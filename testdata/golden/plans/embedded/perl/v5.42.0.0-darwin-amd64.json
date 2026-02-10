@@ -6,7 +6,7 @@
     "os": "darwin",
     "arch": "amd64"
   },
-  "recipe_hash": "b381fe61e7eab9a1a035e489bca6842940beed278d5da28d3c2e88620a472d5d",
+  "recipe_hash": "3653dd437a8520480fc78cc0ad6091bdda3bee2b776d2a1467aedca5173402fb",
   "deterministic": true,
   "steps": [
     {
@@ -58,7 +58,6 @@
     }
   ],
   "verify": {
-    "command": "{install_dir}/bin/perl -v",
-    "pattern": "{version}"
+    "command": "{install_dir}/bin/perl -v"
   }
 }

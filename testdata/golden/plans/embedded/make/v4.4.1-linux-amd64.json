@@ -6,13 +6,13 @@
     "os": "linux",
     "arch": "amd64"
   },
-  "recipe_hash": "f1513e89985d8719bd2a253a81beeabe061b039cac5ba731d764aaaae8626551",
+  "recipe_hash": "628773967a5900097b997a017951a5ba89927cd6c00e516d21fa8293b3025603",
   "deterministic": true,
   "dependencies": [
     {
       "tool": "patchelf",
       "version": "0.18.0",
-      "recipe_hash": "bc34310d75089a4b61515c263dcbbf112270d583a31325eca37bfbfbe1be2a58",
+      "recipe_hash": "4ce22514f9ba4f62ed215e1b10d44816fea9081a1a2aaa27089f508ac16f3b24",
       "steps": [
         {
           "action": "download_file",
@@ -57,7 +57,7 @@
         }
       ],
       "verify": {
-        "command": "patchelf --version",
+        "command": "{install_dir}/bin/patchelf --version",
         "pattern": "patchelf {version}"
       }
     }
@@ -99,8 +99,7 @@
       "params": {
         "install_mode": "directory",
         "outputs": [
-          "bin/gmake",
-          "bin/make"
+          "bin/gmake"
         ]
       },
       "evaluable": true,
@@ -108,7 +107,6 @@
     }
   ],
   "verify": {
-    "command": "make --version",
-    "pattern": "GNU Make {version}"
+    "command": "gmake --version"
   }
 }

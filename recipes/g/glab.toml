@@ -8,19 +8,6 @@
   type = ""
   llm_validation = "skipped"
 
-[version]
-  source = "homebrew"
-  github_repo = ""
-  tag_prefix = ""
-  module = ""
-  formula = "glab"
-  cask = ""
-  tap = ""
-  fossil_repo = ""
-  project_name = ""
-  version_separator = ""
-  timeline_tag = ""
-
 [[steps]]
   action = "homebrew"
   formula = "glab"

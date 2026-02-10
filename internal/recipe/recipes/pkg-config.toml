@@ -14,5 +14,6 @@ install_mode = "directory"
 outputs = ["bin/pkg-config", "bin/pkgconf", "lib/libpkgconf.so", "lib/libpkgconf.dylib", "lib/libpkgconf.so.7", "lib/libpkgconf.7.dylib", "lib/libpkgconf.so.7.0.0"]
 
 [verify]
-command = "pkg-config --version"
+# Use absolute path to ensure we verify the installed binary, not system pkg-config
+command = "{install_dir}/bin/pkg-config --version"
 pattern = "{version}"

@@ -4,6 +4,9 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/tsukumogami/tsuku/internal/install"
+	"github.com/tsukumogami/tsuku/internal/verify"
 )
 
 func TestIsSharedLibrary(t *testing.T) {
@@ -158,5 +161,155 @@ func TestFindLibraryFiles_BrokenSymlink(t *testing.T) {
 
 	if len(found) != 0 {
 		t.Errorf("expected 0 files (broken symlink skipped), got %d", len(found))
+	}
+}
+
+func TestCheckDependencyResults_Empty(t *testing.T) {
+	// Empty results should pass (statically linked)
+	result := checkDependencyResults(nil, false)
+	if !result {
+		t.Error("expected empty results to pass")
+	}
+}
+
+func TestCheckDependencyResults_AllPass(t *testing.T) {
+	results := []verify.DepResult{
+		{
+			Soname:   "libfoo.so.1",
+			Category: verify.DepPureSystem,
+			Status:   verify.ValidationPass,
+		},
+		{
+			Soname:   "libbar.so.2",
+			Category: verify.DepTsukuManaged,
+			Status:   verify.ValidationPass,
+			Recipe:   "bar",
+			Version:  "1.0.0",
+		},
+	}
+
+	result := checkDependencyResults(results, false)
+	if !result {
+		t.Error("expected all passing results to return true")
+	}
+}
+
+func TestCheckDependencyResults_OneFail(t *testing.T) {
+	results := []verify.DepResult{
+		{
+			Soname:   "libfoo.so.1",
+			Category: verify.DepPureSystem,
+			Status:   verify.ValidationPass,
+		},
+		{
+			Soname:   "libmissing.so.1",
+			Category: verify.DepPureSystem,
+			Status:   verify.ValidationFail,
+			Error:    "not found",
+		},
+	}
+
+	result := checkDependencyResults(results, false)
+	if result {
+		t.Error("expected failing dependency to return false")
+	}
+}
+
+func TestCheckDependencyResults_TransitiveFail(t *testing.T) {
+	results := []verify.DepResult{
+		{
+			Soname:   "libfoo.so.1",
+			Category: verify.DepTsukuManaged,
+			Status:   verify.ValidationPass,
+			Recipe:   "foo",
+			Version:  "1.0.0",
+			Transitive: []verify.DepResult{
+				{
+					Soname:   "libbaz.so.1",
+					Category: verify.DepPureSystem,
+					Status:   verify.ValidationFail,
+					Error:    "not found",
+				},
+			},
+		},
+	}
+
+	result := checkDependencyResults(results, false)
+	if result {
+		t.Error("expected failing transitive dependency to return false")
+	}
+}
+
+func TestVerifyBinaryIntegrityInternal_NoChecksums(t *testing.T) {
+	// When no checksums are stored (pre-feature installation), should pass
+	versionState := &install.VersionState{
+		BinaryChecksums: nil,
+	}
+
+	err := verifyBinaryIntegrityInternal("/nonexistent", versionState, false)
+	if err != nil {
+		t.Errorf("expected nil error for no checksums, got %v", err)
+	}
+}
+
+func TestVerifyBinaryIntegrityInternal_AllMatch(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Create a test binary
+	binPath := filepath.Join(tmpDir, "bin", "test")
+	if err := os.MkdirAll(filepath.Dir(binPath), 0755); err != nil {
+		t.Fatal(err)
+	}
+	content := []byte("test binary content")
+	if err := os.WriteFile(binPath, content, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// Compute checksum
+	checksums, err := install.ComputeBinaryChecksums(tmpDir, []string{"bin/test"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	versionState := &install.VersionState{
+		BinaryChecksums: checksums,
+	}
+
+	err = verifyBinaryIntegrityInternal(tmpDir, versionState, false)
+	if err != nil {
+		t.Errorf("expected nil error for matching checksums, got %v", err)
+	}
+}
+
+func TestVerifyBinaryIntegrityInternal_Mismatch(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Create a test binary
+	binPath := filepath.Join(tmpDir, "bin", "test")
+	if err := os.MkdirAll(filepath.Dir(binPath), 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(binPath, []byte("original"), 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// Compute checksum of original
+	checksums, err := install.ComputeBinaryChecksums(tmpDir, []string{"bin/test"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Modify the binary
+	if err := os.WriteFile(binPath, []byte("modified"), 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	versionState := &install.VersionState{
+		BinaryChecksums: checksums,
+	}
+
+	err = verifyBinaryIntegrityInternal(tmpDir, versionState, false)
+	if err == nil {
+		t.Error("expected error for mismatched checksums")
 	}
 }

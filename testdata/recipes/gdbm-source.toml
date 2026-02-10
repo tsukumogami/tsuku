@@ -32,4 +32,4 @@ configure_args = ["--disable-silent-rules", "--enable-libgdbm-compat", "--withou
 
 [verify]
 command = "gdbmtool --version"
-pattern = "gdbmtool (GDBM) {version}"
+pattern = "gdbmtool (gdbm) {version}"

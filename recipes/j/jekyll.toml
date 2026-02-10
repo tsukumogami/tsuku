@@ -11,5 +11,6 @@ gem = "jekyll"
 executables = ["jekyll"]
 
 [verify]
-command = "jekyll --version"
+# Use absolute path to ensure we verify the installed gem, not any system version
+command = "{install_dir}/.gem/bin/jekyll --version"
 pattern = "jekyll {version}"

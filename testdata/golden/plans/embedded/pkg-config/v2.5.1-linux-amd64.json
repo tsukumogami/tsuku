@@ -6,13 +6,13 @@
     "os": "linux",
     "arch": "amd64"
   },
-  "recipe_hash": "002918e3e8ddf9fd1a9d00475209640675ca0982304443ef4b796c135678d905",
+  "recipe_hash": "c683fe9f64547f6956c3419db346d8809fa079624012ae7b88c1e1905fb08571",
   "deterministic": true,
   "dependencies": [
     {
       "tool": "patchelf",
       "version": "0.18.0",
-      "recipe_hash": "bc34310d75089a4b61515c263dcbbf112270d583a31325eca37bfbfbe1be2a58",
+      "recipe_hash": "4ce22514f9ba4f62ed215e1b10d44816fea9081a1a2aaa27089f508ac16f3b24",
       "steps": [
         {
           "action": "download_file",
@@ -57,7 +57,7 @@
         }
       ],
       "verify": {
-        "command": "patchelf --version",
+        "command": "{install_dir}/bin/patchelf --version",
         "pattern": "patchelf {version}"
       }
     }
@@ -113,7 +113,7 @@
     }
   ],
   "verify": {
-    "command": "pkg-config --version",
+    "command": "{install_dir}/bin/pkg-config --version",
     "pattern": "{version}"
   }
 }

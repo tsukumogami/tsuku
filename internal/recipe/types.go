@@ -772,6 +772,7 @@ func (r *Recipe) ExtractBinaries() []string {
 			"github_archive":   true,
 			"github_file":      true,
 			"npm_install":      true,
+			"gem_install":      true, // Uses 'executables' parameter, installs to bin/
 			"cargo_install":    true, // Uses 'executables' parameter, installs to bin/
 			"cargo_build":      true, // Uses 'executables' parameter, installs to bin/
 			"configure_make":   true, // Uses 'executables' parameter
@@ -840,14 +841,19 @@ func (r *Recipe) ExtractBinaries() []string {
 			}
 		}
 
-		// Check for 'executables' parameter (used by npm_install, cargo_install, cargo_build)
+		// Check for 'executables' parameter (used by npm_install, cargo_install, cargo_build, gem_install)
 		if executablesRaw, ok := step.Params["executables"]; ok {
 			if executablesList, ok := executablesRaw.([]interface{}); ok {
 				for _, e := range executablesList {
 					if exeStr, ok := e.(string); ok {
-						// These actions install executables to bin/ directory
 						binaryName := filepath.Base(exeStr)
-						destPath := filepath.Join("bin", binaryName)
+						// gem_install puts executables in .gem/bin/, others use bin/
+						var destPath string
+						if step.Action == "gem_install" {
+							destPath = filepath.Join(".gem", "bin", binaryName)
+						} else {
+							destPath = filepath.Join("bin", binaryName)
+						}
 						if !seen[binaryName] {
 							binaries = append(binaries, destPath)
 							seen[binaryName] = true

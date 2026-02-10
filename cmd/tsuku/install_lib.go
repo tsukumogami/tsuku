@@ -156,6 +156,24 @@ func installLibrary(libName, reqVersion, parent string, mgr *install.Manager, te
 		}
 	}
 
+	// Verify library installation (Tiers 1-3, skip Tier 4 integrity)
+	printInfo()
+	printInfo("Verifying library...")
+
+	state, err := mgr.GetState().Load()
+	if err != nil {
+		return fmt.Errorf("failed to load state for verification: %w", err)
+	}
+
+	verifyOpts := LibraryVerifyOptions{
+		CheckIntegrity:           false, // Skip Tier 4 for post-install (opt-in via --integrity flag)
+		SkipDlopen:               true,  // Skip Tier 3 dlopen testing for post-install (may conflict with system libs)
+		SkipDependencyValidation: true,  // Skip Tier 2 dependency validation for post-install (may have false positives)
+	}
+	if err := verifyLibrary(libName, state, cfg, verifyOpts); err != nil {
+		return fmt.Errorf("library verification failed: %w", err)
+	}
+
 	// Send telemetry event
 	if telemetryClient != nil {
 		event := telemetry.NewInstallEvent(libName, "", version, true) // Libraries are always dependencies

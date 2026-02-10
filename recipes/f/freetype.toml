@@ -10,19 +10,6 @@
   llm_validation = "skipped"
 supported_libc = ["glibc"]
 
-[version]
-  source = "homebrew"
-  github_repo = ""
-  tag_prefix = ""
-  module = ""
-  formula = "freetype"
-  cask = ""
-  tap = ""
-  fossil_repo = ""
-  project_name = ""
-  version_separator = ""
-  timeline_tag = ""
-
 [[steps]]
   action = "homebrew"
   formula = "freetype"
