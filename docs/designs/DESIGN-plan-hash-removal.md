@@ -352,8 +352,13 @@ graph LR
     I1587 --> I1588["#1588<br/>local golden files"]
     I1588 --> I1589["#1589<br/>R2 + cleanup"]
 
-    classDef ready fill:#bbdefb,stroke:#1565C0,color:black
-    classDef blocked fill:#fff9c4,stroke:#f9a825,color:black
+    classDef done fill:#c8e6c9
+    classDef ready fill:#bbdefb
+    classDef blocked fill:#fff9c4
+    classDef needsDesign fill:#e1bee7
+
     class I1584 ready
     class I1585,I1586,I1587,I1588,I1589 blocked
 ```
+
+**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
