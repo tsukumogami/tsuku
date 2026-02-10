@@ -157,26 +157,31 @@ jobs:
       - name: "Verify tool functionality"
         run: ./test/scripts/verify-tool.sh ninja
 
-  # NOTE: sqlite-source disabled - Fossil server intermittently returns 503 Server Overload
-  # test-sqlite-source-linux:
-  #   name: "Linux x86_64: sqlite-source"
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
-  #     - name: Set up Go
-  #       uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5  # v6.2.0
-  #       with:
-  #         go-version-file: 'go.mod'
-  #         cache-dependency-path: go.sum
-  #     - name: Build tsuku
-  #       run: CGO_ENABLED=0 go build -o tsuku ./cmd/tsuku
-  #     - name: "Install sqlite-source (tests dependency chain: sqlite -> readline -> ncurses)"
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #         TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
-  #       run: ./tsuku install --recipe testdata/recipes/sqlite-source.toml --force
-  #     - name: "Verify tool functionality"
-  #       run: ./test/scripts/verify-tool.sh sqlite-source
+  # Test configure_make with library dependencies (sqlite-source -> readline -> ncurses) - Linux only
+  test-sqlite-source-linux:
+    name: "Linux x86_64: sqlite-source"
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+
+      - name: Set up Go
+        uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5  # v6.2.0
+        with:
+          go-version-file: 'go.mod'
+          cache-dependency-path: go.sum
+
+      - name: Build tsuku
+        run: CGO_ENABLED=0 go build -o tsuku ./cmd/tsuku
+
+      - name: "Install sqlite-source (tests dependency chain: sqlite -> readline -> ncurses)"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
+        run: ./tsuku install --recipe testdata/recipes/sqlite-source.toml --force
+
+      - name: "Verify tool functionality"
+        run: ./test/scripts/verify-tool.sh sqlite-source
 
   # Test configure_make with complex multi-dependency build - Linux only
   test-git-source-linux:
@@ -416,8 +421,7 @@ jobs:
           run_test "gdbm-source" "gdbm-source" "testdata/recipes/gdbm-source.toml"
           run_test "libsixel-source" "libsixel-source" "testdata/recipes/libsixel-source.toml"
           run_test "ninja" "ninja" ""
-          # sqlite-source excluded - Fossil server intermittently returns 503 Server Overload
-          # run_test "sqlite-source" "sqlite-source" "testdata/recipes/sqlite-source.toml"
+          run_test "sqlite-source" "sqlite-source" "testdata/recipes/sqlite-source.toml"
           # git-source excluded on macOS - see issue #881
 
           # Zig
@@ -508,8 +512,7 @@ jobs:
           run_test "gdbm-source" "gdbm-source" "testdata/recipes/gdbm-source.toml"
           # libsixel-source excluded on macOS - see issue #880
           run_test "ninja" "ninja" ""
-          # sqlite-source excluded - Fossil server intermittently returns 503 Server Overload
-          # run_test "sqlite-source" "sqlite-source" "testdata/recipes/sqlite-source.toml"
+          run_test "sqlite-source" "sqlite-source" "testdata/recipes/sqlite-source.toml"
           # git-source excluded on macOS - see issue #881
 
           # Zig
