@@ -176,7 +176,8 @@ jobs:
         run: |
           case "${{ matrix.family }}" in
             alpine)
-              apk add --no-cache curl bash
+              # libgcc needed for Rust-built tsuku-dltest binary
+              apk add --no-cache curl bash libgcc
               ;;
             debian)
               apt-get update && apt-get install -y --no-install-recommends curl ca-certificates
@@ -322,7 +323,8 @@ jobs:
               set -e
 
               # Install bootstrap dependencies
-              apk add --no-cache curl bash
+              # libgcc needed for Rust-built tsuku-dltest binary
+              apk add --no-cache curl bash libgcc
 
               # Install recipe-declared dependencies
               TSUKU=./tsuku-linux-arm64
