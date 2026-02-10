@@ -9,19 +9,6 @@
   llm_validation = "skipped"
 unsupported_platforms = ["linux/arm64", "linux/alpine"]
 
-[version]
-  source = "homebrew"
-  github_repo = ""
-  tag_prefix = ""
-  module = ""
-  formula = "unar"
-  cask = ""
-  tap = ""
-  fossil_repo = ""
-  project_name = ""
-  version_separator = ""
-  timeline_tag = ""
-
 [[steps]]
   action = "homebrew"
   formula = "unar"
