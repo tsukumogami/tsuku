@@ -5,10 +5,6 @@ homepage = "https://curl.se/"
 dependencies = ["openssl", "zlib"]
 binaries = ["bin/curl"]
 
-[version]
-source = "homebrew"
-formula = "curl"
-
 [[steps]]
 action = "download"
 url = "https://curl.se/download/curl-{version}.tar.gz"
