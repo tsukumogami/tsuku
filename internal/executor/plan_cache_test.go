@@ -12,7 +12,6 @@ func TestCacheKeyFor(t *testing.T) {
 		resolvedVersion string
 		os              string
 		arch            string
-		recipeHash      string
 		want            PlanCacheKey
 	}{
 		{
@@ -21,12 +20,10 @@ func TestCacheKeyFor(t *testing.T) {
 			resolvedVersion: "14.1.0",
 			os:              "linux",
 			arch:            "amd64",
-			recipeHash:      "abc123def456",
 			want: PlanCacheKey{
-				Tool:       "ripgrep",
-				Version:    "14.1.0",
-				Platform:   "linux-amd64",
-				RecipeHash: "abc123def456",
+				Tool:     "ripgrep",
+				Version:  "14.1.0",
+				Platform: "linux-amd64",
 			},
 		},
 		{
@@ -35,12 +32,10 @@ func TestCacheKeyFor(t *testing.T) {
 			resolvedVersion: "1.29.0",
 			os:              "darwin",
 			arch:            "arm64",
-			recipeHash:      "xyz789",
 			want: PlanCacheKey{
-				Tool:       "kubectl",
-				Version:    "1.29.0",
-				Platform:   "darwin-arm64",
-				RecipeHash: "xyz789",
+				Tool:     "kubectl",
+				Version:  "1.29.0",
+				Platform: "darwin-arm64",
 			},
 		},
 		{
@@ -49,19 +44,17 @@ func TestCacheKeyFor(t *testing.T) {
 			resolvedVersion: "2.40.0",
 			os:              "windows",
 			arch:            "amd64",
-			recipeHash:      "hash123",
 			want: PlanCacheKey{
-				Tool:       "gh",
-				Version:    "2.40.0",
-				Platform:   "windows-amd64",
-				RecipeHash: "hash123",
+				Tool:     "gh",
+				Version:  "2.40.0",
+				Platform: "windows-amd64",
 			},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := CacheKeyFor(tt.tool, tt.resolvedVersion, tt.os, tt.arch, tt.recipeHash)
+			got := CacheKeyFor(tt.tool, tt.resolvedVersion, tt.os, tt.arch)
 			if got != tt.want {
 				t.Errorf("CacheKeyFor() = %+v, want %+v", got, tt.want)
 			}
@@ -78,14 +71,12 @@ func TestValidateCachedPlan(t *testing.T) {
 			OS:   "linux",
 			Arch: "amd64",
 		},
-		RecipeHash: "abc123def456",
 	}
 
 	validKey := PlanCacheKey{
-		Tool:       "ripgrep",
-		Version:    "14.1.0",
-		Platform:   "linux-amd64",
-		RecipeHash: "abc123def456",
+		Tool:     "ripgrep",
+		Version:  "14.1.0",
+		Platform: "linux-amd64",
 	}
 
 	tests := []struct {
@@ -107,10 +98,9 @@ func TestValidateCachedPlan(t *testing.T) {
 				Tool:          "ripgrep",
 				Version:       "14.1.0",
 				Platform:      Platform{OS: "linux", Arch: "amd64"},
-				RecipeHash:    "abc123def456",
 			},
 			key:     validKey,
-			wantErr: "plan format version 1 is outdated (current: 3)",
+			wantErr: "plan format version 1 is outdated (current: 4)",
 		},
 		{
 			name: "platform OS mismatch",
@@ -119,7 +109,6 @@ func TestValidateCachedPlan(t *testing.T) {
 				Tool:          "ripgrep",
 				Version:       "14.1.0",
 				Platform:      Platform{OS: "darwin", Arch: "amd64"},
-				RecipeHash:    "abc123def456",
 			},
 			key:     validKey,
 			wantErr: "plan platform darwin-amd64 does not match linux-amd64",
@@ -131,31 +120,17 @@ func TestValidateCachedPlan(t *testing.T) {
 				Tool:          "ripgrep",
 				Version:       "14.1.0",
 				Platform:      Platform{OS: "linux", Arch: "arm64"},
-				RecipeHash:    "abc123def456",
 			},
 			key:     validKey,
 			wantErr: "plan platform linux-arm64 does not match linux-amd64",
 		},
 		{
-			name: "recipe hash mismatch",
-			plan: &InstallationPlan{
-				FormatVersion: PlanFormatVersion,
-				Tool:          "ripgrep",
-				Version:       "14.1.0",
-				Platform:      Platform{OS: "linux", Arch: "amd64"},
-				RecipeHash:    "different_hash",
-			},
-			key:     validKey,
-			wantErr: "recipe has changed since plan was generated",
-		},
-		{
 			name: "invalid platform format in key",
 			plan: validPlan,
 			key: PlanCacheKey{
-				Tool:       "ripgrep",
-				Version:    "14.1.0",
-				Platform:   "linux", // missing arch
-				RecipeHash: "abc123def456",
+				Tool:     "ripgrep",
+				Version:  "14.1.0",
+				Platform: "linux", // missing arch
 			},
 			wantErr: "invalid platform format in cache key",
 		},
@@ -244,7 +219,7 @@ func TestChecksumMismatchError_RecoveryCommand(t *testing.T) {
 func TestPlanCacheKey_ZeroValue(t *testing.T) {
 	// Ensure zero value is well-defined
 	var key PlanCacheKey
-	if key.Tool != "" || key.Version != "" || key.Platform != "" || key.RecipeHash != "" {
+	if key.Tool != "" || key.Version != "" || key.Platform != "" {
 		t.Error("PlanCacheKey zero value should have empty strings")
 	}
 }

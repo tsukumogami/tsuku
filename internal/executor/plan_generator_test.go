@@ -18,16 +18,6 @@ import (
 	"github.com/tsukumogami/tsuku/internal/recipe"
 )
 
-// mockTOMLSerializer implements a simple interface for recipe hash testing.
-type mockTOMLSerializer struct {
-	content []byte
-	err     error
-}
-
-func (m *mockTOMLSerializer) ToTOML() ([]byte, error) {
-	return m.content, m.err
-}
-
 // testDownloader implements actions.Downloader for testing plan generation.
 // It downloads files using a custom HTTP client and computes checksums.
 type testDownloader struct {
@@ -98,49 +88,6 @@ func (d *testDownloader) Download(ctx context.Context, url string) (*actions.Dow
 		Checksum:  checksum,
 		Size:      size,
 	}, nil
-}
-
-func TestComputeRecipeHash(t *testing.T) {
-	tests := []struct {
-		name        string
-		content     []byte
-		wantLen     int // expected hash length
-		expectError bool
-	}{
-		{
-			name:    "simple content",
-			content: []byte(`[metadata]\nname = "test"`),
-			wantLen: 64, // SHA256 hex is 64 chars
-		},
-		{
-			name:    "empty content",
-			content: []byte{},
-			wantLen: 64,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			mock := &mockTOMLSerializer{content: tt.content}
-			hash, err := computeRecipeHash(mock)
-
-			if tt.expectError {
-				if err == nil {
-					t.Error("expected error but got none")
-				}
-				return
-			}
-
-			if err != nil {
-				t.Errorf("unexpected error: %v", err)
-				return
-			}
-
-			if len(hash) != tt.wantLen {
-				t.Errorf("hash length = %d, want %d", len(hash), tt.wantLen)
-			}
-		})
-	}
 }
 
 func TestShouldExecuteForPlatform(t *testing.T) {
@@ -615,9 +562,6 @@ func TestGeneratePlan_BasicRecipe(t *testing.T) {
 	if plan.RecipeSource != "test" {
 		t.Errorf("RecipeSource = %q, want %q", plan.RecipeSource, "test")
 	}
-	if plan.RecipeHash == "" {
-		t.Error("RecipeHash should not be empty")
-	}
 	if len(plan.Steps) != 2 {
 		t.Errorf("len(Steps) = %d, want %d", len(plan.Steps), 2)
 	}
@@ -900,49 +844,6 @@ func TestGeneratePlan_TemplateExpansion(t *testing.T) {
 	}
 	if strings.Contains(dest, "{version}") {
 		t.Errorf("dest = %q, should not contain {version}", dest)
-	}
-}
-
-func TestComputeRecipeHash_Error(t *testing.T) {
-	mock := &mockTOMLSerializer{
-		err: fmt.Errorf("serialization error"),
-	}
-	_, err := computeRecipeHash(mock)
-
-	if err == nil {
-		t.Error("expected error but got none")
-	}
-	if !strings.Contains(err.Error(), "failed to serialize recipe") {
-		t.Errorf("error should mention serialization failure, got: %v", err)
-	}
-}
-
-func TestComputeRecipeHash_Deterministic(t *testing.T) {
-	// Same content should produce same hash
-	content := []byte(`[metadata]\nname = "test"`)
-	mock1 := &mockTOMLSerializer{content: content}
-	mock2 := &mockTOMLSerializer{content: content}
-
-	hash1, err1 := computeRecipeHash(mock1)
-	hash2, err2 := computeRecipeHash(mock2)
-
-	if err1 != nil || err2 != nil {
-		t.Fatalf("unexpected errors: %v, %v", err1, err2)
-	}
-
-	if hash1 != hash2 {
-		t.Errorf("same content should produce same hash: %s != %s", hash1, hash2)
-	}
-
-	// Different content should produce different hash
-	mock3 := &mockTOMLSerializer{content: []byte(`[metadata]\nname = "other"`)}
-	hash3, err3 := computeRecipeHash(mock3)
-	if err3 != nil {
-		t.Fatalf("unexpected error: %v", err3)
-	}
-
-	if hash1 == hash3 {
-		t.Errorf("different content should produce different hash: %s == %s", hash1, hash3)
 	}
 }
 

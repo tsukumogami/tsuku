@@ -130,7 +130,7 @@ func printPlanHuman(plan *install.Plan) {
 	// Metadata
 	fmt.Printf("Platform:      %s/%s\n", plan.Platform.OS, plan.Platform.Arch)
 	fmt.Printf("Generated:     %s\n", plan.GeneratedAt.Format("2006-01-02 15:04:05 UTC"))
-	fmt.Printf("Recipe:        %s (hash: %s)\n", plan.RecipeSource, truncateHash(plan.RecipeHash))
+	fmt.Printf("Recipe:        %s\n", plan.RecipeSource)
 	if plan.Deterministic {
 		fmt.Printf("Deterministic: yes\n")
 	} else {
@@ -221,14 +221,6 @@ func formatValue(v interface{}) string {
 	default:
 		return fmt.Sprintf("%v", v)
 	}
-}
-
-// truncateHash shortens a hash for display.
-func truncateHash(hash string) string {
-	if len(hash) <= 12 {
-		return hash
-	}
-	return hash[:12] + "..."
 }
 
 // getPlanForTool retrieves the installation plan for a tool.

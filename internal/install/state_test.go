@@ -2276,7 +2276,6 @@ func TestVersionState_WithPlan(t *testing.T) {
 			Arch: "amd64",
 		},
 		GeneratedAt:  timeNow(),
-		RecipeHash:   "abc123def456",
 		RecipeSource: "registry",
 		Steps: []PlanStep{
 			{
@@ -2422,7 +2421,6 @@ func TestNewPlanFromExecutor(t *testing.T) {
 		"1.0.0",
 		PlanPlatform{OS: "darwin", Arch: "arm64"},
 		now,
-		"hash123",
 		"registry",
 		true, // deterministic
 		steps,
@@ -2464,7 +2462,6 @@ func TestStateManager_GetCachedPlan_CacheHit(t *testing.T) {
 			Arch: "amd64",
 		},
 		GeneratedAt:  timeNow(),
-		RecipeHash:   "abc123",
 		RecipeSource: "registry",
 		Steps: []PlanStep{
 			{Action: "download", Evaluable: true},

@@ -10,20 +10,19 @@ import (
 // not the user's input. This means "ripgrep" and "ripgrep@14.1.0" that resolve
 // to the same version will share the same cache key.
 type PlanCacheKey struct {
-	Tool       string `json:"tool"`
-	Version    string `json:"version"`     // RESOLVED version (e.g., "14.1.0")
-	Platform   string `json:"platform"`    // e.g., "linux-amd64"
-	RecipeHash string `json:"recipe_hash"` // SHA256 of recipe TOML content
+	Tool     string `json:"tool"`
+	Version  string `json:"version"`  // RESOLVED version (e.g., "14.1.0")
+	Platform string `json:"platform"` // e.g., "linux-amd64"
+	// Note: RecipeHash was removed in v4. Cache validation now uses content-based hashing.
 }
 
 // CacheKeyFor generates a cache key from version resolution output.
 // This should be called AFTER version resolution completes.
-func CacheKeyFor(tool, resolvedVersion, os, arch, recipeHash string) PlanCacheKey {
+func CacheKeyFor(tool, resolvedVersion, os, arch string) PlanCacheKey {
 	return PlanCacheKey{
-		Tool:       tool,
-		Version:    resolvedVersion,
-		Platform:   fmt.Sprintf("%s-%s", os, arch),
-		RecipeHash: recipeHash,
+		Tool:     tool,
+		Version:  resolvedVersion,
+		Platform: fmt.Sprintf("%s-%s", os, arch),
 	}
 }
 
@@ -31,7 +30,9 @@ func CacheKeyFor(tool, resolvedVersion, os, arch, recipeHash string) PlanCacheKe
 // Validation checks:
 //   - Format version matches current PlanFormatVersion
 //   - Platform (OS-Arch) matches the key
-//   - Recipe hash matches (recipe hasn't changed)
+//
+// Note: Recipe hash validation was removed in v4. Content-based cache validation
+// will be implemented in a future change.
 //
 // Returns nil if valid, or an error describing why the plan is invalid.
 func ValidateCachedPlan(plan *InstallationPlan, key PlanCacheKey) error {
@@ -51,11 +52,6 @@ func ValidateCachedPlan(plan *InstallationPlan, key PlanCacheKey) error {
 	if plan.Platform.OS != keyOS || plan.Platform.Arch != keyArch {
 		return fmt.Errorf("plan platform %s-%s does not match %s",
 			plan.Platform.OS, plan.Platform.Arch, key.Platform)
-	}
-
-	// Check recipe hash
-	if plan.RecipeHash != key.RecipeHash {
-		return fmt.Errorf("recipe has changed since plan was generated")
 	}
 
 	return nil

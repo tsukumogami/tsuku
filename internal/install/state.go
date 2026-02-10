@@ -32,7 +32,6 @@ type Plan struct {
 	Version       string       `json:"version"`
 	Platform      PlanPlatform `json:"platform"`
 	GeneratedAt   time.Time    `json:"generated_at"`
-	RecipeHash    string       `json:"recipe_hash"`
 	RecipeSource  string       `json:"recipe_source"`
 	Deterministic bool         `json:"deterministic"`
 	Steps         []PlanStep   `json:"steps"`
@@ -58,14 +57,13 @@ type PlanStep struct {
 // NewPlanFromExecutor creates a Plan from executor plan types.
 // This is a conversion helper that preserves all plan data for storage.
 func NewPlanFromExecutor(formatVersion int, tool, version string, platform PlanPlatform,
-	generatedAt time.Time, recipeHash, recipeSource string, deterministic bool, steps []PlanStep) *Plan {
+	generatedAt time.Time, recipeSource string, deterministic bool, steps []PlanStep) *Plan {
 	return &Plan{
 		FormatVersion: formatVersion,
 		Tool:          tool,
 		Version:       version,
 		Platform:      platform,
 		GeneratedAt:   generatedAt,
-		RecipeHash:    recipeHash,
 		RecipeSource:  recipeSource,
 		Deterministic: deterministic,
 		Steps:         steps,

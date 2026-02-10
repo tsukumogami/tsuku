@@ -27,7 +27,6 @@ func TestToStoragePlan(t *testing.T) {
 				Arch: "amd64",
 			},
 			GeneratedAt:   now,
-			RecipeHash:    "abc123",
 			RecipeSource:  "registry",
 			Deterministic: true,
 			Steps: []ResolvedStep{
@@ -69,9 +68,6 @@ func TestToStoragePlan(t *testing.T) {
 		}
 		if !result.GeneratedAt.Equal(now) {
 			t.Errorf("GeneratedAt = %v, want %v", result.GeneratedAt, now)
-		}
-		if result.RecipeHash != "abc123" {
-			t.Errorf("RecipeHash = %q, want %q", result.RecipeHash, "abc123")
 		}
 		if result.RecipeSource != "registry" {
 			t.Errorf("RecipeSource = %q, want %q", result.RecipeSource, "registry")
@@ -126,7 +122,6 @@ func TestFromStoragePlan(t *testing.T) {
 				Arch: "arm64",
 			},
 			GeneratedAt:   now,
-			RecipeHash:    "def456",
 			RecipeSource:  "/path/to/recipe.toml",
 			Deterministic: false,
 			Steps: []install.PlanStep{
@@ -159,9 +154,6 @@ func TestFromStoragePlan(t *testing.T) {
 		}
 		if !result.GeneratedAt.Equal(now) {
 			t.Errorf("GeneratedAt = %v, want %v", result.GeneratedAt, now)
-		}
-		if result.RecipeHash != "def456" {
-			t.Errorf("RecipeHash = %q, want %q", result.RecipeHash, "def456")
 		}
 		if result.RecipeSource != "/path/to/recipe.toml" {
 			t.Errorf("RecipeSource = %q, want %q", result.RecipeSource, "/path/to/recipe.toml")
@@ -200,7 +192,6 @@ func TestRoundTripConversion(t *testing.T) {
 				Arch: "arm64",
 			},
 			GeneratedAt:   now,
-			RecipeHash:    "hash123",
 			RecipeSource:  "registry",
 			Deterministic: true,
 			Steps: []ResolvedStep{
@@ -241,9 +232,6 @@ func TestRoundTripConversion(t *testing.T) {
 		}
 		if !roundTripped.GeneratedAt.Equal(original.GeneratedAt) {
 			t.Errorf("GeneratedAt: got %v, want %v", roundTripped.GeneratedAt, original.GeneratedAt)
-		}
-		if roundTripped.RecipeHash != original.RecipeHash {
-			t.Errorf("RecipeHash: got %q, want %q", roundTripped.RecipeHash, original.RecipeHash)
 		}
 		if roundTripped.RecipeSource != original.RecipeSource {
 			t.Errorf("RecipeSource: got %q, want %q", roundTripped.RecipeSource, original.RecipeSource)
@@ -294,7 +282,6 @@ func TestRoundTripConversion(t *testing.T) {
 				Arch: "amd64",
 			},
 			GeneratedAt:   now,
-			RecipeHash:    "xyz789",
 			RecipeSource:  "registry",
 			Deterministic: true,
 			Steps: []install.PlanStep{
@@ -329,9 +316,6 @@ func TestRoundTripConversion(t *testing.T) {
 		}
 		if !roundTripped.GeneratedAt.Equal(original.GeneratedAt) {
 			t.Errorf("GeneratedAt: got %v, want %v", roundTripped.GeneratedAt, original.GeneratedAt)
-		}
-		if roundTripped.RecipeHash != original.RecipeHash {
-			t.Errorf("RecipeHash: got %q, want %q", roundTripped.RecipeHash, original.RecipeHash)
 		}
 		if roundTripped.RecipeSource != original.RecipeSource {
 			t.Errorf("RecipeSource: got %q, want %q", roundTripped.RecipeSource, original.RecipeSource)
