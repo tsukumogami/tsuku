@@ -126,6 +126,251 @@
       "recipe": "xz",
       "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
       "reason": "Homebrew relocation doesn't update all path references"
+    },
+    {
+      "recipe": "act",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
+    },
+    {
+      "recipe": "bc",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
+    },
+    {
+      "recipe": "buf",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
+    },
+    {
+      "recipe": "c-ares",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
+    },
+    {
+      "recipe": "chibi-scheme",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
+    },
+    {
+      "recipe": "chicken",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
+    },
+    {
+      "recipe": "cliproxyapi",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
+    },
+    {
+      "recipe": "cloc",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
+    },
+    {
+      "recipe": "cloudflared",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
+    },
+    {
+      "recipe": "ctlptl",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
+    },
+    {
+      "recipe": "docker-buildx",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
+    },
+    {
+      "recipe": "docker-credential-helper-ecr",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
+    },
+    {
+      "recipe": "exiftool",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
+    },
+    {
+      "recipe": "fabric-ai",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
+    },
+    {
+      "recipe": "gh",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
+    },
+    {
+      "recipe": "git-flow",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
+    },
+    {
+      "recipe": "glew",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
+    },
+    {
+      "recipe": "go-task",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
+    },
+    {
+      "recipe": "goreman",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
+    },
+    {
+      "recipe": "grpcurl",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
+    },
+    {
+      "recipe": "hugo",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
+    },
+    {
+      "recipe": "jfrog-cli",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
+    },
+    {
+      "recipe": "jpeg",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
+    },
+    {
+      "recipe": "lcov",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
+    },
+    {
+      "recipe": "license-eye",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
+    },
+    {
+      "recipe": "lima",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
+    },
+    {
+      "recipe": "lua",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
+    },
+    {
+      "recipe": "lua-language-server",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
+    },
+    {
+      "recipe": "luajit",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
+    },
+    {
+      "recipe": "mit-scheme",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
+    },
+    {
+      "recipe": "moreutils",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
+    },
+    {
+      "recipe": "oh-my-posh",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
+    },
+    {
+      "recipe": "openshift-cli",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
+    },
+    {
+      "recipe": "p7zip",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
+    },
+    {
+      "recipe": "periphery",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
+    },
+    {
+      "recipe": "podman",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
+    },
+    {
+      "recipe": "qrencode",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
+    },
+    {
+      "recipe": "sevenzip",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
+    },
+    {
+      "recipe": "sourcekitten",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
+    },
+    {
+      "recipe": "sshpass",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
+    },
+    {
+      "recipe": "swift-sh",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
+    },
+    {
+      "recipe": "tailscale",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
+    },
+    {
+      "recipe": "temporal",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
+    },
+    {
+      "recipe": "terragrunt",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
+    },
+    {
+      "recipe": "unar",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
+    },
+    {
+      "recipe": "witr",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
+    },
+    {
+      "recipe": "xcbeautify",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
+    },
+    {
+      "recipe": "xclogparser",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
+    },
+    {
+      "recipe": "yj",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
     }
   ]
 }
