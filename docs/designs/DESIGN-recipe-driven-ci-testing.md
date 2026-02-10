@@ -1,5 +1,5 @@
 ---
-status: Accepted
+status: Planned
 problem: |
   GHA integration tests for musl/Alpine use hardcoded package lists instead of
   deriving requirements from recipes. Tests pass when packages are pre-installed
@@ -26,7 +26,71 @@ rationale: |
 
 ## Status
 
-**Proposed**
+**Planned**
+
+## Implementation Issues
+
+### Milestone: [Recipe-Driven CI Testing](https://github.com/tsukumogami/tsuku/milestone/74)
+
+| Issue | Dependencies | Tier |
+|-------|--------------|------|
+| [#1573: feat(info): add deps-only and system flags for recipe dependency extraction](https://github.com/tsukumogami/tsuku/issues/1573) | None | testable |
+| _Creates the shared extraction library in internal/executor/system_deps.go and extends the info command with --deps-only, --system, and --family flags. This is the foundation that all other issues depend on._ | | |
+| [#1574: ci: create workflow helper script for recipe-driven package installation](https://github.com/tsukumogami/tsuku/issues/1574) | [#1573](https://github.com/tsukumogami/tsuku/issues/1573) | simple |
+| _Adds .github/scripts/install-recipe-deps.sh, a portable script that uses the info command to install recipe dependencies for any Linux family. Provides a consistent pattern for workflow migrations._ | | |
+| [#1575: ci: migrate integration-tests.yml to use recipe-driven deps](https://github.com/tsukumogami/tsuku/issues/1575) | [#1573](https://github.com/tsukumogami/tsuku/issues/1573), [#1574](https://github.com/tsukumogami/tsuku/issues/1574) | testable |
+| _Updates the library-dlopen-musl job to use the new info command instead of the prototype deps command. First workflow migration that validates the pattern works in CI._ | | |
+| [#1576: ci: migrate platform-integration.yml to use recipe-driven deps](https://github.com/tsukumogami/tsuku/issues/1576) | [#1573](https://github.com/tsukumogami/tsuku/issues/1573), [#1574](https://github.com/tsukumogami/tsuku/issues/1574) | testable |
+| _Replaces hardcoded package lists in the integration and integration-arm64-musl jobs. Uses the helper script to install only recipe-declared packages on Alpine containers._ | | |
+| [#1577: ci: migrate validate-golden-execution.yml to use recipe-driven deps](https://github.com/tsukumogami/tsuku/issues/1577) | [#1573](https://github.com/tsukumogami/tsuku/issues/1573), [#1574](https://github.com/tsukumogami/tsuku/issues/1574) | testable |
+| _Updates validate-linux-containers job to use recipe-driven deps. Extends to other families beyond Alpine when needed._ | | |
+| [#1578: refactor: remove prototype tsuku deps command](https://github.com/tsukumogami/tsuku/issues/1578) | [#1575](https://github.com/tsukumogami/tsuku/issues/1575), [#1576](https://github.com/tsukumogami/tsuku/issues/1576), [#1577](https://github.com/tsukumogami/tsuku/issues/1577) | simple |
+| _Deletes deps.go and deps_test.go, removes command registration. Safe to do after all workflows have migrated to the info command._ | | |
+| [#1579: ci: add comprehensive recipe validation against slim containers](https://github.com/tsukumogami/tsuku/issues/1579) | [#1573](https://github.com/tsukumogami/tsuku/issues/1573), [#1574](https://github.com/tsukumogami/tsuku/issues/1574) | critical |
+| _Creates the final validation workflow that tests ALL recipes (embedded and registry) against minimal container images. Ensures under-declared dependencies are caught before they affect users._ | | |
+
+### Dependency Graph
+
+```mermaid
+graph TD
+    subgraph Recipe-Driven CI Testing
+        I1573[#1573: info flags]
+        I1574[#1574: helper script]
+        I1575[#1575: integration-tests.yml]
+        I1576[#1576: platform-integration.yml]
+        I1577[#1577: validate-golden-execution.yml]
+        I1578[#1578: remove deps cmd]
+        I1579[#1579: comprehensive validation]
+    end
+
+    I1573 --> I1574
+    I1573 --> I1575
+    I1573 --> I1576
+    I1573 --> I1577
+    I1573 --> I1579
+    I1574 --> I1575
+    I1574 --> I1576
+    I1574 --> I1577
+    I1574 --> I1579
+    I1575 --> I1578
+    I1576 --> I1578
+    I1577 --> I1578
+
+    classDef done fill:#90EE90,stroke:#228B22
+    classDef ready fill:#87CEEB,stroke:#4169E1
+    classDef blocked fill:#FFE4B5,stroke:#DAA520
+    classDef needsDesign fill:#DDA0DD,stroke:#8B008B
+
+    class I1573 ready
+    class I1574 blocked
+    class I1575 blocked
+    class I1576 blocked
+    class I1577 blocked
+    class I1578 blocked
+    class I1579 blocked
+```
+
+**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
 
 ## Context and Problem Statement
 
