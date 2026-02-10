@@ -7,17 +7,19 @@ problem: |
   failures that CI never caught. Issue #1570 exposed this when musl dlopen tests
   failed for zlib and libyaml.
 decision: |
-  Add a `tsuku deps` command that recursively extracts system package names from
-  recipes and their transitive dependencies for a target platform. The command
-  shares extraction logic with sandbox mode via a new internal/executor/system_deps.go
-  library. GHA workflows use this to install only recipe-declared packages, making
-  under-declaration cause natural test failures. All five Linux families are supported.
+  Extend `tsuku info` with `--deps-only` and `--system` flags to extract system
+  package names from recipes and their transitive dependencies for a target
+  platform. This reuses the existing transitive resolution infrastructure in
+  `info` and follows the established `--metadata-only` pattern. GHA workflows
+  use this to install only recipe-declared packages, making under-declaration
+  cause natural test failures.
 rationale: |
-  Validation comes from workflow structure, not tooling complexity. Recursive
-  extraction ensures complete dependency coverage. Shared extraction code eliminates
-  duplication between deps command and sandbox mode (~66 LOC saved). Keeping deps
-  as a separate command (vs extending info or check-deps) matches Unix philosophy
-  and the shell scripting use case.
+  Extending `tsuku info` is preferred over a new `tsuku deps` command because:
+  (1) `info` already resolves transitive dependencies via `ResolveTransitive()`,
+  (2) `--deps-only` is symmetrical with existing `--metadata-only` flag, and
+  (3) JSON output already works for automation. The target platform must be
+  passed to transitive resolution because dependencies can be declared in
+  platform-filtered steps.
 ---
 
 # Recipe-Driven CI Testing
@@ -55,13 +57,14 @@ The root cause is that CI doesn't validate recipes correctly declare their syste
 ### Scope
 
 **In scope:**
-- CLI mechanism to extract system package requirements from recipes (including transitive dependencies)
-- Shared extraction library for deps command and sandbox mode
+- Extend `tsuku info` with flags to extract system package requirements
+- Platform-aware transitive dependency resolution
+- Shared extraction library for info command and sandbox mode
 - GHA workflow changes to use recipe-driven package installation
 - Multi-family support (alpine, debian, rhel, arch, suse)
-- Validation that recipes don't under-declare dependencies
 
 **Out of scope:**
+- New CLI commands (reuse existing `info`)
 - Changes to sandbox mode internals (beyond sharing extraction code)
 - New testing frameworks
 - Changes to recipe format
@@ -70,95 +73,127 @@ The root cause is that CI doesn't validate recipes correctly declare their syste
 
 - **Validate declarations**: Tests must fail if recipes under-declare dependencies
 - **Complete coverage**: Transitive dependencies must be included
-- **Code reuse**: Share logic between deps command and sandbox mode
+- **Reuse existing infrastructure**: `info` already has transitive resolution
+- **Consistent UX**: Follow established patterns (`--metadata-only` → `--deps-only`)
+- **Platform-aware**: Dependencies can be declared in platform-filtered steps
 - **Multi-family**: Support all five Linux families consistently
-- **Simplicity**: Prefer composable CLI tools over complex integrated systems
-- **No nested containers**: Avoid container-in-container complexity in GHA
 - **CI agnostic**: Solution should work with any CI system, not just GHA
 
 ## Considered Options
 
-### Decision 1: Architectural Approach
+### Decision 1: Command Structure
 
-The central question is how to make GHA tests derive package requirements from recipes instead of using hardcoded lists.
+Should we create a new `tsuku deps` command or extend `tsuku info`?
 
-#### Chosen: CLI Query with Shared Extraction Library
+#### Chosen: Extend `tsuku info`
 
-Add a composable CLI command that extracts system package requirements from recipes and their transitive dependencies. The extraction logic is shared with sandbox mode via a new internal library.
+Add `--deps-only`, `--system`, and `--family` flags to the existing `info` command.
 
 **How it works:**
 
 ```bash
-# Get system packages declared for Alpine (includes transitive deps)
-tsuku deps --system --family alpine zlib
-# Output: zlib-dev
+# Get tsuku dependencies (recipe names) - current behavior
+tsuku info curl
+# Shows: Install Dependencies: openssl, zlib
 
-# For a recipe with dependencies
-tsuku deps --system --family alpine curl
-# Output: zlib-dev openssl-dev (from curl's dependencies)
+# Get only dependencies, skip metadata
+tsuku info --deps-only curl
+# Output: openssl
+#         zlib
+
+# Get system packages for Alpine
+tsuku info --deps-only --system --family alpine curl
+# Output: openssl-dev
+#         zlib-dev
 
 # JSON format for scripting
-tsuku deps --system --family alpine --format json zlib
-# Output: {"packages":["zlib-dev"],"family":"alpine"}
+tsuku info --deps-only --system --family alpine --json curl
+# Output: {"packages":["openssl-dev","zlib-dev"],"family":"alpine"}
 
 # Use in CI workflows
-apk add $(tsuku deps --system --family alpine zlib)
+apk add $(tsuku info --deps-only --system --family alpine curl)
 ```
 
-The command:
-1. Loads the recipe
-2. Resolves transitive tsuku dependencies using existing `ResolveTransitive()` machinery
-3. Builds a target from `--family` (derives libc: alpine → musl, others → glibc)
-4. For each recipe in the dependency tree, filters steps and extracts packages
-5. Deduplicates and outputs as text or JSON
+**Why this is better than a new command:**
+
+1. **`info` already resolves transitive dependencies**: Lines 90-100 of `info.go` call `ResolveTransitive()` to get the full dependency tree. We reuse this instead of duplicating it.
+
+2. **Symmetrical flags**: `--deps-only` pairs naturally with existing `--metadata-only`:
+   - `tsuku info curl` - everything
+   - `tsuku info --metadata-only curl` - skip deps
+   - `tsuku info --deps-only curl` - skip metadata
+
+3. **JSON output exists**: `--json` already works and is used by automation. Adding `--deps-only` just changes what's in the JSON.
+
+4. **Less CLI surface area**: No new command to document and maintain.
 
 #### Alternatives Considered
 
-**Extend Sandbox Mode**: Use `tsuku install --sandbox` in GHA workflows.
+**New `tsuku deps` command**: Create a separate command for dependency extraction.
 
 Rejected because:
-- **Container-in-container complexity**: GHA runners would need to spawn Docker containers inside containers
-- **Static binary required**: tsuku must be built with `CGO_ENABLED=0` for Alpine execution
-- **Scope creep**: Sandbox is designed for local dev testing, not CI validation
+- Duplicates transitive resolution that `info` already has
+- Adds CLI surface area
+- The verbosity difference (`--deps-only` adds one flag) is negligible
+- "Conceptual purity" (info = introspection, deps = extraction) is a weak argument
 
-**Parallel CI System (`tsuku ci-test`)**: Create a new command for CI validation that orchestrates extraction, installation, and testing.
+**Extend `tsuku check-deps`**: Add system package extraction to the validation command.
 
-Rejected because:
-- **New subsystem**: ~500 LOC for orchestration logic vs ~250 LOC for query-only
-- **Requires root/sudo**: Must install packages in CI
-- **Less composable**: Only works for specific CI patterns
+Rejected because `check-deps` is about validation (pass/fail), not extraction. Different purpose.
 
-### Decision 2: Transitive Dependency Resolution
+### Decision 2: Platform-Aware Transitive Resolution
 
-Should the command extract packages from just the target recipe, or recursively from all dependencies?
+Dependencies can be declared in steps with platform filters. How should transitive resolution handle this?
 
-#### Chosen: Recursive by Default
+#### Chosen: Pass Target to ResolveTransitive
 
-The command recursively resolves all tsuku dependencies and extracts system packages from each.
+The target platform must be passed to `ResolveTransitiveForPlatform()` so it only includes dependencies from steps matching the target.
 
-**Rationale:**
-- Recipes like `curl` depend on `openssl` and `zlib`, which have their own system packages
-- Non-recursive would require each recipe to redeclare all transitive system deps
-- The infrastructure already exists (`ResolveTransitive()` in resolver.go)
-- Implementation cost is ~55 additional LOC with battle-tested cycle detection
+**The problem:**
 
-**Trade-offs accepted:**
-- Slightly higher latency (multiple recipe loads)
-- More complex implementation than direct extraction
+```toml
+# curl.toml
+[[steps]]
+action = "homebrew"
+formula = "zlib"
+when = { os = ["linux"], libc = ["glibc"] }  # Only on glibc
 
-#### Alternatives Considered
+[[steps]]
+action = "apk_install"
+packages = ["zlib-dev"]
+when = { os = ["linux"], libc = ["musl"] }  # Only on musl
+```
 
-**Non-recursive**: Only extract from the target recipe.
+When resolving for Alpine (musl):
+- The `homebrew` step declares a tsuku dependency on `zlib` recipe - but this step doesn't apply to musl
+- The `apk_install` step is a system package, not a tsuku dependency
+- Without platform filtering, we'd incorrectly include `zlib` in the dependency tree
 
-Rejected because current test recipes (zlib, libyaml, gcc-libs) don't expose the problem, but future recipes with dependency chains would fail silently.
+**The solution:**
 
-**Opt-in flag**: Add `--recursive` flag, default to non-recursive.
+```
+tsuku info --deps-only --system --family alpine curl
 
-Rejected because the feature hasn't shipped yet—now is the time to design it correctly. Backward compatibility isn't a concern for unreleased code.
+1. Build target: --family alpine → linux/amd64, alpine, musl
+2. ResolveTransitiveForPlatform(ctx, loader, deps, "curl", target)
+   → Filters steps by target BEFORE extracting dependencies
+   → Returns only dependencies from matching steps
+3. For each recipe in tree: ExtractSystemPackages(recipe, target)
+4. Deduplicate and output
+```
+
+**Backwards compatibility:**
+
+If `--family` is not provided, use the current system as the target:
+- On Ubuntu: resolves for debian/glibc
+- On Alpine: resolves for alpine/musl
+- On macOS: resolves for darwin
+
+This matches current `tsuku info` behavior where dependencies shown are relevant to YOUR system.
 
 ### Decision 3: Code Reuse with Sandbox
 
-Both `tsuku deps` and sandbox mode extract system packages from recipes. How should they share code?
+Both `tsuku info` (with new flags) and sandbox mode extract system packages from recipes. How should they share code?
 
 #### Chosen: Shared Extraction Library in internal/executor
 
@@ -184,126 +219,157 @@ func IsSystemAction(step recipe.Step) bool
 - Leverages existing `SystemAction` interface for type-safe detection
 - Places code alongside related `FilterStepsByTarget()` function
 
-#### Alternatives Considered
+### Decision 4: Output Format
 
-**internal/actions/system_helpers.go**: Place in actions package.
-
-Not chosen because executor is the right abstraction level (between actions and consumers).
-
-**Keep separate**: Document duplication, don't consolidate.
-
-Rejected because maintenance burden grows and bugs must be fixed twice.
-
-### Decision 4: UX - Command Structure
-
-Should `tsuku deps` be a new command, or should functionality be added to existing commands like `info` or `check-deps`?
-
-#### Chosen: Separate Top-Level Command
-
-Keep `tsuku deps` as a distinct command focused on package extraction for scripting.
-
-**Rationale:**
-
-Tsuku has four dependency-related commands, each with distinct purposes:
-
-| Command | Purpose | Output | Use Case |
-|---------|---------|--------|----------|
-| `tsuku info` | Introspection | Human-readable metadata | "Tell me about this tool" |
-| `tsuku check-deps` | Validation | Pass/fail with report | Pre-install validation |
-| `tsuku verify-deps` | Verification | Pass/fail for require_command | System setup checks |
-| `tsuku deps` | Extraction | Shell-friendly package list | CI automation |
-
-The `deps` command exists for shell scripting: `apk add $(tsuku deps --system --family alpine zlib)`. This is cleaner than `apk add $(tsuku info --deps-only --system --family alpine zlib)`.
-
-#### Alternatives Considered
-
-**Extend `tsuku info`**: Add `--deps-only --system --family` flags.
-
-Rejected because it makes the common scripting case verbose and mixes introspection with extraction.
-
-**Subcommand structure**: `tsuku deps show`, `tsuku deps tree`.
-
-Rejected as over-architected for current scope. Can be added later if needed.
-
-### Decision 5: Output Format
-
-How should the CLI output package requirements?
+How should `--deps-only` output dependencies?
 
 #### Chosen: Shell-friendly text default with JSON option
 
 ```bash
 # Plain text (default) - one package per line
-tsuku deps --system --family alpine zlib
+tsuku info --deps-only --system --family alpine curl
+openssl-dev
 zlib-dev
 
 # JSON for programmatic use
-tsuku deps --system --family alpine --format json zlib
-{"packages": ["zlib-dev"], "family": "alpine"}
+tsuku info --deps-only --system --family alpine --json curl
+{"packages": ["openssl-dev", "zlib-dev"], "family": "alpine"}
 ```
 
-Plain text can be used directly in shell substitution without dependencies like `jq`.
+**Text output** is one-per-line for easy shell consumption:
+```bash
+apk add $(tsuku info --deps-only --system --family alpine curl)
+```
+
+**JSON output** uses the existing `--json` flag, consistent with other `info` modes.
 
 ## Decision Outcome
 
-**Chosen: Recursive CLI query with shared extraction library**
+**Chosen: Extend `tsuku info` with platform-aware dependency extraction**
 
 ### Summary
 
-Add a `tsuku deps` command that recursively extracts system package requirements for a recipe and all its transitive dependencies on a target platform. The command shares extraction logic with sandbox mode via `internal/executor/system_deps.go`, eliminating code duplication.
+Add three flags to `tsuku info`:
+- `--deps-only`: Output only dependencies, skip metadata (mutually exclusive with `--metadata-only`)
+- `--system`: Extract system packages instead of tsuku recipe names
+- `--family`: Target Linux family for cross-platform queries (defaults to current system)
 
-The command:
-1. Loads the target recipe
-2. Resolves transitive dependencies using existing `ResolveTransitive()`
-3. For each recipe, filters steps by target platform
-4. Extracts package names from system actions
-5. Deduplicates and outputs as text or JSON
+The implementation reuses existing `ResolveTransitiveForPlatform()` infrastructure, passing the target platform so dependencies from platform-filtered steps are correctly resolved.
 
-GHA workflows change from hardcoded package lists to recipe-derived installation:
+**Data flow:**
+
+```
+tsuku info --deps-only --system --family alpine curl
+
+Recipe (curl.toml)
+    │
+    ▼
+Build target: alpine → linux/amd64, alpine, musl
+    │
+    ▼
+ResolveTransitiveForPlatform(ctx, loader, deps, "curl", target)
+    │
+    ├─ Filter curl's steps by target
+    ├─ Extract dependencies from matching steps only
+    ├─ Recursively resolve each dependency with same target
+    │
+    ▼
+[curl, openssl] (zlib excluded - its homebrew step doesn't match musl)
+    │
+    ▼
+For each recipe: ExtractSystemPackages(recipe, target)
+    │
+    ▼
+["openssl-dev"] (deduplicated)
+    │
+    ▼
+Output:
+openssl-dev
+```
+
+**GHA workflows change from:**
 
 ```yaml
-# Before
 run: apk add --no-cache curl gcc musl-dev bash git zlib-dev yaml-dev
+```
 
-# After
+**To:**
+
+```yaml
 run: |
-  DEPS=$(./tsuku deps --system --family alpine ${{ matrix.library }})
+  DEPS=$(./tsuku info --deps-only --system --family alpine ${{ matrix.library }})
   if [ -n "$DEPS" ]; then
     apk add --no-cache $DEPS
   fi
 ```
 
-Validation happens through workflow structure: start with minimal bootstrap dependencies, install only what recipes declare (including transitive deps), run the test. Under-declaration at any level causes failure.
-
 ### Rationale
 
-This approach validates recipe declarations through **workflow structure** while providing **complete coverage** of transitive dependencies:
+This approach is preferred over a new `tsuku deps` command because:
 
-1. **Recursive extraction**: Catches under-declaration in any recipe in the dependency tree
-2. **Shared code**: Single extraction implementation for deps and sandbox
-3. **Multi-family**: All five Linux families use the same pattern
-4. **Composable**: Works with any CI system via shell scripting
+1. **Reuses existing infrastructure**: `info` already calls `ResolveTransitive()` for transitive dependency resolution. We extend it rather than duplicate it.
+
+2. **Consistent UX**: `--deps-only` is symmetrical with `--metadata-only`. Users familiar with one will understand the other.
+
+3. **Less surface area**: No new command to document, test, and maintain.
+
+4. **Platform-aware by design**: Passing the target to `ResolveTransitiveForPlatform()` ensures correct resolution when dependencies are declared in platform-filtered steps.
 
 ## Solution Architecture
 
-### Component 1: Shared Extraction Library
+### Component 1: Extended `tsuku info` Command
+
+**Location**: `cmd/tsuku/info.go`
+
+**New flags:**
+- `--deps-only`: Output only dependencies (mutually exclusive with `--metadata-only`)
+- `--system`: Extract system packages instead of recipe names
+- `--family`: Target Linux family (alpine, debian, rhel, arch, suse)
+
+**Modified flow:**
+
+```go
+func runInfo(cmd *cobra.Command, args []string) {
+    depsOnly, _ := cmd.Flags().GetBool("deps-only")
+    system, _ := cmd.Flags().GetBool("system")
+    family, _ := cmd.Flags().GetString("family")
+
+    // Build target from --family or current system
+    target := buildTargetFromFamily(family) // defaults to runtime platform
+
+    // Resolve transitive dependencies with platform filtering
+    resolvedDeps, err := actions.ResolveTransitiveForPlatform(
+        ctx, loader, directDeps, toolName, target, false)
+
+    if depsOnly {
+        if system {
+            // Extract system packages from each recipe in the tree
+            packages := extractSystemPackagesFromTree(resolvedDeps, target)
+            outputPackages(packages, jsonOutput)
+        } else {
+            // Output recipe names (existing behavior, just filtered)
+            outputRecipeNames(resolvedDeps, jsonOutput)
+        }
+        return
+    }
+
+    // ... existing info output logic ...
+}
+```
+
+### Component 2: Shared Extraction Library
 
 **Location**: `internal/executor/system_deps.go`
 
 ```go
-// SystemDeps holds extracted system dependencies
-type SystemDeps struct {
-    Packages     map[string][]string // package manager → packages
-    Repositories []RepositoryConfig  // apt_repo, brew_tap, etc.
-}
-
 // ExtractSystemPackagesFromSteps extracts system deps from filtered steps
 func ExtractSystemPackagesFromSteps(steps []recipe.Step) *SystemDeps
 
-// ExtractSystemPackagesRecursive extracts from recipe and all transitive deps
+// ExtractSystemPackagesRecursive extracts from all recipes in dependency tree
 func ExtractSystemPackagesRecursive(
     ctx context.Context,
     loader recipe.Loader,
-    r *recipe.Recipe,
+    recipes []string,
     target platform.Target,
 ) ([]string, error)
 
@@ -312,54 +378,12 @@ func IsSystemAction(step recipe.Step) bool
 ```
 
 **Consumers:**
-- `cmd/tsuku/deps.go` - CLI command
+- `cmd/tsuku/info.go` - CLI command (new `--deps-only --system` mode)
 - `internal/sandbox/packages.go` - Container configuration
-
-### Component 2: `tsuku deps` Command
-
-**Location**: `cmd/tsuku/deps.go`
-
-**Interface**:
-```
-tsuku deps [--system] [--family <family>] [--format <text|json>] <recipe>
-```
-
-**Flags:**
-- `--system`: Filter to system dependency actions only
-- `--family`: Target Linux family (alpine, debian, rhel, arch, suse)
-- `--format`: Output format (default: text)
-- `--recipe`: Path to local recipe file
-
-**Data flow:**
-
-```
-Recipe (curl.toml)
-    │
-    ├─ dependencies = ["openssl", "zlib"]
-    │
-    ▼
-tsuku deps --system --family alpine curl
-    │
-    ├─ ResolveTransitive() → [curl, openssl, zlib]
-    │
-    ├─ For each recipe:
-    │     ├─ FilterStepsByTarget(steps, alpine/musl)
-    │     └─ ExtractSystemPackagesFromSteps()
-    │
-    ├─ Deduplicate packages
-    │     └─ ["openssl-dev", "zlib-dev"]
-    │
-    ▼
-Output:
-openssl-dev
-zlib-dev
-```
 
 ### Component 3: Workflow Helper Script
 
 **Location**: `.github/scripts/install-recipe-deps.sh`
-
-Encapsulates the `tsuku deps` pattern for all five families:
 
 ```bash
 #!/bin/bash
@@ -369,7 +393,7 @@ FAMILY="${1:?Family required}"
 RECIPE="${2:?Recipe required}"
 TSUKU="${3:-./tsuku}"
 
-DEPS=$("$TSUKU" deps --system --family "$FAMILY" "$RECIPE")
+DEPS=$("$TSUKU" info --deps-only --system --family "$FAMILY" "$RECIPE")
 [ -z "$DEPS" ] && exit 0
 
 case "$FAMILY" in
@@ -380,18 +404,6 @@ case "$FAMILY" in
   suse)    zypper -n install $DEPS ;;
 esac
 ```
-
-### Workflow Integration
-
-**integration-tests.yml** (library-dlopen-musl):
-```yaml
-- name: Install recipe-declared dependencies
-  run: ./.github/scripts/install-recipe-deps.sh alpine ${{ matrix.library }}
-```
-
-**Other workflows to update:**
-- `validate-golden-execution.yml` - Replace hardcoded Alpine packages
-- `platform-integration.yml` - Replace hardcoded zlib-dev, yaml-dev, libgcc
 
 ## Implementation Approach
 
@@ -404,11 +416,17 @@ esac
 **Files modified:**
 - `internal/sandbox/packages.go` - Use shared extraction
 
-### Phase 2: Update `tsuku deps` Command
+### Phase 2: Extend `tsuku info`
 
 **Files modified:**
-- `cmd/tsuku/deps.go` - Add recursive extraction, use shared library
-- `cmd/tsuku/deps_test.go` - Add transitive tests
+- `cmd/tsuku/info.go` - Add `--deps-only`, `--system`, `--family` flags
+- `cmd/tsuku/info_test.go` - Add tests for new modes
+
+**Key changes:**
+- Add flag definitions in `init()`
+- Modify `runInfo()` to handle `--deps-only` mode
+- Pass target to `ResolveTransitiveForPlatform()`
+- Add `extractSystemPackagesFromTree()` helper
 
 ### Phase 3: Workflow Helper Script
 
@@ -420,15 +438,24 @@ esac
 - `.github/workflows/validate-golden-execution.yml` - Use helper script
 - `.github/workflows/platform-integration.yml` - Use helper script
 
+### Phase 4: Remove `tsuku deps` Command
+
+**Files deleted:**
+- `cmd/tsuku/deps.go`
+- `cmd/tsuku/deps_test.go`
+
+**Files modified:**
+- `cmd/tsuku/main.go` - Remove `depsCmd` registration
+
 ## Security Considerations
 
 ### Download Verification
 
-Not applicable. The `deps` command only extracts package names from recipes—it doesn't download anything. Package installation happens via system package managers with their own verification.
+Not applicable. The command only extracts package names from recipes—it doesn't download anything. Package installation happens via system package managers with their own verification.
 
 ### Execution Isolation
 
-The `tsuku deps` command is read-only. It loads recipes, filters steps, and outputs text. No execution, no privilege escalation, no system modification.
+The `info` command is read-only. It loads recipes, filters steps, and outputs text. No execution, no privilege escalation, no system modification.
 
 ### Supply Chain Risks
 
@@ -442,21 +469,19 @@ No data access or transmission. The command reads recipe files and outputs packa
 
 ### Positive
 
+- **Reuses existing infrastructure**: No duplication of transitive resolution logic
+- **Consistent UX**: `--deps-only` mirrors `--metadata-only` pattern
+- **Platform-aware**: Correctly handles dependencies in platform-filtered steps
 - **Complete validation**: Recursive extraction catches under-declaration at any level
-- **Code reuse**: ~66 LOC saved by sharing extraction with sandbox
+- **Code reuse**: Shared extraction library serves both info and sandbox
 - **Multi-family**: All five Linux families supported consistently
-- **Composable**: Works with any CI system via shell scripting
-- **Debuggable**: Users can run `tsuku deps` locally to see complete package requirements
 
 ### Negative
 
-- **Implementation complexity**: Recursive resolution adds ~55 LOC over simple extraction
+- **Flag complexity**: `--deps-only --system --family alpine` is verbose (but clear)
 - **Workflow updates needed**: Multiple workflows need migration to new pattern
-- **Bootstrap dependency**: Need Go installed to build tsuku before using `deps`
+- **Bootstrap dependency**: Need Go installed to build tsuku before using the command
 
-### Resolved Uncertainties
+### Migration
 
-- **Transitive deps**: Recursive by default ensures complete coverage
-- **Code duplication**: Shared library eliminates it
-- **Multi-family**: All families work via shared helper script
-- **UX**: Separate command is the right design for scripting use case
+The current `tsuku deps` command in PR #1572 will be removed and replaced with `tsuku info --deps-only --system`. Workflows updated to use the new syntax.
