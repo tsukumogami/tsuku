@@ -33,9 +33,11 @@
     "go_gofumpt_with_dependency": { "tool": "gofumpt",      "tier": 5, "desc": "go_install with dependency", "features": ["action:go_install", "version_detection:goproxy", "dependency:go"], "recipe": "testdata/recipes/gofumpt.toml" }
   },
   "ci": {
-    "linux": ["github_actionlint_with_version", "github_btop_no_version", "github_argo-cd_binary", "github_bombardier_simple", "archive_golang_directory", "archive_nodejs_checksum", "npm_netlify-cli_basic", "pipx_ruff_basic", "gem_bundler_multi_exec", "archive_perl_relocatable", "tap_waypoint-tap_short_form"],
+    "linux": ["github_actionlint_with_version", "github_btop_no_version", "github_argo-cd_binary", "github_bombardier_simple", "archive_golang_directory", "archive_nodejs_checksum", "pipx_ruff_basic", "gem_bundler_multi_exec", "archive_perl_relocatable", "tap_waypoint-tap_short_form"],
     "macos": ["github_actionlint_with_version", "github_argo-cd_binary", "archive_golang_directory", "archive_nodejs_checksum", "cask_iterm2_app_bundle"],
     "scheduled": ["archive_rust_custom_source", "cargo_cargo-audit_basic", "cpan_ack_with_dependency", "archive_go_toolchain", "go_gofumpt_with_dependency"],
-    "blocked": {}
+    "blocked": {
+      "npm_netlify-cli_basic": "https://github.com/tsukumogami/tsuku/issues/1592"
+    }
   }
 }

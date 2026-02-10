@@ -24,8 +24,8 @@
     },
     {
       "recipe": "netlify-cli",
-      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
-      "reason": "npm_install toolchain version drift (Node.js versions not pinned)"
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1592",
+      "reason": "npm EBADPLATFORM: @rollup/rollup-android-arm-eabi declares Android-only platform"
     },
     {
       "recipe": "serve",

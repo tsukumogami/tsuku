@@ -58,8 +58,9 @@ jobs:
           }
 
           # Collect all recipe paths (excluding libraries, system deps, and excluded recipes)
+          # Include both embedded recipes and registry recipes
           RECIPE_LIST=""
-          for path in recipes/*/*.toml; do
+          for path in internal/recipe/recipes/*.toml recipes/*/*.toml; do
             if [ ! -f "$path" ]; then
               continue
             fi
@@ -127,7 +128,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           RESULTS="[]"
-          IMAGES=("debian:bookworm-slim" "fedora:41" "archlinux:base" "opensuse/tumbleweed" "alpine:3.21")
+          IMAGES=("debian:bookworm-slim" "fedora:41-minimal" "archlinux:base" "opensuse/tumbleweed" "alpine:3.21")
           NAMES=("debian" "rhel" "arch" "suse" "alpine")
           LIBCS=("glibc" "glibc" "glibc" "glibc" "musl")
           RECIPES="${{ needs.prepare.outputs.recipes }}"
@@ -226,7 +227,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           RESULTS="[]"
-          IMAGES=("debian:bookworm-slim" "fedora:41" "opensuse/tumbleweed" "alpine:3.21")
+          IMAGES=("debian:bookworm-slim" "fedora:41-minimal" "opensuse/tumbleweed" "alpine:3.21")
           NAMES=("debian" "rhel" "suse" "alpine")
           LIBCS=("glibc" "glibc" "glibc" "musl")
           RECIPES="${{ needs.prepare.outputs.recipes }}"

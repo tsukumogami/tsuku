@@ -624,12 +624,12 @@ jobs:
               set -e
               FAILED=""
 
-              # Pre-install system packages that apk_install actions will verify
-              # This is needed because apk_install only checks packages, does not install them
-              if [ "$FAMILY" = "alpine" ]; then
-                echo "Pre-installing system packages for Alpine validation..."
-                apk add --no-cache libstdc++ yaml-dev openssl-dev
-              fi
+              # Install recipe-declared system packages for each unique recipe
+              # Extract unique recipe names from FILE_LIST
+              RECIPES=$(echo "$FILE_LIST" | cut -d"|" -f2 | sort -u)
+              for recipe in $RECIPES; do
+                ./.github/scripts/install-recipe-deps.sh "$FAMILY" "$recipe" ./tsuku
+              done
 
               echo "$FILE_LIST" | while IFS="|" read -r file tool version; do
                 echo "=== Executing $tool ($version) ==="

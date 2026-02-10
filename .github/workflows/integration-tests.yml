@@ -128,12 +128,11 @@ jobs:
           TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
         run: ./test/scripts/test-library-dlopen.sh ${{ matrix.library }} debian
 
-  # NOTE: musl/Alpine dlopen tests expected to fail until #1092 resolved.
-  # Re-enabled with continue-on-error to maintain visibility into test state.
+  # musl/Alpine dlopen tests use recipe-derived package lists.
+  # This validates that recipes correctly declare their system dependencies.
   library-dlopen-musl:
     name: "Library dlopen: ${{ matrix.library }} (musl)"
     runs-on: ubuntu-latest
-    continue-on-error: true
     container:
       image: golang:1.23-alpine
     strategy:
@@ -146,10 +145,28 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install build dependencies
+      - name: Install bootstrap dependencies
         run: |
+          # Minimal bootstrap: Go is in the container, add tools for Rust build
           apk add --no-cache curl gcc musl-dev bash git
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
+
+      - name: Build tsuku
+        run: go build -o tsuku ./cmd/tsuku
+
+      - name: Install recipe-declared dependencies
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
+        run: |
+          # Get packages declared in the recipe for Alpine/musl
+          DEPS=$(./tsuku info --deps-only --system --family alpine ${{ matrix.library }})
+          if [ -n "$DEPS" ]; then
+            echo "Installing recipe-declared packages: $DEPS"
+            apk add --no-cache $DEPS
+          else
+            echo "No system packages declared for ${{ matrix.library }} on Alpine"
+          fi
 
       - name: Run library dlopen test
         env:

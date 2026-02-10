@@ -155,6 +155,12 @@ jobs:
     container: ${{ matrix.container || null }}
 
     steps:
+      - name: Checkout scripts
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        with:
+          sparse-checkout: .github/scripts
+          sparse-checkout-cone-mode: false
+
       - name: Download pre-built binary
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131  # v7.0.0
         with:
@@ -170,7 +176,8 @@ jobs:
         run: |
           case "${{ matrix.family }}" in
             alpine)
-              apk add --no-cache curl bash
+              # libgcc needed for Rust-built tsuku-dltest binary
+              apk add --no-cache curl bash libgcc
               ;;
             debian)
               apt-get update && apt-get install -y --no-install-recommends curl ca-certificates
@@ -221,11 +228,17 @@ jobs:
           EOF
 
       # Install library dependencies
-      # For musl: install system packages (tsuku verify will detect these)
+      # For musl: install recipe-declared system packages
       # For glibc: tsuku install handles everything
       - name: Install library dependencies (musl only)
         if: matrix.libc == 'musl'
-        run: apk add --no-cache zlib-dev yaml-dev libgcc
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
+        run: |
+          TSUKU=./tsuku-linux-${{ matrix.arch }}
+          ./.github/scripts/install-recipe-deps.sh alpine zlib "$TSUKU"
+          ./.github/scripts/install-recipe-deps.sh alpine libyaml "$TSUKU"
 
       - name: Install library recipes (glibc only)
         if: matrix.libc == 'glibc'
@@ -274,6 +287,12 @@ jobs:
     runs-on: ubuntu-24.04-arm
 
     steps:
+      - name: Checkout scripts
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        with:
+          sparse-checkout: .github/scripts
+          sparse-checkout-cone-mode: false
+
       - name: Download pre-built binary
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131  # v7.0.0
         with:
@@ -303,8 +322,14 @@ jobs:
             sh -c '
               set -e
 
-              # Install test dependencies
-              apk add --no-cache curl bash zlib-dev yaml-dev libgcc
+              # Install bootstrap dependencies
+              # libgcc needed for Rust-built tsuku-dltest binary
+              apk add --no-cache curl bash libgcc
+
+              # Install recipe-declared dependencies
+              TSUKU=./tsuku-linux-arm64
+              ./.github/scripts/install-recipe-deps.sh alpine zlib "$TSUKU"
+              ./.github/scripts/install-recipe-deps.sh alpine libyaml "$TSUKU"
 
               # Set up TSUKU_HOME
               export TSUKU_HOME="/root/.tsuku"
