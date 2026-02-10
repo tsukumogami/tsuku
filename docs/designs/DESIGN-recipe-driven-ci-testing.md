@@ -46,7 +46,7 @@ rationale: |
 | _Updates validate-linux-containers job to use recipe-driven deps. Extends to other families beyond Alpine when needed._ | | |
 | ~~[#1578: refactor: remove prototype tsuku deps command](https://github.com/tsukumogami/tsuku/issues/1578)~~ | ~~[#1575](https://github.com/tsukumogami/tsuku/issues/1575)~~, ~~[#1576](https://github.com/tsukumogami/tsuku/issues/1576)~~, ~~[#1577](https://github.com/tsukumogami/tsuku/issues/1577)~~ | simple |
 | _Deletes deps.go and deps_test.go, removes command registration. Safe to do after all workflows have migrated to the info command._ | | |
-| [#1579: ci: add comprehensive recipe validation against slim containers](https://github.com/tsukumogami/tsuku/issues/1579) | ~~[#1573](https://github.com/tsukumogami/tsuku/issues/1573)~~, ~~[#1574](https://github.com/tsukumogami/tsuku/issues/1574)~~ | critical |
+| ~~[#1579: ci: add comprehensive recipe validation against slim containers](https://github.com/tsukumogami/tsuku/issues/1579)~~ | ~~[#1573](https://github.com/tsukumogami/tsuku/issues/1573)~~, ~~[#1574](https://github.com/tsukumogami/tsuku/issues/1574)~~ | critical |
 | _Creates the final validation workflow that tests ALL recipes (embedded and registry) against minimal container images. Ensures under-declared dependencies are caught before they affect users._ | | |
 
 ### Dependency Graph
@@ -87,7 +87,7 @@ graph TD
     class I1576 done
     class I1577 done
     class I1578 done
-    class I1579 ready
+    class I1579 done
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
