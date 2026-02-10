@@ -7,7 +7,7 @@
   tier = 0
   type = ""
   llm_validation = "skipped"
-unsupported_platforms = ["linux/arm64", "linux/alpine"]
+unsupported_platforms = []
 
 [[steps]]
   action = "homebrew"
