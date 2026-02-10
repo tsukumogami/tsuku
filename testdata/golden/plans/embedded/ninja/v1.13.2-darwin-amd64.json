@@ -6,13 +6,13 @@
     "os": "darwin",
     "arch": "amd64"
   },
-  "recipe_hash": "e5080a0a9361c013b8fcb5f926d6ac28a4d79d50f9fa1c055dc7b8d540ae202f",
+  "recipe_hash": "3b84fee52331d0d11ee4da755450e8fbbca1172dd698fa0c173bea5c6515f132",
   "deterministic": false,
   "dependencies": [
     {
       "tool": "cmake",
       "version": "4.2.3",
-      "recipe_hash": "c36e6b8935620d155ada6b9e9b06dc902a5b93ccf80da5b83293376dfed64196",
+      "recipe_hash": "5340bc0ac5737cf88a647993d875ef4443b332c56cd7ed7a7eb34d185e93c8db",
       "dependencies": [
         {
           "tool": "openssl",
@@ -75,7 +75,7 @@
         {
           "tool": "patchelf",
           "version": "0.18.0",
-          "recipe_hash": "bc34310d75089a4b61515c263dcbbf112270d583a31325eca37bfbfbe1be2a58",
+          "recipe_hash": "4ce22514f9ba4f62ed215e1b10d44816fea9081a1a2aaa27089f508ac16f3b24",
           "steps": [
             {
               "action": "download_file",
@@ -120,7 +120,7 @@
             }
           ],
           "verify": {
-            "command": "patchelf --version",
+            "command": "{install_dir}/bin/patchelf --version",
             "pattern": "patchelf {version}"
           }
         }
@@ -187,14 +187,14 @@
         }
       ],
       "verify": {
-        "command": "cmake --version",
+        "command": "{install_dir}/bin/cmake --version",
         "pattern": "cmake version {version}"
       }
     },
     {
       "tool": "make",
       "version": "4.4.1",
-      "recipe_hash": "f1513e89985d8719bd2a253a81beeabe061b039cac5ba731d764aaaae8626551",
+      "recipe_hash": "c841535e57d3347df442bc676a928fd82b19d382b653d9f343b0e517c876318b",
       "steps": [
         {
           "action": "download_file",
@@ -232,8 +232,7 @@
           "params": {
             "install_mode": "directory",
             "outputs": [
-              "bin/gmake",
-              "bin/make"
+              "bin/gmake"
             ]
           },
           "evaluable": true,
@@ -241,14 +240,14 @@
         }
       ],
       "verify": {
-        "command": "make --version",
+        "command": "{install_dir}/bin/gmake --version",
         "pattern": "GNU Make {version}"
       }
     },
     {
       "tool": "pkg-config",
       "version": "2.5.1",
-      "recipe_hash": "002918e3e8ddf9fd1a9d00475209640675ca0982304443ef4b796c135678d905",
+      "recipe_hash": "c683fe9f64547f6956c3419db346d8809fa079624012ae7b88c1e1905fb08571",
       "steps": [
         {
           "action": "download_file",
@@ -300,7 +299,7 @@
         }
       ],
       "verify": {
-        "command": "pkg-config --version",
+        "command": "{install_dir}/bin/pkg-config --version",
         "pattern": "{version}"
       }
     },
@@ -412,7 +411,7 @@
     }
   ],
   "verify": {
-    "command": "ninja --version",
+    "command": "{install_dir}/bin/ninja --version",
     "pattern": "{version}"
   }
 }

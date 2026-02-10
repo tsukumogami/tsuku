@@ -29,8 +29,9 @@ TEMP_DIR=$(mktemp -d)
 trap "rm -rf $TEMP_DIR" EXIT
 
 verify_make() {
-    echo "Testing: make --version"
-    make --version
+    # Homebrew's make provides gmake to avoid conflicting with system make
+    echo "Testing: gmake --version"
+    gmake --version
 
     echo ""
     echo "Testing: Build a simple Makefile"
@@ -40,7 +41,7 @@ all:
 	@echo "Make works!"
 EOF
     cd "$TEMP_DIR"
-    make
+    gmake
 }
 
 verify_gdbm() {

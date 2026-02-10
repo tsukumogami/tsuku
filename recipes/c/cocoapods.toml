@@ -8,20 +8,7 @@
   tier = 0
   type = ""
   llm_validation = "skipped"
-unsupported_platforms = ["linux/arm64", "linux/alpine", "darwin/arm64"]
-
-[version]
-  source = "homebrew"
-  github_repo = ""
-  tag_prefix = ""
-  module = ""
-  formula = "cocoapods"
-  cask = ""
-  tap = ""
-  fossil_repo = ""
-  project_name = ""
-  version_separator = ""
-  timeline_tag = ""
+unsupported_platforms = ["darwin/arm64"]
 
 [[steps]]
   action = "homebrew"

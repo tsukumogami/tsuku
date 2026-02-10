@@ -531,6 +531,35 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 		}
 	}
 
+	// Verify installation before reporting success
+	// Skip verification for system dependencies (require_system only recipes)
+	if !isSystemDep {
+		if r.Verify.Command != "" {
+			printInfo()
+			printInfo("Verifying installation...")
+
+			// Get the tool state for verification
+			toolState, err := mgr.GetState().GetToolState(toolName)
+			if err != nil {
+				return fmt.Errorf("failed to get tool state for verification: %w", err)
+			}
+
+			// Load state for dependency validation
+			state, err := mgr.GetState().Load()
+			if err != nil {
+				return fmt.Errorf("failed to load state for verification: %w", err)
+			}
+
+			opts := ToolVerifyOptions{Verbose: true, SkipPATHChecks: true, SkipDependencyValidation: true}
+			if err := RunToolVerification(r, toolName, toolState, cfg, state, opts); err != nil {
+				return fmt.Errorf("installation verification failed: %w", err)
+			}
+		} else {
+			printInfo()
+			printInfo("Note: Recipe has no verify command, skipping verification")
+		}
+	}
+
 	// Send telemetry event on successful installation
 	if telemetryClient != nil {
 		// isDependency is true when isExplicit is false (installed as a dependency)

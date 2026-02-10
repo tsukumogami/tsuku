@@ -20,5 +20,6 @@ install_mode = "directory"
 outputs = ["bin/cmake", "bin/ctest", "bin/cpack", "bin/ccmake"]
 
 [verify]
-command = "cmake --version"
+# Use absolute path to ensure we verify the installed binary, not system cmake
+command = "{install_dir}/bin/cmake --version"
 pattern = "cmake version {version}"

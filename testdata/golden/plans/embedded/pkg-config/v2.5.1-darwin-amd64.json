@@ -6,7 +6,7 @@
     "os": "darwin",
     "arch": "amd64"
   },
-  "recipe_hash": "002918e3e8ddf9fd1a9d00475209640675ca0982304443ef4b796c135678d905",
+  "recipe_hash": "c683fe9f64547f6956c3419db346d8809fa079624012ae7b88c1e1905fb08571",
   "deterministic": true,
   "steps": [
     {
@@ -59,7 +59,7 @@
     }
   ],
   "verify": {
-    "command": "pkg-config --version",
+    "command": "{install_dir}/bin/pkg-config --version",
     "pattern": "{version}"
   }
 }

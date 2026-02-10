@@ -13,5 +13,6 @@ action = "install_binaries"
 outputs = ["bin/patchelf"]
 
 [verify]
-command = "patchelf --version"
+# Use absolute path to ensure we verify the installed binary, not system patchelf
+command = "{install_dir}/bin/patchelf --version"
 pattern = "patchelf {version}"

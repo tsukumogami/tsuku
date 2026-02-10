@@ -10,5 +10,6 @@ gem = "fpm"
 executables = ["fpm"]
 
 [verify]
-command = "fpm --version"
+# Use absolute path to ensure we verify the installed gem, not any system version
+command = "{install_dir}/.gem/bin/fpm --version"
 pattern = "{version}"

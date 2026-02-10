@@ -25,8 +25,9 @@ var (
 
 // LibraryVerifyOptions controls library verification behavior
 type LibraryVerifyOptions struct {
-	CheckIntegrity bool // Enable Level 4: checksum verification
-	SkipDlopen     bool // Disable Level 3: dlopen load testing
+	CheckIntegrity           bool // Enable Level 4: checksum verification
+	SkipDlopen               bool // Disable Level 3: dlopen load testing
+	SkipDependencyValidation bool // Disable Level 2: dependency validation
 }
 
 func init() {
@@ -128,43 +129,6 @@ func findToolBinaries(installDir string, binaries []string, toolName string) []s
 	return paths
 }
 
-// verifyBinaryIntegrity verifies the integrity of installed binaries using stored checksums.
-// Returns true if verification passed, false if there were mismatches or errors.
-// If no checksums are stored (pre-feature installation), prints a skip message and returns true.
-func verifyBinaryIntegrity(toolDir string, versionState *install.VersionState) bool {
-	if len(versionState.BinaryChecksums) == 0 {
-		printInfo("  Integrity: SKIPPED (no stored checksums - pre-feature installation)\n")
-		return true
-	}
-
-	printInfof("  Integrity: Verifying %d binaries...\n", len(versionState.BinaryChecksums))
-
-	mismatches, err := install.VerifyBinaryChecksums(toolDir, versionState.BinaryChecksums)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "  Integrity: ERROR - %v\n", err)
-		return false
-	}
-
-	if len(mismatches) == 0 {
-		printInfof("  Integrity: OK (%d binaries verified)\n", len(versionState.BinaryChecksums))
-		return true
-	}
-
-	// Report mismatches
-	fmt.Fprintf(os.Stderr, "  Integrity: MODIFIED\n")
-	for _, m := range mismatches {
-		if m.Error != nil {
-			fmt.Fprintf(os.Stderr, "    %s: ERROR - %v\n", m.Path, m.Error)
-		} else {
-			fmt.Fprintf(os.Stderr, "    %s: expected %s..., got %s...\n",
-				m.Path, truncateChecksum(m.Expected), truncateChecksum(m.Actual))
-		}
-	}
-	fmt.Fprintf(os.Stderr, "    WARNING: Binary may have been modified after installation.\n")
-	fmt.Fprintf(os.Stderr, "    Run 'tsuku install <tool> --reinstall' to restore original.\n")
-	return false
-}
-
 // truncateChecksum returns the first 12 characters of a checksum for display.
 func truncateChecksum(hash string) string {
 	if len(hash) > 12 {
@@ -173,8 +137,82 @@ func truncateChecksum(hash string) string {
 	return hash
 }
 
-// verifyWithAbsolutePath verifies a hidden tool using absolute paths
-func verifyWithAbsolutePath(r *recipe.Recipe, toolName, version, installDir string, versionState *install.VersionState) {
+// ToolVerifyOptions controls tool verification behavior
+type ToolVerifyOptions struct {
+	// Verbose enables detailed output during verification
+	Verbose bool
+	// SkipPATHChecks skips Steps 2-3 (PATH environment checks) for visible tools.
+	// Use this in post-install context where the user may not have added tsuku to PATH yet.
+	SkipPATHChecks bool
+	// SkipDependencyValidation skips Tier 2 dependency validation for tools.
+	// Use this in post-install context where dependency classification may have false positives.
+	SkipDependencyValidation bool
+}
+
+// RunToolVerification performs verification for an installed tool.
+// Returns nil on success, error on failure.
+// This function is designed to be called from both the verify command and install flow.
+func RunToolVerification(r *recipe.Recipe, toolName string, toolState *install.ToolState, cfg *config.Config, state *install.State, opts ToolVerifyOptions) error {
+	version := toolState.Version
+	if toolState.ActiveVersion != "" {
+		version = toolState.ActiveVersion
+	}
+
+	installDir := filepath.Join(cfg.ToolsDir, fmt.Sprintf("%s-%s", toolName, version))
+
+	// Get version state for integrity verification
+	var versionState *install.VersionState
+	if toolState.Versions != nil {
+		if vs, ok := toolState.Versions[version]; ok {
+			versionState = &vs
+		}
+	}
+	if versionState == nil {
+		// Fallback for legacy state without multi-version support
+		versionState = &install.VersionState{
+			Binaries: toolState.Binaries,
+		}
+	}
+
+	if opts.Verbose {
+		printInfof("Verifying %s (version %s)...\n", toolName, version)
+	}
+
+	// Determine verification strategy based on tool visibility
+	if toolState.IsHidden {
+		return runHiddenToolVerification(r, toolName, version, installDir, versionState, cfg, state, opts)
+	}
+	return runVisibleToolVerification(r, toolName, toolState, versionState, installDir, cfg, state, opts)
+}
+
+// makeVerifyEnv creates an environment for verification commands with proper PATH setup.
+// It filters out existing PATH entries and prepends the install directories to ensure
+// the installed tool's binaries are found before system binaries.
+func makeVerifyEnv(installDir string, cfg *config.Config) []string {
+	// Filter out existing PATH to avoid duplicate entries
+	env := make([]string, 0)
+	for _, e := range os.Environ() {
+		if !strings.HasPrefix(e, "PATH=") {
+			env = append(env, e)
+		}
+	}
+
+	// Build PATH with all possible bin directories:
+	// 1. cfg.CurrentDir - symlinks to current tool versions
+	// 2. installDir/bin - standard bin directory
+	// 3. installDir/.gem/bin - gem-installed executables (via install_gem_direct)
+	// 4. Original PATH
+	binDir := filepath.Join(installDir, "bin")
+	gemBinDir := filepath.Join(installDir, ".gem", "bin")
+	pathValue := cfg.CurrentDir + ":" + binDir + ":" + gemBinDir + ":" + os.Getenv("PATH")
+	env = append(env, "PATH="+pathValue)
+
+	return env
+}
+
+// runHiddenToolVerification verifies a hidden tool using absolute paths.
+// Returns nil on success, error on failure.
+func runHiddenToolVerification(r *recipe.Recipe, toolName, version, installDir string, versionState *install.VersionState, cfg *config.Config, state *install.State, opts ToolVerifyOptions) error {
 	command := r.Verify.Command
 	command = strings.ReplaceAll(command, "{version}", version)
 	command = strings.ReplaceAll(command, "{install_dir}", installDir)
@@ -183,197 +221,327 @@ func verifyWithAbsolutePath(r *recipe.Recipe, toolName, version, installDir stri
 	pattern = strings.ReplaceAll(pattern, "{version}", version)
 	pattern = strings.ReplaceAll(pattern, "{install_dir}", installDir)
 
-	printInfof("  Running: %s\n", command)
+	if opts.Verbose {
+		printInfof("  Running: %s\n", command)
+	}
 
 	cmdExec := exec.Command("sh", "-c", command)
+	cmdExec.Env = makeVerifyEnv(installDir, cfg)
+
 	output, err := cmdExec.CombinedOutput()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Verification failed: %v\nOutput: %s\n", err, string(output))
-		exitWithCode(ExitVerifyFailed)
+		return fmt.Errorf("verification command failed: %w\nOutput: %s", err, string(output))
 	}
 
 	outputStr := strings.TrimSpace(string(output))
-	printInfof("  Output: %s\n", outputStr)
+	if opts.Verbose {
+		printInfof("  Output: %s\n", outputStr)
+	}
 
 	if pattern != "" {
 		if !strings.Contains(outputStr, pattern) {
-			fmt.Fprintf(os.Stderr, "Output does not match expected pattern\n  Expected: %s\n  Got: %s\n", pattern, outputStr)
-			exitWithCode(ExitVerifyFailed)
+			return fmt.Errorf("output does not match expected pattern\n  Expected: %s\n  Got: %s", pattern, outputStr)
 		}
-		printInfof("  Pattern matched: %s\n", pattern)
+		if opts.Verbose {
+			printInfof("  Pattern matched: %s\n", pattern)
+		}
 	}
 
 	// Binary integrity verification
-	if !verifyBinaryIntegrity(installDir, versionState) {
-		exitWithCode(ExitVerifyFailed)
+	if err := verifyBinaryIntegrityInternal(installDir, versionState, opts.Verbose); err != nil {
+		return err
 	}
 
-	// Tier 2: Dependency validation
-	printInfo("  Tier 2: Validating dependencies...\n")
-	binaries := findToolBinaries(installDir, nil, toolName)
-	if len(binaries) == 0 {
-		// Try the tool name directly in install dir
-		binPath := filepath.Join(installDir, "bin", toolName)
-		if _, err := os.Stat(binPath); err == nil {
-			binaries = []string{binPath}
+	// Tier 2: Dependency validation (skipped in post-install context)
+	if !opts.SkipDependencyValidation {
+		if opts.Verbose {
+			printInfo("  Tier 2: Validating dependencies...\n")
 		}
-	}
-
-	// Load state for dependency validation
-	cfg, _ := config.DefaultConfig()
-	mgr := install.New(cfg)
-	state, _ := mgr.GetState().Load()
-
-	var allResults []verify.DepResult
-	for _, binPath := range binaries {
-		results, err := verify.ValidateDependenciesSimple(binPath, state, cfg.HomeDir)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "  Dependency validation failed for %s: %v\n", filepath.Base(binPath), err)
-			exitWithCode(ExitVerifyFailed)
-		}
-		allResults = append(allResults, results...)
-	}
-
-	if !displayDependencyResults(allResults) {
-		exitWithCode(ExitVerifyFailed)
-	}
-}
-
-// verifyVisibleTool performs comprehensive verification for visible tools
-func verifyVisibleTool(r *recipe.Recipe, toolName string, toolState *install.ToolState, versionState *install.VersionState, installDir string, cfg *config.Config, state *install.State) {
-	// Step 1: Verify installation via current/ symlink
-	printInfo("  Step 1: Verifying installation via symlink...")
-
-	command := r.Verify.Command
-	pattern := r.Verify.Pattern
-
-	// For visible tools, use the binary name directly (will resolve via current/)
-	// But first verify the symlink works by using absolute path
-	version := toolState.Version
-	command = strings.ReplaceAll(command, "{version}", version)
-	command = strings.ReplaceAll(command, "{install_dir}", installDir)
-	pattern = strings.ReplaceAll(pattern, "{version}", version)
-	pattern = strings.ReplaceAll(pattern, "{install_dir}", installDir)
-
-	printInfof("    Running: %s\n", command)
-	cmdExec := exec.Command("sh", "-c", command)
-
-	// For Step 1, add install directory bin/ to PATH so binaries can be found
-	// This is needed for binary-only installs where verify command doesn't use {install_dir}
-	env := os.Environ()
-	binDir := filepath.Join(installDir, "bin")
-	env = append(env, "PATH="+binDir+":"+os.Getenv("PATH"))
-	cmdExec.Env = env
-
-	output, err := cmdExec.CombinedOutput()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "    Installation verification failed: %v\n", err)
-		fmt.Fprintf(os.Stderr, "    Output: %s\n", string(output))
-		fmt.Fprintf(os.Stderr, "\nThe tool is installed but not working correctly.\n")
-		exitWithCode(ExitVerifyFailed)
-	}
-	outputStr := strings.TrimSpace(string(output))
-	printInfof("    Output: %s\n", outputStr)
-
-	if pattern != "" && !strings.Contains(outputStr, pattern) {
-		fmt.Fprintf(os.Stderr, "    Pattern mismatch\n")
-		fmt.Fprintf(os.Stderr, "    Expected: %s\n", pattern)
-		fmt.Fprintf(os.Stderr, "    Got: %s\n", outputStr)
-		exitWithCode(ExitVerifyFailed)
-	}
-	printInfo("    Installation verified\n")
-
-	// Step 2: Check if current/ is in PATH
-	printInfof("  Step 2: Checking if %s is in PATH...\n", cfg.CurrentDir)
-	pathEnv := os.Getenv("PATH")
-	pathInPATH := false
-	for _, dir := range strings.Split(pathEnv, ":") {
-		if dir == cfg.CurrentDir {
-			pathInPATH = true
-			break
-		}
-	}
-
-	if !pathInPATH {
-		fmt.Fprintf(os.Stderr, "    %s is not in your PATH\n", cfg.CurrentDir)
-		fmt.Fprintf(os.Stderr, "\nThe tool is installed correctly, but you need to add this to your shell profile:\n")
-		fmt.Fprintf(os.Stderr, "  export PATH=\"%s:$PATH\"\n", cfg.CurrentDir)
-		exitWithCode(ExitVerifyFailed)
-	}
-	printInfof("    %s is in PATH\n\n", cfg.CurrentDir)
-
-	// Step 3: Verify tool binaries are accessible from PATH and check for conflicts
-	printInfo("  Step 3: Checking PATH resolution for binaries...")
-
-	// Check each binary provided by this tool
-	binariesToCheck := toolState.Binaries
-	if len(binariesToCheck) == 0 {
-		// Fallback: assume tool name is the binary
-		binariesToCheck = []string{toolName}
-	}
-
-	for _, binaryPath := range binariesToCheck {
-		// Extract just the binary name (e.g., "cargo/bin/cargo" -> "cargo")
-		binaryName := filepath.Base(binaryPath)
-
-		whichPath, err := exec.Command("which", binaryName).Output()
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "    Binary '%s' not found in PATH\n", binaryName)
-			fmt.Fprintf(os.Stderr, "\nThe tool is installed and current/ is in PATH, but '%s' cannot be found.\n", binaryName)
-			fmt.Fprintf(os.Stderr, "This may indicate a broken symlink in %s\n", cfg.CurrentDir)
-			exitWithCode(ExitVerifyFailed)
-		}
-
-		resolvedPath := strings.TrimSpace(string(whichPath))
-		expectedPath := cfg.CurrentSymlink(binaryName)
-
-		printInfof("    Binary '%s':\n", binaryName)
-		printInfof("      Found: %s\n", resolvedPath)
-		printInfof("      Expected: %s\n", expectedPath)
-
-		if resolvedPath != expectedPath {
-			fmt.Fprintf(os.Stderr, "      PATH conflict detected!\n")
-			fmt.Fprintf(os.Stderr, "\nThe tool is installed, but another '%s' is earlier in your PATH:\n", binaryName)
-			fmt.Fprintf(os.Stderr, "  Using: %s\n", resolvedPath)
-			fmt.Fprintf(os.Stderr, "  Expected: %s\n", expectedPath)
-
-			// Try to get version info from the conflicting tool
-			versionCmd := exec.Command(binaryName, "--version")
-			if versionOut, err := versionCmd.CombinedOutput(); err == nil {
-				fmt.Fprintf(os.Stderr, "  Conflicting version output: %s\n", strings.TrimSpace(string(versionOut)))
+		binaries := findToolBinaries(installDir, nil, toolName)
+		if len(binaries) == 0 {
+			// Try the tool name directly in install dir
+			binPath := filepath.Join(installDir, "bin", toolName)
+			if _, err := os.Stat(binPath); err == nil {
+				binaries = []string{binPath}
 			}
-			exitWithCode(ExitVerifyFailed)
 		}
-		printInfo("      Correct binary is being used from PATH")
-	}
 
-	// Step 4: Binary integrity verification
-	printInfo("\n  Step 4: Verifying binary integrity...")
-	if !verifyBinaryIntegrity(installDir, versionState) {
-		exitWithCode(ExitVerifyFailed)
-	}
-
-	// Step 5: Tier 2 dependency validation
-	printInfo("\n  Step 5: Validating dependencies...")
-	binaries := findToolBinaries(installDir, toolState.Binaries, toolName)
-	if len(binaries) == 0 {
-		printInfo("\n    No binaries found to validate\n")
-	} else {
 		var allResults []verify.DepResult
 		for _, binPath := range binaries {
 			results, err := verify.ValidateDependenciesSimple(binPath, state, cfg.HomeDir)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "\n    Dependency validation failed for %s: %v\n", filepath.Base(binPath), err)
-				exitWithCode(ExitVerifyFailed)
+				return fmt.Errorf("dependency validation failed for %s: %w", filepath.Base(binPath), err)
 			}
 			allResults = append(allResults, results...)
 		}
 
-		printInfo("\n")
-		if !displayDependencyResults(allResults) {
-			exitWithCode(ExitVerifyFailed)
+		if !checkDependencyResults(allResults, opts.Verbose) {
+			return fmt.Errorf("dependency validation failed")
+		}
+	} else if opts.Verbose {
+		printInfo("  Tier 2: Skipping dependency validation (post-install verification)\n")
+	}
+
+	return nil
+}
+
+// runVisibleToolVerification performs comprehensive verification for visible tools.
+// Returns nil on success, error on failure.
+func runVisibleToolVerification(r *recipe.Recipe, toolName string, toolState *install.ToolState, versionState *install.VersionState, installDir string, cfg *config.Config, state *install.State, opts ToolVerifyOptions) error {
+	// Step 1: Verify installation via current/ symlink
+	if opts.Verbose {
+		printInfo("  Step 1: Verifying installation via symlink...")
+	}
+
+	command := r.Verify.Command
+	pattern := r.Verify.Pattern
+
+	version := toolState.Version
+	if toolState.ActiveVersion != "" {
+		version = toolState.ActiveVersion
+	}
+	command = strings.ReplaceAll(command, "{version}", version)
+	command = strings.ReplaceAll(command, "{install_dir}", installDir)
+	pattern = strings.ReplaceAll(pattern, "{version}", version)
+	pattern = strings.ReplaceAll(pattern, "{install_dir}", installDir)
+
+	if opts.Verbose {
+		printInfof("    Running: %s\n", command)
+	}
+	cmdExec := exec.Command("sh", "-c", command)
+	cmdExec.Env = makeVerifyEnv(installDir, cfg)
+
+	output, err := cmdExec.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("installation verification failed: %w\nOutput: %s", err, string(output))
+	}
+	outputStr := strings.TrimSpace(string(output))
+	if opts.Verbose {
+		printInfof("    Output: %s\n", outputStr)
+	}
+
+	if pattern != "" && !strings.Contains(outputStr, pattern) {
+		return fmt.Errorf("pattern mismatch\n  Expected: %s\n  Got: %s", pattern, outputStr)
+	}
+	if opts.Verbose {
+		printInfo("    Installation verified\n")
+	}
+
+	// Steps 2-3: PATH environment checks (skipped in post-install context)
+	if !opts.SkipPATHChecks {
+		// Step 2: Check if current/ is in PATH
+		if opts.Verbose {
+			printInfof("  Step 2: Checking if %s is in PATH...\n", cfg.CurrentDir)
+		}
+		pathEnv := os.Getenv("PATH")
+		pathInPATH := false
+		for _, dir := range strings.Split(pathEnv, ":") {
+			if dir == cfg.CurrentDir {
+				pathInPATH = true
+				break
+			}
+		}
+
+		if !pathInPATH {
+			return fmt.Errorf("%s is not in your PATH\n\nThe tool is installed correctly, but you need to add this to your shell profile:\n  export PATH=\"%s:$PATH\"", cfg.CurrentDir, cfg.CurrentDir)
+		}
+		if opts.Verbose {
+			printInfof("    %s is in PATH\n\n", cfg.CurrentDir)
+		}
+
+		// Step 3: Verify tool binaries are accessible from PATH and check for conflicts
+		if opts.Verbose {
+			printInfo("  Step 3: Checking PATH resolution for binaries...")
+		}
+
+		binariesToCheck := toolState.Binaries
+		if len(binariesToCheck) == 0 {
+			binariesToCheck = []string{toolName}
+		}
+
+		for _, binaryPath := range binariesToCheck {
+			binaryName := filepath.Base(binaryPath)
+
+			whichPath, err := exec.Command("which", binaryName).Output()
+			if err != nil {
+				return fmt.Errorf("binary '%s' not found in PATH\n\nThe tool is installed and current/ is in PATH, but '%s' cannot be found.\nThis may indicate a broken symlink in %s", binaryName, binaryName, cfg.CurrentDir)
+			}
+
+			resolvedPath := strings.TrimSpace(string(whichPath))
+			expectedPath := cfg.CurrentSymlink(binaryName)
+
+			if opts.Verbose {
+				printInfof("    Binary '%s':\n", binaryName)
+				printInfof("      Found: %s\n", resolvedPath)
+				printInfof("      Expected: %s\n", expectedPath)
+			}
+
+			if resolvedPath != expectedPath {
+				return fmt.Errorf("PATH conflict detected for '%s'\n\nThe tool is installed, but another '%s' is earlier in your PATH:\n  Using: %s\n  Expected: %s", binaryName, binaryName, resolvedPath, expectedPath)
+			}
+			if opts.Verbose {
+				printInfo("      Correct binary is being used from PATH")
+			}
+		}
+	} else if opts.Verbose {
+		printInfo("  Steps 2-3: Skipping PATH checks (post-install verification)\n")
+	}
+
+	// Step 4: Binary integrity verification
+	if opts.Verbose {
+		printInfo("\n  Step 4: Verifying binary integrity...")
+	}
+	if err := verifyBinaryIntegrityInternal(installDir, versionState, opts.Verbose); err != nil {
+		return err
+	}
+
+	// Step 5: Tier 2 dependency validation (skipped in post-install context)
+	if !opts.SkipDependencyValidation {
+		if opts.Verbose {
+			printInfo("\n  Step 5: Validating dependencies...")
+		}
+		binaries := findToolBinaries(installDir, toolState.Binaries, toolName)
+		if len(binaries) == 0 {
+			if opts.Verbose {
+				printInfo("\n    No binaries found to validate\n")
+			}
+		} else {
+			var allResults []verify.DepResult
+			for _, binPath := range binaries {
+				results, err := verify.ValidateDependenciesSimple(binPath, state, cfg.HomeDir)
+				if err != nil {
+					return fmt.Errorf("dependency validation failed for %s: %w", filepath.Base(binPath), err)
+				}
+				allResults = append(allResults, results...)
+			}
+
+			if opts.Verbose {
+				printInfo("\n")
+			}
+			if !checkDependencyResults(allResults, opts.Verbose) {
+				return fmt.Errorf("dependency validation failed")
+			}
+		}
+	} else if opts.Verbose {
+		printInfo("\n  Step 5: Skipping dependency validation (post-install verification)\n")
+	}
+
+	return nil
+}
+
+// verifyBinaryIntegrityInternal verifies binary integrity and returns an error on failure.
+func verifyBinaryIntegrityInternal(toolDir string, versionState *install.VersionState, verbose bool) error {
+	if len(versionState.BinaryChecksums) == 0 {
+		if verbose {
+			printInfo("  Integrity: SKIPPED (no stored checksums - pre-feature installation)\n")
+		}
+		return nil
+	}
+
+	if verbose {
+		printInfof("  Integrity: Verifying %d binaries...\n", len(versionState.BinaryChecksums))
+	}
+
+	mismatches, err := install.VerifyBinaryChecksums(toolDir, versionState.BinaryChecksums)
+	if err != nil {
+		return fmt.Errorf("integrity check error: %w", err)
+	}
+
+	if len(mismatches) == 0 {
+		if verbose {
+			printInfof("  Integrity: OK (%d binaries verified)\n", len(versionState.BinaryChecksums))
+		}
+		return nil
+	}
+
+	// Build mismatch error message
+	var sb strings.Builder
+	sb.WriteString("integrity verification failed - binary may have been modified after installation\n")
+	for _, m := range mismatches {
+		if m.Error != nil {
+			sb.WriteString(fmt.Sprintf("  %s: ERROR - %v\n", m.Path, m.Error))
+		} else {
+			sb.WriteString(fmt.Sprintf("  %s: expected %s..., got %s...\n", m.Path, truncateChecksum(m.Expected), truncateChecksum(m.Actual)))
 		}
 	}
+	sb.WriteString("Run 'tsuku install <tool> --reinstall' to restore original.")
+	return fmt.Errorf("%s", sb.String())
+}
+
+// checkDependencyResults checks dependency validation results and returns true if all passed.
+func checkDependencyResults(results []verify.DepResult, verbose bool) bool {
+	if len(results) == 0 {
+		if verbose {
+			printInfo("    No dynamic dependencies (statically linked)\n")
+		}
+		return true
+	}
+
+	allPassed := true
+	for _, r := range results {
+		var status string
+		switch r.Category {
+		case verify.DepTsukuManaged:
+			if r.Status == verify.ValidationPass {
+				status = fmt.Sprintf("OK (tsuku:%s@%s)", r.Recipe, r.Version)
+			} else {
+				status = fmt.Sprintf("FAIL (tsuku:%s@%s) - %s", r.Recipe, r.Version, r.Error)
+				allPassed = false
+			}
+		case verify.DepExternallyManaged:
+			if r.Status == verify.ValidationPass {
+				status = fmt.Sprintf("OK (tsuku:%s@%s, external)", r.Recipe, r.Version)
+			} else {
+				status = fmt.Sprintf("FAIL (tsuku:%s@%s, external) - %s", r.Recipe, r.Version, r.Error)
+				allPassed = false
+			}
+		case verify.DepPureSystem:
+			if r.Status == verify.ValidationPass {
+				status = "OK (system)"
+			} else {
+				status = fmt.Sprintf("FAIL (system) - %s", r.Error)
+				allPassed = false
+			}
+		default:
+			status = fmt.Sprintf("UNKNOWN - %s", r.Error)
+			allPassed = false
+		}
+		if verbose {
+			printInfof("    %s: %s\n", r.Soname, status)
+		}
+
+		// Display transitive dependencies (indented further)
+		for _, t := range r.Transitive {
+			var tStatus string
+			switch t.Category {
+			case verify.DepTsukuManaged:
+				if t.Status == verify.ValidationPass {
+					tStatus = fmt.Sprintf("OK (tsuku:%s@%s)", t.Recipe, t.Version)
+				} else {
+					tStatus = fmt.Sprintf("FAIL - %s", t.Error)
+					allPassed = false
+				}
+			case verify.DepPureSystem:
+				if t.Status == verify.ValidationPass {
+					tStatus = "OK (system)"
+				} else {
+					tStatus = fmt.Sprintf("FAIL - %s", t.Error)
+					allPassed = false
+				}
+			default:
+				tStatus = fmt.Sprintf("UNKNOWN - %s", t.Error)
+				allPassed = false
+			}
+			if verbose {
+				printInfof("      -> %s: %s\n", t.Soname, tStatus)
+			}
+		}
+	}
+
+	if verbose {
+		printInfof("  Tier 2: %d dependencies validated\n", len(results))
+	}
+	return allPassed
 }
 
 // verifyLibrary performs verification for library recipes.
@@ -455,8 +623,12 @@ func verifyTsukuManagedLibrary(name string, libVersions map[string]install.Libra
 	}
 
 	// Tier 2: Dependency validation
-	if err := runTier2Validation(libFiles, state, cfg); err != nil {
-		return err
+	if opts.SkipDependencyValidation {
+		printInfo("  Tier 2: Skipping dependency validation (post-install verification)\n")
+	} else {
+		if err := runTier2Validation(libFiles, state, cfg); err != nil {
+			return err
+		}
 	}
 
 	// Tier 3: dlopen load testing
@@ -875,31 +1047,11 @@ installed before this feature will show "Integrity: SKIPPED".`,
 			exitWithCode(ExitGeneral)
 		}
 
-		installDir := filepath.Join(cfg.ToolsDir, fmt.Sprintf("%s-%s", name, toolState.Version))
-		printInfof("Verifying %s (version %s)...\n", name, toolState.Version)
-
-		// Get version state for integrity verification
-		var versionState *install.VersionState
-		if toolState.Versions != nil {
-			if vs, ok := toolState.Versions[toolState.Version]; ok {
-				versionState = &vs
-			}
-		}
-		if versionState == nil {
-			// Fallback for legacy state without multi-version support
-			versionState = &install.VersionState{
-				Binaries: toolState.Binaries,
-			}
-		}
-
-		// Determine verification strategy based on tool visibility
-		if toolState.IsHidden {
-			// Hidden tools: verify with absolute path
-			printInfo("  Tool is hidden (not in PATH)")
-			verifyWithAbsolutePath(r, name, toolState.Version, installDir, versionState)
-		} else {
-			// Visible tools: comprehensive verification
-			verifyVisibleTool(r, name, &toolState, versionState, installDir, cfg, state)
+		// Use shared verification function
+		opts := ToolVerifyOptions{Verbose: true}
+		if err := RunToolVerification(r, name, &toolState, cfg, state, opts); err != nil {
+			fmt.Fprintf(os.Stderr, "Verification failed: %v\n", err)
+			exitWithCode(ExitVerifyFailed)
 		}
 
 		printInfof("%s is working correctly\n", name)
