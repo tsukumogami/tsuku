@@ -160,7 +160,7 @@ jobs:
           TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
         run: |
           # Get packages declared in the recipe for Alpine/musl
-          DEPS=$(./tsuku deps --system --family alpine ${{ matrix.library }})
+          DEPS=$(./tsuku info --deps-only --system --family alpine ${{ matrix.library }})
           if [ -n "$DEPS" ]; then
             echo "Installing recipe-declared packages: $DEPS"
             apk add --no-cache $DEPS
