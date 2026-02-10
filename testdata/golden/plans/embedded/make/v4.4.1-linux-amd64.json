@@ -6,7 +6,7 @@
     "os": "linux",
     "arch": "amd64"
   },
-  "recipe_hash": "c841535e57d3347df442bc676a928fd82b19d382b653d9f343b0e517c876318b",
+  "recipe_hash": "e2b5f9131e71b95e517980633d0d55f25255d5b118c7851854de5ee985add896",
   "deterministic": true,
   "dependencies": [
     {
@@ -99,7 +99,7 @@
       "params": {
         "install_mode": "directory",
         "outputs": [
-          "bin/gmake"
+          "bin/make"
         ]
       },
       "evaluable": true,
@@ -107,7 +107,7 @@
     }
   ],
   "verify": {
-    "command": "{install_dir}/bin/gmake --version",
+    "command": "{install_dir}/bin/make --version",
     "pattern": "GNU Make {version}"
   }
 }
