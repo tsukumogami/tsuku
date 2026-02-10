@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Accepted
 problem: |
   GHA integration tests for musl/Alpine use hardcoded package lists instead of
   deriving requirements from recipes. Tests pass when packages are pre-installed
