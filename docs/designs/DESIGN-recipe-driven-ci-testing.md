@@ -428,15 +428,51 @@ esac
 - Pass target to `ResolveTransitiveForPlatform()`
 - Add `extractSystemPackagesFromTree()` helper
 
-### Phase 3: Workflow Helper Script
+### Phase 3: Workflow Helper Script and Migrations
 
 **Files created:**
 - `.github/scripts/install-recipe-deps.sh` (~30 LOC)
 
-**Files modified:**
-- `.github/workflows/integration-tests.yml` - Use helper script
-- `.github/workflows/validate-golden-execution.yml` - Use helper script
-- `.github/workflows/platform-integration.yml` - Use helper script
+**Workflow migrations required:**
+
+| Workflow | Job | Current Hardcoded Packages | Migration |
+|----------|-----|---------------------------|-----------|
+| `integration-tests.yml` | `library-dlopen-musl` | Uses `tsuku deps` (prototype) | Update to `tsuku info --deps-only --system` |
+| `platform-integration.yml` | `integration` (Alpine) | `zlib-dev yaml-dev libgcc` | Replace with helper script |
+| `platform-integration.yml` | `integration-arm64-musl` | `zlib-dev yaml-dev libgcc` | Replace with helper script |
+| `validate-golden-execution.yml` | `validate-linux-containers` | `libstdc++ yaml-dev openssl-dev` (Alpine) | Replace with helper script |
+
+**Detailed changes per workflow:**
+
+**integration-tests.yml** (`library-dlopen-musl`):
+```yaml
+# Current (prototype with tsuku deps)
+DEPS=$(./tsuku deps --system --family alpine ${{ matrix.library }})
+
+# After
+DEPS=$(./tsuku info --deps-only --system --family alpine ${{ matrix.library }})
+```
+
+**platform-integration.yml** (`integration` and `integration-arm64-musl`):
+```yaml
+# Before
+apk add --no-cache curl bash zlib-dev yaml-dev libgcc
+
+# After
+apk add --no-cache curl bash  # bootstrap only
+./.github/scripts/install-recipe-deps.sh alpine ${{ matrix.library }}
+```
+
+**validate-golden-execution.yml** (`validate-linux-containers`):
+```yaml
+# Before
+if [ "$FAMILY" = "alpine" ]; then
+  apk add --no-cache libstdc++ yaml-dev openssl-dev
+fi
+
+# After
+./.github/scripts/install-recipe-deps.sh "$FAMILY" "$RECIPE"
+```
 
 ### Phase 4: Remove `tsuku deps` Command
 
