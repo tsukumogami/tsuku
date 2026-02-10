@@ -116,6 +116,16 @@
       "recipe": "swiftlint",
       "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
       "reason": "Homebrew relocation doesn't update all path references"
+    },
+    {
+      "recipe": "htop",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
+    },
+    {
+      "recipe": "xz",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
     }
   ]
 }
