@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Accepted
 problem: |
   Plans include a `recipe_hash` field (SHA256 of recipe TOML content) that creates
   artificial coupling between recipe source and plan identity. Different recipes
@@ -26,7 +26,7 @@ rationale: |
 
 ## Status
 
-**Status:** Proposed
+**Status:** Accepted
 
 ## Context and Problem Statement
 
