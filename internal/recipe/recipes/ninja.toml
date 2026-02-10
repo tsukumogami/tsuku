@@ -4,6 +4,10 @@ description = "Small build system with a focus on speed"
 homepage = "https://ninja-build.org/"
 binaries = ["bin/ninja"]
 
+[version]
+source = "homebrew"
+formula = "ninja"
+
 [[steps]]
 action = "download"
 url = "https://github.com/ninja-build/ninja/archive/v{version}.tar.gz"
