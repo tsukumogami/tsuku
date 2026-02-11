@@ -9,7 +9,7 @@ The LLM discovery stage is a stub that needs implementation to complete the disc
 1. **Reuse existing infrastructure**: LLM sessions, tool patterns, and quality metrics already exist
 2. **Deterministic decision-making from LLM outputs**: LLM extracts structured data; algorithm picks the winner
 3. **Security through defense-in-depth**: HTML stripping, URL validation, GitHub API verification, user confirmation
-4. **Web search integration**: Claude native search ($10/1K) is the simplest path
+4. **Web search integration**: Support all LLM providers (Claude, Gemini, local) with unified search
 5. **15-second timeout budget**: Per-discovery timeout to prevent runaway sessions
 6. **Quality metrics extension**: Build on existing ProbeResult/QualityFilter patterns
 
@@ -36,11 +36,19 @@ The existing pattern: ProbeResult → QualityFilter → DiscoveryResult can be e
 - Same threshold-based OR logic applies (passes if ANY threshold met)
 - Deterministic algorithm makes final decision, not LLM
 
-### 2. Claude Native Web Search is Simplest Path
+### 2. DuckDuckGo HTML Scraping Enables Unified Architecture
 
-- $10/1K searches, uses existing ANTHROPIC_API_KEY
-- No additional dependencies or API keys
-- Integrates with existing provider abstraction
+Research discovered that DDG's HTML endpoint (`html.duckduckgo.com/html/?q=`) works with browser-like headers:
+- GET requests with proper headers return real search results
+- No API key, rate limits, or usage-based pricing
+- Simple HTML structure: `result__a` for titles, `result__snippet` for descriptions
+- URLs decoded from `uddg=` parameter
+
+This enables a **unified architecture** where:
+- tsuku performs web search itself (no per-provider search implementation)
+- All LLM providers (Claude, Gemini, local) receive the same search context
+- Local LLMs (#1421) get full discovery capability without cloud dependencies
+- Optional API-based providers (Tavily, Brave) available for users who prefer them
 
 ### 3. Session Pattern Should Follow HomebrewBuilder
 
@@ -58,16 +66,16 @@ The existing pattern: ProbeResult → QualityFilter → DiscoveryResult can be e
 6. User confirmation (rich metadata display)
 7. Sandbox validation (defense in depth)
 
-## Decision (Phase 5)
+## Decision (Phase 5, Updated)
 
 **Problem:**
 The LLM discovery stage in tsuku's resolver chain is an unimplemented stub. Tools not found in the registry or ecosystem probes fall through to a non-functional "not found" error. This blocks the long-tail discovery experience where users expect `tsuku install stripe-cli` to work without knowing the source. The implementation is security-sensitive because LLM output directly influences which binary gets installed.
 
 **Decision:**
-Implement LLM discovery as a quality-metric-driven system where the LLM's role is limited to extracting structured data from web search results, while a deterministic algorithm (reusing the existing QualityFilter pattern) makes the final source selection. Use Claude's native web search tool for simplicity. Require GitHub API verification and user confirmation for all LLM-discovered sources.
+Implement LLM discovery as a quality-metric-driven system where the LLM's role is limited to extracting structured data from web search results, while a deterministic algorithm (reusing the existing QualityFilter pattern) makes the final source selection. Use tsuku-driven web search via DuckDuckGo HTML scraping as the default, with optional API-based providers (Tavily, Brave) for users who prefer them. This unified architecture supports all LLM providers including future local models (#1421). Require GitHub API verification and user confirmation for all LLM-discovered sources.
 
 **Rationale:**
-Separating LLM extraction from deterministic decision-making provides reproducibility and auditability. The LLM excels at understanding web content and extracting structured data; the algorithm excels at consistent, threshold-based decisions. Claude's native web search avoids additional API dependencies while the existing quality metrics infrastructure (ProbeResult, QualityFilter) provides a proven pattern to extend. Defense-in-depth through multiple verification layers (HTML stripping, URL validation, GitHub API checks, user confirmation) addresses the security risks of web-sourced data.
+Separating LLM extraction from deterministic decision-making provides reproducibility and auditability. The LLM excels at understanding web content and extracting structured data; the algorithm excels at consistent, threshold-based decisions. Tsuku-driven search via DuckDuckGo scraping requires no API keys and enables the same discovery flow for all LLM providers—cloud and local alike. The swappable SearchProvider interface allows users with API keys (Tavily, Brave) to use higher-quality search if they prefer, while the existing quality metrics infrastructure (ProbeResult, QualityFilter) provides a proven pattern to extend. Defense-in-depth through multiple verification layers addresses security risks.
 
 ## Phase 8 Review Feedback
 
@@ -99,7 +107,47 @@ Separating LLM extraction from deterministic decision-making provides reproducib
 
 **All critical feedback addressed in design document.**
 
+## Web Search Research (Post Phase 8)
+
+After the initial design was complete, additional research was conducted to find a unified search architecture that supports all LLM providers including local models (#1421).
+
+### Research Findings
+
+| Endpoint | Method | Result |
+|----------|--------|--------|
+| `duckduckgo.com/html/?q=` | GET | CAPTCHA ("Select all squares containing a duck") |
+| `lite.duckduckgo.com/lite/?q=` | GET | 400 error or CAPTCHA |
+| `lite.duckduckgo.com/lite/` | POST | **Works** (with browser headers) |
+| `html.duckduckgo.com/html/?q=` | GET | **Works** (with browser headers) |
+| SearXNG public instances | GET | JavaScript bot verification |
+| Google Search | GET | Aggressive CAPTCHAs, requires JS rendering |
+
+### Key Finding
+
+The `html.duckduckgo.com/html/?q=` endpoint returns real search results when accessed with browser-like headers:
+
+```bash
+curl -sL "https://html.duckduckgo.com/html/?q=ripgrep" \
+  -H "User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36..." \
+  -H "Accept: text/html,application/xhtml+xml,application/xml;q=0.9"
+```
+
+HTML structure:
+- `<a class="result__a">` - Title and link (URL in `uddg=` param)
+- `<a class="result__snippet">` - Description/snippet
+
+### Architecture Change
+
+The design was updated to use a **swappable SearchProvider interface**:
+
+| Priority | Provider | Condition | Cost |
+|----------|----------|-----------|------|
+| 1 | DDG Scraper | Always available (default) | Free |
+| 2 | Tavily | `TAVILY_API_KEY` set | 1K free/month |
+| 3 | Brave | `BRAVE_API_KEY` set | 2K free/month |
+| 4 | Native | Claude/Gemini + `--search-provider=native` | $10-14/1K |
+
 ## Current Status
 
-**Phase:** Phase 8 complete - Final review done
+**Phase:** Phase 8 complete + Web Search Research
 **Last Updated:** 2026-02-10
