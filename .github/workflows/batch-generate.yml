@@ -259,7 +259,7 @@ jobs:
 
       - name: Validate on all Linux x86_64 families
         run: |
-          RESULTS="[]"
+          RESULTS_FILE=$(mktemp)
           IMAGES=("debian:bookworm-slim" "fedora:41" "archlinux:base" "opensuse/tumbleweed" "alpine:3.21")
           NAMES=("debian" "rhel" "arch" "suse" "alpine")
           LIBCS=("glibc" "glibc" "glibc" "glibc" "musl")
@@ -285,8 +285,7 @@ jobs:
               # Check if recipe is in execution exclusions
               if echo "$EXCLUSIONS" | grep -qx "$recipe_name"; then
                 echo "SKIP: $recipe_name is in execution-exclusions.json"
-                RESULTS=$(echo "$RESULTS" | jq --arg r "$recipe_name" --arg p "$platform" \
-                  '. + [{"recipe": $r, "platform": $p, "status": "skipped"}]')
+                echo '{"recipe":"'"$recipe_name"'","platform":"'"$platform"'","status":"skipped"}' >> "$RESULTS_FILE"
                 continue
               fi
 
@@ -345,13 +344,18 @@ jobs:
                 fi
               done
 
-              RESULTS=$(echo "$RESULTS" | jq --arg r "$recipe_name" --arg p "$platform" \
-                --arg s "$STATUS" --argjson e "$EXIT_CODE" --argjson a "$ATTEMPTS" --argjson b "$BLOCKED_BY" \
-                '. + [{"recipe": $r, "platform": $p, "status": $s, "exit_code": $e, "attempts": $a, "blocked_by": $b}]')
+              echo '{"recipe":"'"$recipe_name"'","platform":"'"$platform"'","status":"'"$STATUS"'","exit_code":'"$EXIT_CODE"',"attempts":'"$ATTEMPTS"',"blocked_by":'"$BLOCKED_BY"'}' >> "$RESULTS_FILE"
             done
           done
 
-          echo "$RESULTS" > validation-results-linux-x86_64.json
+          # Convert NDJSON to JSON array
+          if [ -s "$RESULTS_FILE" ]; then
+            jq -s '.' "$RESULTS_FILE" > validation-results-linux-x86_64.json
+          else
+            echo '[]' > validation-results-linux-x86_64.json
+          fi
+          RESULTS=$(cat validation-results-linux-x86_64.json)
+          rm -f "$RESULTS_FILE"
 
           # Summary with counts
           TOTAL=$(echo "$RESULTS" | jq length)
@@ -412,7 +416,7 @@ jobs:
 
       - name: Validate on all Linux arm64 families
         run: |
-          RESULTS="[]"
+          RESULTS_FILE=$(mktemp)
           # archlinux:base excluded -- no ARM64 container image
           IMAGES=("debian:bookworm-slim" "fedora:41" "opensuse/tumbleweed" "alpine:3.21")
           NAMES=("debian" "rhel" "suse" "alpine")
@@ -439,8 +443,7 @@ jobs:
               # Check if recipe is in execution exclusions
               if echo "$EXCLUSIONS" | grep -qx "$recipe_name"; then
                 echo "SKIP: $recipe_name is in execution-exclusions.json"
-                RESULTS=$(echo "$RESULTS" | jq --arg r "$recipe_name" --arg p "$platform" \
-                  '. + [{"recipe": $r, "platform": $p, "status": "skipped"}]')
+                echo '{"recipe":"'"$recipe_name"'","platform":"'"$platform"'","status":"skipped"}' >> "$RESULTS_FILE"
                 continue
               fi
 
@@ -496,13 +499,18 @@ jobs:
                 fi
               done
 
-              RESULTS=$(echo "$RESULTS" | jq --arg r "$recipe_name" --arg p "$platform" \
-                --arg s "$STATUS" --argjson e "$EXIT_CODE" --argjson a "$ATTEMPTS" --argjson b "$BLOCKED_BY" \
-                '. + [{"recipe": $r, "platform": $p, "status": $s, "exit_code": $e, "attempts": $a, "blocked_by": $b}]')
+              echo '{"recipe":"'"$recipe_name"'","platform":"'"$platform"'","status":"'"$STATUS"'","exit_code":'"$EXIT_CODE"',"attempts":'"$ATTEMPTS"',"blocked_by":'"$BLOCKED_BY"'}' >> "$RESULTS_FILE"
             done
           done
 
-          echo "$RESULTS" > validation-results-linux-arm64.json
+          # Convert NDJSON to JSON array
+          if [ -s "$RESULTS_FILE" ]; then
+            jq -s '.' "$RESULTS_FILE" > validation-results-linux-arm64.json
+          else
+            echo '[]' > validation-results-linux-arm64.json
+          fi
+          RESULTS=$(cat validation-results-linux-arm64.json)
+          rm -f "$RESULTS_FILE"
 
           # Summary with counts
           TOTAL=$(echo "$RESULTS" | jq length)
@@ -566,7 +574,8 @@ jobs:
 
       - name: Validate on macOS arm64
         run: |
-          RESULTS="[]"
+          # Use NDJSON accumulation for O(n) performance
+          RESULTS_FILE=$(mktemp)
 
           # Load execution exclusions
           EXCLUSIONS=$(jq -r '.exclusions[].recipe' testdata/golden/execution-exclusions.json 2>/dev/null || echo "")
@@ -584,8 +593,7 @@ jobs:
             # Check if recipe is in execution exclusions
             if echo "$EXCLUSIONS" | grep -qx "$recipe_name"; then
               echo "SKIP: $recipe_name is in execution-exclusions.json"
-              RESULTS=$(echo "$RESULTS" | jq --arg r "$recipe_name" \
-                '. + [{"recipe": $r, "platform": "darwin-arm64", "status": "skipped"}]')
+              echo '{"recipe":"'"$recipe_name"'","platform":"darwin-arm64","status":"skipped"}' >> "$RESULTS_FILE"
               continue
             fi
 
@@ -621,12 +629,17 @@ jobs:
               fi
             done
 
-            RESULTS=$(echo "$RESULTS" | jq --arg r "$recipe_name" --arg p "darwin-arm64" \
-              --arg s "$STATUS" --argjson e "$EXIT_CODE" --argjson a "$ATTEMPTS" --argjson b "$BLOCKED_BY" \
-              '. + [{"recipe": $r, "platform": $p, "status": $s, "exit_code": $e, "attempts": $a, "blocked_by": $b}]')
+            echo '{"recipe":"'"$recipe_name"'","platform":"darwin-arm64","status":"'"$STATUS"'","exit_code":'"$EXIT_CODE"',"attempts":'"$ATTEMPTS"',"blocked_by":'"$BLOCKED_BY"'}' >> "$RESULTS_FILE"
           done
 
-          echo "$RESULTS" > validation-results-darwin-arm64.json
+          # Convert NDJSON to JSON array
+          if [ -s "$RESULTS_FILE" ]; then
+            jq -s '.' "$RESULTS_FILE" > validation-results-darwin-arm64.json
+          else
+            echo '[]' > validation-results-darwin-arm64.json
+          fi
+          RESULTS=$(cat validation-results-darwin-arm64.json)
+          rm -f "$RESULTS_FILE"
 
           # Summary with counts
           TOTAL=$(echo "$RESULTS" | jq length)
@@ -690,7 +703,8 @@ jobs:
 
       - name: Validate on macOS x86_64
         run: |
-          RESULTS="[]"
+          # Use NDJSON accumulation for O(n) performance
+          RESULTS_FILE=$(mktemp)
 
           # Load execution exclusions
           EXCLUSIONS=$(jq -r '.exclusions[].recipe' testdata/golden/execution-exclusions.json 2>/dev/null || echo "")
@@ -708,8 +722,7 @@ jobs:
             # Check if recipe is in execution exclusions
             if echo "$EXCLUSIONS" | grep -qx "$recipe_name"; then
               echo "SKIP: $recipe_name is in execution-exclusions.json"
-              RESULTS=$(echo "$RESULTS" | jq --arg r "$recipe_name" \
-                '. + [{"recipe": $r, "platform": "darwin-x86_64", "status": "skipped"}]')
+              echo '{"recipe":"'"$recipe_name"'","platform":"darwin-x86_64","status":"skipped"}' >> "$RESULTS_FILE"
               continue
             fi
 
@@ -745,12 +758,17 @@ jobs:
               fi
             done
 
-            RESULTS=$(echo "$RESULTS" | jq --arg r "$recipe_name" --arg p "darwin-x86_64" \
-              --arg s "$STATUS" --argjson e "$EXIT_CODE" --argjson a "$ATTEMPTS" --argjson b "$BLOCKED_BY" \
-              '. + [{"recipe": $r, "platform": $p, "status": $s, "exit_code": $e, "attempts": $a, "blocked_by": $b}]')
+            echo '{"recipe":"'"$recipe_name"'","platform":"darwin-x86_64","status":"'"$STATUS"'","exit_code":'"$EXIT_CODE"',"attempts":'"$ATTEMPTS"',"blocked_by":'"$BLOCKED_BY"'}' >> "$RESULTS_FILE"
           done
 
-          echo "$RESULTS" > validation-results-darwin-x86_64.json
+          # Convert NDJSON to JSON array
+          if [ -s "$RESULTS_FILE" ]; then
+            jq -s '.' "$RESULTS_FILE" > validation-results-darwin-x86_64.json
+          else
+            echo '[]' > validation-results-darwin-x86_64.json
+          fi
+          RESULTS=$(cat validation-results-darwin-x86_64.json)
+          rm -f "$RESULTS_FILE"
 
           # Summary with counts
           TOTAL=$(echo "$RESULTS" | jq length)
