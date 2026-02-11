@@ -1,6 +1,6 @@
 name: Recipe Validation Core
 # Reusable workflow containing all validation logic.
-# Called by wrapper workflows to avoid workflow_dispatch+inputs bug.
+# Called by wrapper workflows to avoid workflow_dispatch+inputs limitation.
 
 on:
   workflow_call:
@@ -100,13 +100,37 @@ jobs:
           path: tsuku-*
           retention-days: 1
 
-  # Validate on all Linux x86_64 families
+  # Validate on Linux x86_64 - one job per distro family (parallel)
   validate-linux-x86_64:
-    name: "Linux x86_64"
+    name: "Linux x86_64 (${{ matrix.family }})"
     needs: prepare
     if: needs.prepare.outputs.has_recipes == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - family: debian
+            image: debian:bookworm-slim
+            libc: glibc
+            install_cmd: "apt-get update && apt-get install -y --no-install-recommends curl ca-certificates"
+          - family: rhel
+            image: fedora:41
+            libc: glibc
+            install_cmd: "dnf install -y --setopt=install_weak_deps=False curl ca-certificates"
+          - family: arch
+            image: archlinux:base
+            libc: glibc
+            install_cmd: "pacman -Sy --noconfirm curl ca-certificates"
+          - family: suse
+            image: opensuse/tumbleweed
+            libc: glibc
+            install_cmd: "zypper -n install curl ca-certificates"
+          - family: alpine
+            image: alpine:3.21
+            libc: musl
+            install_cmd: "apk add --no-cache curl bash ca-certificates"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -119,93 +143,98 @@ jobs:
       - name: Make binary executable
         run: chmod +x tsuku-linux-amd64
 
-      - name: Validate on all Linux x86_64 families
+      - name: Validate recipes on ${{ matrix.family }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           RESULTS="[]"
-          IMAGES=("debian:bookworm-slim" "fedora:41-minimal" "archlinux:base" "opensuse/tumbleweed" "alpine:3.21")
-          NAMES=("debian" "rhel" "arch" "suse" "alpine")
-          LIBCS=("glibc" "glibc" "glibc" "glibc" "musl")
           RECIPES="${{ needs.prepare.outputs.recipes }}"
+          PLATFORM="linux-${{ matrix.family }}-${{ matrix.libc }}-x86_64"
 
-          for i in "${!IMAGES[@]}"; do
-            image="${IMAGES[$i]}"
-            family="${NAMES[$i]}"
-            libc="${LIBCS[$i]}"
-            platform="linux-${family}-${libc}-x86_64"
+          echo "=== Validating on $PLATFORM (${{ matrix.image }}) ==="
 
-            echo "=== Validating on $platform ($image) ==="
+          for recipe_path in $RECIPES; do
+            recipe_name=$(basename "$recipe_path" .toml)
 
-            for recipe_path in $RECIPES; do
-              recipe_name=$(basename "$recipe_path" .toml)
+            echo "--- $recipe_name on $PLATFORM ---"
+            STATUS="pass"
+            EXIT_CODE=0
+            ATTEMPTS=1
 
-              echo "--- $recipe_name on $platform ---"
-              STATUS="pass"
-              EXIT_CODE=0
-              ATTEMPTS=1
+            for attempt in 0 1 2; do
+              ATTEMPTS=$((attempt + 1))
+              docker run --rm \
+                -v "$PWD:/workspace" \
+                -w /workspace \
+                -e GITHUB_TOKEN="$GITHUB_TOKEN" \
+                "${{ matrix.image }}" \
+                sh -c "
+                  ${{ matrix.install_cmd }}
+                  timeout 300 ./tsuku-linux-amd64 install --force --recipe '$recipe_path'
+                  echo \$? > /workspace/.tsuku-exit-code
+                " 2>&1 || true
 
-              for attempt in 0 1 2; do
-                ATTEMPTS=$((attempt + 1))
-                docker run --rm \
-                  -v "$PWD:/workspace" \
-                  -w /workspace \
-                  -e GITHUB_TOKEN="$GITHUB_TOKEN" \
-                  "$image" \
-                  sh -c "
-                    case '$family' in
-                      alpine) apk add --no-cache curl bash ca-certificates ;;
-                      debian) apt-get update && apt-get install -y --no-install-recommends curl ca-certificates ;;
-                      rhel) dnf install -y --setopt=install_weak_deps=False curl ca-certificates ;;
-                      arch) pacman -Sy --noconfirm curl ca-certificates ;;
-                      suse) zypper -n install curl ca-certificates ;;
-                    esac
-                    timeout 300 ./tsuku-linux-amd64 install --force --recipe '$recipe_path'
-                    echo \$? > /workspace/.tsuku-exit-code
-                  " 2>&1 || true
+              if [ -f .tsuku-exit-code ]; then
+                EXIT_CODE=$(cat .tsuku-exit-code)
+                rm -f .tsuku-exit-code
+              else
+                EXIT_CODE=1
+              fi
 
-                if [ -f .tsuku-exit-code ]; then
-                  EXIT_CODE=$(cat .tsuku-exit-code)
-                  rm -f .tsuku-exit-code
-                else
-                  EXIT_CODE=1
-                fi
-
-                if [ "$EXIT_CODE" = "0" ]; then
-                  STATUS="pass"
-                  break
-                elif [ "$EXIT_CODE" = "5" ] && [ "$attempt" -lt 2 ]; then
-                  echo "Network error, retrying (attempt $((attempt+2)))..."
-                  sleep $((2 ** (attempt + 1)))
-                  continue
-                else
-                  STATUS="fail"
-                  break
-                fi
-              done
-
-              RESULTS=$(echo "$RESULTS" | jq --arg r "$recipe_name" --arg p "$platform" \
-                --arg s "$STATUS" --argjson e "$EXIT_CODE" --argjson a "$ATTEMPTS" \
-                '. + [{"recipe": $r, "platform": $p, "status": $s, "exit_code": $e, "attempts": $a}]')
+              if [ "$EXIT_CODE" = "0" ]; then
+                STATUS="pass"
+                break
+              elif [ "$EXIT_CODE" = "5" ] && [ "$attempt" -lt 2 ]; then
+                echo "Network error, retrying (attempt $((attempt+2)))..."
+                sleep $((2 ** (attempt + 1)))
+                continue
+              else
+                STATUS="fail"
+                break
+              fi
             done
+
+            RESULTS=$(echo "$RESULTS" | jq --arg r "$recipe_name" --arg p "$PLATFORM" \
+              --arg s "$STATUS" --argjson e "$EXIT_CODE" --argjson a "$ATTEMPTS" \
+              '. + [{"recipe": $r, "platform": $p, "status": $s, "exit_code": $e, "attempts": $a}]')
           done
 
-          echo "$RESULTS" > validation-results-linux-x86_64.json
+          echo "$RESULTS" > validation-results-linux-${{ matrix.family }}-x86_64.json
 
       - name: Upload results
         uses: actions/upload-artifact@v4
         with:
-          name: validation-results-linux-x86_64
-          path: validation-results-linux-x86_64.json
+          name: validation-results-linux-${{ matrix.family }}-x86_64
+          path: validation-results-linux-${{ matrix.family }}-x86_64.json
           retention-days: 7
 
-  # Validate on all Linux arm64 families
+  # Validate on Linux arm64 - one job per distro family (parallel)
   validate-linux-arm64:
-    name: "Linux arm64"
+    name: "Linux arm64 (${{ matrix.family }})"
     needs: prepare
     if: needs.prepare.outputs.has_recipes == 'true'
     runs-on: ubuntu-24.04-arm
-    timeout-minutes: 120
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - family: debian
+            image: debian:bookworm-slim
+            libc: glibc
+            install_cmd: "apt-get update && apt-get install -y --no-install-recommends curl ca-certificates"
+          - family: rhel
+            image: fedora:41
+            libc: glibc
+            install_cmd: "dnf install -y --setopt=install_weak_deps=False curl ca-certificates"
+          - family: suse
+            image: opensuse/tumbleweed
+            libc: glibc
+            install_cmd: "zypper -n install curl ca-certificates"
+          - family: alpine
+            image: alpine:3.21
+            libc: musl
+            install_cmd: "apk add --no-cache curl bash ca-certificates"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -218,83 +247,69 @@ jobs:
       - name: Make binary executable
         run: chmod +x tsuku-linux-arm64
 
-      - name: Validate on all Linux arm64 families
+      - name: Validate recipes on ${{ matrix.family }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           RESULTS="[]"
-          IMAGES=("debian:bookworm-slim" "fedora:41-minimal" "opensuse/tumbleweed" "alpine:3.21")
-          NAMES=("debian" "rhel" "suse" "alpine")
-          LIBCS=("glibc" "glibc" "glibc" "musl")
           RECIPES="${{ needs.prepare.outputs.recipes }}"
+          PLATFORM="linux-${{ matrix.family }}-${{ matrix.libc }}-arm64"
 
-          for i in "${!IMAGES[@]}"; do
-            image="${IMAGES[$i]}"
-            family="${NAMES[$i]}"
-            libc="${LIBCS[$i]}"
-            platform="linux-${family}-${libc}-arm64"
+          echo "=== Validating on $PLATFORM (${{ matrix.image }}) ==="
 
-            echo "=== Validating on $platform ($image) ==="
+          for recipe_path in $RECIPES; do
+            recipe_name=$(basename "$recipe_path" .toml)
 
-            for recipe_path in $RECIPES; do
-              recipe_name=$(basename "$recipe_path" .toml)
+            echo "--- $recipe_name on $PLATFORM ---"
+            STATUS="pass"
+            EXIT_CODE=0
+            ATTEMPTS=1
 
-              echo "--- $recipe_name on $platform ---"
-              STATUS="pass"
-              EXIT_CODE=0
-              ATTEMPTS=1
+            for attempt in 0 1 2; do
+              ATTEMPTS=$((attempt + 1))
+              docker run --rm \
+                -v "$PWD:/workspace" \
+                -w /workspace \
+                -e GITHUB_TOKEN="$GITHUB_TOKEN" \
+                "${{ matrix.image }}" \
+                sh -c "
+                  ${{ matrix.install_cmd }}
+                  timeout 300 ./tsuku-linux-arm64 install --force --recipe '$recipe_path'
+                  echo \$? > /workspace/.tsuku-exit-code
+                " 2>&1 || true
 
-              for attempt in 0 1 2; do
-                ATTEMPTS=$((attempt + 1))
-                docker run --rm \
-                  -v "$PWD:/workspace" \
-                  -w /workspace \
-                  -e GITHUB_TOKEN="$GITHUB_TOKEN" \
-                  "$image" \
-                  sh -c "
-                    case '$family' in
-                      alpine) apk add --no-cache curl bash ca-certificates ;;
-                      debian) apt-get update && apt-get install -y --no-install-recommends curl ca-certificates ;;
-                      rhel) dnf install -y --setopt=install_weak_deps=False curl ca-certificates ;;
-                      suse) zypper -n install curl ca-certificates ;;
-                    esac
-                    timeout 300 ./tsuku-linux-arm64 install --force --recipe '$recipe_path'
-                    echo \$? > /workspace/.tsuku-exit-code
-                  " 2>&1 || true
+              if [ -f .tsuku-exit-code ]; then
+                EXIT_CODE=$(cat .tsuku-exit-code)
+                rm -f .tsuku-exit-code
+              else
+                EXIT_CODE=1
+              fi
 
-                if [ -f .tsuku-exit-code ]; then
-                  EXIT_CODE=$(cat .tsuku-exit-code)
-                  rm -f .tsuku-exit-code
-                else
-                  EXIT_CODE=1
-                fi
-
-                if [ "$EXIT_CODE" = "0" ]; then
-                  STATUS="pass"
-                  break
-                elif [ "$EXIT_CODE" = "5" ] && [ "$attempt" -lt 2 ]; then
-                  echo "Network error, retrying (attempt $((attempt+2)))..."
-                  sleep $((2 ** (attempt + 1)))
-                  continue
-                else
-                  STATUS="fail"
-                  break
-                fi
-              done
-
-              RESULTS=$(echo "$RESULTS" | jq --arg r "$recipe_name" --arg p "$platform" \
-                --arg s "$STATUS" --argjson e "$EXIT_CODE" --argjson a "$ATTEMPTS" \
-                '. + [{"recipe": $r, "platform": $p, "status": $s, "exit_code": $e, "attempts": $a}]')
+              if [ "$EXIT_CODE" = "0" ]; then
+                STATUS="pass"
+                break
+              elif [ "$EXIT_CODE" = "5" ] && [ "$attempt" -lt 2 ]; then
+                echo "Network error, retrying (attempt $((attempt+2)))..."
+                sleep $((2 ** (attempt + 1)))
+                continue
+              else
+                STATUS="fail"
+                break
+              fi
             done
+
+            RESULTS=$(echo "$RESULTS" | jq --arg r "$recipe_name" --arg p "$PLATFORM" \
+              --arg s "$STATUS" --argjson e "$EXIT_CODE" --argjson a "$ATTEMPTS" \
+              '. + [{"recipe": $r, "platform": $p, "status": $s, "exit_code": $e, "attempts": $a}]')
           done
 
-          echo "$RESULTS" > validation-results-linux-arm64.json
+          echo "$RESULTS" > validation-results-linux-${{ matrix.family }}-arm64.json
 
       - name: Upload results
         uses: actions/upload-artifact@v4
         with:
-          name: validation-results-linux-arm64
-          path: validation-results-linux-arm64.json
+          name: validation-results-linux-${{ matrix.family }}-arm64
+          path: validation-results-linux-${{ matrix.family }}-arm64.json
           retention-days: 7
 
   # Validate on macOS arm64
@@ -303,7 +318,7 @@ jobs:
     needs: prepare
     if: needs.prepare.outputs.has_recipes == 'true'
     runs-on: macos-14
-    timeout-minutes: 120
+    timeout-minutes: 60
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -372,7 +387,7 @@ jobs:
     needs: prepare
     if: needs.prepare.outputs.has_recipes == 'true'
     runs-on: macos-15-intel
-    timeout-minutes: 120
+    timeout-minutes: 60
     steps:
       - name: Checkout
         uses: actions/checkout@v4
