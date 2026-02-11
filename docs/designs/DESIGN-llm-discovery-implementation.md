@@ -114,7 +114,7 @@ These metrics are tracked via the existing telemetry infrastructure. Initial thr
 
 The LLM needs web search capability to find tool sources. The question is how to provide it.
 
-#### Chosen: Claude Native Web Search Tool
+#### Chosen: Claude Native Web Search Tool (Cloud Phase)
 
 Claude's API includes a built-in web search tool that:
 - Costs $10 per 1,000 searches (plus standard token costs)
@@ -124,11 +124,29 @@ Claude's API includes a built-in web search tool that:
 
 The implementation adds web search to the tool list for the LLM session. Claude decides when to search, generates queries, and returns results with citations.
 
+#### Local LLM Compatibility (#1421)
+
+This design focuses on cloud-based LLM discovery because local models (planned in #1421) cannot perform web searches. The architectural approach handles this gracefully:
+
+1. **Provider capability detection**: The `LLMDiscoverySession` checks whether the provider supports web search before attempting discovery. Cloud providers (Claude, Gemini) have this capability; local providers don't.
+
+2. **Graceful fallback**: When `provider.SupportsWebSearch()` returns false (local LLM case), LLM discovery is skipped entirely. The resolver chain returns `nil, nil`, which results in "not found" with a helpful message explaining that LLM discovery requires a cloud API key.
+
+3. **Future local discovery path**: Local LLMs can still participate in discovery if we add a "fetch-then-analyze" pattern:
+   - tsuku performs the web search itself (via a search API like Tavily)
+   - Passes search results as context to the local LLM
+   - Local LLM extracts structured data from the provided content
+   - This path would be designed in the #1421 work or a follow-up
+
+4. **No breaking changes**: Cloud discovery works today; local discovery can be added later without changing the core interface. The `Discover()` method already returns `nil, nil` when discovery isn't possible.
+
+This design is explicitly cloud-first for Phase 1. The local LLM runtime (#1421) will need its own discovery strategy that may involve tsuku-driven search or other approaches.
+
 #### Alternatives Considered
 
 **Gemini with Google Search Grounding**: Similar native capability at $14/1K searches. Rejected as initial approach because tsuku already uses Claude for recipe generation, and switching providers mid-discovery adds complexity. Can be added as fallback later.
 
-**Tavily or SerpAPI**: Third-party search APIs purpose-built for LLMs. Rejected because they require additional API keys, create new dependencies, and add configuration complexity. Claude native is simpler and competitively priced.
+**Tavily or SerpAPI**: Third-party search APIs purpose-built for LLMs. Rejected for cloud phase because Claude native is simpler. However, this becomes the likely path for local LLM discovery (tsuku does the search, local LLM analyzes results).
 
 **Implement custom search scraping**: Build direct integration with search engines. Rejected as fragile (anti-bot measures), legally questionable (ToS violations), and high maintenance.
 
@@ -279,6 +297,7 @@ type LLMDiscoverySession struct {
 - **Rate limiting under load**: $10/1K searches is affordable, but Claude's rate limits during peak usage are unclear.
 - **Non-GitHub distribution patterns**: Some tools (like Stripe CLI) have multiple distribution channels. The algorithm may need tuning for these cases.
 - **False positive rate**: Threshold values are estimates. Real usage will inform tuning.
+- **Local LLM discovery path**: When #1421 (local LLM runtime) ships, users without API keys will need a discovery solution. The "fetch-then-analyze" pattern (tsuku does search, local LLM extracts) is the likely path but needs design work.
 
 ## Decision Outcome
 
@@ -310,6 +329,7 @@ Using Claude's native web search avoids new dependencies. The structured output 
 
 ### Trade-offs Accepted
 
+- **Cloud-only initially**: This design requires a cloud API key for LLM discovery. Local LLM users (#1421) get registry + ecosystem stages but not LLM discovery. A future "fetch-then-analyze" pattern can extend discovery to local LLMs.
 - **Claude-only initially**: Gemini web search is similar but adds provider-switching complexity. Can be added as fallback later if needed.
 - **GitHub verification only**: Non-GitHub sources (npm, PyPI) rely on ecosystem probe fallback rather than separate verification. This is acceptable because the ecosystem probe would have found genuine ecosystem packages.
 - **Conservative thresholds**: Stars >= 50 may exclude legitimate but obscure tools. Users can override with `--from`.
