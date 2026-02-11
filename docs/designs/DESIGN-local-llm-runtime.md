@@ -57,6 +57,39 @@ The opportunity: ship a local LLM runtime that works out of the box, with cloud 
 
 **Download Considerations**: First-time use requires downloading the addon (~50MB) and a model (500MB-2.5GB depending on hardware). tsuku prompts for confirmation before the initial download. Users in bandwidth-constrained environments can pre-download via `tsuku llm download` or configure cloud providers instead.
 
+### Configuration Options
+
+Users can control local LLM behavior via `$TSUKU_HOME/config.toml`:
+
+```toml
+[llm]
+# Disable local LLM entirely - addon won't be downloaded, LocalProvider won't be registered
+# Users who only want cloud providers or no LLM can set this to avoid the download prompt
+local_enabled = true  # default: true
+
+# Preemptively start the addon server at the beginning of `tsuku create`
+# When true: server starts early, model loads while tsuku fetches metadata (hides latency)
+# When false: server starts only when first inference is needed (saves resources if LLM not used)
+local_preemptive = true  # default: true
+
+# Override automatic model selection (optional)
+local_model = "qwen2.5-1.5b-instruct-q4"
+
+# Override automatic backend selection (optional)
+local_backend = "cuda"  # or "metal", "vulkan", "cpu"
+```
+
+**Behavior when `local_enabled = false`**:
+- `LocalProvider` is not registered in the factory
+- Addon binary is never downloaded
+- No download prompts appear
+- Users must configure cloud API keys or LLM features are unavailable
+
+**Behavior when `local_preemptive = false`**:
+- Addon server starts lazily on first inference call
+- Model load latency is visible to user (2-5 seconds on GPU)
+- Useful for users who rarely use LLM features and want to avoid resource usage
+
 ## Decision Drivers
 
 - **Self-contained default**: LLM features should work without accounts or API keys
@@ -225,27 +258,55 @@ tsuku (pure Go)                          tsuku-llm (Rust + llama.cpp)
 
 The API contract is defined in protobuf (`llm.proto`), with generated Go client stubs and Rust server stubs (via `tonic`). The `LocalProvider` is transparent to the rest of tsuku -- the Provider interface is unchanged.
 
+### Responsibility Split
+
+**tsuku CLI (Go)** handles:
+- Reading `local_enabled` and `local_preemptive` config options
+- Downloading the addon binary (not models)
+- Starting/stopping the addon server process
+- gRPC client communication
+- User prompts ("Download addon? Y/n")
+- The `tsuku llm download` command for pre-downloading the addon
+
+**tsuku-llm addon (Rust)** handles:
+- Hardware detection (GPU type, VRAM, system RAM, CPU features)
+- Model selection based on detected hardware
+- Model download, caching, and checksum verification
+- Model loading and inference via llama.cpp
+- Idle timeout and server lifecycle
+
+This split keeps tsuku's Go codebase simple (just a gRPC client) while the addon owns all inference complexity. Hardware detection lives in the addon because llama.cpp has the best understanding of what hardware it can use. Model management lives in the addon because model selection depends on hardware detection results and model formats are specific to llama.cpp.
+
 ### Components in tsuku (pure Go)
 
 **LocalProvider** (`internal/llm/local.go`):
 
-Implements the `Provider` interface as a gRPC client to the addon server:
+Implements the `Provider` interface as a gRPC client to the addon server. Only registered in the factory when `local_enabled = true` in config:
 
 ```go
 type LocalProvider struct {
     addonManager *AddonManager  // downloads/manages tsuku-llm binary
+    lifecycle    *ServerLifecycle
     conn         *grpc.ClientConn
     client       llmpb.InferenceServiceClient  // generated from llm.proto
 }
 
+// NewLocalProvider returns nil if local_enabled = false in config
+func NewLocalProvider(cfg *config.Config) *LocalProvider {
+    if !cfg.LLM.LocalEnabled {
+        return nil  // LocalProvider won't be registered in factory
+    }
+    return &LocalProvider{...}
+}
+
 func (p *LocalProvider) Complete(ctx context.Context, req *CompletionRequest) (*CompletionResponse, error) {
-    // Ensure addon is downloaded
+    // Ensure addon is downloaded (prompts user on first use)
     if err := p.addonManager.EnsureAddon(); err != nil {
         return nil, err
     }
 
     // Ensure server is running (start if needed)
-    if err := p.ensureServer(); err != nil {
+    if err := p.lifecycle.EnsureRunning(); err != nil {
         return nil, err
     }
 
@@ -270,7 +331,7 @@ Handles starting, detecting, and health-checking the addon server:
 - Health check: gRPC health checking protocol before sending inference requests
 - If no server found: starts `tsuku-llm serve` as a background process
 - If server unresponsive: cleans up stale socket file, starts fresh
-- Preemptive start: can be told to start the server early
+- **Preemptive start**: When `local_preemptive = true` (default), `tsuku create` calls `ServerLifecycle.StartPreemptively()` early in execution. When false, server only starts on first `Complete()` call.
 
 ### Components in tsuku-llm (Rust + llama.cpp)
 
@@ -335,33 +396,48 @@ type Provider interface {
 // Factory priority:
 // 1. Claude (if ANTHROPIC_API_KEY set)
 // 2. Gemini (if GOOGLE_API_KEY set)
-// 3. Local (always available, starts addon on demand)
+// 3. Local (if local_enabled = true in config, starts addon on demand)
 ```
 
 The circuit breaker handles failover. If the addon fails, the error propagates like any other provider failure.
 
 ### Data Flow
 
-**First-time user (no API keys):**
+**First-time user (no API keys, default config):**
 
 1. User runs `tsuku create ripgrep`
-2. Factory finds no cloud API keys, falls through to LocalProvider
-3. LocalProvider checks for addon, triggers download (~50MB)
-4. LocalProvider starts `tsuku-llm serve` in background
-5. While model loads, tsuku fetches GitHub metadata
+2. Factory finds no cloud API keys, falls through to LocalProvider (registered because `local_enabled = true`)
+3. LocalProvider checks for addon, prompts user, triggers download (~50MB)
+4. Because `local_preemptive = true`, server starts early in `tsuku create` pipeline
+5. While model loads, tsuku fetches GitHub metadata in parallel
 6. Addon detects hardware, selects Qwen 2.5 3B Q4, downloads model (~2.5GB)
 7. Model ready, tsuku sends inference requests over localhost gRPC
 8. Recipe generated (3-5 turns), validated in sandbox, written to local recipes
 9. Server stays alive, idle timeout starts (5 minutes)
 
-**Returning user (addon and model cached):**
+**Returning user (addon and model cached, preemptive enabled):**
 
 1. User runs `tsuku create jq`
-2. LocalProvider starts `tsuku-llm serve` (model loads in 2-5 seconds)
-3. Meanwhile, tsuku fetches metadata
+2. Because `local_preemptive = true`, server starts early (model loads in 2-5 seconds)
+3. Meanwhile, tsuku fetches metadata in parallel
 4. Inference requests hit warm server
 5. Recipe generated
 6. Server stays alive for 5 more minutes
+
+**User with `local_preemptive = false`:**
+
+1. User runs `tsuku create jq`
+2. tsuku fetches metadata, probes registries
+3. When inference is first needed, server starts (user sees 2-5 second pause)
+4. Inference proceeds normally
+5. This mode is useful for users who rarely use LLM features
+
+**User with `local_enabled = false`:**
+
+1. User has set `local_enabled = false` in config (wants cloud-only or no LLM)
+2. LocalProvider is not registered in factory
+3. Addon is never downloaded, no prompts appear
+4. If no cloud API keys configured, LLM features return "no provider available" error
 
 **Batch pipeline (CI):**
 
