@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Accepted
 problem: |
   The LLM discovery stage in tsuku's resolver chain is an unimplemented stub. Tools not
   found in the registry or ecosystem probes fall through to a non-functional "not found"
@@ -26,7 +26,7 @@ rationale: |
 
 ## Status
 
-Proposed
+Accepted
 
 ## Upstream Design Reference
 
