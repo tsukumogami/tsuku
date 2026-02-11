@@ -520,17 +520,15 @@ for VERSION in $VERSIONS; do
         # The --pin-from flag extracts constraints from the golden file (pip versions,
         # go.sum, cargo.lock, etc.) to produce deterministic output.
         # Note: missing platforms already caught by pre-check above
-        # Strip format_version and recipe_hash (recursively) for forward compatibility during v3->v4 format migration
         if ! "$TSUKU" eval "${eval_args[@]}" 2>/dev/null | \
-            jq 'del(.generated_at, .recipe_source, .format_version) | walk(if type == "object" then del(.recipe_hash) else . end)' > "$ACTUAL"; then
+            jq 'del(.generated_at, .recipe_source)' > "$ACTUAL"; then
             echo "Failed to generate plan for $RECIPE@$VERSION ($filename)" >&2
             continue
         fi
 
         # Fast hash comparison
-        # Strip format_version and recipe_hash (recursively) from golden files for forward compatibility during v3->v4 migration
         GOLDEN_NORMALIZED="$TEMP_DIR/golden-$filename"
-        jq 'del(.format_version) | walk(if type == "object" then del(.recipe_hash) else . end)' "$GOLDEN" > "$GOLDEN_NORMALIZED"
+        jq 'del(.generated_at, .recipe_source)' "$GOLDEN" > "$GOLDEN_NORMALIZED"
         GOLDEN_HASH=$(sha256sum "$GOLDEN_NORMALIZED" | cut -d' ' -f1)
         ACTUAL_HASH=$(sha256sum "$ACTUAL" | cut -d' ' -f1)
 

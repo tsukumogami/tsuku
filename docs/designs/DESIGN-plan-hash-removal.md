@@ -340,7 +340,7 @@ Before code changes, update validation to be forward-compatible:
 | ~~[#1586](https://github.com/tsukumogami/tsuku/issues/1586)~~ | feat(executor): implement content-based plan hashing | ~~[#1585](https://github.com/tsukumogami/tsuku/issues/1585)~~ | testable |
 | ~~[#1587](https://github.com/tsukumogami/tsuku/issues/1587)~~ | test(executor): update tests for content-based caching | ~~[#1586](https://github.com/tsukumogami/tsuku/issues/1586)~~ | testable |
 | ~~[#1588](https://github.com/tsukumogami/tsuku/issues/1588)~~ | chore(golden): regenerate local golden files for v4 format | ~~[#1587](https://github.com/tsukumogami/tsuku/issues/1587)~~ | simple |
-| [#1589](https://github.com/tsukumogami/tsuku/issues/1589) | chore(golden): regenerate R2 golden files and cleanup | ~~[#1588](https://github.com/tsukumogami/tsuku/issues/1588)~~ | simple |
+| ~~[#1589](https://github.com/tsukumogami/tsuku/issues/1589)~~ | chore(golden): regenerate R2 golden files and cleanup | ~~[#1588](https://github.com/tsukumogami/tsuku/issues/1588)~~ | simple |
 
 **Milestone:** [Plan Hash Removal](https://github.com/tsukumogami/tsuku/milestone/75)
 
@@ -364,8 +364,7 @@ graph LR
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1584,I1585,I1586,I1587,I1588 done
-    class I1589 ready
+    class I1584,I1585,I1586,I1587,I1588,I1589 done
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
