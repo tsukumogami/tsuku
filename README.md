@@ -60,6 +60,18 @@ tsuku update kubectl
 tsuku remove kubectl
 ```
 
+### Automatic Tool Discovery
+
+tsuku automatically discovers where to find tools. Just run:
+
+```bash
+tsuku install <tool>
+```
+
+When a recipe doesn't exist, tsuku queries the curated registry first, then parallel-probes package registries (npm, PyPI, crates.io, RubyGems, Go, CPAN, Homebrew Cask) within 3 seconds. If multiple registries have the tool, tsuku picks the highest-priority match.
+
+Use `--from` to override automatic discovery with an explicit source (see below).
+
 ### Create recipes from package ecosystems
 
 Generate recipes automatically from package registry metadata:
