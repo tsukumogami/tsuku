@@ -1,0 +1,42 @@
+[package]
+name = "tsuku-llm"
+version = "0.1.0"
+edition = "2021"
+description = "Local LLM inference addon for tsuku"
+license = "MIT"
+repository = "https://github.com/tsukumogami/tsuku"
+
+[dependencies]
+# gRPC server
+tonic = "0.12"
+prost = "0.13"
+
+# Async runtime
+tokio = { version = "1", features = ["full"] }
+tokio-stream = "0.1"
+
+# Unix domain socket support
+tower = "0.5"
+hyper-util = "0.1"
+
+# llama.cpp bindings (placeholder - will configure later)
+# llama-cpp-2 = "0.1"
+
+# Error handling
+anyhow = "1"
+thiserror = "1"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Serialization for tool arguments
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[build-dependencies]
+tonic-build = "0.12"
+
+[[bin]]
+name = "tsuku-llm"
+path = "src/main.rs"
