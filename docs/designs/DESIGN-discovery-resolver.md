@@ -45,7 +45,7 @@ Planned
 | ~~[#1338: Discovery fallback in install](https://github.com/tsukumogami/tsuku/issues/1338)~~ | ~~[#1337](https://github.com/tsukumogami/tsuku/issues/1337)~~ | ~~testable~~ |
 | _Wire the discovery resolver chain into `tsuku install` so unknown tools trigger automatic source discovery and recipe generation. Shows which resolver stage matched and provides actionable errors on failure._ | | |
 | ~~[#1317: Ecosystem probe](https://github.com/tsukumogami/tsuku/issues/1317)~~ | ~~[#1338](https://github.com/tsukumogami/tsuku/issues/1338)~~ | ~~testable~~ |
-| _Implement the `EcosystemProber` interface and `EcosystemProbe` resolver that queries all seven ecosystem builders in parallel with a 3-second timeout. Includes threshold filtering (age >90 days, downloads >1000/month) and the `ProbeResult` type._ | | |
+| _Implement the `EcosystemProber` interface and `EcosystemProbe` resolver that queries all seven ecosystem builders in parallel with a 3-second timeout. Includes the `ProbeResult` type with source, downloads, version count, and repository info._ | | |
 | [#1318: LLM discovery](https://github.com/tsukumogami/tsuku/issues/1318) | [#1338](https://github.com/tsukumogami/tsuku/issues/1338) | critical |
 | _Implement the `LLMDiscovery` resolver: web search via LLM, structured JSON extraction, GitHub API verification (existence, archived status, ownership), rich confirmation prompt with metadata, and prompt injection defenses (HTML stripping, URL validation)._ | | |
 | ~~[#1319: Telemetry events](https://github.com/tsukumogami/tsuku/issues/1319)~~ | ~~[#1338](https://github.com/tsukumogami/tsuku/issues/1338)~~ | ~~simple~~ |
@@ -54,7 +54,7 @@ Planned
 | _Implement edit-distance checking against registry entries, popularity ranking by download count, the 10x auto-select rule, interactive prompting for close matches, and non-interactive error handling. Consumes `ProbeResult` metadata from #1317._ | | |
 | [#1322: Error UX and verbose mode](https://github.com/tsukumogami/tsuku/issues/1322) | [#1338](https://github.com/tsukumogami/tsuku/issues/1338), [#1317](https://github.com/tsukumogami/tsuku/issues/1317), [#1318](https://github.com/tsukumogami/tsuku/issues/1318) | testable |
 | _Implement all error and fallback messages from the UX specification table, add `--verbose` output showing resolver chain progress (registry lookup, ecosystem probe, LLM discovery), and wire debug/info/error log levels through a consistent logger._ | | |
-| [M65: Ecosystem Probe](https://github.com/tsukumogami/tsuku/milestone/65) | [#1338](https://github.com/tsukumogami/tsuku/issues/1338) | |
+| ~~[M65: Ecosystem Probe](https://github.com/tsukumogami/tsuku/milestone/65)~~ | ~~[#1338](https://github.com/tsukumogami/tsuku/issues/1338)~~ | |
 | _Add Probe() methods to all seven ecosystem builders, wire them into a parallel resolver with 3-second timeout, integrate into the discovery chain, and add integration tests. See [DESIGN-ecosystem-probe.md](DESIGN-ecosystem-probe.md)._ | | |
 | ~~[M62: Discovery Registry Bootstrap](https://github.com/tsukumogami/tsuku/milestone/62)~~ | ~~None~~ | |
 | _Extend registry schema with optional metadata, build the `seed-discovery` CLI tool, populate ~500 entries from the priority queue and curated seed lists, and add CI freshness checks. See [DESIGN-discovery-registry-bootstrap.md](current/DESIGN-discovery-registry-bootstrap.md)._ | | |
@@ -109,11 +109,11 @@ graph TD
     class I1319 done
     class I1317 done
     class I1318 needsDesign
-    class M65 ready
+    class M65 done
     class M62 done
     class I1315 done
-    class I1321 blocked
-    class I1322 blocked
+    class I1321 ready
+    class I1322 ready
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
