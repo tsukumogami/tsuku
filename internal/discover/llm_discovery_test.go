@@ -149,7 +149,7 @@ func TestDiscoveryToolDefs(t *testing.T) {
 
 func TestVerifyGitHubRepo(t *testing.T) {
 	if os.Getenv("GITHUB_TOKEN") == "" && os.Getenv("CI") == "" {
-		// Rate limits apply without token, but basic test should work
+		t.Log("Running without GITHUB_TOKEN - rate limits may apply")
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -267,12 +267,9 @@ func testHandleExtractSource(args map[string]any) (*DiscoveryResult, error) {
 		return nil, errorf("extract_source: builder and source are required")
 	}
 
-	var evidence []string
-	for _, e := range evidenceRaw {
-		if s, ok := e.(string); ok {
-			evidence = append(evidence, s)
-		}
-	}
+	// Evidence is parsed but not currently used in DiscoveryResult.
+	// Keeping the parse logic for future use when evidence tracking is added.
+	_ = evidenceRaw
 
 	if builder == "github" {
 		if !isValidGitHubSource(source) {
