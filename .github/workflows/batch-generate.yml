@@ -245,6 +245,7 @@ jobs:
         id: recipes
         run: |
           # Find recipes that were generated (in artifacts but not in checkout)
+          shopt -s nullglob  # Empty glob expands to empty list, not literal pattern
           RECIPE_LIST=""
           for f in artifacts/recipes/*/*.toml; do
             basename_path="${f#artifacts/}"
@@ -402,6 +403,7 @@ jobs:
       - name: Collect new recipe list
         id: recipes
         run: |
+          shopt -s nullglob  # Empty glob expands to empty list, not literal pattern
           RECIPE_LIST=""
           for f in artifacts/recipes/*/*.toml; do
             basename_path="${f#artifacts/}"
@@ -560,6 +562,7 @@ jobs:
       - name: Collect new recipe list
         id: recipes
         run: |
+          shopt -s nullglob  # Empty glob expands to empty list, not literal pattern
           RECIPE_LIST=""
           for f in artifacts/recipes/*/*.toml; do
             basename_path="${f#artifacts/}"
@@ -689,6 +692,7 @@ jobs:
       - name: Collect new recipe list
         id: recipes
         run: |
+          shopt -s nullglob  # Empty glob expands to empty list, not literal pattern
           RECIPE_LIST=""
           for f in artifacts/recipes/*/*.toml; do
             basename_path="${f#artifacts/}"
