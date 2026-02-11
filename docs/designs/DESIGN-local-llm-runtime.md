@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Accepted
 problem: |
   tsuku's recipe generation requires cloud API keys (Anthropic or Google), breaking the self-contained promise. Users must create accounts, set up billing, and configure environment variables before core LLM features work. Small open-source models (1.5-3B parameters) now handle structured extraction well enough for tsuku's use cases.
 decision: |
@@ -12,7 +12,7 @@ rationale: |
 
 ## Status
 
-Proposed
+Accepted
 
 **Source Issue**: [#1421 - feat: local LLM runtime via Rust addon](https://github.com/tsukumogami/tsuku/issues/1421)
 
