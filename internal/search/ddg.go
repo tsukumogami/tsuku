@@ -108,7 +108,7 @@ func (p *DDGProvider) Search(ctx context.Context, query string) (*Response, erro
 			}
 		}
 
-		resp, body, err := p.doSearch(ctx, query)
+		body, statusCode, err := p.doSearch(ctx, query)
 		if err != nil {
 			lastErr = err
 			// Network errors and context cancellation are not retryable
@@ -120,14 +120,14 @@ func (p *DDGProvider) Search(ctx context.Context, query string) (*Response, erro
 		}
 
 		// Check for rate limiting (202 Accepted)
-		if resp.StatusCode == http.StatusAccepted {
+		if statusCode == http.StatusAccepted {
 			lastErr = fmt.Errorf("DDG returned status 202 (rate limited)")
 			continue
 		}
 
 		// Non-retryable status codes
-		if resp.StatusCode != http.StatusOK {
-			return nil, fmt.Errorf("DDG returned status %d", resp.StatusCode)
+		if statusCode != http.StatusOK {
+			return nil, fmt.Errorf("DDG returned status %d", statusCode)
 		}
 
 		// Success - parse results
@@ -142,12 +142,13 @@ func (p *DDGProvider) Search(ctx context.Context, query string) (*Response, erro
 }
 
 // doSearch performs a single search request.
-func (p *DDGProvider) doSearch(ctx context.Context, query string) (*http.Response, string, error) {
+// Returns the response body, status code, and any error.
+func (p *DDGProvider) doSearch(ctx context.Context, query string) (string, int, error) {
 	url := "https://html.duckduckgo.com/html/?q=" + strings.ReplaceAll(query, " ", "+")
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, nil)
 	if err != nil {
-		return nil, "", fmt.Errorf("create request: %w", err)
+		return "", 0, fmt.Errorf("create request: %w", err)
 	}
 
 	// Browser-like headers to avoid bot detection
@@ -157,16 +158,16 @@ func (p *DDGProvider) doSearch(ctx context.Context, query string) (*http.Respons
 
 	resp, err := p.client.Do(req)
 	if err != nil {
-		return nil, "", fmt.Errorf("request failed: %w", err)
+		return "", 0, fmt.Errorf("request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, "", fmt.Errorf("read response: %w", err)
+		return "", 0, fmt.Errorf("read response: %w", err)
 	}
 
-	return resp, string(body), nil
+	return string(body), resp.StatusCode, nil
 }
 
 // parseHTMLResults extracts search results from DDG HTML response.

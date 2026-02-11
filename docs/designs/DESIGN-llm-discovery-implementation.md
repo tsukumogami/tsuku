@@ -34,7 +34,7 @@ Planned
 
 | Issue | Dependencies | Tier |
 |-------|--------------|------|
-| [#1610: feat(search): add DDG retry logic and recorded response tests](https://github.com/tsukumogami/tsuku/issues/1610) | None | testable |
+| ~~[#1610: feat(search): add DDG retry logic and recorded response tests](https://github.com/tsukumogami/tsuku/issues/1610)~~ | None | testable |
 | _Adds exponential backoff retry logic for DDG 202 responses and establishes the test fixture pattern with recorded HTML responses for reliable offline testing._ | | |
 | [#1611: feat(discover): add HTML stripping and URL validation](https://github.com/tsukumogami/tsuku/issues/1611) | None | critical |
 | _Implements security layers against prompt injection: strips script/style tags and HTML comments from search results, validates GitHub URLs against an allowlist pattern, and removes zero-width Unicode characters._ | | |

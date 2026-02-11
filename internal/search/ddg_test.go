@@ -123,7 +123,7 @@ func TestDDGProvider_Search_Success(t *testing.T) {
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write(content)
+		_, _ = w.Write(content)
 	}))
 	defer server.Close()
 
@@ -159,12 +159,12 @@ func TestDDGProvider_Search_RetryOn202(t *testing.T) {
 		if count <= 2 {
 			// First two requests return 202 (rate limited)
 			w.WriteHeader(http.StatusAccepted)
-			w.Write([]byte("Rate limited"))
+			_, _ = w.Write([]byte("Rate limited"))
 			return
 		}
 		// Third request succeeds
 		w.WriteHeader(http.StatusOK)
-		w.Write(content)
+		_, _ = w.Write(content)
 	}))
 	defer server.Close()
 
@@ -202,7 +202,7 @@ func TestDDGProvider_Search_MaxRetriesExceeded(t *testing.T) {
 		atomic.AddInt32(&attempts, 1)
 		// Always return 202 (rate limited)
 		w.WriteHeader(http.StatusAccepted)
-		w.Write([]byte("Rate limited"))
+		_, _ = w.Write([]byte("Rate limited"))
 	}))
 	defer server.Close()
 
@@ -237,7 +237,7 @@ func TestDDGProvider_Search_ContextCancellation(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Always return 202 to trigger retry loop
 		w.WriteHeader(http.StatusAccepted)
-		w.Write([]byte("Rate limited"))
+		_, _ = w.Write([]byte("Rate limited"))
 	}))
 	defer server.Close()
 
@@ -250,7 +250,7 @@ func TestDDGProvider_Search_ContextCancellation(t *testing.T) {
 		Logger:     log.NewNoop(),
 	})
 
-	// Create a context that will be cancelled quickly
+	// Create a context that will be canceled quickly
 	ctx, cancel := context.WithCancel(context.Background())
 
 	// Start search in goroutine
@@ -281,7 +281,7 @@ func TestDDGProvider_Search_NonRetryableStatus(t *testing.T) {
 		atomic.AddInt32(&attempts, 1)
 		// Return 404 - not retryable
 		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte("Not found"))
+		_, _ = w.Write([]byte("Not found"))
 	}))
 	defer server.Close()
 
