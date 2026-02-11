@@ -344,3 +344,189 @@ func TestMockExtraction(t *testing.T) {
 		t.Errorf("confidence mismatch: %f", confidence)
 	}
 }
+
+func TestVerifyGitHubRepo_Fork(t *testing.T) {
+	// Mock GitHub API response for a fork
+	mockResponse := `{
+		"stargazers_count": 100,
+		"forks_count": 10,
+		"archived": false,
+		"description": "A fork of the original",
+		"created_at": "2024-01-15T10:00:00Z",
+		"fork": true,
+		"parent": {
+			"full_name": "original-owner/original-repo",
+			"stargazers_count": 5000
+		}
+	}`
+
+	discovery := &LLMDiscovery{
+		httpGet: func(ctx context.Context, url string) ([]byte, error) {
+			return []byte(mockResponse), nil
+		},
+	}
+
+	result := &DiscoveryResult{
+		Builder: "github",
+		Source:  "fork-owner/forked-repo",
+	}
+
+	metadata, err := discovery.verifyGitHubRepo(context.Background(), result)
+	if err != nil {
+		t.Fatalf("verifyGitHubRepo: %v", err)
+	}
+
+	// Verify fork detection
+	if !metadata.IsFork {
+		t.Error("expected IsFork to be true")
+	}
+	if metadata.ParentRepo != "original-owner/original-repo" {
+		t.Errorf("expected ParentRepo='original-owner/original-repo', got %q", metadata.ParentRepo)
+	}
+	if metadata.ParentStars != 5000 {
+		t.Errorf("expected ParentStars=5000, got %d", metadata.ParentStars)
+	}
+	if metadata.Stars != 100 {
+		t.Errorf("expected Stars=100, got %d", metadata.Stars)
+	}
+}
+
+func TestVerifyGitHubRepo_ForkWithMissingParent(t *testing.T) {
+	// Mock GitHub API response for a fork with null parent
+	// This can happen in edge cases (deleted parent, API issues)
+	mockResponse := `{
+		"stargazers_count": 50,
+		"forks_count": 5,
+		"archived": false,
+		"description": "A fork with missing parent",
+		"created_at": "2024-01-15T10:00:00Z",
+		"fork": true,
+		"parent": null
+	}`
+
+	discovery := &LLMDiscovery{
+		httpGet: func(ctx context.Context, url string) ([]byte, error) {
+			return []byte(mockResponse), nil
+		},
+	}
+
+	result := &DiscoveryResult{
+		Builder: "github",
+		Source:  "fork-owner/forked-repo",
+	}
+
+	metadata, err := discovery.verifyGitHubRepo(context.Background(), result)
+	if err != nil {
+		t.Fatalf("verifyGitHubRepo: %v", err)
+	}
+
+	// Verify fork is still flagged even without parent data
+	if !metadata.IsFork {
+		t.Error("expected IsFork to be true")
+	}
+	if metadata.ParentRepo != "" {
+		t.Errorf("expected empty ParentRepo, got %q", metadata.ParentRepo)
+	}
+	if metadata.ParentStars != 0 {
+		t.Errorf("expected ParentStars=0, got %d", metadata.ParentStars)
+	}
+}
+
+func TestVerifyGitHubRepo_NotAFork(t *testing.T) {
+	// Mock GitHub API response for a non-fork repository
+	mockResponse := `{
+		"stargazers_count": 1000,
+		"forks_count": 200,
+		"archived": false,
+		"description": "The original repository",
+		"created_at": "2020-01-15T10:00:00Z",
+		"fork": false
+	}`
+
+	discovery := &LLMDiscovery{
+		httpGet: func(ctx context.Context, url string) ([]byte, error) {
+			return []byte(mockResponse), nil
+		},
+	}
+
+	result := &DiscoveryResult{
+		Builder: "github",
+		Source:  "owner/original-repo",
+	}
+
+	metadata, err := discovery.verifyGitHubRepo(context.Background(), result)
+	if err != nil {
+		t.Fatalf("verifyGitHubRepo: %v", err)
+	}
+
+	// Verify non-fork has IsFork=false
+	if metadata.IsFork {
+		t.Error("expected IsFork to be false")
+	}
+	if metadata.ParentRepo != "" {
+		t.Errorf("expected empty ParentRepo, got %q", metadata.ParentRepo)
+	}
+	if metadata.ParentStars != 0 {
+		t.Errorf("expected ParentStars=0, got %d", metadata.ParentStars)
+	}
+	if metadata.Stars != 1000 {
+		t.Errorf("expected Stars=1000, got %d", metadata.Stars)
+	}
+}
+
+func TestPassesQualityThreshold_RejectsForks(t *testing.T) {
+	discovery := &LLMDiscovery{}
+
+	tests := []struct {
+		name     string
+		metadata Metadata
+		want     bool
+	}{
+		{
+			name: "non-fork with high stars passes",
+			metadata: Metadata{
+				Stars:  100,
+				IsFork: false,
+			},
+			want: true,
+		},
+		{
+			name: "non-fork with low stars fails",
+			metadata: Metadata{
+				Stars:  10,
+				IsFork: false,
+			},
+			want: false,
+		},
+		{
+			name: "fork with high stars fails (never auto-pass)",
+			metadata: Metadata{
+				Stars:       1000,
+				IsFork:      true,
+				ParentRepo:  "owner/repo",
+				ParentStars: 5000,
+			},
+			want: false,
+		},
+		{
+			name: "fork with low stars fails",
+			metadata: Metadata{
+				Stars:  10,
+				IsFork: true,
+			},
+			want: false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			result := &DiscoveryResult{
+				Metadata: tc.metadata,
+			}
+			got := discovery.passesQualityThreshold(result)
+			if got != tc.want {
+				t.Errorf("passesQualityThreshold() = %v, want %v", got, tc.want)
+			}
+		})
+	}
+}

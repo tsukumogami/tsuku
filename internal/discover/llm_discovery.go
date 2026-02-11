@@ -163,9 +163,14 @@ func (d *LLMDiscovery) Resolve(ctx context.Context, toolName string) (*Discovery
 }
 
 // passesQualityThreshold checks if the result meets minimum quality requirements.
+// Forks never auto-pass - they always require explicit user confirmation.
 func (d *LLMDiscovery) passesQualityThreshold(result *DiscoveryResult) bool {
-	// Extract confidence from the result (stored in the extraction)
-	// For prototype, we pass if we have stars above threshold
+	// Forks never auto-pass - require explicit confirmation
+	if result.Metadata.IsFork {
+		return false
+	}
+
+	// For non-forks, pass if stars above threshold
 	return result.Metadata.Stars >= MinStarsThreshold
 }
 
@@ -197,6 +202,10 @@ func (d *LLMDiscovery) verifyGitHubRepo(ctx context.Context, result *DiscoveryRe
 		Description     string `json:"description"`
 		CreatedAt       string `json:"created_at"`
 		Fork            bool   `json:"fork"`
+		Parent          *struct {
+			FullName        string `json:"full_name"`
+			StargazersCount int    `json:"stargazers_count"`
+		} `json:"parent"`
 	}
 	if err := json.Unmarshal(body, &ghRepo); err != nil {
 		return Metadata{}, fmt.Errorf("parse github response: %w", err)
@@ -213,11 +222,21 @@ func (d *LLMDiscovery) verifyGitHubRepo(ctx context.Context, result *DiscoveryRe
 		ageDays = int(time.Since(createdAt).Hours() / 24)
 	}
 
-	return Metadata{
+	// Build metadata with fork information
+	metadata := Metadata{
 		Stars:       ghRepo.StargazersCount,
 		Description: ghRepo.Description,
 		AgeDays:     ageDays,
-	}, nil
+		IsFork:      ghRepo.Fork,
+	}
+
+	// Populate parent metadata if this is a fork
+	if ghRepo.Fork && ghRepo.Parent != nil {
+		metadata.ParentRepo = ghRepo.Parent.FullName
+		metadata.ParentStars = ghRepo.Parent.StargazersCount
+	}
+
+	return metadata, nil
 }
 
 // discoverySession manages a single LLM discovery conversation.

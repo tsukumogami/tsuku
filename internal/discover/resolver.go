@@ -20,6 +20,9 @@ type Metadata struct {
 	AgeDays     int    // Days since first publish (0 if unavailable)
 	Stars       int    // GitHub stars (0 if unavailable)
 	Description string // Short description for display
+	IsFork      bool   // True if repository is a fork
+	ParentRepo  string // Parent repository full_name (e.g., "owner/repo") if fork
+	ParentStars int    // Parent repository star count (0 if unavailable)
 }
 
 // DiscoveryResult describes where a tool can be sourced from.
