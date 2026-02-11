@@ -15,7 +15,8 @@ import (
 //   - Version 1: Original format with composite actions in plans
 //   - Version 2: Composite actions decomposed to primitives (introduced in #440)
 //   - Version 3: Nested dependencies for self-contained plans (introduced in #621)
-const PlanFormatVersion = 3
+//   - Version 4: Removed recipe_hash field (cache uses content-based hashing) (#1585)
+const PlanFormatVersion = 4
 
 // InstallationPlan represents a fully-resolved, deterministic specification
 // for installing a tool. Plans capture the exact URLs, checksums, and steps
@@ -32,7 +33,6 @@ type InstallationPlan struct {
 	GeneratedAt time.Time `json:"generated_at"`
 
 	// Recipe provenance
-	RecipeHash   string `json:"recipe_hash"`   // SHA256 of recipe file content
 	RecipeSource string `json:"recipe_source"` // "registry" or file path
 
 	// Deterministic indicates whether the entire plan is deterministic.
@@ -66,8 +66,6 @@ type DependencyPlan struct {
 	Tool string `json:"tool"`
 	// Resolved version
 	Version string `json:"version"`
-	// Recipe hash for cache validation
-	RecipeHash string `json:"recipe_hash"`
 	// Nested dependencies (recursive)
 	Dependencies []DependencyPlan `json:"dependencies,omitempty"`
 	// Steps for this dependency

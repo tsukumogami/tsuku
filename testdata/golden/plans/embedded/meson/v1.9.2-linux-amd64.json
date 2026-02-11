@@ -1,37 +1,35 @@
 {
-  "format_version": 3,
+  "format_version": 4,
   "tool": "meson",
   "version": "1.9.2",
   "platform": {
     "os": "linux",
     "arch": "amd64"
   },
-  "recipe_hash": "2eb8f76ea4a9f14dc741d40a67232963b5b7a28807a1c2283197e4bd41a49806",
   "deterministic": false,
   "dependencies": [
     {
       "tool": "python-standalone",
-      "version": "20260114",
-      "recipe_hash": "3068c1ae3ebf682354aa60ac9d3825d538de118e80e1a37cdfcfa725af4e82d1",
+      "version": "20260203",
       "steps": [
         {
           "action": "download_file",
           "params": {
-            "checksum": "4ec9d2c88d5d05f98dc0eda2e6754be26e61f1d0a5ec12503d592c514a6799fb",
+            "checksum": "3397194408bd9afd3463a70313dc83d9d8abcf4beb37fc7335fa666a1501784c",
             "checksum_algo": "sha256",
-            "dest": "cpython-3.10.19+20260114-x86_64-unknown-linux-gnu-install_only.tar.gz",
-            "url": "https://github.com/indygreg/python-build-standalone/releases/download/20260114/cpython-3.10.19+20260114-x86_64-unknown-linux-gnu-install_only.tar.gz"
+            "dest": "cpython-3.10.19+20260203-x86_64-unknown-linux-gnu-install_only.tar.gz",
+            "url": "https://github.com/indygreg/python-build-standalone/releases/download/20260203/cpython-3.10.19+20260203-x86_64-unknown-linux-gnu-install_only.tar.gz"
           },
           "evaluable": true,
           "deterministic": true,
-          "url": "https://github.com/indygreg/python-build-standalone/releases/download/20260114/cpython-3.10.19+20260114-x86_64-unknown-linux-gnu-install_only.tar.gz",
-          "checksum": "4ec9d2c88d5d05f98dc0eda2e6754be26e61f1d0a5ec12503d592c514a6799fb",
-          "size": 43897546
+          "url": "https://github.com/indygreg/python-build-standalone/releases/download/20260203/cpython-3.10.19+20260203-x86_64-unknown-linux-gnu-install_only.tar.gz",
+          "checksum": "3397194408bd9afd3463a70313dc83d9d8abcf4beb37fc7335fa666a1501784c",
+          "size": 43880933
         },
         {
           "action": "extract",
           "params": {
-            "archive": "cpython-3.10.19+20260114-x86_64-unknown-linux-gnu-install_only.tar.gz",
+            "archive": "cpython-3.10.19+20260203-x86_64-unknown-linux-gnu-install_only.tar.gz",
             "format": "tar.gz",
             "strip_dirs": 1
           },

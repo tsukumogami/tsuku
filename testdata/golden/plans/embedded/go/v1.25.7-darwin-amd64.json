@@ -1,32 +1,31 @@
 {
-  "format_version": 3,
+  "format_version": 4,
   "tool": "go",
-  "version": "1.25.5",
+  "version": "1.25.7",
   "platform": {
     "os": "darwin",
     "arch": "amd64"
   },
-  "recipe_hash": "6b7017ca80802605129ead86859ab532c4950c3825277dd3dfc9c81e31c499b7",
   "deterministic": true,
   "steps": [
     {
       "action": "download_file",
       "params": {
-        "checksum": "b69d51bce599e5381a94ce15263ae644ec84667a5ce23d58dc2e63e2c12a9f56",
+        "checksum": "bf5050a2152f4053837b886e8d9640c829dbacbc3370f913351eb0904cb706f5",
         "checksum_algo": "sha256",
-        "dest": "go1.25.5.darwin-amd64.tar.gz",
-        "url": "https://go.dev/dl/go1.25.5.darwin-amd64.tar.gz"
+        "dest": "go1.25.7.darwin-amd64.tar.gz",
+        "url": "https://go.dev/dl/go1.25.7.darwin-amd64.tar.gz"
       },
       "evaluable": true,
       "deterministic": true,
-      "url": "https://go.dev/dl/go1.25.5.darwin-amd64.tar.gz",
-      "checksum": "b69d51bce599e5381a94ce15263ae644ec84667a5ce23d58dc2e63e2c12a9f56",
-      "size": 60495242
+      "url": "https://go.dev/dl/go1.25.7.darwin-amd64.tar.gz",
+      "checksum": "bf5050a2152f4053837b886e8d9640c829dbacbc3370f913351eb0904cb706f5",
+      "size": 60496692
     },
     {
       "action": "extract",
       "params": {
-        "archive": "go1.25.5.darwin-amd64.tar.gz",
+        "archive": "go1.25.7.darwin-amd64.tar.gz",
         "format": "tar.gz",
         "strip_dirs": 1
       },

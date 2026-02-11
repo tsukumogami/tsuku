@@ -18,7 +18,6 @@ func TestInstallationPlanJSONRoundTrip(t *testing.T) {
 			Arch: "amd64",
 		},
 		GeneratedAt:  time.Date(2025, 12, 10, 15, 30, 0, 0, time.UTC),
-		RecipeHash:   "abc123def456",
 		RecipeSource: "registry",
 		Steps: []ResolvedStep{
 			{
@@ -67,9 +66,6 @@ func TestInstallationPlanJSONRoundTrip(t *testing.T) {
 	}
 	if !roundtrip.GeneratedAt.Equal(original.GeneratedAt) {
 		t.Errorf("GeneratedAt: got %v, want %v", roundtrip.GeneratedAt, original.GeneratedAt)
-	}
-	if roundtrip.RecipeHash != original.RecipeHash {
-		t.Errorf("RecipeHash: got %q, want %q", roundtrip.RecipeHash, original.RecipeHash)
 	}
 	if roundtrip.RecipeSource != original.RecipeSource {
 		t.Errorf("RecipeSource: got %q, want %q", roundtrip.RecipeSource, original.RecipeSource)
@@ -176,7 +172,6 @@ func TestJSONFieldNames(t *testing.T) {
 		Version:       "1.0",
 		Platform:      Platform{OS: runtime.GOOS, Arch: runtime.GOARCH},
 		GeneratedAt:   time.Now(),
-		RecipeHash:    "hash",
 		RecipeSource:  "source",
 		Steps: []ResolvedStep{
 			{Action: "download", Params: map[string]interface{}{}, Evaluable: true, URL: "url", Checksum: "sum", Size: 100},
@@ -201,7 +196,6 @@ func TestJSONFieldNames(t *testing.T) {
 		"version",
 		"platform",
 		"generated_at",
-		"recipe_hash",
 		"recipe_source",
 		"steps",
 	}
@@ -318,8 +312,9 @@ func TestIsActionEvaluable(t *testing.T) {
 func TestFormatVersionConstant(t *testing.T) {
 	// Version 2 introduced composite action decomposition (issue #440)
 	// Version 3 introduced nested dependency plans (issue #621)
-	if PlanFormatVersion != 3 {
-		t.Errorf("PlanFormatVersion: got %d, want 3", PlanFormatVersion)
+	// Version 4 removed recipe_hash field (issue #1585)
+	if PlanFormatVersion != 4 {
+		t.Errorf("PlanFormatVersion: got %d, want 4", PlanFormatVersion)
 	}
 }
 

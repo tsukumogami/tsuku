@@ -1,12 +1,11 @@
 {
-  "format_version": 3,
+  "format_version": 4,
   "tool": "python-standalone",
   "version": "20251217",
   "platform": {
     "os": "darwin",
     "arch": "arm64"
   },
-  "recipe_hash": "3068c1ae3ebf682354aa60ac9d3825d538de118e80e1a37cdfcfa725af4e82d1",
   "deterministic": true,
   "steps": [
     {

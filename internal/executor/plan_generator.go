@@ -2,8 +2,6 @@ package executor
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
 	"runtime"
 	"strings"
@@ -143,12 +141,6 @@ func (e *Executor) GeneratePlan(ctx context.Context, cfg PlanConfig) (*Installat
 	// Store version for later use
 	e.version = versionInfo.Version
 
-	// Compute recipe hash
-	recipeHash, err := computeRecipeHash(e.recipe)
-	if err != nil {
-		return nil, fmt.Errorf("failed to compute recipe hash: %w", err)
-	}
-
 	// Get downloader for checksum computation
 	// Callers must provide a Downloader; if nil, no checksums will be computed
 	downloader := cfg.Downloader
@@ -267,7 +259,6 @@ func (e *Executor) GeneratePlan(ctx context.Context, cfg PlanConfig) (*Installat
 		Version:       versionInfo.Version,
 		Platform:      planPlatform,
 		GeneratedAt:   time.Now().UTC(),
-		RecipeHash:    recipeHash,
 		RecipeSource:  recipeSource,
 		Deterministic: planDeterministic,
 		Dependencies:  dependencies,
@@ -290,16 +281,6 @@ func computeDeterministic(steps []ResolvedStep, deps []DependencyPlan) bool {
 		}
 	}
 	return true
-}
-
-// computeRecipeHash computes SHA256 hash of the recipe's TOML content.
-func computeRecipeHash(r interface{ ToTOML() ([]byte, error) }) (string, error) {
-	data, err := r.ToTOML()
-	if err != nil {
-		return "", fmt.Errorf("failed to serialize recipe: %w", err)
-	}
-	hash := sha256.Sum256(data)
-	return hex.EncodeToString(hash[:]), nil
 }
 
 // shouldExecuteForPlatform checks if a step should execute for the given platform.
@@ -791,7 +772,6 @@ func generateSingleDependencyPlan(
 	return &DependencyPlan{
 		Tool:         depName,
 		Version:      plan.Version,
-		RecipeHash:   plan.RecipeHash,
 		Dependencies: nestedDeps,
 		Steps:        plan.Steps,
 		Verify:       verify,

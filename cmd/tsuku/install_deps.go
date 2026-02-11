@@ -2,8 +2,6 @@ package main
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"os"
@@ -25,7 +23,6 @@ type planRetrievalConfig struct {
 	Fresh             bool                 // If true, skip cache and regenerate plan
 	OS                string               // Target OS (defaults to runtime.GOOS)
 	Arch              string               // Target arch (defaults to runtime.GOARCH)
-	RecipeHash        string               // SHA256 hash of recipe TOML
 	DownloadCacheDir  string               // Directory for download cache (enables caching during Decompose)
 	RecipeLoader      actions.RecipeLoader // Recipe loader for dependency resolution (enables self-contained plans)
 	RequireEmbedded   bool                 // Require action dependencies to resolve from embedded registry
@@ -90,7 +87,7 @@ func getOrGeneratePlanWith(
 	}
 
 	// Generate cache key from resolution output
-	cacheKey := executor.CacheKeyFor(cfg.Tool, resolvedVersion, targetOS, targetArch, cfg.RecipeHash)
+	cacheKey := executor.CacheKeyFor(cfg.Tool, resolvedVersion, targetOS, targetArch)
 
 	// Check cache (unless --fresh)
 	if !cfg.Fresh {
@@ -135,16 +132,6 @@ func getOrGeneratePlanWith(
 			return installEvalDeps(deps, autoAccept)
 		},
 	})
-}
-
-// computeRecipeHashForPlan computes SHA256 hash of the recipe's TOML content.
-func computeRecipeHashForPlan(r *recipe.Recipe) (string, error) {
-	data, err := r.ToTOML()
-	if err != nil {
-		return "", fmt.Errorf("failed to serialize recipe: %w", err)
-	}
-	hash := sha256.Sum256(data)
-	return hex.EncodeToString(hash[:]), nil
 }
 
 func runInstallWithTelemetry(toolName, reqVersion, versionConstraint string, isExplicit bool, parent string, client *telemetry.Client) error {
@@ -326,13 +313,6 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 		}
 	}
 
-	// Compute recipe hash for cache key
-	recipeHash, err := computeRecipeHashForPlan(r)
-	if err != nil {
-		printInfof("Warning: failed to compute recipe hash: %v\n", err)
-		// Continue without hash - cache lookup will always miss
-	}
-
 	// Create executor
 	var exec *executor.Executor
 	if reqVersion != "" {
@@ -394,7 +374,6 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 		Tool:              toolName,
 		VersionConstraint: versionConstraint,
 		Fresh:             installFresh,
-		RecipeHash:        recipeHash,
 		DownloadCacheDir:  cfg.DownloadCacheDir,
 		RecipeLoader:      loader,
 		RequireEmbedded:   installRequireEmbedded,
