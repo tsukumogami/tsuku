@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Accepted
 problem: |
   Homebrew bottles contain hardcoded build paths that must be rewritten during
   installation. The homebrew_relocate action extracts full paths (including suffixes
@@ -21,7 +21,7 @@ rationale: |
 
 ## Status
 
-Proposed
+Accepted
 
 ## Context and Problem Statement
 
