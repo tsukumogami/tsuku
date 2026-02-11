@@ -264,6 +264,9 @@ jobs:
           NAMES=("debian" "rhel" "arch" "suse" "alpine")
           LIBCS=("glibc" "glibc" "glibc" "glibc" "musl")
 
+          # Load execution exclusions
+          EXCLUSIONS=$(jq -r '.exclusions[].recipe' testdata/golden/execution-exclusions.json 2>/dev/null || echo "")
+
           for i in "${!IMAGES[@]}"; do
             image="${IMAGES[$i]}"
             family="${NAMES[$i]}"
@@ -278,6 +281,14 @@ jobs:
               case "$recipe_path" in
                 *..*) echo "SKIP: path traversal in $recipe_path"; continue ;;
               esac
+
+              # Check if recipe is in execution exclusions
+              if echo "$EXCLUSIONS" | grep -qx "$recipe_name"; then
+                echo "SKIP: $recipe_name is in execution-exclusions.json"
+                RESULTS=$(echo "$RESULTS" | jq --arg r "$recipe_name" --arg p "$platform" \
+                  '. + [{"recipe": $r, "platform": $p, "status": "skipped"}]')
+                continue
+              fi
 
               echo "--- $recipe_name on $platform ---"
               STATUS="pass"
@@ -341,7 +352,19 @@ jobs:
           done
 
           echo "$RESULTS" > validation-results-linux-x86_64.json
+
+          # Summary with counts
+          TOTAL=$(echo "$RESULTS" | jq length)
+          PASSED=$(echo "$RESULTS" | jq '[.[] | select(.status == "pass")] | length')
+          FAILED=$(echo "$RESULTS" | jq '[.[] | select(.status == "fail")] | length')
+          SKIPPED=$(echo "$RESULTS" | jq '[.[] | select(.status == "skipped")] | length')
+
           echo "### Linux x86_64 Validation Results" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Total: $TOTAL" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Passed: $PASSED" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Failed: $FAILED" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Skipped: $SKIPPED" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
           echo '```json' >> "$GITHUB_STEP_SUMMARY"
           echo "$RESULTS" | jq . >> "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"
@@ -395,6 +418,9 @@ jobs:
           NAMES=("debian" "rhel" "suse" "alpine")
           LIBCS=("glibc" "glibc" "glibc" "musl")
 
+          # Load execution exclusions
+          EXCLUSIONS=$(jq -r '.exclusions[].recipe' testdata/golden/execution-exclusions.json 2>/dev/null || echo "")
+
           for i in "${!IMAGES[@]}"; do
             image="${IMAGES[$i]}"
             family="${NAMES[$i]}"
@@ -409,6 +435,14 @@ jobs:
               case "$recipe_path" in
                 *..*) echo "SKIP: path traversal in $recipe_path"; continue ;;
               esac
+
+              # Check if recipe is in execution exclusions
+              if echo "$EXCLUSIONS" | grep -qx "$recipe_name"; then
+                echo "SKIP: $recipe_name is in execution-exclusions.json"
+                RESULTS=$(echo "$RESULTS" | jq --arg r "$recipe_name" --arg p "$platform" \
+                  '. + [{"recipe": $r, "platform": $p, "status": "skipped"}]')
+                continue
+              fi
 
               echo "--- $recipe_name on $platform ---"
               STATUS="pass"
@@ -469,7 +503,19 @@ jobs:
           done
 
           echo "$RESULTS" > validation-results-linux-arm64.json
+
+          # Summary with counts
+          TOTAL=$(echo "$RESULTS" | jq length)
+          PASSED=$(echo "$RESULTS" | jq '[.[] | select(.status == "pass")] | length')
+          FAILED=$(echo "$RESULTS" | jq '[.[] | select(.status == "fail")] | length')
+          SKIPPED=$(echo "$RESULTS" | jq '[.[] | select(.status == "skipped")] | length')
+
           echo "### Linux arm64 Validation Results" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Total: $TOTAL" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Passed: $PASSED" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Failed: $FAILED" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Skipped: $SKIPPED" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
           echo '```json' >> "$GITHUB_STEP_SUMMARY"
           echo "$RESULTS" | jq . >> "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"
@@ -521,6 +567,10 @@ jobs:
       - name: Validate on macOS arm64
         run: |
           RESULTS="[]"
+
+          # Load execution exclusions
+          EXCLUSIONS=$(jq -r '.exclusions[].recipe' testdata/golden/execution-exclusions.json 2>/dev/null || echo "")
+
           for recipe_path in ${{ steps.recipes.outputs.list }}; do
             recipe_name=$(basename "$recipe_path" .toml)
 
@@ -530,6 +580,14 @@ jobs:
                 continue
                 ;;
             esac
+
+            # Check if recipe is in execution exclusions
+            if echo "$EXCLUSIONS" | grep -qx "$recipe_name"; then
+              echo "SKIP: $recipe_name is in execution-exclusions.json"
+              RESULTS=$(echo "$RESULTS" | jq --arg r "$recipe_name" \
+                '. + [{"recipe": $r, "platform": "darwin-arm64", "status": "skipped"}]')
+              continue
+            fi
 
             echo "--- $recipe_name on darwin-arm64 ---"
             STATUS="pass"
@@ -569,7 +627,19 @@ jobs:
           done
 
           echo "$RESULTS" > validation-results-darwin-arm64.json
+
+          # Summary with counts
+          TOTAL=$(echo "$RESULTS" | jq length)
+          PASSED=$(echo "$RESULTS" | jq '[.[] | select(.status == "pass")] | length')
+          FAILED=$(echo "$RESULTS" | jq '[.[] | select(.status == "fail")] | length')
+          SKIPPED=$(echo "$RESULTS" | jq '[.[] | select(.status == "skipped")] | length')
+
           echo "### macOS arm64 Validation Results" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Total: $TOTAL" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Passed: $PASSED" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Failed: $FAILED" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Skipped: $SKIPPED" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
           echo '```json' >> "$GITHUB_STEP_SUMMARY"
           echo "$RESULTS" | jq . >> "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"
@@ -621,6 +691,10 @@ jobs:
       - name: Validate on macOS x86_64
         run: |
           RESULTS="[]"
+
+          # Load execution exclusions
+          EXCLUSIONS=$(jq -r '.exclusions[].recipe' testdata/golden/execution-exclusions.json 2>/dev/null || echo "")
+
           for recipe_path in ${{ steps.recipes.outputs.list }}; do
             recipe_name=$(basename "$recipe_path" .toml)
 
@@ -630,6 +704,14 @@ jobs:
                 continue
                 ;;
             esac
+
+            # Check if recipe is in execution exclusions
+            if echo "$EXCLUSIONS" | grep -qx "$recipe_name"; then
+              echo "SKIP: $recipe_name is in execution-exclusions.json"
+              RESULTS=$(echo "$RESULTS" | jq --arg r "$recipe_name" \
+                '. + [{"recipe": $r, "platform": "darwin-x86_64", "status": "skipped"}]')
+              continue
+            fi
 
             echo "--- $recipe_name on darwin-x86_64 ---"
             STATUS="pass"
@@ -669,7 +751,19 @@ jobs:
           done
 
           echo "$RESULTS" > validation-results-darwin-x86_64.json
+
+          # Summary with counts
+          TOTAL=$(echo "$RESULTS" | jq length)
+          PASSED=$(echo "$RESULTS" | jq '[.[] | select(.status == "pass")] | length')
+          FAILED=$(echo "$RESULTS" | jq '[.[] | select(.status == "fail")] | length')
+          SKIPPED=$(echo "$RESULTS" | jq '[.[] | select(.status == "skipped")] | length')
+
           echo "### macOS x86_64 Validation Results" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Total: $TOTAL" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Passed: $PASSED" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Failed: $FAILED" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Skipped: $SKIPPED" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
           echo '```json' >> "$GITHUB_STEP_SUMMARY"
           echo "$RESULTS" | jq . >> "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"

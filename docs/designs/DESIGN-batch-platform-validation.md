@@ -31,7 +31,7 @@ Planned
 |-------|--------------|------|
 | ~~[#1324: ci(batch): produce generate job validation result artifact](https://github.com/tsukumogami/tsuku/issues/1324)~~ | ~~[#1320](https://github.com/tsukumogami/tsuku/issues/1320)~~ | testable |
 | _The generate job already validates on linux-debian-glibc-x86_64 but doesn't emit a structured result artifact. Add JSON output so the merge job can include generation-time results in its platform matrix._ | | |
-| [#1325: ci(batch): honor execution-exclusions.json in validation jobs](https://github.com/tsukumogami/tsuku/issues/1325) | ~~[#1320](https://github.com/tsukumogami/tsuku/issues/1320)~~ | testable |
+| ~~[#1325: ci(batch): honor execution-exclusions.json in validation jobs](https://github.com/tsukumogami/tsuku/issues/1325)~~ | ~~[#1320](https://github.com/tsukumogami/tsuku/issues/1320)~~ | testable |
 | _Some recipes can't be tested in CI (e.g., they require interactive input). Load `data/execution-exclusions.json` in each validation job and skip listed recipes, matching the behavior of `test-changed-recipes.yml`._ | | |
 | [#1326: ci(batch): use NDJSON accumulation in validation loops](https://github.com/tsukumogami/tsuku/issues/1326) | ~~[#1320](https://github.com/tsukumogami/tsuku/issues/1320)~~ | simple |
 | _Replace the current pattern of building a JSON array in a shell variable with append-per-line NDJSON, avoiding shell quoting issues and memory growth for large batches._ | | |
@@ -61,8 +61,8 @@ graph LR
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1320,I1323,I1324 done
-    class I1325,I1326,I1327 ready
+    class I1320,I1323,I1324,I1325 done
+    class I1326,I1327 ready
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
