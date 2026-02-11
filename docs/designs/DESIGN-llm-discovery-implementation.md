@@ -10,18 +10,16 @@ decision: |
   Implement LLM discovery as a quality-metric-driven system where the LLM's role is
   limited to extracting structured data from web search results, while a deterministic
   algorithm (reusing the existing QualityFilter pattern) makes the final source selection.
-  Start with tsuku-driven web search via DuckDuckGo HTML scraping to prove the architecture
-  and enable local LLM support. Once proven, add Cloud LLM native search (Claude/Gemini)
-  as the default for users with Cloud keys—decoupled search becomes the fallback for local
-  LLMs. Require GitHub API verification and user confirmation for all LLM-discovered sources.
+  Expose web_search as a tool: Cloud LLMs use their native search capability; local LLMs
+  use a tsuku-provided handler backed by DuckDuckGo. Require GitHub API verification and
+  user confirmation for all LLM-discovered sources.
 rationale: |
-  Separating LLM extraction from deterministic decision-making provides reproducibility
-  and auditability. Starting with decoupled search (DDG) proves the architecture and
-  unblocks local LLM support (#1421), which requires tsuku-driven search. Once proven,
-  Cloud LLM native search provides a better experience for users with Cloud keys while
-  decoupled search remains available for local LLMs. The existing quality metrics
-  infrastructure (ProbeResult, QualityFilter) provides a proven pattern to extend.
-  Defense-in-depth through multiple verification layers addresses security risks.
+  Exposing search as a tool provides a unified architecture across all LLM providers.
+  Cloud LLMs automatically use native search (higher quality, API-handled). Local LLMs
+  get search capability via the DDG tool handler, enabling full discovery without cloud
+  dependencies. The LLM controls search strategy (may search multiple times), and the
+  same extraction/verification flow applies regardless of provider. Defense-in-depth
+  through multiple verification layers addresses security risks of web-sourced data.
 ---
 
 # DESIGN: LLM Discovery Implementation
@@ -116,15 +114,64 @@ These metrics are tracked via the existing telemetry infrastructure. Initial thr
 
 The LLM needs web search capability to find tool sources. The question is how to provide it.
 
-#### Chosen: Swappable Search Provider Interface
+#### Chosen: Search as a Tool (Provider-Transparent)
 
-The architecture uses a `SearchProvider` interface that allows multiple search backends. This enables flexibility based on what credentials the user has available:
+The architecture exposes web search as a **tool** that the LLM can invoke during discovery. Cloud LLM providers (Claude, Gemini) use their native search capability transparently; local LLMs use a tsuku-provided implementation.
+
+```go
+// The LLM sees this tool definition regardless of provider
+var WebSearchTool = llm.ToolDef{
+    Name:        "web_search",
+    Description: "Search the web for information about developer tools",
+    Parameters: map[string]any{
+        "type": "object",
+        "properties": map[string]any{
+            "query": {"type": "string", "description": "Search query"},
+        },
+        "required": []string{"query"},
+    },
+}
+```
+
+**How it works per provider:**
+
+| Provider | web_search Implementation | Behavior |
+|----------|--------------------------|----------|
+| Claude | Native (API-handled) | Claude's API executes search internally |
+| Gemini | Native (grounding) | Gemini's API uses Google Search |
+| Local LLM | tsuku-provided | We implement via DDG/Tavily/Brave |
+
+The LLM doesn't know or care where search results come from. It just calls `web_search` when it needs information, and results appear. This means:
+
+1. **Cloud providers automatically use native search** (better quality, no extra implementation)
+2. **Local providers get search capability** via our DDG/Tavily/Brave implementation
+3. **The LLM controls search strategy** (may search multiple times, refine queries)
+4. **No separate "search phase"** before LLM invocation
+
+**Tool Handler for Local LLMs:**
+
+When the LLM provider doesn't have native search, we register a tool handler:
+
+```go
+type WebSearchHandler struct {
+    searcher SearchProvider // DDG, Tavily, or Brave
+}
+
+func (h *WebSearchHandler) Handle(ctx context.Context, args map[string]any) (string, error) {
+    query := args["query"].(string)
+    results, err := h.searcher.Search(ctx, query)
+    if err != nil {
+        return "", err
+    }
+    return formatResultsAsText(results), nil
+}
+```
+
+**SearchProvider implementations (for local LLMs):**
 
 ```go
 type SearchProvider interface {
-    // Search performs a web search and returns results
     Search(ctx context.Context, query string) ([]SearchResult, error)
-    // Name returns the provider name for logging/display
     Name() string
 }
 
@@ -133,110 +180,44 @@ type SearchResult struct {
     Title       string
     Description string
 }
-```
 
-**Provider Selection Priority**:
-
-The selection logic evolves across implementation phases:
-
-**Phase 1-5 (Initial)**: DDG is the only option—proves the decoupled architecture.
-
-**After Phase 6 (Cloud Native Search)**: Native search becomes the default for Cloud LLMs.
-
-| Condition | Default Provider | Rationale |
-|-----------|-----------------|-----------|
-| Cloud LLM key (Claude/Gemini) | Native search | Better quality, integrated experience |
-| Local LLM only | DDG | Free, no API key needed |
-| Local LLM + `TAVILY_API_KEY` | Tavily | User prefers API-based search |
-| Explicit `--search-provider=ddg` | DDG | User override |
-
-Users can always override with `--search-provider=<name>` flag.
-
-**Default: DuckDuckGo HTML Scraper**
-
-The DDG scraper is the default because it requires no API keys:
-
-```go
+// DDG scraper - default for local LLMs (free, no API key)
 type DDGSearcher struct {
     client *http.Client
 }
 
 func (s *DDGSearcher) Search(ctx context.Context, query string) ([]SearchResult, error) {
     // GET https://html.duckduckgo.com/html/?q={url-encoded-query}
-    // Parse HTML: extract <a class="result__a"> (title/URL), <a class="result__snippet"> (description)
-    // Decode URLs from uddg= parameter
+    // Parse HTML: extract result__a (title/URL), result__snippet (description)
 }
+
+// Optional API-based alternatives
+type TavilySearcher struct { /* uses TAVILY_API_KEY */ }
+type BraveSearcher struct { /* uses BRAVE_API_KEY */ }
 ```
 
-**Why DDG scraping works:**
-- HTML interface designed for low-bandwidth/accessibility use
-- GET requests with browser headers return real results
-- No API key, rate limits, or usage-based pricing
-- Simple HTML: `result__a` for titles, `result__snippet` for descriptions
+**Provider Selection for Local LLMs:**
 
-**API-Based Providers** (when keys are available):
-
-```go
-type TavilySearcher struct {
-    apiKey string
-    client *http.Client
-}
-
-func (s *TavilySearcher) Search(ctx context.Context, query string) ([]SearchResult, error) {
-    // POST https://api.tavily.com/search
-    // JSON response with URL, title, content
-}
-
-type BraveSearcher struct {
-    apiKey string
-    client *http.Client
-}
-
-func (s *BraveSearcher) Search(ctx context.Context, query string) ([]SearchResult, error) {
-    // GET https://api.search.brave.com/res/v1/web/search
-    // JSON response with results array
-}
-```
-
-**Provider-Native Search** (optional, for users who prefer it):
-
-When using Claude or Gemini as the LLM provider, users can opt into native search:
-- `--search-provider=native` uses the LLM's built-in search capability
-- Claude: web_search tool in messages API
-- Gemini: Google Search Grounding config
-
-This is NOT the default because it excludes local LLMs and costs more.
-
-**Unified Architecture**:
-
-Regardless of search provider, results are normalized to `[]SearchResult` and formatted as context for the LLM:
-
-```
-Search results for "stripe cli":
-
-1. GitHub - stripe/stripe-cli: A command line tool to build, test...
-   URL: https://github.com/stripe/stripe-cli
-   Snippet: Build, test, and manage your Stripe integration right from the terminal.
-
-2. Stripe CLI | Stripe Documentation
-   URL: https://stripe.com/docs/stripe-cli
-   Snippet: The Stripe CLI is a developer tool to help you build, test, and manage...
-
-[10-15 results total]
-```
-
-This enables any LLM (Claude, Gemini, local) to analyze the same search results and extract structured source information.
+| Condition | SearchProvider |
+|-----------|---------------|
+| Default | DDG (free, no key needed) |
+| `TAVILY_API_KEY` set | Tavily |
+| `BRAVE_API_KEY` set | Brave |
+| `--search-provider=X` | Explicit override |
 
 #### Alternatives Considered
 
-**Single provider only**: Support only DDG scraping. Rejected because users with API keys may prefer higher-quality results from paid services, and we should support their choice.
+**Tsuku-driven search for all providers**: Always fetch search results before calling the LLM, pass as context. Rejected because:
+- Wastes Cloud LLM native search capability
+- Adds latency (search then LLM vs LLM with search tool)
+- Cloud native search is higher quality (integrated, no scraping)
 
-**Provider-native as default**: Use Claude/Gemini native search by default. Rejected because:
-- Excludes local LLM providers entirely
-- Costs $10-14/1K searches
-- Couples discovery to specific cloud providers
+**Separate search phase**: Fetch results first, then call LLM with results as context. Rejected because:
+- Prevents LLM from refining searches or doing multiple queries
+- Less flexible than tool-based approach
+- Doesn't match how Claude/Gemini native search works
 
-**Google Search scraping**: Direct scraping of Google. Rejected because:
+**Google Search scraping for local LLMs**: Direct scraping of Google. Rejected because:
 - Aggressive bot detection (CAPTCHAs, rate limiting)
 - Requires JavaScript rendering
 - Terms of Service prohibit automated access
@@ -443,18 +424,53 @@ Chain Resolver
 
 ```
 internal/discover/
-├── search.go             # SearchProvider interface + factory
-├── search_ddg.go         # DuckDuckGo HTML scraper (default)
-├── search_tavily.go      # Tavily API provider
-├── search_brave.go       # Brave Search API provider
+├── search.go             # SearchProvider interface (for local LLM tool handler)
+├── search_ddg.go         # DuckDuckGo HTML scraper (default for local)
+├── search_tavily.go      # Tavily API provider (optional)
+├── search_brave.go       # Brave Search API provider (optional)
 ├── llm_discovery.go      # LLMDiscoverySession implementation
+├── llm_tools.go          # Tool definitions (web_search, extract_source)
+├── llm_tool_handler.go   # Tool call handlers (web_search for local LLMs)
 ├── llm_verify.go         # GitHub API verification
 ├── llm_confirm.go        # User confirmation flow
-├── llm_sanitize.go       # HTML stripping, URL validation
-└── llm_tools.go          # Tool definitions (extract_source)
+└── llm_sanitize.go       # HTML stripping, URL validation
 ```
 
-### Search Provider Interface
+### Web Search Tool Handler (Local LLMs)
+
+For local LLMs that don't have native search, we provide a tool handler:
+
+```go
+// internal/discover/llm_tool_handler.go
+
+type WebSearchHandler struct {
+    searcher SearchProvider
+}
+
+func NewWebSearchHandler() *WebSearchHandler {
+    return &WebSearchHandler{
+        searcher: NewSearchProvider(), // DDG by default
+    }
+}
+
+func (h *WebSearchHandler) Handle(ctx context.Context, args map[string]any) (string, error) {
+    query := args["query"].(string)
+    results, err := h.searcher.Search(ctx, query)
+    if err != nil {
+        return "", err
+    }
+    return formatResultsAsText(results), nil
+}
+
+func formatResultsAsText(results []SearchResult) string {
+    // Format as numbered list for LLM consumption
+    // 1. Title
+    //    URL: https://...
+    //    Snippet: ...
+}
+```
+
+### Search Provider Interface (Local LLMs)
 
 ```go
 // internal/discover/search.go
@@ -470,24 +486,19 @@ type SearchResult struct {
     Description string
 }
 
-// NewSearchProvider returns the best available search provider
-// based on environment variables and configuration
-func NewSearchProvider(cfg *Config) SearchProvider {
-    // Priority order: explicit flag > API keys > DDG default
-    if cfg.SearchProvider != "" {
-        return getProviderByName(cfg.SearchProvider)
-    }
+func NewSearchProvider() SearchProvider {
+    // Priority: explicit env var > API keys > DDG default
     if key := os.Getenv("TAVILY_API_KEY"); key != "" {
         return NewTavilySearcher(key)
     }
     if key := os.Getenv("BRAVE_API_KEY"); key != "" {
         return NewBraveSearcher(key)
     }
-    return NewDDGSearcher() // Default: no API key needed
+    return NewDDGSearcher()
 }
 ```
 
-### DDG Scraper (Default)
+### DDG Scraper (Default for Local LLMs)
 
 ```go
 // internal/discover/search_ddg.go
@@ -495,14 +506,6 @@ func NewSearchProvider(cfg *Config) SearchProvider {
 type DDGSearcher struct {
     client *http.Client
 }
-
-func NewDDGSearcher() *DDGSearcher {
-    return &DDGSearcher{
-        client: &http.Client{Timeout: 10 * time.Second},
-    }
-}
-
-func (s *DDGSearcher) Name() string { return "duckduckgo" }
 
 func (s *DDGSearcher) Search(ctx context.Context, query string) ([]SearchResult, error) {
     url := "https://html.duckduckgo.com/html/?q=" + url.QueryEscape(query)
@@ -513,49 +516,10 @@ func (s *DDGSearcher) Search(ctx context.Context, query string) ([]SearchResult,
     req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9")
 
     resp, err := s.client.Do(req)
-    if err != nil {
-        return nil, err
-    }
-    defer resp.Body.Close()
-
     // Parse: <a class="result__a"> for title/URL, <a class="result__snippet"> for description
     return parseResults(resp.Body)
 }
 ```
-
-### API-Based Providers
-
-```go
-// internal/discover/search_tavily.go
-
-type TavilySearcher struct {
-    apiKey string
-    client *http.Client
-}
-
-func (s *TavilySearcher) Name() string { return "tavily" }
-
-func (s *TavilySearcher) Search(ctx context.Context, query string) ([]SearchResult, error) {
-    // POST https://api.tavily.com/search
-    // Body: {"query": query, "search_depth": "basic", "max_results": 15}
-}
-
-// internal/discover/search_brave.go
-
-type BraveSearcher struct {
-    apiKey string
-    client *http.Client
-}
-
-func (s *BraveSearcher) Name() string { return "brave" }
-
-func (s *BraveSearcher) Search(ctx context.Context, query string) ([]SearchResult, error) {
-    // GET https://api.search.brave.com/res/v1/web/search?q=<query>
-    // Header: X-Subscription-Token: <apiKey>
-}
-```
-
-All providers return normalized `[]SearchResult` with up to 15 results.
 
 ### LLMDiscoverySession
 
@@ -588,14 +552,15 @@ func (s *LLMDiscoverySession) Discover(ctx context.Context, toolName string) (*D
 ### System Prompt
 
 ```
-You are a developer tool discovery assistant. Your task is to analyze web search
-results and identify the official source for a developer tool so it can be installed.
+You are a developer tool discovery assistant. Your task is to find the official
+source for a developer tool so it can be installed.
 
-You will be given search results for a tool. Analyze them to find:
-1. The OFFICIAL source: GitHub releases, npm package, crates.io, etc.
-2. Prefer GitHub releases for CLI tools that publish binaries
-3. Extract quality signals: stars, downloads, last update, description
-4. Report findings via the extract_source tool
+When asked about a tool:
+1. Use web_search to find information about the tool
+2. Look for the OFFICIAL source: GitHub releases, npm package, crates.io, etc.
+3. Prefer GitHub releases for CLI tools that publish binaries
+4. Cross-reference multiple sources for confidence
+5. Report findings via extract_source
 
 Be skeptical of unofficial sources. Look for:
 - Official project websites and documentation
@@ -603,13 +568,31 @@ Be skeptical of unofficial sources. Look for:
 - Matching maintainer names across platforms
 - Links from official documentation to download sources
 
-Cross-reference multiple search results. If the top result is a GitHub repo,
-check if other results (official docs, blog posts) link to the same repo.
+If your first search is ambiguous, refine your query or search again.
+Never trust a single web result. Cross-reference multiple sources.
 ```
 
 ### Tool Definitions
 
-**extract_source** (the only tool—search results are provided as context):
+**web_search** (native for Cloud LLMs, tsuku-provided for local):
+```go
+{
+    Name: "web_search",
+    Description: "Search the web for information about developer tools",
+    Parameters: map[string]any{
+        "type": "object",
+        "properties": map[string]any{
+            "query": {"type": "string", "description": "Search query"},
+        },
+        "required": []string{"query"},
+    },
+}
+```
+
+For Claude/Gemini: This maps to their native search capability.
+For local LLMs: tsuku handles the tool call via DDG/Tavily/Brave.
+
+**extract_source** (reports findings after searching):
 ```go
 {
     Name: "extract_source",
@@ -638,19 +621,13 @@ check if other results (official docs, blog posts) link to the same repo.
 
 ```
 Turn 1:
-  User: [Search results for "stripe-cli"]
+  User: "Find the official source for stripe-cli"
 
-  1. GitHub - stripe/stripe-cli: A command line tool to build, test...
-     URL: https://github.com/stripe/stripe-cli
-     Snippet: Build, test, and manage your Stripe integration right from the terminal.
+  LLM: [calls web_search with query "stripe-cli github official"]
+       → Results returned (native for Cloud, DDG for local)
 
-  2. Stripe CLI | Stripe Documentation
-     URL: https://stripe.com/docs/stripe-cli
-     Snippet: The Stripe CLI is a developer tool to help you build, test, and manage...
-
-  [... 10-15 results ...]
-
-  Analyze these results and identify the official source for stripe-cli.
+  LLM: [calls web_search with query "stripe cli documentation"]
+       → Additional results (LLM decides if needed)
 
   LLM: [calls extract_source with structured analysis]
       - builder: "github"
@@ -659,7 +636,12 @@ Turn 1:
       - evidence: ["Official Stripe documentation links to this repo", "8k+ stars"]
 ```
 
-The conversation is typically single-turn since search results are provided upfront. Multi-turn is only needed if the LLM requests clarification (rare).
+The LLM controls the search strategy. It may:
+- Do a single search if results are clear
+- Do multiple searches to cross-reference sources
+- Refine queries based on initial results
+
+Cloud LLMs use native search (higher quality). Local LLMs use tsuku-provided search (DDG/Tavily/Brave).
 
 ### Verification Flow
 
@@ -833,14 +815,17 @@ ChainResolver.Resolve("stripe-cli")
     ├── EcosystemProbe → miss (no npm/cargo/etc. package)
     └── LLMDiscovery.Resolve("stripe-cli")
             |
-            ├── DDGSearcher.Search("stripe-cli github cli tool")
-            │       └── Returns 10-15 SearchResult{URL, Title, Description}
+            ├── Create LLMDiscoverySession with tools: [web_search, extract_source]
             │
-            ├── Create LLMDiscoverySession
-            │       └── Format search results as context
-            │
-            ├── provider.Complete() → extract_source tool call
-            │       └── Returns {builder: "github", source: "stripe/stripe-cli", ...}
+            ├── provider.Complete("Find official source for stripe-cli")
+            │       │
+            │       ├── LLM calls web_search("stripe-cli github official")
+            │       │       └── Cloud: native search / Local: DDG handler
+            │       │
+            │       ├── LLM calls web_search("stripe cli documentation")
+            │       │       └── (optional, LLM decides)
+            │       │
+            │       └── LLM calls extract_source({builder: "github", source: "stripe/stripe-cli", ...})
             │
             ├── Apply quality thresholds
             ├── verifyGitHub("stripe", "stripe-cli")
@@ -861,43 +846,42 @@ Create pipeline → sandbox → install
 
 ### Roadmap Overview
 
-The implementation starts with decoupled search (DDG) because it's required for local LLM support. Once the core design is proven, two parallel tracks extend the system:
+The implementation starts with a tool-based architecture where `web_search` is exposed to the LLM. For Cloud LLMs, this uses native search. For local LLMs, we provide a DDG-based tool handler.
 
 ```
-Phase 1-5: Core Discovery with DDG Search
+Phase 1-5: Core Discovery with Tool-Based Search
+    │
+    ├── Cloud LLMs: Use native web_search (Claude/Gemini handle internally)
+    ├── Local LLMs: Use tsuku-provided web_search handler (DDG)
     │
     ├── Validates: LLM extraction, quality thresholds, verification, confirmation
     │
-    └── Enables parallel tracks:
+    └── Enables parallel track:
             │
-            ├── Track A: Embedded LLM Runtime (#1421)
-            │     └── Local models use DDG/Tavily/Brave search
-            │
-            └── Track B: Cloud Native Search (Phase 6)
-                  └── Claude/Gemini use their native search (default when available)
-
-After Track B completes:
-- Cloud LLMs default to native search (better quality, integrated)
-- Decoupled search (DDG/Tavily/Brave) used only when no Cloud LLM key
+            └── Track A: Embedded LLM Runtime (#1421)
+                  └── Local models get full discovery via DDG tool handler
 ```
 
 This approach:
-1. Proves the architecture with the simplest search backend (DDG)
-2. Unblocks local LLM work (#1421) which requires decoupled search
-3. Upgrades Cloud LLM users to native search once implemented
+1. Cloud LLMs automatically use native search (no extra work needed)
+2. Local LLMs get search capability via DDG tool handler
+3. The LLM controls search strategy (may search multiple times)
+4. Unblocks local LLM work (#1421) immediately
 
-### Phase 1: Search Provider Interface and DDG Scraper
+### Phase 1: Tool Definitions and DDG Handler
 
-Implement the search provider abstraction and DDG implementation. DDG is the initial default because decoupled search is required for local LLM support (#1421).
+Implement the tool-based search architecture. Cloud LLMs use native search; local LLMs use DDG handler.
 
-- Create `SearchProvider` interface in `search.go`
+- Define `web_search` and `extract_source` tools in `llm_tools.go`
+- Implement `WebSearchHandler` for local LLM tool calls
 - Implement `DDGSearcher` with HTML parsing
-- Handle URL decoding from `uddg=` parameter
-- Add browser-like headers for bot detection bypass
+- Implement `SearchProvider` interface for alternative backends
 - Write tests with recorded HTML responses
 
 **Files:**
-- `internal/discover/search.go` (interface + factory)
+- `internal/discover/llm_tools.go` (tool definitions)
+- `internal/discover/llm_tool_handler.go` (web_search handler for local LLMs)
+- `internal/discover/search.go` (SearchProvider interface)
 - `internal/discover/search_ddg.go` (DDG implementation)
 - `internal/discover/search_test.go`
 
@@ -959,40 +943,30 @@ Implement user-facing confirmation flow.
 - `internal/discover/llm_confirm.go`
 - Integration in `cmd/tsuku/install.go`
 
-### Phase 6: Cloud Native Search (Track B)
+### Phase 6: Alternative Search Providers (Optional)
 
-Add native web search for Cloud LLM providers (Claude, Gemini). Once complete, native search becomes the default for Cloud LLMs—decoupled search is only used when no Cloud LLM key is available.
-
-- Implement `ClaudeNativeSearcher` using web_search tool
-- Implement `GeminiNativeSearcher` using Google Search Grounding
-- Update provider selection: native search is default for Cloud LLMs
-- Decoupled search (DDG/Tavily/Brave) becomes fallback for local LLMs or missing keys
-- Add `--search-provider` flag for explicit override
-
-**Provider Selection After Phase 6:**
-
-| Condition | Default Search Provider |
-|-----------|------------------------|
-| Cloud LLM key available | Native (Claude/Gemini) |
-| Local LLM only | DDG (free) or Tavily/Brave (if key set) |
-| `--search-provider=ddg` | DDG (explicit override) |
-
-**Files:**
-- `internal/discover/search_claude.go`
-- `internal/discover/search_gemini.go`
-- Updates to `internal/discover/search.go` (provider selection logic)
-
-### Phase 6b: Additional Decoupled Providers (Optional)
-
-Add Tavily and Brave as alternative decoupled providers for users who prefer API-based search over DDG scraping.
+Add Tavily and Brave as alternative search providers for local LLMs. Users with API keys may prefer these over DDG scraping.
 
 - Implement `TavilySearcher` with JSON API
 - Implement `BraveSearcher` with JSON API
-- Update factory to detect API keys in environment
+- Update `NewSearchProvider()` to detect API keys
+- Add `--search-provider` flag for explicit override
+
+**Provider Selection for Local LLMs:**
+
+| Condition | Search Provider |
+|-----------|----------------|
+| Default | DDG (free, no key) |
+| `TAVILY_API_KEY` set | Tavily |
+| `BRAVE_API_KEY` set | Brave |
+| `--search-provider=X` | Explicit override |
+
+Cloud LLMs always use native search (handled by the API, no configuration needed).
 
 **Files:**
 - `internal/discover/search_tavily.go`
 - `internal/discover/search_brave.go`
+- Updates to `internal/discover/search.go`
 
 ### Phase 7: Budget and Telemetry Integration
 

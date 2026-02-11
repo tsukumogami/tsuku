@@ -138,22 +138,21 @@ HTML structure:
 
 ### Architecture Change
 
-The design was updated to use a **swappable SearchProvider interface** with a phased rollout:
+The design was updated to use **search as a tool** that the LLM invokes:
 
-**Phase 1-5**: DDG scraper is the only option (proves decoupled architecture, enables local LLM work)
+| Provider | web_search Implementation |
+|----------|--------------------------|
+| Claude | Native (API handles internally) |
+| Gemini | Native (Google Search Grounding) |
+| Local LLM | tsuku-provided handler (DDG/Tavily/Brave) |
 
-**After Phase 6**: Native search becomes default for Cloud LLMs:
+The LLM just calls `web_search` when it needs information. Cloud providers handle it natively; local providers use our DDG-based handler.
 
-| Condition | Default Provider |
-|-----------|-----------------|
-| Cloud LLM key available | Native (Claude/Gemini) |
-| Local LLM only | DDG or Tavily/Brave |
-| Explicit override | Any (via `--search-provider`) |
-
-This approach:
-1. Proves the architecture with DDG (simplest, free)
-2. Unblocks local LLM work (#1421) which requires decoupled search
-3. Upgrades Cloud LLM users to native search once Phase 6 completes
+**Benefits:**
+1. Cloud LLMs automatically use native search (no extra work)
+2. Local LLMs get search capability via DDG handler
+3. LLM controls search strategy (may search multiple times)
+4. Unified extraction/verification flow for all providers
 
 ## Current Status
 
