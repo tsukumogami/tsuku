@@ -1,4 +1,4 @@
-name: Validate All Recipes
+name: Full Recipe Validation
 # Validates all recipes across 11 platforms and optionally adds constraints
 
 on:
