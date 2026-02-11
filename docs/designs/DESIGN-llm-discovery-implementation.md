@@ -71,15 +71,16 @@ This separation is powerful: LLMs excel at understanding web content; algorithms
 
 **In scope:**
 - `LLMDiscovery` resolver implementation replacing the stub
-- Web search tool integration (Claude native)
-- Structured output schema (extract_source tool call)
-- GitHub API verification with metadata extraction
+- Web search as a tool (native for Cloud LLMs, DDG handler for local)
+- Structured output schema supporting deterministic and non-deterministic results
+- GitHub API verification with metadata extraction (for deterministic builder results)
 - User confirmation flow with rich metadata display
 - Defense layers (HTML stripping, URL validation, prompt injection defenses)
 - 15-second timeout and per-discovery budget controls
 - Integration with existing BuildSession and Factory patterns
 
 **Out of scope:**
+- Non-deterministic result handling (display instructions, defer to future builder)
 - Non-GitHub source verification (deferred—GitHub covers most cases)
 - Caching of LLM discovery results (recipes serve this purpose)
 - Automated learning from user confirmations
@@ -226,37 +227,33 @@ type BraveSearcher struct { /* uses BRAVE_API_KEY */ }
 
 The LLM needs to return structured data that the algorithm can evaluate. The question is what schema to use.
 
-#### Chosen: Quality-Aligned Extract Schema
+#### Chosen: Flexible Result Interface (Deterministic + Non-Deterministic)
 
-Design the `extract_source` tool call to output signals that align with the existing quality metrics pattern:
+The LLM discovery may find either:
+1. **Deterministic sources**: Mappable to existing builders (github, npm, cargo, etc.)
+2. **Non-deterministic findings**: Install instructions, documentation, download pages
 
-```go
-type ExtractSourceInput struct {
-    // Required identification
-    Builder     string // "github", "npm", "cargo", etc.
-    Source      string // builder-specific arg (owner/repo, package name)
+The result interface must support both types:
 
-    // Confidence signals (from web search analysis)
-    Confidence  int    // 1-100 percentage
-    Evidence    []string // snippets supporting this conclusion
-    Reasoning   string   // chain-of-thought explanation
+| Result Type | Example | Routing |
+|-------------|---------|---------|
+| `builder` | `github:stripe/stripe-cli` | Existing builder pipeline |
+| `instructions` | Install page URL + text | Future: instruction-following builder |
 
-    // Quality metrics (extracted from search results)
-    Stars       int    // GitHub stars if found
-    Downloads   int    // download count if found
-    LastUpdate  string // ISO date of last activity
+**Why support non-deterministic results:**
 
-    // Verification hints
-    RepoURL     string // full GitHub URL for verification
-    IsArchived  bool   // if explicitly mentioned as archived
-    Warnings    []string // concerns found (deprecated, unmaintained, etc.)
-}
-```
+Many tools don't have clean builder mappings:
+- Proprietary tools with custom installers
+- Tools requiring manual download + PATH setup
+- Platform-specific instructions
+- Build-from-source tools without release binaries
 
-This schema enables the deterministic algorithm to:
-- Apply existing quality thresholds (Stars >= 100 OR Downloads >= 1000)
-- Reject obviously bad sources (archived, deprecated)
-- Present rich metadata in confirmation prompt
+Capturing these findings enables:
+1. Displaying helpful instructions to the user (immediate value)
+2. Future: LLM-driven builder that follows install instructions
+3. Analytics on what types of tools need non-deterministic handling
+
+**Deferred to implementation:** The exact schema for `extract_source` tool and result types will be designed during Phase 2 (Core Discovery Session).
 
 #### Alternatives Considered
 
@@ -592,30 +589,15 @@ Never trust a single web result. Cross-reference multiple sources.
 For Claude/Gemini: This maps to their native search capability.
 For local LLMs: tsuku handles the tool call via DDG/Tavily/Brave.
 
-**extract_source** (reports findings after searching):
-```go
-{
-    Name: "extract_source",
-    Description: "Report the discovered tool source with quality signals",
-    Parameters: map[string]any{
-        "type": "object",
-        "properties": map[string]any{
-            "builder": {"type": "string", "enum": ["github", "npm", "cargo", "pypi", "gem", "go", "homebrew"]},
-            "source": {"type": "string", "description": "Builder-specific source arg (owner/repo for github)"},
-            "confidence": {"type": "integer", "minimum": 0, "maximum": 100},
-            "stars": {"type": "integer"},
-            "downloads": {"type": "integer"},
-            "last_update": {"type": "string", "format": "date"},
-            "repo_url": {"type": "string", "format": "uri"},
-            "evidence": {"type": "array", "items": {"type": "string"}},
-            "reasoning": {"type": "string"},
-            "warnings": {"type": "array", "items": {"type": "string"}},
-            "is_archived": {"type": "boolean"}
-        },
-        "required": ["builder", "source", "confidence", "reasoning"]
-    }
-}
-```
+**extract_source** (reports findings - deterministic or non-deterministic):
+
+The tool must support two result types:
+- `result_type: "builder"` - includes builder name, source arg, quality signals
+- `result_type: "instructions"` - includes URL, instruction text, platform
+
+Both types include common fields: confidence, evidence, reasoning, warnings.
+
+Exact schema to be designed during Phase 2 implementation.
 
 ### Conversation Flow
 
