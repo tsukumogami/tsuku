@@ -1,5 +1,5 @@
 ---
-status: Planned
+status: Current
 problem: |
   The batch recipe generation pipeline validates recipes only on Linux x86_64 glibc before creating a PR. These recipes claim all-platform support by default, but nobody verifies that download URLs resolve to working binaries on ARM64, macOS, musl-based distros, or non-debian Linux families. Users on those platforms can get broken installs -- missing binaries, wrong architecture, or shared library failures -- with no warning until they run `tsuku install`.
 decision: |
@@ -12,60 +12,7 @@ rationale: |
 
 ## Status
 
-Planned
-
-## Implementation Issues
-
-### Milestone: [Batch Multi-Platform Validation (Foundation)](https://github.com/tsukumogami/tsuku/milestone/60)
-
-| Issue | Dependencies | Tier |
-|-------|--------------|------|
-| ~~[#1320: ci(batch): restructure generate job and add platform validation jobs](https://github.com/tsukumogami/tsuku/issues/1320)~~ | None | testable |
-| _Split the generate job so it uploads passing recipes as artifacts, add four validation jobs (two Linux with 5-family Docker containers each, two macOS native), and cross-compile tsuku binaries for all target platforms._ | | |
-| ~~[#1323: ci(batch): add merge job with platform constraint derivation](https://github.com/tsukumogami/tsuku/issues/1323)~~ | ~~[#1320](https://github.com/tsukumogami/tsuku/issues/1320)~~ | testable |
-| _With validation results from all 11 environments available, aggregate pass/fail into a result matrix, derive `supported_os`/`supported_libc`/`unsupported_platforms` constraints for partial-coverage recipes, and create the PR with accurate metadata._ | | |
-
-### Milestone: [Batch Multi-Platform Validation (Refinements)](https://github.com/tsukumogami/tsuku/milestone/61)
-
-| Issue | Dependencies | Tier |
-|-------|--------------|------|
-| [#1324: ci(batch): produce generate job validation result artifact](https://github.com/tsukumogami/tsuku/issues/1324) | ~~[#1320](https://github.com/tsukumogami/tsuku/issues/1320)~~ | testable |
-| _The generate job already validates on linux-debian-glibc-x86_64 but doesn't emit a structured result artifact. Add JSON output so the merge job can include generation-time results in its platform matrix._ | | |
-| [#1325: ci(batch): honor execution-exclusions.json in validation jobs](https://github.com/tsukumogami/tsuku/issues/1325) | ~~[#1320](https://github.com/tsukumogami/tsuku/issues/1320)~~ | testable |
-| _Some recipes can't be tested in CI (e.g., they require interactive input). Load `data/execution-exclusions.json` in each validation job and skip listed recipes, matching the behavior of `test-changed-recipes.yml`._ | | |
-| [#1326: ci(batch): use NDJSON accumulation in validation loops](https://github.com/tsukumogami/tsuku/issues/1326) | ~~[#1320](https://github.com/tsukumogami/tsuku/issues/1320)~~ | simple |
-| _Replace the current pattern of building a JSON array in a shell variable with append-per-line NDJSON, avoiding shell quoting issues and memory growth for large batches._ | | |
-| [#1327: ci(batch): add nullglob guard for recipe collection](https://github.com/tsukumogami/tsuku/issues/1327) | ~~[#1320](https://github.com/tsukumogami/tsuku/issues/1320)~~ | simple |
-| _When no recipes match a glob pattern, bash expands the literal glob string into the loop. Add `shopt -s nullglob` so empty matches produce an empty list instead of a spurious iteration._ | | |
-
-### Dependency Graph
-
-```mermaid
-graph LR
-    subgraph Foundation["Foundation"]
-        I1320["#1320: Restructure generate job..."]
-        I1323["#1323: Add merge job with constraints"]
-    end
-
-    subgraph Refinements["Refinements"]
-        I1324["#1324: Produce validation artifact"]
-        I1325["#1325: Honor execution-exclusions"]
-        I1326["#1326: NDJSON accumulation"]
-        I1327["#1327: Nullglob guard"]
-    end
-
-    I1320 --> I1323
-
-    classDef done fill:#c8e6c9
-    classDef ready fill:#bbdefb
-    classDef blocked fill:#fff9c4
-    classDef needsDesign fill:#e1bee7
-
-    class I1320,I1323 done
-    class I1324,I1325,I1326,I1327 ready
-```
-
-**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
+Current
 
 ## Upstream Design Reference
 
@@ -187,14 +134,12 @@ The batch workflow gains four platform validation jobs (one per target environme
 ```
 batch-generate.yml:
 
-  preflight (#1252)
-      │
-  generate (existing, Linux x86_64 glibc/debian)
+  generate (existing, Linux x86_64 glibc/debian, includes preflight)
       │
       ├── validate-linux-x86_64   (ubuntu-latest, 5 family containers)
       ├── validate-linux-arm64    (ubuntu-24.04-arm, 5 family containers)
       ├── validate-darwin-arm64   (macos-14)
-      └── validate-darwin-x86_64  (macos-13)
+      └── validate-darwin-x86_64  (macos-15-intel)
       │
   merge (aggregates results, writes constraints, creates PR)
 ```
@@ -238,7 +183,7 @@ Platform IDs use the format `{os}-{family}-{libc}-{arch}` for Linux and `{os}-{a
 | validate-linux-x86_64 | `ubuntu-latest` | 5 family containers: `linux-{debian,rhel,arch,suse}-glibc-x86_64`, `linux-alpine-musl-x86_64` |
 | validate-linux-arm64 | `ubuntu-24.04-arm` | 4 family containers: `linux-{debian,rhel,suse}-glibc-arm64`, `linux-alpine-musl-arm64` (arch excluded -- no ARM64 image) |
 | validate-darwin-arm64 | `macos-14` | `darwin-arm64` |
-| validate-darwin-x86_64 | `macos-13` | `darwin-x86_64` |
+| validate-darwin-x86_64 | `macos-15-intel` | `darwin-x86_64` |
 
 **Container images for Linux family validation:**
 
@@ -325,29 +270,25 @@ merge job:
 
 ## Implementation Approach
 
-### Phase 1: Platform Validation Jobs (#1254)
+The foundation work is complete. See Implementation Issues for remaining refinements.
 
-Add the four platform validation jobs to `batch-generate.yml`:
+### Completed: Platform Validation Jobs (#1320)
+
+Added four platform validation jobs to `batch-generate.yml`:
 - Retry logic for network errors
 - Structured JSON result artifacts
 - Job summaries in `$GITHUB_STEP_SUMMARY`
 
-Dependencies: #1252 (preflight job provides recipe list)
+### Completed: Merge Job with Constraint Writing (#1323)
 
-### Phase 2: Merge Job with Constraint Writing (#1256)
-
-Add the merge job that:
+Added the merge job that:
 - Aggregates platform results
-- Derives and writes platform constraints
+- Derives and writes platform constraints via `scripts/write-platform-constraints.sh`
 - Creates the PR with accurate metadata
 
-Dependencies: #1254 (platform validation results)
+### Active: Validation Coverage for Batch PRs
 
-### Phase 3: Validation Coverage for Batch PRs
-
-After the batch PR is created, `test-changed-recipes.yml` still triggers as a secondary validation layer. This provides defense-in-depth: the batch workflow catches platform issues and writes constraints, and PR CI validates that the constrained recipes install correctly on the platforms they claim to support.
-
-No code changes needed for this phase; it's the existing behavior once the PR is created with proper constraints.
+After the batch PR is created, `test-changed-recipes.yml` triggers as a secondary validation layer. This provides defense-in-depth: the batch workflow catches platform issues and writes constraints, and PR CI validates that the constrained recipes install correctly on the platforms they claim to support.
 
 ## Security Considerations
 
