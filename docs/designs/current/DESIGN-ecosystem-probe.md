@@ -1,5 +1,5 @@
 ---
-status: Planned
+status: Current
 problem: |
   The ecosystem probe is the second stage of tsuku's discovery resolver chain, but it's currently a stub. Without it, tools not in the curated registry (~500 entries) fall through to LLM-based discovery, which requires an API key and costs money. Most popular developer tools exist in at least one package registry, so a deterministic probe could resolve them for free in under 3 seconds.
 decision: |
@@ -12,56 +12,7 @@ rationale: |
 
 ## Status
 
-Planned
-
-## Implementation Issues
-
-### Milestone: [Ecosystem Probe](https://github.com/tsukumogami/tsuku/milestone/65)
-
-| Issue | Dependencies | Tier |
-|-------|--------------|------|
-| ~~[#1383: Add Probe() to ecosystem builders](https://github.com/tsukumogami/tsuku/issues/1383)~~ | ~~None~~ | ~~testable~~ |
-| _Adds `Probe()` to all 7 ecosystem builders (npm, pypi, cargo, gem, go, cpan, cask), wrapping existing fetch methods to return `ProbeResult` with existence, source, and age (Go only)._ | | |
-| ~~[#1384: Implement parallel ecosystem probe resolver](https://github.com/tsukumogami/tsuku/issues/1384)~~ | ~~[#1383](https://github.com/tsukumogami/tsuku/issues/1383)~~ | ~~testable~~ |
-| _Replaces the stub resolver with goroutine-per-builder fan-out, shared 3-second timeout, buffered channel collection, and static priority-based disambiguation._ | | |
-| ~~[#1385: Wire ecosystem probe into chain resolver](https://github.com/tsukumogami/tsuku/issues/1385)~~ | ~~[#1384](https://github.com/tsukumogami/tsuku/issues/1384)~~ | ~~testable~~ |
-| _Updates `runDiscovery()` to construct `NewEcosystemProbe()` with the list of builder probers, connecting the probe to the live discovery chain._ | | |
-| ~~[#1386: Add integration tests for ecosystem probe](https://github.com/tsukumogami/tsuku/issues/1386)~~ | ~~[#1385](https://github.com/tsukumogami/tsuku/issues/1385)~~ | ~~testable~~ |
-| _Covers parallel execution, timeout behavior, priority disambiguation, and full chain integration with mock HTTP responses._ | | |
-
-### Dependency Graph
-
-```mermaid
-graph TD
-    subgraph Phase1["Phase 1: Builder Interface"]
-        I1383["#1383: Add Probe() to builders"]
-    end
-
-    subgraph Phase2["Phase 2: Resolver"]
-        I1384["#1384: Parallel probe resolver"]
-    end
-
-    subgraph Phase3["Phase 3: Integration"]
-        I1385["#1385: Wire into chain"]
-        I1386["#1386: Integration tests"]
-    end
-
-    I1383 --> I1384
-    I1384 --> I1385
-    I1385 --> I1386
-
-    classDef done fill:#c8e6c9
-    classDef ready fill:#bbdefb
-    classDef blocked fill:#fff9c4
-    classDef needsDesign fill:#e1bee7
-
-    class I1383 done
-    class I1384 done
-    class I1385 done
-    class I1386 done
-```
-
-**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
+Current
 
 ## Upstream Design Reference
 
@@ -101,11 +52,11 @@ The parent design specified filtering by download counts (>1000/month) and packa
 
 ### Decision 1: How to Get Metadata from Builders
 
-The parent design defines `EcosystemProber.Probe()` returning `ProbeResult{Exists, Downloads, Age, Source}`. But builders currently only have `CanBuild()` which returns `(bool, error)`. The question is whether the new `Probe()` method should try to extract metadata, or just confirm existence.
+The parent design defines `EcosystemProber.Probe()` returning `ProbeResult{Source, Downloads, VersionCount, HasRepository}`. But builders currently only have `CanBuild()` which returns `(bool, error)`. The question is whether the new `Probe()` method should try to extract metadata, or just confirm existence.
 
 #### Chosen: Existence-first with optional metadata
 
-`Probe()` reuses the same API call that `CanBuild()` makes, but returns a `ProbeResult` with whatever metadata the API provides. For most builders, `Downloads` and `Age` will be 0. Go builder can populate `Age` from its `Time` field. This avoids secondary API calls while leaving the door open for builders to add metadata as APIs evolve.
+`Probe()` reuses the same API call that `CanBuild()` makes, but returns a `ProbeResult` with whatever metadata the API provides. For most builders, some fields like `Downloads` or `VersionCount` will be 0 when the API doesn't expose them. Builders populate `HasRepository` when a linked source repository is available. This avoids secondary API calls while leaving the door open for builders to add metadata as APIs evolve.
 
 #### Alternatives Considered
 
@@ -123,7 +74,7 @@ Instead of popularity thresholds, use two signals:
 1. **Exact name match**: The queried tool name must exactly match the package name in the registry (case-insensitive). This rejects packages where the tool name is a substring or slight variation.
 2. **Static priority ranking**: When multiple ecosystems match, rank by ecosystem reliability rather than per-package popularity. The order reflects which ecosystems are most likely to contain the "canonical" version of a tool: Homebrew Cask > crates.io > PyPI > npm > RubyGems > Go > CPAN.
 
-The age threshold from the parent design (>90 days) can be applied to the Go builder since it exposes `Time`. For other builders, age is unknown and not filtered.
+Quality filtering was deferred to a follow-up design ([DESIGN-probe-quality-filtering.md](current/DESIGN-probe-quality-filtering.md)) which uses version count and repository presence rather than age thresholds.
 
 #### Alternatives Considered
 
@@ -169,7 +120,7 @@ The parent design's filtering thresholds assumed API metadata that doesn't exist
 ### Trade-offs Accepted
 
 - **Less precise disambiguation**: Without download counts, we can't distinguish between a popular crate and an obscure one. A static priority list is a rough proxy. This is acceptable because disambiguation (#1321) will present options to the user in ambiguous cases.
-- **No age filtering for most ecosystems**: Only Go provides publish dates. Young typosquat packages on npm or PyPI won't be filtered by age. Mitigated by exact name matching and the curated registry taking precedence.
+- **Quality filtering deferred**: Initial implementation doesn't filter by download counts or age. Mitigated by exact name matching, curated registry precedence, and the follow-up [quality filtering design](current/DESIGN-probe-quality-filtering.md).
 - **Cask may produce noise**: Including Cask means macOS GUI apps might match tool names. Can be excluded in a follow-up if it's a problem.
 
 ## Solution Architecture
@@ -205,10 +156,10 @@ type EcosystemProber interface {
 }
 
 type ProbeResult struct {
-    Exists    bool
-    Downloads int    // Monthly downloads (0 if unavailable)
-    Age       int    // Days since first publish (0 if unavailable)
-    Source    string // Builder-specific source arg
+    Source        string // Builder-specific source arg
+    Downloads     int    // Recent downloads (0 if unavailable)
+    VersionCount  int    // Number of published versions (0 if unavailable)
+    HasRepository bool   // Whether the package has a linked source repository
 }
 ```
 
@@ -245,7 +196,7 @@ func NewEcosystemProbe(probers []EcosystemProber, timeout time.Duration) *Ecosys
 3. Launches goroutine per prober: `prober.Probe(ctx, "bat")`
 4. Each goroutine sends `probeOutcome{builderName, result, err}` to a buffered channel (sized to `len(probers)` to prevent goroutine leaks on timeout)
 5. Collector waits for all goroutines or timeout, whichever comes first
-6. Filter: discard results where `!result.Exists` or name doesn't match
+6. Filter: discard nil results or those where name doesn't match
 7. If 0 results → return `(nil, nil)` (chain falls through to LLM)
 8. If 1 result → return `DiscoveryResult` with `Confidence: "ecosystem"`
 9. If N results → rank by priority map, return top result with alternatives in metadata
@@ -259,32 +210,34 @@ Each builder's `Probe()` reuses the existing fetch method:
 func (b *CargoBuilder) Probe(ctx context.Context, name string) (*ProbeResult, error) {
     info, err := b.fetchCrateInfo(ctx, name)
     if err != nil {
-        return &ProbeResult{Exists: false}, nil // soft error
+        return nil, nil // not found, soft error
     }
     return &ProbeResult{
-        Exists: true,
-        Source: name, // cargo source is the crate name
+        Source:       name, // cargo source is the crate name
+        Downloads:    info.Crate.RecentDownloads,
+        VersionCount: len(info.Versions),
     }, nil
 }
 ```
 
-For Go builder, the `Time` field populates `Age`:
+For Go builder, version count and repository info are populated:
 
 ```go
 func (b *GoBuilder) Probe(ctx context.Context, name string) (*ProbeResult, error) {
     info, err := b.fetchModuleInfo(ctx, name)
     if err != nil {
-        return &ProbeResult{Exists: false}, nil
+        return nil, nil // not found
     }
-    age := 0
-    if t, err := time.Parse(time.RFC3339, info.Time); err == nil {
-        age = int(time.Since(t).Hours() / 24)
+    result := &ProbeResult{
+        Source:    name,
+        Downloads: 0, // Go proxy has no download metrics
     }
-    return &ProbeResult{
-        Exists: true,
-        Age:    age,
-        Source: name,
-    }, nil
+    if info.Origin != nil && info.Origin.URL != "" {
+        result.HasRepository = true
+    }
+    versionCount, _ := b.fetchVersionCount(ctx, name)
+    result.VersionCount = versionCount
+    return result, nil
 }
 ```
 
