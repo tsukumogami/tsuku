@@ -119,7 +119,7 @@ func (m *Manager) Shutdown(ctx context.Context) error {
 		provider, err := llm.NewLocalProvider(ctx)
 		if err == nil {
 			_ = provider.Shutdown(ctx, true)
-			provider.Close()
+			_ = provider.Close()
 
 			// Wait briefly for graceful shutdown
 			time.Sleep(500 * time.Millisecond)

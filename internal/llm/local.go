@@ -24,7 +24,7 @@ type LocalProvider struct {
 
 // NewLocalProvider creates a new local provider by connecting to the tsuku-llm addon.
 // The addon must be running and listening on the Unix socket at $TSUKU_HOME/llm.sock.
-func NewLocalProvider(ctx context.Context) (*LocalProvider, error) {
+func NewLocalProvider(_ context.Context) (*LocalProvider, error) {
 	socketPath := SocketPath()
 
 	// Check if socket exists
@@ -32,15 +32,10 @@ func NewLocalProvider(ctx context.Context) (*LocalProvider, error) {
 		return nil, fmt.Errorf("local LLM addon not running (socket not found: %s)", socketPath)
 	}
 
-	// Connect with timeout
-	dialCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
-	defer cancel()
-
-	conn, err := grpc.DialContext(
-		dialCtx,
+	// Create gRPC client (connection is lazy)
+	conn, err := grpc.NewClient(
 		"unix://"+socketPath,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithBlock(),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to local LLM addon: %w", err)
@@ -111,7 +106,7 @@ func IsAddonRunning() bool {
 	if err != nil {
 		return false
 	}
-	conn.Close()
+	_ = conn.Close()
 	return true
 }
 
