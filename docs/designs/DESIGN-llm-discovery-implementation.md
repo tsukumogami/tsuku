@@ -1,5 +1,5 @@
 ---
-status: Accepted
+status: Planned
 problem: |
   The LLM discovery stage in tsuku's resolver chain is an unimplemented stub. Tools not
   found in the registry or ecosystem probes fall through to a non-functional "not found"
@@ -26,7 +26,70 @@ rationale: |
 
 ## Status
 
-Accepted
+Planned
+
+## Implementation Issues
+
+### Milestone: [LLM Discovery Hardening](https://github.com/tsukumogami/tsuku/milestone/76)
+
+| Issue | Dependencies | Tier |
+|-------|--------------|------|
+| [#1610: feat(search): add DDG retry logic and recorded response tests](https://github.com/tsukumogami/tsuku/issues/1610) | None | testable |
+| _Adds exponential backoff retry logic for DDG 202 responses and establishes the test fixture pattern with recorded HTML responses for reliable offline testing._ | | |
+| [#1611: feat(discover): add HTML stripping and URL validation](https://github.com/tsukumogami/tsuku/issues/1611) | None | critical |
+| _Implements security layers against prompt injection: strips script/style tags and HTML comments from search results, validates GitHub URLs against an allowlist pattern, and removes zero-width Unicode characters._ | | |
+| [#1612: feat(discover): add fork detection to GitHub verification](https://github.com/tsukumogami/tsuku/issues/1612) | None | testable |
+| _Extends GitHub API verification to detect forks, fetch parent metadata, and compare star counts. Forks never auto-select; users always get a warning suggesting the original repository._ | | |
+| [#1613: feat(discover): add GitHub API rate limit handling](https://github.com/tsukumogami/tsuku/issues/1613) | [#1612](https://github.com/tsukumogami/tsuku/issues/1612) | testable |
+| _Handles 403 rate limit responses with graceful degradation: skips verification but raises the confirmation bar, ensuring users still get prompted even when API data is unavailable._ | | |
+| [#1614: feat(discover): implement priority ranking for multiple candidates](https://github.com/tsukumogami/tsuku/issues/1614) | [#1612](https://github.com/tsukumogami/tsuku/issues/1612), [#1613](https://github.com/tsukumogami/tsuku/issues/1613) | testable |
+| _Adds deterministic ranking when multiple sources pass thresholds: highest confidence wins, star count breaks ties, forks are excluded from auto-selection. Handles edge cases like all-fork results._ | | |
+| [#1615: feat(discover): improve confirmation UX](https://github.com/tsukumogami/tsuku/issues/1615) | [#1612](https://github.com/tsukumogami/tsuku/issues/1612) | testable |
+| _Implements --yes flag for non-interactive use (skips confirmation but not verification), enhances metadata display with repository age and last commit date, and surfaces fork warnings from #1612._ | | |
+
+### Milestone: [LLM Discovery Extensions](https://github.com/tsukumogami/tsuku/milestone/77)
+
+| Issue | Dependencies | Tier |
+|-------|--------------|------|
+| [#1617: feat(search): add Tavily and Brave search providers](https://github.com/tsukumogami/tsuku/issues/1617) | [#1610](https://github.com/tsukumogami/tsuku/issues/1610) | testable |
+| _Implements Tavily and Brave as API-based alternatives to DDG scraping. Auto-selects provider based on API key presence, adds --search-provider flag for explicit override._ | | |
+| [#1616: feat(discover): add telemetry and cost tracking](https://github.com/tsukumogami/tsuku/issues/1616) | None | testable |
+| _Integrates with existing budget and telemetry infrastructure: tracks LLM token usage per discovery, enforces daily cost limits, emits discovery events for accuracy monitoring, and shows metrics in verbose output._ | | |
+
+### Dependency Graph
+
+```mermaid
+graph TD
+    subgraph Hardening["LLM Discovery Hardening"]
+        I1610["#1610: DDG retry logic"]
+        I1611["#1611: HTML stripping"]
+        I1612["#1612: Fork detection"]
+        I1613["#1613: Rate limit handling"]
+        I1614["#1614: Priority ranking"]
+        I1615["#1615: Confirmation UX"]
+    end
+
+    subgraph Extensions["LLM Discovery Extensions"]
+        I1617["#1617: Tavily and Brave"]
+        I1616["#1616: Telemetry"]
+    end
+
+    I1610 --> I1617
+    I1612 --> I1613
+    I1612 --> I1614
+    I1612 --> I1615
+    I1613 --> I1614
+
+    classDef done fill:#c8e6c9
+    classDef ready fill:#bbdefb
+    classDef blocked fill:#fff9c4
+    classDef needsDesign fill:#e1bee7
+
+    class I1610,I1611,I1612,I1616 ready
+    class I1613,I1614,I1615,I1617 blocked
+```
+
+**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
 
 ## Upstream Design Reference
 
