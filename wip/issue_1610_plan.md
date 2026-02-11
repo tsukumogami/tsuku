@@ -39,19 +39,19 @@ Adapt the existing retry pattern from `internal/actions/download.go` (lines 349-
 
 ## Implementation Steps
 
-- [ ] Create testdata directory and add recorded HTML fixtures
-- [ ] Add DDGProviderOptions struct with MaxRetries, Logger, and HTTPClient fields
-- [ ] Add NewDDGProviderWithOptions constructor that accepts options
-- [ ] Extract HTTP request logic to a helper method (doSearch) for retry isolation
-- [ ] Implement retry loop in Search() with exponential backoff and jitter
-- [ ] Add 202 status code detection as retryable condition
-- [ ] Add debug-level logging for retry attempts
-- [ ] Update existing tests to use fixture files
-- [ ] Add test: successful parse from fixture
-- [ ] Add test: 202 retry then success
-- [ ] Add test: max retries exceeded
-- [ ] Add test: context cancellation during backoff
-- [ ] Run `go test ./internal/search/...` to verify all tests pass
+- [x] Create testdata directory and add recorded HTML fixtures
+- [x] Add DDGProviderOptions struct with MaxRetries, Logger, and HTTPClient fields
+- [x] Add NewDDGProviderWithOptions constructor that accepts options
+- [x] Extract HTTP request logic to a helper method (doSearch) for retry isolation
+- [x] Implement retry loop in Search() with exponential backoff and jitter
+- [x] Add 202 status code detection as retryable condition
+- [x] Add debug-level logging for retry attempts
+- [x] Update existing tests to use fixture files
+- [x] Add test: successful parse from fixture
+- [x] Add test: 202 retry then success
+- [x] Add test: max retries exceeded
+- [x] Add test: context cancellation during backoff
+- [x] Run `go test ./internal/search/...` to verify all tests pass
 
 ## Testing Strategy
 
@@ -84,15 +84,15 @@ The existing integration test (`TestDDGProvider_Integration`) is gated behind `I
 
 ## Success Criteria
 
-- [ ] DDGProvider retries on HTTP 202 with exponential backoff
-- [ ] Max retries is configurable (default: 3)
-- [ ] Backoff includes jitter (25% variance)
-- [ ] Context cancellation stops retry loop promptly
-- [ ] Debug-level logging shows retry attempts
-- [ ] All tests use fixtures or mocks (no live HTTP)
-- [ ] Tests cover: success, 202 retry, max retries, context cancellation
-- [ ] `go test ./internal/search/...` passes
-- [ ] `go vet ./internal/search/...` passes
+- [x] DDGProvider retries on HTTP 202 with exponential backoff
+- [x] Max retries is configurable (default: 3)
+- [x] Backoff includes jitter (25% variance)
+- [x] Context cancellation stops retry loop promptly
+- [x] Debug-level logging shows retry attempts
+- [x] All tests use fixtures or mocks (no live HTTP)
+- [x] Tests cover: success, 202 retry, max retries, context cancellation
+- [x] `go test ./internal/search/...` passes
+- [x] `go vet ./internal/search/...` passes
 
 ## Open Questions
 

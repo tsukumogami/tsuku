@@ -4,21 +4,72 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"math/rand"
 	"net/http"
 	"regexp"
 	"strings"
+	"time"
+
+	"github.com/tsukumogami/tsuku/internal/log"
 )
+
+// DefaultMaxRetries is the default number of retry attempts for rate-limited requests.
+const DefaultMaxRetries = 3
+
+// DDGOptions configures the DDGProvider behavior.
+type DDGOptions struct {
+	// MaxRetries is the maximum number of retry attempts for 202 responses.
+	// Default: 3
+	MaxRetries int
+
+	// Logger for debug output. If nil, uses log.Default().
+	Logger log.Logger
+
+	// HTTPClient for making requests. If nil, uses http.DefaultClient.
+	HTTPClient *http.Client
+
+	// sleepFn is used for testing to mock time.Sleep behavior.
+	// If nil, time.Sleep is used.
+	sleepFn func(time.Duration)
+}
 
 // DDGProvider implements Provider using DuckDuckGo's HTML interface.
 type DDGProvider struct {
-	client *http.Client
+	client     *http.Client
+	maxRetries int
+	logger     log.Logger
+	sleepFn    func(time.Duration)
 }
 
-// NewDDGProvider creates a DuckDuckGo search provider.
+// NewDDGProvider creates a DuckDuckGo search provider with default options.
 func NewDDGProvider() *DDGProvider {
-	return &DDGProvider{
-		client: http.DefaultClient,
+	return NewDDGProviderWithOptions(DDGOptions{})
+}
+
+// NewDDGProviderWithOptions creates a DuckDuckGo search provider with custom options.
+func NewDDGProviderWithOptions(opts DDGOptions) *DDGProvider {
+	p := &DDGProvider{
+		client:     opts.HTTPClient,
+		maxRetries: opts.MaxRetries,
+		logger:     opts.Logger,
+		sleepFn:    opts.sleepFn,
 	}
+
+	// Apply defaults
+	if p.client == nil {
+		p.client = http.DefaultClient
+	}
+	if p.maxRetries <= 0 {
+		p.maxRetries = DefaultMaxRetries
+	}
+	if p.logger == nil {
+		p.logger = log.Default()
+	}
+	if p.sleepFn == nil {
+		p.sleepFn = time.Sleep
+	}
+
+	return p
 }
 
 // Name returns the provider identifier.
@@ -27,13 +78,76 @@ func (p *DDGProvider) Name() string {
 }
 
 // Search performs a web search using DDG's lite HTML interface.
+// Implements retry logic with exponential backoff for 202 (rate limiting) responses.
 func (p *DDGProvider) Search(ctx context.Context, query string) (*Response, error) {
-	// Use the lite HTML interface which is more accessible
+	baseDelay := time.Second
+
+	var lastErr error
+	for attempt := 0; attempt <= p.maxRetries; attempt++ {
+		if attempt > 0 {
+			// Exponential backoff with jitter: base * 2^(attempt-1) * (0.75 + rand*0.5)
+			baseWait := baseDelay * time.Duration(1<<(attempt-1))
+			jitter := 0.75 + rand.Float64()*0.5 // 75% to 125% of base
+			delay := time.Duration(float64(baseWait) * jitter)
+
+			p.logger.Debug("DDG search retry",
+				"attempt", attempt,
+				"max_retries", p.maxRetries,
+				"delay", delay.String(),
+				"query", query,
+			)
+
+			// Wait with context cancellation support
+			select {
+			case <-ctx.Done():
+				return nil, ctx.Err()
+			case <-time.After(delay):
+				// Use time.After here even though we have sleepFn because
+				// we need the select for context cancellation. Tests that
+				// need to verify delays can check the logger output.
+			}
+		}
+
+		resp, body, err := p.doSearch(ctx, query)
+		if err != nil {
+			lastErr = err
+			// Network errors and context cancellation are not retryable
+			if ctx.Err() != nil {
+				return nil, ctx.Err()
+			}
+			// Retry on network errors
+			continue
+		}
+
+		// Check for rate limiting (202 Accepted)
+		if resp.StatusCode == http.StatusAccepted {
+			lastErr = fmt.Errorf("DDG returned status 202 (rate limited)")
+			continue
+		}
+
+		// Non-retryable status codes
+		if resp.StatusCode != http.StatusOK {
+			return nil, fmt.Errorf("DDG returned status %d", resp.StatusCode)
+		}
+
+		// Success - parse results
+		results := parseHTMLResults(body)
+		return &Response{
+			Query:   query,
+			Results: results,
+		}, nil
+	}
+
+	return nil, fmt.Errorf("DDG search failed after %d retries: %w", p.maxRetries, lastErr)
+}
+
+// doSearch performs a single search request.
+func (p *DDGProvider) doSearch(ctx context.Context, query string) (*http.Response, string, error) {
 	url := "https://html.duckduckgo.com/html/?q=" + strings.ReplaceAll(query, " ", "+")
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, nil)
 	if err != nil {
-		return nil, fmt.Errorf("create request: %w", err)
+		return nil, "", fmt.Errorf("create request: %w", err)
 	}
 
 	// Browser-like headers to avoid bot detection
@@ -43,25 +157,16 @@ func (p *DDGProvider) Search(ctx context.Context, query string) (*Response, erro
 
 	resp, err := p.client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("request failed: %w", err)
+		return nil, "", fmt.Errorf("request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("DDG returned status %d", resp.StatusCode)
-	}
-
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("read response: %w", err)
+		return nil, "", fmt.Errorf("read response: %w", err)
 	}
 
-	results := parseHTMLResults(string(body))
-
-	return &Response{
-		Query:   query,
-		Results: results,
-	}, nil
+	return resp, string(body), nil
 }
 
 // parseHTMLResults extracts search results from DDG HTML response.
