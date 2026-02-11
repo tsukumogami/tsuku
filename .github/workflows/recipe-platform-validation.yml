@@ -1,17 +1,15 @@
-name: Full Recipe Validation
+name: Recipe Platform Validation
 # Validates all recipes across 11 platforms and optionally adds constraints
 
 on:
+  # Allow manual trigger
   workflow_dispatch:
     inputs:
       auto_constrain:
         description: 'Automatically add platform constraints to failing recipes'
-        required: true
-        default: 'false'
-        type: choice
-        options:
-          - 'true'
-          - 'false'
+        required: false
+        default: false
+        type: boolean
   schedule:
     # Run weekly on Sunday at 2 AM UTC
     - cron: '0 2 * * 0'
@@ -490,17 +488,17 @@ jobs:
 
           if [ "$NEEDS_CONSTRAINTS" -eq 0 ]; then
             echo "" >> "$GITHUB_STEP_SUMMARY"
-            echo "✅ **All recipes passed on all platforms!**" >> "$GITHUB_STEP_SUMMARY"
+            echo "All recipes passed on all platforms!" >> "$GITHUB_STEP_SUMMARY"
           else
             echo "" >> "$GITHUB_STEP_SUMMARY"
-            echo "⚠️ **$NEEDS_CONSTRAINTS recipe(s) need platform constraints.**" >> "$GITHUB_STEP_SUMMARY"
+            echo "$NEEDS_CONSTRAINTS recipe(s) need platform constraints." >> "$GITHUB_STEP_SUMMARY"
           fi
 
           # Save results for optional constraint step
           echo "NEEDS_CONSTRAINTS=$NEEDS_CONSTRAINTS" >> "$GITHUB_ENV"
 
       - name: Add platform constraints (if enabled)
-        if: env.NEEDS_CONSTRAINTS != '0' && github.event.inputs.auto_constrain == 'true'
+        if: env.NEEDS_CONSTRAINTS != '0' && inputs.auto_constrain
         run: |
           # Get recipes that need constraints
           RECIPES=$(jq -r '[.[] | select(.status == "fail") | .recipe] | unique | .[]' all-results.json)
@@ -528,7 +526,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          BRANCH="validate-all-recipes-$(date +%Y%m%d-%H%M%S)"
+          BRANCH="recipe-platform-validation-$(date +%Y%m%d-%H%M%S)"
           git checkout -b "$BRANCH"
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -547,7 +545,7 @@ Validation covered 11 platforms:
 
           gh pr create \
             --title "feat(recipes): add platform constraints from validation" \
-            --body "Automated PR from \`validate-all-recipes\` workflow.
+            --body "Automated PR from \`recipe-platform-validation\` workflow.
 
 ## Summary
 
