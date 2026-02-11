@@ -10,6 +10,13 @@ import (
 // CopyDirectory recursively copies a directory from src to dst, preserving symlinks
 // This is the canonical implementation used by all actions
 func CopyDirectory(src, dst string) error {
+	return CopyDirectoryExcluding(src, dst, "")
+}
+
+// CopyDirectoryExcluding recursively copies a directory from src to dst,
+// preserving symlinks and skipping any directory matching the exclude name.
+// If exclude is empty, no directories are excluded.
+func CopyDirectoryExcluding(src, dst, exclude string) error {
 	return filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -24,6 +31,11 @@ func CopyDirectory(src, dst string) error {
 		// Skip the source directory itself (walk includes it)
 		if relPath == "." {
 			return nil
+		}
+
+		// Skip excluded directory and its contents
+		if exclude != "" && info.IsDir() && info.Name() == exclude {
+			return filepath.SkipDir
 		}
 
 		// Target path

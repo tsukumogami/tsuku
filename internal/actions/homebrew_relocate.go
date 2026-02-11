@@ -123,8 +123,9 @@ func (a *HomebrewRelocateAction) relocatePlaceholders(ctx *ExecutionContext, pre
 	cellarReplacement := []byte(cellarPath)
 
 	// Detect bottle build paths (e.g., /tmp/action-validator-XXXXXXXX/.install/FORMULA/VERSION)
-	// by scanning for the pattern in all files. We'll collect unique prefixes to replace.
-	bottlePrefixes := make(map[string]bool)
+	// by scanning for the pattern in all files. We'll collect mappings of full path -> prefix.
+	// This allows us to replace the prefix while preserving any suffix after the version.
+	bottlePrefixes := make(map[string]string)
 
 	// Collect binaries that need RPATH fixup
 	var binariesToFix []string
@@ -210,12 +211,22 @@ func (a *HomebrewRelocateAction) relocatePlaceholders(ctx *ExecutionContext, pre
 			newContent = bytes.ReplaceAll(newContent, []byte("@@HOMEBREW_CELLAR@@"), cellarReplacement)
 
 			// Replace bottle build paths
-			// We replace the entire bottle-specific path (e.g., /tmp/action-validator-XXX/.install/curl/8.17.0)
-			// with the prefix path. This is done using a simple pattern match and replace.
-			for prefix := range bottlePrefixes {
-				// Replace paths like /tmp/action-validator-XXX/.install/FORMULA/VERSION
-				// with the installation path
-				newContent = bytes.ReplaceAll(newContent, []byte(prefix), prefixReplacement)
+			// We replace the bottle prefix with the install path, preserving any suffix.
+			// e.g., /tmp/action-validator-XXX/.install/pod/1.16.2/libexec/bin/pod
+			//    -> /root/.tsuku/tools/cocoapods-1.16.2/libexec/bin/pod
+			for fullPath, bottlePrefix := range bottlePrefixes {
+				// Extract suffix (everything after the bottle prefix)
+				suffix := fullPath[len(bottlePrefix):]
+
+				// Security: validate suffix doesn't contain traversal attempts
+				if strings.Contains(suffix, "..") {
+					// Skip paths with traversal attempts - defense in depth
+					continue
+				}
+
+				// Construct replacement: install path + preserved suffix
+				replacement := prefixPath + suffix
+				newContent = bytes.ReplaceAll(newContent, []byte(fullPath), []byte(replacement))
 			}
 
 			// Homebrew bottles often have read-only files; make writable before writing
@@ -241,11 +252,12 @@ func (a *HomebrewRelocateAction) relocatePlaceholders(ctx *ExecutionContext, pre
 	// Debug: Show detected bottle prefixes
 	if len(bottlePrefixes) > 0 {
 		fmt.Printf("   Debug: Found %d bottle path(s) to relocate\n", len(bottlePrefixes))
-		for prefix := range bottlePrefixes {
-			if len(prefix) > 60 {
-				fmt.Printf("     %s...\n", prefix[:60])
+		for fullPath, bottlePrefix := range bottlePrefixes {
+			suffix := fullPath[len(bottlePrefix):]
+			if suffix != "" {
+				fmt.Printf("     prefix: %s, suffix: %s\n", bottlePrefix, suffix)
 			} else {
-				fmt.Printf("     %s\n", prefix)
+				fmt.Printf("     prefix: %s\n", bottlePrefix)
 			}
 		}
 	}
@@ -693,10 +705,11 @@ func (a *HomebrewRelocateAction) isBinaryFile(content []byte) bool {
 	return false
 }
 
-// extractBottlePrefixes scans content for Homebrew bottle build paths and adds them to the map.
-// Bottle paths follow the pattern: /tmp/action-validator-XXXXXXXX/.install/FORMULA/VERSION
-// We need to extract the full path to replace it with the actual installation path.
-func (a *HomebrewRelocateAction) extractBottlePrefixes(content []byte, prefixes map[string]bool) {
+// extractBottlePrefixes scans content for Homebrew bottle build paths and extracts them.
+// Bottle paths follow the pattern: /tmp/action-validator-XXXXXXXX/.install/FORMULA/VERSION[/suffix]
+// Returns a map from full path (including suffix) to the bottle prefix (up to VERSION).
+// This allows the caller to replace only the prefix portion while preserving any suffix.
+func (a *HomebrewRelocateAction) extractBottlePrefixes(content []byte, prefixMap map[string]string) {
 	contentStr := string(content)
 
 	// Look for /tmp/action-validator-XXXXXXXX/.install/FORMULA/VERSION patterns
@@ -725,16 +738,39 @@ func (a *HomebrewRelocateAction) extractBottlePrefixes(content []byte, prefixes 
 			endIdx = len(remaining)
 		}
 
-		pathStr := remaining[:endIdx]
+		fullPath := remaining[:endIdx]
+
+		// Only process if it looks like a valid bottle path (contains /.install/)
+		installIdx := strings.Index(fullPath, "/.install/")
+		if installIdx == -1 {
+			searchPos = absIdx + len(marker)
+			continue
+		}
+
+		// Parse the path after /.install/ to find FORMULA/VERSION boundary
+		// Format: /tmp/action-validator-XXX/.install/FORMULA/VERSION[/suffix]
+		afterInstall := fullPath[installIdx+len("/.install/"):]
+		parts := strings.SplitN(afterInstall, "/", 3) // formula, version, rest
+
+		if len(parts) < 2 {
+			// Not enough components (need at least formula/version)
+			searchPos = absIdx + len(marker)
+			continue
+		}
+
+		// Construct the prefix: everything up to and including version
+		bottlePrefix := fullPath[:installIdx] + "/.install/" + parts[0] + "/" + parts[1]
 
 		// Debug: Show what we found
-		fmt.Printf("   Debug: Found candidate path #%d: %s (has .install: %v)\n",
-			foundCount, pathStr, strings.Contains(pathStr, "/.install/"))
-
-		// Only add if it looks like a valid bottle path (contains /.install/)
-		if strings.Contains(pathStr, "/.install/") {
-			prefixes[pathStr] = true
+		suffix := ""
+		if len(parts) > 2 {
+			suffix = "/" + parts[2]
 		}
+		fmt.Printf("   Debug: Found bottle path #%d: prefix=%s, suffix=%s\n",
+			foundCount, bottlePrefix, suffix)
+
+		// Store mapping from full path to prefix
+		prefixMap[fullPath] = bottlePrefix
 
 		// Move search position past this occurrence
 		searchPos = absIdx + len(marker)
