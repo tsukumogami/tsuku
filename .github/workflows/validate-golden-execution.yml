@@ -118,6 +118,22 @@ jobs:
           # Get list of changed registry recipes (for R2-based execution)
           CHANGED_REGISTRY_RECIPES=$(git diff --name-only --diff-filter=d origin/main...HEAD -- 'recipes/**/*.toml')
 
+          # Check if exclusions file changed - if so, find re-enabled recipes
+          REENABLED_RECIPES=""
+          if git diff --name-only origin/main...HEAD -- 'testdata/golden/execution-exclusions.json' | grep -q .; then
+            echo "Exclusions file changed, checking for re-enabled recipes..."
+            # Get recipes that were in main's exclusions but not in current
+            MAIN_EXCLUSIONS=$(git show origin/main:testdata/golden/execution-exclusions.json 2>/dev/null | jq -r '.exclusions[].recipe' | sort -u || true)
+            CURRENT_EXCLUSIONS=$(jq -r '.exclusions[].recipe' "$EXECUTION_EXCLUSIONS_FILE" 2>/dev/null | sort -u || true)
+
+            # Find recipes removed from exclusions (re-enabled)
+            REENABLED_RECIPES=$(comm -23 <(echo "$MAIN_EXCLUSIONS") <(echo "$CURRENT_EXCLUSIONS") || true)
+            if [ -n "$REENABLED_RECIPES" ]; then
+              echo "Re-enabled recipes (removed from exclusions):"
+              echo "$REENABLED_RECIPES"
+            fi
+          fi
+
           # Process embedded golden file changes (existing logic)
           if [ -z "$CHANGED_EMBEDDED" ]; then
             echo "No embedded golden files changed"
@@ -129,6 +145,22 @@ jobs:
           # Process registry recipe changes
           REGISTRY_RECIPES='['
           REGISTRY_FIRST=true
+
+          # Helper to add recipe to list (avoids duplicates)
+          add_registry_recipe() {
+            local recipe="$1"
+            # Check if already in list
+            if echo "$REGISTRY_RECIPES" | grep -q "\"$recipe\""; then
+              return
+            fi
+            if [ "$REGISTRY_FIRST" = true ]; then
+              REGISTRY_FIRST=false
+            else
+              REGISTRY_RECIPES="$REGISTRY_RECIPES,"
+            fi
+            REGISTRY_RECIPES="$REGISTRY_RECIPES\"$recipe\""
+          }
+
           if [ -n "$CHANGED_REGISTRY_RECIPES" ]; then
             echo "Changed registry recipes:"
             echo "$CHANGED_REGISTRY_RECIPES"
@@ -143,14 +175,25 @@ jobs:
                 continue
               fi
 
-              if [ "$REGISTRY_FIRST" = true ]; then
-                REGISTRY_FIRST=false
-              else
-                REGISTRY_RECIPES="$REGISTRY_RECIPES,"
-              fi
-              REGISTRY_RECIPES="$REGISTRY_RECIPES\"$recipe\""
+              add_registry_recipe "$recipe"
             done
           fi
+
+          # Add re-enabled recipes (removed from exclusions)
+          if [ -n "$REENABLED_RECIPES" ]; then
+            echo "Adding re-enabled recipes to validation:"
+            for recipe in $REENABLED_RECIPES; do
+              # Verify recipe file exists
+              first_letter="${recipe:0:1}"
+              if [ -f "recipes/$first_letter/$recipe.toml" ]; then
+                echo "  + $recipe"
+                add_registry_recipe "$recipe"
+              else
+                echo "  - $recipe (recipe file not found, may be embedded)"
+              fi
+            done
+          fi
+
           REGISTRY_RECIPES="$REGISTRY_RECIPES]"
 
           if [ "$REGISTRY_RECIPES" = '[]' ]; then
