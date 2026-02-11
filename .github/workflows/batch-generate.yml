@@ -851,7 +851,7 @@ jobs:
         with:
           name: validation-results-darwin-x86_64
 
-      # Generation-environment result from #1324 (may not exist yet)
+      # Generation-environment result (produced by generate job)
       - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131  # v7.0.0
         continue-on-error: true
         with:
