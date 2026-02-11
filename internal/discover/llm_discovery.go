@@ -1,16 +1,513 @@
 package discover
 
-import "context"
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+	"regexp"
+	"strings"
+	"time"
+
+	"github.com/tsukumogami/tsuku/internal/llm"
+	"github.com/tsukumogami/tsuku/internal/log"
+	"github.com/tsukumogami/tsuku/internal/search"
+)
+
+// Constants for LLM Discovery configuration.
+const (
+	// MaxDiscoveryTurns limits conversation turns to prevent runaway costs.
+	MaxDiscoveryTurns = 5
+
+	// DefaultDiscoveryTimeout is the total timeout for a discovery session.
+	DefaultDiscoveryTimeout = 60 * time.Second
+
+	// MinConfidenceThreshold gates result acceptance.
+	MinConfidenceThreshold = 70
+
+	// MinStarsThreshold filters low-quality repos.
+	MinStarsThreshold = 50
+)
+
+// Tool names for LLM discovery.
+const (
+	ToolWebSearch     = "web_search"
+	ToolExtractSource = "extract_source"
+)
 
 // LLMDiscovery resolves tool names via LLM web search as a last resort.
 // This is the third and final stage of the resolver chain.
-//
-// Stub: always returns (nil, nil). Implementation deferred to its own design.
-type LLMDiscovery struct{}
+type LLMDiscovery struct {
+	factory  *llm.Factory
+	search   search.Provider
+	confirm  ConfirmFunc
+	httpGet  HTTPGetFunc
+	logger   log.Logger
+	disabled bool // Set when no LLM provider is available
+}
 
-// Resolve is a stub that always misses. Real implementation will invoke the
-// LLM with web search, verify results against the GitHub API, and require
-// user confirmation.
-func (d *LLMDiscovery) Resolve(_ context.Context, _ string) (*DiscoveryResult, error) {
-	return nil, nil
+// ConfirmFunc is a callback for user confirmation.
+// It displays the discovery result and returns true if the user approves.
+type ConfirmFunc func(result *DiscoveryResult) bool
+
+// HTTPGetFunc abstracts HTTP GET for testing.
+type HTTPGetFunc func(ctx context.Context, url string) ([]byte, error)
+
+// LLMDiscoveryOption configures an LLMDiscovery instance.
+type LLMDiscoveryOption func(*LLMDiscovery)
+
+// WithConfirmFunc sets a custom confirmation function.
+func WithConfirmFunc(fn ConfirmFunc) LLMDiscoveryOption {
+	return func(d *LLMDiscovery) {
+		d.confirm = fn
+	}
+}
+
+// WithHTTPGet sets a custom HTTP GET function for testing.
+func WithHTTPGet(fn HTTPGetFunc) LLMDiscoveryOption {
+	return func(d *LLMDiscovery) {
+		d.httpGet = fn
+	}
+}
+
+// WithSearchProvider sets a custom search provider.
+func WithSearchProvider(p search.Provider) LLMDiscoveryOption {
+	return func(d *LLMDiscovery) {
+		d.search = p
+	}
+}
+
+// NewLLMDiscovery creates an LLM-based discovery resolver.
+func NewLLMDiscovery(ctx context.Context, opts ...LLMDiscoveryOption) (*LLMDiscovery, error) {
+	factory, err := llm.NewFactory(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("llm discovery: %w", err)
+	}
+
+	d := &LLMDiscovery{
+		factory: factory,
+		search:  search.NewDDGProvider(),
+		confirm: defaultConfirm,
+		httpGet: defaultHTTPGet,
+		logger:  log.Default(),
+	}
+
+	for _, opt := range opts {
+		opt(d)
+	}
+
+	return d, nil
+}
+
+// NewLLMDiscoveryDisabled creates a disabled LLM discovery (for when no provider is available).
+func NewLLMDiscoveryDisabled() *LLMDiscovery {
+	return &LLMDiscovery{disabled: true}
+}
+
+// Resolve searches for a tool via LLM web search and GitHub verification.
+// Returns (nil, nil) for a soft miss (no suitable source found).
+func (d *LLMDiscovery) Resolve(ctx context.Context, toolName string) (*DiscoveryResult, error) {
+	if d.disabled {
+		return nil, nil
+	}
+
+	// Apply discovery timeout
+	ctx, cancel := context.WithTimeout(ctx, DefaultDiscoveryTimeout)
+	defer cancel()
+
+	// Get an LLM provider
+	provider, err := d.factory.GetProvider(ctx)
+	if err != nil {
+		d.logger.Debug(fmt.Sprintf("llm discovery: no provider available: %v", err))
+		return nil, nil // Soft miss - no provider
+	}
+
+	// Create and run session
+	session := newDiscoverySession(d, provider, toolName)
+	result, err := session.run(ctx)
+	if err != nil {
+		if ctx.Err() != nil {
+			return nil, ctx.Err()
+		}
+		d.logger.Debug(fmt.Sprintf("llm discovery: session error: %v", err))
+		return nil, nil // Soft miss
+	}
+
+	if result == nil {
+		return nil, nil // No result found
+	}
+
+	// Verify against GitHub API
+	verified, err := d.verifyGitHubRepo(ctx, result)
+	if err != nil {
+		d.logger.Debug(fmt.Sprintf("llm discovery: verification failed: %v", err))
+		// Continue without verification - set lower confidence
+		result.Metadata.Stars = 0
+	} else {
+		result.Metadata = verified
+	}
+
+	// Apply quality thresholds
+	if !d.passesQualityThreshold(result) {
+		d.logger.Debug(fmt.Sprintf("llm discovery: result for %q failed quality threshold", toolName))
+		return nil, nil
+	}
+
+	// Require user confirmation
+	if d.confirm != nil && !d.confirm(result) {
+		d.logger.Debug(fmt.Sprintf("llm discovery: user declined result for %q", toolName))
+		return nil, nil
+	}
+
+	return result, nil
+}
+
+// passesQualityThreshold checks if the result meets minimum quality requirements.
+func (d *LLMDiscovery) passesQualityThreshold(result *DiscoveryResult) bool {
+	// Extract confidence from the result (stored in the extraction)
+	// For prototype, we pass if we have stars above threshold
+	return result.Metadata.Stars >= MinStarsThreshold
+}
+
+// verifyGitHubRepo verifies a GitHub repository exists and returns its metadata.
+func (d *LLMDiscovery) verifyGitHubRepo(ctx context.Context, result *DiscoveryResult) (Metadata, error) {
+	if result.Builder != "github" {
+		return Metadata{}, fmt.Errorf("unsupported builder: %s", result.Builder)
+	}
+
+	// Parse owner/repo from source
+	parts := strings.SplitN(result.Source, "/", 2)
+	if len(parts) != 2 {
+		return Metadata{}, fmt.Errorf("invalid source format: %s", result.Source)
+	}
+	owner, repo := parts[0], parts[1]
+
+	// Fetch from GitHub API
+	url := fmt.Sprintf("https://api.github.com/repos/%s/%s", owner, repo)
+	body, err := d.httpGet(ctx, url)
+	if err != nil {
+		return Metadata{}, err
+	}
+
+	// Parse response
+	var ghRepo struct {
+		StargazersCount int    `json:"stargazers_count"`
+		ForksCount      int    `json:"forks_count"`
+		Archived        bool   `json:"archived"`
+		Description     string `json:"description"`
+		CreatedAt       string `json:"created_at"`
+		Fork            bool   `json:"fork"`
+	}
+	if err := json.Unmarshal(body, &ghRepo); err != nil {
+		return Metadata{}, fmt.Errorf("parse github response: %w", err)
+	}
+
+	// Reject archived repos
+	if ghRepo.Archived {
+		return Metadata{}, fmt.Errorf("repository is archived")
+	}
+
+	// Calculate age in days
+	var ageDays int
+	if createdAt, err := time.Parse(time.RFC3339, ghRepo.CreatedAt); err == nil {
+		ageDays = int(time.Since(createdAt).Hours() / 24)
+	}
+
+	return Metadata{
+		Stars:       ghRepo.StargazersCount,
+		Description: ghRepo.Description,
+		AgeDays:     ageDays,
+	}, nil
+}
+
+// discoverySession manages a single LLM discovery conversation.
+type discoverySession struct {
+	discovery *LLMDiscovery
+	provider  llm.Provider
+	toolName  string
+	messages  []llm.Message
+	tools     []llm.ToolDef
+}
+
+func newDiscoverySession(d *LLMDiscovery, provider llm.Provider, toolName string) *discoverySession {
+	return &discoverySession{
+		discovery: d,
+		provider:  provider,
+		toolName:  toolName,
+		messages:  []llm.Message{},
+		tools:     discoveryToolDefs(),
+	}
+}
+
+// discoveryToolDefs returns the tool definitions for LLM discovery.
+func discoveryToolDefs() []llm.ToolDef {
+	return []llm.ToolDef{
+		{
+			Name: ToolWebSearch,
+			Description: `Search the web for information about a developer tool.
+Use this to find the official source repository, download page, or documentation.
+Focus on finding the canonical source (GitHub, GitLab, official website).`,
+			Parameters: map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"query": map[string]any{
+						"type":        "string",
+						"description": "The search query",
+					},
+				},
+				"required": []string{"query"},
+			},
+		},
+		{
+			Name: ToolExtractSource,
+			Description: `Extract the source information for installing a developer tool.
+Call this when you've found the official source repository.
+Only extract sources you're confident about.`,
+			Parameters: map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"builder": map[string]any{
+						"type":        "string",
+						"description": "The builder to use: 'github' for GitHub releases",
+						"enum":        []string{"github"},
+					},
+					"source": map[string]any{
+						"type":        "string",
+						"description": "Builder-specific source (e.g., 'owner/repo' for github)",
+					},
+					"confidence": map[string]any{
+						"type":        "integer",
+						"description": "Confidence score 0-100",
+						"minimum":     0,
+						"maximum":     100,
+					},
+					"evidence": map[string]any{
+						"type":        "array",
+						"description": "Evidence supporting this extraction",
+						"items":       map[string]any{"type": "string"},
+					},
+					"reasoning": map[string]any{
+						"type":        "string",
+						"description": "Reasoning for this extraction",
+					},
+				},
+				"required": []string{"builder", "source", "confidence", "evidence", "reasoning"},
+			},
+		},
+	}
+}
+
+// discoverySystemPrompt returns the system prompt for discovery.
+func discoverySystemPrompt(toolName string) string {
+	return fmt.Sprintf(`You are a tool discovery assistant for tsuku, a package manager for developer tools.
+
+Your task is to find the official source repository for: %s
+
+Guidelines:
+1. Use web_search to find the official source (GitHub repository preferred)
+2. Look for the CANONICAL source, not forks or mirrors
+3. Verify the repository has releases or downloads
+4. Only call extract_source when you're confident you've found the right source
+5. If you can't find a reliable source, say so instead of guessing
+
+The builder "github" expects source in "owner/repo" format.
+Example: for stripe-cli, the source would be "stripe/stripe-cli"`, toolName)
+}
+
+// run executes the discovery session.
+func (s *discoverySession) run(ctx context.Context) (*DiscoveryResult, error) {
+	// Initial user message
+	s.messages = append(s.messages, llm.Message{
+		Role:    llm.RoleUser,
+		Content: fmt.Sprintf("Find the official source repository for: %s", s.toolName),
+	})
+
+	for turn := 0; turn < MaxDiscoveryTurns; turn++ {
+		s.discovery.logger.Debug(fmt.Sprintf("llm discovery: turn %d for %q", turn+1, s.toolName))
+
+		resp, err := s.provider.Complete(ctx, &llm.CompletionRequest{
+			SystemPrompt: discoverySystemPrompt(s.toolName),
+			Messages:     s.messages,
+			Tools:        s.tools,
+			MaxTokens:    2048,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("llm complete: %w", err)
+		}
+
+		s.discovery.logger.Debug(fmt.Sprintf("llm discovery: response has %d tool calls, stop_reason=%s, content_len=%d",
+			len(resp.ToolCalls), resp.StopReason, len(resp.Content)))
+
+		// Add assistant response to history
+		s.messages = append(s.messages, llm.Message{
+			Role:      llm.RoleAssistant,
+			Content:   resp.Content,
+			ToolCalls: resp.ToolCalls,
+		})
+
+		// Process tool calls
+		var toolResults []llm.Message
+		var result *DiscoveryResult
+
+		for _, tc := range resp.ToolCalls {
+			s.discovery.logger.Debug(fmt.Sprintf("llm discovery: executing tool %s", tc.Name))
+			toolResult, extracted, err := s.executeToolCall(ctx, tc)
+			if err != nil {
+				s.discovery.logger.Debug(fmt.Sprintf("llm discovery: tool %s error: %v", tc.Name, err))
+				// Return error as tool result so LLM can try again
+				toolResults = append(toolResults, llm.Message{
+					Role: llm.RoleUser,
+					ToolResult: &llm.ToolResult{
+						CallID:  tc.ID,
+						Content: fmt.Sprintf("Error: %v", err),
+						IsError: true,
+					},
+				})
+				continue
+			}
+
+			if extracted != nil {
+				result = extracted
+			} else {
+				toolResults = append(toolResults, llm.Message{
+					Role: llm.RoleUser,
+					ToolResult: &llm.ToolResult{
+						CallID:  tc.ID,
+						Content: toolResult,
+						IsError: false,
+					},
+				})
+			}
+		}
+
+		// If extract_source was called successfully, return the result
+		if result != nil {
+			return result, nil
+		}
+
+		// Add tool results and continue
+		if len(toolResults) > 0 {
+			s.messages = append(s.messages, toolResults...)
+			continue
+		}
+
+		// No tool calls and no result - check if LLM gave up
+		if resp.StopReason == "end_turn" && len(resp.ToolCalls) == 0 {
+			return nil, fmt.Errorf("LLM completed without finding source")
+		}
+	}
+
+	return nil, fmt.Errorf("max turns (%d) exceeded", MaxDiscoveryTurns)
+}
+
+// executeToolCall processes a single tool call.
+func (s *discoverySession) executeToolCall(ctx context.Context, tc llm.ToolCall) (string, *DiscoveryResult, error) {
+	switch tc.Name {
+	case ToolWebSearch:
+		return s.handleWebSearch(ctx, tc)
+	case ToolExtractSource:
+		result, err := s.handleExtractSource(tc)
+		return "", result, err
+	default:
+		return "", nil, fmt.Errorf("unknown tool: %s", tc.Name)
+	}
+}
+
+// handleWebSearch performs a web search using the configured search provider.
+func (s *discoverySession) handleWebSearch(ctx context.Context, tc llm.ToolCall) (string, *DiscoveryResult, error) {
+	query, ok := tc.Arguments["query"].(string)
+	if !ok || query == "" {
+		return "", nil, fmt.Errorf("web_search: query is required")
+	}
+
+	if s.discovery.search == nil {
+		return "", nil, fmt.Errorf("web_search: no search provider configured")
+	}
+
+	resp, err := s.discovery.search.Search(ctx, query)
+	if err != nil {
+		return "", nil, fmt.Errorf("web_search failed: %w", err)
+	}
+
+	// Format results for LLM (limit to 10 results)
+	return resp.FormatForLLM(10), nil, nil
+}
+
+// handleExtractSource processes extraction results from the LLM.
+func (s *discoverySession) handleExtractSource(tc llm.ToolCall) (*DiscoveryResult, error) {
+	// Parse arguments
+	builder, _ := tc.Arguments["builder"].(string)
+	source, _ := tc.Arguments["source"].(string)
+	confidence, _ := tc.Arguments["confidence"].(float64)
+	reasoning, _ := tc.Arguments["reasoning"].(string)
+	evidenceRaw, _ := tc.Arguments["evidence"].([]any)
+
+	// Validate required fields
+	if builder == "" || source == "" {
+		return nil, fmt.Errorf("extract_source: builder and source are required")
+	}
+
+	// Convert evidence
+	var evidence []string
+	for _, e := range evidenceRaw {
+		if s, ok := e.(string); ok {
+			evidence = append(evidence, s)
+		}
+	}
+
+	// Validate source format for github builder
+	if builder == "github" {
+		if !isValidGitHubSource(source) {
+			return nil, fmt.Errorf("extract_source: invalid github source format: %s (expected owner/repo)", source)
+		}
+	}
+
+	// Check confidence threshold
+	if int(confidence) < MinConfidenceThreshold {
+		return nil, fmt.Errorf("extract_source: confidence %d is below threshold %d", int(confidence), MinConfidenceThreshold)
+	}
+
+	return &DiscoveryResult{
+		Builder:    builder,
+		Source:     source,
+		Confidence: ConfidenceLLM,
+		Reason:     fmt.Sprintf("LLM discovery: %s (evidence: %s)", reasoning, strings.Join(evidence, ", ")),
+		Metadata:   Metadata{}, // Will be filled by GitHub verification
+	}, nil
+}
+
+// isValidGitHubSource validates the owner/repo format.
+var githubSourceRegex = regexp.MustCompile(`^[a-zA-Z0-9][-a-zA-Z0-9]*/[a-zA-Z0-9._-]+$`)
+
+func isValidGitHubSource(source string) bool {
+	return githubSourceRegex.MatchString(source)
+}
+
+// defaultConfirm is the default confirmation function (always confirms).
+// In production, this is replaced by the CLI confirmation prompt.
+func defaultConfirm(result *DiscoveryResult) bool {
+	return true
+}
+
+// defaultHTTPGet performs an HTTP GET request.
+func defaultHTTPGet(ctx context.Context, url string) ([]byte, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Accept", "application/vnd.github.v3+json")
+	req.Header.Set("User-Agent", "tsuku")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("HTTP %d", resp.StatusCode)
+	}
+
+	return io.ReadAll(resp.Body)
 }
