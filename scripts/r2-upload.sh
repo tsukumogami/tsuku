@@ -28,7 +28,6 @@
 #   plans/{category}/{recipe}/v{version}/{platform}.json
 #
 # Object Metadata:
-#   x-tsuku-recipe-hash     - SHA256 hash of the file content
 #   x-tsuku-generated-at    - ISO 8601 timestamp of upload
 #   x-tsuku-format-version  - Golden file format version
 #   x-tsuku-generator-version - Version of tsuku that generated the file
@@ -41,7 +40,7 @@
 set -euo pipefail
 
 BUCKET_NAME="${R2_BUCKET_NAME:-tsuku-golden-registry}"
-FORMAT_VERSION="3"
+FORMAT_VERSION="4"
 
 # Parse arguments
 CATEGORY=""
@@ -130,7 +129,7 @@ AWS_ACCESS_KEY_ID="$R2_ACCESS_KEY_ID" \
 AWS_SECRET_ACCESS_KEY="$R2_SECRET_ACCESS_KEY" \
 AWS_ENDPOINT_URL="$R2_BUCKET_URL" \
 aws s3 cp "$FILE" "s3://${BUCKET_NAME}/${OBJECT_KEY}" \
-    --metadata "x-tsuku-recipe-hash=${FILE_HASH},x-tsuku-generated-at=${GENERATED_AT},x-tsuku-format-version=${FORMAT_VERSION},x-tsuku-generator-version=${GENERATOR_VERSION}" \
+    --metadata "x-tsuku-generated-at=${GENERATED_AT},x-tsuku-format-version=${FORMAT_VERSION},x-tsuku-generator-version=${GENERATOR_VERSION}" \
     --content-type "application/json"
 
 # Verify upload by reading back and comparing hash

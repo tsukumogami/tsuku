@@ -526,8 +526,10 @@ for VERSION in $VERSIONS; do
             continue
         fi
 
-        # Fast hash comparison (golden files already have fields stripped)
-        GOLDEN_HASH=$(sha256sum "$GOLDEN" | cut -d' ' -f1)
+        # Fast hash comparison
+        GOLDEN_NORMALIZED="$TEMP_DIR/golden-$filename"
+        jq 'del(.generated_at, .recipe_source)' "$GOLDEN" > "$GOLDEN_NORMALIZED"
+        GOLDEN_HASH=$(sha256sum "$GOLDEN_NORMALIZED" | cut -d' ' -f1)
         ACTUAL_HASH=$(sha256sum "$ACTUAL" | cut -d' ' -f1)
 
         if [[ "$GOLDEN_HASH" != "$ACTUAL_HASH" ]]; then
@@ -535,7 +537,7 @@ for VERSION in $VERSIONS; do
             echo "MISMATCH: $GOLDEN"
             echo "--- Expected (golden)"
             echo "+++ Actual (generated)"
-            diff -u "$GOLDEN" "$ACTUAL" || true
+            diff -u "$GOLDEN_NORMALIZED" "$ACTUAL" || true
             echo ""
         fi
     done

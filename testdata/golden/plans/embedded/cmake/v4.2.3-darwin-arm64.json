@@ -1,18 +1,16 @@
 {
-  "format_version": 3,
+  "format_version": 4,
   "tool": "cmake",
   "version": "4.2.3",
   "platform": {
     "os": "darwin",
     "arch": "arm64"
   },
-  "recipe_hash": "5340bc0ac5737cf88a647993d875ef4443b332c56cd7ed7a7eb34d185e93c8db",
   "deterministic": true,
   "dependencies": [
     {
       "tool": "openssl",
       "version": "3.6.1",
-      "recipe_hash": "3c1319b74192a4b885e8d6e822039d72377d99b99d2a2d01521523d3ebbf0bd8",
       "steps": [
         {
           "action": "download_file",
@@ -70,7 +68,6 @@
     {
       "tool": "patchelf",
       "version": "0.18.0",
-      "recipe_hash": "4ce22514f9ba4f62ed215e1b10d44816fea9081a1a2aaa27089f508ac16f3b24",
       "steps": [
         {
           "action": "download_file",

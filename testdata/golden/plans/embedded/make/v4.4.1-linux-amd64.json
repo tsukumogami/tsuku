@@ -1,18 +1,16 @@
 {
-  "format_version": 3,
+  "format_version": 4,
   "tool": "make",
   "version": "4.4.1",
   "platform": {
     "os": "linux",
     "arch": "amd64"
   },
-  "recipe_hash": "628773967a5900097b997a017951a5ba89927cd6c00e516d21fa8293b3025603",
   "deterministic": true,
   "dependencies": [
     {
       "tool": "patchelf",
       "version": "0.18.0",
-      "recipe_hash": "4ce22514f9ba4f62ed215e1b10d44816fea9081a1a2aaa27089f508ac16f3b24",
       "steps": [
         {
           "action": "download_file",

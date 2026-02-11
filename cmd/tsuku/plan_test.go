@@ -31,29 +31,6 @@ func TestFormatBytes(t *testing.T) {
 	}
 }
 
-func TestTruncateHash(t *testing.T) {
-	tests := []struct {
-		name     string
-		hash     string
-		expected string
-	}{
-		{"empty hash", "", ""},
-		{"short hash", "abc123", "abc123"},
-		{"exactly 12 chars", "123456789012", "123456789012"},
-		{"long hash", "sha256:abcdef123456789", "sha256:abcde..."},
-		{"very long hash", "deadbeefcafebabedeadbeefcafebabedeadbeef", "deadbeefcafe..."},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := truncateHash(tt.hash)
-			if result != tt.expected {
-				t.Errorf("truncateHash(%q) = %q, want %q", tt.hash, result, tt.expected)
-			}
-		})
-	}
-}
-
 func TestFormatValue(t *testing.T) {
 	tests := []struct {
 		name     string

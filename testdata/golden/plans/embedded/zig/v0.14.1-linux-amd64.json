@@ -1,12 +1,11 @@
 {
-  "format_version": 3,
+  "format_version": 4,
   "tool": "zig",
   "version": "0.14.1",
   "platform": {
     "os": "linux",
     "arch": "amd64"
   },
-  "recipe_hash": "27cc6e8bd149ae64c98c3a7123fcb95be35a8113902428ee90134ee1ba2f99ec",
   "deterministic": true,
   "steps": [
     {

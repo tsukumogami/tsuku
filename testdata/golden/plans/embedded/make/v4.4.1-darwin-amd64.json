@@ -1,12 +1,11 @@
 {
-  "format_version": 3,
+  "format_version": 4,
   "tool": "make",
   "version": "4.4.1",
   "platform": {
     "os": "darwin",
     "arch": "amd64"
   },
-  "recipe_hash": "628773967a5900097b997a017951a5ba89927cd6c00e516d21fa8293b3025603",
   "deterministic": true,
   "steps": [
     {

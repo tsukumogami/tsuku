@@ -1,37 +1,35 @@
 {
-  "format_version": 3,
+  "format_version": 4,
   "tool": "meson",
   "version": "1.9.2",
   "platform": {
     "os": "darwin",
     "arch": "arm64"
   },
-  "recipe_hash": "2eb8f76ea4a9f14dc741d40a67232963b5b7a28807a1c2283197e4bd41a49806",
   "deterministic": false,
   "dependencies": [
     {
       "tool": "python-standalone",
-      "version": "20260113",
-      "recipe_hash": "3068c1ae3ebf682354aa60ac9d3825d538de118e80e1a37cdfcfa725af4e82d1",
+      "version": "20260203",
       "steps": [
         {
           "action": "download_file",
           "params": {
-            "checksum": "d24ae39fd50f791355b578c2365f278e8d5f010af9487aa26c04366044bb9e60",
+            "checksum": "f2cd9caf1f04d59c620aeb3183ec78f880024a0e9246d2bd2fb59cc4bfedac21",
             "checksum_algo": "sha256",
-            "dest": "cpython-3.10.19+20260113-aarch64-apple-darwin-install_only.tar.gz",
-            "url": "https://github.com/indygreg/python-build-standalone/releases/download/20260113/cpython-3.10.19+20260113-aarch64-apple-darwin-install_only.tar.gz"
+            "dest": "cpython-3.10.19+20260203-aarch64-apple-darwin-install_only.tar.gz",
+            "url": "https://github.com/indygreg/python-build-standalone/releases/download/20260203/cpython-3.10.19+20260203-aarch64-apple-darwin-install_only.tar.gz"
           },
           "evaluable": true,
           "deterministic": true,
-          "url": "https://github.com/indygreg/python-build-standalone/releases/download/20260113/cpython-3.10.19+20260113-aarch64-apple-darwin-install_only.tar.gz",
-          "checksum": "d24ae39fd50f791355b578c2365f278e8d5f010af9487aa26c04366044bb9e60",
-          "size": 19522088
+          "url": "https://github.com/indygreg/python-build-standalone/releases/download/20260203/cpython-3.10.19+20260203-aarch64-apple-darwin-install_only.tar.gz",
+          "checksum": "f2cd9caf1f04d59c620aeb3183ec78f880024a0e9246d2bd2fb59cc4bfedac21",
+          "size": 19530228
         },
         {
           "action": "extract",
           "params": {
-            "archive": "cpython-3.10.19+20260113-aarch64-apple-darwin-install_only.tar.gz",
+            "archive": "cpython-3.10.19+20260203-aarch64-apple-darwin-install_only.tar.gz",
             "format": "tar.gz",
             "strip_dirs": 1
           },

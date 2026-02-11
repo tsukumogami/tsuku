@@ -1,5 +1,5 @@
 {
-  "format_version": 3,
+  "format_version": 4,
   "tool": "libyaml",
   "version": "0.2.5",
   "platform": {
@@ -7,13 +7,11 @@
     "arch": "amd64",
     "linux_family": "debian"
   },
-  "recipe_hash": "38af9602184e059c38e9bc4c00bc8b82b0608e168fc3bf7f6baf771ce42fe237",
   "deterministic": true,
   "dependencies": [
     {
       "tool": "patchelf",
       "version": "0.18.0",
-      "recipe_hash": "4ce22514f9ba4f62ed215e1b10d44816fea9081a1a2aaa27089f508ac16f3b24",
       "steps": [
         {
           "action": "download_file",
