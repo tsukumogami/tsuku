@@ -1,0 +1,16 @@
+name: Recipe Validation
+# Validates all recipes across 11 platforms (no auto-constraint).
+# Use this for Phase 1: reviewing which recipes fail on which platforms.
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Run weekly on Sunday at 2 AM UTC
+    - cron: '0 2 * * 0'
+
+jobs:
+  validate:
+    uses: ./.github/workflows/recipe-validation-core.yml
+    with:
+      auto_constrain: false
+    secrets: inherit
