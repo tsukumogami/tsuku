@@ -187,14 +187,12 @@ The batch workflow gains four platform validation jobs (one per target environme
 ```
 batch-generate.yml:
 
-  preflight (#1252)
-      │
-  generate (existing, Linux x86_64 glibc/debian)
+  generate (existing, Linux x86_64 glibc/debian, includes preflight)
       │
       ├── validate-linux-x86_64   (ubuntu-latest, 5 family containers)
       ├── validate-linux-arm64    (ubuntu-24.04-arm, 5 family containers)
       ├── validate-darwin-arm64   (macos-14)
-      └── validate-darwin-x86_64  (macos-13)
+      └── validate-darwin-x86_64  (macos-15-intel)
       │
   merge (aggregates results, writes constraints, creates PR)
 ```
@@ -238,7 +236,7 @@ Platform IDs use the format `{os}-{family}-{libc}-{arch}` for Linux and `{os}-{a
 | validate-linux-x86_64 | `ubuntu-latest` | 5 family containers: `linux-{debian,rhel,arch,suse}-glibc-x86_64`, `linux-alpine-musl-x86_64` |
 | validate-linux-arm64 | `ubuntu-24.04-arm` | 4 family containers: `linux-{debian,rhel,suse}-glibc-arm64`, `linux-alpine-musl-arm64` (arch excluded -- no ARM64 image) |
 | validate-darwin-arm64 | `macos-14` | `darwin-arm64` |
-| validate-darwin-x86_64 | `macos-13` | `darwin-x86_64` |
+| validate-darwin-x86_64 | `macos-15-intel` | `darwin-x86_64` |
 
 **Container images for Linux family validation:**
 
@@ -325,29 +323,25 @@ merge job:
 
 ## Implementation Approach
 
-### Phase 1: Platform Validation Jobs (#1254)
+The foundation work is complete. See Implementation Issues for remaining refinements.
 
-Add the four platform validation jobs to `batch-generate.yml`:
+### Completed: Platform Validation Jobs (#1320)
+
+Added four platform validation jobs to `batch-generate.yml`:
 - Retry logic for network errors
 - Structured JSON result artifacts
 - Job summaries in `$GITHUB_STEP_SUMMARY`
 
-Dependencies: #1252 (preflight job provides recipe list)
+### Completed: Merge Job with Constraint Writing (#1323)
 
-### Phase 2: Merge Job with Constraint Writing (#1256)
-
-Add the merge job that:
+Added the merge job that:
 - Aggregates platform results
-- Derives and writes platform constraints
+- Derives and writes platform constraints via `scripts/write-platform-constraints.sh`
 - Creates the PR with accurate metadata
 
-Dependencies: #1254 (platform validation results)
+### Active: Validation Coverage for Batch PRs
 
-### Phase 3: Validation Coverage for Batch PRs
-
-After the batch PR is created, `test-changed-recipes.yml` still triggers as a secondary validation layer. This provides defense-in-depth: the batch workflow catches platform issues and writes constraints, and PR CI validates that the constrained recipes install correctly on the platforms they claim to support.
-
-No code changes needed for this phase; it's the existing behavior once the PR is created with proper constraints.
+After the batch PR is created, `test-changed-recipes.yml` triggers as a secondary validation layer. This provides defense-in-depth: the batch workflow catches platform issues and writes constraints, and PR CI validates that the constrained recipes install correctly on the platforms they claim to support.
 
 ## Security Considerations
 
