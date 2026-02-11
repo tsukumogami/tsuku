@@ -2,16 +2,14 @@ name: Full Recipe Validation
 # Validates all recipes across 11 platforms and optionally adds constraints
 
 on:
+  # Allow manual trigger with optional auto-constraint
   workflow_dispatch:
     inputs:
       auto_constrain:
         description: 'Automatically add platform constraints to failing recipes'
-        required: true
+        required: false
         default: 'false'
-        type: choice
-        options:
-          - 'true'
-          - 'false'
+        type: boolean
   schedule:
     # Run weekly on Sunday at 2 AM UTC
     - cron: '0 2 * * 0'
@@ -500,7 +498,7 @@ jobs:
           echo "NEEDS_CONSTRAINTS=$NEEDS_CONSTRAINTS" >> "$GITHUB_ENV"
 
       - name: Add platform constraints (if enabled)
-        if: env.NEEDS_CONSTRAINTS != '0' && github.event.inputs.auto_constrain == 'true'
+        if: env.NEEDS_CONSTRAINTS != '0' && inputs.auto_constrain
         run: |
           # Get recipes that need constraints
           RECIPES=$(jq -r '[.[] | select(.status == "fail") | .recipe] | unique | .[]' all-results.json)
