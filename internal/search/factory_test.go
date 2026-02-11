@@ -17,9 +17,8 @@ func TestNewSearchProvider_ExplicitDDG(t *testing.T) {
 }
 
 func TestNewSearchProvider_ExplicitTavily(t *testing.T) {
-	// Set up environment
-	os.Setenv("TAVILY_API_KEY", "test-tavily-key")
-	defer os.Unsetenv("TAVILY_API_KEY")
+	// Set up environment - t.Setenv handles cleanup automatically
+	t.Setenv("TAVILY_API_KEY", "test-tavily-key")
 
 	p, err := NewSearchProvider("tavily")
 	if err != nil {
@@ -31,8 +30,11 @@ func TestNewSearchProvider_ExplicitTavily(t *testing.T) {
 }
 
 func TestNewSearchProvider_ExplicitTavilyMissingKey(t *testing.T) {
-	// Ensure no key is set
-	os.Unsetenv("TAVILY_API_KEY")
+	// Ensure no key is set - save and restore any existing value
+	if orig, exists := os.LookupEnv("TAVILY_API_KEY"); exists {
+		t.Setenv("TAVILY_API_KEY", orig) // This will restore after test
+		os.Unsetenv("TAVILY_API_KEY")    //nolint:errcheck // intentionally ignoring
+	}
 
 	_, err := NewSearchProvider("tavily")
 	if err == nil {
@@ -44,9 +46,8 @@ func TestNewSearchProvider_ExplicitTavilyMissingKey(t *testing.T) {
 }
 
 func TestNewSearchProvider_ExplicitBrave(t *testing.T) {
-	// Set up environment
-	os.Setenv("BRAVE_API_KEY", "test-brave-key")
-	defer os.Unsetenv("BRAVE_API_KEY")
+	// Set up environment - t.Setenv handles cleanup automatically
+	t.Setenv("BRAVE_API_KEY", "test-brave-key")
 
 	p, err := NewSearchProvider("brave")
 	if err != nil {
@@ -58,8 +59,11 @@ func TestNewSearchProvider_ExplicitBrave(t *testing.T) {
 }
 
 func TestNewSearchProvider_ExplicitBraveMissingKey(t *testing.T) {
-	// Ensure no key is set
-	os.Unsetenv("BRAVE_API_KEY")
+	// Ensure no key is set - save and restore any existing value
+	if orig, exists := os.LookupEnv("BRAVE_API_KEY"); exists {
+		t.Setenv("BRAVE_API_KEY", orig) // This will restore after test
+		os.Unsetenv("BRAVE_API_KEY")    //nolint:errcheck // intentionally ignoring
+	}
 
 	_, err := NewSearchProvider("brave")
 	if err == nil {
@@ -82,10 +86,8 @@ func TestNewSearchProvider_InvalidProvider(t *testing.T) {
 
 func TestNewSearchProvider_AutoSelectTavily(t *testing.T) {
 	// Set up environment - Tavily takes priority
-	os.Setenv("TAVILY_API_KEY", "test-tavily-key")
-	os.Setenv("BRAVE_API_KEY", "test-brave-key")
-	defer os.Unsetenv("TAVILY_API_KEY")
-	defer os.Unsetenv("BRAVE_API_KEY")
+	t.Setenv("TAVILY_API_KEY", "test-tavily-key")
+	t.Setenv("BRAVE_API_KEY", "test-brave-key")
 
 	p, err := NewSearchProvider("")
 	if err != nil {
@@ -98,9 +100,12 @@ func TestNewSearchProvider_AutoSelectTavily(t *testing.T) {
 
 func TestNewSearchProvider_AutoSelectBrave(t *testing.T) {
 	// Set up environment - only Brave key
-	os.Unsetenv("TAVILY_API_KEY")
-	os.Setenv("BRAVE_API_KEY", "test-brave-key")
-	defer os.Unsetenv("BRAVE_API_KEY")
+	// Ensure TAVILY_API_KEY is not set
+	if orig, exists := os.LookupEnv("TAVILY_API_KEY"); exists {
+		t.Setenv("TAVILY_API_KEY", orig) // This will restore after test
+		os.Unsetenv("TAVILY_API_KEY")    //nolint:errcheck // intentionally ignoring
+	}
+	t.Setenv("BRAVE_API_KEY", "test-brave-key")
 
 	p, err := NewSearchProvider("")
 	if err != nil {
@@ -113,8 +118,14 @@ func TestNewSearchProvider_AutoSelectBrave(t *testing.T) {
 
 func TestNewSearchProvider_AutoSelectDDG(t *testing.T) {
 	// Ensure no API keys are set
-	os.Unsetenv("TAVILY_API_KEY")
-	os.Unsetenv("BRAVE_API_KEY")
+	if orig, exists := os.LookupEnv("TAVILY_API_KEY"); exists {
+		t.Setenv("TAVILY_API_KEY", orig) // This will restore after test
+		os.Unsetenv("TAVILY_API_KEY")    //nolint:errcheck // intentionally ignoring
+	}
+	if orig, exists := os.LookupEnv("BRAVE_API_KEY"); exists {
+		t.Setenv("BRAVE_API_KEY", orig) // This will restore after test
+		os.Unsetenv("BRAVE_API_KEY")    //nolint:errcheck // intentionally ignoring
+	}
 
 	p, err := NewSearchProvider("")
 	if err != nil {
