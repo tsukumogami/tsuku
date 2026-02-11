@@ -14,55 +14,6 @@ rationale: |
 
 Current
 
-## Implementation Issues
-
-### Milestone: [Ecosystem Probe](https://github.com/tsukumogami/tsuku/milestone/65)
-
-| Issue | Dependencies | Tier |
-|-------|--------------|------|
-| ~~[#1383: Add Probe() to ecosystem builders](https://github.com/tsukumogami/tsuku/issues/1383)~~ | ~~None~~ | ~~testable~~ |
-| _Adds `Probe()` to all 7 ecosystem builders (npm, pypi, cargo, gem, go, cpan, cask), wrapping existing fetch methods to return `ProbeResult` with source, downloads, version count, and repository info._ | | |
-| ~~[#1384: Implement parallel ecosystem probe resolver](https://github.com/tsukumogami/tsuku/issues/1384)~~ | ~~[#1383](https://github.com/tsukumogami/tsuku/issues/1383)~~ | ~~testable~~ |
-| _Replaces the stub resolver with goroutine-per-builder fan-out, shared 3-second timeout, buffered channel collection, and static priority-based disambiguation._ | | |
-| ~~[#1385: Wire ecosystem probe into chain resolver](https://github.com/tsukumogami/tsuku/issues/1385)~~ | ~~[#1384](https://github.com/tsukumogami/tsuku/issues/1384)~~ | ~~testable~~ |
-| _Updates `runDiscovery()` to construct `NewEcosystemProbe()` with the list of builder probers, connecting the probe to the live discovery chain._ | | |
-| ~~[#1386: Add integration tests for ecosystem probe](https://github.com/tsukumogami/tsuku/issues/1386)~~ | ~~[#1385](https://github.com/tsukumogami/tsuku/issues/1385)~~ | ~~testable~~ |
-| _Covers parallel execution, timeout behavior, priority disambiguation, and full chain integration with mock HTTP responses._ | | |
-
-### Dependency Graph
-
-```mermaid
-graph TD
-    subgraph Phase1["Phase 1: Builder Interface"]
-        I1383["#1383: Add Probe() to builders"]
-    end
-
-    subgraph Phase2["Phase 2: Resolver"]
-        I1384["#1384: Parallel probe resolver"]
-    end
-
-    subgraph Phase3["Phase 3: Integration"]
-        I1385["#1385: Wire into chain"]
-        I1386["#1386: Integration tests"]
-    end
-
-    I1383 --> I1384
-    I1384 --> I1385
-    I1385 --> I1386
-
-    classDef done fill:#c8e6c9
-    classDef ready fill:#bbdefb
-    classDef blocked fill:#fff9c4
-    classDef needsDesign fill:#e1bee7
-
-    class I1383 done
-    class I1384 done
-    class I1385 done
-    class I1386 done
-```
-
-**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
-
 ## Upstream Design Reference
 
 This design implements the Ecosystem Probe stage described in [DESIGN-discovery-resolver.md](DESIGN-discovery-resolver.md) (Solution Architecture: Ecosystem Probe section). It addresses the design questions raised in issue 1317.

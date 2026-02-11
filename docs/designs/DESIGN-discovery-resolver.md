@@ -112,8 +112,8 @@ graph TD
     class M65 done
     class M62 done
     class I1315 done
-    class I1321 ready
-    class I1322 ready
+    class I1321 needsDesign
+    class I1322 needsDesign
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
