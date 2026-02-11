@@ -131,7 +131,10 @@ func toProtoRequest(req *CompletionRequest) *llmpb.CompletionRequest {
 
 		// Convert tool calls
 		for _, tc := range msg.ToolCalls {
-			argsJSON, _ := json.Marshal(tc.Arguments)
+			argsJSON, err := json.Marshal(tc.Arguments)
+			if err != nil {
+				argsJSON = []byte("{}")
+			}
 			pbMsg.ToolCalls = append(pbMsg.ToolCalls, &llmpb.ToolCall{
 				Id:            tc.ID,
 				Name:          tc.Name,
@@ -153,7 +156,10 @@ func toProtoRequest(req *CompletionRequest) *llmpb.CompletionRequest {
 
 	// Convert tools
 	for _, tool := range req.Tools {
-		paramsJSON, _ := json.Marshal(tool.Parameters)
+		paramsJSON, err := json.Marshal(tool.Parameters)
+		if err != nil {
+			paramsJSON = []byte("{}")
+		}
 		pbReq.Tools = append(pbReq.Tools, &llmpb.ToolDef{
 			Name:             tool.Name,
 			Description:      tool.Description,
@@ -193,9 +199,10 @@ func fromProtoResponse(resp *llmpb.CompletionResponse) *CompletionResponse {
 
 	// Convert tool calls
 	for _, tc := range resp.ToolCalls {
-		var args map[string]any
-		_ = json.Unmarshal([]byte(tc.ArgumentsJson), &args)
-
+		args := make(map[string]any)
+		if err := json.Unmarshal([]byte(tc.ArgumentsJson), &args); err != nil {
+			args = make(map[string]any)
+		}
 		result.ToolCalls = append(result.ToolCalls, ToolCall{
 			ID:        tc.Id,
 			Name:      tc.Name,
