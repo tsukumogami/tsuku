@@ -148,6 +148,30 @@ func confirmWithUser(prompt string) bool {
 	return response == "y" || response == "yes"
 }
 
+// confirmLLMDiscovery prompts the user to confirm an LLM-discovered tool source.
+func confirmLLMDiscovery(result *discover.DiscoveryResult) bool {
+	if !isInteractive() {
+		fmt.Fprintln(os.Stderr, "Error: LLM discovery requires interactive mode for confirmation")
+		return false
+	}
+
+	fmt.Fprintln(os.Stderr, "")
+	fmt.Fprintln(os.Stderr, "LLM Discovery Result:")
+	fmt.Fprintf(os.Stderr, "  Source: %s:%s\n", result.Builder, result.Source)
+	if result.Metadata.Stars > 0 {
+		fmt.Fprintf(os.Stderr, "  Stars: %d\n", result.Metadata.Stars)
+	}
+	if result.Metadata.Description != "" {
+		fmt.Fprintf(os.Stderr, "  Description: %s\n", result.Metadata.Description)
+	}
+	fmt.Fprintf(os.Stderr, "  Reason: %s\n", result.Reason)
+	fmt.Fprintln(os.Stderr, "")
+	fmt.Fprintln(os.Stderr, "WARNING: This source was found via LLM web search.")
+	fmt.Fprintln(os.Stderr, "Please verify this is the correct tool before proceeding.")
+
+	return confirmWithUser("Use this source?")
+}
+
 // offerToolchainInstall prompts the user to install a missing toolchain (or
 // auto-installs with --yes). Returns true if the install succeeded.
 func offerToolchainInstall(info *toolchain.Info, ecosystem string, autoApprove bool) bool {
@@ -731,8 +755,14 @@ func runDiscovery(toolName string) (*discover.DiscoveryResult, error) {
 	}
 	stages = append(stages, discover.NewEcosystemProbe(probers, 3*time.Second))
 
-	// Stage 3: LLM discovery (stub — always misses).
-	stages = append(stages, &discover.LLMDiscovery{})
+	// Stage 3: LLM discovery — uses LLM with web search to find tool sources.
+	llmDiscovery, err := discover.NewLLMDiscovery(globalCtx, discover.WithConfirmFunc(confirmLLMDiscovery))
+	if err != nil {
+		// No LLM provider available - use disabled discovery
+		stages = append(stages, discover.NewLLMDiscoveryDisabled())
+	} else {
+		stages = append(stages, llmDiscovery)
+	}
 
 	chain := discover.NewChainResolver(stages...)
 	return chain.Resolve(globalCtx, toolName)
