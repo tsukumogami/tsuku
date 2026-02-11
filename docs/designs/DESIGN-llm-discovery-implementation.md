@@ -704,6 +704,24 @@ Create pipeline → sandbox → install
 
 ## Implementation Approach
 
+### Prototype Status
+
+A working prototype has been implemented that validates the core architecture. The following components are complete:
+
+| Component | Status | Location |
+|-----------|--------|----------|
+| LLMDiscovery struct | Done | `internal/discover/llm_discovery.go` |
+| Tool definitions (web_search, extract_source) | Done | `internal/discover/llm_discovery.go` |
+| Conversation loop with bounded iterations | Done | `internal/discover/llm_discovery.go` |
+| SearchProvider interface | Done | `internal/search/provider.go` |
+| DDG HTML scraper | Done | `internal/search/ddg.go` |
+| GitHub API verification (exists, archived) | Done | `internal/discover/llm_discovery.go` |
+| Quality thresholds (confidence >= 70, stars >= 50) | Done | `internal/discover/llm_discovery.go` |
+| ChainResolver integration (stage 3) | Done | `cmd/tsuku/create.go` |
+| User confirmation flow | Done | `cmd/tsuku/create.go` |
+
+**Remaining work** focuses on hardening, security layers, and optional features rather than core architecture.
+
 ### Roadmap Overview
 
 The implementation starts with a tool-based architecture where `web_search` is exposed to the LLM. For Cloud LLMs, this uses native search. For local LLMs, we provide a DDG-based tool handler.
@@ -732,52 +750,69 @@ This approach:
 
 Implement the tool-based search architecture. Cloud LLMs use native search; local LLMs use DDG handler.
 
-- Define `web_search` and `extract_source` tool schemas
-- Implement tool handler for local LLM web_search calls
-- Implement DDG scraper with HTML parsing
-- Implement SearchProvider interface for alternative backends
-- Write tests with recorded HTML responses
+**Prototype complete:**
+- [x] Define `web_search` and `extract_source` tool schemas
+- [x] Implement tool handler for local LLM web_search calls
+- [x] Implement DDG scraper with HTML parsing
+- [x] Implement SearchProvider interface for alternative backends
+
+**Remaining:**
+- [ ] Add retry logic for DDG rate limiting (202 responses)
+- [ ] Write tests with recorded HTML responses
 
 ### Phase 2: Core Discovery Session
 
 Implement the LLM session that analyzes search results.
 
-- Create LLMDiscoverySession with conversation management
-- Define extract_source tool schema (builder vs instructions results)
-- Write discovery system prompt
-- Implement conversation loop with bounded iterations
-- Wire into ChainResolver as stage 3
-- Add configurable timeout
+**Prototype complete:**
+- [x] Create LLMDiscoverySession with conversation management
+- [x] Define extract_source tool schema (builder results only for now)
+- [x] Write discovery system prompt
+- [x] Implement conversation loop with bounded iterations
+- [x] Wire into ChainResolver as stage 3
+- [x] Add configurable timeout (60s default)
+
+**Remaining:**
+- [ ] Add `instructions` result type to extract_source schema (deferred to Phase 8)
 
 ### Phase 3: Verification and Sanitization
 
 Add security layers: HTML stripping, URL validation, GitHub API verification.
 
-- Implement HTML stripping for search results
-- Implement URL validation with safe character sets
-- Implement GitHub API verification (exists, not archived, fork detection)
-- Add rate limit handling with graceful degradation
-- Connect to existing HTTP client patterns
+**Prototype complete:**
+- [x] Implement GitHub API verification (exists, not archived)
+
+**Remaining:**
+- [ ] Implement HTML stripping for search results
+- [ ] Implement URL validation with domain allowlist
+- [ ] Add fork detection (check if fork, compare to parent stars)
+- [ ] Add rate limit handling with graceful degradation
 
 ### Phase 4: Quality Thresholds and Decision Algorithm
 
 Implement the deterministic decision logic.
 
-- Implement threshold checking (confidence gate, quality OR)
-- Implement priority ranking for multiple candidates
-- Handle edge cases (low confidence, multiple matches, forks)
-- Define initial threshold values based on registry analysis
-- Add tests with mock LLM responses
+**Prototype complete:**
+- [x] Implement threshold checking (confidence >= 70, stars >= 50)
+- [x] Define initial threshold values
+
+**Remaining:**
+- [ ] Implement priority ranking for multiple candidates
+- [ ] Handle edge cases (multiple matches, forks)
+- [ ] Add tests with mock LLM responses
 
 ### Phase 5: Confirmation UX
 
 Implement user-facing confirmation flow.
 
-- Create rich metadata display format
-- Handle interactive vs. non-interactive modes
-- Integrate with existing confirmation patterns
-- Add --yes handling (skip confirmation, not verification)
-- Test TTY detection
+**Prototype complete:**
+- [x] Create metadata display format (builder, source, stars, description, reason)
+- [x] Handle interactive vs. non-interactive modes
+- [x] Integrate with existing confirmation patterns (confirmWithUser)
+
+**Remaining:**
+- [ ] Add --yes handling (skip confirmation, not verification)
+- [ ] Enhance display with more metadata (age, downloads if available)
 
 ### Phase 6: Alternative Search Providers (Optional)
 
