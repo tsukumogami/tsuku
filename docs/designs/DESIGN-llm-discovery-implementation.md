@@ -34,7 +34,7 @@ Planned
 
 | Issue | Dependencies | Tier |
 |-------|--------------|------|
-| [#1610: feat(search): add DDG retry logic and recorded response tests](https://github.com/tsukumogami/tsuku/issues/1610) | None | testable |
+| ~~[#1610: feat(search): add DDG retry logic and recorded response tests](https://github.com/tsukumogami/tsuku/issues/1610)~~ | None | testable |
 | _Adds exponential backoff retry logic for DDG 202 responses and establishes the test fixture pattern with recorded HTML responses for reliable offline testing._ | | |
 | [#1611: feat(discover): add HTML stripping and URL validation](https://github.com/tsukumogami/tsuku/issues/1611) | None | critical |
 | _Implements security layers against prompt injection: strips script/style tags and HTML comments from search results, validates GitHub URLs against an allowlist pattern, and removes zero-width Unicode characters._ | | |
@@ -51,7 +51,7 @@ Planned
 
 | Issue | Dependencies | Tier |
 |-------|--------------|------|
-| [#1617: feat(search): add Tavily and Brave search providers](https://github.com/tsukumogami/tsuku/issues/1617) | [#1610](https://github.com/tsukumogami/tsuku/issues/1610) | testable |
+| ~~[#1617: feat(search): add Tavily and Brave search providers](https://github.com/tsukumogami/tsuku/issues/1617)~~ | [#1610](https://github.com/tsukumogami/tsuku/issues/1610) | testable |
 | _Implements Tavily and Brave as API-based alternatives to DDG scraping. Auto-selects provider based on API key presence, adds --search-provider flag for explicit override._ | | |
 | [#1616: feat(discover): add telemetry and cost tracking](https://github.com/tsukumogami/tsuku/issues/1616) | None | testable |
 | _Integrates with existing budget and telemetry infrastructure: tracks LLM token usage per discovery, enforces daily cost limits, emits discovery events for accuracy monitoring, and shows metrics in verbose output._ | | |
@@ -61,7 +61,7 @@ Planned
 ```mermaid
 graph TD
     subgraph Hardening["LLM Discovery Hardening"]
-        I1610["#1610: DDG retry logic"]
+        I1610["<s>#1610: DDG retry logic</s>"]
         I1611["#1611: HTML stripping"]
         I1612["#1612: Fork detection"]
         I1613["#1613: Rate limit handling"]
@@ -70,7 +70,7 @@ graph TD
     end
 
     subgraph Extensions["LLM Discovery Extensions"]
-        I1617["#1617: Tavily and Brave"]
+        I1617["<s>#1617: Tavily and Brave</s>"]
         I1616["#1616: Telemetry"]
     end
 
@@ -85,8 +85,9 @@ graph TD
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1610,I1611,I1612,I1616 ready
-    class I1613,I1614,I1615,I1617 blocked
+    class I1610,I1617 done
+    class I1611,I1612,I1616 ready
+    class I1613,I1614,I1615 blocked
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design

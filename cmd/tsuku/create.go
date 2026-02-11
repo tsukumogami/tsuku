@@ -20,6 +20,7 @@ import (
 	"github.com/tsukumogami/tsuku/internal/install"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/sandbox"
+	"github.com/tsukumogami/tsuku/internal/search"
 	"github.com/tsukumogami/tsuku/internal/toolchain"
 	"github.com/tsukumogami/tsuku/internal/userconfig"
 	"github.com/tsukumogami/tsuku/internal/validate"
@@ -98,6 +99,7 @@ var (
 	createSkipSandbox       bool
 	createDeterministicOnly bool
 	createOutput            string
+	createSearchProvider    string
 )
 
 func init() {
@@ -107,6 +109,7 @@ func init() {
 	createCmd.Flags().BoolVar(&createSkipSandbox, "skip-sandbox", false, "Skip container sandbox testing (use when Docker is unavailable)")
 	createCmd.Flags().BoolVar(&createDeterministicOnly, "deterministic-only", false, "Skip LLM fallback; exit with structured error if deterministic generation fails")
 	createCmd.Flags().StringVar(&createOutput, "output", "", "Write recipe to this path instead of the default registry location")
+	createCmd.Flags().StringVar(&createSearchProvider, "search-provider", "", "Search provider for LLM discovery: ddg, tavily, or brave")
 }
 
 // confirmSkipSandbox prompts the user to confirm skipping sandbox testing.
@@ -720,6 +723,11 @@ func describeStep(step recipe.Step) string {
 // discovery resolver chain. Currently only the registry lookup stage is
 // active; ecosystem probe and LLM stages are stubs.
 func runDiscovery(toolName string) (*discover.DiscoveryResult, error) {
+	return runDiscoveryWithOptions(toolName, createSearchProvider)
+}
+
+// runDiscoveryWithOptions resolves a tool name with optional search provider override.
+func runDiscoveryWithOptions(toolName string, searchProviderName string) (*discover.DiscoveryResult, error) {
 	cfg, err := config.DefaultConfig()
 	if err != nil {
 		return nil, fmt.Errorf("load config: %w", err)
@@ -756,7 +764,16 @@ func runDiscovery(toolName string) (*discover.DiscoveryResult, error) {
 	stages = append(stages, discover.NewEcosystemProbe(probers, 3*time.Second))
 
 	// Stage 3: LLM discovery — uses LLM with web search to find tool sources.
-	llmDiscovery, err := discover.NewLLMDiscovery(globalCtx, discover.WithConfirmFunc(confirmLLMDiscovery))
+	// Configure search provider based on flag or environment variables.
+	searchProvider, err := search.NewSearchProvider(searchProviderName)
+	if err != nil {
+		return nil, fmt.Errorf("search provider: %w", err)
+	}
+
+	llmDiscovery, err := discover.NewLLMDiscovery(globalCtx,
+		discover.WithConfirmFunc(confirmLLMDiscovery),
+		discover.WithSearchProvider(searchProvider),
+	)
 	if err != nil {
 		// No LLM provider available - use disabled discovery
 		stages = append(stages, discover.NewLLMDiscoveryDisabled())

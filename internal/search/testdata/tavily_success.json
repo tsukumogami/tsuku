@@ -1,0 +1,23 @@
+{
+  "query": "stripe cli github",
+  "results": [
+    {
+      "title": "Stripe CLI - GitHub",
+      "url": "https://github.com/stripe/stripe-cli",
+      "content": "A command-line tool for Stripe that helps you build, test, and manage your integration directly from the terminal.",
+      "score": 0.95
+    },
+    {
+      "title": "Stripe CLI Documentation",
+      "url": "https://stripe.com/docs/stripe-cli",
+      "content": "Install the Stripe CLI to manage your Stripe resources and webhooks from the command line.",
+      "score": 0.88
+    },
+    {
+      "title": "Stripe CLI Releases",
+      "url": "https://github.com/stripe/stripe-cli/releases",
+      "content": "Download pre-built binaries for macOS, Linux, and Windows.",
+      "score": 0.82
+    }
+  ]
+}
