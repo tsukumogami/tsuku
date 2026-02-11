@@ -530,13 +530,13 @@ jobs:
           git add recipes/
           git commit -m "feat(recipes): add platform constraints from validation
 
-Automated platform constraint additions based on full recipe validation.
-Recipes failing on specific platforms now have explicit constraints.
+          Automated platform constraint additions based on full recipe validation.
+          Recipes failing on specific platforms now have explicit constraints.
 
-Validation covered 11 platforms:
-- 5 Linux x86_64 families (debian, rhel, arch, suse, alpine)
-- 4 Linux arm64 families (debian, rhel, suse, alpine)
-- 2 macOS architectures (arm64, x86_64)"
+          Validation covered 11 platforms:
+          - 5 Linux x86_64 families (debian, rhel, arch, suse, alpine)
+          - 4 Linux arm64 families (debian, rhel, suse, alpine)
+          - 2 macOS architectures (arm64, x86_64)"
 
           git push -u origin "$BRANCH"
 
@@ -544,13 +544,13 @@ Validation covered 11 platforms:
             --title "feat(recipes): add platform constraints from validation" \
             --body "Automated PR from \`recipe-platform-validation\` workflow.
 
-## Summary
+          ## Summary
 
-Added platform constraints to recipes that failed validation on specific platforms.
+          Added platform constraints to recipes that failed validation on specific platforms.
 
-See workflow run for detailed validation results: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          See workflow run for detailed validation results: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
-## Next Steps
+          ## Next Steps
 
-Review the added constraints and merge if they look correct." \
+          Review the added constraints and merge if they look correct." \
             --base main
