@@ -82,7 +82,7 @@ graph LR
     class I1252 done
     class I1255 done
     class I1258 done
-    class M61 ready
+    class M61 done
     class I1253 ready
     class M64 done
 ```
