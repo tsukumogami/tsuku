@@ -12,14 +12,14 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	"github.com/tsukumogami/tsuku/internal/llm/llmpb"
+	pb "github.com/tsukumogami/tsuku/internal/llm/proto"
 )
 
 // LocalProvider implements the Provider interface using the local tsuku-llm addon.
 // It communicates with the addon over gRPC via Unix domain sockets.
 type LocalProvider struct {
 	conn   *grpc.ClientConn
-	client llmpb.InferenceServiceClient
+	client pb.InferenceServiceClient
 }
 
 // NewLocalProvider creates a new local provider by connecting to the tsuku-llm addon.
@@ -41,7 +41,7 @@ func NewLocalProvider(_ context.Context) (*LocalProvider, error) {
 		return nil, fmt.Errorf("failed to connect to local LLM addon: %w", err)
 	}
 
-	client := llmpb.NewInferenceServiceClient(conn)
+	client := pb.NewInferenceServiceClient(conn)
 
 	return &LocalProvider{
 		conn:   conn,
@@ -77,13 +77,13 @@ func (p *LocalProvider) Close() error {
 
 // Shutdown sends a shutdown request to the addon.
 func (p *LocalProvider) Shutdown(ctx context.Context, graceful bool) error {
-	_, err := p.client.Shutdown(ctx, &llmpb.ShutdownRequest{Graceful: graceful})
+	_, err := p.client.Shutdown(ctx, &pb.ShutdownRequest{Graceful: graceful})
 	return err
 }
 
 // GetStatus retrieves the addon's current status.
-func (p *LocalProvider) GetStatus(ctx context.Context) (*llmpb.StatusResponse, error) {
-	return p.client.GetStatus(ctx, &llmpb.StatusRequest{})
+func (p *LocalProvider) GetStatus(ctx context.Context) (*pb.StatusResponse, error) {
+	return p.client.GetStatus(ctx, &pb.StatusRequest{})
 }
 
 // SocketPath returns the path to the Unix domain socket.
@@ -111,15 +111,15 @@ func IsAddonRunning() bool {
 }
 
 // toProtoRequest converts a CompletionRequest to proto format.
-func toProtoRequest(req *CompletionRequest) *llmpb.CompletionRequest {
-	pbReq := &llmpb.CompletionRequest{
+func toProtoRequest(req *CompletionRequest) *pb.CompletionRequest {
+	pbReq := &pb.CompletionRequest{
 		SystemPrompt: req.SystemPrompt,
 		MaxTokens:    int32(req.MaxTokens),
 	}
 
 	// Convert messages
 	for _, msg := range req.Messages {
-		pbMsg := &llmpb.Message{
+		pbMsg := &pb.Message{
 			Role:    toProtoRole(msg.Role),
 			Content: msg.Content,
 		}
@@ -130,7 +130,7 @@ func toProtoRequest(req *CompletionRequest) *llmpb.CompletionRequest {
 			if err != nil {
 				argsJSON = []byte("{}")
 			}
-			pbMsg.ToolCalls = append(pbMsg.ToolCalls, &llmpb.ToolCall{
+			pbMsg.ToolCalls = append(pbMsg.ToolCalls, &pb.ToolCall{
 				Id:            tc.ID,
 				Name:          tc.Name,
 				ArgumentsJson: string(argsJSON),
@@ -139,7 +139,7 @@ func toProtoRequest(req *CompletionRequest) *llmpb.CompletionRequest {
 
 		// Convert tool result
 		if msg.ToolResult != nil {
-			pbMsg.ToolResult = &llmpb.ToolResult{
+			pbMsg.ToolResult = &pb.ToolResult{
 				ToolCallId: msg.ToolResult.CallID,
 				Content:    msg.ToolResult.Content,
 				IsError:    msg.ToolResult.IsError,
@@ -155,7 +155,7 @@ func toProtoRequest(req *CompletionRequest) *llmpb.CompletionRequest {
 		if err != nil {
 			paramsJSON = []byte("{}")
 		}
-		pbReq.Tools = append(pbReq.Tools, &llmpb.ToolDef{
+		pbReq.Tools = append(pbReq.Tools, &pb.ToolDef{
 			Name:             tool.Name,
 			Description:      tool.Description,
 			ParametersSchema: string(paramsJSON),
@@ -166,19 +166,19 @@ func toProtoRequest(req *CompletionRequest) *llmpb.CompletionRequest {
 }
 
 // toProtoRole converts a Role to proto format.
-func toProtoRole(role Role) llmpb.Role {
+func toProtoRole(role Role) pb.Role {
 	switch role {
 	case RoleUser:
-		return llmpb.Role_ROLE_USER
+		return pb.Role_ROLE_USER
 	case RoleAssistant:
-		return llmpb.Role_ROLE_ASSISTANT
+		return pb.Role_ROLE_ASSISTANT
 	default:
-		return llmpb.Role_ROLE_UNSPECIFIED
+		return pb.Role_ROLE_UNSPECIFIED
 	}
 }
 
 // fromProtoResponse converts a proto response to CompletionResponse.
-func fromProtoResponse(resp *llmpb.CompletionResponse) *CompletionResponse {
+func fromProtoResponse(resp *pb.CompletionResponse) *CompletionResponse {
 	result := &CompletionResponse{
 		Content:    resp.Content,
 		StopReason: resp.StopReason,
