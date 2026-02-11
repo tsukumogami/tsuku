@@ -1,18 +1,16 @@
 {
-  "format_version": 3,
+  "format_version": 4,
   "tool": "ruby",
   "version": "4.0.0",
   "platform": {
     "os": "darwin",
     "arch": "amd64"
   },
-  "recipe_hash": "bbd80751ea106e390919d8e0f4bef8e95e75888b6b12e621a1892b7957b4e35a",
   "deterministic": false,
   "dependencies": [
     {
       "tool": "libyaml",
       "version": "0.2.5",
-      "recipe_hash": "38af9602184e059c38e9bc4c00bc8b82b0608e168fc3bf7f6baf771ce42fe237",
       "steps": [
         {
           "action": "download_file",

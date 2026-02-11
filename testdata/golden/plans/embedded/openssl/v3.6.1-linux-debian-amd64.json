@@ -1,5 +1,5 @@
 {
-  "format_version": 3,
+  "format_version": 4,
   "tool": "openssl",
   "version": "3.6.1",
   "platform": {
@@ -7,18 +7,15 @@
     "arch": "amd64",
     "linux_family": "debian"
   },
-  "recipe_hash": "3c1319b74192a4b885e8d6e822039d72377d99b99d2a2d01521523d3ebbf0bd8",
   "deterministic": true,
   "dependencies": [
     {
       "tool": "zlib",
       "version": "1.3.1",
-      "recipe_hash": "9ee44727730f3ab4ee98be2a6e76eb90f9d6f1ff3077f10c494d64d77ba77e34",
       "dependencies": [
         {
           "tool": "patchelf",
           "version": "0.18.0",
-          "recipe_hash": "4ce22514f9ba4f62ed215e1b10d44816fea9081a1a2aaa27089f508ac16f3b24",
           "steps": [
             {
               "action": "download_file",

@@ -1,18 +1,16 @@
 {
-  "format_version": 3,
+  "format_version": 4,
   "tool": "pkg-config",
   "version": "2.5.1",
   "platform": {
     "os": "linux",
     "arch": "amd64"
   },
-  "recipe_hash": "c683fe9f64547f6956c3419db346d8809fa079624012ae7b88c1e1905fb08571",
   "deterministic": true,
   "dependencies": [
     {
       "tool": "patchelf",
       "version": "0.18.0",
-      "recipe_hash": "4ce22514f9ba4f62ed215e1b10d44816fea9081a1a2aaa27089f508ac16f3b24",
       "steps": [
         {
           "action": "download_file",

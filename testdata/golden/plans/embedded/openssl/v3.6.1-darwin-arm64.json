@@ -1,12 +1,11 @@
 {
-  "format_version": 3,
+  "format_version": 4,
   "tool": "openssl",
   "version": "3.6.1",
   "platform": {
     "os": "darwin",
     "arch": "arm64"
   },
-  "recipe_hash": "3c1319b74192a4b885e8d6e822039d72377d99b99d2a2d01521523d3ebbf0bd8",
   "deterministic": true,
   "steps": [
     {

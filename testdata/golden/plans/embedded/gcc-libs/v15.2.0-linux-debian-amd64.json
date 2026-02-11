@@ -1,5 +1,5 @@
 {
-  "format_version": 3,
+  "format_version": 4,
   "tool": "gcc-libs",
   "version": "15.2.0",
   "platform": {
@@ -7,13 +7,11 @@
     "arch": "amd64",
     "linux_family": "debian"
   },
-  "recipe_hash": "d2c433fc9ea29dc16586557d1a4d5f4efc7b8b02229636687084faf09cfdac10",
   "deterministic": false,
   "dependencies": [
     {
       "tool": "patchelf",
       "version": "0.18.0",
-      "recipe_hash": "4ce22514f9ba4f62ed215e1b10d44816fea9081a1a2aaa27089f508ac16f3b24",
       "steps": [
         {
           "action": "download_file",

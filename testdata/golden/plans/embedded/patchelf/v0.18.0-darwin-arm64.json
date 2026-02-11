@@ -1,12 +1,11 @@
 {
-  "format_version": 3,
+  "format_version": 4,
   "tool": "patchelf",
   "version": "0.18.0",
   "platform": {
     "os": "darwin",
     "arch": "arm64"
   },
-  "recipe_hash": "4ce22514f9ba4f62ed215e1b10d44816fea9081a1a2aaa27089f508ac16f3b24",
   "deterministic": true,
   "steps": [
     {
