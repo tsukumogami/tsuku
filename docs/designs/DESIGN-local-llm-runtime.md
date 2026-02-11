@@ -520,35 +520,6 @@ Smooth the onboarding flow:
 - Error messages when hardware isn't sufficient
 - `tsuku llm download` command for manual pre-download
 
-## Consequences
-
-### Positive
-
-- **Self-contained by default**: Recipe generation works without accounts or API keys
-- **Pure Go build preserved**: tsuku's core binary has no CGo, `go install` works, contributors don't need C toolchains
-- **Privacy improvement**: Tool names never leave the machine for local inference
-- **Independent addon updates**: New llama.cpp, GPU support, or models ship without tsuku releases
-- **Zero overhead for non-users**: Users who never use local inference never download the addon
-- **Batch-friendly**: Server with idle timeout handles both interactive and batch use cases
-- **Crash isolation**: llama.cpp bugs crash the addon, not tsuku
-- **Cloud fallback**: Cloud providers remain available for users who want higher quality
-
-### Negative
-
-- **First-use download**: Addon (~50MB) + model (0.5-2.5GB) on first local inference use
-- **Two release pipelines**: tsuku (Go) and tsuku-llm (Rust) with protobuf compatibility contract
-- **IPC overhead**: ~0.5-2ms per gRPC call (negligible vs inference time)
-- **Server lifecycle complexity**: Socket management, health checks, idle timeout, stale socket cleanup
-- **Local inference is slower**: 5-30 seconds per turn vs 1-5 seconds for cloud APIs
-- **Quality gap on edge cases**: Small models may struggle with unusual GitHub release layouts
-
-### Mitigations
-
-- **Download size**: Users are prompted for consent; `tsuku llm download` for pre-download in CI
-- **Two pipelines**: gRPC contract enforces compatibility at compile time
-- **Quality gap**: Cloud providers remain available; sandbox validation catches broken recipes
-- **Lifecycle complexity**: All complexity is in the addon; tsuku just checks socket and sends gRPC
-
 ## Security Considerations
 
 ### Download Verification
@@ -641,3 +612,32 @@ Note: Grammar constraints enforce valid JSON structure but don't prevent semanti
 | Poisoned model output | Sandbox validation, URL validation, user confirmation | Typosquatting with plausible domains |
 | Prompt injection | Input sanitization, URL validation, user confirmation | Novel techniques + typosquatting |
 | Privacy leakage | Inference is local; no tool names sent externally | None - this is an improvement |
+
+## Consequences
+
+### Positive
+
+- **Self-contained by default**: Recipe generation works without accounts or API keys
+- **Pure Go build preserved**: tsuku's core binary has no CGo, `go install` works, contributors don't need C toolchains
+- **Privacy improvement**: Tool names never leave the machine for local inference
+- **Independent addon updates**: New llama.cpp, GPU support, or models ship without tsuku releases
+- **Zero overhead for non-users**: Users who never use local inference never download the addon
+- **Batch-friendly**: Server with idle timeout handles both interactive and batch use cases
+- **Crash isolation**: llama.cpp bugs crash the addon, not tsuku
+- **Cloud fallback**: Cloud providers remain available for users who want higher quality
+
+### Negative
+
+- **First-use download**: Addon (~50MB) + model (0.5-2.5GB) on first local inference use
+- **Two release pipelines**: tsuku (Go) and tsuku-llm (Rust) with protobuf compatibility contract
+- **IPC overhead**: ~0.5-2ms per gRPC call (negligible vs inference time)
+- **Server lifecycle complexity**: Socket management, health checks, idle timeout, stale socket cleanup
+- **Local inference is slower**: 5-30 seconds per turn vs 1-5 seconds for cloud APIs
+- **Quality gap on edge cases**: Small models may struggle with unusual GitHub release layouts
+
+### Mitigations
+
+- **Download size**: Users are prompted for consent; `tsuku llm download` for pre-download in CI
+- **Two pipelines**: gRPC contract enforces compatibility at compile time
+- **Quality gap**: Cloud providers remain available; sandbox validation catches broken recipes
+- **Lifecycle complexity**: All complexity is in the addon; tsuku just checks socket and sends gRPC
