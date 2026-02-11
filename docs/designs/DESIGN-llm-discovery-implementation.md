@@ -10,18 +10,18 @@ decision: |
   Implement LLM discovery as a quality-metric-driven system where the LLM's role is
   limited to extracting structured data from web search results, while a deterministic
   algorithm (reusing the existing QualityFilter pattern) makes the final source selection.
-  Use tsuku-driven web search via DuckDuckGo HTML scraping, enabling a unified architecture
-  that works with all LLM providers (Claude, Gemini, and local models). Require GitHub
-  API verification and user confirmation for all LLM-discovered sources.
+  Start with tsuku-driven web search via DuckDuckGo HTML scraping to prove the architecture
+  and enable local LLM support. Once proven, add Cloud LLM native search (Claude/Gemini)
+  as the default for users with Cloud keys—decoupled search becomes the fallback for local
+  LLMs. Require GitHub API verification and user confirmation for all LLM-discovered sources.
 rationale: |
   Separating LLM extraction from deterministic decision-making provides reproducibility
-  and auditability. The LLM excels at understanding web content and extracting structured
-  data; the algorithm excels at consistent, threshold-based decisions. Tsuku-driven search
-  via DuckDuckGo scraping requires no API keys and enables the same discovery flow for
-  all LLM providers—including future local models (#1421). The existing quality metrics
+  and auditability. Starting with decoupled search (DDG) proves the architecture and
+  unblocks local LLM support (#1421), which requires tsuku-driven search. Once proven,
+  Cloud LLM native search provides a better experience for users with Cloud keys while
+  decoupled search remains available for local LLMs. The existing quality metrics
   infrastructure (ProbeResult, QualityFilter) provides a proven pattern to extend.
-  Defense-in-depth through multiple verification layers (HTML stripping, URL validation,
-  GitHub API checks, user confirmation) addresses the security risks of web-sourced data.
+  Defense-in-depth through multiple verification layers addresses security risks.
 ---
 
 # DESIGN: LLM Discovery Implementation
@@ -135,17 +135,22 @@ type SearchResult struct {
 }
 ```
 
-**Provider Selection Priority** (first available wins):
+**Provider Selection Priority**:
 
-| Priority | Provider | Condition | Cost |
-|----------|----------|-----------|------|
-| 1 | DDG Scraper | Always available (default) | Free |
-| 2 | Tavily | `TAVILY_API_KEY` set | 1K free/month |
-| 3 | Brave | `BRAVE_API_KEY` set | 2K free/month |
-| 4 | Claude Native | Using Claude + prefer native | $10/1K |
-| 5 | Gemini Grounding | Using Gemini + prefer native | $14/1K |
+The selection logic evolves across implementation phases:
 
-Users can override with `--search-provider=<name>` flag.
+**Phase 1-5 (Initial)**: DDG is the only option—proves the decoupled architecture.
+
+**After Phase 6 (Cloud Native Search)**: Native search becomes the default for Cloud LLMs.
+
+| Condition | Default Provider | Rationale |
+|-----------|-----------------|-----------|
+| Cloud LLM key (Claude/Gemini) | Native search | Better quality, integrated experience |
+| Local LLM only | DDG | Free, no API key needed |
+| Local LLM + `TAVILY_API_KEY` | Tavily | User prefers API-based search |
+| Explicit `--search-provider=ddg` | DDG | User override |
+
+Users can always override with `--search-provider=<name>` flag.
 
 **Default: DuckDuckGo HTML Scraper**
 
@@ -854,9 +859,36 @@ Create pipeline → sandbox → install
 
 ## Implementation Approach
 
+### Roadmap Overview
+
+The implementation starts with decoupled search (DDG) because it's required for local LLM support. Once the core design is proven, two parallel tracks extend the system:
+
+```
+Phase 1-5: Core Discovery with DDG Search
+    │
+    ├── Validates: LLM extraction, quality thresholds, verification, confirmation
+    │
+    └── Enables parallel tracks:
+            │
+            ├── Track A: Embedded LLM Runtime (#1421)
+            │     └── Local models use DDG/Tavily/Brave search
+            │
+            └── Track B: Cloud Native Search (Phase 6)
+                  └── Claude/Gemini use their native search (default when available)
+
+After Track B completes:
+- Cloud LLMs default to native search (better quality, integrated)
+- Decoupled search (DDG/Tavily/Brave) used only when no Cloud LLM key
+```
+
+This approach:
+1. Proves the architecture with the simplest search backend (DDG)
+2. Unblocks local LLM work (#1421) which requires decoupled search
+3. Upgrades Cloud LLM users to native search once implemented
+
 ### Phase 1: Search Provider Interface and DDG Scraper
 
-Implement the search provider abstraction and default DDG implementation.
+Implement the search provider abstraction and DDG implementation. DDG is the initial default because decoupled search is required for local LLM support (#1421).
 
 - Create `SearchProvider` interface in `search.go`
 - Implement `DDGSearcher` with HTML parsing
@@ -927,20 +959,40 @@ Implement user-facing confirmation flow.
 - `internal/discover/llm_confirm.go`
 - Integration in `cmd/tsuku/install.go`
 
-### Phase 6: API-Based Search Providers
+### Phase 6: Cloud Native Search (Track B)
 
-Add Tavily and Brave search providers for users with API keys.
+Add native web search for Cloud LLM providers (Claude, Gemini). Once complete, native search becomes the default for Cloud LLMs—decoupled search is only used when no Cloud LLM key is available.
+
+- Implement `ClaudeNativeSearcher` using web_search tool
+- Implement `GeminiNativeSearcher` using Google Search Grounding
+- Update provider selection: native search is default for Cloud LLMs
+- Decoupled search (DDG/Tavily/Brave) becomes fallback for local LLMs or missing keys
+- Add `--search-provider` flag for explicit override
+
+**Provider Selection After Phase 6:**
+
+| Condition | Default Search Provider |
+|-----------|------------------------|
+| Cloud LLM key available | Native (Claude/Gemini) |
+| Local LLM only | DDG (free) or Tavily/Brave (if key set) |
+| `--search-provider=ddg` | DDG (explicit override) |
+
+**Files:**
+- `internal/discover/search_claude.go`
+- `internal/discover/search_gemini.go`
+- Updates to `internal/discover/search.go` (provider selection logic)
+
+### Phase 6b: Additional Decoupled Providers (Optional)
+
+Add Tavily and Brave as alternative decoupled providers for users who prefer API-based search over DDG scraping.
 
 - Implement `TavilySearcher` with JSON API
 - Implement `BraveSearcher` with JSON API
 - Update factory to detect API keys in environment
-- Add `--search-provider` flag for explicit selection
-- Write integration tests with recorded API responses
 
 **Files:**
 - `internal/discover/search_tavily.go`
 - `internal/discover/search_brave.go`
-- Updates to `internal/discover/search.go`
 
 ### Phase 7: Budget and Telemetry Integration
 

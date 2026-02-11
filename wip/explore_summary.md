@@ -138,14 +138,22 @@ HTML structure:
 
 ### Architecture Change
 
-The design was updated to use a **swappable SearchProvider interface**:
+The design was updated to use a **swappable SearchProvider interface** with a phased rollout:
 
-| Priority | Provider | Condition | Cost |
-|----------|----------|-----------|------|
-| 1 | DDG Scraper | Always available (default) | Free |
-| 2 | Tavily | `TAVILY_API_KEY` set | 1K free/month |
-| 3 | Brave | `BRAVE_API_KEY` set | 2K free/month |
-| 4 | Native | Claude/Gemini + `--search-provider=native` | $10-14/1K |
+**Phase 1-5**: DDG scraper is the only option (proves decoupled architecture, enables local LLM work)
+
+**After Phase 6**: Native search becomes default for Cloud LLMs:
+
+| Condition | Default Provider |
+|-----------|-----------------|
+| Cloud LLM key available | Native (Claude/Gemini) |
+| Local LLM only | DDG or Tavily/Brave |
+| Explicit override | Any (via `--search-provider`) |
+
+This approach:
+1. Proves the architecture with DDG (simplest, free)
+2. Unblocks local LLM work (#1421) which requires decoupled search
+3. Upgrades Cloud LLM users to native search once Phase 6 completes
 
 ## Current Status
 
