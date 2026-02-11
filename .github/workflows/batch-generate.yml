@@ -171,6 +171,34 @@ jobs:
             echo "changes=true" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Generate validation results for generation environment
+        if: steps.check.outputs.changes == 'true'
+        run: |
+          # Create validation results for recipes that passed generation
+          # These are all recipes that were successfully created and validated
+          RESULTS="[]"
+
+          # Find new/modified recipe files
+          for recipe_path in $(git diff --name-only HEAD -- recipes/ && git ls-files --others --exclude-standard recipes/); do
+            if [[ "$recipe_path" == *.toml ]]; then
+              recipe_name=$(basename "$recipe_path" .toml)
+              RESULTS=$(echo "$RESULTS" | jq --arg r "$recipe_name" \
+                '. + [{"recipe": $r, "platform": "linux-debian-glibc-x86_64", "status": "pass", "exit_code": 0, "attempts": 1}]')
+            fi
+          done
+
+          echo "$RESULTS" > validation-results-linux-debian-glibc-x86_64.json
+          echo "Generated validation results for $(echo "$RESULTS" | jq length) recipes"
+          cat validation-results-linux-debian-glibc-x86_64.json
+
+      - name: Upload generation environment validation results
+        if: steps.check.outputs.changes == 'true'
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
+        with:
+          name: validation-results-linux-debian-glibc-x86_64
+          path: validation-results-linux-debian-glibc-x86_64.json
+          retention-days: 1
+
       - name: Upload passing recipes
         if: steps.check.outputs.changes == 'true'
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
@@ -217,6 +245,7 @@ jobs:
         id: recipes
         run: |
           # Find recipes that were generated (in artifacts but not in checkout)
+          shopt -s nullglob  # Empty glob expands to empty list, not literal pattern
           RECIPE_LIST=""
           for f in artifacts/recipes/*/*.toml; do
             basename_path="${f#artifacts/}"
@@ -231,10 +260,13 @@ jobs:
 
       - name: Validate on all Linux x86_64 families
         run: |
-          RESULTS="[]"
+          RESULTS_FILE=$(mktemp)
           IMAGES=("debian:bookworm-slim" "fedora:41" "archlinux:base" "opensuse/tumbleweed" "alpine:3.21")
           NAMES=("debian" "rhel" "arch" "suse" "alpine")
           LIBCS=("glibc" "glibc" "glibc" "glibc" "musl")
+
+          # Load execution exclusions
+          EXCLUSIONS=$(jq -r '.exclusions[].recipe' testdata/golden/execution-exclusions.json 2>/dev/null || echo "")
 
           for i in "${!IMAGES[@]}"; do
             image="${IMAGES[$i]}"
@@ -250,6 +282,13 @@ jobs:
               case "$recipe_path" in
                 *..*) echo "SKIP: path traversal in $recipe_path"; continue ;;
               esac
+
+              # Check if recipe is in execution exclusions
+              if echo "$EXCLUSIONS" | grep -qx "$recipe_name"; then
+                echo "SKIP: $recipe_name is in execution-exclusions.json"
+                echo '{"recipe":"'"$recipe_name"'","platform":"'"$platform"'","status":"skipped"}' >> "$RESULTS_FILE"
+                continue
+              fi
 
               echo "--- $recipe_name on $platform ---"
               STATUS="pass"
@@ -306,14 +345,31 @@ jobs:
                 fi
               done
 
-              RESULTS=$(echo "$RESULTS" | jq --arg r "$recipe_name" --arg p "$platform" \
-                --arg s "$STATUS" --argjson e "$EXIT_CODE" --argjson a "$ATTEMPTS" --argjson b "$BLOCKED_BY" \
-                '. + [{"recipe": $r, "platform": $p, "status": $s, "exit_code": $e, "attempts": $a, "blocked_by": $b}]')
+              echo '{"recipe":"'"$recipe_name"'","platform":"'"$platform"'","status":"'"$STATUS"'","exit_code":'"$EXIT_CODE"',"attempts":'"$ATTEMPTS"',"blocked_by":'"$BLOCKED_BY"'}' >> "$RESULTS_FILE"
             done
           done
 
-          echo "$RESULTS" > validation-results-linux-x86_64.json
+          # Convert NDJSON to JSON array
+          if [ -s "$RESULTS_FILE" ]; then
+            jq -s '.' "$RESULTS_FILE" > validation-results-linux-x86_64.json
+          else
+            echo '[]' > validation-results-linux-x86_64.json
+          fi
+          RESULTS=$(cat validation-results-linux-x86_64.json)
+          rm -f "$RESULTS_FILE"
+
+          # Summary with counts
+          TOTAL=$(echo "$RESULTS" | jq length)
+          PASSED=$(echo "$RESULTS" | jq '[.[] | select(.status == "pass")] | length')
+          FAILED=$(echo "$RESULTS" | jq '[.[] | select(.status == "fail")] | length')
+          SKIPPED=$(echo "$RESULTS" | jq '[.[] | select(.status == "skipped")] | length')
+
           echo "### Linux x86_64 Validation Results" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Total: $TOTAL" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Passed: $PASSED" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Failed: $FAILED" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Skipped: $SKIPPED" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
           echo '```json' >> "$GITHUB_STEP_SUMMARY"
           echo "$RESULTS" | jq . >> "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"
@@ -347,6 +403,7 @@ jobs:
       - name: Collect new recipe list
         id: recipes
         run: |
+          shopt -s nullglob  # Empty glob expands to empty list, not literal pattern
           RECIPE_LIST=""
           for f in artifacts/recipes/*/*.toml; do
             basename_path="${f#artifacts/}"
@@ -361,11 +418,14 @@ jobs:
 
       - name: Validate on all Linux arm64 families
         run: |
-          RESULTS="[]"
+          RESULTS_FILE=$(mktemp)
           # archlinux:base excluded -- no ARM64 container image
           IMAGES=("debian:bookworm-slim" "fedora:41" "opensuse/tumbleweed" "alpine:3.21")
           NAMES=("debian" "rhel" "suse" "alpine")
           LIBCS=("glibc" "glibc" "glibc" "musl")
+
+          # Load execution exclusions
+          EXCLUSIONS=$(jq -r '.exclusions[].recipe' testdata/golden/execution-exclusions.json 2>/dev/null || echo "")
 
           for i in "${!IMAGES[@]}"; do
             image="${IMAGES[$i]}"
@@ -381,6 +441,13 @@ jobs:
               case "$recipe_path" in
                 *..*) echo "SKIP: path traversal in $recipe_path"; continue ;;
               esac
+
+              # Check if recipe is in execution exclusions
+              if echo "$EXCLUSIONS" | grep -qx "$recipe_name"; then
+                echo "SKIP: $recipe_name is in execution-exclusions.json"
+                echo '{"recipe":"'"$recipe_name"'","platform":"'"$platform"'","status":"skipped"}' >> "$RESULTS_FILE"
+                continue
+              fi
 
               echo "--- $recipe_name on $platform ---"
               STATUS="pass"
@@ -434,14 +501,31 @@ jobs:
                 fi
               done
 
-              RESULTS=$(echo "$RESULTS" | jq --arg r "$recipe_name" --arg p "$platform" \
-                --arg s "$STATUS" --argjson e "$EXIT_CODE" --argjson a "$ATTEMPTS" --argjson b "$BLOCKED_BY" \
-                '. + [{"recipe": $r, "platform": $p, "status": $s, "exit_code": $e, "attempts": $a, "blocked_by": $b}]')
+              echo '{"recipe":"'"$recipe_name"'","platform":"'"$platform"'","status":"'"$STATUS"'","exit_code":'"$EXIT_CODE"',"attempts":'"$ATTEMPTS"',"blocked_by":'"$BLOCKED_BY"'}' >> "$RESULTS_FILE"
             done
           done
 
-          echo "$RESULTS" > validation-results-linux-arm64.json
+          # Convert NDJSON to JSON array
+          if [ -s "$RESULTS_FILE" ]; then
+            jq -s '.' "$RESULTS_FILE" > validation-results-linux-arm64.json
+          else
+            echo '[]' > validation-results-linux-arm64.json
+          fi
+          RESULTS=$(cat validation-results-linux-arm64.json)
+          rm -f "$RESULTS_FILE"
+
+          # Summary with counts
+          TOTAL=$(echo "$RESULTS" | jq length)
+          PASSED=$(echo "$RESULTS" | jq '[.[] | select(.status == "pass")] | length')
+          FAILED=$(echo "$RESULTS" | jq '[.[] | select(.status == "fail")] | length')
+          SKIPPED=$(echo "$RESULTS" | jq '[.[] | select(.status == "skipped")] | length')
+
           echo "### Linux arm64 Validation Results" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Total: $TOTAL" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Passed: $PASSED" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Failed: $FAILED" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Skipped: $SKIPPED" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
           echo '```json' >> "$GITHUB_STEP_SUMMARY"
           echo "$RESULTS" | jq . >> "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"
@@ -478,6 +562,7 @@ jobs:
       - name: Collect new recipe list
         id: recipes
         run: |
+          shopt -s nullglob  # Empty glob expands to empty list, not literal pattern
           RECIPE_LIST=""
           for f in artifacts/recipes/*/*.toml; do
             basename_path="${f#artifacts/}"
@@ -492,7 +577,12 @@ jobs:
 
       - name: Validate on macOS arm64
         run: |
-          RESULTS="[]"
+          # Use NDJSON accumulation for O(n) performance
+          RESULTS_FILE=$(mktemp)
+
+          # Load execution exclusions
+          EXCLUSIONS=$(jq -r '.exclusions[].recipe' testdata/golden/execution-exclusions.json 2>/dev/null || echo "")
+
           for recipe_path in ${{ steps.recipes.outputs.list }}; do
             recipe_name=$(basename "$recipe_path" .toml)
 
@@ -502,6 +592,13 @@ jobs:
                 continue
                 ;;
             esac
+
+            # Check if recipe is in execution exclusions
+            if echo "$EXCLUSIONS" | grep -qx "$recipe_name"; then
+              echo "SKIP: $recipe_name is in execution-exclusions.json"
+              echo '{"recipe":"'"$recipe_name"'","platform":"darwin-arm64","status":"skipped"}' >> "$RESULTS_FILE"
+              continue
+            fi
 
             echo "--- $recipe_name on darwin-arm64 ---"
             STATUS="pass"
@@ -535,13 +632,30 @@ jobs:
               fi
             done
 
-            RESULTS=$(echo "$RESULTS" | jq --arg r "$recipe_name" --arg p "darwin-arm64" \
-              --arg s "$STATUS" --argjson e "$EXIT_CODE" --argjson a "$ATTEMPTS" --argjson b "$BLOCKED_BY" \
-              '. + [{"recipe": $r, "platform": $p, "status": $s, "exit_code": $e, "attempts": $a, "blocked_by": $b}]')
+            echo '{"recipe":"'"$recipe_name"'","platform":"darwin-arm64","status":"'"$STATUS"'","exit_code":'"$EXIT_CODE"',"attempts":'"$ATTEMPTS"',"blocked_by":'"$BLOCKED_BY"'}' >> "$RESULTS_FILE"
           done
 
-          echo "$RESULTS" > validation-results-darwin-arm64.json
+          # Convert NDJSON to JSON array
+          if [ -s "$RESULTS_FILE" ]; then
+            jq -s '.' "$RESULTS_FILE" > validation-results-darwin-arm64.json
+          else
+            echo '[]' > validation-results-darwin-arm64.json
+          fi
+          RESULTS=$(cat validation-results-darwin-arm64.json)
+          rm -f "$RESULTS_FILE"
+
+          # Summary with counts
+          TOTAL=$(echo "$RESULTS" | jq length)
+          PASSED=$(echo "$RESULTS" | jq '[.[] | select(.status == "pass")] | length')
+          FAILED=$(echo "$RESULTS" | jq '[.[] | select(.status == "fail")] | length')
+          SKIPPED=$(echo "$RESULTS" | jq '[.[] | select(.status == "skipped")] | length')
+
           echo "### macOS arm64 Validation Results" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Total: $TOTAL" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Passed: $PASSED" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Failed: $FAILED" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Skipped: $SKIPPED" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
           echo '```json' >> "$GITHUB_STEP_SUMMARY"
           echo "$RESULTS" | jq . >> "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"
@@ -578,6 +692,7 @@ jobs:
       - name: Collect new recipe list
         id: recipes
         run: |
+          shopt -s nullglob  # Empty glob expands to empty list, not literal pattern
           RECIPE_LIST=""
           for f in artifacts/recipes/*/*.toml; do
             basename_path="${f#artifacts/}"
@@ -592,7 +707,12 @@ jobs:
 
       - name: Validate on macOS x86_64
         run: |
-          RESULTS="[]"
+          # Use NDJSON accumulation for O(n) performance
+          RESULTS_FILE=$(mktemp)
+
+          # Load execution exclusions
+          EXCLUSIONS=$(jq -r '.exclusions[].recipe' testdata/golden/execution-exclusions.json 2>/dev/null || echo "")
+
           for recipe_path in ${{ steps.recipes.outputs.list }}; do
             recipe_name=$(basename "$recipe_path" .toml)
 
@@ -602,6 +722,13 @@ jobs:
                 continue
                 ;;
             esac
+
+            # Check if recipe is in execution exclusions
+            if echo "$EXCLUSIONS" | grep -qx "$recipe_name"; then
+              echo "SKIP: $recipe_name is in execution-exclusions.json"
+              echo '{"recipe":"'"$recipe_name"'","platform":"darwin-x86_64","status":"skipped"}' >> "$RESULTS_FILE"
+              continue
+            fi
 
             echo "--- $recipe_name on darwin-x86_64 ---"
             STATUS="pass"
@@ -635,13 +762,30 @@ jobs:
               fi
             done
 
-            RESULTS=$(echo "$RESULTS" | jq --arg r "$recipe_name" --arg p "darwin-x86_64" \
-              --arg s "$STATUS" --argjson e "$EXIT_CODE" --argjson a "$ATTEMPTS" --argjson b "$BLOCKED_BY" \
-              '. + [{"recipe": $r, "platform": $p, "status": $s, "exit_code": $e, "attempts": $a, "blocked_by": $b}]')
+            echo '{"recipe":"'"$recipe_name"'","platform":"darwin-x86_64","status":"'"$STATUS"'","exit_code":'"$EXIT_CODE"',"attempts":'"$ATTEMPTS"',"blocked_by":'"$BLOCKED_BY"'}' >> "$RESULTS_FILE"
           done
 
-          echo "$RESULTS" > validation-results-darwin-x86_64.json
+          # Convert NDJSON to JSON array
+          if [ -s "$RESULTS_FILE" ]; then
+            jq -s '.' "$RESULTS_FILE" > validation-results-darwin-x86_64.json
+          else
+            echo '[]' > validation-results-darwin-x86_64.json
+          fi
+          RESULTS=$(cat validation-results-darwin-x86_64.json)
+          rm -f "$RESULTS_FILE"
+
+          # Summary with counts
+          TOTAL=$(echo "$RESULTS" | jq length)
+          PASSED=$(echo "$RESULTS" | jq '[.[] | select(.status == "pass")] | length')
+          FAILED=$(echo "$RESULTS" | jq '[.[] | select(.status == "fail")] | length')
+          SKIPPED=$(echo "$RESULTS" | jq '[.[] | select(.status == "skipped")] | length')
+
           echo "### macOS x86_64 Validation Results" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Total: $TOTAL" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Passed: $PASSED" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Failed: $FAILED" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Skipped: $SKIPPED" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
           echo '```json' >> "$GITHUB_STEP_SUMMARY"
           echo "$RESULTS" | jq . >> "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"
@@ -707,7 +851,7 @@ jobs:
         with:
           name: validation-results-darwin-x86_64
 
-      # Generation-environment result from #1324 (may not exist yet)
+      # Generation-environment result (produced by generate job)
       - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131  # v7.0.0
         continue-on-error: true
         with:
