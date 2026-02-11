@@ -8,6 +8,8 @@ on:
       - 'testdata/golden/plans/embedded/**/*.json'
       # Recipe changes trigger R2-based validation for registry recipes
       - 'recipes/**/*.toml'
+      # Exclusion list changes should re-run validation
+      - 'testdata/golden/execution-exclusions.json'
       - 'scripts/validate-golden.sh'
       - 'scripts/regenerate-golden.sh'
       - '.github/workflows/validate-golden-execution.yml'
