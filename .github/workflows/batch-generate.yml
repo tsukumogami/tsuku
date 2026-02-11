@@ -171,6 +171,34 @@ jobs:
             echo "changes=true" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Generate validation results for generation environment
+        if: steps.check.outputs.changes == 'true'
+        run: |
+          # Create validation results for recipes that passed generation
+          # These are all recipes that were successfully created and validated
+          RESULTS="[]"
+
+          # Find new/modified recipe files
+          for recipe_path in $(git diff --name-only HEAD -- recipes/ && git ls-files --others --exclude-standard recipes/); do
+            if [[ "$recipe_path" == *.toml ]]; then
+              recipe_name=$(basename "$recipe_path" .toml)
+              RESULTS=$(echo "$RESULTS" | jq --arg r "$recipe_name" \
+                '. + [{"recipe": $r, "platform": "linux-debian-glibc-x86_64", "status": "pass", "exit_code": 0, "attempts": 1}]')
+            fi
+          done
+
+          echo "$RESULTS" > validation-results-linux-debian-glibc-x86_64.json
+          echo "Generated validation results for $(echo "$RESULTS" | jq length) recipes"
+          cat validation-results-linux-debian-glibc-x86_64.json
+
+      - name: Upload generation environment validation results
+        if: steps.check.outputs.changes == 'true'
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
+        with:
+          name: validation-results-linux-debian-glibc-x86_64
+          path: validation-results-linux-debian-glibc-x86_64.json
+          retention-days: 1
+
       - name: Upload passing recipes
         if: steps.check.outputs.changes == 'true'
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
