@@ -1,4 +1,5 @@
 name: Validate All Recipes
+# Validates all recipes across 11 platforms and optionally adds constraints
 
 on:
   workflow_dispatch:
