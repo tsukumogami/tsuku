@@ -26,6 +26,7 @@ var installTargetFamily string
 var installRequireEmbedded bool
 var installFrom string
 var installDeterministicOnly bool
+var installSearchProvider string
 
 var installCmd = &cobra.Command{
 	Use:   "install [tool]...",
@@ -223,6 +224,7 @@ func init() {
 	installCmd.Flags().BoolVar(&installRequireEmbedded, "require-embedded", false, "Require action dependencies to resolve from embedded registry")
 	installCmd.Flags().StringVar(&installFrom, "from", "", "Source override: builder:source (e.g., github:cli/cli, homebrew:jq)")
 	installCmd.Flags().BoolVar(&installDeterministicOnly, "deterministic-only", false, "Skip LLM fallback; fail if deterministic generation fails")
+	installCmd.Flags().StringVar(&installSearchProvider, "search-provider", "", "Search provider for LLM discovery: ddg, tavily, or brave")
 }
 
 // isInteractive returns true if stdin is connected to a terminal
@@ -384,7 +386,7 @@ func extractMissingRecipes(err error) []string {
 // On success, it forwards to the create pipeline to generate a recipe and install.
 // Returns the discovery result on success (install completed), nil on failure.
 func tryDiscoveryFallback(toolName string) *discover.DiscoveryResult {
-	result, err := runDiscovery(toolName)
+	result, err := runDiscoveryWithOptions(toolName, installSearchProvider)
 	if err != nil {
 		var notFound *discover.NotFoundError
 		if errors.As(err, &notFound) {
