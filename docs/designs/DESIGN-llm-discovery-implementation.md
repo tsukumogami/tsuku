@@ -78,13 +78,34 @@ This separation is powerful: LLMs excel at understanding web content; algorithms
 - Defense layers (HTML stripping, URL validation, prompt injection defenses)
 - 15-second timeout and per-discovery budget controls
 - Integration with existing BuildSession and Factory patterns
+- Non-deterministic result handling (requires separate subsystem design)
 
 **Out of scope:**
-- Non-deterministic result handling (display instructions, defer to future builder)
 - Non-GitHub source verification (deferred—GitHub covers most cases)
 - Caching of LLM discovery results (recipes serve this purpose)
 - Automated learning from user confirmations
 - Changes to the ecosystem probe or registry lookup stages
+
+### Required Subsystem Designs
+
+This design identifies building blocks that require their own tactical designs. LLM Discovery is not complete until these subsystems are designed and implemented.
+
+| Subsystem | Purpose | Design Status |
+|-----------|---------|---------------|
+| **Non-Deterministic Builder** | Handle `instructions` results: follow install instructions via LLM, execute platform-specific setup | Needs design |
+| **DDG Search Handler** | Web search tool implementation for local LLMs | Inline (simple enough) |
+
+**Non-Deterministic Builder** is the critical dependency. When LLM discovery finds install instructions instead of a builder-mappable source, this subsystem:
+1. Parses the instructions (may require fetching the full page)
+2. Uses LLM to generate executable install steps
+3. Executes steps in sandbox with appropriate verification
+4. Handles platform-specific branching
+
+This subsystem needs its own design because it involves:
+- LLM-driven code/command generation (security-sensitive)
+- Sandbox execution model
+- Verification strategy for non-deterministic installs
+- Rollback/cleanup on failure
 
 ## Success Criteria
 
@@ -962,6 +983,20 @@ Wire into existing cost tracking and telemetry.
 **Files:**
 - Updates to `internal/discover/llm_discovery.go`
 - Updates to `internal/telemetry/`
+
+### Phase 8: Non-Deterministic Builder (Requires Separate Design)
+
+Handle `instructions` results from LLM discovery. This phase requires its own tactical design document before implementation.
+
+**Blocked by:** DESIGN-non-deterministic-builder.md (to be created)
+
+The non-deterministic builder:
+- Receives instructions results from LLM discovery
+- Uses LLM to parse and execute install instructions
+- Runs in sandbox with verification
+- Handles platform-specific branching
+
+**LLM Discovery is feature-complete when this phase is implemented.**
 
 ## Security Considerations
 
