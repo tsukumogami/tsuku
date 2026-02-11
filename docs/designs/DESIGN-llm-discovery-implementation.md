@@ -78,9 +78,9 @@ This separation is powerful: LLMs excel at understanding web content; algorithms
 - Defense layers (HTML stripping, URL validation, prompt injection defenses)
 - 15-second timeout and per-discovery budget controls
 - Integration with existing BuildSession and Factory patterns
-- Non-deterministic result handling (requires separate subsystem design)
 
 **Out of scope:**
+- Non-deterministic result handling (see Required Subsystem Designs below)
 - Non-GitHub source verification (deferred—GitHub covers most cases)
 - Caching of LLM discovery results (recipes serve this purpose)
 - Automated learning from user confirmations
@@ -314,34 +314,26 @@ The question is how to decide when multiple potential sources are found or when 
 
 Apply the existing quality filter pattern with discovery-specific thresholds:
 
-```go
-type DiscoveryThreshold struct {
-    MinStars      int // 50 for GitHub sources
-    MinDownloads  int // 1000 for ecosystem sources
-    MinConfidence int // 70 for LLM confidence
-}
-
-// Decision rules:
-// 1. Confidence >= 70 is REQUIRED (gates all other checks)
-// 2. THEN apply OR logic: passes if stars >= 50 OR downloads >= 1000
-// 3. If multiple pass: highest confidence wins, then highest stars
-// 4. If none pass: present options with metadata, let user choose
-// 5. Always require user confirmation for LLM sources (unless --yes)
-```
+**Decision rules:**
+1. Confidence is REQUIRED above a minimum threshold (gates all other checks)
+2. THEN apply OR logic: passes if stars >= threshold OR downloads >= threshold
+3. If multiple pass: highest confidence wins, then highest stars
+4. If none pass: present options with metadata, let user choose
+5. Always require user confirmation for LLM sources (unless --yes)
 
 **Why AND logic for confidence, not pure OR like ecosystem probe?**
 
-The ecosystem probe uses pure OR logic because its data comes from authoritative registry APIs—if crates.io says a package has 500 downloads, that's ground truth. LLM discovery is different: the confidence score reflects how certain the LLM is about its extraction, not objective quality. A high-star repo found with low confidence (60%) might mean the LLM is unsure whether it found the right repo. Using confidence as a gate ensures we only auto-select sources where the LLM is reasonably certain it found the correct one.
+The ecosystem probe uses pure OR logic because its data comes from authoritative registry APIs—if crates.io says a package has 500 downloads, that's ground truth. LLM discovery is different: the confidence score reflects how certain the LLM is about its extraction, not objective quality. A high-star repo found with low confidence might mean the LLM is unsure whether it found the right repo. Using confidence as a gate ensures we only auto-select sources where the LLM is reasonably certain it found the correct one.
 
-**Threshold justifications:**
+**Threshold design principles:**
 
-| Threshold | Value | Rationale |
-|-----------|-------|-----------|
-| Confidence >= 70 | Balances recall vs. precision | Below 70%, false positive rate in testing exceeded 15%. Above 85% missed legitimate obscure tools. 70% is the sweet spot. |
-| Stars >= 50 | Filters fly-by-night repos | Analysis of tsuku registry shows 95% of legitimate GitHub tools have 50+ stars. Below this, typosquat risk increases. |
-| Downloads >= 1000 | Consistent with ecosystem probe | The ecosystem probe uses 1000 downloads as its npm/pypi threshold; LLM discovery reuses this for consistency. |
+| Signal | Purpose | Tuning Approach |
+|--------|---------|-----------------|
+| Confidence (gate) | Reject uncertain extractions | Set to balance precision vs. recall; tune via false positive rate |
+| Stars (OR) | Filter low-quality repos | Set to exclude typosquat-risk repos; tune via registry analysis |
+| Downloads (OR) | Quality signal for ecosystem sources | Align with ecosystem probe thresholds for consistency |
 
-These thresholds are initial estimates. Telemetry will track false positives and missed tools, enabling data-driven tuning.
+Specific threshold values will be determined during implementation and tuned via telemetry tracking of false positives and missed tools.
 
 #### Alternatives Considered
 
@@ -361,19 +353,14 @@ Create a new session type that follows the HomebrewSession pattern:
 - Maintains message history for potential multi-turn conversations
 - Tracks cost via totalUsage accumulation
 
-The session lives in `internal/discover/llm_discovery.go` rather than `internal/builders/` because discovery is not building a recipe—it's finding a source.
+The session lives in `internal/discover/` rather than `internal/builders/` because discovery is not building a recipe—it's finding a source.
 
-```go
-type LLMDiscoverySession struct {
-    provider     llm.Provider
-    messages     []llm.Message
-    systemPrompt string
-    tools        []llm.ToolDef
-    totalUsage   llm.Usage
-    genCtx       *discoveryContext
-    timeout      time.Duration // 15 seconds
-}
-```
+**Required capabilities:**
+- LLM provider access (via Factory)
+- Message history for potential multi-turn conversations
+- Tool definitions (web_search, extract_source)
+- Usage tracking for cost accounting
+- Timeout enforcement (configurable, default ~15 seconds)
 
 #### Alternatives Considered
 
@@ -387,11 +374,13 @@ type LLMDiscoverySession struct {
 - **LLM extraction accuracy for tool discovery**: Haven't validated whether LLMs reliably extract the correct source from search results. May need prompt engineering.
 - **Non-GitHub distribution patterns**: Some tools (like Stripe CLI) have multiple distribution channels. The algorithm may need tuning for these cases.
 - **False positive rate**: Threshold values are estimates. Real usage will inform tuning.
-- **Local LLM context limits**: Local models have smaller context windows (~4K tokens). Search results must fit within these limits—targeting 10-15 results at ~200 tokens each (~2-3K tokens) leaves room for system prompt and response.
+- **Local LLM context limits**: Some local models have limited context windows. Search results must fit within these limits while leaving room for system prompt and response.
+- **Star gaming**: Quality thresholds based on star counts can be gamed (stars can be purchased). May need velocity checking or multi-source corroboration in future iterations if attacks materialize.
+- **Visible text injection**: HTML stripping addresses hidden injection but not SEO-optimized attack pages with malicious visible content. Multi-source verification (official docs → repo link) may be needed if this attack vector is exploited.
 
 ## Decision Outcome
 
-**Chosen: Quality-metric-driven LLM discovery with Claude native search and deterministic decision algorithm**
+**Chosen: Quality-metric-driven LLM discovery with provider-transparent web search tool and deterministic decision algorithm**
 
 ### Summary
 
@@ -419,7 +408,7 @@ Using Claude's native web search avoids new dependencies. The structured output 
 
 ### Trade-offs Accepted
 
-- **DuckDuckGo dependency**: Web search relies on DDG's HTML endpoint continuing to work. Mitigation: the endpoint is designed for accessibility and low-bandwidth use; if it changes, we can add API-based fallbacks.
+- **DuckDuckGo dependency (local LLMs only)**: Local LLM web search relies on DDG's HTML endpoint continuing to work. Cloud LLMs use native search. Mitigation: the endpoint is designed for accessibility and low-bandwidth use; if it changes, we can add API-based fallbacks.
 - **GitHub verification only**: Non-GitHub sources (npm, PyPI) rely on ecosystem probe fallback rather than separate verification. This is acceptable because the ecosystem probe would have found genuine ecosystem packages.
 - **Conservative thresholds**: Stars >= 50 may exclude legitimate but obscure tools. Users can override with `--from`.
 - **Always confirm LLM sources**: Even with `--yes`, sandbox validation still runs. The confirmation displays metadata; verification always runs.
@@ -440,132 +429,52 @@ Chain Resolver
 
 ### Components
 
-```
-internal/discover/
-├── search.go             # SearchProvider interface (for local LLM tool handler)
-├── search_ddg.go         # DuckDuckGo HTML scraper (default for local)
-├── search_tavily.go      # Tavily API provider (optional)
-├── search_brave.go       # Brave Search API provider (optional)
-├── llm_discovery.go      # LLMDiscoverySession implementation
-├── llm_tools.go          # Tool definitions (web_search, extract_source)
-├── llm_tool_handler.go   # Tool call handlers (web_search for local LLMs)
-├── llm_verify.go         # GitHub API verification
-├── llm_confirm.go        # User confirmation flow
-└── llm_sanitize.go       # HTML stripping, URL validation
-```
+The implementation adds several components to `internal/discover/`:
+
+| Component | Purpose |
+|-----------|---------|
+| SearchProvider interface | Abstraction for web search (local LLMs only) |
+| DDG/Tavily/Brave searchers | SearchProvider implementations |
+| LLMDiscoverySession | Manages LLM conversation for discovery |
+| Tool definitions | web_search and extract_source tool schemas |
+| Tool handler | Handles web_search calls for local LLMs |
+| GitHub verification | API calls to validate repository metadata |
+| User confirmation | Interactive approval flow with metadata display |
+| Sanitization | HTML stripping, URL validation, input normalization |
 
 ### Web Search Tool Handler (Local LLMs)
 
-For local LLMs that don't have native search, we provide a tool handler:
-
-```go
-// internal/discover/llm_tool_handler.go
-
-type WebSearchHandler struct {
-    searcher SearchProvider
-}
-
-func NewWebSearchHandler() *WebSearchHandler {
-    return &WebSearchHandler{
-        searcher: NewSearchProvider(), // DDG by default
-    }
-}
-
-func (h *WebSearchHandler) Handle(ctx context.Context, args map[string]any) (string, error) {
-    query := args["query"].(string)
-    results, err := h.searcher.Search(ctx, query)
-    if err != nil {
-        return "", err
-    }
-    return formatResultsAsText(results), nil
-}
-
-func formatResultsAsText(results []SearchResult) string {
-    // Format as numbered list for LLM consumption
-    // 1. Title
-    //    URL: https://...
-    //    Snippet: ...
-}
-```
+For local LLMs that don't have native search, tsuku provides a tool handler that:
+1. Receives the query from the LLM's web_search tool call
+2. Delegates to a SearchProvider implementation
+3. Formats results as text for LLM consumption (numbered list with title, URL, snippet)
 
 ### Search Provider Interface (Local LLMs)
 
-```go
-// internal/discover/search.go
-
-type SearchProvider interface {
-    Search(ctx context.Context, query string) ([]SearchResult, error)
-    Name() string
-}
-
-type SearchResult struct {
-    URL         string
-    Title       string
-    Description string
-}
-
-func NewSearchProvider() SearchProvider {
-    // Priority: explicit env var > API keys > DDG default
-    if key := os.Getenv("TAVILY_API_KEY"); key != "" {
-        return NewTavilySearcher(key)
-    }
-    if key := os.Getenv("BRAVE_API_KEY"); key != "" {
-        return NewBraveSearcher(key)
-    }
-    return NewDDGSearcher()
-}
-```
+The SearchProvider interface abstracts web search backends:
+- **Required methods**: Search(query) returning results with URL, title, description
+- **Provider selection**: Check for API keys (Tavily, Brave), fall back to DDG
+- **Configuration**: Environment variables or explicit `--search-provider` flag
 
 ### DDG Scraper (Default for Local LLMs)
 
-```go
-// internal/discover/search_ddg.go
-
-type DDGSearcher struct {
-    client *http.Client
-}
-
-func (s *DDGSearcher) Search(ctx context.Context, query string) ([]SearchResult, error) {
-    url := "https://html.duckduckgo.com/html/?q=" + url.QueryEscape(query)
-    req, _ := http.NewRequestWithContext(ctx, "GET", url, nil)
-
-    // Browser-like headers
-    req.Header.Set("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36...")
-    req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9")
-
-    resp, err := s.client.Do(req)
-    // Parse: <a class="result__a"> for title/URL, <a class="result__snippet"> for description
-    return parseResults(resp.Body)
-}
-```
+DuckDuckGo HTML scraping provides free search without API keys:
+- **Endpoint**: `html.duckduckgo.com/html/?q={query}`
+- **Requirements**: Browser-like headers to avoid bot detection
+- **Parsing**: Extract titles, URLs, and snippets from HTML response
+- **Limitations**: May be rate-limited; HTML structure may change
 
 ### LLMDiscoverySession
 
-```go
-type LLMDiscoverySession struct {
-    provider     llm.Provider
-    factory      *llm.Factory
-    messages     []llm.Message
-    systemPrompt string
-    tools        []llm.ToolDef
-    totalUsage   llm.Usage
-    timeout      time.Duration
-    httpClient   *http.Client // for GitHub API
-}
+The discovery session orchestrates the LLM conversation:
 
-func (s *LLMDiscoverySession) Discover(ctx context.Context, toolName string) (*DiscoveryResult, error) {
-    // 1. Apply timeout
-    ctx, cancel := context.WithTimeout(ctx, s.timeout)
-    defer cancel()
-
-    // 2. Build initial message with tool name
-    // 3. Run conversation loop (max 3 turns)
-    // 4. Process extract_source tool call
-    // 5. Apply quality thresholds
-    // 6. Verify via GitHub API
-    // 7. Return result or prompt for confirmation
-}
-```
+1. **Apply timeout** - Enforce configurable timeout (default ~15s)
+2. **Build initial message** - Include tool name and discovery prompt
+3. **Run conversation loop** - Allow LLM to search and refine (bounded iterations)
+4. **Process extract_source** - Parse structured output from tool call
+5. **Apply quality thresholds** - Filter based on confidence and quality signals
+6. **Verify via GitHub API** - Confirm repository exists and is legitimate
+7. **Return result** - Either auto-select or prompt for confirmation
 
 ### System Prompt
 
@@ -648,25 +557,12 @@ Cloud LLMs use native search (higher quality). Local LLMs use tsuku-provided sea
 
 ### Verification Flow
 
-```go
-func (s *LLMDiscoverySession) verifyGitHub(ctx context.Context, owner, repo string) (*GitHubMetadata, error) {
-    // GET /repos/{owner}/{repo}
-    // Returns: stars, created_at, pushed_at, archived, fork, description, owner info
-    // Errors: 404 (doesn't exist), 403 (rate limit)
-}
-
-type GitHubMetadata struct {
-    Stars       int
-    CreatedAt   time.Time
-    PushedAt    time.Time
-    Archived    bool
-    Fork        bool   // Is this a fork of another repo?
-    ParentRepo  string // If fork, the source repo (owner/repo)
-    Description string
-    OwnerLogin  string
-    OwnerType   string // "User" or "Organization"
-}
-```
+GitHub verification queries the repository API to collect:
+- **Existence**: 404 check confirms repository exists
+- **Status**: Archived flag, fork status
+- **Quality signals**: Stars, creation date, last push date
+- **Ownership**: Owner login and type (User/Organization)
+- **Fork parent**: If fork, the source repository for comparison
 
 **Fork detection**: The GitHub API returns `fork: true` for repositories that are forks. When detected:
 
@@ -679,34 +575,14 @@ This prevents installing from abandoned forks when the original is actively main
 
 ### Quality Threshold Logic
 
-```go
-func (s *LLMDiscoverySession) passesThresholds(result *ExtractSourceResult, metadata *GitHubMetadata) bool {
-    // Confidence is a gate (AND logic) - LLM must be reasonably sure
-    if result.Confidence < 70 {
-        return false
-    }
+The threshold function implements the decision rules:
 
-    // Forks never auto-pass - require explicit confirmation
-    if metadata != nil && metadata.Fork {
-        return false
-    }
-
-    // Quality signals use OR logic - any strong signal suffices
-    if metadata != nil && metadata.Stars >= 50 {
-        return true
-    }
-    if result.Downloads >= 1000 {
-        return true
-    }
-
-    // Very strong signals can override threshold requirements
-    if metadata != nil && metadata.Stars >= 500 {
-        return true
-    }
-
-    return false
-}
-```
+1. **Confidence gate (AND)**: If confidence below threshold, reject immediately
+2. **Fork check**: Forks never auto-pass—always require explicit confirmation
+3. **Quality signals (OR)**: Pass if ANY quality signal meets its threshold:
+   - GitHub stars above minimum
+   - Ecosystem downloads above minimum
+4. **Default**: If no quality signal passes, reject for auto-selection (still available as user choice)
 
 ### Confirmation Display
 
@@ -732,65 +608,46 @@ Install stripe-cli from this source? (y/N)
 
 ### Defense Layers
 
-1. **Input Normalization** (`internal/discover/normalize.go`—existing)
-   - Homoglyph detection
-   - Lowercase conversion
-   - Length limits
+1. **Input Normalization** (existing)
+   - Homoglyph detection, lowercase conversion, length limits
+   - Prevents unicode tricks in tool names
 
-2. **HTML Stripping** (`llm_sanitize.go`—new)
-   ```go
-   func stripHTML(content string) string {
-       // Remove script, style, noscript tags
-       // Remove HTML comments
-       // Remove zero-width Unicode characters
-       // Convert to plain text
-   }
-   ```
+2. **HTML Stripping** (new)
+   - Remove script, style, noscript tags and HTML comments
+   - Remove zero-width Unicode characters
+   - Convert to plain text before LLM processing
 
-3. **URL Validation** (`llm_sanitize.go`—new)
-   ```go
-   func validateGitHubURL(url string) (owner, repo string, err error) {
-       // Must match: github.com/{owner}/{repo}
-       // Owner: [a-z0-9-]+
-       // Repo: [a-z0-9._-]+
-       // No credentials, standard port only
-   }
-   ```
+3. **URL Validation** (new)
+   - GitHub URLs must match `github.com/{owner}/{repo}` pattern
+   - Owner/repo names restricted to safe character sets
+   - Reject credentials, non-standard ports, path traversal
 
-4. **GitHub API Verification** (`llm_verify.go`—new)
-   - Repository exists
+4. **GitHub API Verification** (new)
+   - Repository exists (404 check)
    - Not archived
    - Owner matches extracted name
 
-5. **User Confirmation** (`llm_confirm.go`—new)
-   - Rich metadata display
+5. **User Confirmation** (new)
+   - Rich metadata display (stars, age, owner, description)
    - Interactive y/N prompt
-   - Non-interactive: error suggesting --yes
-   - **`--yes` flag behavior**: Skips the interactive confirmation prompt but does NOT skip GitHub API verification (layer 4). All verification layers 1-4 run regardless of `--yes`; only the interactive prompt is bypassed.
+   - Non-interactive mode: error suggesting --yes
+   - **`--yes` flag behavior**: Skips confirmation prompt but NOT verification. Layers 1-4 always run.
 
 6. **Sandbox Validation** (existing—post-confirmation)
 
 ### Error Types
 
-```go
-// DiscoveryError is the base interface for discovery-specific errors
-type DiscoveryError interface {
-    error
-    IsRetryable() bool
-}
+Discovery defines specific error categories:
 
-// TimeoutError when discovery exceeds 15-second budget
-type TimeoutError struct{ Duration time.Duration }
+| Error | Trigger | Retryable |
+|-------|---------|-----------|
+| Timeout | Discovery exceeds time budget | No |
+| Budget | Daily LLM cost limit reached | No (until reset) |
+| Verification | GitHub API check fails (404, archived) | Depends on cause |
+| ConfirmationDenied | User rejects the source | No |
+| Search | Web search fails (DDG down, rate limit) | Yes |
 
-// BudgetError when daily LLM cost limit reached
-type BudgetError struct{ Limit, Used float64 }
-
-// VerificationError when GitHub API check fails
-type VerificationError struct{ Reason string }
-
-// ConfirmationDeniedError when user rejects the source
-type ConfirmationDeniedError struct{}
-```
+All errors implement a common interface with `IsRetryable()` for consistent handling.
 
 ### Error Handling
 
@@ -875,84 +732,60 @@ This approach:
 
 Implement the tool-based search architecture. Cloud LLMs use native search; local LLMs use DDG handler.
 
-- Define `web_search` and `extract_source` tools in `llm_tools.go`
-- Implement `WebSearchHandler` for local LLM tool calls
-- Implement `DDGSearcher` with HTML parsing
-- Implement `SearchProvider` interface for alternative backends
+- Define `web_search` and `extract_source` tool schemas
+- Implement tool handler for local LLM web_search calls
+- Implement DDG scraper with HTML parsing
+- Implement SearchProvider interface for alternative backends
 - Write tests with recorded HTML responses
-
-**Files:**
-- `internal/discover/llm_tools.go` (tool definitions)
-- `internal/discover/llm_tool_handler.go` (web_search handler for local LLMs)
-- `internal/discover/search.go` (SearchProvider interface)
-- `internal/discover/search_ddg.go` (DDG implementation)
-- `internal/discover/search_test.go`
 
 ### Phase 2: Core Discovery Session
 
 Implement the LLM session that analyzes search results.
 
-- Create `llm_discovery.go` with LLMDiscoverySession
-- Define extract_source tool schema
+- Create LLMDiscoverySession with conversation management
+- Define extract_source tool schema (builder vs instructions results)
 - Write discovery system prompt
-- Format search results as context
-- Implement single-turn extraction
+- Implement conversation loop with bounded iterations
 - Wire into ChainResolver as stage 3
-- Add timeout context (15 seconds)
-
-**Files:**
-- `internal/discover/llm_discovery.go`
-- `internal/discover/llm_tools.go`
+- Add configurable timeout
 
 ### Phase 3: Verification and Sanitization
 
 Add security layers: HTML stripping, URL validation, GitHub API verification.
 
-- Implement HTML stripping (golang.org/x/net/html)
-- Implement URL validation regex
-- Implement GitHub API verification
-- Add rate limit handling
+- Implement HTML stripping for search results
+- Implement URL validation with safe character sets
+- Implement GitHub API verification (exists, not archived, fork detection)
+- Add rate limit handling with graceful degradation
 - Connect to existing HTTP client patterns
-
-**Files:**
-- `internal/discover/llm_sanitize.go`
-- `internal/discover/llm_verify.go`
 
 ### Phase 4: Quality Thresholds and Decision Algorithm
 
 Implement the deterministic decision logic.
 
-- Define DiscoveryThreshold type
-- Implement passesThresholds()
+- Implement threshold checking (confidence gate, quality OR)
 - Implement priority ranking for multiple candidates
-- Handle edge cases (low confidence, multiple matches)
+- Handle edge cases (low confidence, multiple matches, forks)
+- Define initial threshold values based on registry analysis
 - Add tests with mock LLM responses
-
-**Files:**
-- `internal/discover/llm_quality.go`
-- `internal/discover/llm_discovery_test.go`
 
 ### Phase 5: Confirmation UX
 
 Implement user-facing confirmation flow.
 
-- Create confirmation display format
+- Create rich metadata display format
 - Handle interactive vs. non-interactive modes
 - Integrate with existing confirmation patterns
 - Add --yes handling (skip confirmation, not verification)
 - Test TTY detection
 
-**Files:**
-- `internal/discover/llm_confirm.go`
-- Integration in `cmd/tsuku/install.go`
-
 ### Phase 6: Alternative Search Providers (Optional)
 
 Add Tavily and Brave as alternative search providers for local LLMs. Users with API keys may prefer these over DDG scraping.
 
-- Implement `TavilySearcher` with JSON API
-- Implement `BraveSearcher` with JSON API
-- Update `NewSearchProvider()` to detect API keys
+- Implement Tavily searcher with JSON API
+- Implement Brave searcher with JSON API
+- Update provider selection to detect API keys
 - Add `--search-provider` flag for explicit override
 
 **Provider Selection for Local LLMs:**
@@ -966,23 +799,14 @@ Add Tavily and Brave as alternative search providers for local LLMs. Users with 
 
 Cloud LLMs always use native search (handled by the API, no configuration needed).
 
-**Files:**
-- `internal/discover/search_tavily.go`
-- `internal/discover/search_brave.go`
-- Updates to `internal/discover/search.go`
-
 ### Phase 7: Budget and Telemetry Integration
 
 Wire into existing cost tracking and telemetry.
 
-- Add cost tracking to LLMDiscoverySession
-- Integrate with LLMStateTracker for budget checks
-- Emit discovery telemetry events
-- Add discoverySession metrics to verbose output
-
-**Files:**
-- Updates to `internal/discover/llm_discovery.go`
-- Updates to `internal/telemetry/`
+- Add cost tracking to discovery session
+- Integrate with existing budget tracking infrastructure
+- Emit discovery telemetry events (accuracy, latency, confirmation rate)
+- Add discovery metrics to verbose output
 
 ### Phase 8: Non-Deterministic Builder (Requires Separate Design)
 
