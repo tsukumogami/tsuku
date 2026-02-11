@@ -1,18 +1,15 @@
-name: Recipe Platform Validation
-# Validates all recipes across 11 platforms and optionally adds constraints
+name: Recipe Validation Core
+# Reusable workflow containing all validation logic.
+# Called by wrapper workflows to avoid workflow_dispatch+inputs bug.
 
 on:
-  # Allow manual trigger
-  workflow_dispatch:
+  workflow_call:
     inputs:
       auto_constrain:
         description: 'Automatically add platform constraints to failing recipes'
         required: false
         default: false
         type: boolean
-  schedule:
-    # Run weekly on Sunday at 2 AM UTC
-    - cron: '0 2 * * 0'
 
 jobs:
   # Build binaries and collect all recipes

@@ -1,0 +1,13 @@
+name: Recipe Validation with Constraints
+# Validates all recipes and automatically adds platform constraints.
+# Use this for Phase 2: after reviewing failures, generate constraint PR.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  validate-and-constrain:
+    uses: ./.github/workflows/recipe-validation-core.yml
+    with:
+      auto_constrain: true
+    secrets: inherit
