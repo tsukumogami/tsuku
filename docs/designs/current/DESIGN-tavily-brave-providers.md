@@ -1,5 +1,5 @@
 ---
-status: Accepted
+status: Current
 problem: |
   The DDG scraper is the only search provider for local LLMs. Users with API keys
   for Tavily or Brave prefer API-based search for better reliability and structured
@@ -20,7 +20,7 @@ rationale: |
 
 ## Status
 
-Accepted
+Current
 
 ## Upstream Design Reference
 
