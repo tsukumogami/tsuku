@@ -53,7 +53,7 @@ Planned
 |-------|--------------|------|
 | ~~[#1617: feat(search): add Tavily and Brave search providers](https://github.com/tsukumogami/tsuku/issues/1617)~~ | [#1610](https://github.com/tsukumogami/tsuku/issues/1610) | testable |
 | _Implements Tavily and Brave as API-based alternatives to DDG scraping. Auto-selects provider based on API key presence, adds --search-provider flag for explicit override._ | | |
-| [#1616: feat(discover): add telemetry and cost tracking](https://github.com/tsukumogami/tsuku/issues/1616) | None | testable |
+| ~~[#1616: feat(discover): add telemetry and cost tracking](https://github.com/tsukumogami/tsuku/issues/1616)~~ | None | testable |
 | _Integrates with existing budget and telemetry infrastructure: tracks LLM token usage per discovery, enforces daily cost limits, emits discovery events for accuracy monitoring, and shows metrics in verbose output._ | | |
 
 ### Dependency Graph
@@ -71,7 +71,7 @@ graph TD
 
     subgraph Extensions["LLM Discovery Extensions"]
         I1617["<s>#1617: Tavily and Brave</s>"]
-        I1616["#1616: Telemetry"]
+        I1616["<s>#1616: Telemetry</s>"]
     end
 
     I1610 --> I1617
@@ -85,8 +85,7 @@ graph TD
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1610,I1611,I1612,I1613,I1614,I1615,I1617 done
-    class I1616 ready
+    class I1610,I1611,I1612,I1613,I1614,I1615,I1617,I1616 done
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
