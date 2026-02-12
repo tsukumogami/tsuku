@@ -29,6 +29,11 @@ type LLMConfig struct {
 	// Default is true (enabled).
 	Enabled *bool `toml:"enabled,omitempty"`
 
+	// LocalEnabled enables or disables local LLM inference via tsuku-llm addon.
+	// When false, LocalProvider is not registered in the factory.
+	// Default is true (enabled).
+	LocalEnabled *bool `toml:"local_enabled,omitempty"`
+
 	// Providers specifies the preferred provider order.
 	// The first provider in the list becomes the primary.
 	// Empty means auto-detect from environment variables.
@@ -130,6 +135,15 @@ func (c *Config) LLMEnabled() bool {
 	return *c.LLM.Enabled
 }
 
+// LLMLocalEnabled returns whether local LLM inference is enabled.
+// Returns true if not explicitly set (default behavior).
+func (c *Config) LLMLocalEnabled() bool {
+	if c.LLM.LocalEnabled == nil {
+		return true // Default to enabled
+	}
+	return *c.LLM.LocalEnabled
+}
+
 // LLMProviders returns the configured provider order.
 // Returns nil if not set (use auto-detection).
 func (c *Config) LLMProviders() []string {
@@ -162,6 +176,8 @@ func (c *Config) Get(key string) (string, bool) {
 		return strconv.FormatBool(c.Telemetry), true
 	case "llm.enabled":
 		return strconv.FormatBool(c.LLMEnabled()), true
+	case "llm.local_enabled":
+		return strconv.FormatBool(c.LLMLocalEnabled()), true
 	case "llm.providers":
 		if len(c.LLM.Providers) == 0 {
 			return "", true
@@ -193,6 +209,13 @@ func (c *Config) Set(key, value string) error {
 			return fmt.Errorf("invalid value for llm.enabled: must be true or false")
 		}
 		c.LLM.Enabled = &b
+		return nil
+	case "llm.local_enabled":
+		b, err := strconv.ParseBool(value)
+		if err != nil {
+			return fmt.Errorf("invalid value for llm.local_enabled: must be true or false")
+		}
+		c.LLM.LocalEnabled = &b
 		return nil
 	case "llm.providers":
 		if value == "" {
@@ -235,6 +258,7 @@ func AvailableKeys() map[string]string {
 	return map[string]string{
 		"telemetry":             "Enable anonymous usage statistics (true/false)",
 		"llm.enabled":           "Enable LLM features for recipe generation (true/false)",
+		"llm.local_enabled":     "Enable local LLM inference via tsuku-llm addon (true/false)",
 		"llm.providers":         "Preferred LLM provider order (comma-separated, e.g., claude,gemini)",
 		"llm.daily_budget":      "Daily LLM cost limit in USD (default: 5.0, 0 to disable)",
 		"llm.hourly_rate_limit": "Max LLM generations per hour (default: 10, 0 to disable)",

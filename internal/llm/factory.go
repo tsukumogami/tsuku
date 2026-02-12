@@ -19,6 +19,7 @@ type Factory struct {
 // This interface matches the methods provided by userconfig.Config.
 type LLMConfig interface {
 	LLMEnabled() bool
+	LLMLocalEnabled() bool
 	LLMProviders() []string
 }
 
@@ -29,6 +30,7 @@ var ErrLLMDisabled = fmt.Errorf("LLM features are disabled via configuration")
 type factoryOptions struct {
 	primary         string
 	enabled         bool
+	localEnabled    bool
 	preferredOrder  []string
 	enabledExplicit bool // Whether enabled was explicitly set
 }
@@ -46,10 +48,12 @@ func WithPrimaryProvider(name string) FactoryOption {
 
 // WithConfig applies LLM configuration settings.
 // If config.LLMEnabled() returns false, NewFactory will return ErrLLMDisabled.
+// If config.LLMLocalEnabled() returns true, LocalProvider is registered as a fallback.
 // If config.LLMProviders() returns a non-empty list, the first provider becomes primary.
 func WithConfig(cfg LLMConfig) FactoryOption {
 	return func(o *factoryOptions) {
 		o.enabled = cfg.LLMEnabled()
+		o.localEnabled = cfg.LLMLocalEnabled()
 		o.enabledExplicit = true
 		providers := cfg.LLMProviders()
 		if len(providers) > 0 {
@@ -64,6 +68,13 @@ func WithEnabled(enabled bool) FactoryOption {
 	return func(o *factoryOptions) {
 		o.enabled = enabled
 		o.enabledExplicit = true
+	}
+}
+
+// WithLocalEnabled explicitly enables or disables local LLM inference.
+func WithLocalEnabled(enabled bool) FactoryOption {
+	return func(o *factoryOptions) {
+		o.localEnabled = enabled
 	}
 }
 
@@ -82,14 +93,16 @@ func WithProviderOrder(providers []string) FactoryOption {
 // It auto-detects available providers based on environment variables:
 // - Claude: Available if ANTHROPIC_API_KEY is set
 // - Gemini: Available if GOOGLE_API_KEY or GEMINI_API_KEY is set
+// - Local: Available if local_enabled=true in config (lowest priority fallback)
 //
 // Returns ErrLLMDisabled if LLM features are explicitly disabled via WithConfig or WithEnabled.
 // Returns an error if no providers are available.
 func NewFactory(ctx context.Context, opts ...FactoryOption) (*Factory, error) {
 	// Process options
 	o := &factoryOptions{
-		primary: "claude", // Default primary provider
-		enabled: true,     // Default enabled
+		primary:      "claude", // Default primary provider
+		enabled:      true,     // Default enabled
+		localEnabled: true,     // Default local enabled
 	}
 	for _, opt := range opts {
 		opt(o)
@@ -124,8 +137,16 @@ func NewFactory(ctx context.Context, opts ...FactoryOption) (*Factory, error) {
 		}
 	}
 
+	// Register LocalProvider as fallback if enabled
+	// LocalProvider is lowest priority - only used when no cloud providers are available
+	if o.localEnabled {
+		provider := NewLocalProvider()
+		f.providers["local"] = provider
+		f.breakers["local"] = NewCircuitBreaker("local")
+	}
+
 	if len(f.providers) == 0 {
-		return nil, fmt.Errorf("no LLM providers available: set ANTHROPIC_API_KEY or GOOGLE_API_KEY")
+		return nil, fmt.Errorf("no LLM providers available: set ANTHROPIC_API_KEY or GOOGLE_API_KEY, or enable local LLM")
 	}
 
 	return f, nil

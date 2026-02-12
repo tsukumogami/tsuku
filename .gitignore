@@ -54,3 +54,4 @@ tmp/
 # Only testdata/golden/plans/embedded/ is tracked in git
 testdata/golden/plans/[a-z]/
 coverage-analytics
+target/
