@@ -77,7 +77,13 @@ local_model = "qwen2.5-1.5b-instruct-q4"
 
 # Override automatic backend selection (optional)
 local_backend = "cuda"  # or "metal", "vulkan", "cpu"
+
+# Idle timeout before server auto-shuts down (default: 5m)
+# Shorter values useful for development/testing
+idle_timeout = "5m"
 ```
+
+**Environment variable override**: `TSUKU_LLM_IDLE_TIMEOUT` overrides the config file value. This is useful for testing (`TSUKU_LLM_IDLE_TIMEOUT=10s go test ./...`) and CI pipelines that need different timeout behavior without modifying config files.
 
 **Behavior when `local_enabled = false`**:
 - `LocalProvider` is not registered in the factory
@@ -180,6 +186,12 @@ With the addon as a local server, the remaining question is lifecycle management
 Startup is preemptive: `tsuku create` launches the server early in execution, before inference is needed. While the model loads, tsuku does non-LLM work. The `LocalProvider` checks for a running server before attempting to start one, so concurrent or sequential `tsuku create` calls share the same instance.
 
 For batch pipelines in CI, the idle timeout means the server stays warm between sequential calls without explicit lifecycle management. A pipeline of 500 tools just calls `tsuku create` in a loop -- the first starts the server, the rest find it immediately.
+
+**Reliable Daemon State Detection**: The server uses a lock file (`$TSUKU_HOME/llm.sock.lock`) in addition to the socket file. The server acquires an exclusive lock on startup and holds it until shutdown. This solves stale socket detection: if the lock can be acquired, the daemon isn't running (even if an orphaned socket file exists). The kernel automatically releases the lock on process death, making this more reliable than PID files or socket probing alone.
+
+**Configurable Timeout for Testing**: The idle timeout is configurable via `TSUKU_LLM_IDLE_TIMEOUT` environment variable. Development and test workflows use short timeouts (e.g., `10s`) for quick cleanup, while production uses the default `5m`. This eliminates the need for crude process killing during development.
+
+**Signal Handling**: The server handles SIGTERM for graceful shutdown, allowing in-flight requests to complete before exit. This makes the addon well-behaved in systemd, Docker, and orchestrator contexts where SIGTERM is the standard shutdown signal.
 
 #### Alternatives Considered
 
@@ -327,11 +339,14 @@ Manages the `tsuku-llm` binary using tsuku's existing tool management:
 **ServerLifecycle** (`internal/llm/lifecycle.go`):
 
 Handles starting, detecting, and health-checking the addon server:
-- Checks for Unix domain socket at `$TSUKU_HOME/llm.sock`
+- Uses lock file (`$TSUKU_HOME/llm.sock.lock`) to reliably detect running daemon
+- Attempts non-blocking exclusive lock: if acquired, daemon isn't running
+- If lock fails (held by daemon): connect to socket at `$TSUKU_HOME/llm.sock`
 - Health check: gRPC health checking protocol before sending inference requests
 - If no server found: starts `tsuku-llm serve` as a background process
-- If server unresponsive: cleans up stale socket file, starts fresh
+- Stale socket cleanup: if lock acquired but socket exists, remove orphaned socket
 - **Preemptive start**: When `local_preemptive = true` (default), `tsuku create` calls `ServerLifecycle.StartPreemptively()` early in execution. When false, server only starts on first `Complete()` call.
+- **Timeout override**: Reads `TSUKU_LLM_IDLE_TIMEOUT` env var and passes to addon via `--idle-timeout` flag
 
 ### Components in tsuku-llm (Rust + llama.cpp)
 
@@ -378,7 +393,17 @@ service InferenceService {
 // Plus standard gRPC health checking protocol
 ```
 
-The server creates a Unix domain socket at `$TSUKU_HOME/llm.sock` on startup (permissions 0600) and removes it on shutdown. Idle timeout (default 5 minutes) triggers automatic shutdown.
+The server performs the following on startup:
+1. Acquires exclusive lock on `$TSUKU_HOME/llm.sock.lock` (prevents duplicate instances)
+2. Creates Unix domain socket at `$TSUKU_HOME/llm.sock` (permissions 0600)
+3. Registers SIGTERM handler for graceful shutdown
+4. Starts idle timeout timer (configurable via `--idle-timeout` flag, default 5 minutes)
+
+On shutdown (idle timeout, SIGTERM, or gRPC Shutdown call):
+1. Stops accepting new connections
+2. Waits for in-flight requests to complete (with 10-second grace period)
+3. Removes socket file
+4. Releases lock file
 
 Tool calling is implemented through GBNF grammar constraints that force valid JSON matching tool schemas. Temperature 0 for deterministic extraction.
 
@@ -478,8 +503,37 @@ Set up the Rust addon binary and its CI:
 - llama.cpp integration via `cc` crate
 - Build matrix: macOS Metal, Linux CUDA, Linux Vulkan, CPU-only
 - gRPC server skeleton via `tonic` implementing `InferenceService`
-- Port file management and idle timeout
 - Release pipeline producing platform-specific binaries
+
+### Phase 2.5: Daemon Lifecycle Management
+
+Implement reliable daemon state detection and graceful shutdown:
+
+**Lock file mechanism (Rust server)**:
+- Acquire exclusive lock on `$TSUKU_HOME/llm.sock.lock` at startup
+- Hold lock until shutdown (kernel releases on process death)
+- Prevents duplicate daemon instances
+
+**Lock file validation (Go client)**:
+- Attempt non-blocking exclusive lock to detect running daemon
+- If lock acquired: daemon not running, clean up stale socket if present
+- If lock fails: daemon running, proceed to connect
+
+**Configurable idle timeout**:
+- `--idle-timeout` flag on `tsuku-llm serve` (default: 5m)
+- `TSUKU_LLM_IDLE_TIMEOUT` environment variable override
+- Go client passes timeout to addon when starting
+
+**Signal handling (Rust server)**:
+- SIGTERM handler triggers graceful shutdown
+- Wait for in-flight requests (10-second grace period)
+- Clean up socket and lock files on exit
+
+**Integration tests**:
+- Test lock file prevents duplicate daemons
+- Test stale socket cleanup when lock available
+- Test short timeout for deterministic test behavior
+- Test SIGTERM triggers graceful shutdown
 
 ### Phase 3: Hardware Detection and Model Selection
 
