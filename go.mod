@@ -14,6 +14,7 @@ require (
 	github.com/sorairolake/lzip-go v0.3.8
 	github.com/spf13/cobra v1.10.1
 	github.com/ulikunitz/xz v0.5.15
+	golang.org/x/net v0.47.0
 	golang.org/x/oauth2 v0.33.0
 	golang.org/x/sys v0.38.0
 	golang.org/x/term v0.37.0
@@ -58,7 +59,6 @@ require (
 	go.opentelemetry.io/otel/metric v1.38.0 // indirect
 	go.opentelemetry.io/otel/trace v1.38.0 // indirect
 	golang.org/x/crypto v0.45.0 // indirect
-	golang.org/x/net v0.47.0 // indirect
 	golang.org/x/sync v0.18.0 // indirect
 	golang.org/x/text v0.31.0 // indirect
 	golang.org/x/time v0.14.0 // indirect

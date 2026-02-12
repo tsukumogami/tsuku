@@ -3,6 +3,7 @@ package discover
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"testing"
 	"time"
@@ -86,9 +87,10 @@ func TestGitHubSourceValidation(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.source, func(t *testing.T) {
-			got := isValidGitHubSource(tc.source)
+			err := ValidateGitHubURL(tc.source)
+			got := err == nil
 			if got != tc.valid {
-				t.Errorf("isValidGitHubSource(%q) = %v, want %v", tc.source, got, tc.valid)
+				t.Errorf("ValidateGitHubURL(%q) error=%v, want valid=%v", tc.source, err, tc.valid)
 			}
 		})
 	}
@@ -219,7 +221,7 @@ func TestExtractSourceValidation(t *testing.T) {
 				"reasoning":  "test",
 			},
 			wantErr:    true,
-			errContain: "invalid github source format",
+			errContain: "malformed URL", // ValidateGitHubURL returns ErrURLMalformed for non-owner/repo format
 		},
 		{
 			name: "missing builder",
@@ -272,8 +274,8 @@ func testHandleExtractSource(args map[string]any) (*DiscoveryResult, error) {
 	_ = evidenceRaw
 
 	if builder == "github" {
-		if !isValidGitHubSource(source) {
-			return nil, errorf("extract_source: invalid github source format: %s (expected owner/repo)", source)
+		if err := ValidateGitHubURL(source); err != nil {
+			return nil, errorf("extract_source: %v", err)
 		}
 	}
 
@@ -291,7 +293,7 @@ func testHandleExtractSource(args map[string]any) (*DiscoveryResult, error) {
 }
 
 func errorf(format string, args ...any) error {
-	return &testError{msg: format}
+	return &testError{msg: fmt.Sprintf(format, args...)}
 }
 
 type testError struct {
