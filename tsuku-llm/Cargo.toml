@@ -43,6 +43,13 @@ clap = { version = "4", features = ["derive"] }
 [build-dependencies]
 tonic-build = "0.12"
 
+[features]
+default = []
+# GPU backend features (llama.cpp integration in #1638)
+metal = []   # macOS Metal acceleration
+cuda = []    # NVIDIA CUDA acceleration
+vulkan = []  # Vulkan acceleration (AMD, Intel, NVIDIA)
+
 [[bin]]
 name = "tsuku-llm"
 path = "src/main.rs"
