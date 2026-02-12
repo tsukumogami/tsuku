@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Accepted
 problem: |
   The discovery resolver produces only a generic "could not find" message regardless
   of why discovery failed. Users don't know if they need an API key, if the tool
@@ -24,7 +24,7 @@ rationale: |
 
 ## Status
 
-Proposed
+Accepted
 
 ## Upstream Design Reference
 
