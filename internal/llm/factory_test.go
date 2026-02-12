@@ -34,9 +34,40 @@ func TestNewFactoryNoProviders(t *testing.T) {
 	}()
 
 	ctx := context.Background()
-	_, err := NewFactory(ctx)
+	// With local provider disabled, should fail when no API keys are set
+	_, err := NewFactory(ctx, WithLocalEnabled(false))
 	if err == nil {
-		t.Error("NewFactory should fail when no API keys are set")
+		t.Error("NewFactory should fail when no API keys are set and local is disabled")
+	}
+}
+
+func TestNewFactoryWithLocalProviderOnly(t *testing.T) {
+	// Clear all API keys
+	originalAnthropic := os.Getenv("ANTHROPIC_API_KEY")
+	originalGoogle := os.Getenv("GOOGLE_API_KEY")
+	originalGemini := os.Getenv("GEMINI_API_KEY")
+	_ = os.Unsetenv("ANTHROPIC_API_KEY")
+	_ = os.Unsetenv("GOOGLE_API_KEY")
+	_ = os.Unsetenv("GEMINI_API_KEY")
+	defer func() {
+		_ = os.Setenv("ANTHROPIC_API_KEY", originalAnthropic)
+		_ = os.Setenv("GOOGLE_API_KEY", originalGoogle)
+		_ = os.Setenv("GEMINI_API_KEY", originalGemini)
+	}()
+
+	ctx := context.Background()
+	// With local provider enabled (default), should succeed even without API keys
+	factory, err := NewFactory(ctx)
+	if err != nil {
+		t.Fatalf("NewFactory should succeed with local provider enabled: %v", err)
+	}
+
+	if !factory.HasProvider("local") {
+		t.Error("Factory should have local provider")
+	}
+
+	if factory.ProviderCount() != 1 {
+		t.Errorf("ProviderCount() = %d, want 1", factory.ProviderCount())
 	}
 }
 
@@ -391,12 +422,17 @@ func TestSetOnBreakerTripNilCallback(t *testing.T) {
 
 // mockLLMConfig is a mock implementation of LLMConfig for testing.
 type mockLLMConfig struct {
-	enabled   bool
-	providers []string
+	enabled      bool
+	localEnabled bool
+	providers    []string
 }
 
 func (m *mockLLMConfig) LLMEnabled() bool {
 	return m.enabled
+}
+
+func (m *mockLLMConfig) LLMLocalEnabled() bool {
+	return m.localEnabled
 }
 
 func (m *mockLLMConfig) LLMProviders() []string {
