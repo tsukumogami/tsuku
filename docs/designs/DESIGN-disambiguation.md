@@ -191,7 +191,7 @@ Display a numbered list sorted by popularity, showing:
 ```
 Multiple sources found for "bat":
 
-  1. crates.io: sharkdp/bat
+  1. crates.io: sharkdp/bat (recommended)
      Downloads: 45K/day | Versions: 87 | Has repository
 
   2. npm: bat-cli
@@ -200,8 +200,10 @@ Multiple sources found for "bat":
   3. rubygems: bat
      Downloads: 50/day | Versions: 3 | No repository
 
-Select source [1-3, or 'q' to cancel]:
+Select source [1-3, Enter for 1, or 'q' to cancel]:
 ```
+
+The first option (highest-ranked by popularity) is marked as recommended and selected by default when the user presses Enter without typing a number. This matches common CLI patterns and reduces friction for the typical case where the top match is correct.
 
 In non-interactive mode (piped stdin or `--yes` with ambiguous matches), print the same list as an error and suggest `--from`:
 
