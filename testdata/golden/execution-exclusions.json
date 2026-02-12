@@ -61,6 +61,281 @@
       "recipe": "jekyll",
       "issue": "https://github.com/tsukumogami/tsuku/issues/1580",
       "reason": "gem_install binstubs execute system Ruby instead of installed gem"
+    },
+    {
+      "recipe": "act",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1663",
+      "reason": "Segfault (exit 139) - glibc version mismatch with Homebrew bottles"
+    },
+    {
+      "recipe": "buf",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1663",
+      "reason": "Segfault (exit 139) - glibc version mismatch with Homebrew bottles"
+    },
+    {
+      "recipe": "cliproxyapi",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1663",
+      "reason": "Segfault (exit 139) - glibc version mismatch with Homebrew bottles"
+    },
+    {
+      "recipe": "cloudflared",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1663",
+      "reason": "Segfault (exit 139) - glibc version mismatch with Homebrew bottles"
+    },
+    {
+      "recipe": "fabric-ai",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1663",
+      "reason": "Segfault (exit 139) - glibc version mismatch with Homebrew bottles"
+    },
+    {
+      "recipe": "gh",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1663",
+      "reason": "Segfault (exit 139) - glibc version mismatch with Homebrew bottles"
+    },
+    {
+      "recipe": "git-lfs",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1663",
+      "reason": "Segfault (exit 139) - glibc version mismatch with Homebrew bottles"
+    },
+    {
+      "recipe": "go-task",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1663",
+      "reason": "Segfault (exit 139) - glibc version mismatch with Homebrew bottles"
+    },
+    {
+      "recipe": "goreman",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1663",
+      "reason": "Segfault (exit 139) - glibc version mismatch with Homebrew bottles"
+    },
+    {
+      "recipe": "grpcurl",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1663",
+      "reason": "Segfault (exit 139) - glibc version mismatch with Homebrew bottles"
+    },
+    {
+      "recipe": "jfrog-cli",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1663",
+      "reason": "Segfault (exit 139) - glibc version mismatch with Homebrew bottles"
+    },
+    {
+      "recipe": "license-eye",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1663",
+      "reason": "Segfault (exit 139) - glibc version mismatch with Homebrew bottles"
+    },
+    {
+      "recipe": "mkcert",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1663",
+      "reason": "Segfault (exit 139) - glibc version mismatch with Homebrew bottles"
+    },
+    {
+      "recipe": "oh-my-posh",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1663",
+      "reason": "Segfault (exit 139) - glibc version mismatch with Homebrew bottles"
+    },
+    {
+      "recipe": "tailscale",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1663",
+      "reason": "Segfault (exit 139) - glibc version mismatch with Homebrew bottles"
+    },
+    {
+      "recipe": "temporal",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1663",
+      "reason": "Segfault (exit 139) - glibc version mismatch with Homebrew bottles"
+    },
+    {
+      "recipe": "terragrunt",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1663",
+      "reason": "Segfault (exit 139) - glibc version mismatch with Homebrew bottles"
+    },
+    {
+      "recipe": "witr",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1663",
+      "reason": "Segfault (exit 139) - glibc version mismatch with Homebrew bottles"
+    },
+    {
+      "recipe": "bash",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1665",
+      "reason": "Missing library (exit 127) - Homebrew bottle library dependencies not found"
+    },
+    {
+      "recipe": "c-ares",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1665",
+      "reason": "Missing library (exit 127) - Homebrew bottle library dependencies not found"
+    },
+    {
+      "recipe": "chibi-scheme",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1665",
+      "reason": "Missing library (exit 127) - Homebrew bottle library dependencies not found"
+    },
+    {
+      "recipe": "chicken",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1665",
+      "reason": "Missing library (exit 127) - Homebrew bottle library dependencies not found"
+    },
+    {
+      "recipe": "cloc",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1665",
+      "reason": "Missing library (exit 127) - Homebrew bottle library dependencies not found"
+    },
+    {
+      "recipe": "cocoapods",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1665",
+      "reason": "Missing library (exit 127) - Homebrew bottle library dependencies not found"
+    },
+    {
+      "recipe": "exiftool",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1665",
+      "reason": "Missing library (exit 127) - Homebrew bottle library dependencies not found"
+    },
+    {
+      "recipe": "glew",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1665",
+      "reason": "Missing library (exit 127) - Homebrew bottle library dependencies not found"
+    },
+    {
+      "recipe": "jpeg",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1665",
+      "reason": "Missing library (exit 127) - Homebrew bottle library dependencies not found"
+    },
+    {
+      "recipe": "lcov",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1665",
+      "reason": "Missing library (exit 127) - Homebrew bottle library dependencies not found"
+    },
+    {
+      "recipe": "lua-language-server",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1665",
+      "reason": "Missing library (exit 127) - Homebrew bottle library dependencies not found"
+    },
+    {
+      "recipe": "moreutils",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1665",
+      "reason": "Missing library (exit 127) - Homebrew bottle library dependencies not found"
+    },
+    {
+      "recipe": "p7zip",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1665",
+      "reason": "Missing library (exit 127) - Homebrew bottle library dependencies not found"
+    },
+    {
+      "recipe": "pkgconf",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1665",
+      "reason": "Missing library (exit 127) - Homebrew bottle library dependencies not found"
+    },
+    {
+      "recipe": "qrencode",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1665",
+      "reason": "Missing library (exit 127) - Homebrew bottle library dependencies not found"
+    },
+    {
+      "recipe": "swiftlint",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1665",
+      "reason": "Missing library (exit 127) - Homebrew bottle library dependencies not found"
+    },
+    {
+      "recipe": "xcbeautify",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1665",
+      "reason": "Missing library (exit 127) - Homebrew bottle library dependencies not found"
+    },
+    {
+      "recipe": "ctlptl",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1664",
+      "reason": "Verify command uses --version but tool doesn't support it"
+    },
+    {
+      "recipe": "dasel",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1664",
+      "reason": "Verify command uses --version but tool doesn't support it"
+    },
+    {
+      "recipe": "helm",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1664",
+      "reason": "Verify command uses --version but tool doesn't support it"
+    },
+    {
+      "recipe": "hugo",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1664",
+      "reason": "Verify command uses --version but tool doesn't support it"
+    },
+    {
+      "recipe": "kubernetes-cli",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1664",
+      "reason": "Verify command uses --version but tool doesn't support it"
+    },
+    {
+      "recipe": "openshift-cli",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1664",
+      "reason": "Verify command uses --version but tool doesn't support it"
+    },
+    {
+      "recipe": "xclogparser",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1664",
+      "reason": "Verify command uses --version but tool doesn't support it"
+    },
+    {
+      "recipe": "yj",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1664",
+      "reason": "Verify command uses --version but tool doesn't support it"
+    },
+    {
+      "recipe": "biome",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1666",
+      "reason": "Verification failure - pattern mismatch"
+    },
+    {
+      "recipe": "bun",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1666",
+      "reason": "Verification failure - recipe validation failed"
+    },
+    {
+      "recipe": "docker-buildx",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1666",
+      "reason": "Verification failure - exit status 1"
+    },
+    {
+      "recipe": "docker-credential-helper-ecr",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1666",
+      "reason": "Verification failure - exit status 2"
+    },
+    {
+      "recipe": "goimports",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1666",
+      "reason": "Verification failure - exit status 2"
+    },
+    {
+      "recipe": "liberica",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1666",
+      "reason": "Verification failure - recipe validation failed"
+    },
+    {
+      "recipe": "lima",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1666",
+      "reason": "Verification failure - exit status 1"
+    },
+    {
+      "recipe": "lua",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1666",
+      "reason": "Verification failure - exit status 1"
+    },
+    {
+      "recipe": "luajit",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1666",
+      "reason": "Verification failure - exit status 1"
+    },
+    {
+      "recipe": "sevenzip",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1666",
+      "reason": "Verification failure - Command Line Error (exit 7)"
+    },
+    {
+      "recipe": "sshpass",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1666",
+      "reason": "Verification failure - exit status 1"
+    },
+    {
+      "recipe": "spatialite",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1662",
+      "reason": "Transient network error - 502 Bad Gateway downloading dependencies"
     }
   ]
 }
