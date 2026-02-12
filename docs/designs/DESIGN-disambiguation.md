@@ -36,7 +36,7 @@ Planned
 | _Creates `disambiguate.go` with ranking algorithm (downloads DESC, version count, priority) and `isClearWinner()` logic for 10x threshold. Extends `probeOutcome` with version count and repository presence fields. Returns `AmbiguousMatchError` for close matches._ | | |
 | [#1649: feat(discover): add typosquatting detection via edit distance](https://github.com/tsukumogami/tsuku/issues/1649) | None | testable |
 | _Adds `typosquat.go` with Levenshtein distance calculation against registry entries (threshold ≤2). Integrates into chain resolver before probe stage to warn about suspiciously similar names._ | | |
-| [#1650: feat(discover): add ConfirmDisambiguationFunc callback type](https://github.com/tsukumogami/tsuku/issues/1650) | [#1648](https://github.com/tsukumogami/tsuku/issues/1648) | testable |
+| ~~[#1650: feat(discover): add ConfirmDisambiguationFunc callback type](https://github.com/tsukumogami/tsuku/issues/1650)~~ | ~~[#1648](https://github.com/tsukumogami/tsuku/issues/1648)~~ | ~~testable~~ |
 | _Defines the callback interface for interactive disambiguation, following the existing `ConfirmFunc` pattern from LLM discovery. Integrates callback invocation into ecosystem probe for close matches._ | | |
 | [#1651: feat(cli): add disambiguation prompt to create and install commands](https://github.com/tsukumogami/tsuku/issues/1651) | [#1648](https://github.com/tsukumogami/tsuku/issues/1648), [#1650](https://github.com/tsukumogami/tsuku/issues/1650) | testable |
 | _Implements the interactive prompt UI showing ranked matches with metadata (downloads, versions, repository status). Supports Enter-for-default, numbered selection, and 'q' to cancel._ | | |
@@ -86,9 +86,9 @@ graph TD
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1648 done
-    class I1649,I1650,I1652,I1654 ready
-    class I1651,I1653,I1655 blocked
+    class I1648,I1650 done
+    class I1649,I1651,I1652,I1654 ready
+    class I1653,I1655 blocked
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
