@@ -3,7 +3,6 @@
 package llm
 
 import (
-	"context"
 	"net"
 	"os"
 	"os/exec"
