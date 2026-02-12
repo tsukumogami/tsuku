@@ -336,6 +336,11 @@
       "recipe": "spatialite",
       "issue": "https://github.com/tsukumogami/tsuku/issues/1662",
       "reason": "Transient network error - 502 Bad Gateway downloading dependencies"
+    },
+    {
+      "recipe": "sqlite",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1663",
+      "reason": "Crash (abort trap) - Homebrew bottle issue on macOS"
     }
   ]
 }
