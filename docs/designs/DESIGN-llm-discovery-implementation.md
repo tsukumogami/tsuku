@@ -36,7 +36,7 @@ Planned
 |-------|--------------|------|
 | ~~[#1610: feat(search): add DDG retry logic and recorded response tests](https://github.com/tsukumogami/tsuku/issues/1610)~~ | None | testable |
 | _Adds exponential backoff retry logic for DDG 202 responses and establishes the test fixture pattern with recorded HTML responses for reliable offline testing._ | | |
-| [#1611: feat(discover): add HTML stripping and URL validation](https://github.com/tsukumogami/tsuku/issues/1611) | None | critical |
+| ~~[#1611: feat(discover): add HTML stripping and URL validation](https://github.com/tsukumogami/tsuku/issues/1611)~~ | None | critical |
 | _Implements security layers against prompt injection: strips script/style tags and HTML comments from search results, validates GitHub URLs against an allowlist pattern, and removes zero-width Unicode characters._ | | |
 | [#1612: feat(discover): add fork detection to GitHub verification](https://github.com/tsukumogami/tsuku/issues/1612) | None | testable |
 | _Extends GitHub API verification to detect forks, fetch parent metadata, and compare star counts. Forks never auto-select; users always get a warning suggesting the original repository._ | | |
@@ -62,7 +62,7 @@ Planned
 graph TD
     subgraph Hardening["LLM Discovery Hardening"]
         I1610["<s>#1610: DDG retry logic</s>"]
-        I1611["#1611: HTML stripping"]
+        I1611["<s>#1611: HTML stripping</s>"]
         I1612["#1612: Fork detection"]
         I1613["#1613: Rate limit handling"]
         I1614["#1614: Priority ranking"]
@@ -85,8 +85,8 @@ graph TD
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1610,I1617 done
-    class I1611,I1612,I1616 ready
+    class I1610,I1611,I1617 done
+    class I1612,I1616 ready
     class I1613,I1614,I1615 blocked
 ```
 

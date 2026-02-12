@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"regexp"
 	"strings"
 	"time"
 
@@ -430,6 +429,12 @@ func (s *discoverySession) handleWebSearch(ctx context.Context, tc llm.ToolCall)
 		return "", nil, fmt.Errorf("web_search failed: %w", err)
 	}
 
+	// Sanitize search results before LLM sees them (prompt injection defense)
+	for i := range resp.Results {
+		resp.Results[i].Title = StripHTML(resp.Results[i].Title)
+		resp.Results[i].Snippet = StripHTML(resp.Results[i].Snippet)
+	}
+
 	// Format results for LLM (limit to 10 results)
 	return resp.FormatForLLM(10), nil, nil
 }
@@ -458,8 +463,9 @@ func (s *discoverySession) handleExtractSource(tc llm.ToolCall) (*DiscoveryResul
 
 	// Validate source format for github builder
 	if builder == "github" {
-		if !isValidGitHubSource(source) {
-			return nil, fmt.Errorf("extract_source: invalid github source format: %s (expected owner/repo)", source)
+		// Use comprehensive URL validation (handles both owner/repo and full URL formats)
+		if err := ValidateGitHubURL(source); err != nil {
+			return nil, fmt.Errorf("extract_source: %w", err)
 		}
 	}
 
@@ -475,13 +481,6 @@ func (s *discoverySession) handleExtractSource(tc llm.ToolCall) (*DiscoveryResul
 		Reason:     fmt.Sprintf("LLM discovery: %s (evidence: %s)", reasoning, strings.Join(evidence, ", ")),
 		Metadata:   Metadata{}, // Will be filled by GitHub verification
 	}, nil
-}
-
-// isValidGitHubSource validates the owner/repo format.
-var githubSourceRegex = regexp.MustCompile(`^[a-zA-Z0-9][-a-zA-Z0-9]*/[a-zA-Z0-9._-]+$`)
-
-func isValidGitHubSource(source string) bool {
-	return githubSourceRegex.MatchString(source)
 }
 
 // defaultConfirm is the default confirmation function (always confirms).
