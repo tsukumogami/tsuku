@@ -352,7 +352,7 @@ func TestDisambiguate(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := disambiguate(tt.toolName, tt.matches, priority)
+			result, err := disambiguate(tt.toolName, tt.matches, priority, nil)
 
 			if tt.expectError {
 				if err == nil {
@@ -407,5 +407,256 @@ func TestAmbiguousMatchError(t *testing.T) {
 	expected := "multiple sources found for 'bat': use --from to specify"
 	if got := err.Error(); got != expected {
 		t.Errorf("Error() = %q, want %q", got, expected)
+	}
+}
+
+func TestConfirmDisambiguationCallback(t *testing.T) {
+	priority := map[string]int{
+		"crates.io": 1,
+		"npm":       2,
+	}
+
+	closeMatches := []probeOutcome{
+		{
+			builderName: "crates.io",
+			result: &builders.ProbeResult{
+				Source:        "bat",
+				Downloads:     500,
+				VersionCount:  5,
+				HasRepository: true,
+			},
+		},
+		{
+			builderName: "npm",
+			result: &builders.ProbeResult{
+				Source:        "bat-cli",
+				Downloads:     100,
+				VersionCount:  3,
+				HasRepository: false,
+			},
+		},
+	}
+
+	t.Run("callback invoked with correct data", func(t *testing.T) {
+		var receivedMatches []ProbeMatch
+		callback := func(matches []ProbeMatch) (int, error) {
+			receivedMatches = matches
+			return 0, nil
+		}
+
+		_, err := disambiguate("bat", closeMatches, priority, callback)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+
+		if len(receivedMatches) != 2 {
+			t.Fatalf("expected 2 matches, got %d", len(receivedMatches))
+		}
+
+		// Verify first match (crates.io should be first after ranking)
+		if receivedMatches[0].Builder != "crates.io" {
+			t.Errorf("first match builder = %q, want %q", receivedMatches[0].Builder, "crates.io")
+		}
+		if receivedMatches[0].Source != "bat" {
+			t.Errorf("first match source = %q, want %q", receivedMatches[0].Source, "bat")
+		}
+		if receivedMatches[0].Downloads != 500 {
+			t.Errorf("first match downloads = %d, want %d", receivedMatches[0].Downloads, 500)
+		}
+		if receivedMatches[0].VersionCount != 5 {
+			t.Errorf("first match version count = %d, want %d", receivedMatches[0].VersionCount, 5)
+		}
+		if !receivedMatches[0].HasRepository {
+			t.Error("first match should have repository")
+		}
+
+		// Verify second match
+		if receivedMatches[1].Builder != "npm" {
+			t.Errorf("second match builder = %q, want %q", receivedMatches[1].Builder, "npm")
+		}
+		if receivedMatches[1].HasRepository {
+			t.Error("second match should not have repository")
+		}
+	})
+
+	t.Run("callback selection honored - select first", func(t *testing.T) {
+		callback := func(matches []ProbeMatch) (int, error) {
+			return 0, nil // select first
+		}
+
+		result, err := disambiguate("bat", closeMatches, priority, callback)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+
+		if result.Builder != "crates.io" {
+			t.Errorf("result.Builder = %q, want %q", result.Builder, "crates.io")
+		}
+	})
+
+	t.Run("callback selection honored - select second", func(t *testing.T) {
+		callback := func(matches []ProbeMatch) (int, error) {
+			return 1, nil // select second
+		}
+
+		result, err := disambiguate("bat", closeMatches, priority, callback)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+
+		if result.Builder != "npm" {
+			t.Errorf("result.Builder = %q, want %q", result.Builder, "npm")
+		}
+	})
+
+	t.Run("callback error propagates", func(t *testing.T) {
+		expectedErr := &disambiguateTestError{msg: "user cancelled"}
+		callback := func(matches []ProbeMatch) (int, error) {
+			return 0, expectedErr
+		}
+
+		_, err := disambiguate("bat", closeMatches, priority, callback)
+		if err != expectedErr {
+			t.Errorf("expected error %v, got %v", expectedErr, err)
+		}
+	})
+
+	t.Run("out of range index returns AmbiguousMatchError", func(t *testing.T) {
+		callback := func(matches []ProbeMatch) (int, error) {
+			return 99, nil // invalid index
+		}
+
+		_, err := disambiguate("bat", closeMatches, priority, callback)
+		if err == nil {
+			t.Fatal("expected error for out of range index")
+		}
+
+		_, ok := err.(*AmbiguousMatchError)
+		if !ok {
+			t.Errorf("expected AmbiguousMatchError, got %T", err)
+		}
+	})
+
+	t.Run("negative index returns AmbiguousMatchError", func(t *testing.T) {
+		callback := func(matches []ProbeMatch) (int, error) {
+			return -1, nil // invalid index
+		}
+
+		_, err := disambiguate("bat", closeMatches, priority, callback)
+		if err == nil {
+			t.Fatal("expected error for negative index")
+		}
+
+		_, ok := err.(*AmbiguousMatchError)
+		if !ok {
+			t.Errorf("expected AmbiguousMatchError, got %T", err)
+		}
+	})
+
+	t.Run("callback not invoked for clear winner", func(t *testing.T) {
+		clearWinnerMatches := []probeOutcome{
+			{
+				builderName: "crates.io",
+				result: &builders.ProbeResult{
+					Source:        "bat",
+					Downloads:     10000,
+					VersionCount:  10,
+					HasRepository: true,
+				},
+			},
+			{
+				builderName: "npm",
+				result: &builders.ProbeResult{
+					Source:        "bat-cli",
+					Downloads:     100,
+					VersionCount:  3,
+					HasRepository: true,
+				},
+			},
+		}
+
+		callbackInvoked := false
+		callback := func(matches []ProbeMatch) (int, error) {
+			callbackInvoked = true
+			return 0, nil
+		}
+
+		result, err := disambiguate("bat", clearWinnerMatches, priority, callback)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+
+		if callbackInvoked {
+			t.Error("callback should not be invoked for clear winner")
+		}
+
+		if result.Builder != "crates.io" {
+			t.Errorf("result.Builder = %q, want %q", result.Builder, "crates.io")
+		}
+	})
+}
+
+// disambiguateTestError is a simple error type for testing.
+type disambiguateTestError struct {
+	msg string
+}
+
+func (e *disambiguateTestError) Error() string {
+	return e.msg
+}
+
+func TestToProbeMatches(t *testing.T) {
+	matches := []probeOutcome{
+		{
+			builderName: "crates.io",
+			result: &builders.ProbeResult{
+				Source:        "bat",
+				Downloads:     1000,
+				VersionCount:  10,
+				HasRepository: true,
+			},
+		},
+		{
+			builderName: "npm",
+			result: &builders.ProbeResult{
+				Source:        "bat-cli",
+				Downloads:     100,
+				VersionCount:  5,
+				HasRepository: false,
+			},
+		},
+	}
+
+	probeMatches := toProbeMatches(matches)
+
+	if len(probeMatches) != 2 {
+		t.Fatalf("expected 2 matches, got %d", len(probeMatches))
+	}
+
+	// Verify first match
+	pm := probeMatches[0]
+	if pm.Builder != "crates.io" {
+		t.Errorf("first match Builder = %q, want %q", pm.Builder, "crates.io")
+	}
+	if pm.Source != "bat" {
+		t.Errorf("first match Source = %q, want %q", pm.Source, "bat")
+	}
+	if pm.Downloads != 1000 {
+		t.Errorf("first match Downloads = %d, want %d", pm.Downloads, 1000)
+	}
+	if pm.VersionCount != 10 {
+		t.Errorf("first match VersionCount = %d, want %d", pm.VersionCount, 10)
+	}
+	if !pm.HasRepository {
+		t.Error("first match should have repository")
+	}
+
+	// Verify second match
+	pm = probeMatches[1]
+	if pm.Builder != "npm" {
+		t.Errorf("second match Builder = %q, want %q", pm.Builder, "npm")
+	}
+	if pm.HasRepository {
+		t.Error("second match should not have repository")
 	}
 }

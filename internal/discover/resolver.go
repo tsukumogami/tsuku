@@ -154,6 +154,20 @@ type DiscoveryMatch struct {
 	HasRepository bool
 }
 
+// ProbeMatch represents a single ecosystem match for interactive disambiguation.
+// Used as callback input to ConfirmDisambiguationFunc.
+type ProbeMatch struct {
+	Builder       string // e.g., "crates.io", "npm"
+	Source        string // e.g., "sharkdp/bat", "bat-cli"
+	Downloads     int    // Monthly downloads (0 if unavailable)
+	VersionCount  int    // Number of published versions
+	HasRepository bool   // Whether package has linked source repo
+}
+
+// ConfirmDisambiguationFunc prompts the user to select from multiple matches.
+// Returns the selected index (0-based) or an error if cancelled.
+type ConfirmDisambiguationFunc func(matches []ProbeMatch) (int, error)
+
 func (e *AmbiguousMatchError) Error() string {
 	return fmt.Sprintf("multiple sources found for '%s': use --from to specify", e.Tool)
 }
