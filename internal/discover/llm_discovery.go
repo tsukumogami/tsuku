@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
+	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -52,6 +55,33 @@ type ConfirmFunc func(result *DiscoveryResult) bool
 
 // HTTPGetFunc abstracts HTTP GET for testing.
 type HTTPGetFunc func(ctx context.Context, url string) ([]byte, error)
+
+// RateLimitError indicates GitHub API rate limit was exceeded.
+type RateLimitError struct {
+	ResetTime     time.Time // When the rate limit resets
+	Authenticated bool      // Whether request used GITHUB_TOKEN
+}
+
+func (e *RateLimitError) Error() string {
+	msg := "GitHub API rate limit exceeded"
+	if !e.ResetTime.IsZero() {
+		msg += fmt.Sprintf(" (resets at %s)", e.ResetTime.Format(time.RFC3339))
+	}
+	return msg
+}
+
+// IsRateLimited returns true (implements a marker interface for rate limit errors).
+func (e *RateLimitError) IsRateLimited() bool {
+	return true
+}
+
+// Suggestion returns a user-friendly message about the rate limit.
+func (e *RateLimitError) Suggestion() string {
+	if e.Authenticated {
+		return "GitHub API rate limit exceeded. Please wait and try again."
+	}
+	return "GitHub API rate limit exceeded. Set GITHUB_TOKEN for higher limits (5000 req/hour)."
+}
 
 // LLMDiscoveryOption configures an LLMDiscovery instance.
 type LLMDiscoveryOption func(*LLMDiscovery)
@@ -140,15 +170,25 @@ func (d *LLMDiscovery) Resolve(ctx context.Context, toolName string) (*Discovery
 	// Verify against GitHub API
 	verified, err := d.verifyGitHubRepo(ctx, result)
 	if err != nil {
-		d.logger.Debug(fmt.Sprintf("llm discovery: verification failed: %v", err))
-		// Continue without verification - set lower confidence
-		result.Metadata.Stars = 0
+		// Check if this is a rate limit error - handle gracefully
+		var rateLimitErr *RateLimitError
+		if isRateLimitErr(err, &rateLimitErr) {
+			d.logger.Debug(fmt.Sprintf("llm discovery: rate limited, skipping verification for %q", toolName))
+			result.Metadata.VerificationSkipped = true
+			result.Metadata.VerificationWarning = rateLimitErr.Suggestion()
+			// Skip quality threshold - we can't verify stars
+			// Continue to confirmation with warning
+		} else {
+			// Non-rate-limit errors are hard failures
+			d.logger.Debug(fmt.Sprintf("llm discovery: verification failed: %v", err))
+			return nil, nil
+		}
 	} else {
 		result.Metadata = verified
 	}
 
-	// Apply quality thresholds
-	if !d.passesQualityThreshold(result) {
+	// Apply quality thresholds (skip if verification was skipped due to rate limit)
+	if !result.Metadata.VerificationSkipped && !d.passesQualityThreshold(result) {
 		d.logger.Debug(fmt.Sprintf("llm discovery: result for %q failed quality threshold", toolName))
 		return nil, nil
 	}
@@ -529,7 +569,7 @@ func defaultConfirm(result *DiscoveryResult) bool {
 	return true
 }
 
-// defaultHTTPGet performs an HTTP GET request.
+// defaultHTTPGet performs an HTTP GET request with GITHUB_TOKEN if available.
 func defaultHTTPGet(ctx context.Context, url string) ([]byte, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
@@ -538,15 +578,64 @@ func defaultHTTPGet(ctx context.Context, url string) ([]byte, error) {
 	req.Header.Set("Accept", "application/vnd.github.v3+json")
 	req.Header.Set("User-Agent", "tsuku")
 
+	// Use GITHUB_TOKEN if available for higher rate limits (5000/hr vs 60/hr)
+	token := os.Getenv("GITHUB_TOKEN")
+	if token != "" {
+		req.Header.Set("Authorization", "Bearer "+token)
+	}
+
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
 
+	// Check for rate limit (403 with X-RateLimit-Remaining: 0)
+	if resp.StatusCode == http.StatusForbidden {
+		if isRateLimitResponse(resp) {
+			return nil, parseRateLimitError(resp, token != "")
+		}
+		return nil, fmt.Errorf("HTTP 403 Forbidden")
+	}
+
+	if resp.StatusCode == http.StatusNotFound {
+		return nil, fmt.Errorf("repository not found")
+	}
+
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("HTTP %d", resp.StatusCode)
 	}
 
 	return io.ReadAll(resp.Body)
+}
+
+// isRateLimitResponse checks if a 403 response is due to rate limiting.
+func isRateLimitResponse(resp *http.Response) bool {
+	remaining := resp.Header.Get("X-RateLimit-Remaining")
+	return remaining == "0"
+}
+
+// parseRateLimitError creates a RateLimitError from a rate-limited response.
+func parseRateLimitError(resp *http.Response, authenticated bool) *RateLimitError {
+	err := &RateLimitError{
+		Authenticated: authenticated,
+	}
+
+	// Parse reset time from X-RateLimit-Reset header (Unix timestamp)
+	if resetStr := resp.Header.Get("X-RateLimit-Reset"); resetStr != "" {
+		if resetUnix, parseErr := strconv.ParseInt(resetStr, 10, 64); parseErr == nil {
+			err.ResetTime = time.Unix(resetUnix, 0)
+		}
+	}
+
+	return err
+}
+
+// isRateLimitErr checks if an error is a RateLimitError and extracts it.
+func isRateLimitErr(err error, target **RateLimitError) bool {
+	if rateLimitErr, ok := err.(*RateLimitError); ok {
+		*target = rateLimitErr
+		return true
+	}
+	return false
 }

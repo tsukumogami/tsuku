@@ -194,6 +194,17 @@ func confirmLLMDiscovery(result *discover.DiscoveryResult) bool {
 		fmt.Fprintf(os.Stderr, "  Description: %s\n", result.Metadata.Description)
 	}
 
+	// Verification skipped warning (rate limit)
+	if result.Metadata.VerificationSkipped {
+		fmt.Fprintln(os.Stderr, "")
+		fmt.Fprintln(os.Stderr, "WARNING: GitHub API verification was SKIPPED.")
+		if result.Metadata.VerificationWarning != "" {
+			fmt.Fprintf(os.Stderr, "  Reason: %s\n", result.Metadata.VerificationWarning)
+		}
+		fmt.Fprintln(os.Stderr, "  Star count and other metadata could not be verified.")
+		fmt.Fprintln(os.Stderr, "  Exercise extra caution when approving this source.")
+	}
+
 	// Fork warning (AC8)
 	if result.Metadata.IsFork {
 		fmt.Fprintln(os.Stderr, "")
@@ -215,8 +226,8 @@ func confirmLLMDiscovery(result *discover.DiscoveryResult) bool {
 	fmt.Fprintln(os.Stderr, "Please verify this is the correct tool before proceeding.")
 
 	// Handle --yes flag (AC1, AC2, AC3)
-	// Forks never auto-select - require explicit confirmation even with --yes
-	if createAutoApprove && !result.Metadata.IsFork {
+	// Forks and unverified results never auto-select - require explicit confirmation
+	if createAutoApprove && !result.Metadata.IsFork && !result.Metadata.VerificationSkipped {
 		fmt.Fprintln(os.Stderr, "")
 		fmt.Fprintln(os.Stderr, "Auto-approving LLM discovery result (--yes flag).")
 		return true
@@ -225,7 +236,10 @@ func confirmLLMDiscovery(result *discover.DiscoveryResult) bool {
 	// Check for interactive mode (AC4)
 	if !isInteractive() {
 		fmt.Fprintln(os.Stderr, "")
-		if result.Metadata.IsFork {
+		if result.Metadata.VerificationSkipped {
+			fmt.Fprintln(os.Stderr, "Error: Verification was skipped. Unverified results require explicit interactive confirmation.")
+			fmt.Fprintln(os.Stderr, "Run interactively to approve, or use --from to specify the source directly.")
+		} else if result.Metadata.IsFork {
 			fmt.Fprintln(os.Stderr, "Error: Fork detected. Forks require explicit interactive confirmation.")
 			fmt.Fprintln(os.Stderr, "Run interactively to approve, or use --from to specify the source directly.")
 		} else {
