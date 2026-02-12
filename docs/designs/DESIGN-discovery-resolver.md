@@ -46,8 +46,8 @@ Planned
 | _Wire the discovery resolver chain into `tsuku install` so unknown tools trigger automatic source discovery and recipe generation. Shows which resolver stage matched and provides actionable errors on failure._ | | |
 | ~~[#1317: Ecosystem probe](https://github.com/tsukumogami/tsuku/issues/1317)~~ | ~~[#1338](https://github.com/tsukumogami/tsuku/issues/1338)~~ | ~~testable~~ |
 | _Implement the `EcosystemProber` interface and `EcosystemProbe` resolver that queries all seven ecosystem builders in parallel with a 3-second timeout. Includes the `ProbeResult` type with source, downloads, version count, and repository info._ | | |
-| [#1318: LLM discovery](https://github.com/tsukumogami/tsuku/issues/1318) | [#1338](https://github.com/tsukumogami/tsuku/issues/1338) | critical |
-| _Implement the `LLMDiscovery` resolver: web search via LLM, structured JSON extraction, GitHub API verification (existence, archived status, ownership), rich confirmation prompt with metadata, and prompt injection defenses (HTML stripping, URL validation)._ | | |
+| ~~[#1318: LLM discovery](https://github.com/tsukumogami/tsuku/issues/1318)~~ | ~~[#1338](https://github.com/tsukumogami/tsuku/issues/1338)~~ | ~~critical~~ |
+| _Implement the `LLMDiscovery` resolver: web search via LLM, structured JSON extraction, GitHub API verification (existence, archived status, ownership), rich confirmation prompt with metadata, and prompt injection defenses (HTML stripping, URL validation). Decomposed into [milestone 76](https://github.com/tsukumogami/tsuku/milestone/76) and [milestone 77](https://github.com/tsukumogami/tsuku/milestone/77) with 8 implementation issues._ | | |
 | ~~[#1319: Telemetry events](https://github.com/tsukumogami/tsuku/issues/1319)~~ | ~~[#1338](https://github.com/tsukumogami/tsuku/issues/1338)~~ | ~~simple~~ |
 | _Emit telemetry events for discovery usage: which stage resolved the tool, whether disambiguation was needed, LLM discovery usage rates. Hooks into the install fallback path from #1338._ | | |
 | [#1321: Disambiguation](https://github.com/tsukumogami/tsuku/issues/1321) | [#1317](https://github.com/tsukumogami/tsuku/issues/1317) | critical |
@@ -58,6 +58,10 @@ Planned
 | _Add Probe() methods to all seven ecosystem builders, wire them into a parallel resolver with 3-second timeout, integrate into the discovery chain, and add integration tests. See [DESIGN-ecosystem-probe.md](current/DESIGN-ecosystem-probe.md)._ | | |
 | ~~[M62: Discovery Registry Bootstrap](https://github.com/tsukumogami/tsuku/milestone/62)~~ | ~~None~~ | |
 | _Extend registry schema with optional metadata, build the `seed-discovery` CLI tool, populate ~500 entries from the priority queue and curated seed lists, and add CI freshness checks. See [DESIGN-discovery-registry-bootstrap.md](current/DESIGN-discovery-registry-bootstrap.md)._ | | |
+| ~~[M76: LLM Discovery Hardening](https://github.com/tsukumogami/tsuku/milestone/76)~~ | ~~[#1338](https://github.com/tsukumogami/tsuku/issues/1338)~~ | |
+| _Harden LLM discovery with DDG retry logic, HTML stripping, fork detection, rate limit handling, priority ranking, and confirmation UX. See [DESIGN-llm-discovery-implementation.md](DESIGN-llm-discovery-implementation.md)._ | | |
+| [M77: LLM Discovery Extensions](https://github.com/tsukumogami/tsuku/milestone/77) | [M76](https://github.com/tsukumogami/tsuku/milestone/76) | |
+| _Extend LLM discovery with Tavily/Brave search providers and telemetry integration. See [DESIGN-llm-discovery-implementation.md](DESIGN-llm-discovery-implementation.md)._ | | |
 
 ### Dependency Graph
 
@@ -79,7 +83,9 @@ graph TD
     subgraph Phase3["Phase 3: Discovery Stages"]
         I1317["#1317: Ecosystem probe"]
         M65["M65: Ecosystem Probe"]
-        I1318["#1318: LLM discovery"]
+        I1318["<s>#1318: LLM discovery</s>"]
+        M76["M76: LLM Discovery Hardening"]
+        M77["M77: LLM Discovery Extensions"]
         I1319["#1319: Telemetry events"]
     end
 
@@ -94,10 +100,12 @@ graph TD
     I1338 --> I1317
     I1317 --> M65
     I1338 --> I1318
+    I1318 --> M76
+    M76 --> M77
     I1338 --> I1319
     M65 --> I1321
     M65 --> I1322
-    I1318 --> I1322
+    M76 --> I1322
 
     classDef done fill:#c8e6c9
     classDef ready fill:#bbdefb
@@ -108,7 +116,9 @@ graph TD
     class I1337,I1338 done
     class I1319 done
     class I1317 done
-    class I1318 needsDesign
+    class I1318 done
+    class M76 ready
+    class M77 blocked
     class M65 done
     class M62 done
     class I1315 done
