@@ -327,17 +327,15 @@ func runDepsOnly(cmd *cobra.Command, r *recipe.Recipe, toolName string, jsonOutp
 			}
 			printJSON(output)
 		} else {
-			// Text output: human-readable format with headers
-			if len(reqs.Packages) > 0 {
+			// Text output: backward compatible when no repos, headers when repos present
+			hasRepos := len(reqs.Repositories) > 0
+			if hasRepos && len(reqs.Packages) > 0 {
+				// With repositories, use headers to distinguish sections
 				fmt.Println("Packages:")
 				for _, pkg := range reqs.Packages {
 					fmt.Printf("  %s\n", pkg)
 				}
-			}
-			if len(reqs.Repositories) > 0 {
-				if len(reqs.Packages) > 0 {
-					fmt.Println()
-				}
+				fmt.Println()
 				fmt.Println("Repositories:")
 				for _, repo := range reqs.Repositories {
 					switch repo.Type {
@@ -355,6 +353,31 @@ func runDepsOnly(cmd *cobra.Command, r *recipe.Recipe, toolName string, jsonOutp
 							}
 						}
 					}
+				}
+			} else if hasRepos {
+				// Repositories only (rare case)
+				fmt.Println("Repositories:")
+				for _, repo := range reqs.Repositories {
+					switch repo.Type {
+					case "ppa":
+						fmt.Printf("  %s ppa: %s\n", repo.Manager, repo.PPA)
+					case "tap":
+						fmt.Printf("  %s tap: %s\n", repo.Manager, repo.Tap)
+					case "repo":
+						fmt.Printf("  %s repo: %s\n", repo.Manager, repo.URL)
+						if repo.KeyURL != "" {
+							if repo.KeySHA256 != "" {
+								fmt.Printf("    key: %s (sha256: %s)\n", repo.KeyURL, repo.KeySHA256)
+							} else {
+								fmt.Printf("    key: %s\n", repo.KeyURL)
+							}
+						}
+					}
+				}
+			} else {
+				// Packages only - backward compatible one-per-line format
+				for _, pkg := range reqs.Packages {
+					fmt.Println(pkg)
 				}
 			}
 		}
