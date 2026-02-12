@@ -17,6 +17,8 @@ const (
 // Metadata holds optional popularity and provenance signals for disambiguation UX.
 type Metadata struct {
 	Downloads           int    // Monthly downloads (0 if unavailable)
+	VersionCount        int    // Number of published versions (0 if unavailable)
+	HasRepository       bool   // Whether the package has a linked source repository
 	AgeDays             int    // Days since first publish (0 if unavailable)
 	Stars               int    // GitHub stars (0 if unavailable)
 	Description         string // Short description for display
@@ -80,6 +82,27 @@ type NotFoundError struct {
 
 func (e *NotFoundError) Error() string {
 	return fmt.Sprintf("could not find '%s'. Try tsuku install %s --from github:owner/repo if you know the source", e.Tool, e.Tool)
+}
+
+// AmbiguousMatchError indicates multiple ecosystem matches with no clear winner.
+// Returned when popularity data is missing or matches are within 10x of each other.
+// Downstream handlers format this error with --from suggestions.
+type AmbiguousMatchError struct {
+	Tool    string           // The requested tool name
+	Matches []DiscoveryMatch // Ranked matches for display
+}
+
+// DiscoveryMatch represents a single ecosystem match for disambiguation display.
+type DiscoveryMatch struct {
+	Builder       string // e.g., "crates.io", "npm"
+	Source        string // e.g., "sharkdp/bat", "bat-cli"
+	Downloads     int    // 0 if unavailable
+	VersionCount  int    // 0 if unavailable
+	HasRepository bool
+}
+
+func (e *AmbiguousMatchError) Error() string {
+	return fmt.Sprintf("multiple sources found for '%s': use --from to specify", e.Tool)
 }
 
 // isFatalError returns true for errors that should stop the resolver chain.
