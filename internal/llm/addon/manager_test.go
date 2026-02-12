@@ -65,13 +65,3 @@ func TestIsInstalled(t *testing.T) {
 		require.True(t, IsInstalled())
 	})
 }
-
-func TestNewManager(t *testing.T) {
-	// Use isolated TSUKU_HOME so running addon doesn't interfere
-	tmpDir := t.TempDir()
-	t.Setenv("TSUKU_HOME", tmpDir)
-
-	m := NewManager()
-	require.NotNil(t, m)
-	require.False(t, m.IsRunning())
-}

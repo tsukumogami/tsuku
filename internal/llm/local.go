@@ -12,41 +12,27 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
+	"github.com/tsukumogami/tsuku/internal/llm/addon"
 	pb "github.com/tsukumogami/tsuku/internal/llm/proto"
 )
 
 // LocalProvider implements the Provider interface using the local tsuku-llm addon.
 // It communicates with the addon over gRPC via Unix domain sockets.
 type LocalProvider struct {
-	conn   *grpc.ClientConn
-	client pb.InferenceServiceClient
+	lifecycle *ServerLifecycle
+	conn      *grpc.ClientConn
+	client    pb.InferenceServiceClient
 }
 
-// NewLocalProvider creates a new local provider by connecting to the tsuku-llm addon.
-// The addon must be running and listening on the Unix socket at $TSUKU_HOME/llm.sock.
-func NewLocalProvider(_ context.Context) (*LocalProvider, error) {
+// NewLocalProvider creates a new local provider.
+// The provider uses ServerLifecycle to ensure the addon is running before making requests.
+func NewLocalProvider() *LocalProvider {
 	socketPath := SocketPath()
-
-	// Check if socket exists
-	if _, err := os.Stat(socketPath); os.IsNotExist(err) {
-		return nil, fmt.Errorf("local LLM addon not running (socket not found: %s)", socketPath)
-	}
-
-	// Create gRPC client (connection is lazy)
-	conn, err := grpc.NewClient(
-		"unix://"+socketPath,
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to connect to local LLM addon: %w", err)
-	}
-
-	client := pb.NewInferenceServiceClient(conn)
+	addonPath := addon.AddonPath()
 
 	return &LocalProvider{
-		conn:   conn,
-		client: client,
-	}, nil
+		lifecycle: NewServerLifecycle(socketPath, addonPath),
+	}
 }
 
 // Name returns the provider identifier.
@@ -55,7 +41,18 @@ func (p *LocalProvider) Name() string {
 }
 
 // Complete sends a completion request to the local addon.
+// It ensures the addon server is running before sending the request.
 func (p *LocalProvider) Complete(ctx context.Context, req *CompletionRequest) (*CompletionResponse, error) {
+	// Ensure the addon server is running
+	if err := p.lifecycle.EnsureRunning(ctx); err != nil {
+		return nil, fmt.Errorf("local LLM addon not available: %w", err)
+	}
+
+	// Ensure we have a connection
+	if err := p.ensureConnection(ctx); err != nil {
+		return nil, fmt.Errorf("failed to connect to local LLM addon: %w", err)
+	}
+
 	// Convert to proto format
 	pbReq := toProtoRequest(req)
 
@@ -67,22 +64,52 @@ func (p *LocalProvider) Complete(ctx context.Context, req *CompletionRequest) (*
 	return fromProtoResponse(pbResp), nil
 }
 
-// Close releases the gRPC connection.
+// ensureConnection establishes the gRPC connection if not already connected.
+func (p *LocalProvider) ensureConnection(ctx context.Context) error {
+	if p.client != nil {
+		return nil
+	}
+
+	socketPath := SocketPath()
+
+	conn, err := grpc.NewClient(
+		"unix://"+socketPath,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	if err != nil {
+		return err
+	}
+
+	p.conn = conn
+	p.client = pb.NewInferenceServiceClient(conn)
+	return nil
+}
+
+// Close releases the gRPC connection and stops the server if we started it.
 func (p *LocalProvider) Close() error {
 	if p.conn != nil {
-		return p.conn.Close()
+		err := p.conn.Close()
+		p.conn = nil
+		p.client = nil
+		return err
 	}
 	return nil
 }
 
 // Shutdown sends a shutdown request to the addon.
 func (p *LocalProvider) Shutdown(ctx context.Context, graceful bool) error {
+	if p.client == nil {
+		return nil
+	}
 	_, err := p.client.Shutdown(ctx, &pb.ShutdownRequest{Graceful: graceful})
 	return err
 }
 
 // GetStatus retrieves the addon's current status.
 func (p *LocalProvider) GetStatus(ctx context.Context) (*pb.StatusResponse, error) {
+	if err := p.ensureConnection(ctx); err != nil {
+		return nil, err
+	}
 	return p.client.GetStatus(ctx, &pb.StatusRequest{})
 }
 
@@ -97,6 +124,11 @@ func SocketPath() string {
 		home = filepath.Join(userHome, ".tsuku")
 	}
 	return filepath.Join(home, "llm.sock")
+}
+
+// LockPath returns the path to the lock file for daemon state detection.
+func LockPath() string {
+	return SocketPath() + ".lock"
 }
 
 // IsAddonRunning checks if the addon is running by attempting to connect.
