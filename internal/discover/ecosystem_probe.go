@@ -3,7 +3,6 @@ package discover
 import (
 	"context"
 	"fmt"
-	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -109,28 +108,6 @@ func (p *EcosystemProbe) Resolve(ctx context.Context, toolName string) (*Discove
 		return nil, nil
 	}
 
-	// Sort by priority (lower number = higher priority).
-	sort.Slice(matches, func(i, j int) bool {
-		pi := p.priority[matches[i].builderName]
-		pj := p.priority[matches[j].builderName]
-		// Unknown builders get lowest priority.
-		if pi == 0 {
-			pi = 999
-		}
-		if pj == 0 {
-			pj = 999
-		}
-		return pi < pj
-	})
-
-	best := matches[0]
-	return &DiscoveryResult{
-		Builder:    best.builderName,
-		Source:     best.result.Source,
-		Confidence: ConfidenceEcosystem,
-		Reason:     fmt.Sprintf("found in %s ecosystem", best.builderName),
-		Metadata: Metadata{
-			Downloads: best.result.Downloads,
-		},
-	}, nil
+	// Disambiguate: rank by popularity and check for clear winner.
+	return disambiguate(toolName, matches, p.priority)
 }

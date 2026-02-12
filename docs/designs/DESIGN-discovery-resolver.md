@@ -59,9 +59,9 @@ Planned
 | ~~[M62: Discovery Registry Bootstrap](https://github.com/tsukumogami/tsuku/milestone/62)~~ | ~~None~~ | |
 | _Extend registry schema with optional metadata, build the `seed-discovery` CLI tool, populate ~500 entries from the priority queue and curated seed lists, and add CI freshness checks. See [DESIGN-discovery-registry-bootstrap.md](current/DESIGN-discovery-registry-bootstrap.md)._ | | |
 | ~~[M76: LLM Discovery Hardening](https://github.com/tsukumogami/tsuku/milestone/76)~~ | ~~[#1338](https://github.com/tsukumogami/tsuku/issues/1338)~~ | |
-| _Harden LLM discovery with DDG retry logic, HTML stripping, fork detection, rate limit handling, priority ranking, and confirmation UX. See [DESIGN-llm-discovery-implementation.md](current/DESIGN-llm-discovery-implementation.md)._ | | |
-| ~~[M77: LLM Discovery Extensions](https://github.com/tsukumogami/tsuku/milestone/77)~~ | ~~[M76](https://github.com/tsukumogami/tsuku/milestone/76)~~ | |
-| _Extend LLM discovery with Tavily/Brave search providers and telemetry integration. See [DESIGN-llm-discovery-implementation.md](current/DESIGN-llm-discovery-implementation.md)._ | | |
+| _Harden LLM discovery with DDG retry logic, HTML stripping, fork detection, rate limit handling, priority ranking, and confirmation UX. See [DESIGN-llm-discovery-implementation.md](DESIGN-llm-discovery-implementation.md)._ | | |
+| [M77: LLM Discovery Extensions](https://github.com/tsukumogami/tsuku/milestone/77) | [M76](https://github.com/tsukumogami/tsuku/milestone/76) | |
+| _Extend LLM discovery with Tavily/Brave search providers and telemetry integration. See [DESIGN-llm-discovery-implementation.md](DESIGN-llm-discovery-implementation.md)._ | | |
 
 ### Dependency Graph
 
@@ -84,8 +84,8 @@ graph TD
         I1317["#1317: Ecosystem probe"]
         M65["M65: Ecosystem Probe"]
         I1318["<s>#1318: LLM discovery</s>"]
-        M76["<s>M76: LLM Discovery Hardening</s>"]
-        M77["<s>M77: LLM Discovery Extensions</s>"]
+        M76["M76: LLM Discovery Hardening"]
+        M77["M77: LLM Discovery Extensions"]
         I1319["#1319: Telemetry events"]
     end
 
