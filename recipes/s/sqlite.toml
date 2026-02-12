@@ -4,6 +4,7 @@ description = "Command-line interface for SQLite"
 homepage = "https://sqlite.org/"
 dependencies = ["readline"]
 binaries = ["bin/sqlite3"]
+supported_os = ["darwin"]
 
 [[steps]]
 action = "homebrew"

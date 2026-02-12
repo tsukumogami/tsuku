@@ -152,6 +152,15 @@ fi
 
 # Write constraint into [metadata] section (after the last metadata field, before [[steps]])
 if [ -n "$CONSTRAINT_LINE" ]; then
+  # Extract constraint type (e.g., "supported_libc" from "supported_libc = [...]")
+  CONSTRAINT_TYPE=$(echo "$CONSTRAINT_LINE" | cut -d'=' -f1 | tr -d ' ')
+
+  # Check if this constraint type already exists in the file
+  if grep -q "^${CONSTRAINT_TYPE} *= *\[" "$RECIPE_FILE"; then
+    echo "Constraint $CONSTRAINT_TYPE already exists in $RECIPE_FILE, skipping"
+    exit 0
+  fi
+
   NEXT_SECTION=$(grep -n '^\[\[steps\]\]\|^\[version\]\|^\[verify\]' "$RECIPE_FILE" | head -1 | cut -d: -f1)
 
   if [ -n "$NEXT_SECTION" ]; then

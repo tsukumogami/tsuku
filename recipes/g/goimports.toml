@@ -3,6 +3,7 @@ name = "goimports"
 description = "Updates Go import lines and formats code"
 homepage = "https://pkg.go.dev/golang.org/x/tools/cmd/goimports"
 version_format = "semver"
+supported_os = ["linux"]
 
 [[steps]]
 action = "go_install"

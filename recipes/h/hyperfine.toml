@@ -3,6 +3,7 @@ name = "hyperfine"
 description = "Command-line benchmarking tool"
 homepage = "https://github.com/sharkdp/hyperfine"
 version_format = "semver"
+unsupported_platforms = ["linux/arm64"]
 
 [[steps]]
 action = "github_archive"

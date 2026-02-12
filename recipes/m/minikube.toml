@@ -3,6 +3,7 @@ name = "minikube"
 description = "Run Kubernetes locally"
 homepage = "https://minikube.sigs.k8s.io/"
 version_format = "semver"
+supported_libc = ["glibc"]
 
 [[steps]]
 action = "github_file"

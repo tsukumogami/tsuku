@@ -3,6 +3,7 @@ name = "ast-grep"
 description = "Structural code search and refactoring tool"
 homepage = "https://ast-grep.github.io/"
 version_format = "semver"
+supported_libc = ["glibc"]
 
 [[steps]]
 action = "github_archive"

@@ -3,6 +3,7 @@ name = "gdbm"
 description = "GNU database manager"
 homepage = "https://www.gnu.org/software/gdbm/"
 binaries = ["bin/gdbmtool"]
+supported_libc = ["glibc"]
 
 [[steps]]
 action = "homebrew"

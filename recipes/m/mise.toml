@@ -3,6 +3,7 @@ name = "mise"
 description = "Dev tools version manager"
 homepage = "https://github.com/jdx/mise"
 version_format = "semver"
+supported_libc = ["glibc"]
 
 [[steps]]
 action = "github_archive"

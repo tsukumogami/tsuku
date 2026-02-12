@@ -4,6 +4,7 @@ description = "dlopen verification helper for tsuku verify"
 homepage = "https://github.com/tsukumogami/tsuku"
 # Note: internal = true is not yet supported in MetadataSection
 # The tool is hidden via IsHidden flag when installed programmatically
+supported_libc = ["glibc"]
 
 [version]
 tag_prefix = "v"

@@ -3,6 +3,7 @@ name = "appwrite"
 description = "Appwrite CLI - Command line tool for Appwrite backend server"
 homepage = "https://appwrite.io/"
 version_format = "semver"
+supported_libc = ["glibc"]
 
 [[steps]]
 action = "github_file"
