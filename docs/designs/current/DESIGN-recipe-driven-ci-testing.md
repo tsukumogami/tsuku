@@ -198,6 +198,8 @@ This matches current `tsuku info` behavior where dependencies shown are relevant
 
 ### Decision 3: Code Reuse with Sandbox
 
+> **Note:** This decision is superseded by [DESIGN-consolidate-system-deps.md](../DESIGN-consolidate-system-deps.md), which addresses the divergence between executor and sandbox implementations and extends `--deps-only --system` to include repository configurations.
+
 Both `tsuku info` (with new flags) and sandbox mode extract system packages from recipes. How should they share code?
 
 #### Chosen: Shared Extraction Library in internal/executor
