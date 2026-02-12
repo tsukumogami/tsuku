@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Accepted
 problem: |
   Two overlapping implementations extract system packages from recipes and plans:
   executor/system_deps.go (5 actions, packages only) and sandbox/packages.go
@@ -27,7 +27,7 @@ rationale: |
 
 ## Status
 
-**Proposed**
+**Accepted**
 
 ## Upstream Design Reference
 
