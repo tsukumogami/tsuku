@@ -52,7 +52,7 @@ Planned
 | _Emit telemetry events for discovery usage: which stage resolved the tool, whether disambiguation was needed, LLM discovery usage rates. Hooks into the install fallback path from #1338._ | | |
 | ~~[#1321: Disambiguation](https://github.com/tsukumogami/tsuku/issues/1321)~~ | ~~[#1317](https://github.com/tsukumogami/tsuku/issues/1317)~~ | ~~critical~~ |
 | _Implement edit-distance checking against registry entries, popularity ranking by download count, the 10x auto-select rule, interactive prompting for close matches, and non-interactive error handling. Consumes `ProbeResult` metadata from #1317. Decomposed into [milestone 81](https://github.com/tsukumogami/tsuku/milestone/81) with 8 implementation issues. See [DESIGN-disambiguation.md](DESIGN-disambiguation.md)._ | | |
-| [#1322: Error UX and verbose mode](https://github.com/tsukumogami/tsuku/issues/1322) | [#1338](https://github.com/tsukumogami/tsuku/issues/1338), [#1317](https://github.com/tsukumogami/tsuku/issues/1317), [#1318](https://github.com/tsukumogami/tsuku/issues/1318) | testable |
+| ~~[#1322: Error UX and verbose mode](https://github.com/tsukumogami/tsuku/issues/1322)~~ | ~~[#1338](https://github.com/tsukumogami/tsuku/issues/1338), [#1317](https://github.com/tsukumogami/tsuku/issues/1317), [#1318](https://github.com/tsukumogami/tsuku/issues/1318)~~ | ~~testable~~ |
 | _Implement all error and fallback messages from the UX specification table, add `--verbose` output showing resolver chain progress (registry lookup, ecosystem probe, LLM discovery), and wire debug/info/error log levels through a consistent logger._ | | |
 | ~~[M65: Ecosystem Probe](https://github.com/tsukumogami/tsuku/milestone/65)~~ | ~~[#1338](https://github.com/tsukumogami/tsuku/issues/1338)~~ | |
 | _Add Probe() methods to all seven ecosystem builders, wire them into a parallel resolver with 3-second timeout, integrate into the discovery chain, and add integration tests. See [DESIGN-ecosystem-probe.md](current/DESIGN-ecosystem-probe.md)._ | | |
@@ -91,7 +91,7 @@ graph TD
 
     subgraph Phase4["Phase 4: Polish"]
         I1321["<s>#1321: Disambiguation</s>"]
-        I1322["#1322: Error UX and verbose mode"]
+        I1322["<s>#1322: Error UX and verbose mode</s>"]
     end
 
     I1312 --> I1315
@@ -123,7 +123,7 @@ graph TD
     class M62 done
     class I1315 done
     class I1321 done
-    class I1322 needsDesign
+    class I1322 done
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design

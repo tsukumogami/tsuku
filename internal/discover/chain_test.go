@@ -47,10 +47,11 @@ func TestChainResolver_MissThenHit(t *testing.T) {
 }
 
 func TestChainResolver_AllMiss(t *testing.T) {
+	// When HasAPIKey is true, return NotFoundError
 	chain := NewChainResolver(
 		&mockResolver{result: nil, err: nil},
 		&mockResolver{result: nil, err: nil},
-	)
+	).WithLLMAvailability(LLMAvailability{HasAPIKey: true})
 	_, err := chain.Resolve(context.Background(), "nonexistent")
 	var notFound *NotFoundError
 	if !errors.As(err, &notFound) {
@@ -58,6 +59,38 @@ func TestChainResolver_AllMiss(t *testing.T) {
 	}
 	if notFound.Tool != "nonexistent" {
 		t.Errorf("got tool %q, want %q", notFound.Tool, "nonexistent")
+	}
+}
+
+func TestChainResolver_AllMiss_NoAPIKey(t *testing.T) {
+	// When HasAPIKey is false, return ConfigurationError
+	chain := NewChainResolver(
+		&mockResolver{result: nil, err: nil},
+		&mockResolver{result: nil, err: nil},
+	).WithLLMAvailability(LLMAvailability{HasAPIKey: false})
+	_, err := chain.Resolve(context.Background(), "nonexistent")
+	var configErr *ConfigurationError
+	if !errors.As(err, &configErr) {
+		t.Fatalf("expected ConfigurationError, got %v", err)
+	}
+	if configErr.Reason != "no_api_key" {
+		t.Errorf("got reason %q, want %q", configErr.Reason, "no_api_key")
+	}
+}
+
+func TestChainResolver_AllMiss_DeterministicOnly(t *testing.T) {
+	// When DeterministicOnly is true, return ConfigurationError
+	chain := NewChainResolver(
+		&mockResolver{result: nil, err: nil},
+		&mockResolver{result: nil, err: nil},
+	).WithLLMAvailability(LLMAvailability{DeterministicOnly: true, HasAPIKey: true})
+	_, err := chain.Resolve(context.Background(), "nonexistent")
+	var configErr *ConfigurationError
+	if !errors.As(err, &configErr) {
+		t.Fatalf("expected ConfigurationError, got %v", err)
+	}
+	if configErr.Reason != "deterministic_only" {
+		t.Errorf("got reason %q, want %q", configErr.Reason, "deterministic_only")
 	}
 }
 
