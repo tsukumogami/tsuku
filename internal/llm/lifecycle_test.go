@@ -239,3 +239,121 @@ func TestServerLifecycleWithManager_IdleTimeout(t *testing.T) {
 		require.Equal(t, 1*time.Minute, lifecycle.IdleTimeout())
 	})
 }
+
+// Tests for lock file behavior
+
+func TestServerLifecycle_LockFilePreventsSecondInstance(t *testing.T) {
+	tmpDir := t.TempDir()
+	socketPath := filepath.Join(tmpDir, "test.sock")
+	lockPath := socketPath + ".lock"
+
+	// First lifecycle acquires the lock
+	f1, err := os.OpenFile(lockPath, os.O_CREATE|os.O_RDWR, 0600)
+	require.NoError(t, err)
+	defer f1.Close()
+
+	err = syscall.Flock(int(f1.Fd()), syscall.LOCK_EX)
+	require.NoError(t, err)
+
+	// Second attempt to acquire should fail with LOCK_NB
+	f2, err := os.OpenFile(lockPath, os.O_CREATE|os.O_RDWR, 0600)
+	require.NoError(t, err)
+	defer f2.Close()
+
+	err = syscall.Flock(int(f2.Fd()), syscall.LOCK_EX|syscall.LOCK_NB)
+	require.Error(t, err, "second lock attempt should fail when first holds lock")
+}
+
+func TestServerLifecycle_LockReleasedOnClose(t *testing.T) {
+	tmpDir := t.TempDir()
+	socketPath := filepath.Join(tmpDir, "test.sock")
+	lockPath := socketPath + ".lock"
+
+	// Acquire lock
+	f1, err := os.OpenFile(lockPath, os.O_CREATE|os.O_RDWR, 0600)
+	require.NoError(t, err)
+	err = syscall.Flock(int(f1.Fd()), syscall.LOCK_EX)
+	require.NoError(t, err)
+
+	// Close file (releases lock)
+	f1.Close()
+
+	// Now second attempt should succeed
+	f2, err := os.OpenFile(lockPath, os.O_CREATE|os.O_RDWR, 0600)
+	require.NoError(t, err)
+	defer f2.Close()
+
+	err = syscall.Flock(int(f2.Fd()), syscall.LOCK_EX|syscall.LOCK_NB)
+	require.NoError(t, err, "lock should be available after first holder closes")
+}
+
+func TestServerLifecycle_IsRunning_ReturnsFalseAfterLockRelease(t *testing.T) {
+	tmpDir := t.TempDir()
+	socketPath := filepath.Join(tmpDir, "test.sock")
+	lockPath := socketPath + ".lock"
+
+	lifecycle := NewServerLifecycle(socketPath, "")
+
+	// Acquire and hold lock
+	f, err := os.OpenFile(lockPath, os.O_CREATE|os.O_RDWR, 0600)
+	require.NoError(t, err)
+	err = syscall.Flock(int(f.Fd()), syscall.LOCK_EX)
+	require.NoError(t, err)
+
+	// Should be running
+	require.True(t, lifecycle.IsRunning())
+
+	// Release lock
+	_ = syscall.Flock(int(f.Fd()), syscall.LOCK_UN)
+	f.Close()
+
+	// Should no longer be running
+	require.False(t, lifecycle.IsRunning())
+}
+
+func TestServerLifecycle_StaleSocketRemovedWhenLockAvailable(t *testing.T) {
+	tmpDir := t.TempDir()
+	socketPath := filepath.Join(tmpDir, "test.sock")
+
+	// Create stale socket file
+	require.NoError(t, os.WriteFile(socketPath, []byte("stale data"), 0600))
+	require.FileExists(t, socketPath)
+
+	lifecycle := NewServerLifecycle(socketPath, "")
+	ctx := context.Background()
+
+	// Try to ensure running - will fail because no addon, but should clean up stale socket
+	err := lifecycle.EnsureRunning(ctx)
+	require.Error(t, err)
+
+	// Stale socket should be removed
+	_, err = os.Stat(socketPath)
+	require.True(t, os.IsNotExist(err), "stale socket should be removed")
+}
+
+func TestServerLifecycle_StaleSocketNotRemovedWhenLockHeld(t *testing.T) {
+	tmpDir := t.TempDir()
+	socketPath := filepath.Join(tmpDir, "test.sock")
+	lockPath := socketPath + ".lock"
+
+	// Create socket file
+	require.NoError(t, os.WriteFile(socketPath, []byte("data"), 0600))
+
+	// Hold the lock (simulating running daemon)
+	f, err := os.OpenFile(lockPath, os.O_CREATE|os.O_RDWR, 0600)
+	require.NoError(t, err)
+	defer f.Close()
+	err = syscall.Flock(int(f.Fd()), syscall.LOCK_EX)
+	require.NoError(t, err)
+	defer func() { _ = syscall.Flock(int(f.Fd()), syscall.LOCK_UN) }()
+
+	lifecycle := NewServerLifecycle(socketPath, "")
+	ctx, cancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
+	defer cancel()
+
+	// Try to ensure running - should not remove socket because lock is held
+	_ = lifecycle.EnsureRunning(ctx)
+
+	// Socket should still exist
+	require.FileExists(t, socketPath, "socket should not be removed when lock is held")
+}
