@@ -24,7 +24,7 @@ Planned
 |-------|--------------|------|
 | ~~[#1628: feat(llm): complete local provider skeleton with lifecycle management](https://github.com/tsukumogami/tsuku/issues/1628)~~ | None | testable |
 | _Establishes gRPC contract, LocalProvider implementing Provider interface, ServerLifecycle with lock file protocol, and AddonManager stub. This is the walking skeleton that all other issues refine._ | | |
-| [#1629: feat(llm): implement addon download and verification](https://github.com/tsukumogami/tsuku/issues/1629) | [#1628](https://github.com/tsukumogami/tsuku/issues/1628) | testable |
+| ~~[#1629: feat(llm): implement addon download and verification](https://github.com/tsukumogami/tsuku/issues/1629)~~ | [#1628](https://github.com/tsukumogami/tsuku/issues/1628) | testable |
 | _AddonManager downloads platform-specific tsuku-llm binary from CDN with SHA256 verification at download and before each execution._ | | |
 | [#1630: feat(llm): add configurable idle timeout](https://github.com/tsukumogami/tsuku/issues/1630) | [#1628](https://github.com/tsukumogami/tsuku/issues/1628) | simple |
 | _Server shuts down after configurable idle period (default 5m). Supports TSUKU_LLM_IDLE_TIMEOUT env var override for testing._ | | |
@@ -132,8 +132,8 @@ graph TD
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1628 done
-    class I1629,I1630,I1631,I1633,I1635 ready
+    class I1628,I1629 done
+    class I1630,I1631,I1633,I1635 ready
     class I1632,I1634,I1636,I1637,I1638,I1639,I1640,I1641,I1642,I1643,I1644,I1645 blocked
 ```
 
