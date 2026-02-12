@@ -176,3 +176,66 @@ func TestIsProcessDone(t *testing.T) {
 	// This won't match our simple string comparison, but let's test the function
 	require.False(t, isProcessDone(err))
 }
+
+func TestGetIdleTimeout(t *testing.T) {
+	t.Run("returns default when env not set", func(t *testing.T) {
+		t.Setenv(IdleTimeoutEnvVar, "")
+		require.Equal(t, DefaultIdleTimeout, GetIdleTimeout())
+	})
+
+	t.Run("parses valid duration from env", func(t *testing.T) {
+		t.Setenv(IdleTimeoutEnvVar, "10s")
+		require.Equal(t, 10*time.Second, GetIdleTimeout())
+	})
+
+	t.Run("parses minutes from env", func(t *testing.T) {
+		t.Setenv(IdleTimeoutEnvVar, "2m")
+		require.Equal(t, 2*time.Minute, GetIdleTimeout())
+	})
+
+	t.Run("returns default on invalid duration", func(t *testing.T) {
+		t.Setenv(IdleTimeoutEnvVar, "invalid")
+		require.Equal(t, DefaultIdleTimeout, GetIdleTimeout())
+	})
+
+	t.Run("returns default on empty string", func(t *testing.T) {
+		t.Setenv(IdleTimeoutEnvVar, "")
+		require.Equal(t, DefaultIdleTimeout, GetIdleTimeout())
+	})
+}
+
+func TestServerLifecycle_IdleTimeout(t *testing.T) {
+	t.Run("uses default timeout", func(t *testing.T) {
+		t.Setenv(IdleTimeoutEnvVar, "")
+		lifecycle := NewServerLifecycle("/tmp/test.sock", "")
+		require.Equal(t, DefaultIdleTimeout, lifecycle.IdleTimeout())
+	})
+
+	t.Run("uses env var timeout", func(t *testing.T) {
+		t.Setenv(IdleTimeoutEnvVar, "30s")
+		lifecycle := NewServerLifecycle("/tmp/test.sock", "")
+		require.Equal(t, 30*time.Second, lifecycle.IdleTimeout())
+	})
+
+	t.Run("SetIdleTimeout overrides", func(t *testing.T) {
+		lifecycle := NewServerLifecycle("/tmp/test.sock", "")
+		lifecycle.SetIdleTimeout(2 * time.Second)
+		require.Equal(t, 2*time.Second, lifecycle.IdleTimeout())
+	})
+}
+
+func TestServerLifecycleWithManager_IdleTimeout(t *testing.T) {
+	t.Run("uses default timeout", func(t *testing.T) {
+		t.Setenv(IdleTimeoutEnvVar, "")
+		t.Setenv("TSUKU_HOME", t.TempDir())
+		lifecycle := NewServerLifecycleWithManager("/tmp/test.sock", nil)
+		require.Equal(t, DefaultIdleTimeout, lifecycle.IdleTimeout())
+	})
+
+	t.Run("uses env var timeout", func(t *testing.T) {
+		t.Setenv(IdleTimeoutEnvVar, "1m")
+		t.Setenv("TSUKU_HOME", t.TempDir())
+		lifecycle := NewServerLifecycleWithManager("/tmp/test.sock", nil)
+		require.Equal(t, 1*time.Minute, lifecycle.IdleTimeout())
+	})
+}
