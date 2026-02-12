@@ -290,23 +290,95 @@ func runDepsOnly(cmd *cobra.Command, r *recipe.Recipe, toolName string, jsonOutp
 	target := buildInfoTarget(family)
 
 	if system {
-		// Extract system packages from transitive dependency tree
-		packages := extractSystemPackagesFromTree(ctx, r, toolName, target)
+		// Extract system requirements from transitive dependency tree
+		reqs := extractSystemRequirementsFromTree(ctx, r, toolName, target)
 
 		if jsonOutput {
+			type repoOutput struct {
+				Manager   string `json:"manager"`
+				Type      string `json:"type"`
+				URL       string `json:"url,omitempty"`
+				KeyURL    string `json:"key_url,omitempty"`
+				KeySHA256 string `json:"key_sha256,omitempty"`
+				PPA       string `json:"ppa,omitempty"`
+				Tap       string `json:"tap,omitempty"`
+			}
 			type depsOutput struct {
-				Packages []string `json:"packages"`
-				Family   string   `json:"family,omitempty"`
+				Packages     []string     `json:"packages"`
+				Repositories []repoOutput `json:"repositories,omitempty"`
+				Family       string       `json:"family,omitempty"`
+			}
+			var repos []repoOutput
+			for _, repo := range reqs.Repositories {
+				repos = append(repos, repoOutput{
+					Manager:   repo.Manager,
+					Type:      repo.Type,
+					URL:       repo.URL,
+					KeyURL:    repo.KeyURL,
+					KeySHA256: repo.KeySHA256,
+					PPA:       repo.PPA,
+					Tap:       repo.Tap,
+				})
 			}
 			output := depsOutput{
-				Packages: packages,
-				Family:   family,
+				Packages:     reqs.Packages,
+				Repositories: repos,
+				Family:       family,
 			}
 			printJSON(output)
 		} else {
-			// Text output: one package per line
-			for _, pkg := range packages {
-				fmt.Println(pkg)
+			// Text output: backward compatible when no repos, headers when repos present
+			hasRepos := len(reqs.Repositories) > 0
+			if hasRepos && len(reqs.Packages) > 0 {
+				// With repositories, use headers to distinguish sections
+				fmt.Println("Packages:")
+				for _, pkg := range reqs.Packages {
+					fmt.Printf("  %s\n", pkg)
+				}
+				fmt.Println()
+				fmt.Println("Repositories:")
+				for _, repo := range reqs.Repositories {
+					switch repo.Type {
+					case "ppa":
+						fmt.Printf("  %s ppa: %s\n", repo.Manager, repo.PPA)
+					case "tap":
+						fmt.Printf("  %s tap: %s\n", repo.Manager, repo.Tap)
+					case "repo":
+						fmt.Printf("  %s repo: %s\n", repo.Manager, repo.URL)
+						if repo.KeyURL != "" {
+							if repo.KeySHA256 != "" {
+								fmt.Printf("    key: %s (sha256: %s)\n", repo.KeyURL, repo.KeySHA256)
+							} else {
+								fmt.Printf("    key: %s\n", repo.KeyURL)
+							}
+						}
+					}
+				}
+			} else if hasRepos {
+				// Repositories only (rare case)
+				fmt.Println("Repositories:")
+				for _, repo := range reqs.Repositories {
+					switch repo.Type {
+					case "ppa":
+						fmt.Printf("  %s ppa: %s\n", repo.Manager, repo.PPA)
+					case "tap":
+						fmt.Printf("  %s tap: %s\n", repo.Manager, repo.Tap)
+					case "repo":
+						fmt.Printf("  %s repo: %s\n", repo.Manager, repo.URL)
+						if repo.KeyURL != "" {
+							if repo.KeySHA256 != "" {
+								fmt.Printf("    key: %s (sha256: %s)\n", repo.KeyURL, repo.KeySHA256)
+							} else {
+								fmt.Printf("    key: %s\n", repo.KeyURL)
+							}
+						}
+					}
+				}
+			} else {
+				// Packages only - backward compatible one-per-line format
+				for _, pkg := range reqs.Packages {
+					fmt.Println(pkg)
+				}
 			}
 		}
 	} else {
@@ -375,41 +447,56 @@ func buildInfoTarget(family string) platform.Target {
 	return platform.NewTarget(platformStr, family, libc)
 }
 
-// extractSystemPackagesFromTree extracts system packages from the root recipe
-// and all its transitive dependencies.
-func extractSystemPackagesFromTree(ctx context.Context, rootRecipe *recipe.Recipe, rootName string, target platform.Target) []string {
-	// Get packages from the root recipe first
-	seen := make(map[string]bool)
-	var packages []string
+// systemRequirementsResult holds extracted system requirements with flattened packages.
+type systemRequirementsResult struct {
+	Packages     []string                    // Deduplicated package names (flat list)
+	Repositories []executor.RepositoryConfig // Repository configurations
+}
 
-	for _, pkg := range executor.ExtractSystemPackages(rootRecipe, target) {
-		if !seen[pkg] {
-			seen[pkg] = true
-			packages = append(packages, pkg)
+// extractSystemRequirementsFromTree extracts system requirements from the root recipe
+// and all its transitive dependencies.
+func extractSystemRequirementsFromTree(ctx context.Context, rootRecipe *recipe.Recipe, rootName string, target platform.Target) *systemRequirementsResult {
+	seenPkgs := make(map[string]bool)
+	var packages []string
+	var repositories []executor.RepositoryConfig
+
+	// Helper to merge requirements
+	merge := func(reqs *executor.SystemRequirements) {
+		if reqs == nil {
+			return
 		}
+		// Flatten packages from all managers
+		for _, pkgs := range reqs.Packages {
+			for _, pkg := range pkgs {
+				if !seenPkgs[pkg] {
+					seenPkgs[pkg] = true
+					packages = append(packages, pkg)
+				}
+			}
+		}
+		// Add repositories (no deduplication needed as they're action-specific)
+		repositories = append(repositories, reqs.Repositories...)
 	}
+
+	// Get requirements from the root recipe first
+	merge(executor.ExtractSystemRequirementsFromRecipe(rootRecipe, target))
 
 	// Resolve transitive dependencies
 	directDeps := actions.ResolveDependencies(rootRecipe)
 	resolvedDeps, err := actions.ResolveTransitiveForPlatform(ctx, loader, directDeps, rootName, target.OS(), false)
 	if err != nil {
 		// If resolution fails, just return what we have
-		return packages
+		return &systemRequirementsResult{Packages: packages, Repositories: repositories}
 	}
 
-	// Extract packages from each dependency's recipe
+	// Extract requirements from each dependency's recipe
 	for depName := range resolvedDeps.InstallTime {
 		depRecipe, err := loader.Get(depName, recipe.LoaderOptions{})
 		if err != nil {
 			continue
 		}
-		for _, pkg := range executor.ExtractSystemPackages(depRecipe, target) {
-			if !seen[pkg] {
-				seen[pkg] = true
-				packages = append(packages, pkg)
-			}
-		}
+		merge(executor.ExtractSystemRequirementsFromRecipe(depRecipe, target))
 	}
 
-	return packages
+	return &systemRequirementsResult{Packages: packages, Repositories: repositories}
 }
