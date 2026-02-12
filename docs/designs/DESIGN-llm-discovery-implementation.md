@@ -38,13 +38,13 @@ Planned
 | _Adds exponential backoff retry logic for DDG 202 responses and establishes the test fixture pattern with recorded HTML responses for reliable offline testing._ | | |
 | ~~[#1611: feat(discover): add HTML stripping and URL validation](https://github.com/tsukumogami/tsuku/issues/1611)~~ | None | critical |
 | _Implements security layers against prompt injection: strips script/style tags and HTML comments from search results, validates GitHub URLs against an allowlist pattern, and removes zero-width Unicode characters._ | | |
-| [#1612: feat(discover): add fork detection to GitHub verification](https://github.com/tsukumogami/tsuku/issues/1612) | None | testable |
+| ~~[#1612: feat(discover): add fork detection to GitHub verification](https://github.com/tsukumogami/tsuku/issues/1612)~~ | None | testable |
 | _Extends GitHub API verification to detect forks, fetch parent metadata, and compare star counts. Forks never auto-select; users always get a warning suggesting the original repository._ | | |
-| [#1613: feat(discover): add GitHub API rate limit handling](https://github.com/tsukumogami/tsuku/issues/1613) | [#1612](https://github.com/tsukumogami/tsuku/issues/1612) | testable |
+| ~~[#1613: feat(discover): add GitHub API rate limit handling](https://github.com/tsukumogami/tsuku/issues/1613)~~ | [#1612](https://github.com/tsukumogami/tsuku/issues/1612) | testable |
 | _Handles 403 rate limit responses with graceful degradation: skips verification but raises the confirmation bar, ensuring users still get prompted even when API data is unavailable._ | | |
-| [#1614: feat(discover): implement priority ranking for multiple candidates](https://github.com/tsukumogami/tsuku/issues/1614) | [#1612](https://github.com/tsukumogami/tsuku/issues/1612), [#1613](https://github.com/tsukumogami/tsuku/issues/1613) | testable |
+| ~~[#1614: feat(discover): implement priority ranking for multiple candidates](https://github.com/tsukumogami/tsuku/issues/1614)~~ | [#1612](https://github.com/tsukumogami/tsuku/issues/1612), [#1613](https://github.com/tsukumogami/tsuku/issues/1613) | testable |
 | _Adds deterministic ranking when multiple sources pass thresholds: highest confidence wins, star count breaks ties, forks are excluded from auto-selection. Handles edge cases like all-fork results._ | | |
-| [#1615: feat(discover): improve confirmation UX](https://github.com/tsukumogami/tsuku/issues/1615) | [#1612](https://github.com/tsukumogami/tsuku/issues/1612) | testable |
+| ~~[#1615: feat(discover): improve confirmation UX](https://github.com/tsukumogami/tsuku/issues/1615)~~ | [#1612](https://github.com/tsukumogami/tsuku/issues/1612) | testable |
 | _Implements --yes flag for non-interactive use (skips confirmation but not verification), enhances metadata display with repository age and last commit date, and surfaces fork warnings from #1612._ | | |
 
 ### Milestone: [LLM Discovery Extensions](https://github.com/tsukumogami/tsuku/milestone/77)
@@ -63,10 +63,10 @@ graph TD
     subgraph Hardening["LLM Discovery Hardening"]
         I1610["<s>#1610: DDG retry logic</s>"]
         I1611["<s>#1611: HTML stripping</s>"]
-        I1612["#1612: Fork detection"]
-        I1613["#1613: Rate limit handling"]
-        I1614["#1614: Priority ranking"]
-        I1615["#1615: Confirmation UX"]
+        I1612["<s>#1612: Fork detection</s>"]
+        I1613["<s>#1613: Rate limit handling</s>"]
+        I1614["<s>#1614: Priority ranking</s>"]
+        I1615["<s>#1615: Confirmation UX</s>"]
     end
 
     subgraph Extensions["LLM Discovery Extensions"]
@@ -85,9 +85,8 @@ graph TD
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1610,I1611,I1617 done
-    class I1612,I1616 ready
-    class I1613,I1614,I1615 blocked
+    class I1610,I1611,I1612,I1613,I1614,I1615,I1617 done
+    class I1616 ready
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design

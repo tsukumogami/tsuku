@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -52,6 +54,33 @@ type ConfirmFunc func(result *DiscoveryResult) bool
 
 // HTTPGetFunc abstracts HTTP GET for testing.
 type HTTPGetFunc func(ctx context.Context, url string) ([]byte, error)
+
+// RateLimitError indicates GitHub API rate limit was exceeded.
+type RateLimitError struct {
+	ResetTime     time.Time // When the rate limit resets
+	Authenticated bool      // Whether request used GITHUB_TOKEN
+}
+
+func (e *RateLimitError) Error() string {
+	msg := "GitHub API rate limit exceeded"
+	if !e.ResetTime.IsZero() {
+		msg += fmt.Sprintf(" (resets at %s)", e.ResetTime.Format(time.RFC3339))
+	}
+	return msg
+}
+
+// IsRateLimited returns true (implements a marker interface for rate limit errors).
+func (e *RateLimitError) IsRateLimited() bool {
+	return true
+}
+
+// Suggestion returns a user-friendly message about the rate limit.
+func (e *RateLimitError) Suggestion() string {
+	if e.Authenticated {
+		return "GitHub API rate limit exceeded. Please wait and try again."
+	}
+	return "GitHub API rate limit exceeded. Set GITHUB_TOKEN for higher limits (5000 req/hour)."
+}
 
 // LLMDiscoveryOption configures an LLMDiscovery instance.
 type LLMDiscoveryOption func(*LLMDiscovery)
@@ -122,9 +151,9 @@ func (d *LLMDiscovery) Resolve(ctx context.Context, toolName string) (*Discovery
 		return nil, nil // Soft miss - no provider
 	}
 
-	// Create and run session
+	// Create and run session to collect candidates
 	session := newDiscoverySession(d, provider, toolName)
-	result, err := session.run(ctx)
+	candidates, err := session.run(ctx)
 	if err != nil {
 		if ctx.Err() != nil {
 			return nil, ctx.Err()
@@ -133,23 +162,69 @@ func (d *LLMDiscovery) Resolve(ctx context.Context, toolName string) (*Discovery
 		return nil, nil // Soft miss
 	}
 
+	if len(candidates) == 0 {
+		return nil, nil // No candidates found
+	}
+
+	d.logger.Debug(fmt.Sprintf("llm discovery: found %d candidates for %q", len(candidates), toolName))
+
+	// Verify each candidate against GitHub API
+	var verifiedCandidates []*DiscoveryResult
+	var rateLimited bool
+	var rateLimitWarning string
+
+	for _, candidate := range candidates {
+		verified, err := d.verifyGitHubRepo(ctx, candidate)
+		if err != nil {
+			// Check if this is a rate limit error
+			var rateLimitErr *RateLimitError
+			if isRateLimitErr(err, &rateLimitErr) {
+				d.logger.Debug(fmt.Sprintf("llm discovery: rate limited while verifying %s", candidate.Source))
+				rateLimited = true
+				rateLimitWarning = rateLimitErr.Suggestion()
+				// Keep the candidate with verification skipped
+				candidate.Metadata.VerificationSkipped = true
+				candidate.Metadata.VerificationWarning = rateLimitWarning
+				verifiedCandidates = append(verifiedCandidates, candidate)
+			} else {
+				// Non-rate-limit errors: skip this candidate
+				d.logger.Debug(fmt.Sprintf("llm discovery: verification failed for %s: %v", candidate.Source, err))
+				continue
+			}
+		} else {
+			candidate.Metadata = verified
+			verifiedCandidates = append(verifiedCandidates, candidate)
+			d.logger.Debug(fmt.Sprintf("llm discovery: verified %s (stars=%d, fork=%v)",
+				candidate.Source, verified.Stars, verified.IsFork))
+		}
+	}
+
+	if len(verifiedCandidates) == 0 {
+		d.logger.Debug(fmt.Sprintf("llm discovery: no candidates passed verification for %q", toolName))
+		return nil, nil
+	}
+
+	// Rank candidates by confidence (desc), then stars (desc)
+	ranked := rankCandidates(verifiedCandidates)
+	d.logger.Debug(fmt.Sprintf("llm discovery: ranked %d candidates, best is %s (confidence=%d, stars=%d)",
+		len(ranked), ranked[0].Source, ranked[0].ConfidenceScore, ranked[0].Metadata.Stars))
+
+	// Select the best candidate
+	result := d.selectBestCandidate(ranked)
 	if result == nil {
-		return nil, nil // No result found
+		d.logger.Debug(fmt.Sprintf("llm discovery: no suitable candidate for %q", toolName))
+		return nil, nil
 	}
 
-	// Verify against GitHub API
-	verified, err := d.verifyGitHubRepo(ctx, result)
-	if err != nil {
-		d.logger.Debug(fmt.Sprintf("llm discovery: verification failed: %v", err))
-		// Continue without verification - set lower confidence
-		result.Metadata.Stars = 0
-	} else {
-		result.Metadata = verified
+	// If rate limited and this candidate wasn't verified, apply warning
+	if rateLimited && result.Metadata.VerificationSkipped {
+		result.Metadata.VerificationWarning = rateLimitWarning
 	}
 
-	// Apply quality thresholds
-	if !d.passesQualityThreshold(result) {
-		d.logger.Debug(fmt.Sprintf("llm discovery: result for %q failed quality threshold", toolName))
+	// Apply quality thresholds (skip if verification was skipped due to rate limit)
+	// Note: forks are handled by selectBestCandidate, but still need threshold check
+	if !result.Metadata.VerificationSkipped && !result.Metadata.IsFork && !d.passesQualityThreshold(result) {
+		d.logger.Debug(fmt.Sprintf("llm discovery: best candidate for %q failed quality threshold", toolName))
 		return nil, nil
 	}
 
@@ -163,10 +238,88 @@ func (d *LLMDiscovery) Resolve(ctx context.Context, toolName string) (*Discovery
 }
 
 // passesQualityThreshold checks if the result meets minimum quality requirements.
+// Forks never auto-pass - they always require explicit user confirmation.
 func (d *LLMDiscovery) passesQualityThreshold(result *DiscoveryResult) bool {
-	// Extract confidence from the result (stored in the extraction)
-	// For prototype, we pass if we have stars above threshold
+	// Forks never auto-pass - require explicit confirmation
+	if result.Metadata.IsFork {
+		return false
+	}
+
+	// For non-forks, pass if stars above threshold
 	return result.Metadata.Stars >= MinStarsThreshold
+}
+
+// rankCandidates sorts candidates by confidence (descending), then stars (descending).
+// Returns a new sorted slice without modifying the original.
+func rankCandidates(candidates []*DiscoveryResult) []*DiscoveryResult {
+	if len(candidates) <= 1 {
+		return candidates
+	}
+
+	// Create a copy to avoid modifying the original
+	sorted := make([]*DiscoveryResult, len(candidates))
+	copy(sorted, candidates)
+
+	// Sort by confidence DESC, then stars DESC, then source ASC for stability
+	for i := 0; i < len(sorted)-1; i++ {
+		for j := i + 1; j < len(sorted); j++ {
+			if shouldSwap(sorted[i], sorted[j]) {
+				sorted[i], sorted[j] = sorted[j], sorted[i]
+			}
+		}
+	}
+
+	return sorted
+}
+
+// shouldSwap returns true if b should come before a in the ranking.
+func shouldSwap(a, b *DiscoveryResult) bool {
+	// Higher confidence wins
+	if b.ConfidenceScore > a.ConfidenceScore {
+		return true
+	}
+	if b.ConfidenceScore < a.ConfidenceScore {
+		return false
+	}
+
+	// Equal confidence: higher stars wins
+	if b.Metadata.Stars > a.Metadata.Stars {
+		return true
+	}
+	if b.Metadata.Stars < a.Metadata.Stars {
+		return false
+	}
+
+	// Equal confidence and stars: sort by source for stability
+	return b.Source < a.Source
+}
+
+// selectBestCandidate picks the best candidate from a ranked list.
+// Returns the best non-fork that passes quality thresholds, or the best fork with a warning.
+// Returns nil if no candidates are available.
+func (d *LLMDiscovery) selectBestCandidate(candidates []*DiscoveryResult) *DiscoveryResult {
+	if len(candidates) == 0 {
+		return nil
+	}
+
+	// First pass: find best non-fork that passes threshold
+	for _, c := range candidates {
+		if !c.Metadata.IsFork && d.passesQualityThreshold(c) {
+			return c
+		}
+	}
+
+	// Second pass: find best non-fork (even if below threshold)
+	for _, c := range candidates {
+		if !c.Metadata.IsFork {
+			// Below threshold but not a fork - still offer to user
+			return c
+		}
+	}
+
+	// All candidates are forks - return the best fork
+	// The fork warning will be shown during confirmation
+	return candidates[0]
 }
 
 // verifyGitHubRepo verifies a GitHub repository exists and returns its metadata.
@@ -196,7 +349,16 @@ func (d *LLMDiscovery) verifyGitHubRepo(ctx context.Context, result *DiscoveryRe
 		Archived        bool   `json:"archived"`
 		Description     string `json:"description"`
 		CreatedAt       string `json:"created_at"`
+		PushedAt        string `json:"pushed_at"`
 		Fork            bool   `json:"fork"`
+		Owner           *struct {
+			Login string `json:"login"`
+			Type  string `json:"type"`
+		} `json:"owner"`
+		Parent *struct {
+			FullName        string `json:"full_name"`
+			StargazersCount int    `json:"stargazers_count"`
+		} `json:"parent"`
 	}
 	if err := json.Unmarshal(body, &ghRepo); err != nil {
 		return Metadata{}, fmt.Errorf("parse github response: %w", err)
@@ -207,17 +369,43 @@ func (d *LLMDiscovery) verifyGitHubRepo(ctx context.Context, result *DiscoveryRe
 		return Metadata{}, fmt.Errorf("repository is archived")
 	}
 
-	// Calculate age in days
+	// Calculate age in days and format creation date
 	var ageDays int
+	var createdAtStr string
 	if createdAt, err := time.Parse(time.RFC3339, ghRepo.CreatedAt); err == nil {
 		ageDays = int(time.Since(createdAt).Hours() / 24)
+		createdAtStr = createdAt.Format("2006-01-02")
 	}
 
-	return Metadata{
-		Stars:       ghRepo.StargazersCount,
-		Description: ghRepo.Description,
-		AgeDays:     ageDays,
-	}, nil
+	// Calculate days since last commit
+	var lastCommitDays int
+	if pushedAt, err := time.Parse(time.RFC3339, ghRepo.PushedAt); err == nil {
+		lastCommitDays = int(time.Since(pushedAt).Hours() / 24)
+	}
+
+	// Build metadata with fork information
+	metadata := Metadata{
+		Stars:          ghRepo.StargazersCount,
+		Description:    ghRepo.Description,
+		AgeDays:        ageDays,
+		CreatedAt:      createdAtStr,
+		LastCommitDays: lastCommitDays,
+		IsFork:         ghRepo.Fork,
+	}
+
+	// Populate owner metadata if available
+	if ghRepo.Owner != nil {
+		metadata.OwnerName = ghRepo.Owner.Login
+		metadata.OwnerType = ghRepo.Owner.Type
+	}
+
+	// Populate parent metadata if this is a fork
+	if ghRepo.Fork && ghRepo.Parent != nil {
+		metadata.ParentRepo = ghRepo.Parent.FullName
+		metadata.ParentStars = ghRepo.Parent.StargazersCount
+	}
+
+	return metadata, nil
 }
 
 // discoverySession manages a single LLM discovery conversation.
@@ -314,13 +502,16 @@ The builder "github" expects source in "owner/repo" format.
 Example: for stripe-cli, the source would be "stripe/stripe-cli"`, toolName)
 }
 
-// run executes the discovery session.
-func (s *discoverySession) run(ctx context.Context) (*DiscoveryResult, error) {
+// run executes the discovery session and returns all candidates found.
+// Returns a slice of candidates (may be empty) or an error.
+func (s *discoverySession) run(ctx context.Context) ([]*DiscoveryResult, error) {
 	// Initial user message
 	s.messages = append(s.messages, llm.Message{
 		Role:    llm.RoleUser,
 		Content: fmt.Sprintf("Find the official source repository for: %s", s.toolName),
 	})
+
+	var candidates []*DiscoveryResult
 
 	for turn := 0; turn < MaxDiscoveryTurns; turn++ {
 		s.discovery.logger.Debug(fmt.Sprintf("llm discovery: turn %d for %q", turn+1, s.toolName))
@@ -347,7 +538,7 @@ func (s *discoverySession) run(ctx context.Context) (*DiscoveryResult, error) {
 
 		// Process tool calls
 		var toolResults []llm.Message
-		var result *DiscoveryResult
+		var foundCandidate bool
 
 		for _, tc := range resp.ToolCalls {
 			s.discovery.logger.Debug(fmt.Sprintf("llm discovery: executing tool %s", tc.Name))
@@ -367,7 +558,20 @@ func (s *discoverySession) run(ctx context.Context) (*DiscoveryResult, error) {
 			}
 
 			if extracted != nil {
-				result = extracted
+				// Collect candidate instead of returning immediately
+				candidates = append(candidates, extracted)
+				foundCandidate = true
+				s.discovery.logger.Debug(fmt.Sprintf("llm discovery: collected candidate %s:%s (confidence=%d)",
+					extracted.Builder, extracted.Source, extracted.ConfidenceScore))
+				// Send acknowledgment back to LLM
+				toolResults = append(toolResults, llm.Message{
+					Role: llm.RoleUser,
+					ToolResult: &llm.ToolResult{
+						CallID:  tc.ID,
+						Content: fmt.Sprintf("Recorded source: %s:%s", extracted.Builder, extracted.Source),
+						IsError: false,
+					},
+				})
 			} else {
 				toolResults = append(toolResults, llm.Message{
 					Role: llm.RoleUser,
@@ -380,9 +584,10 @@ func (s *discoverySession) run(ctx context.Context) (*DiscoveryResult, error) {
 			}
 		}
 
-		// If extract_source was called successfully, return the result
-		if result != nil {
-			return result, nil
+		// If we found at least one candidate and LLM is done, return candidates
+		if foundCandidate && resp.StopReason == "end_turn" {
+			s.discovery.logger.Debug(fmt.Sprintf("llm discovery: session complete with %d candidates", len(candidates)))
+			return candidates, nil
 		}
 
 		// Add tool results and continue
@@ -393,8 +598,17 @@ func (s *discoverySession) run(ctx context.Context) (*DiscoveryResult, error) {
 
 		// No tool calls and no result - check if LLM gave up
 		if resp.StopReason == "end_turn" && len(resp.ToolCalls) == 0 {
+			if len(candidates) > 0 {
+				return candidates, nil
+			}
 			return nil, fmt.Errorf("LLM completed without finding source")
 		}
+	}
+
+	// Return any candidates collected even if max turns exceeded
+	if len(candidates) > 0 {
+		s.discovery.logger.Debug(fmt.Sprintf("llm discovery: max turns exceeded but returning %d candidates", len(candidates)))
+		return candidates, nil
 	}
 
 	return nil, fmt.Errorf("max turns (%d) exceeded", MaxDiscoveryTurns)
@@ -475,11 +689,12 @@ func (s *discoverySession) handleExtractSource(tc llm.ToolCall) (*DiscoveryResul
 	}
 
 	return &DiscoveryResult{
-		Builder:    builder,
-		Source:     source,
-		Confidence: ConfidenceLLM,
-		Reason:     fmt.Sprintf("LLM discovery: %s (evidence: %s)", reasoning, strings.Join(evidence, ", ")),
-		Metadata:   Metadata{}, // Will be filled by GitHub verification
+		Builder:         builder,
+		Source:          source,
+		Confidence:      ConfidenceLLM,
+		ConfidenceScore: int(confidence), // Store for ranking
+		Reason:          fmt.Sprintf("LLM discovery: %s (evidence: %s)", reasoning, strings.Join(evidence, ", ")),
+		Metadata:        Metadata{}, // Will be filled by GitHub verification
 	}, nil
 }
 
@@ -489,7 +704,7 @@ func defaultConfirm(result *DiscoveryResult) bool {
 	return true
 }
 
-// defaultHTTPGet performs an HTTP GET request.
+// defaultHTTPGet performs an HTTP GET request with GITHUB_TOKEN if available.
 func defaultHTTPGet(ctx context.Context, url string) ([]byte, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
@@ -498,15 +713,64 @@ func defaultHTTPGet(ctx context.Context, url string) ([]byte, error) {
 	req.Header.Set("Accept", "application/vnd.github.v3+json")
 	req.Header.Set("User-Agent", "tsuku")
 
+	// Use GITHUB_TOKEN if available for higher rate limits (5000/hr vs 60/hr)
+	token := os.Getenv("GITHUB_TOKEN")
+	if token != "" {
+		req.Header.Set("Authorization", "Bearer "+token)
+	}
+
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
 
+	// Check for rate limit (403 with X-RateLimit-Remaining: 0)
+	if resp.StatusCode == http.StatusForbidden {
+		if isRateLimitResponse(resp) {
+			return nil, parseRateLimitError(resp, token != "")
+		}
+		return nil, fmt.Errorf("HTTP 403 Forbidden")
+	}
+
+	if resp.StatusCode == http.StatusNotFound {
+		return nil, fmt.Errorf("repository not found")
+	}
+
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("HTTP %d", resp.StatusCode)
 	}
 
 	return io.ReadAll(resp.Body)
+}
+
+// isRateLimitResponse checks if a 403 response is due to rate limiting.
+func isRateLimitResponse(resp *http.Response) bool {
+	remaining := resp.Header.Get("X-RateLimit-Remaining")
+	return remaining == "0"
+}
+
+// parseRateLimitError creates a RateLimitError from a rate-limited response.
+func parseRateLimitError(resp *http.Response, authenticated bool) *RateLimitError {
+	err := &RateLimitError{
+		Authenticated: authenticated,
+	}
+
+	// Parse reset time from X-RateLimit-Reset header (Unix timestamp)
+	if resetStr := resp.Header.Get("X-RateLimit-Reset"); resetStr != "" {
+		if resetUnix, parseErr := strconv.ParseInt(resetStr, 10, 64); parseErr == nil {
+			err.ResetTime = time.Unix(resetUnix, 0)
+		}
+	}
+
+	return err
+}
+
+// isRateLimitErr checks if an error is a RateLimitError and extracts it.
+func isRateLimitErr(err error, target **RateLimitError) bool {
+	if rateLimitErr, ok := err.(*RateLimitError); ok {
+		*target = rateLimitErr
+		return true
+	}
+	return false
 }

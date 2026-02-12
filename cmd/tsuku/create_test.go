@@ -478,3 +478,40 @@ func containsSubstring(s, substr string) bool {
 	}
 	return false
 }
+
+func TestFormatDaysAgo(t *testing.T) {
+	tests := []struct {
+		days int
+		want string
+	}{
+		{0, "today"},
+		{1, "1 day ago"},
+		{3, "3 days ago"},
+		{6, "6 days ago"},
+		{7, "1 week ago"},
+		{13, "1 week ago"},
+		{14, "2 weeks ago"},
+		{21, "3 weeks ago"},
+		{28, "4 weeks ago"},
+		{30, "1 month ago"},
+		{59, "1 month ago"},
+		{60, "2 months ago"},
+		{90, "3 months ago"},
+		{180, "6 months ago"},
+		{364, "12 months ago"},
+		{365, "1 year ago"},
+		{729, "1 year ago"},
+		{730, "2 years ago"},
+		{1095, "3 years ago"},
+		{1825, "5 years ago"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.want, func(t *testing.T) {
+			got := formatDaysAgo(tt.days)
+			if got != tt.want {
+				t.Errorf("formatDaysAgo(%d) = %q, want %q", tt.days, got, tt.want)
+			}
+		})
+	}
+}
