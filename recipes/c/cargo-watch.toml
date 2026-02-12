@@ -4,7 +4,6 @@ description = "Watch for file changes and run cargo commands"
 homepage = "https://crates.io/crates/cargo-watch"
 version_format = "semver"
 extra_dependencies = ["zig"]  # zig needed for native C dependencies
-supported_os = ["darwin"]
 
 [[steps]]
 action = "cargo_install"

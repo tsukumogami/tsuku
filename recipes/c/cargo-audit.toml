@@ -4,7 +4,6 @@ description = "Security audit for Cargo.lock"
 homepage = "https://crates.io/crates/cargo-audit"
 version_format = "semver"
 extra_dependencies = ["zig"]  # zig needed for native C dependencies
-supported_os = ["darwin"]
 
 [[steps]]
 action = "cargo_install"
