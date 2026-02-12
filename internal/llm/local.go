@@ -25,15 +25,23 @@ type LocalProvider struct {
 	client       pb.InferenceServiceClient
 }
 
-// NewLocalProvider creates a new local provider.
+// NewLocalProvider creates a new local provider with default idle timeout.
 // The provider uses ServerLifecycle to ensure the addon is running before making requests.
 func NewLocalProvider() *LocalProvider {
+	return NewLocalProviderWithTimeout(DefaultIdleTimeout)
+}
+
+// NewLocalProviderWithTimeout creates a new local provider with the specified idle timeout.
+// The idle timeout is passed to the addon server when starting it.
+func NewLocalProviderWithTimeout(idleTimeout time.Duration) *LocalProvider {
 	socketPath := SocketPath()
 	addonManager := addon.NewAddonManager()
+	lifecycle := NewServerLifecycleWithManager(socketPath, addonManager)
+	lifecycle.SetIdleTimeout(idleTimeout)
 
 	return &LocalProvider{
 		addonManager: addonManager,
-		lifecycle:    NewServerLifecycleWithManager(socketPath, addonManager),
+		lifecycle:    lifecycle,
 	}
 }
 

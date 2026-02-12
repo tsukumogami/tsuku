@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"testing"
+	"time"
 )
 
 // mockProvider is a simple mock implementation of Provider for testing.
@@ -424,6 +425,7 @@ func TestSetOnBreakerTripNilCallback(t *testing.T) {
 type mockLLMConfig struct {
 	enabled      bool
 	localEnabled bool
+	idleTimeout  time.Duration
 	providers    []string
 }
 
@@ -433,6 +435,13 @@ func (m *mockLLMConfig) LLMEnabled() bool {
 
 func (m *mockLLMConfig) LLMLocalEnabled() bool {
 	return m.localEnabled
+}
+
+func (m *mockLLMConfig) LLMIdleTimeout() time.Duration {
+	if m.idleTimeout == 0 {
+		return 5 * time.Minute // Default
+	}
+	return m.idleTimeout
 }
 
 func (m *mockLLMConfig) LLMProviders() []string {

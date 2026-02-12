@@ -30,7 +30,7 @@ Planned
 | _Server shuts down after configurable idle period (default 5m). Supports TSUKU_LLM_IDLE_TIMEOUT env var override for testing._ | | |
 | ~~[#1631: feat(llm): implement SIGTERM handler for graceful shutdown](https://github.com/tsukumogami/tsuku/issues/1631)~~ | [#1628](https://github.com/tsukumogami/tsuku/issues/1628) | simple |
 | _Rust server handles SIGTERM, waits for in-flight requests (10s grace), cleans up socket and lock files on exit._ | | |
-| [#1632: feat(llm): integrate LocalProvider into factory with config](https://github.com/tsukumogami/tsuku/issues/1632) | [#1628](https://github.com/tsukumogami/tsuku/issues/1628), [#1630](https://github.com/tsukumogami/tsuku/issues/1630) | testable |
+| ~~[#1632: feat(llm): integrate LocalProvider into factory with config](https://github.com/tsukumogami/tsuku/issues/1632)~~ | [#1628](https://github.com/tsukumogami/tsuku/issues/1628), [#1630](https://github.com/tsukumogami/tsuku/issues/1630) | testable |
 | _Factory registers LocalProvider as fallback when local_enabled=true. Reads idle_timeout from config.toml with env var override._ | | |
 | [#1633: ci(llm): add Rust addon build pipeline](https://github.com/tsukumogami/tsuku/issues/1633) | [#1628](https://github.com/tsukumogami/tsuku/issues/1628) | critical |
 | _GitHub Actions workflow builds tsuku-llm for macOS (Metal), Linux (CUDA/Vulkan/CPU). Produces signed binaries with SHA256 checksums._ | | |
@@ -132,8 +132,8 @@ graph TD
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1628,I1629,I1630,I1631 done
-    class I1632,I1633,I1634,I1635 ready
+    class I1628,I1629,I1630,I1631,I1632 done
+    class I1633,I1634,I1635 ready
     class I1636,I1637,I1638,I1639,I1640,I1641,I1642,I1643,I1644,I1645 blocked
 ```
 
