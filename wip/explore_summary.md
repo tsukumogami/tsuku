@@ -14,11 +14,11 @@ Two overlapping implementations extract system packages from recipes/plans: `exe
 
 ## Decision (Phase 5)
 
-Consolidate extraction into a single SystemRequirements type in internal/executor that handles all system dependency actions (packages and repositories). Both info --deps-only and sandbox will use this unified extraction. The info command gains --repos flag for JSON output of repository configurations, and the helper script is extended to set up repositories before installing packages.
+Consolidate extraction into a single SystemRequirements type in internal/executor that handles all system dependency actions (packages and repositories). Both info --deps-only and sandbox will use this unified extraction. The info command is extended to include repositories in both text and JSON output formats, and the helper script is updated to use --json for parsing with jq.
 
 ## Rationale (Phase 5)
 
-Placing the consolidated code in internal/executor follows the original design intent and keeps package-level dependencies clean (sandbox can import executor, but not vice versa). The SystemRequirements struct from sandbox already has the right shape. Backward compatibility is preserved: the default text output of --deps-only --system remains package names only, while --repos adds repository output in JSON format.
+Placing the consolidated code in internal/executor follows the original design intent and keeps package-level dependencies clean (sandbox can import executor, but not vice versa). The SystemRequirements struct from sandbox already has the right shape. Including repositories by default in both output formats is simpler than adding a separate flag - the existing --json flag already provides structured output for scripts.
 
 ## Current Status
 **Phase:** 8 - Final Review

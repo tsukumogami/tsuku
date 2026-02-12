@@ -12,8 +12,8 @@ decision: |
   Consolidate extraction into a single SystemRequirements type in internal/executor
   that handles all system dependency actions (packages and repositories). Both
   info --deps-only and sandbox will use this unified extraction. The info command
-  gains --repos flag for JSON output of repository configurations, and the helper
-  script is extended to set up repositories before installing packages.
+  is extended to include repositories in both text and JSON output formats, and the
+  helper script is updated to use --json for parsing with jq.
 rationale: |
   Placing the consolidated code in internal/executor follows the original design
   intent and keeps package-level dependencies clean (sandbox can import executor,
@@ -173,21 +173,17 @@ Force users to run `tsuku eval | tsuku info --deps-only`. Rejected because it br
 
 ### Decision 3: How to Output Repository Information
 
-The current `--deps-only --system` outputs package names, one per line. Repository configurations are structured (URL, key URL, key hash) and don't fit this format.
+The current `--deps-only --system` outputs package names, one per line for text and a structured object for JSON (via the existing `--json` flag).
 
-#### Chosen: Add --repos flag for JSON output
+#### Chosen: Extend both output formats to include repositories
 
-Add `--repos` flag that outputs the complete `SystemRequirements` as JSON:
+Both text and JSON outputs include repository information by default:
 
+**JSON output** (for scripts, use `--json`):
 ```bash
-# Current behavior preserved
-tsuku info --deps-only --system --family debian some-tool
-custom-package
-
-# New: include repositories in JSON
-tsuku info --deps-only --system --family debian --repos some-tool
+tsuku info --deps-only --system --family debian --json some-tool
 {
-  "packages": {"apt": ["custom-package"]},
+  "packages": ["custom-package"],
   "repositories": [
     {
       "manager": "apt",
@@ -201,32 +197,37 @@ tsuku info --deps-only --system --family debian --repos some-tool
 }
 ```
 
-The `--repos` flag implies JSON output (can be combined with `--json` but not required). This keeps the simple text-based workflow for packages-only recipes, while enabling structured output when repositories are involved.
+**Text output** (for humans, default):
+```bash
+tsuku info --deps-only --system --family debian some-tool
+Packages:
+  custom-package
+
+Repositories:
+  apt repo: https://custom.repo/debian stable main
+    key: https://custom.repo/key.gpg (sha256: abc123...)
+```
+
+The helper script should use `--json` for parsing with jq, not the text format.
 
 #### Alternatives Considered
 
-**Always output JSON when repositories exist:**
-Detect presence of repositories and switch output format. Rejected because it creates unpredictable behavior that breaks shell scripts.
-
-**Text format for repositories (one per line):**
-Output repositories as structured text lines. Rejected because repository configs have multiple fields (URL, key_url, key_sha256, type) that don't serialize cleanly to single lines.
+**Add separate --repos flag:**
+Only output repositories when explicitly requested. Rejected as unnecessary complexity. The `--json` flag already exists for structured output, and repository info should be included by default in both formats.
 
 ### Decision 4: How to Extend install-recipe-deps.sh
 
 The helper script needs to set up repositories before installing packages.
 
-#### Chosen: Parse JSON when --repos is available
+#### Chosen: Use --json flag and parse with jq
 
-Update the script to:
-1. First check if repositories are needed using `--repos`
-2. If repositories exist, parse JSON and set up each one
-3. Then install packages as before
+Update the script to use the existing `--json` flag for structured output:
 
 ```bash
-# Check for repositories
-JSON=$("$TSUKU" info --deps-only --system --family "$FAMILY" --repos "$RECIPE")
+# Get structured output with packages and repositories
+JSON=$("$TSUKU" info --deps-only --system --family "$FAMILY" --json "$RECIPE")
 
-# Parse repositories and set them up
+# Parse and set up repositories first
 REPOS=$(echo "$JSON" | jq -r '.repositories[]? | @base64')
 for repo in $REPOS; do
   TYPE=$(echo "$repo" | base64 -d | jq -r '.type')
@@ -237,7 +238,7 @@ for repo in $REPOS; do
 done
 
 # Install packages
-PKGS=$(echo "$JSON" | jq -r ".packages.$PM // [] | .[]")
+PKGS=$(echo "$JSON" | jq -r '.packages[]?')
 if [ -n "$PKGS" ]; then
   install_packages "$FAMILY" $PKGS
 fi
@@ -255,28 +256,30 @@ Have tsuku build a container with dependencies instead of outputting text. Rejec
 
 ## Decision Outcome
 
-**Chosen: Consolidate in executor with dual entry points and --repos flag**
+**Chosen: Consolidate in executor with dual entry points and extended output**
 
 ### Summary
 
 Move `SystemRequirements` and extraction logic from `sandbox/packages.go` to `executor/system_deps.go`, creating two entry points: one for Recipe input (info command) and one for Plan input (sandbox). Both share a common step-extraction core that handles all 11 action types.
 
-The `tsuku info --deps-only --system` command gains a `--repos` flag that outputs the complete SystemRequirements as JSON, including repository configurations. Without `--repos`, the output remains package names only for backward compatibility.
+The `tsuku info --deps-only --system` command is extended to include repository information in both output formats:
+- **Text output** (default): Human-readable format showing packages and repositories
+- **JSON output** (`--json`): Structured format with `packages` array and `repositories` array
 
-The `install-recipe-deps.sh` script is extended to call with `--repos`, parse the JSON, set up any repositories, then install packages. This requires jq as a dependency.
+The `install-recipe-deps.sh` script is updated to use `--json` for structured parsing with jq, set up any repositories, then install packages.
 
 **Migration path:**
 1. Add `SystemRequirements` type to executor (copied from sandbox)
 2. Implement `ExtractSystemRequirementsFromRecipe` and `ExtractSystemRequirementsFromPlan`
 3. Update sandbox to use the executor functions
-4. Add `--repos` flag to info command
-5. Update helper script to handle repositories
+4. Extend info command to output repositories in both formats
+5. Update helper script to use `--json` and handle repositories
 6. Delete now-empty sandbox/packages.go (or leave as thin wrapper)
 7. Update DESIGN-recipe-driven-ci-testing to reference this design
 
 ### Rationale
 
-Consolidating in executor follows the original design intent and respects package layering. The dual entry points handle the Recipe vs Plan difference without forcing either consumer to change their input types. The `--repos` flag adds capability without breaking existing callers.
+Consolidating in executor follows the original design intent and respects package layering. The dual entry points handle the Recipe vs Plan difference without forcing either consumer to change their input types. Including repositories by default in both output formats is simpler than adding a separate flag.
 
 ## Solution Architecture
 
@@ -338,26 +341,36 @@ Both extraction functions implement the same switch statement logic. The duplica
 
 **Location**: `cmd/tsuku/info.go`
 
-New flag:
-- `--repos`: Include repository configurations (implies JSON output)
+No new flags needed - extend the existing output formats to include repositories.
 
 Modified behavior in `runDepsOnly()`:
 ```go
-if repos {
-    reqs := executor.ExtractSystemRequirementsFromRecipe(r, target)
+reqs := extractSystemRequirementsFromTree(ctx, r, toolName, target)
+
+if jsonOutput {
     printJSON(struct {
-        Packages     map[string][]string            `json:"packages"`
+        Packages     []string                       `json:"packages"`
         Repositories []executor.RepositoryConfig    `json:"repositories,omitempty"`
         Family       string                         `json:"family,omitempty"`
     }{
-        Packages:     reqs.Packages,
+        Packages:     reqs.PackageList(),
         Repositories: reqs.Repositories,
         Family:       family,
     })
 } else {
-    // Existing behavior: extract packages only
-    packages := extractSystemPackagesFromTree(ctx, r, toolName, target)
-    // Output one per line...
+    // Text output for humans
+    if len(reqs.Packages) > 0 {
+        fmt.Println("Packages:")
+        for _, pkg := range reqs.PackageList() {
+            fmt.Printf("  %s\n", pkg)
+        }
+    }
+    if len(reqs.Repositories) > 0 {
+        fmt.Println("\nRepositories:")
+        for _, repo := range reqs.Repositories {
+            fmt.Printf("  %s %s: %s\n", repo.Manager, repo.Type, repo.URL)
+        }
+    }
 }
 ```
 
@@ -365,19 +378,23 @@ if repos {
 
 **Location**: `.github/scripts/install-recipe-deps.sh`
 
-The script checks for jq availability. If jq is present, it uses `--repos` to get the full picture. If not, it falls back to the package-only mode (which won't work for recipes needing repositories, but maintains backward compatibility).
+The script is updated to use `--json` for structured output and parse with jq:
 
 ```bash
-if command -v jq &> /dev/null; then
-  # Full mode with repository support
-  JSON=$("$TSUKU" info --deps-only --system --family "$FAMILY" --repos "$RECIPE")
-  setup_repositories "$JSON" "$FAMILY"
-  install_packages_from_json "$JSON" "$FAMILY"
-else
-  # Fallback: packages only (original behavior)
-  DEPS=$("$TSUKU" info --deps-only --system --family "$FAMILY" "$RECIPE")
-  install_packages "$FAMILY" $DEPS
+# Require jq for JSON parsing
+if ! command -v jq &> /dev/null; then
+  echo "Error: jq is required for parsing JSON output" >&2
+  exit 1
 fi
+
+# Get structured output
+JSON=$("$TSUKU" info --deps-only --system --family "$FAMILY" --json "$RECIPE")
+
+# Set up repositories first
+setup_repositories "$JSON" "$FAMILY"
+
+# Install packages
+install_packages_from_json "$JSON" "$FAMILY"
 ```
 
 **Shell security requirements:**
@@ -434,10 +451,10 @@ In a follow-up PR, update `sandbox/executor.go` to import executor directly and 
 
 ### Phase 4: Extend Info Command
 
-1. Add `--repos` flag definition
-2. Modify `runDepsOnly()` to handle repos mode
+1. Modify `runDepsOnly()` to use `SystemRequirements` instead of just packages
+2. Update both text and JSON output formats to include repositories
 3. Update help text and examples
-4. Add tests for new flag combinations
+4. Add tests for repository output
 
 ### Phase 5: Update Helper Script
 
@@ -480,7 +497,7 @@ Recipes control what repositories are added. A malicious recipe could point to a
 - GPG key verification (with sha256 check) prevents MITM attacks
 - CI runs in ephemeral containers, limiting blast radius
 
-The `--repos` flag surfaces repository information that was previously hidden in sandbox internals, improving auditability. Repository URLs may reveal organizational infrastructure (private repository servers), so `--repos` output shouldn't be piped to public logs without review.
+Including repository information in the output surfaces data that was previously hidden in sandbox internals, improving auditability. Repository URLs may reveal organizational infrastructure (private repository servers), so output shouldn't be piped to public logs without review.
 
 ### User Data Exposure
 
@@ -494,18 +511,20 @@ No change. The command reads recipe files and outputs package/repository names. 
 - CI testing can handle recipes with third-party repositories
 - `install-recipe-deps.sh` covers all cases sandbox handles
 - Follows the original design intent from DESIGN-recipe-driven-ci-testing
-- Repository configurations are now auditable via `--repos` flag
+- Repository configurations are now visible in both text and JSON output, improving auditability
 
 ### Negative
 
-- Helper script now requires jq for full functionality. This is acceptable because: (a) all major CI providers (GitHub Actions, GitLab CI, CircleCI) pre-install jq, (b) the fallback handles the common case of packages-only recipes, (c) recipes requiring repositories are currently rare
-- `--repos` output is JSON-only (can't be piped to xargs like packages)
+- Helper script now requires jq. This is acceptable because all major CI providers (GitHub Actions, GitLab CI, CircleCI) pre-install jq
+- Text output format changes slightly (now shows "Packages:" and "Repositories:" headers)
 - Minor code churn in sandbox to update imports
 - Slight increase in executor package size
 
 ### Migration
 
-Existing consumers of `tsuku info --deps-only --system` continue to work unchanged. The packages-only text output remains the default. The `--repos` flag is opt-in.
+Existing consumers of `tsuku info --deps-only --system` that use text output may see additional "Repositories:" section in the output if recipes have repository actions. Scripts parsing text output should be updated to use `--json` for reliable parsing.
+
+Scripts using `--json` continue to work - the JSON output gains a `repositories` field that can be ignored if not needed.
 
 Sandbox consumers of `sandbox.ExtractSystemRequirements()` continue to work if we leave a re-export wrapper. If we delete the wrapper, sandbox/executor.go needs an import path change.
 
