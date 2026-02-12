@@ -3,6 +3,7 @@ name = "jc"
 description = "Convert command output to JSON"
 homepage = "https://github.com/kellyjonbrazil/jc"
 version_format = "semver"
+supported_libc = ["glibc"]
 
 [[steps]]
 action = "github_archive"

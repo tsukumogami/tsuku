@@ -3,6 +3,7 @@ name = "tilt"
 description = "Multi-service development environment"
 homepage = "https://github.com/tilt-dev/tilt"
 version_format = "semver"
+supported_libc = ["glibc"]
 
 [[steps]]
 action = "github_archive"

@@ -3,6 +3,7 @@ name = "bun"
 description = "Fast all-in-one JavaScript runtime"
 homepage = "https://bun.sh/"
 version_format = "semver"
+supported_os = ["linux"]
 
 [[steps]]
 action = "github_archive"

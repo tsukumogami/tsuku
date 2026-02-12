@@ -3,6 +3,7 @@ name = "gotop"
 description = "Terminal based graphical activity monitor"
 homepage = "https://github.com/xxxserxxx/gotop"
 version_format = "semver"
+unsupported_platforms = ["linux/alpine/amd64", "darwin/amd64"]
 
 [[steps]]
 action = "github_archive"

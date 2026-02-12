@@ -3,6 +3,7 @@ name = "nomad"
 description = "Workload orchestrator"
 homepage = "https://www.nomadproject.io/"
 version_format = "semver"
+supported_libc = ["glibc"]
 
 [version]
 github_repo = "hashicorp/nomad"

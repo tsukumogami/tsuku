@@ -3,6 +3,7 @@ name = "docker-compose"
 description = "Define and run multi-container Docker applications"
 homepage = "https://docs.docker.com/compose/"
 version_format = "semver"
+unsupported_platforms = ["linux/arm64"]
 
 [[steps]]
 action = "github_file"

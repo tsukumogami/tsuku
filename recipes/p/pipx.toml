@@ -4,6 +4,7 @@ description = "Install and run Python applications in isolated environments"
 homepage = "https://pypa.github.io/pipx/"
 version_format = "semver"
 dependencies = ["python-standalone"]
+supported_libc = ["glibc"]
 
 [version]
 source = "pypi"

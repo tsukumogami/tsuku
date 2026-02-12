@@ -3,6 +3,7 @@ name = "helix"
 description = "Post-modern text editor"
 homepage = "https://helix-editor.com/"
 version_format = "semver"
+supported_libc = ["glibc"]
 
 [[steps]]
 action = "github_archive"

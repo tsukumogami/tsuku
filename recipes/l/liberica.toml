@@ -3,6 +3,7 @@ name = "liberica"
 description = "BellSoft Liberica JDK - OpenJDK distribution"
 homepage = "https://bell-sw.com/"
 version_format = "semver"
+supported_os = ["linux"]
 
 [[steps]]
 action = "github_archive"

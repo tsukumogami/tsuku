@@ -4,6 +4,7 @@ description = "Command line tool for transferring data with URLs"
 homepage = "https://curl.se/"
 dependencies = ["openssl", "zlib"]
 binaries = ["bin/curl"]
+supported_os = ["linux"]
 
 [version]
 source = "homebrew"

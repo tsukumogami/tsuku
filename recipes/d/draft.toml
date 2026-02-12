@@ -3,6 +3,7 @@ name = "draft"
 description = "Tool for developers to create cloud-native applications on Kubernetes"
 homepage = "https://draft.sh/"
 version_format = "semver"
+supported_libc = ["glibc"]
 
 [[steps]]
 action = "github_file"

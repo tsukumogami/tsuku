@@ -3,6 +3,7 @@ name = "colima"
 description = "Container runtimes on macOS with minimal setup"
 homepage = "https://github.com/abiosoft/colima"
 version_format = "semver"
+unsupported_platforms = ["linux/arm64", "linux/alpine"]
 
 [[steps]]
 action = "github_file"

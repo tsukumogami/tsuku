@@ -3,6 +3,7 @@ name = "gron"
 description = "Make JSON greppable"
 homepage = "https://github.com/tomnomnom/gron"
 version_format = "semver"
+supported_libc = ["glibc"]
 
 [[steps]]
 action = "github_archive"
