@@ -22,7 +22,7 @@ Planned
 
 | Issue | Dependencies | Tier |
 |-------|--------------|------|
-| [#1628: feat(llm): complete local provider skeleton with lifecycle management](https://github.com/tsukumogami/tsuku/issues/1628) | None | testable |
+| ~~[#1628: feat(llm): complete local provider skeleton with lifecycle management](https://github.com/tsukumogami/tsuku/issues/1628)~~ | None | testable |
 | _Establishes gRPC contract, LocalProvider implementing Provider interface, ServerLifecycle with lock file protocol, and AddonManager stub. This is the walking skeleton that all other issues refine._ | | |
 | [#1629: feat(llm): implement addon download and verification](https://github.com/tsukumogami/tsuku/issues/1629) | [#1628](https://github.com/tsukumogami/tsuku/issues/1628) | testable |
 | _AddonManager downloads platform-specific tsuku-llm binary from CDN with SHA256 verification at download and before each execution._ | | |
