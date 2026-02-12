@@ -290,7 +290,9 @@ func TestChain_EcosystemProbeMissFallsThrough(t *testing.T) {
 	}, 5*time.Second)
 	llmStub := &mockResolver{result: nil, err: nil}
 
-	chain := NewChainResolver(registryMiss, probe, llmStub)
+	// Set HasAPIKey to true to get NotFoundError instead of ConfigurationError
+	chain := NewChainResolver(registryMiss, probe, llmStub).
+		WithLLMAvailability(LLMAvailability{HasAPIKey: true})
 	_, err := chain.Resolve(context.Background(), "nonexistent")
 	if err == nil {
 		t.Fatal("expected NotFoundError")

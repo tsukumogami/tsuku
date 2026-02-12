@@ -73,13 +73,66 @@ type Resolver interface {
 	Resolve(ctx context.Context, toolName string) (*DiscoveryResult, error)
 }
 
+// Suggester is implemented by errors that provide actionable guidance.
+type Suggester interface {
+	Suggestion() string
+}
+
 // NotFoundError indicates no resolver stage could find the tool.
 type NotFoundError struct {
 	Tool string
 }
 
 func (e *NotFoundError) Error() string {
-	return fmt.Sprintf("could not find '%s'. Try tsuku install %s --from github:owner/repo if you know the source", e.Tool, e.Tool)
+	return fmt.Sprintf("could not find '%s'", e.Tool)
+}
+
+func (e *NotFoundError) Suggestion() string {
+	return fmt.Sprintf("Try tsuku install %s --from github:owner/repo if you know the source.", e.Tool)
+}
+
+// ConfigurationError indicates discovery couldn't complete due to missing configuration.
+type ConfigurationError struct {
+	Tool   string
+	Reason string // "no_api_key" or "deterministic_only"
+}
+
+func (e *ConfigurationError) Error() string {
+	switch e.Reason {
+	case "no_api_key":
+		return fmt.Sprintf("no match for '%s' in registry or ecosystems", e.Tool)
+	case "deterministic_only":
+		return fmt.Sprintf("no deterministic source found for '%s'", e.Tool)
+	default:
+		return fmt.Sprintf("configuration error for '%s': %s", e.Tool, e.Reason)
+	}
+}
+
+func (e *ConfigurationError) Suggestion() string {
+	switch e.Reason {
+	case "no_api_key":
+		return "Set ANTHROPIC_API_KEY to enable web search discovery, or use --from to specify the source directly."
+	case "deterministic_only":
+		return "Remove --deterministic-only to enable LLM discovery, or use --from to specify the source."
+	default:
+		return ""
+	}
+}
+
+// BuilderRequiresLLMError indicates the resolved builder requires LLM but deterministic mode is set.
+type BuilderRequiresLLMError struct {
+	Tool    string
+	Builder string
+	Source  string
+}
+
+func (e *BuilderRequiresLLMError) Error() string {
+	return fmt.Sprintf("'%s' resolved to %s releases (%s), which requires LLM for recipe generation",
+		e.Tool, e.Builder, e.Source)
+}
+
+func (e *BuilderRequiresLLMError) Suggestion() string {
+	return "Remove --deterministic-only or wait for a recipe to be contributed."
 }
 
 // isFatalError returns true for errors that should stop the resolver chain.

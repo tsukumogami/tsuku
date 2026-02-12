@@ -19,6 +19,7 @@ import (
 	"github.com/tsukumogami/tsuku/internal/discover"
 	"github.com/tsukumogami/tsuku/internal/install"
 	"github.com/tsukumogami/tsuku/internal/llm"
+	"github.com/tsukumogami/tsuku/internal/log"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/sandbox"
 	"github.com/tsukumogami/tsuku/internal/search"
@@ -904,6 +905,12 @@ func runDiscoveryWithOptions(toolName string, searchProviderName string) (*disco
 	stateManager := install.NewStateManager(cfg)
 	stateTracker := &discoveryStateTracker{state: stateManager, config: userCfg}
 
+	// Determine LLM availability for configuration-aware error messages
+	llmAvail := discover.LLMAvailability{
+		DeterministicOnly: createDeterministicOnly,
+		HasAPIKey:         false, // Will be set to true if NewLLMDiscovery succeeds
+	}
+
 	llmDiscovery, err := discover.NewLLMDiscovery(globalCtx,
 		discover.WithConfirmFunc(confirmLLMDiscovery),
 		discover.WithSearchProvider(searchProvider),
@@ -915,9 +922,12 @@ func runDiscoveryWithOptions(toolName string, searchProviderName string) (*disco
 		stages = append(stages, discover.NewLLMDiscoveryDisabled())
 	} else {
 		stages = append(stages, llmDiscovery)
+		llmAvail.HasAPIKey = true
 	}
 
-	chain := discover.NewChainResolver(stages...)
+	chain := discover.NewChainResolver(stages...).
+		WithLogger(log.Default()).
+		WithLLMAvailability(llmAvail)
 	return chain.Resolve(globalCtx, toolName)
 }
 
