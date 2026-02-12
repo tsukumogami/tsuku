@@ -201,8 +201,13 @@ func (d *LLMDiscovery) verifyGitHubRepo(ctx context.Context, result *DiscoveryRe
 		Archived        bool   `json:"archived"`
 		Description     string `json:"description"`
 		CreatedAt       string `json:"created_at"`
+		PushedAt        string `json:"pushed_at"`
 		Fork            bool   `json:"fork"`
-		Parent          *struct {
+		Owner           *struct {
+			Login string `json:"login"`
+			Type  string `json:"type"`
+		} `json:"owner"`
+		Parent *struct {
 			FullName        string `json:"full_name"`
 			StargazersCount int    `json:"stargazers_count"`
 		} `json:"parent"`
@@ -216,18 +221,34 @@ func (d *LLMDiscovery) verifyGitHubRepo(ctx context.Context, result *DiscoveryRe
 		return Metadata{}, fmt.Errorf("repository is archived")
 	}
 
-	// Calculate age in days
+	// Calculate age in days and format creation date
 	var ageDays int
+	var createdAtStr string
 	if createdAt, err := time.Parse(time.RFC3339, ghRepo.CreatedAt); err == nil {
 		ageDays = int(time.Since(createdAt).Hours() / 24)
+		createdAtStr = createdAt.Format("2006-01-02")
+	}
+
+	// Calculate days since last commit
+	var lastCommitDays int
+	if pushedAt, err := time.Parse(time.RFC3339, ghRepo.PushedAt); err == nil {
+		lastCommitDays = int(time.Since(pushedAt).Hours() / 24)
 	}
 
 	// Build metadata with fork information
 	metadata := Metadata{
-		Stars:       ghRepo.StargazersCount,
-		Description: ghRepo.Description,
-		AgeDays:     ageDays,
-		IsFork:      ghRepo.Fork,
+		Stars:          ghRepo.StargazersCount,
+		Description:    ghRepo.Description,
+		AgeDays:        ageDays,
+		CreatedAt:      createdAtStr,
+		LastCommitDays: lastCommitDays,
+		IsFork:         ghRepo.Fork,
+	}
+
+	// Populate owner metadata if available
+	if ghRepo.Owner != nil {
+		metadata.OwnerName = ghRepo.Owner.Login
+		metadata.OwnerType = ghRepo.Owner.Type
 	}
 
 	// Populate parent metadata if this is a fork

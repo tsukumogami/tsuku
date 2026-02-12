@@ -152,27 +152,115 @@ func confirmWithUser(prompt string) bool {
 }
 
 // confirmLLMDiscovery prompts the user to confirm an LLM-discovered tool source.
+// The --yes flag (createAutoApprove) skips confirmation but not verification.
+// Forks never auto-select - they always require explicit confirmation.
 func confirmLLMDiscovery(result *discover.DiscoveryResult) bool {
-	if !isInteractive() {
-		fmt.Fprintln(os.Stderr, "Error: LLM discovery requires interactive mode for confirmation")
-		return false
-	}
-
+	// Display the discovery result with enhanced metadata
 	fmt.Fprintln(os.Stderr, "")
 	fmt.Fprintln(os.Stderr, "LLM Discovery Result:")
 	fmt.Fprintf(os.Stderr, "  Source: %s:%s\n", result.Builder, result.Source)
+
+	// Stars
 	if result.Metadata.Stars > 0 {
 		fmt.Fprintf(os.Stderr, "  Stars: %d\n", result.Metadata.Stars)
 	}
+
+	// Age: "X years ago (YYYY-MM-DD)" or "X days ago (YYYY-MM-DD)"
+	if result.Metadata.AgeDays > 0 {
+		ageStr := formatDaysAgo(result.Metadata.AgeDays)
+		if result.Metadata.CreatedAt != "" {
+			fmt.Fprintf(os.Stderr, "  Created: %s (%s)\n", ageStr, result.Metadata.CreatedAt)
+		} else {
+			fmt.Fprintf(os.Stderr, "  Created: %s\n", ageStr)
+		}
+	}
+
+	// Last commit: relative time
+	if result.Metadata.LastCommitDays > 0 {
+		fmt.Fprintf(os.Stderr, "  Last commit: %s\n", formatDaysAgo(result.Metadata.LastCommitDays))
+	}
+
+	// Owner with type
+	if result.Metadata.OwnerName != "" {
+		if result.Metadata.OwnerType != "" {
+			fmt.Fprintf(os.Stderr, "  Owner: %s (%s)\n", result.Metadata.OwnerName, result.Metadata.OwnerType)
+		} else {
+			fmt.Fprintf(os.Stderr, "  Owner: %s\n", result.Metadata.OwnerName)
+		}
+	}
+
+	// Description
 	if result.Metadata.Description != "" {
 		fmt.Fprintf(os.Stderr, "  Description: %s\n", result.Metadata.Description)
 	}
-	fmt.Fprintf(os.Stderr, "  Reason: %s\n", result.Reason)
+
+	// Fork warning (AC8)
+	if result.Metadata.IsFork {
+		fmt.Fprintln(os.Stderr, "")
+		fmt.Fprintln(os.Stderr, "WARNING: This repository is a FORK.")
+		if result.Metadata.ParentRepo != "" {
+			fmt.Fprintf(os.Stderr, "  Original repository: %s\n", result.Metadata.ParentRepo)
+			if result.Metadata.ParentStars > 0 {
+				fmt.Fprintf(os.Stderr, "  Original stars: %d\n", result.Metadata.ParentStars)
+			}
+			// Suggest parent if it has significantly more stars
+			if result.Metadata.ParentStars >= result.Metadata.Stars*10 {
+				fmt.Fprintf(os.Stderr, "  Consider using the original repository instead.\n")
+			}
+		}
+	}
+
 	fmt.Fprintln(os.Stderr, "")
 	fmt.Fprintln(os.Stderr, "WARNING: This source was found via LLM web search.")
 	fmt.Fprintln(os.Stderr, "Please verify this is the correct tool before proceeding.")
 
+	// Handle --yes flag (AC1, AC2, AC3)
+	// Forks never auto-select - require explicit confirmation even with --yes
+	if createAutoApprove && !result.Metadata.IsFork {
+		fmt.Fprintln(os.Stderr, "")
+		fmt.Fprintln(os.Stderr, "Auto-approving LLM discovery result (--yes flag).")
+		return true
+	}
+
+	// Check for interactive mode (AC4)
+	if !isInteractive() {
+		fmt.Fprintln(os.Stderr, "")
+		if result.Metadata.IsFork {
+			fmt.Fprintln(os.Stderr, "Error: Fork detected. Forks require explicit interactive confirmation.")
+			fmt.Fprintln(os.Stderr, "Run interactively to approve, or use --from to specify the source directly.")
+		} else {
+			fmt.Fprintln(os.Stderr, "Error: LLM discovery requires confirmation.")
+			fmt.Fprintln(os.Stderr, "Use --yes to approve, or run interactively.")
+		}
+		return false
+	}
+
 	return confirmWithUser("Use this source?")
+}
+
+// formatDaysAgo converts a number of days to a human-readable relative time string.
+func formatDaysAgo(days int) string {
+	if days == 0 {
+		return "today"
+	} else if days == 1 {
+		return "1 day ago"
+	} else if days < 7 {
+		return fmt.Sprintf("%d days ago", days)
+	} else if days < 14 {
+		return "1 week ago"
+	} else if days < 30 {
+		weeks := days / 7
+		return fmt.Sprintf("%d weeks ago", weeks)
+	} else if days < 60 {
+		return "1 month ago"
+	} else if days < 365 {
+		months := days / 30
+		return fmt.Sprintf("%d months ago", months)
+	} else if days < 730 {
+		return "1 year ago"
+	}
+	years := days / 365
+	return fmt.Sprintf("%d years ago", years)
 }
 
 // offerToolchainInstall prompts the user to install a missing toolchain (or

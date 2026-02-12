@@ -353,7 +353,12 @@ func TestVerifyGitHubRepo_Fork(t *testing.T) {
 		"archived": false,
 		"description": "A fork of the original",
 		"created_at": "2024-01-15T10:00:00Z",
+		"pushed_at": "2025-01-20T15:30:00Z",
 		"fork": true,
+		"owner": {
+			"login": "fork-owner",
+			"type": "User"
+		},
 		"parent": {
 			"full_name": "original-owner/original-repo",
 			"stargazers_count": 5000
@@ -388,6 +393,19 @@ func TestVerifyGitHubRepo_Fork(t *testing.T) {
 	}
 	if metadata.Stars != 100 {
 		t.Errorf("expected Stars=100, got %d", metadata.Stars)
+	}
+
+	// Verify owner metadata
+	if metadata.OwnerName != "fork-owner" {
+		t.Errorf("expected OwnerName='fork-owner', got %q", metadata.OwnerName)
+	}
+	if metadata.OwnerType != "User" {
+		t.Errorf("expected OwnerType='User', got %q", metadata.OwnerType)
+	}
+
+	// Verify created date format
+	if metadata.CreatedAt != "2024-01-15" {
+		t.Errorf("expected CreatedAt='2024-01-15', got %q", metadata.CreatedAt)
 	}
 }
 
@@ -440,7 +458,12 @@ func TestVerifyGitHubRepo_NotAFork(t *testing.T) {
 		"archived": false,
 		"description": "The original repository",
 		"created_at": "2020-01-15T10:00:00Z",
-		"fork": false
+		"pushed_at": "2026-02-01T12:00:00Z",
+		"fork": false,
+		"owner": {
+			"login": "stripe",
+			"type": "Organization"
+		}
 	}`
 
 	discovery := &LLMDiscovery{
@@ -471,6 +494,24 @@ func TestVerifyGitHubRepo_NotAFork(t *testing.T) {
 	}
 	if metadata.Stars != 1000 {
 		t.Errorf("expected Stars=1000, got %d", metadata.Stars)
+	}
+
+	// Verify owner metadata (AC7)
+	if metadata.OwnerName != "stripe" {
+		t.Errorf("expected OwnerName='stripe', got %q", metadata.OwnerName)
+	}
+	if metadata.OwnerType != "Organization" {
+		t.Errorf("expected OwnerType='Organization', got %q", metadata.OwnerType)
+	}
+
+	// Verify created date format (AC5)
+	if metadata.CreatedAt != "2020-01-15" {
+		t.Errorf("expected CreatedAt='2020-01-15', got %q", metadata.CreatedAt)
+	}
+
+	// Verify last commit days is calculated (AC6)
+	if metadata.LastCommitDays <= 0 {
+		t.Errorf("expected LastCommitDays > 0, got %d", metadata.LastCommitDays)
 	}
 }
 
