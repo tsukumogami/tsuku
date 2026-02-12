@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Accepted
 problem: |
   When multiple ecosystem registries return matches for a tool name (e.g., "bat" exists
   on crates.io as sharkdp/bat and on npm as bat-cli), the ecosystem probe stage silently
@@ -24,7 +24,7 @@ rationale: |
 
 ## Status
 
-Proposed
+Accepted
 
 ## Upstream Design Reference
 
