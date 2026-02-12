@@ -27,7 +27,7 @@ rationale: This completes the deterministic installation milestone by enabling U
 
 ## Upstream Design Reference
 
-This design implements Milestone 3 of [DESIGN-deterministic-resolution.md](DESIGN-deterministic-resolution.md).
+This design implements Milestone 3 of [DESIGN-deterministic-resolution.md](../current/DESIGN-deterministic-resolution.md).
 
 **Relevant sections:**
 - Vision: "A recipe is a program that produces a deterministic installation plan"

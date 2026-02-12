@@ -32,11 +32,11 @@ Planned
 
 ### Milestone: [Batch Operations Control Plane](https://github.com/tsukumogami/tsuku/milestone/55)
 
-Implements [#1187](https://github.com/tsukumogami/tsuku/issues/1187). See [DESIGN-batch-operations.md](DESIGN-batch-operations.md) for issue details.
+Implements [#1187](https://github.com/tsukumogami/tsuku/issues/1187). See [DESIGN-batch-operations.md](current/DESIGN-batch-operations.md) for issue details.
 
 ### Milestone: [Batch Operations Observability](https://github.com/tsukumogami/tsuku/milestone/56)
 
-Implements [#1187](https://github.com/tsukumogami/tsuku/issues/1187). See [DESIGN-batch-operations.md](DESIGN-batch-operations.md) for issue details.
+Implements [#1187](https://github.com/tsukumogami/tsuku/issues/1187). See [DESIGN-batch-operations.md](current/DESIGN-batch-operations.md) for issue details.
 
 ### Milestone: [Deterministic Homebrew Builder](https://github.com/tsukumogami/tsuku/milestone/51)
 

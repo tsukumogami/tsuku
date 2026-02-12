@@ -46,7 +46,7 @@ Current
 
 ## Upstream Design Reference
 
-This design implements Phase 2 of [DESIGN-discovery-resolver.md](DESIGN-discovery-resolver.md), extending the discovery registry schema with optional metadata fields.
+This design implements Phase 2 of [DESIGN-discovery-resolver.md](../DESIGN-discovery-resolver.md), extending the discovery registry schema with optional metadata fields.
 
 **Relevant upstream sections:**
 - Discovery Registry Format (current): `{builder, source, binary?}`
@@ -55,8 +55,8 @@ This design implements Phase 2 of [DESIGN-discovery-resolver.md](DESIGN-discover
 - Registry is fetched from recipes repository, cached locally
 
 **Related designs:**
-- [DESIGN-registry-scale-strategy.md](DESIGN-registry-scale-strategy.md): Batch recipe generation from priority queue. As recipes get generated, tools graduate out of the discovery registry.
-- [DESIGN-batch-recipe-generation.md](DESIGN-batch-recipe-generation.md): CI pipeline for deterministic recipe generation.
+- [DESIGN-registry-scale-strategy.md](../DESIGN-registry-scale-strategy.md): Batch recipe generation from priority queue. As recipes get generated, tools graduate out of the discovery registry.
+- [DESIGN-batch-recipe-generation.md](../DESIGN-batch-recipe-generation.md): CI pipeline for deterministic recipe generation.
 
 ## Context and Problem Statement
 

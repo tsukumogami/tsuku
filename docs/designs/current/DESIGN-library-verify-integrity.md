@@ -23,7 +23,7 @@ Current
 
 ## Upstream Design Reference
 
-This design implements Level 4 of the tiered library verification system defined in [DESIGN-library-verification.md](docs/designs/DESIGN-library-verification.md).
+This design implements Level 4 of the tiered library verification system defined in [DESIGN-library-verification.md](DESIGN-library-verification.md).
 
 **Relevant sections:**
 - Solution Architecture: Level 4 - Integrity Check

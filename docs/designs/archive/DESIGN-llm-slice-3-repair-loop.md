@@ -9,7 +9,7 @@ rationale: Repair loops improve success rates by allowing the LLM to learn from 
 
 **Status**: Superseded by [DESIGN-llm-builder-infrastructure.md](../current/DESIGN-llm-builder-infrastructure.md)
 
-**Parent Design**: [DESIGN-llm-builder-infrastructure.md](DESIGN-llm-builder-infrastructure.md)
+**Parent Design**: [DESIGN-llm-builder-infrastructure.md](../current/DESIGN-llm-builder-infrastructure.md)
 
 **Issue**: [#269 - Slice 3: Repair Loop + Second Provider](https://github.com/tsukumogami/tsuku/issues/269)
 

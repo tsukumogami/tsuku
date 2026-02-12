@@ -29,7 +29,7 @@ Current
 
 ## Upstream Design Reference
 
-This design addresses a gap discovered during implementation of [DESIGN-ecosystem-probe.md](DESIGN-ecosystem-probe.md). That design assumed registry APIs don't expose download counts, but research shows at least crates.io and RubyGems do. This design also intersects with the discovery registry seeding process described in [DESIGN-discovery-resolver.md](DESIGN-discovery-resolver.md) and the batch pipeline described in [DESIGN-registry-scale-strategy.md](DESIGN-registry-scale-strategy.md).
+This design addresses a gap discovered during implementation of [DESIGN-ecosystem-probe.md](DESIGN-ecosystem-probe.md). That design assumed registry APIs don't expose download counts, but research shows at least crates.io and RubyGems do. This design also intersects with the discovery registry seeding process described in [DESIGN-discovery-resolver.md](../DESIGN-discovery-resolver.md) and the batch pipeline described in [DESIGN-registry-scale-strategy.md](../DESIGN-registry-scale-strategy.md).
 
 **Key architectural insight**: The discovery JSON files (`recipes/discovery/`) are already the universal interface for tool resolution. The batch seeding pipeline produces them, the `RegistryLookup` resolver consumes them, and LLM discovery will eventually produce them dynamically. Quality filtering needs to work for both the runtime probe and the seeding pipeline. An import cycle between `builders` and `discover` prevents `Probe()` from returning `RegistryEntry` directly, so `ProbeResult` carries the quality fields and a thin conversion at the boundary maps to `RegistryEntry` for storage. The `QualityFilter` operates on `ProbeResult`, and the seeding pipeline can call `Probe()` to get the same data.
 

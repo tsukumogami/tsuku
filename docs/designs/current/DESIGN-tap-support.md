@@ -23,8 +23,8 @@ Current
 ## Upstream Design Reference
 
 This design extends:
-- [DESIGN-homebrew.md](current/DESIGN-homebrew.md) - Core formula bottle support
-- [DESIGN-cask-support.md](current/DESIGN-cask-support.md) - Cask support
+- [DESIGN-homebrew.md](DESIGN-homebrew.md) - Core formula bottle support
+- [DESIGN-cask-support.md](DESIGN-cask-support.md) - Cask support
 
 **Relevant patterns:**
 - Cask design's hybrid approach (version provider + generic action)

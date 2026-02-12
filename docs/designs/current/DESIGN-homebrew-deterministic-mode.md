@@ -13,7 +13,7 @@ Current
 
 ## Upstream Design Reference
 
-This design implements part of [DESIGN-registry-scale-strategy.md](DESIGN-registry-scale-strategy.md).
+This design implements part of [DESIGN-registry-scale-strategy.md](../DESIGN-registry-scale-strategy.md).
 
 **Relevant sections:**
 - Decision 1: Fully deterministic batch generation

@@ -16,7 +16,7 @@ Current
 
 ## Upstream Design Reference
 
-This design implements the platform validation jobs (Job 3) and merge job platform-constraint writing (Job 4) from [DESIGN-batch-recipe-generation.md](DESIGN-batch-recipe-generation.md).
+This design implements the platform validation jobs (Job 3) and merge job platform-constraint writing (Job 4) from [DESIGN-batch-recipe-generation.md](../DESIGN-batch-recipe-generation.md).
 
 **Relevant sections:**
 - Job Architecture (Jobs 3-4)

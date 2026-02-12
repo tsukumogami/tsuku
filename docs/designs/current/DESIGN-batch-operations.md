@@ -13,7 +13,7 @@ Current
 
 ## Upstream Design Reference
 
-This design implements part of [DESIGN-registry-scale-strategy.md](DESIGN-registry-scale-strategy.md).
+This design implements part of [DESIGN-registry-scale-strategy.md](../DESIGN-registry-scale-strategy.md).
 
 **Relevant sections:**
 - Phase 0: Rollback scripts (tested against manually-created recipes)

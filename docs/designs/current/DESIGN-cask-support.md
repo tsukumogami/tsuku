@@ -23,7 +23,7 @@ Current
 
 ## Upstream Design Reference
 
-This design extends [DESIGN-homebrew.md](designs/current/DESIGN-homebrew.md) which describes tsuku's Homebrew integration architecture for formula bottles.
+This design extends [DESIGN-homebrew.md](DESIGN-homebrew.md) which describes tsuku's Homebrew integration architecture for formula bottles.
 
 **Relevant sections:**
 - HomebrewBuilder architecture for recipe generation

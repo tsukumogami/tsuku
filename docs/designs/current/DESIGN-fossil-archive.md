@@ -23,7 +23,7 @@ Current
 
 ## Context and Problem Statement
 
-Tsuku's [Build Essentials](BUILD-ESSENTIALS.md) infrastructure enables building tools from source when pre-built binaries aren't available. This design extends that capability to support [Fossil SCM](https://fossil-scm.org/), a distributed version control system used by several important open-source projects.
+Tsuku's [Build Essentials](../../BUILD-ESSENTIALS.md) infrastructure enables building tools from source when pre-built binaries aren't available. This design extends that capability to support [Fossil SCM](https://fossil-scm.org/), a distributed version control system used by several important open-source projects.
 
 ### Recipe Philosophy
 

@@ -33,7 +33,7 @@ rationale: This design ensures all installations are deterministic by default, d
 
 ## Upstream Design Reference
 
-This design implements Milestone 2 of [DESIGN-deterministic-resolution.md](DESIGN-deterministic-resolution.md).
+This design implements Milestone 2 of [DESIGN-deterministic-resolution.md](../current/DESIGN-deterministic-resolution.md).
 
 **Relevant sections:**
 - Vision: "A recipe is a program that produces a deterministic installation plan"

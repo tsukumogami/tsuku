@@ -1,5 +1,5 @@
 ---
-status: Accepted
+status: Current
 problem: |
   Two overlapping implementations extract system packages from recipes and plans:
   executor/system_deps.go (5 actions, packages only) and sandbox/packages.go
@@ -27,11 +27,11 @@ rationale: |
 
 ## Status
 
-**Accepted**
+**Current**
 
 ## Upstream Design Reference
 
-This design supersedes the "Code Reuse with Sandbox" section of [DESIGN-recipe-driven-ci-testing.md](current/DESIGN-recipe-driven-ci-testing.md), which established the original intent for shared extraction code between `tsuku info` and sandbox mode.
+This design supersedes the "Code Reuse with Sandbox" section of [DESIGN-recipe-driven-ci-testing.md](DESIGN-recipe-driven-ci-testing.md), which established the original intent for shared extraction code between `tsuku info` and sandbox mode.
 
 ## Context and Problem Statement
 

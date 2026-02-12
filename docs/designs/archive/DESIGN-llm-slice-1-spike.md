@@ -9,7 +9,7 @@ rationale: Building the critical path first surfaces integration issues early an
 
 **Status**: Superseded by [DESIGN-llm-builder-infrastructure.md](../current/DESIGN-llm-builder-infrastructure.md)
 
-**Parent Design**: [DESIGN-llm-builder-infrastructure.md](DESIGN-llm-builder-infrastructure.md)
+**Parent Design**: [DESIGN-llm-builder-infrastructure.md](../current/DESIGN-llm-builder-infrastructure.md)
 
 **Issue**: [#266 - Slice 1: End-to-End Spike](https://github.com/tsukumogami/tsuku/issues/266)
 

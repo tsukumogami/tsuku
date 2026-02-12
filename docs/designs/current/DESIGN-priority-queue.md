@@ -26,7 +26,7 @@ Current
 
 ## Upstream Design Reference
 
-This design implements Phase 0 (Visibility Infrastructure) of [DESIGN-registry-scale-strategy.md](./DESIGN-registry-scale-strategy.md).
+This design implements Phase 0 (Visibility Infrastructure) of [DESIGN-registry-scale-strategy.md](../DESIGN-registry-scale-strategy.md).
 
 **Relevant sections:**
 - Phase 0: Visibility Infrastructure
