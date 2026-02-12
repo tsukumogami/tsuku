@@ -74,11 +74,12 @@ func TestEcosystemProbe_SingleResult(t *testing.T) {
 	}
 }
 
-func TestEcosystemProbe_MultipleResults_PriorityRanking(t *testing.T) {
+func TestEcosystemProbe_MultipleResults_ClearWinner(t *testing.T) {
+	// Tests disambiguation: clear winner (>10x downloads + secondary signals) auto-selects.
 	probe := NewEcosystemProbe([]builders.EcosystemProber{
-		&mockProber{name: "npm", result: &builders.ProbeResult{Source: "serve", Downloads: 1000, VersionCount: 10}},
-		&mockProber{name: "cask", result: &builders.ProbeResult{Source: "serve"}},
-		&mockProber{name: "pypi", result: &builders.ProbeResult{Source: "serve", VersionCount: 10}},
+		&mockProber{name: "npm", result: &builders.ProbeResult{Source: "serve", Downloads: 500, VersionCount: 5, HasRepository: true}},
+		&mockProber{name: "crates.io", result: &builders.ProbeResult{Source: "serve", Downloads: 100000, VersionCount: 10, HasRepository: true}},
+		&mockProber{name: "pypi", result: &builders.ProbeResult{Source: "serve", Downloads: 200, VersionCount: 5, HasRepository: true}},
 	}, 5*time.Second)
 
 	result, err := probe.Resolve(context.Background(), "serve")
@@ -88,9 +89,32 @@ func TestEcosystemProbe_MultipleResults_PriorityRanking(t *testing.T) {
 	if result == nil {
 		t.Fatal("expected result, got nil")
 	}
-	// cask has priority 1 (highest)
-	if result.Builder != "cask" {
-		t.Errorf("expected cask (highest priority), got %s", result.Builder)
+	// crates.io has >10x downloads vs runner-up (npm with 500)
+	if result.Builder != "crates.io" {
+		t.Errorf("expected crates.io (clear popularity winner), got %s", result.Builder)
+	}
+}
+
+func TestEcosystemProbe_MultipleResults_Ambiguous(t *testing.T) {
+	// Tests disambiguation: close matches return AmbiguousMatchError.
+	probe := NewEcosystemProbe([]builders.EcosystemProber{
+		&mockProber{name: "npm", result: &builders.ProbeResult{Source: "serve", Downloads: 1000, VersionCount: 10, HasRepository: true}},
+		&mockProber{name: "crates.io", result: &builders.ProbeResult{Source: "serve", Downloads: 500, VersionCount: 10, HasRepository: true}},
+	}, 5*time.Second)
+
+	result, err := probe.Resolve(context.Background(), "serve")
+	if err == nil {
+		t.Fatalf("expected AmbiguousMatchError, got result: %+v", result)
+	}
+	ambErr, ok := err.(*AmbiguousMatchError)
+	if !ok {
+		t.Fatalf("expected AmbiguousMatchError, got %T: %v", err, err)
+	}
+	if ambErr.Tool != "serve" {
+		t.Errorf("AmbiguousMatchError.Tool = %q, want %q", ambErr.Tool, "serve")
+	}
+	if len(ambErr.Matches) != 2 {
+		t.Errorf("AmbiguousMatchError.Matches = %d, want 2", len(ambErr.Matches))
 	}
 }
 
@@ -419,21 +443,24 @@ func TestQualityFiltering_PriorityRankingAfterFilter(t *testing.T) {
 	probe := NewEcosystemProbe([]builders.EcosystemProber{
 		// crates.io - high quality (would pass filter)
 		&mockProber{name: "crates.io", result: &builders.ProbeResult{
-			Source:       "serve",
-			Downloads:    1000000,
-			VersionCount: 50,
+			Source:        "serve",
+			Downloads:     50000000, // Clear winner: >10x downloads
+			VersionCount:  50,
+			HasRepository: true,
 		}},
 		// npm - high quality (would pass filter)
 		&mockProber{name: "npm", result: &builders.ProbeResult{
-			Source:       "serve",
-			Downloads:    5000000,
-			VersionCount: 100,
+			Source:        "serve",
+			Downloads:     1000000,
+			VersionCount:  100,
+			HasRepository: true,
 		}},
 		// pypi - high quality (would pass filter)
 		&mockProber{name: "pypi", result: &builders.ProbeResult{
-			Source:       "serve",
-			Downloads:    0,
-			VersionCount: 25,
+			Source:        "serve",
+			Downloads:     500000,
+			VersionCount:  25,
+			HasRepository: true,
 		}},
 	}, 5*time.Second)
 
@@ -445,10 +472,10 @@ func TestQualityFiltering_PriorityRankingAfterFilter(t *testing.T) {
 		t.Fatal("expected result, got nil")
 	}
 
-	// crates.io has priority 3, pypi has 4, npm has 5
-	// crates.io should win by priority ranking
+	// crates.io has >10x downloads (50M) vs runner-up npm (1M)
+	// crates.io should win by popularity ranking
 	if result.Builder != "crates.io" {
-		t.Errorf("expected crates.io (highest priority), got %s", result.Builder)
+		t.Errorf("expected crates.io (clear popularity winner), got %s", result.Builder)
 	}
 }
 
