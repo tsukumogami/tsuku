@@ -3,6 +3,7 @@ name = "jpegoptim"
 description = "JPEG optimizer"
 homepage = "https://github.com/tjko/jpegoptim"
 version_format = "semver"
+unsupported_platforms = ["linux/arm64", "linux/alpine", "darwin/amd64"]
 
 [[steps]]
 action = "github_archive"

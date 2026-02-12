@@ -13,6 +13,7 @@ homepage = "https://github.com/DavHau/nix-portable"
 version_format = "custom"
 tier = 3
 supported_os = ["linux"]
+supported_os = ["linux"]
 
 [[steps]]
 action = "github_file"

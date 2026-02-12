@@ -4,6 +4,7 @@ description = "SpatiaLite spatial extensions for SQLite"
 homepage = "https://www.gaia-gis.it/fossil/libspatialite"
 binaries = ["bin/spatialite"]
 dependencies = ["sqlite", "geos", "proj", "libxml2"]
+supported_os = ["linux"]
 
 [[steps]]
 action = "homebrew"

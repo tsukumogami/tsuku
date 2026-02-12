@@ -3,6 +3,7 @@ name = "ack"
 description = "A grep-like program for searching source code"
 homepage = "https://beyondgrep.com/"
 version_format = "semver"
+supported_os = ["darwin"]
 
 [[steps]]
 action = "cpan_install"

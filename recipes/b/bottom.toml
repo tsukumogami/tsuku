@@ -3,6 +3,7 @@ name = "bottom"
 description = "Graphical process/system monitor for the terminal"
 homepage = "https://clementtsang.github.io/bottom/"
 version_format = "semver"
+supported_libc = ["glibc"]
 
 [[steps]]
 action = "github_archive"

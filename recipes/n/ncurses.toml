@@ -3,6 +3,7 @@ name = "ncurses"
 description = "Text-based UI library"
 homepage = "https://invisible-island.net/ncurses/"
 binaries = ["bin/ncursesw6-config"]
+supported_os = ["darwin"]
 
 [version]
 source = "homebrew"

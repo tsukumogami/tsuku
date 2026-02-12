@@ -3,6 +3,7 @@ name = "perltidy"
 description = "Indent and reformat Perl scripts"
 homepage = "https://metacpan.org/pod/Perl::Tidy"
 version_format = "calver"
+supported_os = ["darwin"]
 
 [[steps]]
 action = "cpan_install"

@@ -3,6 +3,7 @@ name = "carton"
 description = "Perl module dependency manager"
 homepage = "https://metacpan.org/pod/Carton"
 version_format = "semver"
+supported_os = ["darwin"]
 
 [[steps]]
 action = "cpan_install"

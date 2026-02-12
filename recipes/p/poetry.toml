@@ -3,6 +3,7 @@ name = "poetry"
 description = "Python dependency management and packaging made easy"
 homepage = "https://python-poetry.org/"
 version_format = "semver"
+supported_libc = ["glibc"]
 
 [[steps]]
 action = "pipx_install"

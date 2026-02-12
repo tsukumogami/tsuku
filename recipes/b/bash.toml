@@ -3,6 +3,7 @@ name = "bash"
 description = "Bourne Again SHell"
 homepage = "https://www.gnu.org/software/bash/"
 binaries = ["bin/bash"]
+supported_os = ["linux"]
 
 [[steps]]
 action = "homebrew"

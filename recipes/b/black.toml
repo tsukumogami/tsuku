@@ -3,6 +3,7 @@ name = "black"
 description = "The uncompromising Python code formatter"
 homepage = "https://github.com/psf/black"
 version_format = "semver"
+supported_libc = ["glibc"]
 
 [[steps]]
 action = "pipx_install"

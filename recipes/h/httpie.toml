@@ -3,6 +3,7 @@ name = "httpie"
 description = "A user-friendly HTTP client for the API era"
 homepage = "https://httpie.io/"
 version_format = "semver"
+supported_libc = ["glibc"]
 
 [[steps]]
 action = "pipx_install"

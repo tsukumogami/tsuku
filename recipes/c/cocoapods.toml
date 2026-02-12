@@ -9,6 +9,7 @@
   type = ""
   llm_validation = "skipped"
 unsupported_platforms = ["darwin/arm64"]
+supported_os = ["linux"]
 
 [[steps]]
   action = "homebrew"
