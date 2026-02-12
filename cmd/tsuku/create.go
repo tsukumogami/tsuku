@@ -18,6 +18,7 @@ import (
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/discover"
 	"github.com/tsukumogami/tsuku/internal/install"
+	"github.com/tsukumogami/tsuku/internal/llm"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/sandbox"
 	"github.com/tsukumogami/tsuku/internal/search"
@@ -51,6 +52,29 @@ func (r *cliProgressReporter) OnStageDone(detail string) {
 
 func (r *cliProgressReporter) OnStageFailed() {
 	_, _ = fmt.Fprintln(r.out, "failed")
+}
+
+// discoveryStateTracker adapts StateManager and userconfig to the discover.LLMStateTracker interface.
+type discoveryStateTracker struct {
+	state  *install.StateManager
+	config *userconfig.Config
+}
+
+// CanGenerate returns true if generation is allowed (budget not exceeded).
+func (d *discoveryStateTracker) CanGenerate() bool {
+	if d.state == nil || d.config == nil {
+		return true
+	}
+	allowed, _ := d.state.CanGenerate(d.config.LLMHourlyRateLimit(), d.config.LLMDailyBudget())
+	return allowed
+}
+
+// RecordGeneration records usage from a completed discovery session.
+func (d *discoveryStateTracker) RecordGeneration(usage llm.Usage) {
+	if d.state == nil {
+		return
+	}
+	_ = d.state.RecordGeneration(usage.Cost())
 }
 
 var createCmd = &cobra.Command{
@@ -872,9 +896,19 @@ func runDiscoveryWithOptions(toolName string, searchProviderName string) (*disco
 		return nil, fmt.Errorf("search provider: %w", err)
 	}
 
+	// Load user config and state manager for LLM cost tracking
+	userCfg, err := userconfig.Load()
+	if err != nil {
+		userCfg = userconfig.DefaultConfig()
+	}
+	stateManager := install.NewStateManager(cfg)
+	stateTracker := &discoveryStateTracker{state: stateManager, config: userCfg}
+
 	llmDiscovery, err := discover.NewLLMDiscovery(globalCtx,
 		discover.WithConfirmFunc(confirmLLMDiscovery),
 		discover.WithSearchProvider(searchProvider),
+		discover.WithStateTracker(stateTracker),
+		discover.WithConfig(userCfg),
 	)
 	if err != nil {
 		// No LLM provider available - use disabled discovery

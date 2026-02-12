@@ -163,6 +163,12 @@ type DiscoveryEvent struct {
 	Arch          string `json:"arch"`                     // CPU architecture
 	TsukuVersion  string `json:"tsuku_version"`            // Version of tsuku CLI
 	SchemaVersion string `json:"schema_version"`           // Event schema version
+	// LLM discovery metrics (only set for LLM discovery events)
+	InputTokens  int     `json:"input_tokens,omitempty"`  // Total input tokens used
+	OutputTokens int     `json:"output_tokens,omitempty"` // Total output tokens used
+	Cost         float64 `json:"cost,omitempty"`          // Estimated cost in USD
+	Provider     string  `json:"provider,omitempty"`      // LLM provider name (e.g., "claude", "gemini")
+	Turns        int     `json:"turns,omitempty"`         // Number of LLM conversation turns
 }
 
 // discoverySchemaVersion is the schema version for discovery events.
@@ -210,6 +216,37 @@ func NewDiscoveryLLMHitEvent(toolName, builder, source string, durationMs int64)
 	e.Confidence = "llm"
 	e.Builder = builder
 	e.Source = source
+	e.DurationMs = durationMs
+	return e
+}
+
+// NewDiscoveryLLMHitEventWithMetrics creates an event for a successful LLM discovery with cost metrics.
+func NewDiscoveryLLMHitEventWithMetrics(toolName, builder, source string, durationMs int64, inputTokens, outputTokens int, cost float64, provider string, turns int) DiscoveryEvent {
+	e := NewDiscoveryLLMHitEvent(toolName, builder, source, durationMs)
+	e.InputTokens = inputTokens
+	e.OutputTokens = outputTokens
+	e.Cost = cost
+	e.Provider = provider
+	e.Turns = turns
+	return e
+}
+
+// NewDiscoveryLLMRejectedEvent creates an event when LLM discovery found a result but user rejected it.
+func NewDiscoveryLLMRejectedEvent(toolName string, durationMs int64) DiscoveryEvent {
+	e := newBaseDiscoveryEvent()
+	e.Action = "discovery_llm_rejected"
+	e.ToolName = toolName
+	e.Confidence = "llm"
+	e.DurationMs = durationMs
+	return e
+}
+
+// NewDiscoveryLLMBudgetExceededEvent creates an event when LLM discovery was skipped due to budget.
+func NewDiscoveryLLMBudgetExceededEvent(toolName string, durationMs int64) DiscoveryEvent {
+	e := newBaseDiscoveryEvent()
+	e.Action = "discovery_llm_budget_exceeded"
+	e.ToolName = toolName
+	e.ErrorCategory = "budget_exceeded"
 	e.DurationMs = durationMs
 	return e
 }
