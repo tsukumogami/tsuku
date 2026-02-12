@@ -33,30 +33,30 @@ Build on the existing stub at `internal/llm/addon/manager.go` by adding an Addon
 
 ## Implementation Steps
 
-- [ ] **Create manifest types and embedding** (`manifest.go`, `manifest.json`)
+- [x] **Create manifest types and embedding** (`manifest.go`, `manifest.json`)
   - Define Manifest struct with Version, Platforms map[string]PlatformInfo
   - PlatformInfo has URL and SHA256 fields
   - Use `//go:embed manifest.json` directive
   - Add GetManifest() function that returns parsed manifest
   - Use placeholder checksums until CI pipeline exists
 
-- [ ] **Add platform detection** (`platform.go`)
+- [x] **Add platform detection** (`platform.go`)
   - PlatformKey() function returns "GOOS-GOARCH" (e.g., "darwin-arm64", "linux-amd64")
   - Handle Windows .exe extension in binary name
   - GetPlatformInfo() returns PlatformInfo for current platform or error if unsupported
 
-- [ ] **Implement download logic** (`download.go`)
+- [x] **Implement download logic** (`download.go`)
   - Download() function downloads file to temp location
   - Uses httputil.NewSecureClient for HTTPS enforcement and SSRF protection
   - Adds retry logic with exponential backoff (mirror nix_portable.go pattern)
   - Shows progress bar during download
   - Atomic rename to final location after verification
 
-- [ ] **Add verification functions** (`verify.go`)
+- [x] **Add verification functions** (`verify.go`)
   - VerifyChecksum(path, expectedSHA256) wraps actions.VerifyChecksum
   - ComputeChecksum(path) returns hex-encoded SHA256 for testing
 
-- [ ] **Create AddonManager struct** (update `manager.go`)
+- [x] **Create AddonManager struct** (update `manager.go`)
   - Fields: homeDir (for TSUKU_HOME), manifest (cached parsed manifest)
   - AddonDir() returns versioned path: $TSUKU_HOME/tools/tsuku-llm/<version>/
   - BinaryPath() returns full path to binary including version subdirectory
@@ -68,16 +68,16 @@ Build on the existing stub at `internal/llm/addon/manager.go` by adding an Addon
     4. Verify downloaded binary, fail if mismatch
     5. Return path to verified binary
 
-- [ ] **Integrate with LocalProvider** (update `local.go`)
+- [x] **Integrate with LocalProvider** (update `local.go`)
   - Add addonManager field to LocalProvider struct
   - In Complete(), call addonManager.EnsureAddon() before lifecycle.EnsureRunning()
   - Pass verified addon path to lifecycle
 
-- [ ] **Add pre-execution verification to lifecycle** (update `lifecycle.go`)
+- [x] **Add pre-execution verification to lifecycle** (update `lifecycle.go`)
   - Before starting addon in EnsureRunning(), verify checksum again
   - This catches tampering between EnsureAddon() and process start
 
-- [ ] **Write comprehensive tests** (update `manager_test.go`)
+- [x] **Write comprehensive tests** (update `manager_test.go`)
   - Test platform key generation for different GOOS/GOARCH
   - Test manifest parsing
   - Test checksum verification (correct, incorrect, missing file)
@@ -85,7 +85,7 @@ Build on the existing stub at `internal/llm/addon/manager.go` by adding an Addon
   - Test re-download on verification failure
   - Test versioned path structure
 
-- [ ] **Verify E2E skeleton still works**
+- [x] **Verify E2E skeleton still works**
   - Run existing tests: `go test ./internal/llm/...`
   - Verify LocalProvider flow still functions with stub manifest
 
@@ -119,16 +119,16 @@ Build on the existing stub at `internal/llm/addon/manager.go` by adding an Addon
 
 ## Success Criteria
 
-- [ ] AddonManager struct exists at `internal/llm/addon/manager.go`
-- [ ] EnsureAddon() downloads addon if not present and returns path to binary
-- [ ] Platform detection returns correct key for darwin-arm64, darwin-amd64, linux-amd64
-- [ ] SHA256 verification occurs at download time and rejects mismatched binaries
-- [ ] SHA256 verification occurs before execution in lifecycle.EnsureRunning()
-- [ ] Addon stored at `$TSUKU_HOME/tools/tsuku-llm/<version>/tsuku-llm`
-- [ ] Manifest is embedded in binary via `//go:embed`
-- [ ] Failed verification returns clear error (not panic)
-- [ ] All existing tests in internal/llm pass
-- [ ] New unit tests achieve reasonable coverage of new code
+- [x] AddonManager struct exists at `internal/llm/addon/manager.go`
+- [x] EnsureAddon() downloads addon if not present and returns path to binary
+- [x] Platform detection returns correct key for darwin-arm64, darwin-amd64, linux-amd64
+- [x] SHA256 verification occurs at download time and rejects mismatched binaries
+- [x] SHA256 verification occurs before execution in lifecycle.EnsureRunning()
+- [x] Addon stored at `$TSUKU_HOME/tools/tsuku-llm/<version>/tsuku-llm`
+- [x] Manifest is embedded in binary via `//go:embed`
+- [x] Failed verification returns clear error (not panic)
+- [x] All existing tests in internal/llm pass
+- [x] New unit tests achieve reasonable coverage of new code
 
 ## Open Questions
 
