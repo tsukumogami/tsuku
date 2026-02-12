@@ -1,5 +1,5 @@
 ---
-status: Planned
+status: Proposed
 problem: |
   When multiple ecosystem registries return matches for a tool name (e.g., "bat" exists
   on crates.io as sharkdp/bat and on npm as bat-cli), the ecosystem probe stage silently
@@ -24,73 +24,7 @@ rationale: |
 
 ## Status
 
-Planned
-
-## Implementation Issues
-
-### Milestone: [Ecosystem Disambiguation](https://github.com/tsukumogami/tsuku/milestone/81)
-
-| Issue | Dependencies | Tier |
-|-------|--------------|------|
-| [#1648: feat(discover): add core disambiguation with ranking and auto-select](https://github.com/tsukumogami/tsuku/issues/1648) | None | testable |
-| _Creates `disambiguate.go` with ranking algorithm (downloads DESC, version count, priority) and `isClearWinner()` logic for 10x threshold. Extends `probeOutcome` with version count and repository presence fields. Returns `AmbiguousMatchError` for close matches._ | | |
-| [#1649: feat(discover): add typosquatting detection via edit distance](https://github.com/tsukumogami/tsuku/issues/1649) | None | testable |
-| _Adds `typosquat.go` with Levenshtein distance calculation against registry entries (threshold ≤2). Integrates into chain resolver before probe stage to warn about suspiciously similar names._ | | |
-| [#1650: feat(discover): add ConfirmDisambiguationFunc callback type](https://github.com/tsukumogami/tsuku/issues/1650) | [#1648](https://github.com/tsukumogami/tsuku/issues/1648) | testable |
-| _Defines the callback interface for interactive disambiguation, following the existing `ConfirmFunc` pattern from LLM discovery. Integrates callback invocation into ecosystem probe for close matches._ | | |
-| [#1651: feat(cli): add disambiguation prompt to create and install commands](https://github.com/tsukumogami/tsuku/issues/1651) | [#1648](https://github.com/tsukumogami/tsuku/issues/1648), [#1650](https://github.com/tsukumogami/tsuku/issues/1650) | testable |
-| _Implements the interactive prompt UI showing ranked matches with metadata (downloads, versions, repository status). Supports Enter-for-default, numbered selection, and 'q' to cancel._ | | |
-| [#1652: feat(discover): add AmbiguousMatchError type for non-interactive mode](https://github.com/tsukumogami/tsuku/issues/1652) | [#1648](https://github.com/tsukumogami/tsuku/issues/1648) | testable |
-| _Enhances `AmbiguousMatchError` with formatted `--from` suggestions for CI/pipeline usage. Error message includes ranked matches with source identifiers for copy-paste convenience._ | | |
-| [#1653: feat(cli): handle AmbiguousMatchError with --from suggestions](https://github.com/tsukumogami/tsuku/issues/1653) | [#1652](https://github.com/tsukumogami/tsuku/issues/1652) | testable |
-| _Adds CLI error handling that displays `AmbiguousMatchError` with actionable `--from` suggestions in create and install commands. Provides clear guidance for non-interactive resolution._ | | |
-| [#1654: feat(batch): add DisambiguationRecord tracking](https://github.com/tsukumogami/tsuku/issues/1654) | [#1648](https://github.com/tsukumogami/tsuku/issues/1648) | testable |
-| _Creates `DisambiguationRecord` type for batch orchestrator to track tool selections. Records selection reason (single_match, 10x_popularity_gap, priority_fallback) and sets `HighRisk` flag for fallback selections._ | | |
-| [#1655: feat(dashboard): display disambiguation metrics](https://github.com/tsukumogami/tsuku/issues/1655) | [#1654](https://github.com/tsukumogami/tsuku/issues/1654) | simple |
-| _Adds disambiguation statistics to the pipeline dashboard showing counts by selection reason and highlighting high-risk fallback selections for human review._ | | |
-
-### Dependency Graph
-
-```mermaid
-graph TD
-    subgraph Phase1["Phase 1: Core"]
-        I1648["#1648: Core disambiguation"]
-        I1649["#1649: Typosquatting"]
-    end
-
-    subgraph Phase2["Phase 2: Interactive"]
-        I1650["#1650: Callback type"]
-        I1651["#1651: CLI prompt"]
-    end
-
-    subgraph Phase3["Phase 3: Non-Interactive"]
-        I1652["#1652: AmbiguousMatchError"]
-        I1653["#1653: CLI error handling"]
-    end
-
-    subgraph Phase4["Phase 4: Batch"]
-        I1654["#1654: Batch tracking"]
-        I1655["#1655: Dashboard metrics"]
-    end
-
-    I1648 --> I1650
-    I1650 --> I1651
-    I1648 --> I1651
-    I1648 --> I1652
-    I1652 --> I1653
-    I1648 --> I1654
-    I1654 --> I1655
-
-    classDef done fill:#c8e6c9
-    classDef ready fill:#bbdefb
-    classDef blocked fill:#fff9c4
-    classDef needsDesign fill:#e1bee7
-
-    class I1648,I1649 ready
-    class I1650,I1651,I1652,I1653,I1654,I1655 blocked
-```
-
-**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
+Proposed
 
 ## Upstream Design Reference
 
@@ -257,7 +191,7 @@ Display a numbered list sorted by popularity, showing:
 ```
 Multiple sources found for "bat":
 
-  1. crates.io: sharkdp/bat (recommended)
+  1. crates.io: sharkdp/bat
      Downloads: 45K/day | Versions: 87 | Has repository
 
   2. npm: bat-cli
@@ -266,10 +200,8 @@ Multiple sources found for "bat":
   3. rubygems: bat
      Downloads: 50/day | Versions: 3 | No repository
 
-Select source [1-3, Enter for 1, or 'q' to cancel]:
+Select source [1-3, or 'q' to cancel]:
 ```
-
-The first option (highest-ranked by popularity) is marked as recommended and selected by default when the user presses Enter without typing a number. This matches common CLI patterns and reduces friction for the typical case where the top match is correct.
 
 In non-interactive mode (piped stdin or `--yes` with ambiguous matches), print the same list as an error and suggest `--from`:
 
