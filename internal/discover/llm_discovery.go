@@ -37,15 +37,44 @@ const (
 	ToolExtractSource = "extract_source"
 )
 
+// LLMStateTracker tracks LLM usage for budget enforcement and cost recording.
+// The state tracker manages session-level accumulation: usage is tracked across
+// all turns in a discovery session, then recorded once when the session completes.
+// This prevents inflating generation counts when a single discovery requires
+// multiple LLM turns.
+type LLMStateTracker interface {
+	// CanGenerate returns true if generation is allowed (budget not exceeded).
+	CanGenerate() bool
+	// RecordGeneration records usage from a completed discovery session.
+	RecordGeneration(usage llm.Usage)
+}
+
+// LLMConfig provides LLM configuration.
+type LLMConfig interface {
+	LLMDailyBudget() float64
+}
+
+// ErrBudgetExceeded indicates the daily LLM budget has been exceeded.
+var ErrBudgetExceeded = fmt.Errorf("daily LLM budget exceeded")
+
+// DiscoveryMetrics contains usage metrics from a discovery session.
+type DiscoveryMetrics struct {
+	Usage    llm.Usage // Accumulated token usage across all turns
+	Turns    int       // Number of LLM turns in the session
+	Provider string    // Provider name (e.g., "claude", "gemini")
+}
+
 // LLMDiscovery resolves tool names via LLM web search as a last resort.
 // This is the third and final stage of the resolver chain.
 type LLMDiscovery struct {
-	factory  *llm.Factory
-	search   search.Provider
-	confirm  ConfirmFunc
-	httpGet  HTTPGetFunc
-	logger   log.Logger
-	disabled bool // Set when no LLM provider is available
+	factory      *llm.Factory
+	search       search.Provider
+	confirm      ConfirmFunc
+	httpGet      HTTPGetFunc
+	logger       log.Logger
+	disabled     bool // Set when no LLM provider is available
+	stateTracker LLMStateTracker
+	config       LLMConfig
 }
 
 // ConfirmFunc is a callback for user confirmation.
@@ -106,6 +135,20 @@ func WithSearchProvider(p search.Provider) LLMDiscoveryOption {
 	}
 }
 
+// WithStateTracker sets a state tracker for budget enforcement and cost recording.
+func WithStateTracker(st LLMStateTracker) LLMDiscoveryOption {
+	return func(d *LLMDiscovery) {
+		d.stateTracker = st
+	}
+}
+
+// WithConfig sets the LLM configuration.
+func WithConfig(cfg LLMConfig) LLMDiscoveryOption {
+	return func(d *LLMDiscovery) {
+		d.config = cfg
+	}
+}
+
 // NewLLMDiscovery creates an LLM-based discovery resolver.
 func NewLLMDiscovery(ctx context.Context, opts ...LLMDiscoveryOption) (*LLMDiscovery, error) {
 	factory, err := llm.NewFactory(ctx)
@@ -140,6 +183,12 @@ func (d *LLMDiscovery) Resolve(ctx context.Context, toolName string) (*Discovery
 		return nil, nil
 	}
 
+	// Check budget before starting (if state tracker is configured)
+	if d.stateTracker != nil && !d.stateTracker.CanGenerate() {
+		d.logger.Debug("llm discovery: budget exceeded, skipping LLM stage")
+		return nil, ErrBudgetExceeded
+	}
+
 	// Apply discovery timeout
 	ctx, cancel := context.WithTimeout(ctx, DefaultDiscoveryTimeout)
 	defer cancel()
@@ -153,7 +202,15 @@ func (d *LLMDiscovery) Resolve(ctx context.Context, toolName string) (*Discovery
 
 	// Create and run session to collect candidates
 	session := newDiscoverySession(d, provider, toolName)
-	candidates, err := session.run(ctx)
+	candidates, metrics, err := session.run(ctx)
+
+	// Record usage regardless of success/failure (session-level accumulation).
+	// This ensures cost is tracked even for failed discovery attempts.
+	if d.stateTracker != nil && (metrics.Usage.InputTokens > 0 || metrics.Usage.OutputTokens > 0) {
+		d.stateTracker.RecordGeneration(metrics.Usage)
+		d.logger.Debug(fmt.Sprintf("llm discovery: recorded usage: %s", metrics.Usage.String()))
+	}
+
 	if err != nil {
 		if ctx.Err() != nil {
 			return nil, ctx.Err()
@@ -232,6 +289,15 @@ func (d *LLMDiscovery) Resolve(ctx context.Context, toolName string) (*Discovery
 	if d.confirm != nil && !d.confirm(result) {
 		d.logger.Debug(fmt.Sprintf("llm discovery: user declined result for %q", toolName))
 		return nil, nil
+	}
+
+	// Attach LLM metrics to the result for telemetry
+	result.LLMMetrics = &LLMMetrics{
+		InputTokens:  metrics.Usage.InputTokens,
+		OutputTokens: metrics.Usage.OutputTokens,
+		Cost:         metrics.Usage.Cost(),
+		Provider:     metrics.Provider,
+		Turns:        metrics.Turns,
 	}
 
 	return result, nil
@@ -410,11 +476,13 @@ func (d *LLMDiscovery) verifyGitHubRepo(ctx context.Context, result *DiscoveryRe
 
 // discoverySession manages a single LLM discovery conversation.
 type discoverySession struct {
-	discovery *LLMDiscovery
-	provider  llm.Provider
-	toolName  string
-	messages  []llm.Message
-	tools     []llm.ToolDef
+	discovery  *LLMDiscovery
+	provider   llm.Provider
+	toolName   string
+	messages   []llm.Message
+	tools      []llm.ToolDef
+	totalUsage llm.Usage // Accumulated usage across all turns
+	turns      int       // Number of completed turns
 }
 
 func newDiscoverySession(d *LLMDiscovery, provider llm.Provider, toolName string) *discoverySession {
@@ -424,6 +492,15 @@ func newDiscoverySession(d *LLMDiscovery, provider llm.Provider, toolName string
 		toolName:  toolName,
 		messages:  []llm.Message{},
 		tools:     discoveryToolDefs(),
+	}
+}
+
+// metrics returns the accumulated usage metrics for this session.
+func (s *discoverySession) metrics() DiscoveryMetrics {
+	return DiscoveryMetrics{
+		Usage:    s.totalUsage,
+		Turns:    s.turns,
+		Provider: s.provider.Name(),
 	}
 }
 
@@ -503,8 +580,8 @@ Example: for stripe-cli, the source would be "stripe/stripe-cli"`, toolName)
 }
 
 // run executes the discovery session and returns all candidates found.
-// Returns a slice of candidates (may be empty) or an error.
-func (s *discoverySession) run(ctx context.Context) ([]*DiscoveryResult, error) {
+// Returns a slice of candidates (may be empty), metrics, or an error.
+func (s *discoverySession) run(ctx context.Context) ([]*DiscoveryResult, DiscoveryMetrics, error) {
 	// Initial user message
 	s.messages = append(s.messages, llm.Message{
 		Role:    llm.RoleUser,
@@ -523,8 +600,12 @@ func (s *discoverySession) run(ctx context.Context) ([]*DiscoveryResult, error) 
 			MaxTokens:    2048,
 		})
 		if err != nil {
-			return nil, fmt.Errorf("llm complete: %w", err)
+			return nil, s.metrics(), fmt.Errorf("llm complete: %w", err)
 		}
+
+		// Accumulate usage from this turn
+		s.totalUsage.Add(resp.Usage)
+		s.turns++
 
 		s.discovery.logger.Debug(fmt.Sprintf("llm discovery: response has %d tool calls, stop_reason=%s, content_len=%d",
 			len(resp.ToolCalls), resp.StopReason, len(resp.Content)))
@@ -587,7 +668,7 @@ func (s *discoverySession) run(ctx context.Context) ([]*DiscoveryResult, error) 
 		// If we found at least one candidate and LLM is done, return candidates
 		if foundCandidate && resp.StopReason == "end_turn" {
 			s.discovery.logger.Debug(fmt.Sprintf("llm discovery: session complete with %d candidates", len(candidates)))
-			return candidates, nil
+			return candidates, s.metrics(), nil
 		}
 
 		// Add tool results and continue
@@ -599,19 +680,19 @@ func (s *discoverySession) run(ctx context.Context) ([]*DiscoveryResult, error) 
 		// No tool calls and no result - check if LLM gave up
 		if resp.StopReason == "end_turn" && len(resp.ToolCalls) == 0 {
 			if len(candidates) > 0 {
-				return candidates, nil
+				return candidates, s.metrics(), nil
 			}
-			return nil, fmt.Errorf("LLM completed without finding source")
+			return nil, s.metrics(), fmt.Errorf("LLM completed without finding source")
 		}
 	}
 
 	// Return any candidates collected even if max turns exceeded
 	if len(candidates) > 0 {
 		s.discovery.logger.Debug(fmt.Sprintf("llm discovery: max turns exceeded but returning %d candidates", len(candidates)))
-		return candidates, nil
+		return candidates, s.metrics(), nil
 	}
 
-	return nil, fmt.Errorf("max turns (%d) exceeded", MaxDiscoveryTurns)
+	return nil, s.metrics(), fmt.Errorf("max turns (%d) exceeded", MaxDiscoveryTurns)
 }
 
 // executeToolCall processes a single tool call.

@@ -51,6 +51,19 @@ type DiscoveryResult struct {
 
 	// Metadata holds optional popularity signals for disambiguation and confirmation UX.
 	Metadata Metadata
+
+	// LLMMetrics holds cost and usage metrics from LLM discovery.
+	// Only set for results from the LLM discovery stage.
+	LLMMetrics *LLMMetrics
+}
+
+// LLMMetrics contains cost and usage metrics from an LLM discovery session.
+type LLMMetrics struct {
+	InputTokens  int     // Total input tokens used
+	OutputTokens int     // Total output tokens used
+	Cost         float64 // Estimated cost in USD
+	Provider     string  // LLM provider name (e.g., "claude", "gemini")
+	Turns        int     // Number of LLM conversation turns
 }
 
 // Resolver resolves a tool name to a discovery result.
