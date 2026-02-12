@@ -5,6 +5,10 @@ name: Recipe Validation with Constraints
 on:
   workflow_dispatch:
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   validate-and-constrain:
     uses: ./.github/workflows/recipe-validation-core.yml
