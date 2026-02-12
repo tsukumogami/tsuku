@@ -729,3 +729,273 @@ func TestVerificationSkipped_WhenRateLimited(t *testing.T) {
 		t.Errorf("expected VerificationWarning to mention GITHUB_TOKEN, got %q", result.Metadata.VerificationWarning)
 	}
 }
+
+func TestRankCandidates(t *testing.T) {
+	tests := []struct {
+		name       string
+		candidates []*DiscoveryResult
+		wantOrder  []string // Expected order of Source values
+	}{
+		{
+			name:       "empty list",
+			candidates: []*DiscoveryResult{},
+			wantOrder:  []string{},
+		},
+		{
+			name: "single candidate",
+			candidates: []*DiscoveryResult{
+				{Source: "owner/repo", ConfidenceScore: 90, Metadata: Metadata{Stars: 100}},
+			},
+			wantOrder: []string{"owner/repo"},
+		},
+		{
+			name: "sort by confidence descending",
+			candidates: []*DiscoveryResult{
+				{Source: "low/conf", ConfidenceScore: 70, Metadata: Metadata{Stars: 1000}},
+				{Source: "high/conf", ConfidenceScore: 95, Metadata: Metadata{Stars: 100}},
+				{Source: "mid/conf", ConfidenceScore: 85, Metadata: Metadata{Stars: 500}},
+			},
+			wantOrder: []string{"high/conf", "mid/conf", "low/conf"},
+		},
+		{
+			name: "equal confidence - sort by stars descending",
+			candidates: []*DiscoveryResult{
+				{Source: "low/stars", ConfidenceScore: 90, Metadata: Metadata{Stars: 100}},
+				{Source: "high/stars", ConfidenceScore: 90, Metadata: Metadata{Stars: 5000}},
+				{Source: "mid/stars", ConfidenceScore: 90, Metadata: Metadata{Stars: 1000}},
+			},
+			wantOrder: []string{"high/stars", "mid/stars", "low/stars"},
+		},
+		{
+			name: "equal confidence and stars - stable by source",
+			candidates: []*DiscoveryResult{
+				{Source: "zebra/repo", ConfidenceScore: 90, Metadata: Metadata{Stars: 100}},
+				{Source: "alpha/repo", ConfidenceScore: 90, Metadata: Metadata{Stars: 100}},
+				{Source: "middle/repo", ConfidenceScore: 90, Metadata: Metadata{Stars: 100}},
+			},
+			wantOrder: []string{"alpha/repo", "middle/repo", "zebra/repo"},
+		},
+		{
+			name: "mixed confidence and stars",
+			candidates: []*DiscoveryResult{
+				{Source: "high-conf-low-stars", ConfidenceScore: 95, Metadata: Metadata{Stars: 50}},
+				{Source: "low-conf-high-stars", ConfidenceScore: 75, Metadata: Metadata{Stars: 10000}},
+				{Source: "mid-conf-mid-stars", ConfidenceScore: 85, Metadata: Metadata{Stars: 500}},
+			},
+			// Confidence takes priority over stars
+			wantOrder: []string{"high-conf-low-stars", "mid-conf-mid-stars", "low-conf-high-stars"},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			ranked := rankCandidates(tc.candidates)
+
+			if len(ranked) != len(tc.wantOrder) {
+				t.Fatalf("expected %d candidates, got %d", len(tc.wantOrder), len(ranked))
+			}
+
+			for i, want := range tc.wantOrder {
+				if ranked[i].Source != want {
+					t.Errorf("position %d: expected %s, got %s", i, want, ranked[i].Source)
+				}
+			}
+		})
+	}
+}
+
+func TestSelectBestCandidate(t *testing.T) {
+	discovery := &LLMDiscovery{}
+
+	tests := []struct {
+		name       string
+		candidates []*DiscoveryResult
+		wantSource string // Empty if expecting nil
+	}{
+		{
+			name:       "empty list returns nil",
+			candidates: []*DiscoveryResult{},
+			wantSource: "",
+		},
+		{
+			name: "single non-fork above threshold",
+			candidates: []*DiscoveryResult{
+				{Source: "owner/repo", ConfidenceScore: 90, Metadata: Metadata{Stars: 100, IsFork: false}},
+			},
+			wantSource: "owner/repo",
+		},
+		{
+			name: "single non-fork below threshold still selected",
+			candidates: []*DiscoveryResult{
+				{Source: "owner/repo", ConfidenceScore: 90, Metadata: Metadata{Stars: 10, IsFork: false}},
+			},
+			wantSource: "owner/repo",
+		},
+		{
+			name: "prefers non-fork over fork even with lower stars",
+			candidates: []*DiscoveryResult{
+				{Source: "fork/repo", ConfidenceScore: 95, Metadata: Metadata{Stars: 1000, IsFork: true}},
+				{Source: "original/repo", ConfidenceScore: 90, Metadata: Metadata{Stars: 100, IsFork: false}},
+			},
+			wantSource: "original/repo",
+		},
+		{
+			name: "only forks - selects best fork",
+			candidates: []*DiscoveryResult{
+				{Source: "fork2/repo", ConfidenceScore: 85, Metadata: Metadata{Stars: 200, IsFork: true}},
+				{Source: "fork1/repo", ConfidenceScore: 90, Metadata: Metadata{Stars: 100, IsFork: true}},
+			},
+			wantSource: "fork1/repo", // Higher confidence wins
+		},
+		{
+			name: "multiple non-forks - selects best by ranking",
+			candidates: []*DiscoveryResult{
+				{Source: "low/conf", ConfidenceScore: 75, Metadata: Metadata{Stars: 5000, IsFork: false}},
+				{Source: "high/conf", ConfidenceScore: 95, Metadata: Metadata{Stars: 100, IsFork: false}},
+			},
+			wantSource: "high/conf", // Higher confidence wins
+		},
+		{
+			name: "mix of forks and non-forks with different qualities",
+			candidates: []*DiscoveryResult{
+				{Source: "best-fork", ConfidenceScore: 99, Metadata: Metadata{Stars: 10000, IsFork: true}},
+				{Source: "mediocre-original", ConfidenceScore: 80, Metadata: Metadata{Stars: 200, IsFork: false}},
+				{Source: "good-original", ConfidenceScore: 90, Metadata: Metadata{Stars: 500, IsFork: false}},
+			},
+			wantSource: "good-original", // Best non-fork by confidence
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			// Candidates should be pre-ranked
+			ranked := rankCandidates(tc.candidates)
+			result := discovery.selectBestCandidate(ranked)
+
+			if tc.wantSource == "" {
+				if result != nil {
+					t.Errorf("expected nil, got %s", result.Source)
+				}
+				return
+			}
+
+			if result == nil {
+				t.Fatalf("expected %s, got nil", tc.wantSource)
+			}
+
+			if result.Source != tc.wantSource {
+				t.Errorf("expected %s, got %s", tc.wantSource, result.Source)
+			}
+		})
+	}
+}
+
+func TestRankCandidates_DoesNotModifyOriginal(t *testing.T) {
+	original := []*DiscoveryResult{
+		{Source: "c/repo", ConfidenceScore: 70},
+		{Source: "a/repo", ConfidenceScore: 90},
+		{Source: "b/repo", ConfidenceScore: 80},
+	}
+
+	// Save original order
+	originalOrder := make([]string, len(original))
+	for i, c := range original {
+		originalOrder[i] = c.Source
+	}
+
+	// Rank (should not modify original)
+	ranked := rankCandidates(original)
+
+	// Verify original is unchanged
+	for i, c := range original {
+		if c.Source != originalOrder[i] {
+			t.Errorf("original was modified at position %d: expected %s, got %s",
+				i, originalOrder[i], c.Source)
+		}
+	}
+
+	// Verify ranked is in correct order
+	expectedOrder := []string{"a/repo", "b/repo", "c/repo"}
+	for i, want := range expectedOrder {
+		if ranked[i].Source != want {
+			t.Errorf("ranked position %d: expected %s, got %s", i, want, ranked[i].Source)
+		}
+	}
+}
+
+func TestMultipleCandidates_EndToEnd(t *testing.T) {
+	// Test that multiple candidates are handled correctly through verification
+	callCount := 0
+	discovery := &LLMDiscovery{
+		httpGet: func(ctx context.Context, url string) ([]byte, error) {
+			callCount++
+			// Return different metadata based on URL
+			if containsSubstr(url, "popular") {
+				return []byte(`{
+					"stargazers_count": 5000,
+					"archived": false,
+					"description": "Popular repo",
+					"created_at": "2020-01-01T00:00:00Z",
+					"pushed_at": "2025-01-01T00:00:00Z",
+					"fork": false,
+					"owner": {"login": "popular", "type": "Organization"}
+				}`), nil
+			}
+			if containsSubstr(url, "fork-repo") {
+				return []byte(`{
+					"stargazers_count": 100,
+					"archived": false,
+					"description": "A fork",
+					"created_at": "2023-01-01T00:00:00Z",
+					"pushed_at": "2025-01-01T00:00:00Z",
+					"fork": true,
+					"owner": {"login": "forker", "type": "User"},
+					"parent": {"full_name": "original/repo", "stargazers_count": 10000}
+				}`), nil
+			}
+			return []byte(`{
+				"stargazers_count": 200,
+				"archived": false,
+				"description": "Unknown repo",
+				"created_at": "2022-01-01T00:00:00Z",
+				"pushed_at": "2025-01-01T00:00:00Z",
+				"fork": false,
+				"owner": {"login": "unknown", "type": "User"}
+			}`), nil
+		},
+	}
+
+	candidates := []*DiscoveryResult{
+		{Builder: "github", Source: "forker/fork-repo", ConfidenceScore: 95},
+		{Builder: "github", Source: "popular/repo", ConfidenceScore: 90},
+		{Builder: "github", Source: "unknown/repo", ConfidenceScore: 85},
+	}
+
+	// Verify each candidate
+	var verified []*DiscoveryResult
+	for _, c := range candidates {
+		metadata, err := discovery.verifyGitHubRepo(context.Background(), c)
+		if err != nil {
+			t.Fatalf("verification failed for %s: %v", c.Source, err)
+		}
+		c.Metadata = metadata
+		verified = append(verified, c)
+	}
+
+	// Rank candidates
+	ranked := rankCandidates(verified)
+
+	// Select best
+	best := discovery.selectBestCandidate(ranked)
+
+	// The fork has highest confidence but should be skipped in favor of non-fork
+	if best == nil {
+		t.Fatal("expected a result")
+	}
+	if best.Source != "popular/repo" {
+		t.Errorf("expected popular/repo (best non-fork), got %s", best.Source)
+	}
+	if best.Metadata.IsFork {
+		t.Error("expected non-fork to be selected")
+	}
+}

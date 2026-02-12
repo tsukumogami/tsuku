@@ -42,6 +42,10 @@ type DiscoveryResult struct {
 	// Confidence indicates which resolver stage produced this result.
 	Confidence Confidence
 
+	// ConfidenceScore is the LLM-provided confidence score (0-100) for ranking.
+	// Only set for LLM discovery results. Used to rank multiple candidates.
+	ConfidenceScore int
+
 	// Reason is a human-readable explanation for display.
 	Reason string
 
