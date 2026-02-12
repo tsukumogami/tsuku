@@ -78,7 +78,7 @@ Implements [#1189](https://github.com/tsukumogami/tsuku/issues/1189). See [DESIG
 |-------|-------|--------------|------|
 | ~~[#1648](https://github.com/tsukumogami/tsuku/issues/1648)~~ | ~~core disambiguation with ranking~~ | ~~None~~ | ~~testable~~ |
 | [#1649](https://github.com/tsukumogami/tsuku/issues/1649) | typosquatting detection | None | testable |
-| [#1650](https://github.com/tsukumogami/tsuku/issues/1650) | ConfirmDisambiguationFunc callback | [#1648](https://github.com/tsukumogami/tsuku/issues/1648) | testable |
+| ~~[#1650](https://github.com/tsukumogami/tsuku/issues/1650)~~ | ~~ConfirmDisambiguationFunc callback~~ | ~~[#1648](https://github.com/tsukumogami/tsuku/issues/1648)~~ | ~~testable~~ |
 | [#1651](https://github.com/tsukumogami/tsuku/issues/1651) | disambiguation prompt in CLI | [#1648](https://github.com/tsukumogami/tsuku/issues/1648), [#1650](https://github.com/tsukumogami/tsuku/issues/1650) | testable |
 | [#1652](https://github.com/tsukumogami/tsuku/issues/1652) | AmbiguousMatchError type | [#1648](https://github.com/tsukumogami/tsuku/issues/1648) | testable |
 | [#1653](https://github.com/tsukumogami/tsuku/issues/1653) | CLI error handling for --from | [#1652](https://github.com/tsukumogami/tsuku/issues/1652) | testable |
@@ -187,9 +187,9 @@ graph TD
     class I1278 blocked
     class I1412 done
     class I1191 blocked
-    class I1648 done
-    class I1649,I1650,I1652,I1654 ready
-    class I1651,I1653,I1655 blocked
+    class I1648,I1650 done
+    class I1649,I1651,I1652,I1654 ready
+    class I1653,I1655 blocked
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
