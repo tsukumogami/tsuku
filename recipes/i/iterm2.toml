@@ -9,7 +9,6 @@ name = "iterm2"
 description = "Terminal emulator for macOS (via Homebrew Cask)"
 homepage = "https://iterm2.com/"
 supported_os = ["darwin"]
-supported_os = ["linux"]
 
 [version]
 source = "cask"
