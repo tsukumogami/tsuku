@@ -38,7 +38,7 @@ Planned
 | _Adds `typosquat.go` with Levenshtein distance calculation against registry entries (threshold ≤2). Integrates into chain resolver before probe stage to warn about suspiciously similar names._ | | |
 | ~~[#1650: feat(discover): add ConfirmDisambiguationFunc callback type](https://github.com/tsukumogami/tsuku/issues/1650)~~ | ~~[#1648](https://github.com/tsukumogami/tsuku/issues/1648)~~ | ~~testable~~ |
 | _Defines the callback interface for interactive disambiguation, following the existing `ConfirmFunc` pattern from LLM discovery. Integrates callback invocation into ecosystem probe for close matches._ | | |
-| [#1651: feat(cli): add disambiguation prompt to create and install commands](https://github.com/tsukumogami/tsuku/issues/1651) | [#1648](https://github.com/tsukumogami/tsuku/issues/1648), [#1650](https://github.com/tsukumogami/tsuku/issues/1650) | testable |
+| ~~[#1651: feat(cli): add disambiguation prompt to create and install commands](https://github.com/tsukumogami/tsuku/issues/1651)~~ | ~~[#1648](https://github.com/tsukumogami/tsuku/issues/1648), [#1650](https://github.com/tsukumogami/tsuku/issues/1650)~~ | ~~testable~~ |
 | _Implements the interactive prompt UI showing ranked matches with metadata (downloads, versions, repository status). Supports Enter-for-default, numbered selection, and 'q' to cancel._ | | |
 | [#1652: feat(discover): add AmbiguousMatchError type for non-interactive mode](https://github.com/tsukumogami/tsuku/issues/1652) | [#1648](https://github.com/tsukumogami/tsuku/issues/1648) | testable |
 | _Enhances `AmbiguousMatchError` with formatted `--from` suggestions for CI/pipeline usage. Error message includes ranked matches with source identifiers for copy-paste convenience._ | | |
@@ -86,8 +86,8 @@ graph TD
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1648,I1650 done
-    class I1649,I1651,I1652,I1654 ready
+    class I1648,I1650,I1651 done
+    class I1649,I1652,I1654 ready
     class I1653,I1655 blocked
 ```
 
