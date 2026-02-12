@@ -50,8 +50,8 @@ Planned
 | _Implement the `LLMDiscovery` resolver: web search via LLM, structured JSON extraction, GitHub API verification (existence, archived status, ownership), rich confirmation prompt with metadata, and prompt injection defenses (HTML stripping, URL validation). Decomposed into [milestone 76](https://github.com/tsukumogami/tsuku/milestone/76) and [milestone 77](https://github.com/tsukumogami/tsuku/milestone/77) with 8 implementation issues._ | | |
 | ~~[#1319: Telemetry events](https://github.com/tsukumogami/tsuku/issues/1319)~~ | ~~[#1338](https://github.com/tsukumogami/tsuku/issues/1338)~~ | ~~simple~~ |
 | _Emit telemetry events for discovery usage: which stage resolved the tool, whether disambiguation was needed, LLM discovery usage rates. Hooks into the install fallback path from #1338._ | | |
-| [#1321: Disambiguation](https://github.com/tsukumogami/tsuku/issues/1321) | [#1317](https://github.com/tsukumogami/tsuku/issues/1317) | critical |
-| _Implement edit-distance checking against registry entries, popularity ranking by download count, the 10x auto-select rule, interactive prompting for close matches, and non-interactive error handling. Consumes `ProbeResult` metadata from #1317._ | | |
+| ~~[#1321: Disambiguation](https://github.com/tsukumogami/tsuku/issues/1321)~~ | ~~[#1317](https://github.com/tsukumogami/tsuku/issues/1317)~~ | ~~critical~~ |
+| _Implement edit-distance checking against registry entries, popularity ranking by download count, the 10x auto-select rule, interactive prompting for close matches, and non-interactive error handling. Consumes `ProbeResult` metadata from #1317. Decomposed into [milestone 81](https://github.com/tsukumogami/tsuku/milestone/81) with 8 implementation issues. See [DESIGN-disambiguation.md](DESIGN-disambiguation.md)._ | | |
 | [#1322: Error UX and verbose mode](https://github.com/tsukumogami/tsuku/issues/1322) | [#1338](https://github.com/tsukumogami/tsuku/issues/1338), [#1317](https://github.com/tsukumogami/tsuku/issues/1317), [#1318](https://github.com/tsukumogami/tsuku/issues/1318) | testable |
 | _Implement all error and fallback messages from the UX specification table, add `--verbose` output showing resolver chain progress (registry lookup, ecosystem probe, LLM discovery), and wire debug/info/error log levels through a consistent logger._ | | |
 | ~~[M65: Ecosystem Probe](https://github.com/tsukumogami/tsuku/milestone/65)~~ | ~~[#1338](https://github.com/tsukumogami/tsuku/issues/1338)~~ | |
@@ -90,7 +90,7 @@ graph TD
     end
 
     subgraph Phase4["Phase 4: Polish"]
-        I1321["#1321: Disambiguation"]
+        I1321["<s>#1321: Disambiguation</s>"]
         I1322["#1322: Error UX and verbose mode"]
     end
 
@@ -117,13 +117,13 @@ graph TD
     class I1319 done
     class I1317 done
     class I1318 done
-    class M76 ready
-    class M77 blocked
+    class M76 done
+    class M77 done
     class M65 done
     class M62 done
     class I1315 done
-    class I1321 needsDesign
-    class I1322 blocked
+    class I1321 done
+    class I1322 needsDesign
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
