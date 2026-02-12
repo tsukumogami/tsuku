@@ -41,6 +41,11 @@ func (c *ChainResolver) Resolve(ctx context.Context, toolName string) (*Discover
 	for _, stage := range c.stages {
 		result, err := stage.Resolve(ctx, normalized)
 		if err != nil {
+			// Handle budget exceeded as a fatal error
+			if err == ErrBudgetExceeded {
+				c.emitBudgetExceededEvent(normalized, start)
+				return nil, err
+			}
 			if ctx.Err() != nil || isFatalError(err) {
 				c.emitErrorEvent(normalized, "internal", start)
 				return nil, err
@@ -72,11 +77,28 @@ func (c *ChainResolver) emitHitEvent(toolName string, result *DiscoveryResult, s
 	case ConfidenceEcosystem:
 		event = telemetry.NewDiscoveryEcosystemHitEvent(toolName, result.Builder, result.Source, durationMs)
 	case ConfidenceLLM:
-		event = telemetry.NewDiscoveryLLMHitEvent(toolName, result.Builder, result.Source, durationMs)
+		// Use enriched event if LLM metrics are available
+		if result.LLMMetrics != nil {
+			event = telemetry.NewDiscoveryLLMHitEventWithMetrics(
+				toolName, result.Builder, result.Source, durationMs,
+				result.LLMMetrics.InputTokens, result.LLMMetrics.OutputTokens,
+				result.LLMMetrics.Cost, result.LLMMetrics.Provider, result.LLMMetrics.Turns,
+			)
+		} else {
+			event = telemetry.NewDiscoveryLLMHitEvent(toolName, result.Builder, result.Source, durationMs)
+		}
 	default:
 		return
 	}
 	c.telemetry.SendDiscovery(event)
+}
+
+// emitBudgetExceededEvent sends a telemetry event when LLM budget was exceeded.
+func (c *ChainResolver) emitBudgetExceededEvent(toolName string, start time.Time) {
+	if c.telemetry == nil {
+		return
+	}
+	c.telemetry.SendDiscovery(telemetry.NewDiscoveryLLMBudgetExceededEvent(toolName, time.Since(start).Milliseconds()))
 }
 
 // emitNotFoundEvent sends a telemetry event when no stage found a match.
