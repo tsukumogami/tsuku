@@ -165,7 +165,7 @@ type ProbeMatch struct {
 }
 
 // ConfirmDisambiguationFunc prompts the user to select from multiple matches.
-// Returns the selected index (0-based) or an error if cancelled.
+// Returns the selected index (0-based) or an error if canceled.
 type ConfirmDisambiguationFunc func(matches []ProbeMatch) (int, error)
 
 func (e *AmbiguousMatchError) Error() string {

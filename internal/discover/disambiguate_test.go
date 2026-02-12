@@ -510,7 +510,7 @@ func TestConfirmDisambiguationCallback(t *testing.T) {
 	})
 
 	t.Run("callback error propagates", func(t *testing.T) {
-		expectedErr := &disambiguateTestError{msg: "user cancelled"}
+		expectedErr := &disambiguateTestError{msg: "user canceled"}
 		callback := func(matches []ProbeMatch) (int, error) {
 			return 0, expectedErr
 		}
