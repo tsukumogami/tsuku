@@ -117,13 +117,13 @@ graph TD
     class I1319 done
     class I1317 done
     class I1318 done
-    class M76 ready
-    class M77 blocked
+    class M76 done
+    class M77 done
     class M65 done
     class M62 done
     class I1315 done
     class I1321 done
-    class I1322 blocked
+    class I1322 ready
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
