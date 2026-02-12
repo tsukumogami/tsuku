@@ -33,7 +33,7 @@ Planned
 | Issue | Dependencies | Tier |
 |-------|--------------|------|
 | ~~[#1648: feat(discover): add core disambiguation with ranking and auto-select](https://github.com/tsukumogami/tsuku/issues/1648)~~ | ~~None~~ | ~~testable~~ |
-| ~~_Creates `disambiguate.go` with ranking algorithm (downloads DESC, version count, priority) and `isClearWinner()` logic for 10x threshold. Extends `probeOutcome` with version count and repository presence fields. Returns `AmbiguousMatchError` for close matches._~~ | | |
+| _Creates `disambiguate.go` with ranking algorithm (downloads DESC, version count, priority) and `isClearWinner()` logic for 10x threshold. Extends `probeOutcome` with version count and repository presence fields. Returns `AmbiguousMatchError` for close matches._ | | |
 | [#1649: feat(discover): add typosquatting detection via edit distance](https://github.com/tsukumogami/tsuku/issues/1649) | None | testable |
 | _Adds `typosquat.go` with Levenshtein distance calculation against registry entries (threshold ≤2). Integrates into chain resolver before probe stage to warn about suspiciously similar names._ | | |
 | [#1650: feat(discover): add ConfirmDisambiguationFunc callback type](https://github.com/tsukumogami/tsuku/issues/1650) | [#1648](https://github.com/tsukumogami/tsuku/issues/1648) | testable |
