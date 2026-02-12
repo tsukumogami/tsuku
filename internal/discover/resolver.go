@@ -16,10 +16,19 @@ const (
 
 // Metadata holds optional popularity and provenance signals for disambiguation UX.
 type Metadata struct {
-	Downloads   int    // Monthly downloads (0 if unavailable)
-	AgeDays     int    // Days since first publish (0 if unavailable)
-	Stars       int    // GitHub stars (0 if unavailable)
-	Description string // Short description for display
+	Downloads           int    // Monthly downloads (0 if unavailable)
+	AgeDays             int    // Days since first publish (0 if unavailable)
+	Stars               int    // GitHub stars (0 if unavailable)
+	Description         string // Short description for display
+	IsFork              bool   // True if repository is a fork
+	ParentRepo          string // Parent repository full_name (e.g., "owner/repo") if fork
+	ParentStars         int    // Parent repository star count (0 if unavailable)
+	CreatedAt           string // Creation date in YYYY-MM-DD format (empty if unavailable)
+	LastCommitDays      int    // Days since last commit (0 if unavailable)
+	OwnerName           string // Repository owner login name
+	OwnerType           string // Owner type: "User" or "Organization"
+	VerificationSkipped bool   // True if GitHub API verification was skipped (e.g., rate limited)
+	VerificationWarning string // Warning message when verification was skipped
 }
 
 // DiscoveryResult describes where a tool can be sourced from.
@@ -32,6 +41,10 @@ type DiscoveryResult struct {
 
 	// Confidence indicates which resolver stage produced this result.
 	Confidence Confidence
+
+	// ConfidenceScore is the LLM-provided confidence score (0-100) for ranking.
+	// Only set for LLM discovery results. Used to rank multiple candidates.
+	ConfidenceScore int
 
 	// Reason is a human-readable explanation for display.
 	Reason string
