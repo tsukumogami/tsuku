@@ -30,7 +30,7 @@ Current
 
 ## Upstream Design Reference
 
-This design implements Phase 5 (LLM Discovery) of [DESIGN-discovery-resolver.md](DESIGN-discovery-resolver.md). It addresses the design questions raised in [issue #1318](https://github.com/tsukumogami/tsuku/issues/1318):
+This design implements Phase 5 (LLM Discovery) of [DESIGN-discovery-resolver.md](../DESIGN-discovery-resolver.md). It addresses the design questions raised in [issue #1318](https://github.com/tsukumogami/tsuku/issues/1318):
 
 - LLM integration: How to connect to the existing LLM infrastructure
 - Prompt design: System prompts for reliable structured output

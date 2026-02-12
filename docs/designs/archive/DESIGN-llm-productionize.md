@@ -9,7 +9,7 @@ rationale: These controls ensure users can see and control LLM costs, review gen
 
 **Status**: Superseded by [DESIGN-llm-builder-infrastructure.md](../current/DESIGN-llm-builder-infrastructure.md)
 
-**Parent Design**: [DESIGN-llm-builder-infrastructure.md](docs/DESIGN-llm-builder-infrastructure.md)
+**Parent Design**: [DESIGN-llm-builder-infrastructure.md](../current/DESIGN-llm-builder-infrastructure.md)
 
 **Issue**: [#270 - Slice 4: Productionize](https://github.com/tsukumogami/tsuku/issues/270)
 
@@ -127,7 +127,7 @@ For this feature to be considered production-ready:
 
 ## Upstream Design Reference
 
-From [DESIGN-llm-builder-infrastructure.md](docs/DESIGN-llm-builder-infrastructure.md), Slice 4 specifies:
+From [DESIGN-llm-builder-infrastructure.md](../current/DESIGN-llm-builder-infrastructure.md), Slice 4 specifies:
 
 ### Deliverables
 - Update `tsuku create` to support `--from github`

@@ -44,7 +44,7 @@ This design is implemented through the following GitHub issues:
 
 ## Upstream Design Reference
 
-This design implements part of [DESIGN-deterministic-resolution.md](DESIGN-deterministic-resolution.md).
+This design implements part of [DESIGN-deterministic-resolution.md](../current/DESIGN-deterministic-resolution.md).
 
 **Relevant sections:**
 - Core Insight: Split installation into evaluation and execution phases
@@ -563,7 +563,9 @@ Based on investigation results, implement each ecosystem primitive:
 
 ## Appendix A: Ecosystem Investigation Results
 
-Detailed research was conducted for each supported ecosystem. Full reports are available in `docs/deterministic-builds/`. This appendix summarizes key findings.
+Detailed research was conducted for each supported ecosystem. This appendix summarizes key findings.
+
+> **Note**: The detailed ecosystem research files referenced below (`docs/deterministic-builds/*.md`) were planned but not created before this design was superseded. This appendix summarizes key findings.
 
 ### Summary Table
 
@@ -579,7 +581,7 @@ Detailed research was conducted for each supported ecosystem. Full reports are a
 
 ### Go
 
-> Full details: [ecosystem_go.md](deterministic-builds/ecosystem_go.md)
+> Full details were planned for `deterministic-builds/ecosystem_go.md`.
 
 **Lock mechanism**: `go.sum` contains cryptographic checksums for all module dependencies. Go's Minimum Version Selection (MVS) algorithm ensures reproducible dependency resolution.
 
@@ -615,7 +617,7 @@ type GoBuildParams struct {
 
 ### Cargo
 
-> Full details: [ecosystem_cargo.md](deterministic-builds/ecosystem_cargo.md)
+> Full details were planned for `deterministic-builds/ecosystem_cargo.md`.
 
 **Lock mechanism**: `Cargo.lock` contains SHA-256 checksums for all crate dependencies in TOML format.
 
@@ -648,7 +650,7 @@ type CargoBuildParams struct {
 
 ### npm
 
-> Full details: [ecosystem_npm.md](deterministic-builds/ecosystem_npm.md)
+> Full details were planned for `deterministic-builds/ecosystem_npm.md`.
 
 **Lock mechanism**: `package-lock.json` v2/v3 contains complete dependency tree with SHA-512 integrity hashes.
 
@@ -681,7 +683,7 @@ type NpmExecParams struct {
 
 ### pip
 
-> Full details: [ecosystem_pip.md](deterministic-builds/ecosystem_pip.md)
+> Full details were planned for `deterministic-builds/ecosystem_pip.md`.
 
 **Lock mechanism**: `requirements.txt` with hashes (via pip-tools). Format: `package==version --hash=sha256:...`
 
@@ -714,7 +716,7 @@ type PipInstallParams struct {
 
 ### gem
 
-> Full details: [ecosystem_gem.md](deterministic-builds/ecosystem_gem.md)
+> Full details were planned for `deterministic-builds/ecosystem_gem.md`.
 
 **Lock mechanism**: `Gemfile.lock` with SHA-256 checksums (Bundler 2.6+).
 
@@ -746,7 +748,7 @@ type GemExecParams struct {
 
 ### Nix
 
-> Full details: [ecosystem_nix.md](deterministic-builds/ecosystem_nix.md)
+> Full details were planned for `deterministic-builds/ecosystem_nix.md`.
 
 **Lock mechanism**: `flake.lock` (JSON) pins all flake inputs. Derivation hashes provide content-addressable builds.
 
@@ -783,7 +785,7 @@ type NixRealizeParams struct {
 
 ### CPAN
 
-> Full details: [ecosystem_cpan.md](deterministic-builds/ecosystem_cpan.md)
+> Full details were planned for `deterministic-builds/ecosystem_cpan.md`.
 
 **Lock mechanism**: `cpanfile.snapshot` (via Carton) captures distribution versions and dependency graph.
 

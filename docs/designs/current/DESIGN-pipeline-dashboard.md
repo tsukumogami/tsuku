@@ -100,7 +100,7 @@ This is the right long-term solution, but it's weeks of work. Meanwhile, the dat
 
 ### Upstream Reference
 
-This design supports the broader [Registry Scale Strategy](DESIGN-registry-scale-strategy.md) and specifically provides an intermediate solution for #1190 (Failure Analysis Backend). The goal is to deliver immediate visibility without requiring the full Cloudflare D1 infrastructure.
+This design supports the broader [Registry Scale Strategy](../DESIGN-registry-scale-strategy.md) and specifically provides an intermediate solution for #1190 (Failure Analysis Backend). The goal is to deliver immediate visibility without requiring the full Cloudflare D1 infrastructure.
 
 ### Existing Patterns
 

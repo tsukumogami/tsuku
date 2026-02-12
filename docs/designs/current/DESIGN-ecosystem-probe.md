@@ -16,7 +16,7 @@ Current
 
 ## Upstream Design Reference
 
-This design implements the Ecosystem Probe stage described in [DESIGN-discovery-resolver.md](DESIGN-discovery-resolver.md) (Solution Architecture: Ecosystem Probe section). It addresses the design questions raised in issue 1317.
+This design implements the Ecosystem Probe stage described in [DESIGN-discovery-resolver.md](../DESIGN-discovery-resolver.md) (Solution Architecture: Ecosystem Probe section). It addresses the design questions raised in issue 1317.
 
 ## Context and Problem Statement
 
@@ -74,7 +74,7 @@ Instead of popularity thresholds, use two signals:
 1. **Exact name match**: The queried tool name must exactly match the package name in the registry (case-insensitive). This rejects packages where the tool name is a substring or slight variation.
 2. **Static priority ranking**: When multiple ecosystems match, rank by ecosystem reliability rather than per-package popularity. The order reflects which ecosystems are most likely to contain the "canonical" version of a tool: Homebrew Cask > crates.io > PyPI > npm > RubyGems > Go > CPAN.
 
-Quality filtering was deferred to a follow-up design ([DESIGN-probe-quality-filtering.md](current/DESIGN-probe-quality-filtering.md)) which uses version count and repository presence rather than age thresholds.
+Quality filtering was deferred to a follow-up design ([DESIGN-probe-quality-filtering.md](DESIGN-probe-quality-filtering.md)) which uses version count and repository presence rather than age thresholds.
 
 #### Alternatives Considered
 
@@ -120,7 +120,7 @@ The parent design's filtering thresholds assumed API metadata that doesn't exist
 ### Trade-offs Accepted
 
 - **Less precise disambiguation**: Without download counts, we can't distinguish between a popular crate and an obscure one. A static priority list is a rough proxy. This is acceptable because disambiguation (#1321) will present options to the user in ambiguous cases.
-- **Quality filtering deferred**: Initial implementation doesn't filter by download counts or age. Mitigated by exact name matching, curated registry precedence, and the follow-up [quality filtering design](current/DESIGN-probe-quality-filtering.md).
+- **Quality filtering deferred**: Initial implementation doesn't filter by download counts or age. Mitigated by exact name matching, curated registry precedence, and the follow-up [quality filtering design](DESIGN-probe-quality-filtering.md).
 - **Cask may produce noise**: Including Cask means macOS GUI apps might match tool names. Can be excluded in a follow-up if it's a problem.
 
 ## Solution Architecture
