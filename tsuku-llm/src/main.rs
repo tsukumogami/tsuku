@@ -4,6 +4,7 @@
 //! It bundles llama.cpp and handles hardware detection, model management, and inference.
 
 mod hardware;
+mod model;
 
 use std::fs::File;
 use std::os::unix::io::AsRawFd;
