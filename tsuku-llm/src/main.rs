@@ -3,12 +3,14 @@
 //! This binary provides local inference capabilities via gRPC over Unix domain sockets.
 //! It bundles llama.cpp and handles hardware detection, model management, and inference.
 
+use std::fs::File;
+use std::os::unix::io::AsRawFd;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
 
-use anyhow::{Context, Result};
+use anyhow::{bail, Context, Result};
 use clap::{Parser, Subcommand};
 use tokio::net::UnixListener;
 use tokio::sync::mpsc;
@@ -260,6 +262,37 @@ fn lock_path() -> PathBuf {
     path
 }
 
+/// Tries to acquire an exclusive lock on the lock file.
+/// Returns the lock file handle if successful, or an error if another process holds the lock.
+fn acquire_lock(lock: &PathBuf) -> Result<File> {
+    // Ensure parent directory exists
+    if let Some(parent) = lock.parent() {
+        std::fs::create_dir_all(parent).context("Failed to create lock directory")?;
+    }
+
+    let file = File::options()
+        .create(true)
+        .read(true)
+        .write(true)
+        .open(lock)
+        .context("Failed to open lock file")?;
+
+    // Try to acquire exclusive non-blocking lock
+    let fd = file.as_raw_fd();
+    let result = unsafe { libc::flock(fd, libc::LOCK_EX | libc::LOCK_NB) };
+
+    if result != 0 {
+        let err = std::io::Error::last_os_error();
+        if err.kind() == std::io::ErrorKind::WouldBlock {
+            bail!("Another tsuku-llm daemon is already running (lock held)");
+        }
+        return Err(err).context("Failed to acquire lock");
+    }
+
+    info!("Acquired exclusive lock on {:?}", lock);
+    Ok(file)
+}
+
 /// Clean up socket and lock files.
 fn cleanup_files(socket: &PathBuf, lock: &PathBuf) {
     if socket.exists() {
@@ -331,9 +364,13 @@ async fn main() -> Result<()> {
     let lock = lock_path();
     info!("Starting tsuku-llm server at {:?}", socket);
 
-    // Remove stale socket if it exists
+    // Try to acquire the lock file first
+    let _lock_file = acquire_lock(&lock)?;
+
+    // Now that we have the lock, remove stale socket if it exists
     if socket.exists() {
         std::fs::remove_file(&socket).context("Failed to remove stale socket")?;
+        info!("Removed stale socket file");
     }
 
     // Ensure parent directory exists

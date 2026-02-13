@@ -106,8 +106,10 @@ func isDaemonReady(tsukuHome string) bool {
 // isDaemonRunning checks if the daemon process is still running by checking the lock file.
 func isDaemonRunning(tsukuHome string) bool {
 	lockPath := filepath.Join(tsukuHome, "llm.sock.lock")
-	f, err := os.OpenFile(lockPath, os.O_CREATE|os.O_RDWR, 0600)
+	// Don't create the file - just try to open it for reading
+	f, err := os.OpenFile(lockPath, os.O_RDWR, 0600)
 	if err != nil {
+		// File doesn't exist or can't be opened - daemon not running
 		return false
 	}
 	defer f.Close()
