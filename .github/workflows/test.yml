@@ -241,6 +241,47 @@ jobs:
   #         fi
   #         echo "PASS: no args exits non-zero"
 
+  # Build tsuku-llm and run LLM integration tests
+  llm-integration:
+    name: "LLM Integration Tests"
+    needs: matrix
+    if: ${{ needs.matrix.outputs.llm == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+
+      - name: Set up Go
+        uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5  # v6.2.0
+        with:
+          go-version-file: 'go.mod'
+          cache-dependency-path: go.sum
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: "1.80"
+
+      - name: Cache Cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            tsuku-llm/target
+          key: ${{ runner.os }}-cargo-llm-${{ hashFiles('tsuku-llm/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-llm-
+
+      - name: Install protobuf compiler
+        run: sudo apt-get update && sudo apt-get install -y protobuf-compiler
+
+      - name: Build tsuku-llm
+        working-directory: tsuku-llm
+        run: cargo build --release
+
+      - name: Run LLM integration tests
+        run: go test -tags=integration -v ./internal/llm/...
+
   # Detect changes and generate test matrices
   # Skip integration tests when only documentation files change
   matrix:
@@ -255,6 +296,8 @@ jobs:
       code: ${{ steps.filter.outputs.code }}
       # true when Rust code is modified
       rust: ${{ steps.filter.outputs.rust }}
+      # true when LLM addon code is modified (tsuku-llm or internal/llm)
+      llm: ${{ steps.filter.outputs.llm }}
       # true when recipe files are modified
       recipes: ${{ steps.filter.outputs.recipes }}
       # true when validator code is modified
@@ -278,6 +321,9 @@ jobs:
               - '.github/workflows/**'
             rust:
               - 'cmd/tsuku-dltest/**'
+            llm:
+              - 'tsuku-llm/**'
+              - 'internal/llm/**'
             recipes:
               - 'internal/recipe/recipes/**/*.toml'
             validator:

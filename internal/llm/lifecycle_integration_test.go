@@ -3,6 +3,7 @@
 package llm
 
 import (
+	"context"
 	"net"
 	"os"
 	"os/exec"
@@ -12,6 +13,10 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+
+	pb "github.com/tsukumogami/tsuku/internal/llm/proto"
 )
 
 // These tests require the tsuku-llm binary to be built and available.
@@ -21,6 +26,61 @@ import (
 //   cd tsuku-llm && cargo build --release
 //
 // Set TSUKU_LLM_BINARY to the path of the binary if not in tsuku-llm/target/release/.
+
+// grpcDial connects to the daemon's Unix socket.
+func grpcDial(ctx context.Context, socketPath string) (*grpc.ClientConn, error) {
+	return grpc.NewClient(
+		"unix://"+socketPath,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+}
+
+// testMessage is a simple message struct for testing.
+type testMessage struct {
+	role    string
+	content string
+}
+
+// testResponse is a simple response struct for testing.
+type testResponse struct {
+	content    string
+	stopReason string
+}
+
+// inferenceClient wraps the proto client for easier testing.
+type inferenceClient struct {
+	client pb.InferenceServiceClient
+}
+
+func newInferenceClient(conn *grpc.ClientConn) *inferenceClient {
+	return &inferenceClient{client: pb.NewInferenceServiceClient(conn)}
+}
+
+func (c *inferenceClient) complete(ctx context.Context, systemPrompt string, messages []testMessage, maxTokens int) (*testResponse, error) {
+	req := &pb.CompletionRequest{
+		SystemPrompt: systemPrompt,
+		MaxTokens:    int32(maxTokens),
+	}
+	for _, msg := range messages {
+		role := pb.Role_ROLE_USER
+		if msg.role == "assistant" {
+			role = pb.Role_ROLE_ASSISTANT
+		}
+		req.Messages = append(req.Messages, &pb.Message{
+			Role:    role,
+			Content: msg.content,
+		})
+	}
+
+	resp, err := c.client.Complete(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return &testResponse{
+		content:    resp.Content,
+		stopReason: resp.StopReason,
+	}, nil
+}
 
 func getAddonBinary(t *testing.T) string {
 	t.Helper()
@@ -274,4 +334,121 @@ func TestIntegration_MultipleSIGTERMIsSafe(t *testing.T) {
 	// Should exit cleanly
 	err := daemon.Wait()
 	require.NoError(t, err, "daemon should exit cleanly after multiple SIGTERMs")
+}
+
+// TestIntegration_gRPCGetStatus tests that the Go client can call GetStatus on the daemon.
+func TestIntegration_gRPCGetStatus(t *testing.T) {
+	tsukuHome := t.TempDir()
+	os.Setenv("TSUKU_HOME", tsukuHome)
+	defer os.Unsetenv("TSUKU_HOME")
+
+	// Start daemon
+	daemon := startDaemon(t, tsukuHome, 5*time.Minute)
+
+	// Wait for ready
+	require.Eventually(t, func() bool {
+		return isDaemonReady(tsukuHome)
+	}, 10*time.Second, 100*time.Millisecond, "daemon should become ready")
+
+	// Create provider and get status
+	provider := NewLocalProvider()
+	defer provider.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	status, err := provider.GetStatus(ctx)
+	require.NoError(t, err, "GetStatus should succeed")
+	require.NotNil(t, status, "status should not be nil")
+	require.True(t, status.Ready, "daemon should report ready")
+	require.NotEmpty(t, status.ModelName, "model name should be set")
+
+	// Clean up
+	_ = daemon.Process.Signal(syscall.SIGTERM)
+}
+
+// TestIntegration_gRPCComplete tests that the Go client can call Complete on the daemon.
+// This test uses the proto client directly since the daemon is already running
+// (bypasses the addon download/verification that would happen in production).
+func TestIntegration_gRPCComplete(t *testing.T) {
+	tsukuHome := t.TempDir()
+	os.Setenv("TSUKU_HOME", tsukuHome)
+	defer os.Unsetenv("TSUKU_HOME")
+
+	// Start daemon
+	daemon := startDaemon(t, tsukuHome, 5*time.Minute)
+
+	// Wait for ready
+	require.Eventually(t, func() bool {
+		return isDaemonReady(tsukuHome)
+	}, 10*time.Second, 100*time.Millisecond, "daemon should become ready")
+
+	// Connect directly to the daemon via gRPC (bypass addon manager)
+	socketPath := filepath.Join(tsukuHome, "llm.sock")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	conn, err := grpcDial(ctx, socketPath)
+	require.NoError(t, err, "should connect to daemon")
+	defer conn.Close()
+
+	client := newInferenceClient(conn)
+
+	// Send a completion request using proto types directly
+	resp, err := client.complete(ctx, "You are a helpful assistant.", []testMessage{
+		{role: "user", content: "Hello, what is 2+2?"},
+	}, 100)
+	require.NoError(t, err, "Complete should succeed")
+	require.NotEmpty(t, resp.content, "response content should not be empty")
+	require.NotEmpty(t, resp.stopReason, "stop reason should be set")
+
+	// Clean up
+	_ = daemon.Process.Signal(syscall.SIGTERM)
+}
+
+// TestIntegration_gRPCShutdown tests that the Go client can request daemon shutdown via gRPC.
+func TestIntegration_gRPCShutdown(t *testing.T) {
+	tsukuHome := t.TempDir()
+	os.Setenv("TSUKU_HOME", tsukuHome)
+	defer os.Unsetenv("TSUKU_HOME")
+
+	// Start daemon
+	daemon := startDaemon(t, tsukuHome, 5*time.Minute)
+
+	// Wait for ready
+	require.Eventually(t, func() bool {
+		return isDaemonReady(tsukuHome)
+	}, 10*time.Second, 100*time.Millisecond, "daemon should become ready")
+
+	// Create provider
+	provider := NewLocalProvider()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Ensure connection is established
+	_, err := provider.GetStatus(ctx)
+	require.NoError(t, err, "GetStatus should succeed")
+
+	// Request graceful shutdown via gRPC
+	err = provider.Shutdown(ctx, true)
+	require.NoError(t, err, "Shutdown request should succeed")
+
+	// Close client connection
+	provider.Close()
+
+	// Daemon should stop
+	require.Eventually(t, func() bool {
+		return !isDaemonRunning(tsukuHome)
+	}, 10*time.Second, 100*time.Millisecond, "daemon should stop after gRPC shutdown request")
+
+	// Verify files cleaned up
+	socketPath := filepath.Join(tsukuHome, "llm.sock")
+	_, err = os.Stat(socketPath)
+	require.True(t, os.IsNotExist(err), "socket should be cleaned up after shutdown")
+
+	// Process should have exited
+	err = daemon.Wait()
+	require.NoError(t, err, "daemon should exit cleanly")
 }
