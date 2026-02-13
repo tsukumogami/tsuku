@@ -9,6 +9,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -275,6 +276,96 @@ func confirmLLMDiscovery(result *discover.DiscoveryResult) bool {
 	}
 
 	return confirmWithUser("Use this source?")
+}
+
+// confirmDisambiguation prompts the user to select from multiple ecosystem matches.
+// Returns the selected index (0-based) or an error if canceled.
+// This callback is only registered when running interactively.
+func confirmDisambiguation(matches []discover.ProbeMatch) (int, error) {
+	fmt.Fprintln(os.Stderr, formatDisambiguationPrompt(matches))
+	fmt.Fprint(os.Stderr, "Select source [1-", len(matches), ", Enter for 1, or 'q' to cancel]: ")
+
+	reader := bufio.NewReader(os.Stdin)
+	response, err := reader.ReadString('\n')
+	if err != nil {
+		return 0, fmt.Errorf("failed to read input: %w", err)
+	}
+	response = strings.TrimSpace(response)
+
+	// Empty input = select first (recommended)
+	if response == "" {
+		return 0, nil
+	}
+
+	// 'q' or 'Q' = cancel
+	if strings.ToLower(response) == "q" {
+		return 0, fmt.Errorf("canceled by user")
+	}
+
+	// Parse number
+	selection, err := strconv.Atoi(response)
+	if err != nil {
+		return 0, fmt.Errorf("invalid selection: %q", response)
+	}
+
+	// Convert to 0-based index and validate range
+	if selection < 1 || selection > len(matches) {
+		return 0, fmt.Errorf("selection out of range: %d (must be 1-%d)", selection, len(matches))
+	}
+
+	return selection - 1, nil
+}
+
+// formatDisambiguationPrompt formats the disambiguation prompt for display.
+// This is separated for unit testing.
+func formatDisambiguationPrompt(matches []discover.ProbeMatch) string {
+	var sb strings.Builder
+	sb.WriteString("\nMultiple sources found:\n")
+
+	for i, m := range matches {
+		// Number and source
+		sb.WriteString(fmt.Sprintf("\n  %d. %s: %s", i+1, m.Builder, m.Source))
+		if i == 0 {
+			sb.WriteString(" (recommended)")
+		}
+		sb.WriteString("\n")
+
+		// Metadata line
+		var meta []string
+
+		// Downloads
+		if m.Downloads > 0 {
+			meta = append(meta, fmt.Sprintf("Downloads: %s", formatDownloadCount(m.Downloads)))
+		} else {
+			meta = append(meta, "Downloads: N/A")
+		}
+
+		// Versions
+		if m.VersionCount > 0 {
+			meta = append(meta, fmt.Sprintf("Versions: %d", m.VersionCount))
+		}
+
+		// Repository
+		if m.HasRepository {
+			meta = append(meta, "Has repository")
+		} else {
+			meta = append(meta, "No repository")
+		}
+
+		sb.WriteString(fmt.Sprintf("     %s\n", strings.Join(meta, " | ")))
+	}
+
+	return sb.String()
+}
+
+// formatDownloadCount formats a download count for display (e.g., "45K", "1.2M").
+func formatDownloadCount(count int) string {
+	if count >= 1000000 {
+		return fmt.Sprintf("%.1fM", float64(count)/1000000)
+	} else if count >= 1000 {
+		return fmt.Sprintf("%.1fK", float64(count)/1000)
+	}
+	return strconv.Itoa(count)
 }
 
 // formatDaysAgo converts a number of days to a human-readable relative time string.
@@ -888,7 +979,14 @@ func runDiscoveryWithOptions(toolName string, searchProviderName string) (*disco
 			probers = append(probers, p)
 		}
 	}
-	stages = append(stages, discover.NewEcosystemProbe(probers, 3*time.Second))
+	// Configure ecosystem probe with optional disambiguation callback.
+	// Only register callback when interactive and not auto-approving.
+	// Without callback, close matches return AmbiguousMatchError for non-interactive handling.
+	var ecosystemOpts []discover.EcosystemProbeOption
+	if isInteractive() && !createAutoApprove {
+		ecosystemOpts = append(ecosystemOpts, discover.WithConfirmDisambiguation(confirmDisambiguation))
+	}
+	stages = append(stages, discover.NewEcosystemProbe(probers, 3*time.Second, ecosystemOpts...))
 
 	// Stage 3: LLM discovery — uses LLM with web search to find tool sources.
 	// Configure search provider based on flag or environment variables.

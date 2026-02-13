@@ -62,8 +62,9 @@ func isClearWinner(first, second probeOutcome) bool {
 // Selection logic:
 //   - Single match: auto-select (no threshold checks needed)
 //   - Clear winner (>10x gap + secondary signals): auto-select
-//   - Close matches or missing popularity: return AmbiguousMatchError
-func disambiguate(toolName string, matches []probeOutcome, priority map[string]int) (*DiscoveryResult, error) {
+//   - Close matches with callback: invoke callback for interactive selection
+//   - Close matches without callback: return AmbiguousMatchError
+func disambiguate(toolName string, matches []probeOutcome, priority map[string]int, confirm ConfirmDisambiguationFunc) (*DiscoveryResult, error) {
 	if len(matches) == 0 {
 		return nil, nil
 	}
@@ -80,7 +81,23 @@ func disambiguate(toolName string, matches []probeOutcome, priority map[string]i
 		return toDiscoveryResult(matches[0]), nil
 	}
 
-	// No clear winner: return ambiguous error for downstream handling
+	// No clear winner: try interactive disambiguation if callback available
+	if confirm != nil {
+		probeMatches := toProbeMatches(matches)
+		selected, err := confirm(probeMatches)
+		if err != nil {
+			return nil, err
+		}
+		if selected < 0 || selected >= len(matches) {
+			return nil, &AmbiguousMatchError{
+				Tool:    toolName,
+				Matches: toDiscoveryMatches(matches),
+			}
+		}
+		return toDiscoveryResult(matches[selected]), nil
+	}
+
+	// Non-interactive: return ambiguous error for downstream handling
 	return nil, &AmbiguousMatchError{
 		Tool:    toolName,
 		Matches: toDiscoveryMatches(matches),
@@ -107,6 +124,21 @@ func toDiscoveryMatches(matches []probeOutcome) []DiscoveryMatch {
 	result := make([]DiscoveryMatch, len(matches))
 	for i, m := range matches {
 		result[i] = DiscoveryMatch{
+			Builder:       m.builderName,
+			Source:        m.result.Source,
+			Downloads:     m.result.Downloads,
+			VersionCount:  m.result.VersionCount,
+			HasRepository: m.result.HasRepository,
+		}
+	}
+	return result
+}
+
+// toProbeMatches converts probeOutcomes to ProbeMatches for callback display.
+func toProbeMatches(matches []probeOutcome) []ProbeMatch {
+	result := make([]ProbeMatch, len(matches))
+	for i, m := range matches {
+		result[i] = ProbeMatch{
 			Builder:       m.builderName,
 			Source:        m.result.Source,
 			Downloads:     m.result.Downloads,
