@@ -464,4 +464,89 @@ mod tests {
         // Since file already exists and is valid, no progress updates should happen
         assert_eq!(progress_count.load(Ordering::SeqCst), 0);
     }
+
+    /// Integration test that performs an actual HTTP download.
+    /// Uses a small, stable file from httpbin.org.
+    #[tokio::test]
+    async fn test_real_http_download_with_verification() {
+        use std::sync::atomic::{AtomicU64, Ordering};
+        use std::sync::Arc;
+
+        let temp_dir = tempfile::tempdir().unwrap();
+
+        // Create a manifest with a real downloadable file
+        // httpbin.org/bytes/1024 returns 1024 random bytes, but we need deterministic content
+        // Use httpbin.org/base64/aGVsbG8gd29ybGQ= which decodes to "hello world" (11 bytes)
+        // SHA256 of "hello world" = b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9
+        let mut models = HashMap::new();
+        models.insert(
+            "test-download".to_string(),
+            ModelEntry {
+                quantization: "test".to_string(),
+                size_bytes: 11,
+                sha256: "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9".to_string(),
+                download_url: "https://httpbin.org/base64/aGVsbG8gd29ybGQ=".to_string(),
+                supported_backends: vec![Backend::Cpu],
+            },
+        );
+        let manifest = ModelManifest { models };
+
+        let manager = ModelManager::with_manifest(temp_dir.path().to_path_buf(), manifest);
+
+        // Track progress updates
+        let bytes_received = Arc::new(AtomicU64::new(0));
+        let bytes_received_clone = Arc::clone(&bytes_received);
+        let progress_calls = Arc::new(AtomicU64::new(0));
+        let progress_calls_clone = Arc::clone(&progress_calls);
+
+        let result = manager.download("test-download", move |progress| {
+            bytes_received_clone.store(progress.bytes_downloaded, Ordering::SeqCst);
+            progress_calls_clone.fetch_add(1, Ordering::SeqCst);
+        }).await;
+
+        // Should succeed
+        assert!(result.is_ok(), "Download failed: {:?}", result.err());
+        let path = result.unwrap();
+
+        // File should exist
+        assert!(path.exists(), "Downloaded file doesn't exist");
+
+        // Content should be correct
+        let content = fs::read_to_string(&path).await.unwrap();
+        assert_eq!(content, "hello world");
+
+        // Progress callback should have been called
+        assert!(progress_calls.load(Ordering::SeqCst) > 0, "Progress callback was never called");
+        assert_eq!(bytes_received.load(Ordering::SeqCst), 11, "Final bytes should be 11");
+
+        // Verification should pass
+        assert!(manager.verify("test-download").await.unwrap());
+    }
+
+    /// Test that checksum mismatch is detected during download.
+    #[tokio::test]
+    async fn test_real_http_download_checksum_mismatch() {
+        let temp_dir = tempfile::tempdir().unwrap();
+
+        // Use the same URL but wrong checksum
+        let mut models = HashMap::new();
+        models.insert(
+            "bad-checksum".to_string(),
+            ModelEntry {
+                quantization: "test".to_string(),
+                size_bytes: 11,
+                sha256: "0000000000000000000000000000000000000000000000000000000000000000".to_string(),
+                download_url: "https://httpbin.org/base64/aGVsbG8gd29ybGQ=".to_string(),
+                supported_backends: vec![Backend::Cpu],
+            },
+        );
+        let manifest = ModelManifest { models };
+
+        let manager = ModelManager::with_manifest(temp_dir.path().to_path_buf(), manifest);
+
+        let result = manager.download("bad-checksum", |_| {}).await;
+
+        // Should fail with checksum mismatch after retries
+        assert!(matches!(result, Err(ModelError::DownloadFailed { .. })));
+    }
 }
