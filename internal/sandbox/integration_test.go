@@ -2,6 +2,7 @@ package sandbox
 
 import (
 	"context"
+	"runtime"
 	"testing"
 
 	"github.com/tsukumogami/tsuku/internal/executor"
@@ -23,8 +24,13 @@ func TestSandboxIntegration_SystemDependencies(t *testing.T) {
 	// Create a plan with system dependencies
 	// This simulates what would come from a recipe
 	plan := &executor.InstallationPlan{
-		Tool:    "test-cmake-env",
-		Version: "1.0.0",
+		FormatVersion: executor.PlanFormatVersion,
+		Tool:          "test-cmake-env",
+		Version:       "1.0.0",
+		Platform: executor.Platform{
+			OS:   runtime.GOOS,
+			Arch: runtime.GOARCH,
+		},
 		Steps: []executor.ResolvedStep{
 			{
 				Action: "apt_install",
@@ -106,8 +112,13 @@ func TestSandboxIntegration_WithRepository(t *testing.T) {
 	// Create plan with repository + packages
 	// This demonstrates the new repository handling capability
 	plan := &executor.InstallationPlan{
-		Tool:    "test-with-ppa",
-		Version: "1.0.0",
+		FormatVersion: executor.PlanFormatVersion,
+		Tool:          "test-with-ppa",
+		Version:       "1.0.0",
+		Platform: executor.Platform{
+			OS:   runtime.GOOS,
+			Arch: runtime.GOARCH,
+		},
 		Steps: []executor.ResolvedStep{
 			{
 				Action: "apt_ppa",
@@ -135,7 +146,7 @@ func TestSandboxIntegration_WithRepository(t *testing.T) {
 	sandboxExec := NewExecutor(detector)
 
 	reqs := &SandboxRequirements{
-		Image:           "ubuntu:22.04", // PPA works on Ubuntu
+		Image:           "ubuntu:24.04", // PPAs work on Ubuntu (not Debian)
 		RequiresNetwork: true,           // PPA requires network
 		Resources:       DefaultLimits(),
 	}
@@ -191,8 +202,13 @@ func TestSandboxIntegration_ContainerCaching(t *testing.T) {
 	}
 
 	plan := &executor.InstallationPlan{
-		Tool:    "test-caching",
-		Version: "1.0.0",
+		FormatVersion: executor.PlanFormatVersion,
+		Tool:          "test-caching",
+		Version:       "1.0.0",
+		Platform: executor.Platform{
+			OS:   runtime.GOOS,
+			Arch: runtime.GOARCH,
+		},
 		Steps: []executor.ResolvedStep{
 			{
 				Action: "apt_install",
