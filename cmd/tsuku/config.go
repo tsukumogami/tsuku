@@ -20,17 +20,19 @@ When invoked without a subcommand, displays current configuration values.
 Configuration is stored in ~/.tsuku/config.toml.
 
 Available settings:
-  telemetry      Enable anonymous usage statistics (true/false)
-  llm.enabled    Enable LLM features for recipe generation (true/false)
-  llm.providers  Preferred LLM provider order (comma-separated, e.g., claude,gemini)
+  telemetry           Enable anonymous usage statistics (true/false)
+  llm.enabled         Enable LLM features for recipe generation (true/false)
+  llm.local_enabled   Enable local LLM inference via tsuku-llm addon (true/false)
+  llm.idle_timeout    How long addon stays alive after last request (e.g., 5m, 30s)
+  llm.providers       Preferred LLM provider order (comma-separated, e.g., claude,gemini)
 
 Examples:
   tsuku config
   tsuku config --json
   tsuku config get telemetry
   tsuku config set telemetry false
-  tsuku config set llm.enabled false
-  tsuku config set llm.providers gemini,claude`,
+  tsuku config set llm.local_enabled true
+  tsuku config set llm.idle_timeout 10m`,
 	Run: runConfig,
 }
 
@@ -40,9 +42,11 @@ var configGetCmd = &cobra.Command{
 	Long: `Get the current value of a configuration setting.
 
 Available keys:
-  telemetry      Enable anonymous usage statistics (true/false)
-  llm.enabled    Enable LLM features for recipe generation (true/false)
-  llm.providers  Preferred LLM provider order (comma-separated)`,
+  telemetry           Enable anonymous usage statistics (true/false)
+  llm.enabled         Enable LLM features for recipe generation (true/false)
+  llm.local_enabled   Enable local LLM inference via tsuku-llm addon (true/false)
+  llm.idle_timeout    How long addon stays alive after last request (e.g., 5m, 30s)
+  llm.providers       Preferred LLM provider order (comma-separated)`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		key := args[0]
@@ -71,14 +75,16 @@ var configSetCmd = &cobra.Command{
 	Long: `Set a configuration value.
 
 Available keys:
-  telemetry      Enable anonymous usage statistics (true/false)
-  llm.enabled    Enable LLM features for recipe generation (true/false)
-  llm.providers  Preferred LLM provider order (comma-separated)
+  telemetry           Enable anonymous usage statistics (true/false)
+  llm.enabled         Enable LLM features for recipe generation (true/false)
+  llm.local_enabled   Enable local LLM inference via tsuku-llm addon (true/false)
+  llm.idle_timeout    How long addon stays alive after last request (e.g., 5m, 30s)
+  llm.providers       Preferred LLM provider order (comma-separated)
 
 Examples:
   tsuku config set telemetry false
-  tsuku config set llm.enabled false
-  tsuku config set llm.providers gemini,claude`,
+  tsuku config set llm.local_enabled true
+  tsuku config set llm.idle_timeout 10m`,
 	Args: cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		key := args[0]

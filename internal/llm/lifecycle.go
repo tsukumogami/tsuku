@@ -13,20 +13,44 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
+	"github.com/tsukumogami/tsuku/internal/llm/addon"
 	pb "github.com/tsukumogami/tsuku/internal/llm/proto"
 )
+
+// DefaultIdleTimeout is the default idle timeout for the addon server.
+// The server shuts down after this duration of inactivity.
+const DefaultIdleTimeout = 5 * time.Minute
+
+// IdleTimeoutEnvVar is the environment variable that overrides the idle timeout.
+const IdleTimeoutEnvVar = "TSUKU_LLM_IDLE_TIMEOUT"
 
 // ServerLifecycle manages the lifecycle of the tsuku-llm addon server.
 // It uses a lock file protocol to reliably detect whether the daemon is running.
 type ServerLifecycle struct {
 	mu sync.Mutex
 
-	socketPath string
-	lockPath   string
-	addonPath  string
+	socketPath   string
+	lockPath     string
+	addonPath    string
+	idleTimeout  time.Duration
+	addonManager *addon.AddonManager // optional: for pre-execution verification
 
 	process *os.Process
 	lockFd  *os.File // holds the lock file when we started the server
+}
+
+// GetIdleTimeout returns the idle timeout from TSUKU_LLM_IDLE_TIMEOUT env var,
+// or the default if not set or invalid.
+func GetIdleTimeout() time.Duration {
+	envVal := os.Getenv(IdleTimeoutEnvVar)
+	if envVal == "" {
+		return DefaultIdleTimeout
+	}
+	d, err := time.ParseDuration(envVal)
+	if err != nil {
+		return DefaultIdleTimeout
+	}
+	return d
 }
 
 // NewServerLifecycle creates a new lifecycle manager.
@@ -34,10 +58,34 @@ type ServerLifecycle struct {
 // addonPath is the path to the tsuku-llm binary.
 func NewServerLifecycle(socketPath, addonPath string) *ServerLifecycle {
 	return &ServerLifecycle{
-		socketPath: socketPath,
-		lockPath:   socketPath + ".lock",
-		addonPath:  addonPath,
+		socketPath:  socketPath,
+		lockPath:    socketPath + ".lock",
+		addonPath:   addonPath,
+		idleTimeout: GetIdleTimeout(),
 	}
+}
+
+// NewServerLifecycleWithManager creates a lifecycle manager with an AddonManager
+// for pre-execution checksum verification.
+func NewServerLifecycleWithManager(socketPath string, manager *addon.AddonManager) *ServerLifecycle {
+	addonPath := addon.AddonPath()
+	return &ServerLifecycle{
+		socketPath:   socketPath,
+		lockPath:     socketPath + ".lock",
+		addonPath:    addonPath,
+		idleTimeout:  GetIdleTimeout(),
+		addonManager: manager,
+	}
+}
+
+// IdleTimeout returns the configured idle timeout.
+func (s *ServerLifecycle) IdleTimeout() time.Duration {
+	return s.idleTimeout
+}
+
+// SetIdleTimeout sets the idle timeout. Must be called before EnsureRunning.
+func (s *ServerLifecycle) SetIdleTimeout(d time.Duration) {
+	s.idleTimeout = d
 }
 
 // LockPath returns the path to the lock file.
@@ -83,6 +131,8 @@ func (s *ServerLifecycle) isRunningLocked() bool {
 // It uses the lock file protocol to reliably detect running state.
 // If the socket file exists but no daemon holds the lock, it cleans up
 // the stale socket before starting.
+// When an AddonManager is configured, this also verifies the addon checksum
+// before execution to detect post-download tampering.
 func (s *ServerLifecycle) EnsureRunning(ctx context.Context) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -91,6 +141,13 @@ func (s *ServerLifecycle) EnsureRunning(ctx context.Context) error {
 	if s.addonPath != "" {
 		if _, err := os.Stat(s.addonPath); os.IsNotExist(err) {
 			return fmt.Errorf("tsuku-llm addon not installed at %s", s.addonPath)
+		}
+	}
+
+	// Verify addon checksum before execution (catches post-download tampering)
+	if s.addonManager != nil && s.addonPath != "" {
+		if err := s.addonManager.VerifyBeforeExecution(s.addonPath); err != nil {
+			return fmt.Errorf("addon verification failed: %w", err)
 		}
 	}
 
@@ -125,7 +182,9 @@ func (s *ServerLifecycle) EnsureRunning(ctx context.Context) error {
 		return fmt.Errorf("addon path not configured")
 	}
 
-	cmd := exec.CommandContext(ctx, s.addonPath)
+	// Build command with idle timeout flag
+	args := []string{"serve", "--idle-timeout", s.idleTimeout.String()}
+	cmd := exec.CommandContext(ctx, s.addonPath, args...)
 	cmd.Env = os.Environ()
 	cmd.Stderr = os.Stderr
 

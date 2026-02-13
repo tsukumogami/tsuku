@@ -1,0 +1,285 @@
+name: LLM Addon Release
+
+on:
+  push:
+    tags:
+      - "tsuku-llm-v*"
+
+permissions:
+  contents: write
+
+jobs:
+  # Build tsuku-llm for all platforms
+  build-llm:
+    name: "Build tsuku-llm (${{ matrix.platform }})"
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # macOS builds (Metal support built-in)
+          - platform: darwin-arm64
+            runner: macos-latest
+            target: aarch64-apple-darwin
+            artifact: tsuku-llm-darwin-arm64
+            backend: metal
+          - platform: darwin-amd64
+            runner: macos-15-intel
+            target: x86_64-apple-darwin
+            artifact: tsuku-llm-darwin-amd64
+            backend: metal
+
+          # Linux AMD64 builds
+          - platform: linux-amd64-cuda
+            runner: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
+            artifact: tsuku-llm-linux-amd64-cuda
+            backend: cuda
+          - platform: linux-amd64-vulkan
+            runner: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
+            artifact: tsuku-llm-linux-amd64-vulkan
+            backend: vulkan
+          - platform: linux-amd64-cpu
+            runner: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
+            artifact: tsuku-llm-linux-amd64-cpu
+            backend: cpu
+
+          # Linux ARM64 builds
+          - platform: linux-arm64-cuda
+            runner: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+            artifact: tsuku-llm-linux-arm64-cuda
+            backend: cuda
+          - platform: linux-arm64-vulkan
+            runner: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+            artifact: tsuku-llm-linux-arm64-vulkan
+            backend: vulkan
+          - platform: linux-arm64-cpu
+            runner: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+            artifact: tsuku-llm-linux-arm64-cpu
+            backend: cpu
+
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        with:
+          sparse-checkout: |
+            tsuku-llm
+            internal/llm/proto
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: "1.75"
+
+      - name: Install protobuf compiler
+        run: |
+          if [[ "$OSTYPE" == "darwin"* ]]; then
+            brew install protobuf
+          else
+            sudo apt-get update
+            sudo apt-get install -y protobuf-compiler
+          fi
+
+      - name: Install CUDA toolkit (Linux CUDA builds)
+        if: matrix.backend == 'cuda' && startsWith(matrix.runner, 'ubuntu')
+        run: |
+          # Install CUDA toolkit
+          wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.1-1_all.deb
+          sudo dpkg -i cuda-keyring_1.1-1_all.deb
+          sudo apt-get update
+          sudo apt-get install -y cuda-toolkit-12-4
+          echo "/usr/local/cuda-12.4/bin" >> $GITHUB_PATH
+          echo "CUDA_PATH=/usr/local/cuda-12.4" >> $GITHUB_ENV
+
+      - name: Install Vulkan SDK (Linux Vulkan builds)
+        if: matrix.backend == 'vulkan' && startsWith(matrix.runner, 'ubuntu')
+        run: |
+          # Install Vulkan SDK
+          wget -qO - https://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo apt-key add -
+          sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-jammy.list \
+            https://packages.lunarg.com/vulkan/lunarg-vulkan-jammy.list
+          sudo apt-get update
+          sudo apt-get install -y vulkan-sdk
+          echo "VULKAN_SDK=/usr" >> $GITHUB_ENV
+
+      - name: Inject version
+        run: |
+          VERSION="${GITHUB_REF_NAME#tsuku-llm-v}"
+          if [[ "$OSTYPE" == "darwin"* ]]; then
+            sed -i '' "s/^version = .*/version = \"$VERSION\"/" tsuku-llm/Cargo.toml
+          else
+            sed -i "s/^version = .*/version = \"$VERSION\"/" tsuku-llm/Cargo.toml
+          fi
+          echo "Building version: $VERSION"
+
+      - name: Build release binary
+        working-directory: tsuku-llm
+        env:
+          LLAMA_BACKEND: ${{ matrix.backend }}
+        run: |
+          # Set backend-specific features
+          case "${{ matrix.backend }}" in
+            metal)
+              cargo build --release --features metal
+              ;;
+            cuda)
+              cargo build --release --features cuda
+              ;;
+            vulkan)
+              cargo build --release --features vulkan
+              ;;
+            cpu)
+              cargo build --release
+              ;;
+          esac
+
+      - name: Sign binary (macOS)
+        if: startsWith(matrix.runner, 'macos')
+        run: codesign -s - tsuku-llm/target/release/tsuku-llm
+
+      - name: Create release artifact
+        run: |
+          cp tsuku-llm/target/release/tsuku-llm "${{ matrix.artifact }}"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: ${{ matrix.artifact }}
+
+  # Integration test validates binaries
+  integration-test:
+    name: "Integration Test (${{ matrix.platform }})"
+    needs: [build-llm]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: darwin-arm64
+            runner: macos-latest
+            artifact: tsuku-llm-darwin-arm64
+          - platform: darwin-amd64
+            runner: macos-15-intel
+            artifact: tsuku-llm-darwin-amd64
+          - platform: linux-amd64-cpu
+            runner: ubuntu-22.04
+            artifact: tsuku-llm-linux-amd64-cpu
+          - platform: linux-arm64-cpu
+            runner: ubuntu-24.04-arm
+            artifact: tsuku-llm-linux-arm64-cpu
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+
+      - name: Validate binary execution
+        run: |
+          chmod +x ./${{ matrix.artifact }}
+          # Verify binary runs and shows help
+          ./${{ matrix.artifact }} --help
+          # Verify version output
+          VERSION="${GITHUB_REF_NAME#tsuku-llm-v}"
+          BINARY_VERSION=$(./${{ matrix.artifact }} --version 2>&1 || true)
+          echo "Binary version output: $BINARY_VERSION"
+          if ! echo "$BINARY_VERSION" | grep -q "$VERSION"; then
+            echo "WARNING: Version string not found in output"
+          fi
+          echo "Integration test passed for ${{ matrix.artifact }}"
+
+  # Create release with all artifacts
+  create-release:
+    name: Create Release
+    needs: [build-llm, integration-test]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+
+      - name: Flatten artifacts
+        run: |
+          mkdir -p ./release
+          find ./artifacts -type f -name 'tsuku-llm-*' -exec mv {} ./release/ \;
+          ls -la ./release/
+
+      - name: Generate checksums
+        working-directory: ./release
+        run: |
+          sha256sum tsuku-llm-* > checksums.txt
+          echo "Generated checksums:"
+          cat checksums.txt
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          VERSION="${TAG#tsuku-llm-v}"
+
+          # Create release
+          gh release create "$TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "tsuku-llm $VERSION" \
+            --notes "Local LLM inference addon release $VERSION" \
+            --draft
+
+          # Upload all binaries
+          for file in ./release/tsuku-llm-*; do
+            gh release upload "$TAG" "$file" --repo "$GITHUB_REPOSITORY"
+          done
+
+          # Upload checksums
+          gh release upload "$TAG" ./release/checksums.txt --repo "$GITHUB_REPOSITORY"
+
+          echo "Created draft release $TAG"
+
+  # Finalize release after all uploads
+  finalize-release:
+    name: Finalize Release
+    needs: [create-release]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify artifacts and publish
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+
+          EXPECTED_ARTIFACTS=(
+            # macOS (Metal)
+            tsuku-llm-darwin-arm64
+            tsuku-llm-darwin-amd64
+            # Linux AMD64
+            tsuku-llm-linux-amd64-cuda
+            tsuku-llm-linux-amd64-vulkan
+            tsuku-llm-linux-amd64-cpu
+            # Linux ARM64
+            tsuku-llm-linux-arm64-cuda
+            tsuku-llm-linux-arm64-vulkan
+            tsuku-llm-linux-arm64-cpu
+            # Checksums
+            checksums.txt
+          )
+
+          echo "Verifying all ${#EXPECTED_ARTIFACTS[@]} artifacts are present..."
+          ASSETS=$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets -q '.assets[].name')
+
+          for artifact in "${EXPECTED_ARTIFACTS[@]}"; do
+            if ! echo "$ASSETS" | grep -q "^${artifact}$"; then
+              echo "ERROR: Missing artifact: $artifact"
+              exit 1
+            fi
+            echo "Found: $artifact"
+          done
+
+          # Publish release
+          gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --draft=false
+          echo "Published release $TAG"

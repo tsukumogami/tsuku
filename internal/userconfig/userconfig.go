@@ -8,6 +8,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/BurntSushi/toml"
 	"github.com/tsukumogami/tsuku/internal/config"
@@ -34,6 +35,16 @@ type LLMConfig struct {
 	// Default is true (enabled).
 	LocalEnabled *bool `toml:"local_enabled,omitempty"`
 
+	// LocalPreemptive starts the addon server at the beginning of tsuku create
+	// to hide model loading latency. When false, server starts on first inference.
+	// Default is true (enabled).
+	LocalPreemptive *bool `toml:"local_preemptive,omitempty"`
+
+	// IdleTimeout specifies how long the addon server stays alive after the last request.
+	// Accepts Go duration format (e.g., "5m", "30s").
+	// Default is "5m". Can be overridden by TSUKU_LLM_IDLE_TIMEOUT env var.
+	IdleTimeout string `toml:"idle_timeout,omitempty"`
+
 	// Providers specifies the preferred provider order.
 	// The first provider in the list becomes the primary.
 	// Empty means auto-detect from environment variables.
@@ -54,6 +65,12 @@ const (
 
 	// DefaultHourlyRateLimit is the default maximum LLM generations per hour.
 	DefaultHourlyRateLimit = 10
+
+	// DefaultIdleTimeout is the default addon idle timeout.
+	DefaultIdleTimeout = 5 * time.Minute
+
+	// IdleTimeoutEnvVar is the env var that overrides the idle timeout config.
+	IdleTimeoutEnvVar = "TSUKU_LLM_IDLE_TIMEOUT"
 )
 
 // DefaultConfig returns a Config with default values.
@@ -144,6 +161,36 @@ func (c *Config) LLMLocalEnabled() bool {
 	return *c.LLM.LocalEnabled
 }
 
+// LLMLocalPreemptive returns whether to start the addon server preemptively.
+// Returns true if not explicitly set (default behavior).
+func (c *Config) LLMLocalPreemptive() bool {
+	if c.LLM.LocalPreemptive == nil {
+		return true // Default to enabled
+	}
+	return *c.LLM.LocalPreemptive
+}
+
+// LLMIdleTimeout returns the idle timeout for the addon server.
+// The TSUKU_LLM_IDLE_TIMEOUT env var takes precedence over the config file.
+// Returns DefaultIdleTimeout (5m) if not configured.
+func (c *Config) LLMIdleTimeout() time.Duration {
+	// Check env var first (takes precedence)
+	if envVal := os.Getenv(IdleTimeoutEnvVar); envVal != "" {
+		if d, err := time.ParseDuration(envVal); err == nil {
+			return d
+		}
+	}
+
+	// Check config file value
+	if c.LLM.IdleTimeout != "" {
+		if d, err := time.ParseDuration(c.LLM.IdleTimeout); err == nil {
+			return d
+		}
+	}
+
+	return DefaultIdleTimeout
+}
+
 // LLMProviders returns the configured provider order.
 // Returns nil if not set (use auto-detection).
 func (c *Config) LLMProviders() []string {
@@ -178,6 +225,10 @@ func (c *Config) Get(key string) (string, bool) {
 		return strconv.FormatBool(c.LLMEnabled()), true
 	case "llm.local_enabled":
 		return strconv.FormatBool(c.LLMLocalEnabled()), true
+	case "llm.local_preemptive":
+		return strconv.FormatBool(c.LLMLocalPreemptive()), true
+	case "llm.idle_timeout":
+		return c.LLMIdleTimeout().String(), true
 	case "llm.providers":
 		if len(c.LLM.Providers) == 0 {
 			return "", true
@@ -216,6 +267,19 @@ func (c *Config) Set(key, value string) error {
 			return fmt.Errorf("invalid value for llm.local_enabled: must be true or false")
 		}
 		c.LLM.LocalEnabled = &b
+		return nil
+	case "llm.local_preemptive":
+		b, err := strconv.ParseBool(value)
+		if err != nil {
+			return fmt.Errorf("invalid value for llm.local_preemptive: must be true or false")
+		}
+		c.LLM.LocalPreemptive = &b
+		return nil
+	case "llm.idle_timeout":
+		if _, err := time.ParseDuration(value); err != nil {
+			return fmt.Errorf("invalid value for llm.idle_timeout: must be a duration (e.g., 5m, 30s)")
+		}
+		c.LLM.IdleTimeout = value
 		return nil
 	case "llm.providers":
 		if value == "" {
@@ -259,6 +323,8 @@ func AvailableKeys() map[string]string {
 		"telemetry":             "Enable anonymous usage statistics (true/false)",
 		"llm.enabled":           "Enable LLM features for recipe generation (true/false)",
 		"llm.local_enabled":     "Enable local LLM inference via tsuku-llm addon (true/false)",
+		"llm.local_preemptive":  "Start local LLM addon early to hide loading latency (true/false)",
+		"llm.idle_timeout":      "How long addon stays alive after last request (e.g., 5m, 30s)",
 		"llm.providers":         "Preferred LLM provider order (comma-separated, e.g., claude,gemini)",
 		"llm.daily_budget":      "Daily LLM cost limit in USD (default: 5.0, 0 to disable)",
 		"llm.hourly_rate_limit": "Max LLM generations per hour (default: 10, 0 to disable)",

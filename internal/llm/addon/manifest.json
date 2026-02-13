@@ -1,0 +1,25 @@
+{
+  "version": "0.1.0",
+  "platforms": {
+    "darwin-arm64": {
+      "url": "https://releases.tsuku.dev/tsuku-llm/v0.1.0/tsuku-llm-darwin-arm64",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "darwin-amd64": {
+      "url": "https://releases.tsuku.dev/tsuku-llm/v0.1.0/tsuku-llm-darwin-amd64",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "linux-amd64": {
+      "url": "https://releases.tsuku.dev/tsuku-llm/v0.1.0/tsuku-llm-linux-amd64",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "linux-arm64": {
+      "url": "https://releases.tsuku.dev/tsuku-llm/v0.1.0/tsuku-llm-linux-arm64",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "windows-amd64": {
+      "url": "https://releases.tsuku.dev/tsuku-llm/v0.1.0/tsuku-llm-windows-amd64.exe",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  }
+}
