@@ -3,6 +3,8 @@
 //! This binary provides local inference capabilities via gRPC over Unix domain sockets.
 //! It bundles llama.cpp and handles hardware detection, model management, and inference.
 
+mod hardware;
+
 use std::fs::File;
 use std::os::unix::io::AsRawFd;
 use std::path::PathBuf;
@@ -133,6 +135,9 @@ struct LlmServer {
     /// Loaded model name.
     model_name: String,
 
+    /// Hardware profile detected at startup.
+    hardware_profile: hardware::HardwareProfile,
+
     /// Signal to initiate shutdown.
     shutdown_tx: mpsc::Sender<()>,
 
@@ -144,9 +149,10 @@ struct LlmServer {
 }
 
 impl LlmServer {
-    fn new(model_name: String, shutdown_tx: mpsc::Sender<()>) -> Self {
+    fn new(model_name: String, hardware_profile: hardware::HardwareProfile, shutdown_tx: mpsc::Sender<()>) -> Self {
         Self {
             model_name,
+            hardware_profile,
             shutdown_tx,
             shutting_down: Arc::new(AtomicBool::new(false)),
             in_flight: Arc::new(AtomicUsize::new(0)),
@@ -225,13 +231,12 @@ impl InferenceService for LlmServer {
         &self,
         _request: Request<StatusRequest>,
     ) -> Result<Response<StatusResponse>, Status> {
-        // TODO: Real hardware detection and model info
         let response = StatusResponse {
             ready: !self.shutting_down.load(Ordering::SeqCst),
             model_name: self.model_name.clone(),
-            model_size_bytes: 0, // TODO: Actual model size
-            backend: "cpu".to_string(), // TODO: Detect hardware
-            available_vram_bytes: 0,
+            model_size_bytes: 0, // TODO: Actual model size when model is loaded
+            backend: self.hardware_profile.gpu_backend.to_string(),
+            available_vram_bytes: self.hardware_profile.vram_bytes as i64,
         };
 
         Ok(Response::new(response))
@@ -382,12 +387,15 @@ async fn main() -> Result<()> {
     let listener = UnixListener::bind(&socket).context("Failed to bind Unix socket")?;
     let stream = UnixListenerStream::new(listener);
 
+    // Detect hardware
+    let hardware_profile = hardware::HardwareDetector::detect();
+
     // Create shutdown channel
     let (shutdown_tx, mut shutdown_rx) = mpsc::channel::<()>(1);
 
     // Create the server
-    let model_name = "stub-model".to_string(); // TODO: Load actual model
-    let server = LlmServer::new(model_name, shutdown_tx.clone());
+    let model_name = "stub-model".to_string(); // TODO: Load actual model based on hardware
+    let server = LlmServer::new(model_name, hardware_profile, shutdown_tx.clone());
     let shutting_down = server.shutting_down();
     let in_flight = server.in_flight();
 
