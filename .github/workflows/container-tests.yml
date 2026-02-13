@@ -1,0 +1,62 @@
+# Container-based integration tests for sandbox and validate packages
+# These tests require Docker and are skipped in the main test workflow (which uses -short flag)
+name: Container Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    paths:
+      - '.github/workflows/container-tests.yml'
+  workflow_dispatch:
+
+jobs:
+  sandbox-tests:
+    name: Sandbox Integration Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Verify Docker is available
+        run: docker version
+
+      - name: Build tsuku binary
+        run: go build -o tsuku ./cmd/tsuku
+
+      - name: Run sandbox integration tests
+        run: go test -v -timeout 20m ./internal/sandbox/...
+
+  validate-tests:
+    name: Validate Integration Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Verify Docker is available
+        run: docker version
+
+      - name: Build tsuku binary
+        run: go build -o tsuku ./cmd/tsuku
+
+      - name: Run validate integration tests
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: go test -v -timeout 10m ./internal/validate/...
