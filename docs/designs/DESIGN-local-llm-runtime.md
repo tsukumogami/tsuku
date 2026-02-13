@@ -41,7 +41,7 @@ Planned
 
 | Issue | Dependencies | Tier |
 |-------|--------------|------|
-| [#1635: feat(llm): implement hardware detection](https://github.com/tsukumogami/tsuku/issues/1635) | [#1628](https://github.com/tsukumogami/tsuku/issues/1628) | testable |
+| ~~[#1635: feat(llm): implement hardware detection](https://github.com/tsukumogami/tsuku/issues/1635)~~ | [#1628](https://github.com/tsukumogami/tsuku/issues/1628) | testable |
 | _Detect GPU type (CUDA/Metal/Vulkan/none), VRAM, system RAM, and CPU features (AVX2/AVX-512) at server startup._ | | |
 | [#1636: feat(llm): implement model selection based on hardware](https://github.com/tsukumogami/tsuku/issues/1636) | [#1635](https://github.com/tsukumogami/tsuku/issues/1635) | testable |
 | _ModelSelector maps HardwareProfile to appropriate model (3B/1.5B/0.5B). Supports local_model config override._ | | |
@@ -132,9 +132,9 @@ graph TD
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1628,I1629,I1630,I1631,I1632,I1633,I1634 done
-    class I1635 ready
-    class I1636,I1637,I1638,I1639,I1640,I1641,I1642,I1643,I1644,I1645 blocked
+    class I1628,I1629,I1630,I1631,I1632,I1633,I1634,I1635 done
+    class I1636 ready
+    class I1637,I1638,I1639,I1640,I1641,I1642,I1643,I1644,I1645 blocked
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
