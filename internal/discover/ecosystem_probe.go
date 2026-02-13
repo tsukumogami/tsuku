@@ -13,16 +13,29 @@ import (
 // EcosystemProbe resolves tool names by querying ecosystem registries in parallel.
 // This is the second stage of the resolver chain.
 type EcosystemProbe struct {
-	probers  []builders.EcosystemProber
-	timeout  time.Duration
-	priority map[string]int // builder name → priority rank (lower = better)
-	filter   *QualityFilter
+	probers               []builders.EcosystemProber
+	timeout               time.Duration
+	priority              map[string]int // builder name → priority rank (lower = better)
+	filter                *QualityFilter
+	confirmDisambiguation ConfirmDisambiguationFunc // optional callback for interactive mode
+}
+
+// EcosystemProbeOption configures an EcosystemProbe.
+type EcosystemProbeOption func(*EcosystemProbe)
+
+// WithConfirmDisambiguation sets a callback for interactive disambiguation.
+// When provided, close matches prompt the user to select instead of returning
+// AmbiguousMatchError.
+func WithConfirmDisambiguation(fn ConfirmDisambiguationFunc) EcosystemProbeOption {
+	return func(p *EcosystemProbe) {
+		p.confirmDisambiguation = fn
+	}
 }
 
 // NewEcosystemProbe creates a resolver that queries ecosystem builders in parallel.
 // The timeout applies to all probers collectively via a shared context.
-func NewEcosystemProbe(probers []builders.EcosystemProber, timeout time.Duration) *EcosystemProbe {
-	return &EcosystemProbe{
+func NewEcosystemProbe(probers []builders.EcosystemProber, timeout time.Duration, opts ...EcosystemProbeOption) *EcosystemProbe {
+	p := &EcosystemProbe{
 		probers: probers,
 		timeout: timeout,
 		priority: map[string]int{
@@ -37,6 +50,10 @@ func NewEcosystemProbe(probers []builders.EcosystemProber, timeout time.Duration
 		},
 		filter: NewQualityFilter(),
 	}
+	for _, opt := range opts {
+		opt(p)
+	}
+	return p
 }
 
 // probeOutcome holds the result from a single builder's Probe() call.
@@ -109,5 +126,5 @@ func (p *EcosystemProbe) Resolve(ctx context.Context, toolName string) (*Discove
 	}
 
 	// Disambiguate: rank by popularity and check for clear winner.
-	return disambiguate(toolName, matches, p.priority)
+	return disambiguate(toolName, matches, p.priority, p.confirmDisambiguation)
 }

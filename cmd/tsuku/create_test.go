@@ -1,8 +1,10 @@
 package main
 
 import (
+	"strings"
 	"testing"
 
+	"github.com/tsukumogami/tsuku/internal/discover"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 )
 
@@ -514,4 +516,122 @@ func TestFormatDaysAgo(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestFormatDownloadCount(t *testing.T) {
+	tests := []struct {
+		count int
+		want  string
+	}{
+		{0, "0"},
+		{1, "1"},
+		{999, "999"},
+		{1000, "1.0K"},
+		{1500, "1.5K"},
+		{45000, "45.0K"},
+		{999999, "1000.0K"},
+		{1000000, "1.0M"},
+		{1200000, "1.2M"},
+		{50000000, "50.0M"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.want, func(t *testing.T) {
+			got := formatDownloadCount(tt.count)
+			if got != tt.want {
+				t.Errorf("formatDownloadCount(%d) = %q, want %q", tt.count, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestFormatDisambiguationPrompt(t *testing.T) {
+	tests := []struct {
+		name    string
+		matches []discover.ProbeMatch
+		checks  []string
+	}{
+		{
+			name: "single match",
+			matches: []discover.ProbeMatch{
+				{Builder: "npm", Source: "bat", Downloads: 45000, VersionCount: 12, HasRepository: true},
+			},
+			checks: []string{
+				"Multiple sources found:",
+				"1. npm: bat (recommended)",
+				"Downloads: 45.0K",
+				"Versions: 12",
+				"Has repository",
+			},
+		},
+		{
+			name: "two matches with different metadata",
+			matches: []discover.ProbeMatch{
+				{Builder: "crates.io", Source: "bat", Downloads: 1200000, VersionCount: 50, HasRepository: true},
+				{Builder: "npm", Source: "bat-cli", Downloads: 5000, VersionCount: 3, HasRepository: false},
+			},
+			checks: []string{
+				"1. crates.io: bat (recommended)",
+				"Downloads: 1.2M",
+				"Versions: 50",
+				"2. npm: bat-cli",
+				"Downloads: 5.0K",
+				"Versions: 3",
+				"No repository",
+			},
+		},
+		{
+			name: "match with no downloads",
+			matches: []discover.ProbeMatch{
+				{Builder: "pypi", Source: "mytool", Downloads: 0, VersionCount: 5, HasRepository: true},
+			},
+			checks: []string{
+				"1. pypi: mytool (recommended)",
+				"Downloads: N/A",
+				"Versions: 5",
+			},
+		},
+		{
+			name: "match with no version count",
+			matches: []discover.ProbeMatch{
+				{Builder: "rubygems", Source: "gemtool", Downloads: 8000, VersionCount: 0, HasRepository: false},
+			},
+			checks: []string{
+				"Downloads: 8.0K",
+				"No repository",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := formatDisambiguationPrompt(tt.matches)
+			for _, check := range tt.checks {
+				if !strings.Contains(got, check) {
+					t.Errorf("formatDisambiguationPrompt() missing %q in output:\n%s", check, got)
+				}
+			}
+		})
+	}
+
+	// Test that only first match gets "(recommended)" suffix
+	t.Run("only first is recommended", func(t *testing.T) {
+		matches := []discover.ProbeMatch{
+			{Builder: "npm", Source: "first"},
+			{Builder: "pypi", Source: "second"},
+			{Builder: "crates.io", Source: "third"},
+		}
+		got := formatDisambiguationPrompt(matches)
+
+		// Count occurrences of "(recommended)"
+		count := strings.Count(got, "(recommended)")
+		if count != 1 {
+			t.Errorf("expected 1 occurrence of '(recommended)', got %d in:\n%s", count, got)
+		}
+
+		// Verify it's attached to the first match
+		if !strings.Contains(got, "1. npm: first (recommended)") {
+			t.Errorf("'(recommended)' not attached to first match in:\n%s", got)
+		}
+	})
 }
