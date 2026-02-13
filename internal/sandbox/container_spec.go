@@ -48,6 +48,16 @@ var familyToBaseImage = map[string]string{
 	"suse":   "opensuse/leap:15",
 }
 
+// hasPPARepository returns true if any repository is a PPA (Ubuntu-specific).
+func hasPPARepository(repositories []RepositoryConfig) bool {
+	for _, repo := range repositories {
+		if repo.Type == "ppa" {
+			return true
+		}
+	}
+	return false
+}
+
 // DeriveContainerSpec creates a container specification from system requirements.
 //
 // This function:
@@ -117,6 +127,11 @@ func DeriveContainerSpec(reqs *SystemRequirements) (*ContainerSpec, error) {
 	baseImage, ok := familyToBaseImage[family]
 	if !ok {
 		return nil, fmt.Errorf("no base image configured for linux_family %q", family)
+	}
+
+	// PPAs require Ubuntu, not Debian - they're Ubuntu-specific (Launchpad integration)
+	if family == "debian" && hasPPARepository(reqs.Repositories) {
+		baseImage = "ubuntu:24.04"
 	}
 
 	// Generate build commands (repositories first, then packages)
