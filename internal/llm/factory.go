@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"time"
 )
 
 // Factory creates and manages LLM providers with circuit breakers.
@@ -20,6 +21,7 @@ type Factory struct {
 type LLMConfig interface {
 	LLMEnabled() bool
 	LLMLocalEnabled() bool
+	LLMIdleTimeout() time.Duration
 	LLMProviders() []string
 }
 
@@ -31,8 +33,10 @@ type factoryOptions struct {
 	primary         string
 	enabled         bool
 	localEnabled    bool
+	idleTimeout     time.Duration
 	preferredOrder  []string
 	enabledExplicit bool // Whether enabled was explicitly set
+	config          LLMConfig
 }
 
 // FactoryOption configures a Factory.
@@ -52,8 +56,10 @@ func WithPrimaryProvider(name string) FactoryOption {
 // If config.LLMProviders() returns a non-empty list, the first provider becomes primary.
 func WithConfig(cfg LLMConfig) FactoryOption {
 	return func(o *factoryOptions) {
+		o.config = cfg
 		o.enabled = cfg.LLMEnabled()
 		o.localEnabled = cfg.LLMLocalEnabled()
+		o.idleTimeout = cfg.LLMIdleTimeout()
 		o.enabledExplicit = true
 		providers := cfg.LLMProviders()
 		if len(providers) > 0 {
@@ -89,6 +95,25 @@ func WithProviderOrder(providers []string) FactoryOption {
 	}
 }
 
+// shouldRegisterLocal determines whether to register LocalProvider.
+func shouldRegisterLocal(o *factoryOptions) bool {
+	// If explicitly disabled, skip
+	if !o.localEnabled {
+		return false
+	}
+	// If explicit provider order was given, only include local if listed
+	if len(o.preferredOrder) > 0 {
+		for _, p := range o.preferredOrder {
+			if p == "local" {
+				return true
+			}
+		}
+		return false
+	}
+	// Default: include local
+	return true
+}
+
 // NewFactory creates a factory with available providers.
 // It auto-detects available providers based on environment variables:
 // - Claude: Available if ANTHROPIC_API_KEY is set
@@ -100,9 +125,10 @@ func WithProviderOrder(providers []string) FactoryOption {
 func NewFactory(ctx context.Context, opts ...FactoryOption) (*Factory, error) {
 	// Process options
 	o := &factoryOptions{
-		primary:      "claude", // Default primary provider
-		enabled:      true,     // Default enabled
-		localEnabled: true,     // Default local enabled
+		primary:      "claude",        // Default primary provider
+		enabled:      true,            // Default enabled
+		localEnabled: true,            // Default local enabled
+		idleTimeout:  5 * time.Minute, // Default idle timeout
 	}
 	for _, opt := range opts {
 		opt(o)
@@ -139,8 +165,8 @@ func NewFactory(ctx context.Context, opts ...FactoryOption) (*Factory, error) {
 
 	// Register LocalProvider as fallback if enabled
 	// LocalProvider is lowest priority - only used when no cloud providers are available
-	if o.localEnabled {
-		provider := NewLocalProvider()
+	if shouldRegisterLocal(o) {
+		provider := NewLocalProviderWithTimeout(o.idleTimeout)
 		f.providers["local"] = provider
 		f.breakers["local"] = NewCircuitBreaker("local")
 	}

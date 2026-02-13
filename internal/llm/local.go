@@ -19,19 +19,29 @@ import (
 // LocalProvider implements the Provider interface using the local tsuku-llm addon.
 // It communicates with the addon over gRPC via Unix domain sockets.
 type LocalProvider struct {
-	lifecycle *ServerLifecycle
-	conn      *grpc.ClientConn
-	client    pb.InferenceServiceClient
+	addonManager *addon.AddonManager
+	lifecycle    *ServerLifecycle
+	conn         *grpc.ClientConn
+	client       pb.InferenceServiceClient
 }
 
-// NewLocalProvider creates a new local provider.
+// NewLocalProvider creates a new local provider with default idle timeout.
 // The provider uses ServerLifecycle to ensure the addon is running before making requests.
 func NewLocalProvider() *LocalProvider {
+	return NewLocalProviderWithTimeout(DefaultIdleTimeout)
+}
+
+// NewLocalProviderWithTimeout creates a new local provider with the specified idle timeout.
+// The idle timeout is passed to the addon server when starting it.
+func NewLocalProviderWithTimeout(idleTimeout time.Duration) *LocalProvider {
 	socketPath := SocketPath()
-	addonPath := addon.AddonPath()
+	addonManager := addon.NewAddonManager()
+	lifecycle := NewServerLifecycleWithManager(socketPath, addonManager)
+	lifecycle.SetIdleTimeout(idleTimeout)
 
 	return &LocalProvider{
-		lifecycle: NewServerLifecycle(socketPath, addonPath),
+		addonManager: addonManager,
+		lifecycle:    lifecycle,
 	}
 }
 
@@ -41,9 +51,14 @@ func (p *LocalProvider) Name() string {
 }
 
 // Complete sends a completion request to the local addon.
-// It ensures the addon server is running before sending the request.
+// It ensures the addon is downloaded, verified, and running before sending the request.
 func (p *LocalProvider) Complete(ctx context.Context, req *CompletionRequest) (*CompletionResponse, error) {
-	// Ensure the addon server is running
+	// Ensure addon is downloaded and verified
+	if _, err := p.addonManager.EnsureAddon(ctx); err != nil {
+		return nil, fmt.Errorf("failed to ensure addon: %w", err)
+	}
+
+	// Ensure the addon server is running (includes pre-execution verification)
 	if err := p.lifecycle.EnsureRunning(ctx); err != nil {
 		return nil, fmt.Errorf("local LLM addon not available: %w", err)
 	}
