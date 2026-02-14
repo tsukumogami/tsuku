@@ -1,7 +1,7 @@
 ---
 status: Proposed
 problem: |
-  Tsuku requires explicit CLI invocation for every tool installation. Users must know which tools they need, manually install them, and configure PATH. The vision is automatic command interception and on-demand provisioning, but the foundational building blocks are missing.
+  Tsuku requires explicit CLI invocation for every tool installation. Users must know which tools they need and manually install them. The vision is automatic command interception and on-demand provisioning, but the foundational building blocks are missing.
 decision: |
   Build five independent building blocks organized into two parallel tracks. Track A (command interception): binary index, command-not-found handler, auto-install. Track B (project environments): project configuration file, shell environment activation. Each block provides standalone value while enabling the next. Shell hooks are optional; all features work via explicit CLI.
 rationale: |
@@ -16,12 +16,11 @@ Proposed
 
 ## Context and Problem Statement
 
-Tsuku currently operates as an explicit package manager: users invoke `tsuku install <tool>` to install tools, then manually ensure the tools are on their PATH. This model works but creates friction:
+Tsuku currently operates as an explicit package manager: users invoke `tsuku install <tool>` to install each tool they need. The install script sets up PATH automatically, but users must still know which tools to install. This model works but creates friction:
 
 1. **Discovery burden**: Users must know which tool they need and its recipe name
 2. **Manual installation**: Every tool requires an explicit install command
-3. **PATH management**: Users must configure their shell to find installed tools
-4. **No project-local environments**: Tools are global, with no per-directory version control
+3. **No project-local environments**: Tools are global, with no per-directory version control
 
 The vision is a fundamentally different UX where:
 - Users type a command (e.g., `jq .foo data.json`)
