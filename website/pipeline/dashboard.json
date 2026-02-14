@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-02-14T18:36:03Z",
+  "generated_at": "2026-02-14T18:54:48Z",
   "queue": {
     "total": 4905,
     "by_status": {
@@ -29796,6 +29796,78 @@
     "timeout": 3,
     "validation_failed": 156
   },
+  "runs": [
+    {
+      "batch_id": "2026-02-06-homebrew",
+      "total": 2,
+      "merged": 2,
+      "rate": 1,
+      "timestamp": "2026-02-06T20:45:08Z"
+    },
+    {
+      "batch_id": "2026-02-06-homebrew",
+      "total": 5,
+      "merged": 5,
+      "rate": 1,
+      "timestamp": "2026-02-06T19:07:05Z"
+    },
+    {
+      "batch_id": "2026-02-06-homebrew",
+      "total": 5,
+      "merged": 5,
+      "rate": 1,
+      "timestamp": "2026-02-06T17:55:11Z"
+    },
+    {
+      "batch_id": "2026-02-06-homebrew",
+      "total": 3,
+      "merged": 3,
+      "rate": 1,
+      "timestamp": "2026-02-06T17:01:06Z"
+    },
+    {
+      "batch_id": "2026-02-06-homebrew",
+      "total": 1,
+      "merged": 1,
+      "rate": 1,
+      "timestamp": "2026-02-06T15:52:17Z"
+    },
+    {
+      "batch_id": "2026-02-06-homebrew",
+      "total": 1,
+      "merged": 1,
+      "rate": 1,
+      "timestamp": "2026-02-06T14:48:32Z"
+    },
+    {
+      "batch_id": "2026-02-06-homebrew",
+      "total": 1,
+      "merged": 1,
+      "rate": 1,
+      "timestamp": "2026-02-06T13:17:01Z"
+    },
+    {
+      "batch_id": "2026-02-06-homebrew",
+      "total": 1,
+      "merged": 1,
+      "rate": 1,
+      "timestamp": "2026-02-06T11:42:31Z"
+    },
+    {
+      "batch_id": "2026-02-06-homebrew",
+      "total": 5,
+      "merged": 5,
+      "rate": 1,
+      "timestamp": "2026-02-06T10:56:25Z"
+    },
+    {
+      "batch_id": "2026-02-06-homebrew",
+      "total": 3,
+      "merged": 3,
+      "rate": 1,
+      "timestamp": "2026-02-06T09:58:17Z"
+    }
+  ],
   "disambiguations": {
     "total": 20,
     "by_reason": {

@@ -3,8 +3,10 @@ package dashboard
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"sort"
@@ -429,22 +431,27 @@ func computeTopBlockers(blockers map[string][]string, limit int) []Blocker {
 }
 
 func loadMetrics(path string) ([]RunSummary, error) {
-	file, err := os.Open(path)
+	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
-	defer file.Close()
 
 	var runs []RunSummary
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := scanner.Bytes()
-		if len(line) == 0 {
-			continue
+
+	// Try streaming decoder first for pretty-printed JSON objects
+	decoder := json.NewDecoder(bytes.NewReader(data))
+	for {
+		var record MetricsRecord
+		if err := decoder.Decode(&record); err != nil {
+			if err == io.EOF {
+				break
+			}
+			// If streaming fails, fall back to line-by-line parsing
+			runs = parseMetricsLineByLine(data)
+			break
 		}
 
-		var record MetricsRecord
-		if err := json.Unmarshal(line, &record); err != nil {
+		if record.BatchID == "" {
 			continue
 		}
 
@@ -462,7 +469,43 @@ func loadMetrics(path string) ([]RunSummary, error) {
 		})
 	}
 
-	return runs, scanner.Err()
+	return runs, nil
+}
+
+// parseMetricsLineByLine handles JSONL format where each line is a JSON object.
+// Malformed lines are skipped.
+func parseMetricsLineByLine(data []byte) []RunSummary {
+	var runs []RunSummary
+	scanner := bufio.NewScanner(bytes.NewReader(data))
+	for scanner.Scan() {
+		line := scanner.Bytes()
+		if len(line) == 0 {
+			continue
+		}
+
+		var record MetricsRecord
+		if err := json.Unmarshal(line, &record); err != nil {
+			continue // Skip malformed lines
+		}
+
+		if record.BatchID == "" {
+			continue
+		}
+
+		rate := 0.0
+		if record.Total > 0 {
+			rate = float64(record.Merged) / float64(record.Total)
+		}
+
+		runs = append(runs, RunSummary{
+			BatchID:   record.BatchID,
+			Total:     record.Total,
+			Merged:    record.Merged,
+			Rate:      rate,
+			Timestamp: record.Timestamp,
+		})
+	}
+	return runs
 }
 
 // loadFailuresFromDir aggregates failures across all JSONL files in a directory.
