@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Accepted
 problem: |
   Tsuku requires explicit CLI invocation for every tool installation. Users must know which tools they need and manually install them. The vision is automatic command interception and on-demand provisioning, but the foundational building blocks are missing.
 decision: |
@@ -12,7 +12,7 @@ rationale: |
 
 ## Status
 
-Proposed
+Accepted
 
 ## Context and Problem Statement
 
