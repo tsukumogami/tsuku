@@ -46,7 +46,7 @@ Planned
 | _Adds CLI error handling that displays `AmbiguousMatchError` with actionable `--from` suggestions in create and install commands. Provides clear guidance for non-interactive resolution._ | | |
 | ~~[#1654: feat(batch): add DisambiguationRecord tracking](https://github.com/tsukumogami/tsuku/issues/1654)~~ | [#1648](https://github.com/tsukumogami/tsuku/issues/1648) | testable |
 | _Creates `DisambiguationRecord` type for batch orchestrator to track tool selections. Records selection reason (single_match, 10x_popularity_gap, priority_fallback) and sets `HighRisk` flag for fallback selections._ | | |
-| [#1655: feat(dashboard): display disambiguation metrics](https://github.com/tsukumogami/tsuku/issues/1655) | [#1654](https://github.com/tsukumogami/tsuku/issues/1654) | simple |
+| ~~[#1655: feat(dashboard): display disambiguation metrics](https://github.com/tsukumogami/tsuku/issues/1655)~~ | ~~[#1654](https://github.com/tsukumogami/tsuku/issues/1654)~~ | ~~simple~~ |
 | _Adds disambiguation statistics to the pipeline dashboard showing counts by selection reason and highlighting high-risk fallback selections for human review._ | | |
 
 ### Dependency Graph
@@ -86,8 +86,8 @@ graph TD
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1648,I1650,I1651,I1654 done
-    class I1649,I1652,I1655 ready
+    class I1648,I1650,I1651,I1654,I1655 done
+    class I1649,I1652 ready
     class I1653 blocked
 ```
 
