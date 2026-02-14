@@ -414,6 +414,14 @@ func offerToolchainInstall(info *toolchain.Info, ecosystem string, autoApprove b
 	return true
 }
 
+// handleAmbiguousError handles AmbiguousMatchError with specific exit code.
+// This function does not return - it calls exitWithCode.
+func handleAmbiguousError(err *discover.AmbiguousMatchError) {
+	// Print the formatted error message directly to preserve multi-line output
+	fmt.Fprintln(os.Stderr, "Error:", err.Error())
+	exitWithCode(ExitAmbiguous)
+}
+
 // parseFromFlag parses the --from flag value.
 // Returns (builder, remainder).
 // Splits on the first ":" - builder name before, remainder after.
@@ -479,6 +487,11 @@ func runCreate(cmd *cobra.Command, args []string) {
 		// No --from flag: run discovery to find the builder and source.
 		result, err := runDiscovery(toolName)
 		if err != nil {
+			// Handle AmbiguousMatchError with specific exit code and JSON output
+			var ambigErr *discover.AmbiguousMatchError
+			if errors.As(err, &ambigErr) {
+				handleAmbiguousError(ambigErr)
+			}
 			printError(err)
 			exitWithCode(ExitRecipeNotFound)
 		}
