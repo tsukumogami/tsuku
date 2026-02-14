@@ -18,6 +18,10 @@ pub enum LlamaError {
     #[error("tokenization failed: {0}")]
     Tokenization(String),
 
+    /// Failed to detokenize output.
+    #[error("detokenization failed: {0}")]
+    Detokenization(String),
+
     /// Failed to decode tokens.
     #[error("decode failed: {0}")]
     Decode(String),

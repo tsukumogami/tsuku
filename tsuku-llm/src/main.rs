@@ -190,28 +190,68 @@ impl LlmServer {
         self.in_flight.clone()
     }
 
-    /// Build a prompt string from messages.
+    /// Build a prompt string from messages using ChatML format.
     ///
-    /// Uses a simple chat template format compatible with most models.
-    fn build_prompt(&self, messages: &[proto::Message]) -> String {
+    /// Qwen 2.5 uses the ChatML template:
+    /// ```
+    /// <|im_start|>system
+    /// {system_prompt}<|im_end|>
+    /// <|im_start|>user
+    /// {user_message}<|im_end|>
+    /// <|im_start|>assistant
+    /// ```
+    fn build_prompt(&self, system_prompt: &str, messages: &[proto::Message]) -> String {
         let mut prompt = String::new();
 
+        // Add system prompt if present
+        if !system_prompt.is_empty() {
+            prompt.push_str("<|im_start|>system\n");
+            prompt.push_str(system_prompt);
+            prompt.push_str("<|im_end|>\n");
+        }
+
+        // Add each message
         for msg in messages {
-            let role_str = match proto::Role::try_from(msg.role) {
+            let role = match proto::Role::try_from(msg.role) {
                 Ok(proto::Role::User) => "user",
                 Ok(proto::Role::Assistant) => "assistant",
                 Ok(proto::Role::Tool) => "tool",
-                _ => "system",
+                _ => "user", // Default to user for unknown roles
             };
-            let content = &msg.content;
 
-            // Simple chat template: <|role|>\ncontent\n
-            prompt.push_str(&format!("<|{}|>\n{}\n", role_str, content));
+            prompt.push_str(&format!("<|im_start|>{}\n", role));
+            prompt.push_str(&msg.content);
+            prompt.push_str("<|im_end|>\n");
         }
 
-        // Add assistant prefix to prompt for completion
-        prompt.push_str("<|assistant|>\n");
+        // Add assistant start token for completion
+        prompt.push_str("<|im_start|>assistant\n");
         prompt
+    }
+
+    /// Parse tool call from JSON content.
+    ///
+    /// Expected format: {"name": "tool_name", "arguments": {...}}
+    fn parse_tool_call(content: &str) -> Option<proto::ToolCall> {
+        let value: serde_json::Value = serde_json::from_str(content.trim()).ok()?;
+
+        let name = value.get("name")?.as_str()?;
+        let arguments = value.get("arguments")?;
+
+        // Generate a simple unique ID using timestamp and hash
+        let id = format!(
+            "call_{}",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_nanos()
+        );
+
+        Some(proto::ToolCall {
+            id,
+            name: name.to_string(),
+            arguments_json: arguments.to_string(),
+        })
     }
 }
 
@@ -233,14 +273,15 @@ impl InferenceService for LlmServer {
 
         let req = request.into_inner();
         info!(
-            "Complete request: {} messages, {} tools",
+            "Complete request: {} messages, {} tools, system_prompt: {} chars",
             req.messages.len(),
-            req.tools.len()
+            req.tools.len(),
+            req.system_prompt.len()
         );
 
-        // Build prompt from messages
-        let prompt = self.build_prompt(&req.messages);
-        debug!("Built prompt: {} chars", prompt.len());
+        // Build prompt from messages using ChatML format
+        let prompt = self.build_prompt(&req.system_prompt, &req.messages);
+        debug!("Built prompt ({} chars):\n{}", prompt.len(), &prompt[..prompt.len().min(500)]);
 
         // Acquire context lock for inference
         let mut ctx = self.context.lock().await;
@@ -326,7 +367,20 @@ impl InferenceService for LlmServer {
         // After single-token decodes, logits are at index 0.
         let mut logits_idx = (tokens.len() - 1) as i32;
 
+        // Generation timeout: 30 seconds max per turn
+        const GENERATION_TIMEOUT: Duration = Duration::from_secs(30);
+        let generation_start = std::time::Instant::now();
+        let mut timed_out = false;
+        let using_grammar = grammar_sampler.is_some();
+
         for _ in 0..max_tokens {
+            // Check timeout
+            if generation_start.elapsed() > GENERATION_TIMEOUT {
+                warn!("Generation timeout reached after 30s");
+                timed_out = true;
+                break;
+            }
+
             // Sample next token (grammar-constrained or regular)
             let next_token = if let Some(ref mut gs) = grammar_sampler {
                 // Grammar sampler handles everything internally
@@ -341,6 +395,7 @@ impl InferenceService for LlmServer {
 
             // Check for EOS (token 0 or 2 are common EOS tokens)
             if next_token == 0 || next_token == 2 {
+                debug!("EOS token {} encountered", next_token);
                 break;
             }
 
@@ -357,23 +412,47 @@ impl InferenceService for LlmServer {
             logits_idx = 0;
         }
 
-        // Detokenize output (simplified - just return the count for now)
-        // Full detokenization would use llama_token_to_piece
-        let content = format!(
-            "Generated {} tokens (detokenization not yet implemented)",
-            output_tokens.len()
+        // Detokenize output
+        let content = ctx.detokenize(&output_tokens).map_err(|e| {
+            error!("Detokenization failed: {}", e);
+            Status::internal(format!("Detokenization failed: {}", e))
+        })?;
+
+        info!(
+            "Generated {} tokens in {:?}: {}",
+            output_tokens.len(),
+            generation_start.elapsed(),
+            if content.len() > 100 {
+                format!("{}...", &content[..100])
+            } else {
+                content.clone()
+            }
         );
 
-        let stop_reason = if output_tokens.len() >= max_tokens {
-            "max_tokens"
+        // Parse tool calls if we used grammar-constrained generation with tools
+        let mut tool_calls = Vec::new();
+        let stop_reason = if timed_out {
+            "timeout".to_string()
+        } else if output_tokens.len() >= max_tokens {
+            "max_tokens".to_string()
+        } else if using_grammar && !req.tools.is_empty() {
+            // Try to parse tool call from content
+            if let Some(tool_call) = Self::parse_tool_call(&content) {
+                info!("Parsed tool call: {} with args {}", tool_call.name, tool_call.arguments_json);
+                tool_calls.push(tool_call);
+                "tool_use".to_string()
+            } else {
+                warn!("Grammar was used but failed to parse tool call from: {}", content);
+                "end_turn".to_string()
+            }
         } else {
-            "end_turn"
+            "end_turn".to_string()
         };
 
         let response = CompletionResponse {
             content,
-            tool_calls: vec![],
-            stop_reason: stop_reason.to_string(),
+            tool_calls,
+            stop_reason,
             usage: Some(Usage {
                 input_tokens: input_tokens as i32,
                 output_tokens: output_tokens.len() as i32,

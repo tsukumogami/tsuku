@@ -6,7 +6,7 @@ use std::sync::Arc;
 use super::bindings::{
     llama_batch_free, llama_batch_init, llama_context, llama_decode, llama_free,
     llama_get_logits_ith, llama_get_memory, llama_memory_clear, llama_n_ctx,
-    llama_new_context_with_model, llama_tokenize,
+    llama_new_context_with_model, llama_token_to_piece, llama_tokenize,
 };
 use super::error::{LlamaError, Result};
 use super::model::LlamaModel;
@@ -213,6 +213,64 @@ impl LlamaContext {
     /// Get the model this context was created from.
     pub fn model(&self) -> &Arc<LlamaModel> {
         &self._model
+    }
+
+    /// Convert tokens back to text (detokenization).
+    ///
+    /// # Arguments
+    ///
+    /// * `tokens` - Token IDs to convert to text
+    ///
+    /// # Returns
+    ///
+    /// The text representation of the tokens.
+    pub fn detokenize(&self, tokens: &[i32]) -> Result<String> {
+        let vocab = self._model.vocab();
+        let mut output = String::new();
+
+        for &token in tokens {
+            // Start with a reasonable buffer size
+            let mut buf = vec![0u8; 256];
+            let len = unsafe {
+                llama_token_to_piece(
+                    vocab,
+                    token,
+                    buf.as_mut_ptr() as *mut i8,
+                    buf.len() as i32,
+                    0,     // lstrip
+                    false, // special - don't render special tokens
+                )
+            };
+
+            if len < 0 {
+                // Negative means buffer too small, resize and retry
+                let needed = (-len) as usize;
+                buf.resize(needed, 0);
+                let len = unsafe {
+                    llama_token_to_piece(
+                        vocab,
+                        token,
+                        buf.as_mut_ptr() as *mut i8,
+                        buf.len() as i32,
+                        0,
+                        false,
+                    )
+                };
+                if len < 0 {
+                    return Err(LlamaError::Detokenization(format!(
+                        "failed to detokenize token {}: buffer still too small",
+                        token
+                    )));
+                }
+                buf.truncate(len as usize);
+            } else {
+                buf.truncate(len as usize);
+            }
+
+            output.push_str(&String::from_utf8_lossy(&buf));
+        }
+
+        Ok(output)
     }
 
     /// Get the raw context pointer for use with samplers.
