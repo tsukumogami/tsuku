@@ -11,7 +11,7 @@ repo = "oven-sh/bun"
 asset_pattern = "bun-{os}-{arch}.zip"
 strip_dirs = 1
 binaries = ["bun"]
-os_mapping = { linux = "linux", darwin = "darwin" }
+os_mapping = { linux = "linux" }
 arch_mapping = { amd64 = "x64", arm64 = "aarch64" }
 
 [verify]
