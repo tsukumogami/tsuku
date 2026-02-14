@@ -31,6 +31,11 @@ type Metadata struct {
 	OwnerType           string // Owner type: "User" or "Organization"
 	VerificationSkipped bool   // True if GitHub API verification was skipped (e.g., rate limited)
 	VerificationWarning string // Warning message when verification was skipped
+
+	// Disambiguation fields - populated when ecosystem probe selects from multiple matches
+	SelectionReason string           // "single_match", "10x_popularity_gap", or "priority_fallback"
+	Alternatives    []DiscoveryMatch // Other matches that weren't selected
+	DownloadsRatio  float64          // Ratio of selected downloads to runner-up (for 10x_popularity_gap)
 }
 
 // DiscoveryResult describes where a tool can be sourced from.

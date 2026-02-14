@@ -352,7 +352,7 @@ func TestDisambiguate(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := disambiguate(tt.toolName, tt.matches, priority, nil)
+			result, err := disambiguate(tt.toolName, tt.matches, priority, nil, false)
 
 			if tt.expectError {
 				if err == nil {
@@ -444,7 +444,7 @@ func TestConfirmDisambiguationCallback(t *testing.T) {
 			return 0, nil
 		}
 
-		_, err := disambiguate("bat", closeMatches, priority, callback)
+		_, err := disambiguate("bat", closeMatches, priority, callback, false)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -484,7 +484,7 @@ func TestConfirmDisambiguationCallback(t *testing.T) {
 			return 0, nil // select first
 		}
 
-		result, err := disambiguate("bat", closeMatches, priority, callback)
+		result, err := disambiguate("bat", closeMatches, priority, callback, false)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -499,7 +499,7 @@ func TestConfirmDisambiguationCallback(t *testing.T) {
 			return 1, nil // select second
 		}
 
-		result, err := disambiguate("bat", closeMatches, priority, callback)
+		result, err := disambiguate("bat", closeMatches, priority, callback, false)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -515,7 +515,7 @@ func TestConfirmDisambiguationCallback(t *testing.T) {
 			return 0, expectedErr
 		}
 
-		_, err := disambiguate("bat", closeMatches, priority, callback)
+		_, err := disambiguate("bat", closeMatches, priority, callback, false)
 		if err != expectedErr {
 			t.Errorf("expected error %v, got %v", expectedErr, err)
 		}
@@ -526,7 +526,7 @@ func TestConfirmDisambiguationCallback(t *testing.T) {
 			return 99, nil // invalid index
 		}
 
-		_, err := disambiguate("bat", closeMatches, priority, callback)
+		_, err := disambiguate("bat", closeMatches, priority, callback, false)
 		if err == nil {
 			t.Fatal("expected error for out of range index")
 		}
@@ -542,7 +542,7 @@ func TestConfirmDisambiguationCallback(t *testing.T) {
 			return -1, nil // invalid index
 		}
 
-		_, err := disambiguate("bat", closeMatches, priority, callback)
+		_, err := disambiguate("bat", closeMatches, priority, callback, false)
 		if err == nil {
 			t.Fatal("expected error for negative index")
 		}
@@ -581,7 +581,7 @@ func TestConfirmDisambiguationCallback(t *testing.T) {
 			return 0, nil
 		}
 
-		result, err := disambiguate("bat", clearWinnerMatches, priority, callback)
+		result, err := disambiguate("bat", clearWinnerMatches, priority, callback, false)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
