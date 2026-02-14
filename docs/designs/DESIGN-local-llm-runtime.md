@@ -51,7 +51,7 @@ Planned
 | _Build llama.cpp via cc crate. Safe Rust wrappers for model loading and inference with proper context management._ | | |
 | ~~[#1672: feat(llm): configure model manifest with HuggingFace URLs](https://github.com/tsukumogami/tsuku/issues/1672)~~ | [#1637](https://github.com/tsukumogami/tsuku/issues/1637), [#1638](https://github.com/tsukumogami/tsuku/issues/1638) | testable |
 | _Update manifest with real HuggingFace download URLs and SHA256 checksums. Enables end-to-end model download and inference._ | | |
-| [#1675: fix(llm): daemon socket not cleaned up on SIGTERM](https://github.com/tsukumogami/tsuku/issues/1675) | [#1631](https://github.com/tsukumogami/tsuku/issues/1631) | testable |
+| ~~[#1675: fix(llm): daemon socket not cleaned up on SIGTERM](https://github.com/tsukumogami/tsuku/issues/1675)~~ | [#1631](https://github.com/tsukumogami/tsuku/issues/1631) | testable |
 | _Fix SIGTERM handler to properly clean up socket and lock files. Daemon should exit with status 0 after graceful shutdown._ | | |
 | [#1676: fix(llm): tokenization fails with negative count from llama_tokenize](https://github.com/tsukumogami/tsuku/issues/1676) | [#1638](https://github.com/tsukumogami/tsuku/issues/1638) | testable |
 | _Fix tokenization error when processing completion requests. llama_tokenize returns negative count indicating configuration or encoding issue._ | | |
@@ -95,7 +95,7 @@ graph TD
         I1637["#1637: Model download"]
         I1638["#1638: llama.cpp integration"]
         I1672["#1672: HuggingFace manifest"]
-        I1675["#1675: SIGTERM cleanup"]
+        I1675["#1675: SIGTERM cleanup ✓"]
         I1676["#1676: Tokenization fix"]
         I1639["#1639: GBNF grammar"]
         I1640["#1640: Complete RPC"]
@@ -146,8 +146,8 @@ graph TD
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1628,I1629,I1630,I1631,I1632,I1633,I1634,I1635,I1636,I1637,I1638,I1672 done
-    class I1639,I1642,I1643,I1645,I1675,I1676 ready
+    class I1628,I1629,I1630,I1631,I1632,I1633,I1634,I1635,I1636,I1637,I1638,I1672,I1675 done
+    class I1639,I1642,I1643,I1645,I1676 ready
     class I1640,I1641,I1644 blocked
 ```
 
