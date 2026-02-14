@@ -7,12 +7,14 @@
 
 mod context;
 mod error;
+mod grammar;
 mod model;
 mod params;
 mod sampler;
 
 pub use context::LlamaContext;
 pub use error::{LlamaError, Result};
+pub use grammar::{json_schema_to_gbnf, GrammarSampler};
 pub use model::LlamaModel;
 pub use params::{ContextParams, ModelParams};
 pub use sampler::Sampler;

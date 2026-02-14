@@ -214,6 +214,17 @@ impl LlamaContext {
     pub fn model(&self) -> &Arc<LlamaModel> {
         &self._model
     }
+
+    /// Get the raw context pointer for use with samplers.
+    ///
+    /// # Safety
+    ///
+    /// The returned pointer is valid only while the context is alive.
+    /// The caller must not free or mutate the context through this pointer
+    /// except through llama.cpp's sampler APIs.
+    pub fn as_ptr(&mut self) -> *mut llama_context {
+        self.ptr.as_ptr()
+    }
 }
 
 impl Drop for LlamaContext {

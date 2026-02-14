@@ -82,7 +82,9 @@ impl LlamaModel {
     }
 
     /// Get the vocabulary for this model.
-    pub(crate) fn vocab(&self) -> *const llama_vocab {
+    ///
+    /// This is used by grammar samplers to access vocabulary data.
+    pub fn vocab(&self) -> *const llama_vocab {
         unsafe { bindings::llama_model_get_vocab(self.ptr.as_ptr()) }
     }
 

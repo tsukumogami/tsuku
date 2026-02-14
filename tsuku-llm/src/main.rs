@@ -23,7 +23,7 @@ use tokio_stream::wrappers::UnixListenerStream;
 use tonic::{Request, Response, Status};
 use tracing::{debug, error, info, warn};
 
-use llama::{ContextParams, LlamaContext, LlamaModel, ModelParams, Sampler};
+use llama::{ContextParams, GrammarSampler, LlamaContext, LlamaModel, ModelParams, Sampler, json_schema_to_gbnf};
 
 // Generated from proto/llm.proto
 pub mod proto {
@@ -272,17 +272,72 @@ impl InferenceService for LlmServer {
         };
         let mut pos = tokens.len() as i32;
 
+        // Check if we should use grammar-constrained generation
+        // Priority: json_schema field > first tool's parameters_schema
+        let grammar_schema: Option<String> = if !req.json_schema.is_empty() {
+            Some(req.json_schema.clone())
+        } else if !req.tools.is_empty() {
+            // Use the first tool's schema for grammar constraints
+            let tool = &req.tools[0];
+            if !tool.parameters_schema.is_empty() {
+                Some(tool.parameters_schema.clone())
+            } else {
+                None
+            }
+        } else {
+            None
+        };
+
+        // Create grammar sampler if schema is provided
+        let mut grammar_sampler: Option<GrammarSampler> = if let Some(schema_str) = grammar_schema {
+            match serde_json::from_str::<serde_json::Value>(&schema_str) {
+                Ok(schema) => {
+                    match json_schema_to_gbnf(&schema) {
+                        Ok(grammar) => {
+                            debug!("Generated GBNF grammar:\n{}", grammar);
+                            match GrammarSampler::new(ctx.model().vocab(), &grammar, "root") {
+                                Ok(sampler) => {
+                                    info!("Using grammar-constrained generation");
+                                    Some(sampler)
+                                }
+                                Err(e) => {
+                                    warn!("Failed to create grammar sampler: {}. Falling back to unconstrained.", e);
+                                    None
+                                }
+                            }
+                        }
+                        Err(e) => {
+                            warn!("Failed to generate grammar from schema: {}. Falling back to unconstrained.", e);
+                            None
+                        }
+                    }
+                }
+                Err(e) => {
+                    warn!("Failed to parse JSON schema: {}. Falling back to unconstrained.", e);
+                    None
+                }
+            }
+        } else {
+            None
+        };
+
         // Track the batch index where logits are available.
         // After prompt decode, logits are at the last token index.
         // After single-token decodes, logits are at index 0.
         let mut logits_idx = (tokens.len() - 1) as i32;
 
         for _ in 0..max_tokens {
-            // Get logits for the token where they were computed
-            let logits = ctx.get_logits(logits_idx);
-
-            // Sample next token
-            let next_token = self.sampler.sample(logits);
+            // Sample next token (grammar-constrained or regular)
+            let next_token = if let Some(ref mut gs) = grammar_sampler {
+                // Grammar sampler handles everything internally
+                let token = gs.sample(ctx.as_ptr(), logits_idx);
+                gs.accept(token);
+                token
+            } else {
+                // Regular sampling: get logits and sample
+                let logits = ctx.get_logits(logits_idx);
+                self.sampler.sample(logits)
+            };
 
             // Check for EOS (token 0 or 2 are common EOS tokens)
             if next_token == 0 || next_token == 2 {

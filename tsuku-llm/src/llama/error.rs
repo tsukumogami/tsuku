@@ -45,6 +45,10 @@ pub enum LlamaError {
     /// Backend not available.
     #[error("backend '{0}' not available")]
     BackendNotAvailable(String),
+
+    /// Grammar error.
+    #[error("grammar error: {0}")]
+    Grammar(String),
 }
 
 /// Result type alias for llama operations.
