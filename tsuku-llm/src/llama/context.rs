@@ -79,8 +79,11 @@ impl LlamaContext {
     pub fn tokenize(&self, text: &str, add_special: bool, parse_special: bool) -> Result<Vec<i32>> {
         let vocab = self._model.vocab();
 
-        // First, get the number of tokens needed
-        let n_tokens = unsafe {
+        // First call with null buffer to get the required token count.
+        // llama_tokenize returns -n_tokens when buffer is too small (or null/0).
+        // We negate this to get the actual count needed.
+        // Special case: i32::MIN indicates tokenization overflow.
+        let n_tokens_result = unsafe {
             llama_tokenize(
                 vocab,
                 text.as_ptr() as *const i8,
@@ -92,10 +95,20 @@ impl LlamaContext {
             )
         };
 
-        if n_tokens < 0 {
+        // Check for overflow error (result too large for int32)
+        if n_tokens_result == i32::MIN {
             return Err(LlamaError::Tokenization(
-                "llama_tokenize returned negative count".to_string(),
+                "tokenization result exceeds int32 limit".to_string(),
             ));
+        }
+
+        // The return value is negative (the negation of the required size).
+        // Negate it to get the actual required buffer size.
+        let n_tokens = -n_tokens_result;
+
+        if n_tokens <= 0 {
+            // Empty tokenization result
+            return Ok(Vec::new());
         }
 
         // Allocate buffer and tokenize

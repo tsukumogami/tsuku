@@ -413,8 +413,6 @@ func TestIntegration_gRPCGetStatus(t *testing.T) {
 // (bypasses the addon download/verification that would happen in production).
 func TestIntegration_gRPCComplete(t *testing.T) {
 	skipIfModelCDNUnavailable(t)
-	// TODO(#1676): Fix tokenization error - llama_tokenize returns negative count
-	t.Skip("Skipped: tokenization error in llama.cpp needs fix (see issue #1676)")
 
 	tsukuHome := t.TempDir()
 	os.Setenv("TSUKU_HOME", tsukuHome)
@@ -423,15 +421,28 @@ func TestIntegration_gRPCComplete(t *testing.T) {
 	// Start daemon
 	daemon := startDaemon(t, tsukuHome, 5*time.Minute)
 
-	// Wait for ready
+	// Wait for socket to be available
 	require.Eventually(t, func() bool {
 		return isDaemonReady(tsukuHome)
-	}, 10*time.Second, 100*time.Millisecond, "daemon should become ready")
+	}, 10*time.Second, 100*time.Millisecond, "daemon socket should become ready")
+
+	// Wait for daemon to be fully ready (gRPC accepting, model loaded)
+	// by polling GetStatus until it succeeds
+	provider := NewLocalProvider()
+	defer provider.Close()
+
+	require.Eventually(t, func() bool {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		status, err := provider.GetStatus(ctx)
+		return err == nil && status != nil && status.Ready
+	}, 3*time.Minute, 1*time.Second, "daemon should be fully ready (gRPC accepting, model loaded)")
 
 	// Connect directly to the daemon via gRPC (bypass addon manager)
 	socketPath := filepath.Join(tsukuHome, "llm.sock")
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	// Use a longer timeout for inference - CPU inference can take 30+ seconds
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
 
 	conn, err := grpcDial(ctx, socketPath)

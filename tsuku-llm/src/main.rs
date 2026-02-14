@@ -272,9 +272,14 @@ impl InferenceService for LlmServer {
         };
         let mut pos = tokens.len() as i32;
 
+        // Track the batch index where logits are available.
+        // After prompt decode, logits are at the last token index.
+        // After single-token decodes, logits are at index 0.
+        let mut logits_idx = (tokens.len() - 1) as i32;
+
         for _ in 0..max_tokens {
-            // Get logits for last position
-            let logits = ctx.get_logits(0);
+            // Get logits for the token where they were computed
+            let logits = ctx.get_logits(logits_idx);
 
             // Sample next token
             let next_token = self.sampler.sample(logits);
@@ -293,6 +298,8 @@ impl InferenceService for LlmServer {
             })?;
 
             pos += 1;
+            // After single-token decode, logits are at batch index 0
+            logits_idx = 0;
         }
 
         // Detokenize output (simplified - just return the count for now)
