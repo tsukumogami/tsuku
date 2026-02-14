@@ -308,12 +308,12 @@
                     </a>
                 `).join('') || '<div class="no-data">No current failures</div>';
 
-            // Render recent runs
+            // Render recent runs (clickable, link to runs.html)
             const runItems = (data.runs || []).slice(0, 10).map(run => `
-                <div class="run-item">
+                <a href="/pipeline/runs.html" class="run-item status-row">
                     <span class="run-id">${run.batch_id}</span>
                     <span class="run-rate ${rateClass(run.rate)}">${run.merged}/${run.total} (${formatPercent(run.rate)})</span>
-                </div>
+                </a>
             `).join('') || '<div class="no-data">No batch runs recorded yet</div>';
 
             // Render disambiguation stats
