@@ -4,6 +4,7 @@
 //! It bundles llama.cpp and handles hardware detection, model management, and inference.
 
 mod hardware;
+mod llama;
 mod model;
 mod models;
 
@@ -17,10 +18,12 @@ use std::time::Duration;
 use anyhow::{bail, Context, Result};
 use clap::{Parser, Subcommand};
 use tokio::net::UnixListener;
-use tokio::sync::mpsc;
+use tokio::sync::{mpsc, Mutex};
 use tokio_stream::wrappers::UnixListenerStream;
 use tonic::{Request, Response, Status};
-use tracing::{info, warn};
+use tracing::{debug, error, info, warn};
+
+use llama::{ContextParams, LlamaContext, LlamaModel, ModelParams, Sampler};
 
 // Generated from proto/llm.proto
 pub mod proto {
@@ -148,16 +151,34 @@ struct LlmServer {
 
     /// Count of in-flight requests.
     in_flight: Arc<AtomicUsize>,
+
+    /// The loaded model (shared for creating new contexts if needed).
+    model: Arc<LlamaModel>,
+
+    /// Inference context (protected by mutex since it's not Sync).
+    context: Mutex<LlamaContext>,
+
+    /// Token sampler for inference.
+    sampler: Sampler,
 }
 
 impl LlmServer {
-    fn new(model_name: String, hardware_profile: hardware::HardwareProfile, shutdown_tx: mpsc::Sender<()>) -> Self {
+    fn new(
+        model_name: String,
+        hardware_profile: hardware::HardwareProfile,
+        shutdown_tx: mpsc::Sender<()>,
+        model: Arc<LlamaModel>,
+        context: LlamaContext,
+    ) -> Self {
         Self {
             model_name,
             hardware_profile,
             shutdown_tx,
             shutting_down: Arc::new(AtomicBool::new(false)),
             in_flight: Arc::new(AtomicUsize::new(0)),
+            model,
+            context: Mutex::new(context),
+            sampler: Sampler::greedy(),
         }
     }
 
@@ -167,6 +188,30 @@ impl LlmServer {
 
     fn in_flight(&self) -> Arc<AtomicUsize> {
         self.in_flight.clone()
+    }
+
+    /// Build a prompt string from messages.
+    ///
+    /// Uses a simple chat template format compatible with most models.
+    fn build_prompt(&self, messages: &[proto::Message]) -> String {
+        let mut prompt = String::new();
+
+        for msg in messages {
+            let role_str = match proto::Role::try_from(msg.role) {
+                Ok(proto::Role::User) => "user",
+                Ok(proto::Role::Assistant) => "assistant",
+                Ok(proto::Role::Tool) => "tool",
+                _ => "system",
+            };
+            let content = &msg.content;
+
+            // Simple chat template: <|role|>\ncontent\n
+            prompt.push_str(&format!("<|{}|>\n{}\n", role_str, content));
+        }
+
+        // Add assistant prefix to prompt for completion
+        prompt.push_str("<|assistant|>\n");
+        prompt
     }
 }
 
@@ -193,19 +238,83 @@ impl InferenceService for LlmServer {
             req.tools.len()
         );
 
-        // TODO: Actual inference via llama.cpp
-        // For now, return a stub response
+        // Build prompt from messages
+        let prompt = self.build_prompt(&req.messages);
+        debug!("Built prompt: {} chars", prompt.len());
+
+        // Acquire context lock for inference
+        let mut ctx = self.context.lock().await;
+
+        // Clear KV cache for fresh generation
+        ctx.clear_kv_cache();
+
+        // Tokenize the prompt
+        let tokens = ctx.tokenize(&prompt, true, true).map_err(|e| {
+            error!("Tokenization failed: {}", e);
+            Status::internal(format!("Tokenization failed: {}", e))
+        })?;
+
+        let input_tokens = tokens.len();
+        debug!("Tokenized {} input tokens", input_tokens);
+
+        // Decode prompt tokens
+        ctx.decode(&tokens, 0).map_err(|e| {
+            error!("Decode failed: {}", e);
+            Status::internal(format!("Decode failed: {}", e))
+        })?;
+
+        // Generate response tokens
+        let mut output_tokens: Vec<i32> = Vec::new();
+        let max_tokens = if req.max_tokens > 0 {
+            req.max_tokens as usize
+        } else {
+            512 // Default if not specified
+        };
+        let mut pos = tokens.len() as i32;
+
+        for _ in 0..max_tokens {
+            // Get logits for last position
+            let logits = ctx.get_logits(0);
+
+            // Sample next token
+            let next_token = self.sampler.sample(logits);
+
+            // Check for EOS (token 0 or 2 are common EOS tokens)
+            if next_token == 0 || next_token == 2 {
+                break;
+            }
+
+            output_tokens.push(next_token);
+
+            // Decode the new token
+            ctx.decode(&[next_token], pos).map_err(|e| {
+                error!("Decode failed during generation: {}", e);
+                Status::internal(format!("Decode failed: {}", e))
+            })?;
+
+            pos += 1;
+        }
+
+        // Detokenize output (simplified - just return the count for now)
+        // Full detokenization would use llama_token_to_piece
+        let content = format!(
+            "Generated {} tokens (detokenization not yet implemented)",
+            output_tokens.len()
+        );
+
+        let stop_reason = if output_tokens.len() >= max_tokens {
+            "max_tokens"
+        } else {
+            "end_turn"
+        };
+
         let response = CompletionResponse {
-            content: format!(
-                "[STUB] Model {} received prompt with {} messages",
-                self.model_name,
-                req.messages.len()
-            ),
+            content,
             tool_calls: vec![],
-            stop_reason: "end_turn".to_string(),
+            stop_reason: stop_reason.to_string(),
             usage: Some(Usage {
-                input_tokens: 100, // Placeholder
-                output_tokens: 50, // Placeholder
+                input_tokens: input_tokens as i32,
+                output_tokens: output_tokens.len() as i32,
             }),
         };
 
@@ -391,13 +500,80 @@ async fn main() -> Result<()> {
 
     // Detect hardware
     let hardware_profile = hardware::HardwareDetector::detect();
+    info!(
+        "Hardware: {} RAM, {:?} GPU",
+        hardware_profile.ram_bytes / (1024 * 1024 * 1024),
+        hardware_profile.gpu_backend
+    );
+
+    // Select and load model
+    let selector = model::ModelSelector::new();
+    let model_spec = selector.select(&hardware_profile).context("Model selection failed")?;
+    let model_name = model_spec.name.clone();
+    info!("Selected model: {} (backend: {:?})", model_name, model_spec.backend);
+
+    // Get models directory
+    let models_dir = std::env::var("TSUKU_HOME")
+        .ok()
+        .map(PathBuf::from)
+        .unwrap_or_else(|| {
+            dirs::home_dir()
+                .expect("Could not determine home directory")
+                .join(".tsuku")
+        })
+        .join("models");
+
+    // Ensure model is available
+    let model_manager = models::ModelManager::new(models_dir.clone());
+    let model_path = model_manager.model_path(&model_name);
+
+    if !model_manager.is_available(&model_name).await {
+        info!("Model not found locally, downloading...");
+        model_manager
+            .download(&model_name, |progress| {
+                info!(
+                    "Download progress: {} bytes",
+                    progress.bytes_downloaded
+                );
+            })
+            .await
+            .context("Failed to download model")?;
+    }
+
+    info!("Loading model from {:?}", model_path);
+
+    // Load model (blocking operation, run in spawn_blocking)
+    let model_params = match model_spec.backend {
+        model::Backend::Cpu => ModelParams::for_cpu(),
+        _ => ModelParams::for_gpu(),
+    };
+    let model = tokio::task::spawn_blocking({
+        let path = model_path.clone();
+        move || LlamaModel::load_from_file(&path, model_params)
+    })
+    .await
+    .context("Model loading task panicked")?
+    .context("Failed to load model")?;
+
+    let model = Arc::new(model);
+    info!("Model loaded successfully");
+
+    // Create inference context
+    let context_params = ContextParams::default();
+    let context = LlamaContext::new(model.clone(), context_params).context("Failed to create context")?;
+    info!("Inference context created");
 
     // Create shutdown channel
     let (shutdown_tx, mut shutdown_rx) = mpsc::channel::<()>(1);
 
     // Create the server
-    let model_name = "stub-model".to_string(); // TODO: Load actual model based on hardware
-    let server = LlmServer::new(model_name, hardware_profile, shutdown_tx.clone());
+    let server = LlmServer::new(
+        model_name,
+        hardware_profile,
+        shutdown_tx.clone(),
+        model,
+        context,
+    );
     let shutting_down = server.shutting_down();
     let in_flight = server.in_flight();
 
