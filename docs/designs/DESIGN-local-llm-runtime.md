@@ -58,7 +58,7 @@ Planned
 | [#1639: feat(llm): implement GBNF grammar constraints for JSON](https://github.com/tsukumogami/tsuku/issues/1639) | [#1638](https://github.com/tsukumogami/tsuku/issues/1638) | testable |
 | _Generate GBNF grammar from JSON Schema. Forces model output to valid JSON matching tool schemas._ | | |
 | [#1640: feat(llm): wire Complete RPC to llama.cpp inference](https://github.com/tsukumogami/tsuku/issues/1640) | [#1639](https://github.com/tsukumogami/tsuku/issues/1639), [#1672](https://github.com/tsukumogami/tsuku/issues/1672), [#1675](https://github.com/tsukumogami/tsuku/issues/1675), [#1676](https://github.com/tsukumogami/tsuku/issues/1676) | testable |
-| _Complete RPC invokes llama.cpp with grammar constraints. Returns structured responses matching Provider interface._ | | |
+| _Complete RPC invokes llama.cpp with grammar constraints. Includes local E2E validation: run `tsuku create` with LocalProvider on dev machine to verify full flow._ | | |
 
 ### Milestone: [Production Ready](https://github.com/tsukumogami/tsuku/milestone/80)
 
