@@ -59,6 +59,52 @@
         .priority-2 { background: #d29922; color: #000; }
         .priority-3 { background: var(--text-muted); color: var(--bg); }
 
+        .filter-bar {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 0.4rem 0.8rem;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background: var(--bg);
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.85rem;
+            text-decoration: none;
+        }
+
+        .filter-btn:hover {
+            border-color: var(--accent);
+            color: var(--text);
+        }
+
+        .filter-btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #000;
+        }
+
+        .filter-description {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin: 0 0 1rem 0;
+            padding: 0.75rem 1rem;
+            background: var(--code-bg);
+            border-radius: 4px;
+        }
+
+        .filter-description code {
+            background: var(--bg);
+            padding: 0.1rem 0.3rem;
+            border-radius: 3px;
+            font-family: "SF Mono", Consolas, monospace;
+        }
+
         .dep-list {
             display: flex;
             flex-wrap: wrap;
@@ -139,13 +185,64 @@
     <script>
         const STATUS = 'blocked';
 
-        function renderPackages(packages) {
-            if (!packages || packages.length === 0) {
+        // Get filter from URL
+        const params = new URLSearchParams(window.location.search);
+        const filterBlocker = params.get('blocker');
+
+        function renderDescription(filter) {
+            if (!filter) {
+                return `<p class="filter-description">Packages waiting on dependencies that don't have recipes yet. Select a blocker above to see packages waiting on it.</p>`;
+            }
+            return `<p class="filter-description">Packages blocked by <code>${filter}</code>. These packages cannot be installed until a recipe for ${filter} is created.</p>`;
+        }
+
+        function renderFilters(packages, activeFilter) {
+            // Count by blocker
+            const byBlocker = {};
+            packages.forEach(pkg => {
+                (pkg.blocked_by || []).forEach(dep => {
+                    byBlocker[dep] = (byBlocker[dep] || 0) + 1;
+                });
+            });
+
+            // Sort by count descending, take top 10
+            const blockers = Object.entries(byBlocker)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 10);
+
+            if (blockers.length === 0) return '';
+
+            const allActive = !activeFilter ? 'active' : '';
+            let html = `<a href="?" class="filter-btn ${allActive}">All (${packages.length})</a>`;
+
+            blockers.forEach(([blocker, count]) => {
+                const active = activeFilter === blocker ? 'active' : '';
+                html += `<a href="?blocker=${encodeURIComponent(blocker)}" class="filter-btn ${active}">${blocker} (${count})</a>`;
+            });
+
+            return `<div class="filter-bar">${html}</div>`;
+        }
+
+        function renderPackages(allPackages, filter) {
+            if (!allPackages || allPackages.length === 0) {
                 return '<div class="loading">No packages with this status</div>';
             }
 
+            // Filter if blocker specified
+            let packages = allPackages;
+            if (filter) {
+                packages = allPackages.filter(pkg => (pkg.blocked_by || []).includes(filter));
+            }
+
+            if (packages.length === 0) {
+                return renderFilters(allPackages, filter) + renderDescription(filter) + '<div class="loading">No packages match this filter</div>';
+            }
+
             const rows = packages.map(pkg => {
-                const deps = (pkg.blocked_by || []).map(d => `<span class="dep-badge">${d}</span>`).join('');
+                const deps = (pkg.blocked_by || []).map(d => {
+                    const isActive = d === filter ? 'style="background: var(--accent); color: #000;"' : '';
+                    return `<span class="dep-badge" ${isActive}>${d}</span>`;
+                }).join('');
                 return `
                     <tr>
                         <td class="package-name">${pkg.name}</td>
@@ -157,8 +254,10 @@
             }).join('');
 
             return `
+                ${renderFilters(allPackages, filter)}
+                ${renderDescription(filter)}
                 <div class="package-list">
-                    <h2>${packages.length} packages</h2>
+                    <h2>${packages.length} package${packages.length !== 1 ? 's' : ''}</h2>
                     <table class="package-table">
                         <thead>
                             <tr>
@@ -181,7 +280,7 @@
                 const response = await fetch('/pipeline/dashboard.json');
                 const data = await response.json();
                 const packages = data.queue.packages?.[STATUS] || [];
-                document.getElementById('content').innerHTML = renderPackages(packages);
+                document.getElementById('content').innerHTML = renderPackages(packages, filterBlocker);
             } catch (error) {
                 document.getElementById('content').innerHTML = `<div class="loading">Error loading data: ${error.message}</div>`;
             }
