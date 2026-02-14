@@ -1,24 +1,22 @@
-name: Update Dashboard
+name: Sync Disambiguations
 
 on:
   push:
     branches: [main]
     paths:
-      - 'data/queues/**'
-      - 'data/metrics/**'
-      - 'data/failures/**'
-      - 'data/disambiguations/**'
+      - 'data/discovery-seeds/disambiguations.json'
   workflow_dispatch:
 
 permissions:
   contents: write
 
 concurrency:
-  group: update-dashboard
+  group: sync-disambiguations
   cancel-in-progress: false
 
 jobs:
-  update:
+  sync:
+    name: Sync Disambiguation Seeds
     runs-on: ubuntu-latest
     steps:
       - name: Generate GitHub App token
@@ -36,23 +34,23 @@ jobs:
         with:
           go-version-file: go.mod
 
-      - name: Generate dashboard
+      - name: Build and run sync-disambiguations
         run: |
-          go build -o queue-analytics ./cmd/queue-analytics
-          ./queue-analytics
+          go build -o sync-disambiguations ./cmd/sync-disambiguations
+          ./sync-disambiguations
 
-      - name: Commit dashboard
+      - name: Commit and push
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add website/pipeline/dashboard.json
+          git add data/disambiguations/
           if git diff --cached --quiet; then
-            echo "No dashboard changes"
+            echo "No disambiguation changes"
             exit 0
           fi
-          git commit -m "chore(dashboard): update pipeline dashboard"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore(data): sync disambiguation data from seeds"
 
-          # Retry logic (in case of concurrent pushes)
+          # Retry logic for concurrent pushes
           for attempt in {1..3}; do
             if git push; then
               break

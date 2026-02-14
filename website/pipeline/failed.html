@@ -59,6 +59,49 @@
         .priority-2 { background: #d29922; color: #000; }
         .priority-3 { background: var(--text-muted); color: var(--bg); }
 
+        .filter-bar {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 0.4rem 0.8rem;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background: var(--bg);
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.85rem;
+            text-decoration: none;
+        }
+
+        .filter-btn:hover {
+            border-color: var(--accent);
+            color: var(--text);
+        }
+
+        .filter-btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #000;
+        }
+
+        .filter-description {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin: 0 0 1rem 0;
+            padding: 0.75rem 1rem;
+            background: var(--code-bg);
+            border-radius: 4px;
+        }
+
+        .filter-description .category-badge {
+            margin-right: 0.5rem;
+        }
+
         .category-badge {
             display: inline-block;
             padding: 0.15rem 0.5rem;
@@ -132,9 +175,63 @@
     <script>
         const STATUS = 'failed';
 
-        function renderPackages(packages) {
-            if (!packages || packages.length === 0) {
+        // Get filter from URL
+        const params = new URLSearchParams(window.location.search);
+        const filterCategory = params.get('category');
+
+        // Descriptions for each failure category
+        const categoryDescriptions = {
+            'deterministic': 'Recipe generation succeeded with high confidence. The tool has clear versioning and download patterns.',
+            'deterministic_insufficient': 'Not enough data for confident automatic selection. May need manual review or additional metadata.',
+            'missing_dep': 'Recipe requires a dependency that is not yet available in tsuku.',
+            'timeout': 'Recipe generation timed out. Usually indicates complex build requirements or network issues.',
+            'validation_failed': 'Generated recipe failed validation checks. May have incorrect URLs, checksums, or structure.'
+        };
+
+        function renderDescription(filter) {
+            if (!filter) {
+                return `<p class="filter-description">Packages that failed during recipe generation or validation. Select a category above to see its meaning.</p>`;
+            }
+            const desc = categoryDescriptions[filter] || 'Unknown failure category.';
+            return `<p class="filter-description"><span class="category-badge">${filter}</span> ${desc}</p>`;
+        }
+
+        function renderFilters(packages, activeFilter) {
+            // Count by category
+            const byCategory = {};
+            packages.forEach(pkg => {
+                const cat = pkg.category || 'unknown';
+                byCategory[cat] = (byCategory[cat] || 0) + 1;
+            });
+
+            const categories = Object.keys(byCategory).sort();
+            if (categories.length === 0) return '';
+
+            const allActive = !activeFilter ? 'active' : '';
+            let html = `<a href="?" class="filter-btn ${allActive}">All (${packages.length})</a>`;
+
+            categories.forEach(cat => {
+                const active = activeFilter === cat ? 'active' : '';
+                const count = byCategory[cat];
+                html += `<a href="?category=${cat}" class="filter-btn ${active}">${cat} (${count})</a>`;
+            });
+
+            return `<div class="filter-bar">${html}</div>`;
+        }
+
+        function renderPackages(allPackages, filter) {
+            if (!allPackages || allPackages.length === 0) {
                 return '<div class="loading">No packages with this status</div>';
+            }
+
+            // Filter if category specified
+            let packages = allPackages;
+            if (filter) {
+                packages = allPackages.filter(pkg => pkg.category === filter);
+            }
+
+            if (packages.length === 0) {
+                return renderFilters(allPackages, filter) + renderDescription(filter) + '<div class="loading">No packages match this filter</div>';
             }
 
             const rows = packages.map(pkg => `
@@ -147,8 +244,10 @@
             `).join('');
 
             return `
+                ${renderFilters(allPackages, filter)}
+                ${renderDescription(filter)}
                 <div class="package-list">
-                    <h2>${packages.length} packages</h2>
+                    <h2>${packages.length} package${packages.length !== 1 ? 's' : ''}</h2>
                     <table class="package-table">
                         <thead>
                             <tr>
@@ -171,7 +270,7 @@
                 const response = await fetch('/pipeline/dashboard.json');
                 const data = await response.json();
                 const packages = data.queue.packages?.[STATUS] || [];
-                document.getElementById('content').innerHTML = renderPackages(packages);
+                document.getElementById('content').innerHTML = renderPackages(packages, filterCategory);
             } catch (error) {
                 document.getElementById('content').innerHTML = `<div class="loading">Error loading data: ${error.message}</div>`;
             }
