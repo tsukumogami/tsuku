@@ -273,6 +273,8 @@ func TestIntegration_StaleSocketCleanup(t *testing.T) {
 }
 
 func TestIntegration_ShortTimeoutTriggersShutdown(t *testing.T) {
+	skipIfModelCDNUnavailable(t)
+
 	tsukuHome := t.TempDir()
 
 	// Start daemon with short 2s timeout
@@ -302,6 +304,8 @@ func TestIntegration_ShortTimeoutTriggersShutdown(t *testing.T) {
 }
 
 func TestIntegration_SIGTERMTriggersGracefulShutdown(t *testing.T) {
+	skipIfModelCDNUnavailable(t)
+
 	tsukuHome := t.TempDir()
 
 	// Start daemon
@@ -336,6 +340,8 @@ func TestIntegration_SIGTERMTriggersGracefulShutdown(t *testing.T) {
 }
 
 func TestIntegration_MultipleSIGTERMIsSafe(t *testing.T) {
+	skipIfModelCDNUnavailable(t)
+
 	tsukuHome := t.TempDir()
 
 	// Start daemon
