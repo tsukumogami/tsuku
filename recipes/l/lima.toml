@@ -19,5 +19,5 @@ supported_os = ["linux"]
   binaries = ["bin/apptainer.lima", "bin/docker.lima", "bin/kubectl.lima", "bin/lima", "bin/limactl", "bin/nerdctl.lima", "bin/podman.lima"]
 
 [verify]
-  command = "apptainer.lima --version"
+  command = "limactl --version"
   pattern = ""

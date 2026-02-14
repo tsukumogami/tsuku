@@ -18,5 +18,5 @@ supported_os = ["linux"]
   binaries = ["bin/docker-buildx"]
 
 [verify]
-  command = "docker-buildx --version"
+  command = "docker-buildx version"
   pattern = ""

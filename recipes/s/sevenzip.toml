@@ -19,5 +19,8 @@ supported_os = ["linux"]
   binaries = ["bin/7zz"]
 
 [verify]
-  command = "7zz --version"
-  pattern = ""
+  command = "7zz"
+  mode = "output"
+  pattern = "7-Zip"
+  exit_code = 0
+  reason = "7zz shows version info when run without arguments"
