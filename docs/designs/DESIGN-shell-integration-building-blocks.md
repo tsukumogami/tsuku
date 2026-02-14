@@ -75,7 +75,7 @@ The vision is a fundamentally different UX where:
 - Tsuku identifies which recipe provides `jq`
 - Tsuku either auto-installs or prompts for confirmation
 - The command runs seamlessly
-- Optionally, LLM discovery helps find or create recipes for unknown commands
+- Optionally, LLM (large language model) discovery helps find or create recipes for unknown commands
 
 This vision requires several building blocks that don't exist today. This design identifies those building blocks so each can be designed and implemented independently.
 
@@ -368,7 +368,7 @@ This design produces five building blocks, each with its own detailed design doc
 │                                                                      │
 │  ┌──────────────┐     ┌──────────────┐     ┌──────────────┐        │
 │  │ Binary Index │     │   Project    │     │   Install    │        │
-│  │   (Block 1)  │◄────┤    Config    │     │   Manager    │        │
+│  │   (Block 1)  │     │    Config    │     │   Manager    │        │
 │  │              │     │   (Block 4)  │     │  (existing)  │        │
 │  └──────┬───────┘     └──────────────┘     └──────┬───────┘        │
 │         │                                          │                 │
@@ -488,7 +488,7 @@ type EnvActivator interface {
 
 ```
 1. User enters project directory with .tsuku.toml
-2. Shell's prompt hook invokes `tsuku env` (or user runs `eval $(tsuku shell)`)
+2. Shell's prompt hook invokes `tsuku shell` (or user runs `eval $(tsuku shell)`)
 3. EnvActivator calls LoadProjectConfig(".")
 4. For each tool in config, EnvActivator ensures version is installed
 5. EnvActivator returns PATH modification pointing to project tool versions
