@@ -45,10 +45,11 @@ type Dashboard struct {
 
 // DisambiguationStatus summarizes disambiguation activity across batch runs.
 type DisambiguationStatus struct {
-	Total      int            `json:"total"`       // Total tools with disambiguation decisions
-	ByReason   map[string]int `json:"by_reason"`   // Count by selection reason
-	HighRisk   int            `json:"high_risk"`   // Count of priority_fallback selections
-	NeedReview []string       `json:"need_review"` // Tools with HighRisk=true (for human review)
+	Total      int                    `json:"total"`       // Total tools with disambiguation decisions
+	ByReason   map[string]int         `json:"by_reason"`   // Count by selection reason
+	HighRisk   int                    `json:"high_risk"`   // Count of priority_fallback selections
+	NeedReview []string               `json:"need_review"` // Tools with HighRisk=true (for human review)
+	Entries    []DisambiguationRecord `json:"entries"`     // Full list of disambiguation records
 }
 
 // QueueStatus summarizes queue state.
@@ -555,6 +556,7 @@ func loadDisambiguationsFromDir(dir string) (*DisambiguationStatus, error) {
 	status := &DisambiguationStatus{
 		ByReason:   make(map[string]int),
 		NeedReview: []string{},
+		Entries:    []DisambiguationRecord{},
 	}
 
 	// Track seen tools to avoid double-counting across files
@@ -575,6 +577,7 @@ func loadDisambiguationsFromDir(dir string) (*DisambiguationStatus, error) {
 
 			status.Total++
 			status.ByReason[rec.SelectionReason]++
+			status.Entries = append(status.Entries, rec)
 
 			if rec.HighRisk {
 				status.HighRisk++
@@ -582,6 +585,11 @@ func loadDisambiguationsFromDir(dir string) (*DisambiguationStatus, error) {
 			}
 		}
 	}
+
+	// Sort entries by tool name for stable output
+	sort.Slice(status.Entries, func(i, j int) bool {
+		return status.Entries[i].Tool < status.Entries[j].Tool
+	})
 
 	// Sort NeedReview for stable output
 	sort.Strings(status.NeedReview)

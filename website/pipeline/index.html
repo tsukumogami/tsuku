@@ -318,10 +318,10 @@
                 const reasonItems = Object.entries(d.by_reason || {})
                     .sort((a, b) => b[1] - a[1])
                     .map(([reason, count]) => `
-                        <div class="blocker-item">
+                        <a href="/pipeline/disambiguations.html?reason=${reason}" class="status-row">
                             <span class="blocker-name">${reason}</span>
                             <span class="blocker-count">${count}</span>
-                        </div>
+                        </a>
                     `).join('');
 
                 const reviewItems = (d.need_review || []).slice(0, 5).map(tool => `
@@ -333,13 +333,13 @@
 
                 disambiguationPanel = `
                     <div class="panel">
-                        <h2>Disambiguation (${d.total} tools)</h2>
+                        <h2><a href="/pipeline/disambiguations.html" style="color: inherit; text-decoration: none;">Disambiguation (${d.total} tools)</a></h2>
                         <div class="blocker-list">
                             ${reasonItems}
-                            ${d.high_risk > 0 ? `<div class="blocker-item" style="border-top: 2px solid var(--border); padding-top: 0.75rem;">
+                            ${d.high_risk > 0 ? `<a href="/pipeline/disambiguations.html?reason=priority_fallback" class="status-row" style="border-top: 2px solid var(--border); padding-top: 0.75rem;">
                                 <span class="blocker-name" style="color: #d29922;">High-risk</span>
                                 <span class="blocker-count" style="background: #d29922; color: white;">${d.high_risk}</span>
-                            </div>` : ''}
+                            </a>` : ''}
                         </div>
                         ${reviewItems ? `<h3 style="font-size: 0.9rem; margin-top: 1rem; margin-bottom: 0.5rem; color: var(--text-muted);">Needs Review</h3><div class="blocker-list">${reviewItems}</div>` : ''}
                     </div>

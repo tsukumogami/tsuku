@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Disambiguation decisions in tsuku pipeline">
+    <title>Disambiguations - tsuku Pipeline</title>
+    <link rel="stylesheet" href="/assets/style.css">
+    <style>
+        .package-list {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .package-list h2 {
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            color: var(--text-muted);
+        }
+
+        .filter-bar {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 0.4rem 0.8rem;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background: var(--bg);
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.85rem;
+            text-decoration: none;
+        }
+
+        .filter-btn:hover {
+            border-color: var(--accent);
+            color: var(--text);
+        }
+
+        .filter-btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #000;
+        }
+
+        .package-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .package-table th,
+        .package-table td {
+            text-align: left;
+            padding: 0.5rem 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .package-table th {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .package-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .tool-name {
+            font-family: "SF Mono", Consolas, monospace;
+            font-weight: 600;
+        }
+
+        .source {
+            font-family: "SF Mono", Consolas, monospace;
+            font-size: 0.9rem;
+        }
+
+        .reason-badge {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .reason-curated { background: #3fb950; color: #000; }
+        .reason-single_match { background: #3fb950; color: #000; }
+        .reason-10x_popularity_gap { background: #58a6ff; color: #000; }
+        .reason-priority_fallback { background: #d29922; color: #000; }
+
+        .high-risk {
+            color: #d29922;
+            font-weight: 600;
+        }
+
+        .alternatives {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-family: "SF Mono", Consolas, monospace;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-muted);
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 1rem;
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 600px) {
+            .package-table {
+                font-size: 0.85rem;
+            }
+            .alternatives {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="/" class="logo">tsuku</a>
+            <a href="https://github.com/tsukumogami/tsuku" class="github-link" aria-label="GitHub">
+                <svg viewBox="0 0 16 16" width="24" height="24" fill="currentColor">
+                    <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+                </svg>
+            </a>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero">
+            <h1>Disambiguation Decisions</h1>
+            <p class="tagline">Tools with multiple possible sources</p>
+        </section>
+
+        <a href="/pipeline/" class="back-link">&larr; Back to Dashboard</a>
+
+        <div id="content">
+            <div class="loading">Loading...</div>
+        </div>
+
+        <section class="links">
+            <a href="/pipeline/" class="link-btn">Back to Dashboard</a>
+        </section>
+    </main>
+
+    <footer>
+        <p>
+            <a href="/telemetry">Privacy</a>
+            <span class="sep">|</span>
+            <a href="https://github.com/tsukumogami/tsuku">GitHub</a>
+        </p>
+    </footer>
+
+    <script>
+        // Get filter from URL
+        const params = new URLSearchParams(window.location.search);
+        const filterReason = params.get('reason');
+
+        function renderFilters(byReason, activeFilter) {
+            const reasons = Object.keys(byReason).sort();
+            if (reasons.length === 0) return '';
+
+            const allActive = !activeFilter ? 'active' : '';
+            let html = `<a href="?#" class="filter-btn ${allActive}">All</a>`;
+
+            reasons.forEach(reason => {
+                const active = activeFilter === reason ? 'active' : '';
+                const count = byReason[reason];
+                html += `<a href="?reason=${reason}" class="filter-btn ${active}">${reason} (${count})</a>`;
+            });
+
+            return `<div class="filter-bar">${html}</div>`;
+        }
+
+        function renderDisambiguations(disambiguations, byReason, filter) {
+            if (!disambiguations || disambiguations.length === 0) {
+                return '<div class="loading">No disambiguation data available</div>';
+            }
+
+            // Filter if reason specified
+            let filtered = disambiguations;
+            if (filter) {
+                filtered = disambiguations.filter(d => d.selection_reason === filter);
+            }
+
+            if (filtered.length === 0) {
+                return renderFilters(byReason, filter) + '<div class="loading">No disambiguations match this filter</div>';
+            }
+
+            const rows = filtered.map(d => {
+                const reasonClass = `reason-${d.selection_reason}`;
+                const highRisk = d.high_risk ? '<span class="high-risk"> (needs review)</span>' : '';
+                const alternatives = d.alternatives && d.alternatives.length > 0
+                    ? d.alternatives.join(', ')
+                    : '-';
+
+                return `
+                    <tr>
+                        <td class="tool-name">${d.tool}</td>
+                        <td class="source">${d.selected}</td>
+                        <td><span class="reason-badge ${reasonClass}">${d.selection_reason}</span>${highRisk}</td>
+                        <td class="alternatives">${alternatives}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            return `
+                ${renderFilters(byReason, filter)}
+                <div class="package-list">
+                    <h2>${filtered.length} disambiguation${filtered.length !== 1 ? 's' : ''}</h2>
+                    <table class="package-table">
+                        <thead>
+                            <tr>
+                                <th>Tool</th>
+                                <th>Selected Source</th>
+                                <th>Reason</th>
+                                <th>Alternatives</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rows}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        async function load() {
+            try {
+                const response = await fetch('/pipeline/dashboard.json');
+                const data = await response.json();
+
+                if (!data.disambiguations) {
+                    document.getElementById('content').innerHTML = '<div class="loading">No disambiguation data available</div>';
+                    return;
+                }
+
+                const byReason = data.disambiguations.by_reason || {};
+                const disambiguations = data.disambiguations.entries || [];
+
+                document.getElementById('content').innerHTML = renderDisambiguations(disambiguations, byReason, filterReason);
+            } catch (error) {
+                document.getElementById('content').innerHTML = `<div class="loading">Error loading data: ${error.message}</div>`;
+            }
+        }
+
+        load();
+    </script>
+</body>
+</html>
