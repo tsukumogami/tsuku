@@ -4,7 +4,9 @@ package llm
 
 import (
 	"context"
+	"io"
 	"net"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -26,6 +28,31 @@ import (
 //   cd tsuku-llm && cargo build --release
 //
 // Set TSUKU_LLM_BINARY to the path of the binary if not in tsuku-llm/target/release/.
+
+// modelCDNURL is the URL where models are downloaded from.
+// Tests that require model inference skip if this URL is unreachable.
+const modelCDNURL = "https://cdn.tsuku.dev/models/"
+
+// skipIfModelCDNUnavailable skips the test if the model CDN is not reachable.
+// This allows tests to pass in environments where the model infrastructure
+// hasn't been deployed yet (e.g., CI before model CDN is set up).
+func skipIfModelCDNUnavailable(t *testing.T) {
+	t.Helper()
+
+	client := &http.Client{Timeout: 5 * time.Second}
+	resp, err := client.Head(modelCDNURL)
+	if err != nil {
+		t.Skipf("Model CDN unavailable (network error): %v", err)
+	}
+	defer resp.Body.Close()
+	// Drain body to allow connection reuse
+	_, _ = io.Copy(io.Discard, resp.Body)
+
+	// 4xx/5xx responses indicate CDN is down or not configured
+	if resp.StatusCode >= 400 {
+		t.Skipf("Model CDN unavailable (HTTP %d)", resp.StatusCode)
+	}
+}
 
 // grpcDial connects to the daemon's Unix socket.
 func grpcDial(ctx context.Context, socketPath string) (*grpc.ClientConn, error) {
@@ -338,6 +365,8 @@ func TestIntegration_MultipleSIGTERMIsSafe(t *testing.T) {
 
 // TestIntegration_gRPCGetStatus tests that the Go client can call GetStatus on the daemon.
 func TestIntegration_gRPCGetStatus(t *testing.T) {
+	skipIfModelCDNUnavailable(t)
+
 	tsukuHome := t.TempDir()
 	os.Setenv("TSUKU_HOME", tsukuHome)
 	defer os.Unsetenv("TSUKU_HOME")
@@ -371,6 +400,8 @@ func TestIntegration_gRPCGetStatus(t *testing.T) {
 // This test uses the proto client directly since the daemon is already running
 // (bypasses the addon download/verification that would happen in production).
 func TestIntegration_gRPCComplete(t *testing.T) {
+	skipIfModelCDNUnavailable(t)
+
 	tsukuHome := t.TempDir()
 	os.Setenv("TSUKU_HOME", tsukuHome)
 	defer os.Unsetenv("TSUKU_HOME")
@@ -409,6 +440,8 @@ func TestIntegration_gRPCComplete(t *testing.T) {
 
 // TestIntegration_gRPCShutdown tests that the Go client can request daemon shutdown via gRPC.
 func TestIntegration_gRPCShutdown(t *testing.T) {
+	skipIfModelCDNUnavailable(t)
+
 	tsukuHome := t.TempDir()
 	os.Setenv("TSUKU_HOME", tsukuHome)
 	defer os.Unsetenv("TSUKU_HOME")
