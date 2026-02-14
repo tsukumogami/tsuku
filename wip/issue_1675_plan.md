@@ -34,28 +34,32 @@ None.
 
 ## Implementation Steps
 
-- [ ] **Step 1: Add explicit process exit after cleanup**
-  - In `main.rs`, after `cleanup_files(&socket, &lock)` and the final log message, add `std::process::exit(0)`
-  - This ensures the process exits with code 0 before returning from main() where race conditions could occur
+- [x] **Step 1: Register SIGTERM handler early (before model download)**
+  - Moved signal handler registration to right after lock acquisition
+  - This ensures SIGTERM is caught during model download/loading phases
 
-- [ ] **Step 2: Handle SIGTERM during shutdown grace period**
-  - Modify the `wait_for_in_flight` function or the shutdown path to also listen for SIGTERM
-  - If a second SIGTERM arrives during the grace period, immediately proceed to cleanup (don't wait further)
-  - This ensures multiple SIGTERMs don't cause issues
+- [x] **Step 2: Handle SIGTERM during model download**
+  - Wrapped model download in `tokio::select!` that also watches for SIGTERM
+  - If SIGTERM arrives during download, cleanup and exit with status 0
 
-- [ ] **Step 3: Ensure cleanup runs even if grace period is interrupted**
-  - Use tokio::select! in the in-flight wait loop to also watch for SIGTERM
-  - On second SIGTERM, break out of wait loop and proceed to cleanup
+- [x] **Step 3: Handle SIGTERM during model loading**
+  - Wrapped model loading (spawn_blocking) in `tokio::select!`
+  - If SIGTERM arrives during loading, cleanup and exit with status 0
 
-- [ ] **Step 4: Remove skip directives from integration tests**
-  - In `internal/llm/lifecycle_integration_test.go`, remove:
-    - Line 315: `t.Skip("Skipped: socket cleanup after SIGTERM needs fix (see issue #1675)")`
-    - Line 353: `t.Skip("Skipped: multiple SIGTERM handling needs fix (see issue #1675)")`
+- [x] **Step 4: Handle SIGTERM during shutdown grace period**
+  - Modified `wait_for_in_flight` function to accept sigterm parameter
+  - If second SIGTERM arrives during grace period, return immediately to proceed to cleanup
 
-- [ ] **Step 5: Run tests to verify fix**
-  - Build tsuku-llm: `cd tsuku-llm && cargo build`
-  - Run Rust unit tests: `cargo test`
-  - Run Go integration tests: `go test -tags=integration -v ./internal/llm/... -run SIGTERM`
+- [x] **Step 5: Add explicit process exit after cleanup**
+  - Added `std::process::exit(0)` after cleanup to ensure clean exit status
+
+- [x] **Step 6: Remove skip directives from integration tests**
+  - Removed skip directives from `TestIntegration_SIGTERMTriggersGracefulShutdown`
+  - Removed skip directives from `TestIntegration_MultipleSIGTERMIsSafe`
+
+- [x] **Step 7: Verify fix with tests**
+  - Rust unit tests: 48 passed
+  - SIGTERM integration tests: Both pass
 
 ## Testing Strategy
 
@@ -85,22 +89,22 @@ None.
 
 ## Success Criteria
 
-- [ ] `TestIntegration_SIGTERMTriggersGracefulShutdown` passes:
+- [x] `TestIntegration_SIGTERMTriggersGracefulShutdown` passes:
   - Socket file is removed after SIGTERM
   - Lock file is removed after SIGTERM
   - Process exits with status 0
 
-- [ ] `TestIntegration_MultipleSIGTERMIsSafe` passes:
+- [x] `TestIntegration_MultipleSIGTERMIsSafe` passes:
   - Daemon handles multiple rapid SIGTERMs without crash
   - Process exits with status 0 (not "signal: terminated")
 
-- [ ] All other tests remain passing:
+- [x] All other tests remain passing:
   - 48 Rust tests pass
-  - All Go tests pass
+  - All Go non-integration tests pass
 
 - [ ] No regressions in other shutdown paths:
-  - Idle timeout still cleans up correctly
-  - gRPC Shutdown still cleans up correctly
+  - Idle timeout still cleans up correctly (not tested - unrelated to this fix)
+  - gRPC Shutdown still cleans up correctly (not tested - unrelated to this fix)
 
 ## Open Questions
 
