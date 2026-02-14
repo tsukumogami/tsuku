@@ -187,8 +187,8 @@ graph TD
     class I1278 blocked
     class I1412 done
     class I1191 blocked
-    class I1648,I1650,I1651,I1654 done
-    class I1649,I1652,I1655 ready
+    class I1648,I1650,I1651,I1654,I1655 done
+    class I1649,I1652 ready
     class I1653 blocked
 ```
 
