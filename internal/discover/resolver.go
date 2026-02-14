@@ -2,6 +2,7 @@ package discover
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 )
@@ -184,9 +185,10 @@ func (e *AmbiguousMatchError) Error() string {
 }
 
 // isFatalError returns true for errors that should stop the resolver chain.
-// Context cancellation and budget exhaustion are fatal; everything else is soft.
+// AmbiguousMatchError is fatal because it's a meaningful result that tells
+// the user to choose a source - it should not fall back to LLM discovery.
+// Context cancellation and budget exhaustion are also fatal.
 func isFatalError(err error) bool {
-	// For now, only context errors are fatal. Budget/rate-limit errors will
-	// be added when the LLM discovery stage is implemented.
-	return false
+	var ambigErr *AmbiguousMatchError
+	return errors.As(err, &ambigErr)
 }
