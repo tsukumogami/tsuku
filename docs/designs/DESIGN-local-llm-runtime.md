@@ -49,7 +49,7 @@ Planned
 | _Download GGUF models from CDN with progress callback. SHA256 verification at download and before each load._ | | |
 | ~~[#1638: feat(llm): integrate llama.cpp for inference](https://github.com/tsukumogami/tsuku/issues/1638)~~ | [#1633](https://github.com/tsukumogami/tsuku/issues/1633), [#1637](https://github.com/tsukumogami/tsuku/issues/1637) | critical |
 | _Build llama.cpp via cc crate. Safe Rust wrappers for model loading and inference with proper context management._ | | |
-| [#1672: feat(llm): configure model manifest with HuggingFace URLs](https://github.com/tsukumogami/tsuku/issues/1672) | [#1637](https://github.com/tsukumogami/tsuku/issues/1637), [#1638](https://github.com/tsukumogami/tsuku/issues/1638) | testable |
+| ~~[#1672: feat(llm): configure model manifest with HuggingFace URLs](https://github.com/tsukumogami/tsuku/issues/1672)~~ | [#1637](https://github.com/tsukumogami/tsuku/issues/1637), [#1638](https://github.com/tsukumogami/tsuku/issues/1638) | testable |
 | _Update manifest with real HuggingFace download URLs and SHA256 checksums. Enables end-to-end model download and inference._ | | |
 | [#1639: feat(llm): implement GBNF grammar constraints for JSON](https://github.com/tsukumogami/tsuku/issues/1639) | [#1638](https://github.com/tsukumogami/tsuku/issues/1638) | testable |
 | _Generate GBNF grammar from JSON Schema. Forces model output to valid JSON matching tool schemas._ | | |
@@ -136,8 +136,8 @@ graph TD
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1628,I1629,I1630,I1631,I1632,I1633,I1634,I1635,I1636,I1637,I1638 done
-    class I1639,I1672,I1642,I1643,I1645 ready
+    class I1628,I1629,I1630,I1631,I1632,I1633,I1634,I1635,I1636,I1637,I1638,I1672 done
+    class I1639,I1642,I1643,I1645 ready
     class I1640,I1641,I1644 blocked
 ```
 
