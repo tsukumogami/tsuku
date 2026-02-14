@@ -123,6 +123,48 @@
             text-decoration: underline;
         }
 
+        .info-box {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .info-box p {
+            margin: 0 0 1rem 0;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .info-box p:last-child {
+            margin-bottom: 0;
+        }
+
+        .legend {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+
+        .legend-item .reason-badge {
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .legend-item span:last-child {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            line-height: 1.4;
+        }
+
         @media (max-width: 600px) {
             .package-table {
                 font-size: 0.85rem;
@@ -152,6 +194,31 @@
         </section>
 
         <a href="/pipeline/" class="back-link">&larr; Back to Dashboard</a>
+
+        <div class="info-box">
+            <p>
+                When a tool name (like <code>bat</code> or <code>jq</code>) exists in multiple package registries,
+                tsuku must decide which source to use. This page shows how each ambiguous tool was resolved.
+            </p>
+            <div class="legend">
+                <div class="legend-item">
+                    <span class="reason-badge reason-curated">curated</span>
+                    <span>Manually selected by maintainers. No alternatives recorded since selection predates discovery.</span>
+                </div>
+                <div class="legend-item">
+                    <span class="reason-badge reason-single_match">single_match</span>
+                    <span>Only one source matched the tool name. No ambiguity to resolve.</span>
+                </div>
+                <div class="legend-item">
+                    <span class="reason-badge reason-10x_popularity_gap">10x_popularity_gap</span>
+                    <span>One source has 10x more downloads than alternatives. High confidence automatic selection.</span>
+                </div>
+                <div class="legend-item">
+                    <span class="reason-badge reason-priority_fallback">priority_fallback</span>
+                    <span>Selected based on ecosystem priority order. May need review if alternatives are close in popularity.</span>
+                </div>
+            </div>
+        </div>
 
         <div id="content">
             <div class="loading">Loading...</div>
