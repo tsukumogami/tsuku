@@ -19,5 +19,5 @@ supported_os = ["linux"]
   binaries = ["bin/sshpass"]
 
 [verify]
-  command = "sshpass --version"
+  command = "sshpass -V"
   pattern = ""

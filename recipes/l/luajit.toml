@@ -16,8 +16,8 @@ supported_os = ["linux"]
 
 [[steps]]
   action = "install_binaries"
-  binaries = ["bin/luajit-2.1.1767980792"]
+  binaries = ["bin/luajit"]
 
 [verify]
-  command = "luajit-2.1.1767980792 --version"
+  command = "luajit -v"
   pattern = ""

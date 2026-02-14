@@ -19,5 +19,5 @@ supported_os = ["linux"]
   binaries = ["bin/lua", "bin/luac"]
 
 [verify]
-  command = "lua --version"
+  command = "lua -v"
   pattern = ""
