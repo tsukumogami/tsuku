@@ -84,6 +84,7 @@ const (
 	SelectionSingleMatch      = "single_match"
 	Selection10xPopularityGap = "10x_popularity_gap"
 	SelectionPriorityFallback = "priority_fallback"
+	SelectionCurated          = "curated" // Manual curation from seed files
 )
 
 // DisambiguationRecord represents a disambiguation decision made during batch processing.

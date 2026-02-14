@@ -311,6 +311,41 @@
                 </div>
             `).join('') || '<div class="no-data">No batch runs recorded yet</div>';
 
+            // Render disambiguation stats
+            let disambiguationPanel = '';
+            if (data.disambiguations && data.disambiguations.total > 0) {
+                const d = data.disambiguations;
+                const reasonItems = Object.entries(d.by_reason || {})
+                    .sort((a, b) => b[1] - a[1])
+                    .map(([reason, count]) => `
+                        <div class="blocker-item">
+                            <span class="blocker-name">${reason}</span>
+                            <span class="blocker-count">${count}</span>
+                        </div>
+                    `).join('');
+
+                const reviewItems = (d.need_review || []).slice(0, 5).map(tool => `
+                    <div class="blocker-item">
+                        <span class="blocker-name">${tool}</span>
+                        <span class="blocker-count" style="background: #d29922; color: white;">review</span>
+                    </div>
+                `).join('');
+
+                disambiguationPanel = `
+                    <div class="panel">
+                        <h2>Disambiguation (${d.total} tools)</h2>
+                        <div class="blocker-list">
+                            ${reasonItems}
+                            ${d.high_risk > 0 ? `<div class="blocker-item" style="border-top: 2px solid var(--border); padding-top: 0.75rem;">
+                                <span class="blocker-name" style="color: #d29922;">High-risk</span>
+                                <span class="blocker-count" style="background: #d29922; color: white;">${d.high_risk}</span>
+                            </div>` : ''}
+                        </div>
+                        ${reviewItems ? `<h3 style="font-size: 0.9rem; margin-top: 1rem; margin-bottom: 0.5rem; color: var(--text-muted);">Needs Review</h3><div class="blocker-list">${reviewItems}</div>` : ''}
+                    </div>
+                `;
+            }
+
             container.innerHTML = `
                 <div class="dashboard-header">
                     <span>Updated ${formatDate(data.generated_at)}</span>
@@ -344,6 +379,8 @@
                             ${runItems}
                         </div>
                     </div>
+
+                    ${disambiguationPanel}
                 </div>
 
                 <div class="raw-data-links">

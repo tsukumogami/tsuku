@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-02-14T19:25:12Z",
+  "generated_at": "2026-02-14T14:30:31Z",
   "queue": {
     "total": 4905,
     "by_status": {
@@ -29761,20 +29761,6 @@
   },
   "blockers": [
     {
-      "dependency": "gmp",
-      "count": 1,
-      "packages": [
-        "homebrew:coreutils"
-      ]
-    },
-    {
-      "dependency": "ada-url",
-      "count": 1,
-      "packages": [
-        "homebrew:node"
-      ]
-    },
-    {
       "dependency": "dav1d",
       "count": 1,
       "packages": [
@@ -29787,6 +29773,20 @@
       "packages": [
         "homebrew:imagemagick"
       ]
+    },
+    {
+      "dependency": "gmp",
+      "count": 1,
+      "packages": [
+        "homebrew:coreutils"
+      ]
+    },
+    {
+      "dependency": "ada-url",
+      "count": 1,
+      "packages": [
+        "homebrew:node"
+      ]
     }
   ],
   "failures": {
@@ -29795,5 +29795,13 @@
     "missing_dep": 4,
     "timeout": 3,
     "validation_failed": 156
+  },
+  "disambiguations": {
+    "total": 20,
+    "by_reason": {
+      "curated": 20
+    },
+    "high_risk": 0,
+    "need_review": []
   }
 }
