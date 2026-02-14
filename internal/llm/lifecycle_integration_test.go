@@ -29,28 +29,34 @@ import (
 //
 // Set TSUKU_LLM_BINARY to the path of the binary if not in tsuku-llm/target/release/.
 
-// modelCDNURL is the URL where models are downloaded from.
+// modelSourceURL is the URL where models are downloaded from (HuggingFace Hub).
 // Tests that require model inference skip if this URL is unreachable.
-const modelCDNURL = "https://cdn.tsuku.dev/models/"
+const modelSourceURL = "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF/resolve/main/qwen2.5-0.5b-instruct-q4_k_m.gguf"
 
-// skipIfModelCDNUnavailable skips the test if the model CDN is not reachable.
-// This allows tests to pass in environments where the model infrastructure
-// hasn't been deployed yet (e.g., CI before model CDN is set up).
+// skipIfModelCDNUnavailable skips the test if the model source is not reachable.
+// This allows tests to pass in environments where HuggingFace is blocked or
+// network access is restricted.
 func skipIfModelCDNUnavailable(t *testing.T) {
 	t.Helper()
 
-	client := &http.Client{Timeout: 5 * time.Second}
-	resp, err := client.Head(modelCDNURL)
+	client := &http.Client{Timeout: 10 * time.Second}
+	// Use HEAD request to check accessibility without downloading the file
+	req, err := http.NewRequest("HEAD", modelSourceURL, nil)
 	if err != nil {
-		t.Skipf("Model CDN unavailable (network error): %v", err)
+		t.Skipf("Model source unavailable (request error): %v", err)
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Skipf("Model source unavailable (network error): %v", err)
 	}
 	defer resp.Body.Close()
 	// Drain body to allow connection reuse
 	_, _ = io.Copy(io.Discard, resp.Body)
 
-	// 4xx/5xx responses indicate CDN is down or not configured
+	// 4xx/5xx responses indicate source is down or model is not available
 	if resp.StatusCode >= 400 {
-		t.Skipf("Model CDN unavailable (HTTP %d)", resp.StatusCode)
+		t.Skipf("Model source unavailable (HTTP %d)", resp.StatusCode)
 	}
 }
 

@@ -151,9 +151,9 @@ impl ModelManifest {
             "qwen2.5-3b-instruct-q4".to_string(),
             ModelEntry {
                 quantization: "q4_k_m".to_string(),
-                size_bytes: 2_500_000_000, // ~2.5GB
-                sha256: "placeholder_sha256_3b".to_string(),
-                download_url: "https://cdn.tsuku.dev/models/qwen2.5-3b-instruct-q4_k_m.gguf"
+                size_bytes: 2_104_932_768,
+                sha256: "626b4a6678b86442240e33df819e00132d3ba7dddfe1cdc4fbb18e0a9615c62d".to_string(),
+                download_url: "https://huggingface.co/Qwen/Qwen2.5-3B-Instruct-GGUF/resolve/main/qwen2.5-3b-instruct-q4_k_m.gguf"
                     .to_string(),
                 supported_backends: vec![Backend::Cuda, Backend::Metal, Backend::Vulkan, Backend::Cpu],
             },
@@ -164,9 +164,9 @@ impl ModelManifest {
             "qwen2.5-1.5b-instruct-q4".to_string(),
             ModelEntry {
                 quantization: "q4_k_m".to_string(),
-                size_bytes: 1_500_000_000, // ~1.5GB
-                sha256: "placeholder_sha256_1.5b".to_string(),
-                download_url: "https://cdn.tsuku.dev/models/qwen2.5-1.5b-instruct-q4_k_m.gguf"
+                size_bytes: 1_117_320_736,
+                sha256: "6a1a2eb6d15622bf3c96857206351ba97e1af16c30d7a74ee38970e434e9407e".to_string(),
+                download_url: "https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct-GGUF/resolve/main/qwen2.5-1.5b-instruct-q4_k_m.gguf"
                     .to_string(),
                 supported_backends: vec![Backend::Cuda, Backend::Metal, Backend::Vulkan, Backend::Cpu],
             },
@@ -177,9 +177,9 @@ impl ModelManifest {
             "qwen2.5-0.5b-instruct-q4".to_string(),
             ModelEntry {
                 quantization: "q4_k_m".to_string(),
-                size_bytes: 500_000_000, // ~500MB
-                sha256: "placeholder_sha256_0.5b".to_string(),
-                download_url: "https://cdn.tsuku.dev/models/qwen2.5-0.5b-instruct-q4_k_m.gguf"
+                size_bytes: 491_400_032,
+                sha256: "74a4da8c9fdbcd15bd1f6d01d621410d31c6fc00986f5eb687824e7b93d7a9db".to_string(),
+                download_url: "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF/resolve/main/qwen2.5-0.5b-instruct-q4_k_m.gguf"
                     .to_string(),
                 supported_backends: vec![Backend::Cuda, Backend::Metal, Backend::Vulkan, Backend::Cpu],
             },
