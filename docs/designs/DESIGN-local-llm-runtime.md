@@ -55,7 +55,7 @@ Planned
 | _Fix SIGTERM handler to properly clean up socket and lock files. Daemon should exit with status 0 after graceful shutdown._ | | |
 | ~~[#1676: fix(llm): tokenization fails with negative count from llama_tokenize](https://github.com/tsukumogami/tsuku/issues/1676)~~ | [#1638](https://github.com/tsukumogami/tsuku/issues/1638) | testable |
 | _Fix tokenization error when processing completion requests. llama_tokenize returns negative count indicating configuration or encoding issue._ | | |
-| [#1639: feat(llm): implement GBNF grammar constraints for JSON](https://github.com/tsukumogami/tsuku/issues/1639) | [#1638](https://github.com/tsukumogami/tsuku/issues/1638) | testable |
+| ~~[#1639: feat(llm): implement GBNF grammar constraints for JSON](https://github.com/tsukumogami/tsuku/issues/1639)~~ | [#1638](https://github.com/tsukumogami/tsuku/issues/1638) | testable |
 | _Generate GBNF grammar from JSON Schema. Forces model output to valid JSON matching tool schemas._ | | |
 | [#1640: feat(llm): wire Complete RPC to llama.cpp inference](https://github.com/tsukumogami/tsuku/issues/1640) | [#1639](https://github.com/tsukumogami/tsuku/issues/1639), [#1672](https://github.com/tsukumogami/tsuku/issues/1672), [#1675](https://github.com/tsukumogami/tsuku/issues/1675), [#1676](https://github.com/tsukumogami/tsuku/issues/1676) | testable |
 | _Complete RPC invokes llama.cpp with grammar constraints. Includes local E2E validation: run `tsuku create` with LocalProvider on dev machine to verify full flow._ | | |
@@ -97,7 +97,7 @@ graph TD
         I1672["#1672: HuggingFace manifest"]
         I1675["#1675: SIGTERM cleanup ✓"]
         I1676["#1676: Tokenization fix ✓"]
-        I1639["#1639: GBNF grammar"]
+        I1639["#1639: GBNF grammar ✓"]
         I1640["#1640: Complete RPC"]
     end
 
@@ -146,9 +146,9 @@ graph TD
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1628,I1629,I1630,I1631,I1632,I1633,I1634,I1635,I1636,I1637,I1638,I1672,I1675,I1676 done
-    class I1639,I1642,I1643,I1645 ready
-    class I1640,I1641,I1644 blocked
+    class I1628,I1629,I1630,I1631,I1632,I1633,I1634,I1635,I1636,I1637,I1638,I1672,I1675,I1676,I1639 done
+    class I1640,I1642,I1643,I1645 ready
+    class I1641,I1644 blocked
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
