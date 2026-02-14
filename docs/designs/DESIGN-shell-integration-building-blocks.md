@@ -570,30 +570,6 @@ Each block requires its own detailed design. This section outlines what each des
 
 **Integration with shellenv**: May extend or replace existing `shellenv` command
 
-## Consequences
-
-### Positive
-
-- **Incremental delivery**: Each block provides value immediately upon release
-- **Reduced friction**: Users discover tools via commands, not recipe names
-- **Reproducible projects**: Teams share tool requirements via config file
-- **Optional complexity**: Users choose their integration level (CLI only → shell hooks)
-- **Foundation for LLM**: Clear integration point for future LLM discovery
-
-### Negative
-
-- **Recipe metadata dependency**: Index accuracy depends on complete binary declarations
-- **Multiple shell implementations**: bash, zsh, fish each need separate code
-- **Learning curve**: Five new concepts for users to understand
-- **Performance constraints**: 50ms budget limits implementation flexibility
-
-### Mitigations
-
-- **Recipe metadata**: Add CI validation for binary declarations; migration script for existing recipes
-- **Shell implementations**: Start with bash/zsh, add fish later; share logic in tsuku binary
-- **Learning curve**: Progressive disclosure - users can use just Block 1 (`tsuku which`) without understanding the rest
-- **Performance**: SQLite with proper indexing; benchmark in CI
-
 ## Security Considerations
 
 ### Download Verification
@@ -663,3 +639,26 @@ No data is transmitted externally by these building blocks.
 | Malicious project config | No auto-install on clone, explicit invocation required | User may run `tsuku install` in untrusted repo |
 | Index manipulation | Rebuild from registry, not external fetch | Local disk compromise would allow modification |
 
+## Consequences
+
+### Positive
+
+- **Incremental delivery**: Each block provides value immediately upon release
+- **Reduced friction**: Users discover tools via commands, not recipe names
+- **Reproducible projects**: Teams share tool requirements via config file
+- **Optional complexity**: Users choose their integration level (CLI only → shell hooks)
+- **Foundation for LLM**: Clear integration point for future LLM discovery
+
+### Negative
+
+- **Recipe metadata dependency**: Index accuracy depends on complete binary declarations
+- **Multiple shell implementations**: bash, zsh, fish each need separate code
+- **Learning curve**: Five new concepts for users to understand
+- **Performance constraints**: 50ms budget limits implementation flexibility
+
+### Mitigations
+
+- **Recipe metadata**: Add CI validation for binary declarations; migration script for existing recipes
+- **Shell implementations**: Start with bash/zsh, add fish later; share logic in tsuku binary
+- **Learning curve**: Progressive disclosure - users can use just Block 1 (`tsuku which`) without understanding the rest
+- **Performance**: SQLite with proper indexing; benchmark in CI
