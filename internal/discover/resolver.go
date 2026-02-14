@@ -3,6 +3,7 @@ package discover
 import (
 	"context"
 	"fmt"
+	"strings"
 )
 
 // Confidence indicates how the tool source was determined.
@@ -174,7 +175,12 @@ type ProbeMatch struct {
 type ConfirmDisambiguationFunc func(matches []ProbeMatch) (int, error)
 
 func (e *AmbiguousMatchError) Error() string {
-	return fmt.Sprintf("multiple sources found for '%s': use --from to specify", e.Tool)
+	var b strings.Builder
+	fmt.Fprintf(&b, "Multiple sources found for %q. Use --from to specify:\n", e.Tool)
+	for _, m := range e.Matches {
+		fmt.Fprintf(&b, "  tsuku install %s --from %s:%s\n", e.Tool, m.Builder, m.Source)
+	}
+	return strings.TrimSuffix(b.String(), "\n")
 }
 
 // isFatalError returns true for errors that should stop the resolver chain.

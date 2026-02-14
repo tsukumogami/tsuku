@@ -24,13 +24,13 @@ None
 
 ## Implementation Steps
 
-- [ ] Update `AmbiguousMatchError.Error()` to return multi-line formatted output per design spec
-- [ ] Update `TestAmbiguousMatchError` to verify new format
-- [ ] Add test case for 2 matches
-- [ ] Add test case for 3+ matches
-- [ ] Add test case for matches with varying source formats (simple name vs owner/repo)
-- [ ] Run `go test ./internal/discover/...` to verify all tests pass
-- [ ] Run `go vet ./...` and `go build ./...` to verify no issues
+- [x] Update `AmbiguousMatchError.Error()` to return multi-line formatted output per design spec
+- [x] Update `TestAmbiguousMatchError` to verify new format
+- [x] Add test case for 2 matches
+- [x] Add test case for 3+ matches
+- [x] Add test case for matches with varying source formats (simple name vs owner/repo)
+- [x] Run `go test ./internal/discover/...` to verify all tests pass
+- [x] Run `go vet ./...` and `go build ./...` to verify no issues
 
 ## Testing Strategy
 
