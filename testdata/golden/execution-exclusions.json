@@ -63,96 +63,6 @@
       "reason": "gem_install binstubs execute system Ruby instead of installed gem"
     },
     {
-      "recipe": "act",
-      "issue": "https://github.com/tsukumogami/tsuku/issues/1663",
-      "reason": "Segfault (exit 139) - glibc version mismatch with Homebrew bottles"
-    },
-    {
-      "recipe": "buf",
-      "issue": "https://github.com/tsukumogami/tsuku/issues/1663",
-      "reason": "Segfault (exit 139) - glibc version mismatch with Homebrew bottles"
-    },
-    {
-      "recipe": "cliproxyapi",
-      "issue": "https://github.com/tsukumogami/tsuku/issues/1663",
-      "reason": "Segfault (exit 139) - glibc version mismatch with Homebrew bottles"
-    },
-    {
-      "recipe": "cloudflared",
-      "issue": "https://github.com/tsukumogami/tsuku/issues/1663",
-      "reason": "Segfault (exit 139) - glibc version mismatch with Homebrew bottles"
-    },
-    {
-      "recipe": "fabric-ai",
-      "issue": "https://github.com/tsukumogami/tsuku/issues/1663",
-      "reason": "Segfault (exit 139) - glibc version mismatch with Homebrew bottles"
-    },
-    {
-      "recipe": "gh",
-      "issue": "https://github.com/tsukumogami/tsuku/issues/1663",
-      "reason": "Segfault (exit 139) - glibc version mismatch with Homebrew bottles"
-    },
-    {
-      "recipe": "git-lfs",
-      "issue": "https://github.com/tsukumogami/tsuku/issues/1663",
-      "reason": "Segfault (exit 139) - glibc version mismatch with Homebrew bottles"
-    },
-    {
-      "recipe": "go-task",
-      "issue": "https://github.com/tsukumogami/tsuku/issues/1663",
-      "reason": "Segfault (exit 139) - glibc version mismatch with Homebrew bottles"
-    },
-    {
-      "recipe": "goreman",
-      "issue": "https://github.com/tsukumogami/tsuku/issues/1663",
-      "reason": "Segfault (exit 139) - glibc version mismatch with Homebrew bottles"
-    },
-    {
-      "recipe": "grpcurl",
-      "issue": "https://github.com/tsukumogami/tsuku/issues/1663",
-      "reason": "Segfault (exit 139) - glibc version mismatch with Homebrew bottles"
-    },
-    {
-      "recipe": "jfrog-cli",
-      "issue": "https://github.com/tsukumogami/tsuku/issues/1663",
-      "reason": "Segfault (exit 139) - glibc version mismatch with Homebrew bottles"
-    },
-    {
-      "recipe": "license-eye",
-      "issue": "https://github.com/tsukumogami/tsuku/issues/1663",
-      "reason": "Segfault (exit 139) - glibc version mismatch with Homebrew bottles"
-    },
-    {
-      "recipe": "mkcert",
-      "issue": "https://github.com/tsukumogami/tsuku/issues/1663",
-      "reason": "Segfault (exit 139) - glibc version mismatch with Homebrew bottles"
-    },
-    {
-      "recipe": "oh-my-posh",
-      "issue": "https://github.com/tsukumogami/tsuku/issues/1663",
-      "reason": "Segfault (exit 139) - glibc version mismatch with Homebrew bottles"
-    },
-    {
-      "recipe": "tailscale",
-      "issue": "https://github.com/tsukumogami/tsuku/issues/1663",
-      "reason": "Segfault (exit 139) - glibc version mismatch with Homebrew bottles"
-    },
-    {
-      "recipe": "temporal",
-      "issue": "https://github.com/tsukumogami/tsuku/issues/1663",
-      "reason": "Segfault (exit 139) - glibc version mismatch with Homebrew bottles"
-    },
-    {
-      "recipe": "terragrunt",
-      "issue": "https://github.com/tsukumogami/tsuku/issues/1663",
-      "reason": "Segfault (exit 139) - glibc version mismatch with Homebrew bottles"
-    },
-    {
-      "recipe": "witr",
-      "issue": "https://github.com/tsukumogami/tsuku/issues/1663",
-      "reason": "Segfault (exit 139) - glibc version mismatch with Homebrew bottles"
-    },
-    {
       "recipe": "bash",
       "issue": "https://github.com/tsukumogami/tsuku/issues/1665",
       "reason": "Missing library (exit 127) - Homebrew bottle library dependencies not found"
@@ -336,11 +246,6 @@
       "recipe": "spatialite",
       "issue": "https://github.com/tsukumogami/tsuku/issues/1662",
       "reason": "Transient network error - 502 Bad Gateway downloading dependencies"
-    },
-    {
-      "recipe": "sqlite",
-      "issue": "https://github.com/tsukumogami/tsuku/issues/1663",
-      "reason": "Crash (abort trap) - Homebrew bottle issue on macOS"
     }
   ]
 }
