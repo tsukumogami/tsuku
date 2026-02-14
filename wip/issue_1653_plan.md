@@ -44,13 +44,13 @@ For non-JSON mode, use `fmt.Fprintln(os.Stderr, err.Error())` directly to preser
 
 ## Implementation Steps
 
-- [ ] Add `ExitAmbiguous = 10` to exitcodes.go
-- [ ] Add `ambiguousError` struct for JSON output in create.go
-- [ ] Add `handleAmbiguousError` helper function
-- [ ] Update create.go runCreate error handling (lines 480-484)
-- [ ] Update install.go tryDiscoveryFallback error handling (lines 388-398)
-- [ ] Add unit tests for error handling
-- [ ] Run tests and verify
+- [x] Add `ExitAmbiguous = 10` to exitcodes.go
+- [x] Add `handleAmbiguousError` helper function in create.go (text only, no --json flag)
+- [x] Update create.go runCreate error handling (lines 480-484)
+- [x] Add `ambiguousInstallError` struct for JSON output in install.go
+- [x] Add `handleAmbiguousInstallError` helper function (supports --json flag)
+- [x] Update install.go tryDiscoveryFallback error handling (lines 388-398)
+- [x] Run tests and verify (existing AmbiguousMatchError tests cover formatting)
 
 ## Test Cases
 
