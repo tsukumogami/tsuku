@@ -284,23 +284,23 @@
                 `;
             }).join('');
 
-            // Render blockers
+            // Render blockers (clickable, link to blocked.html with filter)
             const blockerItems = (data.blockers || []).slice(0, 10).map(b => `
-                <div class="blocker-item">
+                <a href="/pipeline/blocked.html?blocker=${encodeURIComponent(b.dependency)}" class="status-row">
                     <span class="blocker-name">${b.dependency}</span>
                     <span class="blocker-count">${b.count} blocked</span>
-                </div>
+                </a>
             `).join('') || '<div class="no-data">No blocking dependencies</div>';
 
-            // Render failure categories
+            // Render failure categories (clickable, link to failed.html with filter)
             const failureItems = Object.entries(data.failures || {})
                 .filter(([_, count]) => count > 0)
                 .sort((a, b) => b[1] - a[1])
                 .map(([cat, count]) => `
-                    <div class="blocker-item">
+                    <a href="/pipeline/failed.html?category=${encodeURIComponent(cat)}" class="status-row">
                         <span class="blocker-name">${cat}</span>
                         <span class="blocker-count">${count}</span>
-                    </div>
+                    </a>
                 `).join('') || '<div class="no-data">No failures recorded</div>';
 
             // Render recent runs
