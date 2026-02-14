@@ -49,9 +49,11 @@ Planned
 | _Download GGUF models from CDN with progress callback. SHA256 verification at download and before each load._ | | |
 | ~~[#1638: feat(llm): integrate llama.cpp for inference](https://github.com/tsukumogami/tsuku/issues/1638)~~ | [#1633](https://github.com/tsukumogami/tsuku/issues/1633), [#1637](https://github.com/tsukumogami/tsuku/issues/1637) | critical |
 | _Build llama.cpp via cc crate. Safe Rust wrappers for model loading and inference with proper context management._ | | |
+| [#1672: feat(llm): configure model manifest with HuggingFace URLs](https://github.com/tsukumogami/tsuku/issues/1672) | [#1637](https://github.com/tsukumogami/tsuku/issues/1637), [#1638](https://github.com/tsukumogami/tsuku/issues/1638) | testable |
+| _Update manifest with real HuggingFace download URLs and SHA256 checksums. Enables end-to-end model download and inference._ | | |
 | [#1639: feat(llm): implement GBNF grammar constraints for JSON](https://github.com/tsukumogami/tsuku/issues/1639) | [#1638](https://github.com/tsukumogami/tsuku/issues/1638) | testable |
 | _Generate GBNF grammar from JSON Schema. Forces model output to valid JSON matching tool schemas._ | | |
-| [#1640: feat(llm): wire Complete RPC to llama.cpp inference](https://github.com/tsukumogami/tsuku/issues/1640) | [#1638](https://github.com/tsukumogami/tsuku/issues/1638), [#1639](https://github.com/tsukumogami/tsuku/issues/1639) | testable |
+| [#1640: feat(llm): wire Complete RPC to llama.cpp inference](https://github.com/tsukumogami/tsuku/issues/1640) | [#1638](https://github.com/tsukumogami/tsuku/issues/1638), [#1639](https://github.com/tsukumogami/tsuku/issues/1639), [#1672](https://github.com/tsukumogami/tsuku/issues/1672) | testable |
 | _Complete RPC invokes llama.cpp with grammar constraints. Returns structured responses matching Provider interface._ | | |
 
 ### Milestone: [Production Ready](https://github.com/tsukumogami/tsuku/milestone/80)
@@ -88,6 +90,7 @@ graph TD
         I1636["#1636: Model selection"]
         I1637["#1637: Model download"]
         I1638["#1638: llama.cpp integration"]
+        I1672["#1672: HuggingFace manifest"]
         I1639["#1639: GBNF grammar"]
         I1640["#1640: Complete RPC"]
     end
@@ -114,8 +117,9 @@ graph TD
     I1636 --> I1637
     I1633 --> I1638
     I1637 --> I1638
+    I1638 --> I1672
     I1638 --> I1639
-    I1638 --> I1640
+    I1672 --> I1640
     I1639 --> I1640
     I1640 --> I1641
     I1629 --> I1642
@@ -133,7 +137,7 @@ graph TD
     classDef needsDesign fill:#e1bee7
 
     class I1628,I1629,I1630,I1631,I1632,I1633,I1634,I1635,I1636,I1637,I1638 done
-    class I1639,I1642,I1643,I1645 ready
+    class I1639,I1672,I1642,I1643,I1645 ready
     class I1640,I1641,I1644 blocked
 ```
 
