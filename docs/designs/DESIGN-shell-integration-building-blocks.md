@@ -55,7 +55,8 @@ graph LR
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1677,I1678,I1679,I1680,I1681 needsDesign
+    class I1677,I1680 needsDesign
+    class I1678,I1679,I1681 blocked
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
