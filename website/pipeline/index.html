@@ -292,16 +292,21 @@
                 </a>
             `).join('') || '<div class="no-data">No blocking dependencies</div>';
 
-            // Render failure categories (clickable, link to failed.html with filter)
-            const failureItems = Object.entries(data.failures || {})
-                .filter(([_, count]) => count > 0)
+            // Render failure categories from current queue (not historical)
+            const failedPackages = data.queue.packages?.failed || [];
+            const failuresByCategory = {};
+            failedPackages.forEach(pkg => {
+                const cat = pkg.category || 'unknown';
+                failuresByCategory[cat] = (failuresByCategory[cat] || 0) + 1;
+            });
+            const failureItems = Object.entries(failuresByCategory)
                 .sort((a, b) => b[1] - a[1])
                 .map(([cat, count]) => `
                     <a href="/pipeline/failed.html?category=${encodeURIComponent(cat)}" class="status-row">
                         <span class="blocker-name">${cat}</span>
                         <span class="blocker-count">${count}</span>
                     </a>
-                `).join('') || '<div class="no-data">No failures recorded</div>';
+                `).join('') || '<div class="no-data">No current failures</div>';
 
             // Render recent runs
             const runItems = (data.runs || []).slice(0, 10).map(run => `
