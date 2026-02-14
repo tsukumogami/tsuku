@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-02-14T19:25:12Z",
+  "generated_at": "2026-02-14T19:29:44Z",
   "queue": {
     "total": 4905,
     "by_status": {
@@ -29761,20 +29761,6 @@
   },
   "blockers": [
     {
-      "dependency": "gmp",
-      "count": 1,
-      "packages": [
-        "homebrew:coreutils"
-      ]
-    },
-    {
-      "dependency": "ada-url",
-      "count": 1,
-      "packages": [
-        "homebrew:node"
-      ]
-    },
-    {
       "dependency": "dav1d",
       "count": 1,
       "packages": [
@@ -29787,6 +29773,20 @@
       "packages": [
         "homebrew:imagemagick"
       ]
+    },
+    {
+      "dependency": "gmp",
+      "count": 1,
+      "packages": [
+        "homebrew:coreutils"
+      ]
+    },
+    {
+      "dependency": "ada-url",
+      "count": 1,
+      "packages": [
+        "homebrew:node"
+      ]
     }
   ],
   "failures": {
@@ -29795,5 +29795,227 @@
     "missing_dep": 4,
     "timeout": 3,
     "validation_failed": 156
+  },
+  "runs": [
+    {
+      "batch_id": "2026-02-06-homebrew",
+      "total": 2,
+      "merged": 2,
+      "rate": 1,
+      "timestamp": "2026-02-06T20:45:08Z"
+    },
+    {
+      "batch_id": "2026-02-06-homebrew",
+      "total": 5,
+      "merged": 5,
+      "rate": 1,
+      "timestamp": "2026-02-06T19:07:05Z"
+    },
+    {
+      "batch_id": "2026-02-06-homebrew",
+      "total": 5,
+      "merged": 5,
+      "rate": 1,
+      "timestamp": "2026-02-06T17:55:11Z"
+    },
+    {
+      "batch_id": "2026-02-06-homebrew",
+      "total": 3,
+      "merged": 3,
+      "rate": 1,
+      "timestamp": "2026-02-06T17:01:06Z"
+    },
+    {
+      "batch_id": "2026-02-06-homebrew",
+      "total": 1,
+      "merged": 1,
+      "rate": 1,
+      "timestamp": "2026-02-06T15:52:17Z"
+    },
+    {
+      "batch_id": "2026-02-06-homebrew",
+      "total": 1,
+      "merged": 1,
+      "rate": 1,
+      "timestamp": "2026-02-06T14:48:32Z"
+    },
+    {
+      "batch_id": "2026-02-06-homebrew",
+      "total": 1,
+      "merged": 1,
+      "rate": 1,
+      "timestamp": "2026-02-06T13:17:01Z"
+    },
+    {
+      "batch_id": "2026-02-06-homebrew",
+      "total": 1,
+      "merged": 1,
+      "rate": 1,
+      "timestamp": "2026-02-06T11:42:31Z"
+    },
+    {
+      "batch_id": "2026-02-06-homebrew",
+      "total": 5,
+      "merged": 5,
+      "rate": 1,
+      "timestamp": "2026-02-06T10:56:25Z"
+    },
+    {
+      "batch_id": "2026-02-06-homebrew",
+      "total": 3,
+      "merged": 3,
+      "rate": 1,
+      "timestamp": "2026-02-06T09:58:17Z"
+    }
+  ],
+  "disambiguations": {
+    "total": 20,
+    "by_reason": {
+      "curated": 20
+    },
+    "high_risk": 0,
+    "need_review": [],
+    "entries": [
+      {
+        "tool": "age",
+        "selected": "github:FiloSottile/age",
+        "alternatives": [],
+        "selection_reason": "curated",
+        "high_risk": false
+      },
+      {
+        "tool": "bat",
+        "selected": "github:sharkdp/bat",
+        "alternatives": [],
+        "selection_reason": "curated",
+        "high_risk": false
+      },
+      {
+        "tool": "buf",
+        "selected": "github:bufbuild/buf",
+        "alternatives": [],
+        "selection_reason": "curated",
+        "high_risk": false
+      },
+      {
+        "tool": "delta",
+        "selected": "github:dandavison/delta",
+        "alternatives": [],
+        "selection_reason": "curated",
+        "high_risk": false
+      },
+      {
+        "tool": "dive",
+        "selected": "github:wagoodman/dive",
+        "alternatives": [],
+        "selection_reason": "curated",
+        "high_risk": false
+      },
+      {
+        "tool": "dust",
+        "selected": "homebrew:dust",
+        "alternatives": [],
+        "selection_reason": "curated",
+        "high_risk": false
+      },
+      {
+        "tool": "fd",
+        "selected": "homebrew:fd",
+        "alternatives": [],
+        "selection_reason": "curated",
+        "high_risk": false
+      },
+      {
+        "tool": "fzf",
+        "selected": "github:junegunn/fzf",
+        "alternatives": [],
+        "selection_reason": "curated",
+        "high_risk": false
+      },
+      {
+        "tool": "gh",
+        "selected": "github:cli/cli",
+        "alternatives": [],
+        "selection_reason": "curated",
+        "high_risk": false
+      },
+      {
+        "tool": "gum",
+        "selected": "github:charmbracelet/gum",
+        "alternatives": [],
+        "selection_reason": "curated",
+        "high_risk": false
+      },
+      {
+        "tool": "hub",
+        "selected": "github:github/hub",
+        "alternatives": [],
+        "selection_reason": "curated",
+        "high_risk": false
+      },
+      {
+        "tool": "jq",
+        "selected": "github:jqlang/jq",
+        "alternatives": [],
+        "selection_reason": "curated",
+        "high_risk": false
+      },
+      {
+        "tool": "just",
+        "selected": "github:casey/just",
+        "alternatives": [],
+        "selection_reason": "curated",
+        "high_risk": false
+      },
+      {
+        "tool": "ko",
+        "selected": "github:ko-build/ko",
+        "alternatives": [],
+        "selection_reason": "curated",
+        "high_risk": false
+      },
+      {
+        "tool": "rg",
+        "selected": "github:BurntSushi/ripgrep",
+        "alternatives": [],
+        "selection_reason": "curated",
+        "high_risk": false
+      },
+      {
+        "tool": "sd",
+        "selected": "github:chmln/sd",
+        "alternatives": [],
+        "selection_reason": "curated",
+        "high_risk": false
+      },
+      {
+        "tool": "sk",
+        "selected": "github:lotabout/skim",
+        "alternatives": [],
+        "selection_reason": "curated",
+        "high_risk": false
+      },
+      {
+        "tool": "step",
+        "selected": "github:smallstep/cli",
+        "alternatives": [],
+        "selection_reason": "curated",
+        "high_risk": false
+      },
+      {
+        "tool": "task",
+        "selected": "homebrew:go-task",
+        "alternatives": [],
+        "selection_reason": "curated",
+        "high_risk": false
+      },
+      {
+        "tool": "yq",
+        "selected": "homebrew:yq",
+        "alternatives": [],
+        "selection_reason": "curated",
+        "high_risk": false
+      }
+    ]
   }
 }

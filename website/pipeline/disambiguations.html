@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Blocked packages in tsuku pipeline">
-    <title>Blocked Packages - tsuku Pipeline</title>
+    <meta name="description" content="Disambiguation decisions in tsuku pipeline">
+    <title>Disambiguations - tsuku Pipeline</title>
     <link rel="stylesheet" href="/assets/style.css">
     <style>
         .package-list {
@@ -20,44 +20,6 @@
             margin-bottom: 1rem;
             color: var(--text-muted);
         }
-
-        .package-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .package-table th,
-        .package-table td {
-            text-align: left;
-            padding: 0.5rem 0.75rem;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .package-table th {
-            font-weight: 600;
-            color: var(--text-muted);
-            font-size: 0.85rem;
-        }
-
-        .package-table tr:last-child td {
-            border-bottom: none;
-        }
-
-        .package-name {
-            font-family: "SF Mono", Consolas, monospace;
-        }
-
-        .priority-badge {
-            display: inline-block;
-            padding: 0.15rem 0.5rem;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-
-        .priority-1 { background: #3fb950; color: #000; }
-        .priority-2 { background: #d29922; color: #000; }
-        .priority-3 { background: var(--text-muted); color: var(--bg); }
 
         .filter-bar {
             display: flex;
@@ -98,27 +60,64 @@
             border-radius: 4px;
         }
 
-        .filter-description code {
-            background: var(--bg);
-            padding: 0.1rem 0.3rem;
-            border-radius: 3px;
+        .filter-description .reason-badge {
+            margin-right: 0.5rem;
+        }
+
+        .package-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .package-table th,
+        .package-table td {
+            text-align: left;
+            padding: 0.5rem 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .package-table th {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .package-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .tool-name {
             font-family: "SF Mono", Consolas, monospace;
+            font-weight: 600;
         }
 
-        .dep-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.25rem;
+        .source {
+            font-family: "SF Mono", Consolas, monospace;
+            font-size: 0.9rem;
         }
 
-        .dep-badge {
+        .reason-badge {
             display: inline-block;
             padding: 0.15rem 0.5rem;
             border-radius: 4px;
             font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .reason-curated { background: #3fb950; color: #000; }
+        .reason-single_match { background: #3fb950; color: #000; }
+        .reason-10x_popularity_gap { background: #58a6ff; color: #000; }
+        .reason-priority_fallback { background: #d29922; color: #000; }
+
+        .high-risk {
+            color: #d29922;
+            font-weight: 600;
+        }
+
+        .alternatives {
+            font-size: 0.85rem;
+            color: var(--text-muted);
             font-family: "SF Mono", Consolas, monospace;
-            background: #d29922;
-            color: #000;
         }
 
         .loading {
@@ -142,6 +141,9 @@
             .package-table {
                 font-size: 0.85rem;
             }
+            .alternatives {
+                display: none;
+            }
         }
     </style>
 </head>
@@ -159,8 +161,8 @@
 
     <main>
         <section class="hero">
-            <h1>Blocked Packages</h1>
-            <p class="tagline">Packages waiting on missing dependencies</p>
+            <h1>Disambiguation Decisions</h1>
+            <p class="tagline">Tools with multiple possible sources</p>
         </section>
 
         <a href="/pipeline/" class="back-link">&larr; Back to Dashboard</a>
@@ -183,88 +185,86 @@
     </footer>
 
     <script>
-        const STATUS = 'blocked';
-
         // Get filter from URL
         const params = new URLSearchParams(window.location.search);
-        const filterBlocker = params.get('blocker');
+        const filterReason = params.get('reason');
+
+        // Descriptions for each selection reason
+        const reasonDescriptions = {
+            'curated': 'Manually selected by maintainers. No alternatives recorded since selection predates automatic discovery.',
+            'single_match': 'Only one source matched the tool name. No ambiguity to resolve.',
+            '10x_popularity_gap': 'One source has 10x more downloads than alternatives. High confidence automatic selection.',
+            'priority_fallback': 'Selected based on ecosystem priority order. May need review if alternatives are close in popularity.'
+        };
 
         function renderDescription(filter) {
             if (!filter) {
-                return `<p class="filter-description">Packages waiting on dependencies that don't have recipes yet. Select a blocker above to see packages waiting on it.</p>`;
+                return `<p class="filter-description">When a tool name exists in multiple package registries, tsuku must decide which source to use. Select a category above to see its meaning.</p>`;
             }
-            return `<p class="filter-description">Packages blocked by <code>${filter}</code>. These packages cannot be installed until a recipe for ${filter} is created.</p>`;
+            const desc = reasonDescriptions[filter] || 'Unknown selection reason.';
+            return `<p class="filter-description"><span class="reason-badge reason-${filter}">${filter}</span> ${desc}</p>`;
         }
 
-        function renderFilters(packages, activeFilter) {
-            // Count by blocker
-            const byBlocker = {};
-            packages.forEach(pkg => {
-                (pkg.blocked_by || []).forEach(dep => {
-                    byBlocker[dep] = (byBlocker[dep] || 0) + 1;
-                });
-            });
-
-            // Sort by count descending, take top 10
-            const blockers = Object.entries(byBlocker)
-                .sort((a, b) => b[1] - a[1])
-                .slice(0, 10);
-
-            if (blockers.length === 0) return '';
+        function renderFilters(byReason, activeFilter) {
+            const reasons = Object.keys(byReason).sort();
+            if (reasons.length === 0) return '';
 
             const allActive = !activeFilter ? 'active' : '';
-            let html = `<a href="?" class="filter-btn ${allActive}">All (${packages.length})</a>`;
+            let html = `<a href="?#" class="filter-btn ${allActive}">All</a>`;
 
-            blockers.forEach(([blocker, count]) => {
-                const active = activeFilter === blocker ? 'active' : '';
-                html += `<a href="?blocker=${encodeURIComponent(blocker)}" class="filter-btn ${active}">${blocker} (${count})</a>`;
+            reasons.forEach(reason => {
+                const active = activeFilter === reason ? 'active' : '';
+                const count = byReason[reason];
+                html += `<a href="?reason=${reason}" class="filter-btn ${active}">${reason} (${count})</a>`;
             });
 
             return `<div class="filter-bar">${html}</div>`;
         }
 
-        function renderPackages(allPackages, filter) {
-            if (!allPackages || allPackages.length === 0) {
-                return '<div class="loading">No packages with this status</div>';
+        function renderDisambiguations(disambiguations, byReason, filter) {
+            if (!disambiguations || disambiguations.length === 0) {
+                return '<div class="loading">No disambiguation data available</div>';
             }
 
-            // Filter if blocker specified
-            let packages = allPackages;
+            // Filter if reason specified
+            let filtered = disambiguations;
             if (filter) {
-                packages = allPackages.filter(pkg => (pkg.blocked_by || []).includes(filter));
+                filtered = disambiguations.filter(d => d.selection_reason === filter);
             }
 
-            if (packages.length === 0) {
-                return renderFilters(allPackages, filter) + renderDescription(filter) + '<div class="loading">No packages match this filter</div>';
+            if (filtered.length === 0) {
+                return renderFilters(byReason, filter) + '<div class="loading">No disambiguations match this filter</div>';
             }
 
-            const rows = packages.map(pkg => {
-                const deps = (pkg.blocked_by || []).map(d => {
-                    const isActive = d === filter ? 'style="background: var(--accent); color: #000;"' : '';
-                    return `<span class="dep-badge" ${isActive}>${d}</span>`;
-                }).join('');
+            const rows = filtered.map(d => {
+                const reasonClass = `reason-${d.selection_reason}`;
+                const highRisk = d.high_risk ? '<span class="high-risk"> (needs review)</span>' : '';
+                const alternatives = d.alternatives && d.alternatives.length > 0
+                    ? d.alternatives.join(', ')
+                    : '-';
+
                 return `
                     <tr>
-                        <td class="package-name">${pkg.name}</td>
-                        <td>${pkg.ecosystem}</td>
-                        <td><span class="priority-badge priority-${pkg.priority}">P${pkg.priority}</span></td>
-                        <td><div class="dep-list">${deps || '-'}</div></td>
+                        <td class="tool-name">${d.tool}</td>
+                        <td class="source">${d.selected}</td>
+                        <td><span class="reason-badge ${reasonClass}">${d.selection_reason}</span>${highRisk}</td>
+                        <td class="alternatives">${alternatives}</td>
                     </tr>
                 `;
             }).join('');
 
             return `
-                ${renderFilters(allPackages, filter)}
+                ${renderFilters(byReason, filter)}
                 ${renderDescription(filter)}
                 <div class="package-list">
-                    <h2>${packages.length} package${packages.length !== 1 ? 's' : ''}</h2>
+                    <h2>${filtered.length} disambiguation${filtered.length !== 1 ? 's' : ''}</h2>
                     <table class="package-table">
                         <thead>
                             <tr>
-                                <th>Package</th>
-                                <th>Ecosystem</th>
-                                <th>Priority</th>
-                                <th>Blocked By</th>
+                                <th>Tool</th>
+                                <th>Selected Source</th>
+                                <th>Reason</th>
+                                <th>Alternatives</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -279,8 +279,16 @@
             try {
                 const response = await fetch('/pipeline/dashboard.json');
                 const data = await response.json();
-                const packages = data.queue.packages?.[STATUS] || [];
-                document.getElementById('content').innerHTML = renderPackages(packages, filterBlocker);
+
+                if (!data.disambiguations) {
+                    document.getElementById('content').innerHTML = '<div class="loading">No disambiguation data available</div>';
+                    return;
+                }
+
+                const byReason = data.disambiguations.by_reason || {};
+                const disambiguations = data.disambiguations.entries || [];
+
+                document.getElementById('content').innerHTML = renderDisambiguations(disambiguations, byReason, filterReason);
             } catch (error) {
                 document.getElementById('content').innerHTML = `<div class="loading">Error loading data: ${error.message}</div>`;
             }

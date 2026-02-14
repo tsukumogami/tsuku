@@ -507,3 +507,226 @@ func TestGenerate_missingQueueFile(t *testing.T) {
 		t.Errorf("Queue.Total: got %d, want 0", dash.Queue.Total)
 	}
 }
+
+func TestLoadDisambiguationsFromDir(t *testing.T) {
+	dir := t.TempDir()
+
+	// Create test disambiguation file
+	content := `{"schema_version":1,"ecosystem":"homebrew","environment":"linux-x86_64","updated_at":"2026-02-13T10:00:00Z","disambiguations":[{"tool":"bat","selected":"crates.io:sharkdp/bat","alternatives":["npm:bat-cli"],"selection_reason":"10x_popularity_gap","downloads_ratio":225.5,"high_risk":false},{"tool":"fd","selected":"crates.io:sharkdp/fd","alternatives":["npm:fd-cli"],"selection_reason":"priority_fallback","downloads_ratio":1.5,"high_risk":true}]}
+`
+	if err := os.WriteFile(filepath.Join(dir, "homebrew.jsonl"), []byte(content), 0644); err != nil {
+		t.Fatalf("write test file: %v", err)
+	}
+
+	status, err := loadDisambiguationsFromDir(dir)
+	if err != nil {
+		t.Fatalf("loadDisambiguationsFromDir: %v", err)
+	}
+
+	if status == nil {
+		t.Fatal("status should not be nil")
+	}
+
+	if status.Total != 2 {
+		t.Errorf("Total: got %d, want 2", status.Total)
+	}
+
+	if status.ByReason["10x_popularity_gap"] != 1 {
+		t.Errorf("ByReason[10x_popularity_gap]: got %d, want 1", status.ByReason["10x_popularity_gap"])
+	}
+
+	if status.ByReason["priority_fallback"] != 1 {
+		t.Errorf("ByReason[priority_fallback]: got %d, want 1", status.ByReason["priority_fallback"])
+	}
+
+	if status.HighRisk != 1 {
+		t.Errorf("HighRisk: got %d, want 1", status.HighRisk)
+	}
+
+	if len(status.NeedReview) != 1 || status.NeedReview[0] != "fd" {
+		t.Errorf("NeedReview: got %v, want [fd]", status.NeedReview)
+	}
+}
+
+func TestLoadDisambiguationsFromDir_MultipleFiles(t *testing.T) {
+	dir := t.TempDir()
+
+	// Create two disambiguation files
+	file1 := `{"schema_version":1,"ecosystem":"homebrew","disambiguations":[{"tool":"bat","selected":"crates.io:sharkdp/bat","selection_reason":"10x_popularity_gap","high_risk":false}]}
+`
+	file2 := `{"schema_version":1,"ecosystem":"npm","disambiguations":[{"tool":"exa","selected":"crates.io:ogham/exa","selection_reason":"single_match","high_risk":false}]}
+`
+	if err := os.WriteFile(filepath.Join(dir, "homebrew.jsonl"), []byte(file1), 0644); err != nil {
+		t.Fatalf("write file1: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "npm.jsonl"), []byte(file2), 0644); err != nil {
+		t.Fatalf("write file2: %v", err)
+	}
+
+	status, err := loadDisambiguationsFromDir(dir)
+	if err != nil {
+		t.Fatalf("loadDisambiguationsFromDir: %v", err)
+	}
+
+	if status.Total != 2 {
+		t.Errorf("Total: got %d, want 2", status.Total)
+	}
+
+	if status.ByReason["10x_popularity_gap"] != 1 {
+		t.Errorf("ByReason[10x_popularity_gap]: got %d, want 1", status.ByReason["10x_popularity_gap"])
+	}
+
+	if status.ByReason["single_match"] != 1 {
+		t.Errorf("ByReason[single_match]: got %d, want 1", status.ByReason["single_match"])
+	}
+}
+
+func TestLoadDisambiguationsFromDir_DeduplicatesTools(t *testing.T) {
+	dir := t.TempDir()
+
+	// Same tool in multiple files - should only be counted once
+	file1 := `{"schema_version":1,"ecosystem":"homebrew","disambiguations":[{"tool":"bat","selected":"crates.io:sharkdp/bat","selection_reason":"10x_popularity_gap","high_risk":false}]}
+`
+	file2 := `{"schema_version":1,"ecosystem":"npm","disambiguations":[{"tool":"bat","selected":"crates.io:sharkdp/bat","selection_reason":"10x_popularity_gap","high_risk":false}]}
+`
+	if err := os.WriteFile(filepath.Join(dir, "homebrew.jsonl"), []byte(file1), 0644); err != nil {
+		t.Fatalf("write file1: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "npm.jsonl"), []byte(file2), 0644); err != nil {
+		t.Fatalf("write file2: %v", err)
+	}
+
+	status, err := loadDisambiguationsFromDir(dir)
+	if err != nil {
+		t.Fatalf("loadDisambiguationsFromDir: %v", err)
+	}
+
+	// Should deduplicate to 1 tool
+	if status.Total != 1 {
+		t.Errorf("Total should be 1 after deduplication, got %d", status.Total)
+	}
+}
+
+func TestLoadDisambiguationsFromDir_EmptyDir(t *testing.T) {
+	dir := t.TempDir()
+
+	status, err := loadDisambiguationsFromDir(dir)
+	if err != nil {
+		t.Fatalf("loadDisambiguationsFromDir: %v", err)
+	}
+
+	// Should return nil for empty directory
+	if status != nil {
+		t.Errorf("status should be nil for empty directory, got %v", status)
+	}
+}
+
+func TestLoadDisambiguationsFromDir_MalformedLines(t *testing.T) {
+	dir := t.TempDir()
+
+	content := `not valid json
+{"schema_version":1,"ecosystem":"homebrew","disambiguations":[{"tool":"bat","selected":"crates.io:sharkdp/bat","selection_reason":"10x_popularity_gap","high_risk":false}]}
+also not valid
+`
+	if err := os.WriteFile(filepath.Join(dir, "mixed.jsonl"), []byte(content), 0644); err != nil {
+		t.Fatalf("write test file: %v", err)
+	}
+
+	status, err := loadDisambiguationsFromDir(dir)
+	if err != nil {
+		t.Fatalf("loadDisambiguationsFromDir: %v", err)
+	}
+
+	// Should skip malformed lines and process valid ones
+	if status.Total != 1 {
+		t.Errorf("Total: got %d, want 1", status.Total)
+	}
+}
+
+func TestGenerate_WithDisambiguations(t *testing.T) {
+	dir := t.TempDir()
+	outputPath := filepath.Join(dir, "dashboard.json")
+	disambDir := filepath.Join(dir, "disambiguations")
+	if err := os.MkdirAll(disambDir, 0755); err != nil {
+		t.Fatalf("mkdir: %v", err)
+	}
+
+	// Create test disambiguation file
+	content := `{"schema_version":1,"ecosystem":"homebrew","disambiguations":[{"tool":"bat","selected":"crates.io:sharkdp/bat","selection_reason":"10x_popularity_gap","high_risk":false},{"tool":"fd","selected":"crates.io:sharkdp/fd","selection_reason":"priority_fallback","high_risk":true}]}
+`
+	if err := os.WriteFile(filepath.Join(disambDir, "homebrew.jsonl"), []byte(content), 0644); err != nil {
+		t.Fatalf("write test file: %v", err)
+	}
+
+	opts := Options{
+		QueueFile:          filepath.Join("testdata", "priority-queue.json"),
+		FailuresDir:        "testdata",
+		MetricsDir:         "testdata",
+		DisambiguationsDir: disambDir,
+		OutputFile:         outputPath,
+	}
+
+	if err := Generate(opts); err != nil {
+		t.Fatalf("Generate: %v", err)
+	}
+
+	data, err := os.ReadFile(outputPath)
+	if err != nil {
+		t.Fatalf("read output: %v", err)
+	}
+
+	var dash Dashboard
+	if err := json.Unmarshal(data, &dash); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+
+	// Verify disambiguations are present
+	if dash.Disambiguations == nil {
+		t.Fatal("Disambiguations should be populated")
+	}
+
+	if dash.Disambiguations.Total != 2 {
+		t.Errorf("Disambiguations.Total: got %d, want 2", dash.Disambiguations.Total)
+	}
+
+	if dash.Disambiguations.HighRisk != 1 {
+		t.Errorf("Disambiguations.HighRisk: got %d, want 1", dash.Disambiguations.HighRisk)
+	}
+
+	if len(dash.Disambiguations.NeedReview) != 1 || dash.Disambiguations.NeedReview[0] != "fd" {
+		t.Errorf("Disambiguations.NeedReview: got %v, want [fd]", dash.Disambiguations.NeedReview)
+	}
+}
+
+func TestGenerate_MissingDisambiguationsDir(t *testing.T) {
+	dir := t.TempDir()
+	outputPath := filepath.Join(dir, "dashboard.json")
+
+	opts := Options{
+		QueueFile:          filepath.Join("testdata", "priority-queue.json"),
+		FailuresDir:        "testdata",
+		MetricsDir:         "testdata",
+		DisambiguationsDir: "/nonexistent",
+		OutputFile:         outputPath,
+	}
+
+	// Should not error, disambiguations are non-fatal
+	if err := Generate(opts); err != nil {
+		t.Fatalf("Generate: %v", err)
+	}
+
+	data, err := os.ReadFile(outputPath)
+	if err != nil {
+		t.Fatalf("read output: %v", err)
+	}
+
+	var dash Dashboard
+	if err := json.Unmarshal(data, &dash); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+
+	// Disambiguations should be omitted (nil)
+	if dash.Disambiguations != nil {
+		t.Errorf("Disambiguations should be nil: %v", dash.Disambiguations)
+	}
+}

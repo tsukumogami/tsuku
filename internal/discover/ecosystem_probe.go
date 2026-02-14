@@ -18,6 +18,7 @@ type EcosystemProbe struct {
 	priority              map[string]int // builder name → priority rank (lower = better)
 	filter                *QualityFilter
 	confirmDisambiguation ConfirmDisambiguationFunc // optional callback for interactive mode
+	forceDeterministic    bool                      // select deterministically even without clear winner
 }
 
 // EcosystemProbeOption configures an EcosystemProbe.
@@ -29,6 +30,16 @@ type EcosystemProbeOption func(*EcosystemProbe)
 func WithConfirmDisambiguation(fn ConfirmDisambiguationFunc) EcosystemProbeOption {
 	return func(p *EcosystemProbe) {
 		p.confirmDisambiguation = fn
+	}
+}
+
+// WithForceDeterministic enables deterministic selection even without a clear winner.
+// When enabled, close matches select the first ranked result (by priority) and mark
+// the selection as "priority_fallback" with HighRisk metadata. Use this for batch mode
+// where all decisions must be deterministic and tracked for later human review.
+func WithForceDeterministic() EcosystemProbeOption {
+	return func(p *EcosystemProbe) {
+		p.forceDeterministic = true
 	}
 }
 
@@ -126,5 +137,5 @@ func (p *EcosystemProbe) Resolve(ctx context.Context, toolName string) (*Discove
 	}
 
 	// Disambiguate: rank by popularity and check for clear winner.
-	return disambiguate(toolName, matches, p.priority, p.confirmDisambiguation)
+	return disambiguate(toolName, matches, p.priority, p.confirmDisambiguation, p.forceDeterministic)
 }

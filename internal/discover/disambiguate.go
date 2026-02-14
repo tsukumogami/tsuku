@@ -56,6 +56,13 @@ func isClearWinner(first, second probeOutcome) bool {
 	return first.result.Downloads >= second.result.Downloads*10
 }
 
+// Selection reason constants for disambiguation tracking.
+const (
+	SelectionSingleMatch      = "single_match"
+	Selection10xPopularityGap = "10x_popularity_gap"
+	SelectionPriorityFallback = "priority_fallback"
+)
+
 // disambiguate ranks multiple probe results and selects the best one.
 // Returns the selected result if there's a clear winner, or AmbiguousMatchError otherwise.
 //
@@ -63,22 +70,33 @@ func isClearWinner(first, second probeOutcome) bool {
 //   - Single match: auto-select (no threshold checks needed)
 //   - Clear winner (>10x gap + secondary signals): auto-select
 //   - Close matches with callback: invoke callback for interactive selection
-//   - Close matches without callback: return AmbiguousMatchError
-func disambiguate(toolName string, matches []probeOutcome, priority map[string]int, confirm ConfirmDisambiguationFunc) (*DiscoveryResult, error) {
+//   - Close matches with forceDeterministic: select first ranked (priority_fallback)
+//   - Close matches without callback or force: return AmbiguousMatchError
+//
+// The returned DiscoveryResult includes Metadata.SelectionReason for batch tracking.
+func disambiguate(toolName string, matches []probeOutcome, priority map[string]int, confirm ConfirmDisambiguationFunc, forceDeterministic bool) (*DiscoveryResult, error) {
 	if len(matches) == 0 {
 		return nil, nil
 	}
 
 	// Single match: auto-select without checking thresholds
 	if len(matches) == 1 {
-		return toDiscoveryResult(matches[0]), nil
+		result := toDiscoveryResult(matches[0])
+		result.Metadata.SelectionReason = SelectionSingleMatch
+		return result, nil
 	}
 
 	// Multiple matches: rank and check for clear winner
 	rankProbeResults(matches, priority)
 
 	if isClearWinner(matches[0], matches[1]) {
-		return toDiscoveryResult(matches[0]), nil
+		result := toDiscoveryResult(matches[0])
+		result.Metadata.SelectionReason = Selection10xPopularityGap
+		result.Metadata.Alternatives = toDiscoveryMatches(matches[1:])
+		if matches[1].result.Downloads > 0 {
+			result.Metadata.DownloadsRatio = float64(matches[0].result.Downloads) / float64(matches[1].result.Downloads)
+		}
+		return result, nil
 	}
 
 	// No clear winner: try interactive disambiguation if callback available
@@ -94,7 +112,22 @@ func disambiguate(toolName string, matches []probeOutcome, priority map[string]i
 				Matches: toDiscoveryMatches(matches),
 			}
 		}
-		return toDiscoveryResult(matches[selected]), nil
+		result := toDiscoveryResult(matches[selected])
+		// Interactive selection doesn't populate SelectionReason - it's user choice
+		return result, nil
+	}
+
+	// Deterministic mode: select first ranked match with priority_fallback
+	// This is used in batch mode where all decisions must be deterministic
+	// and tracked for later human review.
+	if forceDeterministic {
+		result := toDiscoveryResult(matches[0])
+		result.Metadata.SelectionReason = SelectionPriorityFallback
+		result.Metadata.Alternatives = toDiscoveryMatches(matches[1:])
+		if matches[1].result.Downloads > 0 && matches[0].result.Downloads > 0 {
+			result.Metadata.DownloadsRatio = float64(matches[0].result.Downloads) / float64(matches[1].result.Downloads)
+		}
+		return result, nil
 	}
 
 	// Non-interactive: return ambiguous error for downstream handling

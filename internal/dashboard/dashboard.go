@@ -3,8 +3,10 @@ package dashboard
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"sort"
@@ -15,29 +17,41 @@ import (
 
 // Options configures dashboard generation.
 type Options struct {
-	QueueFile   string // Path to priority-queue.json or queues directory
-	FailuresDir string // Directory containing failures JSONL files
-	MetricsDir  string // Directory containing metrics JSONL files
-	OutputFile  string // Path to output dashboard.json
+	QueueFile          string // Path to priority-queue.json or queues directory
+	FailuresDir        string // Directory containing failures JSONL files
+	MetricsDir         string // Directory containing metrics JSONL files
+	DisambiguationsDir string // Directory containing disambiguation JSONL files
+	OutputFile         string // Path to output dashboard.json
 }
 
 // DefaultOptions returns options with default file paths.
 func DefaultOptions() Options {
 	return Options{
-		QueueFile:   "data/queues",
-		FailuresDir: "data/failures",
-		MetricsDir:  "data/metrics",
-		OutputFile:  "website/pipeline/dashboard.json",
+		QueueFile:          "data/queues",
+		FailuresDir:        "data/failures",
+		MetricsDir:         "data/metrics",
+		DisambiguationsDir: "data/disambiguations",
+		OutputFile:         "website/pipeline/dashboard.json",
 	}
 }
 
 // Dashboard is the output JSON structure.
 type Dashboard struct {
-	GeneratedAt string         `json:"generated_at"`
-	Queue       QueueStatus    `json:"queue"`
-	Blockers    []Blocker      `json:"blockers"`
-	Failures    map[string]int `json:"failures"`
-	Runs        []RunSummary   `json:"runs,omitempty"`
+	GeneratedAt     string                `json:"generated_at"`
+	Queue           QueueStatus           `json:"queue"`
+	Blockers        []Blocker             `json:"blockers"`
+	Failures        map[string]int        `json:"failures"`
+	Runs            []RunSummary          `json:"runs,omitempty"`
+	Disambiguations *DisambiguationStatus `json:"disambiguations,omitempty"`
+}
+
+// DisambiguationStatus summarizes disambiguation activity across batch runs.
+type DisambiguationStatus struct {
+	Total      int                    `json:"total"`       // Total tools with disambiguation decisions
+	ByReason   map[string]int         `json:"by_reason"`   // Count by selection reason
+	HighRisk   int                    `json:"high_risk"`   // Count of priority_fallback selections
+	NeedReview []string               `json:"need_review"` // Tools with HighRisk=true (for human review)
+	Entries    []DisambiguationRecord `json:"entries"`     // Full list of disambiguation records
 }
 
 // QueueStatus summarizes queue state.
@@ -110,6 +124,25 @@ type MetricsRecord struct {
 	Constrained     int    `json:"constrained"`
 	Timestamp       string `json:"timestamp"`
 	DurationSeconds int    `json:"duration_seconds"`
+}
+
+// DisambiguationFile represents one line in disambiguation JSONL files.
+type DisambiguationFile struct {
+	SchemaVersion   int                    `json:"schema_version"`
+	Ecosystem       string                 `json:"ecosystem"`
+	Environment     string                 `json:"environment"`
+	UpdatedAt       string                 `json:"updated_at"`
+	Disambiguations []DisambiguationRecord `json:"disambiguations"`
+}
+
+// DisambiguationRecord represents a single disambiguation decision.
+type DisambiguationRecord struct {
+	Tool            string   `json:"tool"`
+	Selected        string   `json:"selected"`
+	Alternatives    []string `json:"alternatives"`
+	SelectionReason string   `json:"selection_reason"`
+	DownloadsRatio  float64  `json:"downloads_ratio,omitempty"`
+	HighRisk        bool     `json:"high_risk"`
 }
 
 // loadQueueFromPathOrDir loads queue from a file or aggregates all queues from a directory.
@@ -207,6 +240,12 @@ func Generate(opts Options) error {
 			runs[i], runs[j] = runs[j], runs[i]
 		}
 		dash.Runs = runs
+	}
+
+	// Load disambiguations
+	disambiguations, err := loadDisambiguationsFromDir(opts.DisambiguationsDir)
+	if err == nil && disambiguations != nil && disambiguations.Total > 0 {
+		dash.Disambiguations = disambiguations
 	}
 
 	// Write output
@@ -392,22 +431,27 @@ func computeTopBlockers(blockers map[string][]string, limit int) []Blocker {
 }
 
 func loadMetrics(path string) ([]RunSummary, error) {
-	file, err := os.Open(path)
+	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
-	defer file.Close()
 
 	var runs []RunSummary
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := scanner.Bytes()
-		if len(line) == 0 {
-			continue
+
+	// Try streaming decoder first for pretty-printed JSON objects
+	decoder := json.NewDecoder(bytes.NewReader(data))
+	for {
+		var record MetricsRecord
+		if err := decoder.Decode(&record); err != nil {
+			if err == io.EOF {
+				break
+			}
+			// If streaming fails, fall back to line-by-line parsing
+			runs = parseMetricsLineByLine(data)
+			break
 		}
 
-		var record MetricsRecord
-		if err := json.Unmarshal(line, &record); err != nil {
+		if record.BatchID == "" {
 			continue
 		}
 
@@ -425,7 +469,43 @@ func loadMetrics(path string) ([]RunSummary, error) {
 		})
 	}
 
-	return runs, scanner.Err()
+	return runs, nil
+}
+
+// parseMetricsLineByLine handles JSONL format where each line is a JSON object.
+// Malformed lines are skipped.
+func parseMetricsLineByLine(data []byte) []RunSummary {
+	var runs []RunSummary
+	scanner := bufio.NewScanner(bytes.NewReader(data))
+	for scanner.Scan() {
+		line := scanner.Bytes()
+		if len(line) == 0 {
+			continue
+		}
+
+		var record MetricsRecord
+		if err := json.Unmarshal(line, &record); err != nil {
+			continue // Skip malformed lines
+		}
+
+		if record.BatchID == "" {
+			continue
+		}
+
+		rate := 0.0
+		if record.Total > 0 {
+			rate = float64(record.Merged) / float64(record.Total)
+		}
+
+		runs = append(runs, RunSummary{
+			BatchID:   record.BatchID,
+			Total:     record.Total,
+			Merged:    record.Merged,
+			Rate:      rate,
+			Timestamp: record.Timestamp,
+		})
+	}
+	return runs
 }
 
 // loadFailuresFromDir aggregates failures across all JSONL files in a directory.
@@ -500,4 +580,89 @@ func loadMetricsFromDir(dir string) ([]RunSummary, error) {
 	}
 
 	return allRuns, nil
+}
+
+// loadDisambiguationsFromDir aggregates disambiguation records across all JSONL files
+// in a directory and computes summary statistics.
+func loadDisambiguationsFromDir(dir string) (*DisambiguationStatus, error) {
+	// Glob for all JSONL files in the directory
+	pattern := filepath.Join(dir, "*.jsonl")
+	files, err := filepath.Glob(pattern)
+	if err != nil {
+		return nil, fmt.Errorf("glob disambiguations: %w", err)
+	}
+
+	if len(files) == 0 {
+		return nil, nil // No disambiguation files yet
+	}
+
+	status := &DisambiguationStatus{
+		ByReason:   make(map[string]int),
+		NeedReview: []string{},
+		Entries:    []DisambiguationRecord{},
+	}
+
+	// Track seen tools to avoid double-counting across files
+	seenTools := make(map[string]bool)
+
+	for _, path := range files {
+		records, err := loadDisambiguationFile(path)
+		if err != nil {
+			continue // Skip files that can't be read
+		}
+
+		for _, rec := range records {
+			// Skip if we've already counted this tool
+			if seenTools[rec.Tool] {
+				continue
+			}
+			seenTools[rec.Tool] = true
+
+			status.Total++
+			status.ByReason[rec.SelectionReason]++
+			status.Entries = append(status.Entries, rec)
+
+			if rec.HighRisk {
+				status.HighRisk++
+				status.NeedReview = append(status.NeedReview, rec.Tool)
+			}
+		}
+	}
+
+	// Sort entries by tool name for stable output
+	sort.Slice(status.Entries, func(i, j int) bool {
+		return status.Entries[i].Tool < status.Entries[j].Tool
+	})
+
+	// Sort NeedReview for stable output
+	sort.Strings(status.NeedReview)
+
+	return status, nil
+}
+
+// loadDisambiguationFile reads a single disambiguation JSONL file.
+func loadDisambiguationFile(path string) ([]DisambiguationRecord, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	var allRecords []DisambiguationRecord
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Bytes()
+		if len(line) == 0 {
+			continue
+		}
+
+		var df DisambiguationFile
+		if err := json.Unmarshal(line, &df); err != nil {
+			continue // Skip malformed lines
+		}
+
+		allRecords = append(allRecords, df.Disambiguations...)
+	}
+
+	return allRecords, scanner.Err()
 }

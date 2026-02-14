@@ -23,6 +23,9 @@ type BatchResult struct {
 
 	// Failures is the list of failure records for this run.
 	Failures []FailureRecord `json:"-"`
+
+	// Disambiguations is the list of disambiguation records for this run.
+	Disambiguations []DisambiguationRecord `json:"-"`
 }
 
 // Summary returns a markdown summary of the batch run for use in PR descriptions.
@@ -52,7 +55,48 @@ func (r *BatchResult) Summary() string {
 		}
 	}
 
+	if len(r.Disambiguations) > 0 {
+		highRisk := 0
+		for _, d := range r.Disambiguations {
+			if d.HighRisk {
+				highRisk++
+			}
+		}
+		s += fmt.Sprintf("\n### Disambiguations: %d", len(r.Disambiguations))
+		if highRisk > 0 {
+			s += fmt.Sprintf(" (%d high-risk)", highRisk)
+		}
+		s += "\n\n"
+		for _, d := range r.Disambiguations {
+			risk := ""
+			if d.HighRisk {
+				risk = " ⚠️"
+			}
+			s += fmt.Sprintf("- **%s**: %s (%s)%s\n", d.Tool, d.Selected, d.SelectionReason, risk)
+		}
+	}
+
 	return s
+}
+
+// Selection reasons for disambiguation records.
+const (
+	SelectionSingleMatch      = "single_match"
+	Selection10xPopularityGap = "10x_popularity_gap"
+	SelectionPriorityFallback = "priority_fallback"
+	SelectionCurated          = "curated" // Manual curation from seed files
+)
+
+// DisambiguationRecord represents a disambiguation decision made during batch processing.
+// This tracks when multiple ecosystem matches exist for a tool and records which
+// source was selected, enabling later human review of potentially incorrect selections.
+type DisambiguationRecord struct {
+	Tool            string   `json:"tool"`
+	Selected        string   `json:"selected"`
+	Alternatives    []string `json:"alternatives"`
+	SelectionReason string   `json:"selection_reason"`
+	DownloadsRatio  float64  `json:"downloads_ratio,omitempty"`
+	HighRisk        bool     `json:"high_risk"`
 }
 
 // FailureRecord represents a single package generation failure.
@@ -110,6 +154,52 @@ func WriteFailures(dir, ecosystem string, failures []FailureRecord) error {
 
 	if err := os.WriteFile(path, data, 0644); err != nil {
 		return fmt.Errorf("write failures: %w", err)
+	}
+
+	return nil
+}
+
+// DisambiguationFile is the top-level structure for disambiguation JSONL entries.
+type DisambiguationFile struct {
+	SchemaVersion   int                    `json:"schema_version"`
+	Ecosystem       string                 `json:"ecosystem"`
+	Environment     string                 `json:"environment"`
+	UpdatedAt       string                 `json:"updated_at"`
+	Disambiguations []DisambiguationRecord `json:"disambiguations"`
+}
+
+// WriteDisambiguations writes disambiguation records to data/disambiguations/<ecosystem>-<timestamp>.jsonl.
+// Each call writes one JSON line containing all disambiguation decisions from a single batch
+// run for one environment. Uses timestamped filenames to eliminate append-only conflicts.
+func WriteDisambiguations(dir, ecosystem string, disambiguations []DisambiguationRecord) error {
+	if len(disambiguations) == 0 {
+		return nil
+	}
+
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return fmt.Errorf("create disambiguations dir: %w", err)
+	}
+
+	timestamp := time.Now().UTC().Format("2006-01-02T15-04-05Z")
+	record := DisambiguationFile{
+		SchemaVersion:   1,
+		Ecosystem:       ecosystem,
+		Environment:     "linux-glibc-x86_64",
+		UpdatedAt:       timestamp,
+		Disambiguations: disambiguations,
+	}
+
+	data, err := json.Marshal(record)
+	if err != nil {
+		return fmt.Errorf("marshal disambiguations: %w", err)
+	}
+	data = append(data, '\n')
+
+	filename := fmt.Sprintf("%s-%s.jsonl", ecosystem, timestamp)
+	path := filepath.Join(dir, filename)
+
+	if err := os.WriteFile(path, data, 0644); err != nil {
+		return fmt.Errorf("write disambiguations: %w", err)
 	}
 
 	return nil
