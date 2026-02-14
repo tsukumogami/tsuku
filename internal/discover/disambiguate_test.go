@@ -396,17 +396,80 @@ func TestDisambiguate(t *testing.T) {
 }
 
 func TestAmbiguousMatchError(t *testing.T) {
-	err := &AmbiguousMatchError{
-		Tool: "bat",
-		Matches: []DiscoveryMatch{
-			{Builder: "crates.io", Source: "bat", Downloads: 10000},
-			{Builder: "npm", Source: "bat-cli", Downloads: 100},
+	tests := []struct {
+		name     string
+		err      *AmbiguousMatchError
+		expected string
+	}{
+		{
+			name: "two matches",
+			err: &AmbiguousMatchError{
+				Tool: "bat",
+				Matches: []DiscoveryMatch{
+					{Builder: "crates.io", Source: "sharkdp/bat", Downloads: 10000},
+					{Builder: "npm", Source: "bat-cli", Downloads: 100},
+				},
+			},
+			expected: `Multiple sources found for "bat". Use --from to specify:
+  tsuku install bat --from crates.io:sharkdp/bat
+  tsuku install bat --from npm:bat-cli`,
+		},
+		{
+			name: "three matches",
+			err: &AmbiguousMatchError{
+				Tool: "bat",
+				Matches: []DiscoveryMatch{
+					{Builder: "crates.io", Source: "sharkdp/bat", Downloads: 45000},
+					{Builder: "npm", Source: "bat-cli", Downloads: 200},
+					{Builder: "rubygems", Source: "bat", Downloads: 50},
+				},
+			},
+			expected: `Multiple sources found for "bat". Use --from to specify:
+  tsuku install bat --from crates.io:sharkdp/bat
+  tsuku install bat --from npm:bat-cli
+  tsuku install bat --from rubygems:bat`,
+		},
+		{
+			name: "five matches",
+			err: &AmbiguousMatchError{
+				Tool: "serve",
+				Matches: []DiscoveryMatch{
+					{Builder: "npm", Source: "serve", Downloads: 50000},
+					{Builder: "pypi", Source: "serve", Downloads: 10000},
+					{Builder: "crates.io", Source: "serve", Downloads: 5000},
+					{Builder: "rubygems", Source: "serve", Downloads: 1000},
+					{Builder: "cpan", Source: "Serve", Downloads: 100},
+				},
+			},
+			expected: `Multiple sources found for "serve". Use --from to specify:
+  tsuku install serve --from npm:serve
+  tsuku install serve --from pypi:serve
+  tsuku install serve --from crates.io:serve
+  tsuku install serve --from rubygems:serve
+  tsuku install serve --from cpan:Serve`,
+		},
+		{
+			name: "source with owner/repo format",
+			err: &AmbiguousMatchError{
+				Tool: "fd",
+				Matches: []DiscoveryMatch{
+					{Builder: "crates.io", Source: "sharkdp/fd", Downloads: 20000},
+					{Builder: "go", Source: "github.com/sharkdp/fd", Downloads: 100},
+				},
+			},
+			expected: `Multiple sources found for "fd". Use --from to specify:
+  tsuku install fd --from crates.io:sharkdp/fd
+  tsuku install fd --from go:github.com/sharkdp/fd`,
 		},
 	}
 
-	expected := "multiple sources found for 'bat': use --from to specify"
-	if got := err.Error(); got != expected {
-		t.Errorf("Error() = %q, want %q", got, expected)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := tt.err.Error()
+			if got != tt.expected {
+				t.Errorf("Error() =\n%s\n\nwant:\n%s", got, tt.expected)
+			}
+		})
 	}
 }
 

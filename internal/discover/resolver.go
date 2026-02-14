@@ -2,7 +2,9 @@ package discover
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"strings"
 )
 
 // Confidence indicates how the tool source was determined.
@@ -174,13 +176,19 @@ type ProbeMatch struct {
 type ConfirmDisambiguationFunc func(matches []ProbeMatch) (int, error)
 
 func (e *AmbiguousMatchError) Error() string {
-	return fmt.Sprintf("multiple sources found for '%s': use --from to specify", e.Tool)
+	var b strings.Builder
+	fmt.Fprintf(&b, "Multiple sources found for %q. Use --from to specify:\n", e.Tool)
+	for _, m := range e.Matches {
+		fmt.Fprintf(&b, "  tsuku install %s --from %s:%s\n", e.Tool, m.Builder, m.Source)
+	}
+	return strings.TrimSuffix(b.String(), "\n")
 }
 
 // isFatalError returns true for errors that should stop the resolver chain.
-// Context cancellation and budget exhaustion are fatal; everything else is soft.
+// AmbiguousMatchError is fatal because it's a meaningful result that tells
+// the user to choose a source - it should not fall back to LLM discovery.
+// Context cancellation and budget exhaustion are also fatal.
 func isFatalError(err error) bool {
-	// For now, only context errors are fatal. Budget/rate-limit errors will
-	// be added when the LLM discovery stage is implemented.
-	return false
+	var ambigErr *AmbiguousMatchError
+	return errors.As(err, &ambigErr)
 }

@@ -36,6 +36,10 @@ const (
 	// and LLM fallback was suppressed (--deterministic-only flag).
 	ExitDeterministicFailed = 9
 
+	// ExitAmbiguous indicates multiple ecosystem sources were found and
+	// the user must specify one with --from.
+	ExitAmbiguous = 10
+
 	// ExitCancelled indicates the operation was canceled by the user (Ctrl+C)
 	ExitCancelled = 130
 )

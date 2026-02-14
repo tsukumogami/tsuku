@@ -360,6 +360,49 @@ func handleInstallError(err error) {
 
 var reNotFoundInRegistry = regexp.MustCompile(`recipe (\S+) not found in registry`)
 
+// ambiguousInstallError is the structured JSON error for AmbiguousMatchError.
+type ambiguousInstallError struct {
+	Status   string                  `json:"status"`
+	Category string                  `json:"category"`
+	Message  string                  `json:"message"`
+	Tool     string                  `json:"tool"`
+	Matches  []ambiguousInstallMatch `json:"matches"`
+	ExitCode int                     `json:"exit_code"`
+}
+
+// ambiguousInstallMatch represents a single ecosystem match in JSON output.
+type ambiguousInstallMatch struct {
+	Builder string `json:"builder"`
+	Source  string `json:"source"`
+}
+
+// handleAmbiguousInstallError handles AmbiguousMatchError with specific exit code and JSON output.
+// This function does not return - it calls exitWithCode.
+func handleAmbiguousInstallError(err *discover.AmbiguousMatchError) {
+	if installJSON {
+		matches := make([]ambiguousInstallMatch, len(err.Matches))
+		for i, m := range err.Matches {
+			matches[i] = ambiguousInstallMatch{
+				Builder: m.Builder,
+				Source:  m.Source,
+			}
+		}
+		resp := ambiguousInstallError{
+			Status:   "error",
+			Category: "ambiguous",
+			Message:  fmt.Sprintf("Multiple sources found for %q. Use --from to specify.", err.Tool),
+			Tool:     err.Tool,
+			Matches:  matches,
+			ExitCode: ExitAmbiguous,
+		}
+		printJSON(resp)
+	} else {
+		// Print the formatted error message directly to preserve multi-line output
+		fmt.Fprintln(os.Stderr, "Error:", err.Error())
+	}
+	exitWithCode(ExitAmbiguous)
+}
+
 // extractMissingRecipes extracts recipe names from "recipe X not found in registry"
 // patterns in the error chain. Results are deduplicated and capped at 100 items.
 func extractMissingRecipes(err error) []string {
@@ -388,6 +431,12 @@ func extractMissingRecipes(err error) []string {
 func tryDiscoveryFallback(toolName string) *discover.DiscoveryResult {
 	result, err := runDiscoveryWithOptions(toolName, installSearchProvider)
 	if err != nil {
+		// Handle AmbiguousMatchError with specific exit code and JSON output
+		var ambigErr *discover.AmbiguousMatchError
+		if errors.As(err, &ambigErr) {
+			handleAmbiguousInstallError(ambigErr)
+		}
+
 		var notFound *discover.NotFoundError
 		if errors.As(err, &notFound) {
 			printError(notFound)

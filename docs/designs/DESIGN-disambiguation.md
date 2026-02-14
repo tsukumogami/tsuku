@@ -40,9 +40,9 @@ Planned
 | _Defines the callback interface for interactive disambiguation, following the existing `ConfirmFunc` pattern from LLM discovery. Integrates callback invocation into ecosystem probe for close matches._ | | |
 | ~~[#1651: feat(cli): add disambiguation prompt to create and install commands](https://github.com/tsukumogami/tsuku/issues/1651)~~ | ~~[#1648](https://github.com/tsukumogami/tsuku/issues/1648), [#1650](https://github.com/tsukumogami/tsuku/issues/1650)~~ | ~~testable~~ |
 | _Implements the interactive prompt UI showing ranked matches with metadata (downloads, versions, repository status). Supports Enter-for-default, numbered selection, and 'q' to cancel._ | | |
-| [#1652: feat(discover): add AmbiguousMatchError type for non-interactive mode](https://github.com/tsukumogami/tsuku/issues/1652) | [#1648](https://github.com/tsukumogami/tsuku/issues/1648) | testable |
+| ~~[#1652: feat(discover): add AmbiguousMatchError type for non-interactive mode](https://github.com/tsukumogami/tsuku/issues/1652)~~ | ~~[#1648](https://github.com/tsukumogami/tsuku/issues/1648)~~ | ~~testable~~ |
 | _Enhances `AmbiguousMatchError` with formatted `--from` suggestions for CI/pipeline usage. Error message includes ranked matches with source identifiers for copy-paste convenience._ | | |
-| [#1653: feat(cli): handle AmbiguousMatchError with --from suggestions](https://github.com/tsukumogami/tsuku/issues/1653) | [#1652](https://github.com/tsukumogami/tsuku/issues/1652) | testable |
+| ~~[#1653: feat(cli): handle AmbiguousMatchError with --from suggestions](https://github.com/tsukumogami/tsuku/issues/1653)~~ | ~~[#1652](https://github.com/tsukumogami/tsuku/issues/1652)~~ | ~~testable~~ |
 | _Adds CLI error handling that displays `AmbiguousMatchError` with actionable `--from` suggestions in create and install commands. Provides clear guidance for non-interactive resolution._ | | |
 | ~~[#1654: feat(batch): add DisambiguationRecord tracking](https://github.com/tsukumogami/tsuku/issues/1654)~~ | [#1648](https://github.com/tsukumogami/tsuku/issues/1648) | testable |
 | _Creates `DisambiguationRecord` type for batch orchestrator to track tool selections. Records selection reason (single_match, 10x_popularity_gap, priority_fallback) and sets `HighRisk` flag for fallback selections._ | | |
@@ -86,9 +86,8 @@ graph TD
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1648,I1650,I1651,I1654,I1655 done
-    class I1649,I1652 ready
-    class I1653 blocked
+    class I1648,I1650,I1651,I1652,I1653,I1654,I1655 done
+    class I1649 ready
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
