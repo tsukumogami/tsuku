@@ -429,14 +429,19 @@ fn cleanup_files(socket: &PathBuf, lock: &PathBuf) {
 }
 
 /// Wait for in-flight requests to complete with a timeout.
-async fn wait_for_in_flight(in_flight: &Arc<AtomicUsize>, timeout: Duration) {
+/// Returns true if interrupted by a second signal, false otherwise.
+async fn wait_for_in_flight(
+    in_flight: &Arc<AtomicUsize>,
+    timeout: Duration,
+    sigterm: &mut tokio::signal::unix::Signal,
+) -> bool {
     let start = std::time::Instant::now();
 
     loop {
         let count = in_flight.load(Ordering::SeqCst);
         if count == 0 {
             info!("All in-flight requests completed");
-            return;
+            return false;
         }
 
         if start.elapsed() >= timeout {
@@ -444,7 +449,7 @@ async fn wait_for_in_flight(in_flight: &Arc<AtomicUsize>, timeout: Duration) {
                 "Grace period expired with {} in-flight requests",
                 count
             );
-            return;
+            return false;
         }
 
         info!(
@@ -452,7 +457,15 @@ async fn wait_for_in_flight(in_flight: &Arc<AtomicUsize>, timeout: Duration) {
             count,
             (timeout - start.elapsed()).as_secs_f32()
         );
-        tokio::time::sleep(Duration::from_millis(100)).await;
+
+        // Wait for either the poll interval or a second SIGTERM
+        tokio::select! {
+            _ = tokio::time::sleep(Duration::from_millis(100)) => {}
+            _ = sigterm.recv() => {
+                warn!("Received second SIGTERM during grace period, forcing immediate cleanup");
+                return true;
+            }
+        }
     }
 }
 
@@ -482,6 +495,12 @@ async fn main() -> Result<()> {
 
     // Try to acquire the lock file first
     let _lock_file = acquire_lock(&lock)?;
+
+    // Set up SIGTERM handler EARLY - before any long-running operations like model download.
+    // This ensures we can catch SIGTERM during startup and clean up properly.
+    #[cfg(unix)]
+    let mut sigterm = tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
+        .context("Failed to register SIGTERM handler")?;
 
     // Now that we have the lock, remove stale socket if it exists
     if socket.exists() {
@@ -523,37 +542,58 @@ async fn main() -> Result<()> {
         })
         .join("models");
 
-    // Ensure model is available
+    // Ensure model is available - check for SIGTERM during download
     let model_manager = models::ModelManager::new(models_dir.clone());
     let model_path = model_manager.model_path(&model_name);
 
     if !model_manager.is_available(&model_name).await {
         info!("Model not found locally, downloading...");
-        model_manager
-            .download(&model_name, |progress| {
-                info!(
-                    "Download progress: {} bytes",
-                    progress.bytes_downloaded
-                );
-            })
-            .await
-            .context("Failed to download model")?;
+        let download_future = model_manager.download(&model_name, |progress| {
+            info!(
+                "Download progress: {} bytes",
+                progress.bytes_downloaded
+            );
+        });
+
+        tokio::select! {
+            result = download_future => {
+                result.context("Failed to download model")?;
+            }
+            _ = sigterm.recv() => {
+                info!("SIGTERM received during model download, cleaning up");
+                cleanup_files(&socket, &lock);
+                info!("Server shutdown complete (reason: SIGTERM during startup)");
+                std::process::exit(0);
+            }
+        }
     }
 
     info!("Loading model from {:?}", model_path);
 
     // Load model (blocking operation, run in spawn_blocking)
+    // Check for SIGTERM during model loading
     let model_params = match model_spec.backend {
         model::Backend::Cpu => ModelParams::for_cpu(),
         _ => ModelParams::for_gpu(),
     };
-    let model = tokio::task::spawn_blocking({
+    let load_future = tokio::task::spawn_blocking({
         let path = model_path.clone();
         move || LlamaModel::load_from_file(&path, model_params)
-    })
-    .await
-    .context("Model loading task panicked")?
-    .context("Failed to load model")?;
+    });
+
+    let model = tokio::select! {
+        result = load_future => {
+            result
+                .context("Model loading task panicked")?
+                .context("Failed to load model")?
+        }
+        _ = sigterm.recv() => {
+            info!("SIGTERM received during model loading, cleaning up");
+            cleanup_files(&socket, &lock);
+            info!("Server shutdown complete (reason: SIGTERM during startup)");
+            std::process::exit(0);
+        }
+    };
 
     let model = Arc::new(model);
     info!("Model loaded successfully");
@@ -578,11 +618,6 @@ async fn main() -> Result<()> {
     let in_flight = server.in_flight();
 
     info!("Server ready, waiting for connections...");
-
-    // Set up SIGTERM handler
-    #[cfg(unix)]
-    let mut sigterm = tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
-        .context("Failed to register SIGTERM handler")?;
 
     // Run the server with graceful shutdown
     let server_future = tonic::transport::Server::builder()
@@ -612,13 +647,18 @@ async fn main() -> Result<()> {
     shutting_down.store(true, Ordering::SeqCst);
 
     // Wait for in-flight requests with grace period
-    wait_for_in_flight(&in_flight, SHUTDOWN_GRACE_PERIOD).await;
+    // Pass sigterm so we can detect a second signal during grace period
+    let _interrupted = wait_for_in_flight(&in_flight, SHUTDOWN_GRACE_PERIOD, &mut sigterm).await;
 
     // Clean up files
     cleanup_files(&socket, &lock);
 
     info!("Server shutdown complete (reason: {})", shutdown_reason);
-    Ok(())
+
+    // Exit explicitly with code 0 to prevent the default signal handler
+    // from terminating the process with "signal: terminated" status.
+    // This ensures the process exits cleanly after all cleanup is done.
+    std::process::exit(0);
 }
 
 // Bring in scopeguard for the in-flight request tracking RAII guard

@@ -311,8 +311,6 @@ func TestIntegration_ShortTimeoutTriggersShutdown(t *testing.T) {
 
 func TestIntegration_SIGTERMTriggersGracefulShutdown(t *testing.T) {
 	skipIfModelCDNUnavailable(t)
-	// TODO(#1675): Fix SIGTERM cleanup - socket not being removed on signal
-	t.Skip("Skipped: socket cleanup after SIGTERM needs fix (see issue #1675)")
 
 	tsukuHome := t.TempDir()
 
@@ -349,8 +347,6 @@ func TestIntegration_SIGTERMTriggersGracefulShutdown(t *testing.T) {
 
 func TestIntegration_MultipleSIGTERMIsSafe(t *testing.T) {
 	skipIfModelCDNUnavailable(t)
-	// TODO(#1675): Fix SIGTERM handling - daemon exits with non-zero status
-	t.Skip("Skipped: multiple SIGTERM handling needs fix (see issue #1675)")
 
 	tsukuHome := t.TempDir()
 
