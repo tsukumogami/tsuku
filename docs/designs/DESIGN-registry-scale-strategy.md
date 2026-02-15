@@ -72,19 +72,6 @@ Implements [#1189](https://github.com/tsukumogami/tsuku/issues/1189). See [DESIG
 |-------|-------|--------------|------|
 | [#1191](https://github.com/tsukumogami/tsuku/issues/1191) | design system library backfill strategy | [#1190](https://github.com/tsukumogami/tsuku/issues/1190) | simple |
 
-### Milestone: [Ecosystem Disambiguation](https://github.com/tsukumogami/tsuku/milestone/81)
-
-| Issue | Title | Dependencies | Tier |
-|-------|-------|--------------|------|
-| ~~[#1648](https://github.com/tsukumogami/tsuku/issues/1648)~~ | ~~core disambiguation with ranking~~ | ~~None~~ | ~~testable~~ |
-| ~~[#1649](https://github.com/tsukumogami/tsuku/issues/1649)~~ | ~~typosquatting detection~~ | ~~None~~ | ~~testable~~ |
-| ~~[#1650](https://github.com/tsukumogami/tsuku/issues/1650)~~ | ~~ConfirmDisambiguationFunc callback~~ | ~~[#1648](https://github.com/tsukumogami/tsuku/issues/1648)~~ | ~~testable~~ |
-| ~~[#1651](https://github.com/tsukumogami/tsuku/issues/1651)~~ | ~~disambiguation prompt in CLI~~ | ~~[#1648](https://github.com/tsukumogami/tsuku/issues/1648), [#1650](https://github.com/tsukumogami/tsuku/issues/1650)~~ | ~~testable~~ |
-| ~~[#1652](https://github.com/tsukumogami/tsuku/issues/1652)~~ | ~~AmbiguousMatchError type~~ | ~~[#1648](https://github.com/tsukumogami/tsuku/issues/1648)~~ | ~~testable~~ |
-| ~~[#1653](https://github.com/tsukumogami/tsuku/issues/1653)~~ | ~~CLI error handling for --from~~ | ~~[#1652](https://github.com/tsukumogami/tsuku/issues/1652)~~ | ~~testable~~ |
-| ~~[#1654](https://github.com/tsukumogami/tsuku/issues/1654)~~ | ~~DisambiguationRecord tracking~~ | ~~[#1648](https://github.com/tsukumogami/tsuku/issues/1648)~~ | ~~testable~~ |
-| ~~[#1655](https://github.com/tsukumogami/tsuku/issues/1655)~~ | ~~dashboard metrics display~~ | ~~[#1654](https://github.com/tsukumogami/tsuku/issues/1654)~~ | ~~simple~~ |
-
 ### Dependency Graph
 
 ```mermaid
@@ -126,17 +113,6 @@ graph TD
         I1191["#1191: System library backfill"]
     end
 
-    subgraph M_Disambiguation["Ecosystem Disambiguation"]
-        I1648["#1648: Core disambiguation"]
-        I1649["#1649: Typosquatting"]
-        I1650["#1650: Callback type"]
-        I1651["#1651: CLI prompt"]
-        I1652["#1652: AmbiguousMatchError"]
-        I1653["#1653: CLI error handling"]
-        I1654["#1654: Batch tracking"]
-        I1655["#1655: Dashboard metrics"]
-    end
-
     I1186 --> I1199
     I1186 --> I1200
     I1199 --> I1201
@@ -156,13 +132,6 @@ graph TD
     I1189 --> I1190
     I1190 --> I1191
     I1277 --> I1278
-    I1648 --> I1650
-    I1650 --> I1651
-    I1648 --> I1651
-    I1648 --> I1652
-    I1652 --> I1653
-    I1648 --> I1654
-    I1654 --> I1655
 
     classDef done fill:#c8e6c9
     classDef ready fill:#bbdefb
@@ -187,7 +156,6 @@ graph TD
     class I1278 blocked
     class I1412 done
     class I1191 blocked
-    class I1648,I1649,I1650,I1651,I1652,I1653,I1654,I1655 done
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
