@@ -1,5 +1,5 @@
 ---
-status: Planned
+status: Current
 problem: |
   M47 delivered platform compatibility infrastructure (libc detection, recipe conditionals, coverage analysis in internal/recipe/coverage.go) but 0 of 13 library recipes were migrated. Coverage analysis code exists and test infrastructure validates recipes on declared platforms, but there's no visibility into which recipes support which platforms. The execution-exclusions.json file tracks blockers but doesn't show the full coverage picture. We can't see the M47 gap (libraries without musl) or identify other coverage gaps across the 265-recipe registry.
 decision: |
@@ -12,11 +12,11 @@ rationale: |
 
 ## Status
 
-**Planned**
+**Current**
 
 ## Implementation Issues
 
-This design is being implemented through 9 issues across 2 sequential milestones.
+This design was implemented through 9 issues across 2 sequential milestones.
 
 ### Milestone: [Platform Coverage Validation](https://github.com/tsukumogami/tsuku/milestone/71)
 
@@ -24,9 +24,9 @@ This design is being implemented through 9 issues across 2 sequential milestones
 |-------|--------------|------|
 | ~~[#1538: fix(docs): update design doc status from Proposed to Accepted](https://github.com/tsukumogami/tsuku/issues/1538)~~ | ~~None~~ | ~~simple~~ |
 | ~~[#1539: feat(tests): re-enable integration-tests.yml musl dlopen tests](https://github.com/tsukumogami/tsuku/issues/1539)~~ | ~~None~~ | ~~testable~~ |
-| [#1540: feat(workflows): trigger validate-all-recipes workflow and add platform constraints](https://github.com/tsukumogami/tsuku/issues/1540) | None | testable |
+| ~~[#1540: feat(workflows): trigger validate-all-recipes workflow and add platform constraints](https://github.com/tsukumogami/tsuku/issues/1540)~~ | ~~None~~ | ~~testable~~ |
 | _Manually triggers the validation workflow across all 11 platforms to identify which recipes fail where. First run reviews failures, second run with auto_constrain creates a PR with platform constraints._ | | |
-| [#1543: feat(recipes): apply platform constraints from validation results](https://github.com/tsukumogami/tsuku/issues/1543) | [#1540](https://github.com/tsukumogami/tsuku/issues/1540) | testable |
+| ~~[#1543: feat(recipes): apply platform constraints from validation results](https://github.com/tsukumogami/tsuku/issues/1543)~~ | ~~[#1540](https://github.com/tsukumogami/tsuku/issues/1540)~~ | ~~testable~~ |
 | _Reviews and merges the auto-generated PR from #1540, ensuring constraints accurately reflect test results. This establishes honest platform declarations before building the coverage dashboard._ | | |
 
 ### Milestone: [Coverage Dashboard](https://github.com/tsukumogami/tsuku/milestone/72)
@@ -39,59 +39,18 @@ This design is being implemented through 9 issues across 2 sequential milestones
 | ~~[#1547: feat(ci): add workflow to regenerate coverage.json on recipe changes](https://github.com/tsukumogami/tsuku/issues/1547)~~ | ~~None~~ | ~~testable~~ |
 | ~~[#1548: docs(website): add coverage dashboard documentation](https://github.com/tsukumogami/tsuku/issues/1548)~~ | ~~[#1544](https://github.com/tsukumogami/tsuku/issues/1544), [#1545](https://github.com/tsukumogami/tsuku/issues/1545), [#1546](https://github.com/tsukumogami/tsuku/issues/1546), [#1547](https://github.com/tsukumogami/tsuku/issues/1547)~~ | ~~simple~~ |
 
-### Dependency Graph
-
-```mermaid
-graph TD
-    subgraph M1["Milestone 1: Platform Coverage Validation"]
-        I1538["#1538: Fix doc status"]
-        I1539["#1539: Re-enable musl tests"]
-        I1540["#1540: Trigger validation"]
-        I1543["#1543: Apply constraints"]
-    end
-
-    subgraph M2["Milestone 2: Coverage Dashboard"]
-        I1544["#1544: Dashboard HTML"]
-        I1545["#1545: Coverage matrix"]
-        I1546["#1546: Gap list"]
-        I1547["#1547: CI workflow"]
-        I1548["#1548: Documentation"]
-    end
-
-    I1540 --> I1543
-    I1544 --> I1545
-    I1544 --> I1546
-    I1545 --> I1548
-    I1546 --> I1548
-    I1547 --> I1548
-
-    classDef done fill:#c8e6c9
-    classDef ready fill:#bbdefb
-    classDef blocked fill:#fff9c4
-    classDef needsDesign fill:#e1bee7
-
-    class I1538,I1539,I1544,I1545,I1546,I1547,I1548 done
-    class I1540 ready
-    class I1543 blocked
-```
-
-**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
-
 ### Work Sequencing
 
-**Completed** (7 issues):
+**All 9 issues completed:**
 - ~~#1538~~ (doc fix) ✓
 - ~~#1539~~ (musl tests) ✓
+- ~~#1540~~ (validation trigger) ✓ -- validated 262 recipes across 11 platforms, identified 169 needing constraints
+- ~~#1543~~ (apply constraints) ✓ -- PR #1656 merged with 158 recipe constraint updates
 - ~~#1544~~ (dashboard HTML) ✓
 - ~~#1545~~ (coverage matrix) ✓
 - ~~#1546~~ (gap list and category breakdown) ✓
 - ~~#1547~~ (CI workflow) ✓
 - ~~#1548~~ (dashboard documentation) ✓
-
-**Can start immediately** (1 issue):
-- #1540 (validation trigger - requires PR merge first)
-
-**Milestone ordering**: Complete Milestone 1 before starting Milestone 2 for accurate coverage data.
 
 **Related Designs:**
 - [DESIGN-platform-compatibility-verification.md](./current/DESIGN-platform-compatibility-verification.md) - M47: Infrastructure for platform compatibility
