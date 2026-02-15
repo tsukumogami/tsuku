@@ -612,4 +612,4 @@ tsuku eval lazygit | jq '.steps[] | select(.action=="go_build") | .locks.go_sum'
 
 - [Plan-Based Installation Guide](GUIDE-plan-based-installation.md) - How to use plans for reproducible deployments
 - [Recipe Verification Guide](GUIDE-recipe-verification.md) - How tsuku verifies installations
-- [Design: Decomposable Actions](../DESIGN-decomposable-actions.md) - Technical architecture details
+- [Design: Deterministic Resolution](designs/current/DESIGN-deterministic-resolution.md) - Technical architecture details (action classification and decomposition)

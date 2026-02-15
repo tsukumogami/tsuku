@@ -290,6 +290,177 @@ Plans are JSON documents containing:
 
 Plans are stored inline in `$TSUKU_HOME/state.json` alongside version information. The `tsuku plan export` command extracts plans for sharing or air-gapped use.
 
+### Detailed Data Structures
+
+The core data types that implement the plan concept:
+
+```go
+type InstallationPlan struct {
+    FormatVersion int       `json:"format_version"`
+    Tool          string    `json:"tool"`
+    Version       string    `json:"version"`
+    Platform      Platform  `json:"platform"`
+    GeneratedAt   time.Time `json:"generated_at"`
+    RecipeHash    string    `json:"recipe_hash"`
+    RecipeSource  string    `json:"recipe_source"`
+    Steps         []ResolvedStep `json:"steps"`
+}
+
+type Platform struct {
+    OS   string `json:"os"`
+    Arch string `json:"arch"`
+}
+
+type ResolvedStep struct {
+    Action    string                 `json:"action"`
+    Params    map[string]interface{} `json:"params"`
+    Evaluable bool                   `json:"evaluable"`
+    URL       string                 `json:"url,omitempty"`
+    Checksum  string                 `json:"checksum,omitempty"`
+    Size      int64                  `json:"size,omitempty"`
+}
+```
+
+**Plan cache key** is based on the OUTPUT of version resolution, not user input. This means `tsuku eval ripgrep` and `tsuku eval ripgrep@14.1.0` that resolve to the same version share the same cache:
+
+```go
+type PlanCacheKey struct {
+    Tool       string `json:"tool"`
+    Version    string `json:"version"`     // RESOLVED version
+    Platform   string `json:"platform"`    // e.g., "linux-amd64"
+    RecipeHash string `json:"recipe_hash"` // SHA256 of recipe TOML
+}
+```
+
+**Checksum mismatch** is a hard failure with a clear recovery path:
+
+```go
+type ChecksumMismatchError struct {
+    URL              string
+    ExpectedChecksum string
+    ActualChecksum   string
+}
+```
+
+The error message explicitly mentions both legitimate updates and supply chain attacks as possibilities, guiding users to `tsuku install <tool> --fresh` to re-verify artifacts.
+
+### Action Classification and Decomposition
+
+Composite actions in recipes are authoring conveniences that must decompose into primitive operations during plan generation. This ensures plans contain only primitives that execute deterministically.
+
+#### Primitive Tiers
+
+**Tier 1: File Operation Primitives** - Fully atomic operations with deterministic, reproducible behavior:
+
+| Primitive | Purpose | Key Parameters |
+|-----------|---------|----------------|
+| `download_file` | Fetch URL to file | `url`, `dest`, `checksum` |
+| `extract` | Decompress archive | `archive`, `format`, `strip_dirs` |
+| `chmod` | Set file permissions | `files`, `mode` |
+| `install_binaries` | Copy to install dir, create symlinks | `binaries`, `install_mode` |
+| `set_env` | Set environment variables | `vars` |
+| `set_rpath` | Modify binary rpath | `binary`, `rpath` |
+| `link_dependencies` | Create dependency symlinks | `dependencies` |
+| `install_libraries` | Install shared libraries | `libraries` |
+
+**Tier 2: Ecosystem Primitives** - The decomposition barrier for ecosystem-specific operations. Atomic from tsuku's perspective but internally invoke external tooling. The plan captures maximum constraint to minimize non-determinism:
+
+| Primitive | Ecosystem | Locked at Eval | Residual Non-determinism |
+|-----------|-----------|----------------|--------------------------|
+| `go_build` | Go | go.sum, module versions | Compiler version, CGO |
+| `cargo_build` | Rust | Cargo.lock | Compiler version |
+| `npm_exec` | Node.js | package-lock.json | Native addon builds |
+| `pip_exec` | Python | requirements.txt with hashes | Native extensions |
+| `gem_exec` | Ruby | Gemfile.lock | Native extensions |
+| `nix_realize` | Nix | Derivation hash | None (fully deterministic) |
+| `cpan_install` | Perl | cpanfile.snapshot | XS modules, Makefile.PL |
+
+#### Ecosystem Composite Actions
+
+Recipe-authoring composites decompose to ecosystem primitives during evaluation:
+
+| Composite | Decomposes To | Purpose |
+|-----------|---------------|---------|
+| `go_install` | `go_build` | Install Go module from source |
+| `cargo_install` | `cargo_build` | Install Rust crate from source |
+| `npm_install` | `npm_exec` | Install npm package |
+| `gem_install` | `gem_exec` | Install Ruby gem |
+| `pipx_install` | `pip_exec` | Install Python package with pipx |
+| `nix_install` | `nix_realize` | Install package via Nix |
+| `cpan_install` | `cpan_install` | Install Perl module |
+
+These composites are **evaluable** - they resolve versions, capture lock files, and compute checksums during evaluation, then emit the corresponding primitive in the plan. The primitive appears in the plan, not the composite.
+
+#### Decomposable Interface
+
+Composite actions implement the `Decomposable` interface:
+
+```go
+type Decomposable interface {
+    Decompose(ctx *EvalContext, params map[string]interface{}) ([]Step, error)
+}
+
+type Step struct {
+    Action   string
+    Params   map[string]interface{}
+    Checksum string
+    Size     int64
+}
+
+type EvalContext struct {
+    Version    string
+    VersionTag string
+    OS         string
+    Arch       string
+    Recipe     *recipe.Recipe
+    Resolver   *version.Resolver
+    Downloader *validate.PreDownloader
+}
+```
+
+The plan generator recursively decomposes composite actions until only primitives remain. Cycle detection uses a visited set of `(action, params_hash)` tuples.
+
+**Example**: `github_archive` decomposes to `download_file` + `extract` + `chmod` + `install_binaries`. Ecosystem composites like `go_install` decompose to a single `go_build` primitive with captured lock information (`go.sum`, resolved module versions).
+
+Plans that contain ecosystem primitives carry a `deterministic: false` flag on those steps to explicitly mark residual non-determinism.
+
+### Two-Phase Evaluation Model
+
+Plan generation splits into two distinct phases:
+
+1. **Version Resolution** (always runs): Maps user input to a resolved version. Fast, requires only API calls.
+2. **Artifact Verification** (cached by resolution output): Downloads artifacts and computes checksums. Slow, requires network.
+
+The cache key is based on what Phase 1 produces, not what the user typed. This means different version constraints that resolve to the same version share the same cache. The `--fresh` flag bypasses artifact cache to force re-verification.
+
+Cache lookup validates three factors before reusing a plan:
+- Recipe hash matches (recipe hasn't changed)
+- Format version matches (plan structure is compatible)
+- Platform matches (OS and architecture)
+
+The orchestration logic (`getOrGeneratePlan`) resolves the version first, generates a cache key from the resolution output, checks for a cached plan, and only runs Phase 2 if no valid cache exists. Download cache reuse ensures that files downloaded during plan generation are available to `ExecutePlan()` without re-downloading.
+
+### Plan Execution and Verification
+
+`ExecutePlan()` iterates over plan steps and executes each primitive. For download steps with checksums, it computes the SHA256 of the downloaded file and compares against the plan:
+
+- **Match**: Proceed to next step
+- **Mismatch**: Hard failure via `ChecksumMismatchError` with recovery guidance
+
+The executor validates that plans contain only primitive actions before execution begins. This is the single execution path for all installations - there is no legacy `Execute()` method.
+
+### External Plan Loading and Validation
+
+For `tsuku install --plan`, plans can be loaded from file paths or stdin (using `-`). Before execution, external plans undergo validation:
+
+- **Structural**: Format version, primitive-only actions, checksum requirements
+- **Platform**: Plan's OS/arch must match the current system
+- **Tool name**: If specified on the command line, must match the plan's tool field
+
+Tool name is optional on the command line and defaults to the plan's tool name. This supports both explicit use (`tsuku install ripgrep --plan plan.json`) and scripted workflows (`tsuku install --plan plan.json`).
+
+Offline installation works when artifacts are pre-cached: the download action checks `$TSUKU_HOME/cache/downloads/` first and skips network requests when a cached file's checksum matches the plan.
+
 ## Implementation Approach
 
 Implementation proceeds in three milestones, each delivering incremental value.
@@ -305,6 +476,16 @@ Introduce the plan concept and the `tsuku eval` command. This milestone focuses 
 
 After this milestone, recipe authors can test changes by comparing `tsuku eval` output against expected plans.
 
+**Key decisions for this milestone:**
+
+- **Download for checksum computation**: `tsuku eval` downloads assets to compute real SHA256 checksums rather than just resolving URLs. This is essential for golden file testing and tamper detection. Downloaded files populate `$TSUKU_HOME/cache/downloads/` for reuse during subsequent installation.
+- **All resolved steps captured**: Plans include every recipe step (not just downloads) to support full replay in Milestone 3.
+- **Inline storage with export**: Plans stored in `state.json` with `tsuku plan export` for standalone use.
+- **Conditional step handling**: Recipe steps with `when` clauses are evaluated against the target platform; steps that don't match are excluded from the plan. Plans are platform-specific by design.
+- **Platform override flags**: `tsuku eval` accepts `--os` and `--arch` flags for cross-platform plan generation. Values are validated against a whitelist of known platforms to prevent injection through template variables.
+- **Recipe hash**: SHA256 of the raw TOML recipe file content, enabling detection of recipe changes that might invalidate a plan.
+- **Action evaluability**: Actions are classified as fully evaluable (URL/checksum captured) or non-evaluable (arbitrary shell, ecosystem installers). Non-evaluable steps are marked with `evaluable: false` in the plan.
+
 ### Milestone 2: Deterministic Execution
 
 Refactor the executor to use plans internally. All installations become plan-based, making determinism architectural.
@@ -314,29 +495,54 @@ Refactor the executor to use plans internally. All installations become plan-bas
 3. Store plans in state.json for installed tools
 4. Add `--fresh` flag to force re-evaluation for pinned versions
 5. Implement checksum verification with failure on mismatch
+6. Define `Decomposable` interface and primitive registry
+7. Implement recursive decomposition for composite actions
+8. Migrate composite actions (`github_archive`, `download_archive`, etc.) to `Decompose()`
+9. Implement ecosystem primitives (`go_build`, `cargo_build`, etc.)
+10. Validate plans contain only primitives; add `deterministic` flag to plan schema
 
 After this milestone, re-installing a tool with a pinned version reuses the stored plan.
+
+**Key decisions for this milestone:**
+
+- **Cache by resolution output** (not user input): Version resolution always runs. Artifact verification is cached based on what resolution produces. This avoids complex version constraint classification and aligns with Nix's evaluation/realization model.
+- **Replace Execute with ExecutePlan**: The old `Execute()` method is removed, not kept alongside. Since tsuku is pre-1.0, there's no backward compatibility burden. All execution goes through plans by construction.
+- **Hard failure with recovery on checksum mismatch**: Mismatches are installation failures, not warnings. The error message guides users to `--fresh` for re-verification. This prevents silent installation of modified binaries.
+- **Composite decomposition at eval time** (not interpreter pattern): Composite actions implement `Decompose()` rather than having the plan generator understand their internals. This localizes complexity and makes decomposition independently testable.
+- **Two primitive tiers**: File operation primitives (Tier 1) are fully deterministic. Ecosystem primitives (Tier 2) represent the decomposition barrier where external tooling is invoked with maximum constraint but residual non-determinism exists.
+- **Implementation organized in parallel tracks**: Plan cache types (A), state manager (B), executor methods (C), and CLI changes (D) touch different files and can be developed in parallel, with integration in track D.
 
 ### Milestone 3: Plan-Based Installation
 
 Enable installation from externally-provided plans for air-gapped environments.
 
 1. Add `--plan` flag to `tsuku install`
-2. Support reading plans from file or stdin
-3. Implement offline installation when cached assets are available
-4. Add `tsuku plan show` and `tsuku plan export` commands
+2. Support reading plans from file or stdin (using `-` for stdin per Unix convention)
+3. Implement comprehensive pre-execution validation for external plans
+4. Implement offline installation when cached assets are available
+5. Add `tsuku plan show` and `tsuku plan export` commands
 
 After this milestone, teams can generate plans on connected machines and execute them in isolated environments.
 
-## Open Questions
+**Key decisions for this milestone:**
 
-1. **Checksum source**: Should `tsuku eval` download files to compute checksums, or rely on upstream-provided checksums where available?
+- **File path with stdin support**: `--plan plan.json` reads from file, `--plan -` reads from stdin. This enables the canonical `tsuku eval tool | tsuku install --plan -` workflow.
+- **Comprehensive pre-execution validation**: External plans are validated for format version, platform compatibility, primitive-only steps, and tool name match before execution begins. No partial installation on validation failure.
+- **Tool name optional, defaults from plan**: `tsuku install --plan plan.json` infers the tool name from the plan. `tsuku install ripgrep --plan plan.json` validates that the plan matches. This supports both scripted and interactive workflows.
+- **Plan trust model**: External plans are treated as code - review before execution, verify source. Plan signing is deferred to future work.
+- **Minimal new code**: Reuses existing `ExecutePlan()` entirely, adding only plan loading and validation layers.
 
-2. **Plan storage**: Inline in state.json vs separate plan files? Current recommendation: inline with export capability.
+## Resolved Questions
 
-3. **Multi-platform plans**: Should `tsuku eval` be able to generate plans for other platforms (via API queries), or only the current platform?
+These questions were posed in the original strategic design and resolved during tactical design:
 
-4. **Cache integration**: Should plans be cached separately from downloaded artifacts?
+1. **Checksum source**: Resolved: download files to compute real checksums. URL-only resolution defeats golden file testing. Downloaded files populate the cache for subsequent installation.
+
+2. **Plan storage**: Resolved: inline in state.json with export capability via `tsuku plan export`. Simpler than separate files while providing the same capabilities.
+
+3. **Multi-platform plans**: Resolved: `tsuku eval` accepts `--os` and `--arch` flags for cross-platform generation, defaulting to the current system. Flag values validated against a whitelist.
+
+4. **Cache integration**: Resolved: plans are stored inline in state.json. Downloaded artifacts go to `$TSUKU_HOME/cache/downloads/`. Plan cache lookup is based on resolution output (tool, resolved version, platform, recipe hash), not user input.
 
 ## Security Considerations
 
@@ -397,18 +603,188 @@ After this milestone, teams can generate plans on connected machines and execute
 
 Milestone: [Deterministic Recipe Execution](https://github.com/tsukumogami/tsuku/milestone/15)
 
-| Issue | Title | Dependencies | Tier |
-|-------|-------|--------------|------|
-| [#367](https://github.com/tsukumogami/tsuku/issues/367) | Installation plans and tsuku eval command | None | simple |
-| [#368](https://github.com/tsukumogami/tsuku/issues/368) | Deterministic execution for pinned versions | #367 | simple |
-| [#370](https://github.com/tsukumogami/tsuku/issues/370) | Plan-based installation | #368 | simple |
+### Strategic Issues
+
+| Issue | Title | Dependencies |
+|-------|-------|--------------|
+| [#367](https://github.com/tsukumogami/tsuku/issues/367) | Installation plans and tsuku eval command | None |
+| [#368](https://github.com/tsukumogami/tsuku/issues/368) | Deterministic execution for pinned versions | #367 |
+| [#370](https://github.com/tsukumogami/tsuku/issues/370) | Plan-based installation | #368 |
+
+### Milestone 2: Decomposable Actions
+
+| Issue | Title | Dependencies |
+|-------|-------|--------------|
+| [#436](https://github.com/tsukumogami/tsuku/issues/436) | Define Decomposable interface and primitive registry | None |
+| [#437](https://github.com/tsukumogami/tsuku/issues/437) | Implement recursive decomposition algorithm | None |
+| [#438](https://github.com/tsukumogami/tsuku/issues/438) | Implement Decompose() for github_archive | None |
+| [#439](https://github.com/tsukumogami/tsuku/issues/439) | Implement Decompose() for download_archive, github_file, hashicorp_release | None |
+| [#440](https://github.com/tsukumogami/tsuku/issues/440) | Update plan generator to decompose composite actions | None |
+| [#441](https://github.com/tsukumogami/tsuku/issues/441) | Validate plans contain only primitives | None |
+| [#442](https://github.com/tsukumogami/tsuku/issues/442) | Add deterministic flag to plan schema | None |
+
+### Milestone 2: Ecosystem Primitives
+
+| Issue | Title | Dependencies |
+|-------|-------|--------------|
+| [#443](https://github.com/tsukumogami/tsuku/issues/443) | Implement go_build ecosystem primitive | None |
+| [#444](https://github.com/tsukumogami/tsuku/issues/444) | Implement cargo_build ecosystem primitive | None |
+| [#445](https://github.com/tsukumogami/tsuku/issues/445) | Implement npm_exec ecosystem primitive | None |
+| [#446](https://github.com/tsukumogami/tsuku/issues/446) | Implement pip_install ecosystem primitive | None |
+| [#447](https://github.com/tsukumogami/tsuku/issues/447) | Implement gem_exec ecosystem primitive | None |
+| [#448](https://github.com/tsukumogami/tsuku/issues/448) | Implement nix_realize ecosystem primitive | None |
+| [#449](https://github.com/tsukumogami/tsuku/issues/449) | Implement cpan_install ecosystem primitive | None |
+
+### Milestone 2: Deterministic Execution Infrastructure
+
+| Issue | Title | Dependencies |
+|-------|-------|--------------|
+| [#470](https://github.com/tsukumogami/tsuku/issues/470) | Add plan cache infrastructure | None |
+| [#471](https://github.com/tsukumogami/tsuku/issues/471) | Add GetCachedPlan to StateManager | None |
+| [#472](https://github.com/tsukumogami/tsuku/issues/472) | Expose ResolveVersion public method | None |
+| [#473](https://github.com/tsukumogami/tsuku/issues/473) | Add ExecutePlan with checksum verification | #470 |
+| [#474](https://github.com/tsukumogami/tsuku/issues/474) | Add --fresh flag to install command | None |
+| [#475](https://github.com/tsukumogami/tsuku/issues/475) | Add plan conversion helpers | #470 |
+| [#477](https://github.com/tsukumogami/tsuku/issues/477) | Implement getOrGeneratePlan orchestration | #470, #471, #472, #474, #475 |
+| [#478](https://github.com/tsukumogami/tsuku/issues/478) | Wire up plan-based installation flow | #473, #477 |
+| [#479](https://github.com/tsukumogami/tsuku/issues/479) | Remove legacy Execute method | #478 |
+
+### Milestone 3: Plan-Based Installation
+
+| Issue | Title | Dependencies |
+|-------|-------|--------------|
+| [#506](https://github.com/tsukumogami/tsuku/issues/506) | Add plan loading utilities for external plans | None |
+| [#507](https://github.com/tsukumogami/tsuku/issues/507) | Add --plan flag to install command | #506 |
+| [#508](https://github.com/tsukumogami/tsuku/issues/508) | Document plan-based installation workflow | #507 |
 
 ## Future Work
 
 Lock files for team version coordination are tracked separately in the vision repository. This design provides the infrastructure (installation plans) that lock files will build upon.
+
+## Appendix A: Ecosystem Primitive Details
+
+Each ecosystem primitive requires dedicated investigation to determine what can be locked at eval time, what reproducibility guarantees the ecosystem provides, and what residual non-determinism must be accepted.
+
+### Summary
+
+| Ecosystem | Lock File | Deterministic | Key Limitation |
+|-----------|-----------|---------------|----------------|
+| **Nix** | flake.lock + derivation hash | **Yes** | Binary cache trust |
+| **Go** | go.sum (MVS checksums) | Yes (pure Go) | CGO, compiler version |
+| **Cargo** | Cargo.lock (SHA-256) | No | Compiler, build scripts |
+| **npm** | package-lock.json v3 | Partial | Native addons, scripts |
+| **pip** | requirements.txt + hashes | No | Platform wheels, C extensions |
+| **gem** | Gemfile.lock + checksums | No | Native extensions, hooks |
+| **CPAN** | cpanfile.snapshot (Carton) | No | XS modules, Makefile.PL |
+
+### Recommended Primitive Interfaces
+
+```go
+type GoBuildParams struct {
+    Module      string   `json:"module"`
+    Version     string   `json:"version"`
+    Executables []string `json:"executables"`
+    GoSum       string   `json:"go_sum"`
+    GoVersion   string   `json:"go_version"`
+    CGOEnabled  bool     `json:"cgo_enabled"`
+    BuildFlags  []string `json:"build_flags"`
+}
+
+type CargoBuildParams struct {
+    Crate        string   `json:"crate"`
+    Version      string   `json:"version"`
+    Executables  []string `json:"executables"`
+    CargoLock    string   `json:"cargo_lock"`
+    RustVersion  string   `json:"rust_version"`
+    TargetTriple string   `json:"target_triple"`
+}
+
+type NpmExecParams struct {
+    Package       string   `json:"package"`
+    Version       string   `json:"version"`
+    Executables   []string `json:"executables"`
+    PackageLock   string   `json:"package_lock"`
+    NodeVersion   string   `json:"node_version"`
+    IgnoreScripts bool     `json:"ignore_scripts"`
+}
+
+type PipInstallParams struct {
+    Package       string   `json:"package"`
+    Version       string   `json:"version"`
+    Executables   []string `json:"executables"`
+    Requirements  string   `json:"requirements"`
+    PythonVersion string   `json:"python_version"`
+    OnlyBinary    bool     `json:"only_binary"`
+}
+
+type GemExecParams struct {
+    Gem         string   `json:"gem"`
+    Version     string   `json:"version"`
+    Executables []string `json:"executables"`
+    LockData    string   `json:"lock_data"`
+    RubyVersion string   `json:"ruby_version"`
+    Platforms   []string `json:"platforms"`
+}
+
+type NixRealizeParams struct {
+    FlakeRef       string          `json:"flake_ref"`
+    Executables    []string        `json:"executables"`
+    DerivationPath string          `json:"derivation_path"`
+    OutputPath     string          `json:"output_path"`
+    FlakeLock      json.RawMessage `json:"flake_lock"`
+    LockedRef      string          `json:"locked_ref"`
+}
+
+type CpanInstallParams struct {
+    Distribution string `json:"distribution"`
+    Version      string `json:"version"`
+    Executables  []string `json:"executables"`
+    Snapshot     string `json:"snapshot"`
+    PerlVersion  string `json:"perl_version"`
+    MirrorOnly   bool   `json:"mirror_only"`
+    CachedBundle bool   `json:"cached_bundle"`
+}
+```
+
+### Ecosystem-Specific Notes
+
+**Go**: Minimum Version Selection (MVS) provides reproducible dependency resolution. Eval captures `go.sum` and module versions. Locked execution uses `CGO_ENABLED=0 GOPROXY=off go build -trimpath -buildvcs=false`. Nix provides the strongest reproducibility guarantees of all ecosystems.
+
+**Cargo**: `Cargo.lock` with SHA-256 checksums. Locked execution via `cargo build --release --locked --offline`. Build scripts (`build.rs`) and proc macros are sources of non-determinism.
+
+**npm**: `package-lock.json` v2/v3 with SHA-512 integrity hashes. `--ignore-scripts` is the default for security. Native addons (`node-gyp`) are the primary source of non-determinism.
+
+**pip**: `requirements.txt` with hashes via pip-tools. `--only-binary :all:` prevents source distribution builds. Platform wheels and C extensions remain non-deterministic.
+
+**gem**: `Gemfile.lock` with checksums (Bundler 2.6+). Native extensions and Ruby version ABI compatibility are the main concerns. Install hooks execute arbitrary code with no disable mechanism.
+
+**Nix**: Fully deterministic via content-addressed derivations. `flake.lock` pins all inputs. Binary cache trust model is the only consideration.
+
+**CPAN**: `cpanfile.snapshot` via Carton. XS module compilation and `Makefile.PL` decisions introduce non-determinism. Bundling and mirror-only mode provide partial mitigation.
+
+## Appendix B: Ecosystem Investigation Template
+
+For future ecosystem additions:
+
+1. **Lock mechanism**: What file/format captures the dependency graph?
+2. **Eval-time capture**: What commands extract lock information without installing?
+3. **Locked execution**: What flags/env ensure the lock is respected?
+4. **Reproducibility guarantees**: What does the ecosystem guarantee about builds?
+5. **Residual non-determinism**: What can still vary between runs?
+6. **Recommended primitive interface**: Struct definition with locked fields
+7. **Security considerations**: Ecosystem-specific risks
 
 ## References
 
 - Issue #227: Deterministic Recipe Resolution
 - Issue #303: Asset pre-download with checksum capture
 - Design: Container Validation Slice 2 (pre-download pattern)
+
+### Superseded Designs
+
+The following designs were consolidated into this document. They remain in `docs/designs/archive/` for historical reference:
+
+- `DESIGN-installation-plans-eval.md` - Milestone 1 tactical design: plan data structures, action evaluability, platform flags, download cache
+- `DESIGN-deterministic-execution.md` - Milestone 2 tactical design: two-phase evaluation, cache-by-resolution-output, ExecutePlan, checksum mismatch handling
+- `DESIGN-decomposable-actions.md` - Milestone 2 tactical design: primitive tiers, Decomposable interface, recursive decomposition, ecosystem primitives
+- `DESIGN-plan-based-installation.md` - Milestone 3 tactical design: plan loading, external validation, tool name handling, offline workflow
