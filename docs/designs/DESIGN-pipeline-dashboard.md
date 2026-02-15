@@ -104,7 +104,7 @@ Popular tools (bat, fd, rg, etc.) should use `github:` or `cargo:` sources, but 
 - Records failures to `data/failures/<ecosystem>-<timestamp>.jsonl`
 
 **Disambiguation implementation:**
-- `internal/disambiguation/` contains ecosystem routing logic
+- `internal/discover/` contains ecosystem routing logic
 - Manual overrides are queue entries with `confidence: "curated"`
 - CLI uses disambiguation in `install` command but not in `create`
 
@@ -253,12 +253,15 @@ Note: Quality metrics (download counts, version counts) are stored separately in
 3. **Failed packages**: Re-disambiguate after N consecutive failures (source may have changed)
 4. **Manual refresh**: Force re-disambiguation via workflow input or CLI flag
 
-The workflow invokes the existing CLI disambiguation:
-```bash
-tsuku disambiguate <name> --json
+The seeding command imports `internal/discover` directly and calls the disambiguation logic:
+
+```go
+import "github.com/tsukumogami/tsuku/internal/discover"
+
+result, err := discover.Disambiguate(toolName, opts)
 ```
 
-This reuses the ecosystem probers in `internal/disambiguation/` which already handle API rate limits, authentication, and quality metric collection.
+This reuses the ecosystem probers in `internal/discover/` which already handle API rate limits, authentication, and quality metric collection.
 
 **API call estimation**:
 - Initial seeding: ~5K calls (one-time)
@@ -287,7 +290,7 @@ The current queue contains 5,144 packages but they're all from Homebrew's formul
 
 #### Chosen: Incremental Multi-Source Seeding with Existing Probers
 
-The seeding workflow discovers new packages and maintains disambiguation freshness, reusing the existing ecosystem probers in `internal/disambiguation/`.
+The seeding workflow discovers new packages and maintains disambiguation freshness, reusing the existing ecosystem probers in `internal/discover/`.
 
 **Package discovery** (identifies candidates for disambiguation):
 - **homebrew**: `brew formulae --json` (existing seed script)
@@ -301,7 +304,7 @@ The seeding workflow discovers new packages and maintains disambiguation freshne
 
 1. **Discovery phase**: Collect tool names from ecosystem feeds
 2. **Filter phase**: Skip tools already in queue with fresh disambiguation
-3. **Disambiguation phase**: For new/stale tools, invoke `tsuku disambiguate <name> --json`
+3. **Disambiguation phase**: For new/stale tools, call `discover.Disambiguate()` directly
 4. **Merge phase**: Update queue with new entries, preserve existing fresh entries
 
 **Freshness rules**:
@@ -345,7 +348,7 @@ Rejected for initial implementation because we want autonomous progress. On-dema
 
 ### Assumptions
 
-1. **Existing ecosystem probers work for batch**: The disambiguation probers in `internal/disambiguation/` already implement API fetching, rate limiting, and quality metric collection. We assume these work correctly when invoked via `tsuku disambiguate --json`.
+1. **Existing ecosystem probers work for batch**: The disambiguation probers in `internal/discover/` already implement API fetching, rate limiting, and quality metric collection. The seeding command imports this package directly.
 
 2. **Disambiguation decisions are stable**: A tool's best source rarely changes. This justifies treating disambiguation as durable data with 30-day freshness rather than recomputing weekly.
 
@@ -423,8 +426,8 @@ By treating disambiguation as durable data with freshness tracking, we:
 4. Create a feedback loop where failures trigger re-disambiguation
 
 The design reuses existing infrastructure:
-- Ecosystem probers in `internal/disambiguation/` handle API fetching and rate limits
-- `tsuku disambiguate --json` provides the interface for seeding
+- Ecosystem probers in `internal/discover/` handle API fetching and rate limits
+- Seeding command imports disambiguation logic directly (no CLI wrapper needed)
 - Curated overrides work exactly as they do today
 
 The 10x popularity threshold from DESIGN-disambiguation.md provides a clear decision rule, but requires secondary signals for security: a source must have **version_count >= 3** AND **has_repository link** before auto-selection. This prevents typosquatted packages with inflated download counts from being auto-selected. If secondary signals are missing, the seeding workflow prompts for manual review rather than falling back to ecosystem priority (which DESIGN-disambiguation.md explicitly prohibits for auto-selection).
@@ -516,7 +519,7 @@ Visibility changes work independently of queue changes. Even if the unified queu
 │  ├── Identify stale records (disambiguated_at > 30 days)           │
 │  ├── Identify packages due for retry (next_retry_at has passed)   │
 │  ├── Validate curated overrides (check sources exist)             │
-│  ├── For each: invoke `tsuku disambiguate <name> --json`           │
+│  ├── For each: call discover.Disambiguate() via seed-queue         │
 │  ├── Alert on source changes for high-priority packages           │
 │  ├── Write audit log to data/disambiguations/audit/               │
 │  ├── Write seeding stats to data/metrics/seeding-runs.jsonl       │
@@ -526,10 +529,10 @@ Visibility changes work independently of queue changes. Even if the unified queu
 │  cmd/seed-queue/main.go (NEW)                                       │
 │  ├── PackageDiscovery (fetch popular packages from each ecosystem) │
 │  ├── FreshnessChecker (identify stale/failing entries)             │
-│  ├── DisambiguationRunner (shell out to tsuku disambiguate)        │
+│  ├── DisambiguationRunner (imports internal/discover directly)     │
 │  └── QueueMerger (update entries, preserve freshness metadata)     │
 │                                                                     │
-│  internal/disambiguation/ (EXISTING - reused)                       │
+│  internal/discover/ (EXISTING - reused)                             │
 │  ├── Ecosystem probers (homebrew, cargo, npm, pypi, etc.)          │
 │  ├── Rate limiting per ecosystem                                   │
 │  ├── Quality metrics collection                                    │
@@ -1737,7 +1740,7 @@ Refine failure categories for better debugging. This can be done independently o
 
 ### Phase 3: Unified Disambiguated Queue
 
-Replace the homebrew-only queue with a unified queue containing pre-resolved sources. This phase reuses the existing ecosystem probers in `internal/disambiguation/`.
+Replace the homebrew-only queue with a unified queue containing pre-resolved sources. This phase reuses the existing ecosystem probers in `internal/discover/`.
 
 **Pre-validation step** (before building infrastructure):
 
@@ -1755,7 +1758,7 @@ If these fail, disambiguation doesn't solve the root cause and we need a differe
 1. Create `cmd/seed-queue/main.go` with:
    - `PackageDiscovery`: Fetch popular packages from ecosystem feeds (homebrew formulae, crates.io top, npm popular, etc.)
    - `FreshnessChecker`: Identify entries needing disambiguation (new, stale >30 days, consecutive_failures >= 3)
-   - `DisambiguationRunner`: Shell out to `tsuku disambiguate <name> --json` (reuses existing probers)
+   - `DisambiguationRunner`: Import `internal/discover` and call disambiguation directly
    - `QueueMerger`: Update queue entries, preserve fresh ones, add freshness metadata
 
 2. Create `seed-queue.yml` workflow (runs weekly on schedule, manual dispatch):
@@ -1766,17 +1769,19 @@ If these fail, disambiguation doesn't solve the root cause and we need a differe
 
 **Step 2: Leverage existing disambiguation**
 
-The heavy lifting is already done in `internal/disambiguation/`:
+The heavy lifting is already done in `internal/discover/`:
 - Ecosystem probers handle API rate limits and authentication
 - Quality metric collection is implemented
 - 10x threshold scoring exists
 - Curated override lookup works
 
-The seeding workflow just orchestrates:
-```bash
-# For each package needing disambiguation
-tsuku disambiguate ripgrep --json
-# Output: {"source": "cargo:ripgrep", "confidence": "auto", "metrics": {...}}
+The seeding command imports this directly:
+```go
+import "github.com/tsukumogami/tsuku/internal/discover"
+
+// For each package needing disambiguation
+result, err := discover.Disambiguate("ripgrep", opts)
+// result.Source = "cargo:ripgrep", result.Confidence = "auto"
 ```
 
 **Step 3: Update queue schema and batch generation**
