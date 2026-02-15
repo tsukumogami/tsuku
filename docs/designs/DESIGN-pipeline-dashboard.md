@@ -1685,19 +1685,21 @@ No runtime disambiguation lookup needed. The seeding workflow already made the d
 
 ### Planning Summary
 
-This design spans three milestones with different levels of specification:
+This design produces one milestone with three phases:
 
-| Milestone | Scope | Status |
-|-----------|-------|--------|
-| **M1: Unblock Pipeline** | Queue schema, Bootstrap Phase A, orchestrator changes, recipe merge workflow | Ready for issues |
-| **M2: Observability** | Dashboard drill-down, failure subcategories, seeding stats pages | Needs design |
-| **M3: Automated Seeding** | Seeding command, weekly workflow, Bootstrap Phase B, ecosystem discovery | Needs design |
+| Phase | Scope | Status |
+|-------|-------|--------|
+| **Phase 1: Unblock Pipeline** | Queue schema, Bootstrap Phase A, orchestrator changes, recipe merge workflow | Ready for issues |
+| **Phase 2: Observability** | Dashboard drill-down, failure subcategories, seeding stats pages | Needs design |
+| **Phase 3: Automated Seeding** | Seeding command, weekly workflow, Bootstrap Phase B, ecosystem discovery | Needs design |
 
-**M1 is the critical path** - it unblocks the pipeline immediately. M2 and M3 are valuable but can proceed independently after M1.
+**Phase 1 is the critical path** - it unblocks the pipeline immediately.
+
+**Phases 2 and 3** are needs-design issues within this milestone. When designed, each spawns its own milestone with implementation issues.
 
 ---
 
-### Milestone 1: Unblock Pipeline (Ready for Issues)
+### Phase 1: Unblock Pipeline (Ready for Issues)
 
 This milestone migrates to the unified queue format and gets recipes flowing again.
 
@@ -1789,7 +1791,7 @@ Create workflow that updates queue status when recipes merge:
 
 ---
 
-### Milestone 2: Observability (Needs Design)
+### Phase 2: Observability (Needs Design)
 
 > **Status: Needs design issue before implementation**
 >
@@ -1811,7 +1813,7 @@ Create workflow that updates queue status when recipes merge:
 
 ---
 
-### Milestone 3: Automated Seeding (Needs Design)
+### Phase 3: Automated Seeding (Needs Design)
 
 > **Status: Needs design issue before implementation**
 >
