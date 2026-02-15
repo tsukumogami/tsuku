@@ -8,12 +8,13 @@ problem: |
   Meanwhile, disambiguation exists in the CLI but isn't integrated into batch generation,
   and only Homebrew runs despite the design supporting 8 ecosystems.
 decision: |
-  Augment the existing pipeline with three changes: (1) expand the dashboard to show
-  real-time failure reasons, circuit breaker state, and per-ecosystem metrics;
+  Augment the existing pipeline with four changes: (1) expand the dashboard with
+  drill-down navigation where every panel links to a list page and every list item
+  links to a detail page showing full information without requiring JSON file inspection;
   (2) integrate disambiguation into batch generation so packages route to the correct
   ecosystem before recipe creation; (3) enable multi-ecosystem scheduled runs so all
-  8 supported ecosystems process autonomously. This builds on DESIGN-registry-scale-strategy
-  rather than replacing it.
+  8 supported ecosystems process autonomously; (4) add failure subcategories for
+  precise debugging. This builds on DESIGN-registry-scale-strategy rather than replacing it.
 rationale: |
   The current infrastructure works but has visibility and coverage gaps. Rebuilding
   would duplicate effort already invested in the batch workflow, circuit breaker,
@@ -125,22 +126,46 @@ All packages are in the homebrew queue. No other ecosystem queues exist.
 
 The dashboard currently shows failure categories but lacks detail for debugging. When all 10 packages fail hourly with `validation_failed`, operators can't determine if it's bottle availability, verify pattern issues, or something else. The failure JSONL files contain this data but aren't exposed.
 
-#### Chosen: Add Failure Detail Panel
+#### Chosen: Drill-Down Dashboard with Full Detail Pages
 
-Add a "Recent Failures" panel that shows the last 20 failures with:
-- Package name and ecosystem
-- Failure category (refined)
-- One-line error message (truncated from failure record)
-- Timestamp
-- Link to failure JSONL for full details
+Every dashboard panel links to a dedicated page, and every list item links to a detail page. No JSON file inspection required.
 
-Also add a "Pipeline Health" section showing:
-- Circuit breaker state per ecosystem (closed/open/half-open)
-- Last successful batch (with recipe count)
-- Current batch status (running/waiting)
-- Time since last recipe merged
+**Main dashboard (index.html)** shows summary panels:
+- Each panel displays a preview (e.g., last 5 failures, recent 3 runs)
+- Each panel header is clickable → navigates to full list page
+- "Pipeline Health" shows circuit breaker state per ecosystem, last successful batch, time since last recipe
 
-This reuses existing data in `data/failures/` and `batch-control.json`. The `queue-analytics` command aggregates this into `dashboard.json`.
+**List pages** show complete data:
+- `failures.html`: All failures with filtering by category, ecosystem, date range
+- `runs.html`: All batch runs with success/fail counts (existing, enhanced)
+- `blocked.html`: All blocked packages with dependency info (existing, enhanced)
+- `pending.html`: All pending packages by ecosystem (existing)
+
+**Detail pages** show single-item deep dive:
+- `failure.html?id=<failure-id>`: Full failure record including:
+  - Package ID and ecosystem
+  - Category and subcategory
+  - Full error message (not truncated)
+  - Stack trace or CLI output if available
+  - Timestamp and batch ID
+  - Platform where failure occurred
+  - Link to related workflow run (if available)
+- `run.html?id=<batch-id>`: Full batch run details including:
+  - All packages processed
+  - Per-platform results
+  - Recipes generated
+  - Failures encountered
+
+**Navigation pattern:**
+```
+Dashboard Panel → List Page → Detail Page
+     ↓                ↓            ↓
+  "Failures (42)"  → failures.html → failure.html?id=xyz
+  "Recent Runs"    → runs.html     → run.html?id=2026-02-15-homebrew
+  "Blocked (4)"    → blocked.html  → (package detail in queue)
+```
+
+This reuses existing data in `data/failures/` and `batch-control.json`. The `queue-analytics` command aggregates everything into `dashboard.json` with enough detail for all pages.
 
 #### Alternatives Considered
 
@@ -308,21 +333,46 @@ Multi-ecosystem rotation trades throughput for fairness. A pipeline stuck on hom
 │                        Dashboard (website/pipeline/)                 │
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                     │
-│  index.html                                                         │
-│  ├── Queue Status panel (existing)                                  │
-│  ├── Top Blockers panel (existing)                                  │
-│  ├── Failure Categories panel (existing)                            │
-│  ├── Recent Runs panel (existing)                                   │
-│  ├── [NEW] Recent Failures panel (last 20 with subcategory)         │
+│  PAGES (all panels link to list pages, all list items link to       │
+│         detail pages)                                               │
+│                                                                     │
+│  index.html (main dashboard)                                        │
+│  ├── Queue Status panel → pending.html                              │
+│  ├── Top Blockers panel → blocked.html                              │
+│  ├── Failure Categories panel → failures.html                       │
+│  ├── Recent Runs panel → runs.html                                  │
+│  ├── [NEW] Recent Failures panel → failures.html                    │
 │  ├── [NEW] Pipeline Health panel (breaker state, last success)      │
-│  └── Disambiguation panel (existing)                                │
+│  └── Disambiguation panel → disambiguations.html                    │
+│                                                                     │
+│  [NEW] failures.html (list all failures, filterable)                │
+│  ├── Table: package, ecosystem, category, subcategory, timestamp    │
+│  ├── Filters: by category, ecosystem, date range                    │
+│  └── Each row → failure.html?id=<failure-id>                        │
+│                                                                     │
+│  [NEW] failure.html?id=<id> (single failure detail)                 │
+│  ├── Full error message (not truncated)                             │
+│  ├── CLI output / stack trace                                       │
+│  ├── Platform, batch ID, timestamp                                  │
+│  └── Link to workflow run (if available)                            │
+│                                                                     │
+│  runs.html (existing, enhanced)                                     │
+│  ├── Each row → run.html?id=<batch-id>                              │
+│                                                                     │
+│  [NEW] run.html?id=<id> (single run detail)                         │
+│  ├── All packages processed                                         │
+│  ├── Per-platform results                                           │
+│  └── Recipes generated, failures encountered                        │
+│                                                                     │
+│  pending.html, blocked.html, success.html (existing, enhanced)      │
+│  └── Each row → package detail or disambiguation page               │
 │                                                                     │
 │  dashboard.json                                                     │
 │  ├── queue: { total, by_status, packages }                         │
 │  ├── blockers: [...]                                                │
 │  ├── runs: [...]                                                    │
 │  ├── disambiguations: { total, by_reason, need_review }             │
-│  ├── [NEW] recent_failures: [{ package, category, subcategory, ... }]│
+│  ├── [NEW] failures: [{ id, package, category, subcategory, ... }]  │
 │  ├── [NEW] health: { per_ecosystem_breaker, last_success, ... }     │
 │  └── generated_at                                                   │
 │                                                                     │
@@ -413,17 +463,57 @@ type FailureRecord struct {
 }
 ```
 
-**Recent failures section**:
+**Failures section** (all failures, not just recent):
 ```json
 {
-  "recent_failures": [
+  "failures": [
     {
+      "id": "homebrew-2026-02-15T13-45-21Z-neovim",
       "package": "neovim",
       "ecosystem": "homebrew",
       "category": "validation_failed",
       "subcategory": "verify_pattern_mismatch",
       "message": "expected version pattern 'v0.10.0' but got 'NVIM v0.10.0'",
-      "timestamp": "2026-02-15T13:45:21Z"
+      "full_output": "tsuku install: verification failed\nexpected: v0.10.0\ngot: NVIM v0.10.0\nexit code: 6",
+      "platform": "linux-x86_64-debian",
+      "batch_id": "2026-02-15-homebrew",
+      "timestamp": "2026-02-15T13:45:21Z",
+      "workflow_run_url": "https://github.com/tsukumogami/tsuku/actions/runs/22036696489"
+    }
+  ],
+  "failures_summary": {
+    "total": 42,
+    "by_category": {
+      "validation_failed": 30,
+      "deterministic_insufficient": 8,
+      "api_error": 4
+    },
+    "by_ecosystem": {
+      "homebrew": 42
+    }
+  }
+}
+```
+
+**Runs section** (full detail per run):
+```json
+{
+  "runs": [
+    {
+      "batch_id": "2026-02-15-homebrew",
+      "ecosystem": "homebrew",
+      "timestamp": "2026-02-15T13:45:21Z",
+      "total": 10,
+      "succeeded": 0,
+      "failed": 10,
+      "blocked": 0,
+      "packages_processed": ["neovim", "bat", "fd", "..."],
+      "recipes_generated": [],
+      "workflow_run_url": "https://github.com/tsukumogami/tsuku/actions/runs/22036696489",
+      "platform_results": {
+        "linux-x86_64-debian": {"tested": 10, "passed": 0, "failed": 10},
+        "darwin-arm64": {"tested": 10, "passed": 0, "failed": 10}
+      }
     }
   ]
 }
@@ -474,30 +564,49 @@ func NewOrchestrator(cfg Config, queue *seed.PriorityQueue) *Orchestrator {
 
 ## Implementation Approach
 
-### Phase 1: Dashboard Visibility
+### Phase 1: Dashboard Visibility with Drill-Down Navigation
 
-Add failure debugging to the dashboard without changing the pipeline.
+Add failure debugging and full navigation to the dashboard.
 
 1. Extend `cmd/queue-analytics/` to aggregate:
-   - Recent failures from `data/failures/*.jsonl` (last 20)
+   - All failures from `data/failures/*.jsonl` (not just recent)
+   - Full failure details including `full_output`, `platform`, `workflow_run_url`
    - Circuit breaker state from `batch-control.json`
-   - Time since last successful batch (derived from `data/metrics/batch-runs.jsonl` by finding last run with `succeeded > 0`)
+   - Time since last successful batch (derived from `data/metrics/batch-runs.jsonl`)
+   - Full run details including per-platform results
 
-2. Add two new panels to `website/pipeline/index.html`:
-   - "Recent Failures" with package, category, message, timestamp
-   - "Pipeline Health" with breaker state, last success, hours since recipe
+2. Create drill-down page structure:
+   - `failures.html`: List all failures with filters (category, ecosystem, date)
+   - `failure.html`: Single failure detail page (query param `?id=<failure-id>`)
+   - `run.html`: Single run detail page (query param `?id=<batch-id>`)
+   - Enhance existing `runs.html` to link to `run.html?id=`
 
-3. Update `website/pipeline/dashboard.json` schema with new sections.
+3. Update `website/pipeline/index.html`:
+   - Add "Recent Failures" panel linking to `failures.html`
+   - Add "Pipeline Health" panel with breaker state
+   - Make all panel headers clickable → link to respective list pages
+   - Make all table rows clickable → link to detail pages
+
+4. Update `website/pipeline/dashboard.json` schema:
+   - Add `failures` array with full failure records
+   - Add `failures_summary` for category/ecosystem breakdown
+   - Extend `runs` array with full detail per run
+   - Add `health` section
 
 **Deliverables:**
 - Modified `cmd/queue-analytics/`
 - Modified `website/pipeline/index.html`
+- New `website/pipeline/failures.html`
+- New `website/pipeline/failure.html`
+- New `website/pipeline/run.html`
+- Modified `website/pipeline/runs.html`
 - Updated dashboard.json schema
 
 **Validation:**
-- Dashboard shows recent failures with useful debugging info
-- Circuit breaker state visible for each ecosystem
-- "Hours since last recipe" metric accurately reflects staleness
+- All dashboard panels are clickable and navigate to list pages
+- All list items are clickable and navigate to detail pages
+- Failure detail page shows full error output (not truncated)
+- No need to inspect JSON files for any information
 
 ### Phase 2: Disambiguation Integration
 
