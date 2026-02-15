@@ -227,72 +227,89 @@ Rejected because it fragments the data and makes aggregation harder. A single JS
 
 The current workflow assumes each package comes from the queue's ecosystem. But package names like `rg` exist in multiple ecosystems (homebrew, cargo, github), and the best source varies by tool. Processing `homebrew:bat` when `github:sharkdp/bat` has pre-built binaries wastes CI cycles on certain failure.
 
-#### Chosen: Unified Queue with Pre-Resolved Sources
+#### Chosen: Unified Queue with Durable Disambiguation Decisions
 
-Replace per-ecosystem queues with a single unified queue where each entry includes its pre-resolved source. Disambiguation happens during seeding, not generation.
+Replace per-ecosystem queues with a single unified queue where each entry includes its pre-resolved source. Disambiguation decisions are durable—computed once and cached until stale or invalidated.
 
-**Seeding workflow** (runs weekly):
-1. For each tool name, query all relevant ecosystems for quality metrics:
-   - Downloads/week (popularity signal)
-   - Version count (maintenance signal)
-   - Repository presence (source availability)
-   - Artifact availability (pre-built binaries)
-2. Apply disambiguation algorithm (from DESIGN-disambiguation.md):
-   - 10x download threshold → auto-select winner
-   - Curated overrides take precedence
-   - Close matches use ecosystem priority order
-3. Output: `data/queues/priority-queue.json` with pre-resolved sources
+**Key insight**: A tool's best source rarely changes. `ripgrep` should use `cargo:ripgrep` today, next week, and next month. Re-running disambiguation for 5K packages weekly wastes API calls. Instead, treat disambiguation decisions as durable data with freshness tracking.
 
-**Queue entry format**:
+**Queue entry format** (includes freshness metadata):
 ```json
-{"name": "bat", "source": "github:sharkdp/bat", "tier": 1, "confidence": "high"}
-{"name": "jq", "source": "homebrew:jq", "tier": 1, "confidence": "auto"}
-{"name": "ripgrep", "source": "cargo:ripgrep", "tier": 1, "confidence": "curated"}
+{
+  "name": "ripgrep",
+  "source": "cargo:ripgrep",
+  "tier": 1,
+  "confidence": "auto",
+  "disambiguated_at": "2026-02-15T00:00:00Z",
+  "metrics_snapshot": {
+    "cargo_downloads": 1250000,
+    "homebrew_installs": 89000
+  }
+}
 ```
+
+**Incremental seeding workflow** (reuses existing ecosystem probers):
+1. **New packages**: Disambiguate tools not yet in queue (from ecosystem feeds)
+2. **Stale records**: Re-disambiguate if `disambiguated_at` > 30 days
+3. **Failed packages**: Re-disambiguate after N consecutive failures (source may have changed)
+4. **Manual refresh**: Force re-disambiguation via workflow input or CLI flag
+
+The workflow invokes the existing CLI disambiguation:
+```bash
+tsuku disambiguate <name> --json
+```
+
+This reuses the ecosystem probers in `internal/disambiguation/` which already handle API rate limits, authentication, and quality metric collection.
+
+**API call estimation**:
+- Initial seeding: ~5K calls (one-time)
+- Weekly maintenance: ~50 new packages + ~200 stale records + ~10 failure retries = ~260 calls
+- Rate limits become a non-issue after initial seeding
 
 **Batch generation** uses the pre-resolved source directly:
 ```bash
 tsuku create --from github:sharkdp/bat --deterministic-only
 ```
 
-This eliminates wasted queue slots. If `bat` should come from GitHub, it's already in the queue as `github:sharkdp/bat`, not `homebrew:bat`.
-
 #### Alternatives Considered
 
 **Per-ecosystem queues with rotation**: 8 separate queues, rotate hourly.
 Rejected because it doesn't solve the core problem. A package like `bat` in the homebrew queue will always fail homebrew generation because bat doesn't have Homebrew bottles. Rotation just wastes CI cycles on 8 ecosystems instead of 1.
 
+**Full re-disambiguation weekly**: Query all ecosystems for all packages every week.
+Rejected because it wastes API calls. Disambiguation results are stable—`ripgrep`'s best source doesn't change week to week. Incremental updates with freshness tracking are more efficient.
+
 **Disambiguation at generation time**: Check curated overrides when processing each package.
 Rejected because it's a partial fix. Curated overrides only cover ~30 packages. The 4,988 pending packages would still process from their queue ecosystem. Upfront disambiguation using quality metrics handles the entire queue.
-
-**Parallel ecosystem queries**: Query all ecosystems for every package during batch generation.
-Rejected because of rate-limit risk. With 10 packages/hour and 8 ecosystem APIs, that's 80 API calls minimum. Combined with retry logic and metadata fetching, this risks hitting rate limits. Weekly seeding amortizes API calls.
 
 ### Decision 4: Seeding Strategy for Multi-Ecosystem Coverage
 
 The current queue contains 5,144 packages but they're all from Homebrew's formula list. Other ecosystems (cargo, npm, pypi, etc.) have popular packages that aren't in Homebrew or have better sources elsewhere.
 
-#### Chosen: Multi-Source Seeding with Quality-Based Disambiguation
+#### Chosen: Incremental Multi-Source Seeding with Existing Probers
 
-The seeding workflow queries multiple ecosystem APIs and merges results:
+The seeding workflow discovers new packages and maintains disambiguation freshness, reusing the existing ecosystem probers in `internal/disambiguation/`.
 
-**Input sources per ecosystem**:
-- **homebrew**: `brew formulae --json` (existing)
-- **cargo**: crates.io downloads API
-- **npm**: npm registry downloads
-- **pypi**: PyPI stats API
-- **rubygems**: RubyGems downloads
-- **go**: pkg.go.dev popularity (heuristic)
-- **github**: GitHub release download counts
+**Package discovery** (identifies candidates for disambiguation):
+- **homebrew**: `brew formulae --json` (existing seed script)
+- **cargo**: crates.io most-downloaded list
+- **npm**: npm registry popular packages
+- **pypi**: PyPI top packages by downloads
+- **rubygems**: RubyGems most-downloaded
+- **github**: Curated list of popular CLI tools with releases
 
-**Merge algorithm**:
-1. Collect all tool names from all ecosystems
-2. For each tool name present in multiple ecosystems:
-   - Fetch quality metrics from each ecosystem where the tool exists
-   - Apply disambiguation algorithm (10x threshold, curated override)
-   - Select best source
-3. For tool names in single ecosystem: use that ecosystem
-4. Output: unified queue with `source` field populated
+**Seeding phases**:
+
+1. **Discovery phase**: Collect tool names from ecosystem feeds
+2. **Filter phase**: Skip tools already in queue with fresh disambiguation
+3. **Disambiguation phase**: For new/stale tools, invoke `tsuku disambiguate <name> --json`
+4. **Merge phase**: Update queue with new entries, preserve existing fresh entries
+
+**Freshness rules**:
+- `disambiguated_at` < 30 days → fresh, skip re-disambiguation
+- `disambiguated_at` >= 30 days → stale, re-disambiguate
+- `consecutive_failures` >= 3 → force re-disambiguate (source may have changed)
+- Curated overrides → never auto-refresh (manual only)
 
 **Curated overrides** (`data/disambiguations/curated.jsonl`) take precedence:
 ```jsonl
@@ -300,37 +317,45 @@ The seeding workflow queries multiple ecosystem APIs and merges results:
 {"name": "rg", "source": "cargo:ripgrep", "reason": "canonical crate"}
 ```
 
-This ensures expert knowledge trumps algorithmic decisions when needed.
+Curated entries are never overridden by algorithmic disambiguation. They represent expert knowledge that shouldn't churn.
+
+**Failure feedback loop**:
+When batch generation fails a package repeatedly, increment `consecutive_failures`. After threshold (default 3), mark for re-disambiguation. This catches cases where:
+- A source stopped publishing binaries
+- A better source became available
+- The original disambiguation was wrong
 
 #### Alternatives Considered
 
 **Independent ecosystem queues**: Each ecosystem gets its own queue with its own packages.
 Rejected because it creates duplicate work. A package like `ripgrep` would appear in homebrew, cargo, and github queues, processed 3 times with 2 failing.
 
-**Homebrew-only with overrides**: Keep current homebrew queue, override specific packages.
-Rejected because it misses packages that aren't in Homebrew at all. Many popular Rust/Go tools distribute via GitHub releases, not Homebrew bottles.
+**Full regeneration weekly**: Re-disambiguate all packages every week.
+Rejected because it wastes API calls. With durable disambiguation decisions and freshness tracking, we only re-process new, stale, or failing packages.
 
 **On-demand seeding**: Add packages to queue when users request them.
 Rejected for initial implementation because we want autonomous progress. On-demand is a valid addition later via telemetry data, but shouldn't be the only source.
 
 ### Assumptions
 
-1. **Quality metrics are available from ecosystem APIs**: Seeding relies on download counts, version counts, and artifact availability from each ecosystem's public API. Most ecosystems expose this (crates.io, npm, pypi, rubygems), but some (go, cpan) may require heuristics.
+1. **Existing ecosystem probers work for batch**: The disambiguation probers in `internal/disambiguation/` already implement API fetching, rate limiting, and quality metric collection. We assume these work correctly when invoked via `tsuku disambiguate --json`.
 
-2. **Curated overrides take precedence**: When an expert has manually specified a source in `curated.jsonl`, the seeding workflow uses it even if quality metrics suggest otherwise. This prevents algorithmic churn on well-known packages.
+2. **Disambiguation decisions are stable**: A tool's best source rarely changes. This justifies treating disambiguation as durable data with 30-day freshness rather than recomputing weekly.
 
-3. **Deterministic generation works for most sources**: The unified queue assumes `tsuku create --from <source> --deterministic-only` succeeds for non-github sources. Sources that require LLM generation (most `github:` entries) are excluded from the queue.
+3. **Curated overrides take precedence**: When an expert has manually specified a source in `curated.jsonl`, the seeding workflow uses it even if quality metrics suggest otherwise. This prevents algorithmic churn on well-known packages.
 
-4. **Failure categories map to actionable remediation**: Operators know what to do when they see "verify_pattern_mismatch" vs "binary_discovery_failed". If this doesn't hold, we'll need to add resolution guidance to the dashboard.
+4. **Deterministic generation works for selected sources**: The unified queue assumes `tsuku create --from <source> --deterministic-only` succeeds for the sources disambiguation selects. Sources that require LLM generation are excluded from the queue.
 
-5. **Dashboard data refresh is sufficient**: The dashboard regenerates when data changes. If all batches fail, no data changes, so the dashboard can become stale. Mitigation: include "generated_at" timestamp prominently.
+5. **Failure categories map to actionable remediation**: Operators know what to do when they see "verify_pattern_mismatch" vs "binary_discovery_failed". If this doesn't hold, we'll need to add resolution guidance to the dashboard.
+
+6. **Dashboard data refresh is sufficient**: The dashboard regenerates when data changes. If all batches fail, no data changes, so the dashboard can become stale. Mitigation: include "generated_at" timestamp prominently.
 
 ### Uncertainties
 
 - **Quality metric reliability**: Download counts from ecosystem APIs may be stale or missing. The 10x threshold from DESIGN-disambiguation.md may need tuning for batch contexts.
-- **Rate limits during seeding**: Weekly seeding queries multiple APIs. We need to respect rate limits: crates.io (1 req/sec), npm (varies), pypi (no documented limit but be reasonable).
 - **Ecosystem coverage**: Some ecosystems (cpan, go) don't have obvious popularity APIs. May need proxy metrics like GitHub stars or search result ordering.
-- **Deterministic source coverage**: What percentage of packages can actually generate deterministically? If most route to `github:` (LLM-required), the unified queue may still be sparse.
+- **Deterministic source coverage**: What percentage of packages can actually generate deterministically? If most route to `github:` (LLM-required), the unified queue may still be sparse. **Recommendation**: Validate hypothesis by manually testing `tsuku create --from cargo:ripgrep --deterministic-only` before building seeding infrastructure.
+- **Freshness threshold tuning**: 30 days is a guess. May need adjustment based on how often sources actually change.
 
 ### Success Metrics
 
@@ -367,11 +392,16 @@ Failure categories get refined subcategories to distinguish "no bottle available
 
 The unified queue approach solves the root cause directly. The current problem is that popular tools (bat, fd, rg) are in the homebrew queue but should use github or cargo sources. Per-ecosystem rotation with disambiguation overrides is a partial fix: it helps the ~30 packages with curated records but leaves 4,988 packages routing to potentially wrong ecosystems.
 
-By doing disambiguation at seeding time, we:
-1. Amortize API calls (weekly, not per-batch)
-2. Get quality metrics for all packages, not just curated ones
-3. Produce a queue where every entry is ready to process
-4. Make ecosystem coverage automatic (seeding queries all ecosystems)
+By treating disambiguation as durable data with freshness tracking, we:
+1. Pay the API cost once per package (initial disambiguation)
+2. Minimize ongoing API calls (~260/week vs ~40K for full regeneration)
+3. Get quality metrics for all packages, not just curated ones
+4. Create a feedback loop where failures trigger re-disambiguation
+
+The design reuses existing infrastructure:
+- Ecosystem probers in `internal/disambiguation/` handle API fetching and rate limits
+- `tsuku disambiguate --json` provides the interface for seeding
+- Curated overrides work exactly as they do today
 
 The 10x popularity threshold from DESIGN-disambiguation.md provides a clear decision rule. If cargo's `ripgrep` has 10x more downloads than homebrew's, use cargo. If downloads are close, use curated override or ecosystem priority.
 
@@ -435,21 +465,28 @@ Visibility changes work independently of queue changes. Even if the unified queu
 └─────────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────────┐
-│                         Seeding Pipeline                             │
+│                     Incremental Seeding Pipeline                     │
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                     │
 │  seed-queue.yml (NEW - runs weekly)                                 │
-│  ├── Query all ecosystem APIs for package metadata                  │
-│  ├── Collect quality metrics (downloads, versions, artifacts)      │
-│  ├── Apply disambiguation algorithm (10x threshold)                │
-│  ├── Merge with curated overrides                                  │
+│  ├── Discover new packages from ecosystem feeds                    │
+│  ├── Identify stale records (disambiguated_at > 30 days)           │
+│  ├── Identify failing packages (consecutive_failures >= 3)        │
+│  ├── For each: invoke `tsuku disambiguate <name> --json`           │
+│  ├── Merge results into existing queue (preserve fresh entries)   │
 │  └── Output: data/queues/priority-queue.json                       │
 │                                                                     │
 │  cmd/seed-queue/main.go (NEW)                                       │
-│  ├── EcosystemFetcher interface per ecosystem                      │
-│  ├── QualityMetrics struct                                          │
-│  ├── DisambiguationScorer (from DESIGN-disambiguation.md)          │
-│  └── QueueMerger (dedup, resolve conflicts)                        │
+│  ├── PackageDiscovery (fetch popular packages from each ecosystem) │
+│  ├── FreshnessChecker (identify stale/failing entries)             │
+│  ├── DisambiguationRunner (shell out to tsuku disambiguate)        │
+│  └── QueueMerger (update entries, preserve freshness metadata)     │
+│                                                                     │
+│  internal/disambiguation/ (EXISTING - reused)                       │
+│  ├── Ecosystem probers (homebrew, cargo, npm, pypi, etc.)          │
+│  ├── Rate limiting per ecosystem                                   │
+│  ├── Quality metrics collection                                    │
+│  └── 10x threshold scoring                                          │
 │                                                                     │
 └─────────────────────────────────────────────────────────────────────┘
 
@@ -1331,17 +1368,21 @@ This distinguishes:
 
 ### Unified Queue Entry Format
 
-The new queue format includes pre-resolved sources:
+The new queue format includes pre-resolved sources with freshness tracking:
 
 ```json
 {
-  "name": "bat",
-  "source": "github:sharkdp/bat",
+  "name": "ripgrep",
+  "source": "cargo:ripgrep",
   "tier": 1,
+  "status": "pending",
   "confidence": "auto",
-  "metrics": {
-    "downloads": 1250000,
-    "ecosystem_sources": ["homebrew", "cargo", "github"]
+  "disambiguated_at": "2026-02-15T00:00:00Z",
+  "consecutive_failures": 0,
+  "metrics_snapshot": {
+    "cargo_downloads": 1250000,
+    "homebrew_installs": 89000,
+    "selected_reason": "10x threshold exceeded"
   }
 }
 ```
@@ -1350,8 +1391,11 @@ The new queue format includes pre-resolved sources:
 - `name`: Tool name (used for display and deduplication)
 - `source`: Pre-resolved source in `ecosystem:identifier` format
 - `tier`: Priority tier (1 = most important)
+- `status`: Queue status: `pending`, `success`, `failed`, `blocked`
 - `confidence`: How source was selected: `curated`, `auto` (10x threshold), `priority` (ecosystem order)
-- `metrics`: Optional metadata for debugging disambiguation decisions
+- `disambiguated_at`: When disambiguation was last run (for freshness checking)
+- `consecutive_failures`: Count of consecutive batch failures (triggers re-disambiguation at threshold)
+- `metrics_snapshot`: Quality metrics at disambiguation time (for debugging/auditing)
 
 ### Batch Generation with Unified Queue
 
@@ -1453,82 +1497,86 @@ Refine failure categories for better debugging. This can be done independently o
 
 ### Phase 3: Unified Disambiguated Queue
 
-Replace the homebrew-only queue with a unified queue containing pre-resolved sources.
+Replace the homebrew-only queue with a unified queue containing pre-resolved sources. This phase reuses the existing ecosystem probers in `internal/disambiguation/`.
 
-**Step 1: Build seeding infrastructure**
+**Pre-validation step** (before building infrastructure):
 
-1. Create `cmd/seed-queue/main.go` with:
-   - `EcosystemFetcher` interface for querying each ecosystem API
-   - Concrete implementations: `HomebrewFetcher`, `CargoFetcher`, `NpmFetcher`, etc.
-   - `QualityMetrics` struct: downloads, version_count, has_artifacts
-   - `DisambiguationScorer` applying 10x threshold from DESIGN-disambiguation.md
-
-2. Create `seed-queue.yml` workflow (runs weekly on schedule, manual dispatch):
-   - Builds and runs `cmd/seed-queue`
-   - Commits updated `data/queues/priority-queue.json`
-
-**Step 2: Implement ecosystem fetchers**
-
-Start with ecosystems that have clear popularity APIs:
-- **homebrew**: Use existing `brew formulae --json` (has downloads via analytics API)
-- **cargo**: crates.io API has download counts
-- **npm**: npm registry has weekly downloads
-- **pypi**: PyPI stats API (BigQuery-based, may need proxy)
-- **rubygems**: RubyGems API has downloads
-
-Defer ecosystems without clear popularity metrics:
-- **go**: pkg.go.dev doesn't expose downloads; use GitHub stars as proxy
-- **cpan**: MetaCPAN has some metrics but sparse
-
-**Step 3: Implement disambiguation scorer**
-
-Apply the algorithm from DESIGN-disambiguation.md:
-```go
-func (s *Scorer) SelectSource(name string, candidates []SourceCandidate) SourceCandidate {
-    // Check curated override first
-    if override := s.curated[name]; override != "" {
-        return SourceCandidate{Source: override, Confidence: "curated"}
-    }
-
-    // Sort by downloads descending
-    sort.Slice(candidates, func(i, j int) bool {
-        return candidates[i].Downloads > candidates[j].Downloads
-    })
-
-    // 10x threshold for auto-selection
-    if len(candidates) >= 2 && candidates[0].Downloads > candidates[1].Downloads*10 {
-        return SourceCandidate{Source: candidates[0].Source, Confidence: "auto"}
-    }
-
-    // Close match - use ecosystem priority
-    return SourceCandidate{Source: candidates[0].Source, Confidence: "priority"}
-}
+Manually test that disambiguation actually helps:
+```bash
+# Test that the disambiguated sources work for deterministic generation
+tsuku create --from cargo:ripgrep --deterministic-only
+tsuku create --from github:sharkdp/bat --deterministic-only
 ```
 
-**Step 4: Update batch generation**
+If these fail, disambiguation doesn't solve the root cause and we need a different approach.
 
-1. Modify queue entry schema to include `source` field:
+**Step 1: Build incremental seeding infrastructure**
+
+1. Create `cmd/seed-queue/main.go` with:
+   - `PackageDiscovery`: Fetch popular packages from ecosystem feeds (homebrew formulae, crates.io top, npm popular, etc.)
+   - `FreshnessChecker`: Identify entries needing disambiguation (new, stale >30 days, consecutive_failures >= 3)
+   - `DisambiguationRunner`: Shell out to `tsuku disambiguate <name> --json` (reuses existing probers)
+   - `QueueMerger`: Update queue entries, preserve fresh ones, add freshness metadata
+
+2. Create `seed-queue.yml` workflow (runs weekly on schedule, manual dispatch):
+   - Discovers new packages from ecosystem feeds
+   - Identifies stale/failing entries in existing queue
+   - Runs disambiguation only for those entries
+   - Commits updated `data/queues/priority-queue.json`
+
+**Step 2: Leverage existing disambiguation**
+
+The heavy lifting is already done in `internal/disambiguation/`:
+- Ecosystem probers handle API rate limits and authentication
+- Quality metric collection is implemented
+- 10x threshold scoring exists
+- Curated override lookup works
+
+The seeding workflow just orchestrates:
+```bash
+# For each package needing disambiguation
+tsuku disambiguate ripgrep --json
+# Output: {"source": "cargo:ripgrep", "confidence": "auto", "metrics": {...}}
+```
+
+**Step 3: Update queue schema and batch generation**
+
+1. Extend queue entry schema with freshness fields:
    ```json
-   {"name": "bat", "source": "github:sharkdp/bat", "tier": 1}
+   {
+     "name": "ripgrep",
+     "source": "cargo:ripgrep",
+     "tier": 1,
+     "disambiguated_at": "2026-02-15T00:00:00Z",
+     "consecutive_failures": 0
+   }
    ```
 
-2. Update orchestrator to use `pkg.Source` directly instead of constructing from ecosystem.
+2. Update orchestrator to:
+   - Use `pkg.Source` directly
+   - Increment `consecutive_failures` on failure
+   - Reset `consecutive_failures` on success
 
 3. Filter out `github:` sources that require LLM (deterministic-only batching).
+
+**API call estimation**:
+- Initial seeding: ~5K disambiguation calls (one-time)
+- Weekly maintenance: ~50 new + ~200 stale + ~10 failures = ~260 calls
+- Rate limits are non-issue after initial seeding
 
 **Deliverables:**
 - New `cmd/seed-queue/` command
 - New `seed-queue.yml` workflow
-- Ecosystem fetcher implementations
-- Modified queue schema
+- Modified queue schema with freshness fields
 - Modified `internal/batch/orchestrator.go`
 
 **Validation:**
-- Seeding workflow runs successfully and produces unified queue
+- Seeding workflow runs incrementally (skips fresh entries)
 - Queue contains entries from multiple ecosystems
-- Entries have pre-resolved sources
+- Entries have pre-resolved sources with freshness metadata
 - Batch generation uses source directly (no runtime disambiguation)
 - Packages like `bat`, `fd`, `rg` use their correct sources (github/cargo, not homebrew)
+- Failed packages get re-disambiguated after threshold
 
 ## Security Considerations
 
@@ -1567,10 +1615,10 @@ Note: The failure records reveal ecosystem trends (which packages are being proc
 
 ### Negative
 
-- **Weekly seeding dependency**: Queue quality depends on weekly seeding workflow. If seeding fails, queue becomes stale.
-- **API rate limits**: Seeding queries multiple ecosystem APIs; need careful rate limiting
-- **Quality metric gaps**: Some ecosystems (go, cpan) lack clear popularity APIs; will use proxies or heuristics
-- **LLM exclusion**: Packages that require LLM generation (many `github:` sources) are excluded from batch processing
+- **Seeding workflow dependency**: Queue quality depends on seeding workflow. If seeding fails repeatedly, queue becomes stale. Mitigation: freshness is gradual (30-day threshold), so occasional failures don't immediately impact batch processing.
+- **Quality metric gaps**: Some ecosystems (go, cpan) lack clear popularity APIs; will use proxies or heuristics.
+- **LLM exclusion**: Packages that require LLM generation (many `github:` sources) are excluded from batch processing.
+- **Initial seeding cost**: First run disambiguates ~5K packages, which takes time. Subsequent runs are incremental (~260 packages/week).
 
 ### Neutral
 
