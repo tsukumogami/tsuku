@@ -22,20 +22,20 @@ None.
 
 ## Implementation Steps
 
-- [ ] **Analyze and organize unique content from each superseded design into categories**
+- [x] **Analyze and organize unique content from each superseded design into categories**
   - Data structures / interfaces (InstallationPlan, ResolvedStep, Decomposable, PlanCacheKey, ChecksumMismatchError, ecosystem primitive params)
   - Algorithms (recursive decomposition, two-phase evaluation, plan cache lookup)
   - Classification tables (primitive tiers, action evaluability, ecosystem investigation results)
   - Implementation patterns (ExecutePlan flow, getOrGeneratePlan orchestration, plan loading, external plan validation)
   - CLI details (platform override flags, --fresh flag, --plan flag with stdin support, tool name handling)
 
-- [ ] **Add "Detailed Data Structures" section to parent design** (after Solution Architecture)
+- [x] **Add "Detailed Data Structures" section to parent design** (after Solution Architecture)
   - InstallationPlan and ResolvedStep structs (from installation-plans-eval)
   - PlanCacheKey struct and cache key generation (from deterministic-execution)
   - Decomposable interface, Step, and EvalContext structs (from decomposable-actions)
   - ChecksumMismatchError type with recovery message (from deterministic-execution)
 
-- [ ] **Expand Milestone 1 section with implementation details**
+- [x] **Expand Milestone 1 section with implementation details**
   - PlanGenerator component and how it integrates with executor
   - Action evaluability classification table (fully evaluable vs non-evaluable)
   - Conditional step handling (when clause filtering)
@@ -43,7 +43,7 @@ None.
   - Platform override flags (--os, --arch) with validation requirements
   - Recipe hash computation
 
-- [ ] **Expand Milestone 2 section with implementation details**
+- [x] **Expand Milestone 2 section with implementation details**
   - Two-phase evaluation model: version resolution (always runs) + artifact verification (cached)
   - Cache lookup by resolution output (not user input), with rationale
   - Plan validation: multi-factor (recipe hash, format version, platform)
@@ -52,38 +52,38 @@ None.
   - --fresh flag semantics
   - Checksum mismatch: hard failure with recovery path via --fresh
 
-- [ ] **Add "Decomposable Actions" section under Milestone 2**
+- [x] **Add "Decomposable Actions" section under Milestone 2**
   - Primitive classification: Tier 1 (file operation primitives) and Tier 2 (ecosystem primitives) tables
   - Ecosystem composite action mapping table (go_install -> go_build, etc.)
   - Recursive decomposition algorithm description with cycle detection
   - github_archive decomposition example (key example from the design)
   - Plan structure showing primitives-only constraint and deterministic flag
 
-- [ ] **Add "Ecosystem Primitives" appendix or section**
+- [x] **Add "Ecosystem Primitives" appendix or section**
   - Summary table of all ecosystems (Nix, Go, Cargo, npm, pip, gem, CPAN) with lock mechanisms and determinism levels
   - Recommended primitive struct definitions per ecosystem (GoBuildParams, CargoBuildParams, etc.)
   - Investigation template for future ecosystem additions
   - Note about planned but uncreated detailed research files
 
-- [ ] **Expand Milestone 3 section with implementation details**
+- [x] **Expand Milestone 3 section with implementation details**
   - Plan loading: file path and stdin support (- convention)
   - External plan validation (structural + platform + tool name checks)
   - Tool name handling: optional on CLI, defaults from plan
   - Offline installation workflow
   - Plan trust model (treat plans as code, verify source)
 
-- [ ] **Add consolidated implementation issues table**
+- [x] **Add consolidated implementation issues table**
   - Merge implementation issue tables from all four superseded designs into parent
   - Organize by milestone / track for clarity
 
-- [ ] **Fix broken cross-reference in docs/GUIDE-actions-and-primitives.md**
+- [x] **Fix broken cross-reference in docs/GUIDE-actions-and-primitives.md**
   - Line 615: change `../DESIGN-decomposable-actions.md` to `designs/current/DESIGN-deterministic-resolution.md`
   - Update the link text to reference the consolidated design
 
-- [ ] **Update code comment in cmd/tsuku/eval.go**
+- [x] **Update code comment in cmd/tsuku/eval.go**
   - Line 18: change `DESIGN-installation-plans-eval.md` to `DESIGN-deterministic-resolution.md`
 
-- [ ] **Review parent design for coherence after consolidation**
+- [x] **Review parent design for coherence after consolidation**
   - Ensure new sections flow naturally within existing structure
   - Remove any redundancy between original and new content
   - Verify all internal cross-references within the document work
