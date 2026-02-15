@@ -577,11 +577,11 @@ Visibility changes work independently of queue changes. Even if the unified queu
 │                                                                     │
 │  update-queue-status.yml (NEW - triggered on push to main)          │
 │  ├── Detect added/modified files in recipes/                       │
-│  ├── Parse recipe to extract source from [source] section         │
-│  ├── Compare recipe source to queue entry's source                 │
-│  ├── If match: status → "success"                                  │
-│  ├── If differ: status → "success", update source, confidence →   │
-│  │              "curated" (manual override found better source)    │
+│  ├── Extract sources from recipe steps (can be multiple per recipe)│
+│  ├── Check if queue source IN recipe sources                       │
+│  ├── If IN: status → "success" (disambiguation valid)              │
+│  ├── If NOT IN: status → "success", confidence → "curated"         │
+│  │             (human chose differently, don't update source)      │
 │  └── Commit updated priority-queue.json                            │
 │                                                                     │
 │  This is the SAME workflow for both:                                │
@@ -1612,13 +1612,18 @@ Packages that disambiguate to `github:` sources often can't generate determinist
 **Recipe merge triggers status update** (single flow, two triggers):
 When a recipe PR merges to main, a push-triggered workflow updates the queue:
 1. Detect which recipe files were added/modified in the push
-2. Parse each recipe to extract its source (from the recipe's `[source]` section)
+2. Extract sources from recipe steps (recipes don't have a `[source]` field):
+   - `action = "homebrew"` with `formula = "bat"` → `homebrew:bat`
+   - `action = "cargo_install"` with `crate = "ripgrep"` → `cargo:ripgrep`
+   - `action = "github_archive"` with `repo = "sharkdp/bat"` → `github:sharkdp/bat`
+   - A recipe can have multiple sources for different platforms (e.g., homebrew for glibc, github for musl)
 3. Find matching queue entries by package name
-4. Compare recipe source to queue entry's `source` field:
-   - **Match**: Set `status: "success"` (disambiguation was correct)
-   - **Differ**: Set `status: "success"`, update `source` to match recipe, set `confidence: "curated"` (manual override discovered a better source)
+4. Check if queue entry's `source` is in the recipe's extracted sources:
+   - **Queue source IN recipe sources**: Set `status: "success"` (disambiguation was valid, recipe may have added more platform coverage)
+   - **Queue source NOT IN recipe sources**: Set `status: "success"`, set `confidence: "curated"` (human chose differently than disambiguation)
+   - **Don't update `source` field** - it stays as historical provenance of how we discovered the tool
 
-This is the same mechanism for both automated (batch-created) and manual (human-created) recipes. If someone manually creates a recipe using a different source than disambiguation selected, it automatically becomes a curated override.
+This handles both single-source and multi-source recipes. If someone adds musl support to a homebrew recipe via github, and the queue had `homebrew:X`, it stays `confidence: "auto"` because homebrew was a valid choice. If someone creates a recipe using cargo when disambiguation selected homebrew, it becomes `confidence: "curated"` to prevent re-disambiguation from overwriting the human choice.
 
 **Note:** `confidence: "priority"` (ecosystem priority fallback) is NOT valid for auto-selection per DESIGN-disambiguation.md. If secondary signals are missing, the entry is flagged for manual review rather than auto-selected.
 
@@ -1775,7 +1780,7 @@ The initial queue population is split into two phases, both run locally to avoid
 Run locally with a simple script:
 
 1. **Scan `recipes/`** → Create `success` entries
-   - For each recipe file, extract source from `[source]` section
+   - For each recipe file, extract sources from steps (first/primary source for queue's `source` field)
    - Create queue entry: `status: "success"`, `confidence: "curated"` (recipe existence is authoritative)
    - ~138 entries
 
