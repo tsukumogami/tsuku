@@ -7,7 +7,7 @@
   "started_at": "2026-02-15T20:29:51Z",
   "pr_number": 1704,
   "pr_url": "https://github.com/tsukumogami/tsuku/pull/1704",
-  "integrity_hash": "sha256:14b7d232f50fc167794f9190b9afd99041cdc8f3fac712d602b109e8c0c3dfdc",
+  "integrity_hash": "sha256:3a1e694d8a7410faa67edb5700a601cc0959e56935ec5d7dc12307d0ada38ba7",
   "issues": [
     {
       "number": 1697,
@@ -32,8 +32,8 @@
     {
       "number": 1698,
       "title": "feat(batch): bootstrap phase A script for queue migration",
-      "status": "implemented",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "dependencies": [
         1697
       ],
@@ -47,19 +47,29 @@
         ],
         "tests_added": 24,
         "key_decisions": "Implemented bootstrap logic in internal/batch/bootstrap.go (not cmd/) so it is fully testable. Source extraction covers 10 ecosystem action types plus fallback to version.github_repo. Only 7 of ~274 recipes are skipped (manual installs, source builds). Recipe entries get default priority 3; homebrew queue preserves tier values as priority. Curated overrides get priority 1. Output sorted by priority then name for stable ordering. Output uses UnifiedQueue wrapper with schema_version, updated_at, and entries fields."
-      }
+      },
+      "completed_at": "2026-02-15T22:01:12Z"
     },
     {
       "number": 1699,
       "title": "feat(batch): orchestrator uses queue source directly",
-      "status": "pending",
+      "status": "implemented",
       "ci_status": "pending",
       "dependencies": [
         1697
       ],
       "tier": "testable",
       "commits": [],
-      "summary": null
+      "summary": {
+        "files_changed": [
+          "internal/batch/orchestrator.go",
+          "internal/batch/orchestrator_test.go",
+          "internal/batch/queue_entry.go",
+          "cmd/batch-generate/main.go"
+        ],
+        "tests_added": 10,
+        "key_decisions": "Migrated Orchestrator from seed.PriorityQueue/seed.Package to UnifiedQueue/QueueEntry. selectCandidates() now returns indices ([]int) into queue.Entries instead of copying Package values, enabling direct mutation for failure tracking. Added nowFunc for time control in tests. Failed entries eligible for re-selection with next_retry_at gating. LoadUnifiedQueue/SaveUnifiedQueue added as public queue persistence API. batch-generate now reads a single unified priority-queue.json with a --queue flag."
+      }
     },
     {
       "number": 1700,
@@ -88,7 +98,7 @@
       "label": "needs-design"
     }
   ],
-  "current_issue_index": 1,
+  "current_issue_index": 2,
   "test_plan_file": "wip/implement-doc_pipeline-dashboard_test_plan.md",
   "doc_plan_file": "wip/implement-doc_pipeline-dashboard_doc_plan.md",
   "resumed_at": null

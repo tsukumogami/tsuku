@@ -40,7 +40,7 @@ Planned
 | _Define the `QueueEntry` struct with status, confidence, and freshness tracking fields. This schema establishes the contract that bootstrap, orchestrator, and merge workflow all depend on._ | | |
 | ~~[#1698: feat(batch): bootstrap phase A script for queue migration](https://github.com/tsukumogami/tsuku/issues/1698)~~ | [#1697](https://github.com/tsukumogami/tsuku/issues/1697) | testable |
 | _Scan existing recipes, import curated overrides, and convert the homebrew queue to the unified format. Outputs `priority-queue.json` with pre-resolved sources for all entries._ | | |
-| [#1699: feat(batch): orchestrator uses queue source directly](https://github.com/tsukumogami/tsuku/issues/1699) | [#1697](https://github.com/tsukumogami/tsuku/issues/1697) | testable |
+| ~~[#1699: feat(batch): orchestrator uses queue source directly](https://github.com/tsukumogami/tsuku/issues/1699)~~ | [#1697](https://github.com/tsukumogami/tsuku/issues/1697) | testable |
 | _Update batch generation to use `pkg.Source` from queue entries instead of hardcoding homebrew. Adds exponential backoff via `failure_count` and `next_retry_at` fields._ | | |
 | [#1700: ci(batch): recipe merge workflow updates queue status](https://github.com/tsukumogami/tsuku/issues/1700) | [#1697](https://github.com/tsukumogami/tsuku/issues/1697) | testable |
 | _Create workflow that updates queue status when recipes merge, detecting whether the recipe source matches the queue's pre-resolved source and flagging mismatches._ | | |
@@ -76,7 +76,8 @@ graph LR
 
     class I1697 done
     class I1698 done
-    class I1699,I1700 ready
+    class I1699 done
+    class I1700 ready
     class I1701,I1702 needsDesign
 ```
 
