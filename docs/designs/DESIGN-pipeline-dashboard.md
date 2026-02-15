@@ -238,7 +238,7 @@ Replace per-ecosystem queues with a single unified queue where each entry includ
 {
   "name": "ripgrep",
   "source": "cargo:ripgrep",
-  "tier": 1,
+  "priority": 1,
   "confidence": "auto",
   "disambiguated_at": "2026-02-15T00:00:00Z",
   "metrics_snapshot": {
@@ -362,7 +362,7 @@ Rejected for initial implementation because we want autonomous progress. On-dema
 - **Primary**: Recipe throughput increases from 0/week to >10/week within 2 weeks of deployment
 - **Secondary**: Time to diagnose a failure decreases from "check workflow logs" (~5 minutes) to "check dashboard" (~30 seconds)
 - **Coverage**: Unified queue includes packages from at least 5 different ecosystems
-- **Routing accuracy**: >95% of queue entries have correct source (validated by spot-checking top-tier packages)
+- **Routing accuracy**: >95% of queue entries have correct source (validated by spot-checking high-priority packages)
 - **Health visibility**: Operators can determine pipeline health status in <10 seconds via dashboard
 
 ## Decision Outcome
@@ -378,8 +378,8 @@ For visibility, the dashboard gains drill-down navigation. Every panel links to 
 For routing and coverage, we replace the current homebrew-only queue with a unified disambiguated queue. A weekly seeding workflow queries all ecosystem APIs, collects quality metrics (downloads, version counts, artifact availability), and applies the disambiguation algorithm from DESIGN-disambiguation.md. The result is a single `priority-queue.json` where each entry has a pre-resolved source:
 
 ```json
-{"name": "bat", "source": "github:sharkdp/bat", "tier": 1, "confidence": "auto"}
-{"name": "jq", "source": "homebrew:jq", "tier": 1, "confidence": "curated"}
+{"name": "bat", "source": "github:sharkdp/bat", "priority": 1, "confidence": "auto"}
+{"name": "jq", "source": "homebrew:jq", "priority": 1, "confidence": "curated"}
 ```
 
 Batch generation uses the source directly: `tsuku create --from github:sharkdp/bat`. No runtime disambiguation lookup needed. Packages that require LLM generation (`github:` sources where deterministic fails) are excluded from the queue or marked for manual review.
@@ -1032,12 +1032,12 @@ Every element described below is clickable unless marked (static).
 │                                                                     │
 │  Filters:                                                           │
 │  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐                   │
-│  │ Ecosystem ▼ │ │ Tier ▼      │ │ Search...   │      [Apply]     │
+│  │ Ecosystem ▼ │ │ Priority ▼      │ │ Search...   │      [Apply]     │
 │  │ (all)       │ │ (all)       │ │             │                   │
 │  └─────────────┘ └─────────────┘ └─────────────┘                   │
 │                                                                     │
 │  ┌───────────────────────────────────────────────────────────────┐ │
-│  │ Package     │ Ecosystem │ Tier │ Added      │ Attempts        │ │
+│  │ Package     │ Ecosystem │ Pri │ Added      │ Attempts        │ │
 │  ├─────────────┼───────────┼──────┼────────────┼─────────────────┤ │
 │  │ neovim      │ homebrew  │ 1    │ 2026-01-15 │ 12 (last: 1h)   │ │
 │  │ [→ package detail]                                            │ │
@@ -1076,7 +1076,7 @@ Every element described below is clickable unless marked (static).
 │  │  Queue Status:  pending                                       │  │
 │  │  Ecosystem:     homebrew                                      │  │
 │  │  Queue ID:      homebrew:neovim                               │  │
-│  │  Tier:          1 (critical)                                  │  │
+│  │  Priority:      1 (critical)                                  │  │
 │  │  Added:         2026-01-15                                    │  │
 │  │  Attempts:      12                                            │  │
 │  │  Last Attempt:  2026-02-15T13:45:21Z (1 hour ago)            │  │
@@ -1374,7 +1374,7 @@ The new queue format includes pre-resolved sources with freshness tracking:
 {
   "name": "ripgrep",
   "source": "cargo:ripgrep",
-  "tier": 1,
+  "priority": 1,
   "status": "pending",
   "confidence": "auto",
   "disambiguated_at": "2026-02-15T00:00:00Z",
@@ -1390,7 +1390,7 @@ The new queue format includes pre-resolved sources with freshness tracking:
 **Fields:**
 - `name`: Tool name (used for display and deduplication)
 - `source`: Pre-resolved source in `ecosystem:identifier` format
-- `tier`: Priority tier (1 = most important)
+- `priority`: Priority level (1 = most important)
 - `status`: Queue status: `pending`, `success`, `failed`, `blocked`
 - `confidence`: How source was selected: `curated`, `auto` (10x threshold), `priority` (ecosystem order)
 - `disambiguated_at`: When disambiguation was last run (for freshness checking)
@@ -1546,7 +1546,7 @@ tsuku disambiguate ripgrep --json
    {
      "name": "ripgrep",
      "source": "cargo:ripgrep",
-     "tier": 1,
+     "priority": 1,
      "disambiguated_at": "2026-02-15T00:00:00Z",
      "consecutive_failures": 0
    }
