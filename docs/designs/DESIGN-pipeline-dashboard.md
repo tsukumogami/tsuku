@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Accepted
 problem: |
   The batch pipeline runs hourly but generates zero new recipes because all remaining
   Homebrew packages fail deterministic generation. The dashboard at tsuku.dev/pipeline/
@@ -28,7 +28,7 @@ rationale: |
 
 ## Status
 
-Proposed
+Accepted
 
 ## Upstream Design Reference
 
