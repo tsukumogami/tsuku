@@ -7,7 +7,7 @@
   "started_at": "2026-02-15T20:29:51Z",
   "pr_number": 1704,
   "pr_url": "https://github.com/tsukumogami/tsuku/pull/1704",
-  "integrity_hash": "sha256:3a1e694d8a7410faa67edb5700a601cc0959e56935ec5d7dc12307d0ada38ba7",
+  "integrity_hash": "sha256:2cd4016f181481939bd4d809d40e135dffc8ef75baf65aacd0869f28f26c9c0f",
   "issues": [
     {
       "number": 1697,
@@ -38,7 +38,9 @@
         1697
       ],
       "tier": "testable",
-      "commits": [],
+      "commits": [
+        "739ccc52"
+      ],
       "summary": {
         "files_changed": [
           "cmd/bootstrap-queue/main.go",
@@ -53,8 +55,8 @@
     {
       "number": 1699,
       "title": "feat(batch): orchestrator uses queue source directly",
-      "status": "implemented",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "dependencies": [
         1697
       ],
@@ -74,14 +76,23 @@
     {
       "number": 1700,
       "title": "ci(batch): recipe merge workflow updates queue status",
-      "status": "pending",
+      "status": "implemented",
       "ci_status": "pending",
       "dependencies": [
         1697
       ],
       "tier": "testable",
-      "commits": [],
-      "summary": null
+      "commits": [
+        "24218e54"
+      ],
+      "summary": {
+        "files_changed": [
+          ".github/workflows/update-queue-status.yml"
+        ],
+        "tests_added": 0,
+        "key_decisions": "Created workflow triggered on push to main with recipes/ changes. Extracts sources from 8 action types across 6 ecosystem mappings. Dual-path: source match sets status=success; mismatch sets status=success + confidence=curated. Never modifies the source field. Uses pinned checkout SHA matching existing conventions."
+      },
+      "completed_at": "2026-02-15T23:19:09Z"
     }
   ],
   "skipped_issues": [
@@ -98,7 +109,7 @@
       "label": "needs-design"
     }
   ],
-  "current_issue_index": 2,
+  "current_issue_index": 3,
   "test_plan_file": "wip/implement-doc_pipeline-dashboard_test_plan.md",
   "doc_plan_file": "wip/implement-doc_pipeline-dashboard_doc_plan.md",
   "resumed_at": null
