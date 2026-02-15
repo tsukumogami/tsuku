@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-02-09T03:20:00Z",
+  "updated_at": "2026-02-15T04:57:24Z",
   "tiers": {
     "1": "Critical - manually curated high-impact tools",
-    "2": "Popular - >10K weekly downloads (>40K/30d)",
+    "2": "Popular - \u003e10K weekly downloads (\u003e40K/30d)",
     "3": "Standard - all other packages"
   },
   "packages": [
@@ -39246,6 +39246,1918 @@
       "tier": 2,
       "status": "success",
       "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:peonping/tap/peon-ping",
+      "source": "homebrew",
+      "name": "peonping/tap/peon-ping",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:skillshare",
+      "source": "homebrew",
+      "name": "skillshare",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:go@1.25",
+      "source": "homebrew",
+      "name": "go@1.25",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:marcus/tap/sidecar",
+      "source": "homebrew",
+      "name": "marcus/tap/sidecar",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:marcus/tap/td",
+      "source": "homebrew",
+      "name": "marcus/tap/td",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:xbyak",
+      "source": "homebrew",
+      "name": "xbyak",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:brogue",
+      "source": "homebrew",
+      "name": "brogue",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:libupnp",
+      "source": "homebrew",
+      "name": "libupnp",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:a7ex/formulae/xcresultparser",
+      "source": "homebrew",
+      "name": "a7ex/formulae/xcresultparser",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:octoenergy/tap/kraken-cli",
+      "source": "homebrew",
+      "name": "octoenergy/tap/kraken-cli",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:fw-ai/firectl/firectl",
+      "source": "homebrew",
+      "name": "fw-ai/firectl/firectl",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:termshot",
+      "source": "homebrew",
+      "name": "termshot",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:pcapmirror",
+      "source": "homebrew",
+      "name": "pcapmirror",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:qrupdate",
+      "source": "homebrew",
+      "name": "qrupdate",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:ferron",
+      "source": "homebrew",
+      "name": "ferron",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:libharu",
+      "source": "homebrew",
+      "name": "libharu",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:defenseunicorns/tap/uds@0.27.17",
+      "source": "homebrew",
+      "name": "defenseunicorns/tap/uds@0.27.17",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:actions-up",
+      "source": "homebrew",
+      "name": "actions-up",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:getsentry/xcodebuildmcp/xcodebuildmcp",
+      "source": "homebrew",
+      "name": "getsentry/xcodebuildmcp/xcodebuildmcp",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:try-rs",
+      "source": "homebrew",
+      "name": "try-rs",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:domain-check",
+      "source": "homebrew",
+      "name": "domain-check",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:flow-control",
+      "source": "homebrew",
+      "name": "flow-control",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:revylai/tap/greenlight",
+      "source": "homebrew",
+      "name": "revylai/tap/greenlight",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:dblab",
+      "source": "homebrew",
+      "name": "dblab",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:obsproject/tools/clang-format@16",
+      "source": "homebrew",
+      "name": "obsproject/tools/clang-format@16",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:kilo-org/tap/kilocode",
+      "source": "homebrew",
+      "name": "kilo-org/tap/kilocode",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:cpprestsdk",
+      "source": "homebrew",
+      "name": "cpprestsdk",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:ooniprobe",
+      "source": "homebrew",
+      "name": "ooniprobe",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:cargo-hack",
+      "source": "homebrew",
+      "name": "cargo-hack",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:docker-gen",
+      "source": "homebrew",
+      "name": "docker-gen",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:tdlib",
+      "source": "homebrew",
+      "name": "tdlib",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:hdrhistogram_c",
+      "source": "homebrew",
+      "name": "hdrhistogram_c",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:quickemu-project/quickemu/quickemu",
+      "source": "homebrew",
+      "name": "quickemu-project/quickemu/quickemu",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:yejune/tap/godo",
+      "source": "homebrew",
+      "name": "yejune/tap/godo",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:obsproject/tools/clang-format@17",
+      "source": "homebrew",
+      "name": "obsproject/tools/clang-format@17",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:aliyunpan",
+      "source": "homebrew",
+      "name": "aliyunpan",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:ni-kismet/ni/slcli",
+      "source": "homebrew",
+      "name": "ni-kismet/ni/slcli",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:homeport/tap/termshot",
+      "source": "homebrew",
+      "name": "homeport/tap/termshot",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:typstfmt",
+      "source": "homebrew",
+      "name": "typstfmt",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:lstr",
+      "source": "homebrew",
+      "name": "lstr",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:run",
+      "source": "homebrew",
+      "name": "run",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:pipe-rename",
+      "source": "homebrew",
+      "name": "pipe-rename",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:dump1090-fa",
+      "source": "homebrew",
+      "name": "dump1090-fa",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:ffmpeg@2.8",
+      "source": "homebrew",
+      "name": "ffmpeg@2.8",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:revive",
+      "source": "homebrew",
+      "name": "revive",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:klog",
+      "source": "homebrew",
+      "name": "klog",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:libisofs",
+      "source": "homebrew",
+      "name": "libisofs",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:roborev-dev/tap/roborev",
+      "source": "homebrew",
+      "name": "roborev-dev/tap/roborev",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:mbt",
+      "source": "homebrew",
+      "name": "mbt",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:scotch",
+      "source": "homebrew",
+      "name": "scotch",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:mender-cli",
+      "source": "homebrew",
+      "name": "mender-cli",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:hercules",
+      "source": "homebrew",
+      "name": "hercules",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:kilo-org/tap/kilo",
+      "source": "homebrew",
+      "name": "kilo-org/tap/kilo",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:ocm",
+      "source": "homebrew",
+      "name": "ocm",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:stackgenhq/stackgen/stackgen",
+      "source": "homebrew",
+      "name": "stackgenhq/stackgen/stackgen",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:mdserve",
+      "source": "homebrew",
+      "name": "mdserve",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:bagel",
+      "source": "homebrew",
+      "name": "bagel",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:qt-libiodbc",
+      "source": "homebrew",
+      "name": "qt-libiodbc",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:qt-mariadb",
+      "source": "homebrew",
+      "name": "qt-mariadb",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:sentry-native",
+      "source": "homebrew",
+      "name": "sentry-native",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:run-kit",
+      "source": "homebrew",
+      "name": "run-kit",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:libfontenc",
+      "source": "homebrew",
+      "name": "libfontenc",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:parlay",
+      "source": "homebrew",
+      "name": "parlay",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:lynkr",
+      "source": "homebrew",
+      "name": "lynkr",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:moltis-org/tap/moltis",
+      "source": "homebrew",
+      "name": "moltis-org/tap/moltis",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:frotz",
+      "source": "homebrew",
+      "name": "frotz",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:tcpflow",
+      "source": "homebrew",
+      "name": "tcpflow",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:tuckr",
+      "source": "homebrew",
+      "name": "tuckr",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:tuist/tuist/tuist@4.141.0",
+      "source": "homebrew",
+      "name": "tuist/tuist/tuist@4.141.0",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:gomi",
+      "source": "homebrew",
+      "name": "gomi",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:fake-gcs-server",
+      "source": "homebrew",
+      "name": "fake-gcs-server",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:ublue-os/tap/linux-mcp-server",
+      "source": "homebrew",
+      "name": "ublue-os/tap/linux-mcp-server",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:jakehilborn/jakehilborn/displayplacer",
+      "source": "homebrew",
+      "name": "jakehilborn/jakehilborn/displayplacer",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:qt-unixodbc",
+      "source": "homebrew",
+      "name": "qt-unixodbc",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:spinframework/tap/spin",
+      "source": "homebrew",
+      "name": "spinframework/tap/spin",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:dict",
+      "source": "homebrew",
+      "name": "dict",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:oasis",
+      "source": "homebrew",
+      "name": "oasis",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:decasify",
+      "source": "homebrew",
+      "name": "decasify",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:kitex",
+      "source": "homebrew",
+      "name": "kitex",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:gl2ps",
+      "source": "homebrew",
+      "name": "gl2ps",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:teamtype",
+      "source": "homebrew",
+      "name": "teamtype",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:opencsg",
+      "source": "homebrew",
+      "name": "opencsg",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:zlib-ng-compat",
+      "source": "homebrew",
+      "name": "zlib-ng-compat",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:massdriver",
+      "source": "homebrew",
+      "name": "massdriver",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:iproute2",
+      "source": "homebrew",
+      "name": "iproute2",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:wgo",
+      "source": "homebrew",
+      "name": "wgo",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:ipmiutil",
+      "source": "homebrew",
+      "name": "ipmiutil",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:cargo-release",
+      "source": "homebrew",
+      "name": "cargo-release",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:chainsaw",
+      "source": "homebrew",
+      "name": "chainsaw",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:picoruby",
+      "source": "homebrew",
+      "name": "picoruby",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:xe/pkgs/protoc-gen-twirp",
+      "source": "homebrew",
+      "name": "xe/pkgs/protoc-gen-twirp",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:icp-cli",
+      "source": "homebrew",
+      "name": "icp-cli",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:tach",
+      "source": "homebrew",
+      "name": "tach",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:lgug2z/tap/komorebi-for-mac",
+      "source": "homebrew",
+      "name": "lgug2z/tap/komorebi-for-mac",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:cpuid",
+      "source": "homebrew",
+      "name": "cpuid",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:carvel-dev/carvel/kctrl",
+      "source": "homebrew",
+      "name": "carvel-dev/carvel/kctrl",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:hatari",
+      "source": "homebrew",
+      "name": "hatari",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:emmylua_ls",
+      "source": "homebrew",
+      "name": "emmylua_ls",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:magics",
+      "source": "homebrew",
+      "name": "magics",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:tmx",
+      "source": "homebrew",
+      "name": "tmx",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:raine/claude-history/claude-history",
+      "source": "homebrew",
+      "name": "raine/claude-history/claude-history",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:ddclient",
+      "source": "homebrew",
+      "name": "ddclient",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:reshape",
+      "source": "homebrew",
+      "name": "reshape",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:cql",
+      "source": "homebrew",
+      "name": "cql",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:add-determinism",
+      "source": "homebrew",
+      "name": "add-determinism",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:rdb",
+      "source": "homebrew",
+      "name": "rdb",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:druid",
+      "source": "homebrew",
+      "name": "druid",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:nmstatectl",
+      "source": "homebrew",
+      "name": "nmstatectl",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:ctags-lsp",
+      "source": "homebrew",
+      "name": "ctags-lsp",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:skylighting",
+      "source": "homebrew",
+      "name": "skylighting",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:jimtcl",
+      "source": "homebrew",
+      "name": "jimtcl",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:lib3mf",
+      "source": "homebrew",
+      "name": "lib3mf",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:havener",
+      "source": "homebrew",
+      "name": "havener",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:docker-ls",
+      "source": "homebrew",
+      "name": "docker-ls",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:datamash",
+      "source": "homebrew",
+      "name": "datamash",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:yakitrak/yakitrak/notesmd-cli",
+      "source": "homebrew",
+      "name": "yakitrak/yakitrak/notesmd-cli",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:cimg",
+      "source": "homebrew",
+      "name": "cimg",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:buddyh/tap/todoist",
+      "source": "homebrew",
+      "name": "buddyh/tap/todoist",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:aws-checksums",
+      "source": "homebrew",
+      "name": "aws-checksums",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:scummvm-tools",
+      "source": "homebrew",
+      "name": "scummvm-tools",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:claude-hooks",
+      "source": "homebrew",
+      "name": "claude-hooks",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:bsdiff",
+      "source": "homebrew",
+      "name": "bsdiff",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:prog8",
+      "source": "homebrew",
+      "name": "prog8",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:goctl",
+      "source": "homebrew",
+      "name": "goctl",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:git-cinnabar",
+      "source": "homebrew",
+      "name": "git-cinnabar",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:ser2net",
+      "source": "homebrew",
+      "name": "ser2net",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:ginac",
+      "source": "homebrew",
+      "name": "ginac",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:tuist/tuist/tuist@4.145.0",
+      "source": "homebrew",
+      "name": "tuist/tuist/tuist@4.145.0",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:qxmpp",
+      "source": "homebrew",
+      "name": "qxmpp",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:threedotslabs/tap/tdl",
+      "source": "homebrew",
+      "name": "threedotslabs/tap/tdl",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:go-md2man",
+      "source": "homebrew",
+      "name": "go-md2man",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:pyroscope-io/brew/pyroscope",
+      "source": "homebrew",
+      "name": "pyroscope-io/brew/pyroscope",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:cf-terraforming",
+      "source": "homebrew",
+      "name": "cf-terraforming",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:noti",
+      "source": "homebrew",
+      "name": "noti",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:tuist/tuist/tuist@4.139.1",
+      "source": "homebrew",
+      "name": "tuist/tuist/tuist@4.139.1",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:epinio",
+      "source": "homebrew",
+      "name": "epinio",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:git-pages",
+      "source": "homebrew",
+      "name": "git-pages",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:cargo-clone",
+      "source": "homebrew",
+      "name": "cargo-clone",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:serd",
+      "source": "homebrew",
+      "name": "serd",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:rbtools",
+      "source": "homebrew",
+      "name": "rbtools",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:lspmux",
+      "source": "homebrew",
+      "name": "lspmux",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:topydo",
+      "source": "homebrew",
+      "name": "topydo",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:jingkaihe/essentials/matchlock",
+      "source": "homebrew",
+      "name": "jingkaihe/essentials/matchlock",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:shivammathur/extensions/mongodb@8.3",
+      "source": "homebrew",
+      "name": "shivammathur/extensions/mongodb@8.3",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:jose",
+      "source": "homebrew",
+      "name": "jose",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:qt-percona-server",
+      "source": "homebrew",
+      "name": "qt-percona-server",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:kepubify",
+      "source": "homebrew",
+      "name": "kepubify",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:rospo",
+      "source": "homebrew",
+      "name": "rospo",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:leela-zero",
+      "source": "homebrew",
+      "name": "leela-zero",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:dilumaluthge/tap/pijul",
+      "source": "homebrew",
+      "name": "dilumaluthge/tap/pijul",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:omniorb",
+      "source": "homebrew",
+      "name": "omniorb",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:tuist/tuist/tuist@4.141.1",
+      "source": "homebrew",
+      "name": "tuist/tuist/tuist@4.141.1",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:config-file-validator",
+      "source": "homebrew",
+      "name": "config-file-validator",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:datadog/pack/pup",
+      "source": "homebrew",
+      "name": "datadog/pack/pup",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:minio/aistor/mc",
+      "source": "homebrew",
+      "name": "minio/aistor/mc",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:greenmask",
+      "source": "homebrew",
+      "name": "greenmask",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:tin",
+      "source": "homebrew",
+      "name": "tin",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:kubeone",
+      "source": "homebrew",
+      "name": "kubeone",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:happy-coder",
+      "source": "homebrew",
+      "name": "happy-coder",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:math-comp",
+      "source": "homebrew",
+      "name": "math-comp",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:jr",
+      "source": "homebrew",
+      "name": "jr",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:driftctl",
+      "source": "homebrew",
+      "name": "driftctl",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:docker-machine-driver-vmware",
+      "source": "homebrew",
+      "name": "docker-machine-driver-vmware",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:libgxps",
+      "source": "homebrew",
+      "name": "libgxps",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:cargo-crev",
+      "source": "homebrew",
+      "name": "cargo-crev",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:c10t",
+      "source": "homebrew",
+      "name": "c10t",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:taf2/tap/mdvi",
+      "source": "homebrew",
+      "name": "taf2/tap/mdvi",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:hashicorp/tap/copywrite",
+      "source": "homebrew",
+      "name": "hashicorp/tap/copywrite",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:gnu-smalltalk",
+      "source": "homebrew",
+      "name": "gnu-smalltalk",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:codec2",
+      "source": "homebrew",
+      "name": "codec2",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:msc-generator",
+      "source": "homebrew",
+      "name": "msc-generator",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:analog",
+      "source": "homebrew",
+      "name": "analog",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:astra",
+      "source": "homebrew",
+      "name": "astra",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:fastly",
+      "source": "homebrew",
+      "name": "fastly",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:convox",
+      "source": "homebrew",
+      "name": "convox",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:mylee04/tools/code-notify",
+      "source": "homebrew",
+      "name": "mylee04/tools/code-notify",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:anyquery",
+      "source": "homebrew",
+      "name": "anyquery",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:cryptopp",
+      "source": "homebrew",
+      "name": "cryptopp",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:lowdown",
+      "source": "homebrew",
+      "name": "lowdown",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:procps",
+      "source": "homebrew",
+      "name": "procps",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:shivammathur/extensions/mongodb@8.2",
+      "source": "homebrew",
+      "name": "shivammathur/extensions/mongodb@8.2",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:komac",
+      "source": "homebrew",
+      "name": "komac",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:lavat",
+      "source": "homebrew",
+      "name": "lavat",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:wmctrl",
+      "source": "homebrew",
+      "name": "wmctrl",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:uuu",
+      "source": "homebrew",
+      "name": "uuu",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:score-spec/tap/score-compose",
+      "source": "homebrew",
+      "name": "score-spec/tap/score-compose",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:flintrock",
+      "source": "homebrew",
+      "name": "flintrock",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:gom",
+      "source": "homebrew",
+      "name": "gom",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:sdcv",
+      "source": "homebrew",
+      "name": "sdcv",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:git-pkgs/git-pkgs/git-pkgs",
+      "source": "homebrew",
+      "name": "git-pkgs/git-pkgs/git-pkgs",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:libxc",
+      "source": "homebrew",
+      "name": "libxc",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:dry",
+      "source": "homebrew",
+      "name": "dry",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:jabba",
+      "source": "homebrew",
+      "name": "jabba",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:pike",
+      "source": "homebrew",
+      "name": "pike",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:lightdash/lightdash/lightdash",
+      "source": "homebrew",
+      "name": "lightdash/lightdash/lightdash",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:risor",
+      "source": "homebrew",
+      "name": "risor",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:umoci",
+      "source": "homebrew",
+      "name": "umoci",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:sofia-sip",
+      "source": "homebrew",
+      "name": "sofia-sip",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:aws-es-proxy",
+      "source": "homebrew",
+      "name": "aws-es-proxy",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:webhook",
+      "source": "homebrew",
+      "name": "webhook",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:libxaw",
+      "source": "homebrew",
+      "name": "libxaw",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:wv",
+      "source": "homebrew",
+      "name": "wv",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:kwok",
+      "source": "homebrew",
+      "name": "kwok",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:tecolicom/tap/app-greple-xlate",
+      "source": "homebrew",
+      "name": "tecolicom/tap/app-greple-xlate",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:gitlab-ci-linter",
+      "source": "homebrew",
+      "name": "gitlab-ci-linter",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:mitchellh/gon/gon",
+      "source": "homebrew",
+      "name": "mitchellh/gon/gon",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:cidr",
+      "source": "homebrew",
+      "name": "cidr",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:dbcsr",
+      "source": "homebrew",
+      "name": "dbcsr",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:iodine",
+      "source": "homebrew",
+      "name": "iodine",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:roswell",
+      "source": "homebrew",
+      "name": "roswell",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:otterdog",
+      "source": "homebrew",
+      "name": "otterdog",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:c",
+      "source": "homebrew",
+      "name": "c",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:libpthread-stubs",
+      "source": "homebrew",
+      "name": "libpthread-stubs",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:ncdc",
+      "source": "homebrew",
+      "name": "ncdc",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:hjson",
+      "source": "homebrew",
+      "name": "hjson",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:cobo-cli",
+      "source": "homebrew",
+      "name": "cobo-cli",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:gpg-tui",
+      "source": "homebrew",
+      "name": "gpg-tui",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:tecolicom/tap/app-greple-charcode",
+      "source": "homebrew",
+      "name": "tecolicom/tap/app-greple-charcode",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:chardet",
+      "source": "homebrew",
+      "name": "chardet",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:threatcl",
+      "source": "homebrew",
+      "name": "threatcl",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:gops",
+      "source": "homebrew",
+      "name": "gops",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:aws/tap/lightsailctl",
+      "source": "homebrew",
+      "name": "aws/tap/lightsailctl",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:graphql-cli",
+      "source": "homebrew",
+      "name": "graphql-cli",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:brewsci/bio/dssp",
+      "source": "homebrew",
+      "name": "brewsci/bio/dssp",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:rtmidi",
+      "source": "homebrew",
+      "name": "rtmidi",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:portal",
+      "source": "homebrew",
+      "name": "portal",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:valet-sh/core/vsh-mysql84",
+      "source": "homebrew",
+      "name": "valet-sh/core/vsh-mysql84",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:zilliztech/tap/milvus-backup",
+      "source": "homebrew",
+      "name": "zilliztech/tap/milvus-backup",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:core-lightning",
+      "source": "homebrew",
+      "name": "core-lightning",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:ecflow-ui",
+      "source": "homebrew",
+      "name": "ecflow-ui",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:monetdb",
+      "source": "homebrew",
+      "name": "monetdb",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:tmux-xpanes",
+      "source": "homebrew",
+      "name": "tmux-xpanes",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:permify",
+      "source": "homebrew",
+      "name": "permify",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:iniparser",
+      "source": "homebrew",
+      "name": "iniparser",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:git-sync",
+      "source": "homebrew",
+      "name": "git-sync",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:cadence-workflow",
+      "source": "homebrew",
+      "name": "cadence-workflow",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:libnet",
+      "source": "homebrew",
+      "name": "libnet",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:gyb",
+      "source": "homebrew",
+      "name": "gyb",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
+    },
+    {
+      "id": "homebrew:tuist/tuist/tuist@4.138.0",
+      "source": "homebrew",
+      "name": "tuist/tuist/tuist@4.138.0",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-15T04:57:24Z"
     }
   ]
 }
