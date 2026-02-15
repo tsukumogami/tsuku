@@ -241,12 +241,11 @@ Replace per-ecosystem queues with a single unified queue where each entry includ
   "priority": 1,
   "confidence": "auto",
   "disambiguated_at": "2026-02-15T00:00:00Z",
-  "metrics_snapshot": {
-    "cargo_downloads": 1250000,
-    "homebrew_installs": 89000
-  }
+  "next_retry_at": null
 }
 ```
+
+Note: Quality metrics (download counts, version counts) are stored separately in `data/disambiguations/audit/` for debugging, not in the queue itself. This keeps the queue lean and avoids exposing competitive intelligence in the public dashboard.
 
 **Incremental seeding workflow** (reuses existing ecosystem probers):
 1. **New packages**: Disambiguate tools not yet in queue (from ecosystem feeds)
@@ -308,7 +307,7 @@ The seeding workflow discovers new packages and maintains disambiguation freshne
 **Freshness rules**:
 - `disambiguated_at` < 30 days → fresh, skip re-disambiguation
 - `disambiguated_at` >= 30 days → stale, re-disambiguate
-- `consecutive_failures` >= 3 → force re-disambiguate (source may have changed)
+- `next_retry_at` is set and past → re-disambiguate (exponential backoff after failures)
 - Curated overrides → never auto-refresh (manual only)
 
 **Curated overrides** (`data/disambiguations/curated.jsonl`) take precedence:
@@ -317,13 +316,19 @@ The seeding workflow discovers new packages and maintains disambiguation freshne
 {"name": "rg", "source": "cargo:ripgrep", "reason": "canonical crate"}
 ```
 
-Curated entries are never overridden by algorithmic disambiguation. They represent expert knowledge that shouldn't churn.
+Curated entries are never overridden by algorithmic disambiguation. They represent expert knowledge that shouldn't churn. **Curated sources must be validated** during seeding: if a curated source returns 404 or fails deterministic generation in a test run, alert operators rather than silently using a broken override.
 
-**Failure feedback loop**:
-When batch generation fails a package repeatedly, increment `consecutive_failures`. After threshold (default 3), mark for re-disambiguation. This catches cases where:
-- A source stopped publishing binaries
-- A better source became available
-- The original disambiguation was wrong
+**Failure feedback with exponential backoff**:
+Instead of a fixed threshold, use exponential backoff to prevent thrashing:
+- 1st failure: Retry on next batch selection (no delay)
+- 2nd failure: Set `next_retry_at` to +24 hours
+- 3rd failure: Set `next_retry_at` to +72 hours, trigger re-disambiguation
+- 4th+ failure: Double the backoff (max 7 days), re-disambiguate each time
+
+This prevents rapid cycling between sources during temporary outages while still catching permanent source changes.
+
+**Source stability alerts**:
+When re-disambiguation selects a DIFFERENT source than the previous one for a high-priority package, create a GitHub issue for review rather than automatically accepting the change. This prevents supply chain attacks via ecosystem metric manipulation.
 
 #### Alternatives Considered
 
@@ -355,7 +360,24 @@ Rejected for initial implementation because we want autonomous progress. On-dema
 - **Quality metric reliability**: Download counts from ecosystem APIs may be stale or missing. The 10x threshold from DESIGN-disambiguation.md may need tuning for batch contexts.
 - **Ecosystem coverage**: Some ecosystems (cpan, go) don't have obvious popularity APIs. May need proxy metrics like GitHub stars or search result ordering.
 - **Deterministic source coverage**: What percentage of packages can actually generate deterministically? If most route to `github:` (LLM-required), the unified queue may still be sparse. **Recommendation**: Validate hypothesis by manually testing `tsuku create --from cargo:ripgrep --deterministic-only` before building seeding infrastructure.
-- **Freshness threshold tuning**: 30 days is a guess. May need adjustment based on how often sources actually change.
+- **Freshness threshold tuning**: 30 days is initial value. Track "re-disambiguation source change rate" metric to tune: if >50% of re-disambiguations result in same source, threshold is too short; if source changes frequently, threshold is too long.
+
+### Alerting Strategy
+
+The design requires proactive alerting—dashboards alone aren't sufficient.
+
+**Pipeline health alerts** (create GitHub issues):
+- `runs_since_last_success` > 50 (~2 days of hourly batches)
+- Circuit breaker open > 24 hours for any ecosystem
+- Seeding workflow fails 2 consecutive weeks
+- Queue staleness > 20% (entries with `disambiguated_at` > 30 days)
+
+**Source stability alerts** (require manual review):
+- High-priority package (priority 1-2) changes source during re-disambiguation
+- Curated override validation fails (source returns 404)
+- Re-disambiguation selects a source that previously failed for this package
+
+**Implementation**: Add `pipeline-health-monitor.yml` workflow similar to existing `r2-health-monitor.yml` pattern.
 
 ### Success Metrics
 
@@ -403,7 +425,7 @@ The design reuses existing infrastructure:
 - `tsuku disambiguate --json` provides the interface for seeding
 - Curated overrides work exactly as they do today
 
-The 10x popularity threshold from DESIGN-disambiguation.md provides a clear decision rule. If cargo's `ripgrep` has 10x more downloads than homebrew's, use cargo. If downloads are close, use curated override or ecosystem priority.
+The 10x popularity threshold from DESIGN-disambiguation.md provides a clear decision rule, but requires secondary signals for security: a source must have **version_count >= 3** AND **has_repository link** before auto-selection. This prevents typosquatted packages with inflated download counts from being auto-selected. If secondary signals are missing, the seeding workflow prompts for manual review rather than falling back to ecosystem priority (which DESIGN-disambiguation.md explicitly prohibits for auto-selection).
 
 Visibility changes work independently of queue changes. Even if the unified queue takes time to implement, the dashboard improvements immediately help debug the current stalled pipeline.
 
@@ -471,9 +493,11 @@ Visibility changes work independently of queue changes. Even if the unified queu
 │  seed-queue.yml (NEW - runs weekly)                                 │
 │  ├── Discover new packages from ecosystem feeds                    │
 │  ├── Identify stale records (disambiguated_at > 30 days)           │
-│  ├── Identify failing packages (consecutive_failures >= 3)        │
+│  ├── Identify packages due for retry (next_retry_at has passed)   │
+│  ├── Validate curated overrides (check sources exist)             │
 │  ├── For each: invoke `tsuku disambiguate <name> --json`           │
-│  ├── Merge results into existing queue (preserve fresh entries)   │
+│  ├── Alert on source changes for high-priority packages           │
+│  ├── Write audit log to data/disambiguations/audit/               │
 │  └── Output: data/queues/priority-queue.json                       │
 │                                                                     │
 │  cmd/seed-queue/main.go (NEW)                                       │
@@ -903,11 +927,17 @@ Every element described below is clickable unless marked (static).
 │                                                                     │
 │  ┌─ Actions ────────────────────────────────────────────────────┐  │
 │  │                                                               │  │
-│  │  [Retry this package]  (triggers manual batch for 1 package) │  │
-│  │  [Mark as won't fix]   (moves to permanent exclusion)        │  │
-│  │  [File issue]          (opens GitHub issue with context)     │  │
+│  │  [File issue on GitHub]  (opens pre-filled GitHub issue)     │  │
+│  │                                                               │  │
+│  │  ─── Authenticated actions (link to GitHub, require login) ─ │  │
+│  │  [Retry this package]  (triggers workflow_dispatch)          │  │
+│  │  [Mark as won't fix]   (adds to exclusions via PR)           │  │
 │  │                                                               │  │
 │  └───────────────────────────────────────────────────────────────┘  │
+│                                                                     │
+│  Note: "Retry" and "Mark as won't fix" link to GitHub Actions      │
+│  workflow_dispatch or create PRs. They don't execute directly      │
+│  from the dashboard. This keeps authentication on GitHub's side.   │
 │                                                                     │
 └─────────────────────────────────────────────────────────────────────┘
 ```
@@ -1378,12 +1408,8 @@ The new queue format includes pre-resolved sources with freshness tracking:
   "status": "pending",
   "confidence": "auto",
   "disambiguated_at": "2026-02-15T00:00:00Z",
-  "consecutive_failures": 0,
-  "metrics_snapshot": {
-    "cargo_downloads": 1250000,
-    "homebrew_installs": 89000,
-    "selected_reason": "10x threshold exceeded"
-  }
+  "next_retry_at": null,
+  "failure_count": 0
 }
 ```
 
@@ -1392,10 +1418,43 @@ The new queue format includes pre-resolved sources with freshness tracking:
 - `source`: Pre-resolved source in `ecosystem:identifier` format
 - `priority`: Priority level (1 = most important)
 - `status`: Queue status: `pending`, `success`, `failed`, `blocked`
-- `confidence`: How source was selected: `curated`, `auto` (10x threshold), `priority` (ecosystem order)
+- `confidence`: How source was selected: `curated`, `auto` (10x threshold with secondary signals)
 - `disambiguated_at`: When disambiguation was last run (for freshness checking)
-- `consecutive_failures`: Count of consecutive batch failures (triggers re-disambiguation at threshold)
-- `metrics_snapshot`: Quality metrics at disambiguation time (for debugging/auditing)
+- `next_retry_at`: Next eligible retry time (null if no backoff, ISO timestamp if backing off)
+- `failure_count`: Count of failures (used for exponential backoff calculation)
+
+**Note:** `confidence: "priority"` (ecosystem priority fallback) is NOT valid for auto-selection per DESIGN-disambiguation.md. If secondary signals are missing, the entry is flagged for manual review rather than auto-selected.
+
+### Disambiguation Audit Log
+
+Quality metrics are stored separately in `data/disambiguations/audit/<name>.json` for debugging:
+
+```json
+{
+  "name": "ripgrep",
+  "disambiguated_at": "2026-02-15T00:00:00Z",
+  "selected_source": "cargo:ripgrep",
+  "confidence": "auto",
+  "candidates": [
+    {
+      "source": "cargo:ripgrep",
+      "downloads": 1250000,
+      "version_count": 47,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:ripgrep",
+      "downloads": 89000,
+      "version_count": 12,
+      "has_repository": true
+    }
+  ],
+  "decision_reason": "10x threshold exceeded (14x), secondary signals present",
+  "previous_source": null
+}
+```
+
+This allows operators to debug disambiguation decisions without exposing competitive intelligence in the public dashboard.
 
 ### Batch Generation with Unified Queue
 
