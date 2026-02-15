@@ -450,6 +450,7 @@ Visibility changes work independently of queue changes. Even if the unified queu
 │  ├── Recent Runs panel → runs.html                                  │
 │  ├── [NEW] Recent Failures panel → failures.html                    │
 │  ├── [NEW] Pipeline Health panel (breaker state, last success)      │
+│  ├── [NEW] Seeding Stats panel → seeding.html                       │
 │  ├── [NEW] Curated Overrides panel → curated.html                   │
 │  └── Disambiguation panel → disambiguations.html                    │
 │                                                                     │
@@ -478,6 +479,14 @@ Visibility changes work independently of queue changes. Even if the unified queu
 │  pending.html, blocked.html, success.html (existing, enhanced)      │
 │  └── Each row → package detail or disambiguation page               │
 │                                                                     │
+│  [NEW] seeding.html (seeding run history and ecosystem stats)       │
+│  ├── Last seeding run: timestamp, duration, packages processed     │
+│  ├── Ecosystem coverage: packages per ecosystem, % of queue        │
+│  ├── Disambiguation breakdown: auto / curated / requires_manual    │
+│  ├── Recent source changes (packages that changed ecosystem)       │
+│  ├── Curated validation failures                                   │
+│  └── Seeding run history (list of past runs with stats)            │
+│                                                                     │
 │  [NEW] curated.html (all manual overrides)                          │
 │  ├── Table: package, source, reason, added_by, added_at             │
 │  ├── Shows all entries with confidence="curated"                    │
@@ -485,13 +494,15 @@ Visibility changes work independently of queue changes. Even if the unified queu
 │  └── Validation status: which overrides have broken sources         │
 │                                                                     │
 │  dashboard.json                                                     │
-│  ├── queue: { total, by_status, packages }                         │
+│  ├── queue: { total, by_status, by_ecosystem, packages }           │
 │  ├── blockers: [...]                                                │
 │  ├── runs: [...]                                                    │
 │  ├── disambiguations: { total, by_confidence, need_review }         │
 │  ├── [NEW] curated: [{ name, source, reason, validation_status }]   │
 │  ├── [NEW] failures: [{ id, package, category, subcategory, ... }]  │
 │  ├── [NEW] health: { per_ecosystem_breaker, last_success, ... }     │
+│  ├── [NEW] seeding: { last_run, packages_discovered, stale_refreshed│
+│  │                    source_changes, curated_invalid, by_ecosystem}│
 │  └── generated_at                                                   │
 │                                                                     │
 └─────────────────────────────────────────────────────────────────────┘
@@ -508,6 +519,8 @@ Visibility changes work independently of queue changes. Even if the unified queu
 │  ├── For each: invoke `tsuku disambiguate <name> --json`           │
 │  ├── Alert on source changes for high-priority packages           │
 │  ├── Write audit log to data/disambiguations/audit/               │
+│  ├── Write seeding stats to data/metrics/seeding-runs.jsonl       │
+│  ├── Run queue-analytics to update dashboard.json                 │
 │  └── Output: data/queues/priority-queue.json                       │
 │                                                                     │
 │  cmd/seed-queue/main.go (NEW)                                       │
@@ -1264,6 +1277,77 @@ Every element described below is clickable unless marked (static).
 │  │  manual: 4           (manually configured)                   │  │
 │  │  Each links to filtered list                                 │  │
 │  └───────────────────────────────────────────────────────────────┘  │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+#### Seeding Stats (`seeding.html`)
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│  ← Back to Dashboard                                                │
+│                                                                     │
+│  Seeding Stats                                                      │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│  ┌─ Last Seeding Run ─────────────────────────────────────────────┐ │
+│  │                                                                 │ │
+│  │  Timestamp:    2026-02-15T06:00:00Z (9 hours ago)              │ │
+│  │  Duration:     47 minutes                                       │ │
+│  │  Packages:     5,244 total in queue                            │ │
+│  │  Processed:    312 (new: 52, stale: 248, retries: 12)          │ │
+│  │  Source changes: 3 (2 auto-accepted, 1 flagged for review)     │ │
+│  │  Workflow:     [View on GitHub →]                              │ │
+│  │                                                                 │ │
+│  └─────────────────────────────────────────────────────────────────┘ │
+│                                                                     │
+│  ┌─ Ecosystem Coverage ───────────────────────────────────────────┐ │
+│  │                                                                 │ │
+│  │  Ecosystem   │ Packages │ % of Queue │ Trend (30d)             │ │
+│  │  ────────────┼──────────┼────────────┼─────────────────────── │ │
+│  │  homebrew    │ 3,850    │ 73.4%      │ ↓ 2% (was 75.4%)       │ │
+│  │  cargo       │ 644      │ 12.3%      │ ↑ 1.5%                 │ │
+│  │  npm         │ 320      │ 6.1%       │ ↑ 0.3%                 │ │
+│  │  github      │ 218      │ 4.2%       │ ↑ 0.2%                 │ │
+│  │  pypi        │ 128      │ 2.4%       │ →                      │ │
+│  │  rubygems    │ 52       │ 1.0%       │ →                      │ │
+│  │  go          │ 32       │ 0.6%       │ →                      │ │
+│  │                                                                 │ │
+│  └─────────────────────────────────────────────────────────────────┘ │
+│                                                                     │
+│  ┌─ Disambiguation Breakdown ─────────────────────────────────────┐ │
+│  │                                                                 │ │
+│  │  ████████████████████████░░░░░░░░  auto (68%)                  │ │
+│  │  ░░░░░░░░████░░░░░░░░░░░░░░░░░░░░  curated (12%)               │ │
+│  │  ░░░░░░░░░░░░████████░░░░░░░░░░░░  requires_manual (20%)       │ │
+│  │                                                                 │ │
+│  │  auto: 3,566 packages (10x threshold met)                      │ │
+│  │  curated: 629 packages (manual overrides)                      │ │
+│  │  requires_manual: 1,049 packages (need LLM/human)              │ │
+│  │                                                                 │ │
+│  └─────────────────────────────────────────────────────────────────┘ │
+│                                                                     │
+│  ┌─ Recent Source Changes ────────────────────────────────────────┐ │
+│  │                                                                 │ │
+│  │  Package │ Old Source       │ New Source        │ Status       │ │
+│  │  ────────┼──────────────────┼───────────────────┼───────────── │ │
+│  │  tokei   │ homebrew:tokei   │ cargo:tokei       │ ✓ accepted   │ │
+│  │  dust    │ homebrew:dust    │ cargo:du-dust     │ ✓ accepted   │ │
+│  │  procs   │ homebrew:procs   │ cargo:procs       │ ⚠ review     │ │
+│  │  [→ procs flagged because priority=1, needs manual approval]   │ │
+│  │                                                                 │ │
+│  └─────────────────────────────────────────────────────────────────┘ │
+│                                                                     │
+│  ┌─ Seeding History ──────────────────────────────────────────────┐ │
+│  │                                                                 │ │
+│  │  Date       │ Processed │ Changes │ Errors │ Duration          │ │
+│  │  ───────────┼───────────┼─────────┼────────┼────────────────── │ │
+│  │  2026-02-15 │ 312       │ 3       │ 0      │ 47m               │ │
+│  │  2026-02-08 │ 287       │ 5       │ 1      │ 52m               │ │
+│  │  2026-02-01 │ 5,102     │ 0       │ 0      │ 4h 12m (initial)  │ │
+│  │  [→ each row links to seeding run detail]                      │ │
+│  │                                                                 │ │
+│  └─────────────────────────────────────────────────────────────────┘ │
 │                                                                     │
 └─────────────────────────────────────────────────────────────────────┘
 ```
