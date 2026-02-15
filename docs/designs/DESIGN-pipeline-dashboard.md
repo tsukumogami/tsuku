@@ -135,10 +135,10 @@ Every dashboard panel links to a dedicated page, and every list item links to a 
 - Each panel header is clickable → navigates to full list page
 - "Pipeline Health" panel shows:
   - **Pipeline Status**: "Running" / "Stalled" (based on last_run timestamp)
-  - **Last Run**: "1 hour ago (0/10 succeeded)" - shows pipeline is alive even with failures
-  - **Last Success**: "9 days ago (2 recipes)" - when recipes were last merged
-  - **Runs Since Success**: "156 runs" - quantifies the drought
-  - **Circuit Breaker**: per-ecosystem state (closed/open/half-open)
+  - **Last Run**: "1 hour ago (0/10 succeeded)" → click to `run.html?id=<batch-id>`
+  - **Last Success**: "9 days ago (2 recipes)" → click to `run.html?id=<batch-id>`
+  - **Runs Since Success**: "156 runs" → click to `runs.html?filter=since-last-success`
+  - **Circuit Breaker**: per-ecosystem state → click to filtered failures for that ecosystem
 
 **List pages** show complete data:
 - `failures.html`: All failures with filtering by category, ecosystem, date range
@@ -365,9 +365,12 @@ Multi-ecosystem rotation trades throughput for fairness. A pipeline stuck on hom
 │  ├── Each row → run.html?id=<batch-id>                              │
 │                                                                     │
 │  [NEW] run.html?id=<id> (single run detail)                         │
-│  ├── All packages processed                                         │
-│  ├── Per-platform results                                           │
-│  └── Recipes generated, failures encountered                        │
+│  ├── Batch metadata: ID, ecosystem, timestamp, workflow link        │
+│  ├── Summary: X succeeded, Y failed, Z blocked                      │
+│  ├── Packages table: name, status, link to failure detail if failed │
+│  ├── Per-platform breakdown: which platforms passed/failed          │
+│  ├── Recipes generated: links to recipe files in repo               │
+│  └── Failures: inline list with links to failure.html?id=           │
 │                                                                     │
 │  pending.html, blocked.html, success.html (existing, enhanced)      │
 │  └── Each row → package detail or disambiguation page               │
