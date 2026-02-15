@@ -1,0 +1,95 @@
+{
+  "design_doc": "docs/designs/DESIGN-pipeline-dashboard.md",
+  "milestone_name": "pipeline-dashboard",
+  "milestone_number": 83,
+  "milestone_url": "https://github.com/tsukumogami/tsuku/milestone/83",
+  "branch": "impl/pipeline-dashboard",
+  "started_at": "2026-02-15T20:29:51Z",
+  "pr_number": 1704,
+  "pr_url": "https://github.com/tsukumogami/tsuku/pull/1704",
+  "integrity_hash": "sha256:14b7d232f50fc167794f9190b9afd99041cdc8f3fac712d602b109e8c0c3dfdc",
+  "issues": [
+    {
+      "number": 1697,
+      "title": "feat(batch): add unified queue schema with freshness fields",
+      "status": "completed",
+      "ci_status": "passed",
+      "dependencies": [],
+      "tier": "testable",
+      "commits": [
+        "a423d01b",
+        "1fc17512"
+      ],
+      "summary": {
+        "files_changed": [
+          "internal/batch/queue_entry.go",
+          "internal/batch/queue_entry_test.go"
+        ],
+        "tests_added": 15,
+        "key_decisions": "Created QueueEntry as a new struct in internal/batch/ rather than modifying the existing seed.Package struct. Used *time.Time for DisambiguatedAt and NextRetryAt to support null JSON values. Validation collects all errors into a single message. Status and confidence values validated against lookup maps with exported constants."
+      }
+    },
+    {
+      "number": 1698,
+      "title": "feat(batch): bootstrap phase A script for queue migration",
+      "status": "implemented",
+      "ci_status": "pending",
+      "dependencies": [
+        1697
+      ],
+      "tier": "testable",
+      "commits": [],
+      "summary": {
+        "files_changed": [
+          "cmd/bootstrap-queue/main.go",
+          "internal/batch/bootstrap.go",
+          "internal/batch/bootstrap_test.go"
+        ],
+        "tests_added": 24,
+        "key_decisions": "Implemented bootstrap logic in internal/batch/bootstrap.go (not cmd/) so it is fully testable. Source extraction covers 10 ecosystem action types plus fallback to version.github_repo. Only 7 of ~274 recipes are skipped (manual installs, source builds). Recipe entries get default priority 3; homebrew queue preserves tier values as priority. Curated overrides get priority 1. Output sorted by priority then name for stable ordering. Output uses UnifiedQueue wrapper with schema_version, updated_at, and entries fields."
+      }
+    },
+    {
+      "number": 1699,
+      "title": "feat(batch): orchestrator uses queue source directly",
+      "status": "pending",
+      "ci_status": "pending",
+      "dependencies": [
+        1697
+      ],
+      "tier": "testable",
+      "commits": [],
+      "summary": null
+    },
+    {
+      "number": 1700,
+      "title": "ci(batch): recipe merge workflow updates queue status",
+      "status": "pending",
+      "ci_status": "pending",
+      "dependencies": [
+        1697
+      ],
+      "tier": "testable",
+      "commits": [],
+      "summary": null
+    }
+  ],
+  "skipped_issues": [
+    {
+      "number": 1701,
+      "title": "docs(pipeline): design dashboard observability enhancements",
+      "reason": "needs-design",
+      "label": "needs-design"
+    },
+    {
+      "number": 1702,
+      "title": "docs(pipeline): design automated seeding workflow",
+      "reason": "needs-design",
+      "label": "needs-design"
+    }
+  ],
+  "current_issue_index": 1,
+  "test_plan_file": "wip/implement-doc_pipeline-dashboard_test_plan.md",
+  "doc_plan_file": "wip/implement-doc_pipeline-dashboard_doc_plan.md",
+  "resumed_at": null
+}
