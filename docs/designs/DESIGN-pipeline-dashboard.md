@@ -1753,6 +1753,52 @@ tsuku create --from github:sharkdp/bat --deterministic-only
 
 If these fail, disambiguation doesn't solve the root cause and we need a different approach.
 
+**Bootstrap Strategy (run locally, submit via PR)**
+
+The initial queue population is split into two phases, both run locally to avoid CI timeouts and rate limit concerns:
+
+**Bootstrap Phase A: Unblock the pipeline**
+
+Run locally with a simple script:
+
+1. **Scan `recipes/`** → Create `success` entries
+   - For each recipe file, extract source from `[source]` section
+   - Create queue entry: `status: "success"`, `confidence: "curated"` (recipe existence is authoritative)
+   - ~138 entries
+
+2. **Import `curated.jsonl`** → Merge curated overrides
+   - For each curated entry not already in queue (from step 1), create entry
+   - Set `confidence: "curated"`, `status: "pending"`
+   - ~30 entries (minus overlaps with recipes)
+
+3. **Convert existing homebrew queue** → Keep as pending
+   - For remaining packages in current `priority-queue-homebrew.json`
+   - Set `source: "homebrew:<name>"`, `confidence: "auto"`, `status: "pending"`
+   - ~5000 entries
+
+This immediately unblocks the pipeline: curated overrides fix bat/fd/rg, recipes are marked done, homebrew packages continue processing.
+
+**Bootstrap Phase B: Multi-ecosystem coverage**
+
+Run locally after Phase A is merged:
+
+1. **Discover packages from other ecosystems**
+   - cargo: crates.io most-downloaded CLI tools
+   - npm: popular CLI packages
+   - pypi: top packages with entry_points
+   - rubygems: gems with executables
+
+2. **Run disambiguation on all packages**
+   - New packages from step 1
+   - Existing homebrew packages that might have better sources
+   - Rate limit locally (sleep between API calls)
+
+3. **Submit as PR**
+   - Full multi-ecosystem queue with pre-resolved sources
+   - Audit logs for transparency
+
+After both bootstrap phases, the weekly seeding workflow handles incremental updates.
+
 **Step 1: Build incremental seeding infrastructure**
 
 1. Create `cmd/seed-queue/main.go` with:
@@ -1805,9 +1851,9 @@ result, err := discover.Disambiguate("ripgrep", opts)
 3. Filter out `github:` sources that require LLM (deterministic-only batching).
 
 **API call estimation**:
-- Initial seeding: ~5K disambiguation calls (one-time)
+- Initial seeding: ~5K disambiguation calls (one-time, run locally during Bootstrap Phase B)
 - Weekly maintenance: ~50 new + ~200 stale + ~10 failures = ~260 calls
-- Rate limits are non-issue after initial seeding
+- Rate limits are non-issue in CI after bootstrap is complete
 
 **Deliverables:**
 - New `cmd/seed-queue/` command
