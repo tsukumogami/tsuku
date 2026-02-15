@@ -133,7 +133,12 @@ Every dashboard panel links to a dedicated page, and every list item links to a 
 **Main dashboard (index.html)** shows summary panels:
 - Each panel displays a preview (e.g., last 5 failures, recent 3 runs)
 - Each panel header is clickable → navigates to full list page
-- "Pipeline Health" shows circuit breaker state per ecosystem, last successful batch, time since last recipe
+- "Pipeline Health" panel shows:
+  - **Pipeline Status**: "Running" / "Stalled" (based on last_run timestamp)
+  - **Last Run**: "1 hour ago (0/10 succeeded)" - shows pipeline is alive even with failures
+  - **Last Success**: "9 days ago (2 recipes)" - when recipes were last merged
+  - **Runs Since Success**: "156 runs" - quantifies the drought
+  - **Circuit Breaker**: per-ecosystem state (closed/open/half-open)
 
 **List pages** show complete data:
 - `failures.html`: All failures with filtering by category, ecosystem, date range
@@ -453,15 +458,30 @@ type FailureRecord struct {
         "consecutive_failures": 0
       }
     },
-    "last_successful_batch": {
+    "last_run": {
+      "batch_id": "2026-02-15-homebrew",
+      "ecosystem": "homebrew",
+      "timestamp": "2026-02-15T13:45:21Z",
+      "succeeded": 0,
+      "failed": 10,
+      "total": 10
+    },
+    "last_successful_run": {
       "batch_id": "2026-02-06-homebrew",
       "recipes_merged": 2,
       "timestamp": "2026-02-06T20:45:08Z"
     },
+    "runs_since_last_success": 156,
+    "hours_since_last_run": 1,
     "hours_since_recipe_merged": 213
   }
 }
 ```
+
+This distinguishes:
+- **last_run**: Most recent batch execution (shows pipeline is alive even with 0 recipes)
+- **last_successful_run**: Most recent batch that produced recipes
+- **runs_since_last_success**: How many batches have run without merging recipes (156 runs = ~6.5 days at hourly)
 
 **Failures section** (all failures, not just recent):
 ```json
@@ -607,6 +627,9 @@ Add failure debugging and full navigation to the dashboard.
 - All list items are clickable and navigate to detail pages
 - Failure detail page shows full error output (not truncated)
 - No need to inspect JSON files for any information
+- Pipeline Health clearly distinguishes "last run" from "last successful run"
+- A pipeline running hourly with 0 successes shows as "Running" not stalled
+- "Runs since success" counter shows how many batches have failed to produce recipes
 
 ### Phase 2: Disambiguation Integration
 
