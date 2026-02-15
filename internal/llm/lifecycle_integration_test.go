@@ -282,17 +282,32 @@ func TestIntegration_ShortTimeoutTriggersShutdown(t *testing.T) {
 	skipIfModelCDNUnavailable(t)
 
 	tsukuHome := t.TempDir()
+	os.Setenv("TSUKU_HOME", tsukuHome)
+	defer os.Unsetenv("TSUKU_HOME")
 
-	// Start daemon with short 2s timeout
-	daemon := startDaemon(t, tsukuHome, 2*time.Second)
+	// Start daemon with short 5s timeout (gives some buffer for model loading)
+	daemon := startDaemon(t, tsukuHome, 5*time.Second)
 
-	// Wait for it to be ready
+	// Wait for socket to be available
 	require.Eventually(t, func() bool {
 		return isDaemonReady(tsukuHome)
-	}, 10*time.Second, 100*time.Millisecond, "daemon should become ready")
+	}, 10*time.Second, 100*time.Millisecond, "daemon socket should become ready")
 
-	// Wait for idle timeout (2s + buffer)
-	time.Sleep(3 * time.Second)
+	// Wait for model to be fully loaded (daemon in idle timeout loop).
+	// This GetStatus call will reset the idle timeout when it succeeds.
+	provider := NewLocalProvider()
+	defer provider.Close()
+	require.Eventually(t, func() bool {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		status, err := provider.GetStatus(ctx)
+		return err == nil && status != nil && status.Ready
+	}, 3*time.Minute, 1*time.Second, "daemon should be fully ready (model loaded)")
+	t.Log("Daemon fully ready, starting idle timeout test...")
+
+	// Wait for idle timeout (5s + buffer)
+	// The GetStatus call above reset the timeout, so we need to wait > 5s
+	time.Sleep(7 * time.Second)
 
 	// Verify daemon stopped
 	require.Eventually(t, func() bool {

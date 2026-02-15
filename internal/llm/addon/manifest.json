@@ -10,8 +10,8 @@
       "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
     },
     "linux-amd64": {
-      "url": "https://releases.tsuku.dev/tsuku-llm/v0.1.0/tsuku-llm-linux-amd64",
-      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      "url": "file:///home/dgazineu/.tsuku/tools/tsuku-llm/0.1.0/tsuku-llm",
+      "sha256": "526f663e88f6bdc461f6df51590b39fb0db6ecbbcdea428bdcdd3f5987d979ca"
     },
     "linux-arm64": {
       "url": "https://releases.tsuku.dev/tsuku-llm/v0.1.0/tsuku-llm-linux-arm64",

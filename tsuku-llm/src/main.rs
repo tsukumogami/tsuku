@@ -146,6 +146,9 @@ struct LlmServer {
     /// Signal to initiate shutdown.
     shutdown_tx: mpsc::Sender<()>,
 
+    /// Signal that there's activity (resets idle timeout).
+    activity_tx: mpsc::Sender<()>,
+
     /// Whether the server is shutting down.
     shutting_down: Arc<AtomicBool>,
 
@@ -167,6 +170,7 @@ impl LlmServer {
         model_name: String,
         hardware_profile: hardware::HardwareProfile,
         shutdown_tx: mpsc::Sender<()>,
+        activity_tx: mpsc::Sender<()>,
         model: Arc<LlamaModel>,
         context: LlamaContext,
     ) -> Self {
@@ -174,6 +178,7 @@ impl LlmServer {
             model_name,
             hardware_profile,
             shutdown_tx,
+            activity_tx,
             shutting_down: Arc::new(AtomicBool::new(false)),
             in_flight: Arc::new(AtomicUsize::new(0)),
             model,
@@ -331,6 +336,9 @@ impl InferenceService for LlmServer {
             return Err(Status::unavailable("Server is shutting down"));
         }
 
+        // Signal activity to reset idle timeout (ignore if channel is full)
+        let _ = self.activity_tx.try_send(());
+
         // Track in-flight requests
         self.in_flight.fetch_add(1, Ordering::SeqCst);
         let _guard = scopeguard::guard((), |_| {
@@ -391,15 +399,17 @@ impl InferenceService for LlmServer {
         // After single-token decodes, logits are at index 0.
         let mut logits_idx = (tokens.len() - 1) as i32;
 
-        // Generation timeout: 30 seconds max per turn
-        const GENERATION_TIMEOUT: Duration = Duration::from_secs(30);
+        // Generation timeout: 5 minutes max per turn.
+        // CPU inference is slow (~18 tokens/sec) and tool call JSON can be very verbose,
+        // especially for the extract_pattern tool which includes platform mappings.
+        const GENERATION_TIMEOUT: Duration = Duration::from_secs(300);
         let generation_start = std::time::Instant::now();
         let mut timed_out = false;
 
         for _ in 0..max_tokens {
             // Check timeout
             if generation_start.elapsed() > GENERATION_TIMEOUT {
-                warn!("Generation timeout reached after 30s");
+                warn!("Generation timeout reached after 5 minutes");
                 timed_out = true;
                 break;
             }
@@ -498,6 +508,9 @@ impl InferenceService for LlmServer {
         &self,
         _request: Request<StatusRequest>,
     ) -> Result<Response<StatusResponse>, Status> {
+        // Signal activity to reset idle timeout (ignore if channel is full)
+        let _ = self.activity_tx.try_send(());
+
         let response = StatusResponse {
             ready: !self.shutting_down.load(Ordering::SeqCst),
             model_name: self.model_name.clone(),
@@ -754,19 +767,30 @@ async fn main() -> Result<()> {
     let model = Arc::new(model);
     info!("Model loaded successfully");
 
-    // Create inference context
-    let context_params = ContextParams::default();
+    // Create inference context with larger context window and batch size.
+    // Default context is 512, but we need more for tool calling prompts.
+    // Multi-turn conversations with tool results can easily exceed 8K tokens.
+    // Batch size must be large enough to process the entire prompt at once.
+    let context_params = ContextParams {
+        n_ctx: 16384,
+        n_batch: 16384,
+        ..Default::default()
+    };
     let context = LlamaContext::new(model.clone(), context_params).context("Failed to create context")?;
     info!("Inference context created");
 
     // Create shutdown channel
     let (shutdown_tx, mut shutdown_rx) = mpsc::channel::<()>(1);
 
+    // Create activity channel for idle timeout reset
+    let (activity_tx, mut activity_rx) = mpsc::channel::<()>(16);
+
     // Create the server
     let server = LlmServer::new(
         model_name,
         hardware_profile,
         shutdown_tx.clone(),
+        activity_tx,
         model,
         context,
     );
@@ -783,21 +807,37 @@ async fn main() -> Result<()> {
             info!("Shutdown signal received");
         });
 
-    // Main event loop
-    let shutdown_reason = tokio::select! {
-        result = server_future => {
-            result.context("Server error")?;
-            "server stopped"
+    // Main event loop with activity-based idle timeout.
+    // The idle timeout resets whenever there's activity (request starts).
+    let shutdown_reason: &str;
+    let mut idle_deadline = tokio::time::Instant::now() + idle_timeout;
+
+    // Pin the server future so we can poll it in a loop
+    tokio::pin!(server_future);
+
+    loop {
+        tokio::select! {
+            result = &mut server_future => {
+                result.context("Server error")?;
+                shutdown_reason = "server stopped";
+                break;
+            }
+            _ = tokio::time::sleep_until(idle_deadline) => {
+                info!("Idle timeout reached, initiating shutdown");
+                shutdown_reason = "idle timeout";
+                break;
+            }
+            _ = sigterm.recv() => {
+                info!("SIGTERM received, initiating graceful shutdown");
+                shutdown_reason = "SIGTERM";
+                break;
+            }
+            _ = activity_rx.recv() => {
+                // Activity received, reset the idle deadline
+                idle_deadline = tokio::time::Instant::now() + idle_timeout;
+            }
         }
-        _ = tokio::time::sleep(idle_timeout) => {
-            info!("Idle timeout reached, initiating shutdown");
-            "idle timeout"
-        }
-        _ = sigterm.recv() => {
-            info!("SIGTERM received, initiating graceful shutdown");
-            "SIGTERM"
-        }
-    };
+    }
 
     // Mark server as shutting down
     shutting_down.store(true, Ordering::SeqCst);
