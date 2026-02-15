@@ -1730,7 +1730,6 @@ func (o *Orchestrator) generate(pkg QueueEntry) error {
 ```
 
 No runtime disambiguation lookup needed. The seeding workflow already made the decision.
-```
 
 ## Implementation Approach
 
