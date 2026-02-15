@@ -1,7 +1,10 @@
 package batch
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -106,4 +109,49 @@ func (e *QueueEntry) Validate() error {
 		return fmt.Errorf("invalid queue entry: %s", strings.Join(errs, "; "))
 	}
 	return nil
+}
+
+// Ecosystem extracts the ecosystem prefix from the Source field.
+// For example, "cargo:ripgrep" returns "cargo".
+func (e *QueueEntry) Ecosystem() string {
+	if idx := strings.Index(e.Source, ":"); idx >= 0 {
+		return e.Source[:idx]
+	}
+	return ""
+}
+
+// LoadUnifiedQueue reads a unified queue from disk. Returns an empty queue
+// if the file doesn't exist.
+func LoadUnifiedQueue(path string) (*UnifiedQueue, error) {
+	data, err := os.ReadFile(path)
+	if os.IsNotExist(err) {
+		return &UnifiedQueue{
+			SchemaVersion: 1,
+			Entries:       []QueueEntry{},
+		}, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("read queue: %w", err)
+	}
+	var q UnifiedQueue
+	if err := json.Unmarshal(data, &q); err != nil {
+		return nil, fmt.Errorf("parse queue: %w", err)
+	}
+	return &q, nil
+}
+
+// SaveUnifiedQueue writes the unified queue to disk as formatted JSON.
+func SaveUnifiedQueue(path string, queue *UnifiedQueue) error {
+	dir := filepath.Dir(path)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return fmt.Errorf("create directory: %w", err)
+	}
+
+	queue.UpdatedAt = time.Now().UTC().Format(time.RFC3339)
+	data, err := json.MarshalIndent(queue, "", "  ")
+	if err != nil {
+		return fmt.Errorf("marshal queue: %w", err)
+	}
+	data = append(data, '\n')
+	return os.WriteFile(path, data, 0644)
 }
