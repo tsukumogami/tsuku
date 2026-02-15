@@ -51,7 +51,7 @@ The batch recipe generation pipeline and its dashboard (tsuku.dev/pipeline/) are
 
 **Root cause hypothesis:**
 
-Popular tools (bat, fd, rg, etc.) are mapped to `github:` or `cargo:` sources in `data/disambiguations/curated.jsonl`, but batch generation hardcodes `--from homebrew:<name>`. These packages don't have Homebrew bottles (they're Rust crates distributed via GitHub releases). All 10 packages selected each hour fail deterministic generation because the pipeline tries to extract bottles that don't exist.
+Popular tools (bat, fd, rg, etc.) should use `github:` or `cargo:` sources, but batch generation hardcodes `--from homebrew:<name>`. These packages don't have Homebrew bottles (they're Rust crates distributed via GitHub releases). All 10 packages selected each hour fail deterministic generation because the pipeline tries to extract bottles that don't exist.
 
 **Observed problems:**
 
@@ -105,7 +105,7 @@ Popular tools (bat, fd, rg, etc.) are mapped to `github:` or `cargo:` sources in
 
 **Disambiguation implementation:**
 - `internal/disambiguation/` contains ecosystem routing logic
-- `data/disambiguations/curated.jsonl` stores manual overrides
+- Manual overrides are queue entries with `confidence: "curated"`
 - CLI uses disambiguation in `install` command but not in `create`
 
 ### Queue State (as of Feb 15)
@@ -310,13 +310,15 @@ The seeding workflow discovers new packages and maintains disambiguation freshne
 - `next_retry_at` is set and past → re-disambiguate (exponential backoff after failures)
 - Curated overrides → never auto-refresh (manual only)
 
-**Curated overrides** (`data/disambiguations/curated.jsonl`) take precedence:
-```jsonl
-{"name": "bat", "source": "github:sharkdp/bat", "reason": "pre-built binaries"}
-{"name": "rg", "source": "cargo:ripgrep", "reason": "canonical crate"}
+**Curated overrides** are queue entries with `confidence: "curated"`:
+```json
+{"name": "bat", "source": "github:sharkdp/bat", "confidence": "curated", "curated_reason": "pre-built binaries"}
+{"name": "rg", "source": "cargo:ripgrep", "confidence": "curated", "curated_reason": "canonical crate"}
 ```
 
-Curated entries are never overridden by algorithmic disambiguation. They represent expert knowledge that shouldn't churn. **Curated sources must be validated** during seeding: if a curated source returns 404 or fails deterministic generation in a test run, alert operators rather than silently using a broken override.
+The unified queue is the single source of truth—no separate curated.jsonl file. To add a curated override, edit the queue entry and set `confidence: "curated"`. The seeding workflow skips re-disambiguation for curated entries.
+
+**Curated sources must be validated** during seeding: if a curated source returns 404 or fails deterministic generation in a test run, alert operators rather than silently using a broken override.
 
 **Failure feedback with exponential backoff**:
 Instead of a fixed threshold, use exponential backoff to prevent thrashing:
@@ -347,7 +349,7 @@ Rejected for initial implementation because we want autonomous progress. On-dema
 
 2. **Disambiguation decisions are stable**: A tool's best source rarely changes. This justifies treating disambiguation as durable data with 30-day freshness rather than recomputing weekly.
 
-3. **Curated overrides take precedence**: When an expert has manually specified a source in `curated.jsonl`, the seeding workflow uses it even if quality metrics suggest otherwise. This prevents algorithmic churn on well-known packages.
+3. **Curated overrides take precedence**: Queue entries with `confidence: "curated"` are never re-disambiguated by the seeding workflow. This prevents algorithmic churn on packages where an expert has specified the correct source.
 
 4. **Deterministic generation works for selected sources**: The unified queue assumes `tsuku create --from <source> --deterministic-only` succeeds for the sources disambiguation selects. Sources that require LLM generation are excluded from the queue.
 
@@ -406,7 +408,7 @@ For routing and coverage, we replace the current homebrew-only queue with a unif
 
 Batch generation uses the source directly: `tsuku create --from github:sharkdp/bat`. No runtime disambiguation lookup needed. Packages that require LLM generation (`github:` sources where deterministic fails) are excluded from the queue or marked for manual review.
 
-Curated overrides in `data/disambiguations/curated.jsonl` take precedence over algorithmic decisions. Expert knowledge for packages like `ripgrep` → `cargo:ripgrep` isn't overridden by download count heuristics.
+Curated overrides (queue entries with `confidence: "curated"`) take precedence over algorithmic decisions. Expert knowledge for packages like `ripgrep` → `cargo:ripgrep` isn't overridden by download count heuristics.
 
 Failure categories get refined subcategories to distinguish "no bottle available" from "verify pattern mismatch" from "binary not found". The existing `parseInstallJSON` function extracts subcategory from CLI JSON output.
 
@@ -448,6 +450,7 @@ Visibility changes work independently of queue changes. Even if the unified queu
 │  ├── Recent Runs panel → runs.html                                  │
 │  ├── [NEW] Recent Failures panel → failures.html                    │
 │  ├── [NEW] Pipeline Health panel (breaker state, last success)      │
+│  ├── [NEW] Curated Overrides panel → curated.html                   │
 │  └── Disambiguation panel → disambiguations.html                    │
 │                                                                     │
 │  [NEW] failures.html (list all failures, filterable)                │
@@ -475,11 +478,18 @@ Visibility changes work independently of queue changes. Even if the unified queu
 │  pending.html, blocked.html, success.html (existing, enhanced)      │
 │  └── Each row → package detail or disambiguation page               │
 │                                                                     │
+│  [NEW] curated.html (all manual overrides)                          │
+│  ├── Table: package, source, reason, added_by, added_at             │
+│  ├── Shows all entries with confidence="curated"                    │
+│  ├── Actions: Add override, Remove override (links to GitHub PR)    │
+│  └── Validation status: which overrides have broken sources         │
+│                                                                     │
 │  dashboard.json                                                     │
 │  ├── queue: { total, by_status, packages }                         │
 │  ├── blockers: [...]                                                │
 │  ├── runs: [...]                                                    │
-│  ├── disambiguations: { total, by_reason, need_review }             │
+│  ├── disambiguations: { total, by_confidence, need_review }         │
+│  ├── [NEW] curated: [{ name, source, reason, validation_status }]   │
 │  ├── [NEW] failures: [{ id, package, category, subcategory, ... }]  │
 │  ├── [NEW] health: { per_ecosystem_breaker, last_success, ... }     │
 │  └── generated_at                                                   │
@@ -544,8 +554,8 @@ Visibility changes work independently of queue changes. Even if the unified queu
 │  data/failures/*.jsonl                                              │
 │  └── [MODIFY] records now include subcategory field                 │
 │                                                                     │
-│  data/disambiguations/curated.jsonl                                 │
-│  └── (existing, read by seed-queue as overrides)                    │
+│  data/disambiguations/audit/<name>.json                             │
+│  └── (NEW) Audit logs for debugging disambiguation decisions        │
 │                                                                     │
 │  batch-control.json                                                 │
 │  └── (existing, read by queue-analytics for health display)         │
@@ -646,7 +656,7 @@ flowchart LR
         fails[data/failures/*.jsonl]
         metrics[data/metrics/batch-runs.jsonl]
         control[batch-control.json]
-        disamb[data/disambiguations/curated.jsonl]
+        audit[data/disambiguations/audit/]
     end
 
     subgraph Processing["Processing"]
@@ -1239,6 +1249,48 @@ Every element described below is clickable unless marked (static).
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
+#### Curated Overrides (`curated.html`)
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│  ← Back to Dashboard                                                │
+│                                                                     │
+│  Curated Overrides (28 total, 2 have validation errors)            │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│  These are manual source selections that override algorithmic       │
+│  disambiguation. They represent expert knowledge about where a      │
+│  package should be sourced from.                                    │
+│                                                                     │
+│  ┌───────────────────────────────────────────────────────────────┐ │
+│  │ Package  │ Source               │ Reason            │ Status  │ │
+│  ├──────────┼──────────────────────┼───────────────────┼─────────┤ │
+│  │ ripgrep  │ cargo:ripgrep        │ canonical crate   │ ✓ valid │ │
+│  │ bat      │ github:sharkdp/bat   │ pre-built bins    │ ✓ valid │ │
+│  │ fd       │ github:sharkdp/fd    │ pre-built bins    │ ✓ valid │ │
+│  │ exa      │ cargo:exa            │ canonical crate   │ ⚠ 404   │ │
+│  │ [→ source no longer exists, needs update]                     │ │
+│  │ delta    │ github:dandavison/d  │ pre-built bins    │ ✓ valid │ │
+│  │ ...                                                           │ │
+│  └───────────────────────────────────────────────────────────────┘ │
+│                                                                     │
+│  Actions (all link to GitHub - no direct dashboard execution):      │
+│  ┌───────────────────────────────────────────────────────────────┐ │
+│  │  [Add Override]     → Opens PR template to edit queue          │ │
+│  │  [Remove Override]  → Opens PR template to set confidence=null │ │
+│  │  [Fix Invalid]      → Opens issue for broken curated sources   │ │
+│  └───────────────────────────────────────────────────────────────┘ │
+│                                                                     │
+│  ┌─ Summary ──────────────────────────────────────────────────────┐ │
+│  │  Total: 28                                                      │ │
+│  │  Valid: 26 (sources exist and respond)                          │ │
+│  │  Invalid: 2 (source 404 or validation failed)                   │ │
+│  │  Last validated: 2026-02-15T06:00:00Z (by seeding workflow)    │ │
+│  └───────────────────────────────────────────────────────────────┘ │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
 #### Success Packages (`success.html`)
 
 ```
@@ -1417,11 +1469,27 @@ The new queue format includes pre-resolved sources with freshness tracking:
 - `name`: Tool name (used for display and deduplication)
 - `source`: Pre-resolved source in `ecosystem:identifier` format
 - `priority`: Priority level (1 = most important)
-- `status`: Queue status: `pending`, `success`, `failed`, `blocked`
+- `status`: Queue status (see below)
 - `confidence`: How source was selected: `curated`, `auto` (10x threshold with secondary signals)
 - `disambiguated_at`: When disambiguation was last run (for freshness checking)
 - `next_retry_at`: Next eligible retry time (null if no backoff, ISO timestamp if backing off)
 - `failure_count`: Count of failures (used for exponential backoff calculation)
+
+**Status values:**
+- `pending`: Ready for batch processing
+- `success`: Recipe generated and merged
+- `failed`: Batch generation failed (will retry with backoff)
+- `blocked`: Waiting on dependency
+- `requires_manual`: Cannot generate deterministically, needs LLM or human intervention
+- `excluded`: Permanently excluded (won't process)
+
+**Packages requiring manual creation** (status: `requires_manual`):
+Packages that disambiguate to `github:` sources often can't generate deterministically because GitHub releases lack standardized metadata. These packages:
+1. Stay in the queue with `status: "requires_manual"`
+2. Are skipped by batch generation (no wasted CI cycles)
+3. Appear in the dashboard under a "Requires Manual" filter
+4. Can be processed via `tsuku create --from <source>` interactively (with LLM)
+5. Move to `success` when someone manually creates and merges the recipe
 
 **Note:** `confidence: "priority"` (ecosystem priority fallback) is NOT valid for auto-selection per DESIGN-disambiguation.md. If secondary signals are missing, the entry is flagged for manual review rather than auto-selected.
 
