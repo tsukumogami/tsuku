@@ -307,11 +307,23 @@ The seeding workflow discovers new packages and maintains disambiguation freshne
 3. **Disambiguation phase**: For new/stale tools, call `discover.Disambiguate()` directly
 4. **Merge phase**: Update queue with new entries, preserve existing fresh entries
 
-**Freshness rules**:
-- `disambiguated_at` < 30 days → fresh, skip re-disambiguation
+**Re-disambiguation triggers**:
 - `disambiguated_at` >= 30 days → stale, re-disambiguate
 - `next_retry_at` is set and past → re-disambiguate (exponential backoff after failures)
+- **New source discovered** → re-disambiguate (see below)
 - Curated overrides → never auto-refresh (manual only)
+
+**New source discovery check**:
+When seeding discovers a source for a tool already in the queue, check the audit log:
+```
+discovered_source IN audit[tool].candidates → already considered, skip
+discovered_source NOT IN audit[tool].candidates → new source, re-disambiguate
+```
+
+This handles:
+- **Bootstrap**: Phase A entries have no audit log, so Phase B discoveries trigger disambiguation
+- **New ecosystem added**: Existing tools lack the new ecosystem in their candidates
+- **Normal weekly run**: Discoveries match existing candidates, no re-disambiguation needed
 
 **Curated overrides** are queue entries with `confidence: "curated"`:
 ```json
@@ -518,8 +530,9 @@ Visibility changes work independently of queue changes. Even if the unified queu
 │  ├── Discover new packages from ecosystem feeds                    │
 │  ├── Identify stale records (disambiguated_at > 30 days)           │
 │  ├── Identify packages due for retry (next_retry_at has passed)   │
+│  ├── Identify new sources (discovered NOT IN audit candidates)    │
 │  ├── Validate curated overrides (check sources exist)             │
-│  ├── For each: call discover.Disambiguate() via seed-queue         │
+│  ├── For each flagged: call discover.Disambiguate() via seed-queue │
 │  ├── Alert on source changes for high-priority packages           │
 │  ├── Write audit log to data/disambiguations/audit/               │
 │  ├── Write seeding stats to data/metrics/seeding-runs.jsonl       │
@@ -528,7 +541,7 @@ Visibility changes work independently of queue changes. Even if the unified queu
 │                                                                     │
 │  cmd/seed-queue/main.go (NEW)                                       │
 │  ├── PackageDiscovery (fetch popular packages from each ecosystem) │
-│  ├── FreshnessChecker (identify stale/failing entries)             │
+│  ├── FreshnessChecker (stale/failing/new-source detection)         │
 │  ├── DisambiguationRunner (imports internal/discover directly)     │
 │  └── QueueMerger (update entries, preserve freshness metadata)     │
 │                                                                     │
@@ -1803,7 +1816,7 @@ After both bootstrap phases, the weekly seeding workflow handles incremental upd
 
 1. Create `cmd/seed-queue/main.go` with:
    - `PackageDiscovery`: Fetch popular packages from ecosystem feeds (homebrew formulae, crates.io top, npm popular, etc.)
-   - `FreshnessChecker`: Identify entries needing disambiguation (new, stale >30 days, consecutive_failures >= 3)
+   - `FreshnessChecker`: Identify entries needing disambiguation (stale >30 days, failure backoff, new source discovered)
    - `DisambiguationRunner`: Import `internal/discover` and call disambiguation directly
    - `QueueMerger`: Update queue entries, preserve fresh ones, add freshness metadata
 
