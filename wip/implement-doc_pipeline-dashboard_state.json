@@ -7,7 +7,7 @@
   "started_at": "2026-02-15T20:29:51Z",
   "pr_number": 1704,
   "pr_url": "https://github.com/tsukumogami/tsuku/pull/1704",
-  "integrity_hash": "sha256:2cd4016f181481939bd4d809d40e135dffc8ef75baf65aacd0869f28f26c9c0f",
+  "integrity_hash": "sha256:5342c3b807e148a9288f38da40a5908469a5d0a4c536a869e2422704051ed822",
   "issues": [
     {
       "number": 1697,
@@ -76,8 +76,8 @@
     {
       "number": 1700,
       "title": "ci(batch): recipe merge workflow updates queue status",
-      "status": "implemented",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "dependencies": [
         1697
       ],
