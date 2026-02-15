@@ -23,7 +23,7 @@ use tokio_stream::wrappers::UnixListenerStream;
 use tonic::{Request, Response, Status};
 use tracing::{debug, error, info, warn};
 
-use llama::{ContextParams, GrammarSampler, LlamaContext, LlamaModel, ModelParams, Sampler, json_schema_to_gbnf};
+use llama::{ContextParams, LlamaContext, LlamaModel, ModelParams, Sampler};
 
 // Generated from proto/llm.proto
 pub mod proto {
@@ -200,13 +200,39 @@ impl LlmServer {
     /// {user_message}<|im_end|>
     /// <|im_start|>assistant
     /// ```
-    fn build_prompt(&self, system_prompt: &str, messages: &[proto::Message]) -> String {
+    ///
+    /// When tools are provided, adds tool calling instructions to the system prompt.
+    fn build_prompt(
+        &self,
+        system_prompt: &str,
+        messages: &[proto::Message],
+        tools: &[proto::ToolDef],
+    ) -> String {
         let mut prompt = String::new();
 
-        // Add system prompt if present
-        if !system_prompt.is_empty() {
+        // Build effective system prompt with tool instructions if tools provided
+        let effective_system_prompt = if tools.is_empty() {
+            system_prompt.to_string()
+        } else {
+            let tool_descriptions: Vec<String> = tools
+                .iter()
+                .map(|t| format!("- {}: {}", t.name, t.description))
+                .collect();
+
+            format!(
+                "{}\n\nYou have access to the following tools:\n{}\n\n\
+                 When you need to use a tool, respond with ONLY a JSON object in this exact format:\n\
+                 {{\"name\": \"tool_name\", \"arguments\": {{...}}}}\n\n\
+                 Do not include any other text before or after the JSON.",
+                system_prompt,
+                tool_descriptions.join("\n")
+            )
+        };
+
+        // Add system prompt
+        if !effective_system_prompt.is_empty() {
             prompt.push_str("<|im_start|>system\n");
-            prompt.push_str(system_prompt);
+            prompt.push_str(&effective_system_prompt);
             prompt.push_str("<|im_end|>\n");
         }
 
@@ -229,16 +255,56 @@ impl LlmServer {
         prompt
     }
 
-    /// Parse tool call from JSON content.
+    /// Extract JSON object from model output.
+    ///
+    /// The model may output text before/after the JSON. This function finds
+    /// the first complete JSON object in the content.
+    fn extract_json(content: &str) -> Option<&str> {
+        // Find the first '{' and match to its closing '}'
+        let start = content.find('{')?;
+        let bytes = content.as_bytes();
+        let mut depth = 0;
+        let mut in_string = false;
+        let mut escape_next = false;
+
+        for (i, &byte) in bytes[start..].iter().enumerate() {
+            if escape_next {
+                escape_next = false;
+                continue;
+            }
+
+            match byte {
+                b'\\' if in_string => escape_next = true,
+                b'"' => in_string = !in_string,
+                b'{' if !in_string => depth += 1,
+                b'}' if !in_string => {
+                    depth -= 1;
+                    if depth == 0 {
+                        return Some(&content[start..start + i + 1]);
+                    }
+                }
+                _ => {}
+            }
+        }
+        None
+    }
+
+    /// Parse tool call from content, extracting JSON if needed.
     ///
     /// Expected format: {"name": "tool_name", "arguments": {...}}
     fn parse_tool_call(content: &str) -> Option<proto::ToolCall> {
-        let value: serde_json::Value = serde_json::from_str(content.trim()).ok()?;
+        // Try to extract JSON from the content
+        let json_str = Self::extract_json(content).or_else(|| {
+            // Fallback: try parsing the trimmed content directly
+            Some(content.trim())
+        })?;
+
+        let value: serde_json::Value = serde_json::from_str(json_str).ok()?;
 
         let name = value.get("name")?.as_str()?;
         let arguments = value.get("arguments")?;
 
-        // Generate a simple unique ID using timestamp and hash
+        // Generate a simple unique ID using timestamp
         let id = format!(
             "call_{}",
             std::time::SystemTime::now()
@@ -280,7 +346,7 @@ impl InferenceService for LlmServer {
         );
 
         // Build prompt from messages using ChatML format
-        let prompt = self.build_prompt(&req.system_prompt, &req.messages);
+        let prompt = self.build_prompt(&req.system_prompt, &req.messages, &req.tools);
         debug!("Built prompt ({} chars):\n{}", prompt.len(), &prompt[..prompt.len().min(500)]);
 
         // Acquire context lock for inference
@@ -313,54 +379,12 @@ impl InferenceService for LlmServer {
         };
         let mut pos = tokens.len() as i32;
 
-        // Check if we should use grammar-constrained generation
-        // Priority: json_schema field > first tool's parameters_schema
-        let grammar_schema: Option<String> = if !req.json_schema.is_empty() {
-            Some(req.json_schema.clone())
-        } else if !req.tools.is_empty() {
-            // Use the first tool's schema for grammar constraints
-            let tool = &req.tools[0];
-            if !tool.parameters_schema.is_empty() {
-                Some(tool.parameters_schema.clone())
-            } else {
-                None
-            }
-        } else {
-            None
-        };
-
-        // Create grammar sampler if schema is provided
-        let mut grammar_sampler: Option<GrammarSampler> = if let Some(schema_str) = grammar_schema {
-            match serde_json::from_str::<serde_json::Value>(&schema_str) {
-                Ok(schema) => {
-                    match json_schema_to_gbnf(&schema) {
-                        Ok(grammar) => {
-                            debug!("Generated GBNF grammar:\n{}", grammar);
-                            match GrammarSampler::new(ctx.model().vocab(), &grammar, "root") {
-                                Ok(sampler) => {
-                                    info!("Using grammar-constrained generation");
-                                    Some(sampler)
-                                }
-                                Err(e) => {
-                                    warn!("Failed to create grammar sampler: {}. Falling back to unconstrained.", e);
-                                    None
-                                }
-                            }
-                        }
-                        Err(e) => {
-                            warn!("Failed to generate grammar from schema: {}. Falling back to unconstrained.", e);
-                            None
-                        }
-                    }
-                }
-                Err(e) => {
-                    warn!("Failed to parse JSON schema: {}. Falling back to unconstrained.", e);
-                    None
-                }
-            }
-        } else {
-            None
-        };
+        // NOTE: Grammar-constrained generation is disabled due to llama.cpp compatibility
+        // issues with Qwen models (crashes with "Unexpected empty grammar stack").
+        // See: https://github.com/ggml-org/llama.cpp/issues/11938
+        // TODO: Re-enable when upstream fix is available (file issue to track).
+        // Instead, we use prompt engineering + JSON extraction.
+        let _ = &req.json_schema; // Suppress unused warning
 
         // Track the batch index where logits are available.
         // After prompt decode, logits are at the last token index.
@@ -371,7 +395,6 @@ impl InferenceService for LlmServer {
         const GENERATION_TIMEOUT: Duration = Duration::from_secs(30);
         let generation_start = std::time::Instant::now();
         let mut timed_out = false;
-        let using_grammar = grammar_sampler.is_some();
 
         for _ in 0..max_tokens {
             // Check timeout
@@ -381,17 +404,9 @@ impl InferenceService for LlmServer {
                 break;
             }
 
-            // Sample next token (grammar-constrained or regular)
-            let next_token = if let Some(ref mut gs) = grammar_sampler {
-                // Grammar sampler handles everything internally
-                let token = gs.sample(ctx.as_ptr(), logits_idx);
-                gs.accept(token);
-                token
-            } else {
-                // Regular sampling: get logits and sample
-                let logits = ctx.get_logits(logits_idx);
-                self.sampler.sample(logits)
-            };
+            // Sample next token using regular sampling
+            let logits = ctx.get_logits(logits_idx);
+            let next_token = self.sampler.sample(logits);
 
             // Check for EOS (token 0 or 2 are common EOS tokens)
             if next_token == 0 || next_token == 2 {
@@ -429,20 +444,20 @@ impl InferenceService for LlmServer {
             }
         );
 
-        // Parse tool calls if we used grammar-constrained generation with tools
+        // Parse tool calls if tools were provided in the request
         let mut tool_calls = Vec::new();
         let stop_reason = if timed_out {
             "timeout".to_string()
         } else if output_tokens.len() >= max_tokens {
             "max_tokens".to_string()
-        } else if using_grammar && !req.tools.is_empty() {
-            // Try to parse tool call from content
+        } else if !req.tools.is_empty() {
+            // Try to parse tool call from content (using JSON extraction)
             if let Some(tool_call) = Self::parse_tool_call(&content) {
                 info!("Parsed tool call: {} with args {}", tool_call.name, tool_call.arguments_json);
                 tool_calls.push(tool_call);
                 "tool_use".to_string()
             } else {
-                warn!("Grammar was used but failed to parse tool call from: {}", content);
+                debug!("No tool call found in response: {}", content);
                 "end_turn".to_string()
             }
         } else {
