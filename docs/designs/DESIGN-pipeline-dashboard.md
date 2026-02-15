@@ -543,6 +543,22 @@ Visibility changes work independently of queue changes. Even if the unified queu
 └─────────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────────┐
+│                   Queue Status Update (on recipe merge)              │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│  update-queue-status.yml (NEW - triggered on push to main)          │
+│  ├── Detect added/modified files in recipes/                       │
+│  ├── Extract package names from recipe file paths                  │
+│  ├── Update matching queue entries: status → "success"             │
+│  └── Commit updated priority-queue.json                            │
+│                                                                     │
+│  This is the SAME workflow for both:                                │
+│  • Batch-generated recipes (automated PR merge)                    │
+│  • Manually-created recipes (human PR merge)                       │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────┐
 │                            Data Files                                │
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                     │
@@ -1489,7 +1505,14 @@ Packages that disambiguate to `github:` sources often can't generate determinist
 2. Are skipped by batch generation (no wasted CI cycles)
 3. Appear in the dashboard under a "Requires Manual" filter
 4. Can be processed via `tsuku create --from <source>` interactively (with LLM)
-5. Move to `success` when someone manually creates and merges the recipe
+
+**Recipe merge triggers status update** (single flow, two triggers):
+When a recipe PR merges to main, a push-triggered workflow updates the queue:
+1. Detect which recipe files were added/modified in the push
+2. Find matching queue entries by package name
+3. Set `status: "success"` for those entries
+
+This is the same mechanism for both automated (batch-created) and manual (human-created) recipes. The difference is only who creates the PR—the merge-triggered status update is identical.
 
 **Note:** `confidence: "priority"` (ecosystem priority fallback) is NOT valid for auto-selection per DESIGN-disambiguation.md. If secondary signals are missing, the entry is flagged for manual review rather than auto-selected.
 
