@@ -5,17 +5,18 @@ problem: |
   this package fail?" Operators spend 3-5 minutes per failure digging through JSONL
   files and GitHub Actions logs. Failure categories are too coarse -- exit codes 6
   and 7 both map to "validation_failed" -- and circuit breaker state is invisible.
-  Four new pages specified by the parent design (failures, failure detail, run
-  detail, curated overrides) don't exist yet.
+  Five new pages specified by the parent design (failures, failure detail, run
+  detail, package detail, curated overrides) don't exist yet, and six existing
+  pages need enhancements for drill-down navigation.
 decision: |
   Extend queue-analytics to produce three new dashboard.json sections:
   failure_details (last 200 records with error messages, subcategories, platforms),
   health (circuit breaker state, last success, runs-since-success from
   batch-control.json), and curated overrides. Subcategory classification happens at
   dashboard generation time using bracketed tags from deterministic generation
-  output, with regex and exit code fallbacks. Four new HTML pages and two modified
-  pages consume this data for drill-down navigation from panels to lists to detail
-  pages. All pages use an HTML-escaping utility to prevent XSS.
+  output, with regex and exit code fallbacks. Five new HTML pages and six enhanced
+  existing pages consume this data for drill-down navigation from panels to lists
+  to detail pages. All pages use an HTML-escaping utility to prevent XSS.
 rationale: |
   All three decisions keep data flow in a single tool (queue-analytics) and avoid
   changes to the batch orchestrator or CLI. Inline failure details add ~200KB to an
@@ -59,16 +60,18 @@ The parent design (DESIGN-pipeline-dashboard.md) specified high-level requiremen
 ### Scope
 
 **In scope:**
-- New dashboard pages: `failures.html`, `failure.html`, `run.html`, `seeding.html`, `curated.html`
+- New dashboard pages: `failures.html`, `failure.html`, `run.html`, `package.html`, `curated.html`
+- Enhanced existing pages: `index.html`, `pending.html`, `blocked.html`, `success.html`, `runs.html`, `disambiguations.html`
 - Navigation flows between panels, list pages, and detail pages
-- `dashboard.json` schema extensions for `health`, `failures` (with detail), and `curated` sections
+- `dashboard.json` schema extensions for `health`, `failure_details`, and `curated` sections
 - Failure subcategory taxonomy with mapping from CLI exit codes and JSON output
 - `queue-analytics` command changes to populate new fields
 - URL parameter patterns for filtering and deep linking
 - Pipeline Health panel with circuit breaker state, last success tracking, runs-since-success
+- XSS mitigation via `esc()` utility applied to all pages
 
 **Out of scope:**
-- Seeding workflow implementation (Phase 3, separate design)
+- Seeding workflow implementation and `seeding.html` (Phase 3, separate design)
 - Queue schema migration (Phase 1, already has issues #1697-#1700)
 - Dashboard CSS/styling redesign
 - Alerting system (mentioned in parent design but not part of observability pages)
@@ -282,7 +285,7 @@ The core change is in `queue-analytics`. Today it reads failure JSONL files and 
 
 Subcategory classification happens at dashboard generation time, not in the batch orchestrator. The parser first looks for bracketed tags (`[no_bottles]`, `[complex_archive]`) that deterministic generation already emits, then falls back to regex matching on the message text, and finally uses exit code + category as a last resort. This ships without any CLI or orchestrator changes while producing useful subcategories for most failure records.
 
-Four new HTML pages use this data: `failures.html` lists all failures with filtering by category, ecosystem, and date; `failure.html?id=<id>` shows a single failure's full record; `run.html?id=<batch-id>` shows batch summary with available metrics; `curated.html` lists curated overrides with validation status. `seeding.html` is deferred to Phase 3 when there's data to show. The existing `index.html` gets a Pipeline Health panel showing circuit breaker state, last run, last success, and runs since last success. All pages use an HTML-escaping utility to prevent XSS via data values or URL parameters.
+Five new HTML pages use this data: `failures.html` lists all failures with filtering; `failure.html?id=<id>` shows a single failure's full record; `run.html?id=<batch-id>` shows batch summary; `package.html?id=<pkg>` shows per-package status, failure history, and disambiguation; `curated.html` lists curated overrides with validation status. Six existing pages get enhancements: `index.html` gains Pipeline Health, Recent Failures, and Curated Overrides panels; `pending.html`, `blocked.html`, and `success.html` gain filters and link rows to `package.html`; `runs.html` gains filters and summary stats; `disambiguations.html` gains filter dropdowns. `seeding.html` is deferred to Phase 3. All pages use an HTML-escaping utility to prevent XSS via data values or URL parameters.
 
 Every panel on the main dashboard links to a list page. Every row in a list page links to a detail page. Every detail page cross-links to related items (a failure links to its batch run, a run links to its failures). URL parameters control filtering, so links are shareable.
 
@@ -336,14 +339,24 @@ Extending queue-analytics to read batch-control.json (Decision 3) keeps one tool
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                     │
 │  MODIFIED:                                                          │
-│    index.html     -> add Pipeline Health panel, Recent Failures     │
-│                      panel, Seeding Stats panel, Curated panel      │
-│    failed.html    -> rename to failures.html, add subcategory       │
-│                      column, add filters, link rows to detail       │
+│    index.html          -> add Pipeline Health, Recent Failures,     │
+│                           Curated Overrides panels                  │
+│    failed.html         -> rename to failures.html, add subcategory  │
+│                           column, filters, link rows to detail      │
+│    runs.html           -> add ecosystem/status filters, summary     │
+│    pending.html        -> add ecosystem filter, search, ecosystem   │
+│                           breakdown, link rows to package.html      │
+│    blocked.html        -> add Top Blockers analysis panel,          │
+│                           link rows to package.html                 │
+│    success.html        -> add date filters, Success Timeline chart, │
+│                           recipe links, link rows to package.html   │
+│    disambiguations.html-> add status/reason filters, by-reason      │
+│                           breakdown summary                         │
 │                                                                     │
 │  NEW:                                                               │
 │    failure.html   -> single failure detail (by ?id= param)         │
 │    run.html       -> single batch run detail (by ?id= param)       │
+│    package.html   -> per-package detail with history (?id= param)  │
 │    curated.html   -> curated overrides with validation status       │
 │                                                                     │
 │  All pages:                                                         │
@@ -351,6 +364,7 @@ Extending queue-analytics to read batch-control.json (Decision 3) keeps one tool
 │    - Filter/render client-side with vanilla JS                     │
 │    - URL params for filtering (?category=, ?ecosystem=, ?id=)      │
 │    - Back navigation to parent page                                 │
+│    - esc() utility for all innerHTML interpolation                  │
 │                                                                     │
 └─────────────────────────────────────────────────────────────────────┘
 ```
@@ -533,6 +547,7 @@ flowchart TD
         RR[Recent Runs]
         FC[Failure Categories]
         CO[Curated Overrides]
+        DI[Disambiguations]
     end
 
     subgraph Lists["List Pages"]
@@ -542,11 +557,13 @@ flowchart TD
         runs[runs.html]
         success[success.html]
         curated[curated.html]
+        disamb[disambiguations.html]
     end
 
     subgraph Details["Detail Pages"]
         fail[failure.html?id=]
         run[run.html?id=]
+        pkg[package.html?id=]
     end
 
     QS --> pending
@@ -556,23 +573,29 @@ flowchart TD
     RR --> runs
     FC --> failures
     CO --> curated
+    DI --> disamb
     PH -->|Last Run| run
     PH -->|Last Success| run
     PH -->|Runs Since| runs
 
     failures --> fail
     runs --> run
+    pending --> pkg
+    blocked --> pkg
+    success --> pkg
 
     fail --> run
+    fail --> pkg
     run --> fail
+    pkg --> fail
 
     classDef main fill:#e1f5fe
     classDef list fill:#fff9c4
     classDef detail fill:#c8e6c9
 
-    class PH,QS,TB,RF,RR,FC,CO main
-    class pending,blocked,failures,runs,success,curated list
-    class fail,run detail
+    class PH,QS,TB,RF,RR,FC,CO,DI main
+    class pending,blocked,failures,runs,success,curated,disamb list
+    class fail,run,pkg detail
 ```
 
 ### URL Parameter Patterns
@@ -582,9 +605,41 @@ flowchart TD
 | `failures.html` | `?category=`, `?subcategory=`, `?ecosystem=`, `?batch_id=` | `failures.html?category=validation_failed&ecosystem=homebrew` |
 | `failure.html` | `?id=` | `failure.html?id=homebrew-2026-02-15T13-45-21Z-neovim` |
 | `run.html` | `?id=` | `run.html?id=homebrew-20260215T130000Z` |
-| `runs.html` | `?ecosystem=`, `?since_success=true` | `runs.html?ecosystem=cargo` |
-| `pending.html` | `?ecosystem=`, `?priority=` | `pending.html?ecosystem=homebrew` |
+| `runs.html` | `?ecosystem=`, `?status=`, `?since_success=true` | `runs.html?ecosystem=cargo` |
+| `package.html` | `?id=` | `package.html?id=homebrew:neovim` |
+| `pending.html` | `?ecosystem=`, `?priority=`, `?search=` | `pending.html?ecosystem=homebrew` |
+| `blocked.html` | `?pkg=` | `blocked.html?pkg=glib` |
+| `success.html` | `?ecosystem=`, `?from=`, `?to=` | `success.html?ecosystem=homebrew` |
+| `disambiguations.html` | `?status=`, `?reason=` | `disambiguations.html?status=needs_review` |
 | `curated.html` | `?status=` | `curated.html?status=invalid` |
+
+### Page Specifications
+
+Visual layouts for all pages are in the [parent design wireframes](DESIGN-pipeline-dashboard.md) (Page Wireframes section). A copy is in `wip/wireframes.md` for implementation reference. This section specifies data sources, content, and interactions.
+
+**`index.html` (enhanced):** Add three new panels. Pipeline Health shows circuit breaker state per ecosystem (from `health.ecosystems`), last run / last success / runs-since-success (from `health`), with each metric linking to the relevant detail or list page. Recent Failures shows the 5 most recent entries from `failure_details`, each linking to `failure.html?id=`. Curated Overrides shows count and invalid count from `curated`, linking to `curated.html`. Failure Categories panel gains subcategory breakdown computed client-side from `failure_details`. Seeding Stats panel is deferred to Phase 3.
+
+**`failures.html` (new, renamed from `failed.html`):** Source: `failure_details` array. Filter dropdowns for category, subcategory, ecosystem. Table columns: package, ecosystem, category, subcategory, timestamp. Each row links to `failure.html?id=`. Client-side pagination for >20 rows. Add `_redirects` entry for `failed.html` 301 redirect.
+
+**`failure.html` (new, detail):** Source: `failure_details` filtered by `?id=`. Shows full record: package (links to `package.html`), ecosystem (links to filtered `failures.html`), category, subcategory, message (up to 500 chars, empty for per-recipe format), exit code, platform(s), batch (links to `run.html`), timestamp. Actions section: "File issue" link to GitHub with pre-filled context; "Retry" and "Mark as won't fix" link to GitHub workflow_dispatch or PR templates (no direct execution from dashboard).
+
+**`run.html` (new, detail):** Source: `runs` filtered by `?id=`, cross-referenced with `failure_details` filtered by `batch_id`. Shows batch summary (ecosystem, timestamp, duration, succeeded/failed counts). Packages Processed table lists failures from this batch, each linking to `failure.html?id=`. Note: per-package success/fail status and platform breakdown require data not currently in metrics JSONL; show what's available now, extend when orchestrator is updated.
+
+**`package.html` (new, detail):** Source: client-side join across `queue` packages, `failure_details`, `disambiguations`, and `blockers`. Status section shows package name, ecosystem, queue status (which list the package appears in). Disambiguation section shows override status and available sources (from `disambiguations`). Attempt History table shows failures for this package (filtered from `failure_details` by package name), each linking to `failure.html?id=`. Actions: GitHub links for retry, skip, exclude, file issue (same pattern as `failure.html` -- link to GitHub, don't execute directly). **Phase 1 dependency:** priority, attempt count, added date, and next_retry_at require the unified queue schema (#1697). Until then, those fields show "available after queue migration" placeholders.
+
+**`pending.html` (enhanced):** Add ecosystem filter dropdown and search box. Add "By Ecosystem" summary chips at bottom, each linking to filtered view. Each table row links to `package.html?id=`. **Phase 1 dependency:** priority and attempt columns require unified queue schema.
+
+**`blocked.html` (enhanced):** Add "Top Blockers" analysis panel. Compute client-side from `blockers` array: invert the dependency graph to show which missing dependencies block the most packages. Each dependency links to `package.html?id=`. Each blocked package row also links to `package.html?id=`.
+
+**`success.html` (enhanced):** Add ecosystem and date range filter dropdowns. Add "Success Timeline" visualization: daily recipe count as a simple bar chart (computed client-side by grouping successes by date). Each row links to `package.html?id=` and has a "View recipe" link to the recipe file on GitHub.
+
+**`runs.html` (enhanced):** Add ecosystem and status filter dropdowns. Add "since last success" checkbox filter. Add summary panel showing last-24h and last-7d aggregates computed client-side from the runs array. Each row links to `run.html?id=`.
+
+**`disambiguations.html` (enhanced):** Add status and reason filter dropdowns. Add "By Reason" summary chips at bottom. Existing table gains links to `package.html?id=` for each package.
+
+**`curated.html` (new):** Source: `curated` array. Table columns: package, source, reason, validation status (badges for valid/invalid/unknown). Actions: GitHub links for add override (PR template), remove override (PR template), fix invalid (issue template). Summary panel shows total, valid, invalid counts. **Phase 1 dependency:** curated data requires queue schema migration (#1697).
+
+**`seeding.html`:** Deferred to Phase 3 (seeding workflow design). No placeholder page.
 
 ### Data Flow
 
@@ -641,23 +696,32 @@ Extend `internal/dashboard/` to populate the new struct fields. Ordered by indep
 
 ### Phase B: Frontend (new pages + modified pages)
 
-All new pages must use an HTML-escaping utility function for all data values and URL parameters interpolated via `innerHTML` (see Security Considerations).
+All new and modified pages must use an HTML-escaping utility function for all data values and URL parameters interpolated via `innerHTML` (see Security Considerations). See `wip/wireframes.md` for visual layouts.
 
 1. **Add `esc()` utility**: HTML-escaping function shared across all dashboard pages. Apply retroactively to existing pages in the same PR.
-2. **Modify `index.html`**: Add Pipeline Health panel, Recent Failures panel (showing last 5 from `failure_details`), Curated Overrides panel (shows placeholder if `curated` is null).
-3. **Rename `failed.html` to `failures.html`**: Add subcategory column, add filter dropdowns (category, ecosystem), make each row a link to `failure.html?id=`. Add `/pipeline/failed.html /pipeline/failures.html 301` redirect to `_redirects`.
-4. **New `failure.html`**: Reads `failure_details` array, filters by `?id=` parameter, renders full record with cross-links to run detail and filtered failures list.
-5. **New `run.html`**: Reads `runs` array, filters by `?id=` parameter, renders batch summary with available data (ecosystem, counts, duration, timestamp).
-6. **New `curated.html`**: Reads `curated` array, renders override table with validation status badges. Shows placeholder if array is null.
+2. **Modify `index.html`**: Add Pipeline Health panel, Recent Failures panel (last 5 from `failure_details`), Curated Overrides panel, subcategory breakdown in Failure Categories panel. Seeding Stats panel deferred to Phase 3.
+3. **Rename `failed.html` to `failures.html`**: Add subcategory column, filter dropdowns (category, subcategory, ecosystem), client-side pagination, make each row link to `failure.html?id=`. Add redirect to `_redirects`.
+4. **New `failure.html`**: Single failure detail by `?id=`. Cross-links to `package.html`, `run.html`, filtered `failures.html`. GitHub action links (file issue, retry, won't-fix).
+5. **New `run.html`**: Single batch run detail by `?id=`. Shows batch summary and lists failures from `failure_details` filtered by `batch_id`.
+6. **New `package.html`**: Per-package detail by `?id=`. Client-side join: queue status from package arrays, failure history from `failure_details`, disambiguation from `disambiguations`, blocker status from `blockers`. GitHub action links. Phase 1 placeholders for priority/attempts fields.
+7. **Enhance `pending.html`**: Add ecosystem filter, search box, ecosystem breakdown summary chips. Link rows to `package.html?id=`.
+8. **Enhance `blocked.html`**: Add Top Blockers analysis panel (inverted dependency graph computed client-side). Link rows and blocker dependencies to `package.html?id=`.
+9. **Enhance `success.html`**: Add ecosystem and date range filters. Add Success Timeline bar chart (daily recipe count). Link rows to `package.html?id=` and recipe files on GitHub.
+10. **Enhance `runs.html`**: Add ecosystem and status filters, since-success checkbox. Add 24h/7d summary panel.
+11. **Enhance `disambiguations.html`**: Add status/reason filter dropdowns and by-reason breakdown summary.
+12. **New `curated.html`**: Override table with validation status badges. GitHub links for add/remove/fix actions. Summary panel. Shows placeholder if `curated` is null.
 
-Note: `seeding.html` is deferred to Phase 3 (seeding workflow design). Adding a placeholder page that says "not configured" adds a navigation dead-end. The Seeding Stats panel on `index.html` will be added when there's data to show.
+Note: `seeding.html` is deferred to Phase 3 (seeding workflow design). The Seeding Stats panel on `index.html` will be added when there's data to show.
 
 ### Dependencies
 
 - Phase A and Phase B can proceed in parallel after the data structures are agreed
-- `curated` section depends on Phase 1's queue schema migration (#1697) being merged
+- **Phase 1 (#1697) dependencies** (features work without Phase 1 but show placeholders):
+  - `package.html`: priority, attempt count, added date, next_retry_at fields
+  - `pending.html`: priority column
+  - `curated.html` / `curated` dashboard.json section: curated override data
 - `seeding.html` deferred to Phase 3
-- The rest has no external dependencies
+- Everything else has no external dependencies and can ship independently
 
 ## Security Considerations
 
@@ -730,5 +794,6 @@ The `failure_details` array is more detailed than the current aggregate counts, 
 
 - **Existing `failures` field stays**: The `map[string]int` field remains for any consumers that depend on it. New code should compute counts from `failure_details` instead
 - **Redirect from `failed.html`**: Existing bookmarks still work via `_redirects`
-- **Curated page initially sparse**: Shows placeholder until Phase 1 (queue schema) ships. `seeding.html` is deferred entirely to Phase 3
-- **XSS fix is retroactive**: The `esc()` utility gets applied to all 7 existing pages, not just the new ones. This improves security posture for the whole dashboard
+- **Phase 1 graceful degradation**: `package.html` shows available data (failure history, disambiguation, queue status) immediately. Priority, attempt count, and other unified queue fields show placeholders until Phase 1 ships. `curated.html` shows placeholder until curated data is available. Pages don't break -- they just have less data.
+- **`seeding.html` deferred entirely to Phase 3**: No placeholder page, no dead-end navigation link
+- **XSS fix is retroactive**: The `esc()` utility gets applied to all existing pages, not just the new ones. This improves security posture for the whole dashboard
