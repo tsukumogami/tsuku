@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-02-15T17:27:04Z",
+  "generated_at": "2026-02-15T18:35:56Z",
   "queue": {
     "total": 5144,
     "by_status": {
@@ -31195,20 +31195,6 @@
   },
   "blockers": [
     {
-      "dependency": "glib",
-      "count": 1,
-      "packages": [
-        "homebrew:imagemagick"
-      ]
-    },
-    {
-      "dependency": "gmp",
-      "count": 1,
-      "packages": [
-        "homebrew:coreutils"
-      ]
-    },
-    {
       "dependency": "ada-url",
       "count": 1,
       "packages": [
@@ -31220,6 +31206,20 @@
       "count": 1,
       "packages": [
         "homebrew:ffmpeg"
+      ]
+    },
+    {
+      "dependency": "glib",
+      "count": 1,
+      "packages": [
+        "homebrew:imagemagick"
+      ]
+    },
+    {
+      "dependency": "gmp",
+      "count": 1,
+      "packages": [
+        "homebrew:coreutils"
       ]
     }
   ],
