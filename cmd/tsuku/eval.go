@@ -15,7 +15,7 @@ import (
 	"github.com/tsukumogami/tsuku/internal/validate"
 )
 
-// Platform flag validation whitelists per DESIGN-installation-plans-eval.md
+// Platform flag validation whitelists per DESIGN-deterministic-resolution.md
 // Uses tsuku's supported platforms as the source of truth
 var validOSValues = makeSet(recipe.TsukuSupportedOS())
 var validArchValues = makeSet(recipe.TsukuSupportedArch())
