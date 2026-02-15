@@ -39,44 +39,6 @@ This design was implemented through 9 issues across 2 sequential milestones.
 | ~~[#1547: feat(ci): add workflow to regenerate coverage.json on recipe changes](https://github.com/tsukumogami/tsuku/issues/1547)~~ | ~~None~~ | ~~testable~~ |
 | ~~[#1548: docs(website): add coverage dashboard documentation](https://github.com/tsukumogami/tsuku/issues/1548)~~ | ~~[#1544](https://github.com/tsukumogami/tsuku/issues/1544), [#1545](https://github.com/tsukumogami/tsuku/issues/1545), [#1546](https://github.com/tsukumogami/tsuku/issues/1546), [#1547](https://github.com/tsukumogami/tsuku/issues/1547)~~ | ~~simple~~ |
 
-### Dependency Graph
-
-```mermaid
-graph TD
-    subgraph M1["Milestone 1: Platform Coverage Validation"]
-        I1538["#1538: Fix doc status"]
-        I1539["#1539: Re-enable musl tests"]
-        I1540["#1540: Trigger validation"]
-        I1543["#1543: Apply constraints"]
-    end
-
-    subgraph M2["Milestone 2: Coverage Dashboard"]
-        I1544["#1544: Dashboard HTML"]
-        I1545["#1545: Coverage matrix"]
-        I1546["#1546: Gap list"]
-        I1547["#1547: CI workflow"]
-        I1548["#1548: Documentation"]
-    end
-
-    I1540 --> I1543
-    I1544 --> I1545
-    I1544 --> I1546
-    I1545 --> I1548
-    I1546 --> I1548
-    I1547 --> I1548
-
-    classDef done fill:#c8e6c9
-    classDef ready fill:#bbdefb
-    classDef blocked fill:#fff9c4
-    classDef needsDesign fill:#e1bee7
-
-    class I1538,I1539,I1544,I1545,I1546,I1547,I1548 done
-    class I1540 done
-    class I1543 done
-```
-
-**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
-
 ### Work Sequencing
 
 **All 9 issues completed:**
