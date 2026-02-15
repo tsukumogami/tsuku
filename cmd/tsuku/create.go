@@ -968,6 +968,13 @@ func runDiscoveryWithOptions(toolName string, searchProviderName string) (*disco
 
 	var stages []discover.Resolver
 
+	// Load the full discovery registry for typosquat checking.
+	// This is separate from the per-tool registry lookup stage.
+	var discoveryRegistry *discover.DiscoveryRegistry
+	if info, err := os.Stat(discoveryDir); err == nil && info.IsDir() {
+		discoveryRegistry, _ = discover.LoadRegistryDir(discoveryDir)
+	}
+
 	// Stage 1: Registry lookup (if the directory exists).
 	if info, err := os.Stat(discoveryDir); err == nil && info.IsDir() {
 		lookup, err := discover.NewRegistryLookup(discoveryDir)
@@ -1038,7 +1045,8 @@ func runDiscoveryWithOptions(toolName string, searchProviderName string) (*disco
 
 	chain := discover.NewChainResolver(stages...).
 		WithLogger(log.Default()).
-		WithLLMAvailability(llmAvail)
+		WithLLMAvailability(llmAvail).
+		WithRegistry(discoveryRegistry)
 	return chain.Resolve(globalCtx, toolName)
 }
 

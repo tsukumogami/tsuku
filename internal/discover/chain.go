@@ -23,6 +23,7 @@ type ChainResolver struct {
 	telemetry       *telemetry.Client
 	logger          log.Logger
 	llmAvailability LLMAvailability
+	registry        *DiscoveryRegistry
 }
 
 // NewChainResolver creates a resolver that tries stages in order.
@@ -48,6 +49,12 @@ func (c *ChainResolver) WithLLMAvailability(avail LLMAvailability) *ChainResolve
 	return c
 }
 
+// WithRegistry sets the discovery registry for typosquatting detection.
+func (c *ChainResolver) WithRegistry(reg *DiscoveryRegistry) *ChainResolver {
+	c.registry = reg
+	return c
+}
+
 // Resolve tries each stage in order. Returns the first non-nil result.
 // Returns NotFoundError if all stages miss, or ConfigurationError if
 // LLM discovery was unavailable due to configuration.
@@ -55,6 +62,14 @@ func (c *ChainResolver) Resolve(ctx context.Context, toolName string) (*Discover
 	normalized, err := NormalizeName(toolName)
 	if err != nil {
 		return nil, err
+	}
+
+	// Check for typosquatting before probing stages
+	if warning := CheckTyposquat(normalized, c.registry); warning != nil {
+		log.Default().Warn(fmt.Sprintf(
+			"Typosquat warning: %q is similar to %q (distance %d, source: %s)",
+			warning.Requested, warning.Similar, warning.Distance, warning.Source,
+		))
 	}
 
 	start := time.Now()
