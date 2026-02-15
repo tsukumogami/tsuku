@@ -548,8 +548,11 @@ Visibility changes work independently of queue changes. Even if the unified queu
 │                                                                     │
 │  update-queue-status.yml (NEW - triggered on push to main)          │
 │  ├── Detect added/modified files in recipes/                       │
-│  ├── Extract package names from recipe file paths                  │
-│  ├── Update matching queue entries: status → "success"             │
+│  ├── Parse recipe to extract source from [source] section         │
+│  ├── Compare recipe source to queue entry's source                 │
+│  ├── If match: status → "success"                                  │
+│  ├── If differ: status → "success", update source, confidence →   │
+│  │              "curated" (manual override found better source)    │
 │  └── Commit updated priority-queue.json                            │
 │                                                                     │
 │  This is the SAME workflow for both:                                │
@@ -1509,10 +1512,13 @@ Packages that disambiguate to `github:` sources often can't generate determinist
 **Recipe merge triggers status update** (single flow, two triggers):
 When a recipe PR merges to main, a push-triggered workflow updates the queue:
 1. Detect which recipe files were added/modified in the push
-2. Find matching queue entries by package name
-3. Set `status: "success"` for those entries
+2. Parse each recipe to extract its source (from the recipe's `[source]` section)
+3. Find matching queue entries by package name
+4. Compare recipe source to queue entry's `source` field:
+   - **Match**: Set `status: "success"` (disambiguation was correct)
+   - **Differ**: Set `status: "success"`, update `source` to match recipe, set `confidence: "curated"` (manual override discovered a better source)
 
-This is the same mechanism for both automated (batch-created) and manual (human-created) recipes. The difference is only who creates the PR—the merge-triggered status update is identical.
+This is the same mechanism for both automated (batch-created) and manual (human-created) recipes. If someone manually creates a recipe using a different source than disambiguation selected, it automatically becomes a curated override.
 
 **Note:** `confidence: "priority"` (ecosystem priority fallback) is NOT valid for auto-selection per DESIGN-disambiguation.md. If secondary signals are missing, the entry is flagged for manual review rather than auto-selected.
 
