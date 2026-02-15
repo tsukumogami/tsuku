@@ -14,7 +14,8 @@ type TyposquatWarning struct {
 
 // CheckTyposquat compares a tool name against registry entries.
 // Returns a warning if the name is suspiciously similar (distance 1-2).
-// Exact matches (distance 0) do not trigger warnings.
+// Exact matches (distance 0) do not trigger warnings - if the tool exists
+// in the registry, there's nothing suspicious.
 // Returns nil when no similar names are found.
 func CheckTyposquat(toolName string, registry *DiscoveryRegistry) *TyposquatWarning {
 	if registry == nil {
@@ -23,18 +24,32 @@ func CheckTyposquat(toolName string, registry *DiscoveryRegistry) *TyposquatWarn
 
 	normalized := strings.ToLower(toolName)
 
+	// If the tool exists exactly in the registry, no warning needed
+	if _, exists := registry.Lookup(toolName); exists {
+		return nil
+	}
+
+	// Find the closest match within the threshold
+	var bestMatch *TyposquatWarning
+	bestDist := 3 // Start above threshold
+
 	for name, entry := range registry.Tools {
 		dist := levenshtein(normalized, strings.ToLower(name))
-		if dist > 0 && dist <= 2 {
-			return &TyposquatWarning{
+		if dist > 0 && dist <= 2 && dist < bestDist {
+			bestDist = dist
+			bestMatch = &TyposquatWarning{
 				Requested: toolName,
 				Similar:   name,
 				Distance:  dist,
 				Source:    entry.Builder + ":" + entry.Source,
 			}
+			// Early exit on distance 1 (can't get better)
+			if dist == 1 {
+				return bestMatch
+			}
 		}
 	}
-	return nil
+	return bestMatch
 }
 
 // levenshtein computes the Levenshtein edit distance between two strings.
