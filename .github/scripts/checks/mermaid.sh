@@ -122,30 +122,71 @@ if [[ "$MERMAID_COUNT" -eq 0 ]]; then
     exit $EXIT_PASS
 fi
 
-# Extract all mermaid block content to check for issue dependency nodes
-ALL_MERMAID_CONTENT=$(awk '
-    /^```mermaid/ { in_mermaid = 1; next }
-    /^```/ && in_mermaid { in_mermaid = 0; next }
-    in_mermaid { print }
+# Extract each mermaid block separately and find the one with I<number> or M<number> nodes
+# This is the issue dependency diagram - other diagrams are ignored for validation
+DEPENDENCY_DIAGRAM_CONTENT=""
+ALL_DEPENDENCY_NODES=""
+ISSUE_NODES=""
+MILESTONE_NODES=""
+
+# Use a unique separator that won't appear in mermaid diagrams
+BLOCK_SEP="__MERMAID_BLOCK_SEP_$$__"
+
+# Extract all blocks separated by the unique separator
+ALL_BLOCKS=$(awk -v sep="$BLOCK_SEP" '
+    /^```mermaid/ { in_mermaid = 1; block = ""; next }
+    /^```/ && in_mermaid {
+        in_mermaid = 0
+        print block
+        print sep
+        next
+    }
+    in_mermaid { block = block (block ? "\n" : "") $0 }
 ' "$DOC_PATH")
 
-# Check if any diagram contains I<number> or M<number> nodes (issue/milestone dependency diagram)
-# Pattern: I or M followed by one or more digits, as a word boundary
-# Note: M<N> used as subgraph names (subgraph M50["..."]) are excluded from milestone nodes
-ISSUE_NODES=$(echo "$ALL_MERMAID_CONTENT" | grep -oE '\bI[0-9]+\b' | sort -u || true)
-SUBGRAPH_IDS=$(echo "$ALL_MERMAID_CONTENT" | grep -E '^\s*subgraph\s+' | \
-    sed 's/^\s*subgraph\s*//' | sed 's/\[.*$//' | tr -d ' ' || true)
-MILESTONE_NODES_RAW=$(echo "$ALL_MERMAID_CONTENT" | grep -oE '\bM[0-9]+\b' | sort -u || true)
-MILESTONE_NODES=""
-if [[ -n "$MILESTONE_NODES_RAW" ]]; then
-    while IFS= read -r mnode; do
-        [[ -z "$mnode" ]] && continue
-        if [[ -z "$SUBGRAPH_IDS" ]] || ! echo "$SUBGRAPH_IDS" | grep -qE "^${mnode}$"; then
-            MILESTONE_NODES=$(printf '%s\n%s' "$MILESTONE_NODES" "$mnode")
+# Process each block
+current_block=""
+while IFS= read -r line; do
+    if [[ "$line" == "$BLOCK_SEP" ]]; then
+        # End of block, process it
+        if [[ -n "$current_block" ]]; then
+            # Check if this block contains I<number> nodes
+            block_issue_nodes=$(echo "$current_block" | grep -oE '\bI[0-9]+\b' | sort -u || true)
+
+            # Check for M<number> nodes (excluding subgraph names)
+            block_subgraph_ids=$(echo "$current_block" | grep -E '^\s*subgraph\s+' | \
+                sed 's/^\s*subgraph\s*//' | sed 's/\[.*$//' | tr -d ' ' || true)
+            block_milestone_nodes_raw=$(echo "$current_block" | grep -oE '\bM[0-9]+\b' | sort -u || true)
+            block_milestone_nodes=""
+            if [[ -n "$block_milestone_nodes_raw" ]]; then
+                while IFS= read -r mnode; do
+                    [[ -z "$mnode" ]] && continue
+                    if [[ -z "$block_subgraph_ids" ]] || ! echo "$block_subgraph_ids" | grep -qE "^${mnode}$"; then
+                        block_milestone_nodes=$(printf '%s\n%s' "$block_milestone_nodes" "$mnode")
+                    fi
+                done <<< "$block_milestone_nodes_raw"
+                block_milestone_nodes=$(echo "$block_milestone_nodes" | grep -v '^$' | sort -u || true)
+            fi
+
+            # If this block has I<number> or M<number> nodes, it's the dependency diagram
+            if [[ -n "$block_issue_nodes" || -n "$block_milestone_nodes" ]]; then
+                DEPENDENCY_DIAGRAM_CONTENT="$current_block"
+                ISSUE_NODES="$block_issue_nodes"
+                MILESTONE_NODES="$block_milestone_nodes"
+                break  # Only validate the first dependency diagram found
+            fi
         fi
-    done <<< "$MILESTONE_NODES_RAW"
-    MILESTONE_NODES=$(echo "$MILESTONE_NODES" | grep -v '^$' | sort -u || true)
-fi
+        current_block=""
+    else
+        # Accumulate lines into current block
+        if [[ -z "$current_block" ]]; then
+            current_block="$line"
+        else
+            current_block="$current_block"$'\n'"$line"
+        fi
+    fi
+done <<< "$ALL_BLOCKS"
+
 ALL_DEPENDENCY_NODES=$(printf '%s\n%s' "$ISSUE_NODES" "$MILESTONE_NODES" | grep -v '^$' | sort -u || true)
 HAS_ISSUE_DIAGRAM=0
 if [[ -n "$ALL_DEPENDENCY_NODES" ]]; then
@@ -174,14 +215,29 @@ fi
 # At this point: we have an issue dependency diagram in Planned status
 # Continue with detailed validation
 
-# MM08: Only one diagram per doc (for issue dependency diagrams)
-if [[ "$MERMAID_COUNT" -gt 1 ]]; then
-    emit_fail "MM08: Only one mermaid diagram allowed per document, found $MERMAID_COUNT. See: .github/scripts/docs/MM08.md"
+# MM08: Only one issue dependency diagram per doc
+# Count mermaid blocks that contain I<number> or M<number> nodes (not just any diagram)
+ISSUE_DIAGRAM_COUNT=$(awk '
+    /^```mermaid/ { in_mermaid = 1; block = ""; next }
+    /^```/ && in_mermaid {
+        in_mermaid = 0
+        # Check if block contains I<number> or M<number> nodes (not as subgraph names)
+        if (match(block, /\bI[0-9]+\b/) || match(block, /\bM[0-9]+\[/)) {
+            count++
+        }
+        next
+    }
+    in_mermaid { block = block "\n" $0 }
+    END { print count+0 }
+' "$DOC_PATH")
+
+if [[ "$ISSUE_DIAGRAM_COUNT" -gt 1 ]]; then
+    emit_fail "MM08: Only one issue dependency diagram allowed per document, found $ISSUE_DIAGRAM_COUNT. See: .github/scripts/docs/MM08.md"
     exit $EXIT_FAIL
 fi
 
-# Use the already extracted mermaid content
-MERMAID_CONTENT="$ALL_MERMAID_CONTENT"
+# Use only the dependency diagram content for validation
+MERMAID_CONTENT="$DEPENDENCY_DIAGRAM_CONTENT"
 
 FAILED=0
 
