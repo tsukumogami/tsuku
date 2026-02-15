@@ -1,11 +1,11 @@
 {
-  "generated_at": "2026-02-15T04:32:39Z",
+  "generated_at": "2026-02-15T05:57:57Z",
   "queue": {
-    "total": 4905,
+    "total": 5144,
     "by_status": {
       "blocked": 4,
       "failed": 14,
-      "pending": 4749,
+      "pending": 4988,
       "success": 138
     },
     "by_tier": {
@@ -21,7 +21,7 @@
         "success": 130
       },
       "3": {
-        "pending": 4730,
+        "pending": 4969,
         "success": 3
       }
     },
@@ -339,6 +339,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:a7ex/formulae/xcresultparser",
+          "name": "a7ex/formulae/xcresultparser",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:aalib",
           "name": "aalib",
           "ecosystem": "homebrew",
@@ -447,6 +453,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:actions-up",
+          "name": "actions-up",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:activemq",
           "name": "activemq",
           "ecosystem": "homebrew",
@@ -461,6 +473,12 @@
         {
           "id": "homebrew:adb-enhanced",
           "name": "adb-enhanced",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:add-determinism",
+          "name": "add-determinism",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -711,6 +729,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:aliyunpan",
+          "name": "aliyunpan",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:allegro",
           "name": "allegro",
           "ecosystem": "homebrew",
@@ -816,6 +840,12 @@
         {
           "id": "homebrew:amrkmn/tap/opencode",
           "name": "amrkmn/tap/opencode",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:analog",
+          "name": "analog",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -974,6 +1004,12 @@
         {
           "id": "homebrew:anyenv",
           "name": "anyenv",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:anyquery",
+          "name": "anyquery",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -1468,6 +1504,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:astra",
+          "name": "astra",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:astro",
           "name": "astro",
           "ecosystem": "homebrew",
@@ -1809,6 +1851,12 @@
           "category": "deterministic_insufficient"
         },
         {
+          "id": "homebrew:aws-checksums",
+          "name": "aws-checksums",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:aws-console",
           "name": "aws-console",
           "ecosystem": "homebrew",
@@ -1823,6 +1871,12 @@
         {
           "id": "homebrew:aws-elasticbeanstalk",
           "name": "aws-elasticbeanstalk",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:aws-es-proxy",
+          "name": "aws-es-proxy",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -1902,6 +1956,12 @@
         {
           "id": "homebrew:aws/tap/eksctl",
           "name": "aws/tap/eksctl",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:aws/tap/lightsailctl",
+          "name": "aws/tap/lightsailctl",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -2083,6 +2143,12 @@
         {
           "id": "homebrew:badread",
           "name": "badread",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:bagel",
+          "name": "bagel",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -2847,8 +2913,20 @@
           "priority": 3
         },
         {
+          "id": "homebrew:brewsci/bio/dssp",
+          "name": "brewsci/bio/dssp",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:brightness",
           "name": "brightness",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:brogue",
+          "name": "brogue",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -2883,6 +2961,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:bsdiff",
+          "name": "bsdiff",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:btcli",
           "name": "btcli",
           "ecosystem": "homebrew",
@@ -2891,6 +2975,12 @@
         {
           "id": "homebrew:buddyh/tap/alexacli",
           "name": "buddyh/tap/alexacli",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:buddyh/tap/todoist",
+          "name": "buddyh/tap/todoist",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -3045,6 +3135,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:c",
+          "name": "c",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:c-blosc",
           "name": "c-blosc",
           "ecosystem": "homebrew",
@@ -3053,6 +3149,12 @@
         {
           "id": "homebrew:c-blosc2",
           "name": "c-blosc2",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:c10t",
+          "name": "c10t",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -3114,6 +3216,12 @@
         {
           "id": "homebrew:cadence",
           "name": "cadence",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:cadence-workflow",
+          "name": "cadence-workflow",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -3203,6 +3311,18 @@
           "priority": 3
         },
         {
+          "id": "homebrew:cargo-clone",
+          "name": "cargo-clone",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:cargo-crev",
+          "name": "cargo-crev",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:cargo-expand",
           "name": "cargo-expand",
           "ecosystem": "homebrew",
@@ -3223,6 +3343,12 @@
         {
           "id": "homebrew:cargo-generate",
           "name": "cargo-generate",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:cargo-hack",
+          "name": "cargo-hack",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -3259,6 +3385,12 @@
         {
           "id": "homebrew:cargo-outdated",
           "name": "cargo-outdated",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:cargo-release",
+          "name": "cargo-release",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -3319,6 +3451,12 @@
         {
           "id": "homebrew:carvel-dev/carvel/imgpkg",
           "name": "carvel-dev/carvel/imgpkg",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:carvel-dev/carvel/kctrl",
+          "name": "carvel-dev/carvel/kctrl",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -3518,6 +3656,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:cf-terraforming",
+          "name": "cf-terraforming",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:cfengine",
           "name": "cfengine",
           "ecosystem": "homebrew",
@@ -3591,6 +3735,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:chainsaw",
+          "name": "chainsaw",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:chamber",
           "name": "chamber",
           "ecosystem": "homebrew",
@@ -3605,6 +3755,12 @@
         {
           "id": "homebrew:chapel",
           "name": "chapel",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:chardet",
+          "name": "chardet",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -3862,8 +4018,20 @@
           "priority": 3
         },
         {
+          "id": "homebrew:cidr",
+          "name": "cidr",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:cilium-cli",
           "name": "cilium-cli",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:cimg",
+          "name": "cimg",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -3972,6 +4140,12 @@
         {
           "id": "homebrew:claude-code-templates",
           "name": "claude-code-templates",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:claude-hooks",
+          "name": "claude-hooks",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -4337,6 +4511,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:cobo-cli",
+          "name": "cobo-cli",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:coccinelle",
           "name": "coccinelle",
           "ecosystem": "homebrew",
@@ -4393,6 +4573,12 @@
         {
           "id": "homebrew:codebook-lsp",
           "name": "codebook-lsp",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:codec2",
+          "name": "codec2",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -4542,6 +4728,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:config-file-validator",
+          "name": "config-file-validator",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:confluentinc/tap/cli",
           "name": "confluentinc/tap/cli",
           "ecosystem": "homebrew",
@@ -4620,6 +4812,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:convox",
+          "name": "convox",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:cookcli",
           "name": "cookcli",
           "ecosystem": "homebrew",
@@ -4652,6 +4850,12 @@
         {
           "id": "homebrew:copyparty",
           "name": "copyparty",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:core-lightning",
+          "name": "core-lightning",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -4794,6 +4998,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:cpprestsdk",
+          "name": "cpprestsdk",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:cppunit",
           "name": "cppunit",
           "ecosystem": "homebrew",
@@ -4818,8 +5028,20 @@
           "priority": 3
         },
         {
+          "id": "homebrew:cpuid",
+          "name": "cpuid",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:cpulimit",
           "name": "cpulimit",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:cql",
+          "name": "cql",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -4933,6 +5155,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:cryptopp",
+          "name": "cryptopp",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:crystal",
           "name": "crystal",
           "ecosystem": "homebrew",
@@ -4995,6 +5223,12 @@
         {
           "id": "homebrew:ctags",
           "name": "ctags",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:ctags-lsp",
+          "name": "ctags-lsp",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -5294,6 +5528,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:datadog/pack/pup",
+          "name": "datadog/pack/pup",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:datafusion",
           "name": "datafusion",
           "ecosystem": "homebrew",
@@ -5302,6 +5542,12 @@
         {
           "id": "homebrew:datalad",
           "name": "datalad",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:datamash",
+          "name": "datamash",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -5344,6 +5590,18 @@
         {
           "id": "homebrew:daytonaio/cli/daytona",
           "name": "daytonaio/cli/daytona",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:dbcsr",
+          "name": "dbcsr",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:dblab",
+          "name": "dblab",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -5396,6 +5654,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:ddclient",
+          "name": "ddclient",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:ddcutil",
           "name": "ddcutil",
           "ecosystem": "homebrew",
@@ -5426,6 +5690,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:decasify",
+          "name": "decasify",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:deck",
           "name": "deck",
           "ecosystem": "homebrew",
@@ -5440,6 +5710,12 @@
         {
           "id": "homebrew:defenseunicorns/tap/uds",
           "name": "defenseunicorns/tap/uds",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:defenseunicorns/tap/uds@0.27.17",
+          "name": "defenseunicorns/tap/uds@0.27.17",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -5667,6 +5943,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:dict",
+          "name": "dict",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:diesel",
           "name": "diesel",
           "ecosystem": "homebrew",
@@ -5723,6 +6005,12 @@
         {
           "id": "homebrew:dillo",
           "name": "dillo",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:dilumaluthge/tap/pijul",
+          "name": "dilumaluthge/tap/pijul",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -5945,14 +6233,32 @@
           "priority": 3
         },
         {
+          "id": "homebrew:docker-gen",
+          "name": "docker-gen",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:docker-language-server",
           "name": "docker-language-server",
           "ecosystem": "homebrew",
           "priority": 3
         },
         {
+          "id": "homebrew:docker-ls",
+          "name": "docker-ls",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:docker-machine",
           "name": "docker-machine",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:docker-machine-driver-vmware",
+          "name": "docker-machine-driver-vmware",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -6038,6 +6344,12 @@
         {
           "id": "homebrew:doltgres",
           "name": "doltgres",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:domain-check",
+          "name": "domain-check",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -6193,6 +6505,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:driftctl",
+          "name": "driftctl",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:drill",
           "name": "drill",
           "ecosystem": "homebrew",
@@ -6213,6 +6531,18 @@
         {
           "id": "homebrew:dropbear",
           "name": "dropbear",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:druid",
+          "name": "druid",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:dry",
+          "name": "dry",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -6297,6 +6627,12 @@
         {
           "id": "homebrew:dumbpipe",
           "name": "dumbpipe",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:dump1090-fa",
+          "name": "dump1090-fa",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -6511,6 +6847,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:ecflow-ui",
+          "name": "ecflow-ui",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:echidna",
           "name": "echidna",
           "ecosystem": "homebrew",
@@ -6700,6 +7042,12 @@
           "category": "validation_failed"
         },
         {
+          "id": "homebrew:emmylua_ls",
+          "name": "emmylua_ls",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:emqx/mqttx/mqttx-cli",
           "name": "emqx/mqttx/mqttx-cli",
           "ecosystem": "homebrew",
@@ -6816,6 +7164,12 @@
         {
           "id": "homebrew:eoleedi/tap/timetree-exporter",
           "name": "eoleedi/tap/timetree-exporter",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:epinio",
+          "name": "epinio",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -7158,6 +7512,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:fake-gcs-server",
+          "name": "fake-gcs-server",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:fakeroot",
           "name": "fakeroot",
           "ecosystem": "homebrew",
@@ -7212,6 +7572,12 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "validation_failed"
+        },
+        {
+          "id": "homebrew:fastly",
+          "name": "fastly",
+          "ecosystem": "homebrew",
+          "priority": 3
         },
         {
           "id": "homebrew:fastly/tap/fastly",
@@ -7420,6 +7786,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:ferron",
+          "name": "ferron",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:fetch",
           "name": "fetch",
           "ecosystem": "homebrew",
@@ -7446,6 +7818,12 @@
         {
           "id": "homebrew:ffmpeg2theora",
           "name": "ffmpeg2theora",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:ffmpeg@2.8",
+          "name": "ffmpeg@2.8",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -7711,6 +8089,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:flintrock",
+          "name": "flintrock",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:flit",
           "name": "flit",
           "ecosystem": "homebrew",
@@ -7737,6 +8121,12 @@
         {
           "id": "homebrew:flow-cli",
           "name": "flow-cli",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:flow-control",
+          "name": "flow-control",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -8092,6 +8482,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:frotz",
+          "name": "frotz",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:frpc",
           "name": "frpc",
           "ecosystem": "homebrew",
@@ -8148,6 +8544,12 @@
         {
           "id": "homebrew:futhark",
           "name": "futhark",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:fw-ai/firectl/firectl",
+          "name": "fw-ai/firectl/firectl",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -8554,6 +8956,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:getsentry/xcodebuildmcp/xcodebuildmcp",
+          "name": "getsentry/xcodebuildmcp/xcodebuildmcp",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:gettext",
           "name": "gettext",
           "ecosystem": "homebrew",
@@ -8701,6 +9109,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:ginac",
+          "name": "ginac",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:girara",
           "name": "girara",
           "ecosystem": "homebrew",
@@ -8733,6 +9147,12 @@
         {
           "id": "homebrew:git-bug",
           "name": "git-bug",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:git-cinnabar",
+          "name": "git-cinnabar",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -8837,8 +9257,20 @@
           "priority": 3
         },
         {
+          "id": "homebrew:git-pages",
+          "name": "git-pages",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:git-pages-cli",
           "name": "git-pages-cli",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:git-pkgs/git-pkgs/git-pkgs",
+          "name": "git-pkgs/git-pkgs/git-pkgs",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -8893,6 +9325,12 @@
         {
           "id": "homebrew:git-svn",
           "name": "git-svn",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:git-sync",
+          "name": "git-sync",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -8959,6 +9397,12 @@
         {
           "id": "homebrew:gitingest",
           "name": "gitingest",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:gitlab-ci-linter",
+          "name": "gitlab-ci-linter",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -9037,6 +9481,12 @@
         {
           "id": "homebrew:gkrellm",
           "name": "gkrellm",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:gl2ps",
+          "name": "gl2ps",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -9260,6 +9710,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:gnu-smalltalk",
+          "name": "gnu-smalltalk",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:gnu-time",
           "name": "gnu-time",
           "ecosystem": "homebrew",
@@ -9351,6 +9807,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:go-md2man",
+          "name": "go-md2man",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:go-parquet-tools",
           "name": "go-parquet-tools",
           "ecosystem": "homebrew",
@@ -9405,6 +9867,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:go@1.25",
+          "name": "go@1.25",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:goaccess",
           "name": "goaccess",
           "ecosystem": "homebrew",
@@ -9426,6 +9894,12 @@
         {
           "id": "homebrew:goclone",
           "name": "goclone",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:goctl",
+          "name": "goctl",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -9480,6 +9954,18 @@
         {
           "id": "homebrew:gollama",
           "name": "gollama",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:gom",
+          "name": "gom",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:gomi",
+          "name": "gomi",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -9540,6 +10026,12 @@
         {
           "id": "homebrew:gopeed",
           "name": "gopeed",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:gops",
+          "name": "gops",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -9630,6 +10122,12 @@
         {
           "id": "homebrew:gperftools",
           "name": "gperftools",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:gpg-tui",
+          "name": "gpg-tui",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -9798,6 +10296,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:graphql-cli",
+          "name": "graphql-cli",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:graphql-inspector",
           "name": "graphql-inspector",
           "ecosystem": "homebrew",
@@ -9837,6 +10341,12 @@
         {
           "id": "homebrew:grc",
           "name": "grc",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:greenmask",
+          "name": "greenmask",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -10236,6 +10746,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:gyb",
+          "name": "gyb",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:gzip",
           "name": "gzip",
           "ecosystem": "homebrew",
@@ -10292,6 +10808,12 @@
         {
           "id": "homebrew:hapi-fhir-cli",
           "name": "hapi-fhir-cli",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:happy-coder",
+          "name": "happy-coder",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -10387,6 +10909,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:hashicorp/tap/copywrite",
+          "name": "hashicorp/tap/copywrite",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:hashicorp/tap/nomad",
           "name": "hashicorp/tap/nomad",
           "ecosystem": "homebrew",
@@ -10447,8 +10975,20 @@
           "priority": 3
         },
         {
+          "id": "homebrew:hatari",
+          "name": "hatari",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:hatch",
           "name": "hatch",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:havener",
+          "name": "havener",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -10516,6 +11056,12 @@
         {
           "id": "homebrew:hdf5@1.10",
           "name": "hdf5@1.10",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:hdrhistogram_c",
+          "name": "hdrhistogram_c",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -10594,6 +11140,12 @@
         {
           "id": "homebrew:henrygd/beszel/beszel-agent",
           "name": "henrygd/beszel/beszel-agent",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:hercules",
+          "name": "hercules",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -10706,6 +11258,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:hjson",
+          "name": "hjson",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:hk",
           "name": "hk",
           "ecosystem": "homebrew",
@@ -10786,6 +11344,12 @@
         {
           "id": "homebrew:homeport/tap/dyff",
           "name": "homeport/tap/dyff",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:homeport/tap/termshot",
+          "name": "homeport/tap/termshot",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -11152,6 +11716,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:icp-cli",
+          "name": "icp-cli",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:icu4c@76",
           "name": "icu4c@76",
           "ecosystem": "homebrew",
@@ -11423,6 +11993,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:iniparser",
+          "name": "iniparser",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:innoextract",
           "name": "innoextract",
           "ecosystem": "homebrew",
@@ -11519,6 +12095,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:iodine",
+          "name": "iodine",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:ionos-cloud/ionos-cloud/ionosctl",
           "name": "ionos-cloud/ionos-cloud/ionosctl",
           "ecosystem": "homebrew",
@@ -11586,8 +12168,20 @@
           "priority": 3
         },
         {
+          "id": "homebrew:ipmiutil",
+          "name": "ipmiutil",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:ipopt",
           "name": "ipopt",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:iproute2",
+          "name": "iproute2",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -11701,6 +12295,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:jabba",
+          "name": "jabba",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:jack",
           "name": "jack",
           "ecosystem": "homebrew",
@@ -11733,6 +12333,12 @@
         {
           "id": "homebrew:jags",
           "name": "jags",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:jakehilborn/jakehilborn/displayplacer",
+          "name": "jakehilborn/jakehilborn/displayplacer",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -11942,6 +12548,18 @@
           "priority": 3
         },
         {
+          "id": "homebrew:jimtcl",
+          "name": "jimtcl",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:jingkaihe/essentials/matchlock",
+          "name": "jingkaihe/essentials/matchlock",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:jingkaihe/kodelet/kodelet",
           "name": "jingkaihe/kodelet/kodelet",
           "ecosystem": "homebrew",
@@ -12050,6 +12668,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:jose",
+          "name": "jose",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:joshmedeski/sesh/sesh",
           "name": "joshmedeski/sesh/sesh",
           "ecosystem": "homebrew",
@@ -12107,6 +12731,12 @@
         {
           "id": "homebrew:jqp",
           "name": "jqp",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:jr",
+          "name": "jr",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -12545,6 +13175,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:kepubify",
+          "name": "kepubify",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:kew",
           "name": "kew",
           "ecosystem": "homebrew",
@@ -12617,6 +13253,18 @@
           "priority": 3
         },
         {
+          "id": "homebrew:kilo-org/tap/kilo",
+          "name": "kilo-org/tap/kilo",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:kilo-org/tap/kilocode",
+          "name": "kilo-org/tap/kilocode",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:kimi-cli",
           "name": "kimi-cli",
           "ecosystem": "homebrew",
@@ -12641,6 +13289,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:kitex",
+          "name": "kitex",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:klavaro",
           "name": "klavaro",
           "ecosystem": "homebrew",
@@ -12649,6 +13303,12 @@
         {
           "id": "homebrew:klee",
           "name": "klee",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:klog",
+          "name": "klog",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -12721,6 +13381,12 @@
         {
           "id": "homebrew:koekeishiya/formulae/yabai",
           "name": "koekeishiya/formulae/yabai",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:komac",
+          "name": "komac",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -12948,6 +13614,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:kubeone",
+          "name": "kubeone",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:kubergrunt",
           "name": "kubergrunt",
           "ecosystem": "homebrew",
@@ -13058,6 +13730,12 @@
         {
           "id": "homebrew:kuzu",
           "name": "kuzu",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:kwok",
+          "name": "kwok",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -13194,6 +13872,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:lavat",
+          "name": "lavat",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:lazydocker",
           "name": "lazydocker",
           "ecosystem": "homebrew",
@@ -13302,6 +13986,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:leela-zero",
+          "name": "leela-zero",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:lefthook",
           "name": "lefthook",
           "ecosystem": "homebrew",
@@ -13395,6 +14085,18 @@
         {
           "id": "homebrew:lftp",
           "name": "lftp",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:lgug2z/tap/komorebi-for-mac",
+          "name": "lgug2z/tap/komorebi-for-mac",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:lib3mf",
+          "name": "lib3mf",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -13607,6 +14309,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:libfontenc",
+          "name": "libfontenc",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:libfreenect",
           "name": "libfreenect",
           "ecosystem": "homebrew",
@@ -13703,8 +14411,20 @@
           "priority": 3
         },
         {
+          "id": "homebrew:libgxps",
+          "name": "libgxps",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:libhandy",
           "name": "libhandy",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:libharu",
+          "name": "libharu",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -13785,6 +14505,12 @@
         {
           "id": "homebrew:libiscsi",
           "name": "libiscsi",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:libisofs",
+          "name": "libisofs",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -13875,6 +14601,12 @@
         {
           "id": "homebrew:libnatpmp",
           "name": "libnatpmp",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:libnet",
+          "name": "libnet",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -14057,6 +14789,12 @@
         {
           "id": "homebrew:libpst",
           "name": "libpst",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:libpthread-stubs",
+          "name": "libpthread-stubs",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -14335,6 +15073,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:libupnp",
+          "name": "libupnp",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:libusb",
           "name": "libusb",
           "ecosystem": "homebrew",
@@ -14446,6 +15190,18 @@
         {
           "id": "homebrew:libxau",
           "name": "libxau",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:libxaw",
+          "name": "libxaw",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:libxc",
+          "name": "libxc",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -14608,6 +15364,12 @@
         {
           "id": "homebrew:licenseplist",
           "name": "licenseplist",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:lightdash/lightdash/lightdash",
+          "name": "lightdash/lightdash/lightdash",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -15030,6 +15792,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:lowdown",
+          "name": "lowdown",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:lpeg",
           "name": "lpeg",
           "ecosystem": "homebrew",
@@ -15050,6 +15818,18 @@
         {
           "id": "homebrew:lsof",
           "name": "lsof",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:lspmux",
+          "name": "lspmux",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:lstr",
+          "name": "lstr",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -15158,6 +15938,12 @@
         {
           "id": "homebrew:lynis",
           "name": "lynis",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:lynkr",
+          "name": "lynkr",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -15320,6 +16106,12 @@
           "category": "deterministic_insufficient"
         },
         {
+          "id": "homebrew:magics",
+          "name": "magics",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:mago",
           "name": "mago",
           "ecosystem": "homebrew",
@@ -15454,6 +16246,18 @@
         {
           "id": "homebrew:mapserver",
           "name": "mapserver",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:marcus/tap/sidecar",
+          "name": "marcus/tap/sidecar",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:marcus/tap/td",
+          "name": "marcus/tap/td",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -15598,8 +16402,20 @@
           "priority": 3
         },
         {
+          "id": "homebrew:massdriver",
+          "name": "massdriver",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:mat2",
           "name": "mat2",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:math-comp",
+          "name": "math-comp",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -15673,6 +16489,12 @@
         {
           "id": "homebrew:mbpoll",
           "name": "mbpoll",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:mbt",
+          "name": "mbt",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -15857,6 +16679,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:mdserve",
+          "name": "mdserve",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:mdv",
           "name": "mdv",
           "ecosystem": "homebrew",
@@ -15943,6 +16771,12 @@
         {
           "id": "homebrew:mender-artifact",
           "name": "mender-artifact",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:mender-cli",
+          "name": "mender-cli",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -16235,6 +17069,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:minio/aistor/mc",
+          "name": "minio/aistor/mc",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:minio/aistor/minio",
           "name": "minio/aistor/minio",
           "ecosystem": "homebrew",
@@ -16315,6 +17155,12 @@
         {
           "id": "homebrew:mistral-vibe",
           "name": "mistral-vibe",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:mitchellh/gon/gon",
+          "name": "mitchellh/gon/gon",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -16507,6 +17353,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:moltis-org/tap/moltis",
+          "name": "moltis-org/tap/moltis",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:mondoohq/mondoo/cnspec",
           "name": "mondoohq/mondoo/cnspec",
           "ecosystem": "homebrew",
@@ -16515,6 +17367,12 @@
         {
           "id": "homebrew:monero",
           "name": "monero",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:monetdb",
+          "name": "monetdb",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -16781,6 +17639,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:msc-generator",
+          "name": "msc-generator",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:mscgen",
           "name": "mscgen",
           "ecosystem": "homebrew",
@@ -16941,6 +17805,12 @@
         {
           "id": "homebrew:mydumper",
           "name": "mydumper",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:mylee04/tools/code-notify",
+          "name": "mylee04/tools/code-notify",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -17161,6 +18031,12 @@
         {
           "id": "homebrew:nbsdgames",
           "name": "nbsdgames",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:ncdc",
+          "name": "ncdc",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -17516,6 +18392,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:ni-kismet/ni/slcli",
+          "name": "ni-kismet/ni/slcli",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:nickswink/macos-test/c0rnbread",
           "name": "nickswink/macos-test/c0rnbread",
           "ecosystem": "homebrew",
@@ -17609,6 +18491,12 @@
         {
           "id": "homebrew:nmrpflash",
           "name": "nmrpflash",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:nmstatectl",
+          "name": "nmstatectl",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -17725,6 +18613,12 @@
         {
           "id": "homebrew:notcurses",
           "name": "notcurses",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:noti",
+          "name": "noti",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -17961,6 +18855,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:oasis",
+          "name": "oasis",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:oath-toolkit",
           "name": "oath-toolkit",
           "ecosystem": "homebrew",
@@ -17987,6 +18887,18 @@
         {
           "id": "homebrew:obfs4proxy",
           "name": "obfs4proxy",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:obsproject/tools/clang-format@16",
+          "name": "obsproject/tools/clang-format@16",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:obsproject/tools/clang-format@17",
+          "name": "obsproject/tools/clang-format@17",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -18028,6 +18940,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:ocm",
+          "name": "ocm",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:ocp",
           "name": "ocp",
           "ecosystem": "homebrew",
@@ -18043,6 +18961,12 @@
         {
           "id": "homebrew:octave",
           "name": "octave",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:octoenergy/tap/kraken-cli",
+          "name": "octoenergy/tap/kraken-cli",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -18101,6 +19025,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:omniorb",
+          "name": "omniorb",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:omnisharp/omnisharp-roslyn/omnisharp-mono",
           "name": "omnisharp/omnisharp-roslyn/omnisharp-mono",
           "ecosystem": "homebrew",
@@ -18139,6 +19069,12 @@
         {
           "id": "homebrew:onnxruntime",
           "name": "onnxruntime",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:ooniprobe",
+          "name": "ooniprobe",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -18300,6 +19236,12 @@
         {
           "id": "homebrew:opencore-amr",
           "name": "opencore-amr",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:opencsg",
+          "name": "opencsg",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -19162,6 +20104,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:otterdog",
+          "name": "otterdog",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:ottomatic-io/video/untrunc",
           "name": "ottomatic-io/video/untrunc",
           "ecosystem": "homebrew",
@@ -19359,6 +20307,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:parlay",
+          "name": "parlay",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:parquet-cli",
           "name": "parquet-cli",
           "ecosystem": "homebrew",
@@ -19451,6 +20405,12 @@
         {
           "id": "homebrew:pc6001vx",
           "name": "pc6001vx",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:pcapmirror",
+          "name": "pcapmirror",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -19617,6 +20577,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:peonping/tap/peon-ping",
+          "name": "peonping/tap/peon-ping",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:percona-server",
           "name": "percona-server",
           "ecosystem": "homebrew",
@@ -19643,6 +20609,12 @@
         {
           "id": "homebrew:percona-xtrabackup@8.0",
           "name": "percona-xtrabackup@8.0",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:permify",
+          "name": "permify",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -19891,6 +20863,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:picoruby",
+          "name": "picoruby",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:picotool",
           "name": "picotool",
           "ecosystem": "homebrew",
@@ -19929,6 +20907,12 @@
         {
           "id": "homebrew:pigz",
           "name": "pigz",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:pike",
+          "name": "pike",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -20002,6 +20986,12 @@
         {
           "id": "homebrew:pipdeptree",
           "name": "pipdeptree",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:pipe-rename",
+          "name": "pipe-rename",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -20370,6 +21360,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:portal",
+          "name": "portal",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:portaudio",
           "name": "portaudio",
           "ecosystem": "homebrew",
@@ -20637,6 +21633,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:procps",
+          "name": "procps",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:proctools",
           "name": "proctools",
           "ecosystem": "homebrew",
@@ -20645,6 +21647,12 @@
         {
           "id": "homebrew:profanity",
           "name": "profanity",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:prog8",
+          "name": "prog8",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -21157,6 +22165,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:pyroscope-io/brew/pyroscope",
+          "name": "pyroscope-io/brew/pyroscope",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:pyscn",
           "name": "pyscn",
           "ecosystem": "homebrew",
@@ -21435,6 +22449,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:qrupdate",
+          "name": "qrupdate",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:qscintilla2",
           "name": "qscintilla2",
           "ecosystem": "homebrew",
@@ -21454,14 +22474,38 @@
           "category": "deterministic_insufficient"
         },
         {
+          "id": "homebrew:qt-libiodbc",
+          "name": "qt-libiodbc",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:qt-mariadb",
+          "name": "qt-mariadb",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:qt-mysql",
           "name": "qt-mysql",
           "ecosystem": "homebrew",
           "priority": 3
         },
         {
+          "id": "homebrew:qt-percona-server",
+          "name": "qt-percona-server",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:qt-postgresql",
           "name": "qt-postgresql",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:qt-unixodbc",
+          "name": "qt-unixodbc",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -21713,6 +22757,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:quickemu-project/quickemu/quickemu",
+          "name": "quickemu-project/quickemu/quickemu",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:quickjs",
           "name": "quickjs",
           "ecosystem": "homebrew",
@@ -21736,6 +22786,12 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "deterministic_insufficient"
+        },
+        {
+          "id": "homebrew:qxmpp",
+          "name": "qxmpp",
+          "ecosystem": "homebrew",
+          "priority": 3
         },
         {
           "id": "homebrew:r",
@@ -21806,6 +22862,12 @@
         {
           "id": "homebrew:rain",
           "name": "rain",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:raine/claude-history/claude-history",
+          "name": "raine/claude-history/claude-history",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -21931,6 +22993,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:rbtools",
+          "name": "rbtools",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:rbw",
           "name": "rbw",
           "ecosystem": "homebrew",
@@ -21957,6 +23025,12 @@
         {
           "id": "homebrew:rdap",
           "name": "rdap",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:rdb",
+          "name": "rdb",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -22172,6 +23246,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:reshape",
+          "name": "reshape",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:respawn-app/tap/ksrc",
           "name": "respawn-app/tap/ksrc",
           "ecosystem": "homebrew",
@@ -22246,6 +23326,18 @@
         {
           "id": "homebrew:reviewdog/tap/reviewdog",
           "name": "reviewdog/tap/reviewdog",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:revive",
+          "name": "revive",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:revylai/tap/greenlight",
+          "name": "revylai/tap/greenlight",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -22358,6 +23450,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:risor",
+          "name": "risor",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:rizin",
           "name": "rizin",
           "ecosystem": "homebrew",
@@ -22396,6 +23494,12 @@
         {
           "id": "homebrew:rmpc",
           "name": "rmpc",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:roborev-dev/tap/roborev",
+          "name": "roborev-dev/tap/roborev",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -22496,6 +23600,18 @@
           "priority": 3
         },
         {
+          "id": "homebrew:rospo",
+          "name": "rospo",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:roswell",
+          "name": "roswell",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:rover",
           "name": "rover",
           "ecosystem": "homebrew",
@@ -22577,6 +23693,12 @@
         {
           "id": "homebrew:rtl_433",
           "name": "rtl_433",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:rtmidi",
+          "name": "rtmidi",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -22669,6 +23791,18 @@
         {
           "id": "homebrew:rumdl",
           "name": "rumdl",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:run",
+          "name": "run",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:run-kit",
+          "name": "run-kit",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -23071,8 +24205,20 @@
           "priority": 3
         },
         {
+          "id": "homebrew:score-spec/tap/score-compose",
+          "name": "score-spec/tap/score-compose",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:scorecard",
           "name": "scorecard",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:scotch",
+          "name": "scotch",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -23132,6 +24278,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:scummvm-tools",
+          "name": "scummvm-tools",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:scw",
           "name": "scw",
           "ecosystem": "homebrew",
@@ -23146,6 +24298,12 @@
         {
           "id": "homebrew:sdcc",
           "name": "sdcc",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:sdcv",
+          "name": "sdcv",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -23272,6 +24430,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:sentry-native",
+          "name": "sentry-native",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:seqkit",
           "name": "seqkit",
           "ecosystem": "homebrew",
@@ -23286,6 +24450,18 @@
         {
           "id": "homebrew:sequoia-sq",
           "name": "sequoia-sq",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:ser2net",
+          "name": "ser2net",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:serd",
+          "name": "serd",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -23473,6 +24649,18 @@
         {
           "id": "homebrew:shivammathur/extensions/interbase@8.6",
           "name": "shivammathur/extensions/interbase@8.6",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:shivammathur/extensions/mongodb@8.2",
+          "name": "shivammathur/extensions/mongodb@8.2",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:shivammathur/extensions/mongodb@8.3",
+          "name": "shivammathur/extensions/mongodb@8.3",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -23903,6 +25091,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:skillshare",
+          "name": "skillshare",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:skopeo",
           "name": "skopeo",
           "ecosystem": "homebrew",
@@ -23912,6 +25106,12 @@
         {
           "id": "homebrew:skyhook-io/tap/radar",
           "name": "skyhook-io/tap/radar",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:skylighting",
+          "name": "skylighting",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -24129,6 +25329,12 @@
         {
           "id": "homebrew:socket_vmnet",
           "name": "socket_vmnet",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:sofia-sip",
+          "name": "sofia-sip",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -24360,6 +25566,12 @@
         {
           "id": "homebrew:spidermonkey",
           "name": "spidermonkey",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:spinframework/tap/spin",
+          "name": "spinframework/tap/spin",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -24654,6 +25866,12 @@
         {
           "id": "homebrew:sstp-client",
           "name": "sstp-client",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:stackgenhq/stackgen/stackgen",
+          "name": "stackgenhq/stackgen/stackgen",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -25322,6 +26540,18 @@
           "priority": 3
         },
         {
+          "id": "homebrew:tach",
+          "name": "tach",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:taf2/tap/mdvi",
+          "name": "taf2/tap/mdvi",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:tag",
           "name": "tag",
           "ecosystem": "homebrew",
@@ -25479,6 +26709,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:tcpflow",
+          "name": "tcpflow",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:tcping",
           "name": "tcping",
           "ecosystem": "homebrew",
@@ -25509,6 +26745,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:tdlib",
+          "name": "tdlib",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:tea",
           "name": "tea",
           "ecosystem": "homebrew",
@@ -25517,6 +26759,12 @@
         {
           "id": "homebrew:teamookla/speedtest/speedtest",
           "name": "teamookla/speedtest/speedtest",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:teamtype",
+          "name": "teamtype",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -25535,6 +26783,18 @@
         {
           "id": "homebrew:tecolicom/tap/app-greple",
           "name": "tecolicom/tap/app-greple",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:tecolicom/tap/app-greple-charcode",
+          "name": "tecolicom/tap/app-greple-charcode",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:tecolicom/tap/app-greple-xlate",
+          "name": "tecolicom/tap/app-greple-xlate",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -25645,6 +26905,12 @@
         {
           "id": "homebrew:termshark",
           "name": "termshark",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:termshot",
+          "name": "termshot",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -25893,6 +27159,18 @@
           "priority": 3
         },
         {
+          "id": "homebrew:threatcl",
+          "name": "threatcl",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:threedotslabs/tap/tdl",
+          "name": "threedotslabs/tap/tdl",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:thrift",
           "name": "thrift",
           "ecosystem": "homebrew",
@@ -25983,6 +27261,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:tin",
+          "name": "tin",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:tintin",
           "name": "tintin",
           "ecosystem": "homebrew",
@@ -26061,6 +27345,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:tmux-xpanes",
+          "name": "tmux-xpanes",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:tmuxai",
           "name": "tmuxai",
           "ecosystem": "homebrew",
@@ -26075,6 +27365,12 @@
         {
           "id": "homebrew:tmuxp",
           "name": "tmuxp",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:tmx",
+          "name": "tmx",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -26165,6 +27461,12 @@
         {
           "id": "homebrew:topgrade",
           "name": "topgrade",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:topydo",
+          "name": "topydo",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -26386,6 +27688,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:try-rs",
+          "name": "try-rs",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:trzsz",
           "name": "trzsz",
           "ecosystem": "homebrew",
@@ -26448,6 +27756,12 @@
         {
           "id": "homebrew:ttyd",
           "name": "ttyd",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:tuckr",
+          "name": "tuckr",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -26532,6 +27846,36 @@
         {
           "id": "homebrew:tuist/tuist/tuist@4.134.0",
           "name": "tuist/tuist/tuist@4.134.0",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:tuist/tuist/tuist@4.138.0",
+          "name": "tuist/tuist/tuist@4.138.0",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:tuist/tuist/tuist@4.139.1",
+          "name": "tuist/tuist/tuist@4.139.1",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:tuist/tuist/tuist@4.141.0",
+          "name": "tuist/tuist/tuist@4.141.0",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:tuist/tuist/tuist@4.141.1",
+          "name": "tuist/tuist/tuist@4.141.1",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:tuist/tuist/tuist@4.145.0",
+          "name": "tuist/tuist/tuist@4.145.0",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -26698,6 +28042,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:typstfmt",
+          "name": "typstfmt",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:typstyle",
           "name": "typstyle",
           "ecosystem": "homebrew",
@@ -26712,6 +28062,12 @@
         {
           "id": "homebrew:ublue-os/experimental-tap/linux-mcp-server",
           "name": "ublue-os/experimental-tap/linux-mcp-server",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:ublue-os/tap/linux-mcp-server",
+          "name": "ublue-os/tap/linux-mcp-server",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -26760,6 +28116,12 @@
         {
           "id": "homebrew:uhubctl",
           "name": "uhubctl",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:umoci",
+          "name": "umoci",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -27009,6 +28371,12 @@
           "category": "deterministic_insufficient"
         },
         {
+          "id": "homebrew:uuu",
+          "name": "uuu",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:uvicorn",
           "name": "uvicorn",
           "ecosystem": "homebrew",
@@ -27065,6 +28433,12 @@
         {
           "id": "homebrew:valet-sh/core/vsh-mysql80",
           "name": "valet-sh/core/vsh-mysql80",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:valet-sh/core/vsh-mysql84",
+          "name": "valet-sh/core/vsh-mysql84",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -27819,6 +29193,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:webhook",
+          "name": "webhook",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:webkitgtk",
           "name": "webkitgtk",
           "ecosystem": "homebrew",
@@ -27882,6 +29262,12 @@
         {
           "id": "homebrew:wget2",
           "name": "wget2",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:wgo",
+          "name": "wgo",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -28003,6 +29389,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:wmctrl",
+          "name": "wmctrl",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:woff2",
           "name": "woff2",
           "ecosystem": "homebrew",
@@ -28065,6 +29457,12 @@
         {
           "id": "homebrew:wuppiefuzz",
           "name": "wuppiefuzz",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:wv",
+          "name": "wv",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -28171,6 +29569,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:xbyak",
+          "name": "xbyak",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:xclip",
           "name": "xclip",
           "ecosystem": "homebrew",
@@ -28255,6 +29659,12 @@
         {
           "id": "homebrew:xdotool",
           "name": "xdotool",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:xe/pkgs/protoc-gen-twirp",
+          "name": "xe/pkgs/protoc-gen-twirp",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -28439,6 +29849,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:yakitrak/yakitrak/notesmd-cli",
+          "name": "yakitrak/yakitrak/notesmd-cli",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:yakitrak/yakitrak/obsidian-cli",
           "name": "yakitrak/yakitrak/obsidian-cli",
           "ecosystem": "homebrew",
@@ -28527,6 +29943,12 @@
         {
           "id": "homebrew:ydiff",
           "name": "ydiff",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:yejune/tap/godo",
+          "name": "yejune/tap/godo",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -28743,6 +30165,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:zilliztech/tap/milvus-backup",
+          "name": "zilliztech/tap/milvus-backup",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:zim",
           "name": "zim",
           "ecosystem": "homebrew",
@@ -28793,6 +30221,12 @@
         {
           "id": "homebrew:zlib-ng",
           "name": "zlib-ng",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:zlib-ng-compat",
+          "name": "zlib-ng-compat",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -29761,20 +31195,6 @@
   },
   "blockers": [
     {
-      "dependency": "ada-url",
-      "count": 1,
-      "packages": [
-        "homebrew:node"
-      ]
-    },
-    {
-      "dependency": "dav1d",
-      "count": 1,
-      "packages": [
-        "homebrew:ffmpeg"
-      ]
-    },
-    {
       "dependency": "glib",
       "count": 1,
       "packages": [
@@ -29786,6 +31206,20 @@
       "count": 1,
       "packages": [
         "homebrew:coreutils"
+      ]
+    },
+    {
+      "dependency": "ada-url",
+      "count": 1,
+      "packages": [
+        "homebrew:node"
+      ]
+    },
+    {
+      "dependency": "dav1d",
+      "count": 1,
+      "packages": [
+        "homebrew:ffmpeg"
       ]
     }
   ],
