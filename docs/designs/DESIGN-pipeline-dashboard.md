@@ -1683,82 +1683,23 @@ No runtime disambiguation lookup needed. The seeding workflow already made the d
 
 ## Implementation Approach
 
-### Phase 1: Dashboard Visibility with Drill-Down Navigation
+### Planning Summary
 
-Add failure debugging and full navigation to the dashboard.
+This design spans three milestones with different levels of specification:
 
-1. Extend `cmd/queue-analytics/` to aggregate:
-   - All failures from `data/failures/*.jsonl` (not just recent)
-   - Full failure details including `full_output`, `platform`, `workflow_run_url`
-   - Circuit breaker state from `batch-control.json`
-   - Time since last successful batch (derived from `data/metrics/batch-runs.jsonl`)
-   - Full run details including per-platform results
+| Milestone | Scope | Status |
+|-----------|-------|--------|
+| **M1: Unblock Pipeline** | Queue schema, Bootstrap Phase A, orchestrator changes, recipe merge workflow | Ready for issues |
+| **M2: Observability** | Dashboard drill-down, failure subcategories, seeding stats pages | Needs design |
+| **M3: Automated Seeding** | Seeding command, weekly workflow, Bootstrap Phase B, ecosystem discovery | Needs design |
 
-2. Create drill-down page structure:
-   - `failures.html`: List all failures with filters (category, ecosystem, date)
-   - `failure.html`: Single failure detail page (query param `?id=<failure-id>`)
-   - `run.html`: Single run detail page (query param `?id=<batch-id>`)
-   - Enhance existing `runs.html` to link to `run.html?id=`
+**M1 is the critical path** - it unblocks the pipeline immediately. M2 and M3 are valuable but can proceed independently after M1.
 
-3. Update `website/pipeline/index.html`:
-   - Add "Recent Failures" panel linking to `failures.html`
-   - Add "Pipeline Health" panel with breaker state
-   - Make all panel headers clickable → link to respective list pages
-   - Make all table rows clickable → link to detail pages
+---
 
-4. Update `website/pipeline/dashboard.json` schema:
-   - Add `failures` array with full failure records
-   - Add `failures_summary` for category/ecosystem breakdown
-   - Extend `runs` array with full detail per run
-   - Add `health` section
+### Milestone 1: Unblock Pipeline (Ready for Issues)
 
-**Deliverables:**
-- Modified `cmd/queue-analytics/`
-- Modified `website/pipeline/index.html`
-- New `website/pipeline/failures.html`
-- New `website/pipeline/failure.html`
-- New `website/pipeline/run.html`
-- Modified `website/pipeline/runs.html`
-- Updated dashboard.json schema
-
-**Validation:**
-- All dashboard panels are clickable and navigate to list pages
-- All list items are clickable and navigate to detail pages
-- Failure detail page shows full error output (not truncated)
-- No need to inspect JSON files for any information
-- Pipeline Health clearly distinguishes "last run" from "last successful run"
-- A pipeline running hourly with 0 successes shows as "Running" not stalled
-- "Runs since success" counter shows how many batches have failed to produce recipes
-
-### Phase 2: Failure Subcategories
-
-Refine failure categories for better debugging. This can be done independently of queue changes.
-
-1. Add `Subcategory` field to `FailureRecord` struct.
-
-2. Verify `tsuku install --json` output includes subcategory information. If not, add it to CLI first.
-
-3. Extend `parseInstallJSON` in `orchestrator.go` to extract subcategory from CLI JSON output.
-
-4. Update `categoryFromExitCode` to return `(category, subcategory)` tuple.
-
-5. Modify failure JSONL writing to include subcategory.
-
-6. Update `queue-analytics` to aggregate by subcategory.
-
-**Deliverables:**
-- Modified `internal/batch/orchestrator.go`
-- Modified `internal/batch/failure.go`
-- Modified `cmd/queue-analytics/`
-- Possibly modified CLI (`tsuku install --json` output schema)
-
-**Validation:**
-- Failure records include meaningful subcategories
-- Dashboard shows subcategory breakdown
-
-### Phase 3: Unified Disambiguated Queue
-
-Replace the homebrew-only queue with a unified queue containing pre-resolved sources. This phase reuses the existing ecosystem probers in `internal/discover/`.
+This milestone migrates to the unified queue format and gets recipes flowing again.
 
 **Pre-validation step** (before building infrastructure):
 
@@ -1771,13 +1712,31 @@ tsuku create --from github:sharkdp/bat --deterministic-only
 
 If these fail, disambiguation doesn't solve the root cause and we need a different approach.
 
-**Bootstrap Strategy (run locally, submit via PR)**
+#### Issue 1: Queue Schema Migration
 
-The initial queue population is split into two phases, both run locally to avoid CI timeouts and rate limit concerns:
+Define the new unified queue format with freshness fields:
 
-**Bootstrap Phase A: Unblock the pipeline**
+```json
+{
+  "name": "ripgrep",
+  "source": "cargo:ripgrep",
+  "priority": 1,
+  "status": "pending",
+  "confidence": "auto",
+  "disambiguated_at": "2026-02-15T00:00:00Z",
+  "next_retry_at": null,
+  "failure_count": 0
+}
+```
 
-Run locally with a simple script:
+**Deliverables:**
+- Queue entry struct in `internal/batch/`
+- JSON schema for validation
+- Status values: `pending`, `success`, `failed`, `blocked`, `requires_manual`, `excluded`
+
+#### Issue 2: Bootstrap Phase A Script
+
+Run locally to create the initial unified queue:
 
 1. **Scan `recipes/`** → Create `success` entries
    - For each recipe file, extract sources from steps (first/primary source for queue's `source` field)
@@ -1794,98 +1753,97 @@ Run locally with a simple script:
    - Set `source: "homebrew:<name>"`, `confidence: "auto"`, `status: "pending"`
    - ~5000 entries
 
-This immediately unblocks the pipeline: curated overrides fix bat/fd/rg, recipes are marked done, homebrew packages continue processing.
+**Deliverables:**
+- Bootstrap script (Go or shell)
+- `data/queues/priority-queue.json` with unified format
+- PR with migrated data
 
-**Bootstrap Phase B: Multi-ecosystem coverage**
+#### Issue 3: Orchestrator Uses Queue Source
+
+Update batch generation to use pre-resolved sources:
+
+1. Update orchestrator to read `pkg.Source` directly instead of hardcoding ecosystem
+2. Increment `failure_count` on failure, reset on success
+3. Set `next_retry_at` for exponential backoff
+4. Filter out `github:` sources that require LLM (deterministic-only batching)
+5. Update status to `failed` or `requires_manual` as appropriate
+
+**Deliverables:**
+- Modified `internal/batch/orchestrator.go`
+- Modified queue reading/writing logic
+
+#### Issue 4: Recipe Merge Workflow
+
+Create workflow that updates queue status when recipes merge:
+
+1. Trigger on push to main affecting `recipes/`
+2. Extract sources from recipe steps (can be multiple per recipe)
+3. Check if queue source IN recipe sources:
+   - **IN**: Set `status: "success"`
+   - **NOT IN**: Set `status: "success"`, set `confidence: "curated"`
+4. Don't update `source` field (keep as historical provenance)
+
+**Deliverables:**
+- New `update-queue-status.yml` workflow
+- Source extraction logic for recipe steps
+
+---
+
+### Milestone 2: Observability (Needs Design)
+
+> **Status: Needs design issue before implementation**
+>
+> This milestone requires exploration to:
+> - Validate failure subcategories against actual CLI output and exit codes
+> - Define the full dashboard.json schema extension
+> - Spec the seeding stats page data requirements
+
+**Scope:**
+- Dashboard drill-down navigation (failures.html, failure.html, run.html, seeding.html, curated.html)
+- Failure subcategories in batch infrastructure
+- Extended dashboard.json schema with failures, health, seeding sections
+- Pipeline health panel (circuit breaker state, last success tracking)
+
+**Key questions for design:**
+- What are the actual failure subcategories? (Need to audit CLI exit codes and JSON output)
+- How much failure history to retain in dashboard.json?
+- What seeding stats are most useful for operators?
+
+---
+
+### Milestone 3: Automated Seeding (Needs Design)
+
+> **Status: Needs design issue before implementation**
+>
+> This milestone requires exploration to:
+> - Define PackageDiscovery APIs and criteria for each ecosystem
+> - Determine rate limiting strategy per ecosystem
+> - Spec the audit log format and retention
+
+**Scope:**
+- `cmd/seed-queue/` command with PackageDiscovery, FreshnessChecker, DisambiguationRunner, QueueMerger
+- `seed-queue.yml` weekly workflow
+- Bootstrap Phase B (full multi-ecosystem disambiguation, run locally)
+- New source detection logic (check audit candidates)
+
+**Key questions for design:**
+- What APIs for each ecosystem? (crates.io, npm registry, PyPI, RubyGems)
+- What criteria for "popular"? (downloads, stars, recent activity)
+- How to handle ecosystems with no popularity data?
+- Rate limiting strategy (per-ecosystem limits, backoff)
+
+**Bootstrap Phase B** (deferred to this milestone):
 
 Run locally after Phase A is merged:
 
-1. **Discover packages from other ecosystems**
-   - cargo: crates.io most-downloaded CLI tools
-   - npm: popular CLI packages
-   - pypi: top packages with entry_points
-   - rubygems: gems with executables
-
-2. **Run disambiguation on all packages**
-   - New packages from step 1
-   - Existing homebrew packages that might have better sources
-   - Rate limit locally (sleep between API calls)
-
-3. **Submit as PR**
-   - Full multi-ecosystem queue with pre-resolved sources
-   - Audit logs for transparency
-
-After both bootstrap phases, the weekly seeding workflow handles incremental updates.
-
-**Step 1: Build incremental seeding infrastructure**
-
-1. Create `cmd/seed-queue/main.go` with:
-   - `PackageDiscovery`: Fetch popular packages from ecosystem feeds (homebrew formulae, crates.io top, npm popular, etc.)
-   - `FreshnessChecker`: Identify entries needing disambiguation (stale >30 days, failure backoff, new source discovered)
-   - `DisambiguationRunner`: Import `internal/discover` and call disambiguation directly
-   - `QueueMerger`: Update queue entries, preserve fresh ones, add freshness metadata
-
-2. Create `seed-queue.yml` workflow (runs weekly on schedule, manual dispatch):
-   - Discovers new packages from ecosystem feeds
-   - Identifies stale/failing entries in existing queue
-   - Runs disambiguation only for those entries
-   - Commits updated `data/queues/priority-queue.json`
-
-**Step 2: Leverage existing disambiguation**
-
-The heavy lifting is already done in `internal/discover/`:
-- Ecosystem probers handle API rate limits and authentication
-- Quality metric collection is implemented
-- 10x threshold scoring exists
-- Curated override lookup works
-
-The seeding command imports this directly:
-```go
-import "github.com/tsukumogami/tsuku/internal/discover"
-
-// For each package needing disambiguation
-result, err := discover.Disambiguate("ripgrep", opts)
-// result.Source = "cargo:ripgrep", result.Confidence = "auto"
-```
-
-**Step 3: Update queue schema and batch generation**
-
-1. Extend queue entry schema with freshness fields:
-   ```json
-   {
-     "name": "ripgrep",
-     "source": "cargo:ripgrep",
-     "priority": 1,
-     "disambiguated_at": "2026-02-15T00:00:00Z",
-     "consecutive_failures": 0
-   }
-   ```
-
-2. Update orchestrator to:
-   - Use `pkg.Source` directly
-   - Increment `consecutive_failures` on failure
-   - Reset `consecutive_failures` on success
-
-3. Filter out `github:` sources that require LLM (deterministic-only batching).
+1. Discover packages from other ecosystems (cargo, npm, pypi, rubygems)
+2. Run disambiguation on all packages (new + existing homebrew that might have better sources)
+3. Submit as PR with full multi-ecosystem queue and audit logs
 
 **API call estimation**:
 - Initial seeding: ~5K disambiguation calls (one-time, run locally during Bootstrap Phase B)
 - Weekly maintenance: ~50 new + ~200 stale + ~10 failures = ~260 calls
 - Rate limits are non-issue in CI after bootstrap is complete
-
-**Deliverables:**
-- New `cmd/seed-queue/` command
-- New `seed-queue.yml` workflow
-- Modified queue schema with freshness fields
-- Modified `internal/batch/orchestrator.go`
-
-**Validation:**
-- Seeding workflow runs incrementally (skips fresh entries)
-- Queue contains entries from multiple ecosystems
-- Entries have pre-resolved sources with freshness metadata
-- Batch generation uses source directly (no runtime disambiguation)
-- Packages like `bat`, `fd`, `rg` use their correct sources (github/cargo, not homebrew)
-- Failed packages get re-disambiguated after threshold
 
 ## Security Considerations
 
