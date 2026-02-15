@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-02-15T16:30:09Z",
+  "generated_at": "2026-02-15T17:27:04Z",
   "queue": {
     "total": 5144,
     "by_status": {
@@ -31195,13 +31195,6 @@
   },
   "blockers": [
     {
-      "dependency": "dav1d",
-      "count": 1,
-      "packages": [
-        "homebrew:ffmpeg"
-      ]
-    },
-    {
       "dependency": "glib",
       "count": 1,
       "packages": [
@@ -31220,6 +31213,13 @@
       "count": 1,
       "packages": [
         "homebrew:node"
+      ]
+    },
+    {
+      "dependency": "dav1d",
+      "count": 1,
+      "packages": [
+        "homebrew:ffmpeg"
       ]
     }
   ],
