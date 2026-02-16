@@ -18,3 +18,19 @@ type EcosystemProber interface {
 	SessionBuilder
 	Probe(ctx context.Context, name string) (*ProbeResult, error)
 }
+
+// DiscoveryCandidate represents a package discovered from an ecosystem's
+// batch listing API. The Name is the package name within that ecosystem,
+// and Downloads is the popularity metric (0 if unavailable).
+type DiscoveryCandidate struct {
+	Name      string // package name in this ecosystem
+	Downloads int    // popularity metric (0 if unavailable)
+}
+
+// EcosystemDiscoverer extends EcosystemProber with batch discovery.
+// Builders that implement this interface can list popular CLI packages
+// from their ecosystem, not just probe for known names.
+type EcosystemDiscoverer interface {
+	EcosystemProber
+	Discover(ctx context.Context, limit int) ([]DiscoveryCandidate, error)
+}
