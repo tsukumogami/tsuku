@@ -53,7 +53,7 @@ Planned
 | _Create `failures.html` (filterable list of recent failures) and `failure.html` (single-failure detail with error message, platform, and logs link). Redirect legacy `failed.html` to `failures.html`._ | | |
 | [#1714: feat(dashboard): add run detail page and enhance runs list](https://github.com/tsukumogami/tsuku/issues/1714) | [#1709](https://github.com/tsukumogami/tsuku/issues/1709), [#1710](https://github.com/tsukumogami/tsuku/issues/1710), [#1712](https://github.com/tsukumogami/tsuku/issues/1712) | testable |
 | _Create `run.html` (single-run detail showing per-package outcomes and duration breakdown) and enhance `runs.html` with health badges and navigation to the new detail page._ | | |
-| [#1715: feat(dashboard): add package detail page](https://github.com/tsukumogami/tsuku/issues/1715) | [#1708](https://github.com/tsukumogami/tsuku/issues/1708), [#1710](https://github.com/tsukumogami/tsuku/issues/1710), [#1712](https://github.com/tsukumogami/tsuku/issues/1712) | testable |
+| ~~[#1715: feat(dashboard): add package detail page](https://github.com/tsukumogami/tsuku/issues/1715)~~ | [#1708](https://github.com/tsukumogami/tsuku/issues/1708), [#1710](https://github.com/tsukumogami/tsuku/issues/1710), [#1712](https://github.com/tsukumogami/tsuku/issues/1712) | testable |
 | _Create `package.html` that joins queue state, failure history, run participation, and disambiguation data into a single-package view with client-side data from `dashboard.json`._ | | |
 | [#1716: feat(dashboard): enhance index with health, failures, and curated panels](https://github.com/tsukumogami/tsuku/issues/1716) | [#1709](https://github.com/tsukumogami/tsuku/issues/1709), [#1710](https://github.com/tsukumogami/tsuku/issues/1710), [#1711](https://github.com/tsukumogami/tsuku/issues/1711), [#1712](https://github.com/tsukumogami/tsuku/issues/1712) | testable |
 | _Add Health Status, Recent Failures, and Curated Overrides panels to `index.html`, each linking to their respective detail pages for drill-down navigation._ | | |
@@ -110,8 +110,8 @@ graph TD
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1708,I1709,I1710,I1711,I1712,I1713,I1717,I1718 done
-    class I1714,I1715,I1716 ready
+    class I1708,I1709,I1710,I1711,I1712,I1713,I1715,I1717,I1718 done
+    class I1714,I1716 ready
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
