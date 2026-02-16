@@ -72,7 +72,7 @@ Planned
 | _CLI command to pre-download addon and models for CI/offline use. Hardware detection selects appropriate model._ | | |
 | ~~[#1644: test(llm): add end-to-end integration test without cloud keys](https://github.com/tsukumogami/tsuku/issues/1644)~~ | [#1640](https://github.com/tsukumogami/tsuku/issues/1640), [#1632](https://github.com/tsukumogami/tsuku/issues/1632) | testable |
 | _Test creates recipe using local inference with no cloud API keys configured. Validates full flow from factory fallback to recipe output._ | | |
-| [#1645: docs(llm): update documentation for local inference](https://github.com/tsukumogami/tsuku/issues/1645) | [#1632](https://github.com/tsukumogami/tsuku/issues/1632), [#1636](https://github.com/tsukumogami/tsuku/issues/1636) | simple |
+| ~~[#1645: docs(llm): update documentation for local inference](https://github.com/tsukumogami/tsuku/issues/1645)~~ | [#1632](https://github.com/tsukumogami/tsuku/issues/1632), [#1636](https://github.com/tsukumogami/tsuku/issues/1636) | simple |
 | _Document config options, hardware requirements table, and troubleshooting guide for local LLM runtime._ | | |
 
 ### Dependency Graph
@@ -106,7 +106,7 @@ graph TD
         I1642["#1642: Download UX ✓"]
         I1643["#1643: llm download cmd ✓"]
         I1644["#1644: E2E test ✓"]
-        I1645["#1645: Documentation"]
+        I1645["#1645: Documentation ✓"]
     end
 
     I1628 --> I1629
@@ -146,8 +146,7 @@ graph TD
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1628,I1629,I1630,I1631,I1632,I1633,I1634,I1635,I1636,I1637,I1638,I1672,I1675,I1676,I1639,I1640,I1641,I1642,I1643,I1644 done
-    class I1645 ready
+    class I1628,I1629,I1630,I1631,I1632,I1633,I1634,I1635,I1636,I1637,I1638,I1672,I1675,I1676,I1639,I1640,I1641,I1642,I1643,I1644,I1645 done
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
