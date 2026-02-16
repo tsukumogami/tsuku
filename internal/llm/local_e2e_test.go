@@ -60,11 +60,12 @@ func TestE2E_FactoryFallthroughLocalDisabled(t *testing.T) {
 //
 //	go test -v -tags=e2e -run TestE2E_CreateWithLocalProvider ./internal/llm/
 func TestE2E_CreateWithLocalProvider(t *testing.T) {
-	// Set isolated environment -- no cloud keys, isolated home
+	// Clear cloud keys so the factory selects the local provider.
+	// Do NOT override TSUKU_HOME -- the provider needs it to find the
+	// addon socket. These tests are read-only against the addon.
 	t.Setenv("ANTHROPIC_API_KEY", "")
 	t.Setenv("GOOGLE_API_KEY", "")
 	t.Setenv("GEMINI_API_KEY", "")
-	t.Setenv("TSUKU_HOME", t.TempDir())
 
 	if !IsAddonRunning() {
 		t.Skip("tsuku-llm addon not running, skipping e2e test")
@@ -123,7 +124,6 @@ func TestE2E_RecipeGenerationWithLocalProvider(t *testing.T) {
 	t.Setenv("ANTHROPIC_API_KEY", "")
 	t.Setenv("GOOGLE_API_KEY", "")
 	t.Setenv("GEMINI_API_KEY", "")
-	t.Setenv("TSUKU_HOME", t.TempDir())
 
 	if !IsAddonRunning() {
 		t.Skip("tsuku-llm addon not running, skipping e2e test")
@@ -255,7 +255,6 @@ func TestE2E_FactoryCreatesWorkingLocalProvider(t *testing.T) {
 	t.Setenv("ANTHROPIC_API_KEY", "")
 	t.Setenv("GOOGLE_API_KEY", "")
 	t.Setenv("GEMINI_API_KEY", "")
-	t.Setenv("TSUKU_HOME", t.TempDir())
 
 	if !IsAddonRunning() {
 		t.Skip("tsuku-llm addon not running, skipping e2e test")
