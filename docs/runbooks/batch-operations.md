@@ -24,7 +24,9 @@ Operational procedures for the batch recipe generation pipeline. Each section fo
 
 ### Investigation Steps
 
-1. Check which ecosystems have failures:
+1. Check the pipeline dashboard health panel at `/pipeline/` for a quick overview. It shows circuit breaker state per ecosystem, last run timestamps, runs since last success, and a warning if no batch has run in >2 hours. This is the fastest way to assess the situation before deeper investigation.
+
+2. Check which ecosystems have failures:
 
    ```
    jq '.circuit_breaker | to_entries | map(select(.value.failures > 0))' batch-control.json
@@ -49,7 +51,7 @@ Operational procedures for the batch recipe generation pipeline. Each section fo
    ]
    ```
 
-2. Check circuit breaker state for a specific ecosystem:
+3. Check circuit breaker state for a specific ecosystem:
 
    ```
    ./scripts/check_breaker.sh homebrew
@@ -67,15 +69,15 @@ Operational procedures for the batch recipe generation pipeline. Each section fo
    skip=true
    ```
 
-3. Review recent workflow runs:
+4. Review recent workflow runs:
 
    ```
    gh run list --workflow=batch-operations.yml --limit=5
    ```
 
-4. If network errors dominate, check upstream API status pages.
+5. If network errors dominate, check upstream API status pages.
 
-5. If validation errors dominate, check recent CI changes:
+6. If validation errors dominate, check recent CI changes:
 
    ```
    git log --oneline -10 -- .github/workflows/

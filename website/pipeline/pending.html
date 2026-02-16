@@ -43,6 +43,20 @@
             border-bottom: none;
         }
 
+        .package-table tbody tr {
+            cursor: pointer;
+            transition: background 0.15s ease;
+        }
+
+        .package-table tbody tr:hover {
+            background: var(--bg);
+        }
+
+        .package-table tbody tr a {
+            color: inherit;
+            text-decoration: none;
+        }
+
         .package-name {
             font-family: "SF Mono", Consolas, monospace;
         }
@@ -58,6 +72,85 @@
         .priority-1 { background: #3fb950; color: #000; }
         .priority-2 { background: #d29922; color: #000; }
         .priority-3 { background: var(--text-muted); color: var(--bg); }
+
+        .filter-bar {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-bar label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .filter-bar select,
+        .filter-bar input[type="text"] {
+            padding: 0.4rem 0.6rem;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background: var(--bg);
+            color: var(--text);
+            font-size: 0.85rem;
+        }
+
+        .filter-bar select:hover,
+        .filter-bar input[type="text"]:hover {
+            border-color: var(--accent);
+        }
+
+        .filter-bar select {
+            cursor: pointer;
+        }
+
+        .summary-chips {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-top: 1.5rem;
+        }
+
+        .summary-chips h3 {
+            width: 100%;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin: 0 0 0.25rem 0;
+        }
+
+        .chip {
+            display: inline-block;
+            padding: 0.3rem 0.7rem;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .chip:hover {
+            border-color: var(--accent);
+            color: var(--text);
+        }
+
+        .chip.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #000;
+        }
+
+        .failure-count {
+            font-family: "SF Mono", Consolas, monospace;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .failure-count.has-failures {
+            color: #f85149;
+            font-weight: 600;
+        }
 
         .loading {
             text-align: center;
@@ -121,48 +214,203 @@
     </footer>
 
     <script>
-        const STATUS = 'pending';
+        function esc(s) {
+            if (s == null) return '';
+            const div = document.createElement('div');
+            div.textContent = String(s);
+            return div.innerHTML;
+        }
 
-        function renderPackages(packages) {
-            if (!packages || packages.length === 0) {
+        const STATUS = 'pending';
+        let allPackages = [];
+
+        function getParams() {
+            const params = new URLSearchParams(window.location.search);
+            return {
+                ecosystem: params.get('ecosystem') || '',
+                priority: params.get('priority') || '',
+                search: params.get('search') || ''
+            };
+        }
+
+        function updateURL(filters) {
+            const params = new URLSearchParams();
+            if (filters.ecosystem) params.set('ecosystem', filters.ecosystem);
+            if (filters.priority) params.set('priority', filters.priority);
+            if (filters.search) params.set('search', filters.search);
+            const qs = params.toString();
+            const url = window.location.pathname + (qs ? '?' + qs : '');
+            history.pushState(null, '', url);
+        }
+
+        function collectEcosystems(packages) {
+            const vals = new Set();
+            packages.forEach(p => { if (p.ecosystem) vals.add(p.ecosystem); });
+            return Array.from(vals).sort();
+        }
+
+        function collectPriorities(packages) {
+            const vals = new Set();
+            packages.forEach(p => { if (p.priority) vals.add(String(p.priority)); });
+            return Array.from(vals).sort();
+        }
+
+        function applyFilters(packages, filters) {
+            return packages.filter(pkg => {
+                if (filters.ecosystem && pkg.ecosystem !== filters.ecosystem) return false;
+                if (filters.priority && String(pkg.priority) !== filters.priority) return false;
+                if (filters.search) {
+                    const term = filters.search.toLowerCase();
+                    if (!pkg.name.toLowerCase().includes(term)) return false;
+                }
+                return true;
+            });
+        }
+
+        function renderFilters(packages, filters) {
+            const ecosystems = collectEcosystems(packages);
+            const priorities = collectPriorities(packages);
+
+            function opts(values, selected) {
+                return values.map(v =>
+                    '<option value="' + esc(v) + '"' + (v === selected ? ' selected' : '') + '>' + esc(v) + '</option>'
+                ).join('');
+            }
+
+            return '<div class="filter-bar">' +
+                '<label>Ecosystem: ' +
+                    '<select id="filter-ecosystem">' +
+                        '<option value="">All</option>' +
+                        opts(ecosystems, filters.ecosystem) +
+                    '</select>' +
+                '</label>' +
+                '<label>Priority: ' +
+                    '<select id="filter-priority">' +
+                        '<option value="">All</option>' +
+                        opts(priorities, filters.priority) +
+                    '</select>' +
+                '</label>' +
+                '<label>Search: ' +
+                    '<input type="text" id="filter-search" placeholder="Package name..." value="' + esc(filters.search) + '">' +
+                '</label>' +
+            '</div>';
+        }
+
+        function renderEcosystemChips(packages, activeEcosystem) {
+            const counts = {};
+            packages.forEach(pkg => {
+                const eco = pkg.ecosystem || 'unknown';
+                counts[eco] = (counts[eco] || 0) + 1;
+            });
+
+            const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+            if (sorted.length === 0) return '';
+
+            let html = '<div class="summary-chips"><h3>By Ecosystem</h3>';
+            sorted.forEach(function(entry) {
+                var eco = entry[0];
+                var count = entry[1];
+                var active = eco === activeEcosystem ? ' active' : '';
+                html += '<a href="?ecosystem=' + encodeURIComponent(eco) + '" class="chip' + active + '" data-ecosystem="' + esc(eco) + '">' +
+                    esc(eco) + ' (' + count + ')</a>';
+            });
+            html += '</div>';
+            return html;
+        }
+
+        function renderPackages(packages, filters) {
+            if (!allPackages || allPackages.length === 0) {
                 return '<div class="loading">No packages with this status</div>';
             }
 
-            const rows = packages.map(pkg => `
-                <tr>
-                    <td class="package-name">${pkg.name}</td>
-                    <td>${pkg.ecosystem}</td>
-                    <td><span class="tier-badge tier-${pkg.priority}">P${pkg.priority}</span></td>
-                </tr>
-            `).join('');
+            var filtered = applyFilters(allPackages, filters);
 
-            return `
-                <div class="package-list">
-                    <h2>${packages.length} packages</h2>
-                    <table class="package-table">
-                        <thead>
-                            <tr>
-                                <th>Package</th>
-                                <th>Ecosystem</th>
-                                <th>Priority</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${rows}
-                        </tbody>
-                    </table>
-                </div>
-            `;
+            var filterHTML = renderFilters(allPackages, filters);
+
+            if (filtered.length === 0) {
+                return filterHTML + '<div class="loading">No packages match the current filters</div>' +
+                    renderEcosystemChips(allPackages, filters.ecosystem);
+            }
+
+            var rows = filtered.map(function(pkg) {
+                var fcClass = pkg.failure_count > 0 ? 'failure-count has-failures' : 'failure-count';
+                return '<tr onclick="window.location=\'package.html?id=' + encodeURIComponent(pkg.id) + '\'">' +
+                    '<td class="package-name"><a href="package.html?id=' + encodeURIComponent(pkg.id) + '">' + esc(pkg.name) + '</a></td>' +
+                    '<td>' + esc(pkg.ecosystem) + '</td>' +
+                    '<td><span class="priority-badge priority-' + esc(String(pkg.priority)) + '">P' + esc(String(pkg.priority)) + '</span></td>' +
+                    '<td class="' + fcClass + '">' + esc(String(pkg.failure_count || 0)) + '</td>' +
+                '</tr>';
+            }).join('');
+
+            return filterHTML +
+                '<div class="package-list">' +
+                    '<h2>' + filtered.length + ' package' + (filtered.length !== 1 ? 's' : '') + '</h2>' +
+                    '<table class="package-table">' +
+                        '<thead>' +
+                            '<tr>' +
+                                '<th>Package</th>' +
+                                '<th>Ecosystem</th>' +
+                                '<th>Priority</th>' +
+                                '<th>Failures</th>' +
+                            '</tr>' +
+                        '</thead>' +
+                        '<tbody>' +
+                            rows +
+                        '</tbody>' +
+                    '</table>' +
+                '</div>' +
+                renderEcosystemChips(allPackages, filters.ecosystem);
         }
+
+        function render() {
+            var filters = getParams();
+            var content = document.getElementById('content');
+            content.innerHTML = renderPackages(allPackages, filters);
+
+            // Bind filter change handlers
+            var ecoSelect = document.getElementById('filter-ecosystem');
+            var prioSelect = document.getElementById('filter-priority');
+            var searchInput = document.getElementById('filter-search');
+            if (ecoSelect) ecoSelect.addEventListener('change', onFilterChange);
+            if (prioSelect) prioSelect.addEventListener('change', onFilterChange);
+            if (searchInput) searchInput.addEventListener('input', onFilterChange);
+
+            // Bind chip clicks
+            var chips = document.querySelectorAll('.chip[data-ecosystem]');
+            chips.forEach(function(chip) {
+                chip.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    var eco = this.getAttribute('data-ecosystem');
+                    var filters = getParams();
+                    filters.ecosystem = (filters.ecosystem === eco) ? '' : eco;
+                    updateURL(filters);
+                    render();
+                });
+            });
+        }
+
+        function onFilterChange() {
+            var filters = {
+                ecosystem: document.getElementById('filter-ecosystem').value,
+                priority: document.getElementById('filter-priority').value,
+                search: document.getElementById('filter-search').value
+            };
+            updateURL(filters);
+            render();
+        }
+
+        window.addEventListener('popstate', function() {
+            render();
+        });
 
         async function load() {
             try {
-                const response = await fetch('/pipeline/dashboard.json');
-                const data = await response.json();
-                const packages = data.queue.packages?.[STATUS] || [];
-                document.getElementById('content').innerHTML = renderPackages(packages);
+                var response = await fetch('/pipeline/dashboard.json');
+                var data = await response.json();
+                allPackages = data.queue.packages?.[STATUS] || [];
+                render();
             } catch (error) {
-                document.getElementById('content').innerHTML = `<div class="loading">Error loading data: ${error.message}</div>`;
+                document.getElementById('content').innerHTML = '<div class="loading">Error loading data: ' + esc(error.message) + '</div>';
             }
         }
 

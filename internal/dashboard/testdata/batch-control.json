@@ -1,0 +1,16 @@
+{
+  "circuit_breaker": {
+    "homebrew": {
+      "state": "closed",
+      "failures": 0,
+      "last_failure": "2026-02-08T09:31:11Z",
+      "opens_at": "2026-02-08T10:31:11Z"
+    },
+    "npm": {
+      "state": "open",
+      "failures": 3,
+      "last_failure": "2026-02-15T14:00:00Z",
+      "opens_at": "2026-02-15T15:00:00Z"
+    }
+  }
+}
