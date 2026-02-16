@@ -1,5 +1,5 @@
 ---
-status: Accepted
+status: Planned
 problem: |
   The batch pipeline's unified queue has 5,275 entries but 97% come from Homebrew.
   Other ecosystems (cargo, npm, pypi, rubygems, go) have popular CLI tools that
@@ -31,7 +31,58 @@ rationale: |
 
 ## Status
 
-Accepted
+Planned
+
+## Implementation Issues
+
+### Milestone: [automated-seeding](https://github.com/tsukumogami/tsuku/milestone/85)
+
+| Issue | Dependencies | Tier |
+|-------|--------------|------|
+| [#1723: feat(seed): implement walking skeleton for ecosystem discovery and seeding](https://github.com/tsukumogami/tsuku/issues/1723) | None | testable |
+| _Walking skeleton: EcosystemDiscoverer interface, CargoBuilder.Discover(), ResolveWithDetails(), Disambiguator wrapper, convert.go with tier assignment, FilterByName, and seed-queue -source cargo e2e flow._ | | |
+| [#1724: feat(builders): add Discover() to npm, pypi, and gem builders](https://github.com/tsukumogami/tsuku/issues/1724) | [#1723](https://github.com/tsukumogami/tsuku/issues/1723) | testable |
+| _Implements Discover() on NpmBuilder, PyPIBuilder, and GemBuilder using each ecosystem's batch listing APIs with rate limiting and CLI-tool filtering._ | | |
+| [#1725: feat(seed): implement audit log system for disambiguation decisions](https://github.com/tsukumogami/tsuku/issues/1725) | [#1723](https://github.com/tsukumogami/tsuku/issues/1723) | testable |
+| _Per-package audit files recording full probe results, selected source, and reasoning. Provides HasSource() and ReadAuditEntry() that freshness checking depends on._ | | |
+| [#1726: feat(seed): implement freshness checking and source change alerting](https://github.com/tsukumogami/tsuku/issues/1726) | [#1723](https://github.com/tsukumogami/tsuku/issues/1723), [#1725](https://github.com/tsukumogami/tsuku/issues/1725) | critical |
+| _Three re-disambiguation triggers (staleness, failures+stale, new audit candidate), source change detection with priority-based alerting, and curated source validation._ | | |
+| [#1727: feat(seed): complete seed-queue command interface and output](https://github.com/tsukumogami/tsuku/issues/1727) | [#1723](https://github.com/tsukumogami/tsuku/issues/1723), [#1726](https://github.com/tsukumogami/tsuku/issues/1726) | testable |
+| _Full flag set, exit codes (0/1/2), summary JSON to stdout for workflow consumption, and seeding-runs.jsonl persistence. Stabilizes the command contract for CI._ | | |
+| [#1728: feat(batch): add seeding workflow and bootstrap Phase B](https://github.com/tsukumogami/tsuku/issues/1728) | [#1727](https://github.com/tsukumogami/tsuku/issues/1727) | critical |
+| _Updates seed-queue.yml for all ecosystems, adds source change issue creation with seeding:review label, and documents Bootstrap Phase B procedure._ | | |
+
+```mermaid
+graph TD
+    I1723["#1723: walking skeleton"]
+    I1724["#1724: npm/pypi/gem Discover()"]
+    I1725["#1725: audit log system"]
+    I1726["#1726: freshness + alerting"]
+    I1727["#1727: command interface + output"]
+    I1728["#1728: workflow + bootstrap"]
+
+    I1723 --> I1724
+    I1723 --> I1725
+    I1723 --> I1726
+    I1725 --> I1726
+    I1723 --> I1727
+    I1726 --> I1727
+    I1727 --> I1728
+
+    classDef done fill:#c8e6c9,stroke:#333
+    classDef ready fill:#bbdefb,stroke:#333
+    classDef blocked fill:#fff9c4,stroke:#333
+    classDef needsDesign fill:#e1bee7,stroke:#333
+
+    class I1723 ready
+    class I1724 blocked
+    class I1725 blocked
+    class I1726 blocked
+    class I1727 blocked
+    class I1728 blocked
+```
+
+**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
 
 ## Upstream Design Reference
 
