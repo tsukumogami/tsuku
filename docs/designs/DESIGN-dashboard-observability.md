@@ -49,7 +49,7 @@ Planned
 | _Filter the unified queue for `confidence == "curated"` entries and emit a `curated` array with package name, source, reason, and validation status._ | | |
 | ~~[#1712: fix(dashboard): add XSS mitigation to all dashboard pages](https://github.com/tsukumogami/tsuku/issues/1712)~~ | None | critical |
 | _Add an `esc()` HTML-escaping utility to every dashboard page that uses `innerHTML`, covering all existing and new pages against data-driven XSS._ | | |
-| [#1713: feat(dashboard): add failures list and detail pages](https://github.com/tsukumogami/tsuku/issues/1713) | [#1710](https://github.com/tsukumogami/tsuku/issues/1710), [#1712](https://github.com/tsukumogami/tsuku/issues/1712) | testable |
+| ~~[#1713: feat(dashboard): add failures list and detail pages](https://github.com/tsukumogami/tsuku/issues/1713)~~ | [#1710](https://github.com/tsukumogami/tsuku/issues/1710), [#1712](https://github.com/tsukumogami/tsuku/issues/1712) | testable |
 | _Create `failures.html` (filterable list of recent failures) and `failure.html` (single-failure detail with error message, platform, and logs link). Redirect legacy `failed.html` to `failures.html`._ | | |
 | [#1714: feat(dashboard): add run detail page and enhance runs list](https://github.com/tsukumogami/tsuku/issues/1714) | [#1709](https://github.com/tsukumogami/tsuku/issues/1709), [#1710](https://github.com/tsukumogami/tsuku/issues/1710), [#1712](https://github.com/tsukumogami/tsuku/issues/1712) | testable |
 | _Create `run.html` (single-run detail showing per-package outcomes and duration breakdown) and enhance `runs.html` with health badges and navigation to the new detail page._ | | |
@@ -110,8 +110,8 @@ graph TD
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1708,I1709,I1710,I1711,I1712 done
-    class I1713,I1714,I1715,I1716,I1717,I1718 ready
+    class I1708,I1709,I1710,I1711,I1712,I1713 done
+    class I1714,I1715,I1716,I1717,I1718 ready
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
