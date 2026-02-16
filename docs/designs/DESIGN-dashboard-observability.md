@@ -47,7 +47,7 @@ Planned
 | _Read both JSONL failure formats, classify errors into subcategories using bracketed tags, regex, and exit code fallbacks, deduplicate per-recipe, and emit a capped `failure_details` array in `dashboard.json`._ | | |
 | [#1711: feat(dashboard): add curated overrides to dashboard data](https://github.com/tsukumogami/tsuku/issues/1711) | [#1708](https://github.com/tsukumogami/tsuku/issues/1708) | simple |
 | _Filter the unified queue for `confidence == "curated"` entries and emit a `curated` array with package name, source, reason, and validation status._ | | |
-| [#1712: fix(dashboard): add XSS mitigation to all dashboard pages](https://github.com/tsukumogami/tsuku/issues/1712) | None | critical |
+| ~~[#1712: fix(dashboard): add XSS mitigation to all dashboard pages](https://github.com/tsukumogami/tsuku/issues/1712)~~ | None | critical |
 | _Add an `esc()` HTML-escaping utility to every dashboard page that uses `innerHTML`, covering all existing and new pages against data-driven XSS._ | | |
 | [#1713: feat(dashboard): add failures list and detail pages](https://github.com/tsukumogami/tsuku/issues/1713) | [#1710](https://github.com/tsukumogami/tsuku/issues/1710), [#1712](https://github.com/tsukumogami/tsuku/issues/1712) | testable |
 | _Create `failures.html` (filterable list of recent failures) and `failure.html` (single-failure detail with error message, platform, and logs link). Redirect legacy `failed.html` to `failures.html`._ | | |
@@ -110,10 +110,10 @@ graph TD
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1708,I1709 done
-    class I1712 ready
+    class I1708,I1709,I1712 done
     class I1710,I1711 ready
-    class I1713,I1714,I1715,I1716,I1717,I1718 blocked
+    class I1717 ready
+    class I1713,I1714,I1715,I1716,I1718 blocked
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
