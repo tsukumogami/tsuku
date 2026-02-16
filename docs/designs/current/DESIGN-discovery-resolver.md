@@ -1,5 +1,5 @@
 ---
-status: Planned
+status: Current
 problem: |
   tsuku requires `--from` flags on every `tsuku create` invocation, forcing users to
   know whether a tool comes from GitHub releases, crates.io, npm, or elsewhere. Users
@@ -24,7 +24,7 @@ rationale: |
 
 ## Status
 
-Planned
+Current
 
 ## Implementation Issues
 
@@ -60,73 +60,8 @@ Planned
 | _Extend registry schema with optional metadata, build the `seed-discovery` CLI tool, populate ~500 entries from the priority queue and curated seed lists, and add CI freshness checks. See [DESIGN-discovery-registry-bootstrap.md](current/DESIGN-discovery-registry-bootstrap.md)._ | | |
 | ~~[M76: LLM Discovery Hardening](https://github.com/tsukumogami/tsuku/milestone/76)~~ | ~~[#1338](https://github.com/tsukumogami/tsuku/issues/1338)~~ | |
 | _Harden LLM discovery with DDG retry logic, HTML stripping, fork detection, rate limit handling, priority ranking, and confirmation UX. See [DESIGN-llm-discovery-implementation.md](DESIGN-llm-discovery-implementation.md)._ | | |
-| [M77: LLM Discovery Extensions](https://github.com/tsukumogami/tsuku/milestone/77) | [M76](https://github.com/tsukumogami/tsuku/milestone/76) | |
-| _Extend LLM discovery with Tavily/Brave search providers and telemetry integration. See [DESIGN-llm-discovery-implementation.md](DESIGN-llm-discovery-implementation.md)._ | | |
-
-### Dependency Graph
-
-```mermaid
-graph TD
-    subgraph Phase1["Phase 1: Foundation"]
-        I1312["#1312: Registry fetch and cache"]
-        I1313["#1313: Validate registry entries"]
-        I1314["#1314: Deterministic-only guard"]
-    end
-
-    subgraph Phase2["Phase 2: Bootstrap + Convergence"]
-        M62["M62: Discovery Registry Bootstrap"]
-        I1315["#1315: Bootstrap registry"]
-        I1337["#1337: Add --from to install"]
-        I1338["#1338: Discovery fallback"]
-    end
-
-    subgraph Phase3["Phase 3: Discovery Stages"]
-        I1317["#1317: Ecosystem probe"]
-        M65["M65: Ecosystem Probe"]
-        I1318["<s>#1318: LLM discovery</s>"]
-        M76["M76: LLM Discovery Hardening"]
-        M77["M77: LLM Discovery Extensions"]
-        I1319["#1319: Telemetry events"]
-    end
-
-    subgraph Phase4["Phase 4: Polish"]
-        I1321["<s>#1321: Disambiguation</s>"]
-        I1322["<s>#1322: Error UX and verbose mode</s>"]
-    end
-
-    I1312 --> I1315
-    I1315 --> M62
-    I1337 --> I1338
-    I1338 --> I1317
-    I1317 --> M65
-    I1338 --> I1318
-    I1318 --> M76
-    M76 --> M77
-    I1338 --> I1319
-    M65 --> I1321
-    M65 --> I1322
-    M76 --> I1322
-
-    classDef done fill:#c8e6c9
-    classDef ready fill:#bbdefb
-    classDef blocked fill:#fff9c4
-    classDef needsDesign fill:#e1bee7
-
-    class I1312,I1313,I1314 done
-    class I1337,I1338 done
-    class I1319 done
-    class I1317 done
-    class I1318 done
-    class M76 done
-    class M77 done
-    class M65 done
-    class M62 done
-    class I1315 done
-    class I1321 done
-    class I1322 done
-```
-
-**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
+| ~~[M77: LLM Discovery Extensions](https://github.com/tsukumogami/tsuku/milestone/77)~~ | ~~[M76](https://github.com/tsukumogami/tsuku/milestone/76)~~ | |
+| ~~_Extend LLM discovery with Tavily/Brave search providers and telemetry integration. See [DESIGN-llm-discovery-implementation.md](DESIGN-llm-discovery-implementation.md)._~~ | | |
 
 ## Context and Problem Statement
 
