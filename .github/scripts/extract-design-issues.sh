@@ -179,11 +179,12 @@ parse_table() {
     dep_col=$(get_column_position "$header" "Dependencies")
     tier_col=$(get_column_position "$header" "Tier")
 
-    # Extract table data rows (skip header, separator, and description rows)
-    # Description rows have italic text in first cell: | _text_ | | | |
+    # Extract table data rows (skip header, separator, description rows, and child reference rows)
+    # Description rows: | _text_ | | | | or struck-through: | ~~_text_~~ | | | |
+    # Child reference rows: | ^_Child: ..._ | | | | or struck-through: | ~~^_Child: ..._~~ | | | |
     local rows
     rows=$(echo "$table_content" | awk '
-        /^\|/ && !/^\| *-/ && !/^\| *Issue/ && !/^\| *_/ { print }
+        /^\|/ && !/^\| *-/ && !/^\| *Issue/ && !/^\| *_/ && !/^\| *~~_/ && !/^\| *\^_/ && !/^\| *~~\^_/ { print }
     ')
 
     local entries="[]"
