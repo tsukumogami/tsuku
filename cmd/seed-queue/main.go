@@ -22,6 +22,7 @@ func main() {
 	queuePath := flag.String("queue", "data/queues/priority-queue.json", "path to unified queue")
 	auditDir := flag.String("audit-dir", "data/disambiguations/audit", "path to audit log directory")
 	disambiguate := flag.Bool("disambiguate", true, "run disambiguation for new packages")
+	freshness := flag.Int("freshness", 30, "re-disambiguate entries older than N days")
 	flag.Parse()
 
 	if *source == "" {
@@ -34,7 +35,7 @@ func main() {
 	case "homebrew":
 		runHomebrew(*limit, *recipesDir, *embeddedDir)
 	case "cargo":
-		runCargo(*limit, *recipesDir, *embeddedDir, *queuePath, *auditDir, *disambiguate)
+		runCargo(*limit, *recipesDir, *embeddedDir, *queuePath, *auditDir, *disambiguate, *freshness)
 	default:
 		fmt.Fprintf(os.Stderr, "error: unsupported source %q\n", *source)
 		os.Exit(1)
@@ -76,8 +77,8 @@ func runHomebrew(limit int, recipesDir, embeddedDir string) {
 }
 
 // runCargo discovers popular CLI crates, runs disambiguation, and writes
-// to the unified queue.
-func runCargo(limit int, recipesDir, embeddedDir, queuePath, auditDir string, disambiguateFlag bool) {
+// to the unified queue. Also performs freshness checking on existing entries.
+func runCargo(limit int, recipesDir, embeddedDir, queuePath, auditDir string, disambiguateFlag bool, freshnessDays int) {
 	ctx := context.Background()
 	seedingRun := time.Now().UTC()
 
@@ -102,6 +103,12 @@ func runCargo(limit int, recipesDir, embeddedDir, queuePath, auditDir string, di
 		os.Exit(1)
 	}
 	fmt.Fprintf(os.Stderr, "Discovered %d candidates from crates.io\n", len(candidates))
+
+	// Build a set of discovered candidate names for trigger 3 (new audit candidate).
+	discoveredNames := make(map[string]string, len(candidates))
+	for _, c := range candidates {
+		discoveredNames[c.Name] = "cargo:" + c.Name
+	}
 
 	// Convert to seed.Package for filtering.
 	now := seedingRun.Format(time.RFC3339)
@@ -131,58 +138,56 @@ func runCargo(limit int, recipesDir, embeddedDir, queuePath, auditDir string, di
 	packages = seed.FilterByName(packages, unifiedQueue)
 	fmt.Fprintf(os.Stderr, "After filtering: %d new packages\n", len(packages))
 
-	if len(packages) == 0 {
-		fmt.Fprintf(os.Stderr, "No new packages to add\n")
-		return
-	}
-
 	// Resolve the absolute audit directory path relative to the queue file.
 	absAuditDir := auditDir
 	if !filepath.IsAbs(absAuditDir) {
 		absAuditDir, _ = filepath.Abs(absAuditDir)
 	}
 
-	// Convert to queue entries, optionally running disambiguation.
-	var entries []batch.QueueEntry
-	var disambiguated, failed, audited int
-
+	// Build disambiguator (shared between new packages and freshness checking).
+	var d *seed.Disambiguator
 	if disambiguateFlag {
-		// Build disambiguator with the cargo builder as one of the probers.
 		// In a full implementation, all 8 builders would be provided.
-		d := seed.NewDisambiguator(
+		d = seed.NewDisambiguator(
 			[]builders.EcosystemProber{cargoBuilder},
 			30*time.Second,
 		)
+	}
 
-		for _, pkg := range packages {
-			rr, err := d.Resolve(ctx, pkg.Name)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "  disambiguation error for %s: %v\n", pkg.Name, err)
-				failed++
-				// Fall back to discovery ecosystem source.
-				entries = append(entries, seed.ToQueueEntry(pkg, nil))
-				continue
-			}
-			disambiguated++
-			entries = append(entries, seed.ToQueueEntry(pkg, rr.Selected))
+	// --- Process new packages ---
+	var entries []batch.QueueEntry
+	var disambiguated, failed, audited int
 
-			// Write audit entry for this disambiguation decision.
-			if rr.Selected != nil {
-				auditEntry := buildAuditEntry(pkg.Name, rr, existingSources, seedingRun)
-				if writeErr := seed.WriteAuditEntry(absAuditDir, auditEntry); writeErr != nil {
-					fmt.Fprintf(os.Stderr, "  audit write error for %s: %v\n", pkg.Name, writeErr)
-				} else {
-					audited++
+	if len(packages) > 0 {
+		if d != nil {
+			for _, pkg := range packages {
+				rr, err := d.Resolve(ctx, pkg.Name)
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "  disambiguation error for %s: %v\n", pkg.Name, err)
+					failed++
+					entries = append(entries, seed.ToQueueEntry(pkg, nil))
+					continue
+				}
+				disambiguated++
+				entries = append(entries, seed.ToQueueEntry(pkg, rr.Selected))
+
+				if rr.Selected != nil {
+					auditEntry := buildAuditEntry(pkg.Name, rr, existingSources, seedingRun)
+					if writeErr := seed.WriteAuditEntry(absAuditDir, auditEntry); writeErr != nil {
+						fmt.Fprintf(os.Stderr, "  audit write error for %s: %v\n", pkg.Name, writeErr)
+					} else {
+						audited++
+					}
 				}
 			}
-		}
-	} else {
-		for _, pkg := range packages {
-			entries = append(entries, seed.ToQueueEntry(pkg, nil))
+		} else {
+			for _, pkg := range packages {
+				entries = append(entries, seed.ToQueueEntry(pkg, nil))
+			}
 		}
 	}
 
-	// Merge into unified queue.
+	// Merge new entries into unified queue.
 	added := 0
 	existingNames := make(map[string]bool, len(unifiedQueue.Entries))
 	for _, e := range unifiedQueue.Entries {
@@ -196,6 +201,104 @@ func runCargo(limit int, recipesDir, embeddedDir, queuePath, auditDir string, di
 		}
 	}
 
+	// --- Freshness checking on existing entries ---
+	freshnessCfg := seed.FreshnessConfig{
+		ThresholdDays: freshnessDays,
+		Now:           seedingRun,
+	}
+	var sourceChanges []seed.SourceChange
+	var curatedInvalid []seed.CuratedInvalid
+	var curatedSkipped, staleRefreshed int
+
+	curatedValidator := &seed.CuratedSourceValidator{}
+
+	for i := range unifiedQueue.Entries {
+		entry := &unifiedQueue.Entries[i]
+
+		// Skip success entries entirely.
+		if seed.ShouldSkip(*entry) {
+			continue
+		}
+
+		// Curated entries: validate source, never re-disambiguate.
+		if seed.IsCurated(*entry) {
+			curatedSkipped++
+			if err := curatedValidator.Validate(entry.Source); err != nil {
+				curatedInvalid = append(curatedInvalid, seed.CuratedInvalid{
+					Package: entry.Name,
+					Source:  entry.Source,
+					Error:   err.Error(),
+				})
+			}
+			continue
+		}
+
+		// Check if this entry needs re-disambiguation.
+		var auditEntry *seed.AuditEntry
+		auditEntry, _ = seed.ReadAuditEntry(absAuditDir, entry.Name)
+
+		// Determine the discovered source for trigger 3.
+		discoveredSource := discoveredNames[entry.Name]
+
+		if !seed.NeedsRedisambiguation(*entry, freshnessCfg, auditEntry, discoveredSource) {
+			continue
+		}
+
+		// Entry needs re-disambiguation.
+		if d == nil {
+			// Disambiguation disabled; just update the timestamp.
+			seed.UpdateDisambiguatedAt(entry, seedingRun)
+			staleRefreshed++
+			continue
+		}
+
+		rr, err := d.Resolve(ctx, entry.Name)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "  freshness re-disambiguation error for %s: %v\n", entry.Name, err)
+			continue
+		}
+
+		if rr.Selected == nil {
+			// No match found; update timestamp but don't change source.
+			seed.UpdateDisambiguatedAt(entry, seedingRun)
+			staleRefreshed++
+			continue
+		}
+
+		newSource := rr.Selected.Builder + ":" + rr.Selected.Source
+		selectionReason := rr.Selected.Metadata.SelectionReason
+
+		// Apply selection result (pending vs requires_manual).
+		seed.ApplySelectionResult(entry, selectionReason)
+
+		// Check for source change.
+		if newSource != entry.Source {
+			change, modified := seed.ApplySourceChange(entry, newSource, seedingRun)
+			sourceChanges = append(sourceChanges, change)
+			if modified {
+				fmt.Fprintf(os.Stderr, "  source change (auto-accepted): %s -> %s for %s\n",
+					change.Old, change.New, entry.Name)
+			} else {
+				fmt.Fprintf(os.Stderr, "  source change (flagged): %s -> %s for %s (priority %d)\n",
+					change.Old, change.New, entry.Name, entry.Priority)
+			}
+		}
+
+		// Update disambiguated_at timestamp.
+		seed.UpdateDisambiguatedAt(entry, seedingRun)
+		staleRefreshed++
+
+		// Write updated audit entry.
+		newAuditEntry := buildAuditEntry(entry.Name, rr, existingSources, seedingRun)
+		// Mark high_risk for priority_fallback.
+		if selectionReason == discover.SelectionPriorityFallback {
+			newAuditEntry.HighRisk = true
+		}
+		if writeErr := seed.WriteAuditEntry(absAuditDir, newAuditEntry); writeErr != nil {
+			fmt.Fprintf(os.Stderr, "  audit write error for %s: %v\n", entry.Name, writeErr)
+		}
+	}
+
 	if err := batch.SaveUnifiedQueue(queuePath, unifiedQueue); err != nil {
 		fmt.Fprintf(os.Stderr, "error saving queue: %v\n", err)
 		os.Exit(1)
@@ -205,6 +308,8 @@ func runCargo(limit int, recipesDir, embeddedDir, queuePath, auditDir string, di
 	if disambiguateFlag {
 		fmt.Fprintf(os.Stderr, "Disambiguation: %d resolved, %d failed, %d audited\n", disambiguated, failed, audited)
 	}
+	fmt.Fprintf(os.Stderr, "Freshness: %d refreshed, %d curated skipped, %d curated invalid, %d source changes\n",
+		staleRefreshed, curatedSkipped, len(curatedInvalid), len(sourceChanges))
 }
 
 // buildAuditEntry constructs an AuditEntry from a disambiguation result.
