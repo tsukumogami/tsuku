@@ -33,21 +33,21 @@ Current
 | Issue | Dependencies | Tier |
 |-------|--------------|------|
 | ~~[#1648: feat(discover): add core disambiguation with ranking and auto-select](https://github.com/tsukumogami/tsuku/issues/1648)~~ | ~~None~~ | ~~testable~~ |
-| _Creates `disambiguate.go` with ranking algorithm (downloads DESC, version count, priority) and `isClearWinner()` logic for 10x threshold. Extends `probeOutcome` with version count and repository presence fields. Returns `AmbiguousMatchError` for close matches._ | | |
+| ~~_Creates `disambiguate.go` with ranking algorithm (downloads DESC, version count, priority) and `isClearWinner()` logic for 10x threshold. Extends `probeOutcome` with version count and repository presence fields. Returns `AmbiguousMatchError` for close matches._~~ | | |
 | ~~[#1649: feat(discover): add typosquatting detection via edit distance](https://github.com/tsukumogami/tsuku/issues/1649)~~ | ~~None~~ | ~~testable~~ |
-| _Adds `typosquat.go` with Levenshtein distance calculation against registry entries (threshold ≤2). Integrates into chain resolver before probe stage to warn about suspiciously similar names._ | | |
+| ~~_Adds `typosquat.go` with Levenshtein distance calculation against registry entries (threshold ≤2). Integrates into chain resolver before probe stage to warn about suspiciously similar names._~~ | | |
 | ~~[#1650: feat(discover): add ConfirmDisambiguationFunc callback type](https://github.com/tsukumogami/tsuku/issues/1650)~~ | ~~[#1648](https://github.com/tsukumogami/tsuku/issues/1648)~~ | ~~testable~~ |
-| _Defines the callback interface for interactive disambiguation, following the existing `ConfirmFunc` pattern from LLM discovery. Integrates callback invocation into ecosystem probe for close matches._ | | |
+| ~~_Defines the callback interface for interactive disambiguation, following the existing `ConfirmFunc` pattern from LLM discovery. Integrates callback invocation into ecosystem probe for close matches._~~ | | |
 | ~~[#1651: feat(cli): add disambiguation prompt to create and install commands](https://github.com/tsukumogami/tsuku/issues/1651)~~ | ~~[#1648](https://github.com/tsukumogami/tsuku/issues/1648), [#1650](https://github.com/tsukumogami/tsuku/issues/1650)~~ | ~~testable~~ |
-| _Implements the interactive prompt UI showing ranked matches with metadata (downloads, versions, repository status). Supports Enter-for-default, numbered selection, and 'q' to cancel._ | | |
+| ~~_Implements the interactive prompt UI showing ranked matches with metadata (downloads, versions, repository status). Supports Enter-for-default, numbered selection, and 'q' to cancel._~~ | | |
 | ~~[#1652: feat(discover): add AmbiguousMatchError type for non-interactive mode](https://github.com/tsukumogami/tsuku/issues/1652)~~ | ~~[#1648](https://github.com/tsukumogami/tsuku/issues/1648)~~ | ~~testable~~ |
-| _Enhances `AmbiguousMatchError` with formatted `--from` suggestions for CI/pipeline usage. Error message includes ranked matches with source identifiers for copy-paste convenience._ | | |
+| ~~_Enhances `AmbiguousMatchError` with formatted `--from` suggestions for CI/pipeline usage. Error message includes ranked matches with source identifiers for copy-paste convenience._~~ | | |
 | ~~[#1653: feat(cli): handle AmbiguousMatchError with --from suggestions](https://github.com/tsukumogami/tsuku/issues/1653)~~ | ~~[#1652](https://github.com/tsukumogami/tsuku/issues/1652)~~ | ~~testable~~ |
-| _Adds CLI error handling that displays `AmbiguousMatchError` with actionable `--from` suggestions in create and install commands. Provides clear guidance for non-interactive resolution._ | | |
+| ~~_Adds CLI error handling that displays `AmbiguousMatchError` with actionable `--from` suggestions in create and install commands. Provides clear guidance for non-interactive resolution._~~ | | |
 | ~~[#1654: feat(batch): add DisambiguationRecord tracking](https://github.com/tsukumogami/tsuku/issues/1654)~~ | ~~[#1648](https://github.com/tsukumogami/tsuku/issues/1648)~~ | ~~testable~~ |
-| _Creates `DisambiguationRecord` type for batch orchestrator to track tool selections. Records selection reason (single_match, 10x_popularity_gap, priority_fallback) and sets `HighRisk` flag for fallback selections._ | | |
+| ~~_Creates `DisambiguationRecord` type for batch orchestrator to track tool selections. Records selection reason (single_match, 10x_popularity_gap, priority_fallback) and sets `HighRisk` flag for fallback selections._~~ | | |
 | ~~[#1655: feat(dashboard): display disambiguation metrics](https://github.com/tsukumogami/tsuku/issues/1655)~~ | ~~[#1654](https://github.com/tsukumogami/tsuku/issues/1654)~~ | ~~simple~~ |
-| _Adds disambiguation statistics to the pipeline dashboard showing counts by selection reason and highlighting high-risk fallback selections for human review._ | | |
+| ~~_Adds disambiguation statistics to the pipeline dashboard showing counts by selection reason and highlighting high-risk fallback selections for human review._~~ | | |
 
 ## Upstream Design Reference
 
