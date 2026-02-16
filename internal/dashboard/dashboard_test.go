@@ -6,18 +6,18 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/tsukumogami/tsuku/internal/seed"
+	"github.com/tsukumogami/tsuku/internal/batch"
 )
 
 func TestComputeQueueStatus_aggregates(t *testing.T) {
-	queue := &seed.PriorityQueue{
-		Packages: []seed.Package{
-			{ID: "jq", Tier: 1, Status: "success"},
-			{ID: "fd", Tier: 1, Status: "pending"},
-			{ID: "bat", Tier: 1, Status: "failed"},
-			{ID: "fzf", Tier: 2, Status: "pending"},
-			{ID: "ripgrep", Tier: 2, Status: "blocked"},
-			{ID: "exa", Tier: 2, Status: "success"},
+	queue := &batch.UnifiedQueue{
+		Entries: []batch.QueueEntry{
+			{Name: "jq", Source: "homebrew:jq", Priority: 1, Status: "success", Confidence: "curated"},
+			{Name: "fd", Source: "homebrew:fd", Priority: 1, Status: "pending", Confidence: "auto"},
+			{Name: "bat", Source: "homebrew:bat", Priority: 1, Status: "failed", Confidence: "auto"},
+			{Name: "fzf", Source: "homebrew:fzf", Priority: 2, Status: "pending", Confidence: "auto"},
+			{Name: "ripgrep", Source: "cargo:ripgrep", Priority: 2, Status: "blocked", Confidence: "curated"},
+			{Name: "exa", Source: "homebrew:exa", Priority: 2, Status: "success", Confidence: "auto"},
 		},
 	}
 
@@ -50,7 +50,7 @@ func TestComputeQueueStatus_aggregates(t *testing.T) {
 }
 
 func TestComputeQueueStatus_empty(t *testing.T) {
-	queue := &seed.PriorityQueue{Packages: []seed.Package{}}
+	queue := &batch.UnifiedQueue{Entries: []batch.QueueEntry{}}
 	status := computeQueueStatus(queue, nil)
 
 	if status.Total != 0 {
@@ -487,7 +487,7 @@ func TestGenerate_missingQueueFile(t *testing.T) {
 		OutputFile:  outputPath,
 	}
 
-	// seed.Load returns empty queue for missing file, so this should succeed
+	// batch.LoadUnifiedQueue returns empty queue for missing file, so this should succeed
 	if err := Generate(opts); err != nil {
 		t.Fatalf("Generate: %v", err)
 	}
@@ -695,6 +695,117 @@ func TestGenerate_WithDisambiguations(t *testing.T) {
 
 	if len(dash.Disambiguations.NeedReview) != 1 || dash.Disambiguations.NeedReview[0] != "fd" {
 		t.Errorf("Disambiguations.NeedReview: got %v, want [fd]", dash.Disambiguations.NeedReview)
+	}
+}
+
+func TestComputeQueueStatus_unifiedQueueFields(t *testing.T) {
+	// Verify that unified queue fields (Ecosystem, Priority, Confidence, FailureCount)
+	// are correctly mapped to PackageInfo.
+	queue := &batch.UnifiedQueue{
+		Entries: []batch.QueueEntry{
+			{Name: "ripgrep", Source: "cargo:ripgrep", Priority: 1, Status: "success", Confidence: "curated", FailureCount: 0},
+			{Name: "bat", Source: "homebrew:bat", Priority: 2, Status: "failed", Confidence: "auto", FailureCount: 3},
+			{Name: "fd", Source: "github:sharkdp/fd", Priority: 1, Status: "pending", Confidence: "curated", FailureCount: 0},
+		},
+	}
+
+	status := computeQueueStatus(queue, nil)
+
+	if status.Total != 3 {
+		t.Errorf("Total: got %d, want 3", status.Total)
+	}
+
+	// Check that Ecosystem() is correctly extracted from Source
+	successPkgs := status.Packages["success"]
+	if len(successPkgs) != 1 {
+		t.Fatalf("success packages: got %d, want 1", len(successPkgs))
+	}
+	if successPkgs[0].Ecosystem != "cargo" {
+		t.Errorf("Ecosystem: got %q, want %q", successPkgs[0].Ecosystem, "cargo")
+	}
+	if successPkgs[0].Priority != 1 {
+		t.Errorf("Priority: got %d, want 1", successPkgs[0].Priority)
+	}
+
+	// Check the failed entry uses homebrew ecosystem
+	failedPkgs := status.Packages["failed"]
+	if len(failedPkgs) != 1 {
+		t.Fatalf("failed packages: got %d, want 1", len(failedPkgs))
+	}
+	if failedPkgs[0].Ecosystem != "homebrew" {
+		t.Errorf("Ecosystem: got %q, want %q", failedPkgs[0].Ecosystem, "homebrew")
+	}
+
+	// Check github ecosystem
+	pendingPkgs := status.Packages["pending"]
+	if len(pendingPkgs) != 1 {
+		t.Fatalf("pending packages: got %d, want 1", len(pendingPkgs))
+	}
+	if pendingPkgs[0].Ecosystem != "github" {
+		t.Errorf("Ecosystem: got %q, want %q", pendingPkgs[0].Ecosystem, "github")
+	}
+}
+
+func TestComputeQueueStatus_idUsesSource(t *testing.T) {
+	// Verify that PackageInfo.ID uses the full Source field (ecosystem:identifier).
+	queue := &batch.UnifiedQueue{
+		Entries: []batch.QueueEntry{
+			{Name: "ripgrep", Source: "cargo:ripgrep", Priority: 1, Status: "success", Confidence: "curated"},
+		},
+	}
+
+	status := computeQueueStatus(queue, nil)
+
+	pkgs := status.Packages["success"]
+	if len(pkgs) != 1 {
+		t.Fatalf("packages: got %d, want 1", len(pkgs))
+	}
+	if pkgs[0].ID != "cargo:ripgrep" {
+		t.Errorf("ID: got %q, want %q", pkgs[0].ID, "cargo:ripgrep")
+	}
+}
+
+func TestLoadQueue_unifiedFormat(t *testing.T) {
+	// Verify that loadQueue correctly reads the unified queue testdata.
+	queue, err := loadQueue(filepath.Join("testdata", "priority-queue.json"))
+	if err != nil {
+		t.Fatalf("loadQueue: %v", err)
+	}
+
+	if len(queue.Entries) != 6 {
+		t.Fatalf("entries: got %d, want 6", len(queue.Entries))
+	}
+
+	// Verify unified queue fields are populated
+	bat := queue.Entries[2] // bat has failure_count: 2 in testdata
+	if bat.Name != "bat" {
+		t.Errorf("Name: got %q, want %q", bat.Name, "bat")
+	}
+	if bat.FailureCount != 2 {
+		t.Errorf("FailureCount: got %d, want 2", bat.FailureCount)
+	}
+	if bat.Confidence != "auto" {
+		t.Errorf("Confidence: got %q, want %q", bat.Confidence, "auto")
+	}
+	if bat.Ecosystem() != "homebrew" {
+		t.Errorf("Ecosystem: got %q, want %q", bat.Ecosystem(), "homebrew")
+	}
+
+	// Verify a curated entry
+	jq := queue.Entries[0]
+	if jq.Confidence != "curated" {
+		t.Errorf("Confidence: got %q, want %q", jq.Confidence, "curated")
+	}
+}
+
+func TestLoadQueue_missingFile(t *testing.T) {
+	// Verify that missing file returns an empty queue (not an error).
+	queue, err := loadQueue("/nonexistent/priority-queue.json")
+	if err != nil {
+		t.Fatalf("loadQueue: %v", err)
+	}
+	if len(queue.Entries) != 0 {
+		t.Errorf("entries: got %d, want 0", len(queue.Entries))
 	}
 }
 

@@ -12,12 +12,12 @@ import (
 	"sort"
 	"time"
 
-	"github.com/tsukumogami/tsuku/internal/seed"
+	"github.com/tsukumogami/tsuku/internal/batch"
 )
 
 // Options configures dashboard generation.
 type Options struct {
-	QueueFile          string // Path to priority-queue.json or queues directory
+	QueueFile          string // Path to unified priority-queue.json file
 	FailuresDir        string // Directory containing failures JSONL files
 	MetricsDir         string // Directory containing metrics JSONL files
 	DisambiguationsDir string // Directory containing disambiguation JSONL files
@@ -27,7 +27,7 @@ type Options struct {
 // DefaultOptions returns options with default file paths.
 func DefaultOptions() Options {
 	return Options{
-		QueueFile:          "data/queues",
+		QueueFile:          "data/queues/priority-queue.json",
 		FailuresDir:        "data/failures",
 		MetricsDir:         "data/metrics",
 		DisambiguationsDir: "data/disambiguations",
@@ -145,62 +145,10 @@ type DisambiguationRecord struct {
 	HighRisk        bool     `json:"high_risk"`
 }
 
-// loadQueueFromPathOrDir loads queue from a file or aggregates all queues from a directory.
-func loadQueueFromPathOrDir(path string) (*seed.PriorityQueue, error) {
-	info, err := os.Stat(path)
-	if err != nil {
-		// Return empty queue for missing file (matches seed.Load behavior)
-		if os.IsNotExist(err) {
-			return &seed.PriorityQueue{
-				SchemaVersion: 1,
-				Packages:      []seed.Package{},
-				UpdatedAt:     time.Now().UTC().Format(time.RFC3339),
-			}, nil
-		}
-		return nil, err
-	}
-
-	// Single file case
-	if !info.IsDir() {
-		return seed.Load(path)
-	}
-
-	// Directory case: aggregate all ecosystem queue files
-	pattern := filepath.Join(path, "priority-queue-*.json")
-	files, err := filepath.Glob(pattern)
-	if err != nil {
-		return nil, fmt.Errorf("glob queues: %w", err)
-	}
-
-	if len(files) == 0 {
-		// Return empty queue if directory has no queue files (matches seed.Load behavior)
-		return &seed.PriorityQueue{
-			SchemaVersion: 1,
-			Packages:      []seed.Package{},
-			UpdatedAt:     time.Now().UTC().Format(time.RFC3339),
-		}, nil
-	}
-
-	// Load and merge all queues
-	aggregated := &seed.PriorityQueue{
-		SchemaVersion: 1,
-		Packages:      []seed.Package{},
-		UpdatedAt:     time.Now().UTC().Format(time.RFC3339),
-	}
-
-	for _, file := range files {
-		q, err := seed.Load(file)
-		if err != nil {
-			continue // Skip malformed files
-		}
-		aggregated.Packages = append(aggregated.Packages, q.Packages...)
-		// Use the most recent update time
-		if q.UpdatedAt > aggregated.UpdatedAt {
-			aggregated.UpdatedAt = q.UpdatedAt
-		}
-	}
-
-	return aggregated, nil
+// loadQueue loads the unified queue from a single file.
+// Returns an empty queue if the file doesn't exist.
+func loadQueue(path string) (*batch.UnifiedQueue, error) {
+	return batch.LoadUnifiedQueue(path)
 }
 
 // Generate reads pipeline data files and produces dashboard.json.
@@ -221,8 +169,8 @@ func Generate(opts Options) error {
 	dash.Blockers = computeTopBlockers(blockerCounts, 10)
 	dash.Failures = failureCounts
 
-	// Load queue (from file or directory)
-	queue, err := loadQueueFromPathOrDir(opts.QueueFile)
+	// Load unified queue
+	queue, err := loadQueue(opts.QueueFile)
 	if err != nil {
 		return fmt.Errorf("load queue: %w", err)
 	}
@@ -262,36 +210,38 @@ func Generate(opts Options) error {
 	return nil
 }
 
-func computeQueueStatus(queue *seed.PriorityQueue, failureDetails map[string]FailureDetails) QueueStatus {
+func computeQueueStatus(queue *batch.UnifiedQueue, failureDetails map[string]FailureDetails) QueueStatus {
 	status := QueueStatus{
-		Total:    len(queue.Packages),
+		Total:    len(queue.Entries),
 		ByStatus: make(map[string]int),
 		ByTier:   make(map[int]map[string]int),
 		Packages: make(map[string][]PackageInfo),
 	}
 
-	for _, pkg := range queue.Packages {
-		status.ByStatus[pkg.Status]++
+	for _, entry := range queue.Entries {
+		status.ByStatus[entry.Status]++
 
-		if _, ok := status.ByTier[pkg.Tier]; !ok {
-			status.ByTier[pkg.Tier] = make(map[string]int)
+		if _, ok := status.ByTier[entry.Priority]; !ok {
+			status.ByTier[entry.Priority] = make(map[string]int)
 		}
-		status.ByTier[pkg.Tier][pkg.Status]++
+		status.ByTier[entry.Priority][entry.Status]++
 
-		// Build package info with failure details if available
+		// Build package info with failure details if available.
+		// ID is constructed as "ecosystem:name" to match failure detail keys.
+		id := entry.Source
 		info := PackageInfo{
-			ID:        pkg.ID,
-			Name:      pkg.Name,
-			Ecosystem: pkg.Source,
-			Priority:  pkg.Tier,
+			ID:        id,
+			Name:      entry.Name,
+			Ecosystem: entry.Ecosystem(),
+			Priority:  entry.Priority,
 		}
 
-		if details, ok := failureDetails[pkg.ID]; ok {
+		if details, ok := failureDetails[id]; ok {
 			info.Category = details.Category
 			info.BlockedBy = details.BlockedBy
 		}
 
-		status.Packages[pkg.Status] = append(status.Packages[pkg.Status], info)
+		status.Packages[entry.Status] = append(status.Packages[entry.Status], info)
 	}
 
 	// Sort packages by priority (lower number = higher priority)

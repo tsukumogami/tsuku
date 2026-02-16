@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	queueFile := flag.String("queue", "data/queues", "path to priority queue directory or file")
+	queueFile := flag.String("queue", "data/queues/priority-queue.json", "path to unified priority queue file")
 	failuresDir := flag.String("failures-dir", "data/failures", "directory containing failures JSONL files")
 	metricsDir := flag.String("metrics-dir", "data/metrics", "directory containing metrics JSONL files")
 	disambiguationsDir := flag.String("disambiguations-dir", "data/disambiguations", "directory containing disambiguation JSONL files")
