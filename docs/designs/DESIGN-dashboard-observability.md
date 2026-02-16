@@ -59,7 +59,7 @@ Planned
 | _Add Health Status, Recent Failures, and Curated Overrides panels to `index.html`, each linking to their respective detail pages for drill-down navigation._ | | |
 | ~~[#1717: feat(dashboard): enhance list pages with filters and navigation](https://github.com/tsukumogami/tsuku/issues/1717)~~ | [#1708](https://github.com/tsukumogami/tsuku/issues/1708), [#1712](https://github.com/tsukumogami/tsuku/issues/1712) | testable |
 | _Add ecosystem/status/date filters, summary panels, and `package.html` navigation links to the four existing list pages (pending, blocked, success, disambiguations)._ | | |
-| [#1718: feat(dashboard): add curated overrides page](https://github.com/tsukumogami/tsuku/issues/1718) | [#1711](https://github.com/tsukumogami/tsuku/issues/1711), [#1712](https://github.com/tsukumogami/tsuku/issues/1712) | simple |
+| ~~[#1718: feat(dashboard): add curated overrides page](https://github.com/tsukumogami/tsuku/issues/1718)~~ | [#1711](https://github.com/tsukumogami/tsuku/issues/1711), [#1712](https://github.com/tsukumogami/tsuku/issues/1712) | simple |
 | _Create `curated.html` displaying curated overrides with validation status badges, status filters, and GitHub action links for managing the override list._ | | |
 
 ### Dependency Graph
@@ -110,8 +110,8 @@ graph TD
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1708,I1709,I1710,I1711,I1712,I1713,I1717 done
-    class I1714,I1715,I1716,I1718 ready
+    class I1708,I1709,I1710,I1711,I1712,I1713,I1717,I1718 done
+    class I1714,I1715,I1716 ready
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
