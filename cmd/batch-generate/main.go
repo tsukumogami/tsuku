@@ -7,13 +7,13 @@ import (
 	"path/filepath"
 
 	"github.com/tsukumogami/tsuku/internal/batch"
-	"github.com/tsukumogami/tsuku/internal/seed"
 )
 
 func main() {
 	ecosystem := flag.String("ecosystem", "", "ecosystem to process (homebrew, cargo, npm, pypi, rubygems, go, cpan, cask)")
 	batchSize := flag.Int("batch-size", 25, "max recipes per run")
-	tier := flag.Int("tier", 2, "max queue tier to process (1=critical, 2=popular, 3=all)")
+	tier := flag.Int("tier", 2, "max queue priority to process (1=critical, 2=popular, 3=all)")
+	queuePath := flag.String("queue", "data/queues/priority-queue.json", "path to unified priority queue")
 	outputDir := flag.String("output-dir", "recipes", "directory for generated recipes")
 	failuresDir := flag.String("failures-dir", "data/failures", "directory for failure records")
 	flag.Parse()
@@ -24,10 +24,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Compute ecosystem-specific queue path
-	queuePath := filepath.Join("data", "queues", fmt.Sprintf("priority-queue-%s.json", *ecosystem))
-
-	queue, err := seed.Load(queuePath)
+	queue, err := batch.LoadUnifiedQueue(*queuePath)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error loading queue: %v\n", err)
 		os.Exit(1)
@@ -37,7 +34,7 @@ func main() {
 		Ecosystem:   *ecosystem,
 		BatchSize:   *batchSize,
 		MaxTier:     *tier,
-		QueuePath:   queuePath,
+		QueuePath:   *queuePath,
 		OutputDir:   *outputDir,
 		FailuresDir: *failuresDir,
 	}

@@ -1,0 +1,203 @@
+name: Update Queue Status
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'recipes/**'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: queue-operations-status-update
+  cancel-in-progress: false
+
+jobs:
+  update-status:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf  # v2
+        with:
+          app-id: ${{ secrets.TSUKU_BATCH_GENERATOR_APP_ID }}
+          private-key: ${{ secrets.TSUKU_BATCH_GENERATOR_APP_PRIVATE_KEY }}
+
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          fetch-depth: 2
+
+      - name: Detect changed recipes
+        id: detect
+        run: |
+          # Find added or modified recipe files in this push
+          CHANGED=$(git diff --name-only --diff-filter=AM HEAD~1 HEAD -- 'recipes/**/*.toml')
+
+          if [ -z "$CHANGED" ]; then
+            echo "No recipe changes detected"
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "has_changes=true" >> "$GITHUB_OUTPUT"
+          echo "Changed recipes:"
+          echo "$CHANGED"
+
+          # Write to file for next step (avoids shell quoting issues with multiline)
+          echo "$CHANGED" > /tmp/changed-recipes.txt
+
+      - name: Update queue entries
+        if: steps.detect.outputs.has_changes == 'true'
+        run: |
+          QUEUE_FILE="data/queues/priority-queue.json"
+
+          if [ ! -f "$QUEUE_FILE" ]; then
+            echo "Queue file not found at $QUEUE_FILE, nothing to update"
+            exit 0
+          fi
+
+          UPDATED=false
+
+          while IFS= read -r recipe_path; do
+            [ -z "$recipe_path" ] && continue
+
+            recipe_name=$(basename "$recipe_path" .toml)
+            echo "=== Processing recipe: $recipe_name ($recipe_path) ==="
+
+            # Extract sources from recipe step actions.
+            # Each recipe can have multiple steps with different source types.
+            RECIPE_SOURCES=""
+
+            # github_archive / github_file: extract repo field
+            while IFS= read -r repo; do
+              [ -z "$repo" ] && continue
+              # Remove quotes and whitespace
+              repo=$(echo "$repo" | sed 's/^[[:space:]]*repo[[:space:]]*=[[:space:]]*"//; s/"[[:space:]]*$//')
+              RECIPE_SOURCES="$RECIPE_SOURCES github:$repo"
+            done < <(grep -A5 'action\s*=\s*"github_archive"\|action\s*=\s*"github_file"' "$recipe_path" | grep '^\s*repo\s*=' || true)
+
+            # cargo_install: extract crate field
+            while IFS= read -r crate; do
+              [ -z "$crate" ] && continue
+              crate=$(echo "$crate" | sed 's/^[[:space:]]*crate[[:space:]]*=[[:space:]]*"//; s/"[[:space:]]*$//')
+              RECIPE_SOURCES="$RECIPE_SOURCES cargo:$crate"
+            done < <(grep -A5 'action\s*=\s*"cargo_install"' "$recipe_path" | grep '^\s*crate\s*=' || true)
+
+            # pipx_install: extract package field
+            while IFS= read -r pkg; do
+              [ -z "$pkg" ] && continue
+              pkg=$(echo "$pkg" | sed 's/^[[:space:]]*package[[:space:]]*=[[:space:]]*"//; s/"[[:space:]]*$//')
+              RECIPE_SOURCES="$RECIPE_SOURCES pypi:$pkg"
+            done < <(grep -A5 'action\s*=\s*"pipx_install"' "$recipe_path" | grep '^\s*package\s*=' || true)
+
+            # npm_install: extract package field
+            while IFS= read -r pkg; do
+              [ -z "$pkg" ] && continue
+              pkg=$(echo "$pkg" | sed 's/^[[:space:]]*package[[:space:]]*=[[:space:]]*"//; s/"[[:space:]]*$//')
+              RECIPE_SOURCES="$RECIPE_SOURCES npm:$pkg"
+            done < <(grep -A5 'action\s*=\s*"npm_install"' "$recipe_path" | grep '^\s*package\s*=' || true)
+
+            # gem_install: extract gem field
+            while IFS= read -r gem; do
+              [ -z "$gem" ] && continue
+              gem=$(echo "$gem" | sed 's/^[[:space:]]*gem[[:space:]]*=[[:space:]]*"//; s/"[[:space:]]*$//')
+              RECIPE_SOURCES="$RECIPE_SOURCES rubygems:$gem"
+            done < <(grep -A5 'action\s*=\s*"gem_install"' "$recipe_path" | grep '^\s*gem\s*=' || true)
+
+            # homebrew / homebrew_bottle: extract formula field, fall back to recipe name
+            while IFS= read -r formula; do
+              [ -z "$formula" ] && continue
+              formula=$(echo "$formula" | sed 's/^[[:space:]]*formula[[:space:]]*=[[:space:]]*"//; s/"[[:space:]]*$//')
+              RECIPE_SOURCES="$RECIPE_SOURCES homebrew:$formula"
+            done < <(grep -A5 'action\s*=\s*"homebrew"\|action\s*=\s*"homebrew_bottle"' "$recipe_path" | grep '^\s*formula\s*=' || true)
+
+            # If homebrew action found but no formula field, use recipe name
+            if echo "$RECIPE_SOURCES" | grep -q "homebrew:" 2>/dev/null; then
+              : # already have homebrew source
+            elif grep -qE 'action\s*=\s*"(homebrew|homebrew_bottle)"' "$recipe_path" 2>/dev/null; then
+              RECIPE_SOURCES="$RECIPE_SOURCES homebrew:$recipe_name"
+            fi
+
+            # Trim leading space
+            RECIPE_SOURCES=$(echo "$RECIPE_SOURCES" | sed 's/^[[:space:]]*//')
+
+            if [ -z "$RECIPE_SOURCES" ]; then
+              echo "  WARNING: No matching sources found in recipe steps"
+            fi
+            echo "  Extracted sources: $RECIPE_SOURCES"
+
+            # Find matching queue entry by name
+            ENTRY_INDEX=$(jq --arg name "$recipe_name" \
+              '.entries | to_entries[] | select(.value.name == $name) | .key' \
+              "$QUEUE_FILE" 2>/dev/null | head -1)
+
+            if [ -z "$ENTRY_INDEX" ]; then
+              echo "  Recipe '$recipe_name' not found in queue, skipping"
+              continue
+            fi
+
+            QUEUE_SOURCE=$(jq -r --argjson idx "$ENTRY_INDEX" \
+              '.entries[$idx].source' "$QUEUE_FILE")
+            echo "  Queue source: $QUEUE_SOURCE"
+
+            # Check if queue source is among the extracted recipe sources
+            SOURCE_MATCH=false
+            for src in $RECIPE_SOURCES; do
+              if [ "$src" = "$QUEUE_SOURCE" ]; then
+                SOURCE_MATCH=true
+                break
+              fi
+            done
+
+            if [ "$SOURCE_MATCH" = "true" ]; then
+              echo "  Source match: setting status to 'success'"
+              jq --argjson idx "$ENTRY_INDEX" \
+                '.entries[$idx].status = "success"' \
+                "$QUEUE_FILE" > "$QUEUE_FILE.tmp" && mv "$QUEUE_FILE.tmp" "$QUEUE_FILE"
+            else
+              echo "  Source mismatch: setting status to 'success' and confidence to 'curated'"
+              jq --argjson idx "$ENTRY_INDEX" \
+                '.entries[$idx].status = "success" | .entries[$idx].confidence = "curated"' \
+                "$QUEUE_FILE" > "$QUEUE_FILE.tmp" && mv "$QUEUE_FILE.tmp" "$QUEUE_FILE"
+            fi
+
+            UPDATED=true
+          done < /tmp/changed-recipes.txt
+
+          if [ "$UPDATED" = "false" ]; then
+            echo "No queue entries were updated"
+            exit 0
+          fi
+
+          echo "queue_updated=true" >> "$GITHUB_OUTPUT"
+
+      - name: Commit queue changes
+        if: steps.detect.outputs.has_changes == 'true'
+        run: |
+          QUEUE_FILE="data/queues/priority-queue.json"
+
+          git add "$QUEUE_FILE"
+          if git diff --cached --quiet; then
+            echo "No queue changes to commit"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore(batch): update queue status after recipe merge"
+
+          for attempt in 1 2 3; do
+            if [ "$attempt" -gt 1 ]; then
+              echo "Push failed (attempt $((attempt-1))/3), retrying..."
+              sleep $((2 ** attempt))
+              git pull --rebase
+            fi
+            if git push; then
+              echo "Push succeeded on attempt $attempt"
+              exit 0
+            fi
+          done
+          echo "::error::Push failed after 3 attempts"
+          exit 1
