@@ -146,9 +146,30 @@ type DisambiguationRecord struct {
 }
 
 // loadQueue loads the unified queue from a single file.
-// Returns an empty queue if the file doesn't exist.
+// Returns an empty queue if the file doesn't exist. Returns an error if the
+// file contains entries that fail validation (e.g. legacy seed format files
+// with missing source or invalid priority), or if a non-empty file produces
+// zero entries (likely a legacy format mismatch).
 func loadQueue(path string) (*batch.UnifiedQueue, error) {
-	return batch.LoadUnifiedQueue(path)
+	q, err := batch.LoadUnifiedQueue(path)
+	if err != nil {
+		return nil, err
+	}
+	// Detect legacy format: file exists and has content, but no entries parsed.
+	// This happens when a seed-format file (with "packages" key) is loaded by
+	// the unified loader (which expects "entries" key).
+	if len(q.Entries) == 0 {
+		info, statErr := os.Stat(path)
+		if statErr == nil && info.Size() > 2 { // >2 bytes rules out "{}"
+			return nil, fmt.Errorf("queue file %s has content but no entries parsed; check format (expected unified schema with \"entries\" key)", path)
+		}
+	}
+	for i, entry := range q.Entries {
+		if err := entry.Validate(); err != nil {
+			return nil, fmt.Errorf("queue entry %d (%s): %w", i, entry.Name, err)
+		}
+	}
+	return q, nil
 }
 
 // Generate reads pipeline data files and produces dashboard.json.

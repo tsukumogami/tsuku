@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/tsukumogami/tsuku/internal/batch"
@@ -806,6 +807,26 @@ func TestLoadQueue_missingFile(t *testing.T) {
 	}
 	if len(queue.Entries) != 0 {
 		t.Errorf("entries: got %d, want 0", len(queue.Entries))
+	}
+}
+
+func TestLoadQueue_legacyFormatReturnsError(t *testing.T) {
+	// Legacy seed format files (with "tier" instead of "priority", no "source")
+	// should produce a clear validation error, not silently degrade.
+	dir := t.TempDir()
+	path := filepath.Join(dir, "priority-queue.json")
+	content := `{"packages":[{"id":"homebrew:jq","name":"jq","source":"homebrew","tier":1,"status":"pending","added_at":"2026-01-01T00:00:00Z"}]}`
+	if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+		t.Fatalf("write temp file: %v", err)
+	}
+
+	_, err := loadQueue(path)
+	if err == nil {
+		t.Fatal("expected error for legacy format file, got nil")
+	}
+	// Error should mention format mismatch
+	if !strings.Contains(err.Error(), "no entries parsed") {
+		t.Errorf("error should mention format mismatch: %v", err)
 	}
 }
 
