@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-02-16T15:42:21Z",
+  "generated_at": "2026-02-16T16:43:01Z",
   "queue": {
     "total": 5275,
     "by_status": {
@@ -37244,13 +37244,6 @@
   },
   "blockers": [
     {
-      "dependency": "ada-url",
-      "count": 1,
-      "packages": [
-        "homebrew:node"
-      ]
-    },
-    {
       "dependency": "dav1d",
       "count": 1,
       "packages": [
@@ -37270,6 +37263,13 @@
       "packages": [
         "homebrew:coreutils"
       ]
+    },
+    {
+      "dependency": "ada-url",
+      "count": 1,
+      "packages": [
+        "homebrew:node"
+      ]
     }
   ],
   "failures": {
@@ -37280,6 +37280,21 @@
     "validation_failed": 156
   },
   "failure_details": [
+    {
+      "id": "homebrew-2026-02-08T02-37-10Z-xh",
+      "package": "xh",
+      "ecosystem": "homebrew",
+      "category": "deterministic",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "homebrew-2026-02-08T02-37-10Z",
+      "timestamp": "2026-02-08T02:37:10Z"
+    },
     {
       "id": "homebrew-2026-02-08T02-37-10Z-procs",
       "package": "procs",
@@ -37313,21 +37328,6 @@
     {
       "id": "homebrew-2026-02-08T02-37-10Z-tealdeer",
       "package": "tealdeer",
-      "ecosystem": "homebrew",
-      "category": "deterministic",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "homebrew-2026-02-08T02-37-10Z",
-      "timestamp": "2026-02-08T02:37:10Z"
-    },
-    {
-      "id": "homebrew-2026-02-08T02-37-10Z-xh",
-      "package": "xh",
       "ecosystem": "homebrew",
       "category": "deterministic",
       "subcategory": "install_failed",
@@ -39224,7 +39224,7 @@
     "last_run": {
       "batch_id": "2026-02-16-homebrew",
       "ecosystem": "homebrew",
-      "timestamp": "2026-02-16T15:42:00Z",
+      "timestamp": "2026-02-16T16:42:42Z",
       "succeeded": 0,
       "failed": 0,
       "total": 0
@@ -39238,7 +39238,7 @@
       "total": 4,
       "recipes_merged": 4
     },
-    "runs_since_last_success": 160,
+    "runs_since_last_success": 161,
     "hours_since_last_run": 0
   },
   "runs": [
