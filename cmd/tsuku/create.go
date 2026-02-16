@@ -541,18 +541,17 @@ func runCreate(cmd *cobra.Command, args []string) {
 
 	ctx := context.Background()
 
-	// For LLM builders, load config and state tracker for session options
+	// Load user config for LLM settings. This is needed by LLM builders
+	// (GitHubReleaseBuilder) and also by builders that may lazily initialize
+	// LLM as a fallback (HomebrewBuilder).
 	var stateManager *install.StateManager
-	var userCfg *userconfig.Config
-	if builder.RequiresLLM() {
-		// Load user config for LLM settings
-		var err error
-		userCfg, err = userconfig.Load()
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Warning: failed to load user config: %v\n", err)
-			userCfg = userconfig.DefaultConfig()
-		}
+	userCfg, err := userconfig.Load()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: failed to load user config: %v\n", err)
+		userCfg = userconfig.DefaultConfig()
+	}
 
+	if builder.RequiresLLM() {
 		// Initialize state manager for rate limit tracking
 		cfg, err := config.DefaultConfig()
 		if err != nil {
@@ -571,6 +570,7 @@ func runCreate(cmd *cobra.Command, args []string) {
 	sessionOpts := &builders.SessionOptions{
 		ProgressReporter:  progressReporter,
 		LLMConfig:         userCfg,
+		LLMFactoryConfig:  userCfg,
 		LLMStateTracker:   stateManager,
 		DeterministicOnly: createDeterministicOnly,
 	}

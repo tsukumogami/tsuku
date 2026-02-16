@@ -214,7 +214,11 @@ func (b *GitHubReleaseBuilder) NewSession(ctx context.Context, req BuildRequest,
 	// Get or create LLM factory
 	factory := b.factory
 	if factory == nil {
-		factory, err = llm.NewFactory(ctx)
+		var factoryOpts []llm.FactoryOption
+		if opts != nil && opts.LLMFactoryConfig != nil {
+			factoryOpts = append(factoryOpts, llm.WithConfig(opts.LLMFactoryConfig))
+		}
+		factory, err = llm.NewFactory(ctx, factoryOpts...)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create LLM factory: %w", err)
 		}

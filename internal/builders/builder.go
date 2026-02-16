@@ -4,6 +4,7 @@ import (
 	"context"
 	"strings"
 
+	"github.com/tsukumogami/tsuku/internal/llm"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/sandbox"
 )
@@ -224,6 +225,12 @@ type SessionOptions struct {
 
 	// LLMConfig provides access to LLM-related user settings.
 	LLMConfig LLMConfig
+
+	// LLMFactoryConfig provides provider selection settings for the LLM factory.
+	// When set, these settings control which providers are registered and their
+	// priority order. Without this, the factory uses defaults (all detected
+	// providers enabled, local fallback on).
+	LLMFactoryConfig llm.LLMConfig
 
 	// LLMStateTracker provides rate limit checking and cost tracking.
 	LLMStateTracker LLMStateTracker

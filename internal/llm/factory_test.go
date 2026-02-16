@@ -600,3 +600,83 @@ func TestWithConfigEmptyProviders(t *testing.T) {
 		t.Errorf("GetProvider returned %q, want %q (default)", provider.Name(), "claude")
 	}
 }
+
+func TestNewFactoryWithConfigLocalDisabled(t *testing.T) {
+	// Clear all API keys so only local provider would be available
+	originalAnthropic := os.Getenv("ANTHROPIC_API_KEY")
+	originalGoogle := os.Getenv("GOOGLE_API_KEY")
+	originalGemini := os.Getenv("GEMINI_API_KEY")
+	_ = os.Unsetenv("ANTHROPIC_API_KEY")
+	_ = os.Unsetenv("GOOGLE_API_KEY")
+	_ = os.Unsetenv("GEMINI_API_KEY")
+	defer func() {
+		_ = os.Setenv("ANTHROPIC_API_KEY", originalAnthropic)
+		_ = os.Setenv("GOOGLE_API_KEY", originalGoogle)
+		_ = os.Setenv("GEMINI_API_KEY", originalGemini)
+	}()
+
+	// Config with local_enabled=false should prevent local provider registration
+	cfg := &mockLLMConfig{enabled: true, localEnabled: false}
+	ctx := context.Background()
+	_, err := NewFactory(ctx, WithConfig(cfg))
+	if err == nil {
+		t.Error("NewFactory should fail when local is disabled via config and no API keys are set")
+	}
+}
+
+func TestNewFactoryWithConfigLocalEnabled(t *testing.T) {
+	// Clear all API keys so only local provider would be available
+	originalAnthropic := os.Getenv("ANTHROPIC_API_KEY")
+	originalGoogle := os.Getenv("GOOGLE_API_KEY")
+	originalGemini := os.Getenv("GEMINI_API_KEY")
+	_ = os.Unsetenv("ANTHROPIC_API_KEY")
+	_ = os.Unsetenv("GOOGLE_API_KEY")
+	_ = os.Unsetenv("GEMINI_API_KEY")
+	defer func() {
+		_ = os.Setenv("ANTHROPIC_API_KEY", originalAnthropic)
+		_ = os.Setenv("GOOGLE_API_KEY", originalGoogle)
+		_ = os.Setenv("GEMINI_API_KEY", originalGemini)
+	}()
+
+	// Config with local_enabled=true should register local provider even without API keys
+	cfg := &mockLLMConfig{enabled: true, localEnabled: true}
+	ctx := context.Background()
+	factory, err := NewFactory(ctx, WithConfig(cfg))
+	if err != nil {
+		t.Fatalf("NewFactory should succeed with local enabled via config: %v", err)
+	}
+
+	if !factory.HasProvider("local") {
+		t.Error("Factory should have local provider when config enables it")
+	}
+
+	if factory.ProviderCount() != 1 {
+		t.Errorf("ProviderCount() = %d, want 1 (only local)", factory.ProviderCount())
+	}
+}
+
+func TestNewFactoryWithoutConfigUsesDefaults(t *testing.T) {
+	// Clear all API keys
+	originalAnthropic := os.Getenv("ANTHROPIC_API_KEY")
+	originalGoogle := os.Getenv("GOOGLE_API_KEY")
+	originalGemini := os.Getenv("GEMINI_API_KEY")
+	_ = os.Unsetenv("ANTHROPIC_API_KEY")
+	_ = os.Unsetenv("GOOGLE_API_KEY")
+	_ = os.Unsetenv("GEMINI_API_KEY")
+	defer func() {
+		_ = os.Setenv("ANTHROPIC_API_KEY", originalAnthropic)
+		_ = os.Setenv("GOOGLE_API_KEY", originalGoogle)
+		_ = os.Setenv("GEMINI_API_KEY", originalGemini)
+	}()
+
+	// Without WithConfig, local should be enabled by default
+	ctx := context.Background()
+	factory, err := NewFactory(ctx)
+	if err != nil {
+		t.Fatalf("NewFactory should succeed with default local enabled: %v", err)
+	}
+
+	if !factory.HasProvider("local") {
+		t.Error("Factory should have local provider by default")
+	}
+}

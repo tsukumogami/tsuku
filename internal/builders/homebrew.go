@@ -103,12 +103,13 @@ type HomebrewSession struct {
 	req     BuildRequest
 
 	// LLM state (provider may be nil for bottle mode until needed)
-	provider     llm.Provider
-	factory      *llm.Factory // For deferred LLM initialization in bottle mode
-	messages     []llm.Message
-	systemPrompt string
-	tools        []llm.ToolDef
-	totalUsage   llm.Usage
+	provider      llm.Provider
+	factory       *llm.Factory  // For deferred LLM initialization in bottle mode
+	factoryConfig llm.LLMConfig // Provider selection settings for lazy factory creation
+	messages      []llm.Message
+	systemPrompt  string
+	tools         []llm.ToolDef
+	totalUsage    llm.Usage
 
 	// Generation context
 	genCtx  *homebrewGenContext
@@ -402,11 +403,18 @@ func (b *HomebrewBuilder) NewSession(ctx context.Context, req BuildRequest, opts
 	// Check if deterministic-only mode is requested
 	deterministicOnly := opts != nil && opts.DeterministicOnly
 
+	// Capture factory config for lazy LLM initialization
+	var factoryConfig llm.LLMConfig
+	if opts != nil {
+		factoryConfig = opts.LLMFactoryConfig
+	}
+
 	return &HomebrewSession{
 		builder:           b,
 		req:               req,
 		provider:          nil, // Initialized lazily if deterministic generation fails
 		factory:           factory,
+		factoryConfig:     factoryConfig,
 		messages:          messages,
 		systemPrompt:      systemPrompt,
 		tools:             tools,
@@ -525,8 +533,12 @@ func (s *HomebrewSession) ensureLLMProvider(ctx context.Context) error {
 	// Initialize factory if needed
 	factory := s.factory
 	if factory == nil {
+		var factoryOpts []llm.FactoryOption
+		if s.factoryConfig != nil {
+			factoryOpts = append(factoryOpts, llm.WithConfig(s.factoryConfig))
+		}
 		var err error
-		factory, err = llm.NewFactory(ctx)
+		factory, err = llm.NewFactory(ctx, factoryOpts...)
 		if err != nil {
 			return fmt.Errorf("failed to create LLM factory: %w", err)
 		}
