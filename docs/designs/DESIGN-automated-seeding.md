@@ -8,19 +8,23 @@ problem: |
   queue entries lack freshness tracking for their disambiguation decisions, meaning
   stale sources can't be detected or refreshed automatically.
 decision: |
-  Add four new Source implementations (CratesIO, Npm, PyPI, RubyGems) to the existing
-  internal/seed package, each fetching popular CLI tools from ecosystem APIs. Extend
-  cmd/seed-queue to accept multiple sources, run disambiguation via internal/discover
-  for new packages, and write audit logs to data/disambiguations/audit/. The weekly
-  seed-queue.yml workflow runs all sources sequentially with per-ecosystem rate limiting.
-  Bootstrap Phase B runs locally to backfill disambiguation for existing homebrew entries.
+  Extend the existing EcosystemProber builders in internal/builders/ with a Discover()
+  method for batch discovery of popular CLI tools. The four builders that support it
+  (cargo, npm, pypi, gem) already have HTTP clients and API knowledge for their
+  ecosystems. Extend cmd/seed-queue to iterate over discoverer-capable builders, run
+  disambiguation via internal/discover for new packages, and write audit logs to
+  data/disambiguations/audit/. The weekly seed-queue.yml workflow runs all sources
+  sequentially. Bootstrap Phase B runs locally to backfill disambiguation for existing
+  homebrew entries.
 rationale: |
-  The internal/seed.Source interface already abstracts ecosystem-specific fetching, and
-  internal/discover already handles disambiguation with the 10x threshold. Adding new
-  Source implementations is the natural extension point. Per-ecosystem rate limiting in
-  the seeding command avoids CI-side complexity, and audit logs extend the existing
-  DisambiguationRecord format with probe results via a new AuditEntry type. The weekly
-  cadence matches the current seed-queue.yml schedule, keeping CI costs incremental.
+  The existing EcosystemProber builders already have HTTP clients, API knowledge, and
+  response parsing for each ecosystem. Adding a Discover() method to these builders
+  keeps ecosystem API knowledge in one place rather than duplicating it across
+  internal/seed/ and internal/builders/. The Probe() method already handles per-package
+  lookup for disambiguation; Discover() adds batch listing using different endpoints on
+  the same APIs. Audit logs extend the existing DisambiguationRecord format with probe
+  results via a new AuditEntry type. The weekly cadence matches the current seed-queue.yml
+  schedule, keeping CI costs incremental.
 ---
 
 # DESIGN: Automated Seeding Workflow
@@ -55,7 +59,7 @@ This creates three gaps:
 ### Scope
 
 **In scope:**
-- New `Source` implementations for crates.io, npm, PyPI, and RubyGems
+- `Discover()` methods on existing builders for crates.io, npm, PyPI, and RubyGems
 - Disambiguation integration in `cmd/seed-queue`
 - Freshness checking and stale entry re-disambiguation
 - Audit log format for disambiguation decisions
@@ -73,7 +77,7 @@ This creates three gaps:
 
 ## Decision Drivers
 
-1. **Existing infrastructure**: The `Source` interface and `HomebrewSource` pattern are the extension point. New sources should follow the same pattern.
+1. **Existing infrastructure**: The `EcosystemProber` builders already have HTTP clients and API knowledge for each ecosystem. Adding `Discover()` is the natural extension.
 2. **Rate limit compliance**: Each ecosystem has different API limits (crates.io: 1 req/s, RubyGems: 10 req/s, npm/PyPI: undocumented). The design must enforce these.
 3. **Incremental cost**: Weekly seeding should process only new/stale packages, not the full queue. Initial bootstrap is a one-time local cost.
 4. **Security**: Source changes for high-priority packages need manual review. Curated overrides must never be auto-refreshed.
@@ -84,7 +88,17 @@ This creates three gaps:
 
 ### Existing Patterns
 
-**`internal/seed/source.go`** -- the extension point:
+**`internal/builders/probe.go`** -- the ecosystem prober interface:
+```go
+type EcosystemProber interface {
+    SessionBuilder
+    Probe(ctx context.Context, name string) (*ProbeResult, error)
+}
+```
+
+Eight builders implement `EcosystemProber`: `CargoBuilder`, `NpmBuilder`, `PyPIBuilder`, `GemBuilder`, `HomebrewBuilder`, `CaskBuilder`, `GoBuilder`, `CpanBuilder`. Each already has HTTP clients, URL construction, and response parsing for its ecosystem's API. `Probe()` checks whether a specific package exists and returns quality metadata.
+
+**`internal/seed/source.go`** -- the existing seed source interface:
 ```go
 type Source interface {
     Name() string
@@ -92,7 +106,7 @@ type Source interface {
 }
 ```
 
-`HomebrewSource` implements this by fetching `https://formulae.brew.sh/api/analytics/install-on-request/30d.json` and assigning tiers. The interface returns `[]Package` where each package has `ID`, `Source`, `Name`, `Tier`, `Status`, `AddedAt`, and optional `Metadata`.
+`HomebrewSource` is the sole implementation, fetching from Homebrew analytics. It returns `[]Package` where each package has `ID`, `Source`, `Name`, `Tier`, `Status`, `AddedAt`, and optional `Metadata`.
 
 **`internal/seed/queue.go`** -- queue management:
 - `PriorityQueue.Merge(newPackages)` adds packages by ID, skipping duplicates
@@ -149,7 +163,7 @@ type AuditEntry struct {
 
 The codebase has two queue structures: `seed.PriorityQueue` (using `seed.Package` with `ID`, `Source`, `Name`, `Tier`, `Status`) and the unified queue (using `batch.QueueEntry` with `Name`, `Source`, `Priority`, `Status`, `Confidence`, `DisambiguatedAt`, `FailureCount`). The current `cmd/seed-queue` writes to per-ecosystem files (`priority-queue-homebrew.json`) using `seed.Package`, while the batch orchestrator reads the unified queue (`priority-queue.json`) using `batch.QueueEntry`.
 
-This design targets the **unified queue** directly. The seed command will read and write `priority-queue.json` using `batch.QueueEntry`. Source implementations still return `[]seed.Package`, but the command converts these to `batch.QueueEntry` before merging:
+This design targets the **unified queue** directly. The seed command will read and write `priority-queue.json` using `batch.QueueEntry`. Builder `Discover()` returns `[]DiscoveryCandidate`, which the command converts to `[]seed.Package` (for filtering) and then to `batch.QueueEntry` (for merging):
 
 - `seed.Package.Tier` maps to `batch.QueueEntry.Priority`
 - `seed.Package.Source` maps to `batch.QueueEntry.Source` (as `"ecosystem:name"`)
@@ -182,21 +196,45 @@ Each ecosystem has a different API for finding popular packages. The seeding com
 
 The key tension: some ecosystems (crates.io) have excellent filtering and sorting, while others (PyPI) have no search API at all. The design must handle this asymmetry without over-engineering.
 
-#### Chosen: Per-Ecosystem Source Implementations with Ecosystem-Specific Strategies
+#### Chosen: Extend Ecosystem Probers with Batch Discovery
 
-Add four new `Source` implementations, each using the best available endpoint for its ecosystem:
+Add an `EcosystemDiscoverer` interface to `internal/builders/` that the four relevant builders implement:
 
-**CratesIOSource**: Query `https://crates.io/api/v1/crates?category=command-line-utilities&sort=downloads&per_page=100`. The `command-line-utilities` category contains ~16K crates and can be sorted by downloads. Paginate through the top N (default 500). Rate limit: 1 request/second with required User-Agent header.
+```go
+// EcosystemDiscoverer extends EcosystemProber with batch discovery.
+// Builders that implement this interface can list popular CLI packages
+// from their ecosystem, not just probe for known names.
+type EcosystemDiscoverer interface {
+    EcosystemProber
+    Discover(ctx context.Context, limit int) ([]DiscoveryCandidate, error)
+}
 
-**NpmSource**: Query `https://registry.npmjs.org/-/v1/search?text=keywords:cli&popularity=1.0&size=250`. The `keywords:cli` filter and `popularity` weight focus on popular CLI packages. Paginate with `from` offset up to 1000 results. Fetch weekly download counts from `https://api.npmjs.org/downloads/point/last-week/{name}` for the top candidates. Rate limit: 2 requests/second (conservative, since npm doesn't publish limits).
+type DiscoveryCandidate struct {
+    Name      string // package name in this ecosystem
+    Downloads int    // popularity metric (0 if unavailable)
+}
+```
 
-**PyPISource**: Fetch the static dump at `https://hugovk.github.io/top-pypi-packages/top-pypi-packages-30-days.min.json` (top 15K packages by downloads, updated monthly). For the top 500 by downloads, fetch `/pypi/{name}/json` and filter locally for `Environment :: Console` in classifiers. Rate limit: 5 requests/second (PyPI is CDN-cached and doesn't rate-limit reads).
+Each builder already has HTTP clients, API URLs, and response parsing for its ecosystem. `Discover()` adds batch listing using different endpoints on the same APIs:
 
-**RubyGemsSource**: Fetch the top 50 via `https://rubygems.org/api/v1/downloads/top.json`, plus search via `https://rubygems.org/api/v1/search.json?query=cli`. For each candidate, check if `executables` is present (indicates a CLI tool). Rate limit: 5 requests/second (load balancer limit is 10 req/s; stay at 50%).
+**CargoBuilder.Discover()**: Query `https://crates.io/api/v1/crates?category=command-line-utilities&sort=downloads&per_page=100`. The `command-line-utilities` category contains ~16K crates and can be sorted by downloads. Paginate through the top N (default 500). Reuses the existing `cratesIOBaseURL` and `http.Client` from the builder. Rate limit: 1 request/second (same as `Probe()`).
 
-Each source returns `[]seed.Package` with `Source` set to the ecosystem name (e.g., `"cargo"`, `"npm"`). The seeding command then runs disambiguation to pick the right `ecosystem:identifier` source for each.
+**NpmBuilder.Discover()**: Query `https://registry.npmjs.org/-/v1/search?text=keywords:cli&popularity=1.0&size=250`. Paginate with `from` offset up to 1000 results. Fetch weekly download counts from `https://api.npmjs.org/downloads/point/last-week/{name}` for the top candidates. Rate limit: 2 requests/second (conservative, since npm doesn't publish limits).
+
+**PyPIBuilder.Discover()**: Fetch the static dump at `https://hugovk.github.io/top-pypi-packages/top-pypi-packages-30-days.min.json` (top 15K packages by downloads, updated monthly). For the top 500 by downloads, fetch `/pypi/{name}/json` and filter locally for `Environment :: Console` in classifiers. Reuses the builder's existing PyPI metadata fetching. Rate limit: 5 requests/second (PyPI is CDN-cached).
+
+**GemBuilder.Discover()**: Fetch the top 50 via `https://rubygems.org/api/v1/downloads/top.json`, plus search via `https://rubygems.org/api/v1/search.json?query=cli`. For each candidate, check if `executables` is present (indicates a CLI tool). Rate limit: 5 requests/second (load balancer limit is 10 req/s; stay at 50%).
+
+**HomebrewBuilder** does not implement `EcosystemDiscoverer`. Homebrew discovery uses the analytics endpoint which has a fundamentally different shape (popularity ranking of all formulae). The existing `HomebrewSource` in `internal/seed/` stays as-is.
+
+**GoBuilder** and **CpanBuilder** don't implement `EcosystemDiscoverer` either -- Go has no popularity API, and CPAN has low volume.
+
+The seed command iterates over all builders, calls `Discover()` on those that support it, and converts the candidates to `seed.Package` for queue merging. Disambiguation then uses the same builders' `Probe()` method via `EcosystemProbe`.
 
 #### Alternatives Considered
+
+**Separate Source implementations in internal/seed/**: Create `CratesIOSource`, `NpmSource`, `PyPISource`, `RubyGemsSource` as new types in `internal/seed/`, each independently querying ecosystem APIs.
+Rejected because it duplicates ecosystem API knowledge. The builders in `internal/builders/` already have HTTP clients, URL construction, and response parsing for each ecosystem. Creating parallel implementations in `internal/seed/` means maintaining two sets of code that talk to the same APIs.
 
 **GitHub Stars as universal popularity proxy**: Query GitHub's search API for each ecosystem (`language:rust+topic:cli&sort=stars`).
 Rejected because GitHub stars don't correlate well with package registry popularity. A Rust crate can have 50K GitHub stars but be distributed via cargo, not GitHub releases. Each ecosystem's own download metrics are more relevant for seeding.
@@ -318,7 +356,7 @@ Rejected for the same reason. The 30-day freshness cycle means ~200 entries re-d
 
 ### Summary
 
-We're extending the existing seeding infrastructure to cover four additional ecosystems and integrating disambiguation into the seeding workflow. The `internal/seed` package gains four new `Source` implementations (CratesIOSource, NpmSource, PyPISource, RubyGemsSource), each querying its ecosystem's API for popular CLI tools. The `cmd/seed-queue` command accepts a `-source` flag with `all` as the default, running each source sequentially with per-ecosystem rate limiting.
+We're extending the existing ecosystem probers to support batch discovery and integrating disambiguation into the seeding workflow. Four builders in `internal/builders/` (CargoBuilder, NpmBuilder, PyPIBuilder, GemBuilder) gain a `Discover()` method that lists popular CLI packages from their ecosystem APIs. These builders already have HTTP clients and response parsing for each ecosystem -- `Discover()` adds batch listing endpoints alongside the existing per-package `Probe()`. The `cmd/seed-queue` command accepts a `-source` flag with `all` as the default, iterating over discoverer-capable builders sequentially.
 
 For each newly discovered package, the seeding command runs disambiguation via `internal/discover.NewEcosystemProbe()` to determine the best source across all ecosystems. It writes per-package audit files to `data/disambiguations/audit/` recording the probe results and selection rationale. Packages already in the queue are re-disambiguated when any trigger applies: stale `disambiguated_at` (>30 days or null), repeated failures with stale data, or a newly discovered source not previously in the audit candidates. When disambiguation produces a clear winner (`10x_popularity_gap` or `single_match`), the entry is auto-queued as `pending`. When it falls back to priority ranking (`priority_fallback`), the entry gets `status: "requires_manual"` for human review.
 
@@ -330,7 +368,7 @@ The weekly workflow runs all sources, processes new packages and stale entries, 
 
 ### Rationale
 
-The `Source` interface is the natural extension point. `HomebrewSource` already demonstrates the pattern: fetch from an API, return `[]Package`, let the caller merge into the queue. Adding four more implementations follows the same shape. Each source handles its own pagination, rate limiting, and CLI-tool filtering because these vary too much across ecosystems to abstract.
+The `EcosystemProber` builders are the natural extension point. They already know how to talk to each ecosystem's API -- `Probe()` does per-package lookup, and `Discover()` adds batch listing on the same APIs. Keeping both operations in the same builder avoids duplicating HTTP clients, URL construction, and response parsing across `internal/seed/` and `internal/builders/`. Each builder handles its own pagination, rate limiting, and CLI-tool filtering because these vary too much across ecosystems to abstract.
 
 Running full disambiguation at seeding time means every queue entry gets the right source before batch generation touches it. This directly addresses the root cause from DESIGN-pipeline-dashboard.md: packages like bat/fd/rg were routed to homebrew when they should use github or cargo. Disambiguation at seeding time fixes this for the entire queue, not just curated overrides.
 
@@ -349,15 +387,16 @@ cmd/seed-queue/main.go
   |            -audit-dir (path to audit output)
   |            -dry-run (print changes without writing)
   |
-  |-- For each source:
-  |     1. source.Fetch(limit) -> []Package (candidates)
-  |     2. FilterExistingRecipes() -> remove packages with recipes
-  |     3. FilterByName(queue) -> remove packages already in queue (by name, not ID)
-  |     4. If -disambiguate: run EcosystemProbe + disambiguate()
-  |        for each new package
-  |     5. Convert seed.Package -> batch.QueueEntry
-  |     6. queue.Merge(disambiguated entries)
-  |     7. Write audit logs
+  |-- For each discoverer-capable builder:
+  |     1. builder.Discover(limit) -> []DiscoveryCandidate
+  |     2. Convert to []seed.Package with tier assignment
+  |     3. FilterExistingRecipes() -> remove packages with recipes
+  |     4. FilterByName(queue) -> remove packages already in queue (by name, not ID)
+  |     5. If -disambiguate: run EcosystemProbe + disambiguate()
+  |        for each new package (reuses same builders' Probe())
+  |     6. Convert seed.Package -> batch.QueueEntry
+  |     7. queue.Merge(disambiguated entries)
+  |     8. Write audit logs
   |
   |-- Freshness check (all sources):
   |     1. Find entries with stale disambiguated_at (> 30 days or null)
@@ -376,18 +415,21 @@ cmd/seed-queue/main.go
   |     - Append to data/metrics/seeding-runs.jsonl (run history)
   |     - Summary JSON to stdout (for workflow parsing)
 
+internal/builders/
+  |-- probe.go           (existing, add EcosystemDiscoverer interface)
+  |-- cargo.go           (existing, add Discover() method)
+  |-- npm.go             (existing, add Discover() method)
+  |-- pypi.go            (existing, add Discover() method)
+  |-- gem.go             (existing, add Discover() method)
+
 internal/seed/
   |-- source.go          (existing Source interface)
-  |-- homebrew.go        (existing HomebrewSource)
-  |-- crates.go          (NEW: CratesIOSource)
-  |-- npm.go             (NEW: NpmSource)
-  |-- pypi.go            (NEW: PyPISource)
-  |-- rubygems.go        (NEW: RubyGemsSource)
+  |-- homebrew.go        (existing HomebrewSource, unchanged)
   |-- queue.go           (existing, add FilterByName method)
   |-- convert.go         (NEW: seed.Package -> batch.QueueEntry conversion)
   |-- filter.go          (existing FilterExistingRecipes)
   |-- disambiguator.go   (NEW: wraps discover.EcosystemProbe)
-  |-- audit.go           (NEW: audit log read/write)
+  |-- audit.go           (NEW: AuditEntry type + read/write)
 
 internal/discover/       (existing, add ResolveWithDetails() to EcosystemProbe)
 
@@ -400,7 +442,12 @@ internal/discover/       (existing, add ResolveWithDetails() to EcosystemProbe)
 Ecosystem APIs
   |
   v
-Source.Fetch() -> []seed.Package (raw candidates)
+Builder.Discover(limit) -> []DiscoveryCandidate (names + downloads)
+  |   (CargoBuilder, NpmBuilder, PyPIBuilder, GemBuilder)
+  |   + HomebrewSource.Fetch() for homebrew
+  |
+  v
+Convert to []seed.Package (with tier assignment)
   |
   v
 FilterExistingRecipes() -> remove packages with existing recipes
@@ -411,6 +458,7 @@ FilterByName(queue) -> remove packages already in queue (name-based, not ID-base
   v
 Disambiguator.Resolve() -> for each new package:
   |   EcosystemProbe.ResolveWithDetails(name) -> ResolveResult
+  |     uses same builders' Probe() methods
   |     .Selected: DiscoveryResult{Source, Metadata, Confidence}
   |     .AllProbes: []ProbeOutcome (all ecosystems, for audit)
   |   Write audit/<name>.json (AuditEntry embedding DisambiguationRecord)
@@ -432,15 +480,17 @@ FreshnessCheck() -> for stale/failing/new-source entries:
 queue.Save() -> write updated priority-queue.json
 ```
 
-### Ecosystem Source Details
+### Ecosystem Discovery Details
 
-| Source | Endpoint | Rate Limit | CLI Filter | Max Candidates |
-|--------|----------|------------|------------|----------------|
-| Homebrew | `formulae.brew.sh/api/analytics/install-on-request/30d.json` | 3 retries, backoff | None (all are CLI-relevant) | 5,000 |
-| crates.io | `/api/v1/crates?category=command-line-utilities&sort=downloads` | 1 req/s | Category filter | 500 |
-| npm | `/-/v1/search?text=keywords:cli&popularity=1.0` | 2 req/s | Keyword filter | 500 |
-| PyPI | `hugovk.github.io/top-pypi-packages/...30-days.min.json` + `/pypi/{name}/json` | 5 req/s (metadata) | `Environment :: Console` classifier | 500 |
-| RubyGems | `/api/v1/downloads/top.json` + `/api/v1/search.json?query=cli` | 5 req/s | Check `executables` field | 200 |
+| Builder | Discover() Endpoint | Rate Limit | CLI Filter | Max Candidates |
+|---------|---------------------|------------|------------|----------------|
+| HomebrewSource* | `formulae.brew.sh/api/analytics/install-on-request/30d.json` | 3 retries, backoff | None (all are CLI-relevant) | 5,000 |
+| CargoBuilder | `/api/v1/crates?category=command-line-utilities&sort=downloads` | 1 req/s | Category filter | 500 |
+| NpmBuilder | `/-/v1/search?text=keywords:cli&popularity=1.0` | 2 req/s | Keyword filter | 500 |
+| PyPIBuilder | `hugovk.github.io/top-pypi-packages/...30-days.min.json` + `/pypi/{name}/json` | 5 req/s (metadata) | `Environment :: Console` classifier | 500 |
+| GemBuilder | `/api/v1/downloads/top.json` + `/api/v1/search.json?query=cli` | 5 req/s | Check `executables` field | 200 |
+
+\* HomebrewSource uses the existing `seed.Source` interface, not `EcosystemDiscoverer`, because its analytics endpoint has a different shape from the builder API.
 
 ### Tier Assignment for Non-Homebrew Sources
 
@@ -450,7 +500,7 @@ queue.Save() -> write updated priority-queue.json
 - **Tier 2**: Assigned based on per-ecosystem download thresholds: crates.io > 100K recent downloads, npm > 500K weekly downloads, RubyGems > 1M total downloads. PyPI candidates don't have download counts at discovery time, so they start at tier 3.
 - **Tier 3**: All other packages.
 
-Tier assignment happens during source `Fetch()`, before disambiguation. Disambiguation may change the source but preserves the original tier (the tier reflects the tool's popularity, not which ecosystem it installs from).
+Tier assignment happens when converting `DiscoveryCandidate` to `seed.Package`, before disambiguation. The candidate's `Downloads` field drives tier-2 assignment. Disambiguation may change the source but preserves the original tier (the tier reflects the tool's popularity, not which ecosystem it installs from).
 
 ### Audit File Format
 
@@ -677,33 +727,33 @@ Bootstrap Phase B runs locally to backfill disambiguation for existing homebrew-
 
 ## Implementation Approach
 
-### Phase 1: New Source Implementations
+### Phase 1: Builder Discovery Methods
 
-Add `CratesIOSource`, `NpmSource`, `PyPISource`, and `RubyGemsSource` to `internal/seed/`. Each follows the `HomebrewSource` pattern: HTTP fetch with retry, parse response, return `[]Package`.
+Add `EcosystemDiscoverer` interface to `internal/builders/probe.go` and implement `Discover()` on `CargoBuilder`, `NpmBuilder`, `PyPIBuilder`, and `GemBuilder`. Each uses the builder's existing HTTP client and adds batch listing endpoints alongside the per-package `Probe()`.
 
-Each source implements its own rate limiting internally (e.g., `time.Sleep` between paginated requests). The caller doesn't need to know about rate limits.
+Each builder's `Discover()` handles its own pagination, rate limiting, and CLI-tool filtering internally.
 
 **Deliverables:**
-- 4 new source files + tests in `internal/seed/`
-- Per-source rate limiting and retry logic
-- CLI-tool filtering logic per ecosystem
+- `EcosystemDiscoverer` interface + `DiscoveryCandidate` type in `internal/builders/probe.go`
+- `Discover()` method + tests on 4 builders
+- Per-builder rate limiting and CLI-tool filtering logic
 
 ### Phase 2: Disambiguation Integration and Queue Bridging
 
 Add `ResolveWithDetails()` to `internal/discover/ecosystem_probe.go` that returns both the selected result and all probe outcomes. This is the only change to `internal/discover/`.
 
-Add `internal/seed/disambiguator.go` that wraps `discover.NewEcosystemProbe()`. The disambiguator constructs the prober list independently (without the full `ChainResolver` setup) by importing `internal/builders` and creating HTTP clients per ecosystem. It initializes all 8 ecosystem probers at construction time and uses a per-resolve context with 30-second timeout.
+Add `internal/seed/disambiguator.go` that wraps `discover.NewEcosystemProbe()`. The disambiguator takes the same builder instances used for discovery (they implement both `EcosystemDiscoverer` and `EcosystemProber`), plus any non-discoverer probers (HomebrewBuilder, CaskBuilder, GoBuilder, CpanBuilder). It initializes `EcosystemProbe` with all 8 probers and uses a per-resolve context with 30-second timeout.
 
 ```go
 type Disambiguator struct {
     probe *discover.EcosystemProbe
 }
 
-func NewDisambiguator(ctx context.Context) (*Disambiguator, error)
+func NewDisambiguator(ctx context.Context, probers []builders.EcosystemProber) (*Disambiguator, error)
 func (d *Disambiguator) Resolve(ctx context.Context, name string) (*AuditEntry, error)
 ```
 
-`NewDisambiguator` constructs the prober list by calling each ecosystem's `NewXxxProber()` constructor from `internal/builders` with a shared `http.Client`. This avoids depending on `ChainResolver` while reusing the same prober implementations.
+The seed command constructs all builders once, passes the discoverer-capable ones to the discovery loop, and passes the full set to `NewDisambiguator`. This avoids creating builders twice and keeps `ChainResolver` out of the seeding path.
 
 Add `internal/seed/convert.go` for `seed.Package` to `batch.QueueEntry` conversion. Add `internal/seed/audit.go` for reading and writing `AuditEntry` files (embedding `DisambiguationRecord` with seeding-specific fields).
 
@@ -752,9 +802,9 @@ The `GITHUB_TOKEN` secret is used for creating issues (source change alerts) and
 
 **Ecosystem API trust.** The seeding command trusts that ecosystem APIs return accurate metadata (download counts, version counts). An attacker who compromises an ecosystem's API could manipulate download counts to trigger favorable disambiguation. Download counts are not directly comparable across ecosystems (npm weekly installs vs. crates.io recent downloads vs. RubyGems lifetime downloads), which the 10x threshold doesn't account for.
 
-**PyPI data source.** The PyPISource uses a third-party static dump (`hugovk.github.io/top-pypi-packages/`) maintained by a single individual. Compromise of this GitHub account could inject arbitrary package names. Mitigation: every candidate from the static dump is validated against the official PyPI API (checking classifiers and metadata) before being added to the queue. The static dump is only used for discovery, not for download counts or source selection.
+**PyPI data source.** `PyPIBuilder.Discover()` uses a third-party static dump (`hugovk.github.io/top-pypi-packages/`) maintained by a single individual. Compromise of this GitHub account could inject arbitrary package names. Mitigation: every candidate from the static dump is validated against the official PyPI API (checking classifiers and metadata) before being added to the queue. The static dump is only used for discovery, not for download counts or source selection.
 
-**PyPI disambiguation blind spot.** The PyPI prober returns `Downloads: 0` because PyPI's API doesn't expose download counts. This means Python-native tools will never win disambiguation via the 10x threshold against ecosystems that report downloads. For packages discovered by PyPISource, the discovery ecosystem's download data (from the static dump) should be passed as a hint to the disambiguator.
+**PyPI disambiguation blind spot.** The PyPI prober returns `Downloads: 0` because PyPI's API doesn't expose download counts. This means Python-native tools will never win disambiguation via the 10x threshold against ecosystems that report downloads. For packages discovered by `PyPIBuilder.Discover()`, the discovery ecosystem's download data (from the static dump) should be passed as a hint to the disambiguator.
 
 **Cross-ecosystem name squatting.** An attacker can register a popular tool's name on a different ecosystem and inflate downloads. The exact name match filter helps, but doesn't verify that packages on different ecosystems refer to the same upstream project. Future improvement: compare repository URLs across matching packages and flag mismatches.
 
@@ -782,7 +832,7 @@ API requests include a User-Agent header identifying tsuku (required by crates.i
 - **Correct routing**: Disambiguation at seeding time means homebrew entries that should use cargo/github get updated
 - **Debuggable decisions**: Audit logs explain why each source was selected
 - **Incremental cost**: After bootstrap, weekly seeding processes only ~260 packages
-- **Builds on existing infrastructure**: No new packages or patterns; extends seed.Source and reuses discover.EcosystemProbe
+- **Builds on existing infrastructure**: Extends EcosystemProber builders with Discover(), keeping ecosystem API knowledge in one place. Reuses discover.EcosystemProbe for disambiguation
 
 ### Negative
 
