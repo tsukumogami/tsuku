@@ -135,9 +135,16 @@ func (p *LocalProvider) ensureModelReady(ctx context.Context) error {
 		return nil
 	}
 
-	// Model not ready -- it may need to be downloaded.
-	// Only prompt if we have a prompter and the model size is known.
-	if p.prompter != nil && status.ModelSizeBytes > 0 && status.ModelName != "" {
+	// Model not ready -- check if we even have a model selected
+	if status.ModelName == "" {
+		// No model selected. This can happen if hardware detection failed
+		// or the addon doesn't support the current hardware.
+		p.modelPrompted = true
+		return nil // Let the addon handle it; it may select a model at inference time
+	}
+
+	// Model selected but not ready -- prompt for download if we have a prompter
+	if p.prompter != nil {
 		modelDesc := fmt.Sprintf("LLM model %s", status.ModelName)
 		approved, err := p.prompter.ConfirmDownload(ctx, modelDesc, status.ModelSizeBytes)
 		if err != nil {

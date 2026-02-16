@@ -294,6 +294,129 @@ func TestEnsureModelReady(t *testing.T) {
 		err := provider.ensureModelReady(context.Background())
 		require.NoError(t, err)
 	})
+
+	t.Run("prompts when model known but size unknown", func(t *testing.T) {
+		lis2 := bufconn.Listen(bufSize)
+		mockServer := &mockInferenceServer{
+			statusResponse: &pb.StatusResponse{
+				Ready:          false,
+				ModelName:      "qwen2.5-3b-q4",
+				ModelSizeBytes: 0,
+				Backend:        "cpu",
+			},
+		}
+		grpcServer := grpc.NewServer()
+		pb.RegisterInferenceServiceServer(grpcServer, mockServer)
+		go func() { _ = grpcServer.Serve(lis2) }()
+		defer grpcServer.Stop()
+
+		conn, err := grpc.NewClient(
+			"passthrough://bufnet",
+			grpc.WithContextDialer(func(context.Context, string) (net.Conn, error) {
+				return lis2.Dial()
+			}),
+			grpc.WithTransportCredentials(insecure.NewCredentials()),
+		)
+		require.NoError(t, err)
+		defer func() { _ = conn.Close() }()
+
+		prompted := false
+		var promptedSize int64
+		provider := &LocalProvider{
+			client: pb.NewInferenceServiceClient(conn),
+			conn:   conn,
+			prompter: &testLocalPrompter{
+				approve: true,
+				onPrompt: func(_ string, size int64) {
+					prompted = true
+					promptedSize = size
+				},
+			},
+		}
+
+		err = provider.ensureModelReady(context.Background())
+		require.NoError(t, err)
+		require.True(t, prompted, "should prompt even when size is unknown")
+		require.Equal(t, int64(0), promptedSize, "size should be 0 when unknown")
+		require.True(t, provider.modelPrompted, "modelPrompted flag should be set")
+	})
+
+	t.Run("returns ErrDownloadDeclined when model known but size unknown and declined", func(t *testing.T) {
+		lis3 := bufconn.Listen(bufSize)
+		mockServer := &mockInferenceServer{
+			statusResponse: &pb.StatusResponse{
+				Ready:          false,
+				ModelName:      "qwen2.5-3b-q4",
+				ModelSizeBytes: 0,
+				Backend:        "cpu",
+			},
+		}
+		grpcServer := grpc.NewServer()
+		pb.RegisterInferenceServiceServer(grpcServer, mockServer)
+		go func() { _ = grpcServer.Serve(lis3) }()
+		defer grpcServer.Stop()
+
+		conn, err := grpc.NewClient(
+			"passthrough://bufnet",
+			grpc.WithContextDialer(func(context.Context, string) (net.Conn, error) {
+				return lis3.Dial()
+			}),
+			grpc.WithTransportCredentials(insecure.NewCredentials()),
+		)
+		require.NoError(t, err)
+		defer func() { _ = conn.Close() }()
+
+		provider := &LocalProvider{
+			client:   pb.NewInferenceServiceClient(conn),
+			conn:     conn,
+			prompter: &testLocalPrompter{approve: false},
+		}
+
+		err = provider.ensureModelReady(context.Background())
+		require.ErrorIs(t, err, addon.ErrDownloadDeclined)
+		require.False(t, provider.modelPrompted, "modelPrompted should not be set when declined")
+	})
+
+	t.Run("silent pass when no model name", func(t *testing.T) {
+		lis4 := bufconn.Listen(bufSize)
+		mockServer := &mockInferenceServer{
+			statusResponse: &pb.StatusResponse{
+				Ready:          false,
+				ModelName:      "",
+				ModelSizeBytes: 0,
+				Backend:        "",
+			},
+		}
+		grpcServer := grpc.NewServer()
+		pb.RegisterInferenceServiceServer(grpcServer, mockServer)
+		go func() { _ = grpcServer.Serve(lis4) }()
+		defer grpcServer.Stop()
+
+		conn, err := grpc.NewClient(
+			"passthrough://bufnet",
+			grpc.WithContextDialer(func(context.Context, string) (net.Conn, error) {
+				return lis4.Dial()
+			}),
+			grpc.WithTransportCredentials(insecure.NewCredentials()),
+		)
+		require.NoError(t, err)
+		defer func() { _ = conn.Close() }()
+
+		prompted := false
+		provider := &LocalProvider{
+			client: pb.NewInferenceServiceClient(conn),
+			conn:   conn,
+			prompter: &testLocalPrompter{
+				approve:  true,
+				onPrompt: func(_ string, _ int64) { prompted = true },
+			},
+		}
+
+		err = provider.ensureModelReady(context.Background())
+		require.NoError(t, err)
+		require.False(t, prompted, "should not prompt when no model name")
+		require.True(t, provider.modelPrompted, "modelPrompted flag should be set to avoid re-checking")
+	})
 }
 
 // testLocalPrompter is a mock Prompter for LocalProvider tests.
