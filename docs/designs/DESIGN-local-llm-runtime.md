@@ -22,43 +22,43 @@ Planned
 
 | Issue | Dependencies | Tier |
 |-------|--------------|------|
-| ~~[#1628: feat(llm): complete local provider skeleton with lifecycle management](https://github.com/tsukumogami/tsuku/issues/1628)~~ | None | testable |
-| _Establishes gRPC contract, LocalProvider implementing Provider interface, ServerLifecycle with lock file protocol, and AddonManager stub. This is the walking skeleton that all other issues refine._ | | |
-| ~~[#1629: feat(llm): implement addon download and verification](https://github.com/tsukumogami/tsuku/issues/1629)~~ | [#1628](https://github.com/tsukumogami/tsuku/issues/1628) | testable |
-| _AddonManager downloads platform-specific tsuku-llm binary from CDN with SHA256 verification at download and before each execution._ | | |
-| ~~[#1630: feat(llm): add configurable idle timeout](https://github.com/tsukumogami/tsuku/issues/1630)~~ | [#1628](https://github.com/tsukumogami/tsuku/issues/1628) | simple |
-| _Server shuts down after configurable idle period (default 5m). Supports TSUKU_LLM_IDLE_TIMEOUT env var override for testing._ | | |
-| ~~[#1631: feat(llm): implement SIGTERM handler for graceful shutdown](https://github.com/tsukumogami/tsuku/issues/1631)~~ | [#1628](https://github.com/tsukumogami/tsuku/issues/1628) | simple |
-| _Rust server handles SIGTERM, waits for in-flight requests (10s grace), cleans up socket and lock files on exit._ | | |
-| ~~[#1632: feat(llm): integrate LocalProvider into factory with config](https://github.com/tsukumogami/tsuku/issues/1632)~~ | [#1628](https://github.com/tsukumogami/tsuku/issues/1628), [#1630](https://github.com/tsukumogami/tsuku/issues/1630) | testable |
-| _Factory registers LocalProvider as fallback when local_enabled=true. Reads idle_timeout from config.toml with env var override._ | | |
-| ~~[#1633: ci(llm): add Rust addon build pipeline](https://github.com/tsukumogami/tsuku/issues/1633)~~ | [#1628](https://github.com/tsukumogami/tsuku/issues/1628) | critical |
-| _GitHub Actions workflow builds tsuku-llm for macOS (Metal), Linux (CUDA/Vulkan/CPU). Produces signed binaries with SHA256 checksums._ | | |
-| ~~[#1634: test(llm): add lifecycle integration tests](https://github.com/tsukumogami/tsuku/issues/1634)~~ | [#1628](https://github.com/tsukumogami/tsuku/issues/1628), [#1630](https://github.com/tsukumogami/tsuku/issues/1630), [#1631](https://github.com/tsukumogami/tsuku/issues/1631) | testable |
-| _Tests verify lock file prevents duplicates, stale socket cleanup, short timeout behavior, and SIGTERM shutdown._ | | |
+| ~~[#1628: feat(llm): complete local provider skeleton with lifecycle management](https://github.com/tsukumogami/tsuku/issues/1628)~~ | ~~None~~ | ~~testable~~ |
+| ~~_Establishes gRPC contract, LocalProvider implementing Provider interface, ServerLifecycle with lock file protocol, and AddonManager stub. This is the walking skeleton that all other issues refine._~~ | | |
+| ~~[#1629: feat(llm): implement addon download and verification](https://github.com/tsukumogami/tsuku/issues/1629)~~ | ~~[#1628](https://github.com/tsukumogami/tsuku/issues/1628)~~ | ~~testable~~ |
+| ~~_AddonManager downloads platform-specific tsuku-llm binary from CDN with SHA256 verification at download and before each execution._~~ | | |
+| ~~[#1630: feat(llm): add configurable idle timeout](https://github.com/tsukumogami/tsuku/issues/1630)~~ | ~~[#1628](https://github.com/tsukumogami/tsuku/issues/1628)~~ | ~~simple~~ |
+| ~~_Server shuts down after configurable idle period (default 5m). Supports TSUKU_LLM_IDLE_TIMEOUT env var override for testing._~~ | | |
+| ~~[#1631: feat(llm): implement SIGTERM handler for graceful shutdown](https://github.com/tsukumogami/tsuku/issues/1631)~~ | ~~[#1628](https://github.com/tsukumogami/tsuku/issues/1628)~~ | ~~simple~~ |
+| ~~_Rust server handles SIGTERM, waits for in-flight requests (10s grace), cleans up socket and lock files on exit._~~ | | |
+| ~~[#1632: feat(llm): integrate LocalProvider into factory with config](https://github.com/tsukumogami/tsuku/issues/1632)~~ | ~~[#1628](https://github.com/tsukumogami/tsuku/issues/1628), [#1630](https://github.com/tsukumogami/tsuku/issues/1630)~~ | ~~testable~~ |
+| ~~_Factory registers LocalProvider as fallback when local_enabled=true. Reads idle_timeout from config.toml with env var override._~~ | | |
+| ~~[#1633: ci(llm): add Rust addon build pipeline](https://github.com/tsukumogami/tsuku/issues/1633)~~ | ~~[#1628](https://github.com/tsukumogami/tsuku/issues/1628)~~ | ~~critical~~ |
+| ~~_GitHub Actions workflow builds tsuku-llm for macOS (Metal), Linux (CUDA/Vulkan/CPU). Produces signed binaries with SHA256 checksums._~~ | | |
+| ~~[#1634: test(llm): add lifecycle integration tests](https://github.com/tsukumogami/tsuku/issues/1634)~~ | ~~[#1628](https://github.com/tsukumogami/tsuku/issues/1628), [#1630](https://github.com/tsukumogami/tsuku/issues/1630), [#1631](https://github.com/tsukumogami/tsuku/issues/1631)~~ | ~~testable~~ |
+| ~~_Tests verify lock file prevents duplicates, stale socket cleanup, short timeout behavior, and SIGTERM shutdown._~~ | | |
 
 ### Milestone: [Inference Runtime](https://github.com/tsukumogami/tsuku/milestone/79)
 
 | Issue | Dependencies | Tier |
 |-------|--------------|------|
-| ~~[#1635: feat(llm): implement hardware detection](https://github.com/tsukumogami/tsuku/issues/1635)~~ | [#1628](https://github.com/tsukumogami/tsuku/issues/1628) | testable |
-| _Detect GPU type (CUDA/Metal/Vulkan/none), VRAM, system RAM, and CPU features (AVX2/AVX-512) at server startup._ | | |
-| ~~[#1636: feat(llm): implement model selection based on hardware](https://github.com/tsukumogami/tsuku/issues/1636)~~ | [#1635](https://github.com/tsukumogami/tsuku/issues/1635) | testable |
-| _ModelSelector maps HardwareProfile to appropriate model (3B/1.5B/0.5B). Supports local_model config override._ | | |
-| ~~[#1637: feat(llm): implement model download with progress](https://github.com/tsukumogami/tsuku/issues/1637)~~ | [#1636](https://github.com/tsukumogami/tsuku/issues/1636) | testable |
-| _Download GGUF models from CDN with progress callback. SHA256 verification at download and before each load._ | | |
-| ~~[#1638: feat(llm): integrate llama.cpp for inference](https://github.com/tsukumogami/tsuku/issues/1638)~~ | [#1633](https://github.com/tsukumogami/tsuku/issues/1633), [#1637](https://github.com/tsukumogami/tsuku/issues/1637) | critical |
-| _Build llama.cpp via cc crate. Safe Rust wrappers for model loading and inference with proper context management._ | | |
-| ~~[#1672: feat(llm): configure model manifest with HuggingFace URLs](https://github.com/tsukumogami/tsuku/issues/1672)~~ | [#1637](https://github.com/tsukumogami/tsuku/issues/1637), [#1638](https://github.com/tsukumogami/tsuku/issues/1638) | testable |
-| _Update manifest with real HuggingFace download URLs and SHA256 checksums. Enables end-to-end model download and inference._ | | |
-| ~~[#1675: fix(llm): daemon socket not cleaned up on SIGTERM](https://github.com/tsukumogami/tsuku/issues/1675)~~ | [#1631](https://github.com/tsukumogami/tsuku/issues/1631) | testable |
-| _Fix SIGTERM handler to properly clean up socket and lock files. Daemon should exit with status 0 after graceful shutdown._ | | |
-| ~~[#1676: fix(llm): tokenization fails with negative count from llama_tokenize](https://github.com/tsukumogami/tsuku/issues/1676)~~ | [#1638](https://github.com/tsukumogami/tsuku/issues/1638) | testable |
-| _Fix tokenization error when processing completion requests. llama_tokenize returns negative count indicating configuration or encoding issue._ | | |
-| ~~[#1639: feat(llm): implement GBNF grammar constraints for JSON](https://github.com/tsukumogami/tsuku/issues/1639)~~ | [#1638](https://github.com/tsukumogami/tsuku/issues/1638) | testable |
-| _Generate GBNF grammar from JSON Schema. Forces model output to valid JSON matching tool schemas._ | | |
-| ~~[#1640: feat(llm): wire Complete RPC to llama.cpp inference](https://github.com/tsukumogami/tsuku/issues/1640)~~ | [#1639](https://github.com/tsukumogami/tsuku/issues/1639), [#1672](https://github.com/tsukumogami/tsuku/issues/1672), [#1675](https://github.com/tsukumogami/tsuku/issues/1675), [#1676](https://github.com/tsukumogami/tsuku/issues/1676) | testable |
-| _Complete RPC invokes llama.cpp with grammar constraints. Includes local E2E validation: run `tsuku create` with LocalProvider on dev machine to verify full flow._ | | |
+| ~~[#1635: feat(llm): implement hardware detection](https://github.com/tsukumogami/tsuku/issues/1635)~~ | ~~[#1628](https://github.com/tsukumogami/tsuku/issues/1628)~~ | ~~testable~~ |
+| ~~_Detect GPU type (CUDA/Metal/Vulkan/none), VRAM, system RAM, and CPU features (AVX2/AVX-512) at server startup._~~ | | |
+| ~~[#1636: feat(llm): implement model selection based on hardware](https://github.com/tsukumogami/tsuku/issues/1636)~~ | ~~[#1635](https://github.com/tsukumogami/tsuku/issues/1635)~~ | ~~testable~~ |
+| ~~_ModelSelector maps HardwareProfile to appropriate model (3B/1.5B/0.5B). Supports local_model config override._~~ | | |
+| ~~[#1637: feat(llm): implement model download with progress](https://github.com/tsukumogami/tsuku/issues/1637)~~ | ~~[#1636](https://github.com/tsukumogami/tsuku/issues/1636)~~ | ~~testable~~ |
+| ~~_Download GGUF models from CDN with progress callback. SHA256 verification at download and before each load._~~ | | |
+| ~~[#1638: feat(llm): integrate llama.cpp for inference](https://github.com/tsukumogami/tsuku/issues/1638)~~ | ~~[#1633](https://github.com/tsukumogami/tsuku/issues/1633), [#1637](https://github.com/tsukumogami/tsuku/issues/1637)~~ | ~~critical~~ |
+| ~~_Build llama.cpp via cc crate. Safe Rust wrappers for model loading and inference with proper context management._~~ | | |
+| ~~[#1672: feat(llm): configure model manifest with HuggingFace URLs](https://github.com/tsukumogami/tsuku/issues/1672)~~ | ~~[#1637](https://github.com/tsukumogami/tsuku/issues/1637), [#1638](https://github.com/tsukumogami/tsuku/issues/1638)~~ | ~~testable~~ |
+| ~~_Update manifest with real HuggingFace download URLs and SHA256 checksums. Enables end-to-end model download and inference._~~ | | |
+| ~~[#1675: fix(llm): daemon socket not cleaned up on SIGTERM](https://github.com/tsukumogami/tsuku/issues/1675)~~ | ~~[#1631](https://github.com/tsukumogami/tsuku/issues/1631)~~ | ~~testable~~ |
+| ~~_Fix SIGTERM handler to properly clean up socket and lock files. Daemon should exit with status 0 after graceful shutdown._~~ | | |
+| ~~[#1676: fix(llm): tokenization fails with negative count from llama_tokenize](https://github.com/tsukumogami/tsuku/issues/1676)~~ | ~~[#1638](https://github.com/tsukumogami/tsuku/issues/1638)~~ | ~~testable~~ |
+| ~~_Fix tokenization error when processing completion requests. llama_tokenize returns negative count indicating configuration or encoding issue._~~ | | |
+| ~~[#1639: feat(llm): implement GBNF grammar constraints for JSON](https://github.com/tsukumogami/tsuku/issues/1639)~~ | ~~[#1638](https://github.com/tsukumogami/tsuku/issues/1638)~~ | ~~testable~~ |
+| ~~_Generate GBNF grammar from JSON Schema. Forces model output to valid JSON matching tool schemas._~~ | | |
+| ~~[#1640: feat(llm): wire Complete RPC to llama.cpp inference](https://github.com/tsukumogami/tsuku/issues/1640)~~ | ~~[#1639](https://github.com/tsukumogami/tsuku/issues/1639), [#1672](https://github.com/tsukumogami/tsuku/issues/1672), [#1675](https://github.com/tsukumogami/tsuku/issues/1675), [#1676](https://github.com/tsukumogami/tsuku/issues/1676)~~ | ~~testable~~ |
+| ~~_Complete RPC invokes llama.cpp with grammar constraints. Includes local E2E validation: run `tsuku create` with LocalProvider on dev machine to verify full flow._~~ | | |
 
 ### Milestone: [Production Ready](https://github.com/tsukumogami/tsuku/milestone/80)
 
