@@ -29,12 +29,14 @@ type benchmarkTestMatrix struct {
 
 // benchmarkTestDef is a single test case for benchmarking.
 type benchmarkTestDef struct {
-	Tool     string   `json:"tool"`
-	Builder  string   `json:"builder"`
-	Desc     string   `json:"desc"`
-	Action   string   `json:"action"`
-	Format   string   `json:"format"`
-	Features []string `json:"features"`
+	Tool       string   `json:"tool"`
+	Builder    string   `json:"builder"`
+	Desc       string   `json:"desc"`
+	Action     string   `json:"action"`
+	Format     string   `json:"format"`
+	Features   []string `json:"features"`
+	Assets     []string `json:"assets"`
+	Executable string   `json:"executable"`
 }
 
 // BenchmarkResult holds metrics for a single provider + test case run.
@@ -87,8 +89,10 @@ func newBenchmarkRunner(provider Provider) *benchmarkRunner {
 func (r *benchmarkRunner) runTestCase(t *testing.T, testID string, tc benchmarkTestDef) BenchmarkResult {
 	t.Helper()
 
-	// Use a generous timeout for local models which may be slower.
-	timeout := 3 * time.Minute
+	// Default timeout is 8 minutes per case. CPU inference at ~15 tok/s
+	// needs ~2.5 min for 2048 tokens. With thermal throttling on sustained
+	// runs, 8 minutes provides headroom. Override via LLM_BENCHMARK_TIMEOUT.
+	timeout := 8 * time.Minute
 	if os.Getenv("LLM_BENCHMARK_TIMEOUT") != "" {
 		if d, err := time.ParseDuration(os.Getenv("LLM_BENCHMARK_TIMEOUT")); err == nil {
 			timeout = d
@@ -99,17 +103,44 @@ func (r *benchmarkRunner) runTestCase(t *testing.T, testID string, tc benchmarkT
 
 	start := time.Now()
 
-	// Build a request mimicking what the builder would send
+	// Build a request mimicking what the builder would send.
+	// Include actual release asset filenames and a synthetic archive listing
+	// so all providers (cloud and local) have concrete data to analyze,
+	// matching real tsuku create behavior with pre-inspection.
+	var assetList string
+	for _, a := range tc.Assets {
+		assetList += fmt.Sprintf("- %s\n", a)
+	}
+
+	// Build a synthetic archive listing matching what the builder's
+	// pre-inspect would produce, so the model has all data needed upfront.
+	archiveListing := fmt.Sprintf(`{
+  "files": [
+    {"path": "%s", "size": 5000000, "executable": true}
+  ]
+}`, tc.Executable)
+
+	inspectedAsset := ""
+	if len(tc.Assets) > 0 {
+		inspectedAsset = tc.Assets[0]
+	}
+
+	userMsg := fmt.Sprintf(
+		"Analyze this GitHub repository '%s' and its releases to create a recipe.\n\n"+
+			"Release assets:\n%s\n"+
+			"Pre-inspected archive (%s):\n%s\n"+
+			"This listing shows the files inside the archive, including the executable."+
+			" Use this information to determine the executable name and call extract_pattern.\n\n"+
+			"Call extract_pattern with the asset-to-platform mappings.",
+		tc.Tool, assetList, inspectedAsset, archiveListing,
+	)
+
 	req := &CompletionRequest{
 		SystemPrompt: buildSystemPrompt(),
 		Messages: []Message{
 			{
-				Role: RoleUser,
-				Content: fmt.Sprintf(
-					"Analyze this tool: %s. Builder type: %s. Expected action: %s. Description: %s. "+
-						"Call extract_pattern when you have determined the asset-to-platform mappings.",
-					tc.Tool, tc.Builder, tc.Action, tc.Desc,
-				),
+				Role:    RoleUser,
+				Content: userMsg,
 			},
 		},
 		Tools:     buildToolDefs(),
@@ -343,7 +374,14 @@ func TestRecipeQualityBenchmark(t *testing.T) {
 		t.Run("provider="+provider.Name(), func(t *testing.T) {
 			runner := newBenchmarkRunner(provider)
 
-			for _, testID := range testIDs {
+			for i, testID := range testIDs {
+				// Cooldown between cases for CPU-based providers.
+				// Continuous inference causes thermal throttling on CPU,
+				// which degrades token generation speed in later cases.
+				if i > 0 && provider.Name() == "local" {
+					time.Sleep(60 * time.Second)
+				}
+
 				tc := matrix.Tests[testID]
 				t.Run(testID, func(t *testing.T) {
 					result := runner.runTestCase(t, testID, tc)

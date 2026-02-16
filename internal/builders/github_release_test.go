@@ -168,6 +168,80 @@ func TestDeriveAssetPattern(t *testing.T) {
 	}
 }
 
+func TestPickArchiveForPlatform(t *testing.T) {
+	tests := []struct {
+		name   string
+		assets []string
+		goos   string
+		goarch string
+		want   string
+	}{
+		{
+			name:   "go-style linux amd64",
+			assets: []string{"tool_linux_amd64.tar.gz", "tool_linux_arm64.tar.gz", "tool_darwin_amd64.tar.gz"},
+			goos:   "linux", goarch: "amd64",
+			want: "tool_linux_amd64.tar.gz",
+		},
+		{
+			name:   "capitalized OS",
+			assets: []string{"k9s_Linux_amd64.tar.gz", "k9s_Darwin_arm64.tar.gz"},
+			goos:   "linux", goarch: "amd64",
+			want: "k9s_Linux_amd64.tar.gz",
+		},
+		{
+			name:   "rust triple",
+			assets: []string{"tool-x86_64-unknown-linux-musl.tar.gz", "tool-aarch64-apple-darwin.tar.gz"},
+			goos:   "linux", goarch: "amd64",
+			want: "tool-x86_64-unknown-linux-musl.tar.gz",
+		},
+		{
+			name:   "darwin arm64",
+			assets: []string{"tool-x86_64-apple-darwin.zip", "tool-aarch64-apple-darwin.zip"},
+			goos:   "darwin", goarch: "arm64",
+			want: "tool-aarch64-apple-darwin.zip",
+		},
+		{
+			name:   "macOS alias",
+			assets: []string{"tool_macOS_x86_64.tar.gz", "tool_Linux_x86_64.tar.gz"},
+			goos:   "darwin", goarch: "amd64",
+			want: "tool_macOS_x86_64.tar.gz",
+		},
+		{
+			name:   "prefers archive over binary",
+			assets: []string{"k3d-linux-amd64", "k3d-linux-amd64.tar.gz"},
+			goos:   "linux", goarch: "amd64",
+			want: "k3d-linux-amd64.tar.gz",
+		},
+		{
+			name:   "bare binary when no archive",
+			assets: []string{"k3d-linux-amd64", "k3d-darwin-arm64"},
+			goos:   "linux", goarch: "amd64",
+			want: "k3d-linux-amd64",
+		},
+		{
+			name:   "no match returns empty",
+			assets: []string{"tool-windows-amd64.zip"},
+			goos:   "linux", goarch: "amd64",
+			want: "",
+		},
+		{
+			name:   "custom arch 64bit",
+			assets: []string{"trivy_0.50.0_Linux-64bit.tar.gz", "trivy_0.50.0_Linux-ARM64.tar.gz"},
+			goos:   "linux", goarch: "amd64",
+			want: "trivy_0.50.0_Linux-64bit.tar.gz",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			got := pickArchiveForPlatform(tc.assets, tc.goos, tc.goarch)
+			if got != tc.want {
+				t.Errorf("pickArchiveForPlatform() = %q, want %q", got, tc.want)
+			}
+		})
+	}
+}
+
 func TestGitHubReleaseBuilder_Name(t *testing.T) {
 	mockProv := &mockProvider{name: "mock"}
 	factory := createMockFactory(mockProv)

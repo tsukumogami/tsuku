@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -280,13 +281,32 @@ func (b *GitHubReleaseBuilder) NewSession(ctx context.Context, req BuildRequest,
 		progress.OnStageDone(fmt.Sprintf("%s, %d assets", releases[0].Tag, assetCount))
 	}
 
+	// Pre-inspect one archive matching the current platform.
+	// This gives the LLM concrete archive contents upfront so it can call
+	// extract_pattern directly without wasting a turn on inspect_archive.
+	var archiveAsset, archiveListing string
+	if len(releases) > 0 && len(releases[0].Assets) > 0 {
+		archiveAsset = pickArchiveForPlatform(releases[0].Assets, runtime.GOOS, runtime.GOARCH)
+		if archiveAsset != "" {
+			archiveURL := fmt.Sprintf("https://github.com/%s/releases/download/%s/%s",
+				repoPath, releases[0].Tag, archiveAsset)
+			listing, err := llm.InspectArchiveURL(ctx, b.httpClient, archiveURL)
+			if err == nil {
+				archiveListing = listing
+			}
+			// Non-fatal: if inspection fails, we proceed without it
+		}
+	}
+
 	// Build generation context
 	genCtx := &generationContext{
-		repo:        repoPath,
-		releases:    releases,
-		description: repoMeta.Description,
-		readme:      readme,
-		httpClient:  b.httpClient,
+		repo:           repoPath,
+		releases:       releases,
+		description:    repoMeta.Description,
+		readme:         readme,
+		httpClient:     b.httpClient,
+		archiveAsset:   archiveAsset,
+		archiveListing: archiveListing,
 	}
 	if len(releases) > 0 {
 		genCtx.tag = releases[0].Tag
@@ -438,12 +458,14 @@ func (s *GitHubReleaseSession) Close() error {
 
 // generationContext holds context needed during recipe generation.
 type generationContext struct {
-	repo        string // GitHub repository (owner/repo)
-	tag         string // Release tag to use for file fetching
-	releases    []llm.Release
-	description string
-	readme      string
-	httpClient  *http.Client
+	repo           string // GitHub repository (owner/repo)
+	tag            string // Release tag to use for file fetching
+	releases       []llm.Release
+	description    string
+	readme         string
+	httpClient     *http.Client
+	archiveAsset   string // Asset name that was pre-inspected (empty if none)
+	archiveListing string // Pre-inspected archive contents (empty if none)
 }
 
 // runConversationLoop executes the multi-turn conversation until extract_pattern is called.
@@ -999,9 +1021,11 @@ func buildSystemPrompt() string {
 Your task is to analyze the provided release information and determine how to match release assets to different platforms (linux/darwin, amd64/arm64).
 
 You have three tools available:
-1. fetch_file: Fetch a file from a URL to examine its contents (useful for READMEs)
-2. inspect_archive: Inspect the contents of an archive to find the executable
+1. fetch_file: Fetch a file from the repository (useful for READMEs)
+2. inspect_archive: Inspect the contents of an archive to find the executable. Only use this if the user message does not already include a pre-inspected archive listing.
 3. extract_pattern: Call this when you've determined the asset-to-platform mappings
+
+The user message may include a pre-inspected archive listing. If it does, you already have all the information needed to call extract_pattern directly. Only use inspect_archive if the pre-inspected listing is missing or doesn't contain enough information.
 
 When calling extract_pattern, use these target platforms:
 - os: "linux" or "darwin"
@@ -1050,6 +1074,13 @@ Recent releases:
 			readme = readme[:10000] + "\n...(truncated)"
 		}
 		msg += fmt.Sprintf("README.md:\n%s\n", readme)
+	}
+
+	if genCtx.archiveListing != "" {
+		msg += fmt.Sprintf("\nPre-inspected archive (%s):\n%s\n"+
+			"\nThis listing shows the files inside the archive, including the executable."+
+			" Use this information to determine the executable name and call extract_pattern.\n",
+			genCtx.archiveAsset, genCtx.archiveListing)
 	}
 
 	msg += "\nAnalyze the release assets and call extract_pattern with the platform mappings."
@@ -1203,22 +1234,83 @@ func isTextContentType(contentType string) bool {
 
 // inspectArchive downloads and lists the contents of an archive.
 func inspectArchive(ctx context.Context, httpClient *http.Client, archiveURL string) (string, error) {
-	req, err := http.NewRequestWithContext(ctx, "GET", archiveURL, nil)
-	if err != nil {
-		return "", fmt.Errorf("failed to create request: %w", err)
+	return llm.InspectArchiveURL(ctx, httpClient, archiveURL)
+}
+
+// pickArchiveForPlatform selects the best archive asset matching the current
+// platform from a list of release asset names. Returns the matching asset name,
+// or empty string if no match is found.
+//
+// The heuristic scores each asset on OS and architecture match, preferring
+// archive formats (tar.gz, zip, etc.) over bare binaries since archives are
+// the ones that benefit from pre-inspection.
+func pickArchiveForPlatform(assets []string, goos, goarch string) string {
+	// OS aliases: map runtime.GOOS to patterns found in release assets
+	osPatterns := map[string][]string{
+		"linux":  {"linux"},
+		"darwin": {"darwin", "macos", "apple"},
 	}
 
-	resp, err := httpClient.Do(req)
-	if err != nil {
-		return "", fmt.Errorf("failed to download archive: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("HTTP %d: %s", resp.StatusCode, resp.Status)
+	// Arch aliases: map runtime.GOARCH to patterns found in release assets
+	archPatterns := map[string][]string{
+		"amd64": {"amd64", "x86_64", "x64", "64bit"},
+		"arm64": {"arm64", "aarch64"},
 	}
 
-	// For now, return a placeholder - archive inspection requires more complex logic
-	// This is consistent with the existing implementation in client.go
-	return "Archive inspection not fully implemented - please analyze based on filename patterns", nil
+	osAliases := osPatterns[goos]
+	archAliases := archPatterns[goarch]
+
+	if len(osAliases) == 0 || len(archAliases) == 0 {
+		return ""
+	}
+
+	// Archive extensions we can actually inspect
+	archiveExts := []string{".tar.gz", ".tgz", ".tar.xz", ".txz", ".zip", ".tbz"}
+
+	bestAsset := ""
+	bestScore := 0
+
+	for _, asset := range assets {
+		lower := strings.ToLower(asset)
+
+		// Check OS match
+		osMatch := false
+		for _, pattern := range osAliases {
+			if strings.Contains(lower, pattern) {
+				osMatch = true
+				break
+			}
+		}
+		if !osMatch {
+			continue
+		}
+
+		// Check arch match
+		archMatch := false
+		for _, pattern := range archAliases {
+			if strings.Contains(lower, pattern) {
+				archMatch = true
+				break
+			}
+		}
+		if !archMatch {
+			continue
+		}
+
+		// Score: prefer archives over bare binaries
+		score := 1
+		for _, ext := range archiveExts {
+			if strings.HasSuffix(lower, ext) {
+				score = 2
+				break
+			}
+		}
+
+		if score > bestScore {
+			bestScore = score
+			bestAsset = asset
+		}
+	}
+
+	return bestAsset
 }

@@ -1,5 +1,5 @@
 {
-  "description": "Benchmark test matrix for comparing LLM provider quality. Derived from the builders' llm-test-matrix.json with a focus on representative coverage across recipe patterns.",
+  "description": "Benchmark test matrix for comparing LLM provider quality. Each test case includes actual release asset filenames so all providers (cloud and local) have concrete data to analyze.",
   "tests": {
     "bench_github_stern_baseline": {
       "tool": "stern",
@@ -7,7 +7,14 @@
       "action": "github_archive",
       "format": "tar.gz",
       "desc": "Baseline: standard os/arch mapping",
-      "features": ["os:standard", "arch:standard"]
+      "features": ["os:standard", "arch:standard"],
+      "assets": [
+        "stern_1.30.0_linux_amd64.tar.gz",
+        "stern_1.30.0_linux_arm64.tar.gz",
+        "stern_1.30.0_darwin_amd64.tar.gz",
+        "stern_1.30.0_darwin_arm64.tar.gz"
+      ],
+      "executable": "stern"
     },
     "bench_github_tflint_zip": {
       "tool": "tflint",
@@ -15,7 +22,14 @@
       "action": "github_archive",
       "format": "zip",
       "desc": "Zip archive format",
-      "features": ["format:zip"]
+      "features": ["format:zip"],
+      "assets": [
+        "tflint_linux_amd64.zip",
+        "tflint_linux_arm64.zip",
+        "tflint_darwin_amd64.zip",
+        "tflint_darwin_arm64.zip"
+      ],
+      "executable": "tflint"
     },
     "bench_github_ast-grep_rust_triple": {
       "tool": "ast-grep",
@@ -23,7 +37,14 @@
       "action": "github_archive",
       "format": "zip",
       "desc": "Rust-style target triples",
-      "features": ["os:rust_triple", "arch:rust_triple"]
+      "features": ["os:rust_triple", "arch:rust_triple"],
+      "assets": [
+        "ast-grep-x86_64-unknown-linux-gnu.zip",
+        "ast-grep-aarch64-unknown-linux-gnu.zip",
+        "ast-grep-x86_64-apple-darwin.zip",
+        "ast-grep-aarch64-apple-darwin.zip"
+      ],
+      "executable": "sg"
     },
     "bench_github_k9s_capitalized_os": {
       "tool": "k9s",
@@ -31,7 +52,14 @@
       "action": "github_archive",
       "format": "tar.gz",
       "desc": "Capitalized OS names (Darwin, Linux)",
-      "features": ["os:capitalized"]
+      "features": ["os:capitalized"],
+      "assets": [
+        "k9s_Linux_amd64.tar.gz",
+        "k9s_Linux_arm64.tar.gz",
+        "k9s_Darwin_amd64.tar.gz",
+        "k9s_Darwin_arm64.tar.gz"
+      ],
+      "executable": "k9s"
     },
     "bench_github_trivy_custom_arch": {
       "tool": "trivy",
@@ -39,7 +67,14 @@
       "action": "github_archive",
       "format": "tar.gz",
       "desc": "Custom arch names (64bit, ARM64)",
-      "features": ["os:macOS", "arch:custom"]
+      "features": ["os:macOS", "arch:custom"],
+      "assets": [
+        "trivy_0.50.0_Linux-64bit.tar.gz",
+        "trivy_0.50.0_Linux-ARM64.tar.gz",
+        "trivy_0.50.0_macOS-64bit.tar.gz",
+        "trivy_0.50.0_macOS-ARM64.tar.gz"
+      ],
+      "executable": "trivy"
     },
     "bench_github_age_strip_dirs": {
       "tool": "age",
@@ -47,7 +82,14 @@
       "action": "github_archive",
       "format": "tar.gz",
       "desc": "strip_dirs=1 extraction",
-      "features": ["strip_dirs:1"]
+      "features": ["strip_dirs:1"],
+      "assets": [
+        "age-v1.1.1-linux-amd64.tar.gz",
+        "age-v1.1.1-linux-arm64.tar.gz",
+        "age-v1.1.1-darwin-amd64.tar.gz",
+        "age-v1.1.1-darwin-arm64.tar.gz"
+      ],
+      "executable": "age"
     },
     "bench_github_fly_binary_rename": {
       "tool": "fly",
@@ -55,7 +97,14 @@
       "action": "github_archive",
       "format": "tar.gz",
       "desc": "Binary rename (flyctl -> fly)",
-      "features": ["binary:rename"]
+      "features": ["binary:rename"],
+      "assets": [
+        "flyctl_0.2.50_Linux_x86_64.tar.gz",
+        "flyctl_0.2.50_Linux_arm64.tar.gz",
+        "flyctl_0.2.50_macOS_x86_64.tar.gz",
+        "flyctl_0.2.50_macOS_arm64.tar.gz"
+      ],
+      "executable": "flyctl"
     },
     "bench_github_k3d_file_baseline": {
       "tool": "k3d",
@@ -63,7 +112,14 @@
       "action": "github_file",
       "format": "",
       "desc": "github_file baseline (direct binary)",
-      "features": ["action:github_file"]
+      "features": ["action:github_file"],
+      "assets": [
+        "k3d-linux-amd64",
+        "k3d-linux-arm64",
+        "k3d-darwin-amd64",
+        "k3d-darwin-arm64"
+      ],
+      "executable": "k3d"
     },
     "bench_github_cosign_file_rename": {
       "tool": "cosign",
@@ -71,7 +127,14 @@
       "action": "github_file",
       "format": "",
       "desc": "github_file with binary rename",
-      "features": ["action:github_file", "binary:rename"]
+      "features": ["action:github_file", "binary:rename"],
+      "assets": [
+        "cosign-linux-amd64",
+        "cosign-linux-arm64",
+        "cosign-darwin-amd64",
+        "cosign-darwin-arm64"
+      ],
+      "executable": "cosign"
     },
     "bench_github_cargo-deny_musl": {
       "tool": "cargo-deny",
@@ -79,7 +142,14 @@
       "action": "github_archive",
       "format": "tar.gz",
       "desc": "musl libc target (unknown-linux-musl)",
-      "features": ["os:rust_triple", "arch:rust_triple"]
+      "features": ["os:rust_triple", "arch:rust_triple"],
+      "assets": [
+        "cargo-deny-x86_64-unknown-linux-musl.tar.gz",
+        "cargo-deny-aarch64-unknown-linux-musl.tar.gz",
+        "cargo-deny-x86_64-apple-darwin.tar.gz",
+        "cargo-deny-aarch64-apple-darwin.tar.gz"
+      ],
+      "executable": "cargo-deny"
     }
   }
 }

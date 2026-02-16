@@ -11,7 +11,7 @@
     },
     "linux-amd64": {
       "url": "https://releases.tsuku.dev/tsuku-llm/v0.1.0/tsuku-llm-linux-amd64",
-      "sha256": "526f663e88f6bdc461f6df51590b39fb0db6ecbbcdea428bdcdd3f5987d979ca"
+      "sha256": "ee06f43dba21821b634ffeee9ecd74032d54218b571032d168309f03e5256593"
     },
     "linux-arm64": {
       "url": "https://releases.tsuku.dev/tsuku-llm/v0.1.0/tsuku-llm-linux-arm64",

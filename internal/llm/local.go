@@ -97,8 +97,17 @@ func (p *LocalProvider) Complete(ctx context.Context, req *CompletionRequest) (*
 		return nil, err
 	}
 
+	// Cap MaxTokens for local inference. CPU generation is slow (~15 tok/s),
+	// so 4096 tokens would take ~4.5 minutes. 2048 is enough for complex tool
+	// calls like extract_pattern (4 platform mappings) and keeps latency
+	// under ~2.5 minutes per turn.
+	localReq := *req
+	if localReq.MaxTokens > 2048 {
+		localReq.MaxTokens = 2048
+	}
+
 	// Convert to proto format
-	pbReq := toProtoRequest(req)
+	pbReq := toProtoRequest(&localReq)
 
 	// Show spinner during inference
 	spinner := progress.NewSpinner(os.Stderr)

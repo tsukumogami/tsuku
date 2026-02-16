@@ -31,19 +31,19 @@ type InspectArchiveResult struct {
 	Files []ArchiveFile `json:"files"`
 }
 
-// inspectArchive downloads an archive and returns a listing of its contents.
-func (c *Client) inspectArchive(ctx context.Context, url string) (string, error) {
+// InspectArchiveURL downloads an archive from a URL and returns a listing of its contents.
+func InspectArchiveURL(ctx context.Context, httpClient *http.Client, archiveURL string) (string, error) {
 	// Download the archive to a temp file
-	tmpFile, err := c.downloadArchive(ctx, url)
+	tmpFile, err := downloadArchive(ctx, httpClient, archiveURL)
 	if err != nil {
 		return "", fmt.Errorf("failed to download archive: %w", err)
 	}
 	defer os.Remove(tmpFile)
 
 	// Detect format from URL
-	format := detectArchiveFormat(url)
+	format := detectArchiveFormat(archiveURL)
 	if format == "" {
-		return "", fmt.Errorf("unsupported archive format: %s", url)
+		return "", fmt.Errorf("unsupported archive format: %s", archiveURL)
 	}
 
 	// List files in the archive
@@ -62,14 +62,19 @@ func (c *Client) inspectArchive(ctx context.Context, url string) (string, error)
 	return string(jsonBytes), nil
 }
 
+// inspectArchive downloads an archive and returns a listing of its contents.
+func (c *Client) inspectArchive(ctx context.Context, url string) (string, error) {
+	return InspectArchiveURL(ctx, c.httpClient, url)
+}
+
 // downloadArchive downloads an archive from a URL to a temp file.
-func (c *Client) downloadArchive(ctx context.Context, url string) (string, error) {
+func downloadArchive(ctx context.Context, httpClient *http.Client, url string) (string, error) {
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
 		return "", fmt.Errorf("failed to create request: %w", err)
 	}
 
-	resp, err := c.httpClient.Do(req)
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("failed to fetch URL: %w", err)
 	}

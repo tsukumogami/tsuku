@@ -221,7 +221,16 @@ impl LlmServer {
         } else {
             let tool_descriptions: Vec<String> = tools
                 .iter()
-                .map(|t| format!("- {}: {}", t.name, t.description))
+                .map(|t| {
+                    if t.parameters_schema.is_empty() {
+                        format!("- {}: {}", t.name, t.description)
+                    } else {
+                        format!(
+                            "- {}: {}\n  Parameters: {}",
+                            t.name, t.description, t.parameters_schema
+                        )
+                    }
+                })
                 .collect();
 
             format!(

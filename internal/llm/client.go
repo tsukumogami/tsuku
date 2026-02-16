@@ -294,9 +294,11 @@ func buildSystemPrompt() string {
 Your task is to analyze the provided release information and determine how to match release assets to different platforms (linux/darwin, amd64/arm64).
 
 You have three tools available:
-1. fetch_file: Fetch a file from a URL to examine its contents (useful for READMEs)
-2. inspect_archive: Inspect the contents of an archive to find the executable
+1. fetch_file: Fetch a file from the repository (useful for READMEs)
+2. inspect_archive: Inspect the contents of an archive to find the executable. Only use this if the user message does not already include a pre-inspected archive listing.
 3. extract_pattern: Call this when you've determined the asset-to-platform mappings
+
+The user message may include a pre-inspected archive listing. If it does, you already have all the information needed to call extract_pattern directly. Only use inspect_archive if the pre-inspected listing is missing or doesn't contain enough information.
 
 Common patterns you should recognize:
 - Rust-style targets: x86_64-unknown-linux-musl, aarch64-apple-darwin

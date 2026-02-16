@@ -129,7 +129,9 @@ func TestE2E_RecipeGenerationWithLocalProvider(t *testing.T) {
 		t.Skip("tsuku-llm addon not running, skipping e2e test")
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
+	// Local CPU inference is slow (~15 tok/s). With MaxTokens capped at 1024,
+	// each turn takes up to ~70s. Allow 5 minutes for multi-turn conversations.
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
 	provider := NewLocalProvider()

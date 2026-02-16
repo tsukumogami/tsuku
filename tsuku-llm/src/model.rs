@@ -269,11 +269,17 @@ impl ModelSelector {
     }
 
     /// Select model based on hardware capabilities.
+    ///
+    /// When a GPU is detected with known VRAM, model size is based on VRAM.
+    /// When VRAM is unknown (0) or no GPU is present, model size is based on
+    /// system RAM. This handles Vulkan where VRAM detection isn't yet
+    /// implemented and reports 0.
     fn select_model_for_hardware(&self, profile: &HardwareProfile) -> String {
         let has_gpu = profile.gpu_backend != GpuBackend::None;
+        let has_known_vram = has_gpu && profile.vram_bytes > 0;
 
-        if has_gpu {
-            // GPU path: select based on VRAM
+        if has_known_vram {
+            // GPU path with known VRAM: select based on VRAM
             if profile.vram_bytes >= VRAM_THRESHOLD_HIGH {
                 "qwen2.5-3b-instruct-q4".to_string()
             } else if profile.vram_bytes >= VRAM_THRESHOLD_MED {
@@ -282,7 +288,7 @@ impl ModelSelector {
                 "qwen2.5-0.5b-instruct-q4".to_string()
             }
         } else {
-            // CPU-only path: select based on system RAM
+            // CPU-only or GPU with unknown VRAM: select based on system RAM
             if profile.ram_bytes >= RAM_THRESHOLD_HIGH {
                 "qwen2.5-3b-instruct-q4".to_string()
             } else if profile.ram_bytes >= RAM_THRESHOLD_MED {
@@ -458,12 +464,25 @@ mod tests {
 
     #[test]
     fn test_gpu_low_vram_selects_0_5b() {
-        // VRAM < 4GB + GPU: 0.5B Q4
+        // VRAM < 4GB + GPU with known VRAM: 0.5B Q4
         let selector = ModelSelector::new();
         let profile = make_profile(GpuBackend::Vulkan, 2, 16);
 
         let spec = selector.select(&profile).unwrap();
         assert_eq!(spec.name, "qwen2.5-0.5b-instruct-q4");
+        assert_eq!(spec.backend, Backend::Vulkan);
+    }
+
+    #[test]
+    fn test_gpu_unknown_vram_falls_back_to_ram() {
+        // GPU detected but VRAM = 0 (unknown, e.g. Vulkan without VRAM query):
+        // should fall back to RAM-based selection
+        let selector = ModelSelector::new();
+        let profile = make_profile(GpuBackend::Vulkan, 0, 33);
+
+        let spec = selector.select(&profile).unwrap();
+        // With 33GB RAM, should select 3B (same as CPU-only path)
+        assert_eq!(spec.name, "qwen2.5-3b-instruct-q4");
         assert_eq!(spec.backend, Backend::Vulkan);
     }
 
