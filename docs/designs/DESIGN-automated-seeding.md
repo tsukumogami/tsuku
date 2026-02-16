@@ -39,7 +39,7 @@ Planned
 
 | Issue | Dependencies | Tier |
 |-------|--------------|------|
-| [#1723: feat(seed): implement walking skeleton for ecosystem discovery and seeding](https://github.com/tsukumogami/tsuku/issues/1723) | None | testable |
+| ~~[#1723: feat(seed): implement walking skeleton for ecosystem discovery and seeding](https://github.com/tsukumogami/tsuku/issues/1723)~~ | None | testable |
 | _Walking skeleton: EcosystemDiscoverer interface, CargoBuilder.Discover(), ResolveWithDetails(), Disambiguator wrapper, convert.go with tier assignment, FilterByName, and seed-queue -source cargo e2e flow._ | | |
 | [#1724: feat(builders): add Discover() to npm, pypi, and gem builders](https://github.com/tsukumogami/tsuku/issues/1724) | [#1723](https://github.com/tsukumogami/tsuku/issues/1723) | testable |
 | _Implements Discover() on NpmBuilder, PyPIBuilder, and GemBuilder using each ecosystem's batch listing APIs with rate limiting and CLI-tool filtering._ | | |
@@ -74,9 +74,9 @@ graph TD
     classDef blocked fill:#fff9c4,stroke:#333
     classDef needsDesign fill:#e1bee7,stroke:#333
 
-    class I1723 ready
-    class I1724 blocked
-    class I1725 blocked
+    class I1723 done
+    class I1724 ready
+    class I1725 ready
     class I1726 blocked
     class I1727 blocked
     class I1728 blocked
