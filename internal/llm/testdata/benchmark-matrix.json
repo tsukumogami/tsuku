@@ -1,0 +1,85 @@
+{
+  "description": "Benchmark test matrix for comparing LLM provider quality. Derived from the builders' llm-test-matrix.json with a focus on representative coverage across recipe patterns.",
+  "tests": {
+    "bench_github_stern_baseline": {
+      "tool": "stern",
+      "builder": "github",
+      "action": "github_archive",
+      "format": "tar.gz",
+      "desc": "Baseline: standard os/arch mapping",
+      "features": ["os:standard", "arch:standard"]
+    },
+    "bench_github_tflint_zip": {
+      "tool": "tflint",
+      "builder": "github",
+      "action": "github_archive",
+      "format": "zip",
+      "desc": "Zip archive format",
+      "features": ["format:zip"]
+    },
+    "bench_github_ast-grep_rust_triple": {
+      "tool": "ast-grep",
+      "builder": "github",
+      "action": "github_archive",
+      "format": "zip",
+      "desc": "Rust-style target triples",
+      "features": ["os:rust_triple", "arch:rust_triple"]
+    },
+    "bench_github_k9s_capitalized_os": {
+      "tool": "k9s",
+      "builder": "github",
+      "action": "github_archive",
+      "format": "tar.gz",
+      "desc": "Capitalized OS names (Darwin, Linux)",
+      "features": ["os:capitalized"]
+    },
+    "bench_github_trivy_custom_arch": {
+      "tool": "trivy",
+      "builder": "github",
+      "action": "github_archive",
+      "format": "tar.gz",
+      "desc": "Custom arch names (64bit, ARM64)",
+      "features": ["os:macOS", "arch:custom"]
+    },
+    "bench_github_age_strip_dirs": {
+      "tool": "age",
+      "builder": "github",
+      "action": "github_archive",
+      "format": "tar.gz",
+      "desc": "strip_dirs=1 extraction",
+      "features": ["strip_dirs:1"]
+    },
+    "bench_github_fly_binary_rename": {
+      "tool": "fly",
+      "builder": "github",
+      "action": "github_archive",
+      "format": "tar.gz",
+      "desc": "Binary rename (flyctl -> fly)",
+      "features": ["binary:rename"]
+    },
+    "bench_github_k3d_file_baseline": {
+      "tool": "k3d",
+      "builder": "github",
+      "action": "github_file",
+      "format": "",
+      "desc": "github_file baseline (direct binary)",
+      "features": ["action:github_file"]
+    },
+    "bench_github_cosign_file_rename": {
+      "tool": "cosign",
+      "builder": "github",
+      "action": "github_file",
+      "format": "",
+      "desc": "github_file with binary rename",
+      "features": ["action:github_file", "binary:rename"]
+    },
+    "bench_github_cargo-deny_musl": {
+      "tool": "cargo-deny",
+      "builder": "github",
+      "action": "github_archive",
+      "format": "tar.gz",
+      "desc": "musl libc target (unknown-linux-musl)",
+      "features": ["os:rust_triple", "arch:rust_triple"]
+    }
+  }
+}
