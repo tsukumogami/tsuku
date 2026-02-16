@@ -18,9 +18,9 @@ rationale: |
   The internal/seed.Source interface already abstracts ecosystem-specific fetching, and
   internal/discover already handles disambiguation with the 10x threshold. Adding new
   Source implementations is the natural extension point. Per-ecosystem rate limiting in
-  the seeding command avoids CI-side complexity, and audit logs use the existing
-  DisambiguationRecord format from internal/batch. The weekly cadence matches the current
-  seed-queue.yml schedule, keeping CI costs incremental.
+  the seeding command avoids CI-side complexity, and audit logs extend the existing
+  DisambiguationRecord format with probe results via a new AuditEntry type. The weekly
+  cadence matches the current seed-queue.yml schedule, keeping CI costs incremental.
 ---
 
 # DESIGN: Automated Seeding Workflow
@@ -110,7 +110,16 @@ func disambiguate(toolName string, matches []probeOutcome, priority map[string]i
 ```
 With `forceDeterministic: true`, it auto-selects using 10x threshold + secondary signals, falling back to priority ranking when data is missing.
 
-**`internal/discover/ecosystem_probe.go`** -- probes all 8 ecosystems in parallel with per-ecosystem builders that return `ProbeResult{Source, Downloads, VersionCount, HasRepository}`.
+**`internal/discover/ecosystem_probe.go`** -- probes all 8 ecosystems in parallel with per-ecosystem builders that return `ProbeResult{Source, Downloads, VersionCount, HasRepository}`. The current `Resolve()` method returns only the winning `*DiscoveryResult`; the raw `[]probeOutcome` from all ecosystems is internal. The seeding command needs all probe outcomes for audit logs, so the implementation must add a `ResolveWithDetails()` method that returns both:
+
+```go
+type ResolveResult struct {
+    Selected  *DiscoveryResult
+    AllProbes []ProbeOutcome // expose the internal probeOutcome type
+}
+
+func (p *EcosystemProbe) ResolveWithDetails(ctx context.Context, toolName string) (*ResolveResult, error)
+```
 
 **`internal/batch/results.go`** -- `DisambiguationRecord` for tracking decisions:
 ```go
@@ -121,6 +130,18 @@ type DisambiguationRecord struct {
     SelectionReason string   `json:"selection_reason"`
     DownloadsRatio  float64  `json:"downloads_ratio,omitempty"`
     HighRisk        bool     `json:"high_risk"`
+}
+```
+
+The seeding audit log extends this with additional fields. Rather than modifying `DisambiguationRecord`, the implementation defines a new `AuditEntry` type in `internal/seed/audit.go` that embeds it:
+
+```go
+type AuditEntry struct {
+    batch.DisambiguationRecord
+    ProbeResults    []ProbeResult `json:"probe_results"`
+    PreviousSource  *string       `json:"previous_source"`
+    DisambiguatedAt time.Time     `json:"disambiguated_at"`
+    SeedingRun      time.Time     `json:"seeding_run"`
 }
 ```
 
@@ -193,7 +214,13 @@ The question: should seeding run full disambiguation (8-ecosystem probe) for eve
 
 For each package discovered by a source that isn't already in the queue, run the `EcosystemProbe` from `internal/discover` to get probe results from all ecosystems. Then call `disambiguate()` with `forceDeterministic: true` to auto-select the best source.
 
-For packages already in the queue with a fresh `disambiguated_at` (within 30 days), skip disambiguation entirely. For packages with stale `disambiguated_at` (older than 30 days or null), re-run disambiguation. Entries with `failure_count >= 3` also trigger re-disambiguation, but only if their `disambiguated_at` is stale (to avoid re-disambiguating packages that fail due to builder bugs rather than wrong source selection). Entries with `status: "success"` are excluded from freshness checking since they already have working recipes. Entries with `confidence: "curated"` are never re-disambiguated.
+For packages already in the queue with a fresh `disambiguated_at` (within 30 days), skip disambiguation unless a new trigger applies. Three conditions trigger re-disambiguation:
+
+1. **Staleness**: `disambiguated_at` is older than 30 days or null.
+2. **Repeated failures**: `failure_count >= 3` AND `disambiguated_at` is stale. This conjunction is an intentional refinement of the pipeline dashboard's `failure_count >= 3` trigger -- it avoids re-disambiguating packages that were recently checked but fail due to builder bugs rather than wrong source selection.
+3. **New source discovery**: A source discovers a package already in the queue, and the discovering ecosystem is not present in the package's audit candidates (`data/disambiguations/audit/<name>.json`). This handles the case where a new ecosystem is onboarded and existing entries should be re-evaluated against it, without waiting for the 30-day freshness window.
+
+Entries with `status: "success"` are excluded from freshness checking since they already have working recipes. Entries with `confidence: "curated"` are never re-disambiguated but are validated: the seeding command checks whether the curated source still exists (HTTP HEAD against the ecosystem API). Broken curated sources (404s, timeouts) are reported in the stdout summary under a `curated_invalid` field and create GitHub issues, but the queue entry is left unchanged. This provides the data the pipeline dashboard's curated validation page needs.
 
 The seeding command calls `discover.NewEcosystemProbe()` directly (reusing existing builder infrastructure) rather than going through the full `ChainResolver`. This avoids the registry lookup and LLM stages, which aren't relevant for batch seeding.
 
@@ -215,7 +242,7 @@ When disambiguation runs during seeding, operators need to understand why a part
 
 #### Chosen: Per-Package JSON Audit Files with Seeding Run Metadata
 
-Write one JSON file per package to `data/disambiguations/audit/<name>.json`. Reuse the existing `DisambiguationRecord` structure from `internal/batch/results.go` and extend it with probe results:
+Write one JSON file per package to `data/disambiguations/audit/<name>.json`. Define a new `AuditEntry` type in `internal/seed/audit.go` that embeds the existing `DisambiguationRecord` from `internal/batch/results.go` and adds seeding-specific fields:
 
 ```json
 {
@@ -275,11 +302,11 @@ Rejected for the same reason. The 30-day freshness cycle means ~200 entries re-d
 
 2. **30-day freshness threshold is appropriate**: The parent design specified 30 days. If >50% of re-disambiguations return the same source, the threshold is too short. If source changes are missed, it's too long. Track this metric in audit logs.
 
-3. **`forceDeterministic: true` is acceptable for batch seeding**: This means disambiguation will use priority fallback for packages without clear download data, rather than prompting. The resulting `priority_fallback` selections are marked `high_risk` in the audit log.
+3. **`forceDeterministic: true` with manual review for priority_fallback**: Disambiguation uses `forceDeterministic: true` to avoid prompting. When the result is a clear `10x_popularity_gap` or `single_match`, the entry gets `status: "pending"` with `confidence: "auto"`. When the result is a `priority_fallback` (no clear winner), the entry gets `status: "requires_manual"` instead -- consistent with the pipeline dashboard's constraint that ambiguous matches need human review. These entries are marked `high_risk` in the audit log.
 
 4. **Null `disambiguated_at` means stale**: All existing queue entries have `disambiguated_at: null`. The freshness check treats null as stale, which is load-bearing for Bootstrap Phase B (it causes all entries to be re-disambiguated).
 
-4. **GitHub Actions timeout is sufficient**: The full seeding run (discovery + disambiguation + audit) should complete within 2 hours. With ~260 packages to process weekly and 8 ecosystem probes per package at ~2 seconds each, that's ~35 minutes for probing plus overhead.
+5. **GitHub Actions timeout is sufficient**: The full seeding run (discovery + disambiguation + audit) should complete within 2 hours. With ~260 packages to process weekly and 8 ecosystem probes per package at ~2 seconds each, that's ~35 minutes for probing plus overhead.
 
 ### Uncertainties
 
@@ -293,7 +320,7 @@ Rejected for the same reason. The 30-day freshness cycle means ~200 entries re-d
 
 We're extending the existing seeding infrastructure to cover four additional ecosystems and integrating disambiguation into the seeding workflow. The `internal/seed` package gains four new `Source` implementations (CratesIOSource, NpmSource, PyPISource, RubyGemsSource), each querying its ecosystem's API for popular CLI tools. The `cmd/seed-queue` command accepts a `-source` flag with `all` as the default, running each source sequentially with per-ecosystem rate limiting.
 
-For each newly discovered package, the seeding command runs disambiguation via `internal/discover.NewEcosystemProbe()` to determine the best source across all ecosystems. It writes per-package audit files to `data/disambiguations/audit/` recording the probe results and selection rationale. Packages already in the queue with fresh disambiguation (within 30 days) are skipped. Stale entries and entries with repeated failures trigger re-disambiguation.
+For each newly discovered package, the seeding command runs disambiguation via `internal/discover.NewEcosystemProbe()` to determine the best source across all ecosystems. It writes per-package audit files to `data/disambiguations/audit/` recording the probe results and selection rationale. Packages already in the queue are re-disambiguated when any trigger applies: stale `disambiguated_at` (>30 days or null), repeated failures with stale data, or a newly discovered source not previously in the audit candidates. When disambiguation produces a clear winner (`10x_popularity_gap` or `single_match`), the entry is auto-queued as `pending`. When it falls back to priority ranking (`priority_fallback`), the entry gets `status: "requires_manual"` for human review.
 
 Source changes for priority 1-2 packages create GitHub issues for manual review. Priority 3 source changes are auto-accepted. Curated entries (`confidence: "curated"`) are never re-disambiguated.
 
@@ -335,15 +362,18 @@ cmd/seed-queue/main.go
   |-- Freshness check (all sources):
   |     1. Find entries with stale disambiguated_at (> 30 days or null)
   |     2. Find entries with failure_count >= 3 AND stale disambiguated_at
-  |     3. Skip curated entries (confidence: "curated")
-  |     4. Skip success entries (status: "success")
-  |     5. Re-disambiguate, update source if changed
-  |     6. Reset failure_count/next_retry_at on source change
-  |     7. Flag priority 1-2 source changes
+  |     3. Find entries where discovered source not in audit candidates
+  |     4. Skip curated entries (confidence: "curated")
+  |     5. Skip success entries (status: "success")
+  |     6. Validate curated sources exist (HTTP HEAD), report broken ones
+  |     7. Re-disambiguate triggered entries, update source if changed
+  |     8. Reset failure_count/next_retry_at on source change
+  |     9. Flag priority 1-2 source changes
   |
   |-- Output:
   |     - Updated priority-queue.json
   |     - Audit files in data/disambiguations/audit/
+  |     - Append to data/metrics/seeding-runs.jsonl (run history)
   |     - Summary JSON to stdout (for workflow parsing)
 
 internal/seed/
@@ -359,7 +389,7 @@ internal/seed/
   |-- disambiguator.go   (NEW: wraps discover.EcosystemProbe)
   |-- audit.go           (NEW: audit log read/write)
 
-internal/discover/       (existing, no changes needed)
+internal/discover/       (existing, add ResolveWithDetails() to EcosystemProbe)
 
 .github/workflows/seed-queue.yml  (MODIFY: add multi-source support)
 ```
@@ -380,10 +410,10 @@ FilterByName(queue) -> remove packages already in queue (name-based, not ID-base
   |
   v
 Disambiguator.Resolve() -> for each new package:
-  |   EcosystemProbe.Resolve(name) -> []probeOutcome
-  |   disambiguate(name, outcomes, priorities, nil, true)
-  |   -> DiscoveryResult{Source, Metadata, Confidence}
-  |   Write audit/<name>.json
+  |   EcosystemProbe.ResolveWithDetails(name) -> ResolveResult
+  |     .Selected: DiscoveryResult{Source, Metadata, Confidence}
+  |     .AllProbes: []ProbeOutcome (all ecosystems, for audit)
+  |   Write audit/<name>.json (AuditEntry embedding DisambiguationRecord)
   |
   v
 Convert seed.Package -> batch.QueueEntry
@@ -392,9 +422,10 @@ Convert seed.Package -> batch.QueueEntry
 queue.Merge() -> add to priority-queue.json with resolved sources
   |
   v
-FreshnessCheck() -> for stale/failing entries (null or >30 days):
-  |   Skip curated + success entries
-  |   Re-disambiguate, flag source changes
+FreshnessCheck() -> for stale/failing/new-source entries:
+  |   Triggers: stale (null or >30d), failures+stale, new audit candidate
+  |   Skip curated (but validate source exists) + success entries
+  |   Re-disambiguate triggered entries, flag source changes
   |   Reset failure_count on source change
   |
   v
@@ -488,6 +519,9 @@ Exit codes:
     {"package": "procs", "old": "homebrew:procs", "new": "cargo:procs", "priority": 1, "auto_accepted": false}
   ],
   "curated_skipped": 277,
+  "curated_invalid": [
+    {"package": "example-tool", "source": "homebrew:example-tool", "error": "404 Not Found"}
+  ],
   "errors": []
 }
 ```
@@ -583,7 +617,7 @@ EOF
           done
       - name: Commit and push
         run: |
-          git add data/queues/priority-queue.json data/disambiguations/audit/
+          git add data/queues/priority-queue.json data/disambiguations/audit/ data/metrics/seeding-runs.jsonl
           if git diff --cached --quiet; then
             echo "No changes to commit"
             exit 0
@@ -656,7 +690,9 @@ Each source implements its own rate limiting internally (e.g., `time.Sleep` betw
 
 ### Phase 2: Disambiguation Integration and Queue Bridging
 
-Add `internal/seed/disambiguator.go` that wraps `discover.NewEcosystemProbe()` and `disambiguate()`. The disambiguator initializes all 8 ecosystem probers at construction time and uses a per-resolve context with 30-second timeout.
+Add `ResolveWithDetails()` to `internal/discover/ecosystem_probe.go` that returns both the selected result and all probe outcomes. This is the only change to `internal/discover/`.
+
+Add `internal/seed/disambiguator.go` that wraps `discover.NewEcosystemProbe()`. The disambiguator constructs the prober list independently (without the full `ChainResolver` setup) by importing `internal/builders` and creating HTTP clients per ecosystem. It initializes all 8 ecosystem probers at construction time and uses a per-resolve context with 30-second timeout.
 
 ```go
 type Disambiguator struct {
@@ -664,12 +700,15 @@ type Disambiguator struct {
 }
 
 func NewDisambiguator(ctx context.Context) (*Disambiguator, error)
-func (d *Disambiguator) Resolve(ctx context.Context, name string) (*DisambiguationResult, error)
+func (d *Disambiguator) Resolve(ctx context.Context, name string) (*AuditEntry, error)
 ```
 
-Add `internal/seed/convert.go` for `seed.Package` to `batch.QueueEntry` conversion. Add `internal/seed/audit.go` for reading and writing audit files.
+`NewDisambiguator` constructs the prober list by calling each ecosystem's `NewXxxProber()` constructor from `internal/builders` with a shared `http.Client`. This avoids depending on `ChainResolver` while reusing the same prober implementations.
+
+Add `internal/seed/convert.go` for `seed.Package` to `batch.QueueEntry` conversion. Add `internal/seed/audit.go` for reading and writing `AuditEntry` files (embedding `DisambiguationRecord` with seeding-specific fields).
 
 **Deliverables:**
+- `ResolveWithDetails()` method on `EcosystemProbe` in `internal/discover/`
 - `disambiguator.go` + `convert.go` + `audit.go` in `internal/seed/`
 - `FilterByName()` method on queue (name-based deduplication)
 - Tests for disambiguation integration and type conversion
@@ -755,5 +794,5 @@ API requests include a User-Agent header identifying tsuku (required by crates.i
 
 ### Neutral
 
-- **No dashboard changes**: Seeding stats are not added to the dashboard in this design. The existing disambiguation panel shows disambiguation data from queue entries.
+- **Dashboard data available, page deferred**: Seeding run history is persisted to `data/metrics/seeding-runs.jsonl` for future dashboard consumption. The seeding stats page itself (wireframed in the pipeline dashboard design) is deferred to Phase 2 (Observability).
 - **Go and CPAN excluded**: These ecosystems lack practical discovery APIs. They'll continue to be served by curated entries and GitHub seed lists.
