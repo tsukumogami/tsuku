@@ -41,18 +41,24 @@ Planned
 
 | Issue | Dependencies | Tier |
 |-------|--------------|------|
-| [#1635: feat(llm): implement hardware detection](https://github.com/tsukumogami/tsuku/issues/1635) | [#1628](https://github.com/tsukumogami/tsuku/issues/1628) | testable |
+| ~~[#1635: feat(llm): implement hardware detection](https://github.com/tsukumogami/tsuku/issues/1635)~~ | [#1628](https://github.com/tsukumogami/tsuku/issues/1628) | testable |
 | _Detect GPU type (CUDA/Metal/Vulkan/none), VRAM, system RAM, and CPU features (AVX2/AVX-512) at server startup._ | | |
-| [#1636: feat(llm): implement model selection based on hardware](https://github.com/tsukumogami/tsuku/issues/1636) | [#1635](https://github.com/tsukumogami/tsuku/issues/1635) | testable |
+| ~~[#1636: feat(llm): implement model selection based on hardware](https://github.com/tsukumogami/tsuku/issues/1636)~~ | [#1635](https://github.com/tsukumogami/tsuku/issues/1635) | testable |
 | _ModelSelector maps HardwareProfile to appropriate model (3B/1.5B/0.5B). Supports local_model config override._ | | |
-| [#1637: feat(llm): implement model download with progress](https://github.com/tsukumogami/tsuku/issues/1637) | [#1636](https://github.com/tsukumogami/tsuku/issues/1636) | testable |
+| ~~[#1637: feat(llm): implement model download with progress](https://github.com/tsukumogami/tsuku/issues/1637)~~ | [#1636](https://github.com/tsukumogami/tsuku/issues/1636) | testable |
 | _Download GGUF models from CDN with progress callback. SHA256 verification at download and before each load._ | | |
-| [#1638: feat(llm): integrate llama.cpp for inference](https://github.com/tsukumogami/tsuku/issues/1638) | [#1633](https://github.com/tsukumogami/tsuku/issues/1633), [#1637](https://github.com/tsukumogami/tsuku/issues/1637) | critical |
+| ~~[#1638: feat(llm): integrate llama.cpp for inference](https://github.com/tsukumogami/tsuku/issues/1638)~~ | [#1633](https://github.com/tsukumogami/tsuku/issues/1633), [#1637](https://github.com/tsukumogami/tsuku/issues/1637) | critical |
 | _Build llama.cpp via cc crate. Safe Rust wrappers for model loading and inference with proper context management._ | | |
-| [#1639: feat(llm): implement GBNF grammar constraints for JSON](https://github.com/tsukumogami/tsuku/issues/1639) | [#1638](https://github.com/tsukumogami/tsuku/issues/1638) | testable |
+| ~~[#1672: feat(llm): configure model manifest with HuggingFace URLs](https://github.com/tsukumogami/tsuku/issues/1672)~~ | [#1637](https://github.com/tsukumogami/tsuku/issues/1637), [#1638](https://github.com/tsukumogami/tsuku/issues/1638) | testable |
+| _Update manifest with real HuggingFace download URLs and SHA256 checksums. Enables end-to-end model download and inference._ | | |
+| ~~[#1675: fix(llm): daemon socket not cleaned up on SIGTERM](https://github.com/tsukumogami/tsuku/issues/1675)~~ | [#1631](https://github.com/tsukumogami/tsuku/issues/1631) | testable |
+| _Fix SIGTERM handler to properly clean up socket and lock files. Daemon should exit with status 0 after graceful shutdown._ | | |
+| ~~[#1676: fix(llm): tokenization fails with negative count from llama_tokenize](https://github.com/tsukumogami/tsuku/issues/1676)~~ | [#1638](https://github.com/tsukumogami/tsuku/issues/1638) | testable |
+| _Fix tokenization error when processing completion requests. llama_tokenize returns negative count indicating configuration or encoding issue._ | | |
+| ~~[#1639: feat(llm): implement GBNF grammar constraints for JSON](https://github.com/tsukumogami/tsuku/issues/1639)~~ | [#1638](https://github.com/tsukumogami/tsuku/issues/1638) | testable |
 | _Generate GBNF grammar from JSON Schema. Forces model output to valid JSON matching tool schemas._ | | |
-| [#1640: feat(llm): wire Complete RPC to llama.cpp inference](https://github.com/tsukumogami/tsuku/issues/1640) | [#1638](https://github.com/tsukumogami/tsuku/issues/1638), [#1639](https://github.com/tsukumogami/tsuku/issues/1639) | testable |
-| _Complete RPC invokes llama.cpp with grammar constraints. Returns structured responses matching Provider interface._ | | |
+| ~~[#1640: feat(llm): wire Complete RPC to llama.cpp inference](https://github.com/tsukumogami/tsuku/issues/1640)~~ | [#1639](https://github.com/tsukumogami/tsuku/issues/1639), [#1672](https://github.com/tsukumogami/tsuku/issues/1672), [#1675](https://github.com/tsukumogami/tsuku/issues/1675), [#1676](https://github.com/tsukumogami/tsuku/issues/1676) | testable |
+| _Complete RPC invokes llama.cpp with grammar constraints. Includes local E2E validation: run `tsuku create` with LocalProvider on dev machine to verify full flow._ | | |
 
 ### Milestone: [Production Ready](https://github.com/tsukumogami/tsuku/milestone/80)
 
@@ -88,8 +94,11 @@ graph TD
         I1636["#1636: Model selection"]
         I1637["#1637: Model download"]
         I1638["#1638: llama.cpp integration"]
-        I1639["#1639: GBNF grammar"]
-        I1640["#1640: Complete RPC"]
+        I1672["#1672: HuggingFace manifest"]
+        I1675["#1675: SIGTERM cleanup ✓"]
+        I1676["#1676: Tokenization fix ✓"]
+        I1639["#1639: GBNF grammar ✓"]
+        I1640["#1640: Complete RPC ✓"]
     end
 
     subgraph M3["Production Ready"]
@@ -114,8 +123,13 @@ graph TD
     I1636 --> I1637
     I1633 --> I1638
     I1637 --> I1638
+    I1638 --> I1672
+    I1631 --> I1675
+    I1638 --> I1676
     I1638 --> I1639
-    I1638 --> I1640
+    I1672 --> I1640
+    I1675 --> I1640
+    I1676 --> I1640
     I1639 --> I1640
     I1640 --> I1641
     I1629 --> I1642
@@ -132,9 +146,8 @@ graph TD
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1628,I1629,I1630,I1631,I1632,I1633,I1634 done
-    class I1635 ready
-    class I1636,I1637,I1638,I1639,I1640,I1641,I1642,I1643,I1644,I1645 blocked
+    class I1628,I1629,I1630,I1631,I1632,I1633,I1634,I1635,I1636,I1637,I1638,I1672,I1675,I1676,I1639,I1640 done
+    class I1641,I1642,I1643,I1644,I1645 ready
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
