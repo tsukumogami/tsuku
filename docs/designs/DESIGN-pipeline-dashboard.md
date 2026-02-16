@@ -44,8 +44,8 @@ Planned
 | _Update batch generation to use `pkg.Source` from queue entries instead of hardcoding homebrew. Adds exponential backoff via `failure_count` and `next_retry_at` fields._ | | |
 | ~~[#1700: ci(batch): recipe merge workflow updates queue status](https://github.com/tsukumogami/tsuku/issues/1700)~~ | [#1697](https://github.com/tsukumogami/tsuku/issues/1697) | testable |
 | _Create workflow that updates queue status when recipes merge, detecting whether the recipe source matches the queue's pre-resolved source and flagging mismatches._ | | |
-| [#1701: docs(pipeline): design dashboard observability enhancements](https://github.com/tsukumogami/tsuku/issues/1701) | None | simple |
-| _Design Phase 2 observability: drill-down navigation, failure subcategories, and seeding stats. Spawns its own implementation milestone when designed._ | | |
+| ~~[#1701: docs(pipeline): design dashboard observability enhancements](https://github.com/tsukumogami/tsuku/issues/1701)~~ | None | simple |
+| _Design Phase 2 observability: drill-down navigation, failure subcategories, and seeding stats. Spawned dashboard-observability milestone with 11 implementation issues._ | | |
 | [#1702: docs(pipeline): design automated seeding workflow](https://github.com/tsukumogami/tsuku/issues/1702) | None | simple |
 | _Design Phase 3 seeding: `seed-queue` command, weekly workflow, and ecosystem discovery APIs. Spawns its own implementation milestone when designed._ | | |
 
@@ -60,25 +60,26 @@ graph LR
         I1700["#1700: Merge workflow"]
     end
 
+    I1701["#1701: Observability design"]
+    M84["dashboard-observability (11 issues)"]
+
     subgraph Future["Future Work"]
-        I1701["#1701: Observability design"]
         I1702["#1702: Seeding design"]
     end
 
     I1697 --> I1698
     I1697 --> I1699
     I1697 --> I1700
+    I1701 --> M84
 
     classDef done fill:#c8e6c9
     classDef ready fill:#bbdefb
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1697 done
-    class I1698 done
-    class I1699 done
-    class I1700 done
-    class I1701,I1702 needsDesign
+    class I1697,I1698,I1699,I1700,I1701 done
+    class M84 ready
+    class I1702 needsDesign
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
