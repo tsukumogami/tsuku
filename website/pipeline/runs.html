@@ -145,6 +145,13 @@
     </footer>
 
     <script>
+        function esc(s) {
+            if (s == null) return '';
+            const div = document.createElement('div');
+            div.textContent = String(s);
+            return div.innerHTML;
+        }
+
         function formatDate(isoString) {
             const date = new Date(isoString);
             return date.toLocaleDateString('en-US', {
@@ -177,10 +184,10 @@
 
                 return `
                     <tr>
-                        <td class="batch-id">${run.batch_id}</td>
+                        <td class="batch-id">${esc(run.batch_id)}</td>
                         <td class="stats">${run.merged}/${run.total}</td>
                         <td><span class="rate-badge ${rateBadgeClass}">${ratePercent}</span></td>
-                        <td class="timestamp">${formatDate(run.timestamp)}</td>
+                        <td class="timestamp">${esc(formatDate(run.timestamp))}</td>
                     </tr>
                 `;
             }).join('');
@@ -223,7 +230,7 @@
                 const runs = data.runs || [];
                 document.getElementById('content').innerHTML = renderRuns(runs);
             } catch (error) {
-                document.getElementById('content').innerHTML = `<div class="loading">Error loading data: ${error.message}</div>`;
+                document.getElementById('content').innerHTML = `<div class="loading">Error loading data: ${esc(error.message)}</div>`;
             }
         }
 

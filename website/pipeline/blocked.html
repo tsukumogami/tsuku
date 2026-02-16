@@ -183,6 +183,13 @@
     </footer>
 
     <script>
+        function esc(s) {
+            if (s == null) return '';
+            const div = document.createElement('div');
+            div.textContent = String(s);
+            return div.innerHTML;
+        }
+
         const STATUS = 'blocked';
 
         // Get filter from URL
@@ -193,7 +200,7 @@
             if (!filter) {
                 return `<p class="filter-description">Packages waiting on dependencies that don't have recipes yet. Select a blocker above to see packages waiting on it.</p>`;
             }
-            return `<p class="filter-description">Packages blocked by <code>${filter}</code>. These packages cannot be installed until a recipe for ${filter} is created.</p>`;
+            return `<p class="filter-description">Packages blocked by <code>${esc(filter)}</code>. These packages cannot be installed until a recipe for ${esc(filter)} is created.</p>`;
         }
 
         function renderFilters(packages, activeFilter) {
@@ -217,7 +224,7 @@
 
             blockers.forEach(([blocker, count]) => {
                 const active = activeFilter === blocker ? 'active' : '';
-                html += `<a href="?blocker=${encodeURIComponent(blocker)}" class="filter-btn ${active}">${blocker} (${count})</a>`;
+                html += `<a href="?blocker=${encodeURIComponent(blocker)}" class="filter-btn ${active}">${esc(blocker)} (${count})</a>`;
             });
 
             return `<div class="filter-bar">${html}</div>`;
@@ -241,12 +248,12 @@
             const rows = packages.map(pkg => {
                 const deps = (pkg.blocked_by || []).map(d => {
                     const isActive = d === filter ? 'style="background: var(--accent); color: #000;"' : '';
-                    return `<span class="dep-badge" ${isActive}>${d}</span>`;
+                    return `<span class="dep-badge" ${isActive}>${esc(d)}</span>`;
                 }).join('');
                 return `
                     <tr>
-                        <td class="package-name">${pkg.name}</td>
-                        <td>${pkg.ecosystem}</td>
+                        <td class="package-name">${esc(pkg.name)}</td>
+                        <td>${esc(pkg.ecosystem)}</td>
                         <td><span class="priority-badge priority-${pkg.priority}">P${pkg.priority}</span></td>
                         <td><div class="dep-list">${deps || '-'}</div></td>
                     </tr>
@@ -282,7 +289,7 @@
                 const packages = data.queue.packages?.[STATUS] || [];
                 document.getElementById('content').innerHTML = renderPackages(packages, filterBlocker);
             } catch (error) {
-                document.getElementById('content').innerHTML = `<div class="loading">Error loading data: ${error.message}</div>`;
+                document.getElementById('content').innerHTML = `<div class="loading">Error loading data: ${esc(error.message)}</div>`;
             }
         }
 

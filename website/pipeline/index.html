@@ -242,6 +242,13 @@
     </footer>
 
     <script>
+        function esc(s) {
+            if (s == null) return '';
+            const div = document.createElement('div');
+            div.textContent = String(s);
+            return div.innerHTML;
+        }
+
         function formatDate(isoString) {
             const date = new Date(isoString);
             return date.toLocaleDateString('en-US', {
@@ -287,7 +294,7 @@
             // Render blockers (clickable, link to blocked.html with filter)
             const blockerItems = (data.blockers || []).slice(0, 10).map(b => `
                 <a href="/pipeline/blocked.html?blocker=${encodeURIComponent(b.dependency)}" class="status-row">
-                    <span class="blocker-name">${b.dependency}</span>
+                    <span class="blocker-name">${esc(b.dependency)}</span>
                     <span class="blocker-count">${b.count} blocked</span>
                 </a>
             `).join('') || '<div class="no-data">No blocking dependencies</div>';
@@ -303,7 +310,7 @@
                 .sort((a, b) => b[1] - a[1])
                 .map(([cat, count]) => `
                     <a href="/pipeline/failed.html?category=${encodeURIComponent(cat)}" class="status-row">
-                        <span class="blocker-name">${cat}</span>
+                        <span class="blocker-name">${esc(cat)}</span>
                         <span class="blocker-count">${count}</span>
                     </a>
                 `).join('') || '<div class="no-data">No current failures</div>';
@@ -311,7 +318,7 @@
             // Render recent runs (clickable, link to runs.html)
             const runItems = (data.runs || []).slice(0, 10).map(run => `
                 <a href="/pipeline/runs.html" class="run-item status-row">
-                    <span class="run-id">${run.batch_id}</span>
+                    <span class="run-id">${esc(run.batch_id)}</span>
                     <span class="run-rate ${rateClass(run.rate)}">${run.merged}/${run.total} (${formatPercent(run.rate)})</span>
                 </a>
             `).join('') || '<div class="no-data">No batch runs recorded yet</div>';
@@ -323,15 +330,15 @@
                 const reasonItems = Object.entries(d.by_reason || {})
                     .sort((a, b) => b[1] - a[1])
                     .map(([reason, count]) => `
-                        <a href="/pipeline/disambiguations.html?reason=${reason}" class="status-row">
-                            <span class="blocker-name">${reason}</span>
+                        <a href="/pipeline/disambiguations.html?reason=${encodeURIComponent(reason)}" class="status-row">
+                            <span class="blocker-name">${esc(reason)}</span>
                             <span class="blocker-count">${count}</span>
                         </a>
                     `).join('');
 
                 const reviewItems = (d.need_review || []).slice(0, 5).map(tool => `
                     <div class="blocker-item">
-                        <span class="blocker-name">${tool}</span>
+                        <span class="blocker-name">${esc(tool)}</span>
                         <span class="blocker-count" style="background: #d29922; color: white;">review</span>
                     </div>
                 `).join('');
@@ -353,7 +360,7 @@
 
             container.innerHTML = `
                 <div class="dashboard-header">
-                    <span>Updated ${formatDate(data.generated_at)}</span>
+                    <span>Updated ${esc(formatDate(data.generated_at))}</span>
                 </div>
 
                 <div class="panels">
@@ -402,7 +409,7 @@
             container.innerHTML = `
                 <div class="error">
                     <h3>Unable to load dashboard</h3>
-                    <p>${message}</p>
+                    <p>${esc(message)}</p>
                     <button class="retry-btn" onclick="loadDashboard()">Retry</button>
                 </div>
             `;

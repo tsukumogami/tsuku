@@ -185,6 +185,13 @@
     </footer>
 
     <script>
+        function esc(s) {
+            if (s == null) return '';
+            const div = document.createElement('div');
+            div.textContent = String(s);
+            return div.innerHTML;
+        }
+
         // Get filter from URL
         const params = new URLSearchParams(window.location.search);
         const filterReason = params.get('reason');
@@ -202,7 +209,7 @@
                 return `<p class="filter-description">When a tool name exists in multiple package registries, tsuku must decide which source to use. Select a category above to see its meaning.</p>`;
             }
             const desc = reasonDescriptions[filter] || 'Unknown selection reason.';
-            return `<p class="filter-description"><span class="reason-badge reason-${filter}">${filter}</span> ${desc}</p>`;
+            return `<p class="filter-description"><span class="reason-badge reason-${esc(filter)}">${esc(filter)}</span> ${desc}</p>`;
         }
 
         function renderFilters(byReason, activeFilter) {
@@ -215,7 +222,7 @@
             reasons.forEach(reason => {
                 const active = activeFilter === reason ? 'active' : '';
                 const count = byReason[reason];
-                html += `<a href="?reason=${reason}" class="filter-btn ${active}">${reason} (${count})</a>`;
+                html += `<a href="?reason=${encodeURIComponent(reason)}" class="filter-btn ${active}">${esc(reason)} (${count})</a>`;
             });
 
             return `<div class="filter-bar">${html}</div>`;
@@ -237,17 +244,17 @@
             }
 
             const rows = filtered.map(d => {
-                const reasonClass = `reason-${d.selection_reason}`;
+                const reasonClass = `reason-${esc(d.selection_reason)}`;
                 const highRisk = d.high_risk ? '<span class="high-risk"> (needs review)</span>' : '';
                 const alternatives = d.alternatives && d.alternatives.length > 0
-                    ? d.alternatives.join(', ')
+                    ? d.alternatives.map(a => esc(a)).join(', ')
                     : '-';
 
                 return `
                     <tr>
-                        <td class="tool-name">${d.tool}</td>
-                        <td class="source">${d.selected}</td>
-                        <td><span class="reason-badge ${reasonClass}">${d.selection_reason}</span>${highRisk}</td>
+                        <td class="tool-name">${esc(d.tool)}</td>
+                        <td class="source">${esc(d.selected)}</td>
+                        <td><span class="reason-badge ${reasonClass}">${esc(d.selection_reason)}</span>${highRisk}</td>
                         <td class="alternatives">${alternatives}</td>
                     </tr>
                 `;
@@ -290,7 +297,7 @@
 
                 document.getElementById('content').innerHTML = renderDisambiguations(disambiguations, byReason, filterReason);
             } catch (error) {
-                document.getElementById('content').innerHTML = `<div class="loading">Error loading data: ${error.message}</div>`;
+                document.getElementById('content').innerHTML = `<div class="loading">Error loading data: ${esc(error.message)}</div>`;
             }
         }
 

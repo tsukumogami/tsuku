@@ -121,6 +121,13 @@
     </footer>
 
     <script>
+        function esc(s) {
+            if (s == null) return '';
+            const div = document.createElement('div');
+            div.textContent = String(s);
+            return div.innerHTML;
+        }
+
         const STATUS = 'pending';
 
         function renderPackages(packages) {
@@ -130,8 +137,8 @@
 
             const rows = packages.map(pkg => `
                 <tr>
-                    <td class="package-name">${pkg.name}</td>
-                    <td>${pkg.ecosystem}</td>
+                    <td class="package-name">${esc(pkg.name)}</td>
+                    <td>${esc(pkg.ecosystem)}</td>
                     <td><span class="tier-badge tier-${pkg.priority}">P${pkg.priority}</span></td>
                 </tr>
             `).join('');
@@ -162,7 +169,7 @@
                 const packages = data.queue.packages?.[STATUS] || [];
                 document.getElementById('content').innerHTML = renderPackages(packages);
             } catch (error) {
-                document.getElementById('content').innerHTML = `<div class="loading">Error loading data: ${error.message}</div>`;
+                document.getElementById('content').innerHTML = `<div class="loading">Error loading data: ${esc(error.message)}</div>`;
             }
         }
 
