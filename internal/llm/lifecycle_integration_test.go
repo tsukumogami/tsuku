@@ -4,7 +4,9 @@ package llm
 
 import (
 	"context"
+	"io"
 	"net"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -26,6 +28,37 @@ import (
 //   cd tsuku-llm && cargo build --release
 //
 // Set TSUKU_LLM_BINARY to the path of the binary if not in tsuku-llm/target/release/.
+
+// modelSourceURL is the URL where models are downloaded from (HuggingFace Hub).
+// Tests that require model inference skip if this URL is unreachable.
+const modelSourceURL = "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF/resolve/main/qwen2.5-0.5b-instruct-q4_k_m.gguf"
+
+// skipIfModelCDNUnavailable skips the test if the model source is not reachable.
+// This allows tests to pass in environments where HuggingFace is blocked or
+// network access is restricted.
+func skipIfModelCDNUnavailable(t *testing.T) {
+	t.Helper()
+
+	client := &http.Client{Timeout: 10 * time.Second}
+	// Use HEAD request to check accessibility without downloading the file
+	req, err := http.NewRequest("HEAD", modelSourceURL, nil)
+	if err != nil {
+		t.Skipf("Model source unavailable (request error): %v", err)
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Skipf("Model source unavailable (network error): %v", err)
+	}
+	defer resp.Body.Close()
+	// Drain body to allow connection reuse
+	_, _ = io.Copy(io.Discard, resp.Body)
+
+	// 4xx/5xx responses indicate source is down or model is not available
+	if resp.StatusCode >= 400 {
+		t.Skipf("Model source unavailable (HTTP %d)", resp.StatusCode)
+	}
+}
 
 // grpcDial connects to the daemon's Unix socket.
 func grpcDial(ctx context.Context, socketPath string) (*grpc.ClientConn, error) {
@@ -246,18 +279,35 @@ func TestIntegration_StaleSocketCleanup(t *testing.T) {
 }
 
 func TestIntegration_ShortTimeoutTriggersShutdown(t *testing.T) {
+	skipIfModelCDNUnavailable(t)
+
 	tsukuHome := t.TempDir()
+	os.Setenv("TSUKU_HOME", tsukuHome)
+	defer os.Unsetenv("TSUKU_HOME")
 
-	// Start daemon with short 2s timeout
-	daemon := startDaemon(t, tsukuHome, 2*time.Second)
+	// Start daemon with short 5s timeout (gives some buffer for model loading)
+	daemon := startDaemon(t, tsukuHome, 5*time.Second)
 
-	// Wait for it to be ready
+	// Wait for socket to be available
 	require.Eventually(t, func() bool {
 		return isDaemonReady(tsukuHome)
-	}, 10*time.Second, 100*time.Millisecond, "daemon should become ready")
+	}, 10*time.Second, 100*time.Millisecond, "daemon socket should become ready")
 
-	// Wait for idle timeout (2s + buffer)
-	time.Sleep(3 * time.Second)
+	// Wait for model to be fully loaded (daemon in idle timeout loop).
+	// This GetStatus call will reset the idle timeout when it succeeds.
+	provider := NewLocalProvider()
+	defer provider.Close()
+	require.Eventually(t, func() bool {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		status, err := provider.GetStatus(ctx)
+		return err == nil && status != nil && status.Ready
+	}, 3*time.Minute, 1*time.Second, "daemon should be fully ready (model loaded)")
+	t.Log("Daemon fully ready, starting idle timeout test...")
+
+	// Wait for idle timeout (5s + buffer)
+	// The GetStatus call above reset the timeout, so we need to wait > 5s
+	time.Sleep(7 * time.Second)
 
 	// Verify daemon stopped
 	require.Eventually(t, func() bool {
@@ -275,6 +325,8 @@ func TestIntegration_ShortTimeoutTriggersShutdown(t *testing.T) {
 }
 
 func TestIntegration_SIGTERMTriggersGracefulShutdown(t *testing.T) {
+	skipIfModelCDNUnavailable(t)
+
 	tsukuHome := t.TempDir()
 
 	// Start daemon
@@ -309,6 +361,8 @@ func TestIntegration_SIGTERMTriggersGracefulShutdown(t *testing.T) {
 }
 
 func TestIntegration_MultipleSIGTERMIsSafe(t *testing.T) {
+	skipIfModelCDNUnavailable(t)
+
 	tsukuHome := t.TempDir()
 
 	// Start daemon
@@ -338,6 +392,8 @@ func TestIntegration_MultipleSIGTERMIsSafe(t *testing.T) {
 
 // TestIntegration_gRPCGetStatus tests that the Go client can call GetStatus on the daemon.
 func TestIntegration_gRPCGetStatus(t *testing.T) {
+	skipIfModelCDNUnavailable(t)
+
 	tsukuHome := t.TempDir()
 	os.Setenv("TSUKU_HOME", tsukuHome)
 	defer os.Unsetenv("TSUKU_HOME")
@@ -371,6 +427,8 @@ func TestIntegration_gRPCGetStatus(t *testing.T) {
 // This test uses the proto client directly since the daemon is already running
 // (bypasses the addon download/verification that would happen in production).
 func TestIntegration_gRPCComplete(t *testing.T) {
+	skipIfModelCDNUnavailable(t)
+
 	tsukuHome := t.TempDir()
 	os.Setenv("TSUKU_HOME", tsukuHome)
 	defer os.Unsetenv("TSUKU_HOME")
@@ -378,15 +436,28 @@ func TestIntegration_gRPCComplete(t *testing.T) {
 	// Start daemon
 	daemon := startDaemon(t, tsukuHome, 5*time.Minute)
 
-	// Wait for ready
+	// Wait for socket to be available
 	require.Eventually(t, func() bool {
 		return isDaemonReady(tsukuHome)
-	}, 10*time.Second, 100*time.Millisecond, "daemon should become ready")
+	}, 10*time.Second, 100*time.Millisecond, "daemon socket should become ready")
+
+	// Wait for daemon to be fully ready (gRPC accepting, model loaded)
+	// by polling GetStatus until it succeeds
+	provider := NewLocalProvider()
+	defer provider.Close()
+
+	require.Eventually(t, func() bool {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		status, err := provider.GetStatus(ctx)
+		return err == nil && status != nil && status.Ready
+	}, 3*time.Minute, 1*time.Second, "daemon should be fully ready (gRPC accepting, model loaded)")
 
 	// Connect directly to the daemon via gRPC (bypass addon manager)
 	socketPath := filepath.Join(tsukuHome, "llm.sock")
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	// Use a longer timeout for inference - CPU inference can take 30+ seconds
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
 
 	conn, err := grpcDial(ctx, socketPath)
@@ -409,6 +480,8 @@ func TestIntegration_gRPCComplete(t *testing.T) {
 
 // TestIntegration_gRPCShutdown tests that the Go client can request daemon shutdown via gRPC.
 func TestIntegration_gRPCShutdown(t *testing.T) {
+	skipIfModelCDNUnavailable(t)
+
 	tsukuHome := t.TempDir()
 	os.Setenv("TSUKU_HOME", tsukuHome)
 	defer os.Unsetenv("TSUKU_HOME")
