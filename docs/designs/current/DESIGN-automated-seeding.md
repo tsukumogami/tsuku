@@ -1,5 +1,5 @@
 ---
-status: Planned
+status: Current
 problem: |
   The batch pipeline's unified queue has 5,275 entries but 97% come from Homebrew.
   Other ecosystems (cargo, npm, pypi, rubygems, go) have popular CLI tools that
@@ -31,7 +31,7 @@ rationale: |
 
 ## Status
 
-Planned
+Current
 
 ## Implementation Issues
 
