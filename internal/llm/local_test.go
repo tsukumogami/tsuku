@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
@@ -679,5 +680,78 @@ func TestToProtoRequest(t *testing.T) {
 		require.NotNil(t, msg.ToolResult)
 		require.Equal(t, "call_err", msg.ToolResult.ToolCallId)
 		require.True(t, msg.ToolResult.IsError)
+	})
+}
+
+// TestCloseIdempotency verifies that Close() can be called multiple times safely.
+func TestCloseIdempotency(t *testing.T) {
+	t.Run("close without connection", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		t.Setenv("TSUKU_HOME", tmpDir)
+
+		provider := NewLocalProvider()
+		require.NoError(t, provider.Close())
+		require.NoError(t, provider.Close()) // Second call should not panic or error
+	})
+
+	t.Run("close with mock connection", func(t *testing.T) {
+		const bufSize = 1024 * 1024
+		lis := bufconn.Listen(bufSize)
+
+		mockServer := &mockInferenceServer{}
+		grpcServer := grpc.NewServer()
+		pb.RegisterInferenceServiceServer(grpcServer, mockServer)
+		go func() { _ = grpcServer.Serve(lis) }()
+		defer grpcServer.Stop()
+
+		conn, err := grpc.NewClient(
+			"passthrough://bufnet",
+			grpc.WithContextDialer(func(context.Context, string) (net.Conn, error) {
+				return lis.Dial()
+			}),
+			grpc.WithTransportCredentials(insecure.NewCredentials()),
+		)
+		require.NoError(t, err)
+
+		provider := &LocalProvider{
+			client: pb.NewInferenceServiceClient(conn),
+			conn:   conn,
+		}
+
+		require.NoError(t, provider.Close())
+		require.Nil(t, provider.conn)
+		require.Nil(t, provider.client)
+		require.NoError(t, provider.Close()) // Second call after conn is nil
+	})
+}
+
+// TestNewLocalProviderWithTimeoutOverridesEnv verifies that explicit timeout
+// takes precedence over the TSUKU_LLM_IDLE_TIMEOUT env var.
+func TestNewLocalProviderWithTimeoutOverridesEnv(t *testing.T) {
+	tmpDir := t.TempDir()
+	t.Setenv("TSUKU_HOME", tmpDir)
+	t.Setenv("TSUKU_LLM_IDLE_TIMEOUT", "30s")
+
+	provider := NewLocalProviderWithTimeout(10 * time.Minute)
+	require.NotNil(t, provider)
+	require.Equal(t, 10*time.Minute, provider.lifecycle.IdleTimeout(),
+		"explicit timeout should override env var")
+}
+
+// TestGetIdleTimeoutFromEnv verifies the env var parsing for idle timeout.
+func TestGetIdleTimeoutFromEnv(t *testing.T) {
+	t.Run("uses env var when set", func(t *testing.T) {
+		t.Setenv("TSUKU_LLM_IDLE_TIMEOUT", "30s")
+		require.Equal(t, 30*time.Second, GetIdleTimeout())
+	})
+
+	t.Run("returns default when env var is empty", func(t *testing.T) {
+		t.Setenv("TSUKU_LLM_IDLE_TIMEOUT", "")
+		require.Equal(t, DefaultIdleTimeout, GetIdleTimeout())
+	})
+
+	t.Run("returns default when env var is invalid", func(t *testing.T) {
+		t.Setenv("TSUKU_LLM_IDLE_TIMEOUT", "not-a-duration")
+		require.Equal(t, DefaultIdleTimeout, GetIdleTimeout())
 	})
 }

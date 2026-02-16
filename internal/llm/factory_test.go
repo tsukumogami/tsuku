@@ -601,6 +601,79 @@ func TestWithConfigEmptyProviders(t *testing.T) {
 	}
 }
 
+func TestShouldRegisterLocal(t *testing.T) {
+	t.Run("disabled when localEnabled is false", func(t *testing.T) {
+		o := &factoryOptions{localEnabled: false}
+		if shouldRegisterLocal(o) {
+			t.Error("should not register local when localEnabled=false")
+		}
+	})
+
+	t.Run("enabled by default with no preferred order", func(t *testing.T) {
+		o := &factoryOptions{localEnabled: true}
+		if !shouldRegisterLocal(o) {
+			t.Error("should register local when localEnabled=true and no preferred order")
+		}
+	})
+
+	t.Run("enabled when local is in preferred order", func(t *testing.T) {
+		o := &factoryOptions{localEnabled: true, preferredOrder: []string{"claude", "local"}}
+		if !shouldRegisterLocal(o) {
+			t.Error("should register local when listed in preferred order")
+		}
+	})
+
+	t.Run("disabled when preferred order excludes local", func(t *testing.T) {
+		o := &factoryOptions{localEnabled: true, preferredOrder: []string{"claude", "gemini"}}
+		if shouldRegisterLocal(o) {
+			t.Error("should not register local when preferred order excludes it")
+		}
+	})
+
+	t.Run("disabled trumps preferred order", func(t *testing.T) {
+		o := &factoryOptions{localEnabled: false, preferredOrder: []string{"local", "claude"}}
+		if shouldRegisterLocal(o) {
+			t.Error("localEnabled=false should prevent registration even when in preferred order")
+		}
+	})
+}
+
+func TestWithConfigLocalEnabledButProvidersExcludeLocal(t *testing.T) {
+	providers := map[string]Provider{
+		"claude": &mockProvider{name: "claude"},
+		"gemini": &mockProvider{name: "gemini"},
+		"local":  &mockProvider{name: "local"},
+	}
+
+	// Config says local_enabled=true but providers list excludes "local"
+	cfg := &mockLLMConfig{enabled: true, localEnabled: true, providers: []string{"claude", "gemini"}}
+	factory := NewFactoryWithProviders(providers, WithConfig(cfg))
+
+	// NewFactoryWithProviders adds ALL provided providers regardless of config,
+	// because it's a test helper. The config only affects NewFactory (real factory).
+	// Test the option processing directly instead.
+	o := &factoryOptions{
+		localEnabled: true,
+		enabled:      true,
+	}
+	WithConfig(cfg)(o)
+
+	if shouldRegisterLocal(o) {
+		t.Error("should not register local when config providers exclude it, even with localEnabled=true")
+	}
+
+	// Verify the factory still works with its provided providers
+	ctx := context.Background()
+	provider, err := factory.GetProvider(ctx)
+	if err != nil {
+		t.Fatalf("GetProvider failed: %v", err)
+	}
+	// gemini should be primary since providers[0] is "gemini"... no, it's "claude"
+	if provider.Name() != "claude" {
+		t.Errorf("GetProvider returned %q, want %q (first in config providers)", provider.Name(), "claude")
+	}
+}
+
 func TestNewFactoryWithConfigLocalDisabled(t *testing.T) {
 	// Clear all API keys so only local provider would be available
 	originalAnthropic := os.Getenv("ANTHROPIC_API_KEY")
