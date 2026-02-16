@@ -39,7 +39,7 @@ Planned
 
 | Issue | Dependencies | Tier |
 |-------|--------------|------|
-| [#1708: feat(dashboard): migrate queue loading to unified schema](https://github.com/tsukumogami/tsuku/issues/1708) | None | testable |
+| ~~[#1708: feat(dashboard): migrate queue loading to unified schema](https://github.com/tsukumogami/tsuku/issues/1708)~~ | None | testable |
 | _Switch `dashboard.go` from the legacy `seed.PriorityQueue` loader to `batch.UnifiedQueue`, picking up priority, failure count, and confidence fields that downstream pages need._ | | |
 | [#1709: feat(dashboard): add health status with circuit breaker and run tracking](https://github.com/tsukumogami/tsuku/issues/1709) | None | testable |
 | _Parse `batch-control.json` and metrics JSONL to produce a `health` map in `dashboard.json` with circuit breaker state, last success timestamp, and runs-since-success per ecosystem._ | | |
@@ -110,8 +110,10 @@ graph TD
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1708,I1709,I1712 ready
-    class I1710,I1711,I1713,I1714,I1715,I1716,I1717,I1718 blocked
+    class I1708 done
+    class I1709,I1712 ready
+    class I1710,I1711 ready
+    class I1713,I1714,I1715,I1716,I1717,I1718 blocked
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
