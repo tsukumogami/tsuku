@@ -25,9 +25,9 @@ This design was implemented through 9 issues across 2 sequential milestones.
 | ~~[#1538: fix(docs): update design doc status from Proposed to Accepted](https://github.com/tsukumogami/tsuku/issues/1538)~~ | ~~None~~ | ~~simple~~ |
 | ~~[#1539: feat(tests): re-enable integration-tests.yml musl dlopen tests](https://github.com/tsukumogami/tsuku/issues/1539)~~ | ~~None~~ | ~~testable~~ |
 | ~~[#1540: feat(workflows): trigger validate-all-recipes workflow and add platform constraints](https://github.com/tsukumogami/tsuku/issues/1540)~~ | ~~None~~ | ~~testable~~ |
-| _Manually triggers the validation workflow across all 11 platforms to identify which recipes fail where. First run reviews failures, second run with auto_constrain creates a PR with platform constraints._ | | |
+| ~~_Manually triggers the validation workflow across all 11 platforms to identify which recipes fail where. First run reviews failures, second run with auto_constrain creates a PR with platform constraints._~~ | | |
 | ~~[#1543: feat(recipes): apply platform constraints from validation results](https://github.com/tsukumogami/tsuku/issues/1543)~~ | ~~[#1540](https://github.com/tsukumogami/tsuku/issues/1540)~~ | ~~testable~~ |
-| _Reviews and merges the auto-generated PR from #1540, ensuring constraints accurately reflect test results. This establishes honest platform declarations before building the coverage dashboard._ | | |
+| ~~_Reviews and merges the auto-generated PR from #1540, ensuring constraints accurately reflect test results. This establishes honest platform declarations before building the coverage dashboard._~~ | | |
 
 ### Milestone: [Coverage Dashboard](https://github.com/tsukumogami/tsuku/milestone/72)
 

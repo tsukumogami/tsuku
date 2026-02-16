@@ -9,6 +9,9 @@
 #   II03: Issue/milestone links use valid format [#N](url) or [Name](milestone-url)
 #   II04: Dependencies use link format, not plain text
 #   II05: Tier values are valid (simple, testable, critical, milestone)
+#   II06: Child design reference links must point to existing files
+#   II07: Every issue row must be followed by a description row (grandfathered before cutoff)
+#   II08: Strikethrough consistency between issue, child reference, and description rows
 #
 # Usage:
 #   implementation-issues.sh <doc-path>
@@ -104,10 +107,11 @@ for col in "${REQUIRED_COLUMNS[@]}"; do
     fi
 done
 
-# Extract table data rows (skip header, separator, and description rows)
-# Description rows have italic text in first cell with empty remaining cells: | _text_ | | | |
+# Extract table data rows (skip header, separator, description rows, and child reference rows)
+# Description rows: | _text_ | | | | or struck-through: | ~~_text_~~ | | | |
+# Child reference rows: | ^_Child: ..._ | | | | or struck-through: | ~~^_Child: ..._~~ | | | |
 TABLE_ROWS=$(echo "$ISSUES_SECTION" | awk '
-    /^\|/ && !/^\| *-/ && !/^\| *Issue/ && !/^\| *_/ { print }
+    /^\|/ && !/^\| *-/ && !/^\| *Issue/ && !/^\| *_/ && !/^\| *~~_/ && !/^\| *\^_/ && !/^\| *~~\^_/ { print }
 ')
 
 # Parse column positions from header
@@ -236,6 +240,164 @@ while IFS= read -r row; do
         esac
     fi
 done <<< "$TABLE_ROWS"
+
+# II07 and II08: Row sequence validation
+# These checks operate on the full sequence of table rows (including description and child reference rows)
+# to validate that issue rows are followed by description rows and that strikethrough is consistent.
+
+# II07 grandfathering: only enforce for docs created on or after this date
+II07_CUTOFF="2026-02-16"
+
+# Helper: check if the doc predates the II07 cutoff
+ii07_grandfathered() {
+    local file="$1"
+    local creation_info
+    creation_info=$("$SCRIPT_DIR/../get-file-creation-commit.sh" "$file" 2>/dev/null) || return 1
+    local file_date
+    file_date=$(echo "$creation_info" | sed 's/.*"date": "\([0-9-]*\)T.*/\1/')
+    [[ "$file_date" < "$II07_CUTOFF" ]]
+}
+
+# Helper: check if a row has strikethrough on its first cell content
+row_has_strikethrough() {
+    local row="$1"
+    local first_cell
+    first_cell=$(echo "$row" | awk -F'|' '{ gsub(/^[ \t]+|[ \t]+$/, "", $2); print $2 }')
+    [[ "$first_cell" =~ ^~~ ]]
+}
+
+# Helper: check if a row is a description row (| _text_ | | | or | ~~_text_~~ | | |)
+is_description_row() {
+    local row="$1"
+    [[ "$row" =~ ^\|\ *_ ]] || [[ "$row" =~ ^\|\ *~~_ ]]
+}
+
+# Helper: check if a row is a child reference row (| ^_text_ | | | or | ~~^_text_~~ | | |)
+is_child_ref_row() {
+    local row="$1"
+    [[ "$row" =~ ^\|\ *\^_ ]] || [[ "$row" =~ ^\|\ *~~\^_ ]]
+}
+
+# Helper: check if a row is an issue/milestone data row (not header, separator, description, or child ref)
+is_data_row() {
+    local row="$1"
+    [[ "$row" =~ ^\| ]] && ! [[ "$row" =~ ^\|\ *- ]] && ! [[ "$row" =~ ^\|\ *Issue ]] && \
+        ! is_description_row "$row" && ! is_child_ref_row "$row"
+}
+
+# Determine if II07 applies to this doc
+ENFORCE_II07=true
+if ii07_grandfathered "$DOC_PATH"; then
+    ENFORCE_II07=false
+fi
+
+# Extract ALL table rows (including description and child reference rows, but not header/separator)
+# We need the full sequence to check row ordering
+ALL_TABLE_ROWS=$(echo "$ISSUES_SECTION" | awk '
+    /^\|/ && !/^\| *-/ && !/^\| *Issue/ { print }
+')
+
+# Build an array of all rows for sequential analysis
+declare -a ROW_ARRAY
+ROW_INDEX=0
+while IFS= read -r row; do
+    [[ -z "$row" ]] && continue
+    ROW_ARRAY[$ROW_INDEX]="$row"
+    ROW_INDEX=$((ROW_INDEX + 1))
+done <<< "$ALL_TABLE_ROWS"
+
+TOTAL_ROWS=${#ROW_ARRAY[@]}
+
+# Walk through rows and validate II07/II08
+i=0
+while [[ $i -lt $TOTAL_ROWS ]]; do
+    row="${ROW_ARRAY[$i]}"
+
+    if is_data_row "$row"; then
+        # This is an issue or milestone row
+        ISSUE_STRIKETHROUGH=false
+        if row_has_strikethrough "$row"; then
+            ISSUE_STRIKETHROUGH=true
+        fi
+
+        # Extract the issue identifier for error messages
+        ISSUE_ID=$(echo "$row" | awk -F'|' '{ gsub(/^[ \t]+|[ \t]+$/, "", $2); print $2 }')
+
+        # Look at the next row(s)
+        NEXT_IDX=$((i + 1))
+        HAS_CHILD_REF=false
+        HAS_DESCRIPTION=false
+
+        # Check for optional child reference row
+        if [[ $NEXT_IDX -lt $TOTAL_ROWS ]] && is_child_ref_row "${ROW_ARRAY[$NEXT_IDX]}"; then
+            HAS_CHILD_REF=true
+            CHILD_REF_ROW="${ROW_ARRAY[$NEXT_IDX]}"
+
+            # II08: child reference row strikethrough must match issue row
+            if [[ "$ISSUE_STRIKETHROUGH" == true ]] && ! row_has_strikethrough "$CHILD_REF_ROW"; then
+                emit_fail "II08: Struck-through issue row has non-struck child reference row: '$ISSUE_ID'. See: .github/scripts/docs/II08.md"
+                FAILED=1
+            fi
+
+            # II06: Validate child design reference link points to existing file
+            CHILD_CELL=$(echo "$CHILD_REF_ROW" | awk -F'|' '{ gsub(/^[ \t]+|[ \t]+$/, "", $2); print $2 }')
+            # Strip strikethrough if present
+            CHILD_CELL_CLEAN=$(echo "$CHILD_CELL" | sed 's/^~~//;s/~~$//')
+            # Extract path from ^_Child: [DESIGN-name.md](path)_
+            II06_REF_PATH=$(echo "$CHILD_CELL_CLEAN" | grep -oE '\]\([^)]+\)' | sed 's/^\](\(.*\))$/\1/' || true)
+
+            if [[ -n "$II06_REF_PATH" ]]; then
+                # Check for cross-repo references (absolute URLs)
+                if [[ "$II06_REF_PATH" =~ ^https?:// ]]; then
+                    emit_pass "II06: Child reference in '$ISSUE_ID' is a cross-repo URL, skipping validation"
+                else
+                    # Resolve relative to the design doc's directory
+                    II06_DOC_DIR=$(dirname "$DOC_PATH")
+                    II06_CHILD_PATH="$II06_DOC_DIR/$II06_REF_PATH"
+
+                    # Check if path resolves outside repo root
+                    II06_REPO_ROOT=$(cd "$II06_DOC_DIR" && git rev-parse --show-toplevel 2>/dev/null || echo "")
+                    II06_IS_CROSS_REPO=false
+                    if [[ -n "$II06_REPO_ROOT" ]]; then
+                        II06_REAL_PATH=$(cd "$II06_DOC_DIR" && realpath -m "$II06_REF_PATH" 2>/dev/null || echo "$II06_CHILD_PATH")
+                        if [[ ! "$II06_REAL_PATH" =~ ^"$II06_REPO_ROOT" ]]; then
+                            II06_IS_CROSS_REPO=true
+                        fi
+                    fi
+
+                    if [[ "$II06_IS_CROSS_REPO" == true ]]; then
+                        emit_pass "II06: Child reference in '$ISSUE_ID' points outside repo, skipping validation"
+                    elif [[ ! -f "$II06_CHILD_PATH" ]]; then
+                        emit_fail "II06: Child reference in '$ISSUE_ID' points to nonexistent file: '$II06_REF_PATH'. See: .github/scripts/docs/II06.md"
+                        FAILED=1
+                    fi
+                fi
+            fi
+
+            NEXT_IDX=$((NEXT_IDX + 1))
+        fi
+
+        # Check for description row
+        if [[ $NEXT_IDX -lt $TOTAL_ROWS ]] && is_description_row "${ROW_ARRAY[$NEXT_IDX]}"; then
+            HAS_DESCRIPTION=true
+            DESC_ROW="${ROW_ARRAY[$NEXT_IDX]}"
+
+            # II08: description row strikethrough must match issue row
+            if [[ "$ISSUE_STRIKETHROUGH" == true ]] && ! row_has_strikethrough "$DESC_ROW"; then
+                emit_fail "II08: Struck-through issue row has non-struck description row: '$ISSUE_ID'. See: .github/scripts/docs/II08.md"
+                FAILED=1
+            fi
+        fi
+
+        # II07: issue row must be followed by a description row
+        if [[ "$ENFORCE_II07" == true ]] && [[ "$HAS_DESCRIPTION" == false ]]; then
+            emit_fail "II07: Issue row missing required description row: '$ISSUE_ID'. See: .github/scripts/docs/II07.md"
+            FAILED=1
+        fi
+    fi
+
+    i=$((i + 1))
+done
 
 # Return appropriate exit code
 if [[ "$FAILED" -eq 0 ]]; then

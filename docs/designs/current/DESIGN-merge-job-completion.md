@@ -23,11 +23,11 @@ Core merge job capabilities that make the pipeline functionally complete: batch_
 | Issue | Dependencies | Tier |
 |-------|--------------|------|
 | ~~[#1349: ci(batch): add batch_id generation and structured commit message](https://github.com/tsukumogami/tsuku/issues/1349)~~ | ~~None~~ | ~~testable~~ |
-| _Generates a `BATCH_ID` in `{date}-{ecosystem}` format with sequence numbers for same-day batches, and restructures the commit message to include git trailers (`batch_id`, `ecosystem`, `batch_size`, `success_rate`) for rollback support._ | | |
+| ~~_Generates a `BATCH_ID` in `{date}-{ecosystem}` format with sequence numbers for same-day batches, and restructures the commit message to include git trailers (`batch_id`, `ecosystem`, `batch_size`, `success_rate`) for rollback support._~~ | | |
 | ~~[#1350: ci(batch): add recipe list tracking to merge job](https://github.com/tsukumogami/tsuku/issues/1350)~~ | ~~None~~ | ~~simple~~ |
-| _Accumulates `INCLUDED_RECIPES` and `EXCLUDED_RECIPES` name lists during the constraint derivation loop, making recipe-level data available to queue updates and auto-merge gating._ | | |
+| ~~_Accumulates `INCLUDED_RECIPES` and `EXCLUDED_RECIPES` name lists during the constraint derivation loop, making recipe-level data available to queue updates and auto-merge gating._~~ | | |
 | ~~[#1352: ci(batch): add circuit breaker and queue status updates](https://github.com/tsukumogami/tsuku/issues/1352)~~ | ~~[#1350](https://github.com/tsukumogami/tsuku/issues/1350)~~ | ~~testable~~ |
-| _Calls `scripts/update_breaker.sh` with batch outcome and updates `data/priority-queue.json` with per-recipe success/failed statuses using the recipe lists from #1350._ | | |
+| ~~_Calls `scripts/update_breaker.sh` with batch outcome and updates `data/priority-queue.json` with per-recipe success/failed statuses using the recipe lists from #1350._~~ | | |
 
 ### Milestone: [Merge Job Observability](https://github.com/tsukumogami/tsuku/milestone/64)
 
@@ -36,9 +36,9 @@ Observability and scale improvements: SLI metrics for trend analysis and auto-me
 | Issue | Dependencies | Tier |
 |-------|--------------|------|
 | ~~[#1351: ci(batch): add SLI metrics collection to merge job](https://github.com/tsukumogami/tsuku/issues/1351)~~ | ~~[#1349](https://github.com/tsukumogami/tsuku/issues/1349)~~ | ~~testable~~ |
-| _Appends a structured JSON line to `data/metrics/batch-runs.jsonl` with per-platform tested/passed/failed counts, recipe totals, and duration. Uses the batch_id from #1349 as the primary key._ | | |
-| ~~[#1353: ci(batch): add auto-merge gating for clean batches](https://github.com/tsukumogami/tsuku/issues/1353)~~ | [#1350](https://github.com/tsukumogami/tsuku/issues/1350) | testable |
-| _Enables `gh pr merge --auto --squash` when `EXCLUDED_COUNT=0` and leaves a PR comment explaining why auto-merge was skipped otherwise. Fail-open policy: the PR is always created regardless._ | | |
+| ~~_Appends a structured JSON line to `data/metrics/batch-runs.jsonl` with per-platform tested/passed/failed counts, recipe totals, and duration. Uses the batch_id from #1349 as the primary key._~~ | | |
+| ~~[#1353: ci(batch): add auto-merge gating for clean batches](https://github.com/tsukumogami/tsuku/issues/1353)~~ | ~~[#1350](https://github.com/tsukumogami/tsuku/issues/1350)~~ | ~~testable~~ |
+| ~~_Enables `gh pr merge --auto --squash` when `EXCLUDED_COUNT=0` and leaves a PR comment explaining why auto-merge was skipped otherwise. Fail-open policy: the PR is always created regardless._~~ | | |
 
 ## Upstream Design Reference
 
