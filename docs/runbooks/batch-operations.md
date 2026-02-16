@@ -381,3 +381,98 @@ git push
 - **All security incidents are Critical severity** until proven otherwise.
 - If supply chain compromise is confirmed, notify all downstream users.
 - Open a security advisory if published recipes contained compromised artifacts.
+
+---
+
+## 6. Bootstrap Phase B: Multi-Ecosystem Disambiguation
+
+### Context
+
+Bootstrap Phase B is a one-time local procedure that re-disambiguates all existing homebrew-sourced queue entries. After the initial seeding (Phase A, which populated the queue from Homebrew analytics), most entries have `homebrew:` sources because no other ecosystem was checked. Phase B runs full 8-ecosystem disambiguation for every entry, updating sources where a better option exists (e.g., `cargo:ripgrep` instead of `homebrew:ripgrep`).
+
+This is the most expensive seeding operation (~5K entries, each requiring 8 ecosystem probes at ~2.5 seconds). It only runs once. After Phase B, the weekly seed-queue workflow handles incremental updates.
+
+### Prerequisites
+
+- Go toolchain installed (version matching `go.mod`)
+- Network access to ecosystem APIs (crates.io, npm, PyPI, RubyGems, Homebrew, GitHub)
+- The unified queue at `data/queues/priority-queue.json` is up to date
+
+### Procedure
+
+1. Build the seed-queue command:
+
+   ```bash
+   go build -o seed-queue ./cmd/seed-queue
+   ```
+
+2. Run disambiguation for all entries. Setting `-limit 0` skips new package discovery and `-freshness 0` forces re-disambiguation of every entry regardless of its `disambiguated_at` timestamp:
+
+   ```bash
+   ./seed-queue \
+     -source homebrew \
+     -limit 0 \
+     -freshness 0 \
+     -queue data/queues/priority-queue.json \
+     -audit-dir data/disambiguations/audit \
+     -verbose \
+     > bootstrap-summary.json
+   ```
+
+   Expected runtime: 3-4 hours (5,137 homebrew entries at ~2.5 seconds per 8-ecosystem probe).
+
+3. Review the summary output:
+
+   ```bash
+   # Total source changes
+   jq '.source_changes | length' bootstrap-summary.json
+
+   # Source changes for priority 1-2 packages (need manual review)
+   jq '.source_changes[] | select(.priority <= 2)' bootstrap-summary.json
+
+   # Auto-accepted changes (priority 3)
+   jq '[.source_changes[] | select(.auto_accepted == true)] | length' bootstrap-summary.json
+
+   # Any errors during the run
+   jq '.errors' bootstrap-summary.json
+   ```
+
+4. Create a PR with the updated queue and audit files:
+
+   ```bash
+   git checkout -b bootstrap-phase-b
+   git add data/queues/priority-queue.json data/disambiguations/audit/
+   git commit -m "chore(batch): bootstrap Phase B disambiguation"
+   gh pr create \
+     --title "Bootstrap Phase B: multi-ecosystem disambiguation" \
+     --body "Re-disambiguated all homebrew entries using ecosystem probers.
+
+   See bootstrap-summary.json for full details."
+   ```
+
+### Expected Results
+
+Of ~5,137 homebrew entries, approximately 200-400 should get better sources based on the 10x popularity threshold. Common outcomes:
+
+- Rust CLI tools (ripgrep, fd, bat, eza, hyperfine) move from `homebrew:` to `cargo:` or `github:` sources
+- Node.js CLI tools with dedicated GitHub releases move from `homebrew:` to `github:` sources
+- The remaining ~4,700 entries stay as `homebrew:` because Homebrew is genuinely their best source
+
+Priority 1-2 source changes are not auto-accepted. The summary JSON lists them under `source_changes` with `auto_accepted: false`. Review these individually before applying.
+
+### Verification
+
+After the PR merges, confirm the queue is valid:
+
+```bash
+jq '.entries | length' data/queues/priority-queue.json
+jq '[.entries[] | .source | split(":")[0]] | group_by(.) | map({(.[0]): length}) | add' data/queues/priority-queue.json
+```
+
+The second command shows the source distribution. After Phase B, the `homebrew` count should decrease and `cargo`, `github`, `npm`, and other sources should increase.
+
+### Troubleshooting
+
+- **Rate limiting (429 errors)**: The seed-queue command handles per-ecosystem rate limits internally. If you see repeated 429 errors, wait 30 minutes and rerun. The command processes only entries that still need disambiguation (those without a fresh `disambiguated_at`).
+- **Partial completion**: If the run is interrupted, rerun the same command. Entries that were already disambiguated (with a recent `disambiguated_at`) are skipped automatically unless `-freshness 0` is used again.
+- **API outages**: Check the summary for `sources_failed` and `errors`. The command continues processing other ecosystems if one fails (exit code 2 = partial failure).
