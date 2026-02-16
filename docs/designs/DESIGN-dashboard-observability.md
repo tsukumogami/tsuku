@@ -72,7 +72,7 @@ The parent design (DESIGN-pipeline-dashboard.md) specified high-level requiremen
 
 **Out of scope:**
 - Seeding workflow implementation and `seeding.html` (Phase 3, separate design)
-- Queue schema migration (Phase 1, already has issues #1697-#1700)
+- Queue schema migration (Phase 1, shipped as #1697/#1704)
 - Dashboard CSS/styling redesign
 - Alerting system (mentioned in parent design but not part of observability pages)
 - Backend service or database (everything stays as static JSON + HTML)
@@ -408,7 +408,7 @@ type FailureDetail struct {
 The `ID` field is generated deterministically: `<ecosystem>-<timestamp>-<package>` with timestamp formatted as `2006-01-02T15-04-05Z`. This serves as the URL parameter for `failure.html?id=`.
 
 **JSONL format normalization:**
-- **Legacy batch format**: `Package` = `PackageFailure.PackageID` split on `:` (second part), `Ecosystem` = parent record's `Ecosystem` field, `Message` = `PackageFailure.Message`
+- **Legacy batch format**: `Package` = looked up from the unified queue by matching `PackageFailure.PackageID` against `QueueEntry.Source`, falling back to the last segment of `PackageID` after the first `:`. Multi-part sources like `github:sharkdp/bat` need the queue lookup to get `Name` = `bat` (splitting on `:` gives `sharkdp/bat`). `Ecosystem` = extracted from `PackageID` prefix before `:`. `Message` = `PackageFailure.Message`.
 - **Per-recipe format**: `Package` = `FailureRecord.Recipe`, `Ecosystem` = inferred from filename prefix (currently always `"homebrew"`), `Message` = empty (format has no message field)
 
 **Per-recipe deduplication**: A single recipe can fail on multiple platforms (up to 11), generating one JSONL record per platform. These are grouped by `(package, batch_id)` into a single `FailureDetail` record with `Platform` set to `"multiple"` and a `Platforms` field listing all platforms. This prevents one package from consuming 11 of the 200 record slots.
@@ -608,7 +608,7 @@ flowchart TD
 | `runs.html` | `?ecosystem=`, `?status=`, `?since_success=true` | `runs.html?ecosystem=cargo` |
 | `package.html` | `?id=` | `package.html?id=homebrew:neovim` |
 | `pending.html` | `?ecosystem=`, `?priority=`, `?search=` | `pending.html?ecosystem=homebrew` |
-| `blocked.html` | `?pkg=` | `blocked.html?pkg=glib` |
+| `blocked.html` | `?blocker=` | `blocked.html?blocker=glib` |
 | `success.html` | `?ecosystem=`, `?from=`, `?to=` | `success.html?ecosystem=homebrew` |
 | `disambiguations.html` | `?status=`, `?reason=` | `disambiguations.html?status=needs_review` |
 | `curated.html` | `?status=` | `curated.html?status=invalid` |
@@ -625,9 +625,9 @@ Visual layouts for all pages are in the [parent design wireframes](DESIGN-pipeli
 
 **`run.html` (new, detail):** Source: `runs` filtered by `?id=`, cross-referenced with `failure_details` filtered by `batch_id`. Shows batch summary (ecosystem, timestamp, duration, succeeded/failed counts). Packages Processed table lists failures from this batch, each linking to `failure.html?id=`. Note: per-package success/fail status and platform breakdown require data not currently in metrics JSONL; show what's available now, extend when orchestrator is updated.
 
-**`package.html` (new, detail):** Source: client-side join across `queue` packages, `failure_details`, `disambiguations`, and `blockers`. Status section shows package name, ecosystem, queue status (which list the package appears in). Disambiguation section shows override status and available sources (from `disambiguations`). Attempt History table shows failures for this package (filtered from `failure_details` by package name), each linking to `failure.html?id=`. Actions: GitHub links for retry, skip, exclude, file issue (same pattern as `failure.html` -- link to GitHub, don't execute directly). **Phase 1 dependency:** priority, attempt count, added date, and next_retry_at require the unified queue schema (#1697). Until then, those fields show "available after queue migration" placeholders.
+**`package.html` (new, detail):** Source: client-side join across `queue` packages, `failure_details`, `disambiguations`, and `blockers`. Status section shows package name, ecosystem, queue status (which list the package appears in), priority, failure count, and next retry time (from unified queue, available since #1697 merged). Disambiguation section shows override status and available sources (from `disambiguations`). Attempt History table shows failures for this package (filtered from `failure_details` by package name), each linking to `failure.html?id=`. Actions: GitHub links for retry, skip, exclude, file issue (same pattern as `failure.html` -- link to GitHub, don't execute directly).
 
-**`pending.html` (enhanced):** Add ecosystem filter dropdown and search box. Add "By Ecosystem" summary chips at bottom, each linking to filtered view. Each table row links to `package.html?id=`. **Phase 1 dependency:** priority and attempt columns require unified queue schema.
+**`pending.html` (enhanced):** Add ecosystem filter dropdown and search box. Add priority and failure count columns (from unified queue, available since #1697 merged). Add "By Ecosystem" summary chips at bottom, each linking to filtered view. Each table row links to `package.html?id=`.
 
 **`blocked.html` (enhanced):** Add "Top Blockers" analysis panel. Compute client-side from `blockers` array: invert the dependency graph to show which missing dependencies block the most packages. Each dependency links to `package.html?id=`. Each blocked package row also links to `package.html?id=`.
 
@@ -637,7 +637,7 @@ Visual layouts for all pages are in the [parent design wireframes](DESIGN-pipeli
 
 **`disambiguations.html` (enhanced):** Add status and reason filter dropdowns. Add "By Reason" summary chips at bottom. Existing table gains links to `package.html?id=` for each package.
 
-**`curated.html` (new):** Source: `curated` array. Table columns: package, source, reason, validation status (badges for valid/invalid/unknown). Actions: GitHub links for add override (PR template), remove override (PR template), fix invalid (issue template). Summary panel shows total, valid, invalid counts. **Phase 1 dependency:** curated data requires queue schema migration (#1697).
+**`curated.html` (new):** Source: `curated` array (populated from unified queue entries with `confidence == "curated"`, available since #1697 merged). Table columns: package, source, reason, validation status (badges for valid/invalid/unknown). Actions: GitHub links for add override (PR template), remove override (PR template), fix invalid (issue template). Summary panel shows total, valid, invalid counts.
 
 **`seeding.html`:** Deferred to Phase 3 (seeding workflow design). No placeholder page.
 
@@ -686,13 +686,15 @@ flowchart LR
 
 Extend `internal/dashboard/` to populate the new struct fields. Ordered by independence for incremental review:
 
+0. **Migrate dashboard to unified queue** (prerequisite): `dashboard.go` currently imports `internal/seed` and loads old-format queues via a `priority-queue-*.json` glob pattern. This doesn't match the new `priority-queue.json` file produced by Phase 1's bootstrap. Migrate `loadQueueFromPathOrDir()` to use `batch.LoadUnifiedQueue()` and `batch.QueueEntry` instead of `seed.PriorityQueue` and `seed.Package`. This unblocks curated override extraction and access to Phase 1 fields (failure_count, next_retry_at, confidence).
+
 1. **HealthStatus** (independent, small): Read `batch-control.json` for circuit breaker state; scan metrics records for last_run, last_successful_run, runs_since_last_success. Add `--control-file` flag to `cmd/queue-analytics/main.go` (defaults to `batch-control.json`). This can ship as its own small PR to validate the pattern.
 
 2. **FailureDetail loading + subcategory extraction** (core deliverable): Read all JSONL files, normalize both formats into `FailureDetail` structs, group per-recipe records by (package, batch_id), run `extractSubcategory()`, sort by timestamp descending, cap at 200. Summary counts (by_category, by_subcategory, by_ecosystem) are computed client-side.
 
 3. **RunSummary extension**: Add ecosystem and duration fields from metrics JSONL. The metrics data doesn't include workflow URLs or per-package lists; those fields can be added if the batch orchestrator is updated to write them.
 
-4. **CuratedOverride** (blocked on #1697): Filter queue packages where confidence == "curated". Returns nil and the field is omitted from dashboard.json until Phase 1's queue schema migration ships.
+4. **CuratedOverride**: Filter queue entries where `Confidence == "curated"` from the unified queue (available since Phase 1 shipped #1697). Each curated entry maps to a `CuratedOverride` struct with validation status derived from the entry's `Status` field.
 
 ### Phase B: Frontend (new pages + modified pages)
 
@@ -703,23 +705,22 @@ All new and modified pages must use an HTML-escaping utility function for all da
 3. **Rename `failed.html` to `failures.html`**: Add subcategory column, filter dropdowns (category, subcategory, ecosystem), client-side pagination, make each row link to `failure.html?id=`. Add redirect to `_redirects`.
 4. **New `failure.html`**: Single failure detail by `?id=`. Cross-links to `package.html`, `run.html`, filtered `failures.html`. GitHub action links (file issue, retry, won't-fix).
 5. **New `run.html`**: Single batch run detail by `?id=`. Shows batch summary and lists failures from `failure_details` filtered by `batch_id`.
-6. **New `package.html`**: Per-package detail by `?id=`. Client-side join: queue status from package arrays, failure history from `failure_details`, disambiguation from `disambiguations`, blocker status from `blockers`. GitHub action links. Phase 1 placeholders for priority/attempts fields.
+6. **New `package.html`**: Per-package detail by `?id=`. Client-side join: queue status from package arrays (including priority, failure_count, next_retry_at from unified queue), failure history from `failure_details`, disambiguation from `disambiguations`, blocker status from `blockers`. GitHub action links.
 7. **Enhance `pending.html`**: Add ecosystem filter, search box, ecosystem breakdown summary chips. Link rows to `package.html?id=`.
 8. **Enhance `blocked.html`**: Add Top Blockers analysis panel (inverted dependency graph computed client-side). Link rows and blocker dependencies to `package.html?id=`.
 9. **Enhance `success.html`**: Add ecosystem and date range filters. Add Success Timeline bar chart (daily recipe count). Link rows to `package.html?id=` and recipe files on GitHub.
 10. **Enhance `runs.html`**: Add ecosystem and status filters, since-success checkbox. Add 24h/7d summary panel.
 11. **Enhance `disambiguations.html`**: Add status/reason filter dropdowns and by-reason breakdown summary.
-12. **New `curated.html`**: Override table with validation status badges. GitHub links for add/remove/fix actions. Summary panel. Shows placeholder if `curated` is null.
+12. **New `curated.html`**: Override table with validation status badges (populated from unified queue entries with `confidence == "curated"`). GitHub links for add/remove/fix actions. Summary panel.
 
 Note: `seeding.html` is deferred to Phase 3 (seeding workflow design). The Seeding Stats panel on `index.html` will be added when there's data to show.
 
 ### Dependencies
 
-- Phase A and Phase B can proceed in parallel after the data structures are agreed
-- **Phase 1 (#1697) dependencies** (features work without Phase 1 but show placeholders):
-  - `package.html`: priority, attempt count, added date, next_retry_at fields
-  - `pending.html`: priority column
-  - `curated.html` / `curated` dashboard.json section: curated override data
+- Phase A step 0 (queue migration) must complete before steps 2 and 4 can access unified queue fields
+- Phase A and Phase B can otherwise proceed in parallel after the data structures are agreed
+- **Phase 1 (#1697) has shipped**: The unified queue schema is available. Curated data, priority, failure_count, and next_retry_at fields are all accessible from `batch.QueueEntry`. Phase A step 0 migrates dashboard.go to use the new schema.
+- **Workflow trigger update**: `update-dashboard.yml` currently triggers on changes to `data/`. If `batch-control.json` lives outside `data/`, the workflow's path filter needs updating to also watch the control file location.
 - `seeding.html` deferred to Phase 3
 - Everything else has no external dependencies and can ship independently
 
@@ -794,6 +795,6 @@ The `failure_details` array is more detailed than the current aggregate counts, 
 
 - **Existing `failures` field stays**: The `map[string]int` field remains for any consumers that depend on it. New code should compute counts from `failure_details` instead
 - **Redirect from `failed.html`**: Existing bookmarks still work via `_redirects`
-- **Phase 1 graceful degradation**: `package.html` shows available data (failure history, disambiguation, queue status) immediately. Priority, attempt count, and other unified queue fields show placeholders until Phase 1 ships. `curated.html` shows placeholder until curated data is available. Pages don't break -- they just have less data.
+- **Phase 1 shipped**: The unified queue schema (#1697) has merged. All queue fields (priority, failure_count, next_retry_at, confidence) are available. `curated.html` can be fully populated. Phase A step 0 migrates `dashboard.go` from `seed.PriorityQueue` to `batch.UnifiedQueue` to access these fields.
 - **`seeding.html` deferred entirely to Phase 3**: No placeholder page, no dead-end navigation link
 - **XSS fix is retroactive**: The `esc()` utility gets applied to all existing pages, not just the new ones. This improves security posture for the whole dashboard
