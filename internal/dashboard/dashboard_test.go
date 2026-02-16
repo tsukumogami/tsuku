@@ -1270,3 +1270,156 @@ func TestLoadHealth_malformedControlFile(t *testing.T) {
 		t.Errorf("error should mention parse control file: %v", err)
 	}
 }
+
+func TestLoadCurated_filtersCuratedEntries(t *testing.T) {
+	queue := &batch.UnifiedQueue{
+		Entries: []batch.QueueEntry{
+			{Name: "jq", Source: "homebrew:jq", Priority: 1, Status: "success", Confidence: "curated"},
+			{Name: "fd", Source: "homebrew:fd", Priority: 1, Status: "pending", Confidence: "auto"},
+			{Name: "ripgrep", Source: "cargo:ripgrep", Priority: 2, Status: "blocked", Confidence: "curated"},
+			{Name: "bat", Source: "homebrew:bat", Priority: 1, Status: "failed", Confidence: "curated"},
+			{Name: "exa", Source: "homebrew:exa", Priority: 2, Status: "success", Confidence: "auto"},
+		},
+	}
+
+	curated := loadCurated(queue)
+
+	if len(curated) != 3 {
+		t.Fatalf("curated: got %d, want 3", len(curated))
+	}
+
+	// Verify jq (success -> valid)
+	if curated[0].Name != "jq" {
+		t.Errorf("curated[0].Name: got %q, want %q", curated[0].Name, "jq")
+	}
+	if curated[0].Source != "homebrew:jq" {
+		t.Errorf("curated[0].Source: got %q, want %q", curated[0].Source, "homebrew:jq")
+	}
+	if curated[0].ValidationStatus != "valid" {
+		t.Errorf("curated[0].ValidationStatus: got %q, want %q", curated[0].ValidationStatus, "valid")
+	}
+
+	// Verify ripgrep (blocked -> unknown)
+	if curated[1].Name != "ripgrep" {
+		t.Errorf("curated[1].Name: got %q, want %q", curated[1].Name, "ripgrep")
+	}
+	if curated[1].ValidationStatus != "unknown" {
+		t.Errorf("curated[1].ValidationStatus: got %q, want %q", curated[1].ValidationStatus, "unknown")
+	}
+
+	// Verify bat (failed -> invalid)
+	if curated[2].Name != "bat" {
+		t.Errorf("curated[2].Name: got %q, want %q", curated[2].Name, "bat")
+	}
+	if curated[2].ValidationStatus != "invalid" {
+		t.Errorf("curated[2].ValidationStatus: got %q, want %q", curated[2].ValidationStatus, "invalid")
+	}
+}
+
+func TestLoadCurated_noCuratedEntries(t *testing.T) {
+	queue := &batch.UnifiedQueue{
+		Entries: []batch.QueueEntry{
+			{Name: "fd", Source: "homebrew:fd", Priority: 1, Status: "pending", Confidence: "auto"},
+			{Name: "exa", Source: "homebrew:exa", Priority: 2, Status: "success", Confidence: "auto"},
+		},
+	}
+
+	curated := loadCurated(queue)
+
+	if len(curated) != 0 {
+		t.Errorf("curated should be empty when no curated entries: got %d", len(curated))
+	}
+}
+
+func TestLoadCurated_emptyQueue(t *testing.T) {
+	queue := &batch.UnifiedQueue{Entries: []batch.QueueEntry{}}
+
+	curated := loadCurated(queue)
+
+	if len(curated) != 0 {
+		t.Errorf("curated should be empty for empty queue: got %d", len(curated))
+	}
+}
+
+func TestLoadCurated_statusMapping(t *testing.T) {
+	// Test all status values to verify the mapping is complete.
+	tests := []struct {
+		status string
+		want   string
+	}{
+		{"success", "valid"},
+		{"pending", "valid"},
+		{"failed", "invalid"},
+		{"blocked", "unknown"},
+		{"requires_manual", "unknown"},
+		{"excluded", "unknown"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.status, func(t *testing.T) {
+			queue := &batch.UnifiedQueue{
+				Entries: []batch.QueueEntry{
+					{Name: "tool", Source: "homebrew:tool", Priority: 1, Status: tt.status, Confidence: "curated"},
+				},
+			}
+
+			curated := loadCurated(queue)
+
+			if len(curated) != 1 {
+				t.Fatalf("curated: got %d, want 1", len(curated))
+			}
+			if curated[0].ValidationStatus != tt.want {
+				t.Errorf("ValidationStatus for status %q: got %q, want %q", tt.status, curated[0].ValidationStatus, tt.want)
+			}
+		})
+	}
+}
+
+func TestGenerate_withCurated(t *testing.T) {
+	dir := t.TempDir()
+	outputPath := filepath.Join(dir, "dashboard.json")
+
+	opts := Options{
+		QueueFile:          filepath.Join("testdata", "priority-queue.json"),
+		FailuresDir:        "testdata",
+		MetricsDir:         "testdata",
+		DisambiguationsDir: "/nonexistent",
+		ControlFile:        "/nonexistent/batch-control.json",
+		OutputFile:         outputPath,
+	}
+
+	if err := Generate(opts); err != nil {
+		t.Fatalf("Generate: %v", err)
+	}
+
+	data, err := os.ReadFile(outputPath)
+	if err != nil {
+		t.Fatalf("read output: %v", err)
+	}
+
+	var dash Dashboard
+	if err := json.Unmarshal(data, &dash); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+
+	// The testdata queue has 2 curated entries: jq (success) and ripgrep (blocked)
+	if len(dash.Curated) != 2 {
+		t.Fatalf("Curated: got %d, want 2", len(dash.Curated))
+	}
+
+	// Verify jq
+	if dash.Curated[0].Name != "jq" {
+		t.Errorf("Curated[0].Name: got %q, want %q", dash.Curated[0].Name, "jq")
+	}
+	if dash.Curated[0].ValidationStatus != "valid" {
+		t.Errorf("Curated[0].ValidationStatus: got %q, want %q", dash.Curated[0].ValidationStatus, "valid")
+	}
+
+	// Verify ripgrep
+	if dash.Curated[1].Name != "ripgrep" {
+		t.Errorf("Curated[1].Name: got %q, want %q", dash.Curated[1].Name, "ripgrep")
+	}
+	if dash.Curated[1].ValidationStatus != "unknown" {
+		t.Errorf("Curated[1].ValidationStatus: got %q, want %q", dash.Curated[1].ValidationStatus, "unknown")
+	}
+}

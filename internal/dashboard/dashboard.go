@@ -47,6 +47,16 @@ type Dashboard struct {
 	Health          *HealthStatus         `json:"health,omitempty"`
 	Runs            []RunSummary          `json:"runs,omitempty"`
 	Disambiguations *DisambiguationStatus `json:"disambiguations,omitempty"`
+	Curated         []CuratedOverride     `json:"curated,omitempty"`
+}
+
+// CuratedOverride represents a queue entry with curated confidence,
+// surfaced in the dashboard for visibility into manual source selections.
+type CuratedOverride struct {
+	Name             string `json:"name"`
+	Source           string `json:"source"`
+	Reason           string `json:"reason,omitempty"`
+	ValidationStatus string `json:"validation_status"` // "valid", "invalid", "unknown"
 }
 
 // HealthStatus summarizes pipeline health including circuit breaker state
@@ -208,6 +218,36 @@ func loadQueue(path string) (*batch.UnifiedQueue, error) {
 	return q, nil
 }
 
+// loadCurated filters the unified queue for entries with curated confidence
+// and maps them to CuratedOverride records. The ValidationStatus is derived
+// from the entry's queue status: "success" and "pending" map to "valid",
+// "failed" maps to "invalid", and everything else maps to "unknown".
+func loadCurated(queue *batch.UnifiedQueue) []CuratedOverride {
+	var curated []CuratedOverride
+	for _, entry := range queue.Entries {
+		if entry.Confidence != batch.ConfidenceCurated {
+			continue
+		}
+
+		var validationStatus string
+		switch entry.Status {
+		case batch.StatusSuccess, batch.StatusPending:
+			validationStatus = "valid"
+		case batch.StatusFailed:
+			validationStatus = "invalid"
+		default:
+			validationStatus = "unknown"
+		}
+
+		curated = append(curated, CuratedOverride{
+			Name:             entry.Name,
+			Source:           entry.Source,
+			ValidationStatus: validationStatus,
+		})
+	}
+	return curated
+}
+
 // Generate reads pipeline data files and produces dashboard.json.
 func Generate(opts Options) error {
 	dash := Dashboard{
@@ -232,6 +272,11 @@ func Generate(opts Options) error {
 		return fmt.Errorf("load queue: %w", err)
 	}
 	dash.Queue = computeQueueStatus(queue, failureDetails)
+
+	// Load curated overrides from queue
+	if curated := loadCurated(queue); len(curated) > 0 {
+		dash.Curated = curated
+	}
 
 	// Load individual failure detail records
 	detailRecords, detailErr := loadFailureDetailRecords(opts.FailuresDir, queue)
