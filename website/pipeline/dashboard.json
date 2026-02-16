@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-02-16T22:29:11Z",
+  "generated_at": "2026-02-16T23:29:56Z",
   "queue": {
     "total": 5275,
     "by_status": {
@@ -37281,8 +37281,8 @@
   },
   "failure_details": [
     {
-      "id": "homebrew-2026-02-08T02-37-10Z-xh",
-      "package": "xh",
+      "id": "homebrew-2026-02-08T02-37-10Z-sd",
+      "package": "sd",
       "ecosystem": "homebrew",
       "category": "deterministic",
       "subcategory": "install_failed",
@@ -37311,8 +37311,8 @@
       "timestamp": "2026-02-08T02:37:10Z"
     },
     {
-      "id": "homebrew-2026-02-08T02-37-10Z-sd",
-      "package": "sd",
+      "id": "homebrew-2026-02-08T02-37-10Z-xh",
+      "package": "xh",
       "ecosystem": "homebrew",
       "category": "deterministic",
       "subcategory": "install_failed",
@@ -39224,7 +39224,7 @@
     "last_run": {
       "batch_id": "2026-02-16-homebrew",
       "ecosystem": "homebrew",
-      "timestamp": "2026-02-16T22:28:49Z",
+      "timestamp": "2026-02-16T23:29:34Z",
       "succeeded": 0,
       "failed": 0,
       "total": 0
@@ -39238,7 +39238,7 @@
       "total": 4,
       "recipes_merged": 4
     },
-    "runs_since_last_success": 167,
+    "runs_since_last_success": 168,
     "hours_since_last_run": 0
   },
   "runs": [
