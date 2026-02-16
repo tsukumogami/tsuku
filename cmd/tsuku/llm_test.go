@@ -100,6 +100,13 @@ func TestFormatBytesHuman(t *testing.T) {
 		{"megabytes", 50 * 1024 * 1024, "50 MB"},
 		{"gigabytes", int64(2.5 * 1024 * 1024 * 1024), "2.5 GB"},
 		{"one GB", 1024 * 1024 * 1024, "1.0 GB"},
+		{"negative value", -1, "-1 bytes"},
+		{"exact KB boundary", 1024, "1 KB"},
+		{"just below KB", 1023, "1023 bytes"},
+		{"exact MB boundary", 1024 * 1024, "1 MB"},
+		{"just below MB", 1024*1024 - 1, "1024 KB"},
+		{"just below GB", 1024*1024*1024 - 1, "1024 MB"},
+		{"one byte", 1, "1 bytes"},
 	}
 
 	for _, tt := range tests {

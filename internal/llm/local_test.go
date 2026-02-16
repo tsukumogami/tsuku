@@ -314,62 +314,247 @@ func TestErrDownloadDeclinedMessage(t *testing.T) {
 	require.Contains(t, addon.ErrDownloadDeclined.Error(), "download declined")
 }
 
-// TestFromProtoResponse verifies the proto-to-Go conversion.
-func TestFromProtoResponse(t *testing.T) {
-	pbResp := &pb.CompletionResponse{
-		Content:    "Test content",
-		StopReason: "end_turn",
-		Usage: &pb.Usage{
-			InputTokens:  100,
-			OutputTokens: 50,
+// TestEnsureModelReadyDeclinePath verifies that declining the model download returns ErrDownloadDeclined.
+func TestEnsureModelReadyDeclinePath(t *testing.T) {
+	const bufSize = 1024 * 1024
+	lis := bufconn.Listen(bufSize)
+
+	mockServer := &mockInferenceServer{
+		statusResponse: &pb.StatusResponse{
+			Ready:          false,
+			ModelName:      "qwen2.5-3b-q4",
+			ModelSizeBytes: 2684354560, // 2.5 GB
+			Backend:        "cpu",
 		},
-		ToolCalls: []*pb.ToolCall{
-			{
-				Id:            "call_123",
-				Name:          "test_tool",
-				ArgumentsJson: `{"arg1": "value1"}`,
-			},
+	}
+	grpcServer := grpc.NewServer()
+	pb.RegisterInferenceServiceServer(grpcServer, mockServer)
+	go func() { _ = grpcServer.Serve(lis) }()
+	defer grpcServer.Stop()
+
+	conn, err := grpc.NewClient(
+		"passthrough://bufnet",
+		grpc.WithContextDialer(func(context.Context, string) (net.Conn, error) {
+			return lis.Dial()
+		}),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	require.NoError(t, err)
+	defer func() { _ = conn.Close() }()
+
+	provider := &LocalProvider{
+		client: pb.NewInferenceServiceClient(conn),
+		conn:   conn,
+		prompter: &testLocalPrompter{
+			approve: false,
 		},
 	}
 
-	resp := fromProtoResponse(pbResp)
+	err = provider.ensureModelReady(context.Background())
+	require.ErrorIs(t, err, addon.ErrDownloadDeclined)
+	require.False(t, provider.modelPrompted, "modelPrompted should not be set when declined")
+}
 
-	require.Equal(t, "Test content", resp.Content)
-	require.Equal(t, "end_turn", resp.StopReason)
-	require.Equal(t, 100, resp.Usage.InputTokens)
-	require.Equal(t, 50, resp.Usage.OutputTokens)
-	require.Len(t, resp.ToolCalls, 1)
-	require.Equal(t, "call_123", resp.ToolCalls[0].ID)
-	require.Equal(t, "test_tool", resp.ToolCalls[0].Name)
-	require.Equal(t, "value1", resp.ToolCalls[0].Arguments["arg1"])
+// TestFromProtoResponse verifies the proto-to-Go conversion.
+func TestFromProtoResponse(t *testing.T) {
+	t.Run("standard response with tool calls", func(t *testing.T) {
+		pbResp := &pb.CompletionResponse{
+			Content:    "Test content",
+			StopReason: "end_turn",
+			Usage: &pb.Usage{
+				InputTokens:  100,
+				OutputTokens: 50,
+			},
+			ToolCalls: []*pb.ToolCall{
+				{
+					Id:            "call_123",
+					Name:          "test_tool",
+					ArgumentsJson: `{"arg1": "value1"}`,
+				},
+			},
+		}
+
+		resp := fromProtoResponse(pbResp)
+
+		require.Equal(t, "Test content", resp.Content)
+		require.Equal(t, "end_turn", resp.StopReason)
+		require.Equal(t, 100, resp.Usage.InputTokens)
+		require.Equal(t, 50, resp.Usage.OutputTokens)
+		require.Len(t, resp.ToolCalls, 1)
+		require.Equal(t, "call_123", resp.ToolCalls[0].ID)
+		require.Equal(t, "test_tool", resp.ToolCalls[0].Name)
+		require.Equal(t, "value1", resp.ToolCalls[0].Arguments["arg1"])
+	})
+
+	t.Run("invalid JSON in tool call arguments falls back to empty map", func(t *testing.T) {
+		pbResp := &pb.CompletionResponse{
+			Content:    "Using tool",
+			StopReason: "tool_use",
+			ToolCalls: []*pb.ToolCall{
+				{
+					Id:            "call_bad",
+					Name:          "broken_tool",
+					ArgumentsJson: "not valid json",
+				},
+			},
+		}
+
+		resp := fromProtoResponse(pbResp)
+
+		require.Len(t, resp.ToolCalls, 1)
+		require.Equal(t, "call_bad", resp.ToolCalls[0].ID)
+		require.Equal(t, "broken_tool", resp.ToolCalls[0].Name)
+		require.NotNil(t, resp.ToolCalls[0].Arguments)
+		require.Empty(t, resp.ToolCalls[0].Arguments, "invalid JSON should produce empty map")
+	})
+
+	t.Run("empty arguments JSON falls back to empty map", func(t *testing.T) {
+		pbResp := &pb.CompletionResponse{
+			Content:    "Using tool",
+			StopReason: "tool_use",
+			ToolCalls: []*pb.ToolCall{
+				{
+					Id:            "call_empty",
+					Name:          "no_args_tool",
+					ArgumentsJson: "",
+				},
+			},
+		}
+
+		resp := fromProtoResponse(pbResp)
+
+		require.Len(t, resp.ToolCalls, 1)
+		require.NotNil(t, resp.ToolCalls[0].Arguments)
+		require.Empty(t, resp.ToolCalls[0].Arguments, "empty JSON should produce empty map")
+	})
+
+	t.Run("nil usage produces zero values", func(t *testing.T) {
+		pbResp := &pb.CompletionResponse{
+			Content:    "response",
+			StopReason: "end_turn",
+			Usage:      nil,
+		}
+
+		resp := fromProtoResponse(pbResp)
+
+		require.Equal(t, 0, resp.Usage.InputTokens)
+		require.Equal(t, 0, resp.Usage.OutputTokens)
+	})
 }
 
 // TestToProtoRequest verifies the Go-to-proto conversion.
 func TestToProtoRequest(t *testing.T) {
-	req := &CompletionRequest{
-		SystemPrompt: "System prompt",
-		Messages: []Message{
-			{Role: RoleUser, Content: "User message"},
-			{Role: RoleAssistant, Content: "Assistant message"},
-		},
-		Tools: []ToolDef{
-			{
-				Name:        "test_tool",
-				Description: "A test tool",
-				Parameters:  map[string]any{"type": "object"},
+	t.Run("basic messages and tools", func(t *testing.T) {
+		req := &CompletionRequest{
+			SystemPrompt: "System prompt",
+			Messages: []Message{
+				{Role: RoleUser, Content: "User message"},
+				{Role: RoleAssistant, Content: "Assistant message"},
 			},
-		},
-		MaxTokens: 100,
-	}
+			Tools: []ToolDef{
+				{
+					Name:        "test_tool",
+					Description: "A test tool",
+					Parameters:  map[string]any{"type": "object"},
+				},
+			},
+			MaxTokens: 100,
+		}
 
-	pbReq := toProtoRequest(req)
+		pbReq := toProtoRequest(req)
 
-	require.Equal(t, "System prompt", pbReq.SystemPrompt)
-	require.Len(t, pbReq.Messages, 2)
-	require.Equal(t, pb.Role_ROLE_USER, pbReq.Messages[0].Role)
-	require.Equal(t, "User message", pbReq.Messages[0].Content)
-	require.Equal(t, pb.Role_ROLE_ASSISTANT, pbReq.Messages[1].Role)
-	require.Len(t, pbReq.Tools, 1)
-	require.Equal(t, "test_tool", pbReq.Tools[0].Name)
-	require.Equal(t, int32(100), pbReq.MaxTokens)
+		require.Equal(t, "System prompt", pbReq.SystemPrompt)
+		require.Len(t, pbReq.Messages, 2)
+		require.Equal(t, pb.Role_ROLE_USER, pbReq.Messages[0].Role)
+		require.Equal(t, "User message", pbReq.Messages[0].Content)
+		require.Equal(t, pb.Role_ROLE_ASSISTANT, pbReq.Messages[1].Role)
+		require.Len(t, pbReq.Tools, 1)
+		require.Equal(t, "test_tool", pbReq.Tools[0].Name)
+		require.Equal(t, int32(100), pbReq.MaxTokens)
+	})
+
+	t.Run("message with tool calls", func(t *testing.T) {
+		req := &CompletionRequest{
+			Messages: []Message{
+				{
+					Role:    RoleAssistant,
+					Content: "I'll use the tool.",
+					ToolCalls: []ToolCall{
+						{
+							ID:        "call_abc",
+							Name:      "get_weather",
+							Arguments: map[string]any{"city": "Tokyo", "units": "celsius"},
+						},
+						{
+							ID:        "call_def",
+							Name:      "get_time",
+							Arguments: map[string]any{"timezone": "JST"},
+						},
+					},
+				},
+			},
+		}
+
+		pbReq := toProtoRequest(req)
+
+		require.Len(t, pbReq.Messages, 1)
+		msg := pbReq.Messages[0]
+		require.Equal(t, "I'll use the tool.", msg.Content)
+		require.Len(t, msg.ToolCalls, 2)
+
+		require.Equal(t, "call_abc", msg.ToolCalls[0].Id)
+		require.Equal(t, "get_weather", msg.ToolCalls[0].Name)
+		require.Contains(t, msg.ToolCalls[0].ArgumentsJson, `"city"`)
+		require.Contains(t, msg.ToolCalls[0].ArgumentsJson, `"Tokyo"`)
+
+		require.Equal(t, "call_def", msg.ToolCalls[1].Id)
+		require.Equal(t, "get_time", msg.ToolCalls[1].Name)
+		require.Contains(t, msg.ToolCalls[1].ArgumentsJson, `"JST"`)
+	})
+
+	t.Run("message with tool result", func(t *testing.T) {
+		req := &CompletionRequest{
+			Messages: []Message{
+				{
+					Role: RoleUser,
+					ToolResult: &ToolResult{
+						CallID:  "call_abc",
+						Content: `{"temperature": 22, "condition": "sunny"}`,
+						IsError: false,
+					},
+				},
+			},
+		}
+
+		pbReq := toProtoRequest(req)
+
+		require.Len(t, pbReq.Messages, 1)
+		msg := pbReq.Messages[0]
+		require.NotNil(t, msg.ToolResult)
+		require.Equal(t, "call_abc", msg.ToolResult.ToolCallId)
+		require.Equal(t, `{"temperature": 22, "condition": "sunny"}`, msg.ToolResult.Content)
+		require.False(t, msg.ToolResult.IsError)
+	})
+
+	t.Run("message with error tool result", func(t *testing.T) {
+		req := &CompletionRequest{
+			Messages: []Message{
+				{
+					Role: RoleUser,
+					ToolResult: &ToolResult{
+						CallID:  "call_err",
+						Content: "connection timeout",
+						IsError: true,
+					},
+				},
+			},
+		}
+
+		pbReq := toProtoRequest(req)
+
+		msg := pbReq.Messages[0]
+		require.NotNil(t, msg.ToolResult)
+		require.Equal(t, "call_err", msg.ToolResult.ToolCallId)
+		require.True(t, msg.ToolResult.IsError)
+	})
 }
