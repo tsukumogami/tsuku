@@ -379,6 +379,167 @@ func TestEnsureAddon(t *testing.T) {
 	})
 }
 
+func TestEnsureAddonWithPrompter(t *testing.T) {
+	t.Run("prompts before download and proceeds on approval", func(t *testing.T) {
+		fakeAddon := []byte("#!/bin/sh\necho hello")
+		h := sha256.Sum256(fakeAddon)
+		checksum := hex.EncodeToString(h[:])
+
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			_, _ = w.Write(fakeAddon)
+		}))
+		defer server.Close()
+
+		tmpDir := t.TempDir()
+		t.Setenv("TSUKU_HOME", tmpDir)
+
+		oldManifest := cachedManifest
+		cachedManifest = &Manifest{
+			Version: "test",
+			Platforms: map[string]PlatformInfo{
+				PlatformKey(): {
+					URL:    server.URL + "/tsuku-llm",
+					SHA256: checksum,
+				},
+			},
+		}
+		defer func() { cachedManifest = oldManifest }()
+
+		prompted := false
+		mockPrompter := &testPrompter{
+			approve: true,
+			onPrompt: func(desc string, size int64) {
+				prompted = true
+				require.Contains(t, desc, "tsuku-llm")
+				require.Greater(t, size, int64(0))
+			},
+		}
+
+		m := NewAddonManagerWithHome(tmpDir)
+		m.SetPrompter(mockPrompter)
+
+		path, err := m.EnsureAddon(context.Background())
+		require.NoError(t, err)
+		require.NotEmpty(t, path)
+		require.True(t, prompted, "prompter should have been called")
+	})
+
+	t.Run("returns error when user declines download", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		t.Setenv("TSUKU_HOME", tmpDir)
+
+		oldManifest := cachedManifest
+		cachedManifest = &Manifest{
+			Version: "test",
+			Platforms: map[string]PlatformInfo{
+				PlatformKey(): {
+					URL:    "http://should-not-be-called/",
+					SHA256: "fake",
+				},
+			},
+		}
+		defer func() { cachedManifest = oldManifest }()
+
+		mockPrompter := &testPrompter{approve: false}
+
+		m := NewAddonManagerWithHome(tmpDir)
+		m.SetPrompter(mockPrompter)
+
+		_, err := m.EnsureAddon(context.Background())
+		require.ErrorIs(t, err, ErrDownloadDeclined)
+	})
+
+	t.Run("skips prompt when addon already installed", func(t *testing.T) {
+		fakeAddon := []byte("fake addon content")
+		h := sha256.Sum256(fakeAddon)
+		checksum := hex.EncodeToString(h[:])
+
+		tmpDir := t.TempDir()
+		t.Setenv("TSUKU_HOME", tmpDir)
+
+		oldManifest := cachedManifest
+		cachedManifest = &Manifest{
+			Version: "test",
+			Platforms: map[string]PlatformInfo{
+				PlatformKey(): {
+					URL:    "http://should-not-be-called/",
+					SHA256: checksum,
+				},
+			},
+		}
+		defer func() { cachedManifest = oldManifest }()
+
+		prompted := false
+		mockPrompter := &testPrompter{
+			approve:  true,
+			onPrompt: func(_ string, _ int64) { prompted = true },
+		}
+
+		m := NewAddonManagerWithHome(tmpDir)
+		m.SetPrompter(mockPrompter)
+
+		// Pre-create the binary
+		dir, err := m.AddonDir()
+		require.NoError(t, err)
+		require.NoError(t, os.MkdirAll(dir, 0755))
+
+		binaryPath, err := m.BinaryPath()
+		require.NoError(t, err)
+		require.NoError(t, os.WriteFile(binaryPath, fakeAddon, 0755))
+
+		path, err := m.EnsureAddon(context.Background())
+		require.NoError(t, err)
+		require.Equal(t, binaryPath, path)
+		require.False(t, prompted, "should not prompt when addon exists and is valid")
+	})
+
+	t.Run("downloads without prompt when no prompter set", func(t *testing.T) {
+		fakeAddon := []byte("#!/bin/sh\necho hello")
+		h := sha256.Sum256(fakeAddon)
+		checksum := hex.EncodeToString(h[:])
+
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			_, _ = w.Write(fakeAddon)
+		}))
+		defer server.Close()
+
+		tmpDir := t.TempDir()
+		t.Setenv("TSUKU_HOME", tmpDir)
+
+		oldManifest := cachedManifest
+		cachedManifest = &Manifest{
+			Version: "test",
+			Platforms: map[string]PlatformInfo{
+				PlatformKey(): {
+					URL:    server.URL + "/tsuku-llm",
+					SHA256: checksum,
+				},
+			},
+		}
+		defer func() { cachedManifest = oldManifest }()
+
+		m := NewAddonManagerWithHome(tmpDir)
+		// No prompter set -- should download silently (backward compatible)
+
+		path, err := m.EnsureAddon(context.Background())
+		require.NoError(t, err)
+		require.NotEmpty(t, path)
+	})
+}
+
+// testPrompter is a mock Prompter for testing.
+type testPrompter struct {
+	approve  bool
+	onPrompt func(description string, size int64)
+}
+
+func (p *testPrompter) ConfirmDownload(_ context.Context, description string, size int64) (bool, error) {
+	if p.onPrompt != nil {
+		p.onPrompt(description, size)
+	}
+	return p.approve, nil
+}
+
 func TestVerifyBeforeExecution(t *testing.T) {
 	t.Run("returns nil for valid binary", func(t *testing.T) {
 		fakeAddon := []byte("fake addon")

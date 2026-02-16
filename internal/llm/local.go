@@ -14,6 +14,7 @@ import (
 
 	"github.com/tsukumogami/tsuku/internal/llm/addon"
 	pb "github.com/tsukumogami/tsuku/internal/llm/proto"
+	"github.com/tsukumogami/tsuku/internal/progress"
 )
 
 // LocalProvider implements the Provider interface using the local tsuku-llm addon.
@@ -23,6 +24,14 @@ type LocalProvider struct {
 	lifecycle    *ServerLifecycle
 	conn         *grpc.ClientConn
 	client       pb.InferenceServiceClient
+
+	// prompter handles user confirmation before downloads.
+	// If nil, downloads proceed without prompting.
+	prompter addon.Prompter
+
+	// modelPrompted tracks whether we've already prompted for the model download
+	// in this session, to avoid re-prompting on each Complete call.
+	modelPrompted bool
 }
 
 // NewLocalProvider creates a new local provider with default idle timeout.
@@ -45,6 +54,14 @@ func NewLocalProviderWithTimeout(idleTimeout time.Duration) *LocalProvider {
 	}
 }
 
+// SetPrompter sets the prompter for download confirmations.
+// The prompter is propagated to the AddonManager for addon downloads
+// and used directly for model download prompts.
+func (p *LocalProvider) SetPrompter(prompter addon.Prompter) {
+	p.prompter = prompter
+	p.addonManager.SetPrompter(prompter)
+}
+
 // Name returns the provider identifier.
 func (p *LocalProvider) Name() string {
 	return "local"
@@ -52,9 +69,13 @@ func (p *LocalProvider) Name() string {
 
 // Complete sends a completion request to the local addon.
 // It ensures the addon is downloaded, verified, and running before sending the request.
+// Shows a spinner during inference when running in a terminal.
 func (p *LocalProvider) Complete(ctx context.Context, req *CompletionRequest) (*CompletionResponse, error) {
 	// Ensure addon is downloaded and verified
 	if _, err := p.addonManager.EnsureAddon(ctx); err != nil {
+		if err == addon.ErrDownloadDeclined {
+			return nil, fmt.Errorf("addon download declined: configure a cloud provider (ANTHROPIC_API_KEY or GOOGLE_API_KEY) as an alternative")
+		}
 		return nil, fmt.Errorf("failed to ensure addon: %w", err)
 	}
 
@@ -68,15 +89,67 @@ func (p *LocalProvider) Complete(ctx context.Context, req *CompletionRequest) (*
 		return nil, fmt.Errorf("failed to connect to local LLM addon: %w", err)
 	}
 
+	// Check model status and prompt for model download if needed
+	if err := p.ensureModelReady(ctx); err != nil {
+		if err == addon.ErrDownloadDeclined {
+			return nil, fmt.Errorf("model download declined: configure a cloud provider (ANTHROPIC_API_KEY or GOOGLE_API_KEY) as an alternative")
+		}
+		return nil, err
+	}
+
 	// Convert to proto format
 	pbReq := toProtoRequest(req)
 
+	// Show spinner during inference
+	spinner := progress.NewSpinner(os.Stderr)
+	spinner.Start("Generating...")
+	defer spinner.Stop()
+
 	pbResp, err := p.client.Complete(ctx, pbReq)
 	if err != nil {
+		spinner.StopWithMessage("Generation failed.")
 		return nil, fmt.Errorf("local LLM completion failed: %w", err)
 	}
 
+	spinner.Stop()
 	return fromProtoResponse(pbResp), nil
+}
+
+// ensureModelReady checks if the model is downloaded and prompts the user if needed.
+// The model is managed by the addon, but we prompt from the Go side for UX consistency.
+func (p *LocalProvider) ensureModelReady(ctx context.Context) error {
+	if p.modelPrompted {
+		return nil // Already prompted this session
+	}
+
+	status, err := p.client.GetStatus(ctx, &pb.StatusRequest{})
+	if err != nil {
+		// Can't get status -- the addon may still be loading. Let it proceed;
+		// the addon handles model download internally if needed.
+		return nil
+	}
+
+	// If model is already loaded, no prompt needed
+	if status.Ready && status.ModelName != "" {
+		p.modelPrompted = true
+		return nil
+	}
+
+	// Model not ready -- it may need to be downloaded.
+	// Only prompt if we have a prompter and the model size is known.
+	if p.prompter != nil && status.ModelSizeBytes > 0 && status.ModelName != "" {
+		modelDesc := fmt.Sprintf("LLM model %s", status.ModelName)
+		approved, err := p.prompter.ConfirmDownload(ctx, modelDesc, status.ModelSizeBytes)
+		if err != nil {
+			return fmt.Errorf("model download prompt failed: %w", err)
+		}
+		if !approved {
+			return addon.ErrDownloadDeclined
+		}
+	}
+
+	p.modelPrompted = true
+	return nil
 }
 
 // ensureConnection establishes the gRPC connection if not already connected.

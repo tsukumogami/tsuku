@@ -22,6 +22,10 @@ type AddonManager struct {
 
 	// cachedPath is the verified addon path (set after successful EnsureAddon)
 	cachedPath string
+
+	// prompter handles user confirmation before downloads.
+	// If nil, downloads proceed without prompting (backward-compatible).
+	prompter Prompter
 }
 
 // NewAddonManager creates a new addon manager using the default home directory.
@@ -44,6 +48,13 @@ func NewAddonManagerWithHome(homeDir string) *AddonManager {
 	return &AddonManager{
 		homeDir: homeDir,
 	}
+}
+
+// SetPrompter sets the prompter used for download confirmation.
+// When set, the manager prompts the user before downloading the addon.
+// Pass nil to disable prompting (downloads proceed silently).
+func (m *AddonManager) SetPrompter(p Prompter) {
+	m.prompter = p
 }
 
 // HomeDir returns the tsuku home directory.
@@ -119,6 +130,7 @@ func (m *AddonManager) EnsureAddon(ctx context.Context) (string, error) {
 	}
 
 	// Check if binary exists
+	needsDownload := false
 	if _, err := os.Stat(binaryPath); err == nil {
 		// Verify existing binary
 		if err := m.verifyBinary(binaryPath); err == nil {
@@ -127,6 +139,23 @@ func (m *AddonManager) EnsureAddon(ctx context.Context) (string, error) {
 		}
 		// Verification failed - need to re-download
 		fmt.Println("   Existing addon failed verification, re-downloading...")
+		needsDownload = true
+	} else {
+		needsDownload = true
+	}
+
+	// Prompt user before downloading (if prompter is configured)
+	if needsDownload && m.prompter != nil {
+		// Estimated addon size (~50MB). The actual size is not in the manifest,
+		// so we use a reasonable estimate.
+		const estimatedAddonSize int64 = 50 * 1024 * 1024
+		approved, err := m.prompter.ConfirmDownload(ctx, "tsuku-llm inference addon", estimatedAddonSize)
+		if err != nil {
+			return "", fmt.Errorf("download prompt failed: %w", err)
+		}
+		if !approved {
+			return "", ErrDownloadDeclined
+		}
 	}
 
 	// Download addon

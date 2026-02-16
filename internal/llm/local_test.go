@@ -12,6 +12,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/test/bufconn"
 
+	"github.com/tsukumogami/tsuku/internal/llm/addon"
 	pb "github.com/tsukumogami/tsuku/internal/llm/proto"
 )
 
@@ -223,6 +224,94 @@ func TestLocalProviderWithMockServer(t *testing.T) {
 		require.NotNil(t, resp)
 		require.True(t, resp.Accepted)
 	})
+}
+
+// TestLocalProviderSetPrompter verifies prompter propagation to AddonManager.
+func TestLocalProviderSetPrompter(t *testing.T) {
+	tmpDir := t.TempDir()
+	t.Setenv("TSUKU_HOME", tmpDir)
+
+	provider := NewLocalProvider()
+	require.NotNil(t, provider)
+
+	// Set auto-approve prompter
+	prompter := addon.NewAutoApprovePrompter()
+	provider.SetPrompter(prompter)
+
+	// Verify prompter was set
+	require.Equal(t, prompter, provider.prompter)
+}
+
+// TestEnsureModelReady verifies model download prompt behavior.
+func TestEnsureModelReady(t *testing.T) {
+	// Create a buffer-based listener for in-process gRPC
+	const bufSize = 1024 * 1024
+	lis := bufconn.Listen(bufSize)
+
+	t.Run("skips prompt when model is ready", func(t *testing.T) {
+		mockServer := &mockInferenceServer{
+			statusResponse: &pb.StatusResponse{
+				Ready:     true,
+				ModelName: "qwen2.5-1.5b-q4",
+			},
+		}
+		grpcServer := grpc.NewServer()
+		pb.RegisterInferenceServiceServer(grpcServer, mockServer)
+		go func() { _ = grpcServer.Serve(lis) }()
+		defer grpcServer.Stop()
+
+		conn, err := grpc.NewClient(
+			"passthrough://bufnet",
+			grpc.WithContextDialer(func(context.Context, string) (net.Conn, error) {
+				return lis.Dial()
+			}),
+			grpc.WithTransportCredentials(insecure.NewCredentials()),
+		)
+		require.NoError(t, err)
+		defer conn.Close()
+
+		prompted := false
+		provider := &LocalProvider{
+			client: pb.NewInferenceServiceClient(conn),
+			conn:   conn,
+			prompter: &testLocalPrompter{
+				approve:  true,
+				onPrompt: func(_ string, _ int64) { prompted = true },
+			},
+		}
+
+		err = provider.ensureModelReady(context.Background())
+		require.NoError(t, err)
+		require.False(t, prompted, "should not prompt when model is ready")
+		require.True(t, provider.modelPrompted, "modelPrompted flag should be set")
+	})
+
+	t.Run("does not re-prompt after first check", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		t.Setenv("TSUKU_HOME", tmpDir)
+
+		provider := &LocalProvider{modelPrompted: true}
+		err := provider.ensureModelReady(context.Background())
+		require.NoError(t, err)
+	})
+}
+
+// testLocalPrompter is a mock Prompter for LocalProvider tests.
+type testLocalPrompter struct {
+	approve  bool
+	onPrompt func(description string, size int64)
+}
+
+func (p *testLocalPrompter) ConfirmDownload(_ context.Context, description string, size int64) (bool, error) {
+	if p.onPrompt != nil {
+		p.onPrompt(description, size)
+	}
+	return p.approve, nil
+}
+
+// TestErrDownloadDeclinedMessage verifies the user-facing error message.
+func TestErrDownloadDeclinedMessage(t *testing.T) {
+	require.Contains(t, addon.ErrDownloadDeclined.Error(), "download declined")
 }
 
 // TestFromProtoResponse verifies the proto-to-Go conversion.
