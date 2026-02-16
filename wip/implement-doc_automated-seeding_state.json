@@ -8,7 +8,7 @@
   "pr_number": 1722,
   "pr_url": "https://github.com/tsukumogami/tsuku/pull/1722",
   "pr_status": "draft",
-  "integrity_hash": "sha256:7c98b4f6c00d5072f2732eb615ef9a1c1b22582cae41986489e45bd4bc3a6130",
+  "integrity_hash": "sha256:7fa2ed3d2664461410aa1f246fc2f6e348509d4ec9ae9985fc7fa73eb82db3cb",
   "issues": [
     {
       "number": 1723,
@@ -161,14 +161,17 @@
     {
       "number": 1727,
       "title": "feat(seed): complete seed-queue command interface and output",
-      "status": "implemented",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "dependencies": [
         1723,
         1726
       ],
       "tier": "testable",
-      "commits": [],
+      "commits": [
+        "9c3a195a",
+        "9901285d"
+      ],
       "summary": {
         "files_changed": [
           "cmd/seed-queue/main.go",
@@ -196,14 +199,21 @@
     {
       "number": 1728,
       "title": "feat(batch): add seeding workflow and bootstrap Phase B",
-      "status": "pending",
+      "status": "implemented",
       "ci_status": "pending",
       "dependencies": [
         1727
       ],
       "tier": "critical",
       "commits": [],
-      "summary": null,
+      "summary": {
+        "files_changed": [
+          ".github/workflows/seed-queue.yml",
+          "docs/runbooks/batch-operations.md"
+        ],
+        "tests_added": 0,
+        "key_decisions": "No Go code changes needed. Workflow rewritten to use all as default source, redirect stdout to seeding-summary.json, use single queue-operations concurrency group, add source change issue creation step with jq/gh, stage unified queue path + audit dir + seeding-runs.jsonl. Bootstrap Phase B documented in batch-operations runbook."
+      },
       "testable_scenarios": [],
       "test_results": {},
       "doc_updates": [
@@ -214,7 +224,7 @@
     }
   ],
   "skipped_issues": [],
-  "current_issue_index": 4,
+  "current_issue_index": 5,
   "test_plan_file": "wip/implement-doc_automated-seeding_test_plan.md",
   "doc_plan_file": "wip/implement-doc_automated-seeding_doc_plan.md",
   "resumed_at": null
