@@ -40,15 +40,15 @@ Planned
 | Issue | Dependencies | Tier |
 |-------|--------------|------|
 | ~~[#1723: feat(seed): implement walking skeleton for ecosystem discovery and seeding](https://github.com/tsukumogami/tsuku/issues/1723)~~ | None | testable |
-| _Walking skeleton: EcosystemDiscoverer interface, CargoBuilder.Discover(), ResolveWithDetails(), Disambiguator wrapper, convert.go with tier assignment, FilterByName, and seed-queue -source cargo e2e flow._ | | |
+| ~~_Walking skeleton: EcosystemDiscoverer interface, CargoBuilder.Discover(), ResolveWithDetails(), Disambiguator wrapper, convert.go with tier assignment, FilterByName, and seed-queue -source cargo e2e flow._~~ | | |
 | ~~[#1724: feat(builders): add Discover() to npm, pypi, and gem builders](https://github.com/tsukumogami/tsuku/issues/1724)~~ | [#1723](https://github.com/tsukumogami/tsuku/issues/1723) | testable |
-| _Implements Discover() on NpmBuilder, PyPIBuilder, and GemBuilder using each ecosystem's batch listing APIs with rate limiting and CLI-tool filtering._ | | |
+| ~~_Implements Discover() on NpmBuilder, PyPIBuilder, and GemBuilder using each ecosystem's batch listing APIs with rate limiting and CLI-tool filtering._~~ | | |
 | ~~[#1725: feat(seed): implement audit log system for disambiguation decisions](https://github.com/tsukumogami/tsuku/issues/1725)~~ | [#1723](https://github.com/tsukumogami/tsuku/issues/1723) | testable |
-| _Per-package audit files recording full probe results, selected source, and reasoning. Provides HasSource() and ReadAuditEntry() that freshness checking depends on._ | | |
+| ~~_Per-package audit files recording full probe results, selected source, and reasoning. Provides HasSource() and ReadAuditEntry() that freshness checking depends on._~~ | | |
 | ~~[#1726: feat(seed): implement freshness checking and source change alerting](https://github.com/tsukumogami/tsuku/issues/1726)~~ | [#1723](https://github.com/tsukumogami/tsuku/issues/1723), [#1725](https://github.com/tsukumogami/tsuku/issues/1725) | critical |
-| _Three re-disambiguation triggers (staleness, failures+stale, new audit candidate), source change detection with priority-based alerting, and curated source validation._ | | |
+| ~~_Three re-disambiguation triggers (staleness, failures+stale, new audit candidate), source change detection with priority-based alerting, and curated source validation._~~ | | |
 | ~~[#1727: feat(seed): complete seed-queue command interface and output](https://github.com/tsukumogami/tsuku/issues/1727)~~ | [#1723](https://github.com/tsukumogami/tsuku/issues/1723), [#1726](https://github.com/tsukumogami/tsuku/issues/1726) | testable |
-| _Full flag set, exit codes (0/1/2), summary JSON to stdout for workflow consumption, and seeding-runs.jsonl persistence. Stabilizes the command contract for CI._ | | |
+| ~~_Full flag set, exit codes (0/1/2), summary JSON to stdout for workflow consumption, and seeding-runs.jsonl persistence. Stabilizes the command contract for CI._~~ | | |
 | [#1728: feat(batch): add seeding workflow and bootstrap Phase B](https://github.com/tsukumogami/tsuku/issues/1728) | [#1727](https://github.com/tsukumogami/tsuku/issues/1727) | critical |
 | _Updates seed-queue.yml for all ecosystems, adds source change issue creation with seeding:review label, and documents Bootstrap Phase B procedure._ | | |
 
