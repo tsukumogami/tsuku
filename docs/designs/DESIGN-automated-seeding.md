@@ -43,7 +43,7 @@ Planned
 | _Walking skeleton: EcosystemDiscoverer interface, CargoBuilder.Discover(), ResolveWithDetails(), Disambiguator wrapper, convert.go with tier assignment, FilterByName, and seed-queue -source cargo e2e flow._ | | |
 | ~~[#1724: feat(builders): add Discover() to npm, pypi, and gem builders](https://github.com/tsukumogami/tsuku/issues/1724)~~ | [#1723](https://github.com/tsukumogami/tsuku/issues/1723) | testable |
 | _Implements Discover() on NpmBuilder, PyPIBuilder, and GemBuilder using each ecosystem's batch listing APIs with rate limiting and CLI-tool filtering._ | | |
-| [#1725: feat(seed): implement audit log system for disambiguation decisions](https://github.com/tsukumogami/tsuku/issues/1725) | [#1723](https://github.com/tsukumogami/tsuku/issues/1723) | testable |
+| ~~[#1725: feat(seed): implement audit log system for disambiguation decisions](https://github.com/tsukumogami/tsuku/issues/1725)~~ | [#1723](https://github.com/tsukumogami/tsuku/issues/1723) | testable |
 | _Per-package audit files recording full probe results, selected source, and reasoning. Provides HasSource() and ReadAuditEntry() that freshness checking depends on._ | | |
 | [#1726: feat(seed): implement freshness checking and source change alerting](https://github.com/tsukumogami/tsuku/issues/1726) | [#1723](https://github.com/tsukumogami/tsuku/issues/1723), [#1725](https://github.com/tsukumogami/tsuku/issues/1725) | critical |
 | _Three re-disambiguation triggers (staleness, failures+stale, new audit candidate), source change detection with priority-based alerting, and curated source validation._ | | |
@@ -76,8 +76,8 @@ graph TD
 
     class I1723 done
     class I1724 done
-    class I1725 ready
-    class I1726 blocked
+    class I1725 done
+    class I1726 ready
     class I1727 blocked
     class I1728 blocked
 ```
