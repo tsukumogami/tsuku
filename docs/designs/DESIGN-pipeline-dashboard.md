@@ -45,7 +45,7 @@ Planned
 | ~~[#1700: ci(batch): recipe merge workflow updates queue status](https://github.com/tsukumogami/tsuku/issues/1700)~~ | [#1697](https://github.com/tsukumogami/tsuku/issues/1697) | testable |
 | _Create workflow that updates queue status when recipes merge, detecting whether the recipe source matches the queue's pre-resolved source and flagging mismatches._ | | |
 | ~~[#1701: docs(pipeline): design dashboard observability enhancements](https://github.com/tsukumogami/tsuku/issues/1701)~~ | ~~None~~ | ~~simple~~ |
-| ~~_Design Phase 2 observability: drill-down navigation, failure subcategories, and seeding stats. Spawned [dashboard-observability](https://github.com/tsukumogami/tsuku/milestone/84) milestone with 11 implementation issues._~~ | | |
+| ~~_Design Phase 2 observability: drill-down navigation, failure subcategories, and seeding stats. Spawned dashboard-observability milestone with 11 implementation issues._~~ | | |
 | [#1702: docs(pipeline): design automated seeding workflow](https://github.com/tsukumogami/tsuku/issues/1702) | None | simple |
 | _Design Phase 3 seeding: `seed-queue` command, weekly workflow, and ecosystem discovery APIs. Spawns its own implementation milestone when designed._ | | |
 
