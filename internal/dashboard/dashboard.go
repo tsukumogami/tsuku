@@ -21,6 +21,7 @@ type Options struct {
 	FailuresDir        string // Directory containing failures JSONL files
 	MetricsDir         string // Directory containing metrics JSONL files
 	DisambiguationsDir string // Directory containing disambiguation JSONL files
+	ControlFile        string // Path to batch-control.json for circuit breaker state
 	OutputFile         string // Path to output dashboard.json
 }
 
@@ -31,6 +32,7 @@ func DefaultOptions() Options {
 		FailuresDir:        "data/failures",
 		MetricsDir:         "data/metrics",
 		DisambiguationsDir: "data/disambiguations",
+		ControlFile:        "batch-control.json",
 		OutputFile:         "website/pipeline/dashboard.json",
 	}
 }
@@ -41,8 +43,38 @@ type Dashboard struct {
 	Queue           QueueStatus           `json:"queue"`
 	Blockers        []Blocker             `json:"blockers"`
 	Failures        map[string]int        `json:"failures"`
+	Health          *HealthStatus         `json:"health,omitempty"`
 	Runs            []RunSummary          `json:"runs,omitempty"`
 	Disambiguations *DisambiguationStatus `json:"disambiguations,omitempty"`
+}
+
+// HealthStatus summarizes pipeline health including circuit breaker state
+// and run tracking across ecosystems.
+type HealthStatus struct {
+	Ecosystems           map[string]EcosystemHealth `json:"ecosystems"`
+	LastRun              *RunInfo                   `json:"last_run"`
+	LastSuccessfulRun    *RunInfo                   `json:"last_successful_run"`
+	RunsSinceLastSuccess int                        `json:"runs_since_last_success"`
+	HoursSinceLastRun    int                        `json:"hours_since_last_run"`
+}
+
+// EcosystemHealth represents the circuit breaker state for a single ecosystem.
+type EcosystemHealth struct {
+	BreakerState string `json:"breaker_state"`
+	Failures     int    `json:"failures"`
+	LastFailure  string `json:"last_failure,omitempty"`
+	OpensAt      string `json:"opens_at,omitempty"`
+}
+
+// RunInfo summarizes a single batch run for health tracking purposes.
+type RunInfo struct {
+	BatchID       string `json:"batch_id"`
+	Ecosystem     string `json:"ecosystem"`
+	Timestamp     string `json:"timestamp"`
+	Succeeded     int    `json:"succeeded"`
+	Failed        int    `json:"failed"`
+	Total         int    `json:"total"`
+	RecipesMerged int    `json:"recipes_merged,omitempty"`
 }
 
 // DisambiguationStatus summarizes disambiguation activity across batch runs.
@@ -82,9 +114,11 @@ type Blocker struct {
 // RunSummary summarizes a batch run.
 type RunSummary struct {
 	BatchID   string  `json:"batch_id"`
+	Ecosystem string  `json:"ecosystem,omitempty"`
 	Total     int     `json:"total"`
 	Merged    int     `json:"merged"`
 	Rate      float64 `json:"rate"`
+	Duration  int     `json:"duration,omitempty"`
 	Timestamp string  `json:"timestamp"`
 }
 
@@ -198,7 +232,7 @@ func Generate(opts Options) error {
 	dash.Queue = computeQueueStatus(queue, failureDetails)
 
 	// Load metrics
-	runs, err := loadMetricsFromDir(opts.MetricsDir)
+	runs, metricsRecords, err := loadMetricsFromDir(opts.MetricsDir)
 	if err == nil && len(runs) > 0 {
 		// Take last 10, newest first
 		if len(runs) > 10 {
@@ -209,6 +243,12 @@ func Generate(opts Options) error {
 			runs[i], runs[j] = runs[j], runs[i]
 		}
 		dash.Runs = runs
+	}
+
+	// Load health status
+	health, err := loadHealth(opts.ControlFile, metricsRecords)
+	if err == nil && health != nil {
+		dash.Health = health
 	}
 
 	// Load disambiguations
@@ -401,13 +441,14 @@ func computeTopBlockers(blockers map[string][]string, limit int) []Blocker {
 	return result
 }
 
-func loadMetrics(path string) ([]RunSummary, error) {
+func loadMetrics(path string) ([]RunSummary, []MetricsRecord, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	var runs []RunSummary
+	var records []MetricsRecord
 
 	// Try streaming decoder first for pretty-printed JSON objects
 	decoder := json.NewDecoder(bytes.NewReader(data))
@@ -418,7 +459,7 @@ func loadMetrics(path string) ([]RunSummary, error) {
 				break
 			}
 			// If streaming fails, fall back to line-by-line parsing
-			runs = parseMetricsLineByLine(data)
+			runs, records = parseMetricsLineByLine(data)
 			break
 		}
 
@@ -431,22 +472,26 @@ func loadMetrics(path string) ([]RunSummary, error) {
 			rate = float64(record.Merged) / float64(record.Total)
 		}
 
+		records = append(records, record)
 		runs = append(runs, RunSummary{
 			BatchID:   record.BatchID,
+			Ecosystem: record.Ecosystem,
 			Total:     record.Total,
 			Merged:    record.Merged,
 			Rate:      rate,
+			Duration:  record.DurationSeconds,
 			Timestamp: record.Timestamp,
 		})
 	}
 
-	return runs, nil
+	return runs, records, nil
 }
 
 // parseMetricsLineByLine handles JSONL format where each line is a JSON object.
 // Malformed lines are skipped.
-func parseMetricsLineByLine(data []byte) []RunSummary {
+func parseMetricsLineByLine(data []byte) ([]RunSummary, []MetricsRecord) {
 	var runs []RunSummary
+	var records []MetricsRecord
 	scanner := bufio.NewScanner(bytes.NewReader(data))
 	for scanner.Scan() {
 		line := scanner.Bytes()
@@ -468,15 +513,18 @@ func parseMetricsLineByLine(data []byte) []RunSummary {
 			rate = float64(record.Merged) / float64(record.Total)
 		}
 
+		records = append(records, record)
 		runs = append(runs, RunSummary{
 			BatchID:   record.BatchID,
+			Ecosystem: record.Ecosystem,
 			Total:     record.Total,
 			Merged:    record.Merged,
 			Rate:      rate,
+			Duration:  record.DurationSeconds,
 			Timestamp: record.Timestamp,
 		})
 	}
-	return runs
+	return runs, records
 }
 
 // loadFailuresFromDir aggregates failures across all JSONL files in a directory.
@@ -527,30 +575,32 @@ func loadFailuresFromDir(dir string) (map[string][]string, map[string]int, map[s
 // loadMetricsFromDir aggregates metrics across all JSONL files in a directory.
 // Supports both timestamped files (batch-runs-2026-02-06T14:30:00Z.jsonl) and legacy
 // files (batch-runs.jsonl) for backward compatibility.
-func loadMetricsFromDir(dir string) ([]RunSummary, error) {
+func loadMetricsFromDir(dir string) ([]RunSummary, []MetricsRecord, error) {
 	var allRuns []RunSummary
+	var allRecords []MetricsRecord
 
 	// Glob for all JSONL files that start with "batch-runs"
 	pattern := filepath.Join(dir, "batch-runs*.jsonl")
 	files, err := filepath.Glob(pattern)
 	if err != nil {
-		return nil, fmt.Errorf("glob metrics: %w", err)
+		return nil, nil, fmt.Errorf("glob metrics: %w", err)
 	}
 
 	if len(files) == 0 {
-		return nil, fmt.Errorf("no metrics files found")
+		return nil, nil, fmt.Errorf("no metrics files found")
 	}
 
 	// Aggregate across all files
 	for _, path := range files {
-		runs, err := loadMetrics(path)
+		runs, records, err := loadMetrics(path)
 		if err != nil {
 			continue // Skip files that can't be read
 		}
 		allRuns = append(allRuns, runs...)
+		allRecords = append(allRecords, records...)
 	}
 
-	return allRuns, nil
+	return allRuns, allRecords, nil
 }
 
 // loadDisambiguationsFromDir aggregates disambiguation records across all JSONL files
@@ -636,4 +686,116 @@ func loadDisambiguationFile(path string) ([]DisambiguationRecord, error) {
 	}
 
 	return allRecords, scanner.Err()
+}
+
+// batchControlFile represents the top-level structure of batch-control.json.
+type batchControlFile struct {
+	CircuitBreaker map[string]circuitBreakerState `json:"circuit_breaker"`
+}
+
+// circuitBreakerState represents a single ecosystem's circuit breaker entry.
+type circuitBreakerState struct {
+	State       string `json:"state"`
+	Failures    int    `json:"failures"`
+	LastFailure string `json:"last_failure,omitempty"`
+	OpensAt     string `json:"opens_at,omitempty"`
+}
+
+// loadHealth reads batch-control.json for circuit breaker state and scans
+// metrics records to compute run tracking fields. Returns nil if the control
+// file doesn't exist and no metrics records are available.
+func loadHealth(controlFile string, records []MetricsRecord) (*HealthStatus, error) {
+	var ecosystems map[string]EcosystemHealth
+
+	// Read circuit breaker state from batch-control.json
+	data, err := os.ReadFile(controlFile)
+	if err == nil {
+		var control batchControlFile
+		if err := json.Unmarshal(data, &control); err != nil {
+			return nil, fmt.Errorf("parse control file: %w", err)
+		}
+		ecosystems = make(map[string]EcosystemHealth, len(control.CircuitBreaker))
+		for name, cb := range control.CircuitBreaker {
+			ecosystems[name] = EcosystemHealth{
+				BreakerState: cb.State,
+				Failures:     cb.Failures,
+				LastFailure:  cb.LastFailure,
+				OpensAt:      cb.OpensAt,
+			}
+		}
+	} else if !os.IsNotExist(err) {
+		return nil, fmt.Errorf("read control file: %w", err)
+	}
+
+	// If there are no records and no control file, nothing to report
+	if ecosystems == nil && len(records) == 0 {
+		return nil, nil
+	}
+
+	health := &HealthStatus{
+		Ecosystems: ecosystems,
+	}
+	if health.Ecosystems == nil {
+		health.Ecosystems = make(map[string]EcosystemHealth)
+	}
+
+	if len(records) == 0 {
+		return health, nil
+	}
+
+	// Sort records by timestamp to find last run and last successful run.
+	// Work on a copy to avoid mutating the caller's slice.
+	sorted := make([]MetricsRecord, len(records))
+	copy(sorted, records)
+	sort.Slice(sorted, func(i, j int) bool {
+		return sorted[i].Timestamp < sorted[j].Timestamp
+	})
+
+	// Last run is the most recent record
+	last := sorted[len(sorted)-1]
+	health.LastRun = metricsToRunInfo(last)
+
+	// Compute hours since last run
+	if ts, err := time.Parse(time.RFC3339, last.Timestamp); err == nil {
+		hours := int(time.Since(ts).Hours())
+		if hours < 0 {
+			hours = 0
+		}
+		health.HoursSinceLastRun = hours
+	}
+
+	// Find last successful run (merged > 0) and count runs since
+	runsSince := 0
+	for i := len(sorted) - 1; i >= 0; i-- {
+		rec := sorted[i]
+		if rec.Merged > 0 {
+			health.LastSuccessfulRun = metricsToRunInfo(rec)
+			health.RunsSinceLastSuccess = runsSince
+			break
+		}
+		runsSince++
+	}
+	// If no successful run found, runs_since_last_success = total records
+	if health.LastSuccessfulRun == nil {
+		health.RunsSinceLastSuccess = len(sorted)
+	}
+
+	return health, nil
+}
+
+// metricsToRunInfo converts a MetricsRecord into a RunInfo.
+func metricsToRunInfo(rec MetricsRecord) *RunInfo {
+	failed := rec.Total - rec.Merged
+	if failed < 0 {
+		failed = 0
+	}
+	return &RunInfo{
+		BatchID:       rec.BatchID,
+		Ecosystem:     rec.Ecosystem,
+		Timestamp:     rec.Timestamp,
+		Succeeded:     rec.Merged,
+		Failed:        failed,
+		Total:         rec.Total,
+		RecipesMerged: rec.Merged,
+	}
 }

@@ -13,6 +13,7 @@ func main() {
 	failuresDir := flag.String("failures-dir", "data/failures", "directory containing failures JSONL files")
 	metricsDir := flag.String("metrics-dir", "data/metrics", "directory containing metrics JSONL files")
 	disambiguationsDir := flag.String("disambiguations-dir", "data/disambiguations", "directory containing disambiguation JSONL files")
+	controlFile := flag.String("control-file", "batch-control.json", "path to batch-control.json for circuit breaker state")
 	output := flag.String("output", "website/pipeline/dashboard.json", "output file path")
 	flag.Parse()
 
@@ -21,6 +22,7 @@ func main() {
 		FailuresDir:        *failuresDir,
 		MetricsDir:         *metricsDir,
 		DisambiguationsDir: *disambiguationsDir,
+		ControlFile:        *controlFile,
 		OutputFile:         *output,
 	}
 
