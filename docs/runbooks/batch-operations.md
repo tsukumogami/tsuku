@@ -384,7 +384,99 @@ git push
 
 ---
 
-## 6. Bootstrap Phase B: Multi-Ecosystem Disambiguation
+## 6. Seeding Pipeline Operations
+
+### Decision Tree
+
+- Weekly run succeeded (exit 0): no action needed
+- Partial failure (exit 2): check `sources_failed` and `errors` in the summary
+- Fatal failure (exit 1): check workflow logs for queue read/write errors
+- Source change issues created: review and close after resolution
+
+### Source Change Review
+
+The weekly `seed-queue.yml` workflow creates GitHub issues with the `seeding:review` label when re-disambiguation selects a different source for priority 1-2 packages. These are not auto-accepted because changing the source for high-priority tools requires human verification.
+
+1. List open source change issues:
+
+   ```bash
+   gh issue list --label seeding:review --state open
+   ```
+
+2. For each issue, verify the proposed source change makes sense. The issue body includes the package name, old source, new source, and priority level.
+
+3. To accept a source change, update the queue entry's source and reset its failure state:
+
+   ```bash
+   # Find the entry and update its source
+   jq '(.entries[] | select(.name == "<package>")).source = "<new-source>"' \
+     data/queues/priority-queue.json > tmp.json && mv tmp.json data/queues/priority-queue.json
+   ```
+
+4. Close the issue after applying or rejecting the change.
+
+### Failure Investigation
+
+When the seeding workflow exits with code 2 (partial failure), check the summary:
+
+```bash
+# Download the summary artifact from the workflow run
+gh run download <run-id> -n seeding-summary
+
+# Check which sources failed
+jq '.sources_failed' seeding-summary.json
+
+# Check error details
+jq '.errors' seeding-summary.json
+```
+
+Common causes:
+- **Ecosystem API outage**: The affected ecosystem's API returned errors. The other ecosystems still processed successfully. No action needed unless the outage persists across multiple runs.
+- **Rate limiting**: An ecosystem hit its rate limit. The command respects per-ecosystem rate limits internally but external throttling can still occur. Typically resolves on the next run.
+- **Network timeout**: Transient connectivity issue. Check if the next scheduled run succeeds.
+
+### Curated Source Validation
+
+Entries with `confidence: "curated"` are never re-disambiguated, but the workflow validates that their sources still exist via HTTP HEAD requests. Invalid curated sources appear in the summary:
+
+```bash
+jq '.curated_invalid' seeding-summary.json
+```
+
+If a curated source is invalid (the upstream package was removed or renamed), update the queue entry manually:
+
+```bash
+# Check what the entry currently looks like
+jq '.entries[] | select(.name == "<package>")' data/queues/priority-queue.json
+
+# Either remove the entry or update its source
+```
+
+### Interpreting the Seeding Summary
+
+The JSON summary written to stdout contains these fields:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `sources_processed` | string[] | Ecosystems that completed successfully |
+| `sources_failed` | string[] | Ecosystems that encountered errors |
+| `new_packages` | number | New packages added to the queue |
+| `stale_refreshed` | number | Stale entries that were re-disambiguated |
+| `source_changes` | object[] | Entries where re-disambiguation selected a different source |
+| `curated_skipped` | number | Curated entries that were skipped |
+| `curated_invalid` | string[] | Curated entries with invalid upstream sources |
+| `errors` | string[] | Error messages from failed operations |
+
+Each `source_changes` entry contains: `package`, `old_source`, `new_source`, `priority`, and `auto_accepted` (true for priority 3, false for priority 1-2).
+
+### Escalation
+
+- If the same ecosystem fails across 3+ consecutive weekly runs, open an issue to investigate the upstream API.
+- If `curated_invalid` grows beyond 10 entries, review whether the curation list needs a bulk update.
+
+---
+
+## 7. Bootstrap Phase B: Multi-Ecosystem Disambiguation
 
 ### Context
 
