@@ -68,7 +68,7 @@ Planned
 | _Compare local model recipe quality against Claude/Gemini baselines. Document quality expectations per hardware profile._ | | |
 | ~~[#1642: feat(llm): add download permission prompts and progress UX](https://github.com/tsukumogami/tsuku/issues/1642)~~ | [#1629](https://github.com/tsukumogami/tsuku/issues/1629), [#1637](https://github.com/tsukumogami/tsuku/issues/1637) | simple |
 | _Prompt user before addon/model downloads. Show progress bars during downloads and spinner during inference._ | | |
-| [#1643: feat(llm): implement tsuku llm download command](https://github.com/tsukumogami/tsuku/issues/1643) | [#1629](https://github.com/tsukumogami/tsuku/issues/1629), [#1637](https://github.com/tsukumogami/tsuku/issues/1637) | simple |
+| ~~[#1643: feat(llm): implement tsuku llm download command](https://github.com/tsukumogami/tsuku/issues/1643)~~ | [#1629](https://github.com/tsukumogami/tsuku/issues/1629), [#1637](https://github.com/tsukumogami/tsuku/issues/1637) | simple |
 | _CLI command to pre-download addon and models for CI/offline use. Hardware detection selects appropriate model._ | | |
 | [#1644: test(llm): add end-to-end integration test without cloud keys](https://github.com/tsukumogami/tsuku/issues/1644) | [#1640](https://github.com/tsukumogami/tsuku/issues/1640), [#1632](https://github.com/tsukumogami/tsuku/issues/1632) | testable |
 | _Test creates recipe using local inference with no cloud API keys configured. Validates full flow from factory fallback to recipe output._ | | |
@@ -104,7 +104,7 @@ graph TD
     subgraph M3["Production Ready"]
         I1641["#1641: Quality benchmark ✓"]
         I1642["#1642: Download UX ✓"]
-        I1643["#1643: llm download cmd"]
+        I1643["#1643: llm download cmd ✓"]
         I1644["#1644: E2E test"]
         I1645["#1645: Documentation"]
     end
@@ -146,8 +146,8 @@ graph TD
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1628,I1629,I1630,I1631,I1632,I1633,I1634,I1635,I1636,I1637,I1638,I1672,I1675,I1676,I1639,I1640,I1641,I1642 done
-    class I1643,I1644,I1645 ready
+    class I1628,I1629,I1630,I1631,I1632,I1633,I1634,I1635,I1636,I1637,I1638,I1672,I1675,I1676,I1639,I1640,I1641,I1642,I1643 done
+    class I1644,I1645 ready
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
