@@ -1,5 +1,5 @@
 ---
-status: Planned
+status: Current
 problem: |
   The pipeline dashboard shows aggregate failure counts but can't answer "why did
   this package fail?" Operators spend 3-5 minutes per failure digging through JSONL
@@ -31,7 +31,7 @@ rationale: |
 
 ## Status
 
-Planned
+Current
 
 ## Implementation Issues
 
