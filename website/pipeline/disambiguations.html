@@ -23,31 +23,29 @@
 
         .filter-bar {
             display: flex;
-            gap: 0.5rem;
+            gap: 0.75rem;
             margin-bottom: 1rem;
             flex-wrap: wrap;
+            align-items: center;
         }
 
-        .filter-btn {
-            padding: 0.4rem 0.8rem;
+        .filter-bar label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .filter-bar select {
+            padding: 0.4rem 0.6rem;
             border: 1px solid var(--border);
             border-radius: 4px;
             background: var(--bg);
-            color: var(--text-muted);
-            cursor: pointer;
-            font-size: 0.85rem;
-            text-decoration: none;
-        }
-
-        .filter-btn:hover {
-            border-color: var(--accent);
             color: var(--text);
+            font-size: 0.85rem;
+            cursor: pointer;
         }
 
-        .filter-btn.active {
-            background: var(--accent);
+        .filter-bar select:hover {
             border-color: var(--accent);
-            color: #000;
         }
 
         .filter-description {
@@ -86,6 +84,20 @@
             border-bottom: none;
         }
 
+        .package-table tbody tr {
+            cursor: pointer;
+            transition: background 0.15s ease;
+        }
+
+        .package-table tbody tr:hover {
+            background: var(--bg);
+        }
+
+        .package-table tbody tr a {
+            color: inherit;
+            text-decoration: none;
+        }
+
         .tool-name {
             font-family: "SF Mono", Consolas, monospace;
             font-weight: 600;
@@ -118,6 +130,42 @@
             font-size: 0.85rem;
             color: var(--text-muted);
             font-family: "SF Mono", Consolas, monospace;
+        }
+
+        .summary-chips {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-top: 1.5rem;
+        }
+
+        .summary-chips h3 {
+            width: 100%;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin: 0 0 0.25rem 0;
+        }
+
+        .chip {
+            display: inline-block;
+            padding: 0.3rem 0.7rem;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .chip:hover {
+            border-color: var(--accent);
+            color: var(--text);
+        }
+
+        .chip.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #000;
         }
 
         .loading {
@@ -192,9 +240,8 @@
             return div.innerHTML;
         }
 
-        // Get filter from URL
-        const params = new URLSearchParams(window.location.search);
-        const filterReason = params.get('reason');
+        let allDisambiguations = [];
+        let allByReason = {};
 
         // Descriptions for each selection reason
         const reasonDescriptions = {
@@ -204,100 +251,209 @@
             'priority_fallback': 'Selected based on ecosystem priority order. May need review if alternatives are close in popularity.'
         };
 
+        function getParams() {
+            const params = new URLSearchParams(window.location.search);
+            return {
+                status: params.get('status') || '',
+                reason: params.get('reason') || ''
+            };
+        }
+
+        function updateURL(filters) {
+            const params = new URLSearchParams();
+            if (filters.status) params.set('status', filters.status);
+            if (filters.reason) params.set('reason', filters.reason);
+            const qs = params.toString();
+            const url = window.location.pathname + (qs ? '?' + qs : '');
+            history.pushState(null, '', url);
+        }
+
+        function collectStatuses(disambiguations) {
+            // Derive status from high_risk flag: "needs_review" or "ok"
+            const vals = new Set();
+            disambiguations.forEach(d => {
+                vals.add(d.high_risk ? 'needs_review' : 'ok');
+            });
+            return Array.from(vals).sort();
+        }
+
+        function collectReasons(disambiguations) {
+            const vals = new Set();
+            disambiguations.forEach(d => { if (d.selection_reason) vals.add(d.selection_reason); });
+            return Array.from(vals).sort();
+        }
+
+        function applyFilters(disambiguations, filters) {
+            return disambiguations.filter(d => {
+                if (filters.status) {
+                    var itemStatus = d.high_risk ? 'needs_review' : 'ok';
+                    if (itemStatus !== filters.status) return false;
+                }
+                if (filters.reason && d.selection_reason !== filters.reason) return false;
+                return true;
+            });
+        }
+
         function renderDescription(filter) {
             if (!filter) {
-                return `<p class="filter-description">When a tool name exists in multiple package registries, tsuku must decide which source to use. Select a category above to see its meaning.</p>`;
+                return '<p class="filter-description">When a tool name exists in multiple package registries, tsuku must decide which source to use. Filter by reason or status above.</p>';
             }
-            const desc = reasonDescriptions[filter] || 'Unknown selection reason.';
-            return `<p class="filter-description"><span class="reason-badge reason-${esc(filter)}">${esc(filter)}</span> ${desc}</p>`;
+            var desc = reasonDescriptions[filter] || 'Unknown selection reason.';
+            return '<p class="filter-description"><span class="reason-badge reason-' + esc(filter) + '">' + esc(filter) + '</span> ' + desc + '</p>';
         }
 
-        function renderFilters(byReason, activeFilter) {
-            const reasons = Object.keys(byReason).sort();
-            if (reasons.length === 0) return '';
+        function renderFilters(disambiguations, filters) {
+            var statuses = collectStatuses(disambiguations);
+            var reasons = collectReasons(disambiguations);
 
-            const allActive = !activeFilter ? 'active' : '';
-            let html = `<a href="?#" class="filter-btn ${allActive}">All</a>`;
+            function opts(values, selected) {
+                return values.map(v =>
+                    '<option value="' + esc(v) + '"' + (v === selected ? ' selected' : '') + '>' + esc(v) + '</option>'
+                ).join('');
+            }
 
-            reasons.forEach(reason => {
-                const active = activeFilter === reason ? 'active' : '';
-                const count = byReason[reason];
-                html += `<a href="?reason=${encodeURIComponent(reason)}" class="filter-btn ${active}">${esc(reason)} (${count})</a>`;
+            return '<div class="filter-bar">' +
+                '<label>Status: ' +
+                    '<select id="filter-status">' +
+                        '<option value="">All</option>' +
+                        opts(statuses, filters.status) +
+                    '</select>' +
+                '</label>' +
+                '<label>Reason: ' +
+                    '<select id="filter-reason">' +
+                        '<option value="">All</option>' +
+                        opts(reasons, filters.reason) +
+                    '</select>' +
+                '</label>' +
+            '</div>';
+        }
+
+        function renderReasonChips(disambiguations, activeReason) {
+            var counts = {};
+            disambiguations.forEach(function(d) {
+                var r = d.selection_reason || 'unknown';
+                counts[r] = (counts[r] || 0) + 1;
             });
 
-            return `<div class="filter-bar">${html}</div>`;
+            var sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+            if (sorted.length === 0) return '';
+
+            var html = '<div class="summary-chips"><h3>By Reason</h3>';
+            sorted.forEach(function(entry) {
+                var reason = entry[0];
+                var count = entry[1];
+                var active = reason === activeReason ? ' active' : '';
+                html += '<a href="?reason=' + encodeURIComponent(reason) + '" class="chip' + active + '" data-reason="' + esc(reason) + '">' +
+                    esc(reason) + ' (' + count + ')</a>';
+            });
+            html += '</div>';
+            return html;
         }
 
-        function renderDisambiguations(disambiguations, byReason, filter) {
+        function renderDisambiguations(disambiguations, filters) {
             if (!disambiguations || disambiguations.length === 0) {
                 return '<div class="loading">No disambiguation data available</div>';
             }
 
-            // Filter if reason specified
-            let filtered = disambiguations;
-            if (filter) {
-                filtered = disambiguations.filter(d => d.selection_reason === filter);
-            }
+            var filtered = applyFilters(disambiguations, filters);
+            var filterHTML = renderFilters(disambiguations, filters);
 
             if (filtered.length === 0) {
-                return renderFilters(byReason, filter) + '<div class="loading">No disambiguations match this filter</div>';
+                return filterHTML + renderDescription(filters.reason) +
+                    '<div class="loading">No disambiguations match the current filters</div>' +
+                    renderReasonChips(disambiguations, filters.reason);
             }
 
-            const rows = filtered.map(d => {
-                const reasonClass = `reason-${esc(d.selection_reason)}`;
-                const highRisk = d.high_risk ? '<span class="high-risk"> (needs review)</span>' : '';
-                const alternatives = d.alternatives && d.alternatives.length > 0
+            var rows = filtered.map(function(d) {
+                var reasonClass = 'reason-' + esc(d.selection_reason);
+                var highRisk = d.high_risk ? '<span class="high-risk"> (needs review)</span>' : '';
+                var alternatives = d.alternatives && d.alternatives.length > 0
                     ? d.alternatives.map(a => esc(a)).join(', ')
                     : '-';
 
-                return `
-                    <tr>
-                        <td class="tool-name">${esc(d.tool)}</td>
-                        <td class="source">${esc(d.selected)}</td>
-                        <td><span class="reason-badge ${reasonClass}">${esc(d.selection_reason)}</span>${highRisk}</td>
-                        <td class="alternatives">${alternatives}</td>
-                    </tr>
-                `;
+                return '<tr onclick="window.location=\'package.html?id=' + encodeURIComponent(d.selected) + '\'">' +
+                    '<td class="tool-name"><a href="package.html?id=' + encodeURIComponent(d.selected) + '">' + esc(d.tool) + '</a></td>' +
+                    '<td class="source">' + esc(d.selected) + '</td>' +
+                    '<td><span class="reason-badge ' + reasonClass + '">' + esc(d.selection_reason) + '</span>' + highRisk + '</td>' +
+                    '<td class="alternatives">' + alternatives + '</td>' +
+                '</tr>';
             }).join('');
 
-            return `
-                ${renderFilters(byReason, filter)}
-                ${renderDescription(filter)}
-                <div class="package-list">
-                    <h2>${filtered.length} disambiguation${filtered.length !== 1 ? 's' : ''}</h2>
-                    <table class="package-table">
-                        <thead>
-                            <tr>
-                                <th>Tool</th>
-                                <th>Selected Source</th>
-                                <th>Reason</th>
-                                <th>Alternatives</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${rows}
-                        </tbody>
-                    </table>
-                </div>
-            `;
+            return filterHTML +
+                renderDescription(filters.reason) +
+                '<div class="package-list">' +
+                    '<h2>' + filtered.length + ' disambiguation' + (filtered.length !== 1 ? 's' : '') + '</h2>' +
+                    '<table class="package-table">' +
+                        '<thead>' +
+                            '<tr>' +
+                                '<th>Tool</th>' +
+                                '<th>Selected Source</th>' +
+                                '<th>Reason</th>' +
+                                '<th>Alternatives</th>' +
+                            '</tr>' +
+                        '</thead>' +
+                        '<tbody>' +
+                            rows +
+                        '</tbody>' +
+                    '</table>' +
+                '</div>' +
+                renderReasonChips(disambiguations, filters.reason);
         }
+
+        function render() {
+            var filters = getParams();
+            var content = document.getElementById('content');
+            content.innerHTML = renderDisambiguations(allDisambiguations, filters);
+
+            // Bind filter change handlers
+            var statusSelect = document.getElementById('filter-status');
+            var reasonSelect = document.getElementById('filter-reason');
+            if (statusSelect) statusSelect.addEventListener('change', onFilterChange);
+            if (reasonSelect) reasonSelect.addEventListener('change', onFilterChange);
+
+            // Bind chip clicks
+            var chips = document.querySelectorAll('.chip[data-reason]');
+            chips.forEach(function(chip) {
+                chip.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    var reason = this.getAttribute('data-reason');
+                    var filters = getParams();
+                    filters.reason = (filters.reason === reason) ? '' : reason;
+                    updateURL(filters);
+                    render();
+                });
+            });
+        }
+
+        function onFilterChange() {
+            var filters = {
+                status: document.getElementById('filter-status').value,
+                reason: document.getElementById('filter-reason').value
+            };
+            updateURL(filters);
+            render();
+        }
+
+        window.addEventListener('popstate', function() {
+            render();
+        });
 
         async function load() {
             try {
-                const response = await fetch('/pipeline/dashboard.json');
-                const data = await response.json();
+                var response = await fetch('/pipeline/dashboard.json');
+                var data = await response.json();
 
                 if (!data.disambiguations) {
                     document.getElementById('content').innerHTML = '<div class="loading">No disambiguation data available</div>';
                     return;
                 }
 
-                const byReason = data.disambiguations.by_reason || {};
-                const disambiguations = data.disambiguations.entries || [];
+                allByReason = data.disambiguations.by_reason || {};
+                allDisambiguations = data.disambiguations.entries || [];
 
-                document.getElementById('content').innerHTML = renderDisambiguations(disambiguations, byReason, filterReason);
+                render();
             } catch (error) {
-                document.getElementById('content').innerHTML = `<div class="loading">Error loading data: ${esc(error.message)}</div>`;
+                document.getElementById('content').innerHTML = '<div class="loading">Error loading data: ' + esc(error.message) + '</div>';
             }
         }
 

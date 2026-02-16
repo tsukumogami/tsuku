@@ -107,12 +107,14 @@ type QueueStatus struct {
 
 // PackageInfo contains details about a package for display.
 type PackageInfo struct {
-	ID        string   `json:"id"`
-	Name      string   `json:"name"`
-	Ecosystem string   `json:"ecosystem"`
-	Priority  int      `json:"priority"`
-	Category  string   `json:"category,omitempty"`   // For failed packages
-	BlockedBy []string `json:"blocked_by,omitempty"` // For blocked packages
+	ID           string   `json:"id"`
+	Name         string   `json:"name"`
+	Ecosystem    string   `json:"ecosystem"`
+	Priority     int      `json:"priority"`
+	Category     string   `json:"category,omitempty"`      // For failed packages
+	BlockedBy    []string `json:"blocked_by,omitempty"`    // For blocked packages
+	FailureCount int      `json:"failure_count"`           // Consecutive failures from unified queue
+	NextRetryAt  string   `json:"next_retry_at,omitempty"` // Earliest retry time (ISO 8601)
 }
 
 // Blocker represents a dependency blocking packages.
@@ -343,11 +345,17 @@ func computeQueueStatus(queue *batch.UnifiedQueue, failureDetails map[string]Fai
 		// Build package info with failure details if available.
 		// ID is constructed as "ecosystem:name" to match failure detail keys.
 		id := entry.Source
+		var nextRetry string
+		if entry.NextRetryAt != nil {
+			nextRetry = entry.NextRetryAt.Format("2006-01-02T15:04:05Z")
+		}
 		info := PackageInfo{
-			ID:        id,
-			Name:      entry.Name,
-			Ecosystem: entry.Ecosystem(),
-			Priority:  entry.Priority,
+			ID:           id,
+			Name:         entry.Name,
+			Ecosystem:    entry.Ecosystem(),
+			Priority:     entry.Priority,
+			FailureCount: entry.FailureCount,
+			NextRetryAt:  nextRetry,
 		}
 
 		if details, ok := failureDetails[id]; ok {
