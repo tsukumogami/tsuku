@@ -87,7 +87,14 @@ func newBenchmarkRunner(provider Provider) *benchmarkRunner {
 func (r *benchmarkRunner) runTestCase(t *testing.T, testID string, tc benchmarkTestDef) BenchmarkResult {
 	t.Helper()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
+	// Use a generous timeout for local models which may be slower.
+	timeout := 3 * time.Minute
+	if os.Getenv("LLM_BENCHMARK_TIMEOUT") != "" {
+		if d, err := time.ParseDuration(os.Getenv("LLM_BENCHMARK_TIMEOUT")); err == nil {
+			timeout = d
+		}
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
 	start := time.Now()
