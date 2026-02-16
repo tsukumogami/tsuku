@@ -196,6 +196,177 @@
             margin: 0 0.5rem;
         }
 
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .panel-header h2 {
+            margin-bottom: 0;
+        }
+
+        .panel-header .view-all {
+            font-size: 0.8rem;
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .panel-header .view-all:hover {
+            text-decoration: underline;
+        }
+
+        .health-grid {
+            display: grid;
+            grid-template-columns: 120px 1fr;
+            gap: 0.5rem 1rem;
+            align-items: center;
+            font-size: 0.85rem;
+        }
+
+        .health-label {
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .health-value a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .health-value a:hover {
+            text-decoration: underline;
+        }
+
+        .breaker-badge {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #000;
+        }
+
+        .breaker-closed { background: #3fb950; }
+        .breaker-open { background: #f85149; color: #fff; }
+        .breaker-half-open { background: #d29922; }
+
+        .eco-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .eco-badge-link {
+            text-decoration: none;
+        }
+
+        .health-warning {
+            background: #d29922;
+            color: #000;
+            padding: 0.5rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-top: 0.75rem;
+        }
+
+        .failures-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        .failures-table th,
+        .failures-table td {
+            text-align: left;
+            padding: 0.4rem 0.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .failures-table th {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        .failures-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .failures-table tbody tr {
+            cursor: pointer;
+            transition: background 0.15s ease;
+        }
+
+        .failures-table tbody tr:hover {
+            background: var(--bg);
+        }
+
+        .failures-table a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .failures-table .pkg-name {
+            font-family: "SF Mono", Consolas, monospace;
+        }
+
+        .failures-table .time-ago {
+            color: var(--text-muted);
+        }
+
+        .subcategory-indent {
+            padding-left: 1.5rem;
+            font-size: 0.8rem;
+        }
+
+        .curated-stats {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .curated-stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 80px;
+        }
+
+        .curated-stat .stat-value {
+            font-size: 1.4rem;
+            font-weight: 700;
+        }
+
+        .curated-stat .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .curated-stat .stat-valid { color: #3fb950; }
+        .curated-stat .stat-invalid { color: #f85149; }
+
+        .invalid-badge {
+            display: inline-block;
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            background: #f85149;
+            color: #fff;
+            margin-left: 0.25rem;
+            vertical-align: middle;
+        }
+
+        .run-ecosystem {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-left: 0.25rem;
+        }
+
         @media (max-width: 600px) {
             .panels {
                 grid-template-columns: 1fr;
@@ -271,9 +442,87 @@
             return 'bad';
         }
 
+        function timeAgo(isoString) {
+            if (!isoString) return '';
+            const now = Date.now();
+            const then = new Date(isoString).getTime();
+            const diffMs = now - then;
+            if (diffMs < 0) return 'just now';
+            const minutes = Math.floor(diffMs / 60000);
+            if (minutes < 1) return 'just now';
+            if (minutes < 60) return minutes + 'm ago';
+            const hours = Math.floor(minutes / 60);
+            if (hours < 24) return hours + 'h ago';
+            const days = Math.floor(hours / 24);
+            return days + 'd ago';
+        }
+
         function renderDashboard(data) {
             const container = document.getElementById('dashboard-content');
             const total = data.queue.total || 1;
+
+            // Render Pipeline Health panel
+            let healthPanel = '';
+            const health = data.health;
+            if (health) {
+                // Circuit breaker badges per ecosystem
+                const ecoEntries = Object.entries(health.ecosystems || {});
+                const ecoBadges = ecoEntries.map(([eco, info]) => {
+                    const state = info.breaker_state || 'unknown';
+                    let badgeClass = 'breaker-closed';
+                    if (state === 'open') badgeClass = 'breaker-open';
+                    else if (state === 'half-open') badgeClass = 'breaker-half-open';
+                    return `<a href="/pipeline/failures.html?ecosystem=${encodeURIComponent(eco)}" class="eco-badge-link">
+                        <span class="breaker-badge ${badgeClass}">${esc(eco)}: ${esc(state)}</span>
+                    </a>`;
+                }).join('');
+
+                // Last run info
+                let lastRunHtml = '<span class="health-value" style="color: var(--text-muted);">N/A</span>';
+                if (health.last_run) {
+                    const lr = health.last_run;
+                    lastRunHtml = `<span class="health-value"><a href="/pipeline/run.html?id=${encodeURIComponent(lr.batch_id)}">${esc(timeAgo(lr.timestamp))} - ${esc(lr.succeeded)}/${esc(lr.total)} succeeded</a></span>`;
+                }
+
+                // Last success info
+                let lastSuccessHtml = '<span class="health-value" style="color: var(--text-muted);">N/A</span>';
+                if (health.last_successful_run) {
+                    const ls = health.last_successful_run;
+                    lastSuccessHtml = `<span class="health-value"><a href="/pipeline/run.html?id=${encodeURIComponent(ls.batch_id)}">${esc(timeAgo(ls.timestamp))} - ${esc(ls.recipes_merged || 0)} merged</a></span>`;
+                }
+
+                // Runs since last success
+                let runsSinceHtml = `<span class="health-value"><a href="/pipeline/runs.html?since_success=true">${esc(health.runs_since_last_success)}</a></span>`;
+
+                // Warning if hours_since_last_run > 2
+                let warningHtml = '';
+                if (health.hours_since_last_run > 2) {
+                    warningHtml = `<div class="health-warning">No run in ${esc(health.hours_since_last_run)} hours</div>`;
+                }
+
+                healthPanel = `
+                    <div class="panel">
+                        <h2>Pipeline Health</h2>
+                        ${ecoEntries.length > 0 ? `<div class="eco-badges">${ecoBadges}</div>` : ''}
+                        <div class="health-grid">
+                            <span class="health-label">Last Run</span>
+                            ${lastRunHtml}
+                            <span class="health-label">Last Success</span>
+                            ${lastSuccessHtml}
+                            <span class="health-label">Runs Since</span>
+                            ${runsSinceHtml}
+                        </div>
+                        ${warningHtml}
+                    </div>
+                `;
+            } else {
+                healthPanel = `
+                    <div class="panel">
+                        <h2>Pipeline Health</h2>
+                        <div class="no-data">No health data available</div>
+                    </div>
+                `;
+            }
 
             // Calculate status percentages
             const statusOrder = ['pending', 'success', 'failed', 'blocked'];
@@ -295,7 +544,7 @@
             const blockerItems = (data.blockers || []).slice(0, 10).map(b => `
                 <a href="/pipeline/blocked.html?blocker=${encodeURIComponent(b.dependency)}" class="status-row">
                     <span class="blocker-name">${esc(b.dependency)}</span>
-                    <span class="blocker-count">${b.count} blocked</span>
+                    <span class="blocker-count">${esc(b.count)} blocked</span>
                 </a>
             `).join('') || '<div class="no-data">No blocking dependencies</div>';
 
@@ -306,22 +555,128 @@
                 const cat = pkg.category || 'unknown';
                 failuresByCategory[cat] = (failuresByCategory[cat] || 0) + 1;
             });
+
+            // Build subcategory breakdown from failure_details
+            const failureDetails = data.failure_details || [];
+            const subcatByCategory = {};
+            failureDetails.forEach(fd => {
+                const cat = fd.category || 'unknown';
+                if (!subcatByCategory[cat]) subcatByCategory[cat] = {};
+                if (fd.subcategory) {
+                    subcatByCategory[cat][fd.subcategory] = (subcatByCategory[cat][fd.subcategory] || 0) + 1;
+                }
+            });
+
             const failureItems = Object.entries(failuresByCategory)
                 .sort((a, b) => b[1] - a[1])
-                .map(([cat, count]) => `
-                    <a href="/pipeline/failed.html?category=${encodeURIComponent(cat)}" class="status-row">
-                        <span class="blocker-name">${esc(cat)}</span>
-                        <span class="blocker-count">${count}</span>
-                    </a>
-                `).join('') || '<div class="no-data">No current failures</div>';
+                .map(([cat, count]) => {
+                    let subcatHtml = '';
+                    const subcats = subcatByCategory[cat];
+                    if (subcats) {
+                        subcatHtml = Object.entries(subcats)
+                            .sort((a, b) => b[1] - a[1])
+                            .map(([subcat, subcount]) => `
+                                <a href="/pipeline/failures.html?category=${encodeURIComponent(cat)}&subcategory=${encodeURIComponent(subcat)}" class="status-row subcategory-indent">
+                                    <span class="blocker-name" style="font-size: 0.8rem;">${esc(subcat)}</span>
+                                    <span class="blocker-count">${subcount}</span>
+                                </a>
+                            `).join('');
+                    }
+                    return `
+                        <a href="/pipeline/failures.html?category=${encodeURIComponent(cat)}" class="status-row">
+                            <span class="blocker-name">${esc(cat)}</span>
+                            <span class="blocker-count">${count}</span>
+                        </a>
+                        ${subcatHtml}
+                    `;
+                }).join('') || '<div class="no-data">No current failures</div>';
 
-            // Render recent runs (clickable, link to runs.html)
+            // Render recent runs (clickable, link to run.html?id=)
             const runItems = (data.runs || []).slice(0, 10).map(run => `
-                <a href="/pipeline/runs.html" class="run-item status-row">
-                    <span class="run-id">${esc(run.batch_id)}</span>
-                    <span class="run-rate ${rateClass(run.rate)}">${run.merged}/${run.total} (${formatPercent(run.rate)})</span>
+                <a href="/pipeline/run.html?id=${encodeURIComponent(run.batch_id)}" class="run-item status-row">
+                    <span class="run-id">${esc(run.batch_id)}${run.ecosystem ? `<span class="run-ecosystem">${esc(run.ecosystem)}</span>` : ''}</span>
+                    <span class="run-rate ${rateClass(run.rate)}">${esc(run.merged)}/${esc(run.total)} (${esc(formatPercent(run.rate))})</span>
                 </a>
             `).join('') || '<div class="no-data">No batch runs recorded yet</div>';
+
+            // Render Recent Failures panel
+            let recentFailuresPanel = '';
+            if (failureDetails.length > 0) {
+                const recentFive = failureDetails.slice(0, 5);
+                const failureRows = recentFive.map(fd => `
+                    <tr onclick="location.href='/pipeline/failure.html?id=${encodeURIComponent(fd.id)}'">
+                        <td><a href="/pipeline/failure.html?id=${encodeURIComponent(fd.id)}"><span class="pkg-name">${esc(fd.package)}</span></a></td>
+                        <td><a href="/pipeline/failure.html?id=${encodeURIComponent(fd.id)}">${esc(fd.category)}${fd.subcategory ? ' / ' + esc(fd.subcategory) : ''}</a></td>
+                        <td><a href="/pipeline/failure.html?id=${encodeURIComponent(fd.id)}"><span class="time-ago">${esc(timeAgo(fd.timestamp))}</span></a></td>
+                    </tr>
+                `).join('');
+                recentFailuresPanel = `
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h2>Recent Failures</h2>
+                            <a href="/pipeline/failures.html" class="view-all">View all</a>
+                        </div>
+                        <table class="failures-table">
+                            <thead>
+                                <tr>
+                                    <th>Package</th>
+                                    <th>Category</th>
+                                    <th>Time</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${failureRows}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            } else {
+                recentFailuresPanel = `
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h2>Recent Failures</h2>
+                            <a href="/pipeline/failures.html" class="view-all">View all</a>
+                        </div>
+                        <div class="no-data">No recent failures</div>
+                    </div>
+                `;
+            }
+
+            // Render Curated Overrides panel
+            let curatedPanel = '';
+            const curated = data.curated || [];
+            if (curated.length > 0) {
+                const totalCount = curated.length;
+                const invalidCount = curated.filter(c => c.validation_status === 'invalid').length;
+                const validCount = curated.filter(c => c.validation_status === 'valid').length;
+                const invalidBadge = invalidCount > 0 ? `<span class="invalid-badge">${invalidCount} invalid</span>` : '';
+                curatedPanel = `
+                    <div class="panel">
+                        <h2><a href="/pipeline/curated.html" style="color: inherit; text-decoration: none;">Curated Overrides</a> ${invalidBadge}</h2>
+                        <div class="curated-stats">
+                            <div class="curated-stat">
+                                <span class="stat-value">${totalCount}</span>
+                                <span class="stat-label">Total</span>
+                            </div>
+                            <div class="curated-stat">
+                                <span class="stat-value stat-valid">${validCount}</span>
+                                <span class="stat-label">Valid</span>
+                            </div>
+                            <div class="curated-stat">
+                                <span class="stat-value ${invalidCount > 0 ? 'stat-invalid' : ''}">${invalidCount}</span>
+                                <span class="stat-label">Invalid</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                curatedPanel = `
+                    <div class="panel">
+                        <h2>Curated Overrides</h2>
+                        <div class="no-data">No curated overrides</div>
+                    </div>
+                `;
+            }
 
             // Render disambiguation stats
             let disambiguationPanel = '';
@@ -364,6 +719,8 @@
                 </div>
 
                 <div class="panels">
+                    ${healthPanel}
+
                     <div class="panel">
                         <h2>Queue Status (${data.queue.total} packages)</h2>
                         <div class="status-bars">
@@ -379,11 +736,16 @@
                     </div>
 
                     <div class="panel">
-                        <h2>Failure Categories</h2>
+                        <div class="panel-header">
+                            <h2>Failure Categories</h2>
+                            <a href="/pipeline/failures.html" class="view-all">View all</a>
+                        </div>
                         <div class="blocker-list">
                             ${failureItems}
                         </div>
                     </div>
+
+                    ${recentFailuresPanel}
 
                     <div class="panel">
                         <h2>Recent Runs</h2>
@@ -393,6 +755,8 @@
                     </div>
 
                     ${disambiguationPanel}
+
+                    ${curatedPanel}
                 </div>
 
                 <div class="raw-data-links">
