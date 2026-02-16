@@ -166,28 +166,32 @@ func execute(cfg *config) int {
 	// Track all discovered names across sources for trigger 3 (new audit candidate).
 	discoveredNames := make(map[string]string)
 
-	// --- Process each source ---
-	for _, src := range sources {
-		var srcErr error
+	// --- Process each source (skip discovery when limit == 0) ---
+	if cfg.limit > 0 {
+		for _, src := range sources {
+			var srcErr error
 
-		if src == "homebrew" {
-			srcErr = processHomebrew(ctx, cfg, unifiedQueue, existingSources, absAuditDir, d, discoveredNames, summary, seedingRun)
-		} else {
-			disc, ok := discoverers[src]
-			if !ok {
-				summary.SourcesFailed = append(summary.SourcesFailed, src)
-				summary.Errors = append(summary.Errors, fmt.Sprintf("%s: unknown discoverer", src))
-				continue
+			if src == "homebrew" {
+				srcErr = processHomebrew(ctx, cfg, unifiedQueue, existingSources, absAuditDir, d, discoveredNames, summary, seedingRun)
+			} else {
+				disc, ok := discoverers[src]
+				if !ok {
+					summary.SourcesFailed = append(summary.SourcesFailed, src)
+					summary.Errors = append(summary.Errors, fmt.Sprintf("%s: unknown discoverer", src))
+					continue
+				}
+				srcErr = processDiscoverer(ctx, cfg, src, disc, unifiedQueue, existingSources, absAuditDir, d, discoveredNames, summary, seedingRun)
 			}
-			srcErr = processDiscoverer(ctx, cfg, src, disc, unifiedQueue, existingSources, absAuditDir, d, discoveredNames, summary, seedingRun)
-		}
 
-		if srcErr != nil {
-			summary.SourcesFailed = append(summary.SourcesFailed, src)
-			summary.Errors = append(summary.Errors, fmt.Sprintf("%s: %v", src, srcErr))
-		} else {
-			summary.SourcesProcessed = append(summary.SourcesProcessed, src)
+			if srcErr != nil {
+				summary.SourcesFailed = append(summary.SourcesFailed, src)
+				summary.Errors = append(summary.Errors, fmt.Sprintf("%s: %v", src, srcErr))
+			} else {
+				summary.SourcesProcessed = append(summary.SourcesProcessed, src)
+			}
 		}
+	} else if cfg.verbose {
+		fmt.Fprintf(os.Stderr, "  skipping discovery (limit=0)\n")
 	}
 
 	// --- Freshness checking on existing entries ---
