@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-02-16T19:34:32Z",
+  "generated_at": "2026-02-16T20:31:11Z",
   "queue": {
     "total": 5275,
     "by_status": {
@@ -37244,20 +37244,6 @@
   },
   "blockers": [
     {
-      "dependency": "ada-url",
-      "count": 1,
-      "packages": [
-        "homebrew:node"
-      ]
-    },
-    {
-      "dependency": "dav1d",
-      "count": 1,
-      "packages": [
-        "homebrew:ffmpeg"
-      ]
-    },
-    {
       "dependency": "glib",
       "count": 1,
       "packages": [
@@ -37270,6 +37256,20 @@
       "packages": [
         "homebrew:coreutils"
       ]
+    },
+    {
+      "dependency": "ada-url",
+      "count": 1,
+      "packages": [
+        "homebrew:node"
+      ]
+    },
+    {
+      "dependency": "dav1d",
+      "count": 1,
+      "packages": [
+        "homebrew:ffmpeg"
+      ]
     }
   ],
   "failures": {
@@ -37281,8 +37281,8 @@
   },
   "failure_details": [
     {
-      "id": "homebrew-2026-02-08T02-37-10Z-xh",
-      "package": "xh",
+      "id": "homebrew-2026-02-08T02-37-10Z-sd",
+      "package": "sd",
       "ecosystem": "homebrew",
       "category": "deterministic",
       "subcategory": "install_failed",
@@ -37311,8 +37311,8 @@
       "timestamp": "2026-02-08T02:37:10Z"
     },
     {
-      "id": "homebrew-2026-02-08T02-37-10Z-sd",
-      "package": "sd",
+      "id": "homebrew-2026-02-08T02-37-10Z-xh",
+      "package": "xh",
       "ecosystem": "homebrew",
       "category": "deterministic",
       "subcategory": "install_failed",
@@ -39224,7 +39224,7 @@
     "last_run": {
       "batch_id": "2026-02-16-homebrew",
       "ecosystem": "homebrew",
-      "timestamp": "2026-02-16T19:34:14Z",
+      "timestamp": "2026-02-16T20:30:54Z",
       "succeeded": 0,
       "failed": 0,
       "total": 0
@@ -39238,7 +39238,7 @@
       "total": 4,
       "recipes_merged": 4
     },
-    "runs_since_last_success": 164,
+    "runs_since_last_success": 165,
     "hours_since_last_run": 0
   },
   "runs": [
