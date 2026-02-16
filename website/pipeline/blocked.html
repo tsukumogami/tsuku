@@ -43,6 +43,20 @@
             border-bottom: none;
         }
 
+        .package-table tbody tr {
+            cursor: pointer;
+            transition: background 0.15s ease;
+        }
+
+        .package-table tbody tr:hover {
+            background: var(--bg);
+        }
+
+        .package-table tbody tr a {
+            color: inherit;
+            text-decoration: none;
+        }
+
         .package-name {
             font-family: "SF Mono", Consolas, monospace;
         }
@@ -119,6 +133,69 @@
             font-family: "SF Mono", Consolas, monospace;
             background: #d29922;
             color: #000;
+            text-decoration: none;
+        }
+
+        .dep-badge:hover {
+            opacity: 0.85;
+        }
+
+        .top-blockers {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .top-blockers h2 {
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            color: var(--text-muted);
+        }
+
+        .blocker-row {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .blocker-row:last-child {
+            border-bottom: none;
+        }
+
+        .blocker-name {
+            font-family: "SF Mono", Consolas, monospace;
+            font-weight: 600;
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .blocker-name:hover {
+            text-decoration: underline;
+        }
+
+        .blocker-bar {
+            flex: 1;
+            background: var(--border);
+            border-radius: 3px;
+            height: 8px;
+            overflow: hidden;
+        }
+
+        .blocker-bar-fill {
+            height: 100%;
+            background: #d29922;
+            border-radius: 3px;
+        }
+
+        .blocker-count {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            min-width: 80px;
+            text-align: right;
         }
 
         .loading {
@@ -183,6 +260,13 @@
     </footer>
 
     <script>
+        function esc(s) {
+            if (s == null) return '';
+            const div = document.createElement('div');
+            div.textContent = String(s);
+            return div.innerHTML;
+        }
+
         const STATUS = 'blocked';
 
         // Get filter from URL
@@ -191,9 +275,9 @@
 
         function renderDescription(filter) {
             if (!filter) {
-                return `<p class="filter-description">Packages waiting on dependencies that don't have recipes yet. Select a blocker above to see packages waiting on it.</p>`;
+                return '<p class="filter-description">Packages waiting on dependencies that don\'t have recipes yet. Select a blocker above to see packages waiting on it.</p>';
             }
-            return `<p class="filter-description">Packages blocked by <code>${filter}</code>. These packages cannot be installed until a recipe for ${filter} is created.</p>`;
+            return '<p class="filter-description">Packages blocked by <code>' + esc(filter) + '</code>. These packages cannot be installed until a recipe for ' + esc(filter) + ' is created.</p>';
         }
 
         function renderFilters(packages, activeFilter) {
@@ -213,14 +297,51 @@
             if (blockers.length === 0) return '';
 
             const allActive = !activeFilter ? 'active' : '';
-            let html = `<a href="?" class="filter-btn ${allActive}">All (${packages.length})</a>`;
+            let html = '<a href="?" class="filter-btn ' + allActive + '">All (' + packages.length + ')</a>';
 
-            blockers.forEach(([blocker, count]) => {
-                const active = activeFilter === blocker ? 'active' : '';
-                html += `<a href="?blocker=${encodeURIComponent(blocker)}" class="filter-btn ${active}">${blocker} (${count})</a>`;
+            blockers.forEach(function(entry) {
+                var blocker = entry[0];
+                var count = entry[1];
+                var active = activeFilter === blocker ? 'active' : '';
+                html += '<a href="?blocker=' + encodeURIComponent(blocker) + '" class="filter-btn ' + active + '">' + esc(blocker) + ' (' + count + ')</a>';
             });
 
-            return `<div class="filter-bar">${html}</div>`;
+            return '<div class="filter-bar">' + html + '</div>';
+        }
+
+        function renderTopBlockers(packages) {
+            // Compute inverted dependency graph
+            const byBlocker = {};
+            packages.forEach(pkg => {
+                (pkg.blocked_by || []).forEach(dep => {
+                    if (!byBlocker[dep]) byBlocker[dep] = [];
+                    byBlocker[dep].push(pkg.name);
+                });
+            });
+
+            const sorted = Object.entries(byBlocker)
+                .sort((a, b) => b[1].length - a[1].length);
+
+            if (sorted.length === 0) return '';
+
+            const maxCount = sorted[0][1].length;
+
+            let rows = '';
+            sorted.forEach(function(entry) {
+                var dep = entry[0];
+                var pkgs = entry[1];
+                var pct = maxCount > 0 ? (pkgs.length / maxCount) * 100 : 0;
+                rows += '<div class="blocker-row">' +
+                    '<a href="package.html?id=' + encodeURIComponent(dep) + '" class="blocker-name">' + esc(dep) + '</a>' +
+                    '<div class="blocker-bar"><div class="blocker-bar-fill" style="width:' + pct + '%"></div></div>' +
+                    '<span class="blocker-count">' + pkgs.length + ' blocked</span>' +
+                '</div>';
+            });
+
+            return '<div class="top-blockers">' +
+                '<h2>Top Blockers</h2>' +
+                rows +
+            '</div>';
         }
 
         function renderPackages(allPackages, filter) {
@@ -240,39 +361,36 @@
 
             const rows = packages.map(pkg => {
                 const deps = (pkg.blocked_by || []).map(d => {
-                    const isActive = d === filter ? 'style="background: var(--accent); color: #000;"' : '';
-                    return `<span class="dep-badge" ${isActive}>${d}</span>`;
+                    const isActive = d === filter ? ' style="background: var(--accent); color: #000;"' : '';
+                    return '<a href="package.html?id=' + encodeURIComponent(d) + '" class="dep-badge"' + isActive + '>' + esc(d) + '</a>';
                 }).join('');
-                return `
-                    <tr>
-                        <td class="package-name">${pkg.name}</td>
-                        <td>${pkg.ecosystem}</td>
-                        <td><span class="priority-badge priority-${pkg.priority}">P${pkg.priority}</span></td>
-                        <td><div class="dep-list">${deps || '-'}</div></td>
-                    </tr>
-                `;
+                return '<tr onclick="window.location=\'package.html?id=' + encodeURIComponent(pkg.id) + '\'">' +
+                    '<td class="package-name"><a href="package.html?id=' + encodeURIComponent(pkg.id) + '">' + esc(pkg.name) + '</a></td>' +
+                    '<td>' + esc(pkg.ecosystem) + '</td>' +
+                    '<td><span class="priority-badge priority-' + esc(String(pkg.priority)) + '">P' + esc(String(pkg.priority)) + '</span></td>' +
+                    '<td><div class="dep-list">' + (deps || '-') + '</div></td>' +
+                '</tr>';
             }).join('');
 
-            return `
-                ${renderFilters(allPackages, filter)}
-                ${renderDescription(filter)}
-                <div class="package-list">
-                    <h2>${packages.length} package${packages.length !== 1 ? 's' : ''}</h2>
-                    <table class="package-table">
-                        <thead>
-                            <tr>
-                                <th>Package</th>
-                                <th>Ecosystem</th>
-                                <th>Priority</th>
-                                <th>Blocked By</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${rows}
-                        </tbody>
-                    </table>
-                </div>
-            `;
+            return renderFilters(allPackages, filter) +
+                renderDescription(filter) +
+                '<div class="package-list">' +
+                    '<h2>' + packages.length + ' package' + (packages.length !== 1 ? 's' : '') + '</h2>' +
+                    '<table class="package-table">' +
+                        '<thead>' +
+                            '<tr>' +
+                                '<th>Package</th>' +
+                                '<th>Ecosystem</th>' +
+                                '<th>Priority</th>' +
+                                '<th>Blocked By</th>' +
+                            '</tr>' +
+                        '</thead>' +
+                        '<tbody>' +
+                            rows +
+                        '</tbody>' +
+                    '</table>' +
+                '</div>' +
+                renderTopBlockers(allPackages);
         }
 
         async function load() {
@@ -282,7 +400,7 @@
                 const packages = data.queue.packages?.[STATUS] || [];
                 document.getElementById('content').innerHTML = renderPackages(packages, filterBlocker);
             } catch (error) {
-                document.getElementById('content').innerHTML = `<div class="loading">Error loading data: ${error.message}</div>`;
+                document.getElementById('content').innerHTML = '<div class="loading">Error loading data: ' + esc(error.message) + '</div>';
             }
         }
 

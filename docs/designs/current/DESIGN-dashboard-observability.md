@@ -1,5 +1,5 @@
 ---
-status: Planned
+status: Current
 problem: |
   The pipeline dashboard shows aggregate failure counts but can't answer "why did
   this package fail?" Operators spend 3-5 minutes per failure digging through JSONL
@@ -31,90 +31,7 @@ rationale: |
 
 ## Status
 
-Planned
-
-## Implementation Issues
-
-### Milestone: [dashboard-observability](https://github.com/tsukumogami/tsuku/milestone/84)
-
-| Issue | Dependencies | Tier |
-|-------|--------------|------|
-| [#1708: feat(dashboard): migrate queue loading to unified schema](https://github.com/tsukumogami/tsuku/issues/1708) | None | testable |
-| _Switch `dashboard.go` from the legacy `seed.PriorityQueue` loader to `batch.UnifiedQueue`, picking up priority, failure count, and confidence fields that downstream pages need._ | | |
-| [#1709: feat(dashboard): add health status with circuit breaker and run tracking](https://github.com/tsukumogami/tsuku/issues/1709) | None | testable |
-| _Parse `batch-control.json` and metrics JSONL to produce a `health` map in `dashboard.json` with circuit breaker state, last success timestamp, and runs-since-success per ecosystem._ | | |
-| [#1710: feat(dashboard): add failure details with subcategory extraction](https://github.com/tsukumogami/tsuku/issues/1710) | [#1708](https://github.com/tsukumogami/tsuku/issues/1708) | critical |
-| _Read both JSONL failure formats, classify errors into subcategories using bracketed tags, regex, and exit code fallbacks, deduplicate per-recipe, and emit a capped `failure_details` array in `dashboard.json`._ | | |
-| [#1711: feat(dashboard): add curated overrides to dashboard data](https://github.com/tsukumogami/tsuku/issues/1711) | [#1708](https://github.com/tsukumogami/tsuku/issues/1708) | simple |
-| _Filter the unified queue for `confidence == "curated"` entries and emit a `curated` array with package name, source, reason, and validation status._ | | |
-| [#1712: fix(dashboard): add XSS mitigation to all dashboard pages](https://github.com/tsukumogami/tsuku/issues/1712) | None | critical |
-| _Add an `esc()` HTML-escaping utility to every dashboard page that uses `innerHTML`, covering all existing and new pages against data-driven XSS._ | | |
-| [#1713: feat(dashboard): add failures list and detail pages](https://github.com/tsukumogami/tsuku/issues/1713) | [#1710](https://github.com/tsukumogami/tsuku/issues/1710), [#1712](https://github.com/tsukumogami/tsuku/issues/1712) | testable |
-| _Create `failures.html` (filterable list of recent failures) and `failure.html` (single-failure detail with error message, platform, and logs link). Redirect legacy `failed.html` to `failures.html`._ | | |
-| [#1714: feat(dashboard): add run detail page and enhance runs list](https://github.com/tsukumogami/tsuku/issues/1714) | [#1709](https://github.com/tsukumogami/tsuku/issues/1709), [#1710](https://github.com/tsukumogami/tsuku/issues/1710), [#1712](https://github.com/tsukumogami/tsuku/issues/1712) | testable |
-| _Create `run.html` (single-run detail showing per-package outcomes and duration breakdown) and enhance `runs.html` with health badges and navigation to the new detail page._ | | |
-| [#1715: feat(dashboard): add package detail page](https://github.com/tsukumogami/tsuku/issues/1715) | [#1708](https://github.com/tsukumogami/tsuku/issues/1708), [#1710](https://github.com/tsukumogami/tsuku/issues/1710), [#1712](https://github.com/tsukumogami/tsuku/issues/1712) | testable |
-| _Create `package.html` that joins queue state, failure history, run participation, and disambiguation data into a single-package view with client-side data from `dashboard.json`._ | | |
-| [#1716: feat(dashboard): enhance index with health, failures, and curated panels](https://github.com/tsukumogami/tsuku/issues/1716) | [#1709](https://github.com/tsukumogami/tsuku/issues/1709), [#1710](https://github.com/tsukumogami/tsuku/issues/1710), [#1711](https://github.com/tsukumogami/tsuku/issues/1711), [#1712](https://github.com/tsukumogami/tsuku/issues/1712) | testable |
-| _Add Health Status, Recent Failures, and Curated Overrides panels to `index.html`, each linking to their respective detail pages for drill-down navigation._ | | |
-| [#1717: feat(dashboard): enhance list pages with filters and navigation](https://github.com/tsukumogami/tsuku/issues/1717) | [#1708](https://github.com/tsukumogami/tsuku/issues/1708), [#1712](https://github.com/tsukumogami/tsuku/issues/1712) | testable |
-| _Add ecosystem/status/date filters, summary panels, and `package.html` navigation links to the four existing list pages (pending, blocked, success, disambiguations)._ | | |
-| [#1718: feat(dashboard): add curated overrides page](https://github.com/tsukumogami/tsuku/issues/1718) | [#1711](https://github.com/tsukumogami/tsuku/issues/1711), [#1712](https://github.com/tsukumogami/tsuku/issues/1712) | simple |
-| _Create `curated.html` displaying curated overrides with validation status badges, status filters, and GitHub action links for managing the override list._ | | |
-
-### Dependency Graph
-
-```mermaid
-graph TD
-    subgraph Backend["Backend (Phase A)"]
-        I1708["#1708: Migrate queue loading"]
-        I1709["#1709: Health status + circuit breaker"]
-        I1710["#1710: Failure details + subcategories"]
-        I1711["#1711: Curated overrides data"]
-    end
-
-    subgraph Security["Security"]
-        I1712["#1712: XSS mitigation"]
-    end
-
-    subgraph Frontend["Frontend (Phase B)"]
-        I1713["#1713: Failures list + detail pages"]
-        I1714["#1714: Run detail + enhanced runs"]
-        I1715["#1715: Package detail page"]
-        I1716["#1716: Enhanced index panels"]
-        I1717["#1717: Enhanced list pages"]
-        I1718["#1718: Curated overrides page"]
-    end
-
-    I1708 --> I1710
-    I1708 --> I1711
-    I1708 --> I1715
-    I1708 --> I1717
-    I1710 --> I1713
-    I1712 --> I1713
-    I1709 --> I1714
-    I1710 --> I1714
-    I1712 --> I1714
-    I1710 --> I1715
-    I1712 --> I1715
-    I1709 --> I1716
-    I1710 --> I1716
-    I1711 --> I1716
-    I1712 --> I1716
-    I1712 --> I1717
-    I1711 --> I1718
-    I1712 --> I1718
-
-    classDef done fill:#c8e6c9
-    classDef ready fill:#bbdefb
-    classDef blocked fill:#fff9c4
-    classDef needsDesign fill:#e1bee7
-
-    class I1708,I1709,I1712 ready
-    class I1710,I1711,I1713,I1714,I1715,I1716,I1717,I1718 blocked
-```
-
-**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
+Current
 
 ## Upstream Design Reference
 

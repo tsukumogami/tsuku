@@ -43,6 +43,20 @@
             border-bottom: none;
         }
 
+        .package-table tbody tr {
+            cursor: pointer;
+            transition: background 0.15s ease;
+        }
+
+        .package-table tbody tr:hover {
+            background: var(--bg);
+        }
+
+        .package-table tbody tr a {
+            color: inherit;
+            text-decoration: none;
+        }
+
         .batch-id {
             font-family: "SF Mono", Consolas, monospace;
             font-size: 0.9rem;
@@ -60,6 +74,17 @@
         .rate-medium { background: #d29922; color: #000; }
         .rate-bad { background: #f85149; color: #fff; }
 
+        .status-badge {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status-success { background: #3fb950; color: #000; }
+        .status-failed { background: #f85149; color: #fff; }
+
         .timestamp {
             font-size: 0.85rem;
             color: var(--text-muted);
@@ -70,14 +95,74 @@
             font-size: 0.9rem;
         }
 
-        .filter-description {
+        .filter-bar {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-bar label {
+            font-size: 0.85rem;
             color: var(--text-muted);
-            font-size: 0.9rem;
-            line-height: 1.5;
-            margin: 0 0 1rem 0;
-            padding: 0.75rem 1rem;
-            background: var(--code-bg);
+        }
+
+        .filter-bar select {
+            padding: 0.4rem 0.6rem;
+            border: 1px solid var(--border);
             border-radius: 4px;
+            background: var(--bg);
+            color: var(--text);
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+
+        .filter-bar select:hover {
+            border-color: var(--accent);
+        }
+
+        .filter-bar input[type="checkbox"] {
+            margin-right: 0.25rem;
+            cursor: pointer;
+        }
+
+        .summary-panel {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .summary-card {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+        }
+
+        .summary-card h3 {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .summary-stat {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            padding: 0.2rem 0;
+        }
+
+        .summary-stat .label {
+            color: var(--text-muted);
+        }
+
+        .summary-stat .value {
+            font-weight: 600;
+            font-family: "SF Mono", Consolas, monospace;
         }
 
         .loading {
@@ -103,6 +188,9 @@
             }
             .timestamp {
                 display: none;
+            }
+            .summary-panel {
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -145,8 +233,36 @@
     </footer>
 
     <script>
+        function esc(s) {
+            if (s == null) return '';
+            const div = document.createElement('div');
+            div.textContent = String(s);
+            return div.innerHTML;
+        }
+
+        var allRuns = [];
+
+        function getParams() {
+            var params = new URLSearchParams(window.location.search);
+            return {
+                ecosystem: params.get('ecosystem') || '',
+                status: params.get('status') || '',
+                since_success: params.get('since_success') === 'true'
+            };
+        }
+
+        function updateURL(filters) {
+            var params = new URLSearchParams();
+            if (filters.ecosystem) params.set('ecosystem', filters.ecosystem);
+            if (filters.status) params.set('status', filters.status);
+            if (filters.since_success) params.set('since_success', 'true');
+            var qs = params.toString();
+            var url = window.location.pathname + (qs ? '?' + qs : '');
+            history.pushState(null, '', url);
+        }
+
         function formatDate(isoString) {
-            const date = new Date(isoString);
+            var date = new Date(isoString);
             return date.toLocaleDateString('en-US', {
                 year: 'numeric',
                 month: 'short',
@@ -160,70 +276,201 @@
             return (rate * 100).toFixed(0) + '%';
         }
 
+        function formatDuration(seconds) {
+            if (!seconds && seconds !== 0) return '-';
+            var m = Math.floor(seconds / 60);
+            var s = seconds % 60;
+            if (m > 0) return m + 'm ' + s + 's';
+            return s + 's';
+        }
+
         function rateClass(rate) {
             if (rate >= 0.7) return 'rate-good';
             if (rate >= 0.4) return 'rate-medium';
             return 'rate-bad';
         }
 
-        function renderRuns(runs) {
-            if (!runs || runs.length === 0) {
-                return '<div class="loading">No batch runs recorded yet</div>';
+        function runStatus(run) {
+            return run.merged > 0 ? 'success' : 'failed';
+        }
+
+        function collectEcosystems(runs) {
+            var vals = new Set();
+            runs.forEach(function(r) {
+                if (r.ecosystem) vals.add(r.ecosystem);
+            });
+            return Array.from(vals).sort();
+        }
+
+        function applyFilters(runs, filters) {
+            var filtered = runs;
+
+            if (filters.ecosystem) {
+                filtered = filtered.filter(function(r) {
+                    return r.ecosystem === filters.ecosystem;
+                });
             }
 
-            const rows = runs.map(run => {
-                const ratePercent = formatPercent(run.rate);
-                const rateBadgeClass = rateClass(run.rate);
+            if (filters.status) {
+                filtered = filtered.filter(function(r) {
+                    return runStatus(r) === filters.status;
+                });
+            }
 
-                return `
-                    <tr>
-                        <td class="batch-id">${run.batch_id}</td>
-                        <td class="stats">${run.merged}/${run.total}</td>
-                        <td><span class="rate-badge ${rateBadgeClass}">${ratePercent}</span></td>
-                        <td class="timestamp">${formatDate(run.timestamp)}</td>
-                    </tr>
-                `;
+            if (filters.since_success) {
+                // Find index of last successful run and show only runs after it
+                var lastSuccessIdx = -1;
+                for (var i = 0; i < filtered.length; i++) {
+                    if (filtered[i].merged > 0) {
+                        lastSuccessIdx = i;
+                        break;
+                    }
+                }
+                if (lastSuccessIdx > 0) {
+                    filtered = filtered.slice(0, lastSuccessIdx);
+                } else if (lastSuccessIdx === 0) {
+                    // Most recent run is a success; nothing to show
+                    filtered = [];
+                }
+                // If no success found, show all (everything is since last success)
+            }
+
+            return filtered;
+        }
+
+        function computeAggregates(runs, hoursAgo) {
+            var cutoff = new Date(Date.now() - hoursAgo * 60 * 60 * 1000);
+            var subset = runs.filter(function(r) {
+                return new Date(r.timestamp) >= cutoff;
+            });
+            var totalRuns = subset.length;
+            var totalMerged = subset.reduce(function(sum, r) { return sum + r.merged; }, 0);
+            var totalProcessed = subset.reduce(function(sum, r) { return sum + r.total; }, 0);
+            var successRate = totalProcessed > 0 ? (totalMerged / totalProcessed * 100).toFixed(1) : '0.0';
+            return { totalRuns: totalRuns, totalMerged: totalMerged, totalProcessed: totalProcessed, successRate: successRate };
+        }
+
+        function renderSummary(runs) {
+            var last24h = computeAggregates(runs, 24);
+            var last7d = computeAggregates(runs, 168);
+
+            return '<div class="summary-panel">' +
+                '<div class="summary-card">' +
+                '<h3>Last 24 Hours</h3>' +
+                '<div class="summary-stat"><span class="label">Runs</span><span class="value">' + esc(String(last24h.totalRuns)) + '</span></div>' +
+                '<div class="summary-stat"><span class="label">Recipes merged</span><span class="value">' + esc(String(last24h.totalMerged)) + '</span></div>' +
+                '<div class="summary-stat"><span class="label">Success rate</span><span class="value">' + esc(last24h.successRate + '%') + '</span></div>' +
+                '</div>' +
+                '<div class="summary-card">' +
+                '<h3>Last 7 Days</h3>' +
+                '<div class="summary-stat"><span class="label">Runs</span><span class="value">' + esc(String(last7d.totalRuns)) + '</span></div>' +
+                '<div class="summary-stat"><span class="label">Recipes merged</span><span class="value">' + esc(String(last7d.totalMerged)) + '</span></div>' +
+                '<div class="summary-stat"><span class="label">Success rate</span><span class="value">' + esc(last7d.successRate + '%') + '</span></div>' +
+                '</div>' +
+                '</div>';
+        }
+
+        function renderFilters(runs, filters) {
+            var ecosystems = collectEcosystems(runs);
+
+            function opts(values, selected) {
+                return values.map(function(v) {
+                    return '<option value="' + esc(v) + '"' + (v === selected ? ' selected' : '') + '>' + esc(v) + '</option>';
+                }).join('');
+            }
+
+            return '<div class="filter-bar">' +
+                '<label>Ecosystem: ' +
+                '<select id="filter-ecosystem">' +
+                '<option value="">All</option>' +
+                opts(ecosystems, filters.ecosystem) +
+                '</select></label>' +
+                '<label>Status: ' +
+                '<select id="filter-status">' +
+                '<option value=""' + (!filters.status ? ' selected' : '') + '>All</option>' +
+                '<option value="success"' + (filters.status === 'success' ? ' selected' : '') + '>Success</option>' +
+                '<option value="failed"' + (filters.status === 'failed' ? ' selected' : '') + '>Failed</option>' +
+                '</select></label>' +
+                '<label>' +
+                '<input type="checkbox" id="filter-since-success"' + (filters.since_success ? ' checked' : '') + '>' +
+                ' Since last success</label>' +
+                '</div>';
+        }
+
+        function renderTable(runs) {
+            if (runs.length === 0) {
+                return '<div class="loading">No batch runs match the current filters</div>';
+            }
+
+            var rows = runs.map(function(run) {
+                var ratePercent = formatPercent(run.rate);
+                var rateBadgeClass = rateClass(run.rate);
+                var status = runStatus(run);
+                var statusClass = status === 'success' ? 'status-success' : 'status-failed';
+
+                return '<tr onclick="window.location=\'run.html?id=' + encodeURIComponent(run.batch_id) + '\'">' +
+                    '<td class="batch-id"><a href="run.html?id=' + encodeURIComponent(run.batch_id) + '">' + esc(run.batch_id) + '</a></td>' +
+                    '<td>' + esc(run.ecosystem || '-') + '</td>' +
+                    '<td class="stats">' + esc(String(run.merged)) + '/' + esc(String(run.total)) + '</td>' +
+                    '<td><span class="rate-badge ' + rateBadgeClass + '">' + esc(ratePercent) + '</span></td>' +
+                    '<td>' + esc(formatDuration(run.duration)) + '</td>' +
+                    '<td><span class="status-badge ' + statusClass + '">' + esc(status) + '</span></td>' +
+                    '<td class="timestamp">' + esc(formatDate(run.timestamp)) + '</td>' +
+                    '</tr>';
             }).join('');
 
-            // Calculate overall stats
-            const totalRuns = runs.length;
-            const totalProcessed = runs.reduce((sum, r) => sum + r.total, 0);
-            const totalMerged = runs.reduce((sum, r) => sum + r.merged, 0);
-            const overallRate = totalProcessed > 0 ? (totalMerged / totalProcessed * 100).toFixed(1) : 0;
-
-            return `
-                <p class="filter-description">
-                    Each batch run processes pending packages, generates recipes, validates them across platforms,
-                    and merges successful ones. Showing ${totalRuns} runs with ${totalMerged}/${totalProcessed}
-                    packages merged overall (${overallRate}% success rate).
-                </p>
-                <div class="package-list">
-                    <h2>${runs.length} batch runs</h2>
-                    <table class="package-table">
-                        <thead>
-                            <tr>
-                                <th>Batch ID</th>
-                                <th>Merged/Total</th>
-                                <th>Rate</th>
-                                <th>Timestamp</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${rows}
-                        </tbody>
-                    </table>
-                </div>
-            `;
+            return '<div class="package-list">' +
+                '<h2>' + esc(String(runs.length)) + ' batch run' + (runs.length !== 1 ? 's' : '') + '</h2>' +
+                '<table class="package-table">' +
+                '<thead><tr>' +
+                '<th>Batch ID</th>' +
+                '<th>Ecosystem</th>' +
+                '<th>Merged/Total</th>' +
+                '<th>Rate</th>' +
+                '<th>Duration</th>' +
+                '<th>Status</th>' +
+                '<th>Timestamp</th>' +
+                '</tr></thead>' +
+                '<tbody>' + rows + '</tbody>' +
+                '</table></div>';
         }
+
+        function render() {
+            var filters = getParams();
+            var filtered = applyFilters(allRuns, filters);
+
+            var content = document.getElementById('content');
+            content.innerHTML = renderSummary(allRuns) + renderFilters(allRuns, filters) + renderTable(filtered);
+
+            // Bind filter change handlers
+            document.getElementById('filter-ecosystem').addEventListener('change', onFilterChange);
+            document.getElementById('filter-status').addEventListener('change', onFilterChange);
+            document.getElementById('filter-since-success').addEventListener('change', onFilterChange);
+        }
+
+        function onFilterChange() {
+            var filters = {
+                ecosystem: document.getElementById('filter-ecosystem').value,
+                status: document.getElementById('filter-status').value,
+                since_success: document.getElementById('filter-since-success').checked
+            };
+            updateURL(filters);
+            render();
+        }
+
+        window.addEventListener('popstate', function() {
+            render();
+        });
 
         async function load() {
             try {
-                const response = await fetch('/pipeline/dashboard.json');
-                const data = await response.json();
-                const runs = data.runs || [];
-                document.getElementById('content').innerHTML = renderRuns(runs);
+                var response = await fetch('/pipeline/dashboard.json');
+                var data = await response.json();
+                allRuns = data.runs || [];
+                render();
             } catch (error) {
-                document.getElementById('content').innerHTML = `<div class="loading">Error loading data: ${error.message}</div>`;
+                document.getElementById('content').innerHTML =
+                    '<div class="loading">Error loading data: ' + esc(error.message) + '</div>';
             }
         }
 

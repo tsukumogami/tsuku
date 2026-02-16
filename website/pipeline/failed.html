@@ -173,6 +173,13 @@
     </footer>
 
     <script>
+        function esc(s) {
+            if (s == null) return '';
+            const div = document.createElement('div');
+            div.textContent = String(s);
+            return div.innerHTML;
+        }
+
         const STATUS = 'failed';
 
         // Get filter from URL
@@ -193,7 +200,7 @@
                 return `<p class="filter-description">Packages that failed during recipe generation or validation. Select a category above to see its meaning.</p>`;
             }
             const desc = categoryDescriptions[filter] || 'Unknown failure category.';
-            return `<p class="filter-description"><span class="category-badge">${filter}</span> ${desc}</p>`;
+            return `<p class="filter-description"><span class="category-badge">${esc(filter)}</span> ${desc}</p>`;
         }
 
         function renderFilters(packages, activeFilter) {
@@ -213,7 +220,7 @@
             categories.forEach(cat => {
                 const active = activeFilter === cat ? 'active' : '';
                 const count = byCategory[cat];
-                html += `<a href="?category=${cat}" class="filter-btn ${active}">${cat} (${count})</a>`;
+                html += `<a href="?category=${encodeURIComponent(cat)}" class="filter-btn ${active}">${esc(cat)} (${count})</a>`;
             });
 
             return `<div class="filter-bar">${html}</div>`;
@@ -236,10 +243,10 @@
 
             const rows = packages.map(pkg => `
                 <tr>
-                    <td class="package-name">${pkg.name}</td>
-                    <td>${pkg.ecosystem}</td>
+                    <td class="package-name">${esc(pkg.name)}</td>
+                    <td>${esc(pkg.ecosystem)}</td>
                     <td><span class="priority-badge priority-${pkg.priority}">P${pkg.priority}</span></td>
-                    <td>${pkg.category ? `<span class="category-badge">${pkg.category}</span>` : '-'}</td>
+                    <td>${pkg.category ? `<span class="category-badge">${esc(pkg.category)}</span>` : '-'}</td>
                 </tr>
             `).join('');
 
@@ -272,7 +279,7 @@
                 const packages = data.queue.packages?.[STATUS] || [];
                 document.getElementById('content').innerHTML = renderPackages(packages, filterCategory);
             } catch (error) {
-                document.getElementById('content').innerHTML = `<div class="loading">Error loading data: ${error.message}</div>`;
+                document.getElementById('content').innerHTML = `<div class="loading">Error loading data: ${esc(error.message)}</div>`;
             }
         }
 

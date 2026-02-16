@@ -31451,5 +31451,279 @@
         "high_risk": false
       }
     ]
-  }
+  },
+  "health": {
+    "ecosystems": {
+      "homebrew": {
+        "state": "degraded",
+        "last_run": {
+          "batch_id": "homebrew-2026-02-15T18-00-00Z",
+          "timestamp": "2026-02-15T18:00:00Z",
+          "merged": 2,
+          "total": 8,
+          "rate": 0.25
+        },
+        "last_successful_run": {
+          "batch_id": "homebrew-2026-02-10T12-00-00Z",
+          "timestamp": "2026-02-10T12:00:00Z",
+          "merged": 5,
+          "total": 5,
+          "rate": 1.0
+        },
+        "runs_since_last_success": 12,
+        "hours_since_last_run": 20
+      }
+    },
+    "last_run": {
+      "batch_id": "homebrew-2026-02-15T18-00-00Z",
+      "timestamp": "2026-02-15T18:00:00Z",
+      "merged": 2,
+      "total": 8,
+      "rate": 0.25
+    },
+    "last_successful_run": {
+      "batch_id": "homebrew-2026-02-10T12-00-00Z",
+      "timestamp": "2026-02-10T12:00:00Z",
+      "merged": 5,
+      "total": 5,
+      "rate": 1.0
+    },
+    "runs_since_last_success": 12,
+    "hours_since_last_run": 20
+  },
+  "failure_details": [
+    {
+      "id": "homebrew-2026-02-15T18-00-00Z-ffmpeg",
+      "package": "ffmpeg",
+      "ecosystem": "homebrew",
+      "category": "deterministic",
+      "subcategory": "no_bottles",
+      "message": "deterministic generation failed: [no_bottles] No bottle available for arm64_sonoma",
+      "batch_id": "homebrew-2026-02-15T18-00-00Z",
+      "timestamp": "2026-02-15T18:00:00Z"
+    },
+    {
+      "id": "homebrew-2026-02-15T18-00-00Z-imagemagick",
+      "package": "imagemagick",
+      "ecosystem": "homebrew",
+      "category": "deterministic",
+      "subcategory": "verify_failed",
+      "message": "deterministic generation failed: [verify_failed] version pattern mismatch",
+      "batch_id": "homebrew-2026-02-15T18-00-00Z",
+      "timestamp": "2026-02-15T17:55:00Z"
+    },
+    {
+      "id": "homebrew-2026-02-14T12-00-00Z-postgresql",
+      "package": "postgresql@16",
+      "ecosystem": "homebrew",
+      "category": "timeout",
+      "subcategory": "timeout",
+      "exit_code": 0,
+      "batch_id": "homebrew-2026-02-14T12-00-00Z",
+      "timestamp": "2026-02-14T12:00:00Z"
+    },
+    {
+      "id": "homebrew-2026-02-14T12-00-00Z-gcc",
+      "package": "gcc",
+      "ecosystem": "homebrew",
+      "category": "deterministic",
+      "subcategory": "complex_archive",
+      "message": "deterministic generation failed: [complex_archive] multiple top-level directories",
+      "batch_id": "homebrew-2026-02-14T12-00-00Z",
+      "timestamp": "2026-02-14T11:50:00Z"
+    },
+    {
+      "id": "homebrew-2026-02-13T06-00-00Z-rust",
+      "package": "rust",
+      "ecosystem": "homebrew",
+      "category": "validation_failed",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "linux-amd64",
+      "batch_id": "homebrew-2026-02-13T06-00-00Z",
+      "timestamp": "2026-02-13T06:00:00Z"
+    },
+    {
+      "id": "homebrew-2026-02-15T17-50-00Z-eza",
+      "package": "eza",
+      "ecosystem": "homebrew",
+      "category": "validation_failed",
+      "subcategory": "verify_failed",
+      "message": "validation failed: [verify_failed] version pattern did not match binary output",
+      "batch_id": "homebrew-2026-02-15T18-00-00Z",
+      "timestamp": "2026-02-15T17:50:00Z"
+    },
+    {
+      "id": "homebrew-2026-02-15T16-47-00Z-gitui",
+      "package": "gitui",
+      "ecosystem": "homebrew",
+      "category": "validation_failed",
+      "subcategory": "verify_failed",
+      "message": "validation failed: [verify_failed] version pattern did not match binary output",
+      "batch_id": "homebrew-2026-02-15T18-00-00Z",
+      "timestamp": "2026-02-15T16:47:00Z"
+    },
+    {
+      "id": "homebrew-2026-02-15T15-44-00Z-neovim",
+      "package": "neovim",
+      "ecosystem": "homebrew",
+      "category": "validation_failed",
+      "subcategory": "install_failed",
+      "message": "validation failed: [install_failed] installation step returned non-zero exit",
+      "batch_id": "homebrew-2026-02-15T18-00-00Z",
+      "timestamp": "2026-02-15T15:44:00Z"
+    },
+    {
+      "id": "homebrew-2026-02-15T14-41-00Z-shellcheck",
+      "package": "shellcheck",
+      "ecosystem": "homebrew",
+      "category": "validation_failed",
+      "subcategory": "no_binaries",
+      "message": "validation failed: [no_binaries] no executables found in installation directory",
+      "batch_id": "homebrew-2026-02-15T18-00-00Z",
+      "timestamp": "2026-02-15T14:41:00Z"
+    },
+    {
+      "id": "homebrew-2026-02-15T13-38-00Z-tmux",
+      "package": "tmux",
+      "ecosystem": "homebrew",
+      "category": "validation_failed",
+      "subcategory": "install_failed",
+      "message": "validation failed: [install_failed] installation step returned non-zero exit",
+      "batch_id": "homebrew-2026-02-15T18-00-00Z",
+      "timestamp": "2026-02-15T13:38:00Z"
+    },
+    {
+      "id": "homebrew-2026-02-15T12-35-00Z-vim",
+      "package": "vim",
+      "ecosystem": "homebrew",
+      "category": "validation_failed",
+      "subcategory": "verify_failed",
+      "message": "validation failed: [verify_failed] version pattern did not match binary output",
+      "batch_id": "homebrew-2026-02-15T18-00-00Z",
+      "timestamp": "2026-02-15T12:35:00Z"
+    },
+    {
+      "id": "homebrew-2026-02-15T11-32-00Z-wget",
+      "package": "wget",
+      "ecosystem": "homebrew",
+      "category": "validation_failed",
+      "subcategory": "verify_failed",
+      "message": "validation failed: [verify_failed] version pattern did not match binary output",
+      "batch_id": "homebrew-2026-02-15T18-00-00Z",
+      "timestamp": "2026-02-15T11:32:00Z"
+    },
+    {
+      "id": "homebrew-2026-02-15T10-29-00Z-awscli",
+      "package": "awscli",
+      "ecosystem": "homebrew",
+      "category": "validation_failed",
+      "subcategory": "complex_archive",
+      "message": "validation failed: [complex_archive] multiple top-level directories in archive",
+      "batch_id": "homebrew-2026-02-15T18-00-00Z",
+      "timestamp": "2026-02-15T10:29:00Z"
+    },
+    {
+      "id": "homebrew-2026-02-15T09-26-00Z-bat",
+      "package": "bat",
+      "ecosystem": "homebrew",
+      "category": "validation_failed",
+      "subcategory": "verify_failed",
+      "message": "validation failed: [verify_failed] version pattern did not match binary output",
+      "batch_id": "homebrew-2026-02-15T18-00-00Z",
+      "timestamp": "2026-02-15T09:26:00Z"
+    },
+    {
+      "id": "homebrew-2026-02-15T08-23-00Z-exa",
+      "package": "exa",
+      "ecosystem": "homebrew",
+      "category": "validation_failed",
+      "subcategory": "no_binaries",
+      "message": "validation failed: [no_binaries] no executables found in installation directory",
+      "batch_id": "homebrew-2026-02-15T18-00-00Z",
+      "timestamp": "2026-02-15T08:23:00Z"
+    },
+    {
+      "id": "homebrew-2026-02-15T07-20-00Z-gemini-cli",
+      "package": "gemini-cli",
+      "ecosystem": "homebrew",
+      "category": "validation_failed",
+      "subcategory": "api_error",
+      "message": "validation failed: [api_error] upstream API returned unexpected response",
+      "batch_id": "homebrew-2026-02-15T18-00-00Z",
+      "timestamp": "2026-02-15T07:20:00Z"
+    },
+    {
+      "id": "homebrew-2026-02-15T06-17-00Z-jq",
+      "package": "jq",
+      "ecosystem": "homebrew",
+      "category": "validation_failed",
+      "subcategory": "verify_failed",
+      "message": "validation failed: [verify_failed] version pattern did not match binary output",
+      "batch_id": "homebrew-2026-02-15T18-00-00Z",
+      "timestamp": "2026-02-15T06:17:00Z"
+    },
+    {
+      "id": "homebrew-2026-02-15T17-14-00Z-pyenv",
+      "package": "pyenv",
+      "ecosystem": "homebrew",
+      "category": "validation_failed",
+      "subcategory": "install_failed",
+      "message": "validation failed: [install_failed] installation step returned non-zero exit",
+      "batch_id": "homebrew-2026-02-15T18-00-00Z",
+      "timestamp": "2026-02-15T17:14:00Z"
+    },
+    {
+      "id": "homebrew-2026-02-15T16-11-00Z-ripgrep",
+      "package": "ripgrep",
+      "ecosystem": "homebrew",
+      "category": "validation_failed",
+      "subcategory": "verify_failed",
+      "message": "validation failed: [verify_failed] version pattern did not match binary output",
+      "batch_id": "homebrew-2026-02-15T18-00-00Z",
+      "timestamp": "2026-02-15T16:11:00Z"
+    }
+  ],
+  "curated": [
+    {
+      "name": "jq",
+      "ecosystem": "homebrew",
+      "status": "valid",
+      "source": "homebrew:jq",
+      "override_type": "version_pin",
+      "notes": "Pinned to stable bottle"
+    },
+    {
+      "name": "ripgrep",
+      "ecosystem": "homebrew",
+      "status": "valid",
+      "source": "homebrew:ripgrep",
+      "override_type": "binary_rename",
+      "notes": "Binary renamed from rg to ripgrep"
+    },
+    {
+      "name": "neovim",
+      "ecosystem": "homebrew",
+      "status": "invalid",
+      "source": "homebrew:neovim",
+      "override_type": "custom_extract",
+      "notes": "Extract pattern no longer matches upstream"
+    },
+    {
+      "name": "fd",
+      "ecosystem": "homebrew",
+      "status": "valid",
+      "source": "homebrew:fd",
+      "override_type": "version_pin",
+      "notes": ""
+    },
+    {
+      "name": "bat",
+      "ecosystem": "homebrew",
+      "status": "unknown",
+      "source": "homebrew:bat",
+      "override_type": "binary_rename",
+      "notes": "Not yet validated in current batch"
+    }
+  ]
 }
