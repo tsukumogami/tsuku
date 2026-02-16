@@ -36,7 +36,6 @@ type ServerLifecycle struct {
 	addonManager *addon.AddonManager // optional: for pre-execution verification
 
 	process *os.Process
-	lockFd  *os.File // holds the lock file when we started the server
 }
 
 // GetIdleTimeout returns the idle timeout from TSUKU_LLM_IDLE_TIMEOUT env var,
@@ -182,6 +181,12 @@ func (s *ServerLifecycle) EnsureRunning(ctx context.Context) error {
 		return fmt.Errorf("addon path not configured")
 	}
 
+	// Release our lock so the child process can acquire it. The child
+	// (tsuku-llm) acquires the same lock on startup to signal it's running.
+	// Holding the lock here would prevent the child from starting.
+	_ = syscall.Flock(int(fd.Fd()), syscall.LOCK_UN)
+	fd.Close()
+
 	// Build command with idle timeout flag
 	args := []string{"serve", "--idle-timeout", s.idleTimeout.String()}
 	cmd := exec.CommandContext(ctx, s.addonPath, args...)
@@ -189,24 +194,16 @@ func (s *ServerLifecycle) EnsureRunning(ctx context.Context) error {
 	cmd.Stderr = os.Stderr
 
 	if err := cmd.Start(); err != nil {
-		_ = syscall.Flock(int(fd.Fd()), syscall.LOCK_UN)
-		fd.Close()
 		return fmt.Errorf("failed to start addon: %w", err)
 	}
 
 	s.process = cmd.Process
-	s.lockFd = fd // Keep the lock file open; addon will acquire its own lock
 
 	// Monitor process in background
 	go func() {
 		_ = cmd.Wait()
 		s.mu.Lock()
 		s.process = nil
-		if s.lockFd != nil {
-			_ = syscall.Flock(int(s.lockFd.Fd()), syscall.LOCK_UN)
-			s.lockFd.Close()
-			s.lockFd = nil
-		}
 		s.mu.Unlock()
 	}()
 
@@ -271,13 +268,6 @@ func (s *ServerLifecycle) Stop(ctx context.Context) error {
 
 		// Wait briefly for shutdown
 		time.Sleep(500 * time.Millisecond)
-	}
-
-	// Clean up lock file if we still hold it
-	if s.lockFd != nil {
-		_ = syscall.Flock(int(s.lockFd.Fd()), syscall.LOCK_UN)
-		s.lockFd.Close()
-		s.lockFd = nil
 	}
 
 	return nil

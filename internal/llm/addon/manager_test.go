@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -41,6 +42,22 @@ func TestManifest(t *testing.T) {
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "unsupported platform")
 	})
+}
+
+// TestManifestURLsUseHTTPS validates that all platform URLs in the embedded
+// manifest use the HTTPS scheme. This is a regression test for a bug where
+// a developer's local file:// URL was committed for linux-amd64, which the
+// HTTP downloader cannot handle.
+func TestManifestURLsUseHTTPS(t *testing.T) {
+	manifest, err := GetManifest()
+	require.NoError(t, err)
+
+	for platform, info := range manifest.Platforms {
+		u, err := url.Parse(info.URL)
+		require.NoError(t, err, "platform %s has unparseable URL: %s", platform, info.URL)
+		require.Equal(t, "https", u.Scheme,
+			"platform %s URL must use https, got %q: %s", platform, u.Scheme, info.URL)
+	}
 }
 
 func TestPlatformKey(t *testing.T) {

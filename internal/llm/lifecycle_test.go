@@ -2,6 +2,8 @@ package llm
 
 import (
 	"context"
+	"fmt"
+	"net"
 	"os"
 	"path/filepath"
 	"syscall"
@@ -356,4 +358,66 @@ func TestServerLifecycle_StaleSocketNotRemovedWhenLockHeld(t *testing.T) {
 
 	// Socket should still exist
 	require.FileExists(t, socketPath, "socket should not be removed when lock is held")
+}
+
+// TestServerLifecycle_EnsureRunning_ReleasesLockForChild verifies that
+// EnsureRunning releases the parent's flock before starting the child process.
+// This is a regression test for the lock handoff bug where the parent held the
+// lock while starting the addon, preventing the child from acquiring it.
+func TestServerLifecycle_EnsureRunning_ReleasesLockForChild(t *testing.T) {
+	tmpDir := t.TempDir()
+	socketPath := filepath.Join(tmpDir, "test.sock")
+	lockPath := socketPath + ".lock"
+
+	// Create a mock addon script that:
+	// 1. Tries to acquire the lock (fails = parent still holds it = bug)
+	// 2. Creates a Unix socket so waitForReady succeeds
+	// 3. Sleeps briefly then exits
+	mockAddon := filepath.Join(tmpDir, "mock-addon")
+	script := fmt.Sprintf(`#!/bin/bash
+# Try to acquire the lock non-blocking
+exec 200>"%s"
+if ! flock -n 200; then
+    echo "LOCK_HELD_BY_PARENT" >&2
+    exit 1
+fi
+
+# Create Unix socket using Python (widely available)
+python3 -c "
+import socket, time, os, sys
+s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+s.bind('%s')
+s.listen(1)
+time.sleep(3)
+s.close()
+" &
+
+# Wait for socket to appear
+for i in $(seq 1 20); do
+    [ -S "%s" ] && break
+    sleep 0.05
+done
+
+# Keep script alive while socket exists
+wait
+`, lockPath, socketPath, socketPath)
+
+	require.NoError(t, os.WriteFile(mockAddon, []byte(script), 0755))
+
+	lifecycle := NewServerLifecycle(socketPath, mockAddon)
+	lifecycle.SetIdleTimeout(1 * time.Minute)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	err := lifecycle.EnsureRunning(ctx)
+	require.NoError(t, err, "EnsureRunning should succeed when child can acquire lock")
+
+	// Verify the socket is reachable
+	conn, err := net.DialTimeout("unix", socketPath, 500*time.Millisecond)
+	require.NoError(t, err, "should be able to connect to socket")
+	_ = conn.Close()
+
+	// Clean up: stop the addon
+	_ = lifecycle.Stop(context.Background())
 }
