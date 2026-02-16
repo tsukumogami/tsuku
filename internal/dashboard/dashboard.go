@@ -43,6 +43,7 @@ type Dashboard struct {
 	Queue           QueueStatus           `json:"queue"`
 	Blockers        []Blocker             `json:"blockers"`
 	Failures        map[string]int        `json:"failures"`
+	FailureDetails  []FailureDetail       `json:"failure_details,omitempty"`
 	Health          *HealthStatus         `json:"health,omitempty"`
 	Runs            []RunSummary          `json:"runs,omitempty"`
 	Disambiguations *DisambiguationStatus `json:"disambiguations,omitempty"`
@@ -129,6 +130,7 @@ type FailureRecord struct {
 	Ecosystem     string           `json:"ecosystem,omitempty"`
 	Environment   string           `json:"environment,omitempty"`
 	UpdatedAt     string           `json:"updated_at,omitempty"`
+	Timestamp     string           `json:"timestamp,omitempty"` // Per-recipe format timestamp
 	Failures      []PackageFailure `json:"failures,omitempty"`
 	// Per-recipe format fields
 	Recipe    string   `json:"recipe,omitempty"`
@@ -230,6 +232,12 @@ func Generate(opts Options) error {
 		return fmt.Errorf("load queue: %w", err)
 	}
 	dash.Queue = computeQueueStatus(queue, failureDetails)
+
+	// Load individual failure detail records
+	detailRecords, detailErr := loadFailureDetailRecords(opts.FailuresDir, queue)
+	if detailErr == nil && len(detailRecords) > 0 {
+		dash.FailureDetails = detailRecords
+	}
 
 	// Load metrics
 	runs, metricsRecords, err := loadMetricsFromDir(opts.MetricsDir)
