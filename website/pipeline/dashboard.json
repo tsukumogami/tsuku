@@ -31451,5 +31451,139 @@
         "high_risk": false
       }
     ]
-  }
+  },
+  "health": {
+    "ecosystems": {
+      "homebrew": {
+        "state": "degraded",
+        "last_run": {
+          "batch_id": "homebrew-2026-02-15T18-00-00Z",
+          "timestamp": "2026-02-15T18:00:00Z",
+          "merged": 2,
+          "total": 8,
+          "rate": 0.25
+        },
+        "last_successful_run": {
+          "batch_id": "homebrew-2026-02-10T12-00-00Z",
+          "timestamp": "2026-02-10T12:00:00Z",
+          "merged": 5,
+          "total": 5,
+          "rate": 1.0
+        },
+        "runs_since_last_success": 12,
+        "hours_since_last_run": 20
+      }
+    },
+    "last_run": {
+      "batch_id": "homebrew-2026-02-15T18-00-00Z",
+      "timestamp": "2026-02-15T18:00:00Z",
+      "merged": 2,
+      "total": 8,
+      "rate": 0.25
+    },
+    "last_successful_run": {
+      "batch_id": "homebrew-2026-02-10T12-00-00Z",
+      "timestamp": "2026-02-10T12:00:00Z",
+      "merged": 5,
+      "total": 5,
+      "rate": 1.0
+    },
+    "runs_since_last_success": 12,
+    "hours_since_last_run": 20
+  },
+  "failure_details": [
+    {
+      "id": "homebrew-2026-02-15T18-00-00Z-ffmpeg",
+      "package": "ffmpeg",
+      "ecosystem": "homebrew",
+      "category": "deterministic",
+      "subcategory": "no_bottles",
+      "message": "deterministic generation failed: [no_bottles] No bottle available for arm64_sonoma",
+      "batch_id": "homebrew-2026-02-15T18-00-00Z",
+      "timestamp": "2026-02-15T18:00:00Z"
+    },
+    {
+      "id": "homebrew-2026-02-15T18-00-00Z-imagemagick",
+      "package": "imagemagick",
+      "ecosystem": "homebrew",
+      "category": "deterministic",
+      "subcategory": "verify_failed",
+      "message": "deterministic generation failed: [verify_failed] version pattern mismatch",
+      "batch_id": "homebrew-2026-02-15T18-00-00Z",
+      "timestamp": "2026-02-15T17:55:00Z"
+    },
+    {
+      "id": "homebrew-2026-02-14T12-00-00Z-postgresql",
+      "package": "postgresql@16",
+      "ecosystem": "homebrew",
+      "category": "timeout",
+      "subcategory": "timeout",
+      "exit_code": 0,
+      "batch_id": "homebrew-2026-02-14T12-00-00Z",
+      "timestamp": "2026-02-14T12:00:00Z"
+    },
+    {
+      "id": "homebrew-2026-02-14T12-00-00Z-gcc",
+      "package": "gcc",
+      "ecosystem": "homebrew",
+      "category": "deterministic",
+      "subcategory": "complex_archive",
+      "message": "deterministic generation failed: [complex_archive] multiple top-level directories",
+      "batch_id": "homebrew-2026-02-14T12-00-00Z",
+      "timestamp": "2026-02-14T11:50:00Z"
+    },
+    {
+      "id": "homebrew-2026-02-13T06-00-00Z-rust",
+      "package": "rust",
+      "ecosystem": "homebrew",
+      "category": "validation_failed",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "linux-amd64",
+      "batch_id": "homebrew-2026-02-13T06-00-00Z",
+      "timestamp": "2026-02-13T06:00:00Z"
+    }
+  ],
+  "curated": [
+    {
+      "name": "jq",
+      "ecosystem": "homebrew",
+      "status": "valid",
+      "source": "homebrew:jq",
+      "override_type": "version_pin",
+      "notes": "Pinned to stable bottle"
+    },
+    {
+      "name": "ripgrep",
+      "ecosystem": "homebrew",
+      "status": "valid",
+      "source": "homebrew:ripgrep",
+      "override_type": "binary_rename",
+      "notes": "Binary renamed from rg to ripgrep"
+    },
+    {
+      "name": "neovim",
+      "ecosystem": "homebrew",
+      "status": "invalid",
+      "source": "homebrew:neovim",
+      "override_type": "custom_extract",
+      "notes": "Extract pattern no longer matches upstream"
+    },
+    {
+      "name": "fd",
+      "ecosystem": "homebrew",
+      "status": "valid",
+      "source": "homebrew:fd",
+      "override_type": "version_pin",
+      "notes": ""
+    },
+    {
+      "name": "bat",
+      "ecosystem": "homebrew",
+      "status": "unknown",
+      "source": "homebrew:bat",
+      "override_type": "binary_rename",
+      "notes": "Not yet validated in current batch"
+    }
+  ]
 }
