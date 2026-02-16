@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Failure detail in tsuku pipeline">
+    <title>Failure Detail - tsuku Pipeline</title>
+    <link rel="stylesheet" href="/assets/style.css">
+    <style>
+        .detail-card {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .detail-card h2 {
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            color: var(--text-muted);
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 140px 1fr;
+            gap: 0.5rem 1rem;
+            align-items: baseline;
+        }
+
+        .detail-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .detail-value {
+            font-size: 0.9rem;
+            word-break: break-word;
+        }
+
+        .detail-value a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .detail-value a:hover {
+            text-decoration: underline;
+        }
+
+        .package-name {
+            font-family: "SF Mono", Consolas, monospace;
+        }
+
+        .category-badge {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            background: #f85149;
+            color: #fff;
+        }
+
+        .subcategory-badge {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            background: var(--text-muted);
+            color: var(--bg);
+        }
+
+        .message-box {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 0.75rem;
+            font-family: "SF Mono", Consolas, monospace;
+            font-size: 0.85rem;
+            white-space: pre-wrap;
+            line-height: 1.5;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .platform-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.35rem;
+        }
+
+        .platform-tag {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            background: var(--bg);
+            border: 1px solid var(--border);
+        }
+
+        .actions {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .actions h2 {
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            color: var(--text-muted);
+        }
+
+        .action-links {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background: var(--bg);
+            color: var(--text);
+            text-decoration: none;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: border-color 0.15s ease;
+        }
+
+        .action-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-muted);
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 1rem;
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        .error-state {
+            text-align: center;
+            padding: 3rem 2rem;
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-muted);
+        }
+
+        .error-state h2 {
+            margin-bottom: 0.5rem;
+            color: var(--text);
+        }
+
+        .cross-links {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .cross-links h2 {
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            color: var(--text-muted);
+        }
+
+        .cross-link-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .cross-link-list a {
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .cross-link-list a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 600px) {
+            .detail-grid {
+                grid-template-columns: 1fr;
+                gap: 0.25rem;
+            }
+            .detail-label {
+                margin-top: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="/" class="logo">tsuku</a>
+            <a href="https://github.com/tsukumogami/tsuku" class="github-link" aria-label="GitHub">
+                <svg viewBox="0 0 16 16" width="24" height="24" fill="currentColor">
+                    <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+                </svg>
+            </a>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero">
+            <h1>Failure Detail</h1>
+            <p class="tagline">Individual failure record</p>
+        </section>
+
+        <a href="/pipeline/failures.html" class="back-link">&larr; Back to Failures</a>
+
+        <div id="content">
+            <div class="loading">Loading...</div>
+        </div>
+
+        <section class="links">
+            <a href="/pipeline/failures.html" class="link-btn">Back to Failures</a>
+        </section>
+    </main>
+
+    <footer>
+        <p>
+            <a href="/telemetry">Privacy</a>
+            <span class="sep">|</span>
+            <a href="https://github.com/tsukumogami/tsuku">GitHub</a>
+        </p>
+    </footer>
+
+    <script>
+        function esc(s) {
+            if (s == null) return '';
+            const div = document.createElement('div');
+            div.textContent = String(s);
+            return div.innerHTML;
+        }
+
+        function formatDate(isoString) {
+            const date = new Date(isoString);
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                timeZoneName: 'short'
+            });
+        }
+
+        function renderPlatforms(f) {
+            if (f.platform === 'multiple' && f.platforms && f.platforms.length > 0) {
+                return '<div class="platform-list">' +
+                    f.platforms.map(p => '<span class="platform-tag">' + esc(p) + '</span>').join('') +
+                    '</div>';
+            }
+            if (f.platform) {
+                return '<span class="platform-tag">' + esc(f.platform) + '</span>';
+            }
+            return '-';
+        }
+
+        function buildIssueURL(f) {
+            const title = encodeURIComponent('Pipeline failure: ' + f.package + ' (' + f.category + ')');
+            const body = encodeURIComponent(
+                '## Failure Details\n\n' +
+                '- **Package**: ' + f.package + '\n' +
+                '- **Ecosystem**: ' + f.ecosystem + '\n' +
+                '- **Category**: ' + f.category + '\n' +
+                (f.subcategory ? '- **Subcategory**: ' + f.subcategory + '\n' : '') +
+                (f.message ? '- **Message**: ' + f.message + '\n' : '') +
+                '- **Timestamp**: ' + f.timestamp + '\n' +
+                (f.workflow_url ? '- **Workflow**: ' + f.workflow_url + '\n' : '') +
+                '\n## Context\n\nDashboard link: failures.html?id=' + f.id + '\n'
+            );
+            return 'https://github.com/tsukumogami/tsuku/issues/new?title=' + title + '&body=' + body;
+        }
+
+        function buildRetryURL(f) {
+            return 'https://github.com/tsukumogami/tsuku/actions/workflows/batch-generation.yml';
+        }
+
+        function renderDetail(f) {
+            let html = '<div class="detail-card">';
+            html += '<h2>' + esc(f.package) + '</h2>';
+            html += '<div class="detail-grid">';
+
+            // Package
+            html += '<span class="detail-label">Package</span>';
+            html += '<span class="detail-value package-name"><a href="package.html?id=' +
+                encodeURIComponent(f.ecosystem + ':' + f.package) + '">' + esc(f.package) + '</a></span>';
+
+            // Ecosystem
+            html += '<span class="detail-label">Ecosystem</span>';
+            html += '<span class="detail-value"><a href="failures.html?ecosystem=' +
+                encodeURIComponent(f.ecosystem) + '">' + esc(f.ecosystem) + '</a></span>';
+
+            // Category
+            html += '<span class="detail-label">Category</span>';
+            html += '<span class="detail-value"><span class="category-badge">' + esc(f.category) + '</span></span>';
+
+            // Subcategory
+            html += '<span class="detail-label">Subcategory</span>';
+            html += '<span class="detail-value">';
+            if (f.subcategory) {
+                html += '<span class="subcategory-badge">' + esc(f.subcategory) + '</span>';
+            } else {
+                html += '-';
+            }
+            html += '</span>';
+
+            // Message
+            html += '<span class="detail-label">Message</span>';
+            html += '<span class="detail-value">';
+            if (f.message) {
+                html += '<div class="message-box">' + esc(f.message) + '</div>';
+            } else {
+                html += '<span style="color: var(--text-muted); font-style: italic;">No message available</span>';
+            }
+            html += '</span>';
+
+            // Exit code
+            html += '<span class="detail-label">Exit Code</span>';
+            html += '<span class="detail-value">';
+            if (f.exit_code) {
+                html += '<code>' + esc(String(f.exit_code)) + '</code>';
+            } else {
+                html += '-';
+            }
+            html += '</span>';
+
+            // Platform(s)
+            html += '<span class="detail-label">Platform(s)</span>';
+            html += '<span class="detail-value">' + renderPlatforms(f) + '</span>';
+
+            // Batch ID
+            html += '<span class="detail-label">Batch ID</span>';
+            html += '<span class="detail-value">';
+            if (f.batch_id) {
+                html += '<a href="run.html?id=' + encodeURIComponent(f.batch_id) + '">' + esc(f.batch_id) + '</a>';
+            } else {
+                html += '-';
+            }
+            html += '</span>';
+
+            // Timestamp
+            html += '<span class="detail-label">Timestamp</span>';
+            html += '<span class="detail-value">' + esc(formatDate(f.timestamp)) + '</span>';
+
+            // Workflow URL
+            html += '<span class="detail-label">Workflow</span>';
+            html += '<span class="detail-value">';
+            if (f.workflow_url) {
+                html += '<a href="' + esc(f.workflow_url) + '" target="_blank" rel="noopener">View workflow run</a>';
+            } else {
+                html += '-';
+            }
+            html += '</span>';
+
+            html += '</div></div>';
+
+            // Actions
+            html += '<div class="actions">';
+            html += '<h2>Actions</h2>';
+            html += '<div class="action-links">';
+            html += '<a href="' + esc(buildIssueURL(f)) + '" class="action-btn" target="_blank" rel="noopener">File issue</a>';
+            html += '<a href="' + esc(buildRetryURL(f)) + '" class="action-btn" target="_blank" rel="noopener">Retry</a>';
+            html += '</div></div>';
+
+            // Cross-links
+            html += '<div class="cross-links">';
+            html += '<h2>Related</h2>';
+            html += '<div class="cross-link-list">';
+            html += '<a href="package.html?id=' + encodeURIComponent(f.ecosystem + ':' + f.package) +
+                '">View package: ' + esc(f.package) + '</a>';
+            if (f.batch_id) {
+                html += '<a href="run.html?id=' + encodeURIComponent(f.batch_id) +
+                    '">View batch run: ' + esc(f.batch_id) + '</a>';
+            }
+            html += '<a href="failures.html?category=' + encodeURIComponent(f.category) +
+                '">All ' + esc(f.category) + ' failures</a>';
+            html += '<a href="failures.html?ecosystem=' + encodeURIComponent(f.ecosystem) +
+                '">All ' + esc(f.ecosystem) + ' failures</a>';
+            html += '</div></div>';
+
+            return html;
+        }
+
+        function renderError(title, message) {
+            return '<div class="error-state"><h2>' + esc(title) + '</h2><p>' + esc(message) + '</p></div>';
+        }
+
+        async function load() {
+            const params = new URLSearchParams(window.location.search);
+            const id = params.get('id');
+
+            if (!id) {
+                document.getElementById('content').innerHTML =
+                    renderError('No failure selected', 'Provide an id parameter to view a failure record. Browse the failures list to find one.');
+                return;
+            }
+
+            try {
+                const response = await fetch('/pipeline/dashboard.json');
+                const data = await response.json();
+                const details = data.failure_details || [];
+                const failure = details.find(f => f.id === id);
+
+                if (!failure) {
+                    document.getElementById('content').innerHTML =
+                        renderError('Failure not found', 'No failure record matches id "' + id + '". It may have aged out of the dashboard. Check the failures list for current records.');
+                    return;
+                }
+
+                document.title = failure.package + ' - Failure Detail - tsuku Pipeline';
+                document.getElementById('content').innerHTML = renderDetail(failure);
+            } catch (error) {
+                document.getElementById('content').innerHTML =
+                    '<div class="loading">Error loading data: ' + esc(error.message) + '</div>';
+            }
+        }
+
+        load();
+    </script>
+</body>
+</html>

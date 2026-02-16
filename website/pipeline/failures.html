@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Recent failures in tsuku pipeline">
+    <title>Failures - tsuku Pipeline</title>
+    <link rel="stylesheet" href="/assets/style.css">
+    <style>
+        .package-list {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .package-list h2 {
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            color: var(--text-muted);
+        }
+
+        .package-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .package-table th,
+        .package-table td {
+            text-align: left;
+            padding: 0.5rem 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .package-table th {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .package-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .package-table tbody tr {
+            cursor: pointer;
+            transition: background 0.15s ease;
+        }
+
+        .package-table tbody tr:hover {
+            background: var(--bg);
+        }
+
+        .package-table tbody tr a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .package-name {
+            font-family: "SF Mono", Consolas, monospace;
+        }
+
+        .category-badge {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            background: #f85149;
+            color: #fff;
+        }
+
+        .subcategory-badge {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            background: var(--text-muted);
+            color: var(--bg);
+        }
+
+        .filter-bar {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-bar label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .filter-bar select {
+            padding: 0.4rem 0.6rem;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background: var(--bg);
+            color: var(--text);
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+
+        .filter-bar select:hover {
+            border-color: var(--accent);
+        }
+
+        .timestamp {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-muted);
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 1rem;
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .pagination button {
+            padding: 0.4rem 0.8rem;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background: var(--bg);
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        .pagination button:hover:not(:disabled) {
+            border-color: var(--accent);
+            color: var(--text);
+        }
+
+        .pagination button:disabled {
+            opacity: 0.4;
+            cursor: default;
+        }
+
+        .pagination button.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #000;
+        }
+
+        .pagination .page-info {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        @media (max-width: 600px) {
+            .package-table {
+                font-size: 0.85rem;
+            }
+            .timestamp {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="/" class="logo">tsuku</a>
+            <a href="https://github.com/tsukumogami/tsuku" class="github-link" aria-label="GitHub">
+                <svg viewBox="0 0 16 16" width="24" height="24" fill="currentColor">
+                    <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+                </svg>
+            </a>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero">
+            <h1>Failures</h1>
+            <p class="tagline">Recent pipeline failures with details</p>
+        </section>
+
+        <a href="/pipeline/" class="back-link">&larr; Back to Dashboard</a>
+
+        <div id="content">
+            <div class="loading">Loading...</div>
+        </div>
+
+        <section class="links">
+            <a href="/pipeline/" class="link-btn">Back to Dashboard</a>
+        </section>
+    </main>
+
+    <footer>
+        <p>
+            <a href="/telemetry">Privacy</a>
+            <span class="sep">|</span>
+            <a href="https://github.com/tsukumogami/tsuku">GitHub</a>
+        </p>
+    </footer>
+
+    <script>
+        function esc(s) {
+            if (s == null) return '';
+            const div = document.createElement('div');
+            div.textContent = String(s);
+            return div.innerHTML;
+        }
+
+        const PAGE_SIZE = 20;
+        let currentPage = 1;
+        let allFailures = [];
+        let filteredFailures = [];
+
+        function getParams() {
+            const params = new URLSearchParams(window.location.search);
+            return {
+                category: params.get('category') || '',
+                subcategory: params.get('subcategory') || '',
+                ecosystem: params.get('ecosystem') || '',
+                batch_id: params.get('batch_id') || ''
+            };
+        }
+
+        function updateURL(filters) {
+            const params = new URLSearchParams();
+            if (filters.category) params.set('category', filters.category);
+            if (filters.subcategory) params.set('subcategory', filters.subcategory);
+            if (filters.ecosystem) params.set('ecosystem', filters.ecosystem);
+            if (filters.batch_id) params.set('batch_id', filters.batch_id);
+            const qs = params.toString();
+            const url = window.location.pathname + (qs ? '?' + qs : '');
+            history.pushState(null, '', url);
+        }
+
+        function formatDate(isoString) {
+            const date = new Date(isoString);
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function collectValues(failures, field) {
+            const vals = new Set();
+            failures.forEach(f => {
+                const v = f[field];
+                if (v) vals.add(v);
+            });
+            return Array.from(vals).sort();
+        }
+
+        function applyFilters(failures, filters) {
+            return failures.filter(f => {
+                if (filters.category && f.category !== filters.category) return false;
+                if (filters.subcategory && (f.subcategory || '') !== filters.subcategory) return false;
+                if (filters.ecosystem && f.ecosystem !== filters.ecosystem) return false;
+                if (filters.batch_id && f.batch_id !== filters.batch_id) return false;
+                return true;
+            });
+        }
+
+        function renderFilters(failures, filters) {
+            const categories = collectValues(failures, 'category');
+            const subcategories = collectValues(failures, 'subcategory');
+            const ecosystems = collectValues(failures, 'ecosystem');
+
+            function opts(values, selected) {
+                return values.map(v =>
+                    '<option value="' + esc(v) + '"' + (v === selected ? ' selected' : '') + '>' + esc(v) + '</option>'
+                ).join('');
+            }
+
+            return `<div class="filter-bar">
+                <label>Category:
+                    <select id="filter-category">
+                        <option value="">All</option>
+                        ${opts(categories, filters.category)}
+                    </select>
+                </label>
+                <label>Subcategory:
+                    <select id="filter-subcategory">
+                        <option value="">All</option>
+                        ${opts(subcategories, filters.subcategory)}
+                    </select>
+                </label>
+                <label>Ecosystem:
+                    <select id="filter-ecosystem">
+                        <option value="">All</option>
+                        ${opts(ecosystems, filters.ecosystem)}
+                    </select>
+                </label>
+            </div>`;
+        }
+
+        function renderPagination(total) {
+            const pages = Math.ceil(total / PAGE_SIZE);
+            if (pages <= 1) return '';
+
+            let html = '<div class="pagination">';
+            html += '<button onclick="goToPage(' + (currentPage - 1) + ')"' +
+                (currentPage <= 1 ? ' disabled' : '') + '>&laquo; Prev</button>';
+
+            for (let i = 1; i <= pages; i++) {
+                if (pages > 7 && i > 2 && i < pages - 1 && Math.abs(i - currentPage) > 1) {
+                    if (i === 3 || i === pages - 2) {
+                        html += '<span class="page-info">...</span>';
+                    }
+                    continue;
+                }
+                html += '<button onclick="goToPage(' + i + ')" class="' +
+                    (i === currentPage ? 'active' : '') + '">' + i + '</button>';
+            }
+
+            html += '<button onclick="goToPage(' + (currentPage + 1) + ')"' +
+                (currentPage >= pages ? ' disabled' : '') + '>Next &raquo;</button>';
+            html += '<span class="page-info">(' + total + ' total)</span>';
+            html += '</div>';
+            return html;
+        }
+
+        function renderTable(failures) {
+            if (failures.length === 0) {
+                return '<div class="loading">No failures match the current filters</div>';
+            }
+
+            const start = (currentPage - 1) * PAGE_SIZE;
+            const pageItems = failures.slice(start, start + PAGE_SIZE);
+
+            const rows = pageItems.map(f => `
+                <tr onclick="window.location='failure.html?id=${encodeURIComponent(f.id)}'">
+                    <td class="package-name">
+                        <a href="failure.html?id=${encodeURIComponent(f.id)}">${esc(f.package)}</a>
+                    </td>
+                    <td>${esc(f.ecosystem)}</td>
+                    <td><span class="category-badge">${esc(f.category)}</span></td>
+                    <td>${f.subcategory ? '<span class="subcategory-badge">' + esc(f.subcategory) + '</span>' : '-'}</td>
+                    <td class="timestamp">${esc(formatDate(f.timestamp))}</td>
+                </tr>
+            `).join('');
+
+            return `
+                <div class="package-list">
+                    <h2>${failures.length} failure${failures.length !== 1 ? 's' : ''}</h2>
+                    <table class="package-table">
+                        <thead>
+                            <tr>
+                                <th>Package</th>
+                                <th>Ecosystem</th>
+                                <th>Category</th>
+                                <th>Subcategory</th>
+                                <th>Timestamp</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rows}
+                        </tbody>
+                    </table>
+                    ${renderPagination(failures.length)}
+                </div>
+            `;
+        }
+
+        function render() {
+            const filters = getParams();
+            filteredFailures = applyFilters(allFailures, filters);
+
+            // Clamp page
+            const maxPage = Math.max(1, Math.ceil(filteredFailures.length / PAGE_SIZE));
+            if (currentPage > maxPage) currentPage = maxPage;
+
+            const content = document.getElementById('content');
+            content.innerHTML = renderFilters(allFailures, filters) + renderTable(filteredFailures);
+
+            // Bind filter change handlers
+            document.getElementById('filter-category').addEventListener('change', onFilterChange);
+            document.getElementById('filter-subcategory').addEventListener('change', onFilterChange);
+            document.getElementById('filter-ecosystem').addEventListener('change', onFilterChange);
+        }
+
+        function onFilterChange() {
+            const filters = {
+                category: document.getElementById('filter-category').value,
+                subcategory: document.getElementById('filter-subcategory').value,
+                ecosystem: document.getElementById('filter-ecosystem').value,
+                batch_id: getParams().batch_id
+            };
+            currentPage = 1;
+            updateURL(filters);
+            render();
+        }
+
+        function goToPage(page) {
+            const maxPage = Math.max(1, Math.ceil(filteredFailures.length / PAGE_SIZE));
+            if (page < 1 || page > maxPage) return;
+            currentPage = page;
+            render();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        window.addEventListener('popstate', function() {
+            currentPage = 1;
+            render();
+        });
+
+        async function load() {
+            try {
+                const response = await fetch('/pipeline/dashboard.json');
+                const data = await response.json();
+                allFailures = data.failure_details || [];
+                render();
+            } catch (error) {
+                document.getElementById('content').innerHTML =
+                    '<div class="loading">Error loading data: ' + esc(error.message) + '</div>';
+            }
+        }
+
+        load();
+    </script>
+</body>
+</html>
