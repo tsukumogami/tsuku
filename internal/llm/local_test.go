@@ -268,7 +268,7 @@ func TestEnsureModelReady(t *testing.T) {
 			grpc.WithTransportCredentials(insecure.NewCredentials()),
 		)
 		require.NoError(t, err)
-		defer conn.Close()
+		defer func() { _ = conn.Close() }()
 
 		prompted := false
 		provider := &LocalProvider{

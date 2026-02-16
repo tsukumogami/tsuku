@@ -101,7 +101,7 @@ func TestInteractivePrompter_ConfirmDownload(t *testing.T) {
 		require.Empty(t, output.String()) // No output in non-TTY
 	})
 
-	t.Run("returns error on cancelled context", func(t *testing.T) {
+	t.Run("returns error on canceled context", func(t *testing.T) {
 		progress.IsTerminalFunc = func(fd int) bool { return true }
 
 		ctx, cancel := context.WithCancel(context.Background())
