@@ -1,0 +1,221 @@
+{
+  "design_doc": "/home/dgazineu/dev/workspace/tsuku/tsuku-2/public/tsuku/docs/designs/DESIGN-automated-seeding.md",
+  "milestone_name": "automated-seeding",
+  "milestone_number": 85,
+  "milestone_url": "https://github.com/tsukumogami/tsuku/milestone/85",
+  "branch": "docs/automated-seeding",
+  "started_at": "2026-02-16T18:21:25Z",
+  "pr_number": 1722,
+  "pr_url": "https://github.com/tsukumogami/tsuku/pull/1722",
+  "pr_status": "draft",
+  "integrity_hash": "sha256:7c98b4f6c00d5072f2732eb615ef9a1c1b22582cae41986489e45bd4bc3a6130",
+  "issues": [
+    {
+      "number": 1723,
+      "title": "feat(seed): implement walking skeleton for ecosystem discovery and seeding",
+      "status": "completed",
+      "ci_status": "passed",
+      "dependencies": [],
+      "tier": "testable",
+      "commits": [
+        "219074ba",
+        "242d6191"
+      ],
+      "summary": {
+        "files_changed": [
+          "internal/builders/probe.go",
+          "internal/builders/cargo.go",
+          "internal/builders/cargo_test.go",
+          "internal/discover/ecosystem_probe.go",
+          "internal/discover/ecosystem_probe_test.go",
+          "internal/seed/audit.go",
+          "internal/seed/convert.go",
+          "internal/seed/convert_test.go",
+          "internal/seed/disambiguator.go",
+          "internal/seed/disambiguator_test.go",
+          "internal/seed/homebrew.go",
+          "internal/seed/queue.go",
+          "internal/seed/queue_test.go",
+          "cmd/seed-queue/main.go"
+        ],
+        "tests_added": 21,
+        "key_decisions": "Refactored EcosystemProbe.Resolve() to share probing logic with ResolveWithDetails() via internal probeAll() and filterMatches() helpers. Exported IsTier1() from homebrew.go as shared tier-1 check. CargoBuilder.Discover() test uses single page to avoid slow rate-limiting sleeps."
+      },
+      "testable_scenarios": [
+        "scenario-1",
+        "scenario-2",
+        "scenario-3",
+        "scenario-4",
+        "scenario-5",
+        "scenario-6"
+      ],
+      "test_results": {},
+      "doc_updates": [],
+      "doc_results": {},
+      "completed_at": "2026-02-16T18:58:12Z"
+    },
+    {
+      "number": 1724,
+      "title": "feat(builders): add Discover() to npm, pypi, and gem builders",
+      "status": "completed",
+      "ci_status": "passed",
+      "dependencies": [
+        1723
+      ],
+      "tier": "testable",
+      "commits": [
+        "2bc619a1",
+        "d72589d1"
+      ],
+      "summary": {
+        "files_changed": [
+          "internal/builders/npm.go",
+          "internal/builders/npm_test.go",
+          "internal/builders/pypi.go",
+          "internal/builders/pypi_test.go",
+          "internal/builders/gem.go",
+          "internal/builders/gem_test.go"
+        ],
+        "tests_added": 22,
+        "key_decisions": "Followed CargoBuilder.Discover() pattern for all three builders. NpmBuilder paginates with 'from' offset and 2 req/s rate limit. PyPIBuilder adds Classifiers field to existing pypiPackageResponse.Info struct, uses topPyPIURL field on builder, filters for Environment :: Console classifier. GemBuilder combines top downloads and CLI search with dedup, extractGemName() strips version suffixes, caps at 200. All use time.After for rate limiting. PyPI returns Downloads=0 per design."
+      },
+      "testable_scenarios": [
+        "scenario-7",
+        "scenario-8",
+        "scenario-9",
+        "scenario-10"
+      ],
+      "test_results": {},
+      "doc_updates": [],
+      "doc_results": {},
+      "completed_at": "2026-02-16T19:17:23Z"
+    },
+    {
+      "number": 1725,
+      "title": "feat(seed): implement audit log system for disambiguation decisions",
+      "status": "completed",
+      "ci_status": "passed",
+      "dependencies": [
+        1723
+      ],
+      "tier": "testable",
+      "commits": [
+        "dae66f6d",
+        "204255ff"
+      ],
+      "summary": {
+        "files_changed": [
+          "internal/seed/audit.go",
+          "internal/seed/audit_test.go",
+          "cmd/seed-queue/main.go"
+        ],
+        "tests_added": 11,
+        "key_decisions": "Replaced builders.ProbeResult usage in AuditEntry with new AuditProbeResult struct. buildAuditEntry helper in cmd/seed-queue converts discover.ProbeOutcome to AuditProbeResult. Audit write errors are non-fatal (logged to stderr)."
+      },
+      "testable_scenarios": [
+        "scenario-11",
+        "scenario-12",
+        "scenario-13"
+      ],
+      "test_results": {},
+      "doc_updates": [],
+      "doc_results": {},
+      "completed_at": "2026-02-16T19:35:06Z"
+    },
+    {
+      "number": 1726,
+      "title": "feat(seed): implement freshness checking and source change alerting",
+      "status": "completed",
+      "ci_status": "passed",
+      "dependencies": [
+        1723,
+        1725
+      ],
+      "tier": "critical",
+      "commits": [
+        "517747d9",
+        "8e6a514d"
+      ],
+      "summary": {
+        "files_changed": [
+          "internal/seed/freshness.go",
+          "internal/seed/freshness_test.go",
+          "cmd/seed-queue/main.go"
+        ],
+        "tests_added": 31,
+        "key_decisions": "Created composable freshness functions (IsStale, IsFailuresStale, IsNewAuditCandidate, NeedsRedisambiguation, ApplySourceChange, ApplySelectionResult, UpdateDisambiguatedAt) instead of monolithic checker. CuratedSourceValidator uses HTTP HEAD with ecosystemAPIURL(). -freshness flag (int days, default 30) added to seed-queue."
+      },
+      "testable_scenarios": [
+        "scenario-14",
+        "scenario-15",
+        "scenario-16",
+        "scenario-17",
+        "scenario-18",
+        "scenario-19"
+      ],
+      "test_results": {},
+      "doc_updates": [],
+      "doc_results": {},
+      "completed_at": "2026-02-16T19:52:37Z"
+    },
+    {
+      "number": 1727,
+      "title": "feat(seed): complete seed-queue command interface and output",
+      "status": "implemented",
+      "ci_status": "pending",
+      "dependencies": [
+        1723,
+        1726
+      ],
+      "tier": "testable",
+      "commits": [],
+      "summary": {
+        "files_changed": [
+          "cmd/seed-queue/main.go",
+          "cmd/seed-queue/main_test.go",
+          "internal/seed/summary.go",
+          "internal/seed/summary_test.go",
+          "internal/seed/runhistory.go",
+          "internal/seed/runhistory_test.go"
+        ],
+        "tests_added": 30,
+        "key_decisions": "Rewrote cmd/seed-queue/main.go from two-path (homebrew/cargo) to unified multi-source architecture. Extracted run()/execute() from main() for testability. -source defaults to 'all'. SeedingSummary has custom MarshalJSON guaranteeing [] not null. AppendSeedingRun uses atomic write-to-temp-then-rename. Exit code: 0 success, 1 fatal, 2 partial."
+      },
+      "testable_scenarios": [
+        "scenario-20",
+        "scenario-21",
+        "scenario-22"
+      ],
+      "test_results": {},
+      "doc_updates": [
+        "doc-1"
+      ],
+      "doc_results": {},
+      "completed_at": "2026-02-16T20:08:07Z"
+    },
+    {
+      "number": 1728,
+      "title": "feat(batch): add seeding workflow and bootstrap Phase B",
+      "status": "pending",
+      "ci_status": "pending",
+      "dependencies": [
+        1727
+      ],
+      "tier": "critical",
+      "commits": [],
+      "summary": null,
+      "testable_scenarios": [],
+      "test_results": {},
+      "doc_updates": [
+        "doc-2",
+        "doc-3"
+      ],
+      "doc_results": {}
+    }
+  ],
+  "skipped_issues": [],
+  "current_issue_index": 4,
+  "test_plan_file": "wip/implement-doc_automated-seeding_test_plan.md",
+  "doc_plan_file": "wip/implement-doc_automated-seeding_doc_plan.md",
+  "resumed_at": null
+}

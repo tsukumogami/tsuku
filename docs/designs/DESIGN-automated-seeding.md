@@ -47,7 +47,7 @@ Planned
 | _Per-package audit files recording full probe results, selected source, and reasoning. Provides HasSource() and ReadAuditEntry() that freshness checking depends on._ | | |
 | ~~[#1726: feat(seed): implement freshness checking and source change alerting](https://github.com/tsukumogami/tsuku/issues/1726)~~ | [#1723](https://github.com/tsukumogami/tsuku/issues/1723), [#1725](https://github.com/tsukumogami/tsuku/issues/1725) | critical |
 | _Three re-disambiguation triggers (staleness, failures+stale, new audit candidate), source change detection with priority-based alerting, and curated source validation._ | | |
-| [#1727: feat(seed): complete seed-queue command interface and output](https://github.com/tsukumogami/tsuku/issues/1727) | [#1723](https://github.com/tsukumogami/tsuku/issues/1723), [#1726](https://github.com/tsukumogami/tsuku/issues/1726) | testable |
+| ~~[#1727: feat(seed): complete seed-queue command interface and output](https://github.com/tsukumogami/tsuku/issues/1727)~~ | [#1723](https://github.com/tsukumogami/tsuku/issues/1723), [#1726](https://github.com/tsukumogami/tsuku/issues/1726) | testable |
 | _Full flag set, exit codes (0/1/2), summary JSON to stdout for workflow consumption, and seeding-runs.jsonl persistence. Stabilizes the command contract for CI._ | | |
 | [#1728: feat(batch): add seeding workflow and bootstrap Phase B](https://github.com/tsukumogami/tsuku/issues/1728) | [#1727](https://github.com/tsukumogami/tsuku/issues/1727) | critical |
 | _Updates seed-queue.yml for all ecosystems, adds source change issue creation with seeding:review label, and documents Bootstrap Phase B procedure._ | | |
@@ -78,8 +78,8 @@ graph TD
     class I1724 done
     class I1725 done
     class I1726 done
-    class I1727 ready
-    class I1728 blocked
+    class I1727 done
+    class I1728 ready
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
