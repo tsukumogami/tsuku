@@ -126,6 +126,20 @@ Enable or disable stale-if-error fallback behavior.
 
 When enabled, tsuku will fall back to cached recipes when the registry is unavailable (subject to `TSUKU_RECIPE_CACHE_MAX_STALE`). Disable this for strict freshness requirements.
 
+## LLM Runtime
+
+### TSUKU_LLM_IDLE_TIMEOUT
+
+Idle timeout for the local LLM addon server. After this duration with no inference requests, the server shuts down automatically.
+
+- **Default:** `5m`
+- **Format:** Go duration string (e.g., `30s`, `5m`, `10m`)
+- **Example:** `export TSUKU_LLM_IDLE_TIMEOUT=30s`
+
+This overrides the `idle_timeout` value in `$TSUKU_HOME/config.toml`. Useful for testing (short timeouts for quick cleanup) and CI pipelines that need different timeout behavior without modifying config files.
+
+The addon server starts on demand when local inference is needed and stays alive to serve subsequent requests within the timeout window. Batch pipelines benefit from this: the first `tsuku create` call starts the server, and later calls reuse it without model reload overhead.
+
 ## Development and Debugging
 
 ### TSUKU_DEBUG
@@ -170,6 +184,7 @@ To create a token:
 | `TSUKU_RECIPE_CACHE_SIZE_LIMIT` | `50MB` | Recipe cache size limit |
 | `TSUKU_RECIPE_CACHE_MAX_STALE` | `168h` | Maximum stale cache age for fallback |
 | `TSUKU_RECIPE_CACHE_STALE_FALLBACK` | `true` | Enable stale-if-error fallback |
+| `TSUKU_LLM_IDLE_TIMEOUT` | `5m` | Local LLM addon server idle timeout |
 | `TSUKU_NO_TELEMETRY` | (unset) | Disable telemetry when set |
 | `TSUKU_TELEMETRY` | (unset) | Disable telemetry when `0` or `false` |
 | `TSUKU_TELEMETRY_DEBUG` | (unset) | Print telemetry to stderr |

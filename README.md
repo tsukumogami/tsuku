@@ -103,9 +103,9 @@ tsuku create firefox --from cask:firefox
 
 #### LLM-Powered Recipe Generation
 
-Some recipe builders use LLM analysis to generate recipes from complex sources. These require an API key:
+Some recipe builders use LLM analysis to generate recipes from complex sources. These work out of the box with local inference -- no API keys needed.
 
-**Builders requiring LLM**:
+**Builders requiring LLM** (local inference works automatically):
 - `--from github:owner/repo` - Analyzes GitHub releases
 - `--from homebrew:formula` - Analyzes Homebrew formulas
 
@@ -116,7 +116,18 @@ Some recipe builders use LLM analysis to generate recipes from complex sources. 
 - `--from rubygems` - Uses RubyGems API
 - `--from cask:<name>` - Uses Homebrew Cask API (macOS applications)
 
-To use LLM-powered builders, export an API key for Claude or Gemini:
+On first use, tsuku downloads a small addon binary (~50MB) and a model sized for your hardware (0.5-2.5GB). You'll be prompted before any download starts. To pre-download everything for CI or offline use:
+
+```bash
+tsuku llm download            # interactive, auto-detects hardware
+tsuku llm download --yes      # auto-approve for CI pipelines
+```
+
+See the [Local LLM Runtime Guide](docs/GUIDE-local-llm-runtime.md) for hardware requirements, configuration, and troubleshooting.
+
+**Optional: Cloud Providers**
+
+You can also use cloud LLM providers instead of (or alongside) local inference. Export an API key for Claude or Gemini:
 
 ```bash
 # Claude (Anthropic)
@@ -126,7 +137,7 @@ export ANTHROPIC_API_KEY="sk-ant-..."
 export GOOGLE_API_KEY="AIza..."
 ```
 
-Cost per recipe generation: ~$0.02-0.15 depending on complexity.
+Cloud providers take priority over local inference when configured. Cost per recipe generation: ~$0.02-0.15 depending on complexity.
 
 #### Dependency Discovery
 
