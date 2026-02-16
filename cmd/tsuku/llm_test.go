@@ -1,6 +1,7 @@
 package main
 
 import (
+	"slices"
 	"testing"
 )
 
@@ -30,27 +31,13 @@ func TestLLMCommandStructure(t *testing.T) {
 	})
 
 	t.Run("download is subcommand of llm", func(t *testing.T) {
-		found := false
-		for _, sub := range llmCmd.Commands() {
-			if sub == llmDownloadCmd {
-				found = true
-				break
-			}
-		}
-		if !found {
+		if !slices.Contains(llmCmd.Commands(), llmDownloadCmd) {
 			t.Error("llmDownloadCmd should be a subcommand of llmCmd")
 		}
 	})
 
 	t.Run("llm is subcommand of root", func(t *testing.T) {
-		found := false
-		for _, sub := range rootCmd.Commands() {
-			if sub == llmCmd {
-				found = true
-				break
-			}
-		}
-		if !found {
+		if !slices.Contains(rootCmd.Commands(), llmCmd) {
 			t.Error("llmCmd should be a subcommand of rootCmd")
 		}
 	})
