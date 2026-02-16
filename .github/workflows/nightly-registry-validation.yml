@@ -145,7 +145,7 @@ jobs:
           cache-dependency-path: go.sum
 
       - name: Cache downloads
-        uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
+        uses: actions/cache@b7e8d49f17405cc70c1c120101943203c98d3a4b # v5.0.3
         with:
           path: ~/.tsuku/cache/downloads
           key: nightly-registry-${{ github.run_id }}
@@ -246,7 +246,7 @@ jobs:
           cache-dependency-path: go.sum
 
       - name: Cache downloads
-        uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
+        uses: actions/cache@b7e8d49f17405cc70c1c120101943203c98d3a4b # v5.0.3
         with:
           path: ~/.tsuku/cache/downloads
           key: nightly-execution-${{ github.run_id }}
