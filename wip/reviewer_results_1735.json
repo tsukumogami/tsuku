@@ -1,0 +1,19 @@
+{
+  "pragmatic": {"blocking": [], "advisory": []},
+  "architect": {
+    "blocking": [],
+    "advisory": [
+      "client.go:25 godoc still says ANTHROPIC_API_KEY from environment",
+      "factory.go:176 error message hardcodes env var names"
+    ]
+  },
+  "maintainer": {
+    "blocking": [],
+    "advisory": [
+      "client.go:25 stale godoc about env var resolution",
+      "factory_test.go has copy-pasted env var save/restore boilerplate",
+      "factory.go:176 hardcodes env var names in no-providers error"
+    ]
+  },
+  "verdict": "All findings advisory. Ready to push."
+}

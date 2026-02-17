@@ -6,7 +6,7 @@
   "started_at": "2026-02-17T00:20:34Z",
   "pr_number": 1731,
   "pr_url": "https://github.com/tsukumogami/tsuku/pull/1731",
-  "integrity_hash": "sha256:6fb5645095ad337c12cdb49f195df436c80ce124a129a23ed4efa55e3c9a6f82",
+  "integrity_hash": "sha256:3494d1a6d17ce4cb7bfebce6275dac19d20dad1e525f8c5512e9cebc30e087ef",
   "issues": [
     {
       "number": 1733,
@@ -95,15 +95,39 @@
     {
       "number": 1735,
       "title": "refactor(llm): migrate API key resolution to secrets package",
-      "status": "in_progress",
+      "status": "implemented",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
       "dependencies": [
         1734
       ],
       "tier": "testable",
-      "commits": [],
-      "summary": null
+      "commits": [
+        "f0e77df2b72b10eefc65ec19ee76c161e27299d9"
+      ],
+      "summary": null,
+      "reviewer_results": {
+        "pragmatic": {
+          "blocking": [],
+          "advisory": []
+        },
+        "architect": {
+          "blocking": [],
+          "advisory": [
+            "client.go:25 godoc still says ANTHROPIC_API_KEY from environment",
+            "factory.go:176 error message hardcodes env var names"
+          ]
+        },
+        "maintainer": {
+          "blocking": [],
+          "advisory": [
+            "client.go:25 stale godoc about env var resolution",
+            "factory_test.go has copy-pasted env var save/restore boilerplate",
+            "factory.go:176 hardcodes env var names in no-providers error"
+          ]
+        },
+        "verdict": "All findings advisory. Ready to push."
+      }
     },
     {
       "number": 1736,

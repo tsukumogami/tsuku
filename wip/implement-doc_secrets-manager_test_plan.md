@@ -126,7 +126,8 @@ Total scenarios: 16
 **Commands**:
 - `go test -v ./internal/llm/...`
 **Expected**: All existing LLM tests pass. The `claude.go`, `gemini.go`, and `factory.go` files no longer contain direct `os.Getenv("ANTHROPIC_API_KEY")`, `os.Getenv("GOOGLE_API_KEY")`, or `os.Getenv("GEMINI_API_KEY")` calls in non-test code. Provider detection in `factory.go` uses `secrets.IsSet()`.
-**Status**: pending
+**Status**: passed
+**Validated**: 2026-02-16 via Docker (golang:1.25). All 142 LLM tests passed (0 failed, 10 skipped integration tests). Source verification confirmed: claude.go uses secrets.Get("anthropic_api_key"), gemini.go uses secrets.Get("google_api_key"), factory.go uses secrets.IsSet() for provider detection. No os.Getenv calls for API keys remain in non-test code.
 
 ---
 
