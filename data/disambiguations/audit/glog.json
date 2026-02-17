@@ -1,0 +1,53 @@
+{
+  "tool": "glog",
+  "selected": "homebrew:glog",
+  "alternatives": [
+    "rubygems:glog",
+    "npm:glog",
+    "pypi:glog"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.2428217707580396,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:glog",
+      "downloads": 80812,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:glog",
+      "downloads": 10,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:glog",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:glog",
+      "downloads": 65023,
+      "version_count": 16,
+      "has_repository": true
+    },
+    {
+      "source": "npm:glog",
+      "downloads": 0,
+      "version_count": 27,
+      "has_repository": true
+    },
+    {
+      "source": "cpan:glog",
+      "downloads": 0,
+      "version_count": 0,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:glog",
+  "disambiguated_at": "2026-02-17T00:17:05.785661227Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

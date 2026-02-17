@@ -1,0 +1,27 @@
+{
+  "tool": "shadowsocks-rust",
+  "selected": "homebrew:shadowsocks-rust",
+  "alternatives": [
+    "crates.io:shadowsocks-rust"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.1238155401137082,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:shadowsocks-rust",
+      "downloads": 1779,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:shadowsocks-rust",
+      "downloads": 1583,
+      "version_count": 116,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:shadowsocks-rust",
+  "disambiguated_at": "2026-02-17T00:27:47.752499977Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

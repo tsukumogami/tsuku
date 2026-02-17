@@ -1,0 +1,40 @@
+{
+  "tool": "shimmy",
+  "selected": "crates.io:shimmy",
+  "alternatives": [
+    "homebrew:shimmy",
+    "pypi:shimmy"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.3121149897330595,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:shimmy",
+      "downloads": 487,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:shimmy",
+      "downloads": 639,
+      "version_count": 18,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:shimmy",
+      "downloads": 0,
+      "version_count": 10,
+      "has_repository": true
+    },
+    {
+      "source": "npm:shimmy",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:shimmy",
+  "disambiguated_at": "2026-02-17T00:27:51.730996995Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

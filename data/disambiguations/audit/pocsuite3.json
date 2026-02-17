@@ -1,0 +1,26 @@
+{
+  "tool": "pocsuite3",
+  "selected": "homebrew:pocsuite3",
+  "alternatives": [
+    "pypi:pocsuite3"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:pocsuite3",
+      "downloads": 459,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:pocsuite3",
+      "downloads": 0,
+      "version_count": 78,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:pocsuite3",
+  "disambiguated_at": "2026-02-17T00:25:27.158516632Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,32 @@
+{
+  "tool": "ooniprobe",
+  "selected": "homebrew:ooniprobe",
+  "alternatives": [
+    "pypi:ooniprobe"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:ooniprobe",
+      "downloads": 0,
+      "version_count": 23,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:ooniprobe",
+      "downloads": 460,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:ooniprobe",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:ooniprobe",
+  "disambiguated_at": "2026-02-17T00:23:59.840503638Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

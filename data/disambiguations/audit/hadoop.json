@@ -1,0 +1,30 @@
+{
+  "tool": "hadoop",
+  "selected": "homebrew:hadoop",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:hadoop",
+      "downloads": 8,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:hadoop",
+      "downloads": 6230,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:hadoop",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:hadoop",
+  "disambiguated_at": "2026-02-17T00:17:56.398861399Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

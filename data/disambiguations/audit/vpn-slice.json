@@ -1,0 +1,26 @@
+{
+  "tool": "vpn-slice",
+  "selected": "homebrew:vpn-slice",
+  "alternatives": [
+    "pypi:vpn-slice"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:vpn-slice",
+      "downloads": 1197,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:vpn-slice",
+      "downloads": 0,
+      "version_count": 14,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:vpn-slice",
+  "disambiguated_at": "2026-02-17T00:30:52.52019355Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,27 @@
+{
+  "tool": "ab-av1",
+  "selected": "homebrew:ab-av1",
+  "alternatives": [
+    "crates.io:ab-av1"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.0624349635796047,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:ab-av1",
+      "downloads": 1021,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:ab-av1",
+      "downloads": 961,
+      "version_count": 46,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:ab-av1",
+  "disambiguated_at": "2026-02-17T00:10:16.533100464Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

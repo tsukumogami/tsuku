@@ -1,0 +1,47 @@
+{
+  "tool": "tt",
+  "selected": "rubygems:tt",
+  "alternatives": [
+    "homebrew:tt",
+    "npm:tt",
+    "pypi:tt"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 9.294755877034358,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:tt",
+      "downloads": 26,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "pypi:tt",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:tt",
+      "downloads": 553,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:tt",
+      "downloads": 5140,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:tt",
+      "downloads": 8,
+      "version_count": 5,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:tt",
+  "disambiguated_at": "2026-02-17T00:30:04.713436137Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,27 @@
+{
+  "tool": "lockrun",
+  "selected": "rubygems:lockrun",
+  "alternatives": [
+    "homebrew:lockrun"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 7.058721934369602,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:lockrun",
+      "downloads": 579,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:lockrun",
+      "downloads": 4087,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:lockrun",
+  "disambiguated_at": "2026-02-17T00:21:32.935326847Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

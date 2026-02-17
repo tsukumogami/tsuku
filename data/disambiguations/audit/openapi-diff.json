@@ -1,0 +1,27 @@
+{
+  "tool": "openapi-diff",
+  "selected": "npm:openapi-diff",
+  "alternatives": [
+    "homebrew:openapi-diff"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 113.17345597897503,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:openapi-diff",
+      "downloads": 761,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:openapi-diff",
+      "downloads": 86125,
+      "version_count": 38,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:openapi-diff",
+  "disambiguated_at": "2026-02-17T00:24:04.080194098Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

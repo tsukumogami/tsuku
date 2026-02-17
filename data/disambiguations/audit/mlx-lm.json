@@ -1,0 +1,34 @@
+{
+  "tool": "mlx-lm",
+  "selected": "homebrew:mlx-lm",
+  "alternatives": [
+    "crates.io:mlx-lm",
+    "pypi:mlx-lm"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 4.176630434782608,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:mlx-lm",
+      "downloads": 0,
+      "version_count": 92,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:mlx-lm",
+      "downloads": 1537,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:mlx-lm",
+      "downloads": 368,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:mlx-lm",
+  "disambiguated_at": "2026-02-17T00:22:38.838045193Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

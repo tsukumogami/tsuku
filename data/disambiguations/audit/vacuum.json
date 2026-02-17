@@ -1,0 +1,46 @@
+{
+  "tool": "vacuum",
+  "selected": "rubygems:vacuum",
+  "alternatives": [
+    "homebrew:vacuum",
+    "pypi:vacuum"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 4313.210702341137,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:vacuum",
+      "downloads": 12,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:vacuum",
+      "downloads": 0,
+      "version_count": 13,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:vacuum",
+      "downloads": 299,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:vacuum",
+      "downloads": 1289650,
+      "version_count": 40,
+      "has_repository": false
+    },
+    {
+      "source": "npm:vacuum",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:vacuum",
+  "disambiguated_at": "2026-02-17T00:30:32.341849995Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

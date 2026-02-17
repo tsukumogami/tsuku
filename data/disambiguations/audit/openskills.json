@@ -1,0 +1,27 @@
+{
+  "tool": "openskills",
+  "selected": "npm:openskills",
+  "alternatives": [
+    "homebrew:openskills"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 28.937007874015748,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:openskills",
+      "downloads": 127,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:openskills",
+      "downloads": 3675,
+      "version_count": 9,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:openskills",
+  "disambiguated_at": "2026-02-17T00:24:15.451678393Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

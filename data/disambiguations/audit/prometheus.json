@@ -1,0 +1,48 @@
+{
+  "tool": "prometheus",
+  "selected": "crates.io:prometheus",
+  "alternatives": [
+    "rubygems:prometheus",
+    "homebrew:prometheus",
+    "npm:prometheus",
+    "pypi:prometheus"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 4.053071015328939,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:prometheus",
+      "downloads": 16826,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:prometheus",
+      "downloads": 0,
+      "version_count": 7,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:prometheus",
+      "downloads": 17793764,
+      "version_count": 41,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:prometheus",
+      "downloads": 4390193,
+      "version_count": 5,
+      "has_repository": false
+    },
+    {
+      "source": "npm:prometheus",
+      "downloads": 423,
+      "version_count": 11,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:prometheus",
+  "disambiguated_at": "2026-02-17T00:25:43.502865467Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

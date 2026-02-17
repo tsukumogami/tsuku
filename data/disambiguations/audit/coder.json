@@ -1,0 +1,46 @@
+{
+  "tool": "coder",
+  "selected": "rubygems:coder",
+  "alternatives": [
+    "homebrew:coder",
+    "crates.io:coder"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 96.80141342756184,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:coder",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:coder",
+      "downloads": 101,
+      "version_count": 16,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:coder",
+      "downloads": 2830,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:coder",
+      "downloads": 273948,
+      "version_count": 8,
+      "has_repository": false
+    },
+    {
+      "source": "npm:coder",
+      "downloads": 21,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:coder",
+  "disambiguated_at": "2026-02-17T00:13:29.943984924Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

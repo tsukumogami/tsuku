@@ -1,0 +1,47 @@
+{
+  "tool": "walk",
+  "selected": "rubygems:walk",
+  "alternatives": [
+    "homebrew:walk",
+    "npm:walk",
+    "pypi:walk"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 5.17293997965412,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:walk",
+      "downloads": 983,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:walk",
+      "downloads": 11,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:walk",
+      "downloads": 0,
+      "version_count": 10,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:walk",
+      "downloads": 5085,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "npm:walk",
+      "downloads": 0,
+      "version_count": 24,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:walk",
+  "disambiguated_at": "2026-02-17T00:30:59.500241408Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

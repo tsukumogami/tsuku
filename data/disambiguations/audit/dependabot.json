@@ -1,0 +1,24 @@
+{
+  "tool": "dependabot",
+  "selected": "homebrew:dependabot",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:dependabot",
+      "downloads": 2170,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:dependabot",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:dependabot",
+  "disambiguated_at": "2026-02-17T00:14:18.439487602Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

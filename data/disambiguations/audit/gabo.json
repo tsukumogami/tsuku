@@ -1,0 +1,30 @@
+{
+  "tool": "gabo",
+  "selected": "homebrew:gabo",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:gabo",
+      "downloads": 191,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:gabo",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "npm:gabo",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:gabo",
+  "disambiguated_at": "2026-02-17T00:16:23.97297142Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

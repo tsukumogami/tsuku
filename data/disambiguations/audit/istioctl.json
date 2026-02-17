@@ -1,0 +1,18 @@
+{
+  "tool": "istioctl",
+  "selected": "homebrew:istioctl",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:istioctl",
+      "downloads": 26883,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:istioctl",
+  "disambiguated_at": "2026-02-17T00:19:03.236570607Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

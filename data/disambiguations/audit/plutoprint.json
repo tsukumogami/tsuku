@@ -1,0 +1,32 @@
+{
+  "tool": "plutoprint",
+  "selected": "homebrew:plutoprint",
+  "alternatives": [
+    "pypi:plutoprint"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:plutoprint",
+      "downloads": 471,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:plutoprint",
+      "downloads": 0,
+      "version_count": 19,
+      "has_repository": true
+    },
+    {
+      "source": "npm:plutoprint",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:plutoprint",
+  "disambiguated_at": "2026-02-17T00:25:23.933852771Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

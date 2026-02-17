@@ -1,0 +1,24 @@
+{
+  "tool": "game-music-emu",
+  "selected": "homebrew:game-music-emu",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:game-music-emu",
+      "downloads": 33,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:game-music-emu",
+      "downloads": 11976,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:game-music-emu",
+  "disambiguated_at": "2026-02-17T00:16:25.062281721Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

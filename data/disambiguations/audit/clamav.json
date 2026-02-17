@@ -1,0 +1,39 @@
+{
+  "tool": "clamav",
+  "selected": "rubygems:clamav",
+  "alternatives": [
+    "homebrew:clamav"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 26.724967927179424,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:clamav",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:clamav",
+      "downloads": 16369,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:clamav",
+      "downloads": 37,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:clamav",
+      "downloads": 437461,
+      "version_count": 6,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:clamav",
+  "disambiguated_at": "2026-02-17T00:13:07.152310575Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

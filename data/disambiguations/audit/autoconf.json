@@ -1,0 +1,40 @@
+{
+  "tool": "autoconf",
+  "selected": "homebrew:autoconf",
+  "alternatives": [
+    "npm:autoconf",
+    "pypi:autoconf"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3223.512195121951,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:autoconf",
+      "downloads": 396492,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:autoconf",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:autoconf",
+      "downloads": 0,
+      "version_count": 82,
+      "has_repository": true
+    },
+    {
+      "source": "npm:autoconf",
+      "downloads": 123,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:autoconf",
+  "disambiguated_at": "2026-02-17T00:11:16.953200772Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,26 @@
+{
+  "tool": "beautysh",
+  "selected": "homebrew:beautysh",
+  "alternatives": [
+    "pypi:beautysh"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:beautysh",
+      "downloads": 0,
+      "version_count": 31,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:beautysh",
+      "downloads": 1891,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:beautysh",
+  "disambiguated_at": "2026-02-17T00:11:51.906972586Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

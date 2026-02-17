@@ -1,0 +1,27 @@
+{
+  "tool": "lolcrab",
+  "selected": "homebrew:lolcrab",
+  "alternatives": [
+    "crates.io:lolcrab"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.5772357723577235,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:lolcrab",
+      "downloads": 369,
+      "version_count": 11,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:lolcrab",
+      "downloads": 582,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:lolcrab",
+  "disambiguated_at": "2026-02-17T00:21:36.136729616Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

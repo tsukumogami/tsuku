@@ -1,0 +1,41 @@
+{
+  "tool": "weasyprint",
+  "selected": "rubygems:weasyprint",
+  "alternatives": [
+    "homebrew:weasyprint",
+    "npm:weasyprint",
+    "pypi:weasyprint"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.6941478732514987,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:weasyprint",
+      "downloads": 17515,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:weasyprint",
+      "downloads": 0,
+      "version_count": 118,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:weasyprint",
+      "downloads": 47188,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:weasyprint",
+      "downloads": 276,
+      "version_count": 4,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:weasyprint",
+  "disambiguated_at": "2026-02-17T00:31:04.961731249Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

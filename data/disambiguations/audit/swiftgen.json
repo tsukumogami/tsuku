@@ -1,0 +1,27 @@
+{
+  "tool": "swiftgen",
+  "selected": "homebrew:swiftgen",
+  "alternatives": [
+    "npm:swiftgen"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 55328.5,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:swiftgen",
+      "downloads": 110657,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:swiftgen",
+      "downloads": 2,
+      "version_count": 5,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:swiftgen",
+  "disambiguated_at": "2026-02-17T00:29:07.384384666Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,46 @@
+{
+  "tool": "cassandra",
+  "selected": "rubygems:cassandra",
+  "alternatives": [
+    "homebrew:cassandra",
+    "crates.io:cassandra"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 53.9691131498471,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:cassandra",
+      "downloads": 6540,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:cassandra",
+      "downloads": 252,
+      "version_count": 25,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:cassandra",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "npm:cassandra",
+      "downloads": 18,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "rubygems:cassandra",
+      "downloads": 352958,
+      "version_count": 42,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:cassandra",
+  "disambiguated_at": "2026-02-17T00:12:40.143561878Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

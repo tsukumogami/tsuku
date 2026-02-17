@@ -1,0 +1,30 @@
+{
+  "tool": "asn",
+  "selected": "homebrew:asn",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:asn",
+      "downloads": 581,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:asn",
+      "downloads": 22,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "npm:asn",
+      "downloads": 2,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:asn",
+  "disambiguated_at": "2026-02-17T00:11:05.673981169Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

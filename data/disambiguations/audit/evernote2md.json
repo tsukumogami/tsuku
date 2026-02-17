@@ -1,0 +1,33 @@
+{
+  "tool": "evernote2md",
+  "selected": "rubygems:evernote2md",
+  "alternatives": [
+    "homebrew:evernote2md"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 8.337535014005603,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:evernote2md",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:evernote2md",
+      "downloads": 714,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:evernote2md",
+      "downloads": 5953,
+      "version_count": 2,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:evernote2md",
+  "disambiguated_at": "2026-02-17T00:15:27.582949365Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

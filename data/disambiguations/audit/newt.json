@@ -1,0 +1,47 @@
+{
+  "tool": "newt",
+  "selected": "rubygems:newt",
+  "alternatives": [
+    "homebrew:newt",
+    "crates.io:newt",
+    "pypi:newt"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 5.931034482758621,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:newt",
+      "downloads": 4959,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:newt",
+      "downloads": 0,
+      "version_count": 5,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:newt",
+      "downloads": 207,
+      "version_count": 29,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:newt",
+      "downloads": 29412,
+      "version_count": 11,
+      "has_repository": false
+    },
+    {
+      "source": "npm:newt",
+      "downloads": 2,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:newt",
+  "disambiguated_at": "2026-02-17T00:23:27.937568962Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

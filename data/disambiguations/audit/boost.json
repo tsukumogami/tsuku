@@ -1,0 +1,47 @@
+{
+  "tool": "boost",
+  "selected": "homebrew:boost",
+  "alternatives": [
+    "rubygems:boost",
+    "npm:boost",
+    "crates.io:boost"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 79.48056915544676,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:boost",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:boost",
+      "downloads": 50,
+      "version_count": 5,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:boost",
+      "downloads": 519485,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:boost",
+      "downloads": 6536,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:boost",
+      "downloads": 76,
+      "version_count": 99,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:boost",
+  "disambiguated_at": "2026-02-17T00:12:05.673138449Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

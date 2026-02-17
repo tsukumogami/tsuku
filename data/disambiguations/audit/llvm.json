@@ -1,0 +1,33 @@
+{
+  "tool": "llvm",
+  "selected": "homebrew:llvm",
+  "alternatives": [
+    "crates.io:llvm"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 7994.25,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:llvm",
+      "downloads": 112,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:llvm",
+      "downloads": 895356,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:llvm",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:llvm",
+  "disambiguated_at": "2026-02-17T00:21:28.27316485Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

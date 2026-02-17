@@ -1,0 +1,47 @@
+{
+  "tool": "teleport",
+  "selected": "rubygems:teleport",
+  "alternatives": [
+    "homebrew:teleport",
+    "npm:teleport",
+    "pypi:teleport"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 4.2172797840027,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:teleport",
+      "downloads": 3,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:teleport",
+      "downloads": 14815,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:teleport",
+      "downloads": 0,
+      "version_count": 14,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:teleport",
+      "downloads": 62479,
+      "version_count": 20,
+      "has_repository": false
+    },
+    {
+      "source": "npm:teleport",
+      "downloads": 73,
+      "version_count": 14,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:teleport",
+  "disambiguated_at": "2026-02-17T00:29:26.414604753Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

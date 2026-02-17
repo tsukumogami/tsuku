@@ -1,0 +1,41 @@
+{
+  "tool": "most",
+  "selected": "rubygems:most",
+  "alternatives": [
+    "homebrew:most",
+    "npm:most",
+    "pypi:most"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 35.878483835005575,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:most",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:most",
+      "downloads": 897,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:most",
+      "downloads": 32183,
+      "version_count": 5,
+      "has_repository": false
+    },
+    {
+      "source": "npm:most",
+      "downloads": 0,
+      "version_count": 78,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:most",
+  "disambiguated_at": "2026-02-17T00:22:50.263047094Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

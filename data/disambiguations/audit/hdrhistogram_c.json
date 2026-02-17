@@ -1,0 +1,27 @@
+{
+  "tool": "hdrhistogram_c",
+  "selected": "homebrew:hdrhistogram_c",
+  "alternatives": [
+    "crates.io:hdrhistogram_c"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 5878.4375,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:hdrhistogram_c",
+      "downloads": 16,
+      "version_count": 5,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:hdrhistogram_c",
+      "downloads": 94055,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:hdrhistogram_c",
+  "disambiguated_at": "2026-02-17T00:18:09.047458776Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,41 @@
+{
+  "tool": "aichat",
+  "selected": "homebrew:aichat",
+  "alternatives": [
+    "crates.io:aichat",
+    "npm:aichat",
+    "pypi:aichat"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.3890274314214466,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:aichat",
+      "downloads": 0,
+      "version_count": 5,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:aichat",
+      "downloads": 7664,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:aichat",
+      "downloads": 3208,
+      "version_count": 31,
+      "has_repository": true
+    },
+    {
+      "source": "npm:aichat",
+      "downloads": 97,
+      "version_count": 24,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:aichat",
+  "disambiguated_at": "2026-02-17T00:10:28.030259314Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

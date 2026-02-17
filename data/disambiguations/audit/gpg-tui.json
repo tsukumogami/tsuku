@@ -1,0 +1,27 @@
+{
+  "tool": "gpg-tui",
+  "selected": "homebrew:gpg-tui",
+  "alternatives": [
+    "crates.io:gpg-tui"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.889830508474576,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:gpg-tui",
+      "downloads": 1377,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:gpg-tui",
+      "downloads": 354,
+      "version_count": 33,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:gpg-tui",
+  "disambiguated_at": "2026-02-17T00:17:29.734411579Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

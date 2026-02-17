@@ -1,0 +1,27 @@
+{
+  "tool": "htslib",
+  "selected": "rubygems:htslib",
+  "alternatives": [
+    "homebrew:htslib"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 4.085084745762712,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:htslib",
+      "downloads": 5900,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:htslib",
+      "downloads": 24102,
+      "version_count": 22,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:htslib",
+  "disambiguated_at": "2026-02-17T00:18:25.896423792Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

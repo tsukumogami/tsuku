@@ -1,0 +1,27 @@
+{
+  "tool": "cargo-binstall",
+  "selected": "crates.io:cargo-binstall",
+  "alternatives": [
+    "homebrew:cargo-binstall"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 5.074628844114528,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:cargo-binstall",
+      "downloads": 15088,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:cargo-binstall",
+      "downloads": 76566,
+      "version_count": 143,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:cargo-binstall",
+  "disambiguated_at": "2026-02-17T00:12:33.118419093Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

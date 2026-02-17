@@ -1,0 +1,46 @@
+{
+  "tool": "flash",
+  "selected": "rubygems:flash",
+  "alternatives": [
+    "homebrew:flash",
+    "crates.io:flash"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 23.42054574638844,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:flash",
+      "downloads": 88,
+      "version_count": 6,
+      "has_repository": false
+    },
+    {
+      "source": "pypi:flash",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:flash",
+      "downloads": 623,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:flash",
+      "downloads": 14591,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "npm:flash",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:flash",
+  "disambiguated_at": "2026-02-17T00:15:58.508016692Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

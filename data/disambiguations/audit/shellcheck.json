@@ -1,0 +1,27 @@
+{
+  "tool": "shellcheck",
+  "selected": "homebrew:shellcheck",
+  "alternatives": [
+    "npm:shellcheck"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.0595160275403668,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:shellcheck",
+      "downloads": 173429,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:shellcheck",
+      "downloads": 163687,
+      "version_count": 27,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:shellcheck",
+  "disambiguated_at": "2026-02-17T00:10:04.535676136Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

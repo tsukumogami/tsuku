@@ -1,0 +1,24 @@
+{
+  "tool": "nikto",
+  "selected": "homebrew:nikto",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:nikto",
+      "downloads": 5820,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:nikto",
+      "downloads": 4,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:nikto",
+  "disambiguated_at": "2026-02-17T00:23:32.273881158Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

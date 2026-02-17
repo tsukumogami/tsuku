@@ -1,0 +1,47 @@
+{
+  "tool": "glib",
+  "selected": "crates.io:glib",
+  "alternatives": [
+    "homebrew:glib",
+    "rubygems:glib",
+    "npm:glib"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.3315166416131623,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:glib",
+      "downloads": 2798677,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:glib",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "crates.io:glib",
+      "downloads": 3726485,
+      "version_count": 105,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:glib",
+      "downloads": 21990,
+      "version_count": 12,
+      "has_repository": false
+    },
+    {
+      "source": "npm:glib",
+      "downloads": 69,
+      "version_count": 10,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:glib",
+  "disambiguated_at": "2026-02-17T00:17:03.435347693Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

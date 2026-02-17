@@ -1,0 +1,26 @@
+{
+  "tool": "asitop",
+  "selected": "homebrew:asitop",
+  "alternatives": [
+    "pypi:asitop"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:asitop",
+      "downloads": 3712,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:asitop",
+      "downloads": 0,
+      "version_count": 22,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:asitop",
+  "disambiguated_at": "2026-02-17T00:11:04.784007782Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

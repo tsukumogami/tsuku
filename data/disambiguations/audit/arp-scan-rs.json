@@ -1,0 +1,18 @@
+{
+  "tool": "arp-scan-rs",
+  "selected": "homebrew:arp-scan-rs",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:arp-scan-rs",
+      "downloads": 269,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:arp-scan-rs",
+  "disambiguated_at": "2026-02-17T00:11:01.198646846Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

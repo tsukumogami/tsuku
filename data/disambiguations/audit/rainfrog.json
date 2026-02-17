@@ -1,0 +1,27 @@
+{
+  "tool": "rainfrog",
+  "selected": "homebrew:rainfrog",
+  "alternatives": [
+    "crates.io:rainfrog"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.2376111817026683,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:rainfrog",
+      "downloads": 2548,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:rainfrog",
+      "downloads": 787,
+      "version_count": 52,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:rainfrog",
+  "disambiguated_at": "2026-02-17T00:26:35.493908218Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

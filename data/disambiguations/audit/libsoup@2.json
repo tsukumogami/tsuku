@@ -1,0 +1,18 @@
+{
+  "tool": "libsoup@2",
+  "selected": "homebrew:libsoup@2",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:libsoup@2",
+      "downloads": 2461,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:libsoup@2",
+  "disambiguated_at": "2026-02-17T00:21:03.333852991Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

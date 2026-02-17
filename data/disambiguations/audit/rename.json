@@ -1,0 +1,47 @@
+{
+  "tool": "rename",
+  "selected": "rubygems:rename",
+  "alternatives": [
+    "homebrew:rename",
+    "npm:rename",
+    "pypi:rename"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 34.71777911405091,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:rename",
+      "downloads": 50,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:rename",
+      "downloads": 9978,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:rename",
+      "downloads": 0,
+      "version_count": 7,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:rename",
+      "downloads": 346414,
+      "version_count": 18,
+      "has_repository": true
+    },
+    {
+      "source": "npm:rename",
+      "downloads": 0,
+      "version_count": 9,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:rename",
+  "disambiguated_at": "2026-02-17T00:26:49.544347492Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

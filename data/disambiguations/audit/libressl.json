@@ -1,0 +1,18 @@
+{
+  "tool": "libressl",
+  "selected": "homebrew:libressl",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:libressl",
+      "downloads": 6122,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:libressl",
+  "disambiguated_at": "2026-02-17T00:20:58.849103136Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

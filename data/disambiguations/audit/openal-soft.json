@@ -1,0 +1,18 @@
+{
+  "tool": "openal-soft",
+  "selected": "homebrew:openal-soft",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:openal-soft",
+      "downloads": 7298,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:openal-soft",
+  "disambiguated_at": "2026-02-17T00:24:03.117943835Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,47 @@
+{
+  "tool": "helmsman",
+  "selected": "rubygems:helmsman",
+  "alternatives": [
+    "homebrew:helmsman",
+    "npm:helmsman",
+    "pypi:helmsman"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 118.06979695431473,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:helmsman",
+      "downloads": 33,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:helmsman",
+      "downloads": 0,
+      "version_count": 9,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:helmsman",
+      "downloads": 788,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:helmsman",
+      "downloads": 93039,
+      "version_count": 11,
+      "has_repository": false
+    },
+    {
+      "source": "npm:helmsman",
+      "downloads": 298,
+      "version_count": 18,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:helmsman",
+  "disambiguated_at": "2026-02-17T00:18:12.614911493Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

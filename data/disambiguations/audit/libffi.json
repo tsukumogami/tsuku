@@ -1,0 +1,34 @@
+{
+  "tool": "libffi",
+  "selected": "homebrew:libffi",
+  "alternatives": [
+    "crates.io:libffi",
+    "npm:libffi"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.50775771187606,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:libffi",
+      "downloads": 656541,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:libffi",
+      "downloads": 261804,
+      "version_count": 46,
+      "has_repository": true
+    },
+    {
+      "source": "npm:libffi",
+      "downloads": 7,
+      "version_count": 11,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:libffi",
+  "disambiguated_at": "2026-02-17T00:20:33.399766627Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

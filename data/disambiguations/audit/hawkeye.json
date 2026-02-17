@@ -1,0 +1,47 @@
+{
+  "tool": "hawkeye",
+  "selected": "crates.io:hawkeye",
+  "alternatives": [
+    "rubygems:hawkeye",
+    "homebrew:hawkeye",
+    "pypi:hawkeye"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.5128429655575015,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:hawkeye",
+      "downloads": 298,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:hawkeye",
+      "downloads": 0,
+      "version_count": 10,
+      "has_repository": false
+    },
+    {
+      "source": "crates.io:hawkeye",
+      "downloads": 17218,
+      "version_count": 37,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:hawkeye",
+      "downloads": 6852,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "npm:hawkeye",
+      "downloads": 0,
+      "version_count": 0,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:hawkeye",
+  "disambiguated_at": "2026-02-17T00:18:05.950356408Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "openssl@1.1",
+  "selected": "homebrew:openssl@1.1",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:openssl@1.1",
+      "downloads": 53127,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:openssl@1.1",
+  "disambiguated_at": "2026-02-17T00:24:16.153905553Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

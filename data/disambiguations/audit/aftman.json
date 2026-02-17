@@ -1,0 +1,27 @@
+{
+  "tool": "aftman",
+  "selected": "crates.io:aftman",
+  "alternatives": [
+    "homebrew:aftman"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.518633540372671,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:aftman",
+      "downloads": 322,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:aftman",
+      "downloads": 1133,
+      "version_count": 10,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:aftman",
+  "disambiguated_at": "2026-02-17T00:10:25.909450834Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

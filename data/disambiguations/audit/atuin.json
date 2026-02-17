@@ -1,0 +1,40 @@
+{
+  "tool": "atuin",
+  "selected": "homebrew:atuin",
+  "alternatives": [
+    "crates.io:atuin",
+    "pypi:atuin"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 17.09484579636671,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:atuin",
+      "downloads": 80927,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:atuin",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": false
+    },
+    {
+      "source": "crates.io:atuin",
+      "downloads": 4734,
+      "version_count": 47,
+      "has_repository": true
+    },
+    {
+      "source": "npm:atuin",
+      "downloads": 18,
+      "version_count": 3,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:atuin",
+  "disambiguated_at": "2026-02-17T00:11:14.140436325Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

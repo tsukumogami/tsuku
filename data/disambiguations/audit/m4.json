@@ -1,0 +1,32 @@
+{
+  "tool": "m4",
+  "selected": "homebrew:m4",
+  "alternatives": [
+    "npm:m4"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:m4",
+      "downloads": 858204,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:m4",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "npm:m4",
+      "downloads": 0,
+      "version_count": 5,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:m4",
+  "disambiguated_at": "2026-02-17T00:21:45.93897093Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

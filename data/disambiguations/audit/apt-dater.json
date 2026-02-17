@@ -1,0 +1,18 @@
+{
+  "tool": "apt-dater",
+  "selected": "homebrew:apt-dater",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:apt-dater",
+      "downloads": 726,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:apt-dater",
+  "disambiguated_at": "2026-02-17T00:10:51.956322779Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,30 @@
+{
+  "tool": "mydumper",
+  "selected": "homebrew:mydumper",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "pypi:mydumper",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:mydumper",
+      "downloads": 2488,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:mydumper",
+      "downloads": 1,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:mydumper",
+  "disambiguated_at": "2026-02-17T00:23:04.905429413Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

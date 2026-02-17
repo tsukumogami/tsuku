@@ -1,0 +1,41 @@
+{
+  "tool": "hunspell",
+  "selected": "rubygems:hunspell",
+  "alternatives": [
+    "homebrew:hunspell",
+    "crates.io:hunspell",
+    "pypi:hunspell"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.832291192181871,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:hunspell",
+      "downloads": 238,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:hunspell",
+      "downloads": 48298,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:hunspell",
+      "downloads": 0,
+      "version_count": 17,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:hunspell",
+      "downloads": 136794,
+      "version_count": 9,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:hunspell",
+  "disambiguated_at": "2026-02-17T00:18:29.570507204Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

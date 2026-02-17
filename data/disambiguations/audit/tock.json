@@ -1,0 +1,48 @@
+{
+  "tool": "tock",
+  "selected": "rubygems:tock",
+  "alternatives": [
+    "homebrew:tock",
+    "crates.io:tock",
+    "pypi:tock",
+    "npm:tock"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 12.022857142857143,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:tock",
+      "downloads": 155,
+      "version_count": 7,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:tock",
+      "downloads": 350,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:tock",
+      "downloads": 0,
+      "version_count": 20,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:tock",
+      "downloads": 4208,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:tock",
+      "downloads": 0,
+      "version_count": 5,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:tock",
+  "disambiguated_at": "2026-02-17T00:29:48.397625685Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

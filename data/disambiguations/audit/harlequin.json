@@ -1,0 +1,41 @@
+{
+  "tool": "harlequin",
+  "selected": "rubygems:harlequin",
+  "alternatives": [
+    "homebrew:harlequin",
+    "pypi:harlequin",
+    "npm:harlequin"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.921397379912664,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:harlequin",
+      "downloads": 2977,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:harlequin",
+      "downloads": 0,
+      "version_count": 90,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:harlequin",
+      "downloads": 8697,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "npm:harlequin",
+      "downloads": 0,
+      "version_count": 16,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:harlequin",
+  "disambiguated_at": "2026-02-17T00:17:59.787016175Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

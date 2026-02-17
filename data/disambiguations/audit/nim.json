@@ -1,0 +1,40 @@
+{
+  "tool": "nim",
+  "selected": "homebrew:nim",
+  "alternatives": [
+    "rubygems:nim",
+    "npm:nim"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.1735920691837167,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:nim",
+      "downloads": 10305,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:nim",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:nim",
+      "downloads": 4741,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "npm:nim",
+      "downloads": 0,
+      "version_count": 7,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:nim",
+  "disambiguated_at": "2026-02-17T00:23:32.513295635Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

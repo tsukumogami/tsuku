@@ -1,0 +1,24 @@
+{
+  "tool": "teamtype",
+  "selected": "homebrew:teamtype",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:teamtype",
+      "downloads": 94,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:teamtype",
+      "downloads": 90,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:teamtype",
+  "disambiguated_at": "2026-02-17T00:29:21.614689471Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

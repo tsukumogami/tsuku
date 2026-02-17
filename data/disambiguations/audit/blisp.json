@@ -1,0 +1,27 @@
+{
+  "tool": "blisp",
+  "selected": "homebrew:blisp",
+  "alternatives": [
+    "crates.io:blisp"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.112781954887218,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:blisp",
+      "downloads": 296,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:blisp",
+      "downloads": 266,
+      "version_count": 19,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:blisp",
+  "disambiguated_at": "2026-02-17T00:12:01.692689624Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

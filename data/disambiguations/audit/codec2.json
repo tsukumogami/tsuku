@@ -1,0 +1,27 @@
+{
+  "tool": "codec2",
+  "selected": "crates.io:codec2",
+  "alternatives": [
+    "homebrew:codec2"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.2580645161290323,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:codec2",
+      "downloads": 390,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:codec2",
+      "downloads": 310,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:codec2",
+  "disambiguated_at": "2026-02-17T00:13:29.131894923Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

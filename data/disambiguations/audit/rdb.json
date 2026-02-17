@@ -1,0 +1,47 @@
+{
+  "tool": "rdb",
+  "selected": "rubygems:rdb",
+  "alternatives": [
+    "homebrew:rdb",
+    "crates.io:rdb",
+    "npm:rdb"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 9.007075471698114,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:rdb",
+      "downloads": 424,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:rdb",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:rdb",
+      "downloads": 246,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:rdb",
+      "downloads": 3819,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:rdb",
+      "downloads": 108,
+      "version_count": 266,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:rdb",
+  "disambiguated_at": "2026-02-17T00:26:42.532832528Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

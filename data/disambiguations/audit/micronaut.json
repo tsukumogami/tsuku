@@ -1,0 +1,27 @@
+{
+  "tool": "micronaut",
+  "selected": "rubygems:micronaut",
+  "alternatives": [
+    "homebrew:micronaut"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 6.434534019439679,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:micronaut",
+      "downloads": 1749,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:micronaut",
+      "downloads": 11254,
+      "version_count": 2,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:micronaut",
+  "disambiguated_at": "2026-02-17T00:22:25.75705256Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

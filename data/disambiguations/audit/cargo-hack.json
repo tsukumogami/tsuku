@@ -1,0 +1,27 @@
+{
+  "tool": "cargo-hack",
+  "selected": "crates.io:cargo-hack",
+  "alternatives": [
+    "homebrew:cargo-hack"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 277.5706666666667,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:cargo-hack",
+      "downloads": 375,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:cargo-hack",
+      "downloads": 104089,
+      "version_count": 102,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:cargo-hack",
+  "disambiguated_at": "2026-02-17T00:12:35.27763829Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

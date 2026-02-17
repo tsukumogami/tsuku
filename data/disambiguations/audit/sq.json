@@ -1,0 +1,46 @@
+{
+  "tool": "sq",
+  "selected": "rubygems:sq",
+  "alternatives": [
+    "homebrew:sq",
+    "crates.io:sq"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 8.35010752688172,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:sq",
+      "downloads": 2325,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:sq",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:sq",
+      "downloads": 414,
+      "version_count": 27,
+      "has_repository": false
+    },
+    {
+      "source": "rubygems:sq",
+      "downloads": 19414,
+      "version_count": 7,
+      "has_repository": false
+    },
+    {
+      "source": "npm:sq",
+      "downloads": 14,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:sq",
+  "disambiguated_at": "2026-02-17T00:28:32.4398563Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

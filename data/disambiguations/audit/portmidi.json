@@ -1,0 +1,34 @@
+{
+  "tool": "portmidi",
+  "selected": "rubygems:portmidi",
+  "alternatives": [
+    "homebrew:portmidi",
+    "crates.io:portmidi"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.3771112865035517,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:portmidi",
+      "downloads": 6335,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:portmidi",
+      "downloads": 1561,
+      "version_count": 19,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:portmidi",
+      "downloads": 15059,
+      "version_count": 4,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:portmidi",
+  "disambiguated_at": "2026-02-17T00:25:32.153165443Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,32 @@
+{
+  "tool": "weaviate",
+  "selected": "homebrew:weaviate",
+  "alternatives": [
+    "npm:weaviate"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:weaviate",
+      "downloads": 929,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:weaviate",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:weaviate",
+      "downloads": 0,
+      "version_count": 13,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:weaviate",
+  "disambiguated_at": "2026-02-17T00:31:05.486475364Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

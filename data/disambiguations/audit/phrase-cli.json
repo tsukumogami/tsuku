@@ -1,0 +1,27 @@
+{
+  "tool": "phrase-cli",
+  "selected": "homebrew:phrase-cli",
+  "alternatives": [
+    "npm:phrase-cli"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 5.658993576017131,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:phrase-cli",
+      "downloads": 10571,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:phrase-cli",
+      "downloads": 1868,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:phrase-cli",
+  "disambiguated_at": "2026-02-17T00:25:09.840679343Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

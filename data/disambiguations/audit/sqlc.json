@@ -1,0 +1,24 @@
+{
+  "tool": "sqlc",
+  "selected": "homebrew:sqlc",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:sqlc",
+      "downloads": 8707,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:sqlc",
+      "downloads": 16,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:sqlc",
+  "disambiguated_at": "2026-02-17T00:28:33.400137448Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

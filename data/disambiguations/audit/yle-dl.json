@@ -1,0 +1,26 @@
+{
+  "tool": "yle-dl",
+  "selected": "homebrew:yle-dl",
+  "alternatives": [
+    "pypi:yle-dl"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:yle-dl",
+      "downloads": 1463,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:yle-dl",
+      "downloads": 0,
+      "version_count": 64,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:yle-dl",
+  "disambiguated_at": "2026-02-17T00:31:39.963972674Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

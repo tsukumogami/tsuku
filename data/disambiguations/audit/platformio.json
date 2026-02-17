@@ -1,0 +1,32 @@
+{
+  "tool": "platformio",
+  "selected": "homebrew:platformio",
+  "alternatives": [
+    "pypi:platformio"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:platformio",
+      "downloads": 13224,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:platformio",
+      "downloads": 0,
+      "version_count": 120,
+      "has_repository": true
+    },
+    {
+      "source": "npm:platformio",
+      "downloads": 9,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:platformio",
+  "disambiguated_at": "2026-02-17T00:25:21.771271332Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

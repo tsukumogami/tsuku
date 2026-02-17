@@ -1,0 +1,27 @@
+{
+  "tool": "libspelling",
+  "selected": "crates.io:libspelling",
+  "alternatives": [
+    "homebrew:libspelling"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.184041184041184,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:libspelling",
+      "downloads": 2331,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:libspelling",
+      "downloads": 2760,
+      "version_count": 5,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:libspelling",
+  "disambiguated_at": "2026-02-17T00:21:04.270829354Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

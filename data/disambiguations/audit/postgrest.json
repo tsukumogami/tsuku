@@ -1,0 +1,48 @@
+{
+  "tool": "postgrest",
+  "selected": "crates.io:postgrest",
+  "alternatives": [
+    "rubygems:postgrest",
+    "homebrew:postgrest",
+    "npm:postgrest",
+    "pypi:postgrest"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.4989305310146004,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:postgrest",
+      "downloads": 3568,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:postgrest",
+      "downloads": 37624,
+      "version_count": 14,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:postgrest",
+      "downloads": 0,
+      "version_count": 62,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:postgrest",
+      "downloads": 10753,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "npm:postgrest",
+      "downloads": 18,
+      "version_count": 10,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:postgrest",
+  "disambiguated_at": "2026-02-17T00:25:34.489102163Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

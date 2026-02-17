@@ -1,0 +1,47 @@
+{
+  "tool": "jetty",
+  "selected": "rubygems:jetty",
+  "alternatives": [
+    "homebrew:jetty",
+    "crates.io:jetty",
+    "pypi:jetty"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 34.70540758676352,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:jetty",
+      "downloads": 1239,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:jetty",
+      "downloads": 0,
+      "version_count": 7,
+      "has_repository": false
+    },
+    {
+      "source": "crates.io:jetty",
+      "downloads": 207,
+      "version_count": 9,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:jetty",
+      "downloads": 43000,
+      "version_count": 8,
+      "has_repository": false
+    },
+    {
+      "source": "npm:jetty",
+      "downloads": 53,
+      "version_count": 3,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:jetty",
+  "disambiguated_at": "2026-02-17T00:19:14.874397149Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

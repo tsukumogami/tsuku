@@ -1,0 +1,26 @@
+{
+  "tool": "patchpal",
+  "selected": "homebrew:patchpal",
+  "alternatives": [
+    "pypi:patchpal"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:patchpal",
+      "downloads": 251,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:patchpal",
+      "downloads": 0,
+      "version_count": 35,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:patchpal",
+  "disambiguated_at": "2026-02-17T00:24:50.421142534Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

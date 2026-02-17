@@ -1,0 +1,18 @@
+{
+  "tool": "dart-sdk",
+  "selected": "homebrew:dart-sdk",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:dart-sdk",
+      "downloads": 34472,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:dart-sdk",
+  "disambiguated_at": "2026-02-17T00:14:07.97055745Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

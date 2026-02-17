@@ -1,0 +1,47 @@
+{
+  "tool": "doggo",
+  "selected": "rubygems:doggo",
+  "alternatives": [
+    "homebrew:doggo",
+    "crates.io:doggo",
+    "pypi:doggo"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 11.126675313445741,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:doggo",
+      "downloads": 4626,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:doggo",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:doggo",
+      "downloads": 141,
+      "version_count": 15,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:doggo",
+      "downloads": 51472,
+      "version_count": 7,
+      "has_repository": true
+    },
+    {
+      "source": "npm:doggo",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:doggo",
+  "disambiguated_at": "2026-02-17T00:14:41.877946321Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,40 @@
+{
+  "tool": "redress",
+  "selected": "rubygems:redress",
+  "alternatives": [
+    "homebrew:redress",
+    "pypi:redress"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 48.48546511627907,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:redress",
+      "downloads": 0,
+      "version_count": 5,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:redress",
+      "downloads": 688,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:redress",
+      "downloads": 33358,
+      "version_count": 14,
+      "has_repository": false
+    },
+    {
+      "source": "npm:redress",
+      "downloads": 2,
+      "version_count": 4,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:redress",
+  "disambiguated_at": "2026-02-17T00:26:47.51676939Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

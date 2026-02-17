@@ -1,0 +1,38 @@
+{
+  "tool": "locust",
+  "selected": "homebrew:locust",
+  "alternatives": [
+    "pypi:locust"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:locust",
+      "downloads": 7,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:locust",
+      "downloads": 8896,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:locust",
+      "downloads": 0,
+      "version_count": 922,
+      "has_repository": true
+    },
+    {
+      "source": "npm:locust",
+      "downloads": 1,
+      "version_count": 3,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:locust",
+  "disambiguated_at": "2026-02-17T00:21:33.16748593Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

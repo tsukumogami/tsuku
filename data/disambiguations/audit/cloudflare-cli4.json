@@ -1,0 +1,26 @@
+{
+  "tool": "cloudflare-cli4",
+  "selected": "homebrew:cloudflare-cli4",
+  "alternatives": [
+    "pypi:cloudflare-cli4"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:cloudflare-cli4",
+      "downloads": 863,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:cloudflare-cli4",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:cloudflare-cli4",
+  "disambiguated_at": "2026-02-17T00:13:18.797495741Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,32 @@
+{
+  "tool": "ifstat",
+  "selected": "homebrew:ifstat",
+  "alternatives": [
+    "pypi:ifstat"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:ifstat",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:ifstat",
+      "downloads": 957,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:ifstat",
+      "downloads": 2,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:ifstat",
+  "disambiguated_at": "2026-02-17T00:18:40.759375334Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

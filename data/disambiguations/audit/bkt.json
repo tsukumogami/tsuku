@@ -1,0 +1,40 @@
+{
+  "tool": "bkt",
+  "selected": "homebrew:bkt",
+  "alternatives": [
+    "crates.io:bkt",
+    "pypi:bkt"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 10.289256198347108,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:bkt",
+      "downloads": 0,
+      "version_count": 12,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:bkt",
+      "downloads": 2490,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:bkt",
+      "downloads": 242,
+      "version_count": 17,
+      "has_repository": true
+    },
+    {
+      "source": "npm:bkt",
+      "downloads": 0,
+      "version_count": 0,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:bkt",
+  "disambiguated_at": "2026-02-17T00:12:00.618088625Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

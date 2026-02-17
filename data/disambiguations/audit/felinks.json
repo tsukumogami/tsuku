@@ -1,0 +1,18 @@
+{
+  "tool": "felinks",
+  "selected": "homebrew:felinks",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:felinks",
+      "downloads": 1314,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:felinks",
+  "disambiguated_at": "2026-02-17T00:15:43.456228992Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,47 @@
+{
+  "tool": "moon",
+  "selected": "rubygems:moon",
+  "alternatives": [
+    "homebrew:moon",
+    "npm:moon",
+    "pypi:moon"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 10.026315789473685,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:moon",
+      "downloads": 1520,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:moon",
+      "downloads": 27,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "pypi:moon",
+      "downloads": 0,
+      "version_count": 21,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:moon",
+      "downloads": 15240,
+      "version_count": 4,
+      "has_repository": false
+    },
+    {
+      "source": "npm:moon",
+      "downloads": 205,
+      "version_count": 10,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:moon",
+  "disambiguated_at": "2026-02-17T00:22:48.446489015Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

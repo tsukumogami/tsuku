@@ -1,0 +1,24 @@
+{
+  "tool": "fail2ban",
+  "selected": "homebrew:fail2ban",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:fail2ban",
+      "downloads": 946,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:fail2ban",
+      "downloads": 2,
+      "version_count": 3,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:fail2ban",
+  "disambiguated_at": "2026-02-17T00:15:33.632531759Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

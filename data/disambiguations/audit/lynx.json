@@ -1,0 +1,48 @@
+{
+  "tool": "lynx",
+  "selected": "rubygems:lynx",
+  "alternatives": [
+    "homebrew:lynx",
+    "crates.io:lynx",
+    "npm:lynx",
+    "pypi:lynx"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 4.574275576581904,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:lynx",
+      "downloads": 303,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:lynx",
+      "downloads": 0,
+      "version_count": 10,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:lynx",
+      "downloads": 16910,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:lynx",
+      "downloads": 77351,
+      "version_count": 10,
+      "has_repository": false
+    },
+    {
+      "source": "npm:lynx",
+      "downloads": 0,
+      "version_count": 12,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:lynx",
+  "disambiguated_at": "2026-02-17T00:21:43.468607579Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

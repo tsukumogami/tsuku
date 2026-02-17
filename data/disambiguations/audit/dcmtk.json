@@ -1,0 +1,24 @@
+{
+  "tool": "dcmtk",
+  "selected": "homebrew:dcmtk",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:dcmtk",
+      "downloads": 2519,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:dcmtk",
+      "downloads": 585,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:dcmtk",
+  "disambiguated_at": "2026-02-17T00:14:13.672509079Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

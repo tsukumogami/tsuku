@@ -1,0 +1,26 @@
+{
+  "tool": "npq",
+  "selected": "homebrew:npq",
+  "alternatives": [
+    "npm:npq"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:npq",
+      "downloads": 877,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:npq",
+      "downloads": 0,
+      "version_count": 162,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:npq",
+  "disambiguated_at": "2026-02-17T00:23:42.90928614Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

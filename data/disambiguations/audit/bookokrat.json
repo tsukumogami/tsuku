@@ -1,0 +1,27 @@
+{
+  "tool": "bookokrat",
+  "selected": "homebrew:bookokrat",
+  "alternatives": [
+    "crates.io:bookokrat"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.0234833659491194,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:bookokrat",
+      "downloads": 1046,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:bookokrat",
+      "downloads": 1022,
+      "version_count": 14,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:bookokrat",
+  "disambiguated_at": "2026-02-17T00:12:05.007450583Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

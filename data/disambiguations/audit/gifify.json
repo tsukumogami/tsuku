@@ -1,0 +1,41 @@
+{
+  "tool": "gifify",
+  "selected": "homebrew:gifify",
+  "alternatives": [
+    "crates.io:gifify",
+    "npm:gifify",
+    "pypi:gifify"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 15.23404255319149,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:gifify",
+      "downloads": 0,
+      "version_count": 6,
+      "has_repository": false
+    },
+    {
+      "source": "crates.io:gifify",
+      "downloads": 47,
+      "version_count": 7,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:gifify",
+      "downloads": 716,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:gifify",
+      "downloads": 0,
+      "version_count": 18,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:gifify",
+  "disambiguated_at": "2026-02-17T00:16:43.555514087Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

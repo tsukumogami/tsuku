@@ -1,0 +1,48 @@
+{
+  "tool": "neon",
+  "selected": "crates.io:neon",
+  "alternatives": [
+    "homebrew:neon",
+    "rubygems:neon",
+    "npm:neon",
+    "pypi:neon"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 136.6383701188455,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:neon",
+      "downloads": 4712,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:neon",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:neon",
+      "downloads": 4624,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "crates.io:neon",
+      "downloads": 643840,
+      "version_count": 83,
+      "has_repository": true
+    },
+    {
+      "source": "npm:neon",
+      "downloads": 605,
+      "version_count": 3,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:neon",
+  "disambiguated_at": "2026-02-17T00:23:20.065820135Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

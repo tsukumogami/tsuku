@@ -1,0 +1,47 @@
+{
+  "tool": "commitlint",
+  "selected": "npm:commitlint",
+  "alternatives": [
+    "rubygems:commitlint",
+    "homebrew:commitlint",
+    "pypi:commitlint"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 350.0333138515488,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:commitlint",
+      "downloads": 10,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:commitlint",
+      "downloads": 1442,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:commitlint",
+      "downloads": 0,
+      "version_count": 8,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:commitlint",
+      "downloads": 1711,
+      "version_count": 5,
+      "has_repository": true
+    },
+    {
+      "source": "npm:commitlint",
+      "downloads": 598907,
+      "version_count": 137,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:commitlint",
+  "disambiguated_at": "2026-02-17T00:13:33.200928161Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

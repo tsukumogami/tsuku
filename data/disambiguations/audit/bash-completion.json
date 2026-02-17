@@ -1,0 +1,26 @@
+{
+  "tool": "bash-completion",
+  "selected": "homebrew:bash-completion",
+  "alternatives": [
+    "pypi:bash-completion"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:bash-completion",
+      "downloads": 0,
+      "version_count": 9,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:bash-completion",
+      "downloads": 16087,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:bash-completion",
+  "disambiguated_at": "2026-02-17T00:11:43.138140344Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

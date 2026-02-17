@@ -1,0 +1,32 @@
+{
+  "tool": "hamlib",
+  "selected": "homebrew:hamlib",
+  "alternatives": [
+    "npm:hamlib"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:hamlib",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:hamlib",
+      "downloads": 1882,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:hamlib",
+      "downloads": 0,
+      "version_count": 26,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:hamlib",
+  "disambiguated_at": "2026-02-17T00:17:56.864846709Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

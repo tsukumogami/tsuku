@@ -1,0 +1,41 @@
+{
+  "tool": "img2pdf",
+  "selected": "homebrew:img2pdf",
+  "alternatives": [
+    "rubygems:img2pdf",
+    "npm:img2pdf",
+    "pypi:img2pdf"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 6.657905217045002,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:img2pdf",
+      "downloads": 16718,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:img2pdf",
+      "downloads": 0,
+      "version_count": 26,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:img2pdf",
+      "downloads": 2511,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "npm:img2pdf",
+      "downloads": 11,
+      "version_count": 12,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:img2pdf",
+  "disambiguated_at": "2026-02-17T00:18:45.393341779Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

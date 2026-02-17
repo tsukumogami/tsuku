@@ -1,0 +1,27 @@
+{
+  "tool": "media-info",
+  "selected": "homebrew:media-info",
+  "alternatives": [
+    "crates.io:media-info"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 187.96212121212122,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:media-info",
+      "downloads": 24811,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:media-info",
+      "downloads": 132,
+      "version_count": 13,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:media-info",
+  "disambiguated_at": "2026-02-17T00:22:17.155661327Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

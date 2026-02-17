@@ -1,0 +1,18 @@
+{
+  "tool": "ical-buddy",
+  "selected": "homebrew:ical-buddy",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:ical-buddy",
+      "downloads": 2041,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:ical-buddy",
+  "disambiguated_at": "2026-02-17T00:18:35.684238107Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

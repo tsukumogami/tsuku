@@ -1,0 +1,18 @@
+{
+  "tool": "pioneers",
+  "selected": "homebrew:pioneers",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:pioneers",
+      "downloads": 448,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:pioneers",
+  "disambiguated_at": "2026-02-17T00:25:16.113956571Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

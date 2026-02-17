@@ -1,0 +1,27 @@
+{
+  "tool": "libelf",
+  "selected": "homebrew:libelf",
+  "alternatives": [
+    "crates.io:libelf"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 4.982394366197183,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:libelf",
+      "downloads": 284,
+      "version_count": 7,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:libelf",
+      "downloads": 1415,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:libelf",
+  "disambiguated_at": "2026-02-17T00:20:31.626627804Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

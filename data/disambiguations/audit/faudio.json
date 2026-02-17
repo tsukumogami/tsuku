@@ -1,0 +1,18 @@
+{
+  "tool": "faudio",
+  "selected": "homebrew:faudio",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:faudio",
+      "downloads": 5614,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:faudio",
+  "disambiguated_at": "2026-02-17T00:15:39.89781407Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

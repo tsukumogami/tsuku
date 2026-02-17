@@ -1,0 +1,27 @@
+{
+  "tool": "alejandra",
+  "selected": "crates.io:alejandra",
+  "alternatives": [
+    "homebrew:alejandra"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.2177121771217712,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:alejandra",
+      "downloads": 330,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:alejandra",
+      "downloads": 271,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:alejandra",
+  "disambiguated_at": "2026-02-17T00:10:32.998130768Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

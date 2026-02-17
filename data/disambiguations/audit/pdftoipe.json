@@ -1,0 +1,18 @@
+{
+  "tool": "pdftoipe",
+  "selected": "homebrew:pdftoipe",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:pdftoipe",
+      "downloads": 2310,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:pdftoipe",
+  "disambiguated_at": "2026-02-17T00:24:57.137226685Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

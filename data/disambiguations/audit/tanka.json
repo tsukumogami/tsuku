@@ -1,0 +1,27 @@
+{
+  "tool": "tanka",
+  "selected": "rubygems:tanka",
+  "alternatives": [
+    "homebrew:tanka"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.7799121844127332,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:tanka",
+      "downloads": 1822,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:tanka",
+      "downloads": 3243,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:tanka",
+  "disambiguated_at": "2026-02-17T00:29:15.653118913Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

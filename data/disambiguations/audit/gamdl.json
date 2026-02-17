@@ -1,0 +1,26 @@
+{
+  "tool": "gamdl",
+  "selected": "homebrew:gamdl",
+  "alternatives": [
+    "pypi:gamdl"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:gamdl",
+      "downloads": 1574,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:gamdl",
+      "downloads": 0,
+      "version_count": 77,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:gamdl",
+  "disambiguated_at": "2026-02-17T00:16:24.82325192Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

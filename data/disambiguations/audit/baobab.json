@@ -1,0 +1,41 @@
+{
+  "tool": "baobab",
+  "selected": "rubygems:baobab",
+  "alternatives": [
+    "homebrew:baobab",
+    "crates.io:baobab",
+    "npm:baobab"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.7571376942537045,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:baobab",
+      "downloads": 62,
+      "version_count": 6,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:baobab",
+      "downloads": 5534,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:baobab",
+      "downloads": 9724,
+      "version_count": 3,
+      "has_repository": false
+    },
+    {
+      "source": "npm:baobab",
+      "downloads": 0,
+      "version_count": 64,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:baobab",
+  "disambiguated_at": "2026-02-17T00:11:41.218820643Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

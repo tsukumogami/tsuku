@@ -1,0 +1,32 @@
+{
+  "tool": "mypy",
+  "selected": "homebrew:mypy",
+  "alternatives": [
+    "pypi:mypy"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:mypy",
+      "downloads": 13328,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:mypy",
+      "downloads": 0,
+      "version_count": 133,
+      "has_repository": true
+    },
+    {
+      "source": "npm:mypy",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:mypy",
+  "disambiguated_at": "2026-02-17T00:23:05.333204218Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

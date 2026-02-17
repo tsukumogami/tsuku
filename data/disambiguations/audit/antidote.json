@@ -1,0 +1,40 @@
+{
+  "tool": "antidote",
+  "selected": "crates.io:antidote",
+  "alternatives": [
+    "homebrew:antidote",
+    "pypi:antidote"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 67.82072504552227,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:antidote",
+      "downloads": 409705,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:antidote",
+      "downloads": 6041,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:antidote",
+      "downloads": 0,
+      "version_count": 32,
+      "has_repository": true
+    },
+    {
+      "source": "npm:antidote",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:antidote",
+  "disambiguated_at": "2026-02-17T00:10:43.895471188Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

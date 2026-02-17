@@ -1,0 +1,24 @@
+{
+  "tool": "unshield",
+  "selected": "homebrew:unshield",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:unshield",
+      "downloads": 11,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:unshield",
+      "downloads": 599,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:unshield",
+  "disambiguated_at": "2026-02-17T00:30:23.980971625Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

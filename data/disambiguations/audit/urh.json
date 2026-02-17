@@ -1,0 +1,26 @@
+{
+  "tool": "urh",
+  "selected": "homebrew:urh",
+  "alternatives": [
+    "pypi:urh"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:urh",
+      "downloads": 1340,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:urh",
+      "downloads": 0,
+      "version_count": 127,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:urh",
+  "disambiguated_at": "2026-02-17T00:30:25.965034457Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

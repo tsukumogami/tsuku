@@ -1,0 +1,38 @@
+{
+  "tool": "ali",
+  "selected": "homebrew:ali",
+  "alternatives": [
+    "npm:ali"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:ali",
+      "downloads": 176,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:ali",
+      "downloads": 13,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "rubygems:ali",
+      "downloads": 784,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "npm:ali",
+      "downloads": 0,
+      "version_count": 5,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:ali",
+  "disambiguated_at": "2026-02-17T00:10:33.853075328Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

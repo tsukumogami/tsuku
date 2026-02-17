@@ -1,0 +1,24 @@
+{
+  "tool": "python-matplotlib",
+  "selected": "homebrew:python-matplotlib",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:python-matplotlib",
+      "downloads": 26412,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:python-matplotlib",
+      "downloads": 1,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:python-matplotlib",
+  "disambiguated_at": "2026-02-17T00:26:08.766482502Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

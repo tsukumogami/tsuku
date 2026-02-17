@@ -1,0 +1,30 @@
+{
+  "tool": "strace",
+  "selected": "homebrew:strace",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:strace",
+      "downloads": 1399,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:strace",
+      "downloads": 10,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:strace",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:strace",
+  "disambiguated_at": "2026-02-17T00:28:52.307021146Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

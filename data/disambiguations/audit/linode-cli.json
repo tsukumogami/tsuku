@@ -1,0 +1,32 @@
+{
+  "tool": "linode-cli",
+  "selected": "homebrew:linode-cli",
+  "alternatives": [
+    "pypi:linode-cli"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:linode-cli",
+      "downloads": 2573,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:linode-cli",
+      "downloads": 0,
+      "version_count": 174,
+      "has_repository": false
+    },
+    {
+      "source": "npm:linode-cli",
+      "downloads": 0,
+      "version_count": 0,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:linode-cli",
+  "disambiguated_at": "2026-02-17T00:21:22.891690339Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

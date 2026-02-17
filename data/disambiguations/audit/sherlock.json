@@ -1,0 +1,48 @@
+{
+  "tool": "sherlock",
+  "selected": "rubygems:sherlock",
+  "alternatives": [
+    "homebrew:sherlock",
+    "npm:sherlock",
+    "crates.io:sherlock",
+    "pypi:sherlock"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.420324508966695,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:sherlock",
+      "downloads": 5855,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:sherlock",
+      "downloads": 86,
+      "version_count": 9,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:sherlock",
+      "downloads": 0,
+      "version_count": 7,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:sherlock",
+      "downloads": 14171,
+      "version_count": 4,
+      "has_repository": false
+    },
+    {
+      "source": "npm:sherlock",
+      "downloads": 1673,
+      "version_count": 4,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:sherlock",
+  "disambiguated_at": "2026-02-17T00:27:50.92572938Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

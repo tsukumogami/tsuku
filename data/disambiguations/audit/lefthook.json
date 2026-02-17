@@ -1,0 +1,41 @@
+{
+  "tool": "lefthook",
+  "selected": "rubygems:lefthook",
+  "alternatives": [
+    "homebrew:lefthook",
+    "npm:lefthook",
+    "pypi:lefthook"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 519.5846573808358,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:lefthook",
+      "downloads": 14287,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:lefthook",
+      "downloads": 0,
+      "version_count": 74,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:lefthook",
+      "downloads": 7423306,
+      "version_count": 183,
+      "has_repository": false
+    },
+    {
+      "source": "npm:lefthook",
+      "downloads": 0,
+      "version_count": 170,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:lefthook",
+  "disambiguated_at": "2026-02-17T00:20:20.4456322Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

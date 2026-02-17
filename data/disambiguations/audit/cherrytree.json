@@ -1,0 +1,34 @@
+{
+  "tool": "cherrytree",
+  "selected": "homebrew:cherrytree",
+  "alternatives": [
+    "npm:cherrytree",
+    "pypi:cherrytree"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1156,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:cherrytree",
+      "downloads": 4624,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:cherrytree",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "npm:cherrytree",
+      "downloads": 4,
+      "version_count": 30,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:cherrytree",
+  "disambiguated_at": "2026-02-17T00:12:57.649196871Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

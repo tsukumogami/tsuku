@@ -1,0 +1,34 @@
+{
+  "tool": "bbot",
+  "selected": "homebrew:bbot",
+  "alternatives": [
+    "npm:bbot",
+    "pypi:bbot"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 178.25,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:bbot",
+      "downloads": 1426,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:bbot",
+      "downloads": 0,
+      "version_count": 716,
+      "has_repository": true
+    },
+    {
+      "source": "npm:bbot",
+      "downloads": 8,
+      "version_count": 19,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:bbot",
+  "disambiguated_at": "2026-02-17T00:11:48.650421232Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

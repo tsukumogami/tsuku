@@ -1,0 +1,27 @@
+{
+  "tool": "dua-cli",
+  "selected": "homebrew:dua-cli",
+  "alternatives": [
+    "crates.io:dua-cli"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.879924953095685,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:dua-cli",
+      "downloads": 9210,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:dua-cli",
+      "downloads": 3198,
+      "version_count": 119,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:dua-cli",
+  "disambiguated_at": "2026-02-17T00:14:54.090494108Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

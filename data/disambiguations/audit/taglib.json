@@ -1,0 +1,34 @@
+{
+  "tool": "taglib",
+  "selected": "homebrew:taglib",
+  "alternatives": [
+    "crates.io:taglib",
+    "npm:taglib"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 96.35555555555555,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:taglib",
+      "downloads": 450,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:taglib",
+      "downloads": 43360,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:taglib",
+      "downloads": 0,
+      "version_count": 9,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:taglib",
+  "disambiguated_at": "2026-02-17T00:29:13.091815635Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

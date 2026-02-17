@@ -1,0 +1,30 @@
+{
+  "tool": "asio",
+  "selected": "homebrew:asio",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:asio",
+      "downloads": 16,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "pypi:asio",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:asio",
+      "downloads": 9981,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:asio",
+  "disambiguated_at": "2026-02-17T00:11:04.554209258Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

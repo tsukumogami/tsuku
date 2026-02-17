@@ -1,0 +1,27 @@
+{
+  "tool": "spotify_player",
+  "selected": "homebrew:spotify_player",
+  "alternatives": [
+    "crates.io:spotify_player"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.7104629381857104,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:spotify_player",
+      "downloads": 6392,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:spotify_player",
+      "downloads": 3737,
+      "version_count": 58,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:spotify_player",
+  "disambiguated_at": "2026-02-17T00:28:31.554964316Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

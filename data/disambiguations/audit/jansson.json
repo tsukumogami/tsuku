@@ -1,0 +1,27 @@
+{
+  "tool": "jansson",
+  "selected": "homebrew:jansson",
+  "alternatives": [
+    "rubygems:jansson"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 18.447077834635067,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:jansson",
+      "downloads": 68494,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:jansson",
+      "downloads": 3713,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:jansson",
+  "disambiguated_at": "2026-02-17T00:19:08.344661769Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

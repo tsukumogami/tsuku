@@ -1,0 +1,18 @@
+{
+  "tool": "libbluray",
+  "selected": "homebrew:libbluray",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:libbluray",
+      "downloads": 322859,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:libbluray",
+  "disambiguated_at": "2026-02-17T00:20:27.549482934Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,46 @@
+{
+  "tool": "eigen",
+  "selected": "homebrew:eigen",
+  "alternatives": [
+    "rubygems:eigen",
+    "npm:eigen"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 35.761156186612574,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:eigen",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:eigen",
+      "downloads": 141042,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:eigen",
+      "downloads": 10,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "rubygems:eigen",
+      "downloads": 3944,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:eigen",
+      "downloads": 641,
+      "version_count": 6,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:eigen",
+  "disambiguated_at": "2026-02-17T00:15:10.98603865Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

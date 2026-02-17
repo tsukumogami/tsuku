@@ -1,0 +1,34 @@
+{
+  "tool": "jwt-cli",
+  "selected": "homebrew:jwt-cli",
+  "alternatives": [
+    "crates.io:jwt-cli",
+    "npm:jwt-cli"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.2916160388821385,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:jwt-cli",
+      "downloads": 2126,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:jwt-cli",
+      "downloads": 1646,
+      "version_count": 17,
+      "has_repository": true
+    },
+    {
+      "source": "npm:jwt-cli",
+      "downloads": 876,
+      "version_count": 15,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:jwt-cli",
+  "disambiguated_at": "2026-02-17T00:19:33.489152957Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

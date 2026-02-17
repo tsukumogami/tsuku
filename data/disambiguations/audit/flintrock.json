@@ -1,0 +1,26 @@
+{
+  "tool": "flintrock",
+  "selected": "homebrew:flintrock",
+  "alternatives": [
+    "pypi:flintrock"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:flintrock",
+      "downloads": 333,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:flintrock",
+      "downloads": 0,
+      "version_count": 14,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:flintrock",
+  "disambiguated_at": "2026-02-17T00:16:00.374870709Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

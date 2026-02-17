@@ -1,0 +1,24 @@
+{
+  "tool": "vllm",
+  "selected": "pypi:vllm",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "pypi:vllm",
+      "downloads": 0,
+      "version_count": 75,
+      "has_repository": true
+    },
+    {
+      "source": "npm:vllm",
+      "downloads": 9,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:vllm",
+  "disambiguated_at": "2026-02-17T00:30:49.813711256Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

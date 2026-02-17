@@ -1,0 +1,33 @@
+{
+  "tool": "aws-sso-cli",
+  "selected": "homebrew:aws-sso-cli",
+  "alternatives": [
+    "npm:aws-sso-cli",
+    "pypi:aws-sso-cli"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:aws-sso-cli",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:aws-sso-cli",
+      "downloads": 3088,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:aws-sso-cli",
+      "downloads": 0,
+      "version_count": 16,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:aws-sso-cli",
+  "disambiguated_at": "2026-02-17T00:11:26.63271176Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

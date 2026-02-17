@@ -1,0 +1,40 @@
+{
+  "tool": "bkmr",
+  "selected": "homebrew:bkmr",
+  "alternatives": [
+    "crates.io:bkmr",
+    "pypi:bkmr"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.6815068493150684,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:bkmr",
+      "downloads": 982,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:bkmr",
+      "downloads": 0,
+      "version_count": 84,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:bkmr",
+      "downloads": 584,
+      "version_count": 74,
+      "has_repository": true
+    },
+    {
+      "source": "npm:bkmr",
+      "downloads": 0,
+      "version_count": 0,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:bkmr",
+  "disambiguated_at": "2026-02-17T00:12:00.382648439Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

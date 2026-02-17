@@ -1,0 +1,41 @@
+{
+  "tool": "duc",
+  "selected": "homebrew:duc",
+  "alternatives": [
+    "crates.io:duc",
+    "npm:duc",
+    "pypi:duc"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.653386454183267,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:duc",
+      "downloads": 666,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:duc",
+      "downloads": 251,
+      "version_count": 5,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:duc",
+      "downloads": 0,
+      "version_count": 5,
+      "has_repository": true
+    },
+    {
+      "source": "npm:duc",
+      "downloads": 0,
+      "version_count": 8,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:duc",
+  "disambiguated_at": "2026-02-17T00:14:54.635215557Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,48 @@
+{
+  "tool": "zookeeper",
+  "selected": "rubygems:zookeeper",
+  "alternatives": [
+    "homebrew:zookeeper",
+    "crates.io:zookeeper",
+    "npm:zookeeper",
+    "pypi:zookeeper"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 777.784461505952,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:zookeeper",
+      "downloads": 14197,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:zookeeper",
+      "downloads": 12001,
+      "version_count": 29,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:zookeeper",
+      "downloads": 0,
+      "version_count": 43,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:zookeeper",
+      "downloads": 11042206,
+      "version_count": 99,
+      "has_repository": false
+    },
+    {
+      "source": "npm:zookeeper",
+      "downloads": 0,
+      "version_count": 78,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:zookeeper",
+  "disambiguated_at": "2026-02-17T00:31:51.912889021Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

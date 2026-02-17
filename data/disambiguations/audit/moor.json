@@ -1,0 +1,39 @@
+{
+  "tool": "moor",
+  "selected": "homebrew:moor",
+  "alternatives": [
+    "rubygems:moor"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 4.442662389735365,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:moor",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:moor",
+      "downloads": 5540,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:moor",
+      "downloads": 1247,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:moor",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:moor",
+  "disambiguated_at": "2026-02-17T00:22:49.086466706Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

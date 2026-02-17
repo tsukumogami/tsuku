@@ -1,0 +1,41 @@
+{
+  "tool": "lame",
+  "selected": "homebrew:lame",
+  "alternatives": [
+    "rubygems:lame",
+    "crates.io:lame",
+    "npm:lame"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 14.883862834089763,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:lame",
+      "downloads": 2607,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:lame",
+      "downloads": 295147,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:lame",
+      "downloads": 19830,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "npm:lame",
+      "downloads": 186,
+      "version_count": 15,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:lame",
+  "disambiguated_at": "2026-02-17T00:20:11.432265782Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,32 @@
+{
+  "tool": "scw",
+  "selected": "homebrew:scw",
+  "alternatives": [
+    "pypi:scw"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:scw",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:scw",
+      "downloads": 4153,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:scw",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:scw",
+  "disambiguated_at": "2026-02-17T00:27:36.976197839Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

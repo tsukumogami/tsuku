@@ -1,0 +1,41 @@
+{
+  "tool": "killport",
+  "selected": "crates.io:killport",
+  "alternatives": [
+    "homebrew:killport",
+    "npm:killport",
+    "pypi:killport"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 42.484848484848484,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:killport",
+      "downloads": 495,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:killport",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:killport",
+      "downloads": 21030,
+      "version_count": 9,
+      "has_repository": true
+    },
+    {
+      "source": "npm:killport",
+      "downloads": 152,
+      "version_count": 3,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:killport",
+  "disambiguated_at": "2026-02-17T00:19:48.122670761Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

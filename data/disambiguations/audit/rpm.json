@@ -1,0 +1,47 @@
+{
+  "tool": "rpm",
+  "selected": "crates.io:rpm",
+  "alternatives": [
+    "rubygems:rpm",
+    "homebrew:rpm",
+    "pypi:rpm"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 4.581170309653916,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:rpm",
+      "downloads": 8342,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:rpm",
+      "downloads": 0,
+      "version_count": 9,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:rpm",
+      "downloads": 120723,
+      "version_count": 21,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:rpm",
+      "downloads": 26352,
+      "version_count": 5,
+      "has_repository": true
+    },
+    {
+      "source": "npm:rpm",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:rpm",
+  "disambiguated_at": "2026-02-17T00:27:07.763652255Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

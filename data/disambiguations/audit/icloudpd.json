@@ -1,0 +1,34 @@
+{
+  "tool": "icloudpd",
+  "selected": "homebrew:icloudpd",
+  "alternatives": [
+    "npm:icloudpd",
+    "pypi:icloudpd"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 85.15384615384616,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:icloudpd",
+      "downloads": 2214,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:icloudpd",
+      "downloads": 0,
+      "version_count": 97,
+      "has_repository": true
+    },
+    {
+      "source": "npm:icloudpd",
+      "downloads": 26,
+      "version_count": 64,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:icloudpd",
+  "disambiguated_at": "2026-02-17T00:18:38.048301222Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

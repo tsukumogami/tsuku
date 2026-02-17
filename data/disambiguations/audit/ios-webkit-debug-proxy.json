@@ -1,0 +1,24 @@
+{
+  "tool": "ios-webkit-debug-proxy",
+  "selected": "homebrew:ios-webkit-debug-proxy",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:ios-webkit-debug-proxy",
+      "downloads": 8358,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:ios-webkit-debug-proxy",
+      "downloads": 93,
+      "version_count": 3,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:ios-webkit-debug-proxy",
+  "disambiguated_at": "2026-02-17T00:18:55.770153446Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

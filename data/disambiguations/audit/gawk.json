@@ -1,0 +1,41 @@
+{
+  "tool": "gawk",
+  "selected": "homebrew:gawk",
+  "alternatives": [
+    "rubygems:gawk",
+    "npm:gawk",
+    "crates.io:gawk"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 8.44603672189879,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:gawk",
+      "downloads": 10,
+      "version_count": 7,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:gawk",
+      "downloads": 37720,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:gawk",
+      "downloads": 4466,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "npm:gawk",
+      "downloads": 38,
+      "version_count": 51,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:gawk",
+  "disambiguated_at": "2026-02-17T00:16:30.279981823Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

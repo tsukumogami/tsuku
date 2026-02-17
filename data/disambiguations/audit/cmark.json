@@ -1,0 +1,36 @@
+{
+  "tool": "cmark",
+  "selected": "homebrew:cmark",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:cmark",
+      "downloads": 59,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:cmark",
+      "downloads": 929,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:cmark",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:cmark",
+      "downloads": 2,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:cmark",
+  "disambiguated_at": "2026-02-17T00:13:24.087675801Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

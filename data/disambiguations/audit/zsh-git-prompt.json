@@ -1,0 +1,18 @@
+{
+  "tool": "zsh-git-prompt",
+  "selected": "homebrew:zsh-git-prompt",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:zsh-git-prompt",
+      "downloads": 943,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:zsh-git-prompt",
+  "disambiguated_at": "2026-02-17T00:31:54.611733888Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

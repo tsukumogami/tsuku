@@ -1,0 +1,18 @@
+{
+  "tool": "dump1090-fa",
+  "selected": "homebrew:dump1090-fa",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:dump1090-fa",
+      "downloads": 79,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:dump1090-fa",
+  "disambiguated_at": "2026-02-17T00:14:56.21310806Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

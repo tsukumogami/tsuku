@@ -1,0 +1,32 @@
+{
+  "tool": "esptool",
+  "selected": "homebrew:esptool",
+  "alternatives": [
+    "pypi:esptool"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:esptool",
+      "downloads": 0,
+      "version_count": 82,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:esptool",
+      "downloads": 10110,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:esptool",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:esptool",
+  "disambiguated_at": "2026-02-17T00:15:25.388237401Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

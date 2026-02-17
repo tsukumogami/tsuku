@@ -1,0 +1,32 @@
+{
+  "tool": "yewtube",
+  "selected": "homebrew:yewtube",
+  "alternatives": [
+    "pypi:yewtube"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:yewtube",
+      "downloads": 1655,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:yewtube",
+      "downloads": 15,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:yewtube",
+      "downloads": 0,
+      "version_count": 30,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:yewtube",
+  "disambiguated_at": "2026-02-17T00:31:39.11806683Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

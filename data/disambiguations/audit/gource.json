@@ -1,0 +1,24 @@
+{
+  "tool": "gource",
+  "selected": "homebrew:gource",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:gource",
+      "downloads": 5818,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:gource",
+      "downloads": 19,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:gource",
+  "disambiguated_at": "2026-02-17T00:17:27.109298777Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

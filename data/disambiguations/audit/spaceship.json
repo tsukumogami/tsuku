@@ -1,0 +1,39 @@
+{
+  "tool": "spaceship",
+  "selected": "rubygems:spaceship",
+  "alternatives": [
+    "homebrew:spaceship"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 285.9741406008052,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:spaceship",
+      "downloads": 12,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:spaceship",
+      "downloads": 6458,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:spaceship",
+      "downloads": 1846821,
+      "version_count": 118,
+      "has_repository": false
+    },
+    {
+      "source": "npm:spaceship",
+      "downloads": 5,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:spaceship",
+  "disambiguated_at": "2026-02-17T00:28:22.21082703Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

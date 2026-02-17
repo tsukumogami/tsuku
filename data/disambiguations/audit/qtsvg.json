@@ -1,0 +1,18 @@
+{
+  "tool": "qtsvg",
+  "selected": "homebrew:qtsvg",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:qtsvg",
+      "downloads": 50811,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:qtsvg",
+  "disambiguated_at": "2026-02-17T00:26:26.814295839Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

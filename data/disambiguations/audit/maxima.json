@@ -1,0 +1,33 @@
+{
+  "tool": "maxima",
+  "selected": "rubygems:maxima",
+  "alternatives": [
+    "homebrew:maxima"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.426621160409556,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:maxima",
+      "downloads": 32,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:maxima",
+      "downloads": 8497,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:maxima",
+      "downloads": 29116,
+      "version_count": 12,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:maxima",
+  "disambiguated_at": "2026-02-17T00:22:06.052989212Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

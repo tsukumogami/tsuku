@@ -1,0 +1,18 @@
+{
+  "tool": "faircamp",
+  "selected": "homebrew:faircamp",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:faircamp",
+      "downloads": 1327,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:faircamp",
+  "disambiguated_at": "2026-02-17T00:15:33.868570259Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

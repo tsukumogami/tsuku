@@ -1,0 +1,46 @@
+{
+  "tool": "tmx",
+  "selected": "rubygems:tmx",
+  "alternatives": [
+    "homebrew:tmx",
+    "crates.io:tmx"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 171.92537313432837,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:tmx",
+      "downloads": 134,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:tmx",
+      "downloads": 0,
+      "version_count": 8,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:tmx",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:tmx",
+      "downloads": 23038,
+      "version_count": 7,
+      "has_repository": false
+    },
+    {
+      "source": "npm:tmx",
+      "downloads": 3,
+      "version_count": 3,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:tmx",
+  "disambiguated_at": "2026-02-17T00:29:47.902320112Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

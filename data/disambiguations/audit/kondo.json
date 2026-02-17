@@ -1,0 +1,33 @@
+{
+  "tool": "kondo",
+  "selected": "homebrew:kondo",
+  "alternatives": [
+    "crates.io:kondo"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.150105708245243,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:kondo",
+      "downloads": 473,
+      "version_count": 8,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:kondo",
+      "downloads": 544,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:kondo",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:kondo",
+  "disambiguated_at": "2026-02-17T00:19:53.703419983Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

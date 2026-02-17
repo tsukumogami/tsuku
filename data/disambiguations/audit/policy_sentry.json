@@ -1,0 +1,26 @@
+{
+  "tool": "policy_sentry",
+  "selected": "homebrew:policy_sentry",
+  "alternatives": [
+    "pypi:policy_sentry"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:policy_sentry",
+      "downloads": 481,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:policy_sentry",
+      "downloads": 0,
+      "version_count": 84,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:policy_sentry",
+  "disambiguated_at": "2026-02-17T00:25:29.527637248Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

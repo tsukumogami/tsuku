@@ -1,0 +1,40 @@
+{
+  "tool": "v8",
+  "selected": "crates.io:v8",
+  "alternatives": [
+    "npm:v8",
+    "homebrew:v8"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 159.07159318637275,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "pypi:v8",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:v8",
+      "downloads": 3175069,
+      "version_count": 168,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:v8",
+      "downloads": 3669,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:v8",
+      "downloads": 19960,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:v8",
+  "disambiguated_at": "2026-02-17T00:30:32.104630909Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

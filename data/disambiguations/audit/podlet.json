@@ -1,0 +1,33 @@
+{
+  "tool": "podlet",
+  "selected": "homebrew:podlet",
+  "alternatives": [
+    "crates.io:podlet"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.5942307692307693,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:podlet",
+      "downloads": 520,
+      "version_count": 9,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:podlet",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:podlet",
+      "downloads": 1349,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:podlet",
+  "disambiguated_at": "2026-02-17T00:25:27.591905456Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

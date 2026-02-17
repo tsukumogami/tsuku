@@ -1,0 +1,24 @@
+{
+  "tool": "hledger",
+  "selected": "homebrew:hledger",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:hledger",
+      "downloads": 4710,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:hledger",
+      "downloads": 1,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:hledger",
+  "disambiguated_at": "2026-02-17T00:18:19.723807694Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

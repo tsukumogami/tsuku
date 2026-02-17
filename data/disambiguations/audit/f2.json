@@ -1,0 +1,34 @@
+{
+  "tool": "f2",
+  "selected": "homebrew:f2",
+  "alternatives": [
+    "npm:f2",
+    "pypi:f2"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 62.07692307692308,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:f2",
+      "downloads": 807,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:f2",
+      "downloads": 0,
+      "version_count": 8,
+      "has_repository": true
+    },
+    {
+      "source": "npm:f2",
+      "downloads": 13,
+      "version_count": 20,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:f2",
+  "disambiguated_at": "2026-02-17T00:15:31.141852798Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

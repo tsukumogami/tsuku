@@ -1,0 +1,39 @@
+{
+  "tool": "vault-cli",
+  "selected": "homebrew:vault-cli",
+  "alternatives": [
+    "pypi:vault-cli",
+    "npm:vault-cli"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:vault-cli",
+      "downloads": 8,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:vault-cli",
+      "downloads": 2276,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:vault-cli",
+      "downloads": 0,
+      "version_count": 41,
+      "has_repository": true
+    },
+    {
+      "source": "npm:vault-cli",
+      "downloads": 0,
+      "version_count": 13,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:vault-cli",
+  "disambiguated_at": "2026-02-17T00:30:35.645124938Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

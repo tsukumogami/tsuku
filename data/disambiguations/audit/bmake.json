@@ -1,0 +1,26 @@
+{
+  "tool": "bmake",
+  "selected": "homebrew:bmake",
+  "alternatives": [
+    "npm:bmake"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:bmake",
+      "downloads": 3734,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:bmake",
+      "downloads": 0,
+      "version_count": 5,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:bmake",
+  "disambiguated_at": "2026-02-17T00:12:03.632698769Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

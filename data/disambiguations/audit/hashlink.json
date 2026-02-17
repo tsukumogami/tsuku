@@ -1,0 +1,41 @@
+{
+  "tool": "hashlink",
+  "selected": "crates.io:hashlink",
+  "alternatives": [
+    "rubygems:hashlink",
+    "homebrew:hashlink",
+    "npm:hashlink"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 7284.914033149172,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:hashlink",
+      "downloads": 32964236,
+      "version_count": 18,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:hashlink",
+      "downloads": 580,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:hashlink",
+      "downloads": 4525,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "npm:hashlink",
+      "downloads": 35,
+      "version_count": 11,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:hashlink",
+  "disambiguated_at": "2026-02-17T00:18:03.975789034Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

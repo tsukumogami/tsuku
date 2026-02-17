@@ -1,0 +1,45 @@
+{
+  "tool": "noti",
+  "selected": "rubygems:noti",
+  "alternatives": [
+    "homebrew:noti"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 19.48729446935725,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:noti",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:noti",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:noti",
+      "downloads": 669,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:noti",
+      "downloads": 13037,
+      "version_count": 3,
+      "has_repository": false
+    },
+    {
+      "source": "npm:noti",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:noti",
+  "disambiguated_at": "2026-02-17T00:23:40.289469525Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

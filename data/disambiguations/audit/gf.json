@@ -1,0 +1,47 @@
+{
+  "tool": "gf",
+  "selected": "rubygems:gf",
+  "alternatives": [
+    "homebrew:gf",
+    "crates.io:gf",
+    "pypi:gf"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 6.088842975206612,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:gf",
+      "downloads": 270,
+      "version_count": 12,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:gf",
+      "downloads": 484,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:gf",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:gf",
+      "downloads": 2947,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:gf",
+      "downloads": 1,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:gf",
+  "disambiguated_at": "2026-02-17T00:16:38.910348155Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

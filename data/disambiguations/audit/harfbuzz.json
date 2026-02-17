@@ -1,0 +1,40 @@
+{
+  "tool": "harfbuzz",
+  "selected": "homebrew:harfbuzz",
+  "alternatives": [
+    "rubygems:harfbuzz",
+    "crates.io:harfbuzz"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 208.06350749291212,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:harfbuzz",
+      "downloads": 4953,
+      "version_count": 8,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:harfbuzz",
+      "downloads": 12345,
+      "version_count": 5,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:harfbuzz",
+      "downloads": 2568544,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:harfbuzz",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:harfbuzz",
+  "disambiguated_at": "2026-02-17T00:17:59.558582852Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

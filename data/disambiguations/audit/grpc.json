@@ -1,0 +1,48 @@
+{
+  "tool": "grpc",
+  "selected": "rubygems:grpc",
+  "alternatives": [
+    "homebrew:grpc",
+    "npm:grpc",
+    "crates.io:grpc",
+    "pypi:grpc"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1104.4157535060613,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:grpc",
+      "downloads": 0,
+      "version_count": 11,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:grpc",
+      "downloads": 21336,
+      "version_count": 27,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:grpc",
+      "downloads": 185851083,
+      "version_count": 1332,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:grpc",
+      "downloads": 168280,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:grpc",
+      "downloads": 120174,
+      "version_count": 138,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:grpc",
+  "disambiguated_at": "2026-02-17T00:17:43.615411151Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,27 @@
+{
+  "tool": "rbenv",
+  "selected": "homebrew:rbenv",
+  "alternatives": [
+    "rubygems:rbenv"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 17.90897234090398,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:rbenv",
+      "downloads": 398206,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:rbenv",
+      "downloads": 22235,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:rbenv",
+  "disambiguated_at": "2026-02-17T00:26:39.338815478Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,40 @@
+{
+  "tool": "screen",
+  "selected": "homebrew:screen",
+  "alternatives": [
+    "rubygems:screen",
+    "npm:screen"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.1670929241261723,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:screen",
+      "downloads": 12710,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:screen",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:screen",
+      "downloads": 5865,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:screen",
+      "downloads": 0,
+      "version_count": 11,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:screen",
+  "disambiguated_at": "2026-02-17T00:27:35.205420102Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

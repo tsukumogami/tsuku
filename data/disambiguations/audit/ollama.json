@@ -1,0 +1,46 @@
+{
+  "tool": "ollama",
+  "selected": "npm:ollama",
+  "alternatives": [
+    "homebrew:ollama",
+    "pypi:ollama"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.6750288147486423,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:ollama",
+      "downloads": 62,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:ollama",
+      "downloads": 354853,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:ollama",
+      "downloads": 0,
+      "version_count": 34,
+      "has_repository": true
+    },
+    {
+      "source": "npm:ollama",
+      "downloads": 594389,
+      "version_count": 36,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:ollama",
+      "downloads": 993,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:ollama",
+  "disambiguated_at": "2026-02-17T00:10:09.666038127Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

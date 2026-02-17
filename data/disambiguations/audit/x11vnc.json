@@ -1,0 +1,18 @@
+{
+  "tool": "x11vnc",
+  "selected": "homebrew:x11vnc",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:x11vnc",
+      "downloads": 994,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:x11vnc",
+  "disambiguated_at": "2026-02-17T00:31:20.480460823Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "eigen@3",
+  "selected": "homebrew:eigen@3",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:eigen@3",
+      "downloads": 2178,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:eigen@3",
+  "disambiguated_at": "2026-02-17T00:15:11.326569836Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

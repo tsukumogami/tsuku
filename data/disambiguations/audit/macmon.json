@@ -1,0 +1,34 @@
+{
+  "tool": "macmon",
+  "selected": "homebrew:macmon",
+  "alternatives": [
+    "crates.io:macmon",
+    "npm:macmon"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 22.046666666666667,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:macmon",
+      "downloads": 150,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:macmon",
+      "downloads": 3307,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:macmon",
+      "downloads": 0,
+      "version_count": 8,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:macmon",
+  "disambiguated_at": "2026-02-17T00:21:47.884233883Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

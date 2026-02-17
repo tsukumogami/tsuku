@@ -1,0 +1,38 @@
+{
+  "tool": "volta",
+  "selected": "homebrew:volta",
+  "alternatives": [
+    "pypi:volta"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:volta",
+      "downloads": 7476,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:volta",
+      "downloads": 85,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:volta",
+      "downloads": 0,
+      "version_count": 149,
+      "has_repository": true
+    },
+    {
+      "source": "npm:volta",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:volta",
+  "disambiguated_at": "2026-02-17T00:30:51.746545154Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

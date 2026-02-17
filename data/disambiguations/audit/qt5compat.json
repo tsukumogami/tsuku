@@ -1,0 +1,18 @@
+{
+  "tool": "qt5compat",
+  "selected": "homebrew:qt5compat",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:qt5compat",
+      "downloads": 43698,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:qt5compat",
+  "disambiguated_at": "2026-02-17T00:26:19.955264927Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

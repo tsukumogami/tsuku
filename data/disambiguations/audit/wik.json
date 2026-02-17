@@ -1,0 +1,40 @@
+{
+  "tool": "wik",
+  "selected": "rubygems:wik",
+  "alternatives": [
+    "homebrew:wik",
+    "pypi:wik"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 18.06711409395973,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:wik",
+      "downloads": 0,
+      "version_count": 5,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:wik",
+      "downloads": 149,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:wik",
+      "downloads": 2692,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:wik",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:wik",
+  "disambiguated_at": "2026-02-17T00:31:11.940594326Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

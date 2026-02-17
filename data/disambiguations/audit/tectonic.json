@@ -1,0 +1,47 @@
+{
+  "tool": "tectonic",
+  "selected": "homebrew:tectonic",
+  "alternatives": [
+    "crates.io:tectonic",
+    "rubygems:tectonic",
+    "npm:tectonic"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.7539790814006366,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:tectonic",
+      "downloads": 7714,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:tectonic",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:tectonic",
+      "downloads": 4398,
+      "version_count": 46,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:tectonic",
+      "downloads": 3829,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:tectonic",
+      "downloads": 66,
+      "version_count": 42,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:tectonic",
+  "disambiguated_at": "2026-02-17T00:29:24.77173185Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

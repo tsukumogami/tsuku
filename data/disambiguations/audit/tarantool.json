@@ -1,0 +1,47 @@
+{
+  "tool": "tarantool",
+  "selected": "rubygems:tarantool",
+  "alternatives": [
+    "crates.io:tarantool",
+    "homebrew:tarantool",
+    "pypi:tarantool"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 7.581431582806342,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:tarantool",
+      "downloads": 0,
+      "version_count": 31,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:tarantool",
+      "downloads": 10911,
+      "version_count": 30,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:tarantool",
+      "downloads": 678,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:tarantool",
+      "downloads": 82721,
+      "version_count": 27,
+      "has_repository": false
+    },
+    {
+      "source": "npm:tarantool",
+      "downloads": 4,
+      "version_count": 3,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:tarantool",
+  "disambiguated_at": "2026-02-17T00:29:16.686931166Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,48 @@
+{
+  "tool": "progress",
+  "selected": "rubygems:progress",
+  "alternatives": [
+    "crates.io:progress",
+    "homebrew:progress",
+    "npm:progress",
+    "pypi:progress"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 3757.9449068569165,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:progress",
+      "downloads": 2523,
+      "version_count": 3,
+      "has_repository": false
+    },
+    {
+      "source": "pypi:progress",
+      "downloads": 0,
+      "version_count": 10,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:progress",
+      "downloads": 964,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:progress",
+      "downloads": 0,
+      "version_count": 20,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:progress",
+      "downloads": 9481295,
+      "version_count": 57,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:progress",
+  "disambiguated_at": "2026-02-17T00:25:43.018340369Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

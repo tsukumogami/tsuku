@@ -1,0 +1,18 @@
+{
+  "tool": "libomp",
+  "selected": "homebrew:libomp",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:libomp",
+      "downloads": 647314,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:libomp",
+  "disambiguated_at": "2026-02-17T00:20:49.504203971Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,47 @@
+{
+  "tool": "rustic",
+  "selected": "rubygems:rustic",
+  "alternatives": [
+    "npm:rustic",
+    "homebrew:rustic",
+    "crates.io:rustic"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 4.695525857059849,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:rustic",
+      "downloads": 518,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:rustic",
+      "downloads": 162,
+      "version_count": 12,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:rustic",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:rustic",
+      "downloads": 8081,
+      "version_count": 7,
+      "has_repository": false
+    },
+    {
+      "source": "npm:rustic",
+      "downloads": 1721,
+      "version_count": 10,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:rustic",
+  "disambiguated_at": "2026-02-17T00:27:18.36068159Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

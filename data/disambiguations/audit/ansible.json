@@ -1,0 +1,47 @@
+{
+  "tool": "ansible",
+  "selected": "homebrew:ansible",
+  "alternatives": [
+    "rubygems:ansible",
+    "crates.io:ansible",
+    "pypi:ansible"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.5946538958631815,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:ansible",
+      "downloads": 258975,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:ansible",
+      "downloads": 0,
+      "version_count": 417,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:ansible",
+      "downloads": 287,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:ansible",
+      "downloads": 99811,
+      "version_count": 4,
+      "has_repository": false
+    },
+    {
+      "source": "npm:ansible",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:ansible",
+  "disambiguated_at": "2026-02-17T00:10:41.006122634Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

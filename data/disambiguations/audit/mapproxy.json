@@ -1,0 +1,26 @@
+{
+  "tool": "mapproxy",
+  "selected": "homebrew:mapproxy",
+  "alternatives": [
+    "pypi:mapproxy"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:mapproxy",
+      "downloads": 722,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:mapproxy",
+      "downloads": 0,
+      "version_count": 73,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:mapproxy",
+  "disambiguated_at": "2026-02-17T00:21:56.40790195Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

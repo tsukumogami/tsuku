@@ -1,0 +1,41 @@
+{
+  "tool": "code2prompt",
+  "selected": "crates.io:code2prompt",
+  "alternatives": [
+    "homebrew:code2prompt",
+    "npm:code2prompt",
+    "pypi:code2prompt"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.116875,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:code2prompt",
+      "downloads": 1600,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:code2prompt",
+      "downloads": 1787,
+      "version_count": 11,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:code2prompt",
+      "downloads": 0,
+      "version_count": 16,
+      "has_repository": true
+    },
+    {
+      "source": "npm:code2prompt",
+      "downloads": 0,
+      "version_count": 44,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:code2prompt",
+  "disambiguated_at": "2026-02-17T00:13:28.388769103Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

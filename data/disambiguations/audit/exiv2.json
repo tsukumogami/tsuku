@@ -1,0 +1,41 @@
+{
+  "tool": "exiv2",
+  "selected": "rubygems:exiv2",
+  "alternatives": [
+    "homebrew:exiv2",
+    "pypi:exiv2",
+    "npm:exiv2"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 12.137961029923451,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:exiv2",
+      "downloads": 5748,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:exiv2",
+      "downloads": 0,
+      "version_count": 29,
+      "has_repository": true
+    },
+    {
+      "source": "npm:exiv2",
+      "downloads": 0,
+      "version_count": 14,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:exiv2",
+      "downloads": 69769,
+      "version_count": 12,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:exiv2",
+  "disambiguated_at": "2026-02-17T00:15:29.352336818Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,34 @@
+{
+  "tool": "js-beautify",
+  "selected": "rubygems:js-beautify",
+  "alternatives": [
+    "homebrew:js-beautify",
+    "npm:js-beautify"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 32.90401146131805,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:js-beautify",
+      "downloads": 698,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:js-beautify",
+      "downloads": 22967,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "npm:js-beautify",
+      "downloads": 0,
+      "version_count": 131,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:js-beautify",
+  "disambiguated_at": "2026-02-17T00:19:27.484633955Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

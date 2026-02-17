@@ -1,0 +1,18 @@
+{
+  "tool": "vulkan-tools",
+  "selected": "homebrew:vulkan-tools",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:vulkan-tools",
+      "downloads": 6744,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:vulkan-tools",
+  "disambiguated_at": "2026-02-17T00:30:56.289926725Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

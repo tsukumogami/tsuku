@@ -1,0 +1,48 @@
+{
+  "tool": "crun",
+  "selected": "homebrew:crun",
+  "alternatives": [
+    "rubygems:crun",
+    "crates.io:crun",
+    "pypi:crun",
+    "npm:crun"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.9903660886319847,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:crun",
+      "downloads": 29488,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:crun",
+      "downloads": 0,
+      "version_count": 37,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:crun",
+      "downloads": 59,
+      "version_count": 5,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:crun",
+      "downloads": 9861,
+      "version_count": 4,
+      "has_repository": false
+    },
+    {
+      "source": "npm:crun",
+      "downloads": 0,
+      "version_count": 9,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:crun",
+  "disambiguated_at": "2026-02-17T00:13:52.339392399Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,34 @@
+{
+  "tool": "zim",
+  "selected": "homebrew:zim",
+  "alternatives": [
+    "crates.io:zim",
+    "npm:zim"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 9.63963963963964,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:zim",
+      "downloads": 111,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:zim",
+      "downloads": 1070,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:zim",
+      "downloads": 0,
+      "version_count": 9,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:zim",
+  "disambiguated_at": "2026-02-17T00:31:48.682955386Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

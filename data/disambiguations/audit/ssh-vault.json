@@ -1,0 +1,27 @@
+{
+  "tool": "ssh-vault",
+  "selected": "homebrew:ssh-vault",
+  "alternatives": [
+    "crates.io:ssh-vault"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 4.080357142857143,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:ssh-vault",
+      "downloads": 112,
+      "version_count": 22,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:ssh-vault",
+      "downloads": 457,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:ssh-vault",
+  "disambiguated_at": "2026-02-17T00:28:42.224921724Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

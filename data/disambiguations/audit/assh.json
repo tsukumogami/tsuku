@@ -1,0 +1,47 @@
+{
+  "tool": "assh",
+  "selected": "rubygems:assh",
+  "alternatives": [
+    "homebrew:assh",
+    "crates.io:assh",
+    "pypi:assh"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 15.958333333333334,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:assh",
+      "downloads": 384,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:assh",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:assh",
+      "downloads": 106,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:assh",
+      "downloads": 6128,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:assh",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:assh",
+  "disambiguated_at": "2026-02-17T00:11:06.803830861Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,47 @@
+{
+  "tool": "ola",
+  "selected": "rubygems:ola",
+  "alternatives": [
+    "homebrew:ola",
+    "crates.io:ola",
+    "npm:ola"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 12.415415415415415,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:ola",
+      "downloads": 178,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:ola",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:ola",
+      "downloads": 999,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:ola",
+      "downloads": 12403,
+      "version_count": 4,
+      "has_repository": false
+    },
+    {
+      "source": "npm:ola",
+      "downloads": 0,
+      "version_count": 34,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:ola",
+  "disambiguated_at": "2026-02-17T00:23:57.606092844Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

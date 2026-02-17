@@ -1,0 +1,27 @@
+{
+  "tool": "cargo-c",
+  "selected": "crates.io:cargo-c",
+  "alternatives": [
+    "homebrew:cargo-c"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.9966395967516104,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:cargo-c",
+      "downloads": 14284,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:cargo-c",
+      "downloads": 57088,
+      "version_count": 91,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:cargo-c",
+  "disambiguated_at": "2026-02-17T00:12:33.363011915Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

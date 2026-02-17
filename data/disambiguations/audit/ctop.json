@@ -1,0 +1,26 @@
+{
+  "tool": "ctop",
+  "selected": "homebrew:ctop",
+  "alternatives": [
+    "pypi:ctop"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:ctop",
+      "downloads": 4901,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:ctop",
+      "downloads": 0,
+      "version_count": 7,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:ctop",
+  "disambiguated_at": "2026-02-17T00:13:57.911936786Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

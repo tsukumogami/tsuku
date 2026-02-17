@@ -1,0 +1,39 @@
+{
+  "tool": "unison",
+  "selected": "homebrew:unison",
+  "alternatives": [
+    "crates.io:unison"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 457.10526315789474,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:unison",
+      "downloads": 19,
+      "version_count": 5,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:unison",
+      "downloads": 8685,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:unison",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "npm:unison",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:unison",
+  "disambiguated_at": "2026-02-17T00:30:21.863956031Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

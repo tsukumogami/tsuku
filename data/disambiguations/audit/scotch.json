@@ -1,0 +1,46 @@
+{
+  "tool": "scotch",
+  "selected": "rubygems:scotch",
+  "alternatives": [
+    "homebrew:scotch",
+    "npm:scotch"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 7.223706176961603,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:scotch",
+      "downloads": 599,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:scotch",
+      "downloads": 37,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:scotch",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:scotch",
+      "downloads": 4327,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "npm:scotch",
+      "downloads": 0,
+      "version_count": 7,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:scotch",
+  "disambiguated_at": "2026-02-17T00:27:33.314056393Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

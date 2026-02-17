@@ -1,0 +1,48 @@
+{
+  "tool": "nest",
+  "selected": "rubygems:nest",
+  "alternatives": [
+    "homebrew:nest",
+    "crates.io:nest",
+    "npm:nest",
+    "pypi:nest"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 4928.003337041157,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:nest",
+      "downloads": 899,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:nest",
+      "downloads": 0,
+      "version_count": 5,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:nest",
+      "downloads": 250,
+      "version_count": 11,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:nest",
+      "downloads": 4430275,
+      "version_count": 21,
+      "has_repository": false
+    },
+    {
+      "source": "npm:nest",
+      "downloads": 0,
+      "version_count": 11,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:nest",
+  "disambiguated_at": "2026-02-17T00:23:21.968579147Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

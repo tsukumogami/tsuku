@@ -1,0 +1,18 @@
+{
+  "tool": "bareos-client",
+  "selected": "homebrew:bareos-client",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:bareos-client",
+      "downloads": 321,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:bareos-client",
+  "disambiguated_at": "2026-02-17T00:11:41.451843985Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

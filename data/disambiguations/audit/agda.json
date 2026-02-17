@@ -1,0 +1,32 @@
+{
+  "tool": "agda",
+  "selected": "homebrew:agda",
+  "alternatives": [
+    "pypi:agda"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:agda",
+      "downloads": 1157,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:agda",
+      "downloads": 0,
+      "version_count": 8,
+      "has_repository": false
+    },
+    {
+      "source": "npm:agda",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:agda",
+  "disambiguated_at": "2026-02-17T00:10:26.288256724Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

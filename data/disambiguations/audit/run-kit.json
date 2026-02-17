@@ -1,0 +1,27 @@
+{
+  "tool": "run-kit",
+  "selected": "crates.io:run-kit",
+  "alternatives": [
+    "homebrew:run-kit"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 5.54,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:run-kit",
+      "downloads": 277,
+      "version_count": 14,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:run-kit",
+      "downloads": 50,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:run-kit",
+  "disambiguated_at": "2026-02-17T00:27:15.702122722Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

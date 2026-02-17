@@ -1,0 +1,48 @@
+{
+  "tool": "amp",
+  "selected": "rubygems:amp",
+  "alternatives": [
+    "homebrew:amp",
+    "crates.io:amp",
+    "pypi:amp",
+    "npm:amp"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 39.71497584541063,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "pypi:amp",
+      "downloads": 0,
+      "version_count": 6,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:amp",
+      "downloads": 320,
+      "version_count": 12,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:amp",
+      "downloads": 621,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:amp",
+      "downloads": 0,
+      "version_count": 5,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:amp",
+      "downloads": 24663,
+      "version_count": 4,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:amp",
+  "disambiguated_at": "2026-02-17T00:10:38.127456795Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

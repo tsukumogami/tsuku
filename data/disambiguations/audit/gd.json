@@ -1,0 +1,46 @@
+{
+  "tool": "gd",
+  "selected": "homebrew:gd",
+  "alternatives": [
+    "rubygems:gd",
+    "pypi:gd"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 48.59669239250275,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:gd",
+      "downloads": 14,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:gd",
+      "downloads": 0,
+      "version_count": 20,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:gd",
+      "downloads": 220386,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:gd",
+      "downloads": 4535,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:gd",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:gd",
+  "disambiguated_at": "2026-02-17T00:16:32.710169529Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

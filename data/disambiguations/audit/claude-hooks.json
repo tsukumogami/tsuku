@@ -1,0 +1,38 @@
+{
+  "tool": "claude-hooks",
+  "selected": "homebrew:claude-hooks",
+  "alternatives": [
+    "npm:claude-hooks"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:claude-hooks",
+      "downloads": 196,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:claude-hooks",
+      "downloads": 35,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:claude-hooks",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "npm:claude-hooks",
+      "downloads": 0,
+      "version_count": 32,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:claude-hooks",
+  "disambiguated_at": "2026-02-17T00:13:09.776514179Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

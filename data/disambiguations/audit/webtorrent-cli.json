@@ -1,0 +1,26 @@
+{
+  "tool": "webtorrent-cli",
+  "selected": "homebrew:webtorrent-cli",
+  "alternatives": [
+    "npm:webtorrent-cli"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:webtorrent-cli",
+      "downloads": 532,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:webtorrent-cli",
+      "downloads": 0,
+      "version_count": 74,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:webtorrent-cli",
+  "disambiguated_at": "2026-02-17T00:31:07.498507264Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,27 @@
+{
+  "tool": "inih",
+  "selected": "rubygems:inih",
+  "alternatives": [
+    "homebrew:inih"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.4997389942578736,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:inih",
+      "downloads": 5747,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:inih",
+      "downloads": 20113,
+      "version_count": 9,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:inih",
+  "disambiguated_at": "2026-02-17T00:18:50.701646998Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

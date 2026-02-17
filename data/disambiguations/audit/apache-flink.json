@@ -1,0 +1,26 @@
+{
+  "tool": "apache-flink",
+  "selected": "homebrew:apache-flink",
+  "alternatives": [
+    "pypi:apache-flink"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:apache-flink",
+      "downloads": 2762,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:apache-flink",
+      "downloads": 0,
+      "version_count": 56,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:apache-flink",
+  "disambiguated_at": "2026-02-17T00:10:46.849865982Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

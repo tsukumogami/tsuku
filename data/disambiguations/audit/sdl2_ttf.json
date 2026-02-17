@@ -1,0 +1,27 @@
+{
+  "tool": "sdl2_ttf",
+  "selected": "homebrew:sdl2_ttf",
+  "alternatives": [
+    "crates.io:sdl2_ttf"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 15.138169257340241,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:sdl2_ttf",
+      "downloads": 26295,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:sdl2_ttf",
+      "downloads": 1737,
+      "version_count": 28,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:sdl2_ttf",
+  "disambiguated_at": "2026-02-17T00:27:39.549116998Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

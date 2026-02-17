@@ -1,0 +1,47 @@
+{
+  "tool": "cbc",
+  "selected": "crates.io:cbc",
+  "alternatives": [
+    "rubygems:cbc",
+    "homebrew:cbc",
+    "pypi:cbc"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 2242.619203747073,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:cbc",
+      "downloads": 9575984,
+      "version_count": 11,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:cbc",
+      "downloads": 0,
+      "version_count": 15,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:cbc",
+      "downloads": 3802,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:cbc",
+      "downloads": 4270,
+      "version_count": 5,
+      "has_repository": false
+    },
+    {
+      "source": "npm:cbc",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:cbc",
+  "disambiguated_at": "2026-02-17T00:12:41.551585036Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "mvnvm",
+  "selected": "homebrew:mvnvm",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:mvnvm",
+      "downloads": 1480,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:mvnvm",
+  "disambiguated_at": "2026-02-17T00:23:03.62659535Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

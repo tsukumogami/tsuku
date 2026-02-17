@@ -1,0 +1,26 @@
+{
+  "tool": "pgformatter",
+  "selected": "homebrew:pgformatter",
+  "alternatives": [
+    "pypi:pgformatter"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:pgformatter",
+      "downloads": 2512,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:pgformatter",
+      "downloads": 0,
+      "version_count": 7,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:pgformatter",
+  "disambiguated_at": "2026-02-17T00:25:02.955324681Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

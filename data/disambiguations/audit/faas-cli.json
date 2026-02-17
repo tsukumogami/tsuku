@@ -1,0 +1,33 @@
+{
+  "tool": "faas-cli",
+  "selected": "homebrew:faas-cli",
+  "alternatives": [
+    "npm:faas-cli",
+    "pypi:faas-cli"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:faas-cli",
+      "downloads": 3724,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:faas-cli",
+      "downloads": 0,
+      "version_count": 5,
+      "has_repository": false
+    },
+    {
+      "source": "npm:faas-cli",
+      "downloads": 0,
+      "version_count": 85,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:faas-cli",
+  "disambiguated_at": "2026-02-17T00:15:32.788433129Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

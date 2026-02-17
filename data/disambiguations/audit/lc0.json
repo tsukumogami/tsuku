@@ -1,0 +1,18 @@
+{
+  "tool": "lc0",
+  "selected": "homebrew:lc0",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:lc0",
+      "downloads": 1035,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:lc0",
+  "disambiguated_at": "2026-02-17T00:20:16.466715446Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

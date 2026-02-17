@@ -1,0 +1,26 @@
+{
+  "tool": "supabase-mcp-server",
+  "selected": "homebrew:supabase-mcp-server",
+  "alternatives": [
+    "pypi:supabase-mcp-server"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:supabase-mcp-server",
+      "downloads": 531,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:supabase-mcp-server",
+      "downloads": 0,
+      "version_count": 18,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:supabase-mcp-server",
+  "disambiguated_at": "2026-02-17T00:28:59.396693479Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

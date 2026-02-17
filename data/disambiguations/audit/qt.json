@@ -1,0 +1,33 @@
+{
+  "tool": "qt",
+  "selected": "homebrew:qt",
+  "alternatives": [
+    "crates.io:qt"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 638.4247787610619,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:qt",
+      "downloads": 216426,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:qt",
+      "downloads": 339,
+      "version_count": 21,
+      "has_repository": true
+    },
+    {
+      "source": "npm:qt",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:qt",
+  "disambiguated_at": "2026-02-17T00:26:17.919204593Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

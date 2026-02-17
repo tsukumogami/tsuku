@@ -1,0 +1,27 @@
+{
+  "tool": "fast_float",
+  "selected": "crates.io:fast_float",
+  "alternatives": [
+    "homebrew:fast_float"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 299.75364474858674,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:fast_float",
+      "downloads": 1007472,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:fast_float",
+      "downloads": 3361,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:fast_float",
+  "disambiguated_at": "2026-02-17T00:15:36.18459681Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

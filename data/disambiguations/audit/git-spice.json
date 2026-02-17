@@ -1,0 +1,18 @@
+{
+  "tool": "git-spice",
+  "selected": "homebrew:git-spice",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:git-spice",
+      "downloads": 1308,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:git-spice",
+  "disambiguated_at": "2026-02-17T00:16:54.245752889Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

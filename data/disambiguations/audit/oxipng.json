@@ -1,0 +1,34 @@
+{
+  "tool": "oxipng",
+  "selected": "crates.io:oxipng",
+  "alternatives": [
+    "homebrew:oxipng",
+    "npm:oxipng"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 33.87258200168208,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:oxipng",
+      "downloads": 161098,
+      "version_count": 79,
+      "has_repository": true
+    },
+    {
+      "source": "npm:oxipng",
+      "downloads": 211,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:oxipng",
+      "downloads": 4756,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:oxipng",
+  "disambiguated_at": "2026-02-17T00:24:42.289591651Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

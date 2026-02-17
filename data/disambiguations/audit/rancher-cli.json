@@ -1,0 +1,27 @@
+{
+  "tool": "rancher-cli",
+  "selected": "homebrew:rancher-cli",
+  "alternatives": [
+    "npm:rancher-cli"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1176,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:rancher-cli",
+      "downloads": 4704,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:rancher-cli",
+      "downloads": 4,
+      "version_count": 9,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:rancher-cli",
+  "disambiguated_at": "2026-02-17T00:26:36.696595313Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

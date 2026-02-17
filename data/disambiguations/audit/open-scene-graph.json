@@ -1,0 +1,18 @@
+{
+  "tool": "open-scene-graph",
+  "selected": "homebrew:open-scene-graph",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:open-scene-graph",
+      "downloads": 12162,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:open-scene-graph",
+  "disambiguated_at": "2026-02-17T00:24:02.157214384Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,46 @@
+{
+  "tool": "jp",
+  "selected": "rubygems:jp",
+  "alternatives": [
+    "homebrew:jp",
+    "pypi:jp"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 7.2682926829268295,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:jp",
+      "downloads": 54,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:jp",
+      "downloads": 0,
+      "version_count": 6,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:jp",
+      "downloads": 656,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:jp",
+      "downloads": 4768,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:jp",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:jp",
+  "disambiguated_at": "2026-02-17T00:19:22.883309584Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

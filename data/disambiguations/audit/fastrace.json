@@ -1,0 +1,27 @@
+{
+  "tool": "fastrace",
+  "selected": "crates.io:fastrace",
+  "alternatives": [
+    "homebrew:fastrace"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 3985.4166666666665,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:fastrace",
+      "downloads": 216,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:fastrace",
+      "downloads": 860850,
+      "version_count": 18,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:fastrace",
+  "disambiguated_at": "2026-02-17T00:15:39.194183847Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

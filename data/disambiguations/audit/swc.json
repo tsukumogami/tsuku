@@ -1,0 +1,41 @@
+{
+  "tool": "swc",
+  "selected": "crates.io:swc",
+  "alternatives": [
+    "homebrew:swc",
+    "npm:swc",
+    "pypi:swc"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 113.49758919961427,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:swc",
+      "downloads": 1037,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:swc",
+      "downloads": 0,
+      "version_count": 25,
+      "has_repository": true
+    },
+    {
+      "source": "npm:swc",
+      "downloads": 0,
+      "version_count": 63,
+      "has_repository": false
+    },
+    {
+      "source": "crates.io:swc",
+      "downloads": 117697,
+      "version_count": 1418,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:swc",
+  "disambiguated_at": "2026-02-17T00:29:04.676657331Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

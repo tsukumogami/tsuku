@@ -1,0 +1,18 @@
+{
+  "tool": "readsb",
+  "selected": "homebrew:readsb",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:readsb",
+      "downloads": 568,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:readsb",
+  "disambiguated_at": "2026-02-17T00:26:44.711021232Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

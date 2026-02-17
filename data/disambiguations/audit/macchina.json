@@ -1,0 +1,34 @@
+{
+  "tool": "macchina",
+  "selected": "homebrew:macchina",
+  "alternatives": [
+    "crates.io:macchina",
+    "npm:macchina"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.0827118644067797,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:macchina",
+      "downloads": 1597,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:macchina",
+      "downloads": 1475,
+      "version_count": 105,
+      "has_repository": true
+    },
+    {
+      "source": "npm:macchina",
+      "downloads": 4,
+      "version_count": 5,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:macchina",
+  "disambiguated_at": "2026-02-17T00:21:47.354328259Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

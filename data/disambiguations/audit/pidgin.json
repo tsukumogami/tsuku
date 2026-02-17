@@ -1,0 +1,46 @@
+{
+  "tool": "pidgin",
+  "selected": "rubygems:pidgin",
+  "alternatives": [
+    "homebrew:pidgin",
+    "crates.io:pidgin"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.5237333333333334,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:pidgin",
+      "downloads": 1875,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:pidgin",
+      "downloads": 1718,
+      "version_count": 15,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:pidgin",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:pidgin",
+      "downloads": 6607,
+      "version_count": 3,
+      "has_repository": false
+    },
+    {
+      "source": "npm:pidgin",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:pidgin",
+  "disambiguated_at": "2026-02-17T00:25:12.038675539Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

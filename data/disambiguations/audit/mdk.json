@@ -1,0 +1,34 @@
+{
+  "tool": "mdk",
+  "selected": "homebrew:mdk",
+  "alternatives": [
+    "npm:mdk",
+    "pypi:mdk"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 18.264705882352942,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:mdk",
+      "downloads": 621,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:mdk",
+      "downloads": 0,
+      "version_count": 49,
+      "has_repository": true
+    },
+    {
+      "source": "npm:mdk",
+      "downloads": 34,
+      "version_count": 7,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:mdk",
+  "disambiguated_at": "2026-02-17T00:22:15.367667973Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

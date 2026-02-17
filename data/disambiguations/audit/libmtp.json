@@ -1,0 +1,27 @@
+{
+  "tool": "libmtp",
+  "selected": "homebrew:libmtp",
+  "alternatives": [
+    "crates.io:libmtp"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 7.396694214876033,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:libmtp",
+      "downloads": 121,
+      "version_count": 14,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:libmtp",
+      "downloads": 895,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:libmtp",
+  "disambiguated_at": "2026-02-17T00:20:46.506608334Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

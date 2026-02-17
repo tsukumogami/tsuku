@@ -1,0 +1,39 @@
+{
+  "tool": "libmagic",
+  "selected": "homebrew:libmagic",
+  "alternatives": [
+    "rubygems:libmagic"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 5.804969793685171,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:libmagic",
+      "downloads": 50927,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:libmagic",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:libmagic",
+      "downloads": 8773,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:libmagic",
+      "downloads": 0,
+      "version_count": 0,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:libmagic",
+  "disambiguated_at": "2026-02-17T00:20:44.289293957Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

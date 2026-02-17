@@ -1,0 +1,27 @@
+{
+  "tool": "superlu",
+  "selected": "homebrew:superlu",
+  "alternatives": [
+    "crates.io:superlu"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.4317180616740086,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:superlu",
+      "downloads": 779,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:superlu",
+      "downloads": 227,
+      "version_count": 17,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:superlu",
+  "disambiguated_at": "2026-02-17T00:29:00.310720345Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,27 @@
+{
+  "tool": "intelli-shell",
+  "selected": "crates.io:intelli-shell",
+  "alternatives": [
+    "homebrew:intelli-shell"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.1634241245136188,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:intelli-shell",
+      "downloads": 257,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:intelli-shell",
+      "downloads": 299,
+      "version_count": 30,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:intelli-shell",
+  "disambiguated_at": "2026-02-17T00:18:53.677893914Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

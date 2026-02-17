@@ -1,0 +1,33 @@
+{
+  "tool": "dillo",
+  "selected": "rubygems:dillo",
+  "alternatives": [
+    "homebrew:dillo"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 26.54385964912281,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:dillo",
+      "downloads": 456,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:dillo",
+      "downloads": 12104,
+      "version_count": 3,
+      "has_repository": false
+    },
+    {
+      "source": "npm:dillo",
+      "downloads": 1,
+      "version_count": 4,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:dillo",
+  "disambiguated_at": "2026-02-17T00:14:28.763677524Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,26 @@
+{
+  "tool": "animdl",
+  "selected": "homebrew:animdl",
+  "alternatives": [
+    "pypi:animdl"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:animdl",
+      "downloads": 395,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:animdl",
+      "downloads": 0,
+      "version_count": 147,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:animdl",
+  "disambiguated_at": "2026-02-17T00:10:40.617521346Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,45 @@
+{
+  "tool": "garble",
+  "selected": "rubygems:garble",
+  "alternatives": [
+    "homebrew:garble"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 7.648809523809524,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:garble",
+      "downloads": 504,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:garble",
+      "downloads": 10,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:garble",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:garble",
+      "downloads": 3855,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:garble",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:garble",
+  "disambiguated_at": "2026-02-17T00:16:26.393450689Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

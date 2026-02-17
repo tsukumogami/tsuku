@@ -1,0 +1,46 @@
+{
+  "tool": "sesh",
+  "selected": "rubygems:sesh",
+  "alternatives": [
+    "homebrew:sesh",
+    "pypi:sesh"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 23.129963898916966,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:sesh",
+      "downloads": 18,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:sesh",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:sesh",
+      "downloads": 3047,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:sesh",
+      "downloads": 70477,
+      "version_count": 30,
+      "has_repository": true
+    },
+    {
+      "source": "npm:sesh",
+      "downloads": 8,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:sesh",
+  "disambiguated_at": "2026-02-17T00:27:45.151147168Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

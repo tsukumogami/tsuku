@@ -1,0 +1,18 @@
+{
+  "tool": "xk6",
+  "selected": "homebrew:xk6",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:xk6",
+      "downloads": 1209,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:xk6",
+  "disambiguated_at": "2026-02-17T00:31:28.924547296Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

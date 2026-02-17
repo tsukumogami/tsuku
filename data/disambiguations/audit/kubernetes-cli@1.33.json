@@ -1,0 +1,18 @@
+{
+  "tool": "kubernetes-cli@1.33",
+  "selected": "homebrew:kubernetes-cli@1.33",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:kubernetes-cli@1.33",
+      "downloads": 500,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:kubernetes-cli@1.33",
+  "disambiguated_at": "2026-02-17T00:20:04.982183891Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

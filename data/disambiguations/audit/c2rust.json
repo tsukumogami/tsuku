@@ -1,0 +1,27 @@
+{
+  "tool": "c2rust",
+  "selected": "crates.io:c2rust",
+  "alternatives": [
+    "homebrew:c2rust"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.1797040169133193,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:c2rust",
+      "downloads": 473,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:c2rust",
+      "downloads": 1031,
+      "version_count": 17,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:c2rust",
+  "disambiguated_at": "2026-02-17T00:12:27.915185774Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

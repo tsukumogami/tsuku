@@ -1,0 +1,33 @@
+{
+  "tool": "bagels",
+  "selected": "homebrew:bagels",
+  "alternatives": [
+    "npm:bagels",
+    "pypi:bagels"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:bagels",
+      "downloads": 1018,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:bagels",
+      "downloads": 0,
+      "version_count": 34,
+      "has_repository": true
+    },
+    {
+      "source": "npm:bagels",
+      "downloads": 0,
+      "version_count": 88,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:bagels",
+  "disambiguated_at": "2026-02-17T00:11:39.126960687Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

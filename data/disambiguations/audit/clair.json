@@ -1,0 +1,39 @@
+{
+  "tool": "clair",
+  "selected": "homebrew:clair",
+  "alternatives": [
+    "npm:clair",
+    "pypi:clair"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:clair",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:clair",
+      "downloads": 8,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:clair",
+      "downloads": 584,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:clair",
+      "downloads": 0,
+      "version_count": 59,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:clair",
+  "disambiguated_at": "2026-02-17T00:13:06.910544188Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,27 @@
+{
+  "tool": "neovide",
+  "selected": "homebrew:neovide",
+  "alternatives": [
+    "crates.io:neovide"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 16.408212560386474,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:neovide",
+      "downloads": 6793,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:neovide",
+      "downloads": 414,
+      "version_count": 4,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:neovide",
+  "disambiguated_at": "2026-02-17T00:23:20.551075259Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

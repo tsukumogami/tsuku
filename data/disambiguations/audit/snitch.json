@@ -1,0 +1,46 @@
+{
+  "tool": "snitch",
+  "selected": "rubygems:snitch",
+  "alternatives": [
+    "homebrew:snitch",
+    "npm:snitch"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 11.1062124248497,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:snitch",
+      "downloads": 1497,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:snitch",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "crates.io:snitch",
+      "downloads": 20,
+      "version_count": 3,
+      "has_repository": false
+    },
+    {
+      "source": "rubygems:snitch",
+      "downloads": 16626,
+      "version_count": 4,
+      "has_repository": false
+    },
+    {
+      "source": "npm:snitch",
+      "downloads": 3,
+      "version_count": 14,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:snitch",
+  "disambiguated_at": "2026-02-17T00:28:15.57940011Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

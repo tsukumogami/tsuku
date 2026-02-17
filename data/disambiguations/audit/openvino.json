@@ -1,0 +1,34 @@
+{
+  "tool": "openvino",
+  "selected": "crates.io:openvino",
+  "alternatives": [
+    "homebrew:openvino",
+    "pypi:openvino"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.4725468778445294,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:openvino",
+      "downloads": 161774,
+      "version_count": 24,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:openvino",
+      "downloads": 109860,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:openvino",
+      "downloads": 0,
+      "version_count": 38,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:openvino",
+  "disambiguated_at": "2026-02-17T00:24:17.713349007Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,48 @@
+{
+  "tool": "mcfly",
+  "selected": "rubygems:mcfly",
+  "alternatives": [
+    "homebrew:mcfly",
+    "crates.io:mcfly",
+    "pypi:mcfly",
+    "npm:mcfly"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 27.783229259589653,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:mcfly",
+      "downloads": 0,
+      "version_count": 14,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:mcfly",
+      "downloads": 845,
+      "version_count": 33,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:mcfly",
+      "downloads": 93435,
+      "version_count": 21,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:mcfly",
+      "downloads": 3363,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:mcfly",
+      "downloads": 0,
+      "version_count": 10,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:mcfly",
+  "disambiguated_at": "2026-02-17T00:22:08.186048088Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

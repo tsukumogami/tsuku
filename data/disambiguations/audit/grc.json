@@ -1,0 +1,48 @@
+{
+  "tool": "grc",
+  "selected": "rubygems:grc",
+  "alternatives": [
+    "homebrew:grc",
+    "crates.io:grc",
+    "npm:grc",
+    "pypi:grc"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.10873388042204,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:grc",
+      "downloads": 3412,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:grc",
+      "downloads": 0,
+      "version_count": 6,
+      "has_repository": false
+    },
+    {
+      "source": "crates.io:grc",
+      "downloads": 172,
+      "version_count": 19,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:grc",
+      "downloads": 3783,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "npm:grc",
+      "downloads": 0,
+      "version_count": 18,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:grc",
+  "disambiguated_at": "2026-02-17T00:17:38.836131751Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

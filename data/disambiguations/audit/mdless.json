@@ -1,0 +1,40 @@
+{
+  "tool": "mdless",
+  "selected": "rubygems:mdless",
+  "alternatives": [
+    "homebrew:mdless",
+    "npm:mdless"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 137.97392013039934,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:mdless",
+      "downloads": 70,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:mdless",
+      "downloads": 2454,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:mdless",
+      "downloads": 338588,
+      "version_count": 119,
+      "has_repository": false
+    },
+    {
+      "source": "npm:mdless",
+      "downloads": 0,
+      "version_count": 5,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:mdless",
+  "disambiguated_at": "2026-02-17T00:22:15.606504827Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

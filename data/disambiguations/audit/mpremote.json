@@ -1,0 +1,26 @@
+{
+  "tool": "mpremote",
+  "selected": "homebrew:mpremote",
+  "alternatives": [
+    "pypi:mpremote"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:mpremote",
+      "downloads": 560,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:mpremote",
+      "downloads": 0,
+      "version_count": 20,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:mpremote",
+  "disambiguated_at": "2026-02-17T00:22:53.977627736Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

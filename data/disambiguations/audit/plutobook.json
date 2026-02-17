@@ -1,0 +1,32 @@
+{
+  "tool": "plutobook",
+  "selected": "homebrew:plutobook",
+  "alternatives": [
+    "pypi:plutobook"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:plutobook",
+      "downloads": 595,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:plutobook",
+      "downloads": 0,
+      "version_count": 5,
+      "has_repository": false
+    },
+    {
+      "source": "npm:plutobook",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:plutobook",
+  "disambiguated_at": "2026-02-17T00:25:23.690842264Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

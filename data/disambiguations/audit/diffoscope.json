@@ -1,0 +1,34 @@
+{
+  "tool": "diffoscope",
+  "selected": "homebrew:diffoscope",
+  "alternatives": [
+    "rubygems:diffoscope",
+    "pypi:diffoscope"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.1281085154483796,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:diffoscope",
+      "downloads": 4151,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:diffoscope",
+      "downloads": 0,
+      "version_count": 262,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:diffoscope",
+      "downloads": 1327,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:diffoscope",
+  "disambiguated_at": "2026-02-17T00:14:27.905540613Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,27 @@
+{
+  "tool": "gtksourceview5",
+  "selected": "rubygems:gtksourceview5",
+  "alternatives": [
+    "homebrew:gtksourceview5"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 4.479644108924238,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:gtksourceview5",
+      "downloads": 3709,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:gtksourceview5",
+      "downloads": 16615,
+      "version_count": 32,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:gtksourceview5",
+  "disambiguated_at": "2026-02-17T00:17:50.259619868Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

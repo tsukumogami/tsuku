@@ -1,0 +1,47 @@
+{
+  "tool": "trash",
+  "selected": "crates.io:trash",
+  "alternatives": [
+    "npm:trash",
+    "rubygems:trash",
+    "homebrew:trash"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.869164129787573,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:trash",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:trash",
+      "downloads": 4642,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:trash",
+      "downloads": 222881,
+      "version_count": 46,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:trash",
+      "downloads": 17326,
+      "version_count": 5,
+      "has_repository": false
+    },
+    {
+      "source": "npm:trash",
+      "downloads": 119241,
+      "version_count": 46,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:trash",
+  "disambiguated_at": "2026-02-17T00:29:57.098756835Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,48 @@
+{
+  "tool": "pgvector",
+  "selected": "crates.io:pgvector",
+  "alternatives": [
+    "rubygems:pgvector",
+    "npm:pgvector",
+    "homebrew:pgvector",
+    "pypi:pgvector"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.3226501022990833,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:pgvector",
+      "downloads": 20800,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:pgvector",
+      "downloads": 3466978,
+      "version_count": 15,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:pgvector",
+      "downloads": 0,
+      "version_count": 25,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:pgvector",
+      "downloads": 1492682,
+      "version_count": 8,
+      "has_repository": false
+    },
+    {
+      "source": "npm:pgvector",
+      "downloads": 205365,
+      "version_count": 11,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:pgvector",
+  "disambiguated_at": "2026-02-17T00:25:05.329675124Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,27 @@
+{
+  "tool": "pgloader",
+  "selected": "homebrew:pgloader",
+  "alternatives": [
+    "npm:pgloader"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 196.7826086956522,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:pgloader",
+      "downloads": 4526,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:pgloader",
+      "downloads": 23,
+      "version_count": 10,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:pgloader",
+  "disambiguated_at": "2026-02-17T00:25:03.589137671Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

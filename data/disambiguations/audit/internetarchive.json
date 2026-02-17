@@ -1,0 +1,26 @@
+{
+  "tool": "internetarchive",
+  "selected": "homebrew:internetarchive",
+  "alternatives": [
+    "pypi:internetarchive"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:internetarchive",
+      "downloads": 2108,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:internetarchive",
+      "downloads": 0,
+      "version_count": 141,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:internetarchive",
+  "disambiguated_at": "2026-02-17T00:18:54.433203016Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,27 @@
+{
+  "tool": "verapdf",
+  "selected": "rubygems:verapdf",
+  "alternatives": [
+    "homebrew:verapdf"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 4.4110854503464205,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:verapdf",
+      "downloads": 866,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:verapdf",
+      "downloads": 3820,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:verapdf",
+  "disambiguated_at": "2026-02-17T00:30:38.237818703Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,26 @@
+{
+  "tool": "ncview",
+  "selected": "homebrew:ncview",
+  "alternatives": [
+    "pypi:ncview"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:ncview",
+      "downloads": 1125,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:ncview",
+      "downloads": 0,
+      "version_count": 28,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:ncview",
+  "disambiguated_at": "2026-02-17T00:23:17.053023584Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

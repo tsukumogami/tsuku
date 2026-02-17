@@ -1,0 +1,18 @@
+{
+  "tool": "typstfmt",
+  "selected": "crates.io:typstfmt",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:typstfmt",
+      "downloads": 129,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:typstfmt",
+  "disambiguated_at": "2026-02-17T00:30:16.68646047Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

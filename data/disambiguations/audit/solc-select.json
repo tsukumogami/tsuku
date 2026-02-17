@@ -1,0 +1,32 @@
+{
+  "tool": "solc-select",
+  "selected": "homebrew:solc-select",
+  "alternatives": [
+    "pypi:solc-select"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:solc-select",
+      "downloads": 20,
+      "version_count": 3,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:solc-select",
+      "downloads": 777,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:solc-select",
+      "downloads": 0,
+      "version_count": 10,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:solc-select",
+  "disambiguated_at": "2026-02-17T00:28:19.491927864Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

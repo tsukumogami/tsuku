@@ -1,0 +1,41 @@
+{
+  "tool": "overmind",
+  "selected": "rubygems:overmind",
+  "alternatives": [
+    "homebrew:overmind",
+    "npm:overmind",
+    "pypi:overmind"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 17.536337069270047,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "pypi:overmind",
+      "downloads": 0,
+      "version_count": 20,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:overmind",
+      "downloads": 31139,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:overmind",
+      "downloads": 546064,
+      "version_count": 46,
+      "has_repository": true
+    },
+    {
+      "source": "npm:overmind",
+      "downloads": 6149,
+      "version_count": 929,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:overmind",
+  "disambiguated_at": "2026-02-17T00:24:41.297359908Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

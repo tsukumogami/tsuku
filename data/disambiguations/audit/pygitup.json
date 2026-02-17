@@ -1,0 +1,18 @@
+{
+  "tool": "pygitup",
+  "selected": "homebrew:pygitup",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:pygitup",
+      "downloads": 287,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:pygitup",
+  "disambiguated_at": "2026-02-17T00:26:01.02342068Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

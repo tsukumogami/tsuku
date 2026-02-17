@@ -1,0 +1,27 @@
+{
+  "tool": "boringtun",
+  "selected": "crates.io:boringtun",
+  "alternatives": [
+    "homebrew:boringtun"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 50.11392405063291,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:boringtun",
+      "downloads": 237,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:boringtun",
+      "downloads": 11877,
+      "version_count": 10,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:boringtun",
+  "disambiguated_at": "2026-02-17T00:12:08.0418752Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

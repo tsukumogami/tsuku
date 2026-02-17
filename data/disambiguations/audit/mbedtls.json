@@ -1,0 +1,34 @@
+{
+  "tool": "mbedtls",
+  "selected": "homebrew:mbedtls",
+  "alternatives": [
+    "crates.io:mbedtls",
+    "rubygems:mbedtls"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 23.124322285606524,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:mbedtls",
+      "downloads": 490490,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:mbedtls",
+      "downloads": 2003,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "crates.io:mbedtls",
+      "downloads": 21211,
+      "version_count": 45,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:mbedtls",
+  "disambiguated_at": "2026-02-17T00:22:06.290016102Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

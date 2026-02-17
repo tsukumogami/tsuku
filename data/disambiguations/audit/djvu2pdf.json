@@ -1,0 +1,18 @@
+{
+  "tool": "djvu2pdf",
+  "selected": "homebrew:djvu2pdf",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:djvu2pdf",
+      "downloads": 971,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:djvu2pdf",
+  "disambiguated_at": "2026-02-17T00:14:32.449672787Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

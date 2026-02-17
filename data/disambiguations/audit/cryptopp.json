@@ -1,0 +1,40 @@
+{
+  "tool": "cryptopp",
+  "selected": "rubygems:cryptopp",
+  "alternatives": [
+    "homebrew:cryptopp",
+    "pypi:cryptopp"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 15.997118155619596,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:cryptopp",
+      "downloads": 694,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:cryptopp",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:cryptopp",
+      "downloads": 11102,
+      "version_count": 3,
+      "has_repository": false
+    },
+    {
+      "source": "npm:cryptopp",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:cryptopp",
+  "disambiguated_at": "2026-02-17T00:13:53.903949866Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

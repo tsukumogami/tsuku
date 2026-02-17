@@ -1,0 +1,27 @@
+{
+  "tool": "sequoia-sq",
+  "selected": "crates.io:sequoia-sq",
+  "alternatives": [
+    "homebrew:sequoia-sq"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 142.73076923076923,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:sequoia-sq",
+      "downloads": 416,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:sequoia-sq",
+      "downloads": 59376,
+      "version_count": 25,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:sequoia-sq",
+  "disambiguated_at": "2026-02-17T00:27:43.979253659Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

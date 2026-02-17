@@ -1,0 +1,41 @@
+{
+  "tool": "lazysql",
+  "selected": "homebrew:lazysql",
+  "alternatives": [
+    "crates.io:lazysql",
+    "npm:lazysql",
+    "pypi:lazysql"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 10.64935064935065,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:lazysql",
+      "downloads": 4920,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:lazysql",
+      "downloads": 0,
+      "version_count": 5,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:lazysql",
+      "downloads": 462,
+      "version_count": 24,
+      "has_repository": true
+    },
+    {
+      "source": "npm:lazysql",
+      "downloads": 4,
+      "version_count": 5,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:lazysql",
+  "disambiguated_at": "2026-02-17T00:20:15.63325473Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

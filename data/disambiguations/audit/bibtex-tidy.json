@@ -1,0 +1,26 @@
+{
+  "tool": "bibtex-tidy",
+  "selected": "homebrew:bibtex-tidy",
+  "alternatives": [
+    "npm:bibtex-tidy"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:bibtex-tidy",
+      "downloads": 356,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:bibtex-tidy",
+      "downloads": 0,
+      "version_count": 56,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:bibtex-tidy",
+  "disambiguated_at": "2026-02-17T00:11:56.008815587Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,32 @@
+{
+  "tool": "retire",
+  "selected": "homebrew:retire",
+  "alternatives": [
+    "npm:retire"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:retire",
+      "downloads": 14,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:retire",
+      "downloads": 486,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:retire",
+      "downloads": 0,
+      "version_count": 147,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:retire",
+  "disambiguated_at": "2026-02-17T00:26:54.562944479Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

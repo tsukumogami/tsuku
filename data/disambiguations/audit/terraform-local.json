@@ -1,0 +1,26 @@
+{
+  "tool": "terraform-local",
+  "selected": "homebrew:terraform-local",
+  "alternatives": [
+    "pypi:terraform-local"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:terraform-local",
+      "downloads": 2802,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:terraform-local",
+      "downloads": 0,
+      "version_count": 33,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:terraform-local",
+  "disambiguated_at": "2026-02-17T00:29:29.503026602Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

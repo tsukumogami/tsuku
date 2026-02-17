@@ -1,0 +1,40 @@
+{
+  "tool": "libimobiledevice",
+  "selected": "homebrew:libimobiledevice",
+  "alternatives": [
+    "npm:libimobiledevice",
+    "pypi:libimobiledevice"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 7448.333333333333,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:libimobiledevice",
+      "downloads": 44690,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:libimobiledevice",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:libimobiledevice",
+      "downloads": 8,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "npm:libimobiledevice",
+      "downloads": 6,
+      "version_count": 7,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:libimobiledevice",
+  "disambiguated_at": "2026-02-17T00:20:41.075614841Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

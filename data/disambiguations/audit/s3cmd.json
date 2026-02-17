@@ -1,0 +1,40 @@
+{
+  "tool": "s3cmd",
+  "selected": "rubygems:s3cmd",
+  "alternatives": [
+    "homebrew:s3cmd",
+    "pypi:s3cmd"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.3714865875814897,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:s3cmd",
+      "downloads": 9357,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:s3cmd",
+      "downloads": 0,
+      "version_count": 19,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:s3cmd",
+      "downloads": 22190,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "npm:s3cmd",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:s3cmd",
+  "disambiguated_at": "2026-02-17T00:27:21.180357347Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

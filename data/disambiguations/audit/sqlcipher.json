@@ -1,0 +1,24 @@
+{
+  "tool": "sqlcipher",
+  "selected": "homebrew:sqlcipher",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:sqlcipher",
+      "downloads": 4723,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:sqlcipher",
+      "downloads": 19,
+      "version_count": 3,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:sqlcipher",
+  "disambiguated_at": "2026-02-17T00:28:33.641695921Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

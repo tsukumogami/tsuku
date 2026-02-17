@@ -1,0 +1,46 @@
+{
+  "tool": "rogue",
+  "selected": "rubygems:rogue",
+  "alternatives": [
+    "homebrew:rogue",
+    "npm:rogue"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 28.173228346456693,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:rogue",
+      "downloads": 9,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:rogue",
+      "downloads": 381,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:rogue",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:rogue",
+      "downloads": 10734,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "npm:rogue",
+      "downloads": 32,
+      "version_count": 55,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:rogue",
+  "disambiguated_at": "2026-02-17T00:27:04.86080287Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

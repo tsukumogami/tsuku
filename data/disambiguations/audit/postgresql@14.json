@@ -1,0 +1,18 @@
+{
+  "tool": "postgresql@14",
+  "selected": "homebrew:postgresql@14",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:postgresql@14",
+      "downloads": 478177,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:postgresql@14",
+  "disambiguated_at": "2026-02-17T00:25:33.319043572Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

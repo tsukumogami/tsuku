@@ -1,0 +1,41 @@
+{
+  "tool": "streamlink",
+  "selected": "homebrew:streamlink",
+  "alternatives": [
+    "crates.io:streamlink",
+    "pypi:streamlink",
+    "npm:streamlink"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 861.55,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:streamlink",
+      "downloads": 17231,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:streamlink",
+      "downloads": 20,
+      "version_count": 7,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:streamlink",
+      "downloads": 0,
+      "version_count": 103,
+      "has_repository": true
+    },
+    {
+      "source": "npm:streamlink",
+      "downloads": 0,
+      "version_count": 5,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:streamlink",
+  "disambiguated_at": "2026-02-17T00:28:52.915100399Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

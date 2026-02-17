@@ -1,0 +1,40 @@
+{
+  "tool": "vivid",
+  "selected": "homebrew:vivid",
+  "alternatives": [
+    "crates.io:vivid",
+    "pypi:vivid"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 5.174496644295302,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:vivid",
+      "downloads": 3084,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:vivid",
+      "downloads": 596,
+      "version_count": 8,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:vivid",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "npm:vivid",
+      "downloads": 2,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:vivid",
+  "disambiguated_at": "2026-02-17T00:30:48.8021678Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

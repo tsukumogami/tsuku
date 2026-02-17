@@ -1,0 +1,33 @@
+{
+  "tool": "iamb",
+  "selected": "homebrew:iamb",
+  "alternatives": [
+    "crates.io:iamb"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.1896103896103896,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:iamb",
+      "downloads": 385,
+      "version_count": 12,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:iamb",
+      "downloads": 458,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:iamb",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:iamb",
+  "disambiguated_at": "2026-02-17T00:18:34.870307475Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

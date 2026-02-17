@@ -1,0 +1,39 @@
+{
+  "tool": "isync",
+  "selected": "homebrew:isync",
+  "alternatives": [
+    "npm:isync"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 631.6666666666666,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:isync",
+      "downloads": 8,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "pypi:isync",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:isync",
+      "downloads": 1895,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:isync",
+      "downloads": 3,
+      "version_count": 7,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:isync",
+  "disambiguated_at": "2026-02-17T00:19:04.467660248Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

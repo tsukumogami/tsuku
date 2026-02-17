@@ -1,0 +1,41 @@
+{
+  "tool": "ripgrep",
+  "selected": "homebrew:ripgrep",
+  "alternatives": [
+    "crates.io:ripgrep",
+    "rubygems:ripgrep",
+    "pypi:ripgrep"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 5.58228668261563,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:ripgrep",
+      "downloads": 336009,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:ripgrep",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:ripgrep",
+      "downloads": 60192,
+      "version_count": 58,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:ripgrep",
+      "downloads": 9988,
+      "version_count": 5,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:ripgrep",
+  "disambiguated_at": "2026-02-17T00:10:12.236862009Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,46 @@
+{
+  "tool": "nom",
+  "selected": "crates.io:nom",
+  "alternatives": [
+    "rubygems:nom",
+    "homebrew:nom"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 2812.0829669109485,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "pypi:nom",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:nom",
+      "downloads": 679,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:nom",
+      "downloads": 63314048,
+      "version_count": 98,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:nom",
+      "downloads": 22515,
+      "version_count": 9,
+      "has_repository": true
+    },
+    {
+      "source": "npm:nom",
+      "downloads": 62,
+      "version_count": 3,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:nom",
+  "disambiguated_at": "2026-02-17T00:23:39.107930294Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

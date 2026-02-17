@@ -1,0 +1,18 @@
+{
+  "tool": "libcoap",
+  "selected": "homebrew:libcoap",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:libcoap",
+      "downloads": 297,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:libcoap",
+  "disambiguated_at": "2026-02-17T00:20:28.551017372Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,27 @@
+{
+  "tool": "bundletool",
+  "selected": "homebrew:bundletool",
+  "alternatives": [
+    "npm:bundletool"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 263.77142857142854,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:bundletool",
+      "downloads": 18464,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:bundletool",
+      "downloads": 70,
+      "version_count": 11,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:bundletool",
+  "disambiguated_at": "2026-02-17T00:12:24.080069802Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

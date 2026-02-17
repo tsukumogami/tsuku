@@ -1,0 +1,27 @@
+{
+  "tool": "cargo-geiger",
+  "selected": "crates.io:cargo-geiger",
+  "alternatives": [
+    "homebrew:cargo-geiger"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 180.82222222222222,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:cargo-geiger",
+      "downloads": 180,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:cargo-geiger",
+      "downloads": 32548,
+      "version_count": 33,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:cargo-geiger",
+  "disambiguated_at": "2026-02-17T00:12:34.699663885Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

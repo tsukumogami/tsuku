@@ -1,0 +1,47 @@
+{
+  "tool": "mask",
+  "selected": "rubygems:mask",
+  "alternatives": [
+    "crates.io:mask",
+    "homebrew:mask",
+    "npm:mask"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.3766532489936747,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:mask",
+      "downloads": 453,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:mask",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:mask",
+      "downloads": 1739,
+      "version_count": 23,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:mask",
+      "downloads": 4133,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:mask",
+      "downloads": 0,
+      "version_count": 9,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:mask",
+  "disambiguated_at": "2026-02-17T00:22:02.362866396Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

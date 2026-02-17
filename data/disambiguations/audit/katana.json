@@ -1,0 +1,46 @@
+{
+  "tool": "katana",
+  "selected": "rubygems:katana",
+  "alternatives": [
+    "homebrew:katana",
+    "npm:katana"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 6.774052478134111,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:katana",
+      "downloads": 53,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:katana",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:katana",
+      "downloads": 1372,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:katana",
+      "downloads": 9294,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "npm:katana",
+      "downloads": 0,
+      "version_count": 10,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:katana",
+  "disambiguated_at": "2026-02-17T00:19:41.053210937Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}
