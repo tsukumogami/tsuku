@@ -1,0 +1,141 @@
+{
+  "design_doc": "docs/designs/DESIGN-secrets-manager.md",
+  "milestone_name": "secrets-manager",
+  "milestone_number": 86,
+  "branch": "docs/secrets-manager",
+  "started_at": "2026-02-17T00:20:34Z",
+  "pr_number": 1731,
+  "pr_url": "https://github.com/tsukumogami/tsuku/pull/1731",
+  "integrity_hash": "sha256:d598ca292f786e42b13a885040297b7f74130605d91f18e196703bf69282174d",
+  "issues": [
+    {
+      "number": 1733,
+      "title": "feat(secrets): add core secrets resolution package",
+      "status": "completed",
+      "ci_status": "passed",
+      "ci_fix_attempts": 0,
+      "dependencies": [],
+      "tier": "testable",
+      "commits": [
+        "44747c23a7ebe68c281b0e7f4cf490b60d160755"
+      ],
+      "summary": null,
+      "reviewer_results": {
+        "pragmatic": {
+          "blocking": [],
+          "advisory": [
+            "sync.Once/loadConfig are no-op scaffolding (YAGNI for now, #1734 can add)",
+            "Error message mentions config.toml before config file support exists",
+            "Hardcoded count 5 in TestKnownKeysReturnsAllSecrets is fragile"
+          ]
+        },
+        "architect": {
+          "blocking": [],
+          "advisory": [
+            "Package-level sync.Once makes config injection rigid for #1734 (consistent with design)",
+            "Package-level functions with global state matches codebase patterns",
+            "KeyInfo/KeySpec separation is good public/private API boundary"
+          ]
+        },
+        "maintainer": {
+          "blocking": [],
+          "advisory": [
+            "Get() and IsSet() duplicate env var resolution loop",
+            "Error message could use Desc field for friendlier output",
+            "Hard-coded count of 5 known keys will break on addition",
+            "TestGetAllKnownKeysFromEnv doesn't verify specific values match",
+            "TestKnownKeysContainsExpectedEntries hard-codes key list (acceptable as golden list)"
+          ]
+        },
+        "verdict": "All findings advisory. Ready to push."
+      }
+    },
+    {
+      "number": 1734,
+      "title": "feat(userconfig): add secrets section with atomic writes and 0600 permissions",
+      "status": "implemented",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "dependencies": [
+        1733
+      ],
+      "tier": "critical",
+      "commits": [
+        "2d6b4b9172dc6434c68bd20cf7569d1853120701"
+      ],
+      "summary": null,
+      "reviewer_results": {
+        "pragmatic": {
+          "blocking": [],
+          "advisory": [
+            "userconfig.Set(secrets.anything) accepts arbitrary key names with no knownKeys validation - #1737 CLI must add validation",
+            "getConfig() error silently falls through to not-configured message - log.Warn would help debugging"
+          ]
+        },
+        "architect": {
+          "blocking": [],
+          "advisory": [
+            "sync.Once caching means config changes in same process not visible - fine for CLI model",
+            "userconfig.Set accepts arbitrary secret names - correct separation, #1737 should validate"
+          ]
+        },
+        "maintainer": {
+          "blocking": [],
+          "advisory": [
+            "Package doc says ~/.tsuku but convention requires $TSUKU_HOME",
+            "Get() and IsSet() in secrets.go duplicate full resolution chain",
+            "Permission warning doesn't mention tightening on next write",
+            "Permission warning tests don't verify log output",
+            "Hard-coded len(keys) != 5 in test"
+          ]
+        },
+        "verdict": "All findings advisory. Ready to push."
+      }
+    },
+    {
+      "number": 1735,
+      "title": "refactor(llm): migrate API key resolution to secrets package",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "dependencies": [
+        1734
+      ],
+      "tier": "testable",
+      "commits": [],
+      "summary": null
+    },
+    {
+      "number": 1736,
+      "title": "refactor: migrate platform tokens to secrets package",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "dependencies": [
+        1734
+      ],
+      "tier": "testable",
+      "commits": [],
+      "summary": null
+    },
+    {
+      "number": 1737,
+      "title": "feat(cli): add secrets management to tsuku config",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "dependencies": [
+        1734
+      ],
+      "tier": "testable",
+      "commits": [],
+      "summary": null
+    }
+  ],
+  "skipped_issues": null,
+  "current_issue_index": 0,
+  "test_plan_file": "wip/implement-doc_secrets-manager_test_plan.md",
+  "doc_plan_file": "wip/implement-doc_secrets-manager_doc_plan.md",
+  "workflow_template": ".claude/command_assets/phases/implement-doc_phases/workflow-template.md",
+  "resumed_at": null
+}

@@ -89,7 +89,8 @@ Total scenarios: 16
 - `go test -v ./internal/userconfig -run TestSecret`
 - `go test -v ./internal/userconfig`
 **Expected**: All userconfig tests pass. Tests verify that: (a) `Set("secrets.foo", "bar")` stores the value in the `Secrets` map, (b) `Get("secrets.foo")` retrieves it, (c) the `Secrets` map serializes to a `[secrets]` TOML section, and (d) existing non-secrets tests continue to pass.
-**Status**: pending
+**Status**: passed
+**Validated**: 2026-02-16 via Docker (golang:1.25). All 52 userconfig tests passed (0.021s). Secrets-specific tests verified Set/Get round-trip, TOML [secrets] section serialization, case insensitivity, nil map initialization, AvailableKeys exclusion, and non-interference with existing config.
 
 ---
 
@@ -101,7 +102,8 @@ Total scenarios: 16
 - `go test -v ./internal/userconfig -run TestAtomicWrite`
 - `go test -v ./internal/userconfig -run TestPermission`
 **Expected**: Tests verify that `saveToPath()` writes to a temporary file first and then renames atomically. The resulting file has exactly 0600 permissions. A file with wider permissions (e.g., 0644) triggers a warning on read but does not prevent loading.
-**Status**: pending
+**Status**: passed
+**Validated**: 2026-02-16 via Docker (golang:1.25). 7 tests passed (0.013s). Atomic write produces 0600, preserves 0600 on overwrite (restores from 0644), leaves no temp files, maintains content integrity. Permission warning fires on 0644 file but load succeeds; no warning for 0600.
 
 ---
 
@@ -112,7 +114,8 @@ Total scenarios: 16
 **Commands**:
 - `go test -v ./internal/secrets -run TestConfigFallback`
 **Expected**: When an environment variable is not set but the key exists in `config.Secrets["anthropic_api_key"]`, `Get("anthropic_api_key")` returns the config file value. Environment variables still take priority when both are set.
-**Status**: pending
+**Status**: passed
+**Validated**: 2026-02-16 via Docker (golang:1.25). 4 tests passed (0.006s). Config fallback resolves from file when env var empty, env var takes priority when both set, error returned when neither source has value, missing config file handled gracefully with guidance message.
 
 ---
 

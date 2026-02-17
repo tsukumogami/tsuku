@@ -1,0 +1,27 @@
+{
+  "pragmatic": {
+    "blocking": [],
+    "advisory": [
+      "userconfig.Set(secrets.anything) accepts arbitrary key names with no knownKeys validation - #1737 CLI must add validation",
+      "getConfig() error silently falls through to not-configured message - log.Warn would help debugging"
+    ]
+  },
+  "architect": {
+    "blocking": [],
+    "advisory": [
+      "sync.Once caching means config changes in same process not visible - fine for CLI model",
+      "userconfig.Set accepts arbitrary secret names - correct separation, #1737 should validate"
+    ]
+  },
+  "maintainer": {
+    "blocking": [],
+    "advisory": [
+      "Package doc says ~/.tsuku but convention requires $TSUKU_HOME",
+      "Get() and IsSet() in secrets.go duplicate full resolution chain",
+      "Permission warning doesn't mention tightening on next write",
+      "Permission warning tests don't verify log output",
+      "Hard-coded len(keys) != 5 in test"
+    ]
+  },
+  "verdict": "All findings advisory. Ready to push."
+}
