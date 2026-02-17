@@ -6,7 +6,7 @@
   "started_at": "2026-02-17T00:20:34Z",
   "pr_number": 1731,
   "pr_url": "https://github.com/tsukumogami/tsuku/pull/1731",
-  "integrity_hash": "sha256:f44efc11d6519491b7866073c740eb7ea72de964391c41536bd55d56468e0e20",
+  "integrity_hash": "sha256:eea1b9feb90c7a0319edd115fcfb3c3c9fb6849ec737699365aa7798fa8ec21d",
   "issues": [
     {
       "number": 1733,
@@ -132,8 +132,8 @@
     {
       "number": 1736,
       "title": "refactor: migrate platform tokens to secrets package",
-      "status": "implemented",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "ci_fix_attempts": 0,
       "dependencies": [
         1734
@@ -174,15 +174,45 @@
     {
       "number": 1737,
       "title": "feat(cli): add secrets management to tsuku config",
-      "status": "pending",
+      "status": "implemented",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
       "dependencies": [
         1734
       ],
       "tier": "testable",
-      "commits": [],
-      "summary": null
+      "commits": [
+        "2f17f8035558780b28cfb8efbc565e68d1b3cf47"
+      ],
+      "summary": null,
+      "reviewer_results": {
+        "pragmatic": {
+          "blocking": [],
+          "advisory": [
+            "Help text uses ~/.tsuku instead of $TSUKU_HOME",
+            "isKnownSecret allocates on every call (negligible with 5 keys)"
+          ]
+        },
+        "architect": {
+          "blocking": [],
+          "advisory": [
+            "Two terminal-detection patterns coexist (x/term vs Stat)",
+            "Secret name validation only in CLI layer",
+            "JSON output struct defined inline",
+            "Package-level mutable state for stdin testing is standard",
+            "Design doc alignment is exact"
+          ]
+        },
+        "maintainer": {
+          "blocking": [],
+          "advisory": [
+            "configCmd.Long help text omits secrets.\u003cname\u003e",
+            "Unknown key error paths don't mention secrets",
+            "Inconsistent CutPrefix vs HasPrefix+CutPrefix patterns"
+          ]
+        },
+        "verdict": "All findings advisory. Ready to push."
+      }
     }
   ],
   "skipped_issues": null,

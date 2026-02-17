@@ -150,7 +150,8 @@ Total scenarios: 16
 **Commands**:
 - `export TSUKU_HOME=$(mktemp -d) && export TSUKU_TELEMETRY=0 && make build-test && echo "test-secret-value" | ./tsuku-test config set secrets.anthropic_api_key && ./tsuku-test config get secrets.anthropic_api_key`
 **Expected**: The `config set` command reads the value from stdin (no prompt when piped). The `config get` command prints `(set)` without revealing the actual value. The value never appears in command output.
-**Status**: pending
+**Status**: passed
+**Validated**: 2026-02-16 via Docker (golang:1.25). Piped "test-secret-value" into config set; exit code 0, output confirmed `(set)` masking. config get returned `(set)` without revealing actual value. Config.toml [secrets] section stored value correctly.
 
 ---
 
@@ -161,7 +162,8 @@ Total scenarios: 16
 **Commands**:
 - `export TSUKU_HOME=$(mktemp -d) && export TSUKU_TELEMETRY=0 && make build-test && echo "test-key" | ./tsuku-test config set secrets.github_token && ./tsuku-test config`
 **Expected**: The `tsuku config` output includes a "Secrets:" section. The `github_token` line shows `(set)`. The other four known secrets (anthropic_api_key, google_api_key, tavily_api_key, brave_api_key) show `(not set)`. The actual secret value does not appear in the output.
-**Status**: pending
+**Status**: passed
+**Validated**: 2026-02-16 via Docker (golang:1.25). Set github_token via pipe, then ran `tsuku config`. Output shows "Secrets:" section with github_token: (set) and all four other keys as (not set). Secret value "test-key" never appears in output. All 5 known keys listed alphabetically.
 
 ---
 

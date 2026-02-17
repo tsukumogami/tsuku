@@ -116,7 +116,7 @@ Some recipe builders use LLM analysis to generate recipes from complex sources. 
 - `--from rubygems` - Uses RubyGems API
 - `--from cask:<name>` - Uses Homebrew Cask API (macOS applications)
 
-To use LLM-powered builders, export an API key for Claude or Gemini:
+To use LLM-powered builders, set an API key for Claude or Gemini:
 
 ```bash
 # Claude (Anthropic)
@@ -125,6 +125,15 @@ export ANTHROPIC_API_KEY="sk-ant-..."
 # Or Gemini (Google)
 export GOOGLE_API_KEY="AIza..."
 ```
+
+You can also store keys in tsuku's config file instead of environment variables:
+
+```bash
+tsuku config set secrets.anthropic_api_key
+# Reads the value from stdin to avoid shell history exposure
+```
+
+See [Secrets Management](#secrets-management) below for details.
 
 Cost per recipe generation: ~$0.02-0.15 depending on complexity.
 
@@ -192,6 +201,43 @@ tsuku recipes --local
 ```
 
 Use `--force` to overwrite an existing local recipe.
+
+### Secrets Management
+
+tsuku can store API keys and tokens in `$TSUKU_HOME/config.toml` as an alternative to environment variables. This is useful when you work across multiple terminals or don't want to manage shell exports.
+
+**Set a secret:**
+
+```bash
+# Interactive prompt (value won't appear in shell history)
+tsuku config set secrets.anthropic_api_key
+
+# Or pipe the value
+echo "sk-ant-..." | tsuku config set secrets.anthropic_api_key
+```
+
+Secret values are always read from stdin, never from command-line arguments.
+
+**Check if a secret is configured:**
+
+```bash
+tsuku config get secrets.anthropic_api_key
+# Output: (set) or (not set)
+```
+
+The actual value is never displayed.
+
+**View status of all secrets:**
+
+```bash
+tsuku config
+```
+
+The output includes a Secrets section showing which keys are configured and which aren't.
+
+**Resolution order:** When tsuku needs an API key, it checks environment variables first, then the config file. Environment variables always take precedence, so you can override stored secrets for a single command without changing your config.
+
+**Known secrets:** `anthropic_api_key`, `google_api_key`, `github_token`, `tavily_api_key`, `brave_api_key`. The config file is written with 0600 permissions to prevent other users from reading your keys.
 
 ### Verbosity and Debugging
 

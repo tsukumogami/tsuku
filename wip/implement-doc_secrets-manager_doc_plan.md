@@ -10,7 +10,7 @@ Total entries: 4
 **Section**: LLM-Powered Recipe Generation
 **Prerequisite issues**: #1735, #1737
 **Update type**: modify
-**Status**: pending
+**Status**: updated
 **Details**: Update the API key setup instructions under "LLM-Powered Recipe Generation" to show both methods: environment variables (existing) and `tsuku config set secrets.*` via stdin. Replace the bare `export` examples with a note that keys can also be stored in config.toml. Keep the env var examples since they're the quick-start path, but add the config alternative so users know it exists.
 
 ---
@@ -19,7 +19,7 @@ Total entries: 4
 **Section**: Usage (new subsection: Secrets Management)
 **Prerequisite issues**: #1737
 **Update type**: modify
-**Status**: pending
+**Status**: updated
 **Details**: Add a "Secrets Management" subsection under Usage documenting the `tsuku config` secrets workflow: setting secrets via stdin (`tsuku config set secrets.anthropic_api_key`), checking secret status (`tsuku config get secrets.anthropic_api_key` shows set/not-set), and the secrets status display in `tsuku config` output. Mention that stdin input avoids shell history exposure and that piping is supported.
 
 ---

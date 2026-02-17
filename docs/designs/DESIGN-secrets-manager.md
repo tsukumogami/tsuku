@@ -45,8 +45,8 @@ Planned
 | ~~_Replaces direct `os.Getenv()` calls in `claude.go`, `gemini.go`, and `factory.go` with `secrets.Get()` and `secrets.IsSet()`. Removes Gemini's manual two-variable fallback logic since the alias table handles it._~~ | | |
 | ~~[#1736: refactor: migrate platform tokens to secrets package](https://github.com/tsukumogami/tsuku/issues/1736)~~ | ~~[#1734](https://github.com/tsukumogami/tsuku/issues/1734)~~ | ~~testable~~ |
 | ~~_Migrates `GITHUB_TOKEN`, `TAVILY_API_KEY`, and `BRAVE_API_KEY` access across discover, version, builders, and search packages. Updates error messages to mention both env var and config file options._~~ | | |
-| [#1737: feat(cli): add secrets management to tsuku config](https://github.com/tsukumogami/tsuku/issues/1737) | [#1734](https://github.com/tsukumogami/tsuku/issues/1734) | testable |
-| _Adds stdin-based secret input to `tsuku config set`, status-only display for `tsuku config get`, and a Secrets section in `tsuku config` output showing all known keys with set/not-set status._ | | |
+| ~~[#1737: feat(cli): add secrets management to tsuku config](https://github.com/tsukumogami/tsuku/issues/1737)~~ | ~~[#1734](https://github.com/tsukumogami/tsuku/issues/1734)~~ | ~~testable~~ |
+| ~~_Adds stdin-based secret input to `tsuku config set`, status-only display for `tsuku config get`, and a Secrets section in `tsuku config` output showing all known keys with set/not-set status._~~ | | |
 
 ### Dependency Graph
 
@@ -79,7 +79,7 @@ graph TD
 
     class I1733 done
     class I1734 done
-    class I1735,I1736,I1737 ready
+    class I1735,I1736,I1737 done
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design

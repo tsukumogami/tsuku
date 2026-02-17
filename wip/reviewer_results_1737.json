@@ -1,0 +1,28 @@
+{
+  "pragmatic": {
+    "blocking": [],
+    "advisory": [
+      "Help text uses ~/.tsuku instead of $TSUKU_HOME",
+      "isKnownSecret allocates on every call (negligible with 5 keys)"
+    ]
+  },
+  "architect": {
+    "blocking": [],
+    "advisory": [
+      "Two terminal-detection patterns coexist (x/term vs Stat)",
+      "Secret name validation only in CLI layer",
+      "JSON output struct defined inline",
+      "Package-level mutable state for stdin testing is standard",
+      "Design doc alignment is exact"
+    ]
+  },
+  "maintainer": {
+    "blocking": [],
+    "advisory": [
+      "configCmd.Long help text omits secrets.<name>",
+      "Unknown key error paths don't mention secrets",
+      "Inconsistent CutPrefix vs HasPrefix+CutPrefix patterns"
+    ]
+  },
+  "verdict": "All findings advisory. Ready to push."
+}
