@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-02-17T16:58:13Z",
+  "generated_at": "2026-02-17T17:57:32Z",
   "queue": {
     "total": 5275,
     "by_status": {
@@ -37281,6 +37281,21 @@
   },
   "failure_details": [
     {
+      "id": "homebrew-2026-02-08T02-37-10Z-procs",
+      "package": "procs",
+      "ecosystem": "homebrew",
+      "category": "deterministic",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "homebrew-2026-02-08T02-37-10Z",
+      "timestamp": "2026-02-08T02:37:10Z"
+    },
+    {
       "id": "homebrew-2026-02-08T02-37-10Z-sd",
       "package": "sd",
       "ecosystem": "homebrew",
@@ -37313,21 +37328,6 @@
     {
       "id": "homebrew-2026-02-08T02-37-10Z-xh",
       "package": "xh",
-      "ecosystem": "homebrew",
-      "category": "deterministic",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "homebrew-2026-02-08T02-37-10Z",
-      "timestamp": "2026-02-08T02:37:10Z"
-    },
-    {
-      "id": "homebrew-2026-02-08T02-37-10Z-procs",
-      "package": "procs",
       "ecosystem": "homebrew",
       "category": "deterministic",
       "subcategory": "install_failed",
@@ -39224,7 +39224,7 @@
     "last_run": {
       "batch_id": "2026-02-17-homebrew",
       "ecosystem": "homebrew",
-      "timestamp": "2026-02-17T16:57:57Z",
+      "timestamp": "2026-02-17T17:57:17Z",
       "succeeded": 0,
       "failed": 0,
       "total": 0
@@ -39238,7 +39238,7 @@
       "total": 4,
       "recipes_merged": 4
     },
-    "runs_since_last_success": 181,
+    "runs_since_last_success": 182,
     "hours_since_last_run": 0
   },
   "runs": [
