@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-02-17T04:22:05Z",
+  "generated_at": "2026-02-17T05:59:33Z",
   "queue": {
     "total": 5275,
     "by_status": {
@@ -37244,6 +37244,13 @@
   },
   "blockers": [
     {
+      "dependency": "gmp",
+      "count": 1,
+      "packages": [
+        "homebrew:coreutils"
+      ]
+    },
+    {
       "dependency": "ada-url",
       "count": 1,
       "packages": [
@@ -37263,13 +37270,6 @@
       "packages": [
         "homebrew:imagemagick"
       ]
-    },
-    {
-      "dependency": "gmp",
-      "count": 1,
-      "packages": [
-        "homebrew:coreutils"
-      ]
     }
   ],
   "failures": {
@@ -37280,21 +37280,6 @@
     "validation_failed": 156
   },
   "failure_details": [
-    {
-      "id": "homebrew-2026-02-08T02-37-10Z-sd",
-      "package": "sd",
-      "ecosystem": "homebrew",
-      "category": "deterministic",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "homebrew-2026-02-08T02-37-10Z",
-      "timestamp": "2026-02-08T02:37:10Z"
-    },
     {
       "id": "homebrew-2026-02-08T02-37-10Z-procs",
       "package": "procs",
@@ -37311,8 +37296,8 @@
       "timestamp": "2026-02-08T02:37:10Z"
     },
     {
-      "id": "homebrew-2026-02-08T02-37-10Z-xh",
-      "package": "xh",
+      "id": "homebrew-2026-02-08T02-37-10Z-sd",
+      "package": "sd",
       "ecosystem": "homebrew",
       "category": "deterministic",
       "subcategory": "install_failed",
@@ -37328,6 +37313,21 @@
     {
       "id": "homebrew-2026-02-08T02-37-10Z-tealdeer",
       "package": "tealdeer",
+      "ecosystem": "homebrew",
+      "category": "deterministic",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "homebrew-2026-02-08T02-37-10Z",
+      "timestamp": "2026-02-08T02:37:10Z"
+    },
+    {
+      "id": "homebrew-2026-02-08T02-37-10Z-xh",
+      "package": "xh",
       "ecosystem": "homebrew",
       "category": "deterministic",
       "subcategory": "install_failed",
@@ -39224,7 +39224,7 @@
     "last_run": {
       "batch_id": "2026-02-17-homebrew",
       "ecosystem": "homebrew",
-      "timestamp": "2026-02-17T04:21:46Z",
+      "timestamp": "2026-02-17T05:59:16Z",
       "succeeded": 0,
       "failed": 0,
       "total": 0
@@ -39238,7 +39238,7 @@
       "total": 4,
       "recipes_merged": 4
     },
-    "runs_since_last_success": 170,
+    "runs_since_last_success": 171,
     "hours_since_last_run": 0
   },
   "runs": [
