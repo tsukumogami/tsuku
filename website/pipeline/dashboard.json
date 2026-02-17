@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-02-17T19:48:50Z",
+  "generated_at": "2026-02-17T20:38:11Z",
   "queue": {
     "total": 5275,
     "by_status": {
@@ -39224,7 +39224,7 @@
     "last_run": {
       "batch_id": "2026-02-17-homebrew",
       "ecosystem": "homebrew",
-      "timestamp": "2026-02-17T19:48:25Z",
+      "timestamp": "2026-02-17T20:37:51Z",
       "succeeded": 0,
       "failed": 0,
       "total": 0
@@ -39238,7 +39238,7 @@
       "total": 4,
       "recipes_merged": 4
     },
-    "runs_since_last_success": 184,
+    "runs_since_last_success": 185,
     "hours_since_last_run": 0
   },
   "runs": [
