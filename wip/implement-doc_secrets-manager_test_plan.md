@@ -138,7 +138,8 @@ Total scenarios: 16
 **Commands**:
 - `go test -v ./internal/discover/... ./internal/version/... ./internal/builders/... ./internal/search/...`
 **Expected**: All package tests pass. Non-test source files in discover, version, builders, and search packages no longer contain `os.Getenv("GITHUB_TOKEN")`, `os.Getenv("TAVILY_API_KEY")`, or `os.Getenv("BRAVE_API_KEY")`. Error messages reference both env var and config file options.
-**Status**: pending
+**Status**: passed
+**Validated**: 2026-02-16 via Docker (golang:1.25). All 760 tests passed (0 failed, 4 skipped integration tests). Source verification confirmed: no os.Getenv calls for GITHUB_TOKEN/TAVILY_API_KEY/BRAVE_API_KEY in non-test code. All access uses secrets.Get() and secrets.IsSet(). Error messages mention both env var and config.toml.
 
 ---
 

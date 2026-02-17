@@ -41,10 +41,10 @@ Planned
 | ~~_Creates the `internal/secrets` package with `Get()`, `IsSet()`, and `KnownKeys()` functions plus the `KeySpec` table mapping secret names to env var aliases. Resolves from env vars only; config file fallback is wired in #1734._~~ | | |
 | ~~[#1734: feat(userconfig): add secrets section with atomic writes and 0600 permissions](https://github.com/tsukumogami/tsuku/issues/1734)~~ | ~~[#1733](https://github.com/tsukumogami/tsuku/issues/1733)~~ | ~~critical~~ |
 | ~~_Extends `userconfig.Config` with a `Secrets` map, switches all config writes to atomic temp+rename with unconditional 0600 permissions, adds a permission warning on read, and wires `secrets.Get()` to fall through to config file on env var miss._~~ | | |
-| [#1735: refactor(llm): migrate API key resolution to secrets package](https://github.com/tsukumogami/tsuku/issues/1735) | [#1734](https://github.com/tsukumogami/tsuku/issues/1734) | testable |
-| _Replaces direct `os.Getenv()` calls in `claude.go`, `gemini.go`, and `factory.go` with `secrets.Get()` and `secrets.IsSet()`. Removes Gemini's manual two-variable fallback logic since the alias table handles it._ | | |
-| [#1736: refactor: migrate platform tokens to secrets package](https://github.com/tsukumogami/tsuku/issues/1736) | [#1734](https://github.com/tsukumogami/tsuku/issues/1734) | testable |
-| _Migrates `GITHUB_TOKEN`, `TAVILY_API_KEY`, and `BRAVE_API_KEY` access across discover, version, builders, and search packages. Updates error messages to mention both env var and config file options._ | | |
+| ~~[#1735: refactor(llm): migrate API key resolution to secrets package](https://github.com/tsukumogami/tsuku/issues/1735)~~ | ~~[#1734](https://github.com/tsukumogami/tsuku/issues/1734)~~ | ~~testable~~ |
+| ~~_Replaces direct `os.Getenv()` calls in `claude.go`, `gemini.go`, and `factory.go` with `secrets.Get()` and `secrets.IsSet()`. Removes Gemini's manual two-variable fallback logic since the alias table handles it._~~ | | |
+| ~~[#1736: refactor: migrate platform tokens to secrets package](https://github.com/tsukumogami/tsuku/issues/1736)~~ | ~~[#1734](https://github.com/tsukumogami/tsuku/issues/1734)~~ | ~~testable~~ |
+| ~~_Migrates `GITHUB_TOKEN`, `TAVILY_API_KEY`, and `BRAVE_API_KEY` access across discover, version, builders, and search packages. Updates error messages to mention both env var and config file options._~~ | | |
 | [#1737: feat(cli): add secrets management to tsuku config](https://github.com/tsukumogami/tsuku/issues/1737) | [#1734](https://github.com/tsukumogami/tsuku/issues/1734) | testable |
 | _Adds stdin-based secret input to `tsuku config set`, status-only display for `tsuku config get`, and a Secrets section in `tsuku config` output showing all known keys with set/not-set status._ | | |
 

@@ -1,0 +1,27 @@
+{
+  "pragmatic": {
+    "blocking": [],
+    "advisory": [
+      "search/factory.go duplicates guidance already in secrets.Get() error",
+      "Inconsistent resolve-once vs resolve-per-call pattern across files",
+      "token, _ = secrets.Get() pattern is correct for optional tokens"
+    ]
+  },
+  "architect": {
+    "blocking": [],
+    "advisory": [
+      "provider_tap.go:159 stale comment says GITHUB_TOKEN",
+      "llm_discovery.go:788 comment says with GITHUB_TOKEN",
+      "llm_discovery.go:90 struct comment references GITHUB_TOKEN"
+    ]
+  },
+  "maintainer": {
+    "blocking": [],
+    "advisory": [
+      "Four stale comments referencing old direct-env-var pattern",
+      "github_release.go has duplicated rate-limit response parsing (pre-existing)",
+      "Comments should mention secrets package resolution path"
+    ]
+  },
+  "verdict": "All findings advisory. Ready to push."
+}

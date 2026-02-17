@@ -28,7 +28,7 @@ Total entries: 4
 **Section**: GITHUB_TOKEN
 **Prerequisite issues**: #1736
 **Update type**: modify
-**Status**: pending
+**Status**: updated
 **Details**: Update the GITHUB_TOKEN section to mention that the token can also be stored in `$TSUKU_HOME/config.toml` under `[secrets]` via `tsuku config set secrets.github_token`. Note the resolution order (env var checked first, then config file). Keep the existing env var instructions intact since they still work.
 
 ---
@@ -37,5 +37,5 @@ Total entries: 4
 **Section**: Development and Debugging (new entries for API keys)
 **Prerequisite issues**: #1735, #1736
 **Update type**: modify
-**Status**: pending
+**Status**: updated
 **Details**: Add entries for ANTHROPIC_API_KEY, GOOGLE_API_KEY/GEMINI_API_KEY, TAVILY_API_KEY, and BRAVE_API_KEY to the environment variables reference. Each entry should note that these can also be set via `tsuku config set secrets.<name>` as a config file alternative. Update the Summary Table to include these new entries.
