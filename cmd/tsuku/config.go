@@ -7,6 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/tsukumogami/tsuku/internal/config"
+	"github.com/tsukumogami/tsuku/internal/secrets"
 	"github.com/tsukumogami/tsuku/internal/userconfig"
 )
 
@@ -149,8 +150,8 @@ func runConfig(cmd *cobra.Command, args []string) {
 		exitWithCode(ExitGeneral)
 	}
 
-	// Get environment variable status
-	githubToken := os.Getenv("GITHUB_TOKEN")
+	// Get token status via secrets package
+	githubTokenSet := secrets.IsSet("github_token")
 
 	if jsonOutput {
 		type configOutput struct {
@@ -162,7 +163,7 @@ func runConfig(cmd *cobra.Command, args []string) {
 		}
 
 		tokenStatus := "(not set)"
-		if githubToken != "" {
+		if githubTokenSet {
 			tokenStatus = "(set)"
 		}
 
@@ -179,7 +180,7 @@ func runConfig(cmd *cobra.Command, args []string) {
 
 	// Human-readable output
 	fmt.Printf("TSUKU_HOME: %s\n", sysCfg.HomeDir)
-	if githubToken != "" {
+	if githubTokenSet {
 		fmt.Printf("GITHUB_TOKEN: (set)\n")
 	} else {
 		fmt.Printf("GITHUB_TOKEN: (not set)\n")
