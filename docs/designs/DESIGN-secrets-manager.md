@@ -37,8 +37,8 @@ Planned
 
 | Issue | Dependencies | Tier |
 |-------|--------------|------|
-| [#1733: feat(secrets): add core secrets resolution package](https://github.com/tsukumogami/tsuku/issues/1733) | None | testable |
-| _Creates the `internal/secrets` package with `Get()`, `IsSet()`, and `KnownKeys()` functions plus the `KeySpec` table mapping secret names to env var aliases. Resolves from env vars only; config file fallback is wired in #1734._ | | |
+| ~~[#1733: feat(secrets): add core secrets resolution package](https://github.com/tsukumogami/tsuku/issues/1733)~~ | ~~None~~ | ~~testable~~ |
+| ~~_Creates the `internal/secrets` package with `Get()`, `IsSet()`, and `KnownKeys()` functions plus the `KeySpec` table mapping secret names to env var aliases. Resolves from env vars only; config file fallback is wired in #1734._~~ | | |
 | [#1734: feat(userconfig): add secrets section with atomic writes and 0600 permissions](https://github.com/tsukumogami/tsuku/issues/1734) | [#1733](https://github.com/tsukumogami/tsuku/issues/1733) | critical |
 | _Extends `userconfig.Config` with a `Secrets` map, switches all config writes to atomic temp+rename with unconditional 0600 permissions, adds a permission warning on read, and wires `secrets.Get()` to fall through to config file on env var miss._ | | |
 | [#1735: refactor(llm): migrate API key resolution to secrets package](https://github.com/tsukumogami/tsuku/issues/1735) | [#1734](https://github.com/tsukumogami/tsuku/issues/1734) | testable |
@@ -77,8 +77,8 @@ graph TD
     classDef needsDesign fill:#e1bee7
     classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
 
-    class I1733 ready
-    class I1734 blocked
+    class I1733 done
+    class I1734 ready
     class I1735,I1736,I1737 blocked
 ```
 
