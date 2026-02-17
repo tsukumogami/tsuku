@@ -1,6 +1,7 @@
 package secrets
 
 import (
+	"os"
 	"strings"
 	"testing"
 )
@@ -243,5 +244,133 @@ func TestGetReturnsErrorWhenEnvVarEmpty(t *testing.T) {
 	_, err := Get("brave_api_key")
 	if err == nil {
 		t.Error("expected error when BRAVE_API_KEY is empty")
+	}
+}
+
+// --- Config file fallback tests (Scenario 9) ---
+
+func TestConfigFallbackResolvesFromConfigFile(t *testing.T) {
+	// Set up a temp TSUKU_HOME with a config file containing secrets.
+	tmpDir := t.TempDir()
+	t.Setenv("TSUKU_HOME", tmpDir)
+
+	configContent := `telemetry = true
+
+[secrets]
+anthropic_api_key = "sk-ant-from-config"
+`
+	configPath := tmpDir + "/config.toml"
+	if err := os.WriteFile(configPath, []byte(configContent), 0600); err != nil {
+		t.Fatalf("failed to write config: %v", err)
+	}
+
+	// Ensure env var is unset so config file is the only source.
+	t.Setenv("ANTHROPIC_API_KEY", "")
+
+	// Reset cached config so it picks up the new TSUKU_HOME.
+	ResetConfig()
+	defer ResetConfig()
+
+	val, err := Get("anthropic_api_key")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if val != "sk-ant-from-config" {
+		t.Errorf("expected 'sk-ant-from-config', got %q", val)
+	}
+}
+
+func TestConfigFallbackEnvVarTakesPriority(t *testing.T) {
+	// Set up config file with one value and env var with another.
+	tmpDir := t.TempDir()
+	t.Setenv("TSUKU_HOME", tmpDir)
+
+	configContent := `[secrets]
+anthropic_api_key = "from-config"
+`
+	configPath := tmpDir + "/config.toml"
+	if err := os.WriteFile(configPath, []byte(configContent), 0600); err != nil {
+		t.Fatalf("failed to write config: %v", err)
+	}
+
+	t.Setenv("ANTHROPIC_API_KEY", "from-env")
+
+	ResetConfig()
+	defer ResetConfig()
+
+	val, err := Get("anthropic_api_key")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if val != "from-env" {
+		t.Errorf("expected env var to take priority ('from-env'), got %q", val)
+	}
+}
+
+func TestIsSetReturnsTrueFromConfigFile(t *testing.T) {
+	tmpDir := t.TempDir()
+	t.Setenv("TSUKU_HOME", tmpDir)
+
+	configContent := `[secrets]
+github_token = "ghp-from-config"
+`
+	configPath := tmpDir + "/config.toml"
+	if err := os.WriteFile(configPath, []byte(configContent), 0600); err != nil {
+		t.Fatalf("failed to write config: %v", err)
+	}
+
+	t.Setenv("GITHUB_TOKEN", "")
+
+	ResetConfig()
+	defer ResetConfig()
+
+	if !IsSet("github_token") {
+		t.Error("expected IsSet to return true when config file has the key")
+	}
+}
+
+func TestConfigFallbackReturnsErrorWhenBothEmpty(t *testing.T) {
+	tmpDir := t.TempDir()
+	t.Setenv("TSUKU_HOME", tmpDir)
+
+	// Config file exists but doesn't have the key.
+	configContent := `telemetry = true
+`
+	configPath := tmpDir + "/config.toml"
+	if err := os.WriteFile(configPath, []byte(configContent), 0600); err != nil {
+		t.Fatalf("failed to write config: %v", err)
+	}
+
+	t.Setenv("TAVILY_API_KEY", "")
+
+	ResetConfig()
+	defer ResetConfig()
+
+	_, err := Get("tavily_api_key")
+	if err == nil {
+		t.Error("expected error when secret is not set in either env or config")
+	}
+}
+
+func TestConfigFallbackHandlesMissingConfigFile(t *testing.T) {
+	tmpDir := t.TempDir()
+	t.Setenv("TSUKU_HOME", tmpDir)
+	// No config file created.
+
+	t.Setenv("BRAVE_API_KEY", "")
+
+	ResetConfig()
+	defer ResetConfig()
+
+	_, err := Get("brave_api_key")
+	if err == nil {
+		t.Error("expected error when config file doesn't exist and env var is empty")
+	}
+	// Should still get the guidance message.
+	if !strings.Contains(err.Error(), "BRAVE_API_KEY") {
+		t.Errorf("expected env var name in error, got: %s", err.Error())
+	}
+	if !strings.Contains(err.Error(), "config.toml") {
+		t.Errorf("expected config.toml in error, got: %s", err.Error())
 	}
 }

@@ -1,7 +1,8 @@
 // Package secrets provides centralized resolution of API keys and tokens.
 //
-// Secrets are resolved by checking environment variables in priority order.
-// Config file fallback is wired separately (see #1734).
+// Secrets are resolved by checking environment variables first, then
+// the [secrets] section in $TSUKU_HOME/config.toml. If neither source
+// has a value, an error with guidance is returned.
 //
 // Each known secret is defined in the knownKeys table (specs.go), which maps
 // a canonical name to one or more environment variable aliases. Requesting
@@ -14,6 +15,8 @@ import (
 	"sort"
 	"strings"
 	"sync"
+
+	"github.com/tsukumogami/tsuku/internal/userconfig"
 )
 
 // KeyInfo describes a registered secret for external consumers.
@@ -28,19 +31,36 @@ type KeyInfo struct {
 	Desc string
 }
 
-// configOnce ensures config file loading happens at most once.
-// Currently a no-op; wired to userconfig in #1734.
-var configOnce sync.Once
+// cachedConfig holds the lazily loaded userconfig.
+var (
+	configOnce  sync.Once
+	cachedCfg   *userconfig.Config
+	configError error
+)
 
-// loadConfig is the lazy config loader. It runs once on the first
-// Get() or IsSet() call. Currently a no-op placeholder.
+// loadConfig loads the userconfig lazily on the first call.
 func loadConfig() {
 	configOnce.Do(func() {
-		// No-op: config file integration deferred to #1734.
+		cachedCfg, configError = userconfig.Load()
 	})
 }
 
-// Get resolves a secret by name, checking environment variables in order.
+// getConfig returns the cached userconfig, loading it lazily if needed.
+func getConfig() (*userconfig.Config, error) {
+	loadConfig()
+	return cachedCfg, configError
+}
+
+// ResetConfig resets the cached config so the next call to Get()/IsSet()
+// reloads from disk. This is intended for testing only.
+func ResetConfig() {
+	configOnce = sync.Once{}
+	cachedCfg = nil
+	configError = nil
+}
+
+// Get resolves a secret by name, checking environment variables first,
+// then the [secrets] section in config.toml.
 // Returns the first non-empty value found, or an error if the key is
 // unknown or no source has a value set.
 func Get(name string) (string, error) {
@@ -49,8 +69,6 @@ func Get(name string) (string, error) {
 		return "", fmt.Errorf("unknown secret key: %q", name)
 	}
 
-	loadConfig()
-
 	// Check environment variables in priority order.
 	for _, env := range spec.EnvVars {
 		if val := os.Getenv(env); val != "" {
@@ -58,7 +76,13 @@ func Get(name string) (string, error) {
 		}
 	}
 
-	// TODO(#1734): check config file here.
+	// Fall through to config file.
+	cfg, err := getConfig()
+	if err == nil && cfg != nil && cfg.Secrets != nil {
+		if val, ok := cfg.Secrets[name]; ok && val != "" {
+			return val, nil
+		}
+	}
 
 	// Build a guidance message listing all env var options.
 	envList := strings.Join(spec.EnvVars, " or ")
@@ -76,15 +100,19 @@ func IsSet(name string) bool {
 		return false
 	}
 
-	loadConfig()
-
 	for _, env := range spec.EnvVars {
 		if os.Getenv(env) != "" {
 			return true
 		}
 	}
 
-	// TODO(#1734): check config file here.
+	// Fall through to config file.
+	cfg, err := getConfig()
+	if err == nil && cfg != nil && cfg.Secrets != nil {
+		if val, ok := cfg.Secrets[name]; ok && val != "" {
+			return true
+		}
+	}
 
 	return false
 }
