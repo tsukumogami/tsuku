@@ -204,6 +204,7 @@ Total scenarios: 16
 **Commands**:
 - `export TSUKU_HOME=$(mktemp -d) && export TSUKU_TELEMETRY=0 && make build-test && echo "test-key" | ./tsuku-test config set secrets.anthropic_api_key && stat -c "%a" "$TSUKU_HOME/config.toml"`
 **Expected**: After writing a secret via `tsuku config set secrets.*`, the config file has exactly `600` permissions. The file is owned by the current user and is not readable by group or others.
-**Status**: pending
+**Status**: passed
+**Validated**: 2026-02-16 via local shell. Piped "test-key" into `config set secrets.anthropic_api_key` with isolated TSUKU_HOME. `stat -c "%a"` returned `600`. `ls -la` confirmed `-rw-------` with owner-only access. No group or other permissions.
 
 ---

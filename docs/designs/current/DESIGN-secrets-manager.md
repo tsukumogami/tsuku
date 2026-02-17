@@ -1,5 +1,5 @@
 ---
-status: Planned
+status: Current
 problem: |
   Tsuku's LLM and discovery features require API keys that are currently read
   via scattered os.Getenv() calls across multiple packages, with no centralized
@@ -29,7 +29,7 @@ rationale: |
 
 ## Status
 
-Planned
+Current
 
 ## Implementation Issues
 

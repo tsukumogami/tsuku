@@ -6,7 +6,7 @@
   "started_at": "2026-02-17T00:20:34Z",
   "pr_number": 1731,
   "pr_url": "https://github.com/tsukumogami/tsuku/pull/1731",
-  "integrity_hash": "sha256:eea1b9feb90c7a0319edd115fcfb3c3c9fb6849ec737699365aa7798fa8ec21d",
+  "integrity_hash": "sha256:f3859849934f24d4f8af5c78cd022416bf0c71a5a853abd75240e9b85fe726a3",
   "issues": [
     {
       "number": 1733,
@@ -174,8 +174,8 @@
     {
       "number": 1737,
       "title": "feat(cli): add secrets management to tsuku config",
-      "status": "implemented",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "ci_fix_attempts": 0,
       "dependencies": [
         1734
