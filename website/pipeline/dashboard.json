@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-02-17T14:12:24Z",
+  "generated_at": "2026-02-17T15:55:17Z",
   "queue": {
     "total": 5275,
     "by_status": {
@@ -37244,13 +37244,6 @@
   },
   "blockers": [
     {
-      "dependency": "gmp",
-      "count": 1,
-      "packages": [
-        "homebrew:coreutils"
-      ]
-    },
-    {
       "dependency": "ada-url",
       "count": 1,
       "packages": [
@@ -37270,6 +37263,13 @@
       "packages": [
         "homebrew:imagemagick"
       ]
+    },
+    {
+      "dependency": "gmp",
+      "count": 1,
+      "packages": [
+        "homebrew:coreutils"
+      ]
     }
   ],
   "failures": {
@@ -37281,23 +37281,8 @@
   },
   "failure_details": [
     {
-      "id": "homebrew-2026-02-08T02-37-10Z-tealdeer",
-      "package": "tealdeer",
-      "ecosystem": "homebrew",
-      "category": "deterministic",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "homebrew-2026-02-08T02-37-10Z",
-      "timestamp": "2026-02-08T02:37:10Z"
-    },
-    {
-      "id": "homebrew-2026-02-08T02-37-10Z-xh",
-      "package": "xh",
+      "id": "homebrew-2026-02-08T02-37-10Z-sd",
+      "package": "sd",
       "ecosystem": "homebrew",
       "category": "deterministic",
       "subcategory": "install_failed",
@@ -37326,8 +37311,23 @@
       "timestamp": "2026-02-08T02:37:10Z"
     },
     {
-      "id": "homebrew-2026-02-08T02-37-10Z-sd",
-      "package": "sd",
+      "id": "homebrew-2026-02-08T02-37-10Z-xh",
+      "package": "xh",
+      "ecosystem": "homebrew",
+      "category": "deterministic",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "homebrew-2026-02-08T02-37-10Z",
+      "timestamp": "2026-02-08T02:37:10Z"
+    },
+    {
+      "id": "homebrew-2026-02-08T02-37-10Z-tealdeer",
+      "package": "tealdeer",
       "ecosystem": "homebrew",
       "category": "deterministic",
       "subcategory": "install_failed",
@@ -37577,7 +37577,7 @@
       "category": "deterministic",
       "subcategory": "install_failed",
       "exit_code": 6,
-      "platform": "linux-alpine-musl-x86_64",
+      "platform": "linux-alpine-musl-arm64",
       "timestamp": "2026-02-06T20:45:08Z"
     },
     {
@@ -37587,7 +37587,7 @@
       "category": "deterministic",
       "subcategory": "install_failed",
       "exit_code": 6,
-      "platform": "linux-alpine-musl-arm64",
+      "platform": "linux-alpine-musl-x86_64",
       "timestamp": "2026-02-06T20:45:08Z"
     },
     {
@@ -39224,7 +39224,7 @@
     "last_run": {
       "batch_id": "2026-02-17-homebrew",
       "ecosystem": "homebrew",
-      "timestamp": "2026-02-17T14:12:02Z",
+      "timestamp": "2026-02-17T15:54:58Z",
       "succeeded": 0,
       "failed": 0,
       "total": 0
@@ -39238,7 +39238,7 @@
       "total": 4,
       "recipes_merged": 4
     },
-    "runs_since_last_success": 179,
+    "runs_since_last_success": 180,
     "hours_since_last_run": 0
   },
   "runs": [
