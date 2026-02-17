@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-02-17T13:02:37Z",
+  "generated_at": "2026-02-17T14:12:24Z",
   "queue": {
     "total": 5275,
     "by_status": {
@@ -37244,13 +37244,6 @@
   },
   "blockers": [
     {
-      "dependency": "glib",
-      "count": 1,
-      "packages": [
-        "homebrew:imagemagick"
-      ]
-    },
-    {
       "dependency": "gmp",
       "count": 1,
       "packages": [
@@ -37269,6 +37262,13 @@
       "count": 1,
       "packages": [
         "homebrew:ffmpeg"
+      ]
+    },
+    {
+      "dependency": "glib",
+      "count": 1,
+      "packages": [
+        "homebrew:imagemagick"
       ]
     }
   ],
@@ -39224,7 +39224,7 @@
     "last_run": {
       "batch_id": "2026-02-17-homebrew",
       "ecosystem": "homebrew",
-      "timestamp": "2026-02-17T13:02:17Z",
+      "timestamp": "2026-02-17T14:12:02Z",
       "succeeded": 0,
       "failed": 0,
       "total": 0
@@ -39238,7 +39238,7 @@
       "total": 4,
       "recipes_merged": 4
     },
-    "runs_since_last_success": 178,
+    "runs_since_last_success": 179,
     "hours_since_last_run": 0
   },
   "runs": [
