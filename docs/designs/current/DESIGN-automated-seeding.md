@@ -52,37 +52,7 @@ Current
 | ~~[#1728: feat(batch): add seeding workflow and bootstrap Phase B](https://github.com/tsukumogami/tsuku/issues/1728)~~ | [#1727](https://github.com/tsukumogami/tsuku/issues/1727) | critical |
 | ~~_Updates seed-queue.yml for all ecosystems, adds source change issue creation with seeding:review label, and documents Bootstrap Phase B procedure._~~ | | |
 
-```mermaid
-graph TD
-    I1723["#1723: walking skeleton"]
-    I1724["#1724: npm/pypi/gem Discover()"]
-    I1725["#1725: audit log system"]
-    I1726["#1726: freshness + alerting"]
-    I1727["#1727: command interface + output"]
-    I1728["#1728: workflow + bootstrap"]
-
-    I1723 --> I1724
-    I1723 --> I1725
-    I1723 --> I1726
-    I1725 --> I1726
-    I1723 --> I1727
-    I1726 --> I1727
-    I1727 --> I1728
-
-    classDef done fill:#c8e6c9,stroke:#333
-    classDef ready fill:#bbdefb,stroke:#333
-    classDef blocked fill:#fff9c4,stroke:#333
-    classDef needsDesign fill:#e1bee7,stroke:#333
-
-    class I1723 done
-    class I1724 done
-    class I1725 done
-    class I1726 done
-    class I1727 done
-    class I1728 done
-```
-
-**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
+All issues completed.
 
 ## Upstream Design Reference
 
