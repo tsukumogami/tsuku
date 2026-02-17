@@ -6,7 +6,7 @@
   "started_at": "2026-02-17T00:20:34Z",
   "pr_number": 1731,
   "pr_url": "https://github.com/tsukumogami/tsuku/pull/1731",
-  "integrity_hash": "sha256:d598ca292f786e42b13a885040297b7f74130605d91f18e196703bf69282174d",
+  "integrity_hash": "sha256:6fb5645095ad337c12cdb49f195df436c80ce124a129a23ed4efa55e3c9a6f82",
   "issues": [
     {
       "number": 1733,
@@ -53,8 +53,8 @@
     {
       "number": 1734,
       "title": "feat(userconfig): add secrets section with atomic writes and 0600 permissions",
-      "status": "implemented",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "ci_fix_attempts": 0,
       "dependencies": [
         1733
@@ -95,7 +95,7 @@
     {
       "number": 1735,
       "title": "refactor(llm): migrate API key resolution to secrets package",
-      "status": "pending",
+      "status": "in_progress",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
       "dependencies": [
