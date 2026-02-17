@@ -141,11 +141,13 @@ func NeedsRedisambiguation(entry batch.QueueEntry, cfg FreshnessConfig, auditEnt
 
 // ApplySourceChange handles a source change detected during re-disambiguation.
 // For priority 1-2 entries, the existing source is kept and the proposed change
-// is recorded. For priority 3, the source is updated and failure state is reset.
+// is recorded. For priority 3 with a confident selection, the source is updated
+// and failure state is reset. High-risk changes (priority_fallback) are never
+// auto-accepted because cross-ecosystem download comparisons are unreliable.
 //
 // Returns the SourceChange record and a boolean indicating whether the queue
 // entry was modified.
-func ApplySourceChange(entry *batch.QueueEntry, newSource string, now time.Time) (SourceChange, bool) {
+func ApplySourceChange(entry *batch.QueueEntry, newSource string, highRisk bool, now time.Time) (SourceChange, bool) {
 	change := SourceChange{
 		Package:  entry.Name,
 		Old:      entry.Source,
@@ -153,13 +155,13 @@ func ApplySourceChange(entry *batch.QueueEntry, newSource string, now time.Time)
 		Priority: entry.Priority,
 	}
 
-	if entry.Priority <= 2 {
-		// Priority 1-2: do NOT update the queue entry. Keep existing source.
+	if entry.Priority <= 2 || highRisk {
+		// Priority 1-2 or high-risk fallback: keep existing source.
 		change.AutoAccepted = false
 		return change, false
 	}
 
-	// Priority 3: auto-accept the source change.
+	// Priority 3 with confident selection: auto-accept the source change.
 	entry.Source = newSource
 	entry.FailureCount = 0
 	entry.NextRetryAt = nil

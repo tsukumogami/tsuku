@@ -254,7 +254,7 @@ func TestApplySourceChange_Priority1KeepsOldSource(t *testing.T) {
 		FailureCount: 2,
 	}
 
-	change, modified := ApplySourceChange(&entry, "cargo:ripgrep", now)
+	change, modified := ApplySourceChange(&entry, "cargo:ripgrep", false, now)
 
 	if modified {
 		t.Error("priority 1 source change should NOT modify the entry")
@@ -287,7 +287,7 @@ func TestApplySourceChange_Priority2KeepsOldSource(t *testing.T) {
 		FailureCount: 1,
 	}
 
-	change, modified := ApplySourceChange(&entry, "cargo:bat", now)
+	change, modified := ApplySourceChange(&entry, "cargo:bat", false, now)
 
 	if modified {
 		t.Error("priority 2 source change should NOT modify the entry")
@@ -313,10 +313,10 @@ func TestApplySourceChange_Priority3UpdatesSource(t *testing.T) {
 		NextRetryAt:  &retryAt,
 	}
 
-	change, modified := ApplySourceChange(&entry, "cargo:tokei", now)
+	change, modified := ApplySourceChange(&entry, "cargo:tokei", false, now)
 
 	if !modified {
-		t.Error("priority 3 source change should modify the entry")
+		t.Error("priority 3 confident source change should modify the entry")
 	}
 	if entry.Source != "cargo:tokei" {
 		t.Errorf("Source = %q, want cargo:tokei", entry.Source)
@@ -328,7 +328,7 @@ func TestApplySourceChange_Priority3UpdatesSource(t *testing.T) {
 		t.Errorf("NextRetryAt = %v, want nil (cleared on source change)", entry.NextRetryAt)
 	}
 	if !change.AutoAccepted {
-		t.Error("priority 3 changes should be auto-accepted")
+		t.Error("priority 3 confident changes should be auto-accepted")
 	}
 	if change.Old != "homebrew:tokei" {
 		t.Errorf("Old = %q, want homebrew:tokei", change.Old)
@@ -625,7 +625,7 @@ func TestApplySourceChange_NoChange(t *testing.T) {
 
 	// When the source doesn't change, the caller shouldn't call ApplySourceChange.
 	// But verify that applying the same source still works correctly for priority 3.
-	change, modified := ApplySourceChange(&entry, "cargo:tool", now)
+	change, modified := ApplySourceChange(&entry, "cargo:tool", false, now)
 	if !modified {
 		t.Error("priority 3 accepts any source change call")
 	}
@@ -635,5 +635,31 @@ func TestApplySourceChange_NoChange(t *testing.T) {
 	// Failure count still gets reset
 	if entry.FailureCount != 0 {
 		t.Errorf("FailureCount = %d, want 0", entry.FailureCount)
+	}
+}
+
+func TestApplySourceChange_HighRiskNotAutoAccepted(t *testing.T) {
+	now := time.Date(2026, 2, 16, 0, 0, 0, 0, time.UTC)
+	entry := batch.QueueEntry{
+		Name:         "angband",
+		Source:       "homebrew:angband",
+		Priority:     3,
+		Status:       batch.StatusPending,
+		Confidence:   batch.ConfidenceAuto,
+		FailureCount: 0,
+	}
+
+	// High-risk (priority_fallback) changes should NOT be auto-accepted even for priority 3,
+	// because cross-ecosystem download comparisons are unreliable.
+	change, modified := ApplySourceChange(&entry, "rubygems:angband", true, now)
+
+	if modified {
+		t.Error("high-risk source change should NOT modify the entry")
+	}
+	if entry.Source != "homebrew:angband" {
+		t.Errorf("Source should remain homebrew:angband, got %q", entry.Source)
+	}
+	if change.AutoAccepted {
+		t.Error("high-risk changes should not be auto-accepted")
 	}
 }

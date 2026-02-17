@@ -258,8 +258,9 @@ func execute(cfg *config) int {
 
 		seed.ApplySelectionResult(entry, selectionReason)
 
+		highRisk := selectionReason == discover.SelectionPriorityFallback
 		if newSource != entry.Source {
-			change, modified := seed.ApplySourceChange(entry, newSource, seedingRun)
+			change, modified := seed.ApplySourceChange(entry, newSource, highRisk, seedingRun)
 			summary.SourceChanges = append(summary.SourceChanges, change)
 			if cfg.verbose {
 				if modified {
