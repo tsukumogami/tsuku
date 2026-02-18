@@ -37,11 +37,11 @@ Current
 | Issue | Dependencies | Tier |
 |-------|--------------|------|
 | ~~[#1741: refactor(batch): remove ecosystem filter and process all queue entries](https://github.com/tsukumogami/tsuku/issues/1741)~~ | None | testable |
-| _Remove the ecosystem prefix filter from selectCandidates(), add per-entry rate limiting and circuit breaker checks, update BatchResult with per-ecosystem breakdown, update CLI entry point. This is the foundation that unblocks the other two issues._ | | |
+| ~~_Remove the ecosystem prefix filter from selectCandidates(), add per-entry rate limiting and circuit breaker checks, update BatchResult with per-ecosystem breakdown, update CLI entry point. This is the foundation that unblocks the other two issues._~~ | | |
 | ~~[#1742: ci(batch): update workflow for mixed-ecosystem batches](https://github.com/tsukumogami/tsuku/issues/1742)~~ | [#1741](https://github.com/tsukumogami/tsuku/issues/1741) | testable |
-| _Update the GitHub Actions workflow to remove the ECOSYSTEM env var default, drop the breaker preflight, read per-ecosystem results from batch-results.json, and fix PR creation for mixed batches._ | | |
+| ~~_Update the GitHub Actions workflow to remove the ECOSYSTEM env var default, drop the breaker preflight, read per-ecosystem results from batch-results.json, and fix PR creation for mixed batches._~~ | | |
 | ~~[#1743: feat(dashboard): show ecosystem breakdown per batch](https://github.com/tsukumogami/tsuku/issues/1743)~~ | [#1741](https://github.com/tsukumogami/tsuku/issues/1741) | testable |
-| _Update the dashboard Go code and HTML pages to show ecosystem breakdown per batch run, fix hardcoded homebrew assumptions, and add breaker-skip notes to the health panel._ | | |
+| ~~_Update the dashboard Go code and HTML pages to show ecosystem breakdown per batch run, fix hardcoded homebrew assumptions, and add breaker-skip notes to the health panel._~~ | | |
 
 All issues completed.
 
