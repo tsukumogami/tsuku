@@ -971,7 +971,7 @@ jobs:
         run: |
           # Read per-ecosystem outcomes from batch-results.json written by the orchestrator.
           # Each ecosystem that participated in the batch gets its breaker updated.
-          RESULTS_FILE="data/batch-results.json"
+          RESULTS_FILE="data/queues/batch-results.json"
           if [ ! -f "$RESULTS_FILE" ] || [ ! -s "$RESULTS_FILE" ]; then
             echo "No batch results file found, skipping circuit breaker update"
             exit 0
@@ -1032,7 +1032,7 @@ jobs:
 
           # Read ecosystem breakdown from batch results
           ECOSYSTEMS_JSON="{}"
-          RESULTS_FILE="data/batch-results.json"
+          RESULTS_FILE="data/queues/batch-results.json"
           if [ -f "$RESULTS_FILE" ] && [ -s "$RESULTS_FILE" ]; then
             ECOSYSTEMS_JSON=$(jq -c '.ecosystems // {}' "$RESULTS_FILE")
           fi
@@ -1097,7 +1097,7 @@ jobs:
         run: |
           # Update queue statuses for processed recipes using batch results
           QUEUE_FILE="data/queues/priority-queue.json"
-          RESULTS_FILE="data/batch-results.json"
+          RESULTS_FILE="data/queues/batch-results.json"
           if [ -f "$RESULTS_FILE" ] && [ -s "$RESULTS_FILE" ]; then
             # Mark succeeded entries
             for pkg_id in $(jq -r '.recipes // [] | .[]' "$RESULTS_FILE" 2>/dev/null | while read -r path; do basename "$path" .toml; done); do
@@ -1132,7 +1132,7 @@ jobs:
 
           # Read ecosystem breakdown for commit message
           ECO_SUMMARY=""
-          RESULTS_FILE="data/batch-results.json"
+          RESULTS_FILE="data/queues/batch-results.json"
           if [ -f "$RESULTS_FILE" ] && [ -s "$RESULTS_FILE" ]; then
             ECO_SUMMARY=$(jq -r '.ecosystems // {} | to_entries | map("\(.value) \(.key)") | join(", ")' "$RESULTS_FILE")
           fi
