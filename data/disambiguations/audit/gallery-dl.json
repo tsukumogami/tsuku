@@ -1,0 +1,32 @@
+{
+  "tool": "gallery-dl",
+  "selected": "homebrew:gallery-dl",
+  "alternatives": [
+    "pypi:gallery-dl"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:gallery-dl",
+      "downloads": 0,
+      "version_count": 183,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:gallery-dl",
+      "downloads": 24863,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:gallery-dl",
+      "downloads": 7,
+      "version_count": 3,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:gallery-dl",
+  "disambiguated_at": "2026-02-17T00:16:24.356594851Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

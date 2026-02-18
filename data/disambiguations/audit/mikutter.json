@@ -1,0 +1,18 @@
+{
+  "tool": "mikutter",
+  "selected": "homebrew:mikutter",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:mikutter",
+      "downloads": 620,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:mikutter",
+  "disambiguated_at": "2026-02-17T00:22:28.149949861Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

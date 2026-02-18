@@ -1,0 +1,27 @@
+{
+  "tool": "tex-fmt",
+  "selected": "crates.io:tex-fmt",
+  "alternatives": [
+    "homebrew:tex-fmt"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.634585289514867,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:tex-fmt",
+      "downloads": 1278,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:tex-fmt",
+      "downloads": 2089,
+      "version_count": 21,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:tex-fmt",
+  "disambiguated_at": "2026-02-17T00:29:33.346781004Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

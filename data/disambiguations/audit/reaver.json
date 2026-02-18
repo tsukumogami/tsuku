@@ -1,0 +1,41 @@
+{
+  "tool": "reaver",
+  "selected": "npm:reaver",
+  "alternatives": [
+    "rubygems:reaver",
+    "homebrew:reaver",
+    "pypi:reaver"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 4.869855237013908,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:reaver",
+      "downloads": 602,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:reaver",
+      "downloads": 0,
+      "version_count": 14,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:reaver",
+      "downloads": 7046,
+      "version_count": 17,
+      "has_repository": true
+    },
+    {
+      "source": "npm:reaver",
+      "downloads": 34313,
+      "version_count": 6,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:reaver",
+  "disambiguated_at": "2026-02-17T00:26:45.176755361Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

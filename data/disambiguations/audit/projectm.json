@@ -1,0 +1,27 @@
+{
+  "tool": "projectm",
+  "selected": "homebrew:projectm",
+  "alternatives": [
+    "crates.io:projectm"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 7.388059701492537,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:projectm",
+      "downloads": 134,
+      "version_count": 10,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:projectm",
+      "downloads": 990,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:projectm",
+  "disambiguated_at": "2026-02-17T00:25:43.249665809Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,47 @@
+{
+  "tool": "amber",
+  "selected": "rubygems:amber",
+  "alternatives": [
+    "crates.io:amber",
+    "homebrew:amber",
+    "npm:amber"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 37.92039800995025,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:amber",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:amber",
+      "downloads": 506,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:amber",
+      "downloads": 603,
+      "version_count": 23,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:amber",
+      "downloads": 22866,
+      "version_count": 4,
+      "has_repository": false
+    },
+    {
+      "source": "npm:amber",
+      "downloads": 0,
+      "version_count": 51,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:amber",
+  "disambiguated_at": "2026-02-17T00:10:36.900270886Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

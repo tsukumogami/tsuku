@@ -1,0 +1,34 @@
+{
+  "tool": "todo-txt",
+  "selected": "rubygems:todo-txt",
+  "alternatives": [
+    "crates.io:todo-txt",
+    "homebrew:todo-txt"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 55.81758530183727,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:todo-txt",
+      "downloads": 711,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:todo-txt",
+      "downloads": 762,
+      "version_count": 28,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:todo-txt",
+      "downloads": 42533,
+      "version_count": 15,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:todo-txt",
+  "disambiguated_at": "2026-02-17T00:29:48.641058284Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

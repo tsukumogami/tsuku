@@ -1,0 +1,18 @@
+{
+  "tool": "two-ms",
+  "selected": "homebrew:two-ms",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:two-ms",
+      "downloads": 367,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:two-ms",
+  "disambiguated_at": "2026-02-17T00:30:14.637817881Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

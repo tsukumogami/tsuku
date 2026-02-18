@@ -1,0 +1,32 @@
+{
+  "tool": "poco",
+  "selected": "homebrew:poco",
+  "alternatives": [
+    "pypi:poco"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:poco",
+      "downloads": 4353,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:poco",
+      "downloads": 0,
+      "version_count": 23,
+      "has_repository": true
+    },
+    {
+      "source": "npm:poco",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:poco",
+  "disambiguated_at": "2026-02-17T00:25:26.90688787Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

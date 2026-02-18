@@ -1,0 +1,24 @@
+{
+  "tool": "arpack",
+  "selected": "homebrew:arpack",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:arpack",
+      "downloads": 7965,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:arpack",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:arpack",
+  "disambiguated_at": "2026-02-17T00:11:01.43077028Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

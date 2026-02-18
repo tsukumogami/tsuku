@@ -1,0 +1,34 @@
+{
+  "tool": "mcp-google-sheets",
+  "selected": "homebrew:mcp-google-sheets",
+  "alternatives": [
+    "npm:mcp-google-sheets",
+    "pypi:mcp-google-sheets"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.986013986013986,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:mcp-google-sheets",
+      "downloads": 0,
+      "version_count": 13,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:mcp-google-sheets",
+      "downloads": 284,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:mcp-google-sheets",
+      "downloads": 143,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:mcp-google-sheets",
+  "disambiguated_at": "2026-02-17T00:22:09.263247043Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

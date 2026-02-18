@@ -1,0 +1,24 @@
+{
+  "tool": "librealsense",
+  "selected": "homebrew:librealsense",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:librealsense",
+      "downloads": 8,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:librealsense",
+      "downloads": 2472,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:librealsense",
+  "disambiguated_at": "2026-02-17T00:20:57.405195298Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

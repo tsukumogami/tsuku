@@ -1,0 +1,32 @@
+{
+  "tool": "dpkg",
+  "selected": "homebrew:dpkg",
+  "alternatives": [
+    "pypi:dpkg"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:dpkg",
+      "downloads": 16351,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:dpkg",
+      "downloads": 0,
+      "version_count": 14,
+      "has_repository": false
+    },
+    {
+      "source": "npm:dpkg",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:dpkg",
+  "disambiguated_at": "2026-02-17T00:14:49.347089712Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,27 @@
+{
+  "tool": "install-nothing",
+  "selected": "homebrew:install-nothing",
+  "alternatives": [
+    "npm:install-nothing"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 14.454545454545455,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:install-nothing",
+      "downloads": 159,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:install-nothing",
+      "downloads": 11,
+      "version_count": 7,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:install-nothing",
+  "disambiguated_at": "2026-02-17T00:18:52.014234536Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

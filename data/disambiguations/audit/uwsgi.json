@@ -1,0 +1,40 @@
+{
+  "tool": "uwsgi",
+  "selected": "rubygems:uwsgi",
+  "alternatives": [
+    "homebrew:uwsgi",
+    "pypi:uwsgi"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 84.76023778071334,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:uwsgi",
+      "downloads": 1514,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:uwsgi",
+      "downloads": 0,
+      "version_count": 67,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:uwsgi",
+      "downloads": 128327,
+      "version_count": 48,
+      "has_repository": false
+    },
+    {
+      "source": "npm:uwsgi",
+      "downloads": 4,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:uwsgi",
+  "disambiguated_at": "2026-02-17T00:30:30.853740585Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

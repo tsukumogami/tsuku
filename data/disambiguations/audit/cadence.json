@@ -1,0 +1,41 @@
+{
+  "tool": "cadence",
+  "selected": "crates.io:cadence",
+  "alternatives": [
+    "rubygems:cadence",
+    "npm:cadence",
+    "homebrew:cadence"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 575.6798816568047,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:cadence",
+      "downloads": 421,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:cadence",
+      "downloads": 6810293,
+      "version_count": 53,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:cadence",
+      "downloads": 11830,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "npm:cadence",
+      "downloads": 858,
+      "version_count": 103,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:cadence",
+  "disambiguated_at": "2026-02-17T00:12:29.732410718Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

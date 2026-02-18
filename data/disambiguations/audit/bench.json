@@ -1,0 +1,48 @@
+{
+  "tool": "bench",
+  "selected": "rubygems:bench",
+  "alternatives": [
+    "npm:bench",
+    "homebrew:bench",
+    "crates.io:bench",
+    "pypi:bench"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.2269428217383607,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:bench",
+      "downloads": 151,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:bench",
+      "downloads": 0,
+      "version_count": 19,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:bench",
+      "downloads": 571,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:bench",
+      "downloads": 5649,
+      "version_count": 8,
+      "has_repository": false
+    },
+    {
+      "source": "rubygems:bench",
+      "downloads": 6931,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:bench",
+  "disambiguated_at": "2026-02-17T00:11:52.907775364Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

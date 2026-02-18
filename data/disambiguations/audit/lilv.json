@@ -1,0 +1,27 @@
+{
+  "tool": "lilv",
+  "selected": "homebrew:lilv",
+  "alternatives": [
+    "crates.io:lilv"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.7232142857142858,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:lilv",
+      "downloads": 336,
+      "version_count": 12,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:lilv",
+      "downloads": 579,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:lilv",
+  "disambiguated_at": "2026-02-17T00:21:21.065604459Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,47 @@
+{
+  "tool": "ent",
+  "selected": "npm:ent",
+  "alternatives": [
+    "rubygems:ent",
+    "homebrew:ent",
+    "pypi:ent"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 613.6932380428807,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "pypi:ent",
+      "downloads": 0,
+      "version_count": 10,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:ent",
+      "downloads": 45,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:ent",
+      "downloads": 470,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:ent",
+      "downloads": 9095,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "npm:ent",
+      "downloads": 5581540,
+      "version_count": 16,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:ent",
+  "disambiguated_at": "2026-02-17T00:15:18.47757325Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,40 @@
+{
+  "tool": "node",
+  "selected": "homebrew:node",
+  "alternatives": [
+    "npm:node",
+    "pypi:node"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 10.086505463443604,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:node",
+      "downloads": 11,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "pypi:node",
+      "downloads": 0,
+      "version_count": 39,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:node",
+      "downloads": 2683424,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:node",
+      "downloads": 266041,
+      "version_count": 798,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:node",
+  "disambiguated_at": "2026-02-17T00:10:04.197486151Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

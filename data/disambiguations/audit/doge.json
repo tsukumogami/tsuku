@@ -1,0 +1,46 @@
+{
+  "tool": "doge",
+  "selected": "rubygems:doge",
+  "alternatives": [
+    "homebrew:doge",
+    "pypi:doge"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 24.276672694394215,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:doge",
+      "downloads": 17,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:doge",
+      "downloads": 553,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:doge",
+      "downloads": 0,
+      "version_count": 26,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:doge",
+      "downloads": 13425,
+      "version_count": 4,
+      "has_repository": false
+    },
+    {
+      "source": "npm:doge",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:doge",
+  "disambiguated_at": "2026-02-17T00:14:41.641526537Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

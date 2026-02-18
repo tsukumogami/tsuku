@@ -1,0 +1,33 @@
+{
+  "tool": "clojure",
+  "selected": "homebrew:clojure",
+  "alternatives": [
+    "rubygems:clojure"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.5106382978723405,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:clojure",
+      "downloads": 9088,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:clojure",
+      "downloads": 6016,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:clojure",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:clojure",
+  "disambiguated_at": "2026-02-17T00:13:16.161590509Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,26 @@
+{
+  "tool": "aws-google-auth",
+  "selected": "homebrew:aws-google-auth",
+  "alternatives": [
+    "pypi:aws-google-auth"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:aws-google-auth",
+      "downloads": 0,
+      "version_count": 38,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:aws-google-auth",
+      "downloads": 1288,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:aws-google-auth",
+  "disambiguated_at": "2026-02-17T00:11:25.12839507Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

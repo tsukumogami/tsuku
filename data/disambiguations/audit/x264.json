@@ -1,0 +1,33 @@
+{
+  "tool": "x264",
+  "selected": "homebrew:x264",
+  "alternatives": [
+    "crates.io:x264"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 14.29305236803672,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:x264",
+      "downloads": 342533,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:x264",
+      "downloads": 23965,
+      "version_count": 8,
+      "has_repository": true
+    },
+    {
+      "source": "npm:x264",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:x264",
+  "disambiguated_at": "2026-02-17T00:31:20.716805014Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

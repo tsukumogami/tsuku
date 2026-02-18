@@ -1,0 +1,40 @@
+{
+  "tool": "dmd",
+  "selected": "npm:dmd",
+  "alternatives": [
+    "homebrew:dmd",
+    "pypi:dmd"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 269.1409691629956,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:dmd",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:dmd",
+      "downloads": 0,
+      "version_count": 11,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:dmd",
+      "downloads": 681,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:dmd",
+      "downloads": 183285,
+      "version_count": 127,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:dmd",
+  "disambiguated_at": "2026-02-17T00:14:33.776716699Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

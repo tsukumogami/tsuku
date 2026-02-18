@@ -1,0 +1,46 @@
+{
+  "tool": "faiss",
+  "selected": "rubygems:faiss",
+  "alternatives": [
+    "crates.io:faiss",
+    "homebrew:faiss"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 19.720281772820663,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:faiss",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:faiss",
+      "downloads": 6814,
+      "version_count": 15,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:faiss",
+      "downloads": 4760,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:faiss",
+      "downloads": 134374,
+      "version_count": 29,
+      "has_repository": false
+    },
+    {
+      "source": "npm:faiss",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:faiss",
+  "disambiguated_at": "2026-02-17T00:15:34.546883213Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

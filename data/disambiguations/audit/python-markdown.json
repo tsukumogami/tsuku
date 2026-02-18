@@ -1,0 +1,24 @@
+{
+  "tool": "python-markdown",
+  "selected": "homebrew:python-markdown",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:python-markdown",
+      "downloads": 2521,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:python-markdown",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:python-markdown",
+  "disambiguated_at": "2026-02-17T00:26:08.512495798Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

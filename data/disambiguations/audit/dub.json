@@ -1,0 +1,41 @@
+{
+  "tool": "dub",
+  "selected": "rubygems:dub",
+  "alternatives": [
+    "npm:dub",
+    "homebrew:dub",
+    "pypi:dub"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.4558581228842755,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:dub",
+      "downloads": 827,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:dub",
+      "downloads": 0,
+      "version_count": 148,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:dub",
+      "downloads": 97196,
+      "version_count": 136,
+      "has_repository": true
+    },
+    {
+      "source": "npm:dub",
+      "downloads": 66762,
+      "version_count": 208,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:dub",
+  "disambiguated_at": "2026-02-17T00:14:54.32963012Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

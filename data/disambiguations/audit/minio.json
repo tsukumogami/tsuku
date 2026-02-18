@@ -1,0 +1,48 @@
+{
+  "tool": "minio",
+  "selected": "npm:minio",
+  "alternatives": [
+    "crates.io:minio",
+    "rubygems:minio",
+    "homebrew:minio",
+    "pypi:minio"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 16.042412709396533,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:minio",
+      "downloads": 6435,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:minio",
+      "downloads": 34683,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:minio",
+      "downloads": 0,
+      "version_count": 112,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:minio",
+      "downloads": 21200,
+      "version_count": 47,
+      "has_repository": true
+    },
+    {
+      "source": "npm:minio",
+      "downloads": 556399,
+      "version_count": 83,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:minio",
+  "disambiguated_at": "2026-02-17T00:22:31.780080635Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

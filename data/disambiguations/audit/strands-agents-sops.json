@@ -1,0 +1,26 @@
+{
+  "tool": "strands-agents-sops",
+  "selected": "homebrew:strands-agents-sops",
+  "alternatives": [
+    "pypi:strands-agents-sops"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:strands-agents-sops",
+      "downloads": 280,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:strands-agents-sops",
+      "downloads": 0,
+      "version_count": 8,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:strands-agents-sops",
+  "disambiguated_at": "2026-02-17T00:28:52.528828475Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

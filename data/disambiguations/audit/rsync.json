@@ -1,0 +1,40 @@
+{
+  "tool": "rsync",
+  "selected": "rubygems:rsync",
+  "alternatives": [
+    "homebrew:rsync",
+    "npm:rsync"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 132.62644506628226,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:rsync",
+      "downloads": 70758,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:rsync",
+      "downloads": 28,
+      "version_count": 3,
+      "has_repository": false
+    },
+    {
+      "source": "rubygems:rsync",
+      "downloads": 9384382,
+      "version_count": 9,
+      "has_repository": true
+    },
+    {
+      "source": "npm:rsync",
+      "downloads": 0,
+      "version_count": 9,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:rsync",
+  "disambiguated_at": "2026-02-17T00:27:10.104919197Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

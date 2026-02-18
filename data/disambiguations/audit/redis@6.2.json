@@ -1,0 +1,18 @@
+{
+  "tool": "redis@6.2",
+  "selected": "homebrew:redis@6.2",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:redis@6.2",
+      "downloads": 3118,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:redis@6.2",
+  "disambiguated_at": "2026-02-17T00:26:46.580452491Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

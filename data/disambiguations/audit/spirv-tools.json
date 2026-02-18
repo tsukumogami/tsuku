@@ -1,0 +1,33 @@
+{
+  "tool": "spirv-tools",
+  "selected": "homebrew:spirv-tools",
+  "alternatives": [
+    "crates.io:spirv-tools"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.825738072152195,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:spirv-tools",
+      "downloads": 54606,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:spirv-tools",
+      "downloads": 29909,
+      "version_count": 21,
+      "has_repository": true
+    },
+    {
+      "source": "npm:spirv-tools",
+      "downloads": 18,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:spirv-tools",
+  "disambiguated_at": "2026-02-17T00:28:29.47874938Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,40 @@
+{
+  "tool": "nuclei",
+  "selected": "homebrew:nuclei",
+  "alternatives": [
+    "crates.io:nuclei",
+    "npm:nuclei"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.3819391148631364,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:nuclei",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:nuclei",
+      "downloads": 3909,
+      "version_count": 13,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:nuclei",
+      "downloads": 13220,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:nuclei",
+      "downloads": 0,
+      "version_count": 8,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:nuclei",
+  "disambiguated_at": "2026-02-17T00:23:45.796447791Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

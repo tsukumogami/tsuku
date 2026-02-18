@@ -1,0 +1,46 @@
+{
+  "tool": "breezy",
+  "selected": "rubygems:breezy",
+  "alternatives": [
+    "homebrew:breezy",
+    "pypi:breezy"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 66.45020576131687,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:breezy",
+      "downloads": 15,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:breezy",
+      "downloads": 1215,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:breezy",
+      "downloads": 0,
+      "version_count": 30,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:breezy",
+      "downloads": 80737,
+      "version_count": 38,
+      "has_repository": false
+    },
+    {
+      "source": "npm:breezy",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:breezy",
+  "disambiguated_at": "2026-02-17T00:12:11.684678072Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

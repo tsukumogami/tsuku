@@ -1,0 +1,33 @@
+{
+  "tool": "toxiproxy",
+  "selected": "rubygems:toxiproxy",
+  "alternatives": [
+    "homebrew:toxiproxy"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 4873.208806818182,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:toxiproxy",
+      "downloads": 704,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:toxiproxy",
+      "downloads": 3430739,
+      "version_count": 12,
+      "has_repository": true
+    },
+    {
+      "source": "npm:toxiproxy",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:toxiproxy",
+  "disambiguated_at": "2026-02-17T00:29:53.658558423Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,39 @@
+{
+  "tool": "lzip",
+  "selected": "homebrew:lzip",
+  "alternatives": [
+    "pypi:lzip",
+    "npm:lzip"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:lzip",
+      "downloads": 193090,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:lzip",
+      "downloads": 17,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:lzip",
+      "downloads": 0,
+      "version_count": 11,
+      "has_repository": true
+    },
+    {
+      "source": "npm:lzip",
+      "downloads": 0,
+      "version_count": 10,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:lzip",
+  "disambiguated_at": "2026-02-17T00:21:44.38769733Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

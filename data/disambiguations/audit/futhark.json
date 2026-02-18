@@ -1,0 +1,24 @@
+{
+  "tool": "futhark",
+  "selected": "homebrew:futhark",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:futhark",
+      "downloads": 1887,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:futhark",
+      "downloads": 4,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:futhark",
+  "disambiguated_at": "2026-02-17T00:16:21.656130867Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

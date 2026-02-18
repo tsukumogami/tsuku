@@ -1,0 +1,48 @@
+{
+  "tool": "gsl",
+  "selected": "rubygems:gsl",
+  "alternatives": [
+    "homebrew:gsl",
+    "crates.io:gsl",
+    "npm:gsl",
+    "pypi:gsl"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 35.37474741643092,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "pypi:gsl",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:gsl",
+      "downloads": 10176,
+      "version_count": 35,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:gsl",
+      "downloads": 17321,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:gsl",
+      "downloads": 612726,
+      "version_count": 11,
+      "has_repository": true
+    },
+    {
+      "source": "npm:gsl",
+      "downloads": 20,
+      "version_count": 9,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:gsl",
+  "disambiguated_at": "2026-02-17T00:17:45.256077797Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

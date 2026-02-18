@@ -1,0 +1,27 @@
+{
+  "tool": "bulletty",
+  "selected": "crates.io:bulletty",
+  "alternatives": [
+    "homebrew:bulletty"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.2196969696969697,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:bulletty",
+      "downloads": 132,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:bulletty",
+      "downloads": 293,
+      "version_count": 12,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:bulletty",
+  "disambiguated_at": "2026-02-17T00:12:22.781538894Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

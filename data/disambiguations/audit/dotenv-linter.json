@@ -1,0 +1,41 @@
+{
+  "tool": "dotenv-linter",
+  "selected": "crates.io:dotenv-linter",
+  "alternatives": [
+    "homebrew:dotenv-linter",
+    "pypi:dotenv-linter",
+    "npm:dotenv-linter"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 14.679948586118252,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:dotenv-linter",
+      "downloads": 778,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:dotenv-linter",
+      "downloads": 11421,
+      "version_count": 14,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:dotenv-linter",
+      "downloads": 0,
+      "version_count": 13,
+      "has_repository": true
+    },
+    {
+      "source": "npm:dotenv-linter",
+      "downloads": 0,
+      "version_count": 6,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:dotenv-linter",
+  "disambiguated_at": "2026-02-17T00:14:46.296763209Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

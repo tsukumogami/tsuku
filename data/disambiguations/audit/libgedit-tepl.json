@@ -1,0 +1,18 @@
+{
+  "tool": "libgedit-tepl",
+  "selected": "homebrew:libgedit-tepl",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:libgedit-tepl",
+      "downloads": 5939,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:libgedit-tepl",
+  "disambiguated_at": "2026-02-17T00:20:36.105720583Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

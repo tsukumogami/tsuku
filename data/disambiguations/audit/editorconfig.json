@@ -1,0 +1,48 @@
+{
+  "tool": "editorconfig",
+  "selected": "rubygems:editorconfig",
+  "alternatives": [
+    "homebrew:editorconfig",
+    "crates.io:editorconfig",
+    "npm:editorconfig",
+    "pypi:editorconfig"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 11.574154852780808,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:editorconfig",
+      "downloads": 127,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:editorconfig",
+      "downloads": 1834,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:editorconfig",
+      "downloads": 0,
+      "version_count": 14,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:editorconfig",
+      "downloads": 21227,
+      "version_count": 4,
+      "has_repository": false
+    },
+    {
+      "source": "npm:editorconfig",
+      "downloads": 0,
+      "version_count": 28,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:editorconfig",
+  "disambiguated_at": "2026-02-17T00:15:08.848662623Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

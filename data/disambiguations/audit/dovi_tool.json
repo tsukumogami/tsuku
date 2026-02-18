@@ -1,0 +1,18 @@
+{
+  "tool": "dovi_tool",
+  "selected": "homebrew:dovi_tool",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:dovi_tool",
+      "downloads": 985,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:dovi_tool",
+  "disambiguated_at": "2026-02-17T00:14:48.865752108Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

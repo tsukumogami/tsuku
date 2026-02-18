@@ -1,0 +1,18 @@
+{
+  "tool": "osv-scanner",
+  "selected": "homebrew:osv-scanner",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:osv-scanner",
+      "downloads": 13148,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:osv-scanner",
+  "disambiguated_at": "2026-02-17T00:24:36.931088527Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

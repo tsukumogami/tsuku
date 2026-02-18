@@ -1,0 +1,27 @@
+{
+  "tool": "gtksourceview4",
+  "selected": "rubygems:gtksourceview4",
+  "alternatives": [
+    "homebrew:gtksourceview4"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 9.587431693989071,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:gtksourceview4",
+      "downloads": 7686,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:gtksourceview4",
+      "downloads": 73689,
+      "version_count": 61,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:gtksourceview4",
+  "disambiguated_at": "2026-02-17T00:17:50.032114071Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,32 @@
+{
+  "tool": "pyinstaller",
+  "selected": "homebrew:pyinstaller",
+  "alternatives": [
+    "pypi:pyinstaller"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:pyinstaller",
+      "downloads": 6843,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:pyinstaller",
+      "downloads": 0,
+      "version_count": 70,
+      "has_repository": true
+    },
+    {
+      "source": "npm:pyinstaller",
+      "downloads": 51,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:pyinstaller",
+  "disambiguated_at": "2026-02-17T00:26:01.930211159Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

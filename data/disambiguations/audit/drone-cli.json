@@ -1,0 +1,18 @@
+{
+  "tool": "drone-cli",
+  "selected": "homebrew:drone-cli",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:drone-cli",
+      "downloads": 921,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:drone-cli",
+  "disambiguated_at": "2026-02-17T00:14:51.095535092Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

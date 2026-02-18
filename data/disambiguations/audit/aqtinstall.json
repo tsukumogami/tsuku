@@ -1,0 +1,26 @@
+{
+  "tool": "aqtinstall",
+  "selected": "homebrew:aqtinstall",
+  "alternatives": [
+    "pypi:aqtinstall"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:aqtinstall",
+      "downloads": 670,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:aqtinstall",
+      "downloads": 0,
+      "version_count": 122,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:aqtinstall",
+  "disambiguated_at": "2026-02-17T00:10:52.655816634Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,26 @@
+{
+  "tool": "docker-squash",
+  "selected": "homebrew:docker-squash",
+  "alternatives": [
+    "pypi:docker-squash"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:docker-squash",
+      "downloads": 704,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:docker-squash",
+      "downloads": 0,
+      "version_count": 21,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:docker-squash",
+  "disambiguated_at": "2026-02-17T00:14:39.650894527Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,38 @@
+{
+  "tool": "scrapy",
+  "selected": "homebrew:scrapy",
+  "alternatives": [
+    "pypi:scrapy"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:scrapy",
+      "downloads": 10,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:scrapy",
+      "downloads": 2237,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:scrapy",
+      "downloads": 0,
+      "version_count": 107,
+      "has_repository": true
+    },
+    {
+      "source": "npm:scrapy",
+      "downloads": 13,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:scrapy",
+  "disambiguated_at": "2026-02-17T00:27:34.733630585Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

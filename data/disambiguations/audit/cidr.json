@@ -1,0 +1,40 @@
+{
+  "tool": "cidr",
+  "selected": "crates.io:cidr",
+  "alternatives": [
+    "rubygems:cidr",
+    "homebrew:cidr"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 953.2483006797281,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:cidr",
+      "downloads": 420,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:cidr",
+      "downloads": 4768148,
+      "version_count": 13,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:cidr",
+      "downloads": 5002,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:cidr",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:cidr",
+  "disambiguated_at": "2026-02-17T00:13:03.814442345Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

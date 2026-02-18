@@ -1,0 +1,47 @@
+{
+  "tool": "yap",
+  "selected": "crates.io:yap",
+  "alternatives": [
+    "rubygems:yap",
+    "homebrew:yap",
+    "pypi:yap"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 17.71621985116112,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:yap",
+      "downloads": 592767,
+      "version_count": 19,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:yap",
+      "downloads": 112,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:yap",
+      "downloads": 0,
+      "version_count": 11,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:yap",
+      "downloads": 33459,
+      "version_count": 14,
+      "has_repository": true
+    },
+    {
+      "source": "npm:yap",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:yap",
+  "disambiguated_at": "2026-02-17T00:31:36.854948187Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

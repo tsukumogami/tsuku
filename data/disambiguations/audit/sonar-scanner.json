@@ -1,0 +1,27 @@
+{
+  "tool": "sonar-scanner",
+  "selected": "npm:sonar-scanner",
+  "alternatives": [
+    "homebrew:sonar-scanner"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.816375961372108,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:sonar-scanner",
+      "downloads": 63581,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:sonar-scanner",
+      "downloads": 179068,
+      "version_count": 4,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:sonar-scanner",
+  "disambiguated_at": "2026-02-17T00:28:20.37314271Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

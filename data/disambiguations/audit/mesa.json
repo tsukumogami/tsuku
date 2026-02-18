@@ -1,0 +1,41 @@
+{
+  "tool": "mesa",
+  "selected": "homebrew:mesa",
+  "alternatives": [
+    "crates.io:mesa",
+    "pypi:mesa",
+    "npm:mesa"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 47.808522727272724,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:mesa",
+      "downloads": 84143,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:mesa",
+      "downloads": 0,
+      "version_count": 86,
+      "has_repository": true
+    },
+    {
+      "source": "npm:mesa",
+      "downloads": 0,
+      "version_count": 37,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:mesa",
+      "downloads": 1760,
+      "version_count": 350,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:mesa",
+  "disambiguated_at": "2026-02-17T00:22:22.316227292Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,47 @@
+{
+  "tool": "fiona",
+  "selected": "rubygems:fiona",
+  "alternatives": [
+    "homebrew:fiona",
+    "npm:fiona",
+    "pypi:fiona"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 38.240868706811455,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:fiona",
+      "downloads": 1013,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:fiona",
+      "downloads": 8,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:fiona",
+      "downloads": 0,
+      "version_count": 117,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:fiona",
+      "downloads": 38738,
+      "version_count": 10,
+      "has_repository": false
+    },
+    {
+      "source": "npm:fiona",
+      "downloads": 75,
+      "version_count": 49,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:fiona",
+  "disambiguated_at": "2026-02-17T00:15:54.589460841Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

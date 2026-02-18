@@ -1,0 +1,24 @@
+{
+  "tool": "cp2k",
+  "selected": "homebrew:cp2k",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:cp2k",
+      "downloads": 601,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:cp2k",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:cp2k",
+  "disambiguated_at": "2026-02-17T00:13:44.958684786Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

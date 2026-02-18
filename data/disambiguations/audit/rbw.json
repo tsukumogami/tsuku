@@ -1,0 +1,33 @@
+{
+  "tool": "rbw",
+  "selected": "homebrew:rbw",
+  "alternatives": [
+    "crates.io:rbw"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.1288209606986899,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:rbw",
+      "downloads": 1034,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:rbw",
+      "downloads": 916,
+      "version_count": 53,
+      "has_repository": true
+    },
+    {
+      "source": "npm:rbw",
+      "downloads": 1,
+      "version_count": 4,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:rbw",
+  "disambiguated_at": "2026-02-17T00:26:40.844938042Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

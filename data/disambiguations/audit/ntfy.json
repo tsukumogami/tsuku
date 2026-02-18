@@ -1,0 +1,47 @@
+{
+  "tool": "ntfy",
+  "selected": "crates.io:ntfy",
+  "alternatives": [
+    "homebrew:ntfy",
+    "npm:ntfy",
+    "pypi:ntfy"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.0118559051527587,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:ntfy",
+      "downloads": 2219,
+      "version_count": 13,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:ntfy",
+      "downloads": 2193,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:ntfy",
+      "downloads": 0,
+      "version_count": 46,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:ntfy",
+      "downloads": 741,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "npm:ntfy",
+      "downloads": 0,
+      "version_count": 69,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:ntfy",
+  "disambiguated_at": "2026-02-17T00:23:44.467472033Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "argyll-cms",
+  "selected": "homebrew:argyll-cms",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:argyll-cms",
+      "downloads": 1325,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:argyll-cms",
+  "disambiguated_at": "2026-02-17T00:10:57.111556531Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,34 @@
+{
+  "tool": "zellij",
+  "selected": "homebrew:zellij",
+  "alternatives": [
+    "crates.io:zellij",
+    "pypi:zellij"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.7019988280487013,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:zellij",
+      "downloads": 41500,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:zellij",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:zellij",
+      "downloads": 15359,
+      "version_count": 76,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:zellij",
+  "disambiguated_at": "2026-02-17T00:31:47.328856066Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

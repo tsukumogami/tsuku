@@ -1,0 +1,26 @@
+{
+  "tool": "ejabberd",
+  "selected": "homebrew:ejabberd",
+  "alternatives": [
+    "npm:ejabberd"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:ejabberd",
+      "downloads": 697,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:ejabberd",
+      "downloads": 0,
+      "version_count": 18,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:ejabberd",
+  "disambiguated_at": "2026-02-17T00:15:11.847564916Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

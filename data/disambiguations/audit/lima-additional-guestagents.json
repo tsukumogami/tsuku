@@ -1,0 +1,18 @@
+{
+  "tool": "lima-additional-guestagents",
+  "selected": "homebrew:lima-additional-guestagents",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:lima-additional-guestagents",
+      "downloads": 12691,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:lima-additional-guestagents",
+  "disambiguated_at": "2026-02-17T00:21:21.530474053Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

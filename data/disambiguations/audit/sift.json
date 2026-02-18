@@ -1,0 +1,47 @@
+{
+  "tool": "sift",
+  "selected": "rubygems:sift",
+  "alternatives": [
+    "npm:sift",
+    "homebrew:sift",
+    "pypi:sift"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.1657589307559133,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:sift",
+      "downloads": 0,
+      "version_count": 32,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:sift",
+      "downloads": 153,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:sift",
+      "downloads": 6,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:sift",
+      "downloads": 5003006,
+      "version_count": 27,
+      "has_repository": false
+    },
+    {
+      "source": "npm:sift",
+      "downloads": 4291630,
+      "version_count": 155,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:sift",
+  "disambiguated_at": "2026-02-17T00:28:02.724206532Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

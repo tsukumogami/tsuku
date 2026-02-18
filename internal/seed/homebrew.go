@@ -16,7 +16,8 @@ const (
 	maxRetries           = 3
 )
 
-// Tier 1: curated high-impact developer tools.
+// tier1Formulas is the curated set of high-impact developer tools.
+// Shared across all ecosystems for tier assignment.
 var tier1Formulas = map[string]bool{
 	"ripgrep": true, "fd": true, "bat": true, "eza": true,
 	"hyperfine": true, "tokei": true, "delta": true,
@@ -30,6 +31,11 @@ var tier1Formulas = map[string]bool{
 	"wget": true, "curl": true,
 	"neovim": true, "vim": true,
 	"sqlite": true,
+}
+
+// IsTier1 reports whether name is in the curated tier-1 formula set.
+func IsTier1(name string) bool {
+	return tier1Formulas[name]
 }
 
 // HomebrewSource fetches package candidates from Homebrew analytics.

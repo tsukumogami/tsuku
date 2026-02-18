@@ -1,0 +1,18 @@
+{
+  "tool": "acme.sh",
+  "selected": "homebrew:acme.sh",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:acme.sh",
+      "downloads": 566,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:acme.sh",
+  "disambiguated_at": "2026-02-17T00:10:20.175639001Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

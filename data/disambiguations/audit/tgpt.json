@@ -1,0 +1,39 @@
+{
+  "tool": "tgpt",
+  "selected": "homebrew:tgpt",
+  "alternatives": [
+    "crates.io:tgpt"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 45.18181818181818,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:tgpt",
+      "downloads": 994,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:tgpt",
+      "downloads": 22,
+      "version_count": 7,
+      "has_repository": false
+    },
+    {
+      "source": "pypi:tgpt",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "npm:tgpt",
+      "downloads": 9,
+      "version_count": 3,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:tgpt",
+  "disambiguated_at": "2026-02-17T00:29:36.398129874Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

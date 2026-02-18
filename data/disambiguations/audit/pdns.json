@@ -1,0 +1,41 @@
+{
+  "tool": "pdns",
+  "selected": "rubygems:pdns",
+  "alternatives": [
+    "homebrew:pdns",
+    "npm:pdns",
+    "pypi:pdns"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 53.031510658016686,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:pdns",
+      "downloads": 1079,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:pdns",
+      "downloads": 0,
+      "version_count": 7,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:pdns",
+      "downloads": 57221,
+      "version_count": 12,
+      "has_repository": false
+    },
+    {
+      "source": "npm:pdns",
+      "downloads": 0,
+      "version_count": 10,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:pdns",
+  "disambiguated_at": "2026-02-17T00:24:57.606392839Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

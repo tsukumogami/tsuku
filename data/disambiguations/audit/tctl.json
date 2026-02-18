@@ -1,0 +1,18 @@
+{
+  "tool": "tctl",
+  "selected": "pypi:tctl",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "pypi:tctl",
+      "downloads": 0,
+      "version_count": 45,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:tctl",
+  "disambiguated_at": "2026-02-17T00:29:20.474941246Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

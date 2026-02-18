@@ -1,0 +1,48 @@
+{
+  "tool": "opensearch",
+  "selected": "crates.io:opensearch",
+  "alternatives": [
+    "rubygems:opensearch",
+    "homebrew:opensearch",
+    "npm:opensearch",
+    "pypi:opensearch"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 6.1864070241911975,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:opensearch",
+      "downloads": 6497,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:opensearch",
+      "downloads": 0,
+      "version_count": 11,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:opensearch",
+      "downloads": 339609,
+      "version_count": 6,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:opensearch",
+      "downloads": 54896,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:opensearch",
+      "downloads": 735,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:opensearch",
+  "disambiguated_at": "2026-02-17T00:24:14.90754609Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

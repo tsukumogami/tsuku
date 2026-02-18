@@ -1,0 +1,34 @@
+{
+  "tool": "carthage",
+  "selected": "homebrew:carthage",
+  "alternatives": [
+    "npm:carthage",
+    "pypi:carthage"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 21.098540145985403,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:carthage",
+      "downloads": 23124,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:carthage",
+      "downloads": 0,
+      "version_count": 7,
+      "has_repository": true
+    },
+    {
+      "source": "npm:carthage",
+      "downloads": 1096,
+      "version_count": 7,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:carthage",
+  "disambiguated_at": "2026-02-17T00:12:39.073053473Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

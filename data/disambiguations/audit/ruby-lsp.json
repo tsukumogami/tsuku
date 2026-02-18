@@ -1,0 +1,33 @@
+{
+  "tool": "ruby-lsp",
+  "selected": "rubygems:ruby-lsp",
+  "alternatives": [
+    "homebrew:ruby-lsp"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 14817.500835654597,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:ruby-lsp",
+      "downloads": 1795,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:ruby-lsp",
+      "downloads": 26597414,
+      "version_count": 145,
+      "has_repository": false
+    },
+    {
+      "source": "npm:ruby-lsp",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:ruby-lsp",
+  "disambiguated_at": "2026-02-17T00:27:13.025983163Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

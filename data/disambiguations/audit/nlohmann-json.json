@@ -1,0 +1,32 @@
+{
+  "tool": "nlohmann-json",
+  "selected": "homebrew:nlohmann-json",
+  "alternatives": [
+    "pypi:nlohmann-json"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:nlohmann-json",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:nlohmann-json",
+      "downloads": 60769,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:nlohmann-json",
+      "downloads": 6,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:nlohmann-json",
+  "disambiguated_at": "2026-02-17T00:23:34.34300749Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,27 @@
+{
+  "tool": "ceres-solver",
+  "selected": "homebrew:ceres-solver",
+  "alternatives": [
+    "crates.io:ceres-solver"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 8.310757946210268,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:ceres-solver",
+      "downloads": 33991,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:ceres-solver",
+      "downloads": 4090,
+      "version_count": 16,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:ceres-solver",
+  "disambiguated_at": "2026-02-17T00:12:46.798501229Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

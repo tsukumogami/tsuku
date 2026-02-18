@@ -1,0 +1,27 @@
+{
+  "tool": "rip2",
+  "selected": "homebrew:rip2",
+  "alternatives": [
+    "crates.io:rip2"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.836734693877551,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:rip2",
+      "downloads": 450,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:rip2",
+      "downloads": 245,
+      "version_count": 21,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:rip2",
+  "disambiguated_at": "2026-02-17T00:26:59.404478585Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

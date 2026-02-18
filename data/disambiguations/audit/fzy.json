@@ -1,0 +1,39 @@
+{
+  "tool": "fzy",
+  "selected": "rubygems:fzy",
+  "alternatives": [
+    "homebrew:fzy"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.8967391304347827,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:fzy",
+      "downloads": 1104,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:fzy",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "rubygems:fzy",
+      "downloads": 4302,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "npm:fzy",
+      "downloads": 2,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:fzy",
+  "disambiguated_at": "2026-02-17T00:16:23.236679087Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

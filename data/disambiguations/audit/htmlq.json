@@ -1,0 +1,33 @@
+{
+  "tool": "htmlq",
+  "selected": "crates.io:htmlq",
+  "alternatives": [
+    "homebrew:htmlq"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.5634517766497462,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:htmlq",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:htmlq",
+      "downloads": 1773,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:htmlq",
+      "downloads": 2772,
+      "version_count": 4,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:htmlq",
+  "disambiguated_at": "2026-02-17T00:18:25.009673936Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

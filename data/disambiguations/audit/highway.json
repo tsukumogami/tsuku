@@ -1,0 +1,48 @@
+{
+  "tool": "highway",
+  "selected": "homebrew:highway",
+  "alternatives": [
+    "crates.io:highway",
+    "rubygems:highway",
+    "npm:highway",
+    "pypi:highway"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.6661527676371601,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:highway",
+      "downloads": 572785,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:highway",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:highway",
+      "downloads": 49627,
+      "version_count": 9,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:highway",
+      "downloads": 343777,
+      "version_count": 21,
+      "has_repository": true
+    },
+    {
+      "source": "npm:highway",
+      "downloads": 0,
+      "version_count": 5,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:highway",
+  "disambiguated_at": "2026-02-17T00:18:17.427658983Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

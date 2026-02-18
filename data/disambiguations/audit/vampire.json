@@ -1,0 +1,45 @@
+{
+  "tool": "vampire",
+  "selected": "rubygems:vampire",
+  "alternatives": [
+    "homebrew:vampire"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 63.34920634920635,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:vampire",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:vampire",
+      "downloads": 63,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:vampire",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:vampire",
+      "downloads": 3991,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:vampire",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:vampire",
+  "disambiguated_at": "2026-02-17T00:30:34.419845472Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

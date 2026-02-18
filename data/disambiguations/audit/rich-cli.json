@@ -1,0 +1,32 @@
+{
+  "tool": "rich-cli",
+  "selected": "homebrew:rich-cli",
+  "alternatives": [
+    "pypi:rich-cli"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:rich-cli",
+      "downloads": 0,
+      "version_count": 18,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:rich-cli",
+      "downloads": 3833,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:rich-cli",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:rich-cli",
+  "disambiguated_at": "2026-02-17T00:26:57.821490333Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,26 @@
+{
+  "tool": "gimme-aws-creds",
+  "selected": "homebrew:gimme-aws-creds",
+  "alternatives": [
+    "pypi:gimme-aws-creds"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:gimme-aws-creds",
+      "downloads": 0,
+      "version_count": 40,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:gimme-aws-creds",
+      "downloads": 5212,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:gimme-aws-creds",
+  "disambiguated_at": "2026-02-17T00:16:45.265769841Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

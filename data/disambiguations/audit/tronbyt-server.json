@@ -1,0 +1,18 @@
+{
+  "tool": "tronbyt-server",
+  "selected": "homebrew:tronbyt-server",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:tronbyt-server",
+      "downloads": 201,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:tronbyt-server",
+  "disambiguated_at": "2026-02-17T00:30:00.837197007Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

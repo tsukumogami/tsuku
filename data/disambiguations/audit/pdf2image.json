@@ -1,0 +1,48 @@
+{
+  "tool": "pdf2image",
+  "selected": "crates.io:pdf2image",
+  "alternatives": [
+    "rubygems:pdf2image",
+    "npm:pdf2image",
+    "homebrew:pdf2image",
+    "pypi:pdf2image"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.026949950092685,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:pdf2image",
+      "downloads": 862,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:pdf2image",
+      "downloads": 7202,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:pdf2image",
+      "downloads": 0,
+      "version_count": 45,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:pdf2image",
+      "downloads": 7013,
+      "version_count": 3,
+      "has_repository": false
+    },
+    {
+      "source": "npm:pdf2image",
+      "downloads": 1511,
+      "version_count": 9,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:pdf2image",
+  "disambiguated_at": "2026-02-17T00:24:54.517973912Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

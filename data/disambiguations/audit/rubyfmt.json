@@ -1,0 +1,33 @@
+{
+  "tool": "rubyfmt",
+  "selected": "rubygems:rubyfmt",
+  "alternatives": [
+    "homebrew:rubyfmt"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 4.125407166123779,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:rubyfmt",
+      "downloads": 1842,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:rubyfmt",
+      "downloads": 7,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "rubygems:rubyfmt",
+      "downloads": 7599,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:rubyfmt",
+  "disambiguated_at": "2026-02-17T00:27:14.423075998Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

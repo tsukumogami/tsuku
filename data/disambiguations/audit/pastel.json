@@ -1,0 +1,48 @@
+{
+  "tool": "pastel",
+  "selected": "rubygems:pastel",
+  "alternatives": [
+    "crates.io:pastel",
+    "homebrew:pastel",
+    "npm:pastel",
+    "pypi:pastel"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 3962.0468494353327,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:pastel",
+      "downloads": 1329,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:pastel",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:pastel",
+      "downloads": 25059,
+      "version_count": 13,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:pastel",
+      "downloads": 99284932,
+      "version_count": 17,
+      "has_repository": true
+    },
+    {
+      "source": "npm:pastel",
+      "downloads": 0,
+      "version_count": 11,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:pastel",
+  "disambiguated_at": "2026-02-17T00:24:50.165091627Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

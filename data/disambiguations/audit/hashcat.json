@@ -1,0 +1,33 @@
+{
+  "tool": "hashcat",
+  "selected": "homebrew:hashcat",
+  "alternatives": [
+    "pypi:hashcat",
+    "npm:hashcat"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:hashcat",
+      "downloads": 0,
+      "version_count": 22,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:hashcat",
+      "downloads": 20648,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:hashcat",
+      "downloads": 0,
+      "version_count": 14,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:hashcat",
+  "disambiguated_at": "2026-02-17T00:18:01.31585761Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

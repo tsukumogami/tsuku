@@ -1,0 +1,46 @@
+{
+  "tool": "cql",
+  "selected": "rubygems:cql",
+  "alternatives": [
+    "homebrew:cql",
+    "pypi:cql"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 449.7857142857143,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:cql",
+      "downloads": 34,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:cql",
+      "downloads": 490,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:cql",
+      "downloads": 0,
+      "version_count": 12,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:cql",
+      "downloads": 220395,
+      "version_count": 27,
+      "has_repository": true
+    },
+    {
+      "source": "npm:cql",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:cql",
+  "disambiguated_at": "2026-02-17T00:13:49.133506754Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

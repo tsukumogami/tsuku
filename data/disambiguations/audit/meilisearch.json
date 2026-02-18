@@ -1,0 +1,47 @@
+{
+  "tool": "meilisearch",
+  "selected": "rubygems:meilisearch",
+  "alternatives": [
+    "npm:meilisearch",
+    "homebrew:meilisearch",
+    "pypi:meilisearch"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.868419336165217,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:meilisearch",
+      "downloads": 32,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:meilisearch",
+      "downloads": 5933,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:meilisearch",
+      "downloads": 0,
+      "version_count": 64,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:meilisearch",
+      "downloads": 948931,
+      "version_count": 51,
+      "has_repository": true
+    },
+    {
+      "source": "npm:meilisearch",
+      "downloads": 245302,
+      "version_count": 106,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:meilisearch",
+  "disambiguated_at": "2026-02-17T00:22:18.330929228Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

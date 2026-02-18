@@ -1,0 +1,27 @@
+{
+  "tool": "arcadedb",
+  "selected": "rubygems:arcadedb",
+  "alternatives": [
+    "homebrew:arcadedb"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 51.78787878787879,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:arcadedb",
+      "downloads": 66,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:arcadedb",
+      "downloads": 3418,
+      "version_count": 5,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:arcadedb",
+  "disambiguated_at": "2026-02-17T00:10:54.377422492Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

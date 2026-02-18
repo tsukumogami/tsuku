@@ -1,0 +1,39 @@
+{
+  "tool": "klee",
+  "selected": "rubygems:klee",
+  "alternatives": [
+    "homebrew:klee"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.309933774834437,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:klee",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:klee",
+      "downloads": 755,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:klee",
+      "downloads": 1744,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "npm:klee",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:klee",
+  "disambiguated_at": "2026-02-17T00:19:49.992430128Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "php-code-sniffer",
+  "selected": "homebrew:php-code-sniffer",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:php-code-sniffer",
+      "downloads": 4344,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:php-code-sniffer",
+  "disambiguated_at": "2026-02-17T00:25:07.172726059Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

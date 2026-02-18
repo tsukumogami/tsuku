@@ -1,0 +1,26 @@
+{
+  "tool": "dvr-scan",
+  "selected": "homebrew:dvr-scan",
+  "alternatives": [
+    "pypi:dvr-scan"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:dvr-scan",
+      "downloads": 0,
+      "version_count": 18,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:dvr-scan",
+      "downloads": 1252,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:dvr-scan",
+  "disambiguated_at": "2026-02-17T00:14:59.352568305Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

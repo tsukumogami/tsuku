@@ -1,0 +1,46 @@
+{
+  "tool": "check",
+  "selected": "rubygems:check",
+  "alternatives": [
+    "homebrew:check",
+    "crates.io:check"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 7.49738219895288,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:check",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:check",
+      "downloads": 1910,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:check",
+      "downloads": 340,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "npm:check",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:check",
+      "downloads": 14320,
+      "version_count": 2,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:check",
+  "disambiguated_at": "2026-02-17T00:12:55.599395805Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

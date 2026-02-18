@@ -1,0 +1,33 @@
+{
+  "tool": "basedpyright",
+  "selected": "homebrew:basedpyright",
+  "alternatives": [
+    "npm:basedpyright",
+    "pypi:basedpyright"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:basedpyright",
+      "downloads": 0,
+      "version_count": 102,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:basedpyright",
+      "downloads": 7392,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:basedpyright",
+      "downloads": 0,
+      "version_count": 1472,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:basedpyright",
+  "disambiguated_at": "2026-02-17T00:11:42.66987301Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

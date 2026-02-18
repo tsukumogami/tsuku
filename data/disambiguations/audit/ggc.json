@@ -1,0 +1,38 @@
+{
+  "tool": "ggc",
+  "selected": "homebrew:ggc",
+  "alternatives": [
+    "pypi:ggc"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:ggc",
+      "downloads": 11,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:ggc",
+      "downloads": 752,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:ggc",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "npm:ggc",
+      "downloads": 1,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:ggc",
+  "disambiguated_at": "2026-02-17T00:16:39.445671916Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,27 @@
+{
+  "tool": "soapysdr",
+  "selected": "crates.io:soapysdr",
+  "alternatives": [
+    "homebrew:soapysdr"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.460197119029568,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:soapysdr",
+      "downloads": 2638,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:soapysdr",
+      "downloads": 9128,
+      "version_count": 12,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:soapysdr",
+  "disambiguated_at": "2026-02-17T00:28:17.260030269Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,47 @@
+{
+  "tool": "nano",
+  "selected": "npm:nano",
+  "alternatives": [
+    "homebrew:nano",
+    "rubygems:nano",
+    "pypi:nano"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.8154196116662604,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:nano",
+      "downloads": 15,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:nano",
+      "downloads": 0,
+      "version_count": 23,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:nano",
+      "downloads": 36927,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:nano",
+      "downloads": 15238,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "npm:nano",
+      "downloads": 67038,
+      "version_count": 160,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:nano",
+  "disambiguated_at": "2026-02-17T00:23:09.510706851Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

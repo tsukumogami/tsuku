@@ -1,0 +1,45 @@
+{
+  "tool": "logrotate",
+  "selected": "rubygems:logrotate",
+  "alternatives": [
+    "homebrew:logrotate"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 164.1310924369748,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:logrotate",
+      "downloads": 1190,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:logrotate",
+      "downloads": 12,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:logrotate",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:logrotate",
+      "downloads": 195316,
+      "version_count": 4,
+      "has_repository": false
+    },
+    {
+      "source": "npm:logrotate",
+      "downloads": 18,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:logrotate",
+  "disambiguated_at": "2026-02-17T00:21:34.598861503Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

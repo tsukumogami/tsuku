@@ -1,0 +1,48 @@
+{
+  "tool": "mold",
+  "selected": "rubygems:mold",
+  "alternatives": [
+    "homebrew:mold",
+    "crates.io:mold",
+    "npm:mold",
+    "pypi:mold"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.7058080808080809,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:mold",
+      "downloads": 4752,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:mold",
+      "downloads": 208,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:mold",
+      "downloads": 0,
+      "version_count": 6,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:mold",
+      "downloads": 8106,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "npm:mold",
+      "downloads": 4,
+      "version_count": 11,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:mold",
+  "disambiguated_at": "2026-02-17T00:22:42.632396705Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

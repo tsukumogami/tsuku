@@ -1,0 +1,26 @@
+{
+  "tool": "storj-uplink",
+  "selected": "homebrew:storj-uplink",
+  "alternatives": [
+    "pypi:storj-uplink"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:storj-uplink",
+      "downloads": 1256,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:storj-uplink",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:storj-uplink",
+  "disambiguated_at": "2026-02-17T00:28:51.560278271Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

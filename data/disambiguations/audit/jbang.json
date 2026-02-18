@@ -1,0 +1,34 @@
+{
+  "tool": "jbang",
+  "selected": "homebrew:jbang",
+  "alternatives": [
+    "npm:jbang",
+    "pypi:jbang"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 4.120713305898491,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:jbang",
+      "downloads": 3004,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:jbang",
+      "downloads": 0,
+      "version_count": 14,
+      "has_repository": true
+    },
+    {
+      "source": "npm:jbang",
+      "downloads": 729,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:jbang",
+  "disambiguated_at": "2026-02-17T00:19:09.53773372Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

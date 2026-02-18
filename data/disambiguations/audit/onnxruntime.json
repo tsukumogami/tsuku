@@ -1,0 +1,48 @@
+{
+  "tool": "onnxruntime",
+  "selected": "rubygems:onnxruntime",
+  "alternatives": [
+    "homebrew:onnxruntime",
+    "crates.io:onnxruntime",
+    "pypi:onnxruntime",
+    "npm:onnxruntime"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 327.77556572276495,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:onnxruntime",
+      "downloads": 3831,
+      "version_count": 13,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:onnxruntime",
+      "downloads": 8087,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:onnxruntime",
+      "downloads": 0,
+      "version_count": 53,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:onnxruntime",
+      "downloads": 2650721,
+      "version_count": 118,
+      "has_repository": false
+    },
+    {
+      "source": "npm:onnxruntime",
+      "downloads": 0,
+      "version_count": 13,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:onnxruntime",
+  "disambiguated_at": "2026-02-17T00:23:59.60615081Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

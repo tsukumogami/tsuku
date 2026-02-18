@@ -1,0 +1,47 @@
+{
+  "tool": "rain",
+  "selected": "rubygems:rain",
+  "alternatives": [
+    "homebrew:rain",
+    "crates.io:rain",
+    "npm:rain"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.8265625,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:rain",
+      "downloads": 8960,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:rain",
+      "downloads": 84,
+      "version_count": 8,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:rain",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:rain",
+      "downloads": 25326,
+      "version_count": 8,
+      "has_repository": true
+    },
+    {
+      "source": "npm:rain",
+      "downloads": 22,
+      "version_count": 56,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:rain",
+  "disambiguated_at": "2026-02-17T00:26:34.771557191Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,27 @@
+{
+  "tool": "airspy",
+  "selected": "homebrew:airspy",
+  "alternatives": [
+    "crates.io:airspy"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.34,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:airspy",
+      "downloads": 150,
+      "version_count": 5,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:airspy",
+      "downloads": 501,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:airspy",
+  "disambiguated_at": "2026-02-17T00:10:31.064698865Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

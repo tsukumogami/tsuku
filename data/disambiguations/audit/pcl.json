@@ -1,0 +1,36 @@
+{
+  "tool": "pcl",
+  "selected": "homebrew:pcl",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:pcl",
+      "downloads": 13,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:pcl",
+      "downloads": 4859,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:pcl",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "npm:pcl",
+      "downloads": 1,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:pcl",
+  "disambiguated_at": "2026-02-17T00:24:52.869311108Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,33 @@
+{
+  "tool": "khal",
+  "selected": "homebrew:khal",
+  "alternatives": [
+    "pypi:khal",
+    "npm:khal"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:khal",
+      "downloads": 1113,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:khal",
+      "downloads": 0,
+      "version_count": 38,
+      "has_repository": true
+    },
+    {
+      "source": "npm:khal",
+      "downloads": 0,
+      "version_count": 19,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:khal",
+  "disambiguated_at": "2026-02-17T00:19:46.12090262Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

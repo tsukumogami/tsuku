@@ -1,0 +1,33 @@
+{
+  "tool": "btcli",
+  "selected": "homebrew:btcli",
+  "alternatives": [
+    "crates.io:btcli"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 8.719424460431656,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:btcli",
+      "downloads": 1212,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:btcli",
+      "downloads": 139,
+      "version_count": 10,
+      "has_repository": true
+    },
+    {
+      "source": "npm:btcli",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:btcli",
+  "disambiguated_at": "2026-02-17T00:12:16.281788622Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

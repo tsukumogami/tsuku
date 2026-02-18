@@ -1,0 +1,26 @@
+{
+  "tool": "potrace",
+  "selected": "homebrew:potrace",
+  "alternatives": [
+    "npm:potrace"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:potrace",
+      "downloads": 9093,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:potrace",
+      "downloads": 0,
+      "version_count": 10,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:potrace",
+  "disambiguated_at": "2026-02-17T00:25:35.108852636Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,26 @@
+{
+  "tool": "check-jsonschema",
+  "selected": "homebrew:check-jsonschema",
+  "alternatives": [
+    "pypi:check-jsonschema"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:check-jsonschema",
+      "downloads": 9896,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:check-jsonschema",
+      "downloads": 0,
+      "version_count": 92,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:check-jsonschema",
+  "disambiguated_at": "2026-02-17T00:12:55.840769212Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

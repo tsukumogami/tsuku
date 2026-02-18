@@ -1,0 +1,47 @@
+{
+  "tool": "copa",
+  "selected": "rubygems:copa",
+  "alternatives": [
+    "homebrew:copa",
+    "crates.io:copa",
+    "npm:copa"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.9656094764998089,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:copa",
+      "downloads": 2617,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:copa",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "crates.io:copa",
+      "downloads": 1006,
+      "version_count": 76,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:copa",
+      "downloads": 5144,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:copa",
+      "downloads": 0,
+      "version_count": 36,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:copa",
+  "disambiguated_at": "2026-02-17T00:13:39.996561435Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

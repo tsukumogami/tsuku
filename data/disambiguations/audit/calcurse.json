@@ -1,0 +1,18 @@
+{
+  "tool": "calcurse",
+  "selected": "homebrew:calcurse",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:calcurse",
+      "downloads": 687,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:calcurse",
+  "disambiguated_at": "2026-02-17T00:12:31.14278363Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

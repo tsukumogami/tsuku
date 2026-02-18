@@ -1,0 +1,24 @@
+{
+  "tool": "kubeshark",
+  "selected": "homebrew:kubeshark",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:kubeshark",
+      "downloads": 2756,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:kubeshark",
+      "downloads": 7,
+      "version_count": 2,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:kubeshark",
+  "disambiguated_at": "2026-02-17T00:20:06.29025835Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,47 @@
+{
+  "tool": "fabric",
+  "selected": "rubygems:fabric",
+  "alternatives": [
+    "homebrew:fabric",
+    "npm:fabric",
+    "pypi:fabric"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 53.98360655737705,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:fabric",
+      "downloads": 1220,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:fabric",
+      "downloads": 23,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:fabric",
+      "downloads": 0,
+      "version_count": 130,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:fabric",
+      "downloads": 65860,
+      "version_count": 13,
+      "has_repository": false
+    },
+    {
+      "source": "npm:fabric",
+      "downloads": 0,
+      "version_count": 326,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:fabric",
+  "disambiguated_at": "2026-02-17T00:15:33.021895227Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

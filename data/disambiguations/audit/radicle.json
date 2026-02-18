@@ -1,0 +1,34 @@
+{
+  "tool": "radicle",
+  "selected": "crates.io:radicle",
+  "alternatives": [
+    "homebrew:radicle",
+    "npm:radicle"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 39.333333333333336,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:radicle",
+      "downloads": 2124,
+      "version_count": 15,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:radicle",
+      "downloads": 54,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:radicle",
+      "downloads": 6,
+      "version_count": 11,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:radicle",
+  "disambiguated_at": "2026-02-17T00:26:33.686371555Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

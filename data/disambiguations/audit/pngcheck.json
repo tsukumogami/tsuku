@@ -1,0 +1,33 @@
+{
+  "tool": "pngcheck",
+  "selected": "rubygems:pngcheck",
+  "alternatives": [
+    "homebrew:pngcheck"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 95.53812154696132,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:pngcheck",
+      "downloads": 10,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:pngcheck",
+      "downloads": 1810,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:pngcheck",
+      "downloads": 172924,
+      "version_count": 64,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:pngcheck",
+  "disambiguated_at": "2026-02-17T00:25:24.892215854Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

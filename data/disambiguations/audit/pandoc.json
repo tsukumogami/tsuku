@@ -1,0 +1,48 @@
+{
+  "tool": "pandoc",
+  "selected": "homebrew:pandoc",
+  "alternatives": [
+    "crates.io:pandoc",
+    "rubygems:pandoc",
+    "npm:pandoc",
+    "pypi:pandoc"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 29.66453947995047,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:pandoc",
+      "downloads": 311448,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:pandoc",
+      "downloads": 10499,
+      "version_count": 27,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:pandoc",
+      "downloads": 0,
+      "version_count": 30,
+      "has_repository": false
+    },
+    {
+      "source": "rubygems:pandoc",
+      "downloads": 4318,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:pandoc",
+      "downloads": 809,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:pandoc",
+  "disambiguated_at": "2026-02-17T00:24:45.19300617Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

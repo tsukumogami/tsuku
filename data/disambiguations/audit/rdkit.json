@@ -1,0 +1,48 @@
+{
+  "tool": "rdkit",
+  "selected": "rubygems:rdkit",
+  "alternatives": [
+    "homebrew:rdkit",
+    "crates.io:rdkit",
+    "pypi:rdkit",
+    "npm:rdkit"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.3090180360721444,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:rdkit",
+      "downloads": 2495,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:rdkit",
+      "downloads": 215,
+      "version_count": 30,
+      "has_repository": false
+    },
+    {
+      "source": "pypi:rdkit",
+      "downloads": 0,
+      "version_count": 40,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:rdkit",
+      "downloads": 8256,
+      "version_count": 3,
+      "has_repository": false
+    },
+    {
+      "source": "npm:rdkit",
+      "downloads": 0,
+      "version_count": 13,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:rdkit",
+  "disambiguated_at": "2026-02-17T00:26:43.054277749Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,33 @@
+{
+  "tool": "sile",
+  "selected": "homebrew:sile",
+  "alternatives": [
+    "crates.io:sile"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 5.6415094339622645,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:sile",
+      "downloads": 106,
+      "version_count": 15,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:sile",
+      "downloads": 598,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:sile",
+      "downloads": 0,
+      "version_count": 0,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:sile",
+  "disambiguated_at": "2026-02-17T00:28:04.633575859Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

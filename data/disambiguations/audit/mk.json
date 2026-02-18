@@ -1,0 +1,47 @@
+{
+  "tool": "mk",
+  "selected": "rubygems:mk",
+  "alternatives": [
+    "crates.io:mk",
+    "homebrew:mk",
+    "pypi:mk"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 21.339041095890412,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:mk",
+      "downloads": 219,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:mk",
+      "downloads": 0,
+      "version_count": 22,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:mk",
+      "downloads": 292,
+      "version_count": 23,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:mk",
+      "downloads": 6231,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "npm:mk",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:mk",
+  "disambiguated_at": "2026-02-17T00:22:36.403079936Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

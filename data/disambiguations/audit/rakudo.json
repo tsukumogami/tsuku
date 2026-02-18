@@ -1,0 +1,27 @@
+{
+  "tool": "rakudo",
+  "selected": "homebrew:rakudo",
+  "alternatives": [
+    "npm:rakudo"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 13.969696969696969,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:rakudo",
+      "downloads": 1383,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:rakudo",
+      "downloads": 99,
+      "version_count": 32,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:rakudo",
+  "disambiguated_at": "2026-02-17T00:26:35.730386851Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

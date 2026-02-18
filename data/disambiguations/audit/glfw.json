@@ -1,0 +1,47 @@
+{
+  "tool": "glfw",
+  "selected": "rubygems:glfw",
+  "alternatives": [
+    "crates.io:glfw",
+    "homebrew:glfw",
+    "pypi:glfw"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.060173639974139,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:glfw",
+      "downloads": 34841,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:glfw",
+      "downloads": 0,
+      "version_count": 61,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:glfw",
+      "downloads": 43308,
+      "version_count": 76,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:glfw",
+      "downloads": 89222,
+      "version_count": 6,
+      "has_repository": false
+    },
+    {
+      "source": "npm:glfw",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:glfw",
+  "disambiguated_at": "2026-02-17T00:17:02.850168387Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

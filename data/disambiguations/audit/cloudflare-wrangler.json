@@ -1,0 +1,18 @@
+{
+  "tool": "cloudflare-wrangler",
+  "selected": "homebrew:cloudflare-wrangler",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:cloudflare-wrangler",
+      "downloads": 15648,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:cloudflare-wrangler",
+  "disambiguated_at": "2026-02-17T00:13:19.253613597Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

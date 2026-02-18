@@ -1,0 +1,30 @@
+{
+  "tool": "vsearch",
+  "selected": "homebrew:vsearch",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:vsearch",
+      "downloads": 5,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:vsearch",
+      "downloads": 353,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:vsearch",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:vsearch",
+  "disambiguated_at": "2026-02-17T00:30:53.486506704Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

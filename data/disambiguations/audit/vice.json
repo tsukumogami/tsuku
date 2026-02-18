@@ -1,0 +1,46 @@
+{
+  "tool": "vice",
+  "selected": "rubygems:vice",
+  "alternatives": [
+    "homebrew:vice",
+    "pypi:vice"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.89207258834766,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:vice",
+      "downloads": 4,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:vice",
+      "downloads": 2094,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:vice",
+      "downloads": 0,
+      "version_count": 7,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:vice",
+      "downloads": 3962,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:vice",
+      "downloads": 4,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:vice",
+  "disambiguated_at": "2026-02-17T00:30:41.10283932Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,30 @@
+{
+  "tool": "ccache",
+  "selected": "homebrew:ccache",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:ccache",
+      "downloads": 17,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:ccache",
+      "downloads": 323323,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:ccache",
+      "downloads": 2,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:ccache",
+  "disambiguated_at": "2026-02-17T00:12:42.718218943Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

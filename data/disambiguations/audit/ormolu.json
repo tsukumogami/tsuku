@@ -1,0 +1,24 @@
+{
+  "tool": "ormolu",
+  "selected": "homebrew:ormolu",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:ormolu",
+      "downloads": 1628,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:ormolu",
+      "downloads": 2,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:ormolu",
+  "disambiguated_at": "2026-02-17T00:24:21.414601525Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

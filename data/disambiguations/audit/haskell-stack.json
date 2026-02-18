@@ -1,0 +1,24 @@
+{
+  "tool": "haskell-stack",
+  "selected": "homebrew:haskell-stack",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:haskell-stack",
+      "downloads": 7118,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:haskell-stack",
+      "downloads": 2,
+      "version_count": 2,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:haskell-stack",
+  "disambiguated_at": "2026-02-17T00:18:04.443665744Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

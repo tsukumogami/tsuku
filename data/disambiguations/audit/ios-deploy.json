@@ -1,0 +1,34 @@
+{
+  "tool": "ios-deploy",
+  "selected": "rubygems:ios-deploy",
+  "alternatives": [
+    "homebrew:ios-deploy",
+    "npm:ios-deploy"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.050464079514726,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:ios-deploy",
+      "downloads": 27366,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:ios-deploy",
+      "downloads": 83479,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "npm:ios-deploy",
+      "downloads": 0,
+      "version_count": 48,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:ios-deploy",
+  "disambiguated_at": "2026-02-17T00:18:55.533653436Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

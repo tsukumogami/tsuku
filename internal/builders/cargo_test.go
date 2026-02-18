@@ -331,6 +331,145 @@ func TestCargoBuilder_buildCargoTomlURL(t *testing.T) {
 	}
 }
 
+func TestCargoBuilder_Discover_Pagination(t *testing.T) {
+	// The Discover method uses per_page=100. We set limit=3 and serve
+	// pages of 2 items each. Since len(page1) < per_page, Discover stops
+	// after page 1. Instead, we set limit=2 with a single page of 3 crates
+	// to verify limit truncation, or serve a full page.
+	//
+	// For a clean pagination test, serve 3 items on page 1 (< per_page,
+	// so it's the last page) and request limit=3.
+	response := `{
+		"crates": [
+			{"name": "ripgrep", "recent_downloads": 5000000},
+			{"name": "fd-find", "recent_downloads": 2000000},
+			{"name": "bat", "recent_downloads": 1500000}
+		],
+		"meta": {"total": 3}
+	}`
+
+	var requestCount int
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		requestCount++
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(response))
+	}))
+	defer server.Close()
+
+	builder := NewCargoBuilderWithBaseURL(nil, server.URL)
+	candidates, err := builder.Discover(context.Background(), 3)
+	if err != nil {
+		t.Fatalf("Discover() error = %v", err)
+	}
+
+	if len(candidates) != 3 {
+		t.Fatalf("expected 3 candidates, got %d", len(candidates))
+	}
+
+	if candidates[0].Name != "ripgrep" || candidates[0].Downloads != 5000000 {
+		t.Errorf("candidates[0] = %+v, want ripgrep/5000000", candidates[0])
+	}
+	if candidates[2].Name != "bat" || candidates[2].Downloads != 1500000 {
+		t.Errorf("candidates[2] = %+v, want bat/1500000", candidates[2])
+	}
+
+	// Only one page fetched (3 items < per_page=100).
+	if requestCount != 1 {
+		t.Errorf("expected 1 request, got %d", requestCount)
+	}
+}
+
+func TestCargoBuilder_Discover_LimitRespected(t *testing.T) {
+	// Return more than the limit to verify truncation.
+	page := `{
+		"crates": [
+			{"name": "a", "recent_downloads": 100},
+			{"name": "b", "recent_downloads": 90},
+			{"name": "c", "recent_downloads": 80}
+		],
+		"meta": {"total": 3}
+	}`
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(page))
+	}))
+	defer server.Close()
+
+	builder := NewCargoBuilderWithBaseURL(nil, server.URL)
+	candidates, err := builder.Discover(context.Background(), 2)
+	if err != nil {
+		t.Fatalf("Discover() error = %v", err)
+	}
+
+	if len(candidates) != 2 {
+		t.Fatalf("expected 2 candidates, got %d", len(candidates))
+	}
+}
+
+func TestCargoBuilder_Discover_ZeroLimit(t *testing.T) {
+	builder := NewCargoBuilder(nil)
+	candidates, err := builder.Discover(context.Background(), 0)
+	if err != nil {
+		t.Fatalf("Discover() error = %v", err)
+	}
+	if len(candidates) != 0 {
+		t.Errorf("expected 0 candidates for limit=0, got %d", len(candidates))
+	}
+}
+
+func TestCargoBuilder_Discover_ErrorHandling(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	defer server.Close()
+
+	builder := NewCargoBuilderWithBaseURL(nil, server.URL)
+	_, err := builder.Discover(context.Background(), 10)
+	if err == nil {
+		t.Fatal("expected error for 500 response")
+	}
+}
+
+func TestCargoBuilder_Discover_RateLimitError(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusTooManyRequests)
+	}))
+	defer server.Close()
+
+	builder := NewCargoBuilderWithBaseURL(nil, server.URL)
+	_, err := builder.Discover(context.Background(), 10)
+	if err == nil {
+		t.Fatal("expected error for 429 response")
+	}
+}
+
+func TestCargoBuilder_Discover_ContextCanceled(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		// Return a full page so pagination would continue.
+		crates := `{"crates": [`
+		for i := range 100 {
+			if i > 0 {
+				crates += ","
+			}
+			crates += `{"name": "crate-` + string(rune('a'+i%26)) + `", "recent_downloads": 100}`
+		}
+		crates += `], "meta": {"total": 500}}`
+		_, _ = w.Write([]byte(crates))
+	}))
+	defer server.Close()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel() // Cancel immediately.
+
+	builder := NewCargoBuilderWithBaseURL(nil, server.URL)
+	_, err := builder.Discover(ctx, 500)
+	if err == nil {
+		t.Fatal("expected error for canceled context")
+	}
+}
+
 func TestRegistry_Operations(t *testing.T) {
 	reg := NewRegistry()
 

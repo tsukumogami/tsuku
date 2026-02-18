@@ -1,0 +1,40 @@
+{
+  "tool": "gstreamer",
+  "selected": "crates.io:gstreamer",
+  "alternatives": [
+    "rubygems:gstreamer",
+    "homebrew:gstreamer"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.8377943472580696,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:gstreamer",
+      "downloads": 111161,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:gstreamer",
+      "downloads": 922808,
+      "version_count": 122,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:gstreamer",
+      "downloads": 502128,
+      "version_count": 211,
+      "has_repository": false
+    },
+    {
+      "source": "npm:gstreamer",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:gstreamer",
+  "disambiguated_at": "2026-02-17T00:17:46.184436675Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

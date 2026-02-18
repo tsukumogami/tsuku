@@ -1,0 +1,34 @@
+{
+  "tool": "litra",
+  "selected": "crates.io:litra",
+  "alternatives": [
+    "homebrew:litra",
+    "npm:litra"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 10.53225806451613,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:litra",
+      "downloads": 62,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:litra",
+      "downloads": 653,
+      "version_count": 23,
+      "has_repository": true
+    },
+    {
+      "source": "npm:litra",
+      "downloads": 5,
+      "version_count": 18,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:litra",
+  "disambiguated_at": "2026-02-17T00:21:24.541027433Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

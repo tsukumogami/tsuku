@@ -1,0 +1,26 @@
+{
+  "tool": "sphinx-doc",
+  "selected": "homebrew:sphinx-doc",
+  "alternatives": [
+    "pypi:sphinx-doc"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:sphinx-doc",
+      "downloads": 103428,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:sphinx-doc",
+      "downloads": 0,
+      "version_count": 12,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:sphinx-doc",
+  "disambiguated_at": "2026-02-17T00:28:26.639584766Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

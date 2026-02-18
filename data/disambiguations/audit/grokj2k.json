@@ -1,0 +1,18 @@
+{
+  "tool": "grokj2k",
+  "selected": "homebrew:grokj2k",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:grokj2k",
+      "downloads": 421,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:grokj2k",
+  "disambiguated_at": "2026-02-17T00:17:41.348100337Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

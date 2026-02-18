@@ -1,0 +1,41 @@
+{
+  "tool": "rumdl",
+  "selected": "crates.io:rumdl",
+  "alternatives": [
+    "homebrew:rumdl",
+    "pypi:rumdl",
+    "npm:rumdl"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.7284345047923322,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:rumdl",
+      "downloads": 3443,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:rumdl",
+      "downloads": 5951,
+      "version_count": 236,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:rumdl",
+      "downloads": 0,
+      "version_count": 214,
+      "has_repository": true
+    },
+    {
+      "source": "npm:rumdl",
+      "downloads": 0,
+      "version_count": 11,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:rumdl",
+  "disambiguated_at": "2026-02-17T00:27:15.23652244Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

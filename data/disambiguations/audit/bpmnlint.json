@@ -1,0 +1,27 @@
+{
+  "tool": "bpmnlint",
+  "selected": "npm:bpmnlint",
+  "alternatives": [
+    "homebrew:bpmnlint"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 46.79064039408867,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:bpmnlint",
+      "downloads": 406,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:bpmnlint",
+      "downloads": 18997,
+      "version_count": 82,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:bpmnlint",
+  "disambiguated_at": "2026-02-17T00:12:10.978355465Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

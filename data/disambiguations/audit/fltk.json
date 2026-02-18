@@ -1,0 +1,27 @@
+{
+  "tool": "fltk",
+  "selected": "crates.io:fltk",
+  "alternatives": [
+    "homebrew:fltk"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 5.838915687207011,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:fltk",
+      "downloads": 14719,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:fltk",
+      "downloads": 85943,
+      "version_count": 400,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:fltk",
+  "disambiguated_at": "2026-02-17T00:16:02.504304116Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

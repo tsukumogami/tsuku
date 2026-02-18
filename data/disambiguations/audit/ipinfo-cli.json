@@ -1,0 +1,36 @@
+{
+  "tool": "ipinfo-cli",
+  "selected": "homebrew:ipinfo-cli",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:ipinfo-cli",
+      "downloads": 18,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:ipinfo-cli",
+      "downloads": 581,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:ipinfo-cli",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "npm:ipinfo-cli",
+      "downloads": 71,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:ipinfo-cli",
+  "disambiguated_at": "2026-02-17T00:18:57.798564306Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

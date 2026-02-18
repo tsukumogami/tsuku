@@ -1,0 +1,32 @@
+{
+  "tool": "snowflake-cli",
+  "selected": "homebrew:snowflake-cli",
+  "alternatives": [
+    "pypi:snowflake-cli"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:snowflake-cli",
+      "downloads": 5773,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:snowflake-cli",
+      "downloads": 0,
+      "version_count": 28,
+      "has_repository": true
+    },
+    {
+      "source": "npm:snowflake-cli",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:snowflake-cli",
+  "disambiguated_at": "2026-02-17T00:28:16.28621267Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

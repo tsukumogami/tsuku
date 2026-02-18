@@ -1,0 +1,27 @@
+{
+  "tool": "dufs",
+  "selected": "crates.io:dufs",
+  "alternatives": [
+    "homebrew:dufs"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.015193370165746,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:dufs",
+      "downloads": 724,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:dufs",
+      "downloads": 1459,
+      "version_count": 32,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:dufs",
+  "disambiguated_at": "2026-02-17T00:14:55.49593841Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

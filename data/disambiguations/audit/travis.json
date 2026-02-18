@@ -1,0 +1,47 @@
+{
+  "tool": "travis",
+  "selected": "rubygems:travis",
+  "alternatives": [
+    "homebrew:travis",
+    "npm:travis",
+    "pypi:travis"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 9360.122418879057,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:travis",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:travis",
+      "downloads": 678,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:travis",
+      "downloads": 9,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:travis",
+      "downloads": 6346163,
+      "version_count": 412,
+      "has_repository": false
+    },
+    {
+      "source": "npm:travis",
+      "downloads": 0,
+      "version_count": 5,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:travis",
+  "disambiguated_at": "2026-02-17T00:29:57.789107382Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,47 @@
+{
+  "tool": "monolith",
+  "selected": "crates.io:monolith",
+  "alternatives": [
+    "rubygems:monolith",
+    "homebrew:monolith",
+    "pypi:monolith"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.1275734053324333,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:monolith",
+      "downloads": 1860,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:monolith",
+      "downloads": 0,
+      "version_count": 6,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:monolith",
+      "downloads": 6682,
+      "version_count": 15,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:monolith",
+      "downloads": 5926,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "npm:monolith",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:monolith",
+  "disambiguated_at": "2026-02-17T00:22:47.911884472Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

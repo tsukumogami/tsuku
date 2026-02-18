@@ -1,0 +1,34 @@
+{
+  "tool": "gitlab-runner",
+  "selected": "homebrew:gitlab-runner",
+  "alternatives": [
+    "crates.io:gitlab-runner",
+    "npm:gitlab-runner"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 58.6682808716707,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:gitlab-runner",
+      "downloads": 413,
+      "version_count": 13,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:gitlab-runner",
+      "downloads": 24230,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:gitlab-runner",
+      "downloads": 0,
+      "version_count": 10,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:gitlab-runner",
+  "disambiguated_at": "2026-02-17T00:16:58.06544895Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

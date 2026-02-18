@@ -1,0 +1,47 @@
+{
+  "tool": "garnet",
+  "selected": "rubygems:garnet",
+  "alternatives": [
+    "homebrew:garnet",
+    "npm:garnet",
+    "pypi:garnet"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 9.497757847533633,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:garnet",
+      "downloads": 8,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:garnet",
+      "downloads": 0,
+      "version_count": 12,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:garnet",
+      "downloads": 446,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:garnet",
+      "downloads": 4236,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:garnet",
+      "downloads": 23,
+      "version_count": 19,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:garnet",
+  "disambiguated_at": "2026-02-17T00:16:28.000653878Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

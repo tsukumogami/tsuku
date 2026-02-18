@@ -1,0 +1,48 @@
+{
+  "tool": "daemon",
+  "selected": "rubygems:daemon",
+  "alternatives": [
+    "npm:daemon",
+    "homebrew:daemon",
+    "crates.io:daemon",
+    "pypi:daemon"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.62614131198202,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:daemon",
+      "downloads": 239,
+      "version_count": 8,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:daemon",
+      "downloads": 722,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:daemon",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": false
+    },
+    {
+      "source": "rubygems:daemon",
+      "downloads": 112173,
+      "version_count": 3,
+      "has_repository": false
+    },
+    {
+      "source": "npm:daemon",
+      "downloads": 42714,
+      "version_count": 9,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:daemon",
+  "disambiguated_at": "2026-02-17T00:14:04.069969926Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

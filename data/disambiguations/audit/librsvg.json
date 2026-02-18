@@ -1,0 +1,34 @@
+{
+  "tool": "librsvg",
+  "selected": "homebrew:librsvg",
+  "alternatives": [
+    "crates.io:librsvg",
+    "npm:librsvg"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 92.81448849730788,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:librsvg",
+      "downloads": 568860,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:librsvg",
+      "downloads": 6129,
+      "version_count": 36,
+      "has_repository": true
+    },
+    {
+      "source": "npm:librsvg",
+      "downloads": 398,
+      "version_count": 8,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:librsvg",
+  "disambiguated_at": "2026-02-17T00:20:59.779462074Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

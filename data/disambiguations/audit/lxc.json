@@ -1,0 +1,47 @@
+{
+  "tool": "lxc",
+  "selected": "rubygems:lxc",
+  "alternatives": [
+    "homebrew:lxc",
+    "crates.io:lxc",
+    "npm:lxc"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 62.35540752351097,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "pypi:lxc",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:lxc",
+      "downloads": 2552,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:lxc",
+      "downloads": 115,
+      "version_count": 12,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:lxc",
+      "downloads": 159131,
+      "version_count": 42,
+      "has_repository": true
+    },
+    {
+      "source": "npm:lxc",
+      "downloads": 0,
+      "version_count": 6,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:lxc",
+  "disambiguated_at": "2026-02-17T00:21:42.375842575Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

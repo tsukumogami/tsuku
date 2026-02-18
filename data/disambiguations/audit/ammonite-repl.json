@@ -1,0 +1,18 @@
+{
+  "tool": "ammonite-repl",
+  "selected": "homebrew:ammonite-repl",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:ammonite-repl",
+      "downloads": 1874,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:ammonite-repl",
+  "disambiguated_at": "2026-02-17T00:10:37.870544535Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

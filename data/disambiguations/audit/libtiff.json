@@ -1,0 +1,34 @@
+{
+  "tool": "libtiff",
+  "selected": "homebrew:libtiff",
+  "alternatives": [
+    "npm:libtiff",
+    "pypi:libtiff"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 119045.54545454546,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:libtiff",
+      "downloads": 1309501,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:libtiff",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "npm:libtiff",
+      "downloads": 11,
+      "version_count": 5,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:libtiff",
+  "disambiguated_at": "2026-02-17T00:21:05.95627135Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

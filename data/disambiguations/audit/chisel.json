@@ -1,0 +1,47 @@
+{
+  "tool": "chisel",
+  "selected": "rubygems:chisel",
+  "alternatives": [
+    "homebrew:chisel",
+    "crates.io:chisel",
+    "pypi:chisel"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 12.095203488372093,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:chisel",
+      "downloads": 76,
+      "version_count": 6,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:chisel",
+      "downloads": 1376,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:chisel",
+      "downloads": 0,
+      "version_count": 209,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:chisel",
+      "downloads": 16643,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "npm:chisel",
+      "downloads": 2,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:chisel",
+  "disambiguated_at": "2026-02-17T00:12:58.640175101Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

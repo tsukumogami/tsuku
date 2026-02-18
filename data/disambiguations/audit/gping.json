@@ -1,0 +1,33 @@
+{
+  "tool": "gping",
+  "selected": "homebrew:gping",
+  "alternatives": [
+    "crates.io:gping"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 4.368525896414343,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:gping",
+      "downloads": 6579,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:gping",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:gping",
+      "downloads": 1506,
+      "version_count": 46,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:gping",
+  "disambiguated_at": "2026-02-17T00:17:30.651844168Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

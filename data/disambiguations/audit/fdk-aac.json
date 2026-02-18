@@ -1,0 +1,27 @@
+{
+  "tool": "fdk-aac",
+  "selected": "crates.io:fdk-aac",
+  "alternatives": [
+    "homebrew:fdk-aac"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.831209275584515,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:fdk-aac",
+      "downloads": 20872,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:fdk-aac",
+      "downloads": 79965,
+      "version_count": 8,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:fdk-aac",
+  "disambiguated_at": "2026-02-17T00:15:42.185910253Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

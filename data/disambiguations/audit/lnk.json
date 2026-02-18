@@ -1,0 +1,41 @@
+{
+  "tool": "lnk",
+  "selected": "crates.io:lnk",
+  "alternatives": [
+    "homebrew:lnk",
+    "npm:lnk",
+    "pypi:lnk"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 24.69607843137255,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "pypi:lnk",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:lnk",
+      "downloads": 7557,
+      "version_count": 11,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:lnk",
+      "downloads": 306,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:lnk",
+      "downloads": 0,
+      "version_count": 6,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:lnk",
+  "disambiguated_at": "2026-02-17T00:21:31.311646083Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

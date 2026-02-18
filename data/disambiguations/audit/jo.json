@@ -1,0 +1,47 @@
+{
+  "tool": "jo",
+  "selected": "homebrew:jo",
+  "alternatives": [
+    "rubygems:jo",
+    "npm:jo",
+    "pypi:jo"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.4636229749631813,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:jo",
+      "downloads": 17,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:jo",
+      "downloads": 35277,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:jo",
+      "downloads": 0,
+      "version_count": 6,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:jo",
+      "downloads": 10185,
+      "version_count": 3,
+      "has_repository": false
+    },
+    {
+      "source": "npm:jo",
+      "downloads": 46,
+      "version_count": 7,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:jo",
+  "disambiguated_at": "2026-02-17T00:19:18.803995786Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

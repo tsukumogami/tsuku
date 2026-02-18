@@ -1,0 +1,33 @@
+{
+  "tool": "gmt",
+  "selected": "rubygems:gmt",
+  "alternatives": [
+    "homebrew:gmt"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 18.59867549668874,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:gmt",
+      "downloads": 3020,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:gmt",
+      "downloads": 56168,
+      "version_count": 24,
+      "has_repository": false
+    },
+    {
+      "source": "npm:gmt",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:gmt",
+  "disambiguated_at": "2026-02-17T00:17:09.531088166Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

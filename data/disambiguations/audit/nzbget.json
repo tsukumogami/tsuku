@@ -1,0 +1,27 @@
+{
+  "tool": "nzbget",
+  "selected": "rubygems:nzbget",
+  "alternatives": [
+    "homebrew:nzbget"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 7.502847843775427,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:nzbget",
+      "downloads": 1229,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:nzbget",
+      "downloads": 9221,
+      "version_count": 2,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:nzbget",
+  "disambiguated_at": "2026-02-17T00:23:50.133249814Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

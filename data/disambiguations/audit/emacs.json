@@ -1,0 +1,39 @@
+{
+  "tool": "emacs",
+  "selected": "homebrew:emacs",
+  "alternatives": [
+    "crates.io:emacs"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 32.97827496757458,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:emacs",
+      "downloads": 101705,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:emacs",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:emacs",
+      "downloads": 3084,
+      "version_count": 31,
+      "has_repository": false
+    },
+    {
+      "source": "npm:emacs",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:emacs",
+  "disambiguated_at": "2026-02-17T00:15:14.669485026Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

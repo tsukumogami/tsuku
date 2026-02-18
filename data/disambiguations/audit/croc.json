@@ -1,0 +1,41 @@
+{
+  "tool": "croc",
+  "selected": "homebrew:croc",
+  "alternatives": [
+    "rubygems:croc",
+    "pypi:croc",
+    "npm:croc"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.336943231441048,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:croc",
+      "downloads": 7654,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:croc",
+      "downloads": 0,
+      "version_count": 24,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:croc",
+      "downloads": 5725,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:croc",
+      "downloads": 0,
+      "version_count": 21,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:croc",
+  "disambiguated_at": "2026-02-17T00:13:50.628158509Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

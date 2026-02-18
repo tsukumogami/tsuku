@@ -1,0 +1,26 @@
+{
+  "tool": "ncdc",
+  "selected": "homebrew:ncdc",
+  "alternatives": [
+    "npm:ncdc"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:ncdc",
+      "downloads": 371,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:ncdc",
+      "downloads": 0,
+      "version_count": 70,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:ncdc",
+  "disambiguated_at": "2026-02-17T00:23:13.445600338Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

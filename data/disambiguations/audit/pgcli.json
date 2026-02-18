@@ -1,0 +1,26 @@
+{
+  "tool": "pgcli",
+  "selected": "homebrew:pgcli",
+  "alternatives": [
+    "pypi:pgcli"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:pgcli",
+      "downloads": 14685,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:pgcli",
+      "downloads": 0,
+      "version_count": 52,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:pgcli",
+  "disambiguated_at": "2026-02-17T00:25:02.722741732Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

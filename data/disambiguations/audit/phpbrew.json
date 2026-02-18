@@ -1,0 +1,18 @@
+{
+  "tool": "phpbrew",
+  "selected": "homebrew:phpbrew",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:phpbrew",
+      "downloads": 1040,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:phpbrew",
+  "disambiguated_at": "2026-02-17T00:25:08.560242482Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

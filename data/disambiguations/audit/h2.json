@@ -1,0 +1,47 @@
+{
+  "tool": "h2",
+  "selected": "crates.io:h2",
+  "alternatives": [
+    "rubygems:h2",
+    "homebrew:h2",
+    "pypi:h2"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 2358.6197314916412,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "pypi:h2",
+      "downloads": 0,
+      "version_count": 46,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:h2",
+      "downloads": 1012,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:h2",
+      "downloads": 73084191,
+      "version_count": 81,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:h2",
+      "downloads": 30986,
+      "version_count": 13,
+      "has_repository": false
+    },
+    {
+      "source": "npm:h2",
+      "downloads": 45,
+      "version_count": 3,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:h2",
+  "disambiguated_at": "2026-02-17T00:17:55.609766968Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

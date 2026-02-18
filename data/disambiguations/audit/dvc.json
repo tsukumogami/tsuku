@@ -1,0 +1,38 @@
+{
+  "tool": "dvc",
+  "selected": "homebrew:dvc",
+  "alternatives": [
+    "pypi:dvc"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:dvc",
+      "downloads": 12,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:dvc",
+      "downloads": 7945,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:dvc",
+      "downloads": 0,
+      "version_count": 553,
+      "has_repository": true
+    },
+    {
+      "source": "npm:dvc",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:dvc",
+  "disambiguated_at": "2026-02-17T00:14:58.382302612Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

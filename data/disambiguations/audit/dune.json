@@ -1,0 +1,41 @@
+{
+  "tool": "dune",
+  "selected": "rubygems:dune",
+  "alternatives": [
+    "homebrew:dune",
+    "crates.io:dune",
+    "npm:dune"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.0599647266313934,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:dune",
+      "downloads": 96,
+      "version_count": 10,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:dune",
+      "downloads": 1701,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:dune",
+      "downloads": 1803,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "npm:dune",
+      "downloads": 0,
+      "version_count": 7,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:dune",
+  "disambiguated_at": "2026-02-17T00:14:56.679934526Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

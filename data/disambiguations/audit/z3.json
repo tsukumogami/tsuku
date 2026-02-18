@@ -1,0 +1,48 @@
+{
+  "tool": "z3",
+  "selected": "homebrew:z3",
+  "alternatives": [
+    "crates.io:z3",
+    "rubygems:z3",
+    "npm:z3",
+    "pypi:z3"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.6366431042534764,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:z3",
+      "downloads": 581509,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:z3",
+      "downloads": 0,
+      "version_count": 15,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:z3",
+      "downloads": 220549,
+      "version_count": 45,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:z3",
+      "downloads": 74985,
+      "version_count": 25,
+      "has_repository": false
+    },
+    {
+      "source": "npm:z3",
+      "downloads": 9,
+      "version_count": 28,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:z3",
+  "disambiguated_at": "2026-02-17T00:31:43.819306178Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

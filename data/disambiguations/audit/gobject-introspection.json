@@ -1,0 +1,27 @@
+{
+  "tool": "gobject-introspection",
+  "selected": "rubygems:gobject-introspection",
+  "alternatives": [
+    "homebrew:gobject-introspection"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 16.682518189083652,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:gobject-introspection",
+      "downloads": 241491,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:gobject-introspection",
+      "downloads": 4028678,
+      "version_count": 178,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:gobject-introspection",
+  "disambiguated_at": "2026-02-17T00:17:19.296702112Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,45 @@
+{
+  "tool": "jasper",
+  "selected": "homebrew:jasper",
+  "alternatives": [
+    "rubygems:jasper"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 108.42668298653611,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:jasper",
+      "downloads": 442923,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:jasper",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:jasper",
+      "downloads": 12,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:jasper",
+      "downloads": 4085,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "npm:jasper",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:jasper",
+  "disambiguated_at": "2026-02-17T00:19:08.808642353Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

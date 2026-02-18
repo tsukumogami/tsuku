@@ -1,0 +1,24 @@
+{
+  "tool": "dalfox",
+  "selected": "homebrew:dalfox",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:dalfox",
+      "downloads": 22,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:dalfox",
+      "downloads": 1398,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:dalfox",
+  "disambiguated_at": "2026-02-17T00:14:04.872948313Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

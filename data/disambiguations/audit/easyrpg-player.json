@@ -1,0 +1,18 @@
+{
+  "tool": "easyrpg-player",
+  "selected": "homebrew:easyrpg-player",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:easyrpg-player",
+      "downloads": 851,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:easyrpg-player",
+  "disambiguated_at": "2026-02-17T00:15:05.67420039Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

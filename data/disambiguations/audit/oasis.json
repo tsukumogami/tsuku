@@ -1,0 +1,45 @@
+{
+  "tool": "oasis",
+  "selected": "rubygems:oasis",
+  "alternatives": [
+    "homebrew:oasis"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 246.71008403361344,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:oasis",
+      "downloads": 7,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:oasis",
+      "downloads": 238,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:oasis",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:oasis",
+      "downloads": 58717,
+      "version_count": 12,
+      "has_repository": false
+    },
+    {
+      "source": "npm:oasis",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:oasis",
+  "disambiguated_at": "2026-02-17T00:23:50.611794483Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

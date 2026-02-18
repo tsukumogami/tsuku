@@ -1,0 +1,34 @@
+{
+  "tool": "frpc",
+  "selected": "homebrew:frpc",
+  "alternatives": [
+    "npm:frpc",
+    "pypi:frpc"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 5138,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:frpc",
+      "downloads": 5138,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:frpc",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "npm:frpc",
+      "downloads": 1,
+      "version_count": 8,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:frpc",
+  "disambiguated_at": "2026-02-17T00:16:19.290708521Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

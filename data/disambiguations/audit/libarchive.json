@@ -1,0 +1,48 @@
+{
+  "tool": "libarchive",
+  "selected": "homebrew:libarchive",
+  "alternatives": [
+    "rubygems:libarchive",
+    "crates.io:libarchive",
+    "npm:libarchive",
+    "pypi:libarchive"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 6.482583304159639,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:libarchive",
+      "downloads": 1031,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:libarchive",
+      "downloads": 814757,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:libarchive",
+      "downloads": 0,
+      "version_count": 11,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:libarchive",
+      "downloads": 125684,
+      "version_count": 6,
+      "has_repository": true
+    },
+    {
+      "source": "npm:libarchive",
+      "downloads": 3,
+      "version_count": 5,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:libarchive",
+  "disambiguated_at": "2026-02-17T00:20:25.802795789Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

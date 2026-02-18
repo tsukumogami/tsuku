@@ -1,0 +1,26 @@
+{
+  "tool": "tinyproxy",
+  "selected": "homebrew:tinyproxy",
+  "alternatives": [
+    "npm:tinyproxy"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:tinyproxy",
+      "downloads": 1339,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:tinyproxy",
+      "downloads": 0,
+      "version_count": 10,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:tinyproxy",
+  "disambiguated_at": "2026-02-17T00:29:43.711548906Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

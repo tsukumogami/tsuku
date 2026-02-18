@@ -1,0 +1,47 @@
+{
+  "tool": "etcd",
+  "selected": "rubygems:etcd",
+  "alternatives": [
+    "homebrew:etcd",
+    "crates.io:etcd",
+    "pypi:etcd"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 159.6811483090553,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:etcd",
+      "downloads": 658,
+      "version_count": 15,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:etcd",
+      "downloads": 0,
+      "version_count": 16,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:etcd",
+      "downloads": 1874497,
+      "version_count": 12,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:etcd",
+      "downloads": 11739,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:etcd",
+      "downloads": 34,
+      "version_count": 4,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:etcd",
+  "disambiguated_at": "2026-02-17T00:15:25.773099421Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

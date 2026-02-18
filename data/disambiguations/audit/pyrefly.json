@@ -1,0 +1,38 @@
+{
+  "tool": "pyrefly",
+  "selected": "homebrew:pyrefly",
+  "alternatives": [
+    "pypi:pyrefly"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:pyrefly",
+      "downloads": 2478,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:pyrefly",
+      "downloads": 45,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:pyrefly",
+      "downloads": 0,
+      "version_count": 111,
+      "has_repository": true
+    },
+    {
+      "source": "npm:pyrefly",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:pyrefly",
+  "disambiguated_at": "2026-02-17T00:26:04.534857217Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

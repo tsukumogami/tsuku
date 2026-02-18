@@ -1,0 +1,46 @@
+{
+  "tool": "cask",
+  "selected": "homebrew:cask",
+  "alternatives": [
+    "rubygems:cask",
+    "crates.io:cask"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.926634382566586,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:cask",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:cask",
+      "downloads": 36261,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:cask",
+      "downloads": 135,
+      "version_count": 8,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:cask",
+      "downloads": 12390,
+      "version_count": 4,
+      "has_repository": false
+    },
+    {
+      "source": "npm:cask",
+      "downloads": 5,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:cask",
+  "disambiguated_at": "2026-02-17T00:12:39.910434554Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

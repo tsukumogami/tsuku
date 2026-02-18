@@ -1,0 +1,48 @@
+{
+  "tool": "sigstore",
+  "selected": "npm:sigstore",
+  "alternatives": [
+    "crates.io:sigstore",
+    "rubygems:sigstore",
+    "homebrew:sigstore",
+    "pypi:sigstore"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 96.5628573587567,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:sigstore",
+      "downloads": 588,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:sigstore",
+      "downloads": 79402,
+      "version_count": 20,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:sigstore",
+      "downloads": 37723,
+      "version_count": 4,
+      "has_repository": false
+    },
+    {
+      "source": "pypi:sigstore",
+      "downloads": 0,
+      "version_count": 63,
+      "has_repository": true
+    },
+    {
+      "source": "npm:sigstore",
+      "downloads": 7667284,
+      "version_count": 38,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:sigstore",
+  "disambiguated_at": "2026-02-17T00:28:03.860553522Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

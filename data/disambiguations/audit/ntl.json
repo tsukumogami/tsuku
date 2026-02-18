@@ -1,0 +1,32 @@
+{
+  "tool": "ntl",
+  "selected": "homebrew:ntl",
+  "alternatives": [
+    "npm:ntl"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:ntl",
+      "downloads": 1079,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:ntl",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:ntl",
+      "downloads": 0,
+      "version_count": 20,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:ntl",
+  "disambiguated_at": "2026-02-17T00:23:44.833410781Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

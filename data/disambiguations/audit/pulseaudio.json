@@ -1,0 +1,40 @@
+{
+  "tool": "pulseaudio",
+  "selected": "homebrew:pulseaudio",
+  "alternatives": [
+    "rubygems:pulseaudio",
+    "crates.io:pulseaudio"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.5709598800149982,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:pulseaudio",
+      "downloads": 50277,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:pulseaudio",
+      "downloads": 6955,
+      "version_count": 6,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:pulseaudio",
+      "downloads": 32004,
+      "version_count": 10,
+      "has_repository": false
+    },
+    {
+      "source": "npm:pulseaudio",
+      "downloads": 8,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:pulseaudio",
+  "disambiguated_at": "2026-02-17T00:25:54.025851556Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

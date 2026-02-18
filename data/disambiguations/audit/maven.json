@@ -1,0 +1,47 @@
+{
+  "tool": "maven",
+  "selected": "homebrew:maven",
+  "alternatives": [
+    "rubygems:maven",
+    "npm:maven",
+    "pypi:maven"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 92.68342151675485,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:maven",
+      "downloads": 315309,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:maven",
+      "downloads": 0,
+      "version_count": 13,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:maven",
+      "downloads": 11,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "rubygems:maven",
+      "downloads": 3402,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:maven",
+      "downloads": 0,
+      "version_count": 26,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:maven",
+  "disambiguated_at": "2026-02-17T00:22:04.568875504Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

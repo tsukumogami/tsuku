@@ -1,0 +1,27 @@
+{
+  "tool": "wikibase-cli",
+  "selected": "npm:wikibase-cli",
+  "alternatives": [
+    "homebrew:wikibase-cli"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.3556085918854415,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:wikibase-cli",
+      "downloads": 419,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:wikibase-cli",
+      "downloads": 568,
+      "version_count": 144,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:wikibase-cli",
+  "disambiguated_at": "2026-02-17T00:31:12.186104369Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

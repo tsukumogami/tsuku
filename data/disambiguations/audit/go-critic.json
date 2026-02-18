@@ -1,0 +1,18 @@
+{
+  "tool": "go-critic",
+  "selected": "homebrew:go-critic",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:go-critic",
+      "downloads": 530,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:go-critic",
+  "disambiguated_at": "2026-02-17T00:17:15.322081671Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

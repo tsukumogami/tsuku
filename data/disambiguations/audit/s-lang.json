@@ -1,0 +1,18 @@
+{
+  "tool": "s-lang",
+  "selected": "homebrew:s-lang",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:s-lang",
+      "downloads": 12235,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:s-lang",
+  "disambiguated_at": "2026-02-17T00:27:20.072347679Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,26 @@
+{
+  "tool": "ansible-creator",
+  "selected": "homebrew:ansible-creator",
+  "alternatives": [
+    "pypi:ansible-creator"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:ansible-creator",
+      "downloads": 1874,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:ansible-creator",
+      "downloads": 0,
+      "version_count": 40,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:ansible-creator",
+  "disambiguated_at": "2026-02-17T00:10:41.807749265Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,27 @@
+{
+  "tool": "gtop",
+  "selected": "homebrew:gtop",
+  "alternatives": [
+    "npm:gtop"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 6.164794007490637,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:gtop",
+      "downloads": 1646,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:gtop",
+      "downloads": 267,
+      "version_count": 16,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:gtop",
+  "disambiguated_at": "2026-02-17T00:17:50.977972684Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

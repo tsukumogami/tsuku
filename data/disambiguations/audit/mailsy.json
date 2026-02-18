@@ -1,0 +1,26 @@
+{
+  "tool": "mailsy",
+  "selected": "homebrew:mailsy",
+  "alternatives": [
+    "npm:mailsy"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:mailsy",
+      "downloads": 1247,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:mailsy",
+      "downloads": 0,
+      "version_count": 20,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:mailsy",
+  "disambiguated_at": "2026-02-17T00:21:52.159818928Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

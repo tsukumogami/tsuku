@@ -1,0 +1,34 @@
+{
+  "tool": "cyme",
+  "selected": "homebrew:cyme",
+  "alternatives": [
+    "crates.io:cyme",
+    "pypi:cyme"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 4.047451669595782,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:cyme",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:cyme",
+      "downloads": 2303,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:cyme",
+      "downloads": 569,
+      "version_count": 32,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:cyme",
+  "disambiguated_at": "2026-02-17T00:14:00.431442112Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

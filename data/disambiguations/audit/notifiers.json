@@ -1,0 +1,41 @@
+{
+  "tool": "notifiers",
+  "selected": "rubygems:notifiers",
+  "alternatives": [
+    "homebrew:notifiers",
+    "pypi:notifiers",
+    "npm:notifiers"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 62.61381074168798,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:notifiers",
+      "downloads": 391,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:notifiers",
+      "downloads": 0,
+      "version_count": 34,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:notifiers",
+      "downloads": 24482,
+      "version_count": 6,
+      "has_repository": true
+    },
+    {
+      "source": "npm:notifiers",
+      "downloads": 0,
+      "version_count": 5,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:notifiers",
+  "disambiguated_at": "2026-02-17T00:23:40.53762911Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

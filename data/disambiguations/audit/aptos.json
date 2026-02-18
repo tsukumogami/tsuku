@@ -1,0 +1,41 @@
+{
+  "tool": "aptos",
+  "selected": "homebrew:aptos",
+  "alternatives": [
+    "crates.io:aptos",
+    "npm:aptos",
+    "pypi:aptos"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 320,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:aptos",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:aptos",
+      "downloads": 2560,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:aptos",
+      "downloads": 8,
+      "version_count": 11,
+      "has_repository": true
+    },
+    {
+      "source": "npm:aptos",
+      "downloads": 0,
+      "version_count": 72,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:aptos",
+  "disambiguated_at": "2026-02-17T00:10:52.189627095Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

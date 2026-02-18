@@ -1,0 +1,41 @@
+{
+  "tool": "graphviz",
+  "selected": "rubygems:graphviz",
+  "alternatives": [
+    "npm:graphviz",
+    "homebrew:graphviz",
+    "pypi:graphviz"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.6277369641296584,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:graphviz",
+      "downloads": 0,
+      "version_count": 59,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:graphviz",
+      "downloads": 484807,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:graphviz",
+      "downloads": 1818200,
+      "version_count": 11,
+      "has_repository": true
+    },
+    {
+      "source": "npm:graphviz",
+      "downloads": 501194,
+      "version_count": 7,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:graphviz",
+  "disambiguated_at": "2026-02-17T00:17:37.903150132Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

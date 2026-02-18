@@ -1,0 +1,48 @@
+{
+  "tool": "babel",
+  "selected": "npm:babel",
+  "alternatives": [
+    "rubygems:babel",
+    "homebrew:babel",
+    "crates.io:babel",
+    "pypi:babel"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.419096397607943,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:babel",
+      "downloads": 0,
+      "version_count": 46,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:babel",
+      "downloads": 83,
+      "version_count": 11,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:babel",
+      "downloads": 1550,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:babel",
+      "downloads": 34949,
+      "version_count": 5,
+      "has_repository": false
+    },
+    {
+      "source": "npm:babel",
+      "downloads": 119494,
+      "version_count": 165,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:babel",
+  "disambiguated_at": "2026-02-17T00:11:37.121761958Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,27 @@
+{
+  "tool": "erdtree",
+  "selected": "homebrew:erdtree",
+  "alternatives": [
+    "crates.io:erdtree"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.6632231404958677,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:erdtree",
+      "downloads": 805,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:erdtree",
+      "downloads": 484,
+      "version_count": 21,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:erdtree",
+  "disambiguated_at": "2026-02-17T00:15:22.11288539Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

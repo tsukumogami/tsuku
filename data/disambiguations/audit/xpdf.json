@@ -1,0 +1,39 @@
+{
+  "tool": "xpdf",
+  "selected": "rubygems:xpdf",
+  "alternatives": [
+    "homebrew:xpdf"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.4340943683409437,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:xpdf",
+      "downloads": 3285,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:xpdf",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "rubygems:xpdf",
+      "downloads": 4711,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:xpdf",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:xpdf",
+  "disambiguated_at": "2026-02-17T00:31:30.930090063Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

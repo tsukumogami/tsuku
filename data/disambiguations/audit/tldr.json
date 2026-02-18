@@ -1,0 +1,40 @@
+{
+  "tool": "tldr",
+  "selected": "rubygems:tldr",
+  "alternatives": [
+    "npm:tldr",
+    "pypi:tldr"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 15.473684210526315,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:tldr",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:tldr",
+      "downloads": 0,
+      "version_count": 27,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:tldr",
+      "downloads": 22638,
+      "version_count": 23,
+      "has_repository": true
+    },
+    {
+      "source": "npm:tldr",
+      "downloads": 1463,
+      "version_count": 45,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:tldr",
+  "disambiguated_at": "2026-02-17T00:29:44.973755554Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

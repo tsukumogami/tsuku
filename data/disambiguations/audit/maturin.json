@@ -1,0 +1,34 @@
+{
+  "tool": "maturin",
+  "selected": "crates.io:maturin",
+  "alternatives": [
+    "homebrew:maturin",
+    "pypi:maturin"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 14.605403959336543,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:maturin",
+      "downloads": 7476,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:maturin",
+      "downloads": 109190,
+      "version_count": 265,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:maturin",
+      "downloads": 0,
+      "version_count": 173,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:maturin",
+  "disambiguated_at": "2026-02-17T00:22:04.241383921Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

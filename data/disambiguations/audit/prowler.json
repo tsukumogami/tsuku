@@ -1,0 +1,40 @@
+{
+  "tool": "prowler",
+  "selected": "rubygems:prowler",
+  "alternatives": [
+    "homebrew:prowler",
+    "pypi:prowler"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 4.239136774569846,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:prowler",
+      "downloads": 6858,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:prowler",
+      "downloads": 0,
+      "version_count": 145,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:prowler",
+      "downloads": 29072,
+      "version_count": 5,
+      "has_repository": false
+    },
+    {
+      "source": "npm:prowler",
+      "downloads": 3,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:prowler",
+  "disambiguated_at": "2026-02-17T00:25:48.543131702Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

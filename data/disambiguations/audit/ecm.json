@@ -1,0 +1,32 @@
+{
+  "tool": "ecm",
+  "selected": "crates.io:ecm",
+  "alternatives": [
+    "pypi:ecm"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:ecm",
+      "downloads": 1105,
+      "version_count": 10,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:ecm",
+      "downloads": 0,
+      "version_count": 24,
+      "has_repository": true
+    },
+    {
+      "source": "npm:ecm",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:ecm",
+  "disambiguated_at": "2026-02-17T00:15:07.395346955Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

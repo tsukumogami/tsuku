@@ -1,0 +1,48 @@
+{
+  "tool": "aqua",
+  "selected": "rubygems:aqua",
+  "alternatives": [
+    "homebrew:aqua",
+    "crates.io:aqua",
+    "pypi:aqua",
+    "npm:aqua"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.101643444087174,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:aqua",
+      "downloads": 5598,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:aqua",
+      "downloads": 67,
+      "version_count": 5,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:aqua",
+      "downloads": 0,
+      "version_count": 30,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:aqua",
+      "downloads": 11765,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "npm:aqua",
+      "downloads": 0,
+      "version_count": 18,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:aqua",
+  "disambiguated_at": "2026-02-17T00:10:52.848206079Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

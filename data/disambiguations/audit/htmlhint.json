@@ -1,0 +1,26 @@
+{
+  "tool": "htmlhint",
+  "selected": "homebrew:htmlhint",
+  "alternatives": [
+    "npm:htmlhint"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:htmlhint",
+      "downloads": 461,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:htmlhint",
+      "downloads": 0,
+      "version_count": 54,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:htmlhint",
+  "disambiguated_at": "2026-02-17T00:18:24.773643253Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

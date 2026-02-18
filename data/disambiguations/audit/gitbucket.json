@@ -1,0 +1,18 @@
+{
+  "tool": "gitbucket",
+  "selected": "homebrew:gitbucket",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:gitbucket",
+      "downloads": 307,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:gitbucket",
+  "disambiguated_at": "2026-02-17T00:16:56.135830758Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

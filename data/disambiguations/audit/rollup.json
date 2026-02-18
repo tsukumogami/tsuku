@@ -1,0 +1,34 @@
+{
+  "tool": "rollup",
+  "selected": "npm:rollup",
+  "alternatives": [
+    "rubygems:rollup",
+    "homebrew:rollup"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 19863.280215114635,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:rollup",
+      "downloads": 1911,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:rollup",
+      "downloads": 3533,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:rollup",
+      "downloads": 70176969,
+      "version_count": 924,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:rollup",
+  "disambiguated_at": "2026-02-17T00:27:05.365508791Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

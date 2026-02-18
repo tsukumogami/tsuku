@@ -1,0 +1,46 @@
+{
+  "tool": "lux",
+  "selected": "rubygems:lux",
+  "alternatives": [
+    "homebrew:lux",
+    "crates.io:lux"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 42.34566145092461,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:lux",
+      "downloads": 75,
+      "version_count": 7,
+      "has_repository": false
+    },
+    {
+      "source": "pypi:lux",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:lux",
+      "downloads": 1406,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:lux",
+      "downloads": 59538,
+      "version_count": 21,
+      "has_repository": false
+    },
+    {
+      "source": "npm:lux",
+      "downloads": 12,
+      "version_count": 2,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:lux",
+  "disambiguated_at": "2026-02-17T00:21:42.149013404Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,27 @@
+{
+  "tool": "freerdp",
+  "selected": "homebrew:freerdp",
+  "alternatives": [
+    "npm:freerdp"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 4166.428571428572,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:freerdp",
+      "downloads": 29165,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:freerdp",
+      "downloads": 7,
+      "version_count": 10,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:freerdp",
+  "disambiguated_at": "2026-02-17T00:16:17.228909466Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

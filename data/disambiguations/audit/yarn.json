@@ -1,0 +1,34 @@
+{
+  "tool": "yarn",
+  "selected": "npm:yarn",
+  "alternatives": [
+    "homebrew:yarn",
+    "rubygems:yarn"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 54.71982626915186,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:yarn",
+      "downloads": 137454,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:yarn",
+      "downloads": 91991,
+      "version_count": 5,
+      "has_repository": true
+    },
+    {
+      "source": "npm:yarn",
+      "downloads": 7521459,
+      "version_count": 120,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:yarn",
+  "disambiguated_at": "2026-02-17T00:31:37.948052215Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

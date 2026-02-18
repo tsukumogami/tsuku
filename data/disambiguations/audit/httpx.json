@@ -1,0 +1,47 @@
+{
+  "tool": "httpx",
+  "selected": "rubygems:httpx",
+  "alternatives": [
+    "homebrew:httpx",
+    "pypi:httpx",
+    "npm:httpx"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 1485.6591426403643,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:httpx",
+      "downloads": 5272,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:httpx",
+      "downloads": 22,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:httpx",
+      "downloads": 0,
+      "version_count": 74,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:httpx",
+      "downloads": 7832395,
+      "version_count": 131,
+      "has_repository": true
+    },
+    {
+      "source": "npm:httpx",
+      "downloads": 0,
+      "version_count": 21,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:httpx",
+  "disambiguated_at": "2026-02-17T00:18:27.616118847Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,47 @@
+{
+  "tool": "form",
+  "selected": "rubygems:form",
+  "alternatives": [
+    "crates.io:form",
+    "homebrew:form",
+    "npm:form"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.0554584061953536,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:form",
+      "downloads": 4003,
+      "version_count": 14,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:form",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:form",
+      "downloads": 133,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:form",
+      "downloads": 8228,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "npm:form",
+      "downloads": 0,
+      "version_count": 9,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:form",
+  "disambiguated_at": "2026-02-17T00:16:10.108820317Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

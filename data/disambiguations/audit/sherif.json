@@ -1,0 +1,26 @@
+{
+  "tool": "sherif",
+  "selected": "homebrew:sherif",
+  "alternatives": [
+    "npm:sherif"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:sherif",
+      "downloads": 252,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:sherif",
+      "downloads": 0,
+      "version_count": 32,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:sherif",
+  "disambiguated_at": "2026-02-17T00:27:50.605163476Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

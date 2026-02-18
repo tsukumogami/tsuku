@@ -1,0 +1,46 @@
+{
+  "tool": "corkscrew",
+  "selected": "rubygems:corkscrew",
+  "alternatives": [
+    "homebrew:corkscrew",
+    "pypi:corkscrew"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 4.884615384615385,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:corkscrew",
+      "downloads": 8,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "pypi:corkscrew",
+      "downloads": 0,
+      "version_count": 5,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:corkscrew",
+      "downloads": 702,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:corkscrew",
+      "downloads": 3429,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:corkscrew",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:corkscrew",
+  "disambiguated_at": "2026-02-17T00:13:41.666248886Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

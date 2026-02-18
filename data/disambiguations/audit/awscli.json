@@ -1,0 +1,34 @@
+{
+  "tool": "awscli",
+  "selected": "homebrew:awscli",
+  "alternatives": [
+    "rubygems:awscli",
+    "pypi:awscli"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 14.237614726404225,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:awscli",
+      "downloads": 2199683,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:awscli",
+      "downloads": 154498,
+      "version_count": 26,
+      "has_repository": false
+    },
+    {
+      "source": "pypi:awscli",
+      "downloads": 0,
+      "version_count": 2383,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:awscli",
+  "disambiguated_at": "2026-02-17T00:10:06.196067953Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

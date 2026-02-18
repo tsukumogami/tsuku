@@ -1,0 +1,18 @@
+{
+  "tool": "makedepend",
+  "selected": "homebrew:makedepend",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:makedepend",
+      "downloads": 960,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:makedepend",
+  "disambiguated_at": "2026-02-17T00:21:52.629008178Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

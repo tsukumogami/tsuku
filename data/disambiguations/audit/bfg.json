@@ -1,0 +1,33 @@
+{
+  "tool": "bfg",
+  "selected": "homebrew:bfg",
+  "alternatives": [
+    "npm:bfg",
+    "pypi:bfg"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:bfg",
+      "downloads": 15960,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:bfg",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "npm:bfg",
+      "downloads": 0,
+      "version_count": 7,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:bfg",
+  "disambiguated_at": "2026-02-17T00:11:55.497127539Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

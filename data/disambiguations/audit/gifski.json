@@ -1,0 +1,33 @@
+{
+  "tool": "gifski",
+  "selected": "crates.io:gifski",
+  "alternatives": [
+    "homebrew:gifski"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 21.71144278606965,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:gifski",
+      "downloads": 3618,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:gifski",
+      "downloads": 78552,
+      "version_count": 57,
+      "has_repository": true
+    },
+    {
+      "source": "npm:gifski",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:gifski",
+  "disambiguated_at": "2026-02-17T00:16:44.641289605Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

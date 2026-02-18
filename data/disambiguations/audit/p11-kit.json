@@ -1,0 +1,18 @@
+{
+  "tool": "p11-kit",
+  "selected": "homebrew:p11-kit",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:p11-kit",
+      "downloads": 830598,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:p11-kit",
+  "disambiguated_at": "2026-02-17T00:24:43.02489073Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

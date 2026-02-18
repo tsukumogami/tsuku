@@ -1,0 +1,18 @@
+{
+  "tool": "soapyhackrf",
+  "selected": "homebrew:soapyhackrf",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:soapyhackrf",
+      "downloads": 485,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:soapyhackrf",
+  "disambiguated_at": "2026-02-17T00:28:16.922002433Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,41 @@
+{
+  "tool": "asyncapi",
+  "selected": "homebrew:asyncapi",
+  "alternatives": [
+    "crates.io:asyncapi",
+    "pypi:asyncapi",
+    "npm:asyncapi"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.9828850855745723,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:asyncapi",
+      "downloads": 818,
+      "version_count": 5,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:asyncapi",
+      "downloads": 2440,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:asyncapi",
+      "downloads": 0,
+      "version_count": 21,
+      "has_repository": true
+    },
+    {
+      "source": "npm:asyncapi",
+      "downloads": 0,
+      "version_count": 13,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:asyncapi",
+  "disambiguated_at": "2026-02-17T00:11:09.809073832Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

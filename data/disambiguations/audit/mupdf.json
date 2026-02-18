@@ -1,0 +1,48 @@
+{
+  "tool": "mupdf",
+  "selected": "crates.io:mupdf",
+  "alternatives": [
+    "rubygems:mupdf",
+    "npm:mupdf",
+    "homebrew:mupdf",
+    "pypi:mupdf"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 6.91270934532009,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:mupdf",
+      "downloads": 22412,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:mupdf",
+      "downloads": 190694,
+      "version_count": 21,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:mupdf",
+      "downloads": 0,
+      "version_count": 7,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:mupdf",
+      "downloads": 27586,
+      "version_count": 9,
+      "has_repository": true
+    },
+    {
+      "source": "npm:mupdf",
+      "downloads": 23924,
+      "version_count": 27,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:mupdf",
+  "disambiguated_at": "2026-02-17T00:23:01.656306599Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

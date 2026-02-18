@@ -1,0 +1,40 @@
+{
+  "tool": "unbound",
+  "selected": "homebrew:unbound",
+  "alternatives": [
+    "rubygems:unbound",
+    "npm:unbound"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 65.6584412684234,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:unbound",
+      "downloads": 12,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:unbound",
+      "downloads": 1176074,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:unbound",
+      "downloads": 17912,
+      "version_count": 6,
+      "has_repository": false
+    },
+    {
+      "source": "npm:unbound",
+      "downloads": 922,
+      "version_count": 20,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:unbound",
+  "disambiguated_at": "2026-02-17T00:30:20.131997866Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,46 @@
+{
+  "tool": "git-sync",
+  "selected": "rubygems:git-sync",
+  "alternatives": [
+    "homebrew:git-sync",
+    "npm:git-sync"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 117.82233502538071,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:git-sync",
+      "downloads": 197,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:git-sync",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "crates.io:git-sync",
+      "downloads": 14,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "rubygems:git-sync",
+      "downloads": 23211,
+      "version_count": 7,
+      "has_repository": false
+    },
+    {
+      "source": "npm:git-sync",
+      "downloads": 2,
+      "version_count": 7,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:git-sync",
+  "disambiguated_at": "2026-02-17T00:16:54.719828823Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

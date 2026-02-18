@@ -1,0 +1,27 @@
+{
+  "tool": "stylua",
+  "selected": "crates.io:stylua",
+  "alternatives": [
+    "homebrew:stylua"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.7507794232268123,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:stylua",
+      "downloads": 10264,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:stylua",
+      "downloads": 38498,
+      "version_count": 57,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:stylua",
+  "disambiguated_at": "2026-02-17T00:28:57.098418825Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

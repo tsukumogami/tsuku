@@ -1,0 +1,18 @@
+{
+  "tool": "frei0r",
+  "selected": "homebrew:frei0r",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:frei0r",
+      "downloads": 397152,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:frei0r",
+  "disambiguated_at": "2026-02-17T00:16:17.94853096Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

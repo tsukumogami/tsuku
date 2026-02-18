@@ -1,0 +1,26 @@
+{
+  "tool": "nanobind",
+  "selected": "homebrew:nanobind",
+  "alternatives": [
+    "pypi:nanobind"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:nanobind",
+      "downloads": 0,
+      "version_count": 46,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:nanobind",
+      "downloads": 840,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:nanobind",
+  "disambiguated_at": "2026-02-17T00:23:09.7496519Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

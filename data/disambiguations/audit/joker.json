@@ -1,0 +1,48 @@
+{
+  "tool": "joker",
+  "selected": "rubygems:joker",
+  "alternatives": [
+    "homebrew:joker",
+    "crates.io:joker",
+    "npm:joker",
+    "pypi:joker"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 13.329038652130823,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:joker",
+      "downloads": 85,
+      "version_count": 5,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:joker",
+      "downloads": 1009,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:joker",
+      "downloads": 0,
+      "version_count": 15,
+      "has_repository": true
+    },
+    {
+      "source": "npm:joker",
+      "downloads": 3,
+      "version_count": 7,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:joker",
+      "downloads": 13449,
+      "version_count": 2,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:joker",
+  "disambiguated_at": "2026-02-17T00:19:20.551504227Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

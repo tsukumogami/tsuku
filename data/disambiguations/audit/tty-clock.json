@@ -1,0 +1,18 @@
+{
+  "tool": "tty-clock",
+  "selected": "homebrew:tty-clock",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:tty-clock",
+      "downloads": 1000,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:tty-clock",
+  "disambiguated_at": "2026-02-17T00:30:05.665286532Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

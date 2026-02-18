@@ -1,0 +1,18 @@
+{
+  "tool": "bedops",
+  "selected": "homebrew:bedops",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:bedops",
+      "downloads": 436,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:bedops",
+  "disambiguated_at": "2026-02-17T00:11:52.138984641Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

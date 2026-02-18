@@ -1,0 +1,24 @@
+{
+  "tool": "ossp-uuid",
+  "selected": "homebrew:ossp-uuid",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:ossp-uuid",
+      "downloads": 22469,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:ossp-uuid",
+      "downloads": 2,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:ossp-uuid",
+  "disambiguated_at": "2026-02-17T00:24:36.697986214Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

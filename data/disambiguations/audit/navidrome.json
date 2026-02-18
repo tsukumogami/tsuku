@@ -1,0 +1,18 @@
+{
+  "tool": "navidrome",
+  "selected": "homebrew:navidrome",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:navidrome",
+      "downloads": 1192,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:navidrome",
+  "disambiguated_at": "2026-02-17T00:23:12.248172451Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

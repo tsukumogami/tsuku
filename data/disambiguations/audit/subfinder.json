@@ -1,0 +1,41 @@
+{
+  "tool": "subfinder",
+  "selected": "rubygems:subfinder",
+  "alternatives": [
+    "homebrew:subfinder",
+    "npm:subfinder",
+    "pypi:subfinder"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.536442436820901,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:subfinder",
+      "downloads": 0,
+      "version_count": 28,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:subfinder",
+      "downloads": 8191,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:subfinder",
+      "downloads": 12585,
+      "version_count": 6,
+      "has_repository": false
+    },
+    {
+      "source": "npm:subfinder",
+      "downloads": 6,
+      "version_count": 10,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:subfinder",
+  "disambiguated_at": "2026-02-17T00:28:57.50418962Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

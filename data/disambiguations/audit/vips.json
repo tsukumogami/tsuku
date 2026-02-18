@@ -1,0 +1,41 @@
+{
+  "tool": "vips",
+  "selected": "rubygems:vips",
+  "alternatives": [
+    "homebrew:vips",
+    "npm:vips",
+    "crates.io:vips"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.398653773227152,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:vips",
+      "downloads": 58,
+      "version_count": 5,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:vips",
+      "downloads": 63288,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:vips",
+      "downloads": 151806,
+      "version_count": 16,
+      "has_repository": false
+    },
+    {
+      "source": "npm:vips",
+      "downloads": 419,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:vips",
+  "disambiguated_at": "2026-02-17T00:30:44.772585103Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

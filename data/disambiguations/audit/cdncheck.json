@@ -1,0 +1,26 @@
+{
+  "tool": "cdncheck",
+  "selected": "homebrew:cdncheck",
+  "alternatives": [
+    "pypi:cdncheck"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:cdncheck",
+      "downloads": 1208,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:cdncheck",
+      "downloads": 0,
+      "version_count": 12,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:cdncheck",
+  "disambiguated_at": "2026-02-17T00:12:45.060981722Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

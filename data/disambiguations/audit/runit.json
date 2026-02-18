@@ -1,0 +1,30 @@
+{
+  "tool": "runit",
+  "selected": "homebrew:runit",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:runit",
+      "downloads": 782,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:runit",
+      "downloads": 14,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "npm:runit",
+      "downloads": 5,
+      "version_count": 3,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:runit",
+  "disambiguated_at": "2026-02-17T00:27:16.273310038Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

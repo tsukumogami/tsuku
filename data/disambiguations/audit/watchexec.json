@@ -1,0 +1,27 @@
+{
+  "tool": "watchexec",
+  "selected": "crates.io:watchexec",
+  "alternatives": [
+    "homebrew:watchexec"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 54.703034215622985,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:watchexec",
+      "downloads": 6196,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:watchexec",
+      "downloads": 338940,
+      "version_count": 74,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:watchexec",
+  "disambiguated_at": "2026-02-17T00:10:12.606198035Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

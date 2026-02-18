@@ -1,0 +1,24 @@
+{
+  "tool": "zls",
+  "selected": "homebrew:zls",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:zls",
+      "downloads": 3872,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:zls",
+      "downloads": 1,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:zls",
+  "disambiguated_at": "2026-02-17T00:31:51.158977704Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

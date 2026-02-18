@@ -1,0 +1,34 @@
+{
+  "tool": "pocketbase",
+  "selected": "npm:pocketbase",
+  "alternatives": [
+    "homebrew:pocketbase",
+    "pypi:pocketbase"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 20.263157894736842,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:pocketbase",
+      "downloads": 3895,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:pocketbase",
+      "downloads": 0,
+      "version_count": 23,
+      "has_repository": true
+    },
+    {
+      "source": "npm:pocketbase",
+      "downloads": 78925,
+      "version_count": 101,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:pocketbase",
+  "disambiguated_at": "2026-02-17T00:25:26.67030684Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

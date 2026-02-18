@@ -1,0 +1,33 @@
+{
+  "tool": "homeassistant-cli",
+  "selected": "homebrew:homeassistant-cli",
+  "alternatives": [
+    "pypi:homeassistant-cli",
+    "npm:homeassistant-cli"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:homeassistant-cli",
+      "downloads": 0,
+      "version_count": 41,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:homeassistant-cli",
+      "downloads": 1587,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:homeassistant-cli",
+      "downloads": 0,
+      "version_count": 5,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:homeassistant-cli",
+  "disambiguated_at": "2026-02-17T00:18:20.52709652Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

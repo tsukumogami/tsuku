@@ -1,0 +1,26 @@
+{
+  "tool": "cli53",
+  "selected": "homebrew:cli53",
+  "alternatives": [
+    "pypi:cli53"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:cli53",
+      "downloads": 1480,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:cli53",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:cli53",
+  "disambiguated_at": "2026-02-17T00:13:12.225502664Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

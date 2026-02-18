@@ -1,0 +1,26 @@
+{
+  "tool": "codecov-cli",
+  "selected": "homebrew:codecov-cli",
+  "alternatives": [
+    "pypi:codecov-cli"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:codecov-cli",
+      "downloads": 999,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:codecov-cli",
+      "downloads": 0,
+      "version_count": 70,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:codecov-cli",
+  "disambiguated_at": "2026-02-17T00:13:29.412530251Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

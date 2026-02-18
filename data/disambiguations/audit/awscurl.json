@@ -1,0 +1,32 @@
+{
+  "tool": "awscurl",
+  "selected": "homebrew:awscurl",
+  "alternatives": [
+    "pypi:awscurl"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:awscurl",
+      "downloads": 5043,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:awscurl",
+      "downloads": 0,
+      "version_count": 34,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:awscurl",
+      "downloads": 10,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:awscurl",
+  "disambiguated_at": "2026-02-17T00:11:29.760877773Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

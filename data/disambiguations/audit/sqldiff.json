@@ -1,0 +1,41 @@
+{
+  "tool": "sqldiff",
+  "selected": "homebrew:sqldiff",
+  "alternatives": [
+    "crates.io:sqldiff",
+    "npm:sqldiff",
+    "pypi:sqldiff"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 116.625,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:sqldiff",
+      "downloads": 1866,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:sqldiff",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:sqldiff",
+      "downloads": 16,
+      "version_count": 6,
+      "has_repository": true
+    },
+    {
+      "source": "npm:sqldiff",
+      "downloads": 0,
+      "version_count": 34,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:sqldiff",
+  "disambiguated_at": "2026-02-17T00:28:34.319609568Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

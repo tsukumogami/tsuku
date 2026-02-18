@@ -1,0 +1,24 @@
+{
+  "tool": "gibo",
+  "selected": "homebrew:gibo",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:gibo",
+      "downloads": 1822,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:gibo",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:gibo",
+  "disambiguated_at": "2026-02-17T00:16:43.316932113Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,46 @@
+{
+  "tool": "igraph",
+  "selected": "rubygems:igraph",
+  "alternatives": [
+    "homebrew:igraph",
+    "pypi:igraph"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 38.36652360515021,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:igraph",
+      "downloads": 8,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:igraph",
+      "downloads": 1165,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:igraph",
+      "downloads": 0,
+      "version_count": 35,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:igraph",
+      "downloads": 44697,
+      "version_count": 10,
+      "has_repository": false
+    },
+    {
+      "source": "npm:igraph",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:igraph",
+  "disambiguated_at": "2026-02-17T00:18:41.696088301Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

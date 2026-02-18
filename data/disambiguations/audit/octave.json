@@ -1,0 +1,39 @@
+{
+  "tool": "octave",
+  "selected": "homebrew:octave",
+  "alternatives": [
+    "rubygems:octave"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 4.245380072394742,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:octave",
+      "downloads": 7,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:octave",
+      "downloads": 22284,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:octave",
+      "downloads": 5249,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "npm:octave",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:octave",
+  "disambiguated_at": "2026-02-17T00:23:54.777123399Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

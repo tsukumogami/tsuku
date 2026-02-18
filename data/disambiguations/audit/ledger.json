@@ -1,0 +1,46 @@
+{
+  "tool": "ledger",
+  "selected": "rubygems:ledger",
+  "alternatives": [
+    "homebrew:ledger",
+    "crates.io:ledger"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 4.899053627760252,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:ledger",
+      "downloads": 3487,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:ledger",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "crates.io:ledger",
+      "downloads": 1446,
+      "version_count": 17,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:ledger",
+      "downloads": 17083,
+      "version_count": 5,
+      "has_repository": false
+    },
+    {
+      "source": "npm:ledger",
+      "downloads": 8,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:ledger",
+  "disambiguated_at": "2026-02-17T00:20:19.867858696Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

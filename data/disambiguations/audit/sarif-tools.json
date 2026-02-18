@@ -1,0 +1,26 @@
+{
+  "tool": "sarif-tools",
+  "selected": "homebrew:sarif-tools",
+  "alternatives": [
+    "pypi:sarif-tools"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:sarif-tools",
+      "downloads": 213,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:sarif-tools",
+      "downloads": 0,
+      "version_count": 11,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:sarif-tools",
+  "disambiguated_at": "2026-02-17T00:27:25.017033216Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

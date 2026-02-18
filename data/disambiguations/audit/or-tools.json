@@ -1,0 +1,33 @@
+{
+  "tool": "or-tools",
+  "selected": "rubygems:or-tools",
+  "alternatives": [
+    "homebrew:or-tools"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 100.98153034300792,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:or-tools",
+      "downloads": 20,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:or-tools",
+      "downloads": 2274,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:or-tools",
+      "downloads": 229632,
+      "version_count": 51,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:or-tools",
+  "disambiguated_at": "2026-02-17T00:24:19.697126817Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

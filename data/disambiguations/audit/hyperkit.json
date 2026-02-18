@@ -1,0 +1,30 @@
+{
+  "tool": "hyperkit",
+  "selected": "rubygems:hyperkit",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "pypi:hyperkit",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:hyperkit",
+      "downloads": 23185,
+      "version_count": 5,
+      "has_repository": true
+    },
+    {
+      "source": "npm:hyperkit",
+      "downloads": 1,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:hyperkit",
+  "disambiguated_at": "2026-02-17T00:18:31.904850608Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

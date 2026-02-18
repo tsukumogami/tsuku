@@ -1,0 +1,39 @@
+{
+  "tool": "ocm",
+  "selected": "rubygems:ocm",
+  "alternatives": [
+    "homebrew:ocm"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 51.311909262759926,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:ocm",
+      "downloads": 17,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:ocm",
+      "downloads": 529,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:ocm",
+      "downloads": 27144,
+      "version_count": 8,
+      "has_repository": false
+    },
+    {
+      "source": "npm:ocm",
+      "downloads": 6,
+      "version_count": 4,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:ocm",
+  "disambiguated_at": "2026-02-17T00:23:54.068528098Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

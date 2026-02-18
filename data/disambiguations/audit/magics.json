@@ -1,0 +1,32 @@
+{
+  "tool": "magics",
+  "selected": "homebrew:magics",
+  "alternatives": [
+    "pypi:magics"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:magics",
+      "downloads": 87,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:magics",
+      "downloads": 0,
+      "version_count": 39,
+      "has_repository": true
+    },
+    {
+      "source": "npm:magics",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:magics",
+  "disambiguated_at": "2026-02-17T00:21:50.567575272Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

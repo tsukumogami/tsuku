@@ -1,0 +1,41 @@
+{
+  "tool": "elm",
+  "selected": "homebrew:elm",
+  "alternatives": [
+    "crates.io:elm",
+    "npm:elm",
+    "pypi:elm"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 5.881188118811881,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:elm",
+      "downloads": 101,
+      "version_count": 10,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:elm",
+      "downloads": 594,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:elm",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "npm:elm",
+      "downloads": 0,
+      "version_count": 45,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:elm",
+  "disambiguated_at": "2026-02-17T00:15:14.436494169Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

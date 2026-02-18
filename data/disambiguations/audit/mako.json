@@ -1,0 +1,48 @@
+{
+  "tool": "mako",
+  "selected": "rubygems:mako",
+  "alternatives": [
+    "homebrew:mako",
+    "crates.io:mako",
+    "pypi:mako",
+    "npm:mako"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 37.06553079947575,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:mako",
+      "downloads": 66,
+      "version_count": 8,
+      "has_repository": false
+    },
+    {
+      "source": "pypi:mako",
+      "downloads": 0,
+      "version_count": 77,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:mako",
+      "downloads": 763,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:mako",
+      "downloads": 28281,
+      "version_count": 8,
+      "has_repository": false
+    },
+    {
+      "source": "npm:mako",
+      "downloads": 0,
+      "version_count": 66,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:mako",
+  "disambiguated_at": "2026-02-17T00:21:53.749010773Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

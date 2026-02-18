@@ -1,0 +1,24 @@
+{
+  "tool": "rtorrent",
+  "selected": "homebrew:rtorrent",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:rtorrent",
+      "downloads": 4811,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:rtorrent",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:rtorrent",
+  "disambiguated_at": "2026-02-17T00:27:12.080902482Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,24 @@
+{
+  "tool": "cargo-flamegraph",
+  "selected": "homebrew:cargo-flamegraph",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:cargo-flamegraph",
+      "downloads": 339,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:cargo-flamegraph",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:cargo-flamegraph",
+  "disambiguated_at": "2026-02-17T00:12:34.459709633Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

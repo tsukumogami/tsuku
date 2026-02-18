@@ -1,0 +1,41 @@
+{
+  "tool": "base64",
+  "selected": "rubygems:base64",
+  "alternatives": [
+    "crates.io:base64",
+    "npm:base64",
+    "homebrew:base64"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.736468762839585,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:base64",
+      "downloads": 135219029,
+      "version_count": 43,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:base64",
+      "downloads": 1036,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:base64",
+      "downloads": 370022649,
+      "version_count": 5,
+      "has_repository": true
+    },
+    {
+      "source": "npm:base64",
+      "downloads": 15029,
+      "version_count": 9,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:base64",
+  "disambiguated_at": "2026-02-17T00:11:42.405194132Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

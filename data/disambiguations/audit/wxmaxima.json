@@ -1,0 +1,18 @@
+{
+  "tool": "wxmaxima",
+  "selected": "homebrew:wxmaxima",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:wxmaxima",
+      "downloads": 3261,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:wxmaxima",
+  "disambiguated_at": "2026-02-17T00:31:19.066878922Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

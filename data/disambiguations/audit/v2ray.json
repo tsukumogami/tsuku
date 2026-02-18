@@ -1,0 +1,30 @@
+{
+  "tool": "v2ray",
+  "selected": "homebrew:v2ray",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:v2ray",
+      "downloads": 7601,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:v2ray",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "npm:v2ray",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:v2ray",
+  "disambiguated_at": "2026-02-17T00:30:31.086824986Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

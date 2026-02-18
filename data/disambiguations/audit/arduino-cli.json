@@ -1,0 +1,26 @@
+{
+  "tool": "arduino-cli",
+  "selected": "homebrew:arduino-cli",
+  "alternatives": [
+    "npm:arduino-cli"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:arduino-cli",
+      "downloads": 12983,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:arduino-cli",
+      "downloads": 0,
+      "version_count": 5,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:arduino-cli",
+  "disambiguated_at": "2026-02-17T00:10:54.851829482Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "testdisk",
+  "selected": "homebrew:testdisk",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:testdisk",
+      "downloads": 20389,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:testdisk",
+  "disambiguated_at": "2026-02-17T00:29:32.577760512Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

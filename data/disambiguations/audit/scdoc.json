@@ -1,0 +1,18 @@
+{
+  "tool": "scdoc",
+  "selected": "homebrew:scdoc",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:scdoc",
+      "downloads": 956,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:scdoc",
+  "disambiguated_at": "2026-02-17T00:27:30.385978176Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

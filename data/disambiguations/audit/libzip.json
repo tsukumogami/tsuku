@@ -1,0 +1,27 @@
+{
+  "tool": "libzip",
+  "selected": "homebrew:libzip",
+  "alternatives": [
+    "npm:libzip"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 17608.9375,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:libzip",
+      "downloads": 281743,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:libzip",
+      "downloads": 16,
+      "version_count": 9,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:libzip",
+  "disambiguated_at": "2026-02-17T00:21:19.7834972Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

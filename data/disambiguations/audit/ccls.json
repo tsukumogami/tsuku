@@ -1,0 +1,18 @@
+{
+  "tool": "ccls",
+  "selected": "homebrew:ccls",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:ccls",
+      "downloads": 3504,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:ccls",
+  "disambiguated_at": "2026-02-17T00:12:43.562549866Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

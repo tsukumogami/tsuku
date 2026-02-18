@@ -1,0 +1,30 @@
+{
+  "tool": "tcpflow",
+  "selected": "homebrew:tcpflow",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:tcpflow",
+      "downloads": 718,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:tcpflow",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "npm:tcpflow",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:tcpflow",
+  "disambiguated_at": "2026-02-17T00:29:19.273269881Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

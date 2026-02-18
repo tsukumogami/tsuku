@@ -1,0 +1,24 @@
+{
+  "tool": "libgit2",
+  "selected": "homebrew:libgit2",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:libgit2",
+      "downloads": 335954,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:libgit2",
+      "downloads": 6,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:libgit2",
+  "disambiguated_at": "2026-02-17T00:20:36.669621473Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

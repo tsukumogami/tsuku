@@ -1,0 +1,33 @@
+{
+  "tool": "miniserve",
+  "selected": "crates.io:miniserve",
+  "alternatives": [
+    "homebrew:miniserve"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.7987967914438503,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:miniserve",
+      "downloads": 2691,
+      "version_count": 52,
+      "has_repository": true
+    },
+    {
+      "source": "npm:miniserve",
+      "downloads": 3,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:miniserve",
+      "downloads": 1496,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:miniserve",
+  "disambiguated_at": "2026-02-17T00:22:33.506601494Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

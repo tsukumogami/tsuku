@@ -1,0 +1,33 @@
+{
+  "tool": "tika",
+  "selected": "homebrew:tika",
+  "alternatives": [
+    "pypi:tika",
+    "npm:tika"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:tika",
+      "downloads": 1157,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:tika",
+      "downloads": 0,
+      "version_count": 36,
+      "has_repository": true
+    },
+    {
+      "source": "npm:tika",
+      "downloads": 0,
+      "version_count": 23,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:tika",
+  "disambiguated_at": "2026-02-17T00:29:41.163189797Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

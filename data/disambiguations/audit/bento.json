@@ -1,0 +1,46 @@
+{
+  "tool": "bento",
+  "selected": "rubygems:bento",
+  "alternatives": [
+    "homebrew:bento",
+    "pypi:bento"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 34.02123142250531,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:bento",
+      "downloads": 0,
+      "version_count": 6,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:bento",
+      "downloads": 10,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:bento",
+      "downloads": 471,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:bento",
+      "downloads": 16024,
+      "version_count": 3,
+      "has_repository": false
+    },
+    {
+      "source": "npm:bento",
+      "downloads": 0,
+      "version_count": 0,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:bento",
+  "disambiguated_at": "2026-02-17T00:11:53.455665852Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

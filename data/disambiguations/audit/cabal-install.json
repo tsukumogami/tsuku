@@ -1,0 +1,18 @@
+{
+  "tool": "cabal-install",
+  "selected": "homebrew:cabal-install",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:cabal-install",
+      "downloads": 11366,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:cabal-install",
+  "disambiguated_at": "2026-02-17T00:12:29.169401308Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

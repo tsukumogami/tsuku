@@ -1,0 +1,39 @@
+{
+  "tool": "kotlin",
+  "selected": "homebrew:kotlin",
+  "alternatives": [
+    "npm:kotlin"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 8.294863797047203,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:kotlin",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "crates.io:kotlin",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:kotlin",
+      "downloads": 39890,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:kotlin",
+      "downloads": 4809,
+      "version_count": 219,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:kotlin",
+  "disambiguated_at": "2026-02-17T00:19:55.875284146Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

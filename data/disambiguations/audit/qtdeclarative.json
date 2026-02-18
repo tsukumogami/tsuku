@@ -1,0 +1,18 @@
+{
+  "tool": "qtdeclarative",
+  "selected": "homebrew:qtdeclarative",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:qtdeclarative",
+      "downloads": 49415,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:qtdeclarative",
+  "disambiguated_at": "2026-02-17T00:26:21.416558049Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

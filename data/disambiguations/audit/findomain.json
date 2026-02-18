@@ -1,0 +1,26 @@
+{
+  "tool": "findomain",
+  "selected": "homebrew:findomain",
+  "alternatives": [
+    "crates.io:findomain"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:findomain",
+      "downloads": 715,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:findomain",
+      "downloads": 0,
+      "version_count": 53,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:findomain",
+  "disambiguated_at": "2026-02-17T00:15:53.558988563Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

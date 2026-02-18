@@ -1,0 +1,33 @@
+{
+  "tool": "typescript-language-server",
+  "selected": "npm:typescript-language-server",
+  "alternatives": [
+    "homebrew:typescript-language-server"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 237.56271082490034,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:typescript-language-server",
+      "downloads": 6522,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:typescript-language-server",
+      "downloads": 38,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "npm:typescript-language-server",
+      "downloads": 1549384,
+      "version_count": 145,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:typescript-language-server",
+  "disambiguated_at": "2026-02-17T00:30:15.840575281Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

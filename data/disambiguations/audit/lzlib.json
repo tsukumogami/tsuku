@@ -1,0 +1,30 @@
+{
+  "tool": "lzlib",
+  "selected": "homebrew:lzlib",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:lzlib",
+      "downloads": 10,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:lzlib",
+      "downloads": 18259,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:lzlib",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:lzlib",
+  "disambiguated_at": "2026-02-17T00:21:44.624004783Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "rxvt-unicode",
+  "selected": "homebrew:rxvt-unicode",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:rxvt-unicode",
+      "downloads": 314,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:rxvt-unicode",
+  "disambiguated_at": "2026-02-17T00:27:19.604636728Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

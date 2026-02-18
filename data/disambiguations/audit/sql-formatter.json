@@ -1,0 +1,33 @@
+{
+  "tool": "sql-formatter",
+  "selected": "homebrew:sql-formatter",
+  "alternatives": [
+    "npm:sql-formatter",
+    "pypi:sql-formatter"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:sql-formatter",
+      "downloads": 986,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:sql-formatter",
+      "downloads": 0,
+      "version_count": 18,
+      "has_repository": true
+    },
+    {
+      "source": "npm:sql-formatter",
+      "downloads": 0,
+      "version_count": 171,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:sql-formatter",
+  "disambiguated_at": "2026-02-17T00:28:32.932795796Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

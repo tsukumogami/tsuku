@@ -1,0 +1,18 @@
+{
+  "tool": "macos-trash",
+  "selected": "homebrew:macos-trash",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:macos-trash",
+      "downloads": 934,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:macos-trash",
+  "disambiguated_at": "2026-02-17T00:21:48.116130904Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

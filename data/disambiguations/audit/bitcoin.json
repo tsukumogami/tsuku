@@ -1,0 +1,48 @@
+{
+  "tool": "bitcoin",
+  "selected": "crates.io:bitcoin",
+  "alternatives": [
+    "rubygems:bitcoin",
+    "homebrew:bitcoin",
+    "npm:bitcoin",
+    "pypi:bitcoin"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 17.239206632739037,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:bitcoin",
+      "downloads": 3273,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:bitcoin",
+      "downloads": 0,
+      "version_count": 37,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:bitcoin",
+      "downloads": 1023009,
+      "version_count": 106,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:bitcoin",
+      "downloads": 59342,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "npm:bitcoin",
+      "downloads": 493,
+      "version_count": 37,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:bitcoin",
+  "disambiguated_at": "2026-02-17T00:11:59.094754187Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

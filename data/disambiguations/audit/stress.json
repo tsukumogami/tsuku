@@ -1,0 +1,39 @@
+{
+  "tool": "stress",
+  "selected": "homebrew:stress",
+  "alternatives": [
+    "crates.io:stress"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 132.35294117647058,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:stress",
+      "downloads": 2250,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:stress",
+      "downloads": 17,
+      "version_count": 5,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:stress",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "npm:stress",
+      "downloads": 14,
+      "version_count": 3,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:stress",
+  "disambiguated_at": "2026-02-17T00:28:53.857069246Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

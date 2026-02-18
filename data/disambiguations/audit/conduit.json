@@ -1,0 +1,48 @@
+{
+  "tool": "conduit",
+  "selected": "rubygems:conduit",
+  "alternatives": [
+    "crates.io:conduit",
+    "homebrew:conduit",
+    "npm:conduit",
+    "pypi:conduit"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 64.67148014440433,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:conduit",
+      "downloads": 221,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:conduit",
+      "downloads": 0,
+      "version_count": 10,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:conduit",
+      "downloads": 2493,
+      "version_count": 27,
+      "has_repository": true
+    },
+    {
+      "source": "npm:conduit",
+      "downloads": 17,
+      "version_count": 178,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:conduit",
+      "downloads": 161226,
+      "version_count": 27,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:conduit",
+  "disambiguated_at": "2026-02-17T00:13:34.840296431Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

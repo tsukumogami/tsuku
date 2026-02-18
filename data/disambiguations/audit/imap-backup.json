@@ -1,0 +1,27 @@
+{
+  "tool": "imap-backup",
+  "selected": "rubygems:imap-backup",
+  "alternatives": [
+    "homebrew:imap-backup"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 251.50790305584826,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:imap-backup",
+      "downloads": 949,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:imap-backup",
+      "downloads": 238681,
+      "version_count": 138,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:imap-backup",
+  "disambiguated_at": "2026-02-17T00:18:43.9593492Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

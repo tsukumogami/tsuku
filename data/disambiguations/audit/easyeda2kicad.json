@@ -1,0 +1,34 @@
+{
+  "tool": "easyeda2kicad",
+  "selected": "homebrew:easyeda2kicad",
+  "alternatives": [
+    "npm:easyeda2kicad",
+    "pypi:easyeda2kicad"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 19.565217391304348,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:easyeda2kicad",
+      "downloads": 450,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:easyeda2kicad",
+      "downloads": 0,
+      "version_count": 24,
+      "has_repository": true
+    },
+    {
+      "source": "npm:easyeda2kicad",
+      "downloads": 23,
+      "version_count": 23,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:easyeda2kicad",
+  "disambiguated_at": "2026-02-17T00:15:05.140013398Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

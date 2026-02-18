@@ -1,0 +1,33 @@
+{
+  "tool": "jid",
+  "selected": "crates.io:jid",
+  "alternatives": [
+    "homebrew:jid"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 15.28956834532374,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:jid",
+      "downloads": 8501,
+      "version_count": 29,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:jid",
+      "downloads": 556,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:jid",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:jid",
+  "disambiguated_at": "2026-02-17T00:19:16.02898622Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

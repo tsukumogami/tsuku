@@ -1,0 +1,41 @@
+{
+  "tool": "mpd",
+  "selected": "homebrew:mpd",
+  "alternatives": [
+    "rubygems:mpd",
+    "crates.io:mpd",
+    "npm:mpd"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.1471518987341771,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:mpd",
+      "downloads": 5800,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:mpd",
+      "downloads": 4690,
+      "version_count": 13,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:mpd",
+      "downloads": 5056,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:mpd",
+      "downloads": 0,
+      "version_count": 13,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:mpd",
+  "disambiguated_at": "2026-02-17T00:22:52.053247072Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

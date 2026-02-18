@@ -1,0 +1,48 @@
+{
+  "tool": "leveldb",
+  "selected": "rubygems:leveldb",
+  "alternatives": [
+    "crates.io:leveldb",
+    "homebrew:leveldb",
+    "pypi:leveldb",
+    "npm:leveldb"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.1690605110667807,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:leveldb",
+      "downloads": 0,
+      "version_count": 16,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:leveldb",
+      "downloads": 4258,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:leveldb",
+      "downloads": 105270,
+      "version_count": 24,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:leveldb",
+      "downloads": 123067,
+      "version_count": 11,
+      "has_repository": false
+    },
+    {
+      "source": "npm:leveldb",
+      "downloads": 0,
+      "version_count": 15,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:leveldb",
+  "disambiguated_at": "2026-02-17T00:20:23.376048036Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

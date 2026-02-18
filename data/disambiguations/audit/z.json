@@ -1,0 +1,40 @@
+{
+  "tool": "z",
+  "selected": "rubygems:z",
+  "alternatives": [
+    "homebrew:z",
+    "npm:z"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.3156331229112515,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:z",
+      "downloads": 57,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:z",
+      "downloads": 5386,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:z",
+      "downloads": 7086,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:z",
+      "downloads": 0,
+      "version_count": 18,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:z",
+  "disambiguated_at": "2026-02-17T00:31:43.571750209Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,32 @@
+{
+  "tool": "dstack",
+  "selected": "homebrew:dstack",
+  "alternatives": [
+    "pypi:dstack"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:dstack",
+      "downloads": 1227,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:dstack",
+      "downloads": 0,
+      "version_count": 308,
+      "has_repository": true
+    },
+    {
+      "source": "npm:dstack",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:dstack",
+  "disambiguated_at": "2026-02-17T00:14:52.268739173Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

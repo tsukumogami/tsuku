@@ -1,0 +1,33 @@
+{
+  "tool": "testssl",
+  "selected": "homebrew:testssl",
+  "alternatives": [
+    "crates.io:testssl"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 261.72222222222223,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:testssl",
+      "downloads": 4711,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:testssl",
+      "downloads": 18,
+      "version_count": 6,
+      "has_repository": false
+    },
+    {
+      "source": "npm:testssl",
+      "downloads": 11,
+      "version_count": 3,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:testssl",
+  "disambiguated_at": "2026-02-17T00:29:33.089192331Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

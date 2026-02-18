@@ -1,0 +1,26 @@
+{
+  "tool": "dnstwist",
+  "selected": "homebrew:dnstwist",
+  "alternatives": [
+    "pypi:dnstwist"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:dnstwist",
+      "downloads": 1214,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:dnstwist",
+      "downloads": 0,
+      "version_count": 21,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:dnstwist",
+  "disambiguated_at": "2026-02-17T00:14:36.421632294Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

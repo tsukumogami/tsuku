@@ -1,0 +1,26 @@
+{
+  "tool": "ansible-builder",
+  "selected": "homebrew:ansible-builder",
+  "alternatives": [
+    "pypi:ansible-builder"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:ansible-builder",
+      "downloads": 709,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:ansible-builder",
+      "downloads": 0,
+      "version_count": 26,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:ansible-builder",
+  "disambiguated_at": "2026-02-17T00:10:41.245708226Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

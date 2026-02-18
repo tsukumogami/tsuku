@@ -1,0 +1,26 @@
+{
+  "tool": "angular-cli",
+  "selected": "homebrew:angular-cli",
+  "alternatives": [
+    "npm:angular-cli"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:angular-cli",
+      "downloads": 24070,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:angular-cli",
+      "downloads": 0,
+      "version_count": 88,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:angular-cli",
+  "disambiguated_at": "2026-02-17T00:10:40.358492414Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

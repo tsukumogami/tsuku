@@ -1,0 +1,18 @@
+{
+  "tool": "pyenv-virtualenvwrapper",
+  "selected": "homebrew:pyenv-virtualenvwrapper",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:pyenv-virtualenvwrapper",
+      "downloads": 1392,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:pyenv-virtualenvwrapper",
+  "disambiguated_at": "2026-02-17T00:26:00.442723658Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

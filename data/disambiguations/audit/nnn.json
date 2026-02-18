@@ -1,0 +1,40 @@
+{
+  "tool": "nnn",
+  "selected": "homebrew:nnn",
+  "alternatives": [
+    "crates.io:nnn",
+    "npm:nnn"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 34.81025641025641,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:nnn",
+      "downloads": 195,
+      "version_count": 12,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:nnn",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:nnn",
+      "downloads": 6788,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:nnn",
+      "downloads": 0,
+      "version_count": 18,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:nnn",
+  "disambiguated_at": "2026-02-17T00:23:35.559801219Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

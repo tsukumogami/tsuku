@@ -1,0 +1,48 @@
+{
+  "tool": "jose",
+  "selected": "npm:jose",
+  "alternatives": [
+    "rubygems:jose",
+    "crates.io:jose",
+    "homebrew:jose",
+    "pypi:jose"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 5.07688676833527,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:jose",
+      "downloads": 22715,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:jose",
+      "downloads": 0,
+      "version_count": 5,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:jose",
+      "downloads": 340,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:jose",
+      "downloads": 7764639,
+      "version_count": 10,
+      "has_repository": false
+    },
+    {
+      "source": "npm:jose",
+      "downloads": 39420193,
+      "version_count": 232,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:jose",
+  "disambiguated_at": "2026-02-17T00:19:22.456133277Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

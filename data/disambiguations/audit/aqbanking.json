@@ -1,0 +1,33 @@
+{
+  "tool": "aqbanking",
+  "selected": "rubygems:aqbanking",
+  "alternatives": [
+    "homebrew:aqbanking"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 4.684659090909091,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:aqbanking",
+      "downloads": 1056,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:aqbanking",
+      "downloads": 4947,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:aqbanking",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:aqbanking",
+  "disambiguated_at": "2026-02-17T00:10:52.423095074Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

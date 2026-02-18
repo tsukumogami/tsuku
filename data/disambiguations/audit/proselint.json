@@ -1,0 +1,33 @@
+{
+  "tool": "proselint",
+  "selected": "homebrew:proselint",
+  "alternatives": [
+    "pypi:proselint",
+    "npm:proselint"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:proselint",
+      "downloads": 499,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:proselint",
+      "downloads": 0,
+      "version_count": 32,
+      "has_repository": true
+    },
+    {
+      "source": "npm:proselint",
+      "downloads": 0,
+      "version_count": 9,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:proselint",
+  "disambiguated_at": "2026-02-17T00:25:44.378454758Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

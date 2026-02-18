@@ -1,0 +1,40 @@
+{
+  "tool": "rabbitmq",
+  "selected": "rubygems:rabbitmq",
+  "alternatives": [
+    "homebrew:rabbitmq",
+    "npm:rabbitmq"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.2487716105550501,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:rabbitmq",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:rabbitmq",
+      "downloads": 43960,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:rabbitmq",
+      "downloads": 54896,
+      "version_count": 21,
+      "has_repository": false
+    },
+    {
+      "source": "npm:rabbitmq",
+      "downloads": 431,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:rabbitmq",
+  "disambiguated_at": "2026-02-17T00:26:32.356282491Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

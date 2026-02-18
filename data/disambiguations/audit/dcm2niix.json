@@ -1,0 +1,26 @@
+{
+  "tool": "dcm2niix",
+  "selected": "homebrew:dcm2niix",
+  "alternatives": [
+    "pypi:dcm2niix"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:dcm2niix",
+      "downloads": 1080,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:dcm2niix",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:dcm2niix",
+  "disambiguated_at": "2026-02-17T00:14:13.439816537Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

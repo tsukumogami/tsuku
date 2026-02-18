@@ -1,0 +1,46 @@
+{
+  "tool": "starship",
+  "selected": "homebrew:starship",
+  "alternatives": [
+    "crates.io:starship",
+    "rubygems:starship"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 6.21732818886809,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:starship",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:starship",
+      "downloads": 162751,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:starship",
+      "downloads": 26177,
+      "version_count": 140,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:starship",
+      "downloads": 1989,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:starship",
+      "downloads": 12,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:starship",
+  "disambiguated_at": "2026-02-17T00:28:45.452020561Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

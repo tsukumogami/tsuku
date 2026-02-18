@@ -1,0 +1,33 @@
+{
+  "tool": "libx11",
+  "selected": "homebrew:libx11",
+  "alternatives": [
+    "rubygems:libx11"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 85.90671058508262,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:libx11",
+      "downloads": 5,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:libx11",
+      "downloads": 1538761,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:libx11",
+      "downloads": 17912,
+      "version_count": 7,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:libx11",
+  "disambiguated_at": "2026-02-17T00:21:12.507868382Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

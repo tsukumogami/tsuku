@@ -1,0 +1,39 @@
+{
+  "tool": "flow-cli",
+  "selected": "rubygems:flow-cli",
+  "alternatives": [
+    "homebrew:flow-cli"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 9.12629022465088,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:flow-cli",
+      "downloads": 1647,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:flow-cli",
+      "downloads": 14,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:flow-cli",
+      "downloads": 15031,
+      "version_count": 7,
+      "has_repository": true
+    },
+    {
+      "source": "npm:flow-cli",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:flow-cli",
+  "disambiguated_at": "2026-02-17T00:16:01.927264388Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

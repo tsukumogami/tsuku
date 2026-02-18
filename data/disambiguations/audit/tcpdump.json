@@ -1,0 +1,24 @@
+{
+  "tool": "tcpdump",
+  "selected": "homebrew:tcpdump",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:tcpdump",
+      "downloads": 5547,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:tcpdump",
+      "downloads": 4,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:tcpdump",
+  "disambiguated_at": "2026-02-17T00:29:19.037259217Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

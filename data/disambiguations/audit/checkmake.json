@@ -1,0 +1,18 @@
+{
+  "tool": "checkmake",
+  "selected": "homebrew:checkmake",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:checkmake",
+      "downloads": 2177,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:checkmake",
+  "disambiguated_at": "2026-02-17T00:12:56.735132171Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

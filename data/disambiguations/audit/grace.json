@@ -1,0 +1,47 @@
+{
+  "tool": "grace",
+  "selected": "rubygems:grace",
+  "alternatives": [
+    "homebrew:grace",
+    "npm:grace",
+    "pypi:grace"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.6912637828668364,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:grace",
+      "downloads": 9,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:grace",
+      "downloads": 1179,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:grace",
+      "downloads": 0,
+      "version_count": 97,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:grace",
+      "downloads": 4352,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:grace",
+      "downloads": 4,
+      "version_count": 8,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:grace",
+  "disambiguated_at": "2026-02-17T00:17:33.055840979Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

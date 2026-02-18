@@ -1,0 +1,41 @@
+{
+  "tool": "kuzu",
+  "selected": "crates.io:kuzu",
+  "alternatives": [
+    "npm:kuzu",
+    "homebrew:kuzu",
+    "pypi:kuzu"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.8111624003357112,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:kuzu",
+      "downloads": 687,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:kuzu",
+      "downloads": 4316,
+      "version_count": 161,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:kuzu",
+      "downloads": 0,
+      "version_count": 36,
+      "has_repository": true
+    },
+    {
+      "source": "npm:kuzu",
+      "downloads": 2383,
+      "version_count": 686,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:kuzu",
+  "disambiguated_at": "2026-02-17T00:20:08.8121484Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

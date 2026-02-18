@@ -1,0 +1,26 @@
+{
+  "tool": "git-gui",
+  "selected": "homebrew:git-gui",
+  "alternatives": [
+    "npm:git-gui"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:git-gui",
+      "downloads": 64561,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:git-gui",
+      "downloads": 0,
+      "version_count": 7,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:git-gui",
+  "disambiguated_at": "2026-02-17T00:16:50.323846301Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

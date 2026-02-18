@@ -1,0 +1,45 @@
+{
+  "tool": "grafana",
+  "selected": "rubygems:grafana",
+  "alternatives": [
+    "homebrew:grafana"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.1754235578862444,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:grafana",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:grafana",
+      "downloads": 49,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:grafana",
+      "downloads": 19832,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:grafana",
+      "downloads": 23311,
+      "version_count": 8,
+      "has_repository": false
+    },
+    {
+      "source": "npm:grafana",
+      "downloads": 75,
+      "version_count": 2,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:grafana",
+  "disambiguated_at": "2026-02-17T00:17:34.725554057Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

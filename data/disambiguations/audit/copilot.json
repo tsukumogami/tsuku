@@ -1,0 +1,46 @@
+{
+  "tool": "copilot",
+  "selected": "rubygems:copilot",
+  "alternatives": [
+    "homebrew:copilot",
+    "pypi:copilot"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 11.78080176535491,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:copilot",
+      "downloads": 42,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:copilot",
+      "downloads": 2719,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:copilot",
+      "downloads": 0,
+      "version_count": 9,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:copilot",
+      "downloads": 32032,
+      "version_count": 9,
+      "has_repository": false
+    },
+    {
+      "source": "npm:copilot",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:copilot",
+  "disambiguated_at": "2026-02-17T00:13:40.494675565Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

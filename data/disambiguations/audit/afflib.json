@@ -1,0 +1,24 @@
+{
+  "tool": "afflib",
+  "selected": "homebrew:afflib",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "pypi:afflib",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:afflib",
+      "downloads": 4096,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:afflib",
+  "disambiguated_at": "2026-02-17T00:10:25.233835406Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

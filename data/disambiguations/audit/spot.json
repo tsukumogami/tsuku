@@ -1,0 +1,47 @@
+{
+  "tool": "spot",
+  "selected": "rubygems:spot",
+  "alternatives": [
+    "homebrew:spot",
+    "crates.io:spot",
+    "npm:spot"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 51.59704641350211,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:spot",
+      "downloads": 474,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:spot",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:spot",
+      "downloads": 19,
+      "version_count": 7,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:spot",
+      "downloads": 24457,
+      "version_count": 7,
+      "has_repository": false
+    },
+    {
+      "source": "npm:spot",
+      "downloads": 0,
+      "version_count": 6,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:spot",
+  "disambiguated_at": "2026-02-17T00:28:31.044993963Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

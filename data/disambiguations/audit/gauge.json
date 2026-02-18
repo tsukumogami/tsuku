@@ -1,0 +1,48 @@
+{
+  "tool": "gauge",
+  "selected": "rubygems:gauge",
+  "alternatives": [
+    "homebrew:gauge",
+    "crates.io:gauge",
+    "npm:gauge",
+    "pypi:gauge"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 7.002300613496932,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:gauge",
+      "downloads": 1304,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:gauge",
+      "downloads": 0,
+      "version_count": 37,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:gauge",
+      "downloads": 109,
+      "version_count": 17,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:gauge",
+      "downloads": 9131,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "npm:gauge",
+      "downloads": 0,
+      "version_count": 40,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:gauge",
+  "disambiguated_at": "2026-02-17T00:16:30.04780036Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

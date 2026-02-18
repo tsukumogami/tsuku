@@ -1,0 +1,18 @@
+{
+  "tool": "libiscsi",
+  "selected": "homebrew:libiscsi",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:libiscsi",
+      "downloads": 11630,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:libiscsi",
+  "disambiguated_at": "2026-02-17T00:20:42.49054055Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

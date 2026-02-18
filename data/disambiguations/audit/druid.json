@@ -1,0 +1,47 @@
+{
+  "tool": "druid",
+  "selected": "crates.io:druid",
+  "alternatives": [
+    "rubygems:druid",
+    "homebrew:druid",
+    "pypi:druid"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.930709534368071,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:druid",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:druid",
+      "downloads": 15861,
+      "version_count": 14,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:druid",
+      "downloads": 692,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:druid",
+      "downloads": 5412,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:druid",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:druid",
+  "disambiguated_at": "2026-02-17T00:14:51.570312348Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

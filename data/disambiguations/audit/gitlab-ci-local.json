@@ -1,0 +1,27 @@
+{
+  "tool": "gitlab-ci-local",
+  "selected": "npm:gitlab-ci-local",
+  "alternatives": [
+    "homebrew:gitlab-ci-local"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.0062313060817547,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:gitlab-ci-local",
+      "downloads": 8024,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:gitlab-ci-local",
+      "downloads": 8074,
+      "version_count": 113,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:gitlab-ci-local",
+  "disambiguated_at": "2026-02-17T00:16:57.829497473Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,32 @@
+{
+  "tool": "mlpack",
+  "selected": "homebrew:mlpack",
+  "alternatives": [
+    "pypi:mlpack"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:mlpack",
+      "downloads": 676,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:mlpack",
+      "downloads": 0,
+      "version_count": 11,
+      "has_repository": true
+    },
+    {
+      "source": "npm:mlpack",
+      "downloads": 1,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:mlpack",
+  "disambiguated_at": "2026-02-17T00:22:37.834975629Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

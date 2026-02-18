@@ -1,0 +1,27 @@
+{
+  "tool": "mkvtoolnix",
+  "selected": "homebrew:mkvtoolnix",
+  "alternatives": [
+    "rubygems:mkvtoolnix"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 9.625980545967995,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:mkvtoolnix",
+      "downloads": 30678,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:mkvtoolnix",
+      "downloads": 3187,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:mkvtoolnix",
+  "disambiguated_at": "2026-02-17T00:22:37.596331726Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,27 @@
+{
+  "tool": "brogue",
+  "selected": "homebrew:brogue",
+  "alternatives": [
+    "npm:brogue"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 45.9,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:brogue",
+      "downloads": 459,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:brogue",
+      "downloads": 10,
+      "version_count": 20,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:brogue",
+  "disambiguated_at": "2026-02-17T00:12:14.013696036Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

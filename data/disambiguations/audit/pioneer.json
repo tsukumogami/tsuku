@@ -1,0 +1,46 @@
+{
+  "tool": "pioneer",
+  "selected": "rubygems:pioneer",
+  "alternatives": [
+    "homebrew:pioneer",
+    "npm:pioneer"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 74.9536231884058,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "pypi:pioneer",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:pioneer",
+      "downloads": 345,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:pioneer",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:pioneer",
+      "downloads": 25859,
+      "version_count": 8,
+      "has_repository": true
+    },
+    {
+      "source": "npm:pioneer",
+      "downloads": 15,
+      "version_count": 30,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:pioneer",
+  "disambiguated_at": "2026-02-17T00:25:15.875857736Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,27 @@
+{
+  "tool": "kubie",
+  "selected": "homebrew:kubie",
+  "alternatives": [
+    "crates.io:kubie"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 11.210762331838565,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:kubie",
+      "downloads": 5000,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:kubie",
+      "downloads": 446,
+      "version_count": 42,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:kubie",
+  "disambiguated_at": "2026-02-17T00:20:07.50227574Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

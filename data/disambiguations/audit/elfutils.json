@@ -1,0 +1,27 @@
+{
+  "tool": "elfutils",
+  "selected": "homebrew:elfutils",
+  "alternatives": [
+    "crates.io:elfutils"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3174.8536585365855,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:elfutils",
+      "downloads": 41,
+      "version_count": 6,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:elfutils",
+      "downloads": 130169,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:elfutils",
+  "disambiguated_at": "2026-02-17T00:15:13.701650823Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

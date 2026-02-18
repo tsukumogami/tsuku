@@ -1,0 +1,34 @@
+{
+  "tool": "bluez",
+  "selected": "homebrew:bluez",
+  "alternatives": [
+    "crates.io:bluez",
+    "npm:bluez"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.8295454545454546,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:bluez",
+      "downloads": 1011,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:bluez",
+      "downloads": 264,
+      "version_count": 10,
+      "has_repository": true
+    },
+    {
+      "source": "npm:bluez",
+      "downloads": 3,
+      "version_count": 14,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:bluez",
+  "disambiguated_at": "2026-02-17T00:12:03.400508775Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

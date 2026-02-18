@@ -1,0 +1,48 @@
+{
+  "tool": "tesseract",
+  "selected": "homebrew:tesseract",
+  "alternatives": [
+    "rubygems:tesseract",
+    "crates.io:tesseract",
+    "npm:tesseract",
+    "pypi:tesseract"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 55.496678229172794,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:tesseract",
+      "downloads": 943943,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:tesseract",
+      "downloads": 15282,
+      "version_count": 22,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:tesseract",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:tesseract",
+      "downloads": 17009,
+      "version_count": 3,
+      "has_repository": false
+    },
+    {
+      "source": "npm:tesseract",
+      "downloads": 172,
+      "version_count": 3,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:tesseract",
+  "disambiguated_at": "2026-02-17T00:29:31.915262723Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

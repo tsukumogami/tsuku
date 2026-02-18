@@ -1,0 +1,41 @@
+{
+  "tool": "agg",
+  "selected": "homebrew:agg",
+  "alternatives": [
+    "crates.io:agg",
+    "npm:agg",
+    "pypi:agg"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 6.829670329670329,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:agg",
+      "downloads": 364,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:agg",
+      "downloads": 2486,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:agg",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "npm:agg",
+      "downloads": 3,
+      "version_count": 8,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:agg",
+  "disambiguated_at": "2026-02-17T00:10:27.348462445Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

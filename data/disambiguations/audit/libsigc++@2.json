@@ -1,0 +1,18 @@
+{
+  "tool": "libsigc++@2",
+  "selected": "homebrew:libsigc++@2",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:libsigc++@2",
+      "downloads": 6322,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:libsigc++@2",
+  "disambiguated_at": "2026-02-17T00:21:01.662674565Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

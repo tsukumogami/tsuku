@@ -1,0 +1,47 @@
+{
+  "tool": "unicorn",
+  "selected": "rubygems:unicorn",
+  "alternatives": [
+    "homebrew:unicorn",
+    "crates.io:unicorn",
+    "pypi:unicorn"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 47568.97679237464,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:unicorn",
+      "downloads": 301,
+      "version_count": 10,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:unicorn",
+      "downloads": 2413,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:unicorn",
+      "downloads": 0,
+      "version_count": 28,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:unicorn",
+      "downloads": 114783941,
+      "version_count": 134,
+      "has_repository": true
+    },
+    {
+      "source": "npm:unicorn",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:unicorn",
+  "disambiguated_at": "2026-02-17T00:30:21.630591594Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

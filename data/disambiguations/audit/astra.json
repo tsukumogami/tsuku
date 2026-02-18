@@ -1,0 +1,40 @@
+{
+  "tool": "astra",
+  "selected": "crates.io:astra",
+  "alternatives": [
+    "homebrew:astra",
+    "npm:astra"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 7.370689655172414,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:astra",
+      "downloads": 855,
+      "version_count": 7,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:astra",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:astra",
+      "downloads": 116,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:astra",
+      "downloads": 15,
+      "version_count": 7,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:astra",
+  "disambiguated_at": "2026-02-17T00:11:07.877037062Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

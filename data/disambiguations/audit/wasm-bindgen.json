@@ -1,0 +1,33 @@
+{
+  "tool": "wasm-bindgen",
+  "selected": "crates.io:wasm-bindgen",
+  "alternatives": [
+    "homebrew:wasm-bindgen"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 611523.1052631579,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:wasm-bindgen",
+      "downloads": 76,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:wasm-bindgen",
+      "downloads": 46475756,
+      "version_count": 110,
+      "has_repository": true
+    },
+    {
+      "source": "npm:wasm-bindgen",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:wasm-bindgen",
+  "disambiguated_at": "2026-02-17T00:31:01.45559157Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

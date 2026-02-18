@@ -1,0 +1,27 @@
+{
+  "tool": "fclones",
+  "selected": "crates.io:fclones",
+  "alternatives": [
+    "homebrew:fclones"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.9494079655543595,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:fclones",
+      "downloads": 1811,
+      "version_count": 45,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:fclones",
+      "downloads": 929,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:fclones",
+  "disambiguated_at": "2026-02-17T00:15:41.407058256Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

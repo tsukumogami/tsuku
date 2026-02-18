@@ -1,0 +1,40 @@
+{
+  "tool": "volk",
+  "selected": "homebrew:volk",
+  "alternatives": [
+    "crates.io:volk",
+    "pypi:volk"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 7.844444444444444,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:volk",
+      "downloads": 3177,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:volk",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:volk",
+      "downloads": 405,
+      "version_count": 14,
+      "has_repository": true
+    },
+    {
+      "source": "npm:volk",
+      "downloads": 0,
+      "version_count": 0,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:volk",
+  "disambiguated_at": "2026-02-17T00:30:51.505534912Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

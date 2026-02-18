@@ -1,0 +1,48 @@
+{
+  "tool": "astro",
+  "selected": "rubygems:astro",
+  "alternatives": [
+    "homebrew:astro",
+    "crates.io:astro",
+    "npm:astro",
+    "pypi:astro"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.486886192952051,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:astro",
+      "downloads": 0,
+      "version_count": 17,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:astro",
+      "downloads": 8655,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:astro",
+      "downloads": 4047,
+      "version_count": 10,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:astro",
+      "downloads": 12869,
+      "version_count": 3,
+      "has_repository": false
+    },
+    {
+      "source": "npm:astro",
+      "downloads": 0,
+      "version_count": 1286,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:astro",
+  "disambiguated_at": "2026-02-17T00:11:08.15395315Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

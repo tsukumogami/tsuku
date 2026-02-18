@@ -1,0 +1,40 @@
+{
+  "tool": "mockery",
+  "selected": "homebrew:mockery",
+  "alternatives": [
+    "rubygems:mockery",
+    "npm:mockery"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.8533742331288345,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:mockery",
+      "downloads": 18843,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:mockery",
+      "downloads": 14,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:mockery",
+      "downloads": 4890,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:mockery",
+      "downloads": 0,
+      "version_count": 13,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:mockery",
+  "disambiguated_at": "2026-02-17T00:22:40.971171418Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

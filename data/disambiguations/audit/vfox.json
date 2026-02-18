@@ -1,0 +1,34 @@
+{
+  "tool": "vfox",
+  "selected": "crates.io:vfox",
+  "alternatives": [
+    "homebrew:vfox",
+    "npm:vfox"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.378868729989328,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:vfox",
+      "downloads": 1874,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:vfox",
+      "downloads": 6332,
+      "version_count": 160,
+      "has_repository": true
+    },
+    {
+      "source": "npm:vfox",
+      "downloads": 0,
+      "version_count": 118,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:vfox",
+  "disambiguated_at": "2026-02-17T00:30:39.910248891Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

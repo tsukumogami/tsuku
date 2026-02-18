@@ -1,0 +1,27 @@
+{
+  "tool": "simple-scan",
+  "selected": "homebrew:simple-scan",
+  "alternatives": [
+    "crates.io:simple-scan"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 4.674418604651163,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:simple-scan",
+      "downloads": 603,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:simple-scan",
+      "downloads": 129,
+      "version_count": 8,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:simple-scan",
+  "disambiguated_at": "2026-02-17T00:28:05.903482834Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

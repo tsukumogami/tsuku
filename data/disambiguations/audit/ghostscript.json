@@ -1,0 +1,34 @@
+{
+  "tool": "ghostscript",
+  "selected": "homebrew:ghostscript",
+  "alternatives": [
+    "rubygems:ghostscript",
+    "pypi:ghostscript"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 28.61884136437466,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:ghostscript",
+      "downloads": 0,
+      "version_count": 10,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:ghostscript",
+      "downloads": 370013,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:ghostscript",
+      "downloads": 12929,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:ghostscript",
+  "disambiguated_at": "2026-02-17T00:16:41.334928Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

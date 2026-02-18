@@ -1,0 +1,18 @@
+{
+  "tool": "i386-elf-gdb",
+  "selected": "homebrew:i386-elf-gdb",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:i386-elf-gdb",
+      "downloads": 815,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:i386-elf-gdb",
+  "disambiguated_at": "2026-02-17T00:18:33.476357046Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

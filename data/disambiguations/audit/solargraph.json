@@ -1,0 +1,27 @@
+{
+  "tool": "solargraph",
+  "selected": "rubygems:solargraph",
+  "alternatives": [
+    "homebrew:solargraph"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 9801.546888200506,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:solargraph",
+      "downloads": 3551,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:solargraph",
+      "downloads": 34805293,
+      "version_count": 206,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:solargraph",
+  "disambiguated_at": "2026-02-17T00:28:19.258925287Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

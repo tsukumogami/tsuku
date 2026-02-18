@@ -1,0 +1,48 @@
+{
+  "tool": "wallpaper",
+  "selected": "rubygems:wallpaper",
+  "alternatives": [
+    "crates.io:wallpaper",
+    "homebrew:wallpaper",
+    "npm:wallpaper",
+    "pypi:wallpaper"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.1392689401674494,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:wallpaper",
+      "downloads": 4897,
+      "version_count": 8,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:wallpaper",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:wallpaper",
+      "downloads": 389,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:wallpaper",
+      "downloads": 5579,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:wallpaper",
+      "downloads": 0,
+      "version_count": 27,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:wallpaper",
+  "disambiguated_at": "2026-02-17T00:30:59.736450139Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

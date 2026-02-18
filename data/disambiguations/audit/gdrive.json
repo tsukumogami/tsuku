@@ -1,0 +1,41 @@
+{
+  "tool": "gdrive",
+  "selected": "rubygems:gdrive",
+  "alternatives": [
+    "homebrew:gdrive",
+    "pypi:gdrive",
+    "npm:gdrive"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.559263521288838,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:gdrive",
+      "downloads": 1738,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:gdrive",
+      "downloads": 0,
+      "version_count": 14,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:gdrive",
+      "downloads": 4448,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "npm:gdrive",
+      "downloads": 0,
+      "version_count": 11,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:gdrive",
+  "disambiguated_at": "2026-02-17T00:16:34.114551331Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

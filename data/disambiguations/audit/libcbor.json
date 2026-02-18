@@ -1,0 +1,27 @@
+{
+  "tool": "libcbor",
+  "selected": "homebrew:libcbor",
+  "alternatives": [
+    "rubygems:libcbor"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 10.065169689877122,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:libcbor",
+      "downloads": 137611,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:libcbor",
+      "downloads": 13672,
+      "version_count": 2,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:libcbor",
+  "disambiguated_at": "2026-02-17T00:20:28.083741928Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

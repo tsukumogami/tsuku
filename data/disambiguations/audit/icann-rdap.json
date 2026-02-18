@@ -1,0 +1,18 @@
+{
+  "tool": "icann-rdap",
+  "selected": "homebrew:icann-rdap",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:icann-rdap",
+      "downloads": 1094,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:icann-rdap",
+  "disambiguated_at": "2026-02-17T00:18:35.91613115Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

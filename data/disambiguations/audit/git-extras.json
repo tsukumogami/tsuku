@@ -1,0 +1,34 @@
+{
+  "tool": "git-extras",
+  "selected": "homebrew:git-extras",
+  "alternatives": [
+    "rubygems:git-extras",
+    "npm:git-extras"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.5485199485199486,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:git-extras",
+      "downloads": 6016,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:git-extras",
+      "downloads": 17,
+      "version_count": 13,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:git-extras",
+      "downloads": 3885,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:git-extras",
+  "disambiguated_at": "2026-02-17T00:16:49.391897807Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,32 @@
+{
+  "tool": "swagger-codegen",
+  "selected": "homebrew:swagger-codegen",
+  "alternatives": [
+    "pypi:swagger-codegen"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:swagger-codegen",
+      "downloads": 12152,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:swagger-codegen",
+      "downloads": 0,
+      "version_count": 30,
+      "has_repository": true
+    },
+    {
+      "source": "npm:swagger-codegen",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:swagger-codegen",
+  "disambiguated_at": "2026-02-17T00:29:03.917589907Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

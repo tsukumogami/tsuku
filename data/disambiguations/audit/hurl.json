@@ -1,0 +1,48 @@
+{
+  "tool": "hurl",
+  "selected": "rubygems:hurl",
+  "alternatives": [
+    "homebrew:hurl",
+    "crates.io:hurl",
+    "npm:hurl",
+    "pypi:hurl"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.9834796844768567,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:hurl",
+      "downloads": 6719,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:hurl",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:hurl",
+      "downloads": 6085,
+      "version_count": 24,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:hurl",
+      "downloads": 13327,
+      "version_count": 3,
+      "has_repository": false
+    },
+    {
+      "source": "npm:hurl",
+      "downloads": 9,
+      "version_count": 10,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:hurl",
+  "disambiguated_at": "2026-02-17T00:18:29.801003514Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

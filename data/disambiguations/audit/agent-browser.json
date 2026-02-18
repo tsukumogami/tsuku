@@ -1,0 +1,27 @@
+{
+  "tool": "agent-browser",
+  "selected": "npm:agent-browser",
+  "alternatives": [
+    "homebrew:agent-browser"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 845.1170848267623,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:agent-browser",
+      "downloads": 837,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:agent-browser",
+      "downloads": 707363,
+      "version_count": 43,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:agent-browser",
+  "disambiguated_at": "2026-02-17T00:10:26.761012461Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

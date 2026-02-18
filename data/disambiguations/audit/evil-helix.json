@@ -1,0 +1,18 @@
+{
+  "tool": "evil-helix",
+  "selected": "homebrew:evil-helix",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:evil-helix",
+      "downloads": 1057,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:evil-helix",
+  "disambiguated_at": "2026-02-17T00:15:27.818303506Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

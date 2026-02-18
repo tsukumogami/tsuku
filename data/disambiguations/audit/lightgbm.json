@@ -1,0 +1,48 @@
+{
+  "tool": "lightgbm",
+  "selected": "rubygems:lightgbm",
+  "alternatives": [
+    "homebrew:lightgbm",
+    "crates.io:lightgbm",
+    "npm:lightgbm",
+    "pypi:lightgbm"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 356.2292263610315,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:lightgbm",
+      "downloads": 343,
+      "version_count": 8,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:lightgbm",
+      "downloads": 2094,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:lightgbm",
+      "downloads": 0,
+      "version_count": 37,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:lightgbm",
+      "downloads": 745944,
+      "version_count": 27,
+      "has_repository": false
+    },
+    {
+      "source": "npm:lightgbm",
+      "downloads": 235,
+      "version_count": 27,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:lightgbm",
+  "disambiguated_at": "2026-02-17T00:21:20.407706238Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

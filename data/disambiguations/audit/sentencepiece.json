@@ -1,0 +1,41 @@
+{
+  "tool": "sentencepiece",
+  "selected": "crates.io:sentencepiece",
+  "alternatives": [
+    "homebrew:sentencepiece",
+    "rubygems:sentencepiece",
+    "pypi:sentencepiece"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 7.579617834394904,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:sentencepiece",
+      "downloads": 3611,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:sentencepiece",
+      "downloads": 27370,
+      "version_count": 27,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:sentencepiece",
+      "downloads": 0,
+      "version_count": 33,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:sentencepiece",
+      "downloads": 2333,
+      "version_count": 5,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:sentencepiece",
+  "disambiguated_at": "2026-02-17T00:27:42.751237341Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

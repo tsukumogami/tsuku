@@ -1,0 +1,47 @@
+{
+  "tool": "fox",
+  "selected": "rubygems:fox",
+  "alternatives": [
+    "homebrew:fox",
+    "npm:fox",
+    "pypi:fox"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 10.78134110787172,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:fox",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:fox",
+      "downloads": 1372,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:fox",
+      "downloads": 0,
+      "version_count": 6,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:fox",
+      "downloads": 14792,
+      "version_count": 4,
+      "has_repository": false
+    },
+    {
+      "source": "npm:fox",
+      "downloads": 0,
+      "version_count": 30,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:fox",
+  "disambiguated_at": "2026-02-17T00:16:12.910542411Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

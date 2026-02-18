@@ -1,0 +1,18 @@
+{
+  "tool": "unpaper",
+  "selected": "homebrew:unpaper",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:unpaper",
+      "downloads": 11308,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:unpaper",
+  "disambiguated_at": "2026-02-17T00:30:23.515757739Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

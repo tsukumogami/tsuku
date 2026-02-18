@@ -1,0 +1,34 @@
+{
+  "tool": "hwloc",
+  "selected": "homebrew:hwloc",
+  "alternatives": [
+    "rubygems:hwloc",
+    "crates.io:hwloc"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 19.773140806276604,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:hwloc",
+      "downloads": 2255,
+      "version_count": 5,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:hwloc",
+      "downloads": 236902,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:hwloc",
+      "downloads": 11981,
+      "version_count": 5,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:hwloc",
+  "disambiguated_at": "2026-02-17T00:18:30.699079809Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

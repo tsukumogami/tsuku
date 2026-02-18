@@ -1,0 +1,34 @@
+{
+  "tool": "hyfetch",
+  "selected": "homebrew:hyfetch",
+  "alternatives": [
+    "crates.io:hyfetch",
+    "pypi:hyfetch"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 5.301507537688442,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:hyfetch",
+      "downloads": 597,
+      "version_count": 13,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:hyfetch",
+      "downloads": 3165,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:hyfetch",
+      "downloads": 0,
+      "version_count": 51,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:hyfetch",
+  "disambiguated_at": "2026-02-17T00:18:31.667500239Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,40 @@
+{
+  "tool": "libvirt",
+  "selected": "homebrew:libvirt",
+  "alternatives": [
+    "rubygems:libvirt",
+    "npm:libvirt"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.695969259723965,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:libvirt",
+      "downloads": 19,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:libvirt",
+      "downloads": 34379,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:libvirt",
+      "downloads": 12752,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "npm:libvirt",
+      "downloads": 9,
+      "version_count": 7,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:libvirt",
+  "disambiguated_at": "2026-02-17T00:21:09.638572509Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,40 @@
+{
+  "tool": "ford",
+  "selected": "rubygems:ford",
+  "alternatives": [
+    "homebrew:ford",
+    "pypi:ford"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 10.028835063437139,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:ford",
+      "downloads": 867,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:ford",
+      "downloads": 0,
+      "version_count": 73,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:ford",
+      "downloads": 8695,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "npm:ford",
+      "downloads": 1,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:ford",
+  "disambiguated_at": "2026-02-17T00:16:08.343664969Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

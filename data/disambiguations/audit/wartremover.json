@@ -1,0 +1,27 @@
+{
+  "tool": "wartremover",
+  "selected": "npm:wartremover",
+  "alternatives": [
+    "homebrew:wartremover"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 11.140794223826715,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:wartremover",
+      "downloads": 277,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:wartremover",
+      "downloads": 3086,
+      "version_count": 12,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:wartremover",
+  "disambiguated_at": "2026-02-17T00:31:01.222944225Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,47 @@
+{
+  "tool": "sponge",
+  "selected": "rubygems:sponge",
+  "alternatives": [
+    "homebrew:sponge",
+    "npm:sponge",
+    "pypi:sponge"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 7.769523809523809,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:sponge",
+      "downloads": 13,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:sponge",
+      "downloads": 0,
+      "version_count": 8,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:sponge",
+      "downloads": 2100,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:sponge",
+      "downloads": 16316,
+      "version_count": 4,
+      "has_repository": false
+    },
+    {
+      "source": "npm:sponge",
+      "downloads": 1971,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:sponge",
+  "disambiguated_at": "2026-02-17T00:28:30.337747322Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

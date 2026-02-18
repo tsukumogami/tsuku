@@ -1,0 +1,26 @@
+{
+  "tool": "git-delete-merged-branches",
+  "selected": "homebrew:git-delete-merged-branches",
+  "alternatives": [
+    "pypi:git-delete-merged-branches"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:git-delete-merged-branches",
+      "downloads": 446,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:git-delete-merged-branches",
+      "downloads": 0,
+      "version_count": 41,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:git-delete-merged-branches",
+  "disambiguated_at": "2026-02-17T00:16:48.771811642Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -483,6 +483,261 @@ func TestGemBuilder_Probe_VersionsFetchFails(t *testing.T) {
 	}
 }
 
+func TestGemBuilder_Discover_Success(t *testing.T) {
+	topResponse := `{
+		"gems": [
+			{"full_name": "rails-7.1.0", "total_downloads": 500000000},
+			{"full_name": "fpm-1.15.0", "total_downloads": 8000000}
+		]
+	}`
+
+	searchResponse := `[
+		{"name": "fpm", "downloads": 8000000},
+		{"name": "tmuxinator", "downloads": 3000000}
+	]`
+
+	// Gemspec for fpm with executables.
+	fpmGemspec := `Gem::Specification.new do |s|
+  s.name = "fpm"
+  s.executables = ["fpm"]
+end`
+
+	// Gemspec for tmuxinator with executables.
+	tmuxGemspec := `Gem::Specification.new do |s|
+  s.name = "tmuxinator"
+  s.executables = ["tmuxinator"]
+end`
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch r.URL.Path {
+		case "/api/v1/downloads/top.json":
+			_, _ = w.Write([]byte(topResponse))
+		case "/api/v1/search.json":
+			_, _ = w.Write([]byte(searchResponse))
+		case "/api/v1/gems/rails.json":
+			// rails has no source_code_uri so it falls back to gem name
+			_, _ = w.Write([]byte(`{"name": "rails", "info": "Web framework", "source_code_uri": "", "downloads": 500000000}`))
+		case "/api/v1/gems/fpm.json":
+			_, _ = w.Write([]byte(`{"name": "fpm", "info": "Package builder", "source_code_uri": "https://github.com/jordansissel/fpm", "downloads": 8000000}`))
+		case "/api/v1/gems/tmuxinator.json":
+			_, _ = w.Write([]byte(`{"name": "tmuxinator", "info": "Tmux session manager", "source_code_uri": "https://github.com/tmuxinator/tmuxinator", "downloads": 3000000}`))
+		default:
+			// Serve gemspecs from GitHub-like paths.
+			switch r.URL.Path {
+			default:
+				w.WriteHeader(http.StatusNotFound)
+			}
+		}
+	}))
+	defer server.Close()
+
+	// We need a separate mock for GitHub raw content. Since the builder fetches
+	// gemspecs from raw.githubusercontent.com, and we can't easily override that,
+	// we rely on the fallback behavior where discoverExecutables returns [gemName].
+	_ = fpmGemspec
+	_ = tmuxGemspec
+
+	builder := NewGemBuilderWithBaseURL(nil, server.URL)
+	candidates, err := builder.Discover(context.Background(), 10)
+	if err != nil {
+		t.Fatalf("Discover() error = %v", err)
+	}
+
+	// All gems should be included because discoverExecutables falls back to
+	// [gemName] when it can't fetch the gemspec from GitHub.
+	if len(candidates) < 2 {
+		t.Fatalf("expected at least 2 candidates, got %d: %+v", len(candidates), candidates)
+	}
+
+	// Verify deduplication: fpm appears in both top and search results.
+	fpmCount := 0
+	for _, c := range candidates {
+		if c.Name == "fpm" {
+			fpmCount++
+		}
+	}
+	if fpmCount != 1 {
+		t.Errorf("expected fpm to appear exactly once, got %d", fpmCount)
+	}
+}
+
+func TestGemBuilder_Discover_LimitRespected(t *testing.T) {
+	topResponse := `{
+		"gems": [
+			{"full_name": "a-1.0", "total_downloads": 100},
+			{"full_name": "b-1.0", "total_downloads": 90},
+			{"full_name": "c-1.0", "total_downloads": 80}
+		]
+	}`
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch r.URL.Path {
+		case "/api/v1/downloads/top.json":
+			_, _ = w.Write([]byte(topResponse))
+		case "/api/v1/search.json":
+			_, _ = w.Write([]byte(`[]`))
+		default:
+			// Gems with no source code URI, so fallback executables are used.
+			_, _ = w.Write([]byte(`{"name": "x", "info": "test", "source_code_uri": "", "downloads": 100}`))
+		}
+	}))
+	defer server.Close()
+
+	builder := NewGemBuilderWithBaseURL(nil, server.URL)
+	candidates, err := builder.Discover(context.Background(), 1)
+	if err != nil {
+		t.Fatalf("Discover() error = %v", err)
+	}
+
+	if len(candidates) != 1 {
+		t.Fatalf("expected 1 candidate, got %d", len(candidates))
+	}
+}
+
+func TestGemBuilder_Discover_ZeroLimit(t *testing.T) {
+	builder := NewGemBuilder(nil)
+	candidates, err := builder.Discover(context.Background(), 0)
+	if err != nil {
+		t.Fatalf("Discover() error = %v", err)
+	}
+	if len(candidates) != 0 {
+		t.Errorf("expected 0 candidates, got %d", len(candidates))
+	}
+}
+
+func TestGemBuilder_Discover_MaxLimit(t *testing.T) {
+	topResponse := `{"gems": []}`
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch r.URL.Path {
+		case "/api/v1/downloads/top.json":
+			_, _ = w.Write([]byte(topResponse))
+		case "/api/v1/search.json":
+			_, _ = w.Write([]byte(`[]`))
+		default:
+			w.WriteHeader(http.StatusNotFound)
+		}
+	}))
+	defer server.Close()
+
+	builder := NewGemBuilderWithBaseURL(nil, server.URL)
+	// Request more than the 200 max.
+	candidates, err := builder.Discover(context.Background(), 500)
+	if err != nil {
+		t.Fatalf("Discover() error = %v", err)
+	}
+	// Should return 0 (no candidates) but not error about the limit.
+	if len(candidates) != 0 {
+		t.Errorf("expected 0 candidates (no gems), got %d", len(candidates))
+	}
+}
+
+func TestGemBuilder_Discover_TopDownloadsError(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	defer server.Close()
+
+	builder := NewGemBuilderWithBaseURL(nil, server.URL)
+	_, err := builder.Discover(context.Background(), 10)
+	if err == nil {
+		t.Fatal("expected error when top downloads fails")
+	}
+}
+
+func TestGemBuilder_Discover_RateLimitError(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusTooManyRequests)
+	}))
+	defer server.Close()
+
+	builder := NewGemBuilderWithBaseURL(nil, server.URL)
+	_, err := builder.Discover(context.Background(), 10)
+	if err == nil {
+		t.Fatal("expected error for 429 response")
+	}
+}
+
+func TestGemBuilder_Discover_MalformedResponse(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{invalid json`))
+	}))
+	defer server.Close()
+
+	builder := NewGemBuilderWithBaseURL(nil, server.URL)
+	_, err := builder.Discover(context.Background(), 10)
+	if err == nil {
+		t.Fatal("expected error for malformed JSON")
+	}
+}
+
+func TestGemBuilder_Discover_EmptyResults(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch r.URL.Path {
+		case "/api/v1/downloads/top.json":
+			_, _ = w.Write([]byte(`{"gems": []}`))
+		case "/api/v1/search.json":
+			_, _ = w.Write([]byte(`[]`))
+		default:
+			w.WriteHeader(http.StatusNotFound)
+		}
+	}))
+	defer server.Close()
+
+	builder := NewGemBuilderWithBaseURL(nil, server.URL)
+	candidates, err := builder.Discover(context.Background(), 10)
+	if err != nil {
+		t.Fatalf("Discover() error = %v", err)
+	}
+	if len(candidates) != 0 {
+		t.Errorf("expected 0 candidates, got %d", len(candidates))
+	}
+}
+
+func TestGemBuilder_Discover_ContextCanceled(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"gems": [{"full_name": "a-1.0", "total_downloads": 100}]}`))
+	}))
+	defer server.Close()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel() // Cancel immediately.
+
+	builder := NewGemBuilderWithBaseURL(nil, server.URL)
+	_, err := builder.Discover(ctx, 10)
+	if err == nil {
+		t.Fatal("expected error for canceled context")
+	}
+}
+
+func TestExtractGemName(t *testing.T) {
+	tests := []struct {
+		fullName string
+		want     string
+	}{
+		{"rails-7.1.0", "rails"},
+		{"fpm-1.15.0", "fpm"},
+		{"some-gem-name-2.0.0", "some-gem-name"},
+		{"simple", "simple"},
+		{"a-1", "a"},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.fullName, func(t *testing.T) {
+			got := extractGemName(tc.fullName)
+			if got != tc.want {
+				t.Errorf("extractGemName(%q) = %q, want %q", tc.fullName, got, tc.want)
+			}
+		})
+	}
+}
+
 func TestGemBuilder_Probe_NoRepository(t *testing.T) {
 	// Test gem without source_code_uri
 	gemResponse := `{

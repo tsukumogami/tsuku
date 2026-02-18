@@ -1,0 +1,46 @@
+{
+  "tool": "grizzly",
+  "selected": "rubygems:grizzly",
+  "alternatives": [
+    "homebrew:grizzly",
+    "npm:grizzly"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 11.386004514672686,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:grizzly",
+      "downloads": 31,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:grizzly",
+      "downloads": 443,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:grizzly",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:grizzly",
+      "downloads": 5044,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:grizzly",
+      "downloads": 0,
+      "version_count": 43,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:grizzly",
+  "disambiguated_at": "2026-02-17T00:17:40.379689253Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "csvq",
+  "selected": "homebrew:csvq",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:csvq",
+      "downloads": 573,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:csvq",
+  "disambiguated_at": "2026-02-17T00:13:56.851227646Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

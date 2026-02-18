@@ -1,0 +1,24 @@
+{
+  "tool": "colmap",
+  "selected": "homebrew:colmap",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:colmap",
+      "downloads": 25,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:colmap",
+      "downloads": 5656,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:colmap",
+  "disambiguated_at": "2026-02-17T00:13:31.515292635Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

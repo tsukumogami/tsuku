@@ -1,0 +1,46 @@
+{
+  "tool": "prettier",
+  "selected": "npm:prettier",
+  "alternatives": [
+    "rubygems:prettier",
+    "homebrew:prettier"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 22.763261316767135,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:prettier",
+      "downloads": 26457,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:prettier",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:prettier",
+      "downloads": 87,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "npm:prettier",
+      "downloads": 71173616,
+      "version_count": 184,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:prettier",
+      "downloads": 3126688,
+      "version_count": 56,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:prettier",
+  "disambiguated_at": "2026-02-17T00:25:38.868358189Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

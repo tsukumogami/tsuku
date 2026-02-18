@@ -1,0 +1,18 @@
+{
+  "tool": "bazarr",
+  "selected": "homebrew:bazarr",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:bazarr",
+      "downloads": 1227,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:bazarr",
+  "disambiguated_at": "2026-02-17T00:11:47.461350523Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

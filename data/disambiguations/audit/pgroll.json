@@ -1,0 +1,26 @@
+{
+  "tool": "pgroll",
+  "selected": "homebrew:pgroll",
+  "alternatives": [
+    "npm:pgroll"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:pgroll",
+      "downloads": 99,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:pgroll",
+      "downloads": 0,
+      "version_count": 7,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:pgroll",
+  "disambiguated_at": "2026-02-17T00:25:04.056037847Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

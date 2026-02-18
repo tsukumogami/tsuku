@@ -1,0 +1,45 @@
+{
+  "tool": "ladybug",
+  "selected": "rubygems:ladybug",
+  "alternatives": [
+    "homebrew:ladybug"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 85.37719298245614,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:ladybug",
+      "downloads": 114,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:ladybug",
+      "downloads": 68,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:ladybug",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:ladybug",
+      "downloads": 9733,
+      "version_count": 5,
+      "has_repository": false
+    },
+    {
+      "source": "npm:ladybug",
+      "downloads": 7,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:ladybug",
+  "disambiguated_at": "2026-02-17T00:20:10.875474097Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

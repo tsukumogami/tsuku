@@ -1,0 +1,39 @@
+{
+  "tool": "folly",
+  "selected": "homebrew:folly",
+  "alternatives": [
+    "rubygems:folly"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 59.56027397260274,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:folly",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:folly",
+      "downloads": 260874,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:folly",
+      "downloads": 4380,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:folly",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:folly",
+  "disambiguated_at": "2026-02-17T00:16:05.553889929Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

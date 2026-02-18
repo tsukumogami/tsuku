@@ -1,0 +1,30 @@
+{
+  "tool": "lsusb",
+  "selected": "homebrew:lsusb",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:lsusb",
+      "downloads": 20,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:lsusb",
+      "downloads": 7785,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:lsusb",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:lsusb",
+  "disambiguated_at": "2026-02-17T00:21:38.349520294Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

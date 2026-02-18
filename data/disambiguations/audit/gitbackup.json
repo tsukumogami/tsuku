@@ -1,0 +1,27 @@
+{
+  "tool": "gitbackup",
+  "selected": "homebrew:gitbackup",
+  "alternatives": [
+    "crates.io:gitbackup"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.3773584905660377,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:gitbackup",
+      "downloads": 53,
+      "version_count": 8,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:gitbackup",
+      "downloads": 126,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:gitbackup",
+  "disambiguated_at": "2026-02-17T00:16:55.892274434Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

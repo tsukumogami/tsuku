@@ -1,0 +1,39 @@
+{
+  "tool": "fop",
+  "selected": "rubygems:fop",
+  "alternatives": [
+    "homebrew:fop"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.8346918813172481,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:fop",
+      "downloads": 10,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:fop",
+      "downloads": 3067,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:fop",
+      "downloads": 5627,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "npm:fop",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:fop",
+  "disambiguated_at": "2026-02-17T00:16:07.149383996Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

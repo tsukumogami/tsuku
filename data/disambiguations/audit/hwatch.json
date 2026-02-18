@@ -1,0 +1,33 @@
+{
+  "tool": "hwatch",
+  "selected": "homebrew:hwatch",
+  "alternatives": [
+    "crates.io:hwatch"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.4421364985163203,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:hwatch",
+      "downloads": 1160,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:hwatch",
+      "downloads": 337,
+      "version_count": 24,
+      "has_repository": true
+    },
+    {
+      "source": "npm:hwatch",
+      "downloads": 1,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:hwatch",
+  "disambiguated_at": "2026-02-17T00:18:30.466055421Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

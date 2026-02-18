@@ -1,0 +1,48 @@
+{
+  "tool": "typst",
+  "selected": "crates.io:typst",
+  "alternatives": [
+    "homebrew:typst",
+    "rubygems:typst",
+    "pypi:typst",
+    "npm:typst"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 13.826378613001875,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:typst",
+      "downloads": 20274,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:typst",
+      "downloads": 280316,
+      "version_count": 16,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:typst",
+      "downloads": 14978,
+      "version_count": 41,
+      "has_repository": false
+    },
+    {
+      "source": "pypi:typst",
+      "downloads": 0,
+      "version_count": 39,
+      "has_repository": true
+    },
+    {
+      "source": "npm:typst",
+      "downloads": 0,
+      "version_count": 8,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:typst",
+  "disambiguated_at": "2026-02-17T00:30:16.455609032Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

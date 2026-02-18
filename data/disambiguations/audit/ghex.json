@@ -1,0 +1,39 @@
+{
+  "tool": "ghex",
+  "selected": "homebrew:ghex",
+  "alternatives": [
+    "npm:ghex"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 536.5,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:ghex",
+      "downloads": 8,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "pypi:ghex",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:ghex",
+      "downloads": 1073,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:ghex",
+      "downloads": 2,
+      "version_count": 19,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:ghex",
+  "disambiguated_at": "2026-02-17T00:16:40.636503666Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

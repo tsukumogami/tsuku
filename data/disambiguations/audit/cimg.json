@@ -1,0 +1,26 @@
+{
+  "tool": "cimg",
+  "selected": "homebrew:cimg",
+  "alternatives": [
+    "npm:cimg"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:cimg",
+      "downloads": 2194,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:cimg",
+      "downloads": 0,
+      "version_count": 6,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:cimg",
+  "disambiguated_at": "2026-02-17T00:13:04.275713167Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

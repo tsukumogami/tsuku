@@ -1,0 +1,27 @@
+{
+  "tool": "gradle",
+  "selected": "homebrew:gradle",
+  "alternatives": [
+    "npm:gradle"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 219.7058823529412,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:gradle",
+      "downloads": 246510,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:gradle",
+      "downloads": 1122,
+      "version_count": 16,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:gradle",
+  "disambiguated_at": "2026-02-17T00:17:33.288083665Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

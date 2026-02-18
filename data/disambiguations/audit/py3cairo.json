@@ -1,0 +1,18 @@
+{
+  "tool": "py3cairo",
+  "selected": "homebrew:py3cairo",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:py3cairo",
+      "downloads": 76591,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:py3cairo",
+  "disambiguated_at": "2026-02-17T00:25:58.230821287Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

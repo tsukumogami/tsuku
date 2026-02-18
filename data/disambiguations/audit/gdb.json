@@ -1,0 +1,40 @@
+{
+  "tool": "gdb",
+  "selected": "homebrew:gdb",
+  "alternatives": [
+    "rubygems:gdb",
+    "crates.io:gdb"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.0329212190914316,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:gdb",
+      "downloads": 135,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:gdb",
+      "downloads": 42423,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:gdb",
+      "downloads": 20868,
+      "version_count": 5,
+      "has_repository": true
+    },
+    {
+      "source": "npm:gdb",
+      "downloads": 5,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:gdb",
+  "disambiguated_at": "2026-02-17T00:16:33.187931772Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

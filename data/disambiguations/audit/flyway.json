@@ -1,0 +1,41 @@
+{
+  "tool": "flyway",
+  "selected": "homebrew:flyway",
+  "alternatives": [
+    "crates.io:flyway",
+    "npm:flyway",
+    "pypi:flyway"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 135.82993197278913,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:flyway",
+      "downloads": 19967,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:flyway",
+      "downloads": 147,
+      "version_count": 7,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:flyway",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "npm:flyway",
+      "downloads": 105,
+      "version_count": 12,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:flyway",
+  "disambiguated_at": "2026-02-17T00:16:03.848891436Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

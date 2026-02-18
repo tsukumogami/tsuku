@@ -1,0 +1,24 @@
+{
+  "tool": "openvpn",
+  "selected": "homebrew:openvpn",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:openvpn",
+      "downloads": 44493,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:openvpn",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:openvpn",
+  "disambiguated_at": "2026-02-17T00:24:17.944861327Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

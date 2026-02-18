@@ -1,0 +1,18 @@
+{
+  "tool": "docker-machine-driver-vmware",
+  "selected": "homebrew:docker-machine-driver-vmware",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:docker-machine-driver-vmware",
+      "downloads": 627,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:docker-machine-driver-vmware",
+  "disambiguated_at": "2026-02-17T00:14:39.417940847Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

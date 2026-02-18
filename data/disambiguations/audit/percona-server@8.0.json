@@ -1,0 +1,18 @@
+{
+  "tool": "percona-server@8.0",
+  "selected": "homebrew:percona-server@8.0",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:percona-server@8.0",
+      "downloads": 1982,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:percona-server@8.0",
+  "disambiguated_at": "2026-02-17T00:24:59.112124399Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

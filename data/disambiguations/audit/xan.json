@@ -1,0 +1,34 @@
+{
+  "tool": "xan",
+  "selected": "homebrew:xan",
+  "alternatives": [
+    "crates.io:xan",
+    "npm:xan"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.9007585335018964,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:xan",
+      "downloads": 3007,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:xan",
+      "downloads": 1582,
+      "version_count": 73,
+      "has_repository": true
+    },
+    {
+      "source": "npm:xan",
+      "downloads": 2,
+      "version_count": 20,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:xan",
+  "disambiguated_at": "2026-02-17T00:31:22.620607511Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

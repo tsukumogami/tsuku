@@ -1,0 +1,41 @@
+{
+  "tool": "deno",
+  "selected": "homebrew:deno",
+  "alternatives": [
+    "npm:deno",
+    "crates.io:deno",
+    "pypi:deno"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 10.013416091599522,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:deno",
+      "downloads": 259738,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:deno",
+      "downloads": 0,
+      "version_count": 20,
+      "has_repository": false
+    },
+    {
+      "source": "crates.io:deno",
+      "downloads": 5496,
+      "version_count": 320,
+      "has_repository": true
+    },
+    {
+      "source": "npm:deno",
+      "downloads": 25939,
+      "version_count": 80,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:deno",
+  "disambiguated_at": "2026-02-17T00:14:18.203209658Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,41 @@
+{
+  "tool": "bastet",
+  "selected": "rubygems:bastet",
+  "alternatives": [
+    "homebrew:bastet",
+    "pypi:bastet",
+    "npm:bastet"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 17.12783053323594,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:bastet",
+      "downloads": 1369,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:bastet",
+      "downloads": 0,
+      "version_count": 21,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:bastet",
+      "downloads": 23448,
+      "version_count": 5,
+      "has_repository": false
+    },
+    {
+      "source": "npm:bastet",
+      "downloads": 0,
+      "version_count": 9,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:bastet",
+  "disambiguated_at": "2026-02-17T00:11:46.027325534Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

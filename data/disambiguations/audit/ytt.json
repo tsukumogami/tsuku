@@ -1,0 +1,39 @@
+{
+  "tool": "ytt",
+  "selected": "homebrew:ytt",
+  "alternatives": [
+    "npm:ytt"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 197.16666666666666,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:ytt",
+      "downloads": 1183,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:ytt",
+      "downloads": 95,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "pypi:ytt",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "npm:ytt",
+      "downloads": 6,
+      "version_count": 39,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:ytt",
+  "disambiguated_at": "2026-02-17T00:31:42.647059271Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

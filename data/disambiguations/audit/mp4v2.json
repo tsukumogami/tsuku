@@ -1,0 +1,18 @@
+{
+  "tool": "mp4v2",
+  "selected": "homebrew:mp4v2",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:mp4v2",
+      "downloads": 1501,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:mp4v2",
+  "disambiguated_at": "2026-02-17T00:22:51.260301886Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

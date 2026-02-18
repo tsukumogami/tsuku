@@ -1,0 +1,27 @@
+{
+  "tool": "w3m",
+  "selected": "homebrew:w3m",
+  "alternatives": [
+    "npm:w3m"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1175.1666666666667,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:w3m",
+      "downloads": 14102,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:w3m",
+      "downloads": 12,
+      "version_count": 14,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:w3m",
+  "disambiguated_at": "2026-02-17T00:30:57.936211429Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

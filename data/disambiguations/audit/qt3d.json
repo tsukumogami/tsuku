@@ -1,0 +1,18 @@
+{
+  "tool": "qt3d",
+  "selected": "homebrew:qt3d",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:qt3d",
+      "downloads": 33602,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:qt3d",
+  "disambiguated_at": "2026-02-17T00:26:19.717945885Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

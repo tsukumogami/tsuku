@@ -1,0 +1,48 @@
+{
+  "tool": "parallel",
+  "selected": "rubygems:parallel",
+  "alternatives": [
+    "homebrew:parallel",
+    "npm:parallel",
+    "crates.io:parallel",
+    "pypi:parallel"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 9480.905901747445,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:parallel",
+      "downloads": 75825,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:parallel",
+      "downloads": 0,
+      "version_count": 7,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:parallel",
+      "downloads": 0,
+      "version_count": 31,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:parallel",
+      "downloads": 718889690,
+      "version_count": 107,
+      "has_repository": true
+    },
+    {
+      "source": "npm:parallel",
+      "downloads": 870,
+      "version_count": 27,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:parallel",
+  "disambiguated_at": "2026-02-17T00:24:47.405671579Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

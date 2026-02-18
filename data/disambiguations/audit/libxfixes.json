@@ -1,0 +1,18 @@
+{
+  "tool": "libxfixes",
+  "selected": "homebrew:libxfixes",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:libxfixes",
+      "downloads": 213274,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:libxfixes",
+  "disambiguated_at": "2026-02-17T00:21:15.152767245Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

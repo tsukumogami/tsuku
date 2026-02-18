@@ -1,0 +1,26 @@
+{
+  "tool": "circumflex",
+  "selected": "homebrew:circumflex",
+  "alternatives": [
+    "npm:circumflex"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:circumflex",
+      "downloads": 1022,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:circumflex",
+      "downloads": 0,
+      "version_count": 61,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:circumflex",
+  "disambiguated_at": "2026-02-17T00:13:05.178145098Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

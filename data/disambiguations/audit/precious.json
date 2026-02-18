@@ -1,0 +1,47 @@
+{
+  "tool": "precious",
+  "selected": "rubygems:precious",
+  "alternatives": [
+    "homebrew:precious",
+    "crates.io:precious",
+    "npm:precious"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 10.334831460674158,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:precious",
+      "downloads": 445,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:precious",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:precious",
+      "downloads": 143,
+      "version_count": 37,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:precious",
+      "downloads": 4599,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:precious",
+      "downloads": 0,
+      "version_count": 12,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:precious",
+  "disambiguated_at": "2026-02-17T00:25:37.923983962Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

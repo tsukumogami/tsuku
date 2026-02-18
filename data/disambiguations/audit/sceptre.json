@@ -1,0 +1,33 @@
+{
+  "tool": "sceptre",
+  "selected": "homebrew:sceptre",
+  "alternatives": [
+    "pypi:sceptre",
+    "npm:sceptre"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:sceptre",
+      "downloads": 442,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:sceptre",
+      "downloads": 0,
+      "version_count": 59,
+      "has_repository": true
+    },
+    {
+      "source": "npm:sceptre",
+      "downloads": 0,
+      "version_count": 13,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:sceptre",
+  "disambiguated_at": "2026-02-17T00:27:30.622116125Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,41 @@
+{
+  "tool": "ocaml",
+  "selected": "crates.io:ocaml",
+  "alternatives": [
+    "homebrew:ocaml",
+    "npm:ocaml",
+    "pypi:ocaml"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.1198433100746725,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:ocaml",
+      "downloads": 8169,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:ocaml",
+      "downloads": 0,
+      "version_count": 11,
+      "has_repository": false
+    },
+    {
+      "source": "crates.io:ocaml",
+      "downloads": 25486,
+      "version_count": 79,
+      "has_repository": true
+    },
+    {
+      "source": "npm:ocaml",
+      "downloads": 4604,
+      "version_count": 70,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:ocaml",
+  "disambiguated_at": "2026-02-17T00:23:53.401405366Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,24 @@
+{
+  "tool": "libjwt",
+  "selected": "homebrew:libjwt",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:libjwt",
+      "downloads": 7,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:libjwt",
+      "downloads": 1430,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:libjwt",
+  "disambiguated_at": "2026-02-17T00:20:43.019319774Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

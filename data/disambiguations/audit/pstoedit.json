@@ -1,0 +1,24 @@
+{
+  "tool": "pstoedit",
+  "selected": "homebrew:pstoedit",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:pstoedit",
+      "downloads": 10,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:pstoedit",
+      "downloads": 16456,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:pstoedit",
+  "disambiguated_at": "2026-02-17T00:25:51.678021536Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,26 @@
+{
+  "tool": "moodle-dl",
+  "selected": "homebrew:moodle-dl",
+  "alternatives": [
+    "pypi:moodle-dl"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:moodle-dl",
+      "downloads": 469,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:moodle-dl",
+      "downloads": 0,
+      "version_count": 93,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:moodle-dl",
+  "disambiguated_at": "2026-02-17T00:22:48.216029788Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

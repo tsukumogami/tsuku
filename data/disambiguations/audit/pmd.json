@@ -1,0 +1,40 @@
+{
+  "tool": "pmd",
+  "selected": "rubygems:pmd",
+  "alternatives": [
+    "homebrew:pmd",
+    "npm:pmd"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.254922718611052,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:pmd",
+      "downloads": 4723,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:pmd",
+      "downloads": 10,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:pmd",
+      "downloads": 10650,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:pmd",
+      "downloads": 0,
+      "version_count": 5,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:pmd",
+  "disambiguated_at": "2026-02-17T00:25:24.175990356Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,48 @@
+{
+  "tool": "foreman",
+  "selected": "rubygems:foreman",
+  "alternatives": [
+    "homebrew:foreman",
+    "crates.io:foreman",
+    "npm:foreman",
+    "pypi:foreman"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 35899.74320330969,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:foreman",
+      "downloads": 501,
+      "version_count": 17,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:foreman",
+      "downloads": 3384,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:foreman",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:foreman",
+      "downloads": 121484731,
+      "version_count": 180,
+      "has_repository": false
+    },
+    {
+      "source": "npm:foreman",
+      "downloads": 0,
+      "version_count": 48,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:foreman",
+  "disambiguated_at": "2026-02-17T00:16:08.579997148Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

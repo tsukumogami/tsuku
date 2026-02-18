@@ -1,0 +1,32 @@
+{
+  "tool": "awk",
+  "selected": "homebrew:awk",
+  "alternatives": [
+    "pypi:awk"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:awk",
+      "downloads": 0,
+      "version_count": 5,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:awk",
+      "downloads": 21154,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:awk",
+      "downloads": 6,
+      "version_count": 3,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:awk",
+  "disambiguated_at": "2026-02-17T00:11:22.154001267Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

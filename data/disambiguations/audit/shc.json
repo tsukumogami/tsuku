@@ -1,0 +1,40 @@
+{
+  "tool": "shc",
+  "selected": "rubygems:shc",
+  "alternatives": [
+    "homebrew:shc",
+    "pypi:shc"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.2197483059051306,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:shc",
+      "downloads": 1033,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:shc",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:shc",
+      "downloads": 3326,
+      "version_count": 3,
+      "has_repository": false
+    },
+    {
+      "source": "npm:shc",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:shc",
+  "disambiguated_at": "2026-02-17T00:27:48.967190039Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

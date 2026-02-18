@@ -1,0 +1,33 @@
+{
+  "tool": "netpbm",
+  "selected": "homebrew:netpbm",
+  "alternatives": [
+    "npm:netpbm"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 35071,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:netpbm",
+      "downloads": 350710,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:netpbm",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "npm:netpbm",
+      "downloads": 10,
+      "version_count": 7,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:netpbm",
+  "disambiguated_at": "2026-02-17T00:23:25.701134096Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

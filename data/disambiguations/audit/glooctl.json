@@ -1,0 +1,18 @@
+{
+  "tool": "glooctl",
+  "selected": "homebrew:glooctl",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:glooctl",
+      "downloads": 1482,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:glooctl",
+  "disambiguated_at": "2026-02-17T00:17:06.020812182Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

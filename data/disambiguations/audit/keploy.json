@@ -1,0 +1,26 @@
+{
+  "tool": "keploy",
+  "selected": "homebrew:keploy",
+  "alternatives": [
+    "pypi:keploy"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:keploy",
+      "downloads": 1586,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:keploy",
+      "downloads": 0,
+      "version_count": 36,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:keploy",
+  "disambiguated_at": "2026-02-17T00:19:44.699229139Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

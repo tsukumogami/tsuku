@@ -1,0 +1,34 @@
+{
+  "tool": "spirv-cross",
+  "selected": "crates.io:spirv-cross",
+  "alternatives": [
+    "rubygems:spirv-cross",
+    "homebrew:spirv-cross"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 10.07088075210292,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:spirv-cross",
+      "downloads": 708,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:spirv-cross",
+      "downloads": 81413,
+      "version_count": 63,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:spirv-cross",
+      "downloads": 8084,
+      "version_count": 5,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:spirv-cross",
+  "disambiguated_at": "2026-02-17T00:28:28.497646167Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

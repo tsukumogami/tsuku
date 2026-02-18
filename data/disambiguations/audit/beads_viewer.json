@@ -1,0 +1,18 @@
+{
+  "tool": "beads_viewer",
+  "selected": "homebrew:beads_viewer",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:beads_viewer",
+      "downloads": 243,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:beads_viewer",
+  "disambiguated_at": "2026-02-17T00:11:50.323281475Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

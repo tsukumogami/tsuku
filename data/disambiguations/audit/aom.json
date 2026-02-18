@@ -1,0 +1,26 @@
+{
+  "tool": "aom",
+  "selected": "homebrew:aom",
+  "alternatives": [
+    "npm:aom"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:aom",
+      "downloads": 1028467,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:aom",
+      "downloads": 0,
+      "version_count": 103,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:aom",
+  "disambiguated_at": "2026-02-17T00:10:45.849178719Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

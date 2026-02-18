@@ -1,0 +1,27 @@
+{
+  "tool": "n8n-mcp",
+  "selected": "npm:n8n-mcp",
+  "alternatives": [
+    "homebrew:n8n-mcp"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 22.97739852398524,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:n8n-mcp",
+      "downloads": 2168,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:n8n-mcp",
+      "downloads": 49815,
+      "version_count": 150,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:n8n-mcp",
+  "disambiguated_at": "2026-02-17T00:23:08.090938126Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "hypre",
+  "selected": "homebrew:hypre",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:hypre",
+      "downloads": 660,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:hypre",
+  "disambiguated_at": "2026-02-17T00:18:32.212079481Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,33 @@
+{
+  "tool": "beancount",
+  "selected": "homebrew:beancount",
+  "alternatives": [
+    "npm:beancount",
+    "pypi:beancount"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:beancount",
+      "downloads": 972,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:beancount",
+      "downloads": 0,
+      "version_count": 34,
+      "has_repository": true
+    },
+    {
+      "source": "npm:beancount",
+      "downloads": 0,
+      "version_count": 35,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:beancount",
+  "disambiguated_at": "2026-02-17T00:11:50.581834926Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

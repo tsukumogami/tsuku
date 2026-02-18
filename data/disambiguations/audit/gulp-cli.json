@@ -1,0 +1,27 @@
+{
+  "tool": "gulp-cli",
+  "selected": "npm:gulp-cli",
+  "alternatives": [
+    "homebrew:gulp-cli"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 1313.6952303961195,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:gulp-cli",
+      "downloads": 1237,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:gulp-cli",
+      "downloads": 1625041,
+      "version_count": 22,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:gulp-cli",
+  "disambiguated_at": "2026-02-17T00:17:52.997482629Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

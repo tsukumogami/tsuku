@@ -1,0 +1,41 @@
+{
+  "tool": "gphoto2",
+  "selected": "homebrew:gphoto2",
+  "alternatives": [
+    "crates.io:gphoto2",
+    "npm:gphoto2",
+    "pypi:gphoto2"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.6659810777457835,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:gphoto2",
+      "downloads": 4050,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:gphoto2",
+      "downloads": 0,
+      "version_count": 61,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:gphoto2",
+      "downloads": 2431,
+      "version_count": 32,
+      "has_repository": true
+    },
+    {
+      "source": "npm:gphoto2",
+      "downloads": 94,
+      "version_count": 21,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:gphoto2",
+  "disambiguated_at": "2026-02-17T00:17:30.420744019Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

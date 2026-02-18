@@ -1,0 +1,41 @@
+{
+  "tool": "binutils",
+  "selected": "homebrew:binutils",
+  "alternatives": [
+    "npm:binutils",
+    "crates.io:binutils",
+    "pypi:binutils"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2799.642424242424,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:binutils",
+      "downloads": 461941,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:binutils",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": false
+    },
+    {
+      "source": "crates.io:binutils",
+      "downloads": 100,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "npm:binutils",
+      "downloads": 165,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:binutils",
+  "disambiguated_at": "2026-02-17T00:11:57.743222889Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

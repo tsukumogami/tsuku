@@ -1,0 +1,26 @@
+{
+  "tool": "arxiv_latex_cleaner",
+  "selected": "homebrew:arxiv_latex_cleaner",
+  "alternatives": [
+    "pypi:arxiv_latex_cleaner"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:arxiv_latex_cleaner",
+      "downloads": 846,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:arxiv_latex_cleaner",
+      "downloads": 0,
+      "version_count": 39,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:arxiv_latex_cleaner",
+  "disambiguated_at": "2026-02-17T00:11:02.885930713Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

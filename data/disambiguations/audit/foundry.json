@@ -1,0 +1,48 @@
+{
+  "tool": "foundry",
+  "selected": "rubygems:foundry",
+  "alternatives": [
+    "homebrew:foundry",
+    "npm:foundry",
+    "crates.io:foundry",
+    "pypi:foundry"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 14.17350332594235,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:foundry",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:foundry",
+      "downloads": 1804,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:foundry",
+      "downloads": 117,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:foundry",
+      "downloads": 25569,
+      "version_count": 10,
+      "has_repository": false
+    },
+    {
+      "source": "npm:foundry",
+      "downloads": 122,
+      "version_count": 59,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:foundry",
+  "disambiguated_at": "2026-02-17T00:16:12.434593015Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

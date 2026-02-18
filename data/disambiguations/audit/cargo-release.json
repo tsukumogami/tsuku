@@ -1,0 +1,27 @@
+{
+  "tool": "cargo-release",
+  "selected": "crates.io:cargo-release",
+  "alternatives": [
+    "homebrew:cargo-release"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 26.57894736842105,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:cargo-release",
+      "downloads": 437,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:cargo-release",
+      "downloads": 11615,
+      "version_count": 143,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:cargo-release",
+  "disambiguated_at": "2026-02-17T00:12:36.894201138Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

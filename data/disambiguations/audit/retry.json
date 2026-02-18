@@ -1,0 +1,48 @@
+{
+  "tool": "retry",
+  "selected": "crates.io:retry",
+  "alternatives": [
+    "rubygems:retry",
+    "homebrew:retry",
+    "pypi:retry",
+    "npm:retry"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 54.209201730239876,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:retry",
+      "downloads": 1102832,
+      "version_count": 15,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:retry",
+      "downloads": 3442,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:retry",
+      "downloads": 0,
+      "version_count": 15,
+      "has_repository": true
+    },
+    {
+      "source": "npm:retry",
+      "downloads": 0,
+      "version_count": 15,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:retry",
+      "downloads": 20344,
+      "version_count": 3,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:retry",
+  "disambiguated_at": "2026-02-17T00:26:54.989945563Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

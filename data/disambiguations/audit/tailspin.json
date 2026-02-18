@@ -1,0 +1,40 @@
+{
+  "tool": "tailspin",
+  "selected": "homebrew:tailspin",
+  "alternatives": [
+    "crates.io:tailspin",
+    "pypi:tailspin"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 4.755656108597285,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:tailspin",
+      "downloads": 4204,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:tailspin",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:tailspin",
+      "downloads": 884,
+      "version_count": 31,
+      "has_repository": true
+    },
+    {
+      "source": "npm:tailspin",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:tailspin",
+  "disambiguated_at": "2026-02-17T00:29:13.329479473Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

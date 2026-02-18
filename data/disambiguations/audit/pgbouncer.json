@@ -1,0 +1,32 @@
+{
+  "tool": "pgbouncer",
+  "selected": "homebrew:pgbouncer",
+  "alternatives": [
+    "pypi:pgbouncer"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:pgbouncer",
+      "downloads": 871,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:pgbouncer",
+      "downloads": 0,
+      "version_count": 10,
+      "has_repository": true
+    },
+    {
+      "source": "npm:pgbouncer",
+      "downloads": 33,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:pgbouncer",
+  "disambiguated_at": "2026-02-17T00:25:02.490384205Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

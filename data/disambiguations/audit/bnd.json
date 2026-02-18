@@ -1,0 +1,32 @@
+{
+  "tool": "bnd",
+  "selected": "homebrew:bnd",
+  "alternatives": [
+    "npm:bnd"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:bnd",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:bnd",
+      "downloads": 318,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:bnd",
+      "downloads": 0,
+      "version_count": 33,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:bnd",
+  "disambiguated_at": "2026-02-17T00:12:04.096438742Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

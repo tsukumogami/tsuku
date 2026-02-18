@@ -1,0 +1,34 @@
+{
+  "tool": "snapcraft",
+  "selected": "homebrew:snapcraft",
+  "alternatives": [
+    "crates.io:snapcraft",
+    "pypi:snapcraft"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.900900900900901,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:snapcraft",
+      "downloads": 3464,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:snapcraft",
+      "downloads": 0,
+      "version_count": 12,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:snapcraft",
+      "downloads": 888,
+      "version_count": 21,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:snapcraft",
+  "disambiguated_at": "2026-02-17T00:28:14.566907738Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

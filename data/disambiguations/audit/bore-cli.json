@@ -1,0 +1,34 @@
+{
+  "tool": "bore-cli",
+  "selected": "crates.io:bore-cli",
+  "alternatives": [
+    "homebrew:bore-cli",
+    "npm:bore-cli"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.908450704225352,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:bore-cli",
+      "downloads": 4440,
+      "version_count": 14,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:bore-cli",
+      "downloads": 1136,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:bore-cli",
+      "downloads": 152,
+      "version_count": 7,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:bore-cli",
+  "disambiguated_at": "2026-02-17T00:12:06.891678497Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

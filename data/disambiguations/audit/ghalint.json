@@ -1,0 +1,18 @@
+{
+  "tool": "ghalint",
+  "selected": "homebrew:ghalint",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:ghalint",
+      "downloads": 688,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:ghalint",
+  "disambiguated_at": "2026-02-17T00:16:39.912916927Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

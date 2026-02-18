@@ -1,0 +1,18 @@
+{
+  "tool": "cagent",
+  "selected": "homebrew:cagent",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:cagent",
+      "downloads": 2014,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:cagent",
+  "disambiguated_at": "2026-02-17T00:12:30.200104283Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

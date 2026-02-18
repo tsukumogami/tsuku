@@ -1,0 +1,26 @@
+{
+  "tool": "cmake-language-server",
+  "selected": "homebrew:cmake-language-server",
+  "alternatives": [
+    "pypi:cmake-language-server"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:cmake-language-server",
+      "downloads": 558,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:cmake-language-server",
+      "downloads": 0,
+      "version_count": 12,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:cmake-language-server",
+  "disambiguated_at": "2026-02-17T00:13:23.718515379Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

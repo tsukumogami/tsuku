@@ -1,0 +1,27 @@
+{
+  "tool": "id3v2",
+  "selected": "homebrew:id3v2",
+  "alternatives": [
+    "npm:id3v2"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 185.625,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:id3v2",
+      "downloads": 1485,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:id3v2",
+      "downloads": 8,
+      "version_count": 5,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:id3v2",
+  "disambiguated_at": "2026-02-17T00:18:39.762693713Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

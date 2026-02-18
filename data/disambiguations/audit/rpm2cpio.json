@@ -1,0 +1,18 @@
+{
+  "tool": "rpm2cpio",
+  "selected": "homebrew:rpm2cpio",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:rpm2cpio",
+      "downloads": 2208,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:rpm2cpio",
+  "disambiguated_at": "2026-02-17T00:27:07.995839353Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

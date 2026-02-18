@@ -1,0 +1,27 @@
+{
+  "tool": "git-absorb",
+  "selected": "homebrew:git-absorb",
+  "alternatives": [
+    "crates.io:git-absorb"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.8894736842105264,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:git-absorb",
+      "downloads": 2513,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:git-absorb",
+      "downloads": 1330,
+      "version_count": 26,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:git-absorb",
+  "disambiguated_at": "2026-02-17T00:16:45.978801675Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

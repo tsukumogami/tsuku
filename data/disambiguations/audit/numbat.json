@@ -1,0 +1,40 @@
+{
+  "tool": "numbat",
+  "selected": "crates.io:numbat",
+  "alternatives": [
+    "homebrew:numbat",
+    "pypi:numbat"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.5036910846110165,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:numbat",
+      "downloads": 1761,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:numbat",
+      "downloads": 0,
+      "version_count": 8,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:numbat",
+      "downloads": 2648,
+      "version_count": 29,
+      "has_repository": true
+    },
+    {
+      "source": "npm:numbat",
+      "downloads": 2,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:numbat",
+  "disambiguated_at": "2026-02-17T00:23:47.005217221Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

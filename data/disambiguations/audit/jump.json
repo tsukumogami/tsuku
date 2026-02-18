@@ -1,0 +1,47 @@
+{
+  "tool": "jump",
+  "selected": "rubygems:jump",
+  "alternatives": [
+    "homebrew:jump",
+    "pypi:jump",
+    "npm:jump"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 72.77526273241713,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:jump",
+      "downloads": 12,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:jump",
+      "downloads": 1237,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:jump",
+      "downloads": 0,
+      "version_count": 14,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:jump",
+      "downloads": 90023,
+      "version_count": 13,
+      "has_repository": false
+    },
+    {
+      "source": "npm:jump",
+      "downloads": 0,
+      "version_count": 10,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:jump",
+  "disambiguated_at": "2026-02-17T00:19:31.691036133Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

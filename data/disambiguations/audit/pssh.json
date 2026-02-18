@@ -1,0 +1,34 @@
+{
+  "tool": "pssh",
+  "selected": "rubygems:pssh",
+  "alternatives": [
+    "homebrew:pssh",
+    "pypi:pssh"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 7.09159626500667,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:pssh",
+      "downloads": 2249,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:pssh",
+      "downloads": 0,
+      "version_count": 8,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:pssh",
+      "downloads": 15949,
+      "version_count": 5,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:pssh",
+  "disambiguated_at": "2026-02-17T00:25:51.441753937Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

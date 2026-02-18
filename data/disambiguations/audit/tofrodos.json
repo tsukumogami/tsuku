@@ -1,0 +1,18 @@
+{
+  "tool": "tofrodos",
+  "selected": "homebrew:tofrodos",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:tofrodos",
+      "downloads": 140,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:tofrodos",
+  "disambiguated_at": "2026-02-17T00:29:49.117941716Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

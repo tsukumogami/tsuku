@@ -1,0 +1,40 @@
+{
+  "tool": "dprint",
+  "selected": "npm:dprint",
+  "alternatives": [
+    "crates.io:dprint",
+    "homebrew:dprint"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 48.58127018299246,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "pypi:dprint",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:dprint",
+      "downloads": 2395,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:dprint",
+      "downloads": 2787,
+      "version_count": 146,
+      "has_repository": true
+    },
+    {
+      "source": "npm:dprint",
+      "downloads": 135396,
+      "version_count": 127,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:dprint",
+  "disambiguated_at": "2026-02-17T00:14:49.711665766Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,48 @@
+{
+  "tool": "bob",
+  "selected": "rubygems:bob",
+  "alternatives": [
+    "homebrew:bob",
+    "crates.io:bob",
+    "npm:bob",
+    "pypi:bob"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 10.245762711864407,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:bob",
+      "downloads": 280,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:bob",
+      "downloads": 0,
+      "version_count": 51,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:bob",
+      "downloads": 2242,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:bob",
+      "downloads": 22971,
+      "version_count": 4,
+      "has_repository": false
+    },
+    {
+      "source": "npm:bob",
+      "downloads": 0,
+      "version_count": 73,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:bob",
+  "disambiguated_at": "2026-02-17T00:12:04.565172153Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

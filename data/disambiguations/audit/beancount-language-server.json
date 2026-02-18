@@ -1,0 +1,33 @@
+{
+  "tool": "beancount-language-server",
+  "selected": "homebrew:beancount-language-server",
+  "alternatives": [
+    "crates.io:beancount-language-server"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.1921296296296295,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:beancount-language-server",
+      "downloads": 515,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:beancount-language-server",
+      "downloads": 432,
+      "version_count": 26,
+      "has_repository": true
+    },
+    {
+      "source": "npm:beancount-language-server",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:beancount-language-server",
+  "disambiguated_at": "2026-02-17T00:11:50.88720216Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "pipes-sh",
+  "selected": "homebrew:pipes-sh",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:pipes-sh",
+      "downloads": 2156,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:pipes-sh",
+  "disambiguated_at": "2026-02-17T00:25:17.779086099Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

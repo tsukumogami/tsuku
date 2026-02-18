@@ -1,0 +1,27 @@
+{
+  "tool": "oxker",
+  "selected": "crates.io:oxker",
+  "alternatives": [
+    "homebrew:oxker"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.0959051724137931,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:oxker",
+      "downloads": 928,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:oxker",
+      "downloads": 1017,
+      "version_count": 40,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:oxker",
+  "disambiguated_at": "2026-02-17T00:24:42.544913523Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

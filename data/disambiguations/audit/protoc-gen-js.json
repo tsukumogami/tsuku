@@ -1,0 +1,27 @@
+{
+  "tool": "protoc-gen-js",
+  "selected": "npm:protoc-gen-js",
+  "alternatives": [
+    "homebrew:protoc-gen-js"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 11.081360453484494,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:protoc-gen-js",
+      "downloads": 2999,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:protoc-gen-js",
+      "downloads": 33233,
+      "version_count": 8,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:protoc-gen-js",
+  "disambiguated_at": "2026-02-17T00:25:47.224620592Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

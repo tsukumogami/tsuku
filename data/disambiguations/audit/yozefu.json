@@ -1,0 +1,27 @@
+{
+  "tool": "yozefu",
+  "selected": "homebrew:yozefu",
+  "alternatives": [
+    "crates.io:yozefu"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.538181818181818,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:yozefu",
+      "downloads": 423,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:yozefu",
+      "downloads": 275,
+      "version_count": 26,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:yozefu",
+  "disambiguated_at": "2026-02-17T00:31:42.339238696Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

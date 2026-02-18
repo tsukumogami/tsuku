@@ -1,0 +1,33 @@
+{
+  "tool": "mcpm",
+  "selected": "homebrew:mcpm",
+  "alternatives": [
+    "pypi:mcpm",
+    "npm:mcpm"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:mcpm",
+      "downloads": 2806,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:mcpm",
+      "downloads": 0,
+      "version_count": 55,
+      "has_repository": true
+    },
+    {
+      "source": "npm:mcpm",
+      "downloads": 0,
+      "version_count": 6,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:mcpm",
+  "disambiguated_at": "2026-02-17T00:22:11.766834456Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,38 @@
+{
+  "tool": "tre",
+  "selected": "homebrew:tre",
+  "alternatives": [
+    "npm:tre"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:tre",
+      "downloads": 87,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:tre",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:tre",
+      "downloads": 1627,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:tre",
+      "downloads": 0,
+      "version_count": 6,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:tre",
+  "disambiguated_at": "2026-02-17T00:29:58.021190115Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

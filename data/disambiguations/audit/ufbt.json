@@ -1,0 +1,26 @@
+{
+  "tool": "ufbt",
+  "selected": "homebrew:ufbt",
+  "alternatives": [
+    "pypi:ufbt"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:ufbt",
+      "downloads": 312,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:ufbt",
+      "downloads": 0,
+      "version_count": 34,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:ufbt",
+  "disambiguated_at": "2026-02-17T00:30:18.542155648Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

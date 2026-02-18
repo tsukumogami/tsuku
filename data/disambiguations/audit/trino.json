@@ -1,0 +1,40 @@
+{
+  "tool": "trino",
+  "selected": "homebrew:trino",
+  "alternatives": [
+    "npm:trino",
+    "pypi:trino"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 5.206997084548105,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:trino",
+      "downloads": 1786,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:trino",
+      "downloads": 6,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:trino",
+      "downloads": 0,
+      "version_count": 34,
+      "has_repository": true
+    },
+    {
+      "source": "npm:trino",
+      "downloads": 343,
+      "version_count": 6,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:trino",
+  "disambiguated_at": "2026-02-17T00:30:00.105475245Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

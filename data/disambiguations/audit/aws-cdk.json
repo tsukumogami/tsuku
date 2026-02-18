@@ -1,0 +1,27 @@
+{
+  "tool": "aws-cdk",
+  "selected": "npm:aws-cdk",
+  "alternatives": [
+    "homebrew:aws-cdk"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 82.58407630105744,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:aws-cdk",
+      "downloads": 33761,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:aws-cdk",
+      "downloads": 2788121,
+      "version_count": 646,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:aws-cdk",
+  "disambiguated_at": "2026-02-17T00:11:23.398386828Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

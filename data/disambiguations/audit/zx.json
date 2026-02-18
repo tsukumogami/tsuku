@@ -1,0 +1,40 @@
+{
+  "tool": "zx",
+  "selected": "npm:zx",
+  "alternatives": [
+    "homebrew:zx",
+    "pypi:zx"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 441.2374572405929,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:zx",
+      "downloads": 15,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:zx",
+      "downloads": 3508,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:zx",
+      "downloads": 0,
+      "version_count": 12,
+      "has_repository": true
+    },
+    {
+      "source": "npm:zx",
+      "downloads": 1547861,
+      "version_count": 263,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:zx",
+  "disambiguated_at": "2026-02-17T00:31:56.165957904Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "dylibbundler",
+  "selected": "homebrew:dylibbundler",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:dylibbundler",
+      "downloads": 1313,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:dylibbundler",
+  "disambiguated_at": "2026-02-17T00:15:01.300531755Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

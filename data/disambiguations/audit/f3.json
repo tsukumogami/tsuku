@@ -1,0 +1,41 @@
+{
+  "tool": "f3",
+  "selected": "homebrew:f3",
+  "alternatives": [
+    "crates.io:f3",
+    "npm:f3",
+    "pypi:f3"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 5.52555910543131,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:f3",
+      "downloads": 1252,
+      "version_count": 12,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:f3",
+      "downloads": 0,
+      "version_count": 9,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:f3",
+      "downloads": 6918,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:f3",
+      "downloads": 0,
+      "version_count": 23,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:f3",
+  "disambiguated_at": "2026-02-17T00:15:31.383538617Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

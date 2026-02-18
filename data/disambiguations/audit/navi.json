@@ -1,0 +1,48 @@
+{
+  "tool": "navi",
+  "selected": "rubygems:navi",
+  "alternatives": [
+    "homebrew:navi",
+    "crates.io:navi",
+    "npm:navi",
+    "pypi:navi"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 12.298623853211009,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:navi",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:navi",
+      "downloads": 1185,
+      "version_count": 17,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:navi",
+      "downloads": 4360,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:navi",
+      "downloads": 53622,
+      "version_count": 15,
+      "has_repository": false
+    },
+    {
+      "source": "npm:navi",
+      "downloads": 0,
+      "version_count": 56,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:navi",
+  "disambiguated_at": "2026-02-17T00:23:12.007410294Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

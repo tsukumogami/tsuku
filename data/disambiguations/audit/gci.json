@@ -1,0 +1,39 @@
+{
+  "tool": "gci",
+  "selected": "rubygems:gci",
+  "alternatives": [
+    "homebrew:gci"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 6.289402173913044,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:gci",
+      "downloads": 12,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:gci",
+      "downloads": 736,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:gci",
+      "downloads": 4629,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "npm:gci",
+      "downloads": 1,
+      "version_count": 3,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:gci",
+  "disambiguated_at": "2026-02-17T00:16:32.270056932Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

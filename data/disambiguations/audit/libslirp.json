@@ -1,0 +1,27 @@
+{
+  "tool": "libslirp",
+  "selected": "homebrew:libslirp",
+  "alternatives": [
+    "crates.io:libslirp"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1767.2878787878788,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:libslirp",
+      "downloads": 66,
+      "version_count": 7,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:libslirp",
+      "downloads": 116641,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:libslirp",
+  "disambiguated_at": "2026-02-17T00:21:02.391968273Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

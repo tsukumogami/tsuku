@@ -1,0 +1,32 @@
+{
+  "tool": "ffms2",
+  "selected": "homebrew:ffms2",
+  "alternatives": [
+    "pypi:ffms2"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:ffms2",
+      "downloads": 2006,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:ffms2",
+      "downloads": 0,
+      "version_count": 8,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:ffms2",
+      "downloads": 50,
+      "version_count": 3,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:ffms2",
+  "disambiguated_at": "2026-02-17T00:15:49.807764691Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

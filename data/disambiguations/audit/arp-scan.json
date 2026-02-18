@@ -1,0 +1,33 @@
+{
+  "tool": "arp-scan",
+  "selected": "homebrew:arp-scan",
+  "alternatives": [
+    "crates.io:arp-scan"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 44.53367875647668,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:arp-scan",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:arp-scan",
+      "downloads": 8595,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:arp-scan",
+      "downloads": 193,
+      "version_count": 16,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:arp-scan",
+  "disambiguated_at": "2026-02-17T00:11:00.968970816Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

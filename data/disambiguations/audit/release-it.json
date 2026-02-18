@@ -1,0 +1,27 @@
+{
+  "tool": "release-it",
+  "selected": "npm:release-it",
+  "alternatives": [
+    "homebrew:release-it"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 1207.1472868217054,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:release-it",
+      "downloads": 645,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:release-it",
+      "downloads": 778610,
+      "version_count": 431,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:release-it",
+  "disambiguated_at": "2026-02-17T00:26:48.652697677Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

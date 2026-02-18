@@ -1,0 +1,41 @@
+{
+  "tool": "highs",
+  "selected": "crates.io:highs",
+  "alternatives": [
+    "rubygems:highs",
+    "homebrew:highs",
+    "npm:highs"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.0352570167139703,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:highs",
+      "downloads": 997,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:highs",
+      "downloads": 32828,
+      "version_count": 28,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:highs",
+      "downloads": 31710,
+      "version_count": 13,
+      "has_repository": false
+    },
+    {
+      "source": "npm:highs",
+      "downloads": 0,
+      "version_count": 25,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:highs",
+  "disambiguated_at": "2026-02-17T00:18:17.194512069Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

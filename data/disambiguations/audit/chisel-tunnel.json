@@ -1,0 +1,27 @@
+{
+  "tool": "chisel-tunnel",
+  "selected": "homebrew:chisel-tunnel",
+  "alternatives": [
+    "npm:chisel-tunnel"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 145.5,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:chisel-tunnel",
+      "downloads": 291,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:chisel-tunnel",
+      "downloads": 2,
+      "version_count": 6,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:chisel-tunnel",
+  "disambiguated_at": "2026-02-17T00:12:58.877949738Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,47 @@
+{
+  "tool": "autocorrect",
+  "selected": "rubygems:autocorrect",
+  "alternatives": [
+    "crates.io:autocorrect",
+    "homebrew:autocorrect",
+    "pypi:autocorrect"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.4528256704980842,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:autocorrect",
+      "downloads": 0,
+      "version_count": 23,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:autocorrect",
+      "downloads": 1092,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:autocorrect",
+      "downloads": 6067,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "crates.io:autocorrect",
+      "downloads": 4176,
+      "version_count": 70,
+      "has_repository": true
+    },
+    {
+      "source": "npm:autocorrect",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:autocorrect",
+  "disambiguated_at": "2026-02-17T00:11:17.420038075Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

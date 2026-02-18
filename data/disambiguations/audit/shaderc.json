@@ -1,0 +1,33 @@
+{
+  "tool": "shaderc",
+  "selected": "crates.io:shaderc",
+  "alternatives": [
+    "homebrew:shaderc"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.204735648912648,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:shaderc",
+      "downloads": 114502,
+      "version_count": 40,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:shaderc",
+      "downloads": 35729,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:shaderc",
+      "downloads": 1,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:shaderc",
+  "disambiguated_at": "2026-02-17T00:27:47.052562965Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

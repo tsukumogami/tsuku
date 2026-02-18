@@ -1,0 +1,18 @@
+{
+  "tool": "libdnet",
+  "selected": "homebrew:libdnet",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:libdnet",
+      "downloads": 3958,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:libdnet",
+  "disambiguated_at": "2026-02-17T00:20:30.853333262Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

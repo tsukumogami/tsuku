@@ -1,0 +1,33 @@
+{
+  "tool": "scdl",
+  "selected": "homebrew:scdl",
+  "alternatives": [
+    "pypi:scdl",
+    "npm:scdl"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:scdl",
+      "downloads": 0,
+      "version_count": 62,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:scdl",
+      "downloads": 662,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:scdl",
+      "downloads": 0,
+      "version_count": 6,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:scdl",
+  "disambiguated_at": "2026-02-17T00:27:30.144977259Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

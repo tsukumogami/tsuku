@@ -1,0 +1,47 @@
+{
+  "tool": "cobalt",
+  "selected": "rubygems:cobalt",
+  "alternatives": [
+    "homebrew:cobalt",
+    "crates.io:cobalt",
+    "pypi:cobalt"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 38.04651162790697,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:cobalt",
+      "downloads": 0,
+      "version_count": 37,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:cobalt",
+      "downloads": 184,
+      "version_count": 18,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:cobalt",
+      "downloads": 344,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:cobalt",
+      "downloads": 13088,
+      "version_count": 3,
+      "has_repository": false
+    },
+    {
+      "source": "npm:cobalt",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:cobalt",
+  "disambiguated_at": "2026-02-17T00:13:26.37777632Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

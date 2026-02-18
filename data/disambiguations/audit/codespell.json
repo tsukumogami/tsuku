@@ -1,0 +1,34 @@
+{
+  "tool": "codespell",
+  "selected": "homebrew:codespell",
+  "alternatives": [
+    "npm:codespell",
+    "pypi:codespell"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.9476439790575917,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:codespell",
+      "downloads": 3941,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:codespell",
+      "downloads": 0,
+      "version_count": 24,
+      "has_repository": true
+    },
+    {
+      "source": "npm:codespell",
+      "downloads": 1337,
+      "version_count": 15,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:codespell",
+  "disambiguated_at": "2026-02-17T00:13:30.329129932Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

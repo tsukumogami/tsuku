@@ -1,0 +1,46 @@
+{
+  "tool": "dug",
+  "selected": "rubygems:dug",
+  "alternatives": [
+    "homebrew:dug",
+    "crates.io:dug"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 71.01346801346801,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "pypi:dug",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:dug",
+      "downloads": 94,
+      "version_count": 7,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:dug",
+      "downloads": 297,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:dug",
+      "downloads": 21091,
+      "version_count": 8,
+      "has_repository": true
+    },
+    {
+      "source": "npm:dug",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:dug",
+  "disambiguated_at": "2026-02-17T00:14:55.729748497Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

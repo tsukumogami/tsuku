@@ -1,0 +1,33 @@
+{
+  "tool": "primecount",
+  "selected": "homebrew:primecount",
+  "alternatives": [
+    "crates.io:primecount"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 5.878260869565217,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:primecount",
+      "downloads": 115,
+      "version_count": 5,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:primecount",
+      "downloads": 676,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:primecount",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:primecount",
+  "disambiguated_at": "2026-02-17T00:25:39.581301885Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,41 @@
+{
+  "tool": "swag",
+  "selected": "rubygems:swag",
+  "alternatives": [
+    "npm:swag",
+    "homebrew:swag",
+    "pypi:swag"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 41.99552572706935,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:swag",
+      "downloads": 409,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:swag",
+      "downloads": 0,
+      "version_count": 21,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:swag",
+      "downloads": 37544,
+      "version_count": 15,
+      "has_repository": true
+    },
+    {
+      "source": "npm:swag",
+      "downloads": 894,
+      "version_count": 23,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:swag",
+  "disambiguated_at": "2026-02-17T00:29:03.680602955Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

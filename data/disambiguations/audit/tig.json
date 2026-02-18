@@ -1,0 +1,39 @@
+{
+  "tool": "tig",
+  "selected": "homebrew:tig",
+  "alternatives": [
+    "npm:tig"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1060.1363636363637,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:tig",
+      "downloads": 23323,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:tig",
+      "downloads": 17,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "pypi:tig",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "npm:tig",
+      "downloads": 22,
+      "version_count": 43,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:tig",
+  "disambiguated_at": "2026-02-17T00:29:40.686245869Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

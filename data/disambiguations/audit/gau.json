@@ -1,0 +1,30 @@
+{
+  "tool": "gau",
+  "selected": "homebrew:gau",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "pypi:gau",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:gau",
+      "downloads": 551,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:gau",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:gau",
+  "disambiguated_at": "2026-02-17T00:16:29.346136532Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

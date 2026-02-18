@@ -1,0 +1,33 @@
+{
+  "tool": "activemq",
+  "selected": "rubygems:activemq",
+  "alternatives": [
+    "homebrew:activemq"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.6348784194528876,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:activemq",
+      "downloads": 2632,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:activemq",
+      "downloads": 9567,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "npm:activemq",
+      "downloads": 1,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:activemq",
+  "disambiguated_at": "2026-02-17T00:10:21.510027589Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "moarvm",
+  "selected": "homebrew:moarvm",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:moarvm",
+      "downloads": 1147,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:moarvm",
+  "disambiguated_at": "2026-02-17T00:22:39.822478906Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

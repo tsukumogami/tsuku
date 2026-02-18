@@ -1,0 +1,48 @@
+{
+  "tool": "pwned",
+  "selected": "rubygems:pwned",
+  "alternatives": [
+    "crates.io:pwned",
+    "homebrew:pwned",
+    "npm:pwned",
+    "pypi:pwned"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 359.36439829872404,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:pwned",
+      "downloads": 349,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:pwned",
+      "downloads": 15988,
+      "version_count": 8,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:pwned",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:pwned",
+      "downloads": 5745518,
+      "version_count": 12,
+      "has_repository": true
+    },
+    {
+      "source": "npm:pwned",
+      "downloads": 65,
+      "version_count": 48,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:pwned",
+  "disambiguated_at": "2026-02-17T00:25:57.13959762Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

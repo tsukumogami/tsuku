@@ -1,0 +1,18 @@
+{
+  "tool": "pure-ftpd",
+  "selected": "homebrew:pure-ftpd",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:pure-ftpd",
+      "downloads": 1648,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:pure-ftpd",
+  "disambiguated_at": "2026-02-17T00:25:55.977773963Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

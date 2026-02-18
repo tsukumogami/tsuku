@@ -1,0 +1,30 @@
+{
+  "tool": "wxwidgets",
+  "selected": "homebrew:wxwidgets",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "pypi:wxwidgets",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:wxwidgets",
+      "downloads": 53905,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:wxwidgets",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:wxwidgets",
+  "disambiguated_at": "2026-02-17T00:31:19.766999706Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

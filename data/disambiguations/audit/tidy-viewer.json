@@ -1,0 +1,27 @@
+{
+  "tool": "tidy-viewer",
+  "selected": "homebrew:tidy-viewer",
+  "alternatives": [
+    "crates.io:tidy-viewer"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 8.225225225225225,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:tidy-viewer",
+      "downloads": 913,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:tidy-viewer",
+      "downloads": 111,
+      "version_count": 35,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:tidy-viewer",
+  "disambiguated_at": "2026-02-17T00:29:39.91945255Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

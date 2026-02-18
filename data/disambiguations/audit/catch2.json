@@ -1,0 +1,18 @@
+{
+  "tool": "catch2",
+  "selected": "homebrew:catch2",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:catch2",
+      "downloads": 5611,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:catch2",
+  "disambiguated_at": "2026-02-17T00:12:40.85384616Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,27 @@
+{
+  "tool": "htmldoc",
+  "selected": "rubygems:htmldoc",
+  "alternatives": [
+    "homebrew:htmldoc"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 110.863173216885,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:htmldoc",
+      "downloads": 687,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:htmldoc",
+      "downloads": 76163,
+      "version_count": 5,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:htmldoc",
+  "disambiguated_at": "2026-02-17T00:18:24.506841972Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

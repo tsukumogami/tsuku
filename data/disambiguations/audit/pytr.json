@@ -1,0 +1,26 @@
+{
+  "tool": "pytr",
+  "selected": "homebrew:pytr",
+  "alternatives": [
+    "pypi:pytr"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:pytr",
+      "downloads": 246,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:pytr",
+      "downloads": 0,
+      "version_count": 41,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:pytr",
+  "disambiguated_at": "2026-02-17T00:26:12.471983507Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,27 @@
+{
+  "tool": "termscp",
+  "selected": "homebrew:termscp",
+  "alternatives": [
+    "crates.io:termscp"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.9767857142857144,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:termscp",
+      "downloads": 560,
+      "version_count": 39,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:termscp",
+      "downloads": 1107,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:termscp",
+  "disambiguated_at": "2026-02-17T00:29:28.631598692Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

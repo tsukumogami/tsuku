@@ -1,0 +1,18 @@
+{
+  "tool": "sstp-client",
+  "selected": "homebrew:sstp-client",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:sstp-client",
+      "downloads": 1794,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:sstp-client",
+  "disambiguated_at": "2026-02-17T00:28:44.055416762Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

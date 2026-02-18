@@ -1,0 +1,27 @@
+{
+  "tool": "mktorrent",
+  "selected": "rubygems:mktorrent",
+  "alternatives": [
+    "homebrew:mktorrent"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 102.8125,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:mktorrent",
+      "downloads": 384,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:mktorrent",
+      "downloads": 39480,
+      "version_count": 14,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:mktorrent",
+  "disambiguated_at": "2026-02-17T00:22:37.124664396Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

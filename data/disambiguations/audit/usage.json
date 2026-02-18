@@ -1,0 +1,47 @@
+{
+  "tool": "usage",
+  "selected": "homebrew:usage",
+  "alternatives": [
+    "rubygems:usage",
+    "crates.io:usage",
+    "npm:usage"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 21.514563106796118,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:usage",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:usage",
+      "downloads": 230464,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:usage",
+      "downloads": 177,
+      "version_count": 5,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:usage",
+      "downloads": 10712,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "npm:usage",
+      "downloads": 0,
+      "version_count": 39,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:usage",
+  "disambiguated_at": "2026-02-17T00:30:26.91286096Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

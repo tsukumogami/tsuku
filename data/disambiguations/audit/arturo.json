@@ -1,0 +1,40 @@
+{
+  "tool": "arturo",
+  "selected": "rubygems:arturo",
+  "alternatives": [
+    "homebrew:arturo",
+    "npm:arturo"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 3270.625,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:arturo",
+      "downloads": 15,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:arturo",
+      "downloads": 112,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:arturo",
+      "downloads": 366310,
+      "version_count": 56,
+      "has_repository": true
+    },
+    {
+      "source": "npm:arturo",
+      "downloads": 0,
+      "version_count": 6,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:arturo",
+  "disambiguated_at": "2026-02-17T00:11:02.654264054Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

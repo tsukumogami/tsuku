@@ -1,0 +1,38 @@
+{
+  "tool": "janet",
+  "selected": "homebrew:janet",
+  "alternatives": [
+    "pypi:janet"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:janet",
+      "downloads": 7,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:janet",
+      "downloads": 1003,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:janet",
+      "downloads": 0,
+      "version_count": 20,
+      "has_repository": true
+    },
+    {
+      "source": "npm:janet",
+      "downloads": 65,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:janet",
+  "disambiguated_at": "2026-02-17T00:19:07.806842341Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

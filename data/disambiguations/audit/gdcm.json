@@ -1,0 +1,33 @@
+{
+  "tool": "gdcm",
+  "selected": "rubygems:gdcm",
+  "alternatives": [
+    "homebrew:gdcm"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 4.705716302046577,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:gdcm",
+      "downloads": 1417,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:gdcm",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "rubygems:gdcm",
+      "downloads": 6668,
+      "version_count": 6,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:gdcm",
+  "disambiguated_at": "2026-02-17T00:16:33.417280483Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

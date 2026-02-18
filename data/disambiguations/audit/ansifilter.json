@@ -1,0 +1,24 @@
+{
+  "tool": "ansifilter",
+  "selected": "homebrew:ansifilter",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:ansifilter",
+      "downloads": 1712,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:ansifilter",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:ansifilter",
+  "disambiguated_at": "2026-02-17T00:10:43.203577076Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

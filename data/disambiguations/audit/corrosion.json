@@ -1,0 +1,30 @@
+{
+  "tool": "corrosion",
+  "selected": "homebrew:corrosion",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:corrosion",
+      "downloads": 31,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:corrosion",
+      "downloads": 864,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:corrosion",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:corrosion",
+  "disambiguated_at": "2026-02-17T00:13:41.918313353Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

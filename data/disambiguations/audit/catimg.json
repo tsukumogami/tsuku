@@ -1,0 +1,32 @@
+{
+  "tool": "catimg",
+  "selected": "homebrew:catimg",
+  "alternatives": [
+    "pypi:catimg"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:catimg",
+      "downloads": 15,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:catimg",
+      "downloads": 0,
+      "version_count": 7,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:catimg",
+      "downloads": 958,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:catimg",
+  "disambiguated_at": "2026-02-17T00:12:41.092915708Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

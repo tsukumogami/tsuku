@@ -1,0 +1,40 @@
+{
+  "tool": "tach",
+  "selected": "rubygems:tach",
+  "alternatives": [
+    "homebrew:tach",
+    "pypi:tach"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 97.39320388349515,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:tach",
+      "downloads": 412,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:tach",
+      "downloads": 40126,
+      "version_count": 9,
+      "has_repository": false
+    },
+    {
+      "source": "pypi:tach",
+      "downloads": 0,
+      "version_count": 102,
+      "has_repository": true
+    },
+    {
+      "source": "npm:tach",
+      "downloads": 3,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:tach",
+  "disambiguated_at": "2026-02-17T00:29:12.490762751Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

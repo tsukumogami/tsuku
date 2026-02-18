@@ -1,0 +1,41 @@
+{
+  "tool": "nettle",
+  "selected": "homebrew:nettle",
+  "alternatives": [
+    "crates.io:nettle",
+    "rubygems:nettle",
+    "npm:nettle"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 8.632097213492562,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:nettle",
+      "downloads": 782819,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:nettle",
+      "downloads": 90687,
+      "version_count": 22,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:nettle",
+      "downloads": 4603,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:nettle",
+      "downloads": 2,
+      "version_count": 5,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:nettle",
+  "disambiguated_at": "2026-02-17T00:23:26.201925606Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

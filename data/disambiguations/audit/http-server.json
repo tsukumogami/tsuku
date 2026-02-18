@@ -1,0 +1,41 @@
+{
+  "tool": "http-server",
+  "selected": "npm:http-server",
+  "alternatives": [
+    "crates.io:http-server",
+    "homebrew:http-server",
+    "rubygems:http-server"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 86.780956079769,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:http-server",
+      "downloads": 8221,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:http-server",
+      "downloads": 59221,
+      "version_count": 50,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:http-server",
+      "downloads": 2436,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "npm:http-server",
+      "downloads": 5139255,
+      "version_count": 49,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:http-server",
+  "disambiguated_at": "2026-02-17T00:18:26.402851168Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

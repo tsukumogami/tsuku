@@ -1,0 +1,26 @@
+{
+  "tool": "sysaidmin",
+  "selected": "homebrew:sysaidmin",
+  "alternatives": [
+    "pypi:sysaidmin"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:sysaidmin",
+      "downloads": 450,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:sysaidmin",
+      "downloads": 0,
+      "version_count": 10,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:sysaidmin",
+  "disambiguated_at": "2026-02-17T00:29:09.679908764Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

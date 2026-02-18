@@ -1,0 +1,27 @@
+{
+  "tool": "libass",
+  "selected": "homebrew:libass",
+  "alternatives": [
+    "crates.io:libass"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 12601.035714285714,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:libass",
+      "downloads": 28,
+      "version_count": 5,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:libass",
+      "downloads": 352829,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:libass",
+  "disambiguated_at": "2026-02-17T00:20:26.106212247Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

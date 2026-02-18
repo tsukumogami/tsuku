@@ -55,3 +55,4 @@ tmp/
 testdata/golden/plans/[a-z]/
 coverage-analytics
 target/
+.claude/

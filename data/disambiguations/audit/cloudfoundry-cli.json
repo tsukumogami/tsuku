@@ -1,0 +1,27 @@
+{
+  "tool": "cloudfoundry-cli",
+  "selected": "homebrew:cloudfoundry-cli",
+  "alternatives": [
+    "npm:cloudfoundry-cli"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 94.83333333333333,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:cloudfoundry-cli",
+      "downloads": 569,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:cloudfoundry-cli",
+      "downloads": 6,
+      "version_count": 9,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:cloudfoundry-cli",
+  "disambiguated_at": "2026-02-17T00:13:20.047215451Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

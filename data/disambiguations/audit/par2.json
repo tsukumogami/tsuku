@@ -1,0 +1,18 @@
+{
+  "tool": "par2",
+  "selected": "homebrew:par2",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:par2",
+      "downloads": 1165,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:par2",
+  "disambiguated_at": "2026-02-17T00:24:47.164659276Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,33 @@
+{
+  "tool": "libosmium",
+  "selected": "homebrew:libosmium",
+  "alternatives": [
+    "crates.io:libosmium"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 15.8,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:libosmium",
+      "downloads": 30,
+      "version_count": 5,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:libosmium",
+      "downloads": 474,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:libosmium",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:libosmium",
+  "disambiguated_at": "2026-02-17T00:20:50.957953109Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

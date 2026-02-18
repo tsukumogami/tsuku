@@ -1,0 +1,18 @@
+{
+  "tool": "libdbusmenu",
+  "selected": "homebrew:libdbusmenu",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:libdbusmenu",
+      "downloads": 5226,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:libdbusmenu",
+  "disambiguated_at": "2026-02-17T00:20:29.796346086Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

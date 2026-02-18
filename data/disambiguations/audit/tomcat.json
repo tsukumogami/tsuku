@@ -1,0 +1,40 @@
+{
+  "tool": "tomcat",
+  "selected": "homebrew:tomcat",
+  "alternatives": [
+    "rubygems:tomcat",
+    "crates.io:tomcat"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 4.350730124391563,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:tomcat",
+      "downloads": 16089,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:tomcat",
+      "downloads": 82,
+      "version_count": 12,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:tomcat",
+      "downloads": 3698,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:tomcat",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:tomcat",
+  "disambiguated_at": "2026-02-17T00:29:50.101152156Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

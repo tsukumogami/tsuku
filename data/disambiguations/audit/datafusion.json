@@ -1,0 +1,41 @@
+{
+  "tool": "datafusion",
+  "selected": "crates.io:datafusion",
+  "alternatives": [
+    "rubygems:datafusion",
+    "homebrew:datafusion",
+    "pypi:datafusion"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 134.03741231488698,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:datafusion",
+      "downloads": 1042,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:datafusion",
+      "downloads": 0,
+      "version_count": 40,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:datafusion",
+      "downloads": 2407580,
+      "version_count": 112,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:datafusion",
+      "downloads": 17962,
+      "version_count": 7,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:datafusion",
+  "disambiguated_at": "2026-02-17T00:14:09.334126209Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

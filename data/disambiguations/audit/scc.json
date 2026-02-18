@@ -1,0 +1,41 @@
+{
+  "tool": "scc",
+  "selected": "crates.io:scc",
+  "alternatives": [
+    "homebrew:scc",
+    "pypi:scc",
+    "npm:scc"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 2259.531659797677,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:scc",
+      "downloads": 5338,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:scc",
+      "downloads": 0,
+      "version_count": 70,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:scc",
+      "downloads": 12061380,
+      "version_count": 232,
+      "has_repository": true
+    },
+    {
+      "source": "npm:scc",
+      "downloads": 0,
+      "version_count": 13,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:scc",
+  "disambiguated_at": "2026-02-17T00:27:29.916880441Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

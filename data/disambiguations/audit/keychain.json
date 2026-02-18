@@ -1,0 +1,47 @@
+{
+  "tool": "keychain",
+  "selected": "rubygems:keychain",
+  "alternatives": [
+    "homebrew:keychain",
+    "npm:keychain",
+    "pypi:keychain"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.795791846702987,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:keychain",
+      "downloads": 16,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:keychain",
+      "downloads": 0,
+      "version_count": 7,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:keychain",
+      "downloads": 5323,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:keychain",
+      "downloads": 20205,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "npm:keychain",
+      "downloads": 0,
+      "version_count": 10,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:keychain",
+  "disambiguated_at": "2026-02-17T00:19:45.421229627Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

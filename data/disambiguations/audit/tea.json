@@ -1,0 +1,46 @@
+{
+  "tool": "tea",
+  "selected": "rubygems:tea",
+  "alternatives": [
+    "homebrew:tea",
+    "pypi:tea"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.237234523271577,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:tea",
+      "downloads": 10,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:tea",
+      "downloads": 2213,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:tea",
+      "downloads": 0,
+      "version_count": 18,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:tea",
+      "downloads": 4951,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:tea",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:tea",
+  "disambiguated_at": "2026-02-17T00:29:21.22272913Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

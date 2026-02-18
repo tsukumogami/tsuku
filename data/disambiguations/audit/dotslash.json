@@ -1,0 +1,33 @@
+{
+  "tool": "dotslash",
+  "selected": "crates.io:dotslash",
+  "alternatives": [
+    "homebrew:dotslash"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 172.41710296684118,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "pypi:dotslash",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:dotslash",
+      "downloads": 197590,
+      "version_count": 11,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:dotslash",
+      "downloads": 1146,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:dotslash",
+  "disambiguated_at": "2026-02-17T00:14:47.825958635Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

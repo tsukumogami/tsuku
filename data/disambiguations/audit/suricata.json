@@ -1,0 +1,34 @@
+{
+  "tool": "suricata",
+  "selected": "rubygems:suricata",
+  "alternatives": [
+    "homebrew:suricata",
+    "crates.io:suricata"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 9.444148936170214,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:suricata",
+      "downloads": 127,
+      "version_count": 24,
+      "has_repository": false
+    },
+    {
+      "source": "rubygems:suricata",
+      "downloads": 17755,
+      "version_count": 9,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:suricata",
+      "downloads": 1880,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:suricata",
+  "disambiguated_at": "2026-02-17T00:29:02.293725985Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

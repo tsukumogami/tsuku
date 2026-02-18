@@ -1,0 +1,26 @@
+{
+  "tool": "c7n",
+  "selected": "homebrew:c7n",
+  "alternatives": [
+    "pypi:c7n"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:c7n",
+      "downloads": 667,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:c7n",
+      "downloads": 0,
+      "version_count": 151,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:c7n",
+  "disambiguated_at": "2026-02-17T00:12:28.459756928Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

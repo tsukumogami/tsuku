@@ -1,0 +1,47 @@
+{
+  "tool": "lolcat",
+  "selected": "rubygems:lolcat",
+  "alternatives": [
+    "homebrew:lolcat",
+    "crates.io:lolcat",
+    "pypi:lolcat"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 673.3881249196761,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:lolcat",
+      "downloads": 7781,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:lolcat",
+      "downloads": 775,
+      "version_count": 11,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:lolcat",
+      "downloads": 0,
+      "version_count": 9,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:lolcat",
+      "downloads": 5239633,
+      "version_count": 26,
+      "has_repository": false
+    },
+    {
+      "source": "npm:lolcat",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:lolcat",
+  "disambiguated_at": "2026-02-17T00:21:35.901136249Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

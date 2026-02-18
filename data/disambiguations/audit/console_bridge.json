@@ -1,0 +1,18 @@
+{
+  "tool": "console_bridge",
+  "selected": "homebrew:console_bridge",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:console_bridge",
+      "downloads": 10685,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:console_bridge",
+  "disambiguated_at": "2026-02-17T00:13:36.260233979Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

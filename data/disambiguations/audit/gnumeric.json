@@ -1,0 +1,27 @@
+{
+  "tool": "gnumeric",
+  "selected": "rubygems:gnumeric",
+  "alternatives": [
+    "homebrew:gnumeric"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 20.195050662509743,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:gnumeric",
+      "downloads": 5132,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:gnumeric",
+      "downloads": 103641,
+      "version_count": 78,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:gnumeric",
+  "disambiguated_at": "2026-02-17T00:17:14.066607681Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

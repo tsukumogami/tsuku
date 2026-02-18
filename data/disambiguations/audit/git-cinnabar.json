@@ -1,0 +1,27 @@
+{
+  "tool": "git-cinnabar",
+  "selected": "homebrew:git-cinnabar",
+  "alternatives": [
+    "crates.io:git-cinnabar"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.258241758241758,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:git-cinnabar",
+      "downloads": 182,
+      "version_count": 12,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:git-cinnabar",
+      "downloads": 411,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:git-cinnabar",
+  "disambiguated_at": "2026-02-17T00:16:47.386858505Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

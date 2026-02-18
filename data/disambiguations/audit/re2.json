@@ -1,0 +1,48 @@
+{
+  "tool": "re2",
+  "selected": "rubygems:re2",
+  "alternatives": [
+    "homebrew:re2",
+    "crates.io:re2",
+    "npm:re2",
+    "pypi:re2"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 319.18628805963897,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:re2",
+      "downloads": 119385,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:re2",
+      "downloads": 0,
+      "version_count": 14,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:re2",
+      "downloads": 106,
+      "version_count": 11,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:re2",
+      "downloads": 38106055,
+      "version_count": 418,
+      "has_repository": true
+    },
+    {
+      "source": "npm:re2",
+      "downloads": 0,
+      "version_count": 86,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:re2",
+  "disambiguated_at": "2026-02-17T00:26:43.537305379Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

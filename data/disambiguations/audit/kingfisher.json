@@ -1,0 +1,47 @@
+{
+  "tool": "kingfisher",
+  "selected": "rubygems:kingfisher",
+  "alternatives": [
+    "homebrew:kingfisher",
+    "crates.io:kingfisher",
+    "pypi:kingfisher"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.3883587786259541,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:kingfisher",
+      "downloads": 42,
+      "version_count": 6,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:kingfisher",
+      "downloads": 0,
+      "version_count": 12,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:kingfisher",
+      "downloads": 2096,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:kingfisher",
+      "downloads": 2910,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:kingfisher",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:kingfisher",
+  "disambiguated_at": "2026-02-17T00:19:48.898470996Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

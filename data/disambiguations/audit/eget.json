@@ -1,0 +1,26 @@
+{
+  "tool": "eget",
+  "selected": "homebrew:eget",
+  "alternatives": [
+    "npm:eget"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:eget",
+      "downloads": 898,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:eget",
+      "downloads": 0,
+      "version_count": 9,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:eget",
+  "disambiguated_at": "2026-02-17T00:15:10.280547017Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

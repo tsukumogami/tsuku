@@ -1,0 +1,46 @@
+{
+  "tool": "crystal",
+  "selected": "rubygems:crystal",
+  "alternatives": [
+    "homebrew:crystal",
+    "npm:crystal"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 5.431056637343086,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:crystal",
+      "downloads": 10117,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:crystal",
+      "downloads": 14,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "pypi:crystal",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:crystal",
+      "downloads": 54946,
+      "version_count": 12,
+      "has_repository": false
+    },
+    {
+      "source": "npm:crystal",
+      "downloads": 129,
+      "version_count": 72,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:crystal",
+  "disambiguated_at": "2026-02-17T00:13:54.604077651Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

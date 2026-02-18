@@ -1,0 +1,39 @@
+{
+  "tool": "azure-cli",
+  "selected": "homebrew:azure-cli",
+  "alternatives": [
+    "pypi:azure-cli",
+    "npm:azure-cli"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:azure-cli",
+      "downloads": 434797,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:azure-cli",
+      "downloads": 9,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "pypi:azure-cli",
+      "downloads": 0,
+      "version_count": 200,
+      "has_repository": true
+    },
+    {
+      "source": "npm:azure-cli",
+      "downloads": 0,
+      "version_count": 76,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:azure-cli",
+  "disambiguated_at": "2026-02-17T00:11:32.953222704Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

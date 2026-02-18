@@ -1,0 +1,41 @@
+{
+  "tool": "sf",
+  "selected": "homebrew:sf",
+  "alternatives": [
+    "rubygems:sf",
+    "npm:sf",
+    "crates.io:sf"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.745031712473573,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:sf",
+      "downloads": 148,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:sf",
+      "downloads": 4127,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:sf",
+      "downloads": 2365,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:sf",
+      "downloads": 1829,
+      "version_count": 12,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:sf",
+  "disambiguated_at": "2026-02-17T00:27:45.390889386Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

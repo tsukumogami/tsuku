@@ -1,0 +1,46 @@
+{
+  "tool": "libconfig",
+  "selected": "rubygems:libconfig",
+  "alternatives": [
+    "homebrew:libconfig",
+    "pypi:libconfig"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.061820652173913,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:libconfig",
+      "downloads": 12,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:libconfig",
+      "downloads": 4416,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:libconfig",
+      "downloads": 0,
+      "version_count": 10,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:libconfig",
+      "downloads": 4689,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "npm:libconfig",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:libconfig",
+  "disambiguated_at": "2026-02-17T00:20:28.789679776Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

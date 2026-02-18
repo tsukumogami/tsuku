@@ -1,0 +1,34 @@
+{
+  "tool": "minimap2",
+  "selected": "rubygems:minimap2",
+  "alternatives": [
+    "crates.io:minimap2",
+    "homebrew:minimap2"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 12.2615315718764,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:minimap2",
+      "downloads": 1672,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:minimap2",
+      "downloads": 2233,
+      "version_count": 25,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:minimap2",
+      "downloads": 27380,
+      "version_count": 26,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:minimap2",
+  "disambiguated_at": "2026-02-17T00:22:31.542599477Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

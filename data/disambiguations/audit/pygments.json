@@ -1,0 +1,34 @@
+{
+  "tool": "pygments",
+  "selected": "homebrew:pygments",
+  "alternatives": [
+    "npm:pygments",
+    "pypi:pygments"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 232.32142857142858,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:pygments",
+      "downloads": 13010,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:pygments",
+      "downloads": 0,
+      "version_count": 67,
+      "has_repository": true
+    },
+    {
+      "source": "npm:pygments",
+      "downloads": 56,
+      "version_count": 7,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:pygments",
+  "disambiguated_at": "2026-02-17T00:26:01.266303121Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,24 @@
+{
+  "tool": "filebeat",
+  "selected": "homebrew:filebeat",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:filebeat",
+      "downloads": 2331,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:filebeat",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:filebeat",
+  "disambiguated_at": "2026-02-17T00:15:51.595361215Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

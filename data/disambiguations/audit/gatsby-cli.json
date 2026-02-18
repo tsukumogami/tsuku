@@ -1,0 +1,26 @@
+{
+  "tool": "gatsby-cli",
+  "selected": "homebrew:gatsby-cli",
+  "alternatives": [
+    "npm:gatsby-cli"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:gatsby-cli",
+      "downloads": 732,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:gatsby-cli",
+      "downloads": 0,
+      "version_count": 1062,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:gatsby-cli",
+  "disambiguated_at": "2026-02-17T00:16:29.116976843Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

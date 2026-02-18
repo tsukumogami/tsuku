@@ -1,0 +1,40 @@
+{
+  "tool": "epubcheck",
+  "selected": "rubygems:epubcheck",
+  "alternatives": [
+    "homebrew:epubcheck",
+    "pypi:epubcheck"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 32.77117117117117,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:epubcheck",
+      "downloads": 1110,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:epubcheck",
+      "downloads": 0,
+      "version_count": 7,
+      "has_repository": true
+    },
+    {
+      "source": "npm:epubcheck",
+      "downloads": 4,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:epubcheck",
+      "downloads": 36376,
+      "version_count": 3,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:epubcheck",
+  "disambiguated_at": "2026-02-17T00:15:21.542137318Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

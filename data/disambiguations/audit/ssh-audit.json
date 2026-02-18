@@ -1,0 +1,26 @@
+{
+  "tool": "ssh-audit",
+  "selected": "homebrew:ssh-audit",
+  "alternatives": [
+    "pypi:ssh-audit"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:ssh-audit",
+      "downloads": 635,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:ssh-audit",
+      "downloads": 0,
+      "version_count": 12,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:ssh-audit",
+  "disambiguated_at": "2026-02-17T00:28:41.645471678Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

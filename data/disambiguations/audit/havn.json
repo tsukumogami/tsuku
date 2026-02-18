@@ -1,0 +1,27 @@
+{
+  "tool": "havn",
+  "selected": "homebrew:havn",
+  "alternatives": [
+    "crates.io:havn"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.0031152647975077,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:havn",
+      "downloads": 322,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:havn",
+      "downloads": 321,
+      "version_count": 25,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:havn",
+  "disambiguated_at": "2026-02-17T00:18:05.713259914Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

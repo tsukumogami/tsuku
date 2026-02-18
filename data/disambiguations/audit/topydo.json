@@ -1,0 +1,26 @@
+{
+  "tool": "topydo",
+  "selected": "homebrew:topydo",
+  "alternatives": [
+    "pypi:topydo"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:topydo",
+      "downloads": 102,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:topydo",
+      "downloads": 0,
+      "version_count": 22,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:topydo",
+  "disambiguated_at": "2026-02-17T00:29:51.783654377Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

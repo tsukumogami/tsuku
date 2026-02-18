@@ -1,0 +1,26 @@
+{
+  "tool": "iftop",
+  "selected": "homebrew:iftop",
+  "alternatives": [
+    "npm:iftop"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:iftop",
+      "downloads": 5169,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:iftop",
+      "downloads": 0,
+      "version_count": 9,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:iftop",
+  "disambiguated_at": "2026-02-17T00:18:41.123410729Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

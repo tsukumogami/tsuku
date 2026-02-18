@@ -1,0 +1,46 @@
+{
+  "tool": "chromaprint",
+  "selected": "rubygems:chromaprint",
+  "alternatives": [
+    "homebrew:chromaprint",
+    "crates.io:chromaprint"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 10.654912646257413,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:chromaprint",
+      "downloads": 391,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:chromaprint",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:chromaprint",
+      "downloads": 6239,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:chromaprint",
+      "downloads": 66476,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "npm:chromaprint",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:chromaprint",
+  "disambiguated_at": "2026-02-17T00:13:01.238244116Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

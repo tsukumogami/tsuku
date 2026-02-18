@@ -1,0 +1,27 @@
+{
+  "tool": "cocogitto",
+  "selected": "crates.io:cocogitto",
+  "alternatives": [
+    "homebrew:cocogitto"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.9780405405405406,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:cocogitto",
+      "downloads": 2960,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:cocogitto",
+      "downloads": 5855,
+      "version_count": 32,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:cocogitto",
+  "disambiguated_at": "2026-02-17T00:13:27.442152353Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

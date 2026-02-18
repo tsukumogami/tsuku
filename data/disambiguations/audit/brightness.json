@@ -1,0 +1,40 @@
+{
+  "tool": "brightness",
+  "selected": "homebrew:brightness",
+  "alternatives": [
+    "crates.io:brightness",
+    "npm:brightness"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.6791979949874687,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:brightness",
+      "downloads": 2680,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:brightness",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:brightness",
+      "downloads": 1596,
+      "version_count": 10,
+      "has_repository": true
+    },
+    {
+      "source": "npm:brightness",
+      "downloads": 132,
+      "version_count": 9,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:brightness",
+  "disambiguated_at": "2026-02-17T00:12:13.474090873Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

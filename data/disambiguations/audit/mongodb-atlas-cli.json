@@ -1,0 +1,27 @@
+{
+  "tool": "mongodb-atlas-cli",
+  "selected": "homebrew:mongodb-atlas-cli",
+  "alternatives": [
+    "crates.io:mongodb-atlas-cli"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 98.86068111455108,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:mongodb-atlas-cli",
+      "downloads": 63864,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:mongodb-atlas-cli",
+      "downloads": 646,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:mongodb-atlas-cli",
+  "disambiguated_at": "2026-02-17T00:22:45.128951545Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

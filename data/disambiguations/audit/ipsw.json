@@ -1,0 +1,26 @@
+{
+  "tool": "ipsw",
+  "selected": "homebrew:ipsw",
+  "alternatives": [
+    "pypi:ipsw"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:ipsw",
+      "downloads": 0,
+      "version_count": 5,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:ipsw",
+      "downloads": 5267,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:ipsw",
+  "disambiguated_at": "2026-02-17T00:18:59.754876842Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

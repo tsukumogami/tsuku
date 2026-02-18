@@ -1,0 +1,48 @@
+{
+  "tool": "vultr",
+  "selected": "rubygems:vultr",
+  "alternatives": [
+    "homebrew:vultr",
+    "npm:vultr",
+    "crates.io:vultr",
+    "pypi:vultr"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 77.82629107981221,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:vultr",
+      "downloads": 29,
+      "version_count": 7,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:vultr",
+      "downloads": 0,
+      "version_count": 6,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:vultr",
+      "downloads": 426,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:vultr",
+      "downloads": 33154,
+      "version_count": 15,
+      "has_repository": false
+    },
+    {
+      "source": "npm:vultr",
+      "downloads": 124,
+      "version_count": 10,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:vultr",
+  "disambiguated_at": "2026-02-17T00:30:57.234492515Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,41 @@
+{
+  "tool": "flatbuffers",
+  "selected": "crates.io:flatbuffers",
+  "alternatives": [
+    "npm:flatbuffers",
+    "homebrew:flatbuffers",
+    "pypi:flatbuffers"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.918819876160799,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:flatbuffers",
+      "downloads": 5720,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:flatbuffers",
+      "downloads": 0,
+      "version_count": 26,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:flatbuffers",
+      "downloads": 10131278,
+      "version_count": 33,
+      "has_repository": true
+    },
+    {
+      "source": "npm:flatbuffers",
+      "downloads": 2585288,
+      "version_count": 38,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:flatbuffers",
+  "disambiguated_at": "2026-02-17T00:15:58.982832009Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

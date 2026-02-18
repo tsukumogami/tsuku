@@ -1,0 +1,24 @@
+{
+  "tool": "fernflower",
+  "selected": "homebrew:fernflower",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:fernflower",
+      "downloads": 406,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:fernflower",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:fernflower",
+  "disambiguated_at": "2026-02-17T00:15:46.285693543Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

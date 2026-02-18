@@ -1,0 +1,46 @@
+{
+  "tool": "carapace",
+  "selected": "homebrew:carapace",
+  "alternatives": [
+    "rubygems:carapace",
+    "npm:carapace"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.202819107282694,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:carapace",
+      "downloads": 73,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:carapace",
+      "downloads": 19968,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:carapace",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:carapace",
+      "downloads": 16601,
+      "version_count": 4,
+      "has_repository": false
+    },
+    {
+      "source": "npm:carapace",
+      "downloads": 0,
+      "version_count": 6,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:carapace",
+  "disambiguated_at": "2026-02-17T00:12:32.883726291Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

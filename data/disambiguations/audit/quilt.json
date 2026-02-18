@@ -1,0 +1,46 @@
+{
+  "tool": "quilt",
+  "selected": "rubygems:quilt",
+  "alternatives": [
+    "homebrew:quilt",
+    "pypi:quilt"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 39.294186046511626,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:quilt",
+      "downloads": 5,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:quilt",
+      "downloads": 860,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:quilt",
+      "downloads": 0,
+      "version_count": 50,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:quilt",
+      "downloads": 33793,
+      "version_count": 9,
+      "has_repository": false
+    },
+    {
+      "source": "npm:quilt",
+      "downloads": 8,
+      "version_count": 4,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:quilt",
+  "disambiguated_at": "2026-02-17T00:26:30.954410583Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

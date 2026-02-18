@@ -1,0 +1,18 @@
+{
+  "tool": "libvncserver",
+  "selected": "homebrew:libvncserver",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:libvncserver",
+      "downloads": 1110,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:libvncserver",
+  "disambiguated_at": "2026-02-17T00:21:10.734665299Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,27 @@
+{
+  "tool": "makensis",
+  "selected": "homebrew:makensis",
+  "alternatives": [
+    "npm:makensis"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.257309941520468,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:makensis",
+      "downloads": 2702,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:makensis",
+      "downloads": 1197,
+      "version_count": 87,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:makensis",
+  "disambiguated_at": "2026-02-17T00:21:52.867144992Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

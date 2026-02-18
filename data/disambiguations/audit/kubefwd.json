@@ -1,0 +1,18 @@
+{
+  "tool": "kubefwd",
+  "selected": "homebrew:kubefwd",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:kubefwd",
+      "downloads": 224,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:kubefwd",
+  "disambiguated_at": "2026-02-17T00:20:03.167035188Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

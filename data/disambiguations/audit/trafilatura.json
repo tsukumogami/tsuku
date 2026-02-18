@@ -1,0 +1,26 @@
+{
+  "tool": "trafilatura",
+  "selected": "homebrew:trafilatura",
+  "alternatives": [
+    "pypi:trafilatura"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:trafilatura",
+      "downloads": 496,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:trafilatura",
+      "downloads": 0,
+      "version_count": 50,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:trafilatura",
+  "disambiguated_at": "2026-02-17T00:29:54.94171577Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

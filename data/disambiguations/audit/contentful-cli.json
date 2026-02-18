@@ -1,0 +1,27 @@
+{
+  "tool": "contentful-cli",
+  "selected": "npm:contentful-cli",
+  "alternatives": [
+    "homebrew:contentful-cli"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 21.76341127922971,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:contentful-cli",
+      "downloads": 2908,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:contentful-cli",
+      "downloads": 63288,
+      "version_count": 857,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:contentful-cli",
+  "disambiguated_at": "2026-02-17T00:13:37.900091023Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

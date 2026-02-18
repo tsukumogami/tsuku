@@ -1,0 +1,34 @@
+{
+  "tool": "jenkins-job-builder",
+  "selected": "homebrew:jenkins-job-builder",
+  "alternatives": [
+    "npm:jenkins-job-builder",
+    "pypi:jenkins-job-builder"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 234.5,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:jenkins-job-builder",
+      "downloads": 469,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:jenkins-job-builder",
+      "downloads": 0,
+      "version_count": 82,
+      "has_repository": true
+    },
+    {
+      "source": "npm:jenkins-job-builder",
+      "downloads": 2,
+      "version_count": 9,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:jenkins-job-builder",
+  "disambiguated_at": "2026-02-17T00:19:12.755781489Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

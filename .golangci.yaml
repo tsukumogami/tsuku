@@ -64,6 +64,15 @@ linters:
         - G104
         # Integer conversion for tar file modes is safe
         - G115
+        # Taint analysis rules (G7xx) produce false positives in this codebase:
+        # CLI tool builds/runs commands from recipe definitions (not user web input)
+        - G702
+        - G703
+        - G704
+        - G705
+        # Test credentials and struct field names are not real secrets
+        - G101
+        - G117
 
     dupl:
       # Increase threshold - version providers have similar structures by design

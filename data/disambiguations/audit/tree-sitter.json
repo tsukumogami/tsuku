@@ -1,0 +1,48 @@
+{
+  "tool": "tree-sitter",
+  "selected": "crates.io:tree-sitter",
+  "alternatives": [
+    "homebrew:tree-sitter",
+    "rubygems:tree-sitter",
+    "npm:tree-sitter",
+    "pypi:tree-sitter"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 9.155931573075494,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:tree-sitter",
+      "downloads": 349570,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:tree-sitter",
+      "downloads": 3200639,
+      "version_count": 72,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:tree-sitter",
+      "downloads": 0,
+      "version_count": 36,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:tree-sitter",
+      "downloads": 6029,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "npm:tree-sitter",
+      "downloads": 0,
+      "version_count": 200,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:tree-sitter",
+  "disambiguated_at": "2026-02-17T00:29:58.500894607Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

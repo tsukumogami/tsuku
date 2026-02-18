@@ -1,0 +1,34 @@
+{
+  "tool": "closure-compiler",
+  "selected": "rubygems:closure-compiler",
+  "alternatives": [
+    "homebrew:closure-compiler",
+    "npm:closure-compiler"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2886.5283194057565,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:closure-compiler",
+      "downloads": 1077,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:closure-compiler",
+      "downloads": 3108791,
+      "version_count": 32,
+      "has_repository": false
+    },
+    {
+      "source": "npm:closure-compiler",
+      "downloads": 0,
+      "version_count": 17,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:closure-compiler",
+  "disambiguated_at": "2026-02-17T00:13:17.560960008Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

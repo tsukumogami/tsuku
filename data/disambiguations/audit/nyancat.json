@@ -1,0 +1,40 @@
+{
+  "tool": "nyancat",
+  "selected": "rubygems:nyancat",
+  "alternatives": [
+    "homebrew:nyancat",
+    "pypi:nyancat"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 30.252771618625278,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:nyancat",
+      "downloads": 902,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:nyancat",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:nyancat",
+      "downloads": 27288,
+      "version_count": 6,
+      "has_repository": false
+    },
+    {
+      "source": "npm:nyancat",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:nyancat",
+  "disambiguated_at": "2026-02-17T00:23:49.894244532Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

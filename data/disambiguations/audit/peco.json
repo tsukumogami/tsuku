@@ -1,0 +1,33 @@
+{
+  "tool": "peco",
+  "selected": "homebrew:peco",
+  "alternatives": [
+    "pypi:peco",
+    "npm:peco"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:peco",
+      "downloads": 0,
+      "version_count": 33,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:peco",
+      "downloads": 4280,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:peco",
+      "downloads": 0,
+      "version_count": 23,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:peco",
+  "disambiguated_at": "2026-02-17T00:24:58.477552736Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

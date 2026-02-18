@@ -1,0 +1,47 @@
+{
+  "tool": "terminator",
+  "selected": "rubygems:terminator",
+  "alternatives": [
+    "homebrew:terminator",
+    "crates.io:terminator",
+    "pypi:terminator"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 18.895739613654406,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:terminator",
+      "downloads": 3779,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:terminator",
+      "downloads": 377,
+      "version_count": 7,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:terminator",
+      "downloads": 0,
+      "version_count": 24,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:terminator",
+      "downloads": 71407,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "npm:terminator",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:terminator",
+  "disambiguated_at": "2026-02-17T00:29:28.380625069Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

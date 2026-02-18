@@ -1,0 +1,24 @@
+{
+  "tool": "phoneinfoga",
+  "selected": "homebrew:phoneinfoga",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:phoneinfoga",
+      "downloads": 1370,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:phoneinfoga",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:phoneinfoga",
+  "disambiguated_at": "2026-02-17T00:25:06.41672608Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

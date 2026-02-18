@@ -1,0 +1,27 @@
+{
+  "tool": "chafa",
+  "selected": "homebrew:chafa",
+  "alternatives": [
+    "crates.io:chafa"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 99.11724137931034,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:chafa",
+      "downloads": 145,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:chafa",
+      "downloads": 14372,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:chafa",
+  "disambiguated_at": "2026-02-17T00:12:51.004076682Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

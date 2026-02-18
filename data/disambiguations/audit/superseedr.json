@@ -1,0 +1,27 @@
+{
+  "tool": "superseedr",
+  "selected": "crates.io:superseedr",
+  "alternatives": [
+    "homebrew:superseedr"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.3855072463768114,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:superseedr",
+      "downloads": 345,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:superseedr",
+      "downloads": 823,
+      "version_count": 37,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:superseedr",
+  "disambiguated_at": "2026-02-17T00:29:01.072663844Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

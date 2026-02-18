@@ -1,0 +1,34 @@
+{
+  "tool": "wdiff",
+  "selected": "rubygems:wdiff",
+  "alternatives": [
+    "homebrew:wdiff",
+    "pypi:wdiff"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 8.872665534804753,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:wdiff",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:wdiff",
+      "downloads": 1767,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:wdiff",
+      "downloads": 15678,
+      "version_count": 4,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:wdiff",
+  "disambiguated_at": "2026-02-17T00:31:04.721750197Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,41 @@
+{
+  "tool": "electric",
+  "selected": "rubygems:electric",
+  "alternatives": [
+    "homebrew:electric",
+    "npm:electric",
+    "pypi:electric"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 30.819897084048026,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:electric",
+      "downloads": 0,
+      "version_count": 26,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:electric",
+      "downloads": 583,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:electric",
+      "downloads": 17968,
+      "version_count": 6,
+      "has_repository": false
+    },
+    {
+      "source": "npm:electric",
+      "downloads": 41,
+      "version_count": 76,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:electric",
+  "disambiguated_at": "2026-02-17T00:15:13.434923799Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

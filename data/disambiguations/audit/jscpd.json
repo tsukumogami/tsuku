@@ -1,0 +1,26 @@
+{
+  "tool": "jscpd",
+  "selected": "homebrew:jscpd",
+  "alternatives": [
+    "npm:jscpd"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:jscpd",
+      "downloads": 509,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:jscpd",
+      "downloads": 0,
+      "version_count": 156,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:jscpd",
+  "disambiguated_at": "2026-02-17T00:19:27.716405844Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

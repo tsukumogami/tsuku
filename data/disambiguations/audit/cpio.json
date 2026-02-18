@@ -1,0 +1,40 @@
+{
+  "tool": "cpio",
+  "selected": "crates.io:cpio",
+  "alternatives": [
+    "rubygems:cpio",
+    "homebrew:cpio"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 37.401875901875904,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:cpio",
+      "downloads": 103678,
+      "version_count": 7,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:cpio",
+      "downloads": 2149,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:cpio",
+      "downloads": 2772,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "npm:cpio",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:cpio",
+  "disambiguated_at": "2026-02-17T00:13:45.673043105Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

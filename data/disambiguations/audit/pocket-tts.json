@@ -1,0 +1,34 @@
+{
+  "tool": "pocket-tts",
+  "selected": "crates.io:pocket-tts",
+  "alternatives": [
+    "homebrew:pocket-tts",
+    "pypi:pocket-tts"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 4.161676646706587,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:pocket-tts",
+      "downloads": 167,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:pocket-tts",
+      "downloads": 0,
+      "version_count": 5,
+      "has_repository": false
+    },
+    {
+      "source": "crates.io:pocket-tts",
+      "downloads": 695,
+      "version_count": 20,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:pocket-tts",
+  "disambiguated_at": "2026-02-17T00:25:26.433643643Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,32 @@
+{
+  "tool": "cython",
+  "selected": "homebrew:cython",
+  "alternatives": [
+    "pypi:cython"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:cython",
+      "downloads": 15058,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:cython",
+      "downloads": 0,
+      "version_count": 150,
+      "has_repository": true
+    },
+    {
+      "source": "npm:cython",
+      "downloads": 4,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:cython",
+  "disambiguated_at": "2026-02-17T00:14:01.137033896Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

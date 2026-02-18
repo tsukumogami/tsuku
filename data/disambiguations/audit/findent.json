@@ -1,0 +1,26 @@
+{
+  "tool": "findent",
+  "selected": "homebrew:findent",
+  "alternatives": [
+    "pypi:findent"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:findent",
+      "downloads": 1484,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:findent",
+      "downloads": 0,
+      "version_count": 21,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:findent",
+  "disambiguated_at": "2026-02-17T00:15:53.327708523Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,27 @@
+{
+  "tool": "gsasl",
+  "selected": "homebrew:gsasl",
+  "alternatives": [
+    "rubygems:gsasl"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.076456915158559,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:gsasl",
+      "downloads": 37059,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:gsasl",
+      "downloads": 12046,
+      "version_count": 3,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:gsasl",
+  "disambiguated_at": "2026-02-17T00:17:44.787877476Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

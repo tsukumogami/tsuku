@@ -1,0 +1,27 @@
+{
+  "tool": "rulesync",
+  "selected": "npm:rulesync",
+  "alternatives": [
+    "homebrew:rulesync"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 44.23359339146398,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:rulesync",
+      "downloads": 2179,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:rulesync",
+      "downloads": 96385,
+      "version_count": 191,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:rulesync",
+  "disambiguated_at": "2026-02-17T00:27:14.997974508Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

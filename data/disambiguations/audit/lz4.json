@@ -1,0 +1,41 @@
+{
+  "tool": "lz4",
+  "selected": "crates.io:lz4",
+  "alternatives": [
+    "homebrew:lz4",
+    "npm:lz4",
+    "pypi:lz4"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 4.732168291846903,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:lz4",
+      "downloads": 1595823,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:lz4",
+      "downloads": 7551703,
+      "version_count": 37,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:lz4",
+      "downloads": 0,
+      "version_count": 86,
+      "has_repository": true
+    },
+    {
+      "source": "npm:lz4",
+      "downloads": 248891,
+      "version_count": 41,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:lz4",
+  "disambiguated_at": "2026-02-17T00:21:43.927499449Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

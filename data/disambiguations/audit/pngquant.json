@@ -1,0 +1,41 @@
+{
+  "tool": "pngquant",
+  "selected": "homebrew:pngquant",
+  "alternatives": [
+    "npm:pngquant",
+    "crates.io:pngquant",
+    "pypi:pngquant"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.2222019686474663,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:pngquant",
+      "downloads": 17677,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:pngquant",
+      "downloads": 491,
+      "version_count": 7,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:pngquant",
+      "downloads": 0,
+      "version_count": 12,
+      "has_repository": true
+    },
+    {
+      "source": "npm:pngquant",
+      "downloads": 5486,
+      "version_count": 25,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:pngquant",
+  "disambiguated_at": "2026-02-17T00:25:25.727868136Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

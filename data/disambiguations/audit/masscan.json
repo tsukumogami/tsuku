@@ -1,0 +1,24 @@
+{
+  "tool": "masscan",
+  "selected": "homebrew:masscan",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:masscan",
+      "downloads": 3193,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:masscan",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:masscan",
+  "disambiguated_at": "2026-02-17T00:22:02.599988709Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

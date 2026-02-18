@@ -1,0 +1,41 @@
+{
+  "tool": "rojo",
+  "selected": "crates.io:rojo",
+  "alternatives": [
+    "homebrew:rojo",
+    "npm:rojo",
+    "pypi:rojo"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 5.713095238095238,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:rojo",
+      "downloads": 840,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:rojo",
+      "downloads": 4799,
+      "version_count": 72,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:rojo",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "npm:rojo",
+      "downloads": 173,
+      "version_count": 10,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:rojo",
+  "disambiguated_at": "2026-02-17T00:27:05.095460026Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

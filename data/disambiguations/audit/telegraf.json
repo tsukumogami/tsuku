@@ -1,0 +1,41 @@
+{
+  "tool": "telegraf",
+  "selected": "rubygems:telegraf",
+  "alternatives": [
+    "npm:telegraf",
+    "homebrew:telegraf",
+    "crates.io:telegraf"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.648850746352761,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:telegraf",
+      "downloads": 6665,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:telegraf",
+      "downloads": 6076,
+      "version_count": 16,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:telegraf",
+      "downloads": 470073,
+      "version_count": 17,
+      "has_repository": false
+    },
+    {
+      "source": "npm:telegraf",
+      "downloads": 177463,
+      "version_count": 241,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:telegraf",
+  "disambiguated_at": "2026-02-17T00:29:25.605723738Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

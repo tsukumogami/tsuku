@@ -1,0 +1,33 @@
+{
+  "tool": "fava",
+  "selected": "homebrew:fava",
+  "alternatives": [
+    "pypi:fava",
+    "npm:fava"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:fava",
+      "downloads": 0,
+      "version_count": 57,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:fava",
+      "downloads": 1770,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:fava",
+      "downloads": 0,
+      "version_count": 19,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:fava",
+  "disambiguated_at": "2026-02-17T00:15:40.418641433Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

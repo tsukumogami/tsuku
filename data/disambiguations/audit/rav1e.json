@@ -1,0 +1,33 @@
+{
+  "tool": "rav1e",
+  "selected": "crates.io:rav1e",
+  "alternatives": [
+    "homebrew:rav1e"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 13.602954976062541,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:rav1e",
+      "downloads": 334622,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:rav1e",
+      "downloads": 4551848,
+      "version_count": 27,
+      "has_repository": true
+    },
+    {
+      "source": "npm:rav1e",
+      "downloads": 3,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:rav1e",
+  "disambiguated_at": "2026-02-17T00:26:38.618036009Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

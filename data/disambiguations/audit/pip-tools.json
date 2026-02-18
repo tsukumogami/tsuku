@@ -1,0 +1,26 @@
+{
+  "tool": "pip-tools",
+  "selected": "homebrew:pip-tools",
+  "alternatives": [
+    "pypi:pip-tools"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:pip-tools",
+      "downloads": 2838,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:pip-tools",
+      "downloads": 0,
+      "version_count": 125,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:pip-tools",
+  "disambiguated_at": "2026-02-17T00:25:16.657665099Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

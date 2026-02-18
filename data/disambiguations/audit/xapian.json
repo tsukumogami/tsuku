@@ -1,0 +1,39 @@
+{
+  "tool": "xapian",
+  "selected": "rubygems:xapian",
+  "alternatives": [
+    "homebrew:xapian"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.6789134598641824,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:xapian",
+      "downloads": 12,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:xapian",
+      "downloads": 5743,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:xapian",
+      "downloads": 9642,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:xapian",
+      "downloads": 1,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:xapian",
+  "disambiguated_at": "2026-02-17T00:31:23.096339998Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

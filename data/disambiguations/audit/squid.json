@@ -1,0 +1,41 @@
+{
+  "tool": "squid",
+  "selected": "rubygems:squid",
+  "alternatives": [
+    "homebrew:squid",
+    "npm:squid",
+    "crates.io:squid"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 66.90363830111129,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:squid",
+      "downloads": 6569,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:squid",
+      "downloads": 18,
+      "version_count": 6,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:squid",
+      "downloads": 439490,
+      "version_count": 12,
+      "has_repository": false
+    },
+    {
+      "source": "npm:squid",
+      "downloads": 1723,
+      "version_count": 56,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:squid",
+  "disambiguated_at": "2026-02-17T00:28:40.465139772Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

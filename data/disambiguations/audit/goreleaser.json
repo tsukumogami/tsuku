@@ -1,0 +1,18 @@
+{
+  "tool": "goreleaser",
+  "selected": "homebrew:goreleaser",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:goreleaser",
+      "downloads": 18226,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:goreleaser",
+  "disambiguated_at": "2026-02-17T00:17:25.549448113Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

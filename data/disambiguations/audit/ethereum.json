@@ -1,0 +1,47 @@
+{
+  "tool": "ethereum",
+  "selected": "rubygems:ethereum",
+  "alternatives": [
+    "crates.io:ethereum",
+    "homebrew:ethereum",
+    "pypi:ethereum"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.162771300133455,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:ethereum",
+      "downloads": 7203,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:ethereum",
+      "downloads": 0,
+      "version_count": 48,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:ethereum",
+      "downloads": 113896,
+      "version_count": 28,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:ethereum",
+      "downloads": 132435,
+      "version_count": 49,
+      "has_repository": true
+    },
+    {
+      "source": "npm:ethereum",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:ethereum",
+  "disambiguated_at": "2026-02-17T00:15:26.255215468Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

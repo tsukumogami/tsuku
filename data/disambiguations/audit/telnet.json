@@ -1,0 +1,34 @@
+{
+  "tool": "telnet",
+  "selected": "homebrew:telnet",
+  "alternatives": [
+    "crates.io:telnet",
+    "npm:telnet"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 28.58220284237726,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:telnet",
+      "downloads": 6192,
+      "version_count": 10,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:telnet",
+      "downloads": 176981,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:telnet",
+      "downloads": 1442,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:telnet",
+  "disambiguated_at": "2026-02-17T00:29:26.892684296Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,48 @@
+{
+  "tool": "diesel",
+  "selected": "crates.io:diesel",
+  "alternatives": [
+    "rubygems:diesel",
+    "homebrew:diesel",
+    "pypi:diesel",
+    "npm:diesel"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 28.19680844667316,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "pypi:diesel",
+      "downloads": 0,
+      "version_count": 9,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:diesel",
+      "downloads": 1096,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:diesel",
+      "downloads": 2344762,
+      "version_count": 91,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:diesel",
+      "downloads": 83157,
+      "version_count": 6,
+      "has_repository": false
+    },
+    {
+      "source": "npm:diesel",
+      "downloads": 0,
+      "version_count": 6,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:diesel",
+  "disambiguated_at": "2026-02-17T00:14:26.50091289Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

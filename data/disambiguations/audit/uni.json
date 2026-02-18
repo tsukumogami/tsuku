@@ -1,0 +1,46 @@
+{
+  "tool": "uni",
+  "selected": "rubygems:uni",
+  "alternatives": [
+    "homebrew:uni",
+    "npm:uni"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 49.32635983263598,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:uni",
+      "downloads": 22,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "pypi:uni",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:uni",
+      "downloads": 478,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:uni",
+      "downloads": 23578,
+      "version_count": 8,
+      "has_repository": true
+    },
+    {
+      "source": "npm:uni",
+      "downloads": 306,
+      "version_count": 7,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:uni",
+  "disambiguated_at": "2026-02-17T00:30:21.395737484Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,24 @@
+{
+  "tool": "bloaty",
+  "selected": "homebrew:bloaty",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:bloaty",
+      "downloads": 39,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:bloaty",
+      "downloads": 2423,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:bloaty",
+  "disambiguated_at": "2026-02-17T00:12:01.933348259Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

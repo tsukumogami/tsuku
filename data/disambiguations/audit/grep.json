@@ -1,0 +1,48 @@
+{
+  "tool": "grep",
+  "selected": "crates.io:grep",
+  "alternatives": [
+    "rubygems:grep",
+    "homebrew:grep",
+    "npm:grep",
+    "pypi:grep"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.4910382119151633,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:grep",
+      "downloads": 0,
+      "version_count": 5,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:grep",
+      "downloads": 473884,
+      "version_count": 29,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:grep",
+      "downloads": 135743,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:grep",
+      "downloads": 66810,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:grep",
+      "downloads": 2056,
+      "version_count": 3,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:grep",
+  "disambiguated_at": "2026-02-17T00:17:39.885154154Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

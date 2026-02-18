@@ -1,0 +1,41 @@
+{
+  "tool": "r",
+  "selected": "homebrew:r",
+  "alternatives": [
+    "rubygems:r",
+    "npm:r",
+    "crates.io:r"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.6443502982329004,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:r",
+      "downloads": 47437,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:r",
+      "downloads": 72,
+      "version_count": 8,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:r",
+      "downloads": 17939,
+      "version_count": 4,
+      "has_repository": false
+    },
+    {
+      "source": "npm:r",
+      "downloads": 2435,
+      "version_count": 5,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:r",
+  "disambiguated_at": "2026-02-17T00:26:32.119733283Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

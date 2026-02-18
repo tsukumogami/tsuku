@@ -1,0 +1,18 @@
+{
+  "tool": "tomcat@10",
+  "selected": "homebrew:tomcat@10",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:tomcat@10",
+      "downloads": 2085,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:tomcat@10",
+  "disambiguated_at": "2026-02-17T00:29:50.595565611Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

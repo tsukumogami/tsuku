@@ -1,0 +1,26 @@
+{
+  "tool": "svtplay-dl",
+  "selected": "homebrew:svtplay-dl",
+  "alternatives": [
+    "pypi:svtplay-dl"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:svtplay-dl",
+      "downloads": 2905,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:svtplay-dl",
+      "downloads": 0,
+      "version_count": 98,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:svtplay-dl",
+  "disambiguated_at": "2026-02-17T00:29:03.204342403Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

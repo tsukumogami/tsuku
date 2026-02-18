@@ -1,0 +1,45 @@
+{
+  "tool": "oxen",
+  "selected": "rubygems:oxen",
+  "alternatives": [
+    "homebrew:oxen"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 31.20539419087137,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:oxen",
+      "downloads": 11,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:oxen",
+      "downloads": 482,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:oxen",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:oxen",
+      "downloads": 15041,
+      "version_count": 8,
+      "has_repository": false
+    },
+    {
+      "source": "npm:oxen",
+      "downloads": 5,
+      "version_count": 3,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:oxen",
+  "disambiguated_at": "2026-02-17T00:24:41.534287973Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

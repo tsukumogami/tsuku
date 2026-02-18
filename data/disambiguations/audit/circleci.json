@@ -1,0 +1,41 @@
+{
+  "tool": "circleci",
+  "selected": "rubygems:circleci",
+  "alternatives": [
+    "homebrew:circleci",
+    "npm:circleci",
+    "pypi:circleci"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 67.85173116089614,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:circleci",
+      "downloads": 0,
+      "version_count": 5,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:circleci",
+      "downloads": 1665760,
+      "version_count": 24,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:circleci",
+      "downloads": 24550,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:circleci",
+      "downloads": 2135,
+      "version_count": 8,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:circleci",
+  "disambiguated_at": "2026-02-17T00:13:04.815205701Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

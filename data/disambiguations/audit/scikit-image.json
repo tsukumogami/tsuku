@@ -1,0 +1,26 @@
+{
+  "tool": "scikit-image",
+  "selected": "homebrew:scikit-image",
+  "alternatives": [
+    "pypi:scikit-image"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:scikit-image",
+      "downloads": 2331,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:scikit-image",
+      "downloads": 0,
+      "version_count": 71,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:scikit-image",
+  "disambiguated_at": "2026-02-17T00:27:31.447542195Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

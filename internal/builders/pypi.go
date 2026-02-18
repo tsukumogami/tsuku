@@ -31,6 +31,7 @@ type pypiPackageResponse struct {
 		Summary     string            `json:"summary"`
 		HomePage    string            `json:"home_page"`
 		ProjectURLs map[string]string `json:"project_urls"`
+		Classifiers []string          `json:"classifiers"`
 	} `json:"info"`
 	Releases map[string]json.RawMessage `json:"releases"`
 }
@@ -50,10 +51,14 @@ type pyprojectToml struct {
 // Pre-compile regex for package name validation
 var pypiPackageNameRegex = regexp.MustCompile(`^[a-zA-Z0-9]([a-zA-Z0-9._-]*[a-zA-Z0-9])?$`)
 
+// defaultTopPyPIURL is the static dump of top PyPI packages by downloads.
+const defaultTopPyPIURL = "https://hugovk.github.io/top-pypi-packages/top-pypi-packages-30-days.min.json"
+
 // PyPIBuilder generates recipes for Python packages from PyPI
 type PyPIBuilder struct {
 	httpClient  *http.Client
 	pypiBaseURL string
+	topPyPIURL  string
 }
 
 // NewPyPIBuilder creates a new PyPIBuilder with the given HTTP client.
@@ -67,6 +72,7 @@ func NewPyPIBuilder(httpClient *http.Client) *PyPIBuilder {
 	return &PyPIBuilder{
 		httpClient:  httpClient,
 		pypiBaseURL: "https://pypi.org",
+		topPyPIURL:  defaultTopPyPIURL,
 	}
 }
 
@@ -74,6 +80,7 @@ func NewPyPIBuilder(httpClient *http.Client) *PyPIBuilder {
 func NewPyPIBuilderWithBaseURL(httpClient *http.Client, baseURL string) *PyPIBuilder {
 	b := NewPyPIBuilder(httpClient)
 	b.pypiBaseURL = baseURL
+	b.topPyPIURL = baseURL + "/top-pypi-packages-30-days.min.json"
 	return b
 }
 
@@ -381,6 +388,103 @@ func isValidPyPIPackageName(name string) bool {
 	}
 
 	return pypiPackageNameRegex.MatchString(name)
+}
+
+// topPyPIPackagesResponse represents the static dump of top PyPI packages.
+type topPyPIPackagesResponse struct {
+	Rows []struct {
+		Project       string `json:"project"`
+		DownloadCount int    `json:"download_count"`
+	} `json:"rows"`
+}
+
+// Discover lists popular CLI packages from PyPI by fetching a static dump
+// of top packages and filtering for those with an "Environment :: Console"
+// classifier. It rate-limits metadata fetches at 5 requests/second.
+// Downloads in the returned candidates are set to 0 because PyPI's per-package
+// API does not expose download counts.
+func (b *PyPIBuilder) Discover(ctx context.Context, limit int) ([]DiscoveryCandidate, error) {
+	if limit <= 0 {
+		return nil, nil
+	}
+
+	// Fetch the static dump of top PyPI packages.
+	req, err := http.NewRequestWithContext(ctx, "GET", b.topPyPIURL, nil)
+	if err != nil {
+		return nil, fmt.Errorf("create top packages request: %w", err)
+	}
+	req.Header.Set("User-Agent", "tsuku/1.0 (https://github.com/tsukumogami/tsuku)")
+
+	resp, err := b.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("fetch top PyPI packages: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("top PyPI packages returned status %d", resp.StatusCode)
+	}
+
+	limitedReader := io.LimitReader(resp.Body, maxPyPIResponseSize)
+	var topPkgs topPyPIPackagesResponse
+	if err := json.NewDecoder(limitedReader).Decode(&topPkgs); err != nil {
+		return nil, fmt.Errorf("parse top PyPI packages: %w", err)
+	}
+
+	var candidates []DiscoveryCandidate
+
+	for _, row := range topPkgs.Rows {
+		if len(candidates) >= limit {
+			break
+		}
+
+		select {
+		case <-ctx.Done():
+			return candidates, ctx.Err()
+		default:
+		}
+
+		name := row.Project
+		if name == "" {
+			continue
+		}
+
+		// Rate limit: 5 req/s for metadata fetches.
+		select {
+		case <-ctx.Done():
+			return candidates, ctx.Err()
+		case <-time.After(200 * time.Millisecond):
+		}
+
+		// Fetch per-package metadata to check classifiers.
+		pkgInfo, err := b.fetchPackageInfo(ctx, name)
+		if err != nil {
+			// Skip packages we can't fetch (not found, rate limited, etc.)
+			continue
+		}
+
+		if !hasConsoleClassifier(pkgInfo.Info.Classifiers) {
+			continue
+		}
+
+		candidates = append(candidates, DiscoveryCandidate{
+			Name:      name,
+			Downloads: 0, // PyPI API does not expose download counts
+		})
+	}
+
+	return candidates, nil
+}
+
+// hasConsoleClassifier checks if the classifiers list contains
+// "Environment :: Console", indicating a CLI tool.
+func hasConsoleClassifier(classifiers []string) bool {
+	for _, c := range classifiers {
+		if c == "Environment :: Console" {
+			return true
+		}
+	}
+	return false
 }
 
 // Probe checks if a package exists on PyPI and returns quality metadata.

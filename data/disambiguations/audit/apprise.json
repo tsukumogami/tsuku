@@ -1,0 +1,40 @@
+{
+  "tool": "apprise",
+  "selected": "rubygems:apprise",
+  "alternatives": [
+    "homebrew:apprise",
+    "pypi:apprise"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 15.04872107186358,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:apprise",
+      "downloads": 821,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:apprise",
+      "downloads": 0,
+      "version_count": 67,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:apprise",
+      "downloads": 12355,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "npm:apprise",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:apprise",
+  "disambiguated_at": "2026-02-17T00:10:50.319192838Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

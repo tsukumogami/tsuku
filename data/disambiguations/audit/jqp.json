@@ -1,0 +1,32 @@
+{
+  "tool": "jqp",
+  "selected": "homebrew:jqp",
+  "alternatives": [
+    "pypi:jqp"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:jqp",
+      "downloads": 941,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:jqp",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "npm:jqp",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:jqp",
+  "disambiguated_at": "2026-02-17T00:19:25.244459769Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

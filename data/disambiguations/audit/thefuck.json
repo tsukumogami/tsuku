@@ -1,0 +1,32 @@
+{
+  "tool": "thefuck",
+  "selected": "homebrew:thefuck",
+  "alternatives": [
+    "pypi:thefuck"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:thefuck",
+      "downloads": 16183,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:thefuck",
+      "downloads": 0,
+      "version_count": 101,
+      "has_repository": true
+    },
+    {
+      "source": "npm:thefuck",
+      "downloads": 2,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:thefuck",
+  "disambiguated_at": "2026-02-17T00:29:37.092785501Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

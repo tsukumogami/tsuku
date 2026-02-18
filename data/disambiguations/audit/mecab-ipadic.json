@@ -1,0 +1,18 @@
+{
+  "tool": "mecab-ipadic",
+  "selected": "homebrew:mecab-ipadic",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:mecab-ipadic",
+      "downloads": 16200,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:mecab-ipadic",
+  "disambiguated_at": "2026-02-17T00:22:16.537521221Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

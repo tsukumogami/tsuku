@@ -1,0 +1,39 @@
+{
+  "tool": "nanobot",
+  "selected": "homebrew:nanobot",
+  "alternatives": [
+    "crates.io:nanobot"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.6217391304347826,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:nanobot",
+      "downloads": 373,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:nanobot",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "crates.io:nanobot",
+      "downloads": 230,
+      "version_count": 20,
+      "has_repository": true
+    },
+    {
+      "source": "npm:nanobot",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:nanobot",
+  "disambiguated_at": "2026-02-17T00:23:09.988787513Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,27 @@
+{
+  "tool": "cargo-sweep",
+  "selected": "crates.io:cargo-sweep",
+  "alternatives": [
+    "homebrew:cargo-sweep"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 25.821997105643995,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:cargo-sweep",
+      "downloads": 1382,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:cargo-sweep",
+      "downloads": 35686,
+      "version_count": 11,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:cargo-sweep",
+  "disambiguated_at": "2026-02-17T00:12:37.188201326Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

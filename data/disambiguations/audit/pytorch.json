@@ -1,0 +1,30 @@
+{
+  "tool": "pytorch",
+  "selected": "homebrew:pytorch",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:pytorch",
+      "downloads": 42854,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:pytorch",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "npm:pytorch",
+      "downloads": 10,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:pytorch",
+  "disambiguated_at": "2026-02-17T00:26:12.232729572Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

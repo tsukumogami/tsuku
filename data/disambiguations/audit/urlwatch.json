@@ -1,0 +1,26 @@
+{
+  "tool": "urlwatch",
+  "selected": "homebrew:urlwatch",
+  "alternatives": [
+    "pypi:urlwatch"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:urlwatch",
+      "downloads": 0,
+      "version_count": 38,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:urlwatch",
+      "downloads": 380,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:urlwatch",
+  "disambiguated_at": "2026-02-17T00:30:26.670627247Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

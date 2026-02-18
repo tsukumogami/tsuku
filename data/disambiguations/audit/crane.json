@@ -1,0 +1,46 @@
+{
+  "tool": "crane",
+  "selected": "rubygems:crane",
+  "alternatives": [
+    "homebrew:crane",
+    "pypi:crane"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.651815487217488,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:crane",
+      "downloads": 10796,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:crane",
+      "downloads": 30,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:crane",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:crane",
+      "downloads": 17833,
+      "version_count": 4,
+      "has_repository": false
+    },
+    {
+      "source": "npm:crane",
+      "downloads": 1,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:crane",
+  "disambiguated_at": "2026-02-17T00:13:49.715916509Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

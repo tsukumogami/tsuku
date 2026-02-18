@@ -1,0 +1,26 @@
+{
+  "tool": "psql2csv",
+  "selected": "homebrew:psql2csv",
+  "alternatives": [
+    "pypi:psql2csv"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:psql2csv",
+      "downloads": 589,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:psql2csv",
+      "downloads": 0,
+      "version_count": 7,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:psql2csv",
+  "disambiguated_at": "2026-02-17T00:25:50.979066446Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

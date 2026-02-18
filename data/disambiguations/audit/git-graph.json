@@ -1,0 +1,41 @@
+{
+  "tool": "git-graph",
+  "selected": "rubygems:git-graph",
+  "alternatives": [
+    "crates.io:git-graph",
+    "homebrew:git-graph",
+    "pypi:git-graph"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 19.03157894736842,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:git-graph",
+      "downloads": 571,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:git-graph",
+      "downloads": 760,
+      "version_count": 5,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:git-graph",
+      "downloads": 0,
+      "version_count": 10,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:git-graph",
+      "downloads": 14464,
+      "version_count": 4,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:git-graph",
+  "disambiguated_at": "2026-02-17T00:16:50.096338496Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

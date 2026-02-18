@@ -1,0 +1,18 @@
+{
+  "tool": "neo4j-mcp",
+  "selected": "homebrew:neo4j-mcp",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:neo4j-mcp",
+      "downloads": 121,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:neo4j-mcp",
+  "disambiguated_at": "2026-02-17T00:23:18.781199409Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

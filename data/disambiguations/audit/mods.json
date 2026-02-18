@@ -1,0 +1,40 @@
+{
+  "tool": "mods",
+  "selected": "rubygems:mods",
+  "alternatives": [
+    "homebrew:mods",
+    "npm:mods"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 351.9399599733155,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:mods",
+      "downloads": 57,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:mods",
+      "downloads": 1499,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:mods",
+      "downloads": 527558,
+      "version_count": 41,
+      "has_repository": false
+    },
+    {
+      "source": "npm:mods",
+      "downloads": 0,
+      "version_count": 5,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:mods",
+  "disambiguated_at": "2026-02-17T00:22:41.756843163Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,32 @@
+{
+  "tool": "streamrip",
+  "selected": "homebrew:streamrip",
+  "alternatives": [
+    "pypi:streamrip"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:streamrip",
+      "downloads": 1941,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:streamrip",
+      "downloads": 0,
+      "version_count": 61,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:streamrip",
+      "downloads": 57,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:streamrip",
+  "disambiguated_at": "2026-02-17T00:28:53.238934998Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

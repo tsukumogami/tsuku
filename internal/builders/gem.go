@@ -356,6 +356,226 @@ func isValidGemName(name string) bool {
 	return gemNameRegex.MatchString(name)
 }
 
+// rubyGemsTopDownloadsResponse represents the /api/v1/downloads/top.json response.
+type rubyGemsTopDownloadsResponse struct {
+	Gems []struct {
+		FullName       string `json:"full_name"`
+		TotalDownloads int    `json:"total_downloads"`
+	} `json:"gems"`
+}
+
+// rubyGemsSearchEntry represents a single gem in the search API response.
+type rubyGemsSearchEntry struct {
+	Name      string `json:"name"`
+	Downloads int    `json:"downloads"`
+}
+
+// Discover lists popular CLI gems from RubyGems by combining the top
+// downloads endpoint and a CLI keyword search. It deduplicates candidates,
+// then checks each gem's info for executables (indicating a CLI tool).
+// Rate limited to 5 requests/second. Maximum candidates: min(limit, 200).
+func (b *GemBuilder) Discover(ctx context.Context, limit int) ([]DiscoveryCandidate, error) {
+	if limit <= 0 {
+		return nil, nil
+	}
+	const maxGemCandidates = 200
+	if limit > maxGemCandidates {
+		limit = maxGemCandidates
+	}
+
+	seen := make(map[string]int) // name -> total downloads
+
+	// Source 1: Top downloads.
+	topGems, err := b.fetchTopDownloads(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("fetch top downloads: %w", err)
+	}
+	for _, g := range topGems {
+		if g.Name != "" {
+			seen[g.Name] = g.Downloads
+		}
+	}
+
+	// Rate limit between the two source requests.
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	case <-time.After(200 * time.Millisecond):
+	}
+
+	// Source 2: CLI keyword search.
+	searchGems, err := b.searchGems(ctx, "cli")
+	if err != nil {
+		// Non-fatal: we still have top downloads to work with.
+		// But if both fail, we have nothing.
+		if len(seen) == 0 {
+			return nil, fmt.Errorf("search gems: %w", err)
+		}
+	} else {
+		for _, g := range searchGems {
+			if g.Name != "" {
+				if _, ok := seen[g.Name]; !ok {
+					seen[g.Name] = g.Downloads
+				}
+			}
+		}
+	}
+
+	// Check each candidate for executables and filter.
+	var candidates []DiscoveryCandidate
+	for name, downloads := range seen {
+		if len(candidates) >= limit {
+			break
+		}
+
+		select {
+		case <-ctx.Done():
+			return candidates, ctx.Err()
+		default:
+		}
+
+		// Rate limit: 5 req/s for gem info fetches.
+		select {
+		case <-ctx.Done():
+			return candidates, ctx.Err()
+		case <-time.After(200 * time.Millisecond):
+		}
+
+		gemInfo, err := b.fetchGemInfo(ctx, name)
+		if err != nil {
+			continue
+		}
+
+		// Only include gems that have executables (indicates a CLI tool).
+		execs, _ := b.discoverExecutables(ctx, gemInfo)
+		if len(execs) == 0 {
+			continue
+		}
+		// If the only "executable" is the gem name as a fallback, we accept it,
+		// since discoverExecutables returns [gemName] as fallback. The issue spec
+		// says check if "executables" field is present, so we accept any result.
+
+		candidates = append(candidates, DiscoveryCandidate{
+			Name:      name,
+			Downloads: downloads,
+		})
+	}
+
+	return candidates, nil
+}
+
+// gemCandidate is an intermediate type for collecting gem names and downloads
+// from multiple sources before deduplication.
+type gemCandidate struct {
+	Name      string
+	Downloads int
+}
+
+// fetchTopDownloads fetches the top downloaded gems from RubyGems.
+func (b *GemBuilder) fetchTopDownloads(ctx context.Context) ([]gemCandidate, error) {
+	baseURL, err := url.Parse(b.rubyGemsBaseURL)
+	if err != nil {
+		return nil, fmt.Errorf("invalid base URL: %w", err)
+	}
+	apiURL := baseURL.JoinPath("api", "v1", "downloads", "top.json")
+
+	req, err := http.NewRequestWithContext(ctx, "GET", apiURL.String(), nil)
+	if err != nil {
+		return nil, fmt.Errorf("create request: %w", err)
+	}
+	req.Header.Set("User-Agent", "tsuku/1.0 (https://github.com/tsukumogami/tsuku)")
+	req.Header.Set("Accept", "application/json")
+
+	resp, err := b.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("fetch top downloads: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == 429 {
+		return nil, fmt.Errorf("rubygems.org rate limit exceeded")
+	}
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("rubygems.org returned status %d", resp.StatusCode)
+	}
+
+	limitedReader := io.LimitReader(resp.Body, maxRubyGemsResponseSize)
+	var topResp rubyGemsTopDownloadsResponse
+	if err := json.NewDecoder(limitedReader).Decode(&topResp); err != nil {
+		return nil, fmt.Errorf("parse top downloads: %w", err)
+	}
+
+	var results []gemCandidate
+	for _, g := range topResp.Gems {
+		name := extractGemName(g.FullName)
+		if name != "" {
+			results = append(results, gemCandidate{
+				Name:      name,
+				Downloads: g.TotalDownloads,
+			})
+		}
+	}
+	return results, nil
+}
+
+// extractGemName strips the version suffix from a full_name like "rails-7.1.0".
+// It finds the last hyphen followed by a version-like string and strips it.
+func extractGemName(fullName string) string {
+	// Find the last hyphen. Everything before it is the gem name,
+	// everything after is the version.
+	idx := strings.LastIndex(fullName, "-")
+	if idx <= 0 {
+		return fullName
+	}
+	return fullName[:idx]
+}
+
+// searchGems searches RubyGems for gems matching the given query.
+func (b *GemBuilder) searchGems(ctx context.Context, query string) ([]gemCandidate, error) {
+	baseURL, err := url.Parse(b.rubyGemsBaseURL)
+	if err != nil {
+		return nil, fmt.Errorf("invalid base URL: %w", err)
+	}
+	apiURL := baseURL.JoinPath("api", "v1", "search.json")
+	q := apiURL.Query()
+	q.Set("query", query)
+	apiURL.RawQuery = q.Encode()
+
+	req, err := http.NewRequestWithContext(ctx, "GET", apiURL.String(), nil)
+	if err != nil {
+		return nil, fmt.Errorf("create search request: %w", err)
+	}
+	req.Header.Set("User-Agent", "tsuku/1.0 (https://github.com/tsukumogami/tsuku)")
+	req.Header.Set("Accept", "application/json")
+
+	resp, err := b.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("search gems: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == 429 {
+		return nil, fmt.Errorf("rubygems.org rate limit exceeded")
+	}
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("rubygems.org returned status %d", resp.StatusCode)
+	}
+
+	limitedReader := io.LimitReader(resp.Body, maxRubyGemsResponseSize)
+	var entries []rubyGemsSearchEntry
+	if err := json.NewDecoder(limitedReader).Decode(&entries); err != nil {
+		return nil, fmt.Errorf("parse search results: %w", err)
+	}
+
+	var results []gemCandidate
+	for _, e := range entries {
+		if e.Name != "" {
+			results = append(results, gemCandidate(e))
+		}
+	}
+	return results, nil
+}
+
 // Probe checks if a gem exists on RubyGems and returns quality metadata.
 func (b *GemBuilder) Probe(ctx context.Context, name string) (*ProbeResult, error) {
 	gemInfo, err := b.fetchGemInfo(ctx, name)

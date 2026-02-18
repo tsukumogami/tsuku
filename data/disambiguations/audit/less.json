@@ -1,0 +1,46 @@
+{
+  "tool": "less",
+  "selected": "rubygems:less",
+  "alternatives": [
+    "homebrew:less",
+    "npm:less"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 1579.8820212046019,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:less",
+      "downloads": 13299,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:less",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:less",
+      "downloads": 21,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "rubygems:less",
+      "downloads": 21010851,
+      "version_count": 76,
+      "has_repository": true
+    },
+    {
+      "source": "npm:less",
+      "downloads": 0,
+      "version_count": 137,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:less",
+  "disambiguated_at": "2026-02-17T00:20:22.906066062Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

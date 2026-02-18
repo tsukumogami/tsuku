@@ -1,0 +1,48 @@
+{
+  "tool": "raylib",
+  "selected": "crates.io:raylib",
+  "alternatives": [
+    "homebrew:raylib",
+    "rubygems:raylib",
+    "pypi:raylib",
+    "npm:raylib"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 6.132504813583056,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:raylib",
+      "downloads": 35035,
+      "version_count": 14,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:raylib",
+      "downloads": 5713,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:raylib",
+      "downloads": 1181,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:raylib",
+      "downloads": 0,
+      "version_count": 66,
+      "has_repository": true
+    },
+    {
+      "source": "npm:raylib",
+      "downloads": 0,
+      "version_count": 20,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:raylib",
+  "disambiguated_at": "2026-02-17T00:26:39.03161282Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

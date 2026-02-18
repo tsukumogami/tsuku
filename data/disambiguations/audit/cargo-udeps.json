@@ -1,0 +1,27 @@
+{
+  "tool": "cargo-udeps",
+  "selected": "crates.io:cargo-udeps",
+  "alternatives": [
+    "homebrew:cargo-udeps"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 76.00444839857651,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:cargo-udeps",
+      "downloads": 1124,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:cargo-udeps",
+      "downloads": 85429,
+      "version_count": 58,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:cargo-udeps",
+  "disambiguated_at": "2026-02-17T00:12:37.423154474Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

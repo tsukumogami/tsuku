@@ -1,0 +1,34 @@
+{
+  "tool": "proxygen",
+  "selected": "homebrew:proxygen",
+  "alternatives": [
+    "crates.io:proxygen",
+    "npm:proxygen"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 21.254901960784313,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:proxygen",
+      "downloads": 1084,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:proxygen",
+      "downloads": 51,
+      "version_count": 9,
+      "has_repository": true
+    },
+    {
+      "source": "npm:proxygen",
+      "downloads": 12,
+      "version_count": 14,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:proxygen",
+  "disambiguated_at": "2026-02-17T00:25:49.567582616Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,34 @@
+{
+  "tool": "headson",
+  "selected": "crates.io:headson",
+  "alternatives": [
+    "homebrew:headson",
+    "pypi:headson"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 5.9786476868327405,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:headson",
+      "downloads": 281,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:headson",
+      "downloads": 0,
+      "version_count": 62,
+      "has_repository": false
+    },
+    {
+      "source": "crates.io:headson",
+      "downloads": 1680,
+      "version_count": 70,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:headson",
+  "disambiguated_at": "2026-02-17T00:18:09.520841924Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

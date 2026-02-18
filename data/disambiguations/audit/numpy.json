@@ -1,0 +1,47 @@
+{
+  "tool": "numpy",
+  "selected": "crates.io:numpy",
+  "alternatives": [
+    "homebrew:numpy",
+    "rubygems:numpy",
+    "pypi:numpy"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 21.10682627731077,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:numpy",
+      "downloads": 379841,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:numpy",
+      "downloads": 8017238,
+      "version_count": 46,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:numpy",
+      "downloads": 313700,
+      "version_count": 5,
+      "has_repository": false
+    },
+    {
+      "source": "pypi:numpy",
+      "downloads": 0,
+      "version_count": 142,
+      "has_repository": true
+    },
+    {
+      "source": "npm:numpy",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:numpy",
+  "disambiguated_at": "2026-02-17T00:23:47.238841925Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

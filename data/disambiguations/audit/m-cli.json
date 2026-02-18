@@ -1,0 +1,32 @@
+{
+  "tool": "m-cli",
+  "selected": "homebrew:m-cli",
+  "alternatives": [
+    "pypi:m-cli"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:m-cli",
+      "downloads": 2849,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:m-cli",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "npm:m-cli",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:m-cli",
+  "disambiguated_at": "2026-02-17T00:21:45.468388904Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "mailpit",
+  "selected": "homebrew:mailpit",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:mailpit",
+      "downloads": 11494,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:mailpit",
+  "disambiguated_at": "2026-02-17T00:21:51.807839293Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

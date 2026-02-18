@@ -1,0 +1,46 @@
+{
+  "tool": "pango",
+  "selected": "crates.io:pango",
+  "alternatives": [
+    "homebrew:pango",
+    "rubygems:pango"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.038243644299666,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:pango",
+      "downloads": 1242664,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:pango",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "crates.io:pango",
+      "downloads": 2532852,
+      "version_count": 58,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:pango",
+      "downloads": 862152,
+      "version_count": 230,
+      "has_repository": true
+    },
+    {
+      "source": "npm:pango",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:pango",
+  "disambiguated_at": "2026-02-17T00:24:46.133093357Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

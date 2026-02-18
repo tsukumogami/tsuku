@@ -1,0 +1,18 @@
+{
+  "tool": "rtl_433",
+  "selected": "homebrew:rtl_433",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:rtl_433",
+      "downloads": 2060,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:rtl_433",
+  "disambiguated_at": "2026-02-17T00:27:11.044991722Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

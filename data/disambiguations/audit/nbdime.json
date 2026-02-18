@@ -1,0 +1,33 @@
+{
+  "tool": "nbdime",
+  "selected": "homebrew:nbdime",
+  "alternatives": [
+    "pypi:nbdime",
+    "npm:nbdime"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:nbdime",
+      "downloads": 763,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:nbdime",
+      "downloads": 0,
+      "version_count": 39,
+      "has_repository": true
+    },
+    {
+      "source": "npm:nbdime",
+      "downloads": 0,
+      "version_count": 31,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:nbdime",
+  "disambiguated_at": "2026-02-17T00:23:12.717732534Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

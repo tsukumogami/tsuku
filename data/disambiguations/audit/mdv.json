@@ -1,0 +1,47 @@
+{
+  "tool": "mdv",
+  "selected": "rubygems:mdv",
+  "alternatives": [
+    "homebrew:mdv",
+    "npm:mdv",
+    "pypi:mdv"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 139.1922077922078,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:mdv",
+      "downloads": 385,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:mdv",
+      "downloads": 0,
+      "version_count": 14,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:mdv",
+      "downloads": 56,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:mdv",
+      "downloads": 53589,
+      "version_count": 23,
+      "has_repository": true
+    },
+    {
+      "source": "npm:mdv",
+      "downloads": 0,
+      "version_count": 19,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:mdv",
+  "disambiguated_at": "2026-02-17T00:22:16.071590831Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

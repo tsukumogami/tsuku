@@ -1,0 +1,18 @@
+{
+  "tool": "xerces-c",
+  "selected": "homebrew:xerces-c",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:xerces-c",
+      "downloads": 47181,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:xerces-c",
+  "disambiguated_at": "2026-02-17T00:31:27.525898367Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

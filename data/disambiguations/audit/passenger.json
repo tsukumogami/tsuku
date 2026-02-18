@@ -1,0 +1,39 @@
+{
+  "tool": "passenger",
+  "selected": "rubygems:passenger",
+  "alternatives": [
+    "homebrew:passenger"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 27655.236074270557,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:passenger",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:passenger",
+      "downloads": 1131,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:passenger",
+      "downloads": 31278072,
+      "version_count": 200,
+      "has_repository": true
+    },
+    {
+      "source": "npm:passenger",
+      "downloads": 5,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:passenger",
+  "disambiguated_at": "2026-02-17T00:24:49.922918663Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

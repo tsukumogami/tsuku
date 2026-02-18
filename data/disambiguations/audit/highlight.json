@@ -1,0 +1,40 @@
+{
+  "tool": "highlight",
+  "selected": "rubygems:highlight",
+  "alternatives": [
+    "homebrew:highlight",
+    "npm:highlight"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 8.961010709504686,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:highlight",
+      "downloads": 5976,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:highlight",
+      "downloads": 46,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:highlight",
+      "downloads": 53551,
+      "version_count": 6,
+      "has_repository": false
+    },
+    {
+      "source": "npm:highlight",
+      "downloads": 5217,
+      "version_count": 6,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:highlight",
+  "disambiguated_at": "2026-02-17T00:18:16.736238492Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

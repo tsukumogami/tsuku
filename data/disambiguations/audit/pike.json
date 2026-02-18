@@ -1,0 +1,47 @@
+{
+  "tool": "pike",
+  "selected": "rubygems:pike",
+  "alternatives": [
+    "homebrew:pike",
+    "crates.io:pike",
+    "pypi:pike"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 31.16835016835017,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:pike",
+      "downloads": 297,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:pike",
+      "downloads": 249,
+      "version_count": 7,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:pike",
+      "downloads": 0,
+      "version_count": 5,
+      "has_repository": false
+    },
+    {
+      "source": "rubygems:pike",
+      "downloads": 9257,
+      "version_count": 3,
+      "has_repository": false
+    },
+    {
+      "source": "npm:pike",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:pike",
+  "disambiguated_at": "2026-02-17T00:25:13.243650554Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,27 @@
+{
+  "tool": "haxe",
+  "selected": "homebrew:haxe",
+  "alternatives": [
+    "npm:haxe"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.864705882352941,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:haxe",
+      "downloads": 1314,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:haxe",
+      "downloads": 340,
+      "version_count": 68,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:haxe",
+  "disambiguated_at": "2026-02-17T00:18:06.611868844Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

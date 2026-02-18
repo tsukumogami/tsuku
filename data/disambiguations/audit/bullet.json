@@ -1,0 +1,47 @@
+{
+  "tool": "bullet",
+  "selected": "rubygems:bullet",
+  "alternatives": [
+    "homebrew:bullet",
+    "npm:bullet",
+    "pypi:bullet"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 9970.622538424592,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:bullet",
+      "downloads": 17,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:bullet",
+      "downloads": 16656,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:bullet",
+      "downloads": 0,
+      "version_count": 12,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:bullet",
+      "downloads": 166070689,
+      "version_count": 119,
+      "has_repository": true
+    },
+    {
+      "source": "npm:bullet",
+      "downloads": 10,
+      "version_count": 7,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:bullet",
+  "disambiguated_at": "2026-02-17T00:12:22.544539236Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

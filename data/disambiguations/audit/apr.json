@@ -1,0 +1,34 @@
+{
+  "tool": "apr",
+  "selected": "homebrew:apr",
+  "alternatives": [
+    "crates.io:apr",
+    "npm:apr"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 301.41089108910893,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:apr",
+      "downloads": 606,
+      "version_count": 24,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:apr",
+      "downloads": 182655,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:apr",
+      "downloads": 0,
+      "version_count": 7,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:apr",
+  "disambiguated_at": "2026-02-17T00:10:51.221170813Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

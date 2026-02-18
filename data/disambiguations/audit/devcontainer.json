@@ -1,0 +1,26 @@
+{
+  "tool": "devcontainer",
+  "selected": "homebrew:devcontainer",
+  "alternatives": [
+    "npm:devcontainer"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:devcontainer",
+      "downloads": 8209,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:devcontainer",
+      "downloads": 0,
+      "version_count": 13,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:devcontainer",
+  "disambiguated_at": "2026-02-17T00:14:21.033075593Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

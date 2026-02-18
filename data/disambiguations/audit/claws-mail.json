@@ -1,0 +1,18 @@
+{
+  "tool": "claws-mail",
+  "selected": "homebrew:claws-mail",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:claws-mail",
+      "downloads": 885,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:claws-mail",
+  "disambiguated_at": "2026-02-17T00:13:10.985265192Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

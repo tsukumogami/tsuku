@@ -1,0 +1,48 @@
+{
+  "tool": "moto",
+  "selected": "rubygems:moto",
+  "alternatives": [
+    "homebrew:moto",
+    "crates.io:moto",
+    "pypi:moto",
+    "npm:moto"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 174.72423398328692,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:moto",
+      "downloads": 99,
+      "version_count": 19,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:moto",
+      "downloads": 1077,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:moto",
+      "downloads": 188178,
+      "version_count": 85,
+      "has_repository": false
+    },
+    {
+      "source": "pypi:moto",
+      "downloads": 0,
+      "version_count": 1031,
+      "has_repository": true
+    },
+    {
+      "source": "npm:moto",
+      "downloads": 0,
+      "version_count": 29,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:moto",
+  "disambiguated_at": "2026-02-17T00:22:50.659509768Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

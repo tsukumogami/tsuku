@@ -1,0 +1,47 @@
+{
+  "tool": "crunch",
+  "selected": "crates.io:crunch",
+  "alternatives": [
+    "rubygems:crunch",
+    "homebrew:crunch",
+    "pypi:crunch"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.5889517927603363,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:crunch",
+      "downloads": 913,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:crunch",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:crunch",
+      "downloads": 20920,
+      "version_count": 14,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:crunch",
+      "downloads": 5829,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:crunch",
+      "downloads": 10,
+      "version_count": 4,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:crunch",
+  "disambiguated_at": "2026-02-17T00:13:52.814698258Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

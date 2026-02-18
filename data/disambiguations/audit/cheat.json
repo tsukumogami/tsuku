@@ -1,0 +1,47 @@
+{
+  "tool": "cheat",
+  "selected": "rubygems:cheat",
+  "alternatives": [
+    "homebrew:cheat",
+    "npm:cheat",
+    "pypi:cheat"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 126.57583333333334,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:cheat",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "pypi:cheat",
+      "downloads": 0,
+      "version_count": 43,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:cheat",
+      "downloads": 2400,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:cheat",
+      "downloads": 303782,
+      "version_count": 8,
+      "has_repository": false
+    },
+    {
+      "source": "npm:cheat",
+      "downloads": 7,
+      "version_count": 6,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:cheat",
+  "disambiguated_at": "2026-02-17T00:12:55.358085118Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

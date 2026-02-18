@@ -1,0 +1,27 @@
+{
+  "tool": "codanna",
+  "selected": "crates.io:codanna",
+  "alternatives": [
+    "homebrew:codanna"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 5.296610169491525,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:codanna",
+      "downloads": 236,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:codanna",
+      "downloads": 1250,
+      "version_count": 56,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:codanna",
+  "disambiguated_at": "2026-02-17T00:13:27.686457529Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,26 @@
+{
+  "tool": "happy-coder",
+  "selected": "homebrew:happy-coder",
+  "alternatives": [
+    "npm:happy-coder"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:happy-coder",
+      "downloads": 97,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:happy-coder",
+      "downloads": 0,
+      "version_count": 60,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:happy-coder",
+  "disambiguated_at": "2026-02-17T00:17:58.322289441Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

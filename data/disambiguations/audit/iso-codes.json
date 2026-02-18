@@ -1,0 +1,34 @@
+{
+  "tool": "iso-codes",
+  "selected": "rubygems:iso-codes",
+  "alternatives": [
+    "homebrew:iso-codes",
+    "npm:iso-codes"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.2820268926455964,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:iso-codes",
+      "downloads": 23129,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:iso-codes",
+      "downloads": 29652,
+      "version_count": 8,
+      "has_repository": false
+    },
+    {
+      "source": "npm:iso-codes",
+      "downloads": 3,
+      "version_count": 15,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:iso-codes",
+  "disambiguated_at": "2026-02-17T00:19:02.138917944Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

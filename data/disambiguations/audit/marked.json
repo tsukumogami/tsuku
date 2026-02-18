@@ -1,0 +1,48 @@
+{
+  "tool": "marked",
+  "selected": "rubygems:marked",
+  "alternatives": [
+    "homebrew:marked",
+    "crates.io:marked",
+    "npm:marked",
+    "pypi:marked"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 17.70425321463897,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:marked",
+      "downloads": 2022,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:marked",
+      "downloads": 121,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:marked",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:marked",
+      "downloads": 35798,
+      "version_count": 7,
+      "has_repository": false
+    },
+    {
+      "source": "npm:marked",
+      "downloads": 0,
+      "version_count": 206,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:marked",
+  "disambiguated_at": "2026-02-17T00:22:00.908771354Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,41 @@
+{
+  "tool": "regal",
+  "selected": "rubygems:regal",
+  "alternatives": [
+    "homebrew:regal",
+    "npm:regal",
+    "pypi:regal"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 13.682403433476395,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:regal",
+      "downloads": 932,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:regal",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:regal",
+      "downloads": 12752,
+      "version_count": 5,
+      "has_repository": false
+    },
+    {
+      "source": "npm:regal",
+      "downloads": 0,
+      "version_count": 12,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:regal",
+  "disambiguated_at": "2026-02-17T00:26:47.755510061Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

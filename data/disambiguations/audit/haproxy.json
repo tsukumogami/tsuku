@@ -1,0 +1,34 @@
+{
+  "tool": "haproxy",
+  "selected": "rubygems:haproxy",
+  "alternatives": [
+    "homebrew:haproxy",
+    "npm:haproxy"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 12.707747075775556,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:haproxy",
+      "downloads": 5899,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:haproxy",
+      "downloads": 74963,
+      "version_count": 7,
+      "has_repository": true
+    },
+    {
+      "source": "npm:haproxy",
+      "downloads": 110,
+      "version_count": 8,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:haproxy",
+  "disambiguated_at": "2026-02-17T00:17:58.633413552Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

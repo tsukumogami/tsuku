@@ -1,0 +1,18 @@
+{
+  "tool": "nspr",
+  "selected": "homebrew:nspr",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:nspr",
+      "downloads": 174590,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:nspr",
+  "disambiguated_at": "2026-02-17T00:23:44.047913977Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,47 @@
+{
+  "tool": "pcre2",
+  "selected": "homebrew:pcre2",
+  "alternatives": [
+    "crates.io:pcre2",
+    "rubygems:pcre2",
+    "pypi:pcre2"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 11.184286515473856,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:pcre2",
+      "downloads": 2413021,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:pcre2",
+      "downloads": 215751,
+      "version_count": 14,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:pcre2",
+      "downloads": 0,
+      "version_count": 9,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:pcre2",
+      "downloads": 3815,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "npm:pcre2",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:pcre2",
+  "disambiguated_at": "2026-02-17T00:24:53.340895069Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

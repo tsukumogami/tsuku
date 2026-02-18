@@ -1,0 +1,32 @@
+{
+  "tool": "mactop",
+  "selected": "homebrew:mactop",
+  "alternatives": [
+    "pypi:mactop"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:mactop",
+      "downloads": 0,
+      "version_count": 7,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:mactop",
+      "downloads": 12774,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:mactop",
+      "downloads": 1,
+      "version_count": 4,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:mactop",
+  "disambiguated_at": "2026-02-17T00:21:48.806574676Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

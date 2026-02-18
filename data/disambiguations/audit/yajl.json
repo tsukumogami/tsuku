@@ -1,0 +1,40 @@
+{
+  "tool": "yajl",
+  "selected": "rubygems:yajl",
+  "alternatives": [
+    "homebrew:yajl",
+    "pypi:yajl"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 5.233828775267539,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:yajl",
+      "downloads": 33640,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:yajl",
+      "downloads": 0,
+      "version_count": 8,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:yajl",
+      "downloads": 176066,
+      "version_count": 4,
+      "has_repository": false
+    },
+    {
+      "source": "npm:yajl",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:yajl",
+  "disambiguated_at": "2026-02-17T00:31:34.372359058Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

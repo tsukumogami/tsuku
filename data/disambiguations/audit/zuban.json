@@ -1,0 +1,26 @@
+{
+  "tool": "zuban",
+  "selected": "homebrew:zuban",
+  "alternatives": [
+    "pypi:zuban"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:zuban",
+      "downloads": 537,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:zuban",
+      "downloads": 0,
+      "version_count": 34,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:zuban",
+  "disambiguated_at": "2026-02-17T00:31:55.92910986Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

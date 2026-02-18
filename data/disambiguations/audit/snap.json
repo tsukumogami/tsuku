@@ -1,0 +1,47 @@
+{
+  "tool": "snap",
+  "selected": "crates.io:snap",
+  "alternatives": [
+    "rubygems:snap",
+    "homebrew:snap",
+    "npm:snap"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 706.4676858066119,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:snap",
+      "downloads": 11368478,
+      "version_count": 17,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:snap",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:snap",
+      "downloads": 5106,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:snap",
+      "downloads": 16092,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "npm:snap",
+      "downloads": 321,
+      "version_count": 4,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:snap",
+  "disambiguated_at": "2026-02-17T00:28:14.054653983Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

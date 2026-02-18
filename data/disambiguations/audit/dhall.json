@@ -1,0 +1,41 @@
+{
+  "tool": "dhall",
+  "selected": "crates.io:dhall",
+  "alternatives": [
+    "rubygems:dhall",
+    "homebrew:dhall",
+    "pypi:dhall"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 4.225747960108794,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:dhall",
+      "downloads": 0,
+      "version_count": 18,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:dhall",
+      "downloads": 111864,
+      "version_count": 22,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:dhall",
+      "downloads": 356,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:dhall",
+      "downloads": 26472,
+      "version_count": 12,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:dhall",
+  "disambiguated_at": "2026-02-17T00:14:22.99204532Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

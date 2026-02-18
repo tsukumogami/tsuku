@@ -1,0 +1,27 @@
+{
+  "tool": "grails",
+  "selected": "rubygems:grails",
+  "alternatives": [
+    "homebrew:grails"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 5.94354066985646,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:grails",
+      "downloads": 1045,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:grails",
+      "downloads": 6211,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:grails",
+  "disambiguated_at": "2026-02-17T00:17:35.391173349Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

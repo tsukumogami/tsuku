@@ -1,0 +1,26 @@
+{
+  "tool": "cubejs-cli",
+  "selected": "homebrew:cubejs-cli",
+  "alternatives": [
+    "npm:cubejs-cli"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:cubejs-cli",
+      "downloads": 1709,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:cubejs-cli",
+      "downloads": 0,
+      "version_count": 944,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:cubejs-cli",
+  "disambiguated_at": "2026-02-17T00:13:58.171174532Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

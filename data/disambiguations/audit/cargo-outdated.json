@@ -1,0 +1,27 @@
+{
+  "tool": "cargo-outdated",
+  "selected": "crates.io:cargo-outdated",
+  "alternatives": [
+    "homebrew:cargo-outdated"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 74.68192771084337,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:cargo-outdated",
+      "downloads": 830,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:cargo-outdated",
+      "downloads": 61986,
+      "version_count": 43,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:cargo-outdated",
+  "disambiguated_at": "2026-02-17T00:12:36.656587847Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,48 @@
+{
+  "tool": "selene",
+  "selected": "rubygems:selene",
+  "alternatives": [
+    "crates.io:selene",
+    "homebrew:selene",
+    "pypi:selene",
+    "npm:selene"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 6.470642096829575,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:selene",
+      "downloads": 547,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:selene",
+      "downloads": 8737,
+      "version_count": 41,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:selene",
+      "downloads": 0,
+      "version_count": 90,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:selene",
+      "downloads": 56534,
+      "version_count": 6,
+      "has_repository": false
+    },
+    {
+      "source": "npm:selene",
+      "downloads": 0,
+      "version_count": 5,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:selene",
+  "disambiguated_at": "2026-02-17T00:27:41.571411729Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

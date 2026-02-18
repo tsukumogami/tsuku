@@ -1,0 +1,27 @@
+{
+  "tool": "bash-language-server",
+  "selected": "npm:bash-language-server",
+  "alternatives": [
+    "homebrew:bash-language-server"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 14.678136006502303,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:bash-language-server",
+      "downloads": 3691,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:bash-language-server",
+      "downloads": 54177,
+      "version_count": 110,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:bash-language-server",
+  "disambiguated_at": "2026-02-17T00:11:43.900701156Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

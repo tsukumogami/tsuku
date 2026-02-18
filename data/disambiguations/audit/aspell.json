@@ -1,0 +1,24 @@
+{
+  "tool": "aspell",
+  "selected": "homebrew:aspell",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:aspell",
+      "downloads": 57146,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:aspell",
+      "downloads": 8,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:aspell",
+  "disambiguated_at": "2026-02-17T00:11:06.569719842Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

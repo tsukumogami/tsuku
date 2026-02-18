@@ -1,0 +1,26 @@
+{
+  "tool": "vue-language-server",
+  "selected": "homebrew:vue-language-server",
+  "alternatives": [
+    "npm:vue-language-server"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:vue-language-server",
+      "downloads": 1194,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:vue-language-server",
+      "downloads": 0,
+      "version_count": 64,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:vue-language-server",
+  "disambiguated_at": "2026-02-17T00:30:55.092531612Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,33 @@
+{
+  "tool": "adr-tools",
+  "selected": "npm:adr-tools",
+  "alternatives": [
+    "homebrew:adr-tools"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 8.730659025787965,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:adr-tools",
+      "downloads": 1745,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:adr-tools",
+      "downloads": 10,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:adr-tools",
+      "downloads": 15235,
+      "version_count": 4,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:adr-tools",
+  "disambiguated_at": "2026-02-17T00:10:23.796653065Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,46 @@
+{
+  "tool": "ntp",
+  "selected": "rubygems:ntp",
+  "alternatives": [
+    "crates.io:ntp",
+    "homebrew:ntp"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.179057825407457,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:ntp",
+      "downloads": 4479,
+      "version_count": 8,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:ntp",
+      "downloads": 1681,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:ntp",
+      "downloads": 14239,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "pypi:ntp",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "npm:ntp",
+      "downloads": 6,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:ntp",
+  "disambiguated_at": "2026-02-17T00:23:45.321909181Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

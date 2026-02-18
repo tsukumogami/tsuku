@@ -1,0 +1,34 @@
+{
+  "tool": "rsyslog",
+  "selected": "crates.io:rsyslog",
+  "alternatives": [
+    "homebrew:rsyslog",
+    "npm:rsyslog"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.1229428848015488,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:rsyslog",
+      "downloads": 1160,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:rsyslog",
+      "downloads": 1033,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:rsyslog",
+      "downloads": 0,
+      "version_count": 5,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:rsyslog",
+  "disambiguated_at": "2026-02-17T00:27:10.340132757Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

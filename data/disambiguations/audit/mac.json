@@ -1,0 +1,40 @@
+{
+  "tool": "mac",
+  "selected": "crates.io:mac",
+  "alternatives": [
+    "homebrew:mac",
+    "pypi:mac"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 4557.964757709251,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:mac",
+      "downloads": 6207948,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:mac",
+      "downloads": 0,
+      "version_count": 59,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:mac",
+      "downloads": 1362,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:mac",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:mac",
+  "disambiguated_at": "2026-02-17T00:21:46.187155546Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

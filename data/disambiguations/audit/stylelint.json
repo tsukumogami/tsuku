@@ -1,0 +1,26 @@
+{
+  "tool": "stylelint",
+  "selected": "homebrew:stylelint",
+  "alternatives": [
+    "npm:stylelint"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:stylelint",
+      "downloads": 3386,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:stylelint",
+      "downloads": 0,
+      "version_count": 267,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:stylelint",
+  "disambiguated_at": "2026-02-17T00:28:56.468708671Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

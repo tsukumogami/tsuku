@@ -1,0 +1,27 @@
+{
+  "tool": "diskus",
+  "selected": "crates.io:diskus",
+  "alternatives": [
+    "homebrew:diskus"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 158.69933184855233,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:diskus",
+      "downloads": 71256,
+      "version_count": 7,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:diskus",
+      "downloads": 449,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:diskus",
+  "disambiguated_at": "2026-02-17T00:14:30.442948558Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

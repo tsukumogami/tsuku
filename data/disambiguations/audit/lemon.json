@@ -1,0 +1,40 @@
+{
+  "tool": "lemon",
+  "selected": "rubygems:lemon",
+  "alternatives": [
+    "homebrew:lemon",
+    "pypi:lemon"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 91.20977011494253,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "pypi:lemon",
+      "downloads": 0,
+      "version_count": 10,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:lemon",
+      "downloads": 63482,
+      "version_count": 11,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:lemon",
+      "downloads": 696,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:lemon",
+      "downloads": 3,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:lemon",
+  "disambiguated_at": "2026-02-17T00:20:21.639234158Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

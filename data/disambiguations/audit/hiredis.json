@@ -1,0 +1,48 @@
+{
+  "tool": "hiredis",
+  "selected": "rubygems:hiredis",
+  "alternatives": [
+    "homebrew:hiredis",
+    "crates.io:hiredis",
+    "pypi:hiredis",
+    "npm:hiredis"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 722.7022464418743,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:hiredis",
+      "downloads": 112489,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:hiredis",
+      "downloads": 173,
+      "version_count": 12,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:hiredis",
+      "downloads": 81296053,
+      "version_count": 32,
+      "has_repository": false
+    },
+    {
+      "source": "pypi:hiredis",
+      "downloads": 0,
+      "version_count": 32,
+      "has_repository": true
+    },
+    {
+      "source": "npm:hiredis",
+      "downloads": 0,
+      "version_count": 21,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:hiredis",
+  "disambiguated_at": "2026-02-17T00:18:17.894933327Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

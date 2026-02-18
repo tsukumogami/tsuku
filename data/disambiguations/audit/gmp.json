@@ -1,0 +1,46 @@
+{
+  "tool": "gmp",
+  "selected": "homebrew:gmp",
+  "alternatives": [
+    "rubygems:gmp",
+    "pypi:gmp"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 10.74642978900716,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:gmp",
+      "downloads": 47,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:gmp",
+      "downloads": 0,
+      "version_count": 17,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:gmp",
+      "downloads": 1418475,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:gmp",
+      "downloads": 131995,
+      "version_count": 31,
+      "has_repository": false
+    },
+    {
+      "source": "npm:gmp",
+      "downloads": 3,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:gmp",
+  "disambiguated_at": "2026-02-17T00:17:09.030280717Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

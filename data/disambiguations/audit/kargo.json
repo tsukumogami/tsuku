@@ -1,0 +1,38 @@
+{
+  "tool": "kargo",
+  "selected": "homebrew:kargo",
+  "alternatives": [
+    "pypi:kargo"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:kargo",
+      "downloads": 12,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:kargo",
+      "downloads": 620,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:kargo",
+      "downloads": 0,
+      "version_count": 41,
+      "has_repository": true
+    },
+    {
+      "source": "npm:kargo",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:kargo",
+  "disambiguated_at": "2026-02-17T00:19:39.88222583Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "texi2html",
+  "selected": "homebrew:texi2html",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:texi2html",
+      "downloads": 690,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:texi2html",
+  "disambiguated_at": "2026-02-17T00:29:33.585947358Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,33 @@
+{
+  "tool": "portaudio",
+  "selected": "homebrew:portaudio",
+  "alternatives": [
+    "crates.io:portaudio"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.1421734528051526,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:portaudio",
+      "downloads": 76609,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:portaudio",
+      "downloads": 67073,
+      "version_count": 38,
+      "has_repository": true
+    },
+    {
+      "source": "npm:portaudio",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:portaudio",
+  "disambiguated_at": "2026-02-17T00:25:31.76351239Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,32 @@
+{
+  "tool": "ansible-lint",
+  "selected": "homebrew:ansible-lint",
+  "alternatives": [
+    "pypi:ansible-lint"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:ansible-lint",
+      "downloads": 58327,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:ansible-lint",
+      "downloads": 0,
+      "version_count": 265,
+      "has_repository": true
+    },
+    {
+      "source": "npm:ansible-lint",
+      "downloads": 0,
+      "version_count": 0,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:ansible-lint",
+  "disambiguated_at": "2026-02-17T00:10:42.499496626Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

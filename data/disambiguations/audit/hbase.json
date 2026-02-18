@@ -1,0 +1,33 @@
+{
+  "tool": "hbase",
+  "selected": "homebrew:hbase",
+  "alternatives": [
+    "npm:hbase",
+    "pypi:hbase"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:hbase",
+      "downloads": 0,
+      "version_count": 6,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:hbase",
+      "downloads": 1006,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:hbase",
+      "downloads": 0,
+      "version_count": 28,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:hbase",
+  "disambiguated_at": "2026-02-17T00:18:06.841989616Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

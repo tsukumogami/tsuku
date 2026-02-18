@@ -1,0 +1,46 @@
+{
+  "tool": "blast",
+  "selected": "homebrew:blast",
+  "alternatives": [
+    "rubygems:blast",
+    "pypi:blast"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.435844513243894,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:blast",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:blast",
+      "downloads": 9,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "npm:blast",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "rubygems:blast",
+      "downloads": 2907,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:blast",
+      "downloads": 4174,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:blast",
+  "disambiguated_at": "2026-02-17T00:12:01.316475686Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

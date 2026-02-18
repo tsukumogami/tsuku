@@ -1,0 +1,30 @@
+{
+  "tool": "mmv",
+  "selected": "homebrew:mmv",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:mmv",
+      "downloads": 14,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:mmv",
+      "downloads": 572,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:mmv",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:mmv",
+  "disambiguated_at": "2026-02-17T00:22:39.5601245Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

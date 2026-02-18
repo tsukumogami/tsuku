@@ -1,0 +1,18 @@
+{
+  "tool": "csfml",
+  "selected": "homebrew:csfml",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:csfml",
+      "downloads": 246,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:csfml",
+  "disambiguated_at": "2026-02-17T00:13:55.157157562Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

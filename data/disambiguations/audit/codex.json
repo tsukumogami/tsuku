@@ -1,0 +1,48 @@
+{
+  "tool": "codex",
+  "selected": "crates.io:codex",
+  "alternatives": [
+    "rubygems:codex",
+    "pypi:codex",
+    "npm:codex",
+    "cask:codex"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 13.95999803430144,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:codex",
+      "downloads": 284072,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:codex",
+      "downloads": 0,
+      "version_count": 340,
+      "has_repository": true
+    },
+    {
+      "source": "cask:codex",
+      "downloads": 0,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:codex",
+      "downloads": 20349,
+      "version_count": 4,
+      "has_repository": false
+    },
+    {
+      "source": "npm:codex",
+      "downloads": 0,
+      "version_count": 12,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:codex",
+  "disambiguated_at": "2026-02-17T00:13:30.567559089Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

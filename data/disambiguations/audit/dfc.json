@@ -1,0 +1,40 @@
+{
+  "tool": "dfc",
+  "selected": "homebrew:dfc",
+  "alternatives": [
+    "crates.io:dfc",
+    "npm:dfc"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 7.878378378378378,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:dfc",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "crates.io:dfc",
+      "downloads": 74,
+      "version_count": 7,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:dfc",
+      "downloads": 583,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:dfc",
+      "downloads": 2,
+      "version_count": 6,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:dfc",
+  "disambiguated_at": "2026-02-17T00:14:21.803265202Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,27 @@
+{
+  "tool": "lm-sensors",
+  "selected": "homebrew:lm-sensors",
+  "alternatives": [
+    "crates.io:lm-sensors"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 39.52303860523038,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:lm-sensors",
+      "downloads": 803,
+      "version_count": 16,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:lm-sensors",
+      "downloads": 31737,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:lm-sensors",
+  "disambiguated_at": "2026-02-17T00:21:30.32764152Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

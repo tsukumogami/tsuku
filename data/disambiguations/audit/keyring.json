@@ -1,0 +1,47 @@
+{
+  "tool": "keyring",
+  "selected": "crates.io:keyring",
+  "alternatives": [
+    "rubygems:keyring",
+    "homebrew:keyring",
+    "pypi:keyring"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 37.05557007879897,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:keyring",
+      "downloads": 5579,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:keyring",
+      "downloads": 1984474,
+      "version_count": 73,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:keyring",
+      "downloads": 53554,
+      "version_count": 6,
+      "has_repository": false
+    },
+    {
+      "source": "pypi:keyring",
+      "downloads": 0,
+      "version_count": 203,
+      "has_repository": true
+    },
+    {
+      "source": "npm:keyring",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:keyring",
+  "disambiguated_at": "2026-02-17T00:19:45.661441149Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

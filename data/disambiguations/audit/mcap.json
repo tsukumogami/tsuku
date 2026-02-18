@@ -1,0 +1,34 @@
+{
+  "tool": "mcap",
+  "selected": "crates.io:mcap",
+  "alternatives": [
+    "homebrew:mcap",
+    "pypi:mcap"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 1131.3190013869626,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:mcap",
+      "downloads": 1442,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:mcap",
+      "downloads": 0,
+      "version_count": 25,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:mcap",
+      "downloads": 1631362,
+      "version_count": 36,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:mcap",
+  "disambiguated_at": "2026-02-17T00:22:07.710061149Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -580,6 +580,7 @@ tsuku includes a batch operations control plane for managing automated recipe im
 - **Circuit breaker** (`scripts/check_breaker.sh`, `scripts/update_breaker.sh`): Automatic pause and recovery when failure rates exceed thresholds
 - **Rollback** (`scripts/rollback-batch.sh`): Remove all recipes from a specific batch import by batch ID
 - **Runbook** (`docs/runbooks/batch-operations.md`): Incident response procedures for batch success rate drops, emergency stops, rollbacks, budget alerts, and security incidents
+- **Seeding workflow** (`seed-queue.yml`): Weekly discovery of CLI tools from multiple ecosystems (cargo, npm, pypi, rubygems) with automated disambiguation to select the best installation source for each package
 
 See the [batch operations runbook](docs/runbooks/batch-operations.md) for detailed operational procedures.
 

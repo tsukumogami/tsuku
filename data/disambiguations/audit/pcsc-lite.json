@@ -1,0 +1,18 @@
+{
+  "tool": "pcsc-lite",
+  "selected": "homebrew:pcsc-lite",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:pcsc-lite",
+      "downloads": 4838,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:pcsc-lite",
+  "disambiguated_at": "2026-02-17T00:24:53.577307538Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

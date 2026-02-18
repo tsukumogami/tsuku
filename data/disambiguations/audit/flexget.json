@@ -1,0 +1,26 @@
+{
+  "tool": "flexget",
+  "selected": "homebrew:flexget",
+  "alternatives": [
+    "pypi:flexget"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:flexget",
+      "downloads": 1259,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:flexget",
+      "downloads": 0,
+      "version_count": 1554,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:flexget",
+  "disambiguated_at": "2026-02-17T00:15:59.709286706Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

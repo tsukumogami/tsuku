@@ -1,0 +1,26 @@
+{
+  "tool": "abi3audit",
+  "selected": "homebrew:abi3audit",
+  "alternatives": [
+    "pypi:abi3audit"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:abi3audit",
+      "downloads": 0,
+      "version_count": 25,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:abi3audit",
+      "downloads": 477,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:abi3audit",
+  "disambiguated_at": "2026-02-17T00:10:17.861508737Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

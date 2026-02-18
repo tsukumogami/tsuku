@@ -1,0 +1,24 @@
+{
+  "tool": "gitea-mcp-server",
+  "selected": "homebrew:gitea-mcp-server",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:gitea-mcp-server",
+      "downloads": 322,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:gitea-mcp-server",
+      "downloads": 0,
+      "version_count": 0,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:gitea-mcp-server",
+  "disambiguated_at": "2026-02-17T00:16:56.598455914Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

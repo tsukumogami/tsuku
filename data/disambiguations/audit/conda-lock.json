@@ -1,0 +1,26 @@
+{
+  "tool": "conda-lock",
+  "selected": "homebrew:conda-lock",
+  "alternatives": [
+    "pypi:conda-lock"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:conda-lock",
+      "downloads": 0,
+      "version_count": 65,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:conda-lock",
+      "downloads": 1464,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:conda-lock",
+  "disambiguated_at": "2026-02-17T00:13:34.600230591Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

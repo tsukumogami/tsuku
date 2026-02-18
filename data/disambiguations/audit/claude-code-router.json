@@ -1,0 +1,24 @@
+{
+  "tool": "claude-code-router",
+  "selected": "homebrew:claude-code-router",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:claude-code-router",
+      "downloads": 1231,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:claude-code-router",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:claude-code-router",
+  "disambiguated_at": "2026-02-17T00:13:08.956005036Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

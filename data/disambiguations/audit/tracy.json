@@ -1,0 +1,45 @@
+{
+  "tool": "tracy",
+  "selected": "rubygems:tracy",
+  "alternatives": [
+    "homebrew:tracy"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 7.653475935828877,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:tracy",
+      "downloads": 935,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:tracy",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:tracy",
+      "downloads": 73,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:tracy",
+      "downloads": 7156,
+      "version_count": 4,
+      "has_repository": false
+    },
+    {
+      "source": "npm:tracy",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:tracy",
+  "disambiguated_at": "2026-02-17T00:29:54.35945686Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

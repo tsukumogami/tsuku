@@ -1,0 +1,48 @@
+{
+  "tool": "garage",
+  "selected": "rubygems:garage",
+  "alternatives": [
+    "crates.io:garage",
+    "homebrew:garage",
+    "npm:garage",
+    "pypi:garage"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 58.55603448275862,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:garage",
+      "downloads": 192,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:garage",
+      "downloads": 0,
+      "version_count": 21,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:garage",
+      "downloads": 232,
+      "version_count": 30,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:garage",
+      "downloads": 13585,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:garage",
+      "downloads": 2,
+      "version_count": 7,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:garage",
+  "disambiguated_at": "2026-02-17T00:16:26.15623496Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

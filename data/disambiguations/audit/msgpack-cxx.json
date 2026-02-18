@@ -1,0 +1,26 @@
+{
+  "tool": "msgpack-cxx",
+  "selected": "homebrew:msgpack-cxx",
+  "alternatives": [
+    "pypi:msgpack-cxx"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:msgpack-cxx",
+      "downloads": 9200,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:msgpack-cxx",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:msgpack-cxx",
+  "disambiguated_at": "2026-02-17T00:22:58.020085704Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

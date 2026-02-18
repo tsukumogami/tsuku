@@ -1,0 +1,48 @@
+{
+  "tool": "neo4j",
+  "selected": "rubygems:neo4j",
+  "alternatives": [
+    "homebrew:neo4j",
+    "crates.io:neo4j",
+    "pypi:neo4j",
+    "npm:neo4j"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 98.52178225375754,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:neo4j",
+      "downloads": 13107,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:neo4j",
+      "downloads": 215,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:neo4j",
+      "downloads": 0,
+      "version_count": 107,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:neo4j",
+      "downloads": 1291325,
+      "version_count": 296,
+      "has_repository": true
+    },
+    {
+      "source": "npm:neo4j",
+      "downloads": 0,
+      "version_count": 33,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:neo4j",
+  "disambiguated_at": "2026-02-17T00:23:18.548264183Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

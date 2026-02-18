@@ -1,0 +1,24 @@
+{
+  "tool": "nbping",
+  "selected": "homebrew:nbping",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:nbping",
+      "downloads": 186,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:nbping",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:nbping",
+  "disambiguated_at": "2026-02-17T00:23:12.966096641Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

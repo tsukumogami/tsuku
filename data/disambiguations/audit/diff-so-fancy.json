@@ -1,0 +1,27 @@
+{
+  "tool": "diff-so-fancy",
+  "selected": "npm:diff-so-fancy",
+  "alternatives": [
+    "homebrew:diff-so-fancy"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 26.85019841269841,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:diff-so-fancy",
+      "downloads": 5040,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:diff-so-fancy",
+      "downloads": 135325,
+      "version_count": 39,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:diff-so-fancy",
+  "disambiguated_at": "2026-02-17T00:14:27.208660052Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

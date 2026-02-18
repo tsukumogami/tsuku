@@ -1,0 +1,48 @@
+{
+  "tool": "hydra",
+  "selected": "rubygems:hydra",
+  "alternatives": [
+    "homebrew:hydra",
+    "crates.io:hydra",
+    "npm:hydra",
+    "pypi:hydra"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 41.84639389736477,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:hydra",
+      "downloads": 8652,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:hydra",
+      "downloads": 0,
+      "version_count": 8,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:hydra",
+      "downloads": 317,
+      "version_count": 41,
+      "has_repository": true
+    },
+    {
+      "source": "npm:hydra",
+      "downloads": 0,
+      "version_count": 109,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:hydra",
+      "downloads": 362055,
+      "version_count": 93,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:hydra",
+  "disambiguated_at": "2026-02-17T00:18:31.320678002Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

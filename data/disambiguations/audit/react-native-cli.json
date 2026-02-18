@@ -1,0 +1,27 @@
+{
+  "tool": "react-native-cli",
+  "selected": "npm:react-native-cli",
+  "alternatives": [
+    "homebrew:react-native-cli"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 20.30253623188406,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:react-native-cli",
+      "downloads": 1104,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:react-native-cli",
+      "downloads": 22414,
+      "version_count": 16,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:react-native-cli",
+  "disambiguated_at": "2026-02-17T00:26:44.351932402Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

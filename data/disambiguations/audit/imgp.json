@@ -1,0 +1,26 @@
+{
+  "tool": "imgp",
+  "selected": "homebrew:imgp",
+  "alternatives": [
+    "pypi:imgp"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:imgp",
+      "downloads": 425,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:imgp",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:imgp",
+  "disambiguated_at": "2026-02-17T00:18:45.918449909Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

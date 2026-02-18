@@ -1,0 +1,41 @@
+{
+  "tool": "jira-cli",
+  "selected": "rubygems:jira-cli",
+  "alternatives": [
+    "homebrew:jira-cli",
+    "npm:jira-cli",
+    "pypi:jira-cli"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 15.179516250944822,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:jira-cli",
+      "downloads": 5292,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:jira-cli",
+      "downloads": 0,
+      "version_count": 59,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:jira-cli",
+      "downloads": 80330,
+      "version_count": 27,
+      "has_repository": false
+    },
+    {
+      "source": "npm:jira-cli",
+      "downloads": 375,
+      "version_count": 43,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:jira-cli",
+  "disambiguated_at": "2026-02-17T00:19:17.132578247Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

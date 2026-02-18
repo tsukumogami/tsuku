@@ -1,0 +1,18 @@
+{
+  "tool": "cloud-sql-proxy",
+  "selected": "homebrew:cloud-sql-proxy",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:cloud-sql-proxy",
+      "downloads": 10190,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:cloud-sql-proxy",
+  "disambiguated_at": "2026-02-17T00:13:18.185603174Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

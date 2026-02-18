@@ -1,0 +1,18 @@
+{
+  "tool": "erlang@27",
+  "selected": "homebrew:erlang@27",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:erlang@27",
+      "downloads": 971,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:erlang@27",
+  "disambiguated_at": "2026-02-17T00:15:22.903661346Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

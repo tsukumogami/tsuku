@@ -1,0 +1,47 @@
+{
+  "tool": "qo",
+  "selected": "rubygems:qo",
+  "alternatives": [
+    "homebrew:qo",
+    "npm:qo",
+    "pypi:qo"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 251.7305389221557,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:qo",
+      "downloads": 16,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:qo",
+      "downloads": 334,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:qo",
+      "downloads": 0,
+      "version_count": 18,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:qo",
+      "downloads": 84078,
+      "version_count": 17,
+      "has_repository": false
+    },
+    {
+      "source": "npm:qo",
+      "downloads": 15,
+      "version_count": 23,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:qo",
+  "disambiguated_at": "2026-02-17T00:26:16.464795026Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,47 @@
+{
+  "tool": "hcloud",
+  "selected": "rubygems:hcloud",
+  "alternatives": [
+    "homebrew:hcloud",
+    "crates.io:hcloud",
+    "pypi:hcloud"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 9.19331619537275,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:hcloud",
+      "downloads": 9725,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:hcloud",
+      "downloads": 0,
+      "version_count": 77,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:hcloud",
+      "downloads": 1728,
+      "version_count": 26,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:hcloud",
+      "downloads": 89405,
+      "version_count": 15,
+      "has_repository": false
+    },
+    {
+      "source": "npm:hcloud",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:hcloud",
+  "disambiguated_at": "2026-02-17T00:18:07.537346703Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

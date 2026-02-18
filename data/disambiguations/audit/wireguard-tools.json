@@ -1,0 +1,40 @@
+{
+  "tool": "wireguard-tools",
+  "selected": "homebrew:wireguard-tools",
+  "alternatives": [
+    "npm:wireguard-tools",
+    "pypi:wireguard-tools"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 75.7741116751269,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:wireguard-tools",
+      "downloads": 6,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:wireguard-tools",
+      "downloads": 29855,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:wireguard-tools",
+      "downloads": 0,
+      "version_count": 17,
+      "has_repository": true
+    },
+    {
+      "source": "npm:wireguard-tools",
+      "downloads": 394,
+      "version_count": 10,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:wireguard-tools",
+  "disambiguated_at": "2026-02-17T00:31:15.033478085Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

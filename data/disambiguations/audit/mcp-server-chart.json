@@ -1,0 +1,24 @@
+{
+  "tool": "mcp-server-chart",
+  "selected": "homebrew:mcp-server-chart",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:mcp-server-chart",
+      "downloads": 263,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:mcp-server-chart",
+      "downloads": 6,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:mcp-server-chart",
+  "disambiguated_at": "2026-02-17T00:22:10.674962948Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

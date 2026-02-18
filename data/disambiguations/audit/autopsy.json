@@ -1,0 +1,32 @@
+{
+  "tool": "autopsy",
+  "selected": "rubygems:autopsy",
+  "alternatives": [
+    "npm:autopsy"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:autopsy",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:autopsy",
+      "downloads": 52435,
+      "version_count": 8,
+      "has_repository": false
+    },
+    {
+      "source": "npm:autopsy",
+      "downloads": 0,
+      "version_count": 22,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:autopsy",
+  "disambiguated_at": "2026-02-17T00:11:19.499752908Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

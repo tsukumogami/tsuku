@@ -1,0 +1,46 @@
+{
+  "tool": "i2p",
+  "selected": "rubygems:i2p",
+  "alternatives": [
+    "homebrew:i2p",
+    "crates.io:i2p"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 19.544405997693193,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:i2p",
+      "downloads": 157,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:i2p",
+      "downloads": 867,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:i2p",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:i2p",
+      "downloads": 16945,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "npm:i2p",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:i2p",
+  "disambiguated_at": "2026-02-17T00:18:32.993607532Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

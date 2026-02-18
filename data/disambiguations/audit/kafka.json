@@ -1,0 +1,48 @@
+{
+  "tool": "kafka",
+  "selected": "rubygems:kafka",
+  "alternatives": [
+    "crates.io:kafka",
+    "homebrew:kafka",
+    "npm:kafka",
+    "pypi:kafka"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.2724403861595055,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:kafka",
+      "downloads": 34870,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:kafka",
+      "downloads": 68143,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:kafka",
+      "downloads": 0,
+      "version_count": 17,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:kafka",
+      "downloads": 53553,
+      "version_count": 24,
+      "has_repository": true
+    },
+    {
+      "source": "npm:kafka",
+      "downloads": 1430,
+      "version_count": 8,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:kafka",
+  "disambiguated_at": "2026-02-17T00:19:36.84992873Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

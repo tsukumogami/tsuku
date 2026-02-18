@@ -1,0 +1,47 @@
+{
+  "tool": "flock",
+  "selected": "rubygems:flock",
+  "alternatives": [
+    "homebrew:flock",
+    "crates.io:flock",
+    "npm:flock"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 8.381065088757396,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:flock",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:flock",
+      "downloads": 3380,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:flock",
+      "downloads": 132,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:flock",
+      "downloads": 28328,
+      "version_count": 7,
+      "has_repository": false
+    },
+    {
+      "source": "npm:flock",
+      "downloads": 0,
+      "version_count": 14,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:flock",
+  "disambiguated_at": "2026-02-17T00:16:01.447089142Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,34 @@
+{
+  "tool": "topgrade",
+  "selected": "homebrew:topgrade",
+  "alternatives": [
+    "crates.io:topgrade",
+    "pypi:topgrade"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.6878239314955308,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:topgrade",
+      "downloads": 22470,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:topgrade",
+      "downloads": 0,
+      "version_count": 23,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:topgrade",
+      "downloads": 13313,
+      "version_count": 146,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:topgrade",
+  "disambiguated_at": "2026-02-17T00:29:51.550941976Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

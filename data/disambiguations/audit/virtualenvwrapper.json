@@ -1,0 +1,26 @@
+{
+  "tool": "virtualenvwrapper",
+  "selected": "homebrew:virtualenvwrapper",
+  "alternatives": [
+    "pypi:virtualenvwrapper"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:virtualenvwrapper",
+      "downloads": 3663,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:virtualenvwrapper",
+      "downloads": 0,
+      "version_count": 95,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:virtualenvwrapper",
+  "disambiguated_at": "2026-02-17T00:30:45.930850172Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

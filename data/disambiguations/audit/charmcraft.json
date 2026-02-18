@@ -1,0 +1,26 @@
+{
+  "tool": "charmcraft",
+  "selected": "homebrew:charmcraft",
+  "alternatives": [
+    "pypi:charmcraft"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:charmcraft",
+      "downloads": 0,
+      "version_count": 63,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:charmcraft",
+      "downloads": 653,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:charmcraft",
+  "disambiguated_at": "2026-02-17T00:12:53.608511344Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

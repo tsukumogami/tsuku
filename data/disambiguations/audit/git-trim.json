@@ -1,0 +1,40 @@
+{
+  "tool": "git-trim",
+  "selected": "rubygems:git-trim",
+  "alternatives": [
+    "homebrew:git-trim",
+    "crates.io:git-trim"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 90.96529968454259,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:git-trim",
+      "downloads": 199,
+      "version_count": 21,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:git-trim",
+      "downloads": 86508,
+      "version_count": 4,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:git-trim",
+      "downloads": 951,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:git-trim",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:git-trim",
+  "disambiguated_at": "2026-02-17T00:16:55.183677481Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,46 @@
+{
+  "tool": "pstree",
+  "selected": "rubygems:pstree",
+  "alternatives": [
+    "homebrew:pstree",
+    "pypi:pstree"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 10.201580531861515,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:pstree",
+      "downloads": 5,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:pstree",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:pstree",
+      "downloads": 7972,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:pstree",
+      "downloads": 81327,
+      "version_count": 8,
+      "has_repository": false
+    },
+    {
+      "source": "npm:pstree",
+      "downloads": 25,
+      "version_count": 3,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:pstree",
+  "disambiguated_at": "2026-02-17T00:25:51.927964821Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

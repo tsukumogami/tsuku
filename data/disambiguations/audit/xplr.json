@@ -1,0 +1,34 @@
+{
+  "tool": "xplr",
+  "selected": "homebrew:xplr",
+  "alternatives": [
+    "crates.io:xplr",
+    "npm:xplr"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.2695652173913043,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:xplr",
+      "downloads": 1314,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:xplr",
+      "downloads": 1035,
+      "version_count": 146,
+      "has_repository": true
+    },
+    {
+      "source": "npm:xplr",
+      "downloads": 0,
+      "version_count": 21,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:xplr",
+  "disambiguated_at": "2026-02-17T00:31:31.158304934Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

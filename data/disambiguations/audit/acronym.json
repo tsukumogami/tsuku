@@ -1,0 +1,41 @@
+{
+  "tool": "acronym",
+  "selected": "rubygems:acronym",
+  "alternatives": [
+    "homebrew:acronym",
+    "npm:acronym",
+    "pypi:acronym"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 131.46354166666666,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:acronym",
+      "downloads": 384,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:acronym",
+      "downloads": 0,
+      "version_count": 9,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:acronym",
+      "downloads": 50482,
+      "version_count": 3,
+      "has_repository": false
+    },
+    {
+      "source": "npm:acronym",
+      "downloads": 2,
+      "version_count": 8,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:acronym",
+  "disambiguated_at": "2026-02-17T00:10:20.647944968Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

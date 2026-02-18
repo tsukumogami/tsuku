@@ -1,0 +1,26 @@
+{
+  "tool": "vlang",
+  "selected": "homebrew:vlang",
+  "alternatives": [
+    "npm:vlang"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:vlang",
+      "downloads": 1244,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:vlang",
+      "downloads": 0,
+      "version_count": 8,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:vlang",
+  "disambiguated_at": "2026-02-17T00:30:49.345876204Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

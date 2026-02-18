@@ -1,0 +1,46 @@
+{
+  "tool": "lzfse",
+  "selected": "rubygems:lzfse",
+  "alternatives": [
+    "crates.io:lzfse",
+    "homebrew:lzfse"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.7961807525051994,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:lzfse",
+      "downloads": 5289,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:lzfse",
+      "downloads": 747,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:lzfse",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:lzfse",
+      "downloads": 9500,
+      "version_count": 5,
+      "has_repository": false
+    },
+    {
+      "source": "npm:lzfse",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:lzfse",
+  "disambiguated_at": "2026-02-17T00:21:44.157669877Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

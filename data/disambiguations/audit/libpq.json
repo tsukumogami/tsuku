@@ -1,0 +1,34 @@
+{
+  "tool": "libpq",
+  "selected": "homebrew:libpq",
+  "alternatives": [
+    "crates.io:libpq",
+    "npm:libpq"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.978136058167875,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:libpq",
+      "downloads": 584078,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:libpq",
+      "downloads": 196122,
+      "version_count": 39,
+      "has_repository": true
+    },
+    {
+      "source": "npm:libpq",
+      "downloads": 0,
+      "version_count": 47,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:libpq",
+  "disambiguated_at": "2026-02-17T00:20:53.696984588Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

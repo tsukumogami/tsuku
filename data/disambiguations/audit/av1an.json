@@ -1,0 +1,34 @@
+{
+  "tool": "av1an",
+  "selected": "crates.io:av1an",
+  "alternatives": [
+    "homebrew:av1an",
+    "pypi:av1an"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.644628099173554,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:av1an",
+      "downloads": 121,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:av1an",
+      "downloads": 441,
+      "version_count": 12,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:av1an",
+      "downloads": 0,
+      "version_count": 81,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:av1an",
+  "disambiguated_at": "2026-02-17T00:11:20.511618901Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,34 @@
+{
+  "tool": "arrayfire",
+  "selected": "crates.io:arrayfire",
+  "alternatives": [
+    "homebrew:arrayfire",
+    "pypi:arrayfire"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.625538020086083,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:arrayfire",
+      "downloads": 697,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:arrayfire",
+      "downloads": 0,
+      "version_count": 24,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:arrayfire",
+      "downloads": 2527,
+      "version_count": 18,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:arrayfire",
+  "disambiguated_at": "2026-02-17T00:11:02.191612549Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

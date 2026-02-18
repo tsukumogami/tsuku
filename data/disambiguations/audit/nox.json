@@ -1,0 +1,47 @@
+{
+  "tool": "nox",
+  "selected": "rubygems:nox",
+  "alternatives": [
+    "homebrew:nox",
+    "crates.io:nox",
+    "pypi:nox"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 8.856545961002785,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:nox",
+      "downloads": 118,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:nox",
+      "downloads": 718,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:nox",
+      "downloads": 0,
+      "version_count": 28,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:nox",
+      "downloads": 6359,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "npm:nox",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:nox",
+  "disambiguated_at": "2026-02-17T00:23:41.9207848Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

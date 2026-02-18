@@ -1,0 +1,46 @@
+{
+  "tool": "watchman",
+  "selected": "homebrew:watchman",
+  "alternatives": [
+    "rubygems:watchman",
+    "npm:watchman"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 13.460536222869676,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:watchman",
+      "downloads": 39,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:watchman",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:watchman",
+      "downloads": 411179,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:watchman",
+      "downloads": 30547,
+      "version_count": 7,
+      "has_repository": false
+    },
+    {
+      "source": "npm:watchman",
+      "downloads": 0,
+      "version_count": 10,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:watchman",
+  "disambiguated_at": "2026-02-17T00:31:03.558549652Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

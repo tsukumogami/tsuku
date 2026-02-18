@@ -1,0 +1,27 @@
+{
+  "tool": "sha3sum",
+  "selected": "homebrew:sha3sum",
+  "alternatives": [
+    "crates.io:sha3sum"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 28.333333333333332,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:sha3sum",
+      "downloads": 30,
+      "version_count": 13,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:sha3sum",
+      "downloads": 850,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:sha3sum",
+  "disambiguated_at": "2026-02-17T00:27:46.560642187Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

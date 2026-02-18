@@ -1,0 +1,40 @@
+{
+  "tool": "jsonlint",
+  "selected": "rubygems:jsonlint",
+  "alternatives": [
+    "homebrew:jsonlint",
+    "npm:jsonlint"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 883.4455324357405,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:jsonlint",
+      "downloads": 2451,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:jsonlint",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:jsonlint",
+      "downloads": 2165325,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "npm:jsonlint",
+      "downloads": 0,
+      "version_count": 17,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:jsonlint",
+  "disambiguated_at": "2026-02-17T00:19:29.675712468Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

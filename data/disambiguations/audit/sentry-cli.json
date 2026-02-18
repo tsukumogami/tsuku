@@ -1,0 +1,32 @@
+{
+  "tool": "sentry-cli",
+  "selected": "homebrew:sentry-cli",
+  "alternatives": [
+    "pypi:sentry-cli"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:sentry-cli",
+      "downloads": 9599,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:sentry-cli",
+      "downloads": 0,
+      "version_count": 94,
+      "has_repository": true
+    },
+    {
+      "source": "npm:sentry-cli",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:sentry-cli",
+  "disambiguated_at": "2026-02-17T00:27:43.016488152Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

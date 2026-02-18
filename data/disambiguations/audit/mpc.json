@@ -1,0 +1,48 @@
+{
+  "tool": "mpc",
+  "selected": "rubygems:mpc",
+  "alternatives": [
+    "homebrew:mpc",
+    "crates.io:mpc",
+    "npm:mpc",
+    "pypi:mpc"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 37.81731532962669,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:mpc",
+      "downloads": 77,
+      "version_count": 9,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:mpc",
+      "downloads": 0,
+      "version_count": 5,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:mpc",
+      "downloads": 1259,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:mpc",
+      "downloads": 47612,
+      "version_count": 13,
+      "has_repository": false
+    },
+    {
+      "source": "npm:mpc",
+      "downloads": 0,
+      "version_count": 21,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:mpc",
+  "disambiguated_at": "2026-02-17T00:22:51.805682344Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

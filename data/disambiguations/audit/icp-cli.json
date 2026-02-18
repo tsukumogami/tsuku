@@ -1,0 +1,26 @@
+{
+  "tool": "icp-cli",
+  "selected": "homebrew:icp-cli",
+  "alternatives": [
+    "npm:icp-cli"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:icp-cli",
+      "downloads": 45,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:icp-cli",
+      "downloads": 0,
+      "version_count": 6,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:icp-cli",
+  "disambiguated_at": "2026-02-17T00:18:38.749926221Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

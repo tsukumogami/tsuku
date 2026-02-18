@@ -1,0 +1,26 @@
+{
+  "tool": "podcast-archiver",
+  "selected": "homebrew:podcast-archiver",
+  "alternatives": [
+    "pypi:podcast-archiver"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:podcast-archiver",
+      "downloads": 0,
+      "version_count": 40,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:podcast-archiver",
+      "downloads": 238,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:podcast-archiver",
+  "disambiguated_at": "2026-02-17T00:25:27.396221583Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

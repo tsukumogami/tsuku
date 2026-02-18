@@ -1,0 +1,18 @@
+{
+  "tool": "cdogs-sdl",
+  "selected": "homebrew:cdogs-sdl",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:cdogs-sdl",
+      "downloads": 484,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:cdogs-sdl",
+  "disambiguated_at": "2026-02-17T00:12:45.77284293Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

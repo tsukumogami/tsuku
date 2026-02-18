@@ -1,0 +1,33 @@
+{
+  "tool": "nmap",
+  "selected": "homebrew:nmap",
+  "alternatives": [
+    "rubygems:nmap"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 4.178839601466242,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:nmap",
+      "downloads": 258783,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:nmap",
+      "downloads": 61927,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:nmap",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:nmap",
+  "disambiguated_at": "2026-02-17T00:23:34.847721688Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,46 @@
+{
+  "tool": "duck",
+  "selected": "rubygems:duck",
+  "alternatives": [
+    "homebrew:duck",
+    "npm:duck"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.7907300576884821,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:duck",
+      "downloads": 19,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:duck",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:duck",
+      "downloads": 5027,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:duck",
+      "downloads": 9002,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "npm:duck",
+      "downloads": 0,
+      "version_count": 5,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:duck",
+  "disambiguated_at": "2026-02-17T00:14:54.871025472Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

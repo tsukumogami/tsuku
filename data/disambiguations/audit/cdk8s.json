@@ -1,0 +1,33 @@
+{
+  "tool": "cdk8s",
+  "selected": "homebrew:cdk8s",
+  "alternatives": [
+    "npm:cdk8s",
+    "pypi:cdk8s"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:cdk8s",
+      "downloads": 23515,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:cdk8s",
+      "downloads": 0,
+      "version_count": 1750,
+      "has_repository": true
+    },
+    {
+      "source": "npm:cdk8s",
+      "downloads": 0,
+      "version_count": 1939,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:cdk8s",
+  "disambiguated_at": "2026-02-17T00:12:44.595747098Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

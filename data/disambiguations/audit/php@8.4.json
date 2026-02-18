@@ -1,0 +1,18 @@
+{
+  "tool": "php@8.4",
+  "selected": "homebrew:php@8.4",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:php@8.4",
+      "downloads": 10162,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:php@8.4",
+  "disambiguated_at": "2026-02-17T00:25:08.323209877Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

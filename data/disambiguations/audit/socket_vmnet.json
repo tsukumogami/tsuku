@@ -1,0 +1,18 @@
+{
+  "tool": "socket_vmnet",
+  "selected": "homebrew:socket_vmnet",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:socket_vmnet",
+      "downloads": 3121,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:socket_vmnet",
+  "disambiguated_at": "2026-02-17T00:28:17.805747673Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

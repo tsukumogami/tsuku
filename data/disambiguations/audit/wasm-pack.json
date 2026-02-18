@@ -1,0 +1,34 @@
+{
+  "tool": "wasm-pack",
+  "selected": "crates.io:wasm-pack",
+  "alternatives": [
+    "npm:wasm-pack",
+    "homebrew:wasm-pack"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 7.203261156588328,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:wasm-pack",
+      "downloads": 327345,
+      "version_count": 26,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:wasm-pack",
+      "downloads": 1460,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:wasm-pack",
+      "downloads": 45444,
+      "version_count": 16,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:wasm-pack",
+  "disambiguated_at": "2026-02-17T00:31:01.998409018Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

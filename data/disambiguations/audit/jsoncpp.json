@@ -1,0 +1,27 @@
+{
+  "tool": "jsoncpp",
+  "selected": "homebrew:jsoncpp",
+  "alternatives": [
+    "npm:jsoncpp"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 53952,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:jsoncpp",
+      "downloads": 53952,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:jsoncpp",
+      "downloads": 1,
+      "version_count": 14,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:jsoncpp",
+  "disambiguated_at": "2026-02-17T00:19:29.44300532Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

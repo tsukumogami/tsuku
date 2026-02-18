@@ -1,0 +1,27 @@
+{
+  "tool": "tweakcc",
+  "selected": "npm:tweakcc",
+  "alternatives": [
+    "homebrew:tweakcc"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.59727626459144,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:tweakcc",
+      "downloads": 514,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:tweakcc",
+      "downloads": 1849,
+      "version_count": 52,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:tweakcc",
+  "disambiguated_at": "2026-02-17T00:30:13.708780811Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,33 @@
+{
+  "tool": "gitu",
+  "selected": "homebrew:gitu",
+  "alternatives": [
+    "crates.io:gitu"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.680672268907563,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:gitu",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:gitu",
+      "downloads": 1914,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:gitu",
+      "downloads": 714,
+      "version_count": 64,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:gitu",
+  "disambiguated_at": "2026-02-17T00:16:59.618152495Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

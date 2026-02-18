@@ -1,0 +1,39 @@
+{
+  "tool": "sbt",
+  "selected": "homebrew:sbt",
+  "alternatives": [
+    "rubygems:sbt"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 7.88820661007766,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:sbt",
+      "downloads": 43677,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:sbt",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "rubygems:sbt",
+      "downloads": 5537,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:sbt",
+      "downloads": 41,
+      "version_count": 4,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:sbt",
+  "disambiguated_at": "2026-02-17T00:27:27.242733349Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

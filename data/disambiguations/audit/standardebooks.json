@@ -1,0 +1,26 @@
+{
+  "tool": "standardebooks",
+  "selected": "homebrew:standardebooks",
+  "alternatives": [
+    "pypi:standardebooks"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:standardebooks",
+      "downloads": 509,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:standardebooks",
+      "downloads": 0,
+      "version_count": 104,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:standardebooks",
+  "disambiguated_at": "2026-02-17T00:28:44.974822835Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

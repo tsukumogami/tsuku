@@ -1,0 +1,47 @@
+{
+  "tool": "msgpack",
+  "selected": "rubygems:msgpack",
+  "alternatives": [
+    "homebrew:msgpack",
+    "npm:msgpack",
+    "pypi:msgpack"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 16347.742076226878,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:msgpack",
+      "downloads": 29,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:msgpack",
+      "downloads": 27733,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:msgpack",
+      "downloads": 0,
+      "version_count": 30,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:msgpack",
+      "downloads": 453371931,
+      "version_count": 254,
+      "has_repository": false
+    },
+    {
+      "source": "npm:msgpack",
+      "downloads": 2193,
+      "version_count": 21,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:msgpack",
+  "disambiguated_at": "2026-02-17T00:22:57.734170903Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,38 @@
+{
+  "tool": "astyle",
+  "selected": "homebrew:astyle",
+  "alternatives": [
+    "pypi:astyle"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:astyle",
+      "downloads": 4226,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:astyle",
+      "downloads": 10,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "pypi:astyle",
+      "downloads": 0,
+      "version_count": 16,
+      "has_repository": true
+    },
+    {
+      "source": "npm:astyle",
+      "downloads": 3,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:astyle",
+  "disambiguated_at": "2026-02-17T00:11:09.158214392Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,26 @@
+{
+  "tool": "ncnn",
+  "selected": "homebrew:ncnn",
+  "alternatives": [
+    "pypi:ncnn"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:ncnn",
+      "downloads": 1232,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:ncnn",
+      "downloads": 0,
+      "version_count": 31,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:ncnn",
+  "disambiguated_at": "2026-02-17T00:23:14.595220568Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

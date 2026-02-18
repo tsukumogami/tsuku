@@ -1,0 +1,32 @@
+{
+  "tool": "psutils",
+  "selected": "homebrew:psutils",
+  "alternatives": [
+    "pypi:psutils"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:psutils",
+      "downloads": 19661,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:psutils",
+      "downloads": 0,
+      "version_count": 8,
+      "has_repository": true
+    },
+    {
+      "source": "npm:psutils",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:psutils",
+  "disambiguated_at": "2026-02-17T00:25:52.170091205Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

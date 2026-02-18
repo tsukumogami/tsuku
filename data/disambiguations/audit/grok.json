@@ -1,0 +1,54 @@
+{
+  "tool": "grok",
+  "selected": "crates.io:grok",
+  "alternatives": [
+    "rubygems:grok",
+    "homebrew:grok",
+    "cpan:grok",
+    "pypi:grok"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 80.9293534670372,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:grok",
+      "downloads": 2417117,
+      "version_count": 18,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:grok",
+      "downloads": 667,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:grok",
+      "downloads": 0,
+      "version_count": 79,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:grok",
+      "downloads": 29867,
+      "version_count": 6,
+      "has_repository": false
+    },
+    {
+      "source": "npm:grok",
+      "downloads": 16,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "cpan:grok",
+      "downloads": 1,
+      "version_count": 0,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:grok",
+  "disambiguated_at": "2026-02-17T00:17:41.11547546Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

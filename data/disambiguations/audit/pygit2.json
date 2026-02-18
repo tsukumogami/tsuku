@@ -1,0 +1,26 @@
+{
+  "tool": "pygit2",
+  "selected": "homebrew:pygit2",
+  "alternatives": [
+    "pypi:pygit2"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:pygit2",
+      "downloads": 5825,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:pygit2",
+      "downloads": 0,
+      "version_count": 87,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:pygit2",
+  "disambiguated_at": "2026-02-17T00:26:00.67414924Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

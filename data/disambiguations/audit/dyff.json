@@ -1,0 +1,26 @@
+{
+  "tool": "dyff",
+  "selected": "homebrew:dyff",
+  "alternatives": [
+    "pypi:dyff"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:dyff",
+      "downloads": 1981,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:dyff",
+      "downloads": 0,
+      "version_count": 53,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:dyff",
+  "disambiguated_at": "2026-02-17T00:15:00.806420122Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

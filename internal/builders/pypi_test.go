@@ -383,6 +383,225 @@ func TestIsValidPyPIPackageName(t *testing.T) {
 	}
 }
 
+func TestPyPIBuilder_Discover_Success(t *testing.T) {
+	topPackages := `{
+		"last_update": "2026-02-01",
+		"rows": [
+			{"project": "httpie", "download_count": 500000},
+			{"project": "requests", "download_count": 400000},
+			{"project": "black", "download_count": 300000}
+		]
+	}`
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch r.URL.Path {
+		case "/top-pypi-packages-30-days.min.json":
+			_, _ = w.Write([]byte(topPackages))
+		case "/pypi/httpie/json":
+			_, _ = w.Write([]byte(`{"info": {"name": "httpie", "summary": "CLI HTTP client", "classifiers": ["Environment :: Console"]}}`))
+		case "/pypi/requests/json":
+			// No console classifier -- should be filtered out.
+			_, _ = w.Write([]byte(`{"info": {"name": "requests", "summary": "HTTP library", "classifiers": ["Development Status :: 5 - Production/Stable"]}}`))
+		case "/pypi/black/json":
+			_, _ = w.Write([]byte(`{"info": {"name": "black", "summary": "Code formatter", "classifiers": ["Environment :: Console"]}}`))
+		default:
+			w.WriteHeader(http.StatusNotFound)
+		}
+	}))
+	defer server.Close()
+
+	builder := NewPyPIBuilderWithBaseURL(nil, server.URL)
+	candidates, err := builder.Discover(context.Background(), 10)
+	if err != nil {
+		t.Fatalf("Discover() error = %v", err)
+	}
+
+	if len(candidates) != 2 {
+		t.Fatalf("expected 2 candidates (httpie, black), got %d: %+v", len(candidates), candidates)
+	}
+
+	// Verify filtered results.
+	names := make(map[string]bool)
+	for _, c := range candidates {
+		names[c.Name] = true
+		if c.Downloads != 0 {
+			t.Errorf("expected Downloads=0 for PyPI candidate %q, got %d", c.Name, c.Downloads)
+		}
+	}
+	if !names["httpie"] {
+		t.Error("expected httpie in candidates")
+	}
+	if !names["black"] {
+		t.Error("expected black in candidates")
+	}
+	if names["requests"] {
+		t.Error("requests should be filtered out (no Console classifier)")
+	}
+}
+
+func TestPyPIBuilder_Discover_LimitRespected(t *testing.T) {
+	topPackages := `{
+		"rows": [
+			{"project": "a", "download_count": 500},
+			{"project": "b", "download_count": 400},
+			{"project": "c", "download_count": 300}
+		]
+	}`
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		if r.URL.Path == "/top-pypi-packages-30-days.min.json" {
+			_, _ = w.Write([]byte(topPackages))
+		} else {
+			// All have Console classifier.
+			_, _ = w.Write([]byte(`{"info": {"name": "x", "classifiers": ["Environment :: Console"]}}`))
+		}
+	}))
+	defer server.Close()
+
+	builder := NewPyPIBuilderWithBaseURL(nil, server.URL)
+	candidates, err := builder.Discover(context.Background(), 1)
+	if err != nil {
+		t.Fatalf("Discover() error = %v", err)
+	}
+
+	if len(candidates) != 1 {
+		t.Fatalf("expected 1 candidate, got %d", len(candidates))
+	}
+}
+
+func TestPyPIBuilder_Discover_ZeroLimit(t *testing.T) {
+	builder := NewPyPIBuilder(nil)
+	candidates, err := builder.Discover(context.Background(), 0)
+	if err != nil {
+		t.Fatalf("Discover() error = %v", err)
+	}
+	if len(candidates) != 0 {
+		t.Errorf("expected 0 candidates, got %d", len(candidates))
+	}
+}
+
+func TestPyPIBuilder_Discover_TopPackagesUnavailable(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	defer server.Close()
+
+	builder := NewPyPIBuilderWithBaseURL(nil, server.URL)
+	_, err := builder.Discover(context.Background(), 10)
+	if err == nil {
+		t.Fatal("expected error when top packages are unavailable")
+	}
+}
+
+func TestPyPIBuilder_Discover_MalformedTopPackages(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{invalid json`))
+	}))
+	defer server.Close()
+
+	builder := NewPyPIBuilderWithBaseURL(nil, server.URL)
+	_, err := builder.Discover(context.Background(), 10)
+	if err == nil {
+		t.Fatal("expected error for malformed top packages JSON")
+	}
+}
+
+func TestPyPIBuilder_Discover_EmptyResults(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"rows": []}`))
+	}))
+	defer server.Close()
+
+	builder := NewPyPIBuilderWithBaseURL(nil, server.URL)
+	candidates, err := builder.Discover(context.Background(), 10)
+	if err != nil {
+		t.Fatalf("Discover() error = %v", err)
+	}
+	if len(candidates) != 0 {
+		t.Errorf("expected 0 candidates, got %d", len(candidates))
+	}
+}
+
+func TestPyPIBuilder_Discover_ContextCanceled(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"rows": [{"project": "a", "download_count": 100}]}`))
+	}))
+	defer server.Close()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel() // Cancel immediately.
+
+	builder := NewPyPIBuilderWithBaseURL(nil, server.URL)
+	_, err := builder.Discover(ctx, 10)
+	if err == nil {
+		t.Fatal("expected error for canceled context")
+	}
+}
+
+func TestPyPIBuilder_Discover_SkipsUnfetchablePackages(t *testing.T) {
+	topPackages := `{
+		"rows": [
+			{"project": "good-pkg", "download_count": 500},
+			{"project": "bad-pkg", "download_count": 400}
+		]
+	}`
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch r.URL.Path {
+		case "/top-pypi-packages-30-days.min.json":
+			_, _ = w.Write([]byte(topPackages))
+		case "/pypi/good-pkg/json":
+			_, _ = w.Write([]byte(`{"info": {"name": "good-pkg", "classifiers": ["Environment :: Console"]}}`))
+		case "/pypi/bad-pkg/json":
+			w.WriteHeader(http.StatusNotFound)
+		default:
+			w.WriteHeader(http.StatusNotFound)
+		}
+	}))
+	defer server.Close()
+
+	builder := NewPyPIBuilderWithBaseURL(nil, server.URL)
+	candidates, err := builder.Discover(context.Background(), 10)
+	if err != nil {
+		t.Fatalf("Discover() error = %v", err)
+	}
+
+	if len(candidates) != 1 {
+		t.Fatalf("expected 1 candidate, got %d", len(candidates))
+	}
+	if candidates[0].Name != "good-pkg" {
+		t.Errorf("candidates[0].Name = %q, want %q", candidates[0].Name, "good-pkg")
+	}
+}
+
+func TestHasConsoleClassifier(t *testing.T) {
+	tests := []struct {
+		name        string
+		classifiers []string
+		want        bool
+	}{
+		{"has console", []string{"Environment :: Console", "Development Status :: 5"}, true},
+		{"no console", []string{"Development Status :: 5"}, false},
+		{"empty", nil, false},
+		{"exact match only", []string{"Environment :: Console :: Curses"}, false},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			got := hasConsoleClassifier(tc.classifiers)
+			if got != tc.want {
+				t.Errorf("hasConsoleClassifier(%v) = %v, want %v", tc.classifiers, got, tc.want)
+			}
+		})
+	}
+}
+
 func TestPyPIBuilder_buildPyprojectURL(t *testing.T) {
 	builder := NewPyPIBuilder(nil)
 

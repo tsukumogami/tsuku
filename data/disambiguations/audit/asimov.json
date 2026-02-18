@@ -1,0 +1,48 @@
+{
+  "tool": "asimov",
+  "selected": "rubygems:asimov",
+  "alternatives": [
+    "homebrew:asimov",
+    "crates.io:asimov",
+    "pypi:asimov",
+    "npm:asimov"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 6.39344262295082,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:asimov",
+      "downloads": 366,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:asimov",
+      "downloads": 0,
+      "version_count": 66,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:asimov",
+      "downloads": 85,
+      "version_count": 9,
+      "has_repository": false
+    },
+    {
+      "source": "rubygems:asimov",
+      "downloads": 2340,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "npm:asimov",
+      "downloads": 0,
+      "version_count": 42,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:asimov",
+  "disambiguated_at": "2026-02-17T00:11:04.318708098Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

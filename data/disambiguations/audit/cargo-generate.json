@@ -1,0 +1,27 @@
+{
+  "tool": "cargo-generate",
+  "selected": "crates.io:cargo-generate",
+  "alternatives": [
+    "homebrew:cargo-generate"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 307.36446886446885,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:cargo-generate",
+      "downloads": 546,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:cargo-generate",
+      "downloads": 167821,
+      "version_count": 65,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:cargo-generate",
+  "disambiguated_at": "2026-02-17T00:12:35.037105099Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

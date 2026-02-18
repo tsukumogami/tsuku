@@ -1,0 +1,34 @@
+{
+  "tool": "vapoursynth",
+  "selected": "homebrew:vapoursynth",
+  "alternatives": [
+    "crates.io:vapoursynth",
+    "pypi:vapoursynth"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 8.901255707762557,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:vapoursynth",
+      "downloads": 3504,
+      "version_count": 9,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:vapoursynth",
+      "downloads": 31190,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:vapoursynth",
+      "downloads": 0,
+      "version_count": 32,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:vapoursynth",
+  "disambiguated_at": "2026-02-17T00:30:35.180789964Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

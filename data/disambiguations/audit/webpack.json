@@ -1,0 +1,41 @@
+{
+  "tool": "webpack",
+  "selected": "rubygems:webpack",
+  "alternatives": [
+    "homebrew:webpack",
+    "npm:webpack",
+    "pypi:webpack"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.8486581610206776,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:webpack",
+      "downloads": 6819,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:webpack",
+      "downloads": 0,
+      "version_count": 8,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:webpack",
+      "downloads": 19425,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:webpack",
+      "downloads": 0,
+      "version_count": 867,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:webpack",
+  "disambiguated_at": "2026-02-17T00:31:07.263029912Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

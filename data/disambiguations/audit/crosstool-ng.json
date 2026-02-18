@@ -1,0 +1,18 @@
+{
+  "tool": "crosstool-ng",
+  "selected": "homebrew:crosstool-ng",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:crosstool-ng",
+      "downloads": 1312,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:crosstool-ng",
+  "disambiguated_at": "2026-02-17T00:13:51.428406914Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

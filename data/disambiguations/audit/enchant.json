@@ -1,0 +1,46 @@
+{
+  "tool": "enchant",
+  "selected": "rubygems:enchant",
+  "alternatives": [
+    "homebrew:enchant",
+    "crates.io:enchant"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.2865051051789889,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:enchant",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:enchant",
+      "downloads": 373,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:enchant",
+      "downloads": 24387,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:enchant",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:enchant",
+      "downloads": 31374,
+      "version_count": 8,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:enchant",
+  "disambiguated_at": "2026-02-17T00:15:16.330700741Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

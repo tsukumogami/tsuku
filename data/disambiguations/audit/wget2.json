@@ -1,0 +1,24 @@
+{
+  "tool": "wget2",
+  "selected": "homebrew:wget2",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:wget2",
+      "downloads": 2513,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:wget2",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:wget2",
+  "disambiguated_at": "2026-02-17T00:31:08.969758555Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

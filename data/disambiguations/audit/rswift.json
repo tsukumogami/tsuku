@@ -1,0 +1,33 @@
+{
+  "tool": "rswift",
+  "selected": "rubygems:rswift",
+  "alternatives": [
+    "homebrew:rswift"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.4757329635499208,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:rswift",
+      "downloads": 10096,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:rswift",
+      "downloads": 14899,
+      "version_count": 5,
+      "has_repository": false
+    },
+    {
+      "source": "npm:rswift",
+      "downloads": 2,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:rswift",
+  "disambiguated_at": "2026-02-17T00:27:09.869022178Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

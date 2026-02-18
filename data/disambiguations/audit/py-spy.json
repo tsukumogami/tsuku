@@ -1,0 +1,34 @@
+{
+  "tool": "py-spy",
+  "selected": "crates.io:py-spy",
+  "alternatives": [
+    "homebrew:py-spy",
+    "pypi:py-spy"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 11.94062205466541,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:py-spy",
+      "downloads": 1061,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:py-spy",
+      "downloads": 12669,
+      "version_count": 20,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:py-spy",
+      "downloads": 0,
+      "version_count": 40,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:py-spy",
+  "disambiguated_at": "2026-02-17T00:25:57.993188164Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

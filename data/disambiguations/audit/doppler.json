@@ -1,0 +1,46 @@
+{
+  "tool": "doppler",
+  "selected": "rubygems:doppler",
+  "alternatives": [
+    "homebrew:doppler",
+    "npm:doppler"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.199781181619256,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:doppler",
+      "downloads": 13,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "pypi:doppler",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:doppler",
+      "downloads": 4570,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:doppler",
+      "downloads": 14623,
+      "version_count": 7,
+      "has_repository": false
+    },
+    {
+      "source": "npm:doppler",
+      "downloads": 425,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:doppler",
+  "disambiguated_at": "2026-02-17T00:14:44.076224096Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

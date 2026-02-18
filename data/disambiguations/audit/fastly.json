@@ -1,0 +1,48 @@
+{
+  "tool": "fastly",
+  "selected": "rubygems:fastly",
+  "alternatives": [
+    "crates.io:fastly",
+    "homebrew:fastly",
+    "npm:fastly",
+    "pypi:fastly"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.559048211598947,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:fastly",
+      "downloads": 0,
+      "version_count": 61,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:fastly",
+      "downloads": 2271051,
+      "version_count": 66,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:fastly",
+      "downloads": 579,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:fastly",
+      "downloads": 3540678,
+      "version_count": 99,
+      "has_repository": false
+    },
+    {
+      "source": "npm:fastly",
+      "downloads": 0,
+      "version_count": 65,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:fastly",
+  "disambiguated_at": "2026-02-17T00:15:37.443877564Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

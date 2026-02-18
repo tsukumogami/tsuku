@@ -1,0 +1,34 @@
+{
+  "tool": "vim",
+  "selected": "homebrew:vim",
+  "alternatives": [
+    "rubygems:vim",
+    "npm:vim"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 10.525551040512251,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:vim",
+      "downloads": 256434,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:vim",
+      "downloads": 24363,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:vim",
+      "downloads": 123,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:vim",
+  "disambiguated_at": "2026-02-17T00:10:05.572023358Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

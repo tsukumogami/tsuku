@@ -1,0 +1,33 @@
+{
+  "tool": "mujs",
+  "selected": "homebrew:mujs",
+  "alternatives": [
+    "crates.io:mujs"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 27.223224351747465,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:mujs",
+      "downloads": 24147,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:mujs",
+      "downloads": 887,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "npm:mujs",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:mujs",
+  "disambiguated_at": "2026-02-17T00:23:00.990144121Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

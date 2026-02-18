@@ -1,0 +1,40 @@
+{
+  "tool": "mariadb",
+  "selected": "npm:mariadb",
+  "alternatives": [
+    "homebrew:mariadb",
+    "pypi:mariadb"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 5.595174262734584,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:mariadb",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:mariadb",
+      "downloads": 55950,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:mariadb",
+      "downloads": 0,
+      "version_count": 40,
+      "has_repository": true
+    },
+    {
+      "source": "npm:mariadb",
+      "downloads": 313050,
+      "version_count": 51,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:mariadb",
+  "disambiguated_at": "2026-02-17T00:21:57.541139929Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

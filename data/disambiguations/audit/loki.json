@@ -1,0 +1,47 @@
+{
+  "tool": "loki",
+  "selected": "rubygems:loki",
+  "alternatives": [
+    "homebrew:loki",
+    "npm:loki",
+    "pypi:loki"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 4.838519313304721,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:loki",
+      "downloads": 10,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "pypi:loki",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:loki",
+      "downloads": 1864,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:loki",
+      "downloads": 9019,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "npm:loki",
+      "downloads": 0,
+      "version_count": 74,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:loki",
+  "disambiguated_at": "2026-02-17T00:21:35.435480261Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,24 @@
+{
+  "tool": "latexml",
+  "selected": "homebrew:latexml",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:latexml",
+      "downloads": 7,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:latexml",
+      "downloads": 1326,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:latexml",
+  "disambiguated_at": "2026-02-17T00:20:14.400185618Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

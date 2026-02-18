@@ -1,0 +1,46 @@
+{
+  "tool": "neko",
+  "selected": "rubygems:neko",
+  "alternatives": [
+    "homebrew:neko",
+    "pypi:neko"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.2595307917888565,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:neko",
+      "downloads": 9,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:neko",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:neko",
+      "downloads": 1364,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:neko",
+      "downloads": 4446,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:neko",
+      "downloads": 88,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:neko",
+  "disambiguated_at": "2026-02-17T00:23:18.085254157Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

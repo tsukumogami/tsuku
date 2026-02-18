@@ -1,0 +1,27 @@
+{
+  "tool": "cmatrix",
+  "selected": "homebrew:cmatrix",
+  "alternatives": [
+    "npm:cmatrix"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 471.75,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:cmatrix",
+      "downloads": 16983,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:cmatrix",
+      "downloads": 36,
+      "version_count": 8,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:cmatrix",
+  "disambiguated_at": "2026-02-17T00:13:24.911913155Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

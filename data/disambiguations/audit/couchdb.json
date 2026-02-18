@@ -1,0 +1,48 @@
+{
+  "tool": "couchdb",
+  "selected": "rubygems:couchdb",
+  "alternatives": [
+    "homebrew:couchdb",
+    "crates.io:couchdb",
+    "pypi:couchdb",
+    "npm:couchdb"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 26.69622205088666,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:couchdb",
+      "downloads": 1297,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:couchdb",
+      "downloads": 122,
+      "version_count": 11,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:couchdb",
+      "downloads": 0,
+      "version_count": 15,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:couchdb",
+      "downloads": 34625,
+      "version_count": 7,
+      "has_repository": false
+    },
+    {
+      "source": "npm:couchdb",
+      "downloads": 0,
+      "version_count": 14,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:couchdb",
+  "disambiguated_at": "2026-02-17T00:13:43.493120495Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

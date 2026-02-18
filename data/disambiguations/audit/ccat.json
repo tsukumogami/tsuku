@@ -1,0 +1,36 @@
+{
+  "tool": "ccat",
+  "selected": "homebrew:ccat",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "pypi:ccat",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:ccat",
+      "downloads": 19,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:ccat",
+      "downloads": 750,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:ccat",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:ccat",
+  "disambiguated_at": "2026-02-17T00:12:42.951344063Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

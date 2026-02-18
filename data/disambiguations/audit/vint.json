@@ -1,0 +1,46 @@
+{
+  "tool": "vint",
+  "selected": "rubygems:vint",
+  "alternatives": [
+    "homebrew:vint",
+    "pypi:vint"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 18.70258620689655,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:vint",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:vint",
+      "downloads": 0,
+      "version_count": 6,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:vint",
+      "downloads": 232,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:vint",
+      "downloads": 4339,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:vint",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:vint",
+  "disambiguated_at": "2026-02-17T00:30:43.280867037Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,27 @@
+{
+  "tool": "vulkan-headers",
+  "selected": "homebrew:vulkan-headers",
+  "alternatives": [
+    "crates.io:vulkan-headers"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 585.4594594594595,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:vulkan-headers",
+      "downloads": 64986,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:vulkan-headers",
+      "downloads": 111,
+      "version_count": 8,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:vulkan-headers",
+  "disambiguated_at": "2026-02-17T00:30:55.577760345Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

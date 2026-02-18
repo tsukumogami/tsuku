@@ -1,0 +1,48 @@
+{
+  "tool": "conan",
+  "selected": "rubygems:conan",
+  "alternatives": [
+    "homebrew:conan",
+    "crates.io:conan",
+    "pypi:conan",
+    "npm:conan"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.533994154276274,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:conan",
+      "downloads": 10206,
+      "version_count": 8,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:conan",
+      "downloads": 23607,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:conan",
+      "downloads": 0,
+      "version_count": 353,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:conan",
+      "downloads": 59820,
+      "version_count": 15,
+      "has_repository": false
+    },
+    {
+      "source": "npm:conan",
+      "downloads": 0,
+      "version_count": 24,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:conan",
+  "disambiguated_at": "2026-02-17T00:13:34.150654881Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

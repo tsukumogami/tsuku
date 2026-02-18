@@ -1,0 +1,41 @@
+{
+  "tool": "dbus",
+  "selected": "crates.io:dbus",
+  "alternatives": [
+    "homebrew:dbus",
+    "rubygems:dbus",
+    "npm:dbus"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 6.3836823563320735,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:dbus",
+      "downloads": 544711,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:dbus",
+      "downloads": 3477262,
+      "version_count": 48,
+      "has_repository": true
+    },
+    {
+      "source": "npm:dbus",
+      "downloads": 1230,
+      "version_count": 41,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:dbus",
+      "downloads": 27824,
+      "version_count": 5,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:dbus",
+  "disambiguated_at": "2026-02-17T00:14:13.204559986Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

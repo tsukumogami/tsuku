@@ -1,0 +1,41 @@
+{
+  "tool": "memcached",
+  "selected": "rubygems:memcached",
+  "alternatives": [
+    "homebrew:memcached",
+    "crates.io:memcached",
+    "npm:memcached"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 200.8530937901021,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:memcached",
+      "downloads": 180,
+      "version_count": 10,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:memcached",
+      "downloads": 17923,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:memcached",
+      "downloads": 3599890,
+      "version_count": 81,
+      "has_repository": true
+    },
+    {
+      "source": "npm:memcached",
+      "downloads": 0,
+      "version_count": 33,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:memcached",
+  "disambiguated_at": "2026-02-17T00:22:19.205837018Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

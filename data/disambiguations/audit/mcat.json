@@ -1,0 +1,39 @@
+{
+  "tool": "mcat",
+  "selected": "homebrew:mcat",
+  "alternatives": [
+    "crates.io:mcat"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.1996434937611409,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:mcat",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:mcat",
+      "downloads": 673,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:mcat",
+      "downloads": 561,
+      "version_count": 34,
+      "has_repository": true
+    },
+    {
+      "source": "npm:mcat",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:mcat",
+  "disambiguated_at": "2026-02-17T00:22:07.952614707Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

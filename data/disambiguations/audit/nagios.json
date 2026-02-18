@@ -1,0 +1,40 @@
+{
+  "tool": "nagios",
+  "selected": "rubygems:nagios",
+  "alternatives": [
+    "homebrew:nagios",
+    "pypi:nagios"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 91.52204176334106,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:nagios",
+      "downloads": 0,
+      "version_count": 7,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:nagios",
+      "downloads": 431,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:nagios",
+      "downloads": 39446,
+      "version_count": 4,
+      "has_repository": false
+    },
+    {
+      "source": "npm:nagios",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:nagios",
+  "disambiguated_at": "2026-02-17T00:23:08.567321309Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

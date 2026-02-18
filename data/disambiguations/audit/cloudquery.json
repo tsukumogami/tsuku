@@ -1,0 +1,30 @@
+{
+  "tool": "cloudquery",
+  "selected": "homebrew:cloudquery",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:cloudquery",
+      "downloads": 1085,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:cloudquery",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "npm:cloudquery",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:cloudquery",
+  "disambiguated_at": "2026-02-17T00:13:21.88580107Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,33 @@
+{
+  "tool": "theharvester",
+  "selected": "homebrew:theharvester",
+  "alternatives": [
+    "rubygems:theharvester"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.2260821615660324,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:theharvester",
+      "downloads": 4447,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:theharvester",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:theharvester",
+      "downloads": 3627,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:theharvester",
+  "disambiguated_at": "2026-02-17T00:29:37.362934285Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

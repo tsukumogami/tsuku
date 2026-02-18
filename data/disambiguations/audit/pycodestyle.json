@@ -1,0 +1,32 @@
+{
+  "tool": "pycodestyle",
+  "selected": "homebrew:pycodestyle",
+  "alternatives": [
+    "pypi:pycodestyle"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:pycodestyle",
+      "downloads": 1220,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:pycodestyle",
+      "downloads": 0,
+      "version_count": 23,
+      "has_repository": true
+    },
+    {
+      "source": "npm:pycodestyle",
+      "downloads": 2,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:pycodestyle",
+  "disambiguated_at": "2026-02-17T00:25:59.034136363Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

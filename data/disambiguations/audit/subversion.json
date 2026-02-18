@@ -1,0 +1,34 @@
+{
+  "tool": "subversion",
+  "selected": "homebrew:subversion",
+  "alternatives": [
+    "rubygems:subversion",
+    "crates.io:subversion"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 11.74769820971867,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:subversion",
+      "downloads": 91867,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:subversion",
+      "downloads": 159,
+      "version_count": 8,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:subversion",
+      "downloads": 7820,
+      "version_count": 2,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:subversion",
+  "disambiguated_at": "2026-02-17T00:28:57.986200348Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,30 @@
+{
+  "tool": "nats-server",
+  "selected": "homebrew:nats-server",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "pypi:nats-server",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:nats-server",
+      "downloads": 8153,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:nats-server",
+      "downloads": 19,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:nats-server",
+  "disambiguated_at": "2026-02-17T00:23:11.53921885Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

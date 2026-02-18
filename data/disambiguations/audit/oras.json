@@ -1,0 +1,38 @@
+{
+  "tool": "oras",
+  "selected": "homebrew:oras",
+  "alternatives": [
+    "pypi:oras"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:oras",
+      "downloads": 7,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:oras",
+      "downloads": 0,
+      "version_count": 52,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:oras",
+      "downloads": 47261,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:oras",
+      "downloads": 6,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:oras",
+  "disambiguated_at": "2026-02-17T00:24:20.273335514Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

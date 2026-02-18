@@ -1,0 +1,32 @@
+{
+  "tool": "gnupg",
+  "selected": "homebrew:gnupg",
+  "alternatives": [
+    "pypi:gnupg"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:gnupg",
+      "downloads": 848648,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:gnupg",
+      "downloads": 12,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:gnupg",
+      "downloads": 0,
+      "version_count": 29,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:gnupg",
+  "disambiguated_at": "2026-02-17T00:10:07.934236465Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

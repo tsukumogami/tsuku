@@ -1,0 +1,47 @@
+{
+  "tool": "chroma",
+  "selected": "rubygems:chroma",
+  "alternatives": [
+    "crates.io:chroma",
+    "homebrew:chroma",
+    "pypi:chroma"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 54.33163432260498,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "pypi:chroma",
+      "downloads": 0,
+      "version_count": 5,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:chroma",
+      "downloads": 3073,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:chroma",
+      "downloads": 180301,
+      "version_count": 13,
+      "has_repository": false
+    },
+    {
+      "source": "rubygems:chroma",
+      "downloads": 9796048,
+      "version_count": 6,
+      "has_repository": true
+    },
+    {
+      "source": "npm:chroma",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:chroma",
+  "disambiguated_at": "2026-02-17T00:13:01.011040925Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

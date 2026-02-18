@@ -1,0 +1,39 @@
+{
+  "tool": "jabba",
+  "selected": "homebrew:jabba",
+  "alternatives": [
+    "npm:jabba",
+    "pypi:jabba"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:jabba",
+      "downloads": 8,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:jabba",
+      "downloads": 0,
+      "version_count": 6,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:jabba",
+      "downloads": 441,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:jabba",
+      "downloads": 0,
+      "version_count": 25,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:jabba",
+  "disambiguated_at": "2026-02-17T00:19:05.626654884Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,47 @@
+{
+  "tool": "gleam",
+  "selected": "crates.io:gleam",
+  "alternatives": [
+    "homebrew:gleam",
+    "rubygems:gleam",
+    "pypi:gleam"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 19.82758620689655,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "pypi:gleam",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:gleam",
+      "downloads": 9048,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:gleam",
+      "downloads": 179400,
+      "version_count": 116,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:gleam",
+      "downloads": 6478,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:gleam",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:gleam",
+  "disambiguated_at": "2026-02-17T00:17:02.62014667Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

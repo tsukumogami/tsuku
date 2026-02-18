@@ -1,0 +1,18 @@
+{
+  "tool": "chart-testing",
+  "selected": "homebrew:chart-testing",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:chart-testing",
+      "downloads": 2614,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:chart-testing",
+  "disambiguated_at": "2026-02-17T00:12:54.418721298Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

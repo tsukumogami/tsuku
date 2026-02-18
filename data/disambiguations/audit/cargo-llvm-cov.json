@@ -1,0 +1,27 @@
+{
+  "tool": "cargo-llvm-cov",
+  "selected": "crates.io:cargo-llvm-cov",
+  "alternatives": [
+    "homebrew:cargo-llvm-cov"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 1058.1619975639464,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:cargo-llvm-cov",
+      "downloads": 821,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:cargo-llvm-cov",
+      "downloads": 868751,
+      "version_count": 119,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:cargo-llvm-cov",
+  "disambiguated_at": "2026-02-17T00:12:36.123604927Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

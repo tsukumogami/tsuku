@@ -1,0 +1,48 @@
+{
+  "tool": "metis",
+  "selected": "crates.io:metis",
+  "alternatives": [
+    "homebrew:metis",
+    "rubygems:metis",
+    "npm:metis",
+    "pypi:metis"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.706071009124582,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:metis",
+      "downloads": 22138,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:metis",
+      "downloads": 37769,
+      "version_count": 6,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:metis",
+      "downloads": 0,
+      "version_count": 5,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:metis",
+      "downloads": 8706,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "npm:metis",
+      "downloads": 0,
+      "version_count": 8,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:metis",
+  "disambiguated_at": "2026-02-17T00:22:24.337389017Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

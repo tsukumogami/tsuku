@@ -1,0 +1,32 @@
+{
+  "tool": "cava",
+  "selected": "homebrew:cava",
+  "alternatives": [
+    "pypi:cava"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:cava",
+      "downloads": 0,
+      "version_count": 9,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:cava",
+      "downloads": 3852,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:cava",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:cava",
+  "disambiguated_at": "2026-02-17T00:12:41.322023808Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

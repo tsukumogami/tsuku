@@ -643,6 +643,112 @@ func TestQualityFiltering_CpanRiverMetrics(t *testing.T) {
 	})
 }
 
+// Tests for ResolveWithDetails
+
+func TestResolveWithDetails_IncludesAllProbes(t *testing.T) {
+	probe := NewEcosystemProbe([]builders.EcosystemProber{
+		&mockProber{name: "npm", result: &builders.ProbeResult{Source: "tool", Downloads: 1000, VersionCount: 10, HasRepository: true}},
+		&mockProber{name: "pypi", result: nil},                          // no match
+		&mockProber{name: "crates.io", err: fmt.Errorf("network fail")}, // error
+	}, 5*time.Second)
+
+	rr, err := probe.ResolveWithDetails(context.Background(), "tool")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if rr == nil {
+		t.Fatal("expected result, got nil")
+	}
+
+	// Selected should be npm (the only match).
+	if rr.Selected == nil {
+		t.Fatal("expected selected result")
+	}
+	if rr.Selected.Builder != "npm" {
+		t.Errorf("expected builder npm, got %s", rr.Selected.Builder)
+	}
+
+	// AllProbes should include all 3 probers.
+	if len(rr.AllProbes) != 3 {
+		t.Fatalf("expected 3 probes, got %d", len(rr.AllProbes))
+	}
+
+	// Verify we can find all builders in the results.
+	found := map[string]bool{}
+	for _, p := range rr.AllProbes {
+		found[p.BuilderName] = true
+	}
+	for _, name := range []string{"npm", "pypi", "crates.io"} {
+		if !found[name] {
+			t.Errorf("expected %s in AllProbes", name)
+		}
+	}
+}
+
+func TestResolveWithDetails_NoMatch(t *testing.T) {
+	probe := NewEcosystemProbe([]builders.EcosystemProber{
+		&mockProber{name: "npm", result: nil},
+		&mockProber{name: "pypi", result: nil},
+	}, 5*time.Second)
+
+	rr, err := probe.ResolveWithDetails(context.Background(), "nonexistent")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if rr.Selected != nil {
+		t.Fatalf("expected nil selected, got %+v", rr.Selected)
+	}
+	if len(rr.AllProbes) != 2 {
+		t.Errorf("expected 2 probes, got %d", len(rr.AllProbes))
+	}
+}
+
+func TestResolveWithDetails_AllErrors(t *testing.T) {
+	probe := NewEcosystemProbe([]builders.EcosystemProber{
+		&mockProber{name: "npm", err: fmt.Errorf("fail")},
+		&mockProber{name: "pypi", err: fmt.Errorf("fail")},
+	}, 5*time.Second)
+
+	_, err := probe.ResolveWithDetails(context.Background(), "anything")
+	if err == nil {
+		t.Fatal("expected error when all probers fail")
+	}
+}
+
+func TestResolveWithDetails_EmptyProbers(t *testing.T) {
+	probe := NewEcosystemProbe(nil, 5*time.Second)
+	rr, err := probe.ResolveWithDetails(context.Background(), "anything")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if rr.Selected != nil {
+		t.Fatalf("expected nil selected, got %+v", rr.Selected)
+	}
+}
+
+func TestResolveWithDetails_ErrorOutcomeIncluded(t *testing.T) {
+	probe := NewEcosystemProbe([]builders.EcosystemProber{
+		&mockProber{name: "npm", result: &builders.ProbeResult{Source: "tool", Downloads: 5000, VersionCount: 20}},
+		&mockProber{name: "pypi", err: fmt.Errorf("timeout")},
+	}, 5*time.Second)
+
+	rr, err := probe.ResolveWithDetails(context.Background(), "tool")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// The error outcome should still be present in AllProbes.
+	var foundErr bool
+	for _, p := range rr.AllProbes {
+		if p.BuilderName == "pypi" && p.Err != nil {
+			foundErr = true
+		}
+	}
+	if !foundErr {
+		t.Error("expected pypi error outcome in AllProbes")
+	}
+}
+
 // Helper function for checking substring
 func contains(s, substr string) bool {
 	for i := 0; i <= len(s)-len(substr); i++ {

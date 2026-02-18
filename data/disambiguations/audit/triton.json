@@ -1,0 +1,47 @@
+{
+  "tool": "triton",
+  "selected": "rubygems:triton",
+  "alternatives": [
+    "homebrew:triton",
+    "npm:triton",
+    "pypi:triton"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 21.271317829457363,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:triton",
+      "downloads": 11,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:triton",
+      "downloads": 516,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:triton",
+      "downloads": 0,
+      "version_count": 19,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:triton",
+      "downloads": 10976,
+      "version_count": 3,
+      "has_repository": false
+    },
+    {
+      "source": "npm:triton",
+      "downloads": 0,
+      "version_count": 90,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:triton",
+  "disambiguated_at": "2026-02-17T00:30:00.580752724Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,27 @@
+{
+  "tool": "try-rs",
+  "selected": "crates.io:try-rs",
+  "alternatives": [
+    "homebrew:try-rs"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 12,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:try-rs",
+      "downloads": 86,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:try-rs",
+      "downloads": 1032,
+      "version_count": 53,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:try-rs",
+  "disambiguated_at": "2026-02-17T00:30:02.682683608Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

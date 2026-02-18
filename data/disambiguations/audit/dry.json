@@ -1,0 +1,48 @@
+{
+  "tool": "dry",
+  "selected": "rubygems:dry",
+  "alternatives": [
+    "crates.io:dry",
+    "homebrew:dry",
+    "npm:dry",
+    "pypi:dry"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 53.732925586136595,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:dry",
+      "downloads": 981,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:dry",
+      "downloads": 277,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:dry",
+      "downloads": 0,
+      "version_count": 7,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:dry",
+      "downloads": 52712,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:dry",
+      "downloads": 0,
+      "version_count": 8,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:dry",
+  "disambiguated_at": "2026-02-17T00:14:51.80058283Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

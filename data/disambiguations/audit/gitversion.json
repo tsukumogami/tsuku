@@ -1,0 +1,40 @@
+{
+  "tool": "gitversion",
+  "selected": "rubygems:gitversion",
+  "alternatives": [
+    "homebrew:gitversion",
+    "crates.io:gitversion"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 90.67287133693875,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:gitversion",
+      "downloads": 7951,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:gitversion",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:gitversion",
+      "downloads": 48,
+      "version_count": 8,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:gitversion",
+      "downloads": 720940,
+      "version_count": 416,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:gitversion",
+  "disambiguated_at": "2026-02-17T00:17:00.088876342Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,27 @@
+{
+  "tool": "gtksourceview3",
+  "selected": "rubygems:gtksourceview3",
+  "alternatives": [
+    "homebrew:gtksourceview3"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 174.5236148955495,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:gtksourceview3",
+      "downloads": 2202,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:gtksourceview3",
+      "downloads": 384301,
+      "version_count": 184,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:gtksourceview3",
+  "disambiguated_at": "2026-02-17T00:17:49.790058403Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

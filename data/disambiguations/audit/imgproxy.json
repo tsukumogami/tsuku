@@ -1,0 +1,41 @@
+{
+  "tool": "imgproxy",
+  "selected": "rubygems:imgproxy",
+  "alternatives": [
+    "homebrew:imgproxy",
+    "npm:imgproxy",
+    "pypi:imgproxy"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 876.053412462908,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:imgproxy",
+      "downloads": 1011,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:imgproxy",
+      "downloads": 0,
+      "version_count": 12,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:imgproxy",
+      "downloads": 885690,
+      "version_count": 14,
+      "has_repository": true
+    },
+    {
+      "source": "npm:imgproxy",
+      "downloads": 0,
+      "version_count": 16,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:imgproxy",
+  "disambiguated_at": "2026-02-17T00:18:46.153623441Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

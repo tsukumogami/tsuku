@@ -1,0 +1,32 @@
+{
+  "tool": "vdirsyncer",
+  "selected": "homebrew:vdirsyncer",
+  "alternatives": [
+    "pypi:vdirsyncer"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:vdirsyncer",
+      "downloads": 1500,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:vdirsyncer",
+      "downloads": 8,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "pypi:vdirsyncer",
+      "downloads": 0,
+      "version_count": 68,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:vdirsyncer",
+  "disambiguated_at": "2026-02-17T00:30:36.814530301Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

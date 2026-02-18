@@ -1,0 +1,40 @@
+{
+  "tool": "unzip",
+  "selected": "homebrew:unzip",
+  "alternatives": [
+    "npm:unzip",
+    "crates.io:unzip"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 21.399580096577786,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:unzip",
+      "downloads": 2606,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:unzip",
+      "downloads": 509631,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:unzip",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:unzip",
+      "downloads": 23815,
+      "version_count": 17,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:unzip",
+  "disambiguated_at": "2026-02-17T00:30:24.440397082Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

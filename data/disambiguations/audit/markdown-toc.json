@@ -1,0 +1,41 @@
+{
+  "tool": "markdown-toc",
+  "selected": "npm:markdown-toc",
+  "alternatives": [
+    "homebrew:markdown-toc",
+    "crates.io:markdown-toc",
+    "pypi:markdown-toc"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 241.60634328358208,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:markdown-toc",
+      "downloads": 137,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:markdown-toc",
+      "downloads": 536,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:markdown-toc",
+      "downloads": 0,
+      "version_count": 12,
+      "has_repository": true
+    },
+    {
+      "source": "npm:markdown-toc",
+      "downloads": 129501,
+      "version_count": 47,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:markdown-toc",
+  "disambiguated_at": "2026-02-17T00:22:00.200028239Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

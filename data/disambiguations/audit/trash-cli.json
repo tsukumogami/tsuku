@@ -1,0 +1,39 @@
+{
+  "tool": "trash-cli",
+  "selected": "homebrew:trash-cli",
+  "alternatives": [
+    "pypi:trash-cli",
+    "npm:trash-cli"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:trash-cli",
+      "downloads": 16878,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:trash-cli",
+      "downloads": 7,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:trash-cli",
+      "downloads": 0,
+      "version_count": 60,
+      "has_repository": true
+    },
+    {
+      "source": "npm:trash-cli",
+      "downloads": 0,
+      "version_count": 16,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:trash-cli",
+  "disambiguated_at": "2026-02-17T00:29:57.382630748Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

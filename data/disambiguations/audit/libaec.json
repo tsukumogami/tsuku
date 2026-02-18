@@ -1,0 +1,18 @@
+{
+  "tool": "libaec",
+  "selected": "homebrew:libaec",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:libaec",
+      "downloads": 111938,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:libaec",
+  "disambiguated_at": "2026-02-17T00:20:25.559254697Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

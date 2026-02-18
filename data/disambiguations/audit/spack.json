@@ -1,0 +1,30 @@
+{
+  "tool": "spack",
+  "selected": "homebrew:spack",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:spack",
+      "downloads": 4,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:spack",
+      "downloads": 677,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:spack",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:spack",
+  "disambiguated_at": "2026-02-17T00:28:22.447872475Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

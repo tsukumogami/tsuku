@@ -1,0 +1,39 @@
+{
+  "tool": "spek",
+  "selected": "rubygems:spek",
+  "alternatives": [
+    "homebrew:spek"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 141.5023923444976,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "pypi:spek",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:spek",
+      "downloads": 1045,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:spek",
+      "downloads": 147870,
+      "version_count": 39,
+      "has_repository": true
+    },
+    {
+      "source": "npm:spek",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:spek",
+  "disambiguated_at": "2026-02-17T00:28:26.407804579Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

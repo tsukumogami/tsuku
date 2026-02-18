@@ -1,0 +1,27 @@
+{
+  "tool": "terraform-mcp-server",
+  "selected": "npm:terraform-mcp-server",
+  "alternatives": [
+    "homebrew:terraform-mcp-server"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.4941176470588236,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:terraform-mcp-server",
+      "downloads": 255,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:terraform-mcp-server",
+      "downloads": 381,
+      "version_count": 14,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:terraform-mcp-server",
+  "disambiguated_at": "2026-02-17T00:29:29.973755104Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

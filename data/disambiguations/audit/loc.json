@@ -1,0 +1,46 @@
+{
+  "tool": "loc",
+  "selected": "rubygems:loc",
+  "alternatives": [
+    "crates.io:loc",
+    "homebrew:loc"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 38.04625928041119,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:loc",
+      "downloads": 1751,
+      "version_count": 8,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:loc",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:loc",
+      "downloads": 791,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:loc",
+      "downloads": 66619,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "npm:loc",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:loc",
+  "disambiguated_at": "2026-02-17T00:21:31.544716211Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

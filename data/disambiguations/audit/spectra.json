@@ -1,0 +1,48 @@
+{
+  "tool": "spectra",
+  "selected": "rubygems:spectra",
+  "alternatives": [
+    "homebrew:spectra",
+    "crates.io:spectra",
+    "pypi:spectra",
+    "npm:spectra"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 18.554803788903925,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:spectra",
+      "downloads": 739,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:spectra",
+      "downloads": 0,
+      "version_count": 13,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:spectra",
+      "downloads": 60,
+      "version_count": 26,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:spectra",
+      "downloads": 13712,
+      "version_count": 5,
+      "has_repository": false
+    },
+    {
+      "source": "npm:spectra",
+      "downloads": 0,
+      "version_count": 5,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:spectra",
+  "disambiguated_at": "2026-02-17T00:28:24.952129726Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

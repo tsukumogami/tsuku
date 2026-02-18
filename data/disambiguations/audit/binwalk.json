@@ -1,0 +1,33 @@
+{
+  "tool": "binwalk",
+  "selected": "homebrew:binwalk",
+  "alternatives": [
+    "crates.io:binwalk"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.3771094764171354,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:binwalk",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:binwalk",
+      "downloads": 4622,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:binwalk",
+      "downloads": 10987,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:binwalk",
+  "disambiguated_at": "2026-02-17T00:11:58.046284207Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

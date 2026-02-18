@@ -1,0 +1,41 @@
+{
+  "tool": "zeromq",
+  "selected": "homebrew:zeromq",
+  "alternatives": [
+    "crates.io:zeromq",
+    "npm:zeromq",
+    "rubygems:zeromq"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.125458743550506,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:zeromq",
+      "downloads": 332429,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:zeromq",
+      "downloads": 295372,
+      "version_count": 16,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:zeromq",
+      "downloads": 8180,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "npm:zeromq",
+      "downloads": 134743,
+      "version_count": 71,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:zeromq",
+  "disambiguated_at": "2026-02-17T00:31:48.301125759Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

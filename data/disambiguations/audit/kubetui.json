@@ -1,0 +1,27 @@
+{
+  "tool": "kubetui",
+  "selected": "homebrew:kubetui",
+  "alternatives": [
+    "crates.io:kubetui"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 4.517241379310345,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:kubetui",
+      "downloads": 1179,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:kubetui",
+      "downloads": 261,
+      "version_count": 23,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:kubetui",
+  "disambiguated_at": "2026-02-17T00:20:06.793021772Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

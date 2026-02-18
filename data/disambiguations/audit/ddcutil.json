@@ -1,0 +1,24 @@
+{
+  "tool": "ddcutil",
+  "selected": "homebrew:ddcutil",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:ddcutil",
+      "downloads": 75,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:ddcutil",
+      "downloads": 541,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:ddcutil",
+  "disambiguated_at": "2026-02-17T00:14:14.741140996Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

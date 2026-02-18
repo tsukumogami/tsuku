@@ -1,0 +1,32 @@
+{
+  "tool": "duplicity",
+  "selected": "homebrew:duplicity",
+  "alternatives": [
+    "pypi:duplicity"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:duplicity",
+      "downloads": 2769,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:duplicity",
+      "downloads": 0,
+      "version_count": 226,
+      "has_repository": true
+    },
+    {
+      "source": "npm:duplicity",
+      "downloads": 7,
+      "version_count": 3,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:duplicity",
+  "disambiguated_at": "2026-02-17T00:14:57.477062377Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

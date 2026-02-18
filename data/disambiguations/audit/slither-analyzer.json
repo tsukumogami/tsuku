@@ -1,0 +1,26 @@
+{
+  "tool": "slither-analyzer",
+  "selected": "homebrew:slither-analyzer",
+  "alternatives": [
+    "pypi:slither-analyzer"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:slither-analyzer",
+      "downloads": 3444,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:slither-analyzer",
+      "downloads": 0,
+      "version_count": 48,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:slither-analyzer",
+  "disambiguated_at": "2026-02-17T00:28:11.280742852Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

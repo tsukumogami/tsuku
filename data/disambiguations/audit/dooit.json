@@ -1,0 +1,26 @@
+{
+  "tool": "dooit",
+  "selected": "homebrew:dooit",
+  "alternatives": [
+    "pypi:dooit"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:dooit",
+      "downloads": 0,
+      "version_count": 22,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:dooit",
+      "downloads": 788,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:dooit",
+  "disambiguated_at": "2026-02-17T00:14:43.840350187Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

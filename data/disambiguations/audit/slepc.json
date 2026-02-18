@@ -1,0 +1,26 @@
+{
+  "tool": "slepc",
+  "selected": "homebrew:slepc",
+  "alternatives": [
+    "pypi:slepc"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:slepc",
+      "downloads": 0,
+      "version_count": 61,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:slepc",
+      "downloads": 513,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:slepc",
+  "disambiguated_at": "2026-02-17T00:28:10.222886012Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

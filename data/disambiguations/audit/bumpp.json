@@ -1,0 +1,33 @@
+{
+  "tool": "bumpp",
+  "selected": "npm:bumpp",
+  "alternatives": [
+    "homebrew:bumpp"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 1248.436170212766,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:bumpp",
+      "downloads": 9,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:bumpp",
+      "downloads": 94,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:bumpp",
+      "downloads": 117353,
+      "version_count": 53,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:bumpp",
+  "disambiguated_at": "2026-02-17T00:12:23.012997406Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

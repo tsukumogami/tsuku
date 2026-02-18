@@ -1,0 +1,41 @@
+{
+  "tool": "d2",
+  "selected": "homebrew:d2",
+  "alternatives": [
+    "rubygems:d2",
+    "npm:d2",
+    "pypi:d2"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 5.45290071770335,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:d2",
+      "downloads": 0,
+      "version_count": 7,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:d2",
+      "downloads": 36469,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:d2",
+      "downloads": 6688,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:d2",
+      "downloads": 784,
+      "version_count": 182,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:d2",
+  "disambiguated_at": "2026-02-17T00:14:03.358270813Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

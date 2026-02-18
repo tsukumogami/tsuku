@@ -1,0 +1,46 @@
+{
+  "tool": "got",
+  "selected": "npm:got",
+  "alternatives": [
+    "rubygems:got",
+    "homebrew:got"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 3817.484836601307,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:got",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "pypi:got",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:got",
+      "downloads": 530,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:got",
+      "downloads": 7650,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "npm:got",
+      "downloads": 29203759,
+      "version_count": 191,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:got",
+  "disambiguated_at": "2026-02-17T00:17:26.419260964Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "imessage-ruby",
+  "selected": "homebrew:imessage-ruby",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:imessage-ruby",
+      "downloads": 255,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:imessage-ruby",
+  "disambiguated_at": "2026-02-17T00:18:45.161573856Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

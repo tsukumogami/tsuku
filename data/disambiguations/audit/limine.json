@@ -1,0 +1,27 @@
+{
+  "tool": "limine",
+  "selected": "crates.io:limine",
+  "alternatives": [
+    "homebrew:limine"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 24.35311572700297,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:limine",
+      "downloads": 337,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:limine",
+      "downloads": 8207,
+      "version_count": 18,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:limine",
+  "disambiguated_at": "2026-02-17T00:21:22.014700817Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

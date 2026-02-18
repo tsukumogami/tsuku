@@ -1,0 +1,33 @@
+{
+  "tool": "node-red",
+  "selected": "npm:node-red",
+  "alternatives": [
+    "homebrew:node-red"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 37.77459526774595,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:node-red",
+      "downloads": 803,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:node-red",
+      "downloads": 356,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "npm:node-red",
+      "downloads": 30333,
+      "version_count": 200,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:node-red",
+  "disambiguated_at": "2026-02-17T00:23:36.397794072Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

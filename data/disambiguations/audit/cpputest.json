@@ -1,0 +1,18 @@
+{
+  "tool": "cpputest",
+  "selected": "homebrew:cpputest",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:cpputest",
+      "downloads": 1000,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:cpputest",
+  "disambiguated_at": "2026-02-17T00:13:47.950063235Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

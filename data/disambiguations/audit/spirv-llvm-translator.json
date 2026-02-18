@@ -1,0 +1,18 @@
+{
+  "tool": "spirv-llvm-translator",
+  "selected": "homebrew:spirv-llvm-translator",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:spirv-llvm-translator",
+      "downloads": 49335,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:spirv-llvm-translator",
+  "disambiguated_at": "2026-02-17T00:28:29.129200323Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,27 @@
+{
+  "tool": "c2patool",
+  "selected": "crates.io:c2patool",
+  "alternatives": [
+    "homebrew:c2patool"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.566021867115223,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:c2patool",
+      "downloads": 1189,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:c2patool",
+      "downloads": 4240,
+      "version_count": 102,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:c2patool",
+  "disambiguated_at": "2026-02-17T00:12:27.669332568Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

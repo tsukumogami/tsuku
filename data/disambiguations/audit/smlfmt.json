@@ -1,0 +1,18 @@
+{
+  "tool": "smlfmt",
+  "selected": "homebrew:smlfmt",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:smlfmt",
+      "downloads": 1305,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:smlfmt",
+  "disambiguated_at": "2026-02-17T00:28:12.662304904Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

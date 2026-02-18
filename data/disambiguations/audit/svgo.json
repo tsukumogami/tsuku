@@ -1,0 +1,41 @@
+{
+  "tool": "svgo",
+  "selected": "rubygems:svgo",
+  "alternatives": [
+    "homebrew:svgo",
+    "crates.io:svgo",
+    "npm:svgo"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 8.333333333333334,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:svgo",
+      "downloads": 2484,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:svgo",
+      "downloads": 38,
+      "version_count": 5,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:svgo",
+      "downloads": 20700,
+      "version_count": 11,
+      "has_repository": false
+    },
+    {
+      "source": "npm:svgo",
+      "downloads": 0,
+      "version_count": 109,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:svgo",
+  "disambiguated_at": "2026-02-17T00:29:02.715344672Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

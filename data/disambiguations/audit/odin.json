@@ -1,0 +1,47 @@
+{
+  "tool": "odin",
+  "selected": "rubygems:odin",
+  "alternatives": [
+    "homebrew:odin",
+    "pypi:odin",
+    "npm:odin"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.2767263427109974,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:odin",
+      "downloads": 5865,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:odin",
+      "downloads": 15,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "pypi:odin",
+      "downloads": 0,
+      "version_count": 55,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:odin",
+      "downloads": 7488,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "npm:odin",
+      "downloads": 0,
+      "version_count": 16,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:odin",
+  "disambiguated_at": "2026-02-17T00:23:55.312740515Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

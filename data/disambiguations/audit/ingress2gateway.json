@@ -1,0 +1,18 @@
+{
+  "tool": "ingress2gateway",
+  "selected": "homebrew:ingress2gateway",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:ingress2gateway",
+      "downloads": 968,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:ingress2gateway",
+  "disambiguated_at": "2026-02-17T00:18:50.467621474Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

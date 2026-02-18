@@ -1,0 +1,33 @@
+{
+  "tool": "astgen",
+  "selected": "homebrew:astgen",
+  "alternatives": [
+    "pypi:astgen",
+    "npm:astgen"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:astgen",
+      "downloads": 0,
+      "version_count": 11,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:astgen",
+      "downloads": 1019,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:astgen",
+      "downloads": 0,
+      "version_count": 7,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:astgen",
+  "disambiguated_at": "2026-02-17T00:11:07.436778545Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

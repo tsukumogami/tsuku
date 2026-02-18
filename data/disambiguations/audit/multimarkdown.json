@@ -1,0 +1,34 @@
+{
+  "tool": "multimarkdown",
+  "selected": "rubygems:multimarkdown",
+  "alternatives": [
+    "homebrew:multimarkdown",
+    "npm:multimarkdown"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 16.231281198003327,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:multimarkdown",
+      "downloads": 601,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:multimarkdown",
+      "downloads": 9755,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "npm:multimarkdown",
+      "downloads": 0,
+      "version_count": 15,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:multimarkdown",
+  "disambiguated_at": "2026-02-17T00:23:01.22448093Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

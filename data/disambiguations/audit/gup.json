@@ -1,0 +1,32 @@
+{
+  "tool": "gup",
+  "selected": "homebrew:gup",
+  "alternatives": [
+    "npm:gup"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:gup",
+      "downloads": 223,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:gup",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "npm:gup",
+      "downloads": 0,
+      "version_count": 8,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:gup",
+  "disambiguated_at": "2026-02-17T00:17:53.504193581Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

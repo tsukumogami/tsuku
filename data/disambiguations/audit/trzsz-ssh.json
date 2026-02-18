@@ -1,0 +1,18 @@
+{
+  "tool": "trzsz-ssh",
+  "selected": "homebrew:trzsz-ssh",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:trzsz-ssh",
+      "downloads": 1023,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:trzsz-ssh",
+  "disambiguated_at": "2026-02-17T00:30:03.48640156Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

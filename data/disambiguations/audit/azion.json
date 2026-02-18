@@ -1,0 +1,34 @@
+{
+  "tool": "azion",
+  "selected": "npm:azion",
+  "alternatives": [
+    "homebrew:azion",
+    "pypi:azion"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 11.718270571827057,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:azion",
+      "downloads": 717,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:azion",
+      "downloads": 0,
+      "version_count": 8,
+      "has_repository": true
+    },
+    {
+      "source": "npm:azion",
+      "downloads": 8402,
+      "version_count": 234,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:azion",
+  "disambiguated_at": "2026-02-17T00:11:31.908925036Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

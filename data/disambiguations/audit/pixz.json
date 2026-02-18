@@ -1,0 +1,18 @@
+{
+  "tool": "pixz",
+  "selected": "homebrew:pixz",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:pixz",
+      "downloads": 650,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:pixz",
+  "disambiguated_at": "2026-02-17T00:25:19.501014441Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

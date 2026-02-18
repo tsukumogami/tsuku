@@ -1,0 +1,34 @@
+{
+  "tool": "dateutils",
+  "selected": "homebrew:dateutils",
+  "alternatives": [
+    "npm:dateutils",
+    "pypi:dateutils"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 14.552631578947368,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:dateutils",
+      "downloads": 1106,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:dateutils",
+      "downloads": 0,
+      "version_count": 7,
+      "has_repository": true
+    },
+    {
+      "source": "npm:dateutils",
+      "downloads": 76,
+      "version_count": 22,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:dateutils",
+  "disambiguated_at": "2026-02-17T00:14:10.558834726Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "libpaho-mqtt",
+  "selected": "homebrew:libpaho-mqtt",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:libpaho-mqtt",
+      "downloads": 1131,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:libpaho-mqtt",
+  "disambiguated_at": "2026-02-17T00:20:51.469182901Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

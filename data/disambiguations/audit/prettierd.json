@@ -1,0 +1,18 @@
+{
+  "tool": "prettierd",
+  "selected": "homebrew:prettierd",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:prettierd",
+      "downloads": 1731,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:prettierd",
+  "disambiguated_at": "2026-02-17T00:25:39.107127958Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

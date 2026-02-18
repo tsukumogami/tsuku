@@ -1,0 +1,27 @@
+{
+  "tool": "dbmate",
+  "selected": "npm:dbmate",
+  "alternatives": [
+    "homebrew:dbmate"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.424110769665501,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:dbmate",
+      "downloads": 28311,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:dbmate",
+      "downloads": 68629,
+      "version_count": 45,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:dbmate",
+  "disambiguated_at": "2026-02-17T00:14:12.550295335Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

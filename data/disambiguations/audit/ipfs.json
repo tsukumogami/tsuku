@@ -1,0 +1,24 @@
+{
+  "tool": "ipfs",
+  "selected": "rubygems:ipfs",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:ipfs",
+      "downloads": 48,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:ipfs",
+      "downloads": 11785,
+      "version_count": 4,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:ipfs",
+  "disambiguated_at": "2026-02-17T00:18:57.545854058Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

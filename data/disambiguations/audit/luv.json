@@ -1,0 +1,32 @@
+{
+  "tool": "luv",
+  "selected": "homebrew:luv",
+  "alternatives": [
+    "npm:luv"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:luv",
+      "downloads": 152110,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:luv",
+      "downloads": 83,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "npm:luv",
+      "downloads": 0,
+      "version_count": 13,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:luv",
+  "disambiguated_at": "2026-02-17T00:21:41.84478197Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

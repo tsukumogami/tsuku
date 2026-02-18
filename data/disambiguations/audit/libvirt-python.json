@@ -1,0 +1,32 @@
+{
+  "tool": "libvirt-python",
+  "selected": "homebrew:libvirt-python",
+  "alternatives": [
+    "pypi:libvirt-python"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:libvirt-python",
+      "downloads": 0,
+      "version_count": 133,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:libvirt-python",
+      "downloads": 9746,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:libvirt-python",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:libvirt-python",
+  "disambiguated_at": "2026-02-17T00:21:10.262882451Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

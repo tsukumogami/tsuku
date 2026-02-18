@@ -1,0 +1,18 @@
+{
+  "tool": "sngrep",
+  "selected": "homebrew:sngrep",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:sngrep",
+      "downloads": 640,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:sngrep",
+  "disambiguated_at": "2026-02-17T00:28:15.110129986Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

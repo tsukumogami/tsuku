@@ -1,0 +1,34 @@
+{
+  "tool": "yara-x",
+  "selected": "crates.io:yara-x",
+  "alternatives": [
+    "homebrew:yara-x",
+    "pypi:yara-x"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 16.597049689440993,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:yara-x",
+      "downloads": 1288,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:yara-x",
+      "downloads": 21377,
+      "version_count": 35,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:yara-x",
+      "downloads": 0,
+      "version_count": 34,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:yara-x",
+  "disambiguated_at": "2026-02-17T00:31:37.720112862Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

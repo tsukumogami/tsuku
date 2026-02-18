@@ -1,0 +1,41 @@
+{
+  "tool": "howdoi",
+  "selected": "rubygems:howdoi",
+  "alternatives": [
+    "homebrew:howdoi",
+    "npm:howdoi",
+    "pypi:howdoi"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 4.689550949913644,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:howdoi",
+      "downloads": 0,
+      "version_count": 40,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:howdoi",
+      "downloads": 2316,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:howdoi",
+      "downloads": 10861,
+      "version_count": 3,
+      "has_repository": false
+    },
+    {
+      "source": "npm:howdoi",
+      "downloads": 1,
+      "version_count": 8,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:howdoi",
+  "disambiguated_at": "2026-02-17T00:18:23.545065187Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

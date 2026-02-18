@@ -1,0 +1,41 @@
+{
+  "tool": "xdot",
+  "selected": "homebrew:xdot",
+  "alternatives": [
+    "crates.io:xdot",
+    "npm:xdot",
+    "pypi:xdot"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 40.48571428571429,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:xdot",
+      "downloads": 0,
+      "version_count": 12,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:xdot",
+      "downloads": 35,
+      "version_count": 6,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:xdot",
+      "downloads": 1417,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:xdot",
+      "downloads": 0,
+      "version_count": 17,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:xdot",
+  "disambiguated_at": "2026-02-17T00:31:26.904199772Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,33 @@
+{
+  "tool": "poutine",
+  "selected": "rubygems:poutine",
+  "alternatives": [
+    "homebrew:poutine"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 15.87007874015748,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:poutine",
+      "downloads": 254,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:poutine",
+      "downloads": 4031,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:poutine",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:poutine",
+  "disambiguated_at": "2026-02-17T00:25:35.350395112Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

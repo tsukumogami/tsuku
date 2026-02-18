@@ -1,0 +1,33 @@
+{
+  "tool": "fnt",
+  "selected": "homebrew:fnt",
+  "alternatives": [
+    "npm:fnt"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 272,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:fnt",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:fnt",
+      "downloads": 544,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:fnt",
+      "downloads": 2,
+      "version_count": 5,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:fnt",
+  "disambiguated_at": "2026-02-17T00:16:04.850413516Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

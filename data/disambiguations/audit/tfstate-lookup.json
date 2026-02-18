@@ -1,0 +1,18 @@
+{
+  "tool": "tfstate-lookup",
+  "selected": "homebrew:tfstate-lookup",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:tfstate-lookup",
+      "downloads": 135,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:tfstate-lookup",
+  "disambiguated_at": "2026-02-17T00:29:35.493460671Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

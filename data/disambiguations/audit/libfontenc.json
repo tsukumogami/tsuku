@@ -1,0 +1,18 @@
+{
+  "tool": "libfontenc",
+  "selected": "homebrew:libfontenc",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:libfontenc",
+      "downloads": 15760,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:libfontenc",
+  "disambiguated_at": "2026-02-17T00:20:33.877830821Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

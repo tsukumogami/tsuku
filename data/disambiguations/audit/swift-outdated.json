@@ -1,0 +1,18 @@
+{
+  "tool": "swift-outdated",
+  "selected": "homebrew:swift-outdated",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:swift-outdated",
+      "downloads": 1124,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:swift-outdated",
+  "disambiguated_at": "2026-02-17T00:29:06.682204755Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

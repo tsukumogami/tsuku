@@ -1,0 +1,26 @@
+{
+  "tool": "trezor-agent",
+  "selected": "homebrew:trezor-agent",
+  "alternatives": [
+    "pypi:trezor-agent"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:trezor-agent",
+      "downloads": 494,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:trezor-agent",
+      "downloads": 0,
+      "version_count": 31,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:trezor-agent",
+  "disambiguated_at": "2026-02-17T00:29:59.868542257Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

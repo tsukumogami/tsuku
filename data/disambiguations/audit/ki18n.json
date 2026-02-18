@@ -1,0 +1,27 @@
+{
+  "tool": "ki18n",
+  "selected": "homebrew:ki18n",
+  "alternatives": [
+    "crates.io:ki18n"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 20.13186813186813,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:ki18n",
+      "downloads": 91,
+      "version_count": 9,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:ki18n",
+      "downloads": 1832,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:ki18n",
+  "disambiguated_at": "2026-02-17T00:19:47.075414882Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

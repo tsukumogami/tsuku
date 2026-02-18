@@ -1,0 +1,18 @@
+{
+  "tool": "kdoctor",
+  "selected": "homebrew:kdoctor",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:kdoctor",
+      "downloads": 4617,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:kdoctor",
+  "disambiguated_at": "2026-02-17T00:19:43.000722319Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

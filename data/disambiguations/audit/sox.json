@@ -1,0 +1,46 @@
+{
+  "tool": "sox",
+  "selected": "homebrew:sox",
+  "alternatives": [
+    "rubygems:sox",
+    "pypi:sox"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 4.360492460921289,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:sox",
+      "downloads": 17,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:sox",
+      "downloads": 0,
+      "version_count": 28,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:sox",
+      "downloads": 31522,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:sox",
+      "downloads": 7229,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "npm:sox",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:sox",
+  "disambiguated_at": "2026-02-17T00:28:21.494536209Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

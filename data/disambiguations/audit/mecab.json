@@ -1,0 +1,41 @@
+{
+  "tool": "mecab",
+  "selected": "rubygems:mecab",
+  "alternatives": [
+    "homebrew:mecab",
+    "crates.io:mecab",
+    "pypi:mecab"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 8.694361067755233,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:mecab",
+      "downloads": 1011,
+      "version_count": 8,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:mecab",
+      "downloads": 24987,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:mecab",
+      "downloads": 0,
+      "version_count": 7,
+      "has_repository": false
+    },
+    {
+      "source": "rubygems:mecab",
+      "downloads": 217246,
+      "version_count": 2,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:mecab",
+  "disambiguated_at": "2026-02-17T00:22:16.301968814Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

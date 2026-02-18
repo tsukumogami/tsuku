@@ -1,0 +1,27 @@
+{
+  "tool": "chruby",
+  "selected": "rubygems:chruby",
+  "alternatives": [
+    "homebrew:chruby"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.3707050738962627,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:chruby",
+      "downloads": 10623,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:chruby",
+      "downloads": 14561,
+      "version_count": 3,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:chruby",
+  "disambiguated_at": "2026-02-17T00:13:03.109435233Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,34 @@
+{
+  "tool": "coreutils",
+  "selected": "homebrew:coreutils",
+  "alternatives": [
+    "crates.io:coreutils",
+    "npm:coreutils"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 209.75508359692725,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:coreutils",
+      "downloads": 928376,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:coreutils",
+      "downloads": 4426,
+      "version_count": 36,
+      "has_repository": true
+    },
+    {
+      "source": "npm:coreutils",
+      "downloads": 60,
+      "version_count": 27,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:coreutils",
+  "disambiguated_at": "2026-02-17T00:10:06.423318807Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

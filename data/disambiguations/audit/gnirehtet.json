@@ -1,0 +1,18 @@
+{
+  "tool": "gnirehtet",
+  "selected": "homebrew:gnirehtet",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:gnirehtet",
+      "downloads": 1073,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:gnirehtet",
+  "disambiguated_at": "2026-02-17T00:17:09.830440538Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

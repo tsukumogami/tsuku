@@ -1,0 +1,48 @@
+{
+  "tool": "xxhash",
+  "selected": "rubygems:xxhash",
+  "alternatives": [
+    "homebrew:xxhash",
+    "npm:xxhash",
+    "crates.io:xxhash",
+    "pypi:xxhash"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 59.44919479184512,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:xxhash",
+      "downloads": 233480,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:xxhash",
+      "downloads": 153,
+      "version_count": 7,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:xxhash",
+      "downloads": 13880198,
+      "version_count": 9,
+      "has_repository": false
+    },
+    {
+      "source": "npm:xxhash",
+      "downloads": 8823,
+      "version_count": 11,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:xxhash",
+      "downloads": 0,
+      "version_count": 42,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:xxhash",
+  "disambiguated_at": "2026-02-17T00:31:33.84372062Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,33 @@
+{
+  "tool": "netcat",
+  "selected": "homebrew:netcat",
+  "alternatives": [
+    "npm:netcat"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.7776824034334764,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:netcat",
+      "downloads": 13203,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:netcat",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "npm:netcat",
+      "downloads": 3495,
+      "version_count": 20,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:netcat",
+  "disambiguated_at": "2026-02-17T00:23:23.065501411Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

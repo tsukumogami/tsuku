@@ -1,0 +1,26 @@
+{
+  "tool": "sqlfluff",
+  "selected": "homebrew:sqlfluff",
+  "alternatives": [
+    "pypi:sqlfluff"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:sqlfluff",
+      "downloads": 7006,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:sqlfluff",
+      "downloads": 0,
+      "version_count": 152,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:sqlfluff",
+  "disambiguated_at": "2026-02-17T00:28:34.657182592Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

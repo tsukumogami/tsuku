@@ -1,0 +1,34 @@
+{
+  "tool": "uvicorn",
+  "selected": "homebrew:uvicorn",
+  "alternatives": [
+    "npm:uvicorn",
+    "pypi:uvicorn"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 13.49250936329588,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:uvicorn",
+      "downloads": 7205,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:uvicorn",
+      "downloads": 0,
+      "version_count": 185,
+      "has_repository": true
+    },
+    {
+      "source": "npm:uvicorn",
+      "downloads": 534,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:uvicorn",
+  "disambiguated_at": "2026-02-17T00:30:30.3864272Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "qbittorrent-cli",
+  "selected": "homebrew:qbittorrent-cli",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:qbittorrent-cli",
+      "downloads": 548,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:qbittorrent-cli",
+  "disambiguated_at": "2026-02-17T00:26:14.002312014Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,47 @@
+{
+  "tool": "sip",
+  "selected": "homebrew:sip",
+  "alternatives": [
+    "rubygems:sip",
+    "pypi:sip",
+    "npm:sip"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.5991425509110395,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:sip",
+      "downloads": 12125,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:sip",
+      "downloads": 63,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:sip",
+      "downloads": 0,
+      "version_count": 66,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:sip",
+      "downloads": 4665,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:sip",
+      "downloads": 0,
+      "version_count": 35,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:sip",
+  "disambiguated_at": "2026-02-17T00:28:06.989010226Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

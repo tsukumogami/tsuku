@@ -1,0 +1,47 @@
+{
+  "tool": "cog",
+  "selected": "rubygems:cog",
+  "alternatives": [
+    "homebrew:cog",
+    "pypi:cog",
+    "npm:cog"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 48.3813713592233,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:cog",
+      "downloads": 71,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:cog",
+      "downloads": 3296,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:cog",
+      "downloads": 0,
+      "version_count": 164,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:cog",
+      "downloads": 159465,
+      "version_count": 39,
+      "has_repository": true
+    },
+    {
+      "source": "npm:cog",
+      "downloads": 0,
+      "version_count": 19,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:cog",
+  "disambiguated_at": "2026-02-17T00:13:31.040205722Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

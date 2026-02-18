@@ -1,0 +1,40 @@
+{
+  "tool": "cdo",
+  "selected": "rubygems:cdo",
+  "alternatives": [
+    "homebrew:cdo",
+    "pypi:cdo"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 52.36484149855908,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:cdo",
+      "downloads": 1735,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:cdo",
+      "downloads": 0,
+      "version_count": 31,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:cdo",
+      "downloads": 90853,
+      "version_count": 27,
+      "has_repository": true
+    },
+    {
+      "source": "npm:cdo",
+      "downloads": 7,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:cdo",
+  "disambiguated_at": "2026-02-17T00:12:45.53672422Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

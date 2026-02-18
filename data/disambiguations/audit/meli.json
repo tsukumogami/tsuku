@@ -1,0 +1,40 @@
+{
+  "tool": "meli",
+  "selected": "rubygems:meli",
+  "alternatives": [
+    "crates.io:meli",
+    "homebrew:meli"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 66.61611374407583,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:meli",
+      "downloads": 309,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:meli",
+      "downloads": 422,
+      "version_count": 25,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:meli",
+      "downloads": 28112,
+      "version_count": 6,
+      "has_repository": true
+    },
+    {
+      "source": "npm:meli",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:meli",
+  "disambiguated_at": "2026-02-17T00:22:18.911781774Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

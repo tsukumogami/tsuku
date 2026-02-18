@@ -1,0 +1,26 @@
+{
+  "tool": "git-big-picture",
+  "selected": "homebrew:git-big-picture",
+  "alternatives": [
+    "pypi:git-big-picture"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:git-big-picture",
+      "downloads": 427,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:git-big-picture",
+      "downloads": 0,
+      "version_count": 9,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:git-big-picture",
+  "disambiguated_at": "2026-02-17T00:16:46.613626201Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

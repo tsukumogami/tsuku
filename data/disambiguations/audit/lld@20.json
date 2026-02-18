@@ -1,0 +1,18 @@
+{
+  "tool": "lld@20",
+  "selected": "homebrew:lld@20",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:lld@20",
+      "downloads": 16757,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:lld@20",
+  "disambiguated_at": "2026-02-17T00:21:27.111677516Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

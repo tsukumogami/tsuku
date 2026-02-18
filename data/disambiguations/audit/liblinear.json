@@ -1,0 +1,33 @@
+{
+  "tool": "liblinear",
+  "selected": "homebrew:liblinear",
+  "alternatives": [
+    "crates.io:liblinear"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 262.48728813559325,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:liblinear",
+      "downloads": 123894,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:liblinear",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:liblinear",
+      "downloads": 472,
+      "version_count": 3,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:liblinear",
+  "disambiguated_at": "2026-02-17T00:20:43.591772431Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

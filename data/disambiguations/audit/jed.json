@@ -1,0 +1,34 @@
+{
+  "tool": "jed",
+  "selected": "crates.io:jed",
+  "alternatives": [
+    "homebrew:jed",
+    "npm:jed"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.5320197044334976,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:jed",
+      "downloads": 311,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:jed",
+      "downloads": 203,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:jed",
+      "downloads": 0,
+      "version_count": 10,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:jed",
+  "disambiguated_at": "2026-02-17T00:19:10.941544571Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,24 @@
+{
+  "tool": "guile",
+  "selected": "homebrew:guile",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:guile",
+      "downloads": 18,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:guile",
+      "downloads": 98521,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:guile",
+  "disambiguated_at": "2026-02-17T00:17:52.481343059Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

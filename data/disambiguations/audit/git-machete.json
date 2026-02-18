@@ -1,0 +1,26 @@
+{
+  "tool": "git-machete",
+  "selected": "homebrew:git-machete",
+  "alternatives": [
+    "pypi:git-machete"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:git-machete",
+      "downloads": 1835,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:git-machete",
+      "downloads": 0,
+      "version_count": 137,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:git-machete",
+  "disambiguated_at": "2026-02-17T00:16:51.187653655Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

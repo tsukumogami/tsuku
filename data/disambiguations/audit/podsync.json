@@ -1,0 +1,27 @@
+{
+  "tool": "podsync",
+  "selected": "homebrew:podsync",
+  "alternatives": [
+    "crates.io:podsync"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 10.843137254901961,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:podsync",
+      "downloads": 553,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:podsync",
+      "downloads": 51,
+      "version_count": 13,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:podsync",
+  "disambiguated_at": "2026-02-17T00:25:28.808171299Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

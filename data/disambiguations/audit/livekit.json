@@ -1,0 +1,40 @@
+{
+  "tool": "livekit",
+  "selected": "crates.io:livekit",
+  "alternatives": [
+    "homebrew:livekit",
+    "pypi:livekit"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 44.25675675675676,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:livekit",
+      "downloads": 4662,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:livekit",
+      "downloads": 206325,
+      "version_count": 44,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:livekit",
+      "downloads": 0,
+      "version_count": 99,
+      "has_repository": true
+    },
+    {
+      "source": "npm:livekit",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:livekit",
+  "disambiguated_at": "2026-02-17T00:21:25.011948981Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

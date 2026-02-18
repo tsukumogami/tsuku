@@ -1,0 +1,40 @@
+{
+  "tool": "libproxy",
+  "selected": "homebrew:libproxy",
+  "alternatives": [
+    "crates.io:libproxy",
+    "rubygems:libproxy"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.3119128949615713,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:libproxy",
+      "downloads": 4684,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:libproxy",
+      "downloads": 6145,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:libproxy",
+      "downloads": 4239,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "npm:libproxy",
+      "downloads": 0,
+      "version_count": 0,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:libproxy",
+  "disambiguated_at": "2026-02-17T00:20:54.659161778Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

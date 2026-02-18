@@ -1,0 +1,24 @@
+{
+  "tool": "lldpd",
+  "selected": "homebrew:lldpd",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:lldpd",
+      "downloads": 55,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:lldpd",
+      "downloads": 1525,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:lldpd",
+  "disambiguated_at": "2026-02-17T00:21:27.348208798Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

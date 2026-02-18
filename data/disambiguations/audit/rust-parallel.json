@@ -1,0 +1,27 @@
+{
+  "tool": "rust-parallel",
+  "selected": "crates.io:rust-parallel",
+  "alternatives": [
+    "homebrew:rust-parallel"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.7952522255192878,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:rust-parallel",
+      "downloads": 337,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:rust-parallel",
+      "downloads": 942,
+      "version_count": 79,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:rust-parallel",
+  "disambiguated_at": "2026-02-17T00:27:17.964608393Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

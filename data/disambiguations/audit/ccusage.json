@@ -1,0 +1,33 @@
+{
+  "tool": "ccusage",
+  "selected": "npm:ccusage",
+  "alternatives": [
+    "homebrew:ccusage"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 4.554625550660793,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:ccusage",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:ccusage",
+      "downloads": 4540,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:ccusage",
+      "downloads": 20678,
+      "version_count": 102,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:ccusage",
+  "disambiguated_at": "2026-02-17T00:12:44.025206276Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

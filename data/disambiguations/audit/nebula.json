@@ -1,0 +1,34 @@
+{
+  "tool": "nebula",
+  "selected": "rubygems:nebula",
+  "alternatives": [
+    "homebrew:nebula",
+    "npm:nebula"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.3821499013806706,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:nebula",
+      "downloads": 2028,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:nebula",
+      "downloads": 4831,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:nebula",
+      "downloads": 48,
+      "version_count": 12,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:nebula",
+  "disambiguated_at": "2026-02-17T00:23:17.285963689Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,40 @@
+{
+  "tool": "cai",
+  "selected": "crates.io:cai",
+  "alternatives": [
+    "homebrew:cai",
+    "pypi:cai"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.0194174757281553,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:cai",
+      "downloads": 206,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:cai",
+      "downloads": 0,
+      "version_count": 7,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:cai",
+      "downloads": 210,
+      "version_count": 12,
+      "has_repository": true
+    },
+    {
+      "source": "npm:cai",
+      "downloads": 39,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:cai",
+  "disambiguated_at": "2026-02-17T00:12:30.435812067Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

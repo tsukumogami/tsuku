@@ -1,0 +1,47 @@
+{
+  "tool": "hatch",
+  "selected": "rubygems:hatch",
+  "alternatives": [
+    "homebrew:hatch",
+    "pypi:hatch",
+    "npm:hatch"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 4.276820083682009,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:hatch",
+      "downloads": 0,
+      "version_count": 57,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:hatch",
+      "downloads": 9,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:hatch",
+      "downloads": 5975,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:hatch",
+      "downloads": 25554,
+      "version_count": 8,
+      "has_repository": false
+    },
+    {
+      "source": "npm:hatch",
+      "downloads": 0,
+      "version_count": 12,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:hatch",
+  "disambiguated_at": "2026-02-17T00:18:05.163588162Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

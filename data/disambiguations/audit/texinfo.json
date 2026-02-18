@@ -1,0 +1,18 @@
+{
+  "tool": "texinfo",
+  "selected": "homebrew:texinfo",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:texinfo",
+      "downloads": 29495,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:texinfo",
+  "disambiguated_at": "2026-02-17T00:29:33.820883565Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

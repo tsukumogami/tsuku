@@ -1,0 +1,41 @@
+{
+  "tool": "uchardet",
+  "selected": "rubygems:uchardet",
+  "alternatives": [
+    "homebrew:uchardet",
+    "npm:uchardet",
+    "crates.io:uchardet"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.9104417018512505,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:uchardet",
+      "downloads": 12316,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:uchardet",
+      "downloads": 124,
+      "version_count": 18,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:uchardet",
+      "downloads": 23529,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "npm:uchardet",
+      "downloads": 221,
+      "version_count": 17,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:uchardet",
+  "disambiguated_at": "2026-02-17T00:30:18.071032201Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

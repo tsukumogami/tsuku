@@ -1,0 +1,47 @@
+{
+  "tool": "mani",
+  "selected": "rubygems:mani",
+  "alternatives": [
+    "homebrew:mani",
+    "crates.io:mani",
+    "pypi:mani"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 27.72047244094488,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:mani",
+      "downloads": 508,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:mani",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:mani",
+      "downloads": 211,
+      "version_count": 10,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:mani",
+      "downloads": 14082,
+      "version_count": 5,
+      "has_repository": false
+    },
+    {
+      "source": "npm:mani",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:mani",
+  "disambiguated_at": "2026-02-17T00:21:55.30808398Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

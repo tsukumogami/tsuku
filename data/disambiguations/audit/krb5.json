@@ -1,0 +1,41 @@
+{
+  "tool": "krb5",
+  "selected": "homebrew:krb5",
+  "alternatives": [
+    "rubygems:krb5",
+    "npm:krb5",
+    "pypi:krb5"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 136.41340239559727,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:krb5",
+      "downloads": 842762,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:krb5",
+      "downloads": 0,
+      "version_count": 14,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:krb5",
+      "downloads": 6178,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:krb5",
+      "downloads": 186,
+      "version_count": 13,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:krb5",
+  "disambiguated_at": "2026-02-17T00:19:57.72227511Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

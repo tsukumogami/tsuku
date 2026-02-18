@@ -1,0 +1,46 @@
+{
+  "tool": "ed",
+  "selected": "rubygems:ed",
+  "alternatives": [
+    "homebrew:ed",
+    "crates.io:ed"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 9.445220588235294,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:ed",
+      "downloads": 3939,
+      "version_count": 11,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:ed",
+      "downloads": 5440,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:ed",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:ed",
+      "downloads": 51382,
+      "version_count": 13,
+      "has_repository": false
+    },
+    {
+      "source": "npm:ed",
+      "downloads": 1,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:ed",
+  "disambiguated_at": "2026-02-17T00:15:07.921990758Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "nghttp2",
+  "selected": "homebrew:nghttp2",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:nghttp2",
+      "downloads": 81659,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:nghttp2",
+  "disambiguated_at": "2026-02-17T00:23:29.468586347Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

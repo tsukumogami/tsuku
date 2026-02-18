@@ -1,0 +1,46 @@
+{
+  "tool": "fend",
+  "selected": "rubygems:fend",
+  "alternatives": [
+    "crates.io:fend",
+    "homebrew:fend"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 7.239080459770115,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:fend",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:fend",
+      "downloads": 870,
+      "version_count": 68,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:fend",
+      "downloads": 496,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:fend",
+      "downloads": 6298,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "npm:fend",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:fend",
+  "disambiguated_at": "2026-02-17T00:15:45.578271564Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

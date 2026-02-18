@@ -1,0 +1,48 @@
+{
+  "tool": "solana",
+  "selected": "homebrew:solana",
+  "alternatives": [
+    "rubygems:solana",
+    "npm:solana",
+    "crates.io:solana",
+    "pypi:solana"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.821869488536155,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:solana",
+      "downloads": 4334,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:solana",
+      "downloads": 0,
+      "version_count": 85,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:solana",
+      "downloads": 143,
+      "version_count": 35,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:solana",
+      "downloads": 1134,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "npm:solana",
+      "downloads": 353,
+      "version_count": 49,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:solana",
+  "disambiguated_at": "2026-02-17T00:28:19.026797474Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

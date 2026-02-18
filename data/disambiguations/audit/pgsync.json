@@ -1,0 +1,34 @@
+{
+  "tool": "pgsync",
+  "selected": "rubygems:pgsync",
+  "alternatives": [
+    "homebrew:pgsync",
+    "pypi:pgsync"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2560.560553633218,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:pgsync",
+      "downloads": 578,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:pgsync",
+      "downloads": 0,
+      "version_count": 71,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:pgsync",
+      "downloads": 1480004,
+      "version_count": 43,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:pgsync",
+  "disambiguated_at": "2026-02-17T00:25:04.776194091Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

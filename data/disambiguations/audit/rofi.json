@@ -1,0 +1,27 @@
+{
+  "tool": "rofi",
+  "selected": "homebrew:rofi",
+  "alternatives": [
+    "crates.io:rofi"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.971042471042471,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:rofi",
+      "downloads": 1021,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:rofi",
+      "downloads": 518,
+      "version_count": 6,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:rofi",
+  "disambiguated_at": "2026-02-17T00:27:04.617157852Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

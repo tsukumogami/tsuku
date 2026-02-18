@@ -1,0 +1,18 @@
+{
+  "tool": "oauth2l",
+  "selected": "homebrew:oauth2l",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:oauth2l",
+      "downloads": 2645,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:oauth2l",
+  "disambiguated_at": "2026-02-17T00:23:51.975800178Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

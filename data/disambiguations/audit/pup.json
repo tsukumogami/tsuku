@@ -1,0 +1,38 @@
+{
+  "tool": "pup",
+  "selected": "rubygems:pup",
+  "alternatives": [
+    "pypi:pup"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:pup",
+      "downloads": 45,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:pup",
+      "downloads": 0,
+      "version_count": 17,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:pup",
+      "downloads": 3778,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:pup",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:pup",
+  "disambiguated_at": "2026-02-17T00:25:55.122555453Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

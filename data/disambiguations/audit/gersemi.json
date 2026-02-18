@@ -1,0 +1,34 @@
+{
+  "tool": "gersemi",
+  "selected": "homebrew:gersemi",
+  "alternatives": [
+    "npm:gersemi",
+    "pypi:gersemi"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 52.2,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:gersemi",
+      "downloads": 0,
+      "version_count": 71,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:gersemi",
+      "downloads": 522,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:gersemi",
+      "downloads": 10,
+      "version_count": 14,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:gersemi",
+  "disambiguated_at": "2026-02-17T00:16:37.5280834Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

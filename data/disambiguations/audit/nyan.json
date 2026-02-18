@@ -1,0 +1,41 @@
+{
+  "tool": "nyan",
+  "selected": "rubygems:nyan",
+  "alternatives": [
+    "homebrew:nyan",
+    "npm:nyan",
+    "pypi:nyan"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 30.124282982791588,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "pypi:nyan",
+      "downloads": 0,
+      "version_count": 26,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:nyan",
+      "downloads": 523,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:nyan",
+      "downloads": 15755,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "npm:nyan",
+      "downloads": 13,
+      "version_count": 8,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:nyan",
+  "disambiguated_at": "2026-02-17T00:23:49.651534508Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

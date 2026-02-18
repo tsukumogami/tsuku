@@ -1,0 +1,40 @@
+{
+  "tool": "container",
+  "selected": "rubygems:container",
+  "alternatives": [
+    "homebrew:container",
+    "npm:container"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.48240450845335,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:container",
+      "downloads": 37,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:container",
+      "downloads": 7985,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:container",
+      "downloads": 19822,
+      "version_count": 7,
+      "has_repository": true
+    },
+    {
+      "source": "npm:container",
+      "downloads": 149,
+      "version_count": 2,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:container",
+  "disambiguated_at": "2026-02-17T00:13:37.194914948Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

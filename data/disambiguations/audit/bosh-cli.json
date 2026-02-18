@@ -1,0 +1,18 @@
+{
+  "tool": "bosh-cli",
+  "selected": "homebrew:bosh-cli",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:bosh-cli",
+      "downloads": 679,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:bosh-cli",
+  "disambiguated_at": "2026-02-17T00:12:08.858027687Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

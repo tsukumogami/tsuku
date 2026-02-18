@@ -1,0 +1,33 @@
+{
+  "tool": "typedb",
+  "selected": "homebrew:typedb",
+  "alternatives": [
+    "crates.io:typedb"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.3194444444444446,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:typedb",
+      "downloads": 239,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:typedb",
+      "downloads": 72,
+      "version_count": 7,
+      "has_repository": true
+    },
+    {
+      "source": "npm:typedb",
+      "downloads": 2,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:typedb",
+  "disambiguated_at": "2026-02-17T00:30:15.247828418Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

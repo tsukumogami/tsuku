@@ -1,0 +1,34 @@
+{
+  "tool": "sqlmap",
+  "selected": "homebrew:sqlmap",
+  "alternatives": [
+    "npm:sqlmap",
+    "pypi:sqlmap"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 4115.5,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:sqlmap",
+      "downloads": 24693,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:sqlmap",
+      "downloads": 0,
+      "version_count": 128,
+      "has_repository": true
+    },
+    {
+      "source": "npm:sqlmap",
+      "downloads": 6,
+      "version_count": 13,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:sqlmap",
+  "disambiguated_at": "2026-02-17T00:28:35.863855555Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

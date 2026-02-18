@@ -1,0 +1,46 @@
+{
+  "tool": "links",
+  "selected": "rubygems:links",
+  "alternatives": [
+    "homebrew:links",
+    "npm:links"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 4.619591836734694,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:links",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:links",
+      "downloads": 15,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:links",
+      "downloads": 2450,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:links",
+      "downloads": 11318,
+      "version_count": 3,
+      "has_repository": false
+    },
+    {
+      "source": "npm:links",
+      "downloads": 58,
+      "version_count": 6,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:links",
+  "disambiguated_at": "2026-02-17T00:21:22.431987124Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

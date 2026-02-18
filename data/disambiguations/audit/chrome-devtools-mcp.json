@@ -1,0 +1,27 @@
+{
+  "tool": "chrome-devtools-mcp",
+  "selected": "npm:chrome-devtools-mcp",
+  "alternatives": [
+    "homebrew:chrome-devtools-mcp"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 284.1828396322778,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:chrome-devtools-mcp",
+      "downloads": 979,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:chrome-devtools-mcp",
+      "downloads": 278215,
+      "version_count": 35,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:chrome-devtools-mcp",
+  "disambiguated_at": "2026-02-17T00:13:02.378157254Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

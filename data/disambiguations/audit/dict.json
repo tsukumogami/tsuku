@@ -1,0 +1,48 @@
+{
+  "tool": "dict",
+  "selected": "rubygems:dict",
+  "alternatives": [
+    "crates.io:dict",
+    "npm:dict",
+    "homebrew:dict",
+    "pypi:dict"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 94.23398516520567,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:dict",
+      "downloads": 1483,
+      "version_count": 6,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:dict",
+      "downloads": 512,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:dict",
+      "downloads": 0,
+      "version_count": 45,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:dict",
+      "downloads": 139749,
+      "version_count": 38,
+      "has_repository": true
+    },
+    {
+      "source": "npm:dict",
+      "downloads": 873,
+      "version_count": 7,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:dict",
+  "disambiguated_at": "2026-02-17T00:14:26.276209682Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

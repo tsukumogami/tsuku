@@ -1,0 +1,45 @@
+{
+  "tool": "zbar",
+  "selected": "rubygems:zbar",
+  "alternatives": [
+    "homebrew:zbar"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 43.615349604596915,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:zbar",
+      "downloads": 11,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:zbar",
+      "downloads": 17577,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:zbar",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:zbar",
+      "downloads": 766627,
+      "version_count": 6,
+      "has_repository": false
+    },
+    {
+      "source": "npm:zbar",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:zbar",
+  "disambiguated_at": "2026-02-17T00:31:44.822048135Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

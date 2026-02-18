@@ -1,0 +1,41 @@
+{
+  "tool": "git-cliff",
+  "selected": "npm:git-cliff",
+  "alternatives": [
+    "crates.io:git-cliff",
+    "homebrew:git-cliff",
+    "pypi:git-cliff"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.0693172356369693,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:git-cliff",
+      "downloads": 3888,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:git-cliff",
+      "downloads": 0,
+      "version_count": 25,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:git-cliff",
+      "downloads": 14412,
+      "version_count": 64,
+      "has_repository": true
+    },
+    {
+      "source": "npm:git-cliff",
+      "downloads": 44235,
+      "version_count": 35,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:git-cliff",
+  "disambiguated_at": "2026-02-17T00:16:47.620955143Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

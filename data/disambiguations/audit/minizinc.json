@@ -1,0 +1,33 @@
+{
+  "tool": "minizinc",
+  "selected": "homebrew:minizinc",
+  "alternatives": [
+    "npm:minizinc",
+    "pypi:minizinc"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:minizinc",
+      "downloads": 725,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:minizinc",
+      "downloads": 0,
+      "version_count": 22,
+      "has_repository": true
+    },
+    {
+      "source": "npm:minizinc",
+      "downloads": 0,
+      "version_count": 324,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:minizinc",
+  "disambiguated_at": "2026-02-17T00:22:34.29127003Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

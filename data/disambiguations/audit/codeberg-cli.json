@@ -1,0 +1,27 @@
+{
+  "tool": "codeberg-cli",
+  "selected": "crates.io:codeberg-cli",
+  "alternatives": [
+    "homebrew:codeberg-cli"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.1891348088531186,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:codeberg-cli",
+      "downloads": 497,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:codeberg-cli",
+      "downloads": 591,
+      "version_count": 24,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:codeberg-cli",
+  "disambiguated_at": "2026-02-17T00:13:28.620681186Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

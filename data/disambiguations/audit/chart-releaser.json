@@ -1,0 +1,24 @@
+{
+  "tool": "chart-releaser",
+  "selected": "homebrew:chart-releaser",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:chart-releaser",
+      "downloads": 707,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:chart-releaser",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:chart-releaser",
+  "disambiguated_at": "2026-02-17T00:12:54.186230845Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

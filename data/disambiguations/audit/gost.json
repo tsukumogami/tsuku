@@ -1,0 +1,27 @@
+{
+  "tool": "gost",
+  "selected": "homebrew:gost",
+  "alternatives": [
+    "npm:gost"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 383.25,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:gost",
+      "downloads": 1533,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:gost",
+      "downloads": 4,
+      "version_count": 5,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:gost",
+  "disambiguated_at": "2026-02-17T00:17:26.188846126Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

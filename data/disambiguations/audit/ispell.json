@@ -1,0 +1,34 @@
+{
+  "tool": "ispell",
+  "selected": "rubygems:ispell",
+  "alternatives": [
+    "homebrew:ispell",
+    "crates.io:ispell"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 5.692028985507246,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:ispell",
+      "downloads": 243,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:ispell",
+      "downloads": 1656,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:ispell",
+      "downloads": 9426,
+      "version_count": 2,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:ispell",
+  "disambiguated_at": "2026-02-17T00:19:02.957571792Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

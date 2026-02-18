@@ -1,0 +1,48 @@
+{
+  "tool": "jet",
+  "selected": "rubygems:jet",
+  "alternatives": [
+    "homebrew:jet",
+    "crates.io:jet",
+    "pypi:jet",
+    "npm:jet"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 19.86759581881533,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:jet",
+      "downloads": 47,
+      "version_count": 5,
+      "has_repository": false
+    },
+    {
+      "source": "pypi:jet",
+      "downloads": 0,
+      "version_count": 39,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:jet",
+      "downloads": 5702,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:jet",
+      "downloads": 287,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:jet",
+      "downloads": 0,
+      "version_count": 38,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:jet",
+  "disambiguated_at": "2026-02-17T00:19:13.820914203Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

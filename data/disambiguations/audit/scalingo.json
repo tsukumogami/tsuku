@@ -1,0 +1,34 @@
+{
+  "tool": "scalingo",
+  "selected": "rubygems:scalingo",
+  "alternatives": [
+    "homebrew:scalingo",
+    "npm:scalingo"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 83.46228710462287,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:scalingo",
+      "downloads": 411,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:scalingo",
+      "downloads": 34303,
+      "version_count": 14,
+      "has_repository": true
+    },
+    {
+      "source": "npm:scalingo",
+      "downloads": 372,
+      "version_count": 105,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:scalingo",
+  "disambiguated_at": "2026-02-17T00:27:29.250293981Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

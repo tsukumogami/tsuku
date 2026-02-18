@@ -1,0 +1,40 @@
+{
+  "tool": "geckodriver",
+  "selected": "homebrew:geckodriver",
+  "alternatives": [
+    "crates.io:geckodriver",
+    "npm:geckodriver"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.4640379700620665,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:geckodriver",
+      "downloads": 8020,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:geckodriver",
+      "downloads": 5478,
+      "version_count": 9,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:geckodriver",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:geckodriver",
+      "downloads": 0,
+      "version_count": 80,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:geckodriver",
+  "disambiguated_at": "2026-02-17T00:16:34.582671017Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,26 @@
+{
+  "tool": "appium",
+  "selected": "homebrew:appium",
+  "alternatives": [
+    "npm:appium"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:appium",
+      "downloads": 5699,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:appium",
+      "downloads": 0,
+      "version_count": 451,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:appium",
+  "disambiguated_at": "2026-02-17T00:10:49.792868053Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

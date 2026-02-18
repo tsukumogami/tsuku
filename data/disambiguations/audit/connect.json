@@ -1,0 +1,47 @@
+{
+  "tool": "connect",
+  "selected": "rubygems:connect",
+  "alternatives": [
+    "homebrew:connect",
+    "crates.io:connect",
+    "npm:connect"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 6.169441723800196,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:connect",
+      "downloads": 1021,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:connect",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:connect",
+      "downloads": 176,
+      "version_count": 15,
+      "has_repository": true
+    },
+    {
+      "source": "npm:connect",
+      "downloads": 0,
+      "version_count": 234,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:connect",
+      "downloads": 6299,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:connect",
+  "disambiguated_at": "2026-02-17T00:13:36.020814798Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

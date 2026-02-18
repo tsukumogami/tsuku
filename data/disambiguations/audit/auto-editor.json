@@ -1,0 +1,26 @@
+{
+  "tool": "auto-editor",
+  "selected": "homebrew:auto-editor",
+  "alternatives": [
+    "pypi:auto-editor"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:auto-editor",
+      "downloads": 593,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:auto-editor",
+      "downloads": 0,
+      "version_count": 125,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:auto-editor",
+  "disambiguated_at": "2026-02-17T00:11:16.078630696Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,48 @@
+{
+  "tool": "hjson",
+  "selected": "rubygems:hjson",
+  "alternatives": [
+    "crates.io:hjson",
+    "homebrew:hjson",
+    "npm:hjson",
+    "pypi:hjson"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 46.935919055649244,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:hjson",
+      "downloads": 157,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:hjson",
+      "downloads": 593,
+      "version_count": 7,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:hjson",
+      "downloads": 0,
+      "version_count": 22,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:hjson",
+      "downloads": 27833,
+      "version_count": 3,
+      "has_repository": false
+    },
+    {
+      "source": "npm:hjson",
+      "downloads": 0,
+      "version_count": 54,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:hjson",
+  "disambiguated_at": "2026-02-17T00:18:18.797403816Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

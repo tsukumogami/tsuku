@@ -1,0 +1,48 @@
+{
+  "tool": "protobuf",
+  "selected": "crates.io:protobuf",
+  "alternatives": [
+    "rubygems:protobuf",
+    "homebrew:protobuf",
+    "npm:protobuf",
+    "pypi:protobuf"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.0300104019775635,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:protobuf",
+      "downloads": 884643,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:protobuf",
+      "downloads": 21707224,
+      "version_count": 168,
+      "has_repository": false
+    },
+    {
+      "source": "rubygems:protobuf",
+      "downloads": 10693159,
+      "version_count": 213,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:protobuf",
+      "downloads": 0,
+      "version_count": 208,
+      "has_repository": true
+    },
+    {
+      "source": "npm:protobuf",
+      "downloads": 211,
+      "version_count": 11,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:protobuf",
+  "disambiguated_at": "2026-02-17T00:10:10.410405543Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

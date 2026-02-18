@@ -1,0 +1,18 @@
+{
+  "tool": "bat-extras",
+  "selected": "homebrew:bat-extras",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:bat-extras",
+      "downloads": 2490,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:bat-extras",
+  "disambiguated_at": "2026-02-17T00:11:46.21755076Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

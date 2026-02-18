@@ -1,0 +1,48 @@
+{
+  "tool": "tin",
+  "selected": "rubygems:tin",
+  "alternatives": [
+    "homebrew:tin",
+    "crates.io:tin",
+    "pypi:tin",
+    "npm:tin"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 66.23170731707317,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:tin",
+      "downloads": 246,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:tin",
+      "downloads": 12,
+      "version_count": 6,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:tin",
+      "downloads": 0,
+      "version_count": 14,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:tin",
+      "downloads": 16293,
+      "version_count": 5,
+      "has_repository": true
+    },
+    {
+      "source": "npm:tin",
+      "downloads": 0,
+      "version_count": 9,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:tin",
+  "disambiguated_at": "2026-02-17T00:29:42.868845756Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

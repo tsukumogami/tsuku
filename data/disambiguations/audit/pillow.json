@@ -1,0 +1,48 @@
+{
+  "tool": "pillow",
+  "selected": "homebrew:pillow",
+  "alternatives": [
+    "rubygems:pillow",
+    "crates.io:pillow",
+    "pypi:pillow",
+    "npm:pillow"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 19.675606389272332,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:pillow",
+      "downloads": 99775,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:pillow",
+      "downloads": 59,
+      "version_count": 13,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:pillow",
+      "downloads": 5071,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "pypi:pillow",
+      "downloads": 0,
+      "version_count": 105,
+      "has_repository": true
+    },
+    {
+      "source": "npm:pillow",
+      "downloads": 0,
+      "version_count": 9,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:pillow",
+  "disambiguated_at": "2026-02-17T00:25:13.4768074Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

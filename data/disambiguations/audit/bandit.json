@@ -1,0 +1,47 @@
+{
+  "tool": "bandit",
+  "selected": "rubygems:bandit",
+  "alternatives": [
+    "homebrew:bandit",
+    "crates.io:bandit",
+    "pypi:bandit"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 26.485503426462834,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:bandit",
+      "downloads": 1897,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:bandit",
+      "downloads": 188,
+      "version_count": 9,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:bandit",
+      "downloads": 0,
+      "version_count": 49,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:bandit",
+      "downloads": 50243,
+      "version_count": 10,
+      "has_repository": false
+    },
+    {
+      "source": "npm:bandit",
+      "downloads": 33,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:bandit",
+  "disambiguated_at": "2026-02-17T00:11:40.751568762Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

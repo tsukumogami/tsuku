@@ -1,0 +1,34 @@
+{
+  "tool": "difftastic",
+  "selected": "rubygems:difftastic",
+  "alternatives": [
+    "homebrew:difftastic",
+    "crates.io:difftastic"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 5.616977710173756,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:difftastic",
+      "downloads": 17093,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:difftastic",
+      "downloads": 3669,
+      "version_count": 77,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:difftastic",
+      "downloads": 96011,
+      "version_count": 73,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:difftastic",
+  "disambiguated_at": "2026-02-17T00:14:28.135549897Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

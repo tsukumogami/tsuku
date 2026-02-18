@@ -1,0 +1,30 @@
+{
+  "tool": "vals",
+  "selected": "homebrew:vals",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:vals",
+      "downloads": 842,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:vals",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "npm:vals",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:vals",
+  "disambiguated_at": "2026-02-17T00:30:34.189183086Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

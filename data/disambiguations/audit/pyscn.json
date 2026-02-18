@@ -1,0 +1,26 @@
+{
+  "tool": "pyscn",
+  "selected": "homebrew:pyscn",
+  "alternatives": [
+    "pypi:pyscn"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:pyscn",
+      "downloads": 712,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:pyscn",
+      "downloads": 0,
+      "version_count": 44,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:pyscn",
+  "disambiguated_at": "2026-02-17T00:26:05.806071737Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

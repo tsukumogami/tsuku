@@ -1,0 +1,47 @@
+{
+  "tool": "lexicon",
+  "selected": "rubygems:lexicon",
+  "alternatives": [
+    "homebrew:lexicon",
+    "npm:lexicon",
+    "pypi:lexicon"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 5.038461538461538,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:lexicon",
+      "downloads": 0,
+      "version_count": 8,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:lexicon",
+      "downloads": 64,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:lexicon",
+      "downloads": 468,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:lexicon",
+      "downloads": 2358,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:lexicon",
+      "downloads": 0,
+      "version_count": 20,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:lexicon",
+  "disambiguated_at": "2026-02-17T00:20:23.96452627Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

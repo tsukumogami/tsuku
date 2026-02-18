@@ -1,0 +1,33 @@
+{
+  "tool": "jsign",
+  "selected": "rubygems:jsign",
+  "alternatives": [
+    "homebrew:jsign"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 8.317117117117117,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:jsign",
+      "downloads": 555,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:jsign",
+      "downloads": 4616,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:jsign",
+      "downloads": 12,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:jsign",
+  "disambiguated_at": "2026-02-17T00:19:28.224789767Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

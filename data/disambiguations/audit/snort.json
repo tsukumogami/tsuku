@@ -1,0 +1,41 @@
+{
+  "tool": "snort",
+  "selected": "rubygems:snort",
+  "alternatives": [
+    "homebrew:snort",
+    "pypi:snort",
+    "npm:snort"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.2884272997032642,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:snort",
+      "downloads": 3370,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:snort",
+      "downloads": 0,
+      "version_count": 8,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:snort",
+      "downloads": 4342,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:snort",
+      "downloads": 0,
+      "version_count": 5,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:snort",
+  "disambiguated_at": "2026-02-17T00:28:15.815480648Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

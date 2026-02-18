@@ -1,0 +1,47 @@
+{
+  "tool": "clippy",
+  "selected": "rubygems:clippy",
+  "alternatives": [
+    "crates.io:clippy",
+    "homebrew:clippy",
+    "pypi:clippy"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.132214203298568,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:clippy",
+      "downloads": 1004,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:clippy",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:clippy",
+      "downloads": 94246,
+      "version_count": 26,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:clippy",
+      "downloads": 44201,
+      "version_count": 210,
+      "has_repository": true
+    },
+    {
+      "source": "npm:clippy",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:clippy",
+  "disambiguated_at": "2026-02-17T00:13:15.058652326Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

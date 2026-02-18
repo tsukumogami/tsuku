@@ -1,0 +1,27 @@
+{
+  "tool": "dav1d",
+  "selected": "homebrew:dav1d",
+  "alternatives": [
+    "crates.io:dav1d"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 5.872469511572325,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:dav1d",
+      "downloads": 574950,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:dav1d",
+      "downloads": 97906,
+      "version_count": 23,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:dav1d",
+  "disambiguated_at": "2026-02-17T00:14:10.788116089Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

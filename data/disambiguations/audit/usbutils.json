@@ -1,0 +1,27 @@
+{
+  "tool": "usbutils",
+  "selected": "rubygems:usbutils",
+  "alternatives": [
+    "homebrew:usbutils"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.752605346624377,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:usbutils",
+      "downloads": 4414,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:usbutils",
+      "downloads": 12150,
+      "version_count": 4,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:usbutils",
+  "disambiguated_at": "2026-02-17T00:30:27.403120213Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

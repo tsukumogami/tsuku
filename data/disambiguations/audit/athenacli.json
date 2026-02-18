@@ -1,0 +1,32 @@
+{
+  "tool": "athenacli",
+  "selected": "homebrew:athenacli",
+  "alternatives": [
+    "pypi:athenacli"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:athenacli",
+      "downloads": 10,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:athenacli",
+      "downloads": 406,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:athenacli",
+      "downloads": 0,
+      "version_count": 24,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:athenacli",
+  "disambiguated_at": "2026-02-17T00:11:11.363709018Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

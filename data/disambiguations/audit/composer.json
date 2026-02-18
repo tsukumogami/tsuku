@@ -1,0 +1,48 @@
+{
+  "tool": "composer",
+  "selected": "homebrew:composer",
+  "alternatives": [
+    "rubygems:composer",
+    "crates.io:composer",
+    "pypi:composer",
+    "npm:composer"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 6.743190280227317,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:composer",
+      "downloads": 145,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:composer",
+      "downloads": 206463,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:composer",
+      "downloads": 0,
+      "version_count": 47,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:composer",
+      "downloads": 30618,
+      "version_count": 7,
+      "has_repository": false
+    },
+    {
+      "source": "npm:composer",
+      "downloads": 0,
+      "version_count": 39,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:composer",
+  "disambiguated_at": "2026-02-17T00:13:33.920578212Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

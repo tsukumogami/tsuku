@@ -1,0 +1,41 @@
+{
+  "tool": "heroku",
+  "selected": "rubygems:heroku",
+  "alternatives": [
+    "homebrew:heroku",
+    "npm:heroku",
+    "pypi:heroku"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 190.25138971023063,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:heroku",
+      "downloads": 16910,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:heroku",
+      "downloads": 0,
+      "version_count": 6,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:heroku",
+      "downloads": 3217151,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "npm:heroku",
+      "downloads": 0,
+      "version_count": 589,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:heroku",
+  "disambiguated_at": "2026-02-17T00:18:14.527895466Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,33 @@
+{
+  "tool": "mbt",
+  "selected": "npm:mbt",
+  "alternatives": [
+    "homebrew:mbt"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 218.08962264150944,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:mbt",
+      "downloads": 212,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:mbt",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:mbt",
+      "downloads": 46235,
+      "version_count": 86,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:mbt",
+  "disambiguated_at": "2026-02-17T00:22:07.482390487Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

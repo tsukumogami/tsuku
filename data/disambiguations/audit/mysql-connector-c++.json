@@ -1,0 +1,18 @@
+{
+  "tool": "mysql-connector-c++",
+  "selected": "homebrew:mysql-connector-c++",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:mysql-connector-c++",
+      "downloads": 1420,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:mysql-connector-c++",
+  "disambiguated_at": "2026-02-17T00:23:06.567496697Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

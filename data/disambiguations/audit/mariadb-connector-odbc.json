@@ -1,0 +1,18 @@
+{
+  "tool": "mariadb-connector-odbc",
+  "selected": "homebrew:mariadb-connector-odbc",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:mariadb-connector-odbc",
+      "downloads": 772,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:mariadb-connector-odbc",
+  "disambiguated_at": "2026-02-17T00:21:58.023097687Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

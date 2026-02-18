@@ -1,0 +1,27 @@
+{
+  "tool": "espeak-ng",
+  "selected": "homebrew:espeak-ng",
+  "alternatives": [
+    "npm:espeak-ng"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 35.02368421052632,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:espeak-ng",
+      "downloads": 13309,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:espeak-ng",
+      "downloads": 380,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:espeak-ng",
+  "disambiguated_at": "2026-02-17T00:15:24.518776031Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

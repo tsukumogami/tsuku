@@ -1,0 +1,46 @@
+{
+  "tool": "aide",
+  "selected": "crates.io:aide",
+  "alternatives": [
+    "rubygems:aide",
+    "homebrew:aide"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 7.691834942932397,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:aide",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:aide",
+      "downloads": 507,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:aide",
+      "downloads": 23919,
+      "version_count": 8,
+      "has_repository": false
+    },
+    {
+      "source": "crates.io:aide",
+      "downloads": 183981,
+      "version_count": 51,
+      "has_repository": true
+    },
+    {
+      "source": "npm:aide",
+      "downloads": 5,
+      "version_count": 4,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:aide",
+  "disambiguated_at": "2026-02-17T00:10:29.601110962Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

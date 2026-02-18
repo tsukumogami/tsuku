@@ -1,0 +1,26 @@
+{
+  "tool": "lammps",
+  "selected": "homebrew:lammps",
+  "alternatives": [
+    "pypi:lammps"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:lammps",
+      "downloads": 3451,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:lammps",
+      "downloads": 0,
+      "version_count": 20,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:lammps",
+  "disambiguated_at": "2026-02-17T00:20:11.824758578Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

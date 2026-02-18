@@ -1,0 +1,18 @@
+{
+  "tool": "dvdauthor",
+  "selected": "homebrew:dvdauthor",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:dvdauthor",
+      "downloads": 371,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:dvdauthor",
+  "disambiguated_at": "2026-02-17T00:14:58.616257326Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}
