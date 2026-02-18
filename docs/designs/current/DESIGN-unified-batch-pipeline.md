@@ -28,7 +28,7 @@ rationale: |
 
 ## Status
 
-Completed
+Current
 
 ## Implementation Issues
 
@@ -43,26 +43,7 @@ Completed
 | ~~[#1743: feat(dashboard): show ecosystem breakdown per batch](https://github.com/tsukumogami/tsuku/issues/1743)~~ | [#1741](https://github.com/tsukumogami/tsuku/issues/1741) | testable |
 | _Update the dashboard Go code and HTML pages to show ecosystem breakdown per batch run, fix hardcoded homebrew assumptions, and add breaker-skip notes to the health panel._ | | |
 
-```mermaid
-graph TD
-    I1741["#1741 remove ecosystem filter"]
-    I1742["#1742 update workflow"]
-    I1743["#1743 dashboard breakdown"]
-
-    I1741 --> I1742
-    I1741 --> I1743
-
-    classDef done fill:#c8e6c9,stroke:#2e7d32
-    classDef ready fill:#bbdefb,stroke:#1565c0
-    classDef blocked fill:#fff9c4,stroke:#f9a825
-    classDef needsDesign fill:#e1bee7,stroke:#7b1fa2
-
-    class I1741 done
-    class I1742 done
-    class I1743 done
-```
-
-**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
+All issues completed.
 
 ## Upstream Design Reference
 
