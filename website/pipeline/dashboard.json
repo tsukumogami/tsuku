@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-02-18T15:33:24Z",
+  "generated_at": "2026-02-18T15:56:13Z",
   "queue": {
     "total": 5275,
     "by_status": {
@@ -37293,13 +37293,6 @@
   },
   "blockers": [
     {
-      "dependency": "gmp",
-      "count": 1,
-      "packages": [
-        "homebrew:coreutils"
-      ]
-    },
-    {
       "dependency": "ada-url",
       "count": 1,
       "packages": [
@@ -37318,6 +37311,13 @@
       "count": 1,
       "packages": [
         "homebrew:imagemagick"
+      ]
+    },
+    {
+      "dependency": "gmp",
+      "count": 1,
+      "packages": [
+        "homebrew:coreutils"
       ]
     }
   ],
@@ -37916,21 +37916,6 @@
       "timestamp": "2026-02-08T02:37:10Z"
     },
     {
-      "id": "homebrew-2026-02-08T02-37-10Z-procs",
-      "package": "procs",
-      "ecosystem": "homebrew",
-      "category": "deterministic",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "homebrew-2026-02-08T02-37-10Z",
-      "timestamp": "2026-02-08T02:37:10Z"
-    },
-    {
       "id": "homebrew-2026-02-08T02-37-10Z-tealdeer",
       "package": "tealdeer",
       "ecosystem": "homebrew",
@@ -37948,6 +37933,21 @@
     {
       "id": "homebrew-2026-02-08T02-37-10Z-sd",
       "package": "sd",
+      "ecosystem": "homebrew",
+      "category": "deterministic",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "homebrew-2026-02-08T02-37-10Z",
+      "timestamp": "2026-02-08T02:37:10Z"
+    },
+    {
+      "id": "homebrew-2026-02-08T02-37-10Z-procs",
+      "package": "procs",
       "ecosystem": "homebrew",
       "category": "deterministic",
       "subcategory": "install_failed",
@@ -39284,22 +39284,20 @@
       },
       "homebrew": {
         "breaker_state": "closed",
-        "failures": 0,
-        "last_failure": "2026-02-08T09:31:11Z",
+        "failures": 1,
+        "last_failure": "2026-02-18T15:55:47Z",
         "opens_at": "2026-02-08T10:31:11Z"
       }
     },
     "last_run": {
       "batch_id": "2026-02-18",
       "ecosystems": {
-        "github": 9,
-        "homebrew": 16
+        "homebrew": 10
       },
-      "timestamp": "2026-02-18T14:41:33Z",
-      "succeeded": 1,
+      "timestamp": "2026-02-18T15:55:48Z",
+      "succeeded": 0,
       "failed": 0,
-      "total": 1,
-      "recipes_merged": 1
+      "total": 0
     },
     "last_successful_run": {
       "batch_id": "2026-02-18",
@@ -39313,10 +39311,21 @@
       "total": 1,
       "recipes_merged": 1
     },
-    "runs_since_last_success": 0,
+    "runs_since_last_success": 1,
     "hours_since_last_run": 0
   },
   "runs": [
+    {
+      "batch_id": "2026-02-18",
+      "ecosystems": {
+        "homebrew": 10
+      },
+      "total": 0,
+      "merged": 0,
+      "rate": 0,
+      "duration": 6,
+      "timestamp": "2026-02-18T15:55:48Z"
+    },
     {
       "batch_id": "2026-02-18",
       "ecosystems": {
@@ -39410,17 +39419,6 @@
       "rate": 0,
       "duration": 5,
       "timestamp": "2026-02-18T07:15:21Z"
-    },
-    {
-      "batch_id": "2026-02-18-homebrew",
-      "ecosystems": {
-        "homebrew": 0
-      },
-      "total": 0,
-      "merged": 0,
-      "rate": 0,
-      "duration": 5,
-      "timestamp": "2026-02-18T06:03:01Z"
     }
   ],
   "disambiguations": {
