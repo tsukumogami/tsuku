@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-02-18T14:50:36Z",
+  "generated_at": "2026-02-18T15:33:24Z",
   "queue": {
     "total": 5275,
     "by_status": {
@@ -37293,20 +37293,6 @@
   },
   "blockers": [
     {
-      "dependency": "dav1d",
-      "count": 1,
-      "packages": [
-        "homebrew:ffmpeg"
-      ]
-    },
-    {
-      "dependency": "glib",
-      "count": 1,
-      "packages": [
-        "homebrew:imagemagick"
-      ]
-    },
-    {
       "dependency": "gmp",
       "count": 1,
       "packages": [
@@ -37318,6 +37304,20 @@
       "count": 1,
       "packages": [
         "homebrew:node"
+      ]
+    },
+    {
+      "dependency": "dav1d",
+      "count": 1,
+      "packages": [
+        "homebrew:ffmpeg"
+      ]
+    },
+    {
+      "dependency": "glib",
+      "count": 1,
+      "packages": [
+        "homebrew:imagemagick"
       ]
     }
   ],
@@ -37901,21 +37901,6 @@
       "timestamp": "2026-02-18T04:27:04.521891344Z"
     },
     {
-      "id": "homebrew-2026-02-08T02-37-10Z-sd",
-      "package": "sd",
-      "ecosystem": "homebrew",
-      "category": "deterministic",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "homebrew-2026-02-08T02-37-10Z",
-      "timestamp": "2026-02-08T02:37:10Z"
-    },
-    {
       "id": "homebrew-2026-02-08T02-37-10Z-xh",
       "package": "xh",
       "ecosystem": "homebrew",
@@ -37948,6 +37933,21 @@
     {
       "id": "homebrew-2026-02-08T02-37-10Z-tealdeer",
       "package": "tealdeer",
+      "ecosystem": "homebrew",
+      "category": "deterministic",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "homebrew-2026-02-08T02-37-10Z",
+      "timestamp": "2026-02-08T02:37:10Z"
+    },
+    {
+      "id": "homebrew-2026-02-08T02-37-10Z-sd",
+      "package": "sd",
       "ecosystem": "homebrew",
       "category": "deterministic",
       "subcategory": "install_failed",
@@ -38313,6 +38313,16 @@
       "timestamp": "2026-02-06T19:07:05Z"
     },
     {
+      "id": "homebrew-2026-02-06T19-07-05Z-asciinema",
+      "package": "asciinema",
+      "ecosystem": "homebrew",
+      "category": "deterministic",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "linux-alpine-musl-arm64",
+      "timestamp": "2026-02-06T19:07:05Z"
+    },
+    {
       "id": "homebrew-2026-02-06T19-07-05Z-websocat",
       "package": "websocat",
       "ecosystem": "homebrew",
@@ -38379,16 +38389,6 @@
       "category": "deterministic",
       "subcategory": "install_failed",
       "exit_code": 6,
-      "platform": "linux-alpine-musl-arm64",
-      "timestamp": "2026-02-06T19:07:05Z"
-    },
-    {
-      "id": "homebrew-2026-02-06T19-07-05Z-asciinema",
-      "package": "asciinema",
-      "ecosystem": "homebrew",
-      "category": "deterministic",
-      "subcategory": "install_failed",
-      "exit_code": 6,
       "platform": "linux-alpine-musl-x86_64",
       "timestamp": "2026-02-06T19:07:05Z"
     },
@@ -38444,7 +38444,37 @@
       "category": "deterministic",
       "subcategory": "install_failed",
       "exit_code": 6,
-      "platform": "linux-rhel-glibc-arm64",
+      "platform": "darwin-arm64",
+      "timestamp": "2026-02-06T17:55:10Z"
+    },
+    {
+      "id": "homebrew-2026-02-06T17-55-10Z-moreutils",
+      "package": "moreutils",
+      "ecosystem": "homebrew",
+      "category": "deterministic",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "linux-alpine-musl-arm64",
+      "timestamp": "2026-02-06T17:55:10Z"
+    },
+    {
+      "id": "homebrew-2026-02-06T17-55-10Z-moreutils",
+      "package": "moreutils",
+      "ecosystem": "homebrew",
+      "category": "deterministic",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "linux-alpine-musl-x86_64",
+      "timestamp": "2026-02-06T17:55:10Z"
+    },
+    {
+      "id": "homebrew-2026-02-06T17-55-10Z-mit-scheme",
+      "package": "mit-scheme",
+      "ecosystem": "homebrew",
+      "category": "deterministic",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "linux-suse-glibc-arm64",
       "timestamp": "2026-02-06T17:55:10Z"
     },
     {
@@ -38474,7 +38504,7 @@
       "category": "deterministic",
       "subcategory": "install_failed",
       "exit_code": 6,
-      "platform": "darwin-arm64",
+      "platform": "linux-rhel-glibc-arm64",
       "timestamp": "2026-02-06T17:55:10Z"
     },
     {
@@ -38485,46 +38515,6 @@
       "subcategory": "install_failed",
       "exit_code": 6,
       "platform": "linux-debian-glibc-arm64",
-      "timestamp": "2026-02-06T17:55:10Z"
-    },
-    {
-      "id": "homebrew-2026-02-06T17-55-10Z-moreutils",
-      "package": "moreutils",
-      "ecosystem": "homebrew",
-      "category": "deterministic",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "linux-alpine-musl-arm64",
-      "timestamp": "2026-02-06T17:55:10Z"
-    },
-    {
-      "id": "homebrew-2026-02-06T17-55-10Z-mit-scheme",
-      "package": "mit-scheme",
-      "ecosystem": "homebrew",
-      "category": "deterministic",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "linux-suse-glibc-arm64",
-      "timestamp": "2026-02-06T17:55:10Z"
-    },
-    {
-      "id": "homebrew-2026-02-06T17-55-10Z-moreutils",
-      "package": "moreutils",
-      "ecosystem": "homebrew",
-      "category": "deterministic",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "linux-alpine-musl-x86_64",
-      "timestamp": "2026-02-06T17:55:10Z"
-    },
-    {
-      "id": "homebrew-2026-02-06T17-55-10Z-chicken",
-      "package": "chicken",
-      "ecosystem": "homebrew",
-      "category": "deterministic",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "linux-alpine-musl-x86_64",
       "timestamp": "2026-02-06T17:55:10Z"
     },
     {
@@ -38555,6 +38545,16 @@
       "subcategory": "install_failed",
       "exit_code": 6,
       "platform": "linux-alpine-musl-arm64",
+      "timestamp": "2026-02-06T17:55:10Z"
+    },
+    {
+      "id": "homebrew-2026-02-06T17-55-10Z-chicken",
+      "package": "chicken",
+      "ecosystem": "homebrew",
+      "category": "deterministic",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "linux-alpine-musl-x86_64",
       "timestamp": "2026-02-06T17:55:10Z"
     },
     {
@@ -38602,48 +38602,48 @@
       "timestamp": "2026-02-06T17:48:56.696952879Z"
     },
     {
-      "id": "homebrew-2026-02-06T17-01-06Z-sccache",
-      "package": "sccache",
-      "ecosystem": "homebrew",
-      "category": "deterministic",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "linux-alpine-musl-arm64",
-      "timestamp": "2026-02-06T17:01:06Z"
-    },
-    {
-      "id": "homebrew-2026-02-06T17-01-06Z-sccache",
-      "package": "sccache",
-      "ecosystem": "homebrew",
-      "category": "deterministic",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "linux-alpine-musl-x86_64",
-      "timestamp": "2026-02-06T17:01:06Z"
-    },
-    {
-      "id": "homebrew-2026-02-06T17-01-06Z-glew",
-      "package": "glew",
-      "ecosystem": "homebrew",
-      "category": "deterministic",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "linux-alpine-musl-arm64",
-      "timestamp": "2026-02-06T17:01:06Z"
-    },
-    {
-      "id": "homebrew-2026-02-06T17-01-06Z-glew",
-      "package": "glew",
-      "ecosystem": "homebrew",
-      "category": "deterministic",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "linux-alpine-musl-x86_64",
-      "timestamp": "2026-02-06T17:01:06Z"
-    },
-    {
       "id": "homebrew-2026-02-06T17-01-06Z-buf",
       "package": "buf",
+      "ecosystem": "homebrew",
+      "category": "deterministic",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "linux-alpine-musl-x86_64",
+      "timestamp": "2026-02-06T17:01:06Z"
+    },
+    {
+      "id": "homebrew-2026-02-06T17-01-06Z-sccache",
+      "package": "sccache",
+      "ecosystem": "homebrew",
+      "category": "deterministic",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "linux-alpine-musl-arm64",
+      "timestamp": "2026-02-06T17:01:06Z"
+    },
+    {
+      "id": "homebrew-2026-02-06T17-01-06Z-sccache",
+      "package": "sccache",
+      "ecosystem": "homebrew",
+      "category": "deterministic",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "linux-alpine-musl-x86_64",
+      "timestamp": "2026-02-06T17:01:06Z"
+    },
+    {
+      "id": "homebrew-2026-02-06T17-01-06Z-glew",
+      "package": "glew",
+      "ecosystem": "homebrew",
+      "category": "deterministic",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "linux-alpine-musl-arm64",
+      "timestamp": "2026-02-06T17:01:06Z"
+    },
+    {
+      "id": "homebrew-2026-02-06T17-01-06Z-glew",
+      "package": "glew",
       "ecosystem": "homebrew",
       "category": "deterministic",
       "subcategory": "install_failed",
@@ -39095,17 +39095,7 @@
       "category": "deterministic",
       "subcategory": "install_failed",
       "exit_code": 6,
-      "platform": "linux-alpine-musl-arm64",
-      "timestamp": "2026-02-06T10:56:24Z"
-    },
-    {
-      "id": "homebrew-2026-02-06T10-56-24Z-git-flow",
-      "package": "git-flow",
-      "ecosystem": "homebrew",
-      "category": "deterministic",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "linux-suse-glibc-arm64",
+      "platform": "darwin-x86_64",
       "timestamp": "2026-02-06T10:56:24Z"
     },
     {
@@ -39119,13 +39109,13 @@
       "timestamp": "2026-02-06T10:56:24Z"
     },
     {
-      "id": "homebrew-2026-02-06T10-56-24Z-chibi-scheme",
-      "package": "chibi-scheme",
+      "id": "homebrew-2026-02-06T10-56-24Z-periphery",
+      "package": "periphery",
       "ecosystem": "homebrew",
       "category": "deterministic",
       "subcategory": "install_failed",
       "exit_code": 6,
-      "platform": "linux-alpine-musl-x86_64",
+      "platform": "linux-alpine-musl-arm64",
       "timestamp": "2026-02-06T10:56:24Z"
     },
     {
@@ -39179,13 +39169,13 @@
       "timestamp": "2026-02-06T10:56:24Z"
     },
     {
-      "id": "homebrew-2026-02-06T10-56-24Z-periphery",
-      "package": "periphery",
+      "id": "homebrew-2026-02-06T10-56-24Z-git-flow",
+      "package": "git-flow",
       "ecosystem": "homebrew",
       "category": "deterministic",
       "subcategory": "install_failed",
       "exit_code": 6,
-      "platform": "darwin-x86_64",
+      "platform": "linux-suse-glibc-arm64",
       "timestamp": "2026-02-06T10:56:24Z"
     },
     {
@@ -39236,6 +39226,16 @@
       "subcategory": "install_failed",
       "exit_code": 6,
       "platform": "linux-alpine-musl-arm64",
+      "timestamp": "2026-02-06T10:56:24Z"
+    },
+    {
+      "id": "homebrew-2026-02-06T10-56-24Z-chibi-scheme",
+      "package": "chibi-scheme",
+      "ecosystem": "homebrew",
+      "category": "deterministic",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "linux-alpine-musl-x86_64",
       "timestamp": "2026-02-06T10:56:24Z"
     },
     {
@@ -39318,114 +39318,109 @@
   },
   "runs": [
     {
-      "batch_id": "2026-02-06-homebrew",
+      "batch_id": "2026-02-18",
       "ecosystems": {
-        "homebrew": 2
+        "github": 9,
+        "homebrew": 16
       },
-      "total": 2,
-      "merged": 2,
+      "total": 1,
+      "merged": 1,
       "rate": 1,
-      "duration": 7,
-      "timestamp": "2026-02-06T20:45:08Z"
+      "duration": 8,
+      "timestamp": "2026-02-18T14:41:33Z"
     },
     {
-      "batch_id": "2026-02-06-homebrew",
-      "ecosystems": {
-        "homebrew": 5
-      },
-      "total": 5,
-      "merged": 5,
-      "rate": 1,
-      "duration": 7,
-      "timestamp": "2026-02-06T19:07:05Z"
-    },
-    {
-      "batch_id": "2026-02-06-homebrew",
-      "ecosystems": {
-        "homebrew": 5
-      },
-      "total": 5,
-      "merged": 5,
-      "rate": 1,
-      "duration": 3,
-      "timestamp": "2026-02-06T17:55:11Z"
-    },
-    {
-      "batch_id": "2026-02-06-homebrew",
-      "ecosystems": {
-        "homebrew": 3
-      },
-      "total": 3,
-      "merged": 3,
-      "rate": 1,
+      "batch_id": "2026-02-18",
+      "total": 0,
+      "merged": 0,
+      "rate": 0,
       "duration": 6,
-      "timestamp": "2026-02-06T17:01:06Z"
+      "timestamp": "2026-02-18T14:13:16Z"
     },
     {
-      "batch_id": "2026-02-06-homebrew",
-      "ecosystems": {
-        "homebrew": 1
-      },
+      "batch_id": "2026-02-18",
       "total": 1,
       "merged": 1,
       "rate": 1,
       "duration": 5,
-      "timestamp": "2026-02-06T15:52:17Z"
+      "timestamp": "2026-02-18T14:01:11Z"
     },
     {
-      "batch_id": "2026-02-06-homebrew",
+      "batch_id": "2026-02-18-homebrew",
       "ecosystems": {
-        "homebrew": 1
+        "homebrew": 0
       },
-      "total": 1,
-      "merged": 1,
-      "rate": 1,
-      "duration": 3,
-      "timestamp": "2026-02-06T14:48:32Z"
+      "total": 0,
+      "merged": 0,
+      "rate": 0,
+      "duration": 10,
+      "timestamp": "2026-02-18T13:02:33Z"
     },
     {
-      "batch_id": "2026-02-06-homebrew",
+      "batch_id": "2026-02-18-homebrew",
       "ecosystems": {
-        "homebrew": 1
+        "homebrew": 0
       },
-      "total": 1,
-      "merged": 1,
-      "rate": 1,
-      "duration": 5,
-      "timestamp": "2026-02-06T13:17:01Z"
+      "total": 0,
+      "merged": 0,
+      "rate": 0,
+      "duration": 6,
+      "timestamp": "2026-02-18T11:40:27Z"
     },
     {
-      "batch_id": "2026-02-06-homebrew",
+      "batch_id": "2026-02-18-homebrew",
       "ecosystems": {
-        "homebrew": 1
+        "homebrew": 0
       },
-      "total": 1,
-      "merged": 1,
-      "rate": 1,
+      "total": 0,
+      "merged": 0,
+      "rate": 0,
       "duration": 4,
-      "timestamp": "2026-02-06T11:42:31Z"
+      "timestamp": "2026-02-18T10:45:09Z"
     },
     {
-      "batch_id": "2026-02-06-homebrew",
+      "batch_id": "2026-02-18-homebrew",
       "ecosystems": {
-        "homebrew": 5
+        "homebrew": 0
       },
-      "total": 5,
-      "merged": 5,
-      "rate": 1,
+      "total": 0,
+      "merged": 0,
+      "rate": 0,
+      "duration": 9,
+      "timestamp": "2026-02-18T09:47:52Z"
+    },
+    {
+      "batch_id": "2026-02-18-homebrew",
+      "ecosystems": {
+        "homebrew": 0
+      },
+      "total": 0,
+      "merged": 0,
+      "rate": 0,
+      "duration": 4,
+      "timestamp": "2026-02-18T08:45:26Z"
+    },
+    {
+      "batch_id": "2026-02-18-homebrew",
+      "ecosystems": {
+        "homebrew": 0
+      },
+      "total": 0,
+      "merged": 0,
+      "rate": 0,
       "duration": 5,
-      "timestamp": "2026-02-06T10:56:25Z"
+      "timestamp": "2026-02-18T07:15:21Z"
     },
     {
-      "batch_id": "2026-02-06-homebrew",
+      "batch_id": "2026-02-18-homebrew",
       "ecosystems": {
-        "homebrew": 3
+        "homebrew": 0
       },
-      "total": 3,
-      "merged": 3,
-      "rate": 1,
-      "duration": 3,
-      "timestamp": "2026-02-06T09:58:17Z"
+      "total": 0,
+      "merged": 0,
+      "rate": 0,
+      "duration": 5,
+      "timestamp": "2026-02-18T06:03:01Z"
     }
   ],
   "disambiguations": {
