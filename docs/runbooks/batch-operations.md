@@ -24,7 +24,7 @@ Operational procedures for the batch recipe generation pipeline. Each section fo
 
 ### Investigation Steps
 
-1. Check the pipeline dashboard health panel at `/pipeline/` for a quick overview. It shows circuit breaker state per ecosystem, last run timestamps, runs since last success, and a warning if no batch has run in >2 hours. This is the fastest way to assess the situation before deeper investigation.
+1. Check the pipeline dashboard health panel at `/pipeline/` for a quick overview. It shows circuit breaker state per ecosystem, last run timestamps, runs since last success, and a warning if no batch has run in >2 hours. Each batch run now includes a per-ecosystem breakdown (e.g., "homebrew: 3, cargo: 5") so you can tell at a glance which ecosystems contributed to a given run. If any ecosystem was skipped because its circuit breaker was open, the health panel calls that out directly -- you don't need to query `batch-control.json` to find breaker skips. This is the fastest way to assess the situation before deeper investigation.
 
 2. Check which ecosystems have failures:
 

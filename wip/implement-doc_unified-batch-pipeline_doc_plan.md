@@ -19,5 +19,5 @@ Total entries: 2
 **Section**: Batch Success Rate Drop
 **Prerequisite issues**: #1743
 **Update type**: modify
-**Status**: pending
+**Status**: updated
 **Details**: Update the dashboard investigation step (step 1) to mention that the health panel now shows per-ecosystem breakdown within each batch run and breaker-skip indicators. Operators can see which ecosystems were skipped due to open circuit breakers directly in the dashboard, without needing to query batch-control.json first.
