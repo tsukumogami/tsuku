@@ -45,21 +45,21 @@ Planned
 
 ```mermaid
 graph TD
-    N1741["#1741 remove ecosystem filter"]
-    N1742["#1742 update workflow"]
-    N1743["#1743 dashboard breakdown"]
+    I1741["#1741 remove ecosystem filter"]
+    I1742["#1742 update workflow"]
+    I1743["#1743 dashboard breakdown"]
 
-    N1741 --> N1742
-    N1741 --> N1743
+    I1741 --> I1742
+    I1741 --> I1743
 
     classDef done fill:#c8e6c9,stroke:#2e7d32
     classDef ready fill:#bbdefb,stroke:#1565c0
     classDef blocked fill:#fff9c4,stroke:#f9a825
     classDef needsDesign fill:#e1bee7,stroke:#7b1fa2
 
-    class N1741 done
-    class N1742 ready
-    class N1743 ready
+    class I1741 done
+    class I1742 ready
+    class I1743 ready
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design

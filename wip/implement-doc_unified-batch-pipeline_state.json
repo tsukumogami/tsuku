@@ -6,13 +6,13 @@
   "started_at": "2026-02-18T04:43:47Z",
   "pr_number": 1739,
   "pr_url": "https://github.com/tsukumogami/tsuku/pull/1739",
-  "integrity_hash": "sha256:374d3db411b6385ed4692f5f44a1723ae41146ccb6c8e1dceb259bd8ca983383",
+  "integrity_hash": "sha256:a11cc4c9a56c8b25d9402c06f3f9fb26c3b9685adbd152514c244de1b6ea6c1b",
   "issues": [
     {
       "number": 1741,
       "title": "refactor(batch): remove ecosystem filter and process all queue entries",
       "status": "implemented",
-      "ci_status": "pending",
+      "ci_status": "running",
       "dependencies": [],
       "tier": "testable",
       "commits": [],
