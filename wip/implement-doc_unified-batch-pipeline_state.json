@@ -6,7 +6,7 @@
   "started_at": "2026-02-18T04:43:47Z",
   "pr_number": 1739,
   "pr_url": "https://github.com/tsukumogami/tsuku/pull/1739",
-  "integrity_hash": "sha256:1f9edd08c04cfe03a12f935857633ad3cb56b7012db8ccda6cdde719c7fb8cba",
+  "integrity_hash": "sha256:897115b083133ceb5c4488599225c6a0154f31aeb15aa78ab8d1490c21c02aac",
   "issues": [
     {
       "number": 1741,
@@ -41,8 +41,8 @@
     {
       "number": 1742,
       "title": "ci(batch): update workflow for mixed-ecosystem batches",
-      "status": "implemented",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "dependencies": [
         1741
       ],
@@ -54,23 +54,41 @@
         ],
         "tests_added": 0,
         "key_decisions": "Used gh pr list --search with head:batch/ prefix for open PR detection. Circuit breaker updates loop over per_ecosystem keys from batch-results.json, marking ecosystem as failure only when all entries failed. Queue status updates read recipe names from batch-results.json. Ecosystem breakdown from batch-results.json used for commit messages, PR body, and SLI metrics."
-      }
+      },
+      "completed_at": "2026-02-18T05:28:25Z"
     },
     {
       "number": 1743,
       "title": "feat(dashboard): show ecosystem breakdown per batch",
-      "status": "pending",
+      "status": "implemented",
       "ci_status": "pending",
       "dependencies": [
         1741
       ],
       "tier": "testable",
       "commits": [],
-      "summary": null
+      "summary": {
+        "files_changed": [
+          "internal/dashboard/dashboard.go",
+          "internal/dashboard/dashboard_test.go",
+          "internal/dashboard/failures.go",
+          "website/pipeline/runs.html",
+          "website/pipeline/run.html",
+          "website/pipeline/index.html"
+        ],
+        "tests_added": 5,
+        "key_decisions": "Used resolveEcosystems() helper to normalize old format (ecosystem string -> {ecosystem: total}) and new format (ecosystems object -> pass through). The loadFailures pkgID uses record.Ecosystem when available with homebrew as last-resort fallback for pre-unified records. failures.go defaults to unknown since post-#1741 failure files carry ecosystem in filename. Web pages use getEcosystems() helpers for same backward compat approach."
+      },
+      "doc_results": {
+        "doc-2": {
+          "status": "updated",
+          "commit": "629746f4"
+        }
+      }
     }
   ],
   "skipped_issues": [],
-  "current_issue_index": 1,
+  "current_issue_index": 2,
   "test_plan_file": "wip/implement-doc_unified-batch-pipeline_test_plan.md",
   "resumed_at": null,
   "milestone_url": "https://github.com/tsukumogami/tsuku/milestone/20",
