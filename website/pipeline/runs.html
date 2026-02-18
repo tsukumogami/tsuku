@@ -294,10 +294,31 @@
             return run.merged > 0 ? 'success' : 'failed';
         }
 
+        function getEcosystems(run) {
+            // Backward compat: old format has ecosystem string, new has ecosystems object
+            if (run.ecosystems && typeof run.ecosystems === 'object') {
+                return run.ecosystems;
+            }
+            if (run.ecosystem) {
+                var obj = {};
+                obj[run.ecosystem] = run.total;
+                return obj;
+            }
+            return {};
+        }
+
+        function formatEcosystems(run) {
+            var eco = getEcosystems(run);
+            var keys = Object.keys(eco).sort();
+            if (keys.length === 0) return '-';
+            return keys.map(function(k) { return k + ': ' + eco[k]; }).join(', ');
+        }
+
         function collectEcosystems(runs) {
             var vals = new Set();
             runs.forEach(function(r) {
-                if (r.ecosystem) vals.add(r.ecosystem);
+                var eco = getEcosystems(r);
+                Object.keys(eco).forEach(function(k) { vals.add(k); });
             });
             return Array.from(vals).sort();
         }
@@ -307,7 +328,8 @@
 
             if (filters.ecosystem) {
                 filtered = filtered.filter(function(r) {
-                    return r.ecosystem === filters.ecosystem;
+                    var eco = getEcosystems(r);
+                    return filters.ecosystem in eco;
                 });
             }
 
@@ -410,7 +432,7 @@
 
                 return '<tr onclick="window.location=\'run.html?id=' + encodeURIComponent(run.batch_id) + '\'">' +
                     '<td class="batch-id"><a href="run.html?id=' + encodeURIComponent(run.batch_id) + '">' + esc(run.batch_id) + '</a></td>' +
-                    '<td>' + esc(run.ecosystem || '-') + '</td>' +
+                    '<td>' + esc(formatEcosystems(run)) + '</td>' +
                     '<td class="stats">' + esc(String(run.merged)) + '/' + esc(String(run.total)) + '</td>' +
                     '<td><span class="rate-badge ' + rateBadgeClass + '">' + esc(ratePercent) + '</span></td>' +
                     '<td>' + esc(formatDuration(run.duration)) + '</td>' +

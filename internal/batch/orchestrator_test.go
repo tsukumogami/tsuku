@@ -1,6 +1,7 @@
 package batch
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -20,22 +21,27 @@ func TestSelectCandidates_filtersCorrectly(t *testing.T) {
 		},
 	}
 
+	// Without ecosystem filter, all pending entries within MaxTier are selected.
+	// ripgrep (tier 1), bat (tier 2), serde (tier 1) pass; fd (success) and jq (tier 3) are excluded.
 	orch := NewOrchestrator(Config{
-		Ecosystem: "homebrew",
 		BatchSize: 10,
 		MaxTier:   2,
 	}, queue)
 
 	candidates := orch.selectCandidates()
 
-	if len(candidates) != 2 {
-		t.Fatalf("expected 2 candidates, got %d", len(candidates))
+	if len(candidates) != 3 {
+		t.Fatalf("expected 3 candidates, got %d", len(candidates))
 	}
-	if queue.Entries[candidates[0]].Source != "homebrew:ripgrep" {
-		t.Errorf("expected first candidate homebrew:ripgrep, got %s", queue.Entries[candidates[0]].Source)
+	names := make([]string, len(candidates))
+	for i, idx := range candidates {
+		names[i] = queue.Entries[idx].Name
 	}
-	if queue.Entries[candidates[1]].Source != "homebrew:bat" {
-		t.Errorf("expected second candidate homebrew:bat, got %s", queue.Entries[candidates[1]].Source)
+	expected := []string{"ripgrep", "bat", "serde"}
+	for i, want := range expected {
+		if names[i] != want {
+			t.Errorf("candidate[%d] = %q, want %q", i, names[i], want)
+		}
 	}
 }
 
@@ -50,7 +56,6 @@ func TestSelectCandidates_respectsBatchSize(t *testing.T) {
 	}
 
 	orch := NewOrchestrator(Config{
-		Ecosystem: "homebrew",
 		BatchSize: 2,
 		MaxTier:   3,
 	}, queue)
@@ -66,7 +71,6 @@ func TestSelectCandidates_emptyQueue(t *testing.T) {
 	queue := &UnifiedQueue{SchemaVersion: 1}
 
 	orch := NewOrchestrator(Config{
-		Ecosystem: "homebrew",
 		BatchSize: 10,
 		MaxTier:   3,
 	}, queue)
@@ -93,7 +97,6 @@ func TestSelectCandidates_skipsBackoffEntries(t *testing.T) {
 	}
 
 	orch := NewOrchestrator(Config{
-		Ecosystem: "homebrew",
 		BatchSize: 10,
 		MaxTier:   3,
 	}, queue)
@@ -128,7 +131,6 @@ func TestSelectCandidates_includesFailedEntries(t *testing.T) {
 	}
 
 	orch := NewOrchestrator(Config{
-		Ecosystem: "cargo",
 		BatchSize: 10,
 		MaxTier:   3,
 	}, queue)
@@ -146,9 +148,30 @@ func TestSelectCandidates_includesFailedEntries(t *testing.T) {
 	}
 }
 
-func TestSelectCandidates_filtersBySourceEcosystem(t *testing.T) {
-	// Entries from the unified queue may have different source ecosystems.
-	// The orchestrator should only select entries matching the configured ecosystem.
+func TestSelectCandidates_selectsAllEcosystems(t *testing.T) {
+	// Without ecosystem filter, entries from all ecosystems are selected.
+	queue := &UnifiedQueue{
+		SchemaVersion: 1,
+		Entries: []QueueEntry{
+			{Name: "bat", Source: "github:sharkdp/bat", Priority: 1, Status: StatusPending, Confidence: ConfidenceAuto},
+			{Name: "ripgrep", Source: "cargo:ripgrep", Priority: 1, Status: StatusPending, Confidence: ConfidenceAuto},
+			{Name: "jq", Source: "homebrew:jq", Priority: 1, Status: StatusPending, Confidence: ConfidenceCurated},
+		},
+	}
+
+	orch := NewOrchestrator(Config{
+		BatchSize: 10,
+		MaxTier:   3,
+	}, queue)
+
+	candidates := orch.selectCandidates()
+	if len(candidates) != 3 {
+		t.Fatalf("expected 3 candidates (all ecosystems), got %d", len(candidates))
+	}
+}
+
+func TestSelectCandidates_filterEcosystem(t *testing.T) {
+	// When FilterEcosystem is set, only matching entries are selected.
 	queue := &UnifiedQueue{
 		SchemaVersion: 1,
 		Entries: []QueueEntry{
@@ -159,7 +182,7 @@ func TestSelectCandidates_filtersBySourceEcosystem(t *testing.T) {
 	}
 
 	tests := []struct {
-		ecosystem string
+		filter    string
 		wantCount int
 		wantName  string
 	}{
@@ -170,21 +193,98 @@ func TestSelectCandidates_filtersBySourceEcosystem(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.ecosystem, func(t *testing.T) {
+		t.Run(tt.filter, func(t *testing.T) {
 			orch := NewOrchestrator(Config{
-				Ecosystem: tt.ecosystem,
-				BatchSize: 10,
-				MaxTier:   3,
+				BatchSize:       10,
+				MaxTier:         3,
+				FilterEcosystem: tt.filter,
 			}, queue)
 
 			candidates := orch.selectCandidates()
 			if len(candidates) != tt.wantCount {
-				t.Fatalf("expected %d candidates for %s, got %d", tt.wantCount, tt.ecosystem, len(candidates))
+				t.Fatalf("expected %d candidates for %s, got %d", tt.wantCount, tt.filter, len(candidates))
 			}
 			if tt.wantCount > 0 && queue.Entries[candidates[0]].Name != tt.wantName {
 				t.Errorf("expected %s, got %s", tt.wantName, queue.Entries[candidates[0]].Name)
 			}
 		})
+	}
+}
+
+func TestSelectCandidates_breakerOpen(t *testing.T) {
+	queue := &UnifiedQueue{
+		SchemaVersion: 1,
+		Entries: []QueueEntry{
+			{Name: "bat", Source: "github:sharkdp/bat", Priority: 1, Status: StatusPending, Confidence: ConfidenceAuto},
+			{Name: "ripgrep", Source: "cargo:ripgrep", Priority: 1, Status: StatusPending, Confidence: ConfidenceAuto},
+			{Name: "jq", Source: "homebrew:jq", Priority: 1, Status: StatusPending, Confidence: ConfidenceAuto},
+			{Name: "fzf", Source: "homebrew:fzf", Priority: 1, Status: StatusPending, Confidence: ConfidenceAuto},
+		},
+	}
+
+	orch := NewOrchestrator(Config{
+		BatchSize: 10,
+		MaxTier:   3,
+		BreakerState: map[string]string{
+			"homebrew": "open",
+			"cargo":    "closed",
+		},
+	}, queue)
+
+	candidates := orch.selectCandidates()
+
+	// homebrew entries should be skipped (breaker open), github and cargo pass (no state = closed).
+	if len(candidates) != 2 {
+		t.Fatalf("expected 2 candidates (homebrew breaker open), got %d", len(candidates))
+	}
+	names := make([]string, len(candidates))
+	for i, idx := range candidates {
+		names[i] = queue.Entries[idx].Name
+	}
+	if names[0] != "bat" {
+		t.Errorf("candidate[0] = %q, want bat", names[0])
+	}
+	if names[1] != "ripgrep" {
+		t.Errorf("candidate[1] = %q, want ripgrep", names[1])
+	}
+}
+
+func TestSelectCandidates_breakerHalfOpen(t *testing.T) {
+	queue := &UnifiedQueue{
+		SchemaVersion: 1,
+		Entries: []QueueEntry{
+			{Name: "jq", Source: "homebrew:jq", Priority: 1, Status: StatusPending, Confidence: ConfidenceAuto},
+			{Name: "fzf", Source: "homebrew:fzf", Priority: 1, Status: StatusPending, Confidence: ConfidenceAuto},
+			{Name: "wget", Source: "homebrew:wget", Priority: 1, Status: StatusPending, Confidence: ConfidenceAuto},
+			{Name: "ripgrep", Source: "cargo:ripgrep", Priority: 1, Status: StatusPending, Confidence: ConfidenceAuto},
+			{Name: "serde", Source: "cargo:serde", Priority: 1, Status: StatusPending, Confidence: ConfidenceAuto},
+		},
+	}
+
+	orch := NewOrchestrator(Config{
+		BatchSize: 10,
+		MaxTier:   3,
+		BreakerState: map[string]string{
+			"homebrew": "half-open",
+			"cargo":    "half-open",
+		},
+	}, queue)
+
+	candidates := orch.selectCandidates()
+
+	// Half-open allows at most 1 entry per ecosystem: 1 homebrew + 1 cargo = 2 total.
+	if len(candidates) != 2 {
+		t.Fatalf("expected 2 candidates (1 homebrew probe + 1 cargo probe), got %d", len(candidates))
+	}
+	names := make([]string, len(candidates))
+	for i, idx := range candidates {
+		names[i] = queue.Entries[idx].Name
+	}
+	if names[0] != "jq" {
+		t.Errorf("candidate[0] = %q, want jq (first homebrew probe)", names[0])
+	}
+	if names[1] != "ripgrep" {
+		t.Errorf("candidate[1] = %q, want ripgrep (first cargo probe)", names[1])
 	}
 }
 
@@ -248,7 +348,6 @@ func TestRun_withFakeBinary(t *testing.T) {
 	}
 
 	orch := NewOrchestrator(Config{
-		Ecosystem:   "homebrew",
 		BatchSize:   10,
 		MaxTier:     3,
 		QueuePath:   filepath.Join(tmpDir, "queue.json"),
@@ -315,7 +414,6 @@ exit 0
 	}
 
 	orch := NewOrchestrator(Config{
-		Ecosystem:   "homebrew",
 		BatchSize:   10,
 		MaxTier:     3,
 		QueuePath:   filepath.Join(tmpDir, "queue.json"),
@@ -412,7 +510,6 @@ esac
 			}
 
 			orch := NewOrchestrator(Config{
-				Ecosystem:   "homebrew",
 				BatchSize:   10,
 				MaxTier:     3,
 				QueuePath:   filepath.Join(tmpDir, "queue.json"),
@@ -496,7 +593,6 @@ esac
 	}
 
 	orch := NewOrchestrator(Config{
-		Ecosystem:   "homebrew",
 		BatchSize:   10,
 		MaxTier:     3,
 		QueuePath:   filepath.Join(tmpDir, "queue.json"),
@@ -593,6 +689,7 @@ func TestEcosystemRateLimits(t *testing.T) {
 		"rubygems": 6 * time.Second,
 		"cpan":     1 * time.Second,
 		"cask":     1 * time.Second,
+		"github":   2 * time.Second,
 	}
 	for eco, want := range expected {
 		got, ok := ecosystemRateLimits[eco]
@@ -647,7 +744,6 @@ esac
 	defer func() { ecosystemRateLimits["cargo"] = orig }()
 
 	orch := NewOrchestrator(Config{
-		Ecosystem:   "cargo",
 		BatchSize:   10,
 		MaxTier:     3,
 		QueuePath:   filepath.Join(tmpDir, "queue.json"),
@@ -715,7 +811,6 @@ esac
 	}
 
 	orch := NewOrchestrator(Config{
-		Ecosystem:   "github",
 		BatchSize:   10,
 		MaxTier:     3,
 		QueuePath:   filepath.Join(tmpDir, "queue.json"),
@@ -754,7 +849,6 @@ func TestRun_failureCountIncrements(t *testing.T) {
 	}
 
 	cfg := Config{
-		Ecosystem:   "cargo",
 		BatchSize:   10,
 		MaxTier:     3,
 		QueuePath:   filepath.Join(tmpDir, "queue.json"),
@@ -865,7 +959,6 @@ esac
 	}
 
 	orch := NewOrchestrator(Config{
-		Ecosystem:   "cargo",
 		BatchSize:   10,
 		MaxTier:     3,
 		QueuePath:   filepath.Join(tmpDir, "queue.json"),
@@ -909,7 +1002,6 @@ func TestRun_failureRecordUsesSource(t *testing.T) {
 	}
 
 	orch := NewOrchestrator(Config{
-		Ecosystem:   "github",
 		BatchSize:   10,
 		MaxTier:     3,
 		QueuePath:   filepath.Join(tmpDir, "queue.json"),
@@ -929,6 +1021,181 @@ func TestRun_failureRecordUsesSource(t *testing.T) {
 	// The failure record should use Source, not a constructed ID
 	if result.Failures[0].PackageID != "github:sharkdp/bat" {
 		t.Errorf("PackageID = %q, want %q", result.Failures[0].PackageID, "github:sharkdp/bat")
+	}
+}
+
+func TestRun_perEcosystemResults(t *testing.T) {
+	tmpDir := t.TempDir()
+	fakeBin := filepath.Join(tmpDir, "tsuku")
+	// Fake binary: "create" succeeds for all, "install" succeeds for all
+	script := `#!/bin/sh
+case "$1" in
+  create)
+    while [ $# -gt 0 ]; do
+      case "$1" in
+        --output) shift; mkdir -p "$(dirname "$1")"; echo "[metadata]" > "$1"; shift ;;
+        *) shift ;;
+      esac
+    done
+    exit 0
+    ;;
+  install) exit 0 ;;
+esac
+`
+	if err := os.WriteFile(fakeBin, []byte(script), 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	queue := &UnifiedQueue{
+		SchemaVersion: 1,
+		Entries: []QueueEntry{
+			{Name: "jq", Source: "homebrew:jq", Priority: 1, Status: StatusPending, Confidence: ConfidenceAuto},
+			{Name: "ripgrep", Source: "cargo:ripgrep", Priority: 1, Status: StatusPending, Confidence: ConfidenceAuto},
+			{Name: "bat", Source: "github:sharkdp/bat", Priority: 1, Status: StatusPending, Confidence: ConfidenceAuto},
+			{Name: "fzf", Source: "homebrew:fzf", Priority: 1, Status: StatusPending, Confidence: ConfidenceAuto},
+		},
+	}
+
+	orch := NewOrchestrator(Config{
+		BatchSize:   10,
+		MaxTier:     3,
+		QueuePath:   filepath.Join(tmpDir, "queue.json"),
+		OutputDir:   filepath.Join(tmpDir, "recipes"),
+		FailuresDir: filepath.Join(tmpDir, "failures"),
+		TsukuBin:    fakeBin,
+	}, queue)
+
+	result, err := orch.Run()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if result.Total != 4 {
+		t.Errorf("total = %d, want 4", result.Total)
+	}
+	if result.Succeeded != 4 {
+		t.Errorf("succeeded = %d, want 4", result.Succeeded)
+	}
+
+	// Check Ecosystems counts
+	if result.Ecosystems["homebrew"] != 2 {
+		t.Errorf("Ecosystems[homebrew] = %d, want 2", result.Ecosystems["homebrew"])
+	}
+	if result.Ecosystems["cargo"] != 1 {
+		t.Errorf("Ecosystems[cargo] = %d, want 1", result.Ecosystems["cargo"])
+	}
+	if result.Ecosystems["github"] != 1 {
+		t.Errorf("Ecosystems[github] = %d, want 1", result.Ecosystems["github"])
+	}
+
+	// Check PerEcosystem breakdown
+	if result.PerEcosystem["homebrew"].Total != 2 {
+		t.Errorf("PerEcosystem[homebrew].Total = %d, want 2", result.PerEcosystem["homebrew"].Total)
+	}
+	if result.PerEcosystem["homebrew"].Succeeded != 2 {
+		t.Errorf("PerEcosystem[homebrew].Succeeded = %d, want 2", result.PerEcosystem["homebrew"].Succeeded)
+	}
+	if result.PerEcosystem["cargo"].Total != 1 {
+		t.Errorf("PerEcosystem[cargo].Total = %d, want 1", result.PerEcosystem["cargo"].Total)
+	}
+	if result.PerEcosystem["github"].Succeeded != 1 {
+		t.Errorf("PerEcosystem[github].Succeeded = %d, want 1", result.PerEcosystem["github"].Succeeded)
+	}
+}
+
+func TestSaveResults_groupsFailuresByEcosystem(t *testing.T) {
+	tmpDir := t.TempDir()
+	queuePath := filepath.Join(tmpDir, "queues", "queue.json")
+	failuresDir := filepath.Join(tmpDir, "failures")
+
+	queue := &UnifiedQueue{
+		SchemaVersion: 1,
+		Entries:       []QueueEntry{},
+	}
+
+	orch := NewOrchestrator(Config{
+		BatchSize:   10,
+		MaxTier:     3,
+		QueuePath:   queuePath,
+		FailuresDir: failuresDir,
+	}, queue)
+
+	result := &BatchResult{
+		BatchID:      "2026-02-17",
+		Ecosystems:   map[string]int{"homebrew": 2, "cargo": 1},
+		PerEcosystem: map[string]EcosystemResult{},
+		Total:        3,
+		Failed:       3,
+		Timestamp:    nowFunc(),
+		Failures: []FailureRecord{
+			{PackageID: "homebrew:jq", Category: "validation_failed", Message: "failed", Timestamp: nowFunc()},
+			{PackageID: "cargo:serde", Category: "api_error", Message: "timeout", Timestamp: nowFunc()},
+			{PackageID: "homebrew:fzf", Category: "validation_failed", Message: "failed", Timestamp: nowFunc()},
+		},
+	}
+
+	if err := orch.SaveResults(result); err != nil {
+		t.Fatalf("SaveResults failed: %v", err)
+	}
+
+	// Check that batch-results.json was written
+	resultsPath := filepath.Join(tmpDir, "queues", "batch-results.json")
+	data, err := os.ReadFile(resultsPath)
+	if err != nil {
+		t.Fatalf("failed to read batch-results.json: %v", err)
+	}
+	var savedResult BatchResult
+	if err := json.Unmarshal(data, &savedResult); err != nil {
+		t.Fatalf("failed to parse batch-results.json: %v", err)
+	}
+	if savedResult.Total != 3 {
+		t.Errorf("saved result total = %d, want 3", savedResult.Total)
+	}
+
+	// Check that failure files were grouped by ecosystem
+	entries, err := os.ReadDir(failuresDir)
+	if err != nil {
+		t.Fatalf("failed to read failures dir: %v", err)
+	}
+
+	// Should have at least 2 files (one for homebrew, one for cargo)
+	if len(entries) < 2 {
+		t.Fatalf("expected at least 2 failure files (grouped by ecosystem), got %d", len(entries))
+	}
+
+	// Verify filenames contain ecosystem prefixes
+	foundHomebrew := false
+	foundCargo := false
+	for _, e := range entries {
+		name := e.Name()
+		if len(name) >= 8 && name[:8] == "homebrew" {
+			foundHomebrew = true
+		}
+		if len(name) >= 5 && name[:5] == "cargo" {
+			foundCargo = true
+		}
+	}
+	if !foundHomebrew {
+		t.Error("expected a homebrew failure file")
+	}
+	if !foundCargo {
+		t.Error("expected a cargo failure file")
+	}
+}
+
+func TestGenerateBatchID(t *testing.T) {
+	// Save and restore nowFunc
+	origNow := nowFunc
+	defer func() { nowFunc = origNow }()
+
+	nowFunc = func() time.Time {
+		return time.Date(2026, 2, 17, 14, 30, 0, 0, time.UTC)
+	}
+
+	got := generateBatchID()
+	want := "2026-02-17"
+	if got != want {
+		t.Errorf("generateBatchID() = %q, want %q", got, want)
 	}
 }
 

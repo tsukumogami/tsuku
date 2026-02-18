@@ -114,11 +114,12 @@ func TestDisambiguationRecord_JSONMarshal(t *testing.T) {
 
 func TestBatchResult_Disambiguations(t *testing.T) {
 	result := &BatchResult{
-		BatchID:   "test-batch",
-		Ecosystem: "homebrew",
-		Total:     3,
-		Succeeded: 2,
-		Failed:    1,
+		BatchID:      "test-batch",
+		Ecosystems:   map[string]int{"homebrew": 3},
+		PerEcosystem: map[string]EcosystemResult{},
+		Total:        3,
+		Succeeded:    2,
+		Failed:       1,
 		Disambiguations: []DisambiguationRecord{
 			{
 				Tool:            "bat",

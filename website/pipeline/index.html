@@ -478,11 +478,20 @@
                     </a>`;
                 }).join('');
 
-                // Last run info
+                // Last run info, with breaker-skip note when applicable
                 let lastRunHtml = '<span class="health-value" style="color: var(--text-muted);">N/A</span>';
                 if (health.last_run) {
                     const lr = health.last_run;
-                    lastRunHtml = `<span class="health-value"><a href="/pipeline/run.html?id=${encodeURIComponent(lr.batch_id)}">${esc(timeAgo(lr.timestamp))} - ${esc(lr.succeeded)}/${esc(lr.total)} succeeded</a></span>`;
+                    let skipNote = '';
+                    // Check if any ecosystems had open breakers during this run
+                    const ecoStates = health.ecosystems || {};
+                    const openEcos = Object.entries(ecoStates)
+                        .filter(([, info]) => info.breaker_state === 'open')
+                        .map(([eco]) => eco);
+                    if (openEcos.length > 0) {
+                        skipNote = `, ${esc(openEcos.join(', '))} skipped (breaker open)`;
+                    }
+                    lastRunHtml = `<span class="health-value"><a href="/pipeline/run.html?id=${encodeURIComponent(lr.batch_id)}">${esc(timeAgo(lr.timestamp))} - ${esc(lr.succeeded)}/${esc(lr.total)} succeeded${skipNote}</a></span>`;
                 }
 
                 // Last success info
@@ -593,12 +602,25 @@
                 }).join('') || '<div class="no-data">No current failures</div>';
 
             // Render recent runs (clickable, link to run.html?id=)
-            const runItems = (data.runs || []).slice(0, 10).map(run => `
+            function compactEcosystem(run) {
+                // Backward compat: old format has ecosystem string, new has ecosystems object
+                if (run.ecosystems && typeof run.ecosystems === 'object') {
+                    const keys = Object.keys(run.ecosystems);
+                    if (keys.length === 0) return '';
+                    if (keys.length === 1) return keys[0];
+                    return keys.length + ' eco';
+                }
+                return run.ecosystem || '';
+            }
+
+            const runItems = (data.runs || []).slice(0, 10).map(run => {
+                const ecoLabel = compactEcosystem(run);
+                return `
                 <a href="/pipeline/run.html?id=${encodeURIComponent(run.batch_id)}" class="run-item status-row">
-                    <span class="run-id">${esc(run.batch_id)}${run.ecosystem ? `<span class="run-ecosystem">${esc(run.ecosystem)}</span>` : ''}</span>
+                    <span class="run-id">${esc(run.batch_id)}${ecoLabel ? `<span class="run-ecosystem">${esc(ecoLabel)}</span>` : ''}</span>
                     <span class="run-rate ${rateClass(run.rate)}">${esc(run.merged)}/${esc(run.total)} (${esc(formatPercent(run.rate))})</span>
                 </a>
-            `).join('') || '<div class="no-data">No batch runs recorded yet</div>';
+            `}).join('') || '<div class="no-data">No batch runs recorded yet</div>';
 
             // Render Recent Failures panel
             let recentFailuresPanel = '';

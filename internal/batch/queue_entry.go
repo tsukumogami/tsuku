@@ -87,6 +87,12 @@ func (e *QueueEntry) Validate() error {
 
 	if strings.TrimSpace(e.Source) == "" {
 		errs = append(errs, "source must not be empty")
+	} else {
+		// Validate that the ecosystem prefix doesn't contain path traversal characters.
+		eco := e.Ecosystem()
+		if strings.ContainsAny(eco, "/\\") || strings.Contains(eco, "..") {
+			errs = append(errs, fmt.Sprintf("ecosystem prefix %q contains path traversal characters", eco))
+		}
 	}
 
 	if e.Priority < 1 || e.Priority > 3 {

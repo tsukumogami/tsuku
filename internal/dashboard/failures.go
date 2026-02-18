@@ -226,7 +226,7 @@ func loadFailureDetailsFromFile(path string, queue *batch.UnifiedQueue) ([]Failu
 				eco = filenameEcosystem
 			}
 			if eco == "" {
-				eco = "homebrew" // Default for per-recipe format
+				eco = "unknown" // Default when ecosystem cannot be determined
 			}
 
 			ts := record.Timestamp

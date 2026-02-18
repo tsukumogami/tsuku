@@ -79,13 +79,13 @@ type EcosystemHealth struct {
 
 // RunInfo summarizes a single batch run for health tracking purposes.
 type RunInfo struct {
-	BatchID       string `json:"batch_id"`
-	Ecosystem     string `json:"ecosystem"`
-	Timestamp     string `json:"timestamp"`
-	Succeeded     int    `json:"succeeded"`
-	Failed        int    `json:"failed"`
-	Total         int    `json:"total"`
-	RecipesMerged int    `json:"recipes_merged,omitempty"`
+	BatchID       string         `json:"batch_id"`
+	Ecosystems    map[string]int `json:"ecosystems,omitempty"`
+	Timestamp     string         `json:"timestamp"`
+	Succeeded     int            `json:"succeeded"`
+	Failed        int            `json:"failed"`
+	Total         int            `json:"total"`
+	RecipesMerged int            `json:"recipes_merged,omitempty"`
 }
 
 // DisambiguationStatus summarizes disambiguation activity across batch runs.
@@ -126,13 +126,13 @@ type Blocker struct {
 
 // RunSummary summarizes a batch run.
 type RunSummary struct {
-	BatchID   string  `json:"batch_id"`
-	Ecosystem string  `json:"ecosystem,omitempty"`
-	Total     int     `json:"total"`
-	Merged    int     `json:"merged"`
-	Rate      float64 `json:"rate"`
-	Duration  int     `json:"duration,omitempty"`
-	Timestamp string  `json:"timestamp"`
+	BatchID    string         `json:"batch_id"`
+	Ecosystems map[string]int `json:"ecosystems,omitempty"`
+	Total      int            `json:"total"`
+	Merged     int            `json:"merged"`
+	Rate       float64        `json:"rate"`
+	Duration   int            `json:"duration,omitempty"`
+	Timestamp  string         `json:"timestamp"`
 }
 
 // FailureRecord represents one line in failures JSONL.
@@ -162,16 +162,18 @@ type PackageFailure struct {
 }
 
 // MetricsRecord represents one line in batch-runs.jsonl.
+// Supports both old format (ecosystem string) and new format (ecosystems object).
 type MetricsRecord struct {
-	BatchID         string `json:"batch_id"`
-	Ecosystem       string `json:"ecosystem"`
-	Total           int    `json:"total"`
-	Generated       int    `json:"generated"`
-	Merged          int    `json:"merged"`
-	Excluded        int    `json:"excluded"`
-	Constrained     int    `json:"constrained"`
-	Timestamp       string `json:"timestamp"`
-	DurationSeconds int    `json:"duration_seconds"`
+	BatchID         string         `json:"batch_id"`
+	Ecosystem       string         `json:"ecosystem,omitempty"`
+	Ecosystems      map[string]int `json:"ecosystems,omitempty"`
+	Total           int            `json:"total"`
+	Generated       int            `json:"generated"`
+	Merged          int            `json:"merged"`
+	Excluded        int            `json:"excluded"`
+	Constrained     int            `json:"constrained"`
+	Timestamp       string         `json:"timestamp"`
+	DurationSeconds int            `json:"duration_seconds"`
 }
 
 // DisambiguationFile represents one line in disambiguation JSONL files.
@@ -428,7 +430,11 @@ func loadFailures(path string) (map[string][]string, map[string]int, map[string]
 
 			// Track blocked_by for missing_dep failures in per-recipe format
 			if len(record.BlockedBy) > 0 {
-				pkgID := "homebrew:" + record.Recipe // Assume homebrew for now
+				eco := record.Ecosystem
+				if eco == "" {
+					eco = "homebrew" // last-resort fallback for pre-unified records
+				}
+				pkgID := eco + ":" + record.Recipe
 				details[pkgID] = FailureDetails{
 					Category:  record.Category,
 					BlockedBy: record.BlockedBy,
@@ -535,13 +541,13 @@ func loadMetrics(path string) ([]RunSummary, []MetricsRecord, error) {
 
 		records = append(records, record)
 		runs = append(runs, RunSummary{
-			BatchID:   record.BatchID,
-			Ecosystem: record.Ecosystem,
-			Total:     record.Total,
-			Merged:    record.Merged,
-			Rate:      rate,
-			Duration:  record.DurationSeconds,
-			Timestamp: record.Timestamp,
+			BatchID:    record.BatchID,
+			Ecosystems: resolveEcosystems(record),
+			Total:      record.Total,
+			Merged:     record.Merged,
+			Rate:       rate,
+			Duration:   record.DurationSeconds,
+			Timestamp:  record.Timestamp,
 		})
 	}
 
@@ -576,13 +582,13 @@ func parseMetricsLineByLine(data []byte) ([]RunSummary, []MetricsRecord) {
 
 		records = append(records, record)
 		runs = append(runs, RunSummary{
-			BatchID:   record.BatchID,
-			Ecosystem: record.Ecosystem,
-			Total:     record.Total,
-			Merged:    record.Merged,
-			Rate:      rate,
-			Duration:  record.DurationSeconds,
-			Timestamp: record.Timestamp,
+			BatchID:    record.BatchID,
+			Ecosystems: resolveEcosystems(record),
+			Total:      record.Total,
+			Merged:     record.Merged,
+			Rate:       rate,
+			Duration:   record.DurationSeconds,
+			Timestamp:  record.Timestamp,
 		})
 	}
 	return runs, records
@@ -844,6 +850,19 @@ func loadHealth(controlFile string, records []MetricsRecord) (*HealthStatus, err
 	return health, nil
 }
 
+// resolveEcosystems normalizes ecosystem data from a MetricsRecord.
+// New format records have an ecosystems map; old format records have a single
+// ecosystem string which is synthesized into {ecosystem: total}.
+func resolveEcosystems(rec MetricsRecord) map[string]int {
+	if len(rec.Ecosystems) > 0 {
+		return rec.Ecosystems
+	}
+	if rec.Ecosystem != "" {
+		return map[string]int{rec.Ecosystem: rec.Total}
+	}
+	return nil
+}
+
 // metricsToRunInfo converts a MetricsRecord into a RunInfo.
 func metricsToRunInfo(rec MetricsRecord) *RunInfo {
 	failed := rec.Total - rec.Merged
@@ -852,7 +871,7 @@ func metricsToRunInfo(rec MetricsRecord) *RunInfo {
 	}
 	return &RunInfo{
 		BatchID:       rec.BatchID,
-		Ecosystem:     rec.Ecosystem,
+		Ecosystems:    resolveEcosystems(rec),
 		Timestamp:     rec.Timestamp,
 		Succeeded:     rec.Merged,
 		Failed:        failed,

@@ -8,15 +8,23 @@ import (
 	"time"
 )
 
+// EcosystemResult holds per-ecosystem success/failure breakdown within a batch.
+type EcosystemResult struct {
+	Total     int `json:"total"`
+	Succeeded int `json:"succeeded"`
+	Failed    int `json:"failed"`
+}
+
 // BatchResult holds the outcome of a batch generation run.
 type BatchResult struct {
-	BatchID   string    `json:"batch_id"`
-	Ecosystem string    `json:"ecosystem"`
-	Total     int       `json:"total"`
-	Succeeded int       `json:"succeeded"`
-	Failed    int       `json:"failed"`
-	Blocked   int       `json:"blocked"`
-	Timestamp time.Time `json:"timestamp"`
+	BatchID      string                     `json:"batch_id"`
+	Ecosystems   map[string]int             `json:"ecosystems"`
+	PerEcosystem map[string]EcosystemResult `json:"per_ecosystem"`
+	Total        int                        `json:"total"`
+	Succeeded    int                        `json:"succeeded"`
+	Failed       int                        `json:"failed"`
+	Blocked      int                        `json:"blocked"`
+	Timestamp    time.Time                  `json:"timestamp"`
 
 	// Recipes is the list of generated recipe file paths.
 	Recipes []string `json:"-"`
@@ -30,7 +38,26 @@ type BatchResult struct {
 
 // Summary returns a markdown summary of the batch run for use in PR descriptions.
 func (r *BatchResult) Summary() string {
-	s := fmt.Sprintf("Batch run for **%s** on %s.\n\n", r.Ecosystem, r.Timestamp.Format("2006-01-02"))
+	// Build ecosystem label from the breakdown map.
+	ecoLabel := "mixed"
+	if len(r.Ecosystems) == 1 {
+		for eco := range r.Ecosystems {
+			ecoLabel = eco
+		}
+	}
+
+	s := fmt.Sprintf("Batch run for **%s** on %s.\n\n", ecoLabel, r.Timestamp.Format("2006-01-02"))
+
+	// Show per-ecosystem breakdown when multiple ecosystems are present.
+	if len(r.PerEcosystem) > 1 {
+		s += "### Ecosystem breakdown\n\n"
+		s += "| Ecosystem | Succeeded | Failed | Total |\n|-----------|-----------|--------|-------|\n"
+		for eco, er := range r.PerEcosystem {
+			s += fmt.Sprintf("| %s | %d | %d | %d |\n", eco, er.Succeeded, er.Failed, er.Total)
+		}
+		s += "\n"
+	}
+
 	s += "| Metric | Count |\n|--------|-------|\n"
 	s += fmt.Sprintf("| Succeeded | %d |\n", r.Succeeded)
 	s += fmt.Sprintf("| Failed | %d |\n", r.Failed)

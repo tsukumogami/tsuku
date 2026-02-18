@@ -312,10 +312,26 @@
             return '<div class="error-state"><h2>' + esc(title) + '</h2><p>' + esc(message) + '</p></div>';
         }
 
+        function getEcosystems(run) {
+            if (run.ecosystems && typeof run.ecosystems === 'object') {
+                return run.ecosystems;
+            }
+            if (run.ecosystem) {
+                var obj = {};
+                obj[run.ecosystem] = run.total;
+                return obj;
+            }
+            return {};
+        }
+
         function renderSummary(run) {
             var failed = run.total - run.merged;
             var statusClass = run.merged > 0 ? 'status-success' : 'status-failed';
             var statusText = run.merged > 0 ? 'success' : 'failed';
+
+            var eco = getEcosystems(run);
+            var ecoKeys = Object.keys(eco).sort();
+            var ecoText = ecoKeys.length === 0 ? '-' : ecoKeys.map(function(k) { return k + ': ' + eco[k]; }).join(', ');
 
             var html = '<div class="detail-card">';
             html += '<h2>Batch Summary</h2>';
@@ -324,8 +340,8 @@
             html += '<span class="detail-label">Batch ID</span>';
             html += '<span class="detail-value batch-id">' + esc(run.batch_id) + '</span>';
 
-            html += '<span class="detail-label">Ecosystem</span>';
-            html += '<span class="detail-value">' + esc(run.ecosystem || '-') + '</span>';
+            html += '<span class="detail-label">Ecosystems</span>';
+            html += '<span class="detail-value">' + esc(ecoText) + '</span>';
 
             html += '<span class="detail-label">Status</span>';
             html += '<span class="detail-value"><span class="status-badge ' + statusClass + '">' + esc(statusText) + '</span></span>';

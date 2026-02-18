@@ -302,9 +302,9 @@ func TestLoadMetrics(t *testing.T) {
 		t.Errorf("Rate: got %f, want %f", runs[0].Rate, expectedRate)
 	}
 
-	// Check ecosystem and duration are populated
-	if runs[0].Ecosystem != "homebrew" {
-		t.Errorf("Ecosystem: got %q, want %q", runs[0].Ecosystem, "homebrew")
+	// Check ecosystems and duration are populated
+	if runs[0].Ecosystems["homebrew"] != 10 {
+		t.Errorf("Ecosystems[homebrew]: got %d, want 10", runs[0].Ecosystems["homebrew"])
 	}
 	if runs[0].Duration != 120 {
 		t.Errorf("Duration: got %d, want 120", runs[0].Duration)
@@ -1089,8 +1089,8 @@ func TestLoadHealth_runInfoFields(t *testing.T) {
 	if ri.BatchID != "run-1" {
 		t.Errorf("BatchID: got %q, want %q", ri.BatchID, "run-1")
 	}
-	if ri.Ecosystem != "homebrew" {
-		t.Errorf("Ecosystem: got %q, want %q", ri.Ecosystem, "homebrew")
+	if ri.Ecosystems["homebrew"] != 10 {
+		t.Errorf("Ecosystems[homebrew]: got %d, want 10", ri.Ecosystems["homebrew"])
 	}
 	if ri.Timestamp != "2026-02-01T12:00:00Z" {
 		t.Errorf("Timestamp: got %q, want %q", ri.Timestamp, "2026-02-01T12:00:00Z")
@@ -1128,12 +1128,12 @@ func TestLoadMetrics_ecosystemAndDuration(t *testing.T) {
 		t.Fatalf("runs: got %d, want 2", len(runs))
 	}
 
-	// Check ecosystem propagation
-	if runs[0].Ecosystem != "npm" {
-		t.Errorf("runs[0].Ecosystem: got %q, want %q", runs[0].Ecosystem, "npm")
+	// Check ecosystems propagation (old format: single ecosystem synthesized into map)
+	if runs[0].Ecosystems["npm"] != 5 {
+		t.Errorf("runs[0].Ecosystems[npm]: got %d, want 5", runs[0].Ecosystems["npm"])
 	}
-	if runs[1].Ecosystem != "cargo" {
-		t.Errorf("runs[1].Ecosystem: got %q, want %q", runs[1].Ecosystem, "cargo")
+	if runs[1].Ecosystems["cargo"] != 8 {
+		t.Errorf("runs[1].Ecosystems[cargo]: got %d, want 8", runs[1].Ecosystems["cargo"])
 	}
 
 	// Check duration propagation
@@ -1150,6 +1150,134 @@ func TestLoadMetrics_ecosystemAndDuration(t *testing.T) {
 	}
 	if records[0].DurationSeconds != 90 {
 		t.Errorf("records[0].DurationSeconds: got %d, want 90", records[0].DurationSeconds)
+	}
+}
+
+func TestLoadMetrics_newEcosystemsFormat(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "batch-runs.jsonl")
+	content := `{"batch_id":"2026-02-17","ecosystems":{"homebrew":3,"cargo":5,"github":2},"total":10,"merged":8,"timestamp":"2026-02-17T12:00:00Z","duration_seconds":120}
+`
+	if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+		t.Fatalf("write temp file: %v", err)
+	}
+
+	runs, records, err := loadMetrics(path)
+	if err != nil {
+		t.Fatalf("loadMetrics: %v", err)
+	}
+
+	if len(runs) != 1 {
+		t.Fatalf("runs: got %d, want 1", len(runs))
+	}
+
+	// New format: ecosystems map should be passed through directly
+	if runs[0].Ecosystems["homebrew"] != 3 {
+		t.Errorf("Ecosystems[homebrew]: got %d, want 3", runs[0].Ecosystems["homebrew"])
+	}
+	if runs[0].Ecosystems["cargo"] != 5 {
+		t.Errorf("Ecosystems[cargo]: got %d, want 5", runs[0].Ecosystems["cargo"])
+	}
+	if runs[0].Ecosystems["github"] != 2 {
+		t.Errorf("Ecosystems[github]: got %d, want 2", runs[0].Ecosystems["github"])
+	}
+	if len(runs[0].Ecosystems) != 3 {
+		t.Errorf("Ecosystems count: got %d, want 3", len(runs[0].Ecosystems))
+	}
+
+	// Records should also carry the ecosystems map
+	if records[0].Ecosystems["cargo"] != 5 {
+		t.Errorf("records[0].Ecosystems[cargo]: got %d, want 5", records[0].Ecosystems["cargo"])
+	}
+}
+
+func TestLoadMetrics_mixedOldAndNewFormat(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "batch-runs.jsonl")
+	content := `{"batch_id":"old-run","ecosystem":"homebrew","total":10,"merged":6,"timestamp":"2026-02-01T12:00:00Z","duration_seconds":100}
+{"batch_id":"new-run","ecosystems":{"homebrew":3,"cargo":5},"total":8,"merged":7,"timestamp":"2026-02-17T12:00:00Z","duration_seconds":90}
+`
+	if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+		t.Fatalf("write temp file: %v", err)
+	}
+
+	runs, _, err := loadMetrics(path)
+	if err != nil {
+		t.Fatalf("loadMetrics: %v", err)
+	}
+
+	if len(runs) != 2 {
+		t.Fatalf("runs: got %d, want 2", len(runs))
+	}
+
+	// Old format: single ecosystem synthesized to {ecosystem: total}
+	if runs[0].Ecosystems["homebrew"] != 10 {
+		t.Errorf("old run Ecosystems[homebrew]: got %d, want 10", runs[0].Ecosystems["homebrew"])
+	}
+	if len(runs[0].Ecosystems) != 1 {
+		t.Errorf("old run Ecosystems count: got %d, want 1", len(runs[0].Ecosystems))
+	}
+
+	// New format: ecosystems map passed through directly
+	if runs[1].Ecosystems["homebrew"] != 3 {
+		t.Errorf("new run Ecosystems[homebrew]: got %d, want 3", runs[1].Ecosystems["homebrew"])
+	}
+	if runs[1].Ecosystems["cargo"] != 5 {
+		t.Errorf("new run Ecosystems[cargo]: got %d, want 5", runs[1].Ecosystems["cargo"])
+	}
+}
+
+func TestResolveEcosystems(t *testing.T) {
+	// New format takes precedence
+	rec := MetricsRecord{
+		Ecosystem:  "homebrew",
+		Ecosystems: map[string]int{"homebrew": 3, "cargo": 5},
+		Total:      8,
+	}
+	eco := resolveEcosystems(rec)
+	if eco["homebrew"] != 3 || eco["cargo"] != 5 {
+		t.Errorf("new format: got %v, want {homebrew:3, cargo:5}", eco)
+	}
+
+	// Old format synthesizes {ecosystem: total}
+	rec2 := MetricsRecord{
+		Ecosystem: "npm",
+		Total:     12,
+	}
+	eco2 := resolveEcosystems(rec2)
+	if eco2["npm"] != 12 {
+		t.Errorf("old format: got %v, want {npm:12}", eco2)
+	}
+
+	// Neither set returns nil
+	rec3 := MetricsRecord{Total: 5}
+	eco3 := resolveEcosystems(rec3)
+	if eco3 != nil {
+		t.Errorf("empty: got %v, want nil", eco3)
+	}
+}
+
+func TestLoadFailures_perRecipeWithEcosystem(t *testing.T) {
+	// Verify that record.Ecosystem is used for pkgID prefix instead of hardcoded "homebrew"
+	dir := t.TempDir()
+	path := filepath.Join(dir, "failures.jsonl")
+	content := `{"schema_version":1,"ecosystem":"cargo","recipe":"ripgrep","platform":"linux-x86_64","exit_code":8,"category":"missing_dep","blocked_by":["pcre2"]}
+`
+	if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+		t.Fatalf("write temp file: %v", err)
+	}
+
+	_, _, details, err := loadFailures(path)
+	if err != nil {
+		t.Fatalf("loadFailures: %v", err)
+	}
+
+	// Should use "cargo:" prefix, not "homebrew:"
+	if _, ok := details["cargo:ripgrep"]; !ok {
+		t.Errorf("expected details[cargo:ripgrep], got keys: %v", details)
+	}
+	if _, ok := details["homebrew:ripgrep"]; ok {
+		t.Error("should not have homebrew:ripgrep key")
 	}
 }
 
@@ -1203,12 +1331,12 @@ func TestGenerate_withHealth(t *testing.T) {
 		t.Fatal("LastSuccessfulRun should not be nil")
 	}
 
-	// Verify runs also have ecosystem and duration
+	// Verify runs also have ecosystems and duration
 	if len(dash.Runs) == 0 {
 		t.Fatal("Runs should not be empty")
 	}
-	if dash.Runs[0].Ecosystem != "homebrew" {
-		t.Errorf("Runs[0].Ecosystem: got %q, want %q", dash.Runs[0].Ecosystem, "homebrew")
+	if dash.Runs[0].Ecosystems["homebrew"] != 15 {
+		t.Errorf("Runs[0].Ecosystems[homebrew]: got %d, want 15", dash.Runs[0].Ecosystems["homebrew"])
 	}
 	if dash.Runs[0].Duration != 180 { // newest first (2026-02-01-homebrew has 180s)
 		t.Errorf("Runs[0].Duration: got %d, want 180", dash.Runs[0].Duration)
