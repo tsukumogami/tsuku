@@ -6,13 +6,13 @@
   "started_at": "2026-02-18T04:43:47Z",
   "pr_number": 1739,
   "pr_url": "https://github.com/tsukumogami/tsuku/pull/1739",
-  "integrity_hash": "sha256:a11cc4c9a56c8b25d9402c06f3f9fb26c3b9685adbd152514c244de1b6ea6c1b",
+  "integrity_hash": "sha256:1f9edd08c04cfe03a12f935857633ad3cb56b7012db8ccda6cdde719c7fb8cba",
   "issues": [
     {
       "number": 1741,
       "title": "refactor(batch): remove ecosystem filter and process all queue entries",
-      "status": "implemented",
-      "ci_status": "running",
+      "status": "completed",
+      "ci_status": "passed",
       "dependencies": [],
       "tier": "testable",
       "commits": [],
@@ -35,19 +35,26 @@
           "commit": "3cf91134"
         }
       },
-      "started_at": "2026-02-18T04:51:26Z"
+      "started_at": "2026-02-18T04:51:26Z",
+      "completed_at": "2026-02-18T06:15:00Z"
     },
     {
       "number": 1742,
       "title": "ci(batch): update workflow for mixed-ecosystem batches",
-      "status": "pending",
+      "status": "implemented",
       "ci_status": "pending",
       "dependencies": [
         1741
       ],
       "tier": "testable",
       "commits": [],
-      "summary": null
+      "summary": {
+        "files_changed": [
+          ".github/workflows/batch-generate.yml"
+        ],
+        "tests_added": 0,
+        "key_decisions": "Used gh pr list --search with head:batch/ prefix for open PR detection. Circuit breaker updates loop over per_ecosystem keys from batch-results.json, marking ecosystem as failure only when all entries failed. Queue status updates read recipe names from batch-results.json. Ecosystem breakdown from batch-results.json used for commit messages, PR body, and SLI metrics."
+      }
     },
     {
       "number": 1743,
@@ -63,7 +70,7 @@
     }
   ],
   "skipped_issues": [],
-  "current_issue_index": 0,
+  "current_issue_index": 1,
   "test_plan_file": "wip/implement-doc_unified-batch-pipeline_test_plan.md",
   "resumed_at": null,
   "milestone_url": "https://github.com/tsukumogami/tsuku/milestone/20",
