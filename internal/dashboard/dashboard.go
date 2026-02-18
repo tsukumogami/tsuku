@@ -291,7 +291,7 @@ func Generate(opts Options) error {
 	// Load metrics
 	runs, metricsRecords, err := loadMetricsFromDir(opts.MetricsDir)
 	if err == nil && len(runs) > 0 {
-		// Take last 10, newest first
+		// Take last 10, newest first (runs are sorted by timestamp in loadMetricsFromDir)
 		if len(runs) > 10 {
 			runs = runs[len(runs)-10:]
 		}
@@ -666,6 +666,17 @@ func loadMetricsFromDir(dir string) ([]RunSummary, []MetricsRecord, error) {
 		allRuns = append(allRuns, runs...)
 		allRecords = append(allRecords, records...)
 	}
+
+	// Sort by timestamp so newest runs are last regardless of file load order.
+	// The legacy batch-runs.jsonl (no timestamp in filename) sorts after
+	// timestamped files alphabetically, which would otherwise put old runs
+	// at the end of the slice.
+	sort.Slice(allRuns, func(i, j int) bool {
+		return allRuns[i].Timestamp < allRuns[j].Timestamp
+	})
+	sort.Slice(allRecords, func(i, j int) bool {
+		return allRecords[i].Timestamp < allRecords[j].Timestamp
+	})
 
 	return allRuns, allRecords, nil
 }
