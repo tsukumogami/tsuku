@@ -56,7 +56,7 @@ All issues completed.
 
 ## Upstream Design Reference
 
-This design implements Phase 3 of [DESIGN-pipeline-dashboard.md](DESIGN-pipeline-dashboard.md).
+This design implements Phase 3 of [DESIGN-pipeline-dashboard-2.md](DESIGN-pipeline-dashboard-2.md).
 
 **Relevant sections:**
 - Decision 4: Seeding Strategy for Multi-Ecosystem Coverage
@@ -285,7 +285,7 @@ The seeding command calls `discover.NewEcosystemProbe()` directly (reusing exist
 
 **Why full disambiguation**: A package discovered via PyPI (e.g., "black") might have a better source on GitHub (pre-built binaries). Discovery tells us the package exists; disambiguation tells us where to get it.
 
-**Why skip fresh entries**: Running 5K disambiguation probes weekly is wasteful when >99% of results won't change. The 30-day threshold matches what DESIGN-pipeline-dashboard.md specified.
+**Why skip fresh entries**: Running 5K disambiguation probes weekly is wasteful when >99% of results won't change. The 30-day threshold matches what DESIGN-pipeline-dashboard-2.md specified.
 
 #### Alternatives Considered
 
@@ -391,7 +391,7 @@ The weekly workflow runs all sources, processes new packages and stale entries, 
 
 The `EcosystemProber` builders are the natural extension point. They already know how to talk to each ecosystem's API -- `Probe()` does per-package lookup, and `Discover()` adds batch listing on the same APIs. Keeping both operations in the same builder avoids duplicating HTTP clients, URL construction, and response parsing across `internal/seed/` and `internal/builders/`. Each builder handles its own pagination, rate limiting, and CLI-tool filtering because these vary too much across ecosystems to abstract.
 
-Running full disambiguation at seeding time means every queue entry gets the right source before batch generation touches it. This directly addresses the root cause from DESIGN-pipeline-dashboard.md: packages like bat/fd/rg were routed to homebrew when they should use github or cargo. Disambiguation at seeding time fixes this for the entire queue, not just curated overrides.
+Running full disambiguation at seeding time means every queue entry gets the right source before batch generation touches it. This directly addresses the root cause from DESIGN-pipeline-dashboard-2.md: packages like bat/fd/rg were routed to homebrew when they should use github or cargo. Disambiguation at seeding time fixes this for the entire queue, not just curated overrides.
 
 The 30-day freshness threshold and priority-based alerting balance automation with safety. High-priority packages (the ones attackers target) get manual review on source changes, while the long tail auto-updates.
 

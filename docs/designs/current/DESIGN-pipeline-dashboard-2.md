@@ -1,5 +1,5 @@
 ---
-status: Planned
+status: Current
 problem: |
   The batch pipeline runs hourly but generates zero new recipes because all remaining
   Homebrew packages fail deterministic generation. The dashboard at tsuku.dev/pipeline/
@@ -28,7 +28,7 @@ rationale: |
 
 ## Status
 
-Planned
+Current
 
 ## Implementation Issues
 
@@ -46,43 +46,10 @@ Planned
 | ~~_Create workflow that updates queue status when recipes merge, detecting whether the recipe source matches the queue's pre-resolved source and flagging mismatches._~~ | | |
 | ~~[#1701: docs(pipeline): design dashboard observability enhancements](https://github.com/tsukumogami/tsuku/issues/1701)~~ | ~~None~~ | ~~simple~~ |
 | ~~_Design Phase 2 observability: drill-down navigation, failure subcategories, and seeding stats. Spawned dashboard-observability milestone with 11 implementation issues._~~ | | |
-| [#1702: docs(pipeline): design automated seeding workflow](https://github.com/tsukumogami/tsuku/issues/1702) | None | simple |
-| _Design Phase 3 seeding: `seed-queue` command, weekly workflow, and ecosystem discovery APIs. Spawns its own implementation milestone when designed._ | | |
+| ~~[#1702: docs(pipeline): design automated seeding workflow](https://github.com/tsukumogami/tsuku/issues/1702)~~ | ~~None~~ | ~~simple~~ |
+| ~~_Design Phase 3 seeding: `seed-queue` command, weekly workflow, and ecosystem discovery APIs. Spawned automated-seeding milestone with 6 implementation issues._~~ | | |
 
-### Dependency Graph
-
-```mermaid
-graph LR
-    subgraph Phase1["Phase 1: Unblock Pipeline"]
-        I1697["#1697: Queue schema"]
-        I1698["#1698: Bootstrap script"]
-        I1699["#1699: Orchestrator"]
-        I1700["#1700: Merge workflow"]
-    end
-
-    I1701["#1701: Observability design"]
-    M84["dashboard-observability (11 issues)"]
-
-    subgraph Future["Future Work"]
-        I1702["#1702: Seeding design"]
-    end
-
-    I1697 --> I1698
-    I1697 --> I1699
-    I1697 --> I1700
-    I1701 --> M84
-
-    classDef done fill:#c8e6c9
-    classDef ready fill:#bbdefb
-    classDef blocked fill:#fff9c4
-    classDef needsDesign fill:#e1bee7
-
-    class I1697,I1698,I1699,I1700,I1701 done
-    class M84 ready
-    class I1702 needsDesign
-```
-
-**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
+All issues completed.
 
 ## Upstream Design Reference
 
