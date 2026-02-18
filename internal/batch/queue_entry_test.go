@@ -457,6 +457,37 @@ func TestQueueEntry_JSONFieldNames(t *testing.T) {
 	}
 }
 
+func TestQueueEntry_Validate_pathTraversalEcosystem(t *testing.T) {
+	tests := []struct {
+		name   string
+		source string
+	}{
+		{"forward slash", "../../etc:exploit"},
+		{"backslash", "foo\\bar:exploit"},
+		{"dot-dot in prefix", "..cargo:exploit"},
+		{"slash in prefix", "home/brew:exploit"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			entry := QueueEntry{
+				Name:       "test",
+				Source:     tt.source,
+				Priority:   1,
+				Status:     StatusPending,
+				Confidence: ConfidenceAuto,
+			}
+			err := entry.Validate()
+			if err == nil {
+				t.Fatal("Validate() should return error for path traversal in ecosystem prefix")
+			}
+			if got := err.Error(); !contains(got, "path traversal") {
+				t.Errorf("error = %q, should mention path traversal", got)
+			}
+		})
+	}
+}
+
 func contains(s, substr string) bool {
 	return len(s) >= len(substr) && searchSubstring(s, substr)
 }
