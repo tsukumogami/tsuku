@@ -1,0 +1,24 @@
+{
+  "batch_id": "2026-02-18",
+  "ecosystems": {
+    "github": 9,
+    "homebrew": 16
+  },
+  "per_ecosystem": {
+    "github": {
+      "total": 9,
+      "succeeded": 0,
+      "failed": 9
+    },
+    "homebrew": {
+      "total": 16,
+      "succeeded": 1,
+      "failed": 15
+    }
+  },
+  "total": 25,
+  "succeeded": 1,
+  "failed": 24,
+  "blocked": 0,
+  "timestamp": "2026-02-18T13:58:32.600021246Z"
+}

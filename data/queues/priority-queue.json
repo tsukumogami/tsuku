@@ -1,35 +1,35 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-02-18T04:27:25Z",
+  "updated_at": "2026-02-18T13:59:09Z",
   "entries": [
     {
       "name": "bat",
       "source": "github:sharkdp/bat",
       "priority": 1,
-      "status": "pending",
+      "status": "failed",
       "confidence": "curated",
       "disambiguated_at": null,
-      "failure_count": 0,
+      "failure_count": 1,
       "next_retry_at": null
     },
     {
       "name": "delta",
       "source": "github:dandavison/delta",
       "priority": 1,
-      "status": "pending",
+      "status": "failed",
       "confidence": "curated",
       "disambiguated_at": null,
-      "failure_count": 0,
+      "failure_count": 1,
       "next_retry_at": null
     },
     {
       "name": "dive",
       "source": "github:wagoodman/dive",
       "priority": 1,
-      "status": "pending",
+      "status": "failed",
       "confidence": "curated",
       "disambiguated_at": null,
-      "failure_count": 0,
+      "failure_count": 1,
       "next_retry_at": null
     },
     {
@@ -56,30 +56,30 @@
       "name": "hub",
       "source": "github:github/hub",
       "priority": 1,
-      "status": "pending",
+      "status": "failed",
       "confidence": "curated",
       "disambiguated_at": null,
-      "failure_count": 0,
+      "failure_count": 1,
       "next_retry_at": null
     },
     {
       "name": "jq",
       "source": "github:jqlang/jq",
       "priority": 1,
-      "status": "pending",
+      "status": "failed",
       "confidence": "curated",
       "disambiguated_at": null,
-      "failure_count": 0,
+      "failure_count": 1,
       "next_retry_at": null
     },
     {
       "name": "ko",
       "source": "github:ko-build/ko",
       "priority": 1,
-      "status": "pending",
+      "status": "failed",
       "confidence": "curated",
       "disambiguated_at": null,
-      "failure_count": 0,
+      "failure_count": 1,
       "next_retry_at": null
     },
     {
@@ -106,10 +106,10 @@
       "name": "rg",
       "source": "github:BurntSushi/ripgrep",
       "priority": 1,
-      "status": "pending",
+      "status": "failed",
       "confidence": "curated",
       "disambiguated_at": null,
-      "failure_count": 0,
+      "failure_count": 1,
       "next_retry_at": null
     },
     {
@@ -126,20 +126,20 @@
       "name": "sk",
       "source": "github:lotabout/skim",
       "priority": 1,
-      "status": "pending",
+      "status": "failed",
       "confidence": "curated",
       "disambiguated_at": null,
-      "failure_count": 0,
+      "failure_count": 1,
       "next_retry_at": null
     },
     {
       "name": "step",
       "source": "github:smallstep/cli",
       "priority": 1,
-      "status": "pending",
+      "status": "failed",
       "confidence": "curated",
       "disambiguated_at": null,
-      "failure_count": 0,
+      "failure_count": 1,
       "next_retry_at": null
     },
     {
@@ -149,8 +149,8 @@
       "status": "failed",
       "confidence": "curated",
       "disambiguated_at": null,
-      "failure_count": 1,
-      "next_retry_at": null
+      "failure_count": 2,
+      "next_retry_at": "2026-02-19T13:58:51.609585061Z"
     },
     {
       "name": "tmux",
@@ -189,8 +189,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": null
+      "failure_count": 2,
+      "next_retry_at": "2026-02-19T13:58:52.616836253Z"
     },
     {
       "name": "awscli",
@@ -319,8 +319,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": null
+      "failure_count": 2,
+      "next_retry_at": "2026-02-19T13:58:53.739915113Z"
     },
     {
       "name": "nvm",
@@ -349,8 +349,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": null
+      "failure_count": 2,
+      "next_retry_at": "2026-02-19T13:58:54.860111821Z"
     },
     {
       "name": "pnpm",
@@ -359,8 +359,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": null
+      "failure_count": 2,
+      "next_retry_at": "2026-02-19T13:58:56.206524705Z"
     },
     {
       "name": "protobuf",
@@ -379,8 +379,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": null
+      "failure_count": 2,
+      "next_retry_at": "2026-02-19T13:58:57.575940801Z"
     },
     {
       "name": "python@3.11",
@@ -389,8 +389,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": null
+      "failure_count": 2,
+      "next_retry_at": "2026-02-19T13:58:58.711371555Z"
     },
     {
       "name": "python@3.12",
@@ -399,27 +399,27 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": null
+      "failure_count": 2,
+      "next_retry_at": "2026-02-19T13:58:59.837785858Z"
     },
     {
       "name": "python@3.13",
       "source": "homebrew:python@3.13",
       "priority": 2,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
+      "failure_count": 1,
       "next_retry_at": null
     },
     {
       "name": "python@3.14",
       "source": "homebrew:python@3.14",
       "priority": 2,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
+      "failure_count": 1,
       "next_retry_at": null
     },
     {
@@ -436,7 +436,7 @@
       "name": "watchexec",
       "source": "homebrew:watchexec",
       "priority": 2,
-      "status": "pending",
+      "status": "success",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 0,
@@ -456,50 +456,50 @@
       "name": "0xjacky/tools/nginx-ui",
       "source": "homebrew:0xjacky/tools/nginx-ui",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
+      "failure_count": 1,
       "next_retry_at": null
     },
     {
       "name": "0xjuanma/tap/golazo",
       "source": "homebrew:0xjuanma/tap/golazo",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
+      "failure_count": 1,
       "next_retry_at": null
     },
     {
       "name": "2ykwang/2ykwang/mac-cleanup-go",
       "source": "homebrew:2ykwang/2ykwang/mac-cleanup-go",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
+      "failure_count": 1,
       "next_retry_at": null
     },
     {
       "name": "2ykwang/mac-cleanup-go/mac-cleanup-go",
       "source": "homebrew:2ykwang/mac-cleanup-go/mac-cleanup-go",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
+      "failure_count": 1,
       "next_retry_at": null
     },
     {
       "name": "42ailab/42plugin/forty-two-plugin",
       "source": "homebrew:42ailab/42plugin/forty-two-plugin",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
+      "failure_count": 1,
       "next_retry_at": null
     },
     {
