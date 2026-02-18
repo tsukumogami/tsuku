@@ -12,6 +12,11 @@
       "failures": 0,
       "last_failure": "2026-02-08T09:31:11Z",
       "opens_at": "2026-02-08T10:31:11Z"
+    },
+    "github": {
+      "state": "closed",
+      "failures": 1,
+      "last_failure": "2026-02-18T14:41:33Z"
     }
   },
   "budget": {

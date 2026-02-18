@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-02-18T13:59:09Z",
+  "updated_at": "2026-02-18T14:39:26Z",
   "entries": [
     {
       "name": "bat",
@@ -9,8 +9,8 @@
       "status": "failed",
       "confidence": "curated",
       "disambiguated_at": null,
-      "failure_count": 1,
-      "next_retry_at": null
+      "failure_count": 2,
+      "next_retry_at": "2026-02-19T14:38:38.488971775Z"
     },
     {
       "name": "delta",
@@ -19,8 +19,8 @@
       "status": "failed",
       "confidence": "curated",
       "disambiguated_at": null,
-      "failure_count": 1,
-      "next_retry_at": null
+      "failure_count": 2,
+      "next_retry_at": "2026-02-19T14:38:40.495680713Z"
     },
     {
       "name": "dive",
@@ -29,8 +29,8 @@
       "status": "failed",
       "confidence": "curated",
       "disambiguated_at": null,
-      "failure_count": 1,
-      "next_retry_at": null
+      "failure_count": 2,
+      "next_retry_at": "2026-02-19T14:38:42.502887421Z"
     },
     {
       "name": "eza",
@@ -59,8 +59,8 @@
       "status": "failed",
       "confidence": "curated",
       "disambiguated_at": null,
-      "failure_count": 1,
-      "next_retry_at": null
+      "failure_count": 2,
+      "next_retry_at": "2026-02-19T14:38:44.510364616Z"
     },
     {
       "name": "jq",
@@ -69,8 +69,8 @@
       "status": "failed",
       "confidence": "curated",
       "disambiguated_at": null,
-      "failure_count": 1,
-      "next_retry_at": null
+      "failure_count": 2,
+      "next_retry_at": "2026-02-19T14:38:46.517590309Z"
     },
     {
       "name": "ko",
@@ -79,8 +79,8 @@
       "status": "failed",
       "confidence": "curated",
       "disambiguated_at": null,
-      "failure_count": 1,
-      "next_retry_at": null
+      "failure_count": 2,
+      "next_retry_at": "2026-02-19T14:38:48.524724666Z"
     },
     {
       "name": "neovim",
@@ -109,8 +109,8 @@
       "status": "failed",
       "confidence": "curated",
       "disambiguated_at": null,
-      "failure_count": 1,
-      "next_retry_at": null
+      "failure_count": 2,
+      "next_retry_at": "2026-02-19T14:38:50.531806204Z"
     },
     {
       "name": "shellcheck",
@@ -129,8 +129,8 @@
       "status": "failed",
       "confidence": "curated",
       "disambiguated_at": null,
-      "failure_count": 1,
-      "next_retry_at": null
+      "failure_count": 2,
+      "next_retry_at": "2026-02-19T14:38:52.538871694Z"
     },
     {
       "name": "step",
@@ -139,8 +139,8 @@
       "status": "failed",
       "confidence": "curated",
       "disambiguated_at": null,
-      "failure_count": 1,
-      "next_retry_at": null
+      "failure_count": 2,
+      "next_retry_at": "2026-02-19T14:38:54.545873059Z"
     },
     {
       "name": "task",
@@ -409,8 +409,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": null
+      "failure_count": 2,
+      "next_retry_at": "2026-02-19T14:38:56.091887083Z"
     },
     {
       "name": "python@3.14",
@@ -419,8 +419,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": null
+      "failure_count": 2,
+      "next_retry_at": "2026-02-19T14:38:57.4264322Z"
     },
     {
       "name": "ripgrep",
@@ -459,8 +459,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": null
+      "failure_count": 2,
+      "next_retry_at": "2026-02-19T14:38:58.432918872Z"
     },
     {
       "name": "0xjuanma/tap/golazo",
@@ -469,8 +469,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": null
+      "failure_count": 2,
+      "next_retry_at": "2026-02-19T14:38:59.439233559Z"
     },
     {
       "name": "2ykwang/2ykwang/mac-cleanup-go",
@@ -479,8 +479,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": null
+      "failure_count": 2,
+      "next_retry_at": "2026-02-19T14:39:00.445202581Z"
     },
     {
       "name": "2ykwang/mac-cleanup-go/mac-cleanup-go",
@@ -489,8 +489,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": null
+      "failure_count": 2,
+      "next_retry_at": "2026-02-19T14:39:01.451835953Z"
     },
     {
       "name": "42ailab/42plugin/forty-two-plugin",
@@ -499,54 +499,54 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": null
+      "failure_count": 2,
+      "next_retry_at": "2026-02-19T14:39:02.458561829Z"
     },
     {
       "name": "5ouma/tap/gh-poi",
       "source": "homebrew:5ouma/tap/gh-poi",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
+      "failure_count": 1,
       "next_retry_at": null
     },
     {
       "name": "a2ps",
       "source": "homebrew:a2ps",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
+      "failure_count": 1,
       "next_retry_at": null
     },
     {
       "name": "a7ex/formulae/xcresultparser",
       "source": "homebrew:a7ex/formulae/xcresultparser",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
+      "failure_count": 1,
       "next_retry_at": null
     },
     {
       "name": "aalib",
       "source": "homebrew:aalib",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
+      "failure_count": 1,
       "next_retry_at": null
     },
     {
       "name": "aarch64-elf-binutils",
       "source": "homebrew:aarch64-elf-binutils",
       "priority": 3,
-      "status": "pending",
+      "status": "success",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 0,
@@ -556,20 +556,20 @@
       "name": "aarch64-elf-gcc",
       "source": "homebrew:aarch64-elf-gcc",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
+      "failure_count": 1,
       "next_retry_at": null
     },
     {
       "name": "aarch64-elf-gdb",
       "source": "homebrew:aarch64-elf-gdb",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
+      "failure_count": 1,
       "next_retry_at": null
     },
     {
@@ -586,20 +586,20 @@
       "name": "abcde",
       "source": "homebrew:abcde",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
+      "failure_count": 1,
       "next_retry_at": null
     },
     {
       "name": "abcm2ps",
       "source": "homebrew:abcm2ps",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
+      "failure_count": 1,
       "next_retry_at": null
     },
     {
