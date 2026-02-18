@@ -417,7 +417,9 @@ Update dashboard data and rendering for mixed-ecosystem batches:
 2. `cmd/queue-analytics/main.go`: Regenerate dashboard.json with new schema
 3. `website/pipeline/runs.html`: Show ecosystem breakdown instead of single value, update filter
 4. `website/pipeline/run.html`: Show per-ecosystem results in batch detail
-5. `website/pipeline/index.html`: Update recent runs rendering for multi-ecosystem format
+5. `website/pipeline/index.html`:
+   - Update recent runs rendering for multi-ecosystem format
+   - Health panel "Last Run" line: when entries were skipped due to breaker state, show a note (e.g., "5/10 succeeded, 3 homebrew skipped (breaker open)") so operators can distinguish partial success from flaky generation
 
 ## Security Considerations
 
