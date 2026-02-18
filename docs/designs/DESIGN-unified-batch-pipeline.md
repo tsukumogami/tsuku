@@ -1,5 +1,5 @@
 ---
-status: Accepted
+status: Planned
 problem: |
   The batch pipeline generates zero recipes because the orchestrator filters queue entries
   by ecosystem prefix, but 261 packages were re-routed to non-homebrew sources during
@@ -28,7 +28,41 @@ rationale: |
 
 ## Status
 
-Accepted
+Planned
+
+## Implementation Issues
+
+### Milestone: [unified-batch-pipeline](https://github.com/tsukumogami/tsuku/milestone/20)
+
+| Issue | Dependencies | Tier |
+|-------|--------------|------|
+| [#1741: refactor(batch): remove ecosystem filter and process all queue entries](https://github.com/tsukumogami/tsuku/issues/1741) | None | testable |
+| _Remove the ecosystem prefix filter from selectCandidates(), add per-entry rate limiting and circuit breaker checks, update BatchResult with per-ecosystem breakdown, update CLI entry point. This is the foundation that unblocks the other two issues._ | | |
+| [#1742: ci(batch): update workflow for mixed-ecosystem batches](https://github.com/tsukumogami/tsuku/issues/1742) | [#1741](https://github.com/tsukumogami/tsuku/issues/1741) | testable |
+| _Update the GitHub Actions workflow to remove the ECOSYSTEM env var default, drop the breaker preflight, read per-ecosystem results from batch-results.json, and fix PR creation for mixed batches._ | | |
+| [#1743: feat(dashboard): show ecosystem breakdown per batch](https://github.com/tsukumogami/tsuku/issues/1743) | [#1741](https://github.com/tsukumogami/tsuku/issues/1741) | testable |
+| _Update the dashboard Go code and HTML pages to show ecosystem breakdown per batch run, fix hardcoded homebrew assumptions, and add breaker-skip notes to the health panel._ | | |
+
+```mermaid
+graph TD
+    N1741["#1741 remove ecosystem filter"]
+    N1742["#1742 update workflow"]
+    N1743["#1743 dashboard breakdown"]
+
+    N1741 --> N1742
+    N1741 --> N1743
+
+    classDef done fill:#c8e6c9,stroke:#2e7d32
+    classDef ready fill:#bbdefb,stroke:#1565c0
+    classDef blocked fill:#fff9c4,stroke:#f9a825
+    classDef needsDesign fill:#e1bee7,stroke:#7b1fa2
+
+    class N1741 ready
+    class N1742 blocked
+    class N1743 blocked
+```
+
+**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
 
 ## Upstream Design Reference
 
