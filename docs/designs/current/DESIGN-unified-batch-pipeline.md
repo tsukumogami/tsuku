@@ -1,5 +1,5 @@
 ---
-status: Planned
+status: Current
 problem: |
   The batch pipeline generates zero recipes because the orchestrator filters queue entries
   by ecosystem prefix, but 261 packages were re-routed to non-homebrew sources during
@@ -28,7 +28,7 @@ rationale: |
 
 ## Status
 
-Planned
+Completed
 
 ## Implementation Issues
 
