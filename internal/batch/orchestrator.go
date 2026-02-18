@@ -28,6 +28,10 @@ const MaxRetries = 3
 // MaxBackoff is the maximum backoff duration for exponential retry delays.
 const MaxBackoff = 7 * 24 * time.Hour // 7 days
 
+// defaultRateLimit is the sleep duration used for ecosystems not present in the
+// ecosystemRateLimits map, ensuring safe defaults for new ecosystems.
+const defaultRateLimit = 1 * time.Second
+
 // ecosystemRateLimits defines the sleep duration between package generations
 // per ecosystem, to respect API rate limits.
 var ecosystemRateLimits = map[string]time.Duration{
@@ -39,6 +43,7 @@ var ecosystemRateLimits = map[string]time.Duration{
 	"rubygems": 6 * time.Second,
 	"cpan":     1 * time.Second,
 	"cask":     1 * time.Second,
+	"github":   2 * time.Second,
 }
 
 // nowFunc is the time source used by the orchestrator. Tests replace it
@@ -47,12 +52,23 @@ var nowFunc = func() time.Time { return time.Now().UTC() }
 
 // Config holds batch generation settings.
 type Config struct {
-	Ecosystem   string
 	BatchSize   int
 	MaxTier     int
 	QueuePath   string
 	OutputDir   string
 	FailuresDir string
+
+	// ControlFile is the path to batch-control.json (default: "batch-control.json").
+	ControlFile string
+
+	// BreakerState holds per-ecosystem circuit breaker state populated from
+	// batch-control.json at startup. Values are "closed", "open", or "half-open".
+	// Ecosystems not present are treated as closed.
+	BreakerState map[string]string
+
+	// FilterEcosystem, when set, restricts candidate selection to entries
+	// matching this ecosystem. Used for manual dispatch debugging.
+	FilterEcosystem string
 
 	// TsukuBin overrides the tsuku binary path. If empty, "tsuku" is used
 	// from PATH.
@@ -70,20 +86,25 @@ func NewOrchestrator(cfg Config, queue *UnifiedQueue) *Orchestrator {
 	return &Orchestrator{cfg: cfg, queue: queue}
 }
 
-// Run processes pending entries from the unified queue. It selects entries
-// matching the configured ecosystem and priority, invokes tsuku create for
-// each, and collects results. Queue entries are updated in place with status
-// changes, failure counts, and backoff timestamps.
+// Run processes pending entries from the unified queue. It selects eligible
+// entries across all ecosystems, invokes tsuku create for each with per-entry
+// rate limiting, and collects results. Queue entries are updated in place with
+// status changes, failure counts, and backoff timestamps.
 func (o *Orchestrator) Run() (*BatchResult, error) {
 	candidates := o.selectCandidates()
 	if len(candidates) == 0 {
-		return &BatchResult{BatchID: generateBatchID(o.cfg.Ecosystem)}, nil
+		return &BatchResult{
+			BatchID:      generateBatchID(),
+			Ecosystems:   map[string]int{},
+			PerEcosystem: map[string]EcosystemResult{},
+		}, nil
 	}
 
 	result := &BatchResult{
-		BatchID:   generateBatchID(o.cfg.Ecosystem),
-		Ecosystem: o.cfg.Ecosystem,
-		Timestamp: nowFunc(),
+		BatchID:      generateBatchID(),
+		Ecosystems:   map[string]int{},
+		PerEcosystem: map[string]EcosystemResult{},
+		Timestamp:    nowFunc(),
 	}
 
 	bin := o.cfg.TsukuBin
@@ -91,22 +112,33 @@ func (o *Orchestrator) Run() (*BatchResult, error) {
 		bin = "tsuku"
 	}
 
-	rateLimit := ecosystemRateLimits[o.cfg.Ecosystem]
-
 	for i, idx := range candidates {
 		pkg := &o.queue.Entries[idx]
+		eco := pkg.Ecosystem()
 
-		// Rate limit: sleep between packages (not before the first one)
-		if i > 0 && rateLimit > 0 {
+		// Per-entry rate limiting using the entry's ecosystem.
+		rateLimit := ecosystemRateLimits[eco]
+		if rateLimit == 0 {
+			rateLimit = defaultRateLimit
+		}
+		if i > 0 {
 			time.Sleep(rateLimit)
 		}
+
+		// Track ecosystem entry counts.
+		result.Ecosystems[eco]++
 
 		recipePath := recipeOutputPath(o.cfg.OutputDir, pkg.Name)
 		genResult := o.generate(bin, *pkg, recipePath)
 		result.Total++
 
+		ecoResult := result.PerEcosystem[eco]
+		ecoResult.Total++
+
 		if genResult.Err != nil {
 			result.Failed++
+			ecoResult.Failed++
+			result.PerEcosystem[eco] = ecoResult
 			result.Failures = append(result.Failures, genResult.Failure)
 			o.recordFailure(idx)
 			continue
@@ -122,12 +154,16 @@ func (o *Orchestrator) Run() (*BatchResult, error) {
 				pkg.Status = StatusBlocked
 			} else {
 				result.Failed++
+				ecoResult.Failed++
 				o.recordFailure(idx)
 			}
+			result.PerEcosystem[eco] = ecoResult
 			continue
 		}
 
 		result.Succeeded++
+		ecoResult.Succeeded++
+		result.PerEcosystem[eco] = ecoResult
 		result.Recipes = append(result.Recipes, recipePath)
 		o.recordSuccess(idx)
 	}
@@ -135,15 +171,36 @@ func (o *Orchestrator) Run() (*BatchResult, error) {
 	return result, nil
 }
 
-// SaveResults writes failure records and updates the queue file.
+// SaveResults writes the batch result JSON, per-ecosystem failure records, and
+// updates the queue file.
 func (o *Orchestrator) SaveResults(result *BatchResult) error {
 	if err := SaveUnifiedQueue(o.cfg.QueuePath, o.queue); err != nil {
 		return fmt.Errorf("save queue: %w", err)
 	}
 
+	// Write batch results JSON for downstream consumption (workflow breaker updates, dashboard).
+	resultsDir := filepath.Dir(o.cfg.QueuePath)
+	resultsPath := filepath.Join(resultsDir, "batch-results.json")
+	resultsData, err := json.MarshalIndent(result, "", "  ")
+	if err != nil {
+		return fmt.Errorf("marshal batch results: %w", err)
+	}
+	resultsData = append(resultsData, '\n')
+	if err := os.WriteFile(resultsPath, resultsData, 0644); err != nil {
+		return fmt.Errorf("write batch results: %w", err)
+	}
+
+	// Group failures by ecosystem and write separate failure files per ecosystem.
 	if len(result.Failures) > 0 {
-		if err := WriteFailures(o.cfg.FailuresDir, o.cfg.Ecosystem, result.Failures); err != nil {
-			return fmt.Errorf("write failures: %w", err)
+		grouped := make(map[string][]FailureRecord)
+		for _, f := range result.Failures {
+			eco := strings.SplitN(f.PackageID, ":", 2)[0]
+			grouped[eco] = append(grouped[eco], f)
+		}
+		for eco, failures := range grouped {
+			if err := WriteFailures(o.cfg.FailuresDir, eco, failures); err != nil {
+				return fmt.Errorf("write failures for %s: %w", eco, err)
+			}
 		}
 	}
 
@@ -151,18 +208,29 @@ func (o *Orchestrator) SaveResults(result *BatchResult) error {
 }
 
 // selectCandidates returns indices into queue.Entries for entries that are
-// eligible for processing: pending status, matching ecosystem, within
-// priority limit, and not in a backoff window.
+// eligible for processing: pending/failed status, within priority limit,
+// not in a backoff window, and not blocked by circuit breaker state.
+// When Config.FilterEcosystem is set, only entries matching that ecosystem
+// are selected.
 func (o *Orchestrator) selectCandidates() []int {
 	var candidates []int
-	prefix := o.cfg.Ecosystem + ":"
+	halfOpenCounts := make(map[string]int)
 	now := nowFunc()
 
 	for i, entry := range o.queue.Entries {
 		if entry.Status != StatusPending && entry.Status != StatusFailed {
 			continue
 		}
-		if !strings.HasPrefix(entry.Source, prefix) {
+		eco := entry.Ecosystem()
+		if o.cfg.FilterEcosystem != "" && eco != o.cfg.FilterEcosystem {
+			continue
+		}
+		// Per-entry circuit breaker check.
+		state := o.cfg.BreakerState[eco]
+		if state == "open" {
+			continue
+		}
+		if state == "half-open" && halfOpenCounts[eco] >= 1 {
 			continue
 		}
 		if entry.Priority > o.cfg.MaxTier {
@@ -173,6 +241,9 @@ func (o *Orchestrator) selectCandidates() []int {
 			continue
 		}
 		candidates = append(candidates, i)
+		if state == "half-open" {
+			halfOpenCounts[eco]++
+		}
 		if len(candidates) >= o.cfg.BatchSize {
 			break
 		}
@@ -362,8 +433,8 @@ func parseInstallJSON(stdout []byte, exitCode int) (category string, blockedBy [
 	return cat, result.MissingRecipes
 }
 
-func generateBatchID(ecosystem string) string {
-	return fmt.Sprintf("%s-%s", nowFunc().Format("2006-01-02"), ecosystem)
+func generateBatchID() string {
+	return nowFunc().Format("2006-01-02")
 }
 
 // recipeOutputPath computes the recipe file path: recipes/{first-letter}/{name}.toml

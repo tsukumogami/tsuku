@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
@@ -9,20 +10,23 @@ import (
 	"github.com/tsukumogami/tsuku/internal/batch"
 )
 
+// batchControlFile represents the structure of batch-control.json, used to
+// extract per-ecosystem circuit breaker state.
+type batchControlFile struct {
+	CircuitBreaker map[string]struct {
+		State string `json:"state"`
+	} `json:"circuit_breaker"`
+}
+
 func main() {
-	ecosystem := flag.String("ecosystem", "", "ecosystem to process (homebrew, cargo, npm, pypi, rubygems, go, cpan, cask)")
+	filterEcosystem := flag.String("filter-ecosystem", "", "optional: only process entries from this ecosystem (for debugging)")
 	batchSize := flag.Int("batch-size", 25, "max recipes per run")
 	tier := flag.Int("tier", 2, "max queue priority to process (1=critical, 2=popular, 3=all)")
 	queuePath := flag.String("queue", "data/queues/priority-queue.json", "path to unified priority queue")
 	outputDir := flag.String("output-dir", "recipes", "directory for generated recipes")
 	failuresDir := flag.String("failures-dir", "data/failures", "directory for failure records")
+	controlFile := flag.String("control-file", "batch-control.json", "path to batch-control.json")
 	flag.Parse()
-
-	if *ecosystem == "" {
-		fmt.Fprintln(os.Stderr, "error: -ecosystem is required")
-		flag.Usage()
-		os.Exit(1)
-	}
 
 	queue, err := batch.LoadUnifiedQueue(*queuePath)
 	if err != nil {
@@ -30,13 +34,26 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Read circuit breaker state from batch-control.json.
+	breakerState := make(map[string]string)
+	if data, err := os.ReadFile(*controlFile); err == nil {
+		var ctrl batchControlFile
+		if err := json.Unmarshal(data, &ctrl); err == nil {
+			for eco, cb := range ctrl.CircuitBreaker {
+				breakerState[eco] = cb.State
+			}
+		}
+	}
+
 	cfg := batch.Config{
-		Ecosystem:   *ecosystem,
-		BatchSize:   *batchSize,
-		MaxTier:     *tier,
-		QueuePath:   *queuePath,
-		OutputDir:   *outputDir,
-		FailuresDir: *failuresDir,
+		BatchSize:       *batchSize,
+		MaxTier:         *tier,
+		QueuePath:       *queuePath,
+		OutputDir:       *outputDir,
+		FailuresDir:     *failuresDir,
+		ControlFile:     *controlFile,
+		BreakerState:    breakerState,
+		FilterEcosystem: *filterEcosystem,
 	}
 
 	orch := batch.NewOrchestrator(cfg, queue)

@@ -24,7 +24,7 @@ Operational procedures for the batch recipe generation pipeline. Each section fo
 
 ### Investigation Steps
 
-1. Check the pipeline dashboard health panel at `/pipeline/` for a quick overview. It shows circuit breaker state per ecosystem, last run timestamps, runs since last success, and a warning if no batch has run in >2 hours. This is the fastest way to assess the situation before deeper investigation.
+1. Check the pipeline dashboard health panel at `/pipeline/` for a quick overview. It shows circuit breaker state per ecosystem, last run timestamps, runs since last success, and a warning if no batch has run in >2 hours. Each batch run now includes a per-ecosystem breakdown (e.g., "homebrew: 3, cargo: 5") so you can tell at a glance which ecosystems contributed to a given run. If any ecosystem was skipped because its circuit breaker was open, the health panel calls that out directly -- you don't need to query `batch-control.json` to find breaker skips. This is the fastest way to assess the situation before deeper investigation.
 
 2. Check which ecosystems have failures:
 
@@ -190,46 +190,51 @@ git push
 
    Expected output:
    ```
-   a1b2c3d chore: add homebrew recipes batch_id: 2026-01-28-001
-   e4f5g6h chore: add cargo recipes batch_id: 2026-01-28-001
+   a1b2c3d feat(recipes): add batch 2026-02-17 recipes batch_id: 2026-02-17
    ```
+
+   Each batch now produces a single commit covering all ecosystems. The batch_id is a date string (`YYYY-MM-DD`).
 
 2. Identify the batch_id to roll back. Confirm which files are affected:
 
    ```
-   git log --all --name-only --grep="batch_id: 2026-01-28-001" --format="" | grep '^recipes/' | sort -u
+   git log --all --name-only --grep="batch_id: 2026-02-17" --format="" | grep '^recipes/' | sort -u
    ```
 
    Expected output:
    ```
-   recipes/homebrew/cmake.toml
-   recipes/homebrew/ninja.toml
+   recipes/c/cmake.toml
+   recipes/n/ninja.toml
+   recipes/r/ripgrep.toml
    ```
+
+   Recipes from different ecosystems can appear in the same batch since the pipeline processes all queue entries regardless of source.
 
 ### Resolution
 
 **Execute the rollback:**
 
 ```bash
-./scripts/rollback-batch.sh 2026-01-28-001
+./scripts/rollback-batch.sh 2026-02-17
 ```
 
 Expected output:
 ```
-Finding recipes from batch 2026-01-28-001...
-Found 2 recipes to rollback:
-recipes/homebrew/cmake.toml
-recipes/homebrew/ninja.toml
-Rollback branch created: rollback-batch-2026-01-28-001
-Review changes with: git diff main...rollback-batch-2026-01-28-001
-Create PR with: gh pr create --title 'Rollback batch 2026-01-28-001'
+Finding recipes from batch 2026-02-17...
+Found 3 recipes to rollback:
+recipes/c/cmake.toml
+recipes/n/ninja.toml
+recipes/r/ripgrep.toml
+Rollback branch created: rollback-batch-2026-02-17
+Review changes with: git diff main...rollback-batch-2026-02-17
+Create PR with: gh pr create --title 'Rollback batch 2026-02-17'
 ```
 
 After the script runs, review and create a PR:
 
 ```bash
-git diff main...rollback-batch-2026-01-28-001
-gh pr create --title "Rollback batch 2026-01-28-001" --body "Rollback of batch 2026-01-28-001 due to <reason>"
+git diff main...rollback-batch-2026-02-17
+gh pr create --title "Rollback batch 2026-02-17" --body "Rollback of batch 2026-02-17 due to <reason>"
 ```
 
 ### Escalation
@@ -343,7 +348,7 @@ git push
 
    Expected output (normal -- only batch commits):
    ```
-   a1b2c3d chore: add homebrew recipes batch_id: 2026-01-28-001
+   a1b2c3d feat(recipes): add batch 2026-02-17 recipes
    ```
 
    Suspicious output (manual or unauthorized changes):
