@@ -3,7 +3,7 @@
   "updated_at": "2026-02-15T04:57:24Z",
   "tiers": {
     "1": "Critical - manually curated high-impact tools",
-    "2": "Popular - \u003e10K weekly downloads (\u003e40K/30d)",
+    "2": "Popular - >10K weekly downloads (>40K/30d)",
     "3": "Standard - all other packages"
   },
   "packages": [
@@ -2732,7 +2732,7 @@
       "source": "homebrew",
       "name": "curlie",
       "tier": 2,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-08T02:13:28Z"
     },
     {
@@ -2740,7 +2740,7 @@
       "source": "homebrew",
       "name": "grex",
       "tier": 2,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-08T02:13:28Z"
     },
     {

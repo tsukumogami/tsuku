@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-02-17T00:31:56Z",
+  "updated_at": "2026-02-18T04:27:25Z",
   "entries": [
     {
       "name": "bat",
@@ -146,10 +146,10 @@
       "name": "task",
       "source": "homebrew:go-task",
       "priority": 1,
-      "status": "pending",
+      "status": "failed",
       "confidence": "curated",
       "disambiguated_at": null,
-      "failure_count": 0,
+      "failure_count": 1,
       "next_retry_at": null
     },
     {
@@ -186,10 +186,10 @@
       "name": "anomalyco/tap/opencode",
       "source": "homebrew:anomalyco/tap/opencode",
       "priority": 2,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
+      "failure_count": 1,
       "next_retry_at": null
     },
     {
@@ -216,7 +216,7 @@
       "name": "curlie",
       "source": "homebrew:curlie",
       "priority": 2,
-      "status": "pending",
+      "status": "success",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 0,
@@ -276,7 +276,7 @@
       "name": "grex",
       "source": "homebrew:grex",
       "priority": 2,
-      "status": "pending",
+      "status": "success",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 0,
@@ -316,10 +316,10 @@
       "name": "node@22",
       "source": "homebrew:node@22",
       "priority": 2,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
+      "failure_count": 1,
       "next_retry_at": null
     },
     {
@@ -346,20 +346,20 @@
       "name": "openssl@3",
       "source": "homebrew:openssl@3",
       "priority": 2,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
+      "failure_count": 1,
       "next_retry_at": null
     },
     {
       "name": "pnpm",
       "source": "homebrew:pnpm",
       "priority": 2,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
+      "failure_count": 1,
       "next_retry_at": null
     },
     {
@@ -376,30 +376,30 @@
       "name": "pyenv",
       "source": "homebrew:pyenv",
       "priority": 2,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
+      "failure_count": 1,
       "next_retry_at": null
     },
     {
       "name": "python@3.11",
       "source": "homebrew:python@3.11",
       "priority": 2,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
+      "failure_count": 1,
       "next_retry_at": null
     },
     {
       "name": "python@3.12",
       "source": "homebrew:python@3.12",
       "priority": 2,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
+      "failure_count": 1,
       "next_retry_at": null
     },
     {
