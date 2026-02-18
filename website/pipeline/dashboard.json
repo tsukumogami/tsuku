@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-02-18T14:05:21Z",
+  "generated_at": "2026-02-18T14:13:37Z",
   "queue": {
     "total": 5275,
     "by_status": {
@@ -37269,13 +37269,6 @@
   },
   "blockers": [
     {
-      "dependency": "ada-url",
-      "count": 1,
-      "packages": [
-        "homebrew:node"
-      ]
-    },
-    {
       "dependency": "dav1d",
       "count": 1,
       "packages": [
@@ -37294,6 +37287,13 @@
       "count": 1,
       "packages": [
         "homebrew:coreutils"
+      ]
+    },
+    {
+      "dependency": "ada-url",
+      "count": 1,
+      "packages": [
+        "homebrew:node"
       ]
     }
   ],
@@ -37638,6 +37638,21 @@
       "timestamp": "2026-02-18T04:27:04.521891344Z"
     },
     {
+      "id": "homebrew-2026-02-08T02-37-10Z-xh",
+      "package": "xh",
+      "ecosystem": "homebrew",
+      "category": "deterministic",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "homebrew-2026-02-08T02-37-10Z",
+      "timestamp": "2026-02-08T02:37:10Z"
+    },
+    {
       "id": "homebrew-2026-02-08T02-37-10Z-sd",
       "package": "sd",
       "ecosystem": "homebrew",
@@ -37655,21 +37670,6 @@
     {
       "id": "homebrew-2026-02-08T02-37-10Z-procs",
       "package": "procs",
-      "ecosystem": "homebrew",
-      "category": "deterministic",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "homebrew-2026-02-08T02-37-10Z",
-      "timestamp": "2026-02-08T02:37:10Z"
-    },
-    {
-      "id": "homebrew-2026-02-08T02-37-10Z-xh",
-      "package": "xh",
       "ecosystem": "homebrew",
       "category": "deterministic",
       "subcategory": "install_failed",
@@ -39261,11 +39261,10 @@
     },
     "last_run": {
       "batch_id": "2026-02-18",
-      "timestamp": "2026-02-18T14:01:11Z",
-      "succeeded": 1,
+      "timestamp": "2026-02-18T14:13:16Z",
+      "succeeded": 0,
       "failed": 0,
-      "total": 1,
-      "recipes_merged": 1
+      "total": 0
     },
     "last_successful_run": {
       "batch_id": "2026-02-18",
@@ -39275,7 +39274,7 @@
       "total": 1,
       "recipes_merged": 1
     },
-    "runs_since_last_success": 0,
+    "runs_since_last_success": 1,
     "hours_since_last_run": 0
   },
   "runs": [
