@@ -36,7 +36,7 @@ Planned
 
 | Issue | Dependencies | Tier |
 |-------|--------------|------|
-| [#1741: refactor(batch): remove ecosystem filter and process all queue entries](https://github.com/tsukumogami/tsuku/issues/1741) | None | testable |
+| ~~[#1741: refactor(batch): remove ecosystem filter and process all queue entries](https://github.com/tsukumogami/tsuku/issues/1741)~~ | None | testable |
 | _Remove the ecosystem prefix filter from selectCandidates(), add per-entry rate limiting and circuit breaker checks, update BatchResult with per-ecosystem breakdown, update CLI entry point. This is the foundation that unblocks the other two issues._ | | |
 | [#1742: ci(batch): update workflow for mixed-ecosystem batches](https://github.com/tsukumogami/tsuku/issues/1742) | [#1741](https://github.com/tsukumogami/tsuku/issues/1741) | testable |
 | _Update the GitHub Actions workflow to remove the ECOSYSTEM env var default, drop the breaker preflight, read per-ecosystem results from batch-results.json, and fix PR creation for mixed batches._ | | |
@@ -57,9 +57,9 @@ graph TD
     classDef blocked fill:#fff9c4,stroke:#f9a825
     classDef needsDesign fill:#e1bee7,stroke:#7b1fa2
 
-    class N1741 ready
-    class N1742 blocked
-    class N1743 blocked
+    class N1741 done
+    class N1742 ready
+    class N1743 ready
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design

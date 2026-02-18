@@ -1,0 +1,72 @@
+{
+  "design_doc": "/home/dangazineu/dev/workspace/tsuku/tsuku-2/public/tsuku/docs/designs/DESIGN-unified-batch-pipeline.md",
+  "milestone_name": "unified-batch-pipeline",
+  "milestone_number": 20,
+  "branch": "docs/unified-batch-pipeline",
+  "started_at": "2026-02-18T04:43:47Z",
+  "pr_number": 1739,
+  "pr_url": "https://github.com/tsukumogami/tsuku/pull/1739",
+  "integrity_hash": "sha256:374d3db411b6385ed4692f5f44a1723ae41146ccb6c8e1dceb259bd8ca983383",
+  "issues": [
+    {
+      "number": 1741,
+      "title": "refactor(batch): remove ecosystem filter and process all queue entries",
+      "status": "implemented",
+      "ci_status": "pending",
+      "dependencies": [],
+      "tier": "testable",
+      "commits": [],
+      "summary": {
+        "files_changed": [
+          "internal/batch/orchestrator.go",
+          "internal/batch/results.go",
+          "internal/batch/queue_entry.go",
+          "internal/batch/orchestrator_test.go",
+          "internal/batch/queue_entry_test.go",
+          "internal/batch/disambiguation_test.go",
+          "cmd/batch-generate/main.go"
+        ],
+        "tests_added": 5,
+        "key_decisions": "Placed batch-results.json alongside the queue file (same directory as QueuePath) rather than hardcoding data/batch-results.json, keeping the path relative and testable. Per-ecosystem rate limiting uses existing ecosystemRateLimits map with defaultRateLimit constant fallback. Updated disambiguation_test.go to use new Ecosystems/PerEcosystem fields."
+      },
+      "doc_results": {
+        "doc-1": {
+          "status": "updated",
+          "commit": "3cf91134"
+        }
+      },
+      "started_at": "2026-02-18T04:51:26Z"
+    },
+    {
+      "number": 1742,
+      "title": "ci(batch): update workflow for mixed-ecosystem batches",
+      "status": "pending",
+      "ci_status": "pending",
+      "dependencies": [
+        1741
+      ],
+      "tier": "testable",
+      "commits": [],
+      "summary": null
+    },
+    {
+      "number": 1743,
+      "title": "feat(dashboard): show ecosystem breakdown per batch",
+      "status": "pending",
+      "ci_status": "pending",
+      "dependencies": [
+        1741
+      ],
+      "tier": "testable",
+      "commits": [],
+      "summary": null
+    }
+  ],
+  "skipped_issues": [],
+  "current_issue_index": 0,
+  "test_plan_file": "wip/implement-doc_unified-batch-pipeline_test_plan.md",
+  "resumed_at": null,
+  "milestone_url": "https://github.com/tsukumogami/tsuku/milestone/20",
+  "doc_plan_file": "wip/implement-doc_unified-batch-pipeline_doc_plan.md",
+  "pr_status": "draft"
+}
