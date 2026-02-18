@@ -1,0 +1,18 @@
+{
+  "tool": "diffoci",
+  "selected": "homebrew:diffoci",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:diffoci",
+      "downloads": 592,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:diffoci",
+  "disambiguated_at": "2026-02-17T00:14:27.674702672Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

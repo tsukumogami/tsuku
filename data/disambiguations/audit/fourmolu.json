@@ -1,0 +1,18 @@
+{
+  "tool": "fourmolu",
+  "selected": "homebrew:fourmolu",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:fourmolu",
+      "downloads": 1542,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:fourmolu",
+  "disambiguated_at": "2026-02-17T00:16:12.678666632Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

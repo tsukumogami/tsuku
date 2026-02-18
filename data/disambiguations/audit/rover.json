@@ -1,0 +1,46 @@
+{
+  "tool": "rover",
+  "selected": "rubygems:rover",
+  "alternatives": [
+    "homebrew:rover",
+    "pypi:rover"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 8.318633952254642,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:rover",
+      "downloads": 23,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:rover",
+      "downloads": 3016,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:rover",
+      "downloads": 0,
+      "version_count": 23,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:rover",
+      "downloads": 25089,
+      "version_count": 8,
+      "has_repository": false
+    },
+    {
+      "source": "npm:rover",
+      "downloads": 31,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:rover",
+  "disambiguated_at": "2026-02-17T00:27:07.292383333Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,26 @@
+{
+  "tool": "massdns",
+  "selected": "homebrew:massdns",
+  "alternatives": [
+    "npm:massdns"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:massdns",
+      "downloads": 477,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:massdns",
+      "downloads": 0,
+      "version_count": 16,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:massdns",
+  "disambiguated_at": "2026-02-17T00:22:02.836275622Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,27 @@
+{
+  "tool": "python-launcher",
+  "selected": "homebrew:python-launcher",
+  "alternatives": [
+    "crates.io:python-launcher"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 5.427350427350428,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:python-launcher",
+      "downloads": 635,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:python-launcher",
+      "downloads": 117,
+      "version_count": 27,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:python-launcher",
+  "disambiguated_at": "2026-02-17T00:26:08.008521224Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

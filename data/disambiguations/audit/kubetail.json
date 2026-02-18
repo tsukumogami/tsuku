@@ -1,0 +1,45 @@
+{
+  "tool": "kubetail",
+  "selected": "homebrew:kubetail",
+  "alternatives": [
+    "rubygems:kubetail"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.364375,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:kubetail",
+      "downloads": 31,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:kubetail",
+      "downloads": 3783,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:kubetail",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:kubetail",
+      "downloads": 1600,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "npm:kubetail",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:kubetail",
+  "disambiguated_at": "2026-02-17T00:20:06.55896385Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

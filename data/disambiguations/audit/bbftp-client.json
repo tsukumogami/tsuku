@@ -1,0 +1,18 @@
+{
+  "tool": "bbftp-client",
+  "selected": "homebrew:bbftp-client",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:bbftp-client",
+      "downloads": 522,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:bbftp-client",
+  "disambiguated_at": "2026-02-17T00:11:48.416828711Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

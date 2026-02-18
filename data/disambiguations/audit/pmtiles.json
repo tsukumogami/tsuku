@@ -1,0 +1,41 @@
+{
+  "tool": "pmtiles",
+  "selected": "crates.io:pmtiles",
+  "alternatives": [
+    "homebrew:pmtiles",
+    "npm:pmtiles",
+    "pypi:pmtiles"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 19.209140201394266,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:pmtiles",
+      "downloads": 1291,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:pmtiles",
+      "downloads": 0,
+      "version_count": 27,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:pmtiles",
+      "downloads": 24799,
+      "version_count": 35,
+      "has_repository": true
+    },
+    {
+      "source": "npm:pmtiles",
+      "downloads": 0,
+      "version_count": 62,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:pmtiles",
+  "disambiguated_at": "2026-02-17T00:25:24.65218976Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

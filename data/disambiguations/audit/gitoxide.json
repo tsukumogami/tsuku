@@ -1,0 +1,27 @@
+{
+  "tool": "gitoxide",
+  "selected": "crates.io:gitoxide",
+  "alternatives": [
+    "homebrew:gitoxide"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.1837899543378994,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:gitoxide",
+      "downloads": 876,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:gitoxide",
+      "downloads": 1913,
+      "version_count": 57,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:gitoxide",
+  "disambiguated_at": "2026-02-17T00:16:59.005574774Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

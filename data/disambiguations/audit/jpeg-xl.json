@@ -1,0 +1,18 @@
+{
+  "tool": "jpeg-xl",
+  "selected": "homebrew:jpeg-xl",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:jpeg-xl",
+      "downloads": 1230019,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:jpeg-xl",
+  "disambiguated_at": "2026-02-17T00:19:24.026399733Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

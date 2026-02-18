@@ -1,0 +1,48 @@
+{
+  "tool": "keystone",
+  "selected": "rubygems:keystone",
+  "alternatives": [
+    "homebrew:keystone",
+    "crates.io:keystone",
+    "npm:keystone",
+    "pypi:keystone"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 27.607876712328768,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:keystone",
+      "downloads": 257,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:keystone",
+      "downloads": 584,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:keystone",
+      "downloads": 0,
+      "version_count": 55,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:keystone",
+      "downloads": 16123,
+      "version_count": 4,
+      "has_repository": false
+    },
+    {
+      "source": "npm:keystone",
+      "downloads": 0,
+      "version_count": 171,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:keystone",
+  "disambiguated_at": "2026-02-17T00:19:45.891446044Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

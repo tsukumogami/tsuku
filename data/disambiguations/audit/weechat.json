@@ -1,0 +1,41 @@
+{
+  "tool": "weechat",
+  "selected": "rubygems:weechat",
+  "alternatives": [
+    "homebrew:weechat",
+    "crates.io:weechat",
+    "npm:weechat"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.6208727178557556,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:weechat",
+      "downloads": 7723,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:weechat",
+      "downloads": 122,
+      "version_count": 8,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:weechat",
+      "downloads": 20241,
+      "version_count": 5,
+      "has_repository": true
+    },
+    {
+      "source": "npm:weechat",
+      "downloads": 14,
+      "version_count": 14,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:weechat",
+  "disambiguated_at": "2026-02-17T00:31:07.884384499Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,41 @@
+{
+  "tool": "doxx",
+  "selected": "homebrew:doxx",
+  "alternatives": [
+    "crates.io:doxx",
+    "npm:doxx",
+    "pypi:doxx"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 4.224683544303797,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:doxx",
+      "downloads": 0,
+      "version_count": 5,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:doxx",
+      "downloads": 1335,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:doxx",
+      "downloads": 316,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "npm:doxx",
+      "downloads": 0,
+      "version_count": 28,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:doxx",
+  "disambiguated_at": "2026-02-17T00:14:49.110326651Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "xorriso",
+  "selected": "homebrew:xorriso",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:xorriso",
+      "downloads": 3544,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:xorriso",
+  "disambiguated_at": "2026-02-17T00:31:30.700094203Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

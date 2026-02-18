@@ -1,0 +1,46 @@
+{
+  "tool": "esbuild",
+  "selected": "npm:esbuild",
+  "alternatives": [
+    "rubygems:esbuild",
+    "homebrew:esbuild"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 9910.22206095791,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:esbuild",
+      "downloads": 5860,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:esbuild",
+      "downloads": 18,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "pypi:esbuild",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:esbuild",
+      "downloads": 11024,
+      "version_count": 5,
+      "has_repository": false
+    },
+    {
+      "source": "npm:esbuild",
+      "downloads": 109250288,
+      "version_count": 476,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:esbuild",
+  "disambiguated_at": "2026-02-17T00:15:23.143421871Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,47 @@
+{
+  "tool": "mongoose",
+  "selected": "npm:mongoose",
+  "alternatives": [
+    "rubygems:mongoose",
+    "homebrew:mongoose",
+    "crates.io:mongoose"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 81.23364178411026,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "pypi:mongoose",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:mongoose",
+      "downloads": 768,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:mongoose",
+      "downloads": 222,
+      "version_count": 21,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:mongoose",
+      "downloads": 51656,
+      "version_count": 4,
+      "has_repository": false
+    },
+    {
+      "source": "npm:mongoose",
+      "downloads": 4196205,
+      "version_count": 977,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:mongoose",
+  "disambiguated_at": "2026-02-17T00:22:46.282799493Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

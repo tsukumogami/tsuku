@@ -1,0 +1,26 @@
+{
+  "tool": "cppcheck",
+  "selected": "homebrew:cppcheck",
+  "alternatives": [
+    "pypi:cppcheck"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:cppcheck",
+      "downloads": 21544,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:cppcheck",
+      "downloads": 0,
+      "version_count": 18,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:cppcheck",
+  "disambiguated_at": "2026-02-17T00:13:46.145046082Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

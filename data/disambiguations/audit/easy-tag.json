@@ -1,0 +1,27 @@
+{
+  "tool": "easy-tag",
+  "selected": "homebrew:easy-tag",
+  "alternatives": [
+    "npm:easy-tag"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 384.6666666666667,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:easy-tag",
+      "downloads": 1154,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:easy-tag",
+      "downloads": 3,
+      "version_count": 5,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:easy-tag",
+  "disambiguated_at": "2026-02-17T00:15:04.654055303Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

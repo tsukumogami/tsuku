@@ -1,0 +1,33 @@
+{
+  "tool": "vsce",
+  "selected": "npm:vsce",
+  "alternatives": [
+    "homebrew:vsce"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 20.53268371904182,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:vsce",
+      "downloads": 2463,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:vsce",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "npm:vsce",
+      "downloads": 50572,
+      "version_count": 191,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:vsce",
+  "disambiguated_at": "2026-02-17T00:30:52.959742542Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

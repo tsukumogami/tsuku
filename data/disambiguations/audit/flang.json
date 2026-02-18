@@ -1,0 +1,32 @@
+{
+  "tool": "flang",
+  "selected": "homebrew:flang",
+  "alternatives": [
+    "pypi:flang"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:flang",
+      "downloads": 2553,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:flang",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "npm:flang",
+      "downloads": 2,
+      "version_count": 3,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:flang",
+  "disambiguated_at": "2026-02-17T00:15:57.693841436Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

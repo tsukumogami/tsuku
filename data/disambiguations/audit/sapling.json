@@ -1,0 +1,46 @@
+{
+  "tool": "sapling",
+  "selected": "rubygems:sapling",
+  "alternatives": [
+    "homebrew:sapling",
+    "pypi:sapling"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 21.546313799621927,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:sapling",
+      "downloads": 22,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:sapling",
+      "downloads": 0,
+      "version_count": 11,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:sapling",
+      "downloads": 1587,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:sapling",
+      "downloads": 34194,
+      "version_count": 10,
+      "has_repository": false
+    },
+    {
+      "source": "npm:sapling",
+      "downloads": 10,
+      "version_count": 3,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:sapling",
+  "disambiguated_at": "2026-02-17T00:27:24.784613794Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

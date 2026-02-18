@@ -1,0 +1,46 @@
+{
+  "tool": "depot",
+  "selected": "rubygems:depot",
+  "alternatives": [
+    "homebrew:depot",
+    "pypi:depot"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 64.63571428571429,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:depot",
+      "downloads": 22,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:depot",
+      "downloads": 0,
+      "version_count": 8,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:depot",
+      "downloads": 140,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:depot",
+      "downloads": 9049,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "npm:depot",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:depot",
+  "disambiguated_at": "2026-02-17T00:14:18.909941739Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,27 @@
+{
+  "tool": "gitlogue",
+  "selected": "crates.io:gitlogue",
+  "alternatives": [
+    "homebrew:gitlogue"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.186400937866354,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:gitlogue",
+      "downloads": 853,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:gitlogue",
+      "downloads": 1012,
+      "version_count": 9,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:gitlogue",
+  "disambiguated_at": "2026-02-17T00:16:58.300667614Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

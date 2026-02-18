@@ -1,0 +1,48 @@
+{
+  "tool": "secp256k1",
+  "selected": "crates.io:secp256k1",
+  "alternatives": [
+    "rubygems:secp256k1",
+    "homebrew:secp256k1",
+    "npm:secp256k1",
+    "pypi:secp256k1"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 1368.3472536515121,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:secp256k1",
+      "downloads": 2243,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:secp256k1",
+      "downloads": 0,
+      "version_count": 22,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:secp256k1",
+      "downloads": 6651536,
+      "version_count": 98,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:secp256k1",
+      "downloads": 4861,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:secp256k1",
+      "downloads": 0,
+      "version_count": 62,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:secp256k1",
+  "disambiguated_at": "2026-02-17T00:27:40.951480919Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

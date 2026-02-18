@@ -1,0 +1,41 @@
+{
+  "tool": "librespot",
+  "selected": "crates.io:librespot",
+  "alternatives": [
+    "homebrew:librespot",
+    "npm:librespot",
+    "pypi:librespot"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 15.189138576779026,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "pypi:librespot",
+      "downloads": 0,
+      "version_count": 11,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:librespot",
+      "downloads": 8111,
+      "version_count": 18,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:librespot",
+      "downloads": 534,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:librespot",
+      "downloads": 0,
+      "version_count": 33,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:librespot",
+  "disambiguated_at": "2026-02-17T00:20:57.64178312Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

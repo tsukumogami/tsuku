@@ -1,0 +1,27 @@
+{
+  "tool": "openh264",
+  "selected": "crates.io:openh264",
+  "alternatives": [
+    "homebrew:openh264"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 39.41780104712042,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:openh264",
+      "downloads": 955,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:openh264",
+      "downloads": 37644,
+      "version_count": 47,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:openh264",
+  "disambiguated_at": "2026-02-17T00:24:10.428209605Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

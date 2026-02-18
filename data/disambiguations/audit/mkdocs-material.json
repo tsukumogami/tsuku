@@ -1,0 +1,32 @@
+{
+  "tool": "mkdocs-material",
+  "selected": "homebrew:mkdocs-material",
+  "alternatives": [
+    "pypi:mkdocs-material"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:mkdocs-material",
+      "downloads": 2624,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:mkdocs-material",
+      "downloads": 0,
+      "version_count": 436,
+      "has_repository": true
+    },
+    {
+      "source": "npm:mkdocs-material",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:mkdocs-material",
+  "disambiguated_at": "2026-02-17T00:22:36.882319449Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

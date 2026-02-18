@@ -1,0 +1,18 @@
+{
+  "tool": "freeciv",
+  "selected": "homebrew:freeciv",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:freeciv",
+      "downloads": 2376,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:freeciv",
+  "disambiguated_at": "2026-02-17T00:16:15.641196349Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

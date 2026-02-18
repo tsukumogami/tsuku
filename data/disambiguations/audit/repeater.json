@@ -1,0 +1,45 @@
+{
+  "tool": "repeater",
+  "selected": "rubygems:repeater",
+  "alternatives": [
+    "homebrew:repeater"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1163.5873015873017,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:repeater",
+      "downloads": 19,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:repeater",
+      "downloads": 126,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:repeater",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:repeater",
+      "downloads": 146612,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:repeater",
+      "downloads": 10,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:repeater",
+  "disambiguated_at": "2026-02-17T00:26:50.92028597Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

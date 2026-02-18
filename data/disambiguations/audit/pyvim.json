@@ -1,0 +1,26 @@
+{
+  "tool": "pyvim",
+  "selected": "homebrew:pyvim",
+  "alternatives": [
+    "pypi:pyvim"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:pyvim",
+      "downloads": 812,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:pyvim",
+      "downloads": 0,
+      "version_count": 27,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:pyvim",
+  "disambiguated_at": "2026-02-17T00:26:13.01876301Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

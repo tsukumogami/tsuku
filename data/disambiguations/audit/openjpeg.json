@@ -1,0 +1,27 @@
+{
+  "tool": "openjpeg",
+  "selected": "homebrew:openjpeg",
+  "alternatives": [
+    "npm:openjpeg"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1380.9633620689656,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:openjpeg",
+      "downloads": 640767,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:openjpeg",
+      "downloads": 464,
+      "version_count": 5,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:openjpeg",
+  "disambiguated_at": "2026-02-17T00:24:12.522913352Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

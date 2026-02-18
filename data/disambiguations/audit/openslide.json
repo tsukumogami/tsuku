@@ -1,0 +1,27 @@
+{
+  "tool": "openslide",
+  "selected": "homebrew:openslide",
+  "alternatives": [
+    "crates.io:openslide"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 151.48717948717947,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:openslide",
+      "downloads": 17724,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:openslide",
+      "downloads": 117,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:openslide",
+  "disambiguated_at": "2026-02-17T00:24:15.682229654Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

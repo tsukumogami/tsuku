@@ -1,0 +1,18 @@
+{
+  "tool": "limesuite",
+  "selected": "homebrew:limesuite",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:limesuite",
+      "downloads": 516,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:limesuite",
+  "disambiguated_at": "2026-02-17T00:21:21.767594253Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

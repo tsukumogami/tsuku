@@ -1,0 +1,40 @@
+{
+  "tool": "exa",
+  "selected": "crates.io:exa",
+  "alternatives": [
+    "rubygems:exa",
+    "pypi:exa"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.575115207373272,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:exa",
+      "downloads": 5127,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:exa",
+      "downloads": 0,
+      "version_count": 5,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:exa",
+      "downloads": 3255,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:exa",
+      "downloads": 21,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:exa",
+  "disambiguated_at": "2026-02-17T00:10:06.887788889Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,27 @@
+{
+  "tool": "age-plugin-yubikey",
+  "selected": "homebrew:age-plugin-yubikey",
+  "alternatives": [
+    "crates.io:age-plugin-yubikey"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.8260869565217392,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:age-plugin-yubikey",
+      "downloads": 161,
+      "version_count": 9,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:age-plugin-yubikey",
+      "downloads": 455,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:age-plugin-yubikey",
+  "disambiguated_at": "2026-02-17T00:10:26.523247442Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

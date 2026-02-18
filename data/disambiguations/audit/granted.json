@@ -1,0 +1,34 @@
+{
+  "tool": "granted",
+  "selected": "rubygems:granted",
+  "alternatives": [
+    "homebrew:granted",
+    "npm:granted"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.6707762557077626,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:granted",
+      "downloads": 2190,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:granted",
+      "downloads": 8039,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "npm:granted",
+      "downloads": 0,
+      "version_count": 5,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:granted",
+  "disambiguated_at": "2026-02-17T00:17:35.628267721Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

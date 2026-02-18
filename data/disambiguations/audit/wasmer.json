@@ -1,0 +1,41 @@
+{
+  "tool": "wasmer",
+  "selected": "crates.io:wasmer",
+  "alternatives": [
+    "rubygems:wasmer",
+    "homebrew:wasmer",
+    "pypi:wasmer"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 10.686128776849795,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:wasmer",
+      "downloads": 1425,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:wasmer",
+      "downloads": 0,
+      "version_count": 13,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:wasmer",
+      "downloads": 418394,
+      "version_count": 95,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:wasmer",
+      "downloads": 39153,
+      "version_count": 6,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:wasmer",
+  "disambiguated_at": "2026-02-17T00:31:02.849163183Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

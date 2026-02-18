@@ -1,0 +1,40 @@
+{
+  "tool": "autocode",
+  "selected": "rubygems:autocode",
+  "alternatives": [
+    "homebrew:autocode",
+    "npm:autocode"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 76.34909909909909,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:autocode",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:autocode",
+      "downloads": 444,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:autocode",
+      "downloads": 33899,
+      "version_count": 6,
+      "has_repository": false
+    },
+    {
+      "source": "npm:autocode",
+      "downloads": 106,
+      "version_count": 37,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:autocode",
+  "disambiguated_at": "2026-02-17T00:11:16.718452515Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

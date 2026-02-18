@@ -1,0 +1,18 @@
+{
+  "tool": "pjproject",
+  "selected": "homebrew:pjproject",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:pjproject",
+      "downloads": 471,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:pjproject",
+  "disambiguated_at": "2026-02-17T00:25:19.734033433Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

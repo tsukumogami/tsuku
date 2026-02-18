@@ -1,0 +1,18 @@
+{
+  "tool": "geoipupdate",
+  "selected": "homebrew:geoipupdate",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:geoipupdate",
+      "downloads": 1639,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:geoipupdate",
+  "disambiguated_at": "2026-02-17T00:16:36.879317467Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

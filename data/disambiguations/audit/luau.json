@@ -1,0 +1,32 @@
+{
+  "tool": "luau",
+  "selected": "homebrew:luau",
+  "alternatives": [
+    "pypi:luau"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:luau",
+      "downloads": 2201,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:luau",
+      "downloads": 0,
+      "version_count": 41,
+      "has_repository": false
+    },
+    {
+      "source": "npm:luau",
+      "downloads": 3,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:luau",
+  "disambiguated_at": "2026-02-17T00:21:39.956941164Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

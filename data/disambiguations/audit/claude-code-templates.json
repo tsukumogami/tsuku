@@ -1,0 +1,27 @@
+{
+  "tool": "claude-code-templates",
+  "selected": "npm:claude-code-templates",
+  "alternatives": [
+    "homebrew:claude-code-templates"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 13.040767386091128,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:claude-code-templates",
+      "downloads": 417,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:claude-code-templates",
+      "downloads": 5438,
+      "version_count": 152,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:claude-code-templates",
+  "disambiguated_at": "2026-02-17T00:13:09.546471172Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,26 @@
+{
+  "tool": "mplayer",
+  "selected": "homebrew:mplayer",
+  "alternatives": [
+    "npm:mplayer"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:mplayer",
+      "downloads": 5147,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:mplayer",
+      "downloads": 0,
+      "version_count": 8,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:mplayer",
+  "disambiguated_at": "2026-02-17T00:22:53.60613206Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "gnome-online-accounts",
+  "selected": "homebrew:gnome-online-accounts",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:gnome-online-accounts",
+      "downloads": 537,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:gnome-online-accounts",
+  "disambiguated_at": "2026-02-17T00:17:10.859926694Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

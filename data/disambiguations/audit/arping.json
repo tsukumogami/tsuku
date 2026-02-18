@@ -1,0 +1,24 @@
+{
+  "tool": "arping",
+  "selected": "homebrew:arping",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:arping",
+      "downloads": 4703,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:arping",
+      "downloads": 5,
+      "version_count": 4,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:arping",
+  "disambiguated_at": "2026-02-17T00:11:01.954843572Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

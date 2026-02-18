@@ -1,0 +1,27 @@
+{
+  "tool": "binsider",
+  "selected": "crates.io:binsider",
+  "alternatives": [
+    "homebrew:binsider"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.003610108303249,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:binsider",
+      "downloads": 554,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:binsider",
+      "downloads": 1110,
+      "version_count": 8,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:binsider",
+  "disambiguated_at": "2026-02-17T00:11:57.509904203Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

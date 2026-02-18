@@ -1,0 +1,34 @@
+{
+  "tool": "datasette",
+  "selected": "npm:datasette",
+  "alternatives": [
+    "homebrew:datasette",
+    "pypi:datasette"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 17.77813802686429,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "pypi:datasette",
+      "downloads": 0,
+      "version_count": 163,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:datasette",
+      "downloads": 2159,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:datasette",
+      "downloads": 38383,
+      "version_count": 7,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:datasette",
+  "disambiguated_at": "2026-02-17T00:14:10.136879233Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

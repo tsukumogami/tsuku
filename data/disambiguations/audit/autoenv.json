@@ -1,0 +1,32 @@
+{
+  "tool": "autoenv",
+  "selected": "homebrew:autoenv",
+  "alternatives": [
+    "npm:autoenv"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:autoenv",
+      "downloads": 2095,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:autoenv",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "npm:autoenv",
+      "downloads": 0,
+      "version_count": 16,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:autoenv",
+  "disambiguated_at": "2026-02-17T00:11:17.656097472Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

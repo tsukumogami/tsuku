@@ -1,0 +1,18 @@
+{
+  "tool": "jruby",
+  "selected": "homebrew:jruby",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:jruby",
+      "downloads": 1677,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:jruby",
+  "disambiguated_at": "2026-02-17T00:19:27.251245242Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

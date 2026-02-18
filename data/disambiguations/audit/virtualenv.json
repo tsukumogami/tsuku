@@ -1,0 +1,34 @@
+{
+  "tool": "virtualenv",
+  "selected": "homebrew:virtualenv",
+  "alternatives": [
+    "npm:virtualenv",
+    "pypi:virtualenv"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 4442.25,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:virtualenv",
+      "downloads": 88845,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:virtualenv",
+      "downloads": 0,
+      "version_count": 247,
+      "has_repository": true
+    },
+    {
+      "source": "npm:virtualenv",
+      "downloads": 20,
+      "version_count": 11,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:virtualenv",
+  "disambiguated_at": "2026-02-17T00:30:45.698796674Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

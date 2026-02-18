@@ -1,0 +1,26 @@
+{
+  "tool": "adios2",
+  "selected": "homebrew:adios2",
+  "alternatives": [
+    "pypi:adios2"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:adios2",
+      "downloads": 1192,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:adios2",
+      "downloads": 0,
+      "version_count": 10,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:adios2",
+  "disambiguated_at": "2026-02-17T00:10:23.560502647Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

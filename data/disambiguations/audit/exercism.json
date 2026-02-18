@@ -1,0 +1,34 @@
+{
+  "tool": "exercism",
+  "selected": "rubygems:exercism",
+  "alternatives": [
+    "homebrew:exercism",
+    "crates.io:exercism"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 7.784933171324423,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:exercism",
+      "downloads": 67,
+      "version_count": 9,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:exercism",
+      "downloads": 12345,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:exercism",
+      "downloads": 96105,
+      "version_count": 28,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:exercism",
+  "disambiguated_at": "2026-02-17T00:15:28.867628829Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,34 @@
+{
+  "tool": "kew",
+  "selected": "npm:kew",
+  "alternatives": [
+    "homebrew:kew",
+    "pypi:kew"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 143.57274620648616,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:kew",
+      "downloads": 3361,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:kew",
+      "downloads": 0,
+      "version_count": 11,
+      "has_repository": true
+    },
+    {
+      "source": "npm:kew",
+      "downloads": 482548,
+      "version_count": 25,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:kew",
+  "disambiguated_at": "2026-02-17T00:19:45.180005889Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,33 @@
+{
+  "tool": "aws-console",
+  "selected": "homebrew:aws-console",
+  "alternatives": [
+    "pypi:aws-console",
+    "npm:aws-console"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:aws-console",
+      "downloads": 1311,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:aws-console",
+      "downloads": 0,
+      "version_count": 8,
+      "has_repository": true
+    },
+    {
+      "source": "npm:aws-console",
+      "downloads": 0,
+      "version_count": 6,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:aws-console",
+  "disambiguated_at": "2026-02-17T00:11:23.867094801Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,27 @@
+{
+  "tool": "minijinja-cli",
+  "selected": "crates.io:minijinja-cli",
+  "alternatives": [
+    "homebrew:minijinja-cli"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.4258160237388724,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:minijinja-cli",
+      "downloads": 674,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:minijinja-cli",
+      "downloads": 2309,
+      "version_count": 40,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:minijinja-cli",
+  "disambiguated_at": "2026-02-17T00:22:30.942729983Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

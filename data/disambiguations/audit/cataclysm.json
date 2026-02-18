@@ -1,0 +1,40 @@
+{
+  "tool": "cataclysm",
+  "selected": "homebrew:cataclysm",
+  "alternatives": [
+    "crates.io:cataclysm",
+    "npm:cataclysm"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.0748829953198127,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:cataclysm",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "crates.io:cataclysm",
+      "downloads": 641,
+      "version_count": 60,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:cataclysm",
+      "downloads": 689,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:cataclysm",
+      "downloads": 6,
+      "version_count": 6,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:cataclysm",
+  "disambiguated_at": "2026-02-17T00:12:40.611627914Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

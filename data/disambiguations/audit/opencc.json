@@ -1,0 +1,41 @@
+{
+  "tool": "opencc",
+  "selected": "homebrew:opencc",
+  "alternatives": [
+    "crates.io:opencc",
+    "npm:opencc",
+    "pypi:opencc"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 13.231481481481481,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:opencc",
+      "downloads": 1429,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:opencc",
+      "downloads": 108,
+      "version_count": 7,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:opencc",
+      "downloads": 0,
+      "version_count": 15,
+      "has_repository": true
+    },
+    {
+      "source": "npm:opencc",
+      "downloads": 0,
+      "version_count": 22,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:opencc",
+  "disambiguated_at": "2026-02-17T00:24:05.651728967Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

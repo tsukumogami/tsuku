@@ -1,0 +1,48 @@
+{
+  "tool": "argon2",
+  "selected": "rubygems:argon2",
+  "alternatives": [
+    "crates.io:argon2",
+    "homebrew:argon2",
+    "npm:argon2",
+    "pypi:argon2"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.01764959139886,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:argon2",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:argon2",
+      "downloads": 64844,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:argon2",
+      "downloads": 3660538,
+      "version_count": 35,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:argon2",
+      "downloads": 3725145,
+      "version_count": 28,
+      "has_repository": false
+    },
+    {
+      "source": "npm:argon2",
+      "downloads": 0,
+      "version_count": 81,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:argon2",
+  "disambiguated_at": "2026-02-17T00:10:56.279488576Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

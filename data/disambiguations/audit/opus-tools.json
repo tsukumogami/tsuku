@@ -1,0 +1,24 @@
+{
+  "tool": "opus-tools",
+  "selected": "homebrew:opus-tools",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:opus-tools",
+      "downloads": 20,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:opus-tools",
+      "downloads": 1192,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:opus-tools",
+  "disambiguated_at": "2026-02-17T00:24:19.271731369Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

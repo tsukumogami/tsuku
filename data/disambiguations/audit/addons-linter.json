@@ -1,0 +1,27 @@
+{
+  "tool": "addons-linter",
+  "selected": "npm:addons-linter",
+  "alternatives": [
+    "homebrew:addons-linter"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 198.1676646706587,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:addons-linter",
+      "downloads": 501,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:addons-linter",
+      "downloads": 99282,
+      "version_count": 332,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:addons-linter",
+  "disambiguated_at": "2026-02-17T00:10:23.07761824Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

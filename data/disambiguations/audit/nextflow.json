@@ -1,0 +1,34 @@
+{
+  "tool": "nextflow",
+  "selected": "homebrew:nextflow",
+  "alternatives": [
+    "npm:nextflow",
+    "pypi:nextflow"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.342245989304813,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:nextflow",
+      "downloads": 438,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:nextflow",
+      "downloads": 0,
+      "version_count": 31,
+      "has_repository": false
+    },
+    {
+      "source": "npm:nextflow",
+      "downloads": 187,
+      "version_count": 9,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:nextflow",
+  "disambiguated_at": "2026-02-17T00:23:28.71924265Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

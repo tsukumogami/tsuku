@@ -1,0 +1,46 @@
+{
+  "tool": "opus",
+  "selected": "homebrew:opus",
+  "alternatives": [
+    "crates.io:opus",
+    "rubygems:opus"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.748836981538612,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:opus",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:opus",
+      "downloads": 142947,
+      "version_count": 6,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:opus",
+      "downloads": 392938,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:opus",
+      "downloads": 4394,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:opus",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:opus",
+  "disambiguated_at": "2026-02-17T00:24:19.041235294Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "gastown",
+  "selected": "homebrew:gastown",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:gastown",
+      "downloads": 1033,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:gastown",
+  "disambiguated_at": "2026-02-17T00:16:28.389038583Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

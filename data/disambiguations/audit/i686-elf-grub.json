@@ -1,0 +1,18 @@
+{
+  "tool": "i686-elf-grub",
+  "selected": "homebrew:i686-elf-grub",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:i686-elf-grub",
+      "downloads": 734,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:i686-elf-grub",
+  "disambiguated_at": "2026-02-17T00:18:34.139991027Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

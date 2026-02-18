@@ -1,0 +1,48 @@
+{
+  "tool": "delve",
+  "selected": "homebrew:delve",
+  "alternatives": [
+    "rubygems:delve",
+    "crates.io:delve",
+    "npm:delve",
+    "pypi:delve"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.5389758179231863,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:delve",
+      "downloads": 10819,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:delve",
+      "downloads": 0,
+      "version_count": 44,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:delve",
+      "downloads": 348,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:delve",
+      "downloads": 7030,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "npm:delve",
+      "downloads": 288,
+      "version_count": 5,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:delve",
+  "disambiguated_at": "2026-02-17T00:14:17.795557124Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

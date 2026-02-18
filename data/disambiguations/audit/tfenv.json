@@ -1,0 +1,27 @@
+{
+  "tool": "tfenv",
+  "selected": "homebrew:tfenv",
+  "alternatives": [
+    "rubygems:tfenv"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 23.60287345735863,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:tfenv",
+      "downloads": 128140,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:tfenv",
+      "downloads": 5429,
+      "version_count": 2,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:tfenv",
+  "disambiguated_at": "2026-02-17T00:29:35.251284126Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "noseyparker",
+  "selected": "homebrew:noseyparker",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:noseyparker",
+      "downloads": 414,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:noseyparker",
+  "disambiguated_at": "2026-02-17T00:23:39.753939264Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,46 @@
+{
+  "tool": "lowdown",
+  "selected": "rubygems:lowdown",
+  "alternatives": [
+    "homebrew:lowdown",
+    "pypi:lowdown"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 57.46691042047532,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:lowdown",
+      "downloads": 11,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:lowdown",
+      "downloads": 2735,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:lowdown",
+      "downloads": 0,
+      "version_count": 5,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:lowdown",
+      "downloads": 157172,
+      "version_count": 12,
+      "has_repository": false
+    },
+    {
+      "source": "npm:lowdown",
+      "downloads": 3,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:lowdown",
+  "disambiguated_at": "2026-02-17T00:21:36.711889811Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,26 @@
+{
+  "tool": "apache-arrow",
+  "selected": "homebrew:apache-arrow",
+  "alternatives": [
+    "npm:apache-arrow"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:apache-arrow",
+      "downloads": 128183,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:apache-arrow",
+      "downloads": 0,
+      "version_count": 50,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:apache-arrow",
+  "disambiguated_at": "2026-02-17T00:10:46.187939768Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

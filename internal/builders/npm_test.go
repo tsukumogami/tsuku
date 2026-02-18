@@ -365,6 +365,164 @@ func TestExtractRepositoryURL(t *testing.T) {
 	}
 }
 
+func TestNpmBuilder_Discover_Success(t *testing.T) {
+	searchResponse := `{
+		"objects": [
+			{"package": {"name": "eslint"}},
+			{"package": {"name": "prettier"}}
+		],
+		"total": 2
+	}`
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch {
+		case r.URL.Path == "/-/v1/search":
+			_, _ = w.Write([]byte(searchResponse))
+		case r.URL.Path == "/downloads/point/last-week/eslint":
+			_, _ = w.Write([]byte(`{"downloads": 5000000}`))
+		case r.URL.Path == "/downloads/point/last-week/prettier":
+			_, _ = w.Write([]byte(`{"downloads": 3000000}`))
+		default:
+			w.WriteHeader(http.StatusNotFound)
+		}
+	}))
+	defer server.Close()
+
+	builder := NewNpmBuilderWithBaseURL(nil, server.URL)
+	candidates, err := builder.Discover(context.Background(), 10)
+	if err != nil {
+		t.Fatalf("Discover() error = %v", err)
+	}
+
+	if len(candidates) != 2 {
+		t.Fatalf("expected 2 candidates, got %d", len(candidates))
+	}
+
+	if candidates[0].Name != "eslint" || candidates[0].Downloads != 5000000 {
+		t.Errorf("candidates[0] = %+v, want eslint/5000000", candidates[0])
+	}
+	if candidates[1].Name != "prettier" || candidates[1].Downloads != 3000000 {
+		t.Errorf("candidates[1] = %+v, want prettier/3000000", candidates[1])
+	}
+}
+
+func TestNpmBuilder_Discover_LimitRespected(t *testing.T) {
+	searchResponse := `{
+		"objects": [
+			{"package": {"name": "a"}},
+			{"package": {"name": "b"}},
+			{"package": {"name": "c"}}
+		],
+		"total": 3
+	}`
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		if r.URL.Path == "/-/v1/search" {
+			_, _ = w.Write([]byte(searchResponse))
+		} else {
+			_, _ = w.Write([]byte(`{"downloads": 100}`))
+		}
+	}))
+	defer server.Close()
+
+	builder := NewNpmBuilderWithBaseURL(nil, server.URL)
+	candidates, err := builder.Discover(context.Background(), 2)
+	if err != nil {
+		t.Fatalf("Discover() error = %v", err)
+	}
+
+	if len(candidates) != 2 {
+		t.Fatalf("expected 2 candidates, got %d", len(candidates))
+	}
+}
+
+func TestNpmBuilder_Discover_ZeroLimit(t *testing.T) {
+	builder := NewNpmBuilder(nil)
+	candidates, err := builder.Discover(context.Background(), 0)
+	if err != nil {
+		t.Fatalf("Discover() error = %v", err)
+	}
+	if len(candidates) != 0 {
+		t.Errorf("expected 0 candidates, got %d", len(candidates))
+	}
+}
+
+func TestNpmBuilder_Discover_RateLimitError(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusTooManyRequests)
+	}))
+	defer server.Close()
+
+	builder := NewNpmBuilderWithBaseURL(nil, server.URL)
+	_, err := builder.Discover(context.Background(), 10)
+	if err == nil {
+		t.Fatal("expected error for 429 response")
+	}
+}
+
+func TestNpmBuilder_Discover_ServerError(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	defer server.Close()
+
+	builder := NewNpmBuilderWithBaseURL(nil, server.URL)
+	_, err := builder.Discover(context.Background(), 10)
+	if err == nil {
+		t.Fatal("expected error for 500 response")
+	}
+}
+
+func TestNpmBuilder_Discover_MalformedResponse(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{invalid json`))
+	}))
+	defer server.Close()
+
+	builder := NewNpmBuilderWithBaseURL(nil, server.URL)
+	_, err := builder.Discover(context.Background(), 10)
+	if err == nil {
+		t.Fatal("expected error for malformed JSON response")
+	}
+}
+
+func TestNpmBuilder_Discover_EmptyResults(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"objects": [], "total": 0}`))
+	}))
+	defer server.Close()
+
+	builder := NewNpmBuilderWithBaseURL(nil, server.URL)
+	candidates, err := builder.Discover(context.Background(), 10)
+	if err != nil {
+		t.Fatalf("Discover() error = %v", err)
+	}
+	if len(candidates) != 0 {
+		t.Errorf("expected 0 candidates, got %d", len(candidates))
+	}
+}
+
+func TestNpmBuilder_Discover_ContextCanceled(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"objects": [{"package": {"name": "a"}}], "total": 500}`))
+	}))
+	defer server.Close()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel() // Cancel immediately.
+
+	builder := NewNpmBuilderWithBaseURL(nil, server.URL)
+	_, err := builder.Discover(ctx, 500)
+	if err == nil {
+		t.Fatal("expected error for canceled context")
+	}
+}
+
 func TestCleanRepositoryURL(t *testing.T) {
 	tests := []struct {
 		input string

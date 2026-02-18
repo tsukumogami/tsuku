@@ -1,0 +1,27 @@
+{
+  "tool": "cargo-update",
+  "selected": "crates.io:cargo-update",
+  "alternatives": [
+    "homebrew:cargo-update"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 47.322399250234305,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:cargo-update",
+      "downloads": 1067,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:cargo-update",
+      "downloads": 50493,
+      "version_count": 109,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:cargo-update",
+  "disambiguated_at": "2026-02-17T00:12:37.660871374Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

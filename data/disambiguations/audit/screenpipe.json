@@ -1,0 +1,27 @@
+{
+  "tool": "screenpipe",
+  "selected": "npm:screenpipe",
+  "alternatives": [
+    "homebrew:screenpipe"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.1898734177215189,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:screenpipe",
+      "downloads": 553,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:screenpipe",
+      "downloads": 658,
+      "version_count": 8,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:screenpipe",
+  "disambiguated_at": "2026-02-17T00:27:35.999164653Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

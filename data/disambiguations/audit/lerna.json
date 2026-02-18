@@ -1,0 +1,41 @@
+{
+  "tool": "lerna",
+  "selected": "npm:lerna",
+  "alternatives": [
+    "rubygems:lerna",
+    "homebrew:lerna",
+    "pypi:lerna"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 263.5352156862745,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "pypi:lerna",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:lerna",
+      "downloads": 1908,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:lerna",
+      "downloads": 6375,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "npm:lerna",
+      "downloads": 1680037,
+      "version_count": 286,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:lerna",
+  "disambiguated_at": "2026-02-17T00:20:22.667982345Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

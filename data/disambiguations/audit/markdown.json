@@ -1,0 +1,48 @@
+{
+  "tool": "markdown",
+  "selected": "crates.io:markdown",
+  "alternatives": [
+    "rubygems:markdown",
+    "homebrew:markdown",
+    "pypi:markdown",
+    "npm:markdown"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.956377256946205,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:markdown",
+      "downloads": 2045,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:markdown",
+      "downloads": 874523,
+      "version_count": 30,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:markdown",
+      "downloads": 0,
+      "version_count": 60,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:markdown",
+      "downloads": 295809,
+      "version_count": 13,
+      "has_repository": false
+    },
+    {
+      "source": "npm:markdown",
+      "downloads": 0,
+      "version_count": 8,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:markdown",
+  "disambiguated_at": "2026-02-17T00:21:59.721639091Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

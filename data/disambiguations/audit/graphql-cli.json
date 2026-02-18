@@ -1,0 +1,33 @@
+{
+  "tool": "graphql-cli",
+  "selected": "npm:graphql-cli",
+  "alternatives": [
+    "homebrew:graphql-cli"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 68.24537037037037,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:graphql-cli",
+      "downloads": 9,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:graphql-cli",
+      "downloads": 432,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:graphql-cli",
+      "downloads": 29482,
+      "version_count": 3539,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:graphql-cli",
+  "disambiguated_at": "2026-02-17T00:17:36.962504463Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

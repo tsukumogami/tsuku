@@ -1,0 +1,39 @@
+{
+  "tool": "ispc",
+  "selected": "homebrew:ispc",
+  "alternatives": [
+    "crates.io:ispc"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.9369202226345084,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:ispc",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "crates.io:ispc",
+      "downloads": 539,
+      "version_count": 35,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:ispc",
+      "downloads": 1044,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:ispc",
+      "downloads": 0,
+      "version_count": 0,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:ispc",
+  "disambiguated_at": "2026-02-17T00:19:02.609048471Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

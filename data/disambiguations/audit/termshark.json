@@ -1,0 +1,18 @@
+{
+  "tool": "termshark",
+  "selected": "crates.io:termshark",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:termshark",
+      "downloads": 24,
+      "version_count": 5,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:termshark",
+  "disambiguated_at": "2026-02-17T00:29:28.87323373Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,27 @@
+{
+  "tool": "plplot",
+  "selected": "rubygems:plplot",
+  "alternatives": [
+    "homebrew:plplot"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 8.342622950819672,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:plplot",
+      "downloads": 610,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:plplot",
+      "downloads": 5089,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:plplot",
+  "disambiguated_at": "2026-02-17T00:25:23.073586396Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

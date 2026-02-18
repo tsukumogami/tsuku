@@ -1,0 +1,18 @@
+{
+  "tool": "spotbugs",
+  "selected": "homebrew:spotbugs",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:spotbugs",
+      "downloads": 913,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:spotbugs",
+  "disambiguated_at": "2026-02-17T00:28:31.323189529Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

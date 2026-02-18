@@ -1,0 +1,33 @@
+{
+  "tool": "juliaup",
+  "selected": "homebrew:juliaup",
+  "alternatives": [
+    "crates.io:juliaup"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.5393224440411373,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:juliaup",
+      "downloads": 5089,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:juliaup",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:juliaup",
+      "downloads": 3306,
+      "version_count": 28,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:juliaup",
+  "disambiguated_at": "2026-02-17T00:19:31.459988751Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

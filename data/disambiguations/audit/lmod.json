@@ -1,0 +1,24 @@
+{
+  "tool": "lmod",
+  "selected": "homebrew:lmod",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:lmod",
+      "downloads": 1434,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:lmod",
+      "downloads": 0,
+      "version_count": 0,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:lmod",
+  "disambiguated_at": "2026-02-17T00:21:30.835530434Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

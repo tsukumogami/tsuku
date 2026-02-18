@@ -1,0 +1,26 @@
+{
+  "tool": "cypher-shell",
+  "selected": "homebrew:cypher-shell",
+  "alternatives": [
+    "pypi:cypher-shell"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:cypher-shell",
+      "downloads": 9649,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:cypher-shell",
+      "downloads": 0,
+      "version_count": 5,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:cypher-shell",
+  "disambiguated_at": "2026-02-17T00:14:00.665137826Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

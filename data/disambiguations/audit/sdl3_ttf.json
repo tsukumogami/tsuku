@@ -1,0 +1,18 @@
+{
+  "tool": "sdl3_ttf",
+  "selected": "homebrew:sdl3_ttf",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:sdl3_ttf",
+      "downloads": 8343,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:sdl3_ttf",
+  "disambiguated_at": "2026-02-17T00:27:40.242279074Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

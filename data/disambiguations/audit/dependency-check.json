@@ -1,0 +1,33 @@
+{
+  "tool": "dependency-check",
+  "selected": "homebrew:dependency-check",
+  "alternatives": [
+    "npm:dependency-check",
+    "pypi:dependency-check"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:dependency-check",
+      "downloads": 19840,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:dependency-check",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "npm:dependency-check",
+      "downloads": 0,
+      "version_count": 51,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:dependency-check",
+  "disambiguated_at": "2026-02-17T00:14:18.678294999Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "libgedit-amtk",
+  "selected": "homebrew:libgedit-amtk",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:libgedit-amtk",
+      "downloads": 5570,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:libgedit-amtk",
+  "disambiguated_at": "2026-02-17T00:20:35.637193976Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

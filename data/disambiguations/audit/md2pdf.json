@@ -1,0 +1,47 @@
+{
+  "tool": "md2pdf",
+  "selected": "rubygems:md2pdf",
+  "alternatives": [
+    "homebrew:md2pdf",
+    "npm:md2pdf",
+    "pypi:md2pdf"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 4.315642458100559,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:md2pdf",
+      "downloads": 1074,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:md2pdf",
+      "downloads": 0,
+      "version_count": 11,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:md2pdf",
+      "downloads": 29,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:md2pdf",
+      "downloads": 4635,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:md2pdf",
+      "downloads": 31,
+      "version_count": 8,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:md2pdf",
+  "disambiguated_at": "2026-02-17T00:22:12.476827914Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

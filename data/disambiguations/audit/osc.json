@@ -1,0 +1,47 @@
+{
+  "tool": "osc",
+  "selected": "rubygems:osc",
+  "alternatives": [
+    "homebrew:osc",
+    "npm:osc",
+    "pypi:osc"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 9.73435655253837,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:osc",
+      "downloads": 20,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "pypi:osc",
+      "downloads": 0,
+      "version_count": 32,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:osc",
+      "downloads": 847,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:osc",
+      "downloads": 8245,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "npm:osc",
+      "downloads": 0,
+      "version_count": 34,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:osc",
+  "disambiguated_at": "2026-02-17T00:24:22.131828365Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

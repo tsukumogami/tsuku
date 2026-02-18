@@ -1,0 +1,33 @@
+{
+  "tool": "tinymist",
+  "selected": "homebrew:tinymist",
+  "alternatives": [
+    "crates.io:tinymist"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 4.932655654383736,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:tinymist",
+      "downloads": 3882,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:tinymist",
+      "downloads": 787,
+      "version_count": 42,
+      "has_repository": true
+    },
+    {
+      "source": "npm:tinymist",
+      "downloads": 6,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:tinymist",
+  "disambiguated_at": "2026-02-17T00:29:43.482071137Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

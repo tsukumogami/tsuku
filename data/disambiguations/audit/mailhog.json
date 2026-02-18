@@ -1,0 +1,24 @@
+{
+  "tool": "mailhog",
+  "selected": "npm:mailhog",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "pypi:mailhog",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "npm:mailhog",
+      "downloads": 37186,
+      "version_count": 26,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:mailhog",
+  "disambiguated_at": "2026-02-17T00:21:51.568581663Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

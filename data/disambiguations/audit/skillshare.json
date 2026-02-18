@@ -1,0 +1,24 @@
+{
+  "tool": "skillshare",
+  "selected": "homebrew:skillshare",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:skillshare",
+      "downloads": 240,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:skillshare",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:skillshare",
+  "disambiguated_at": "2026-02-17T00:28:08.497355092Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

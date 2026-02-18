@@ -1,0 +1,24 @@
+{
+  "tool": "libxmlb",
+  "selected": "homebrew:libxmlb",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:libxmlb",
+      "downloads": 86,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:libxmlb",
+      "downloads": 14935,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:libxmlb",
+  "disambiguated_at": "2026-02-17T00:21:17.155869897Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

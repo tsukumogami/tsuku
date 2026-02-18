@@ -1,0 +1,27 @@
+{
+  "tool": "aicommits",
+  "selected": "npm:aicommits",
+  "alternatives": [
+    "homebrew:aicommits"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 4.120689655172414,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:aicommits",
+      "downloads": 464,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:aicommits",
+      "downloads": 1912,
+      "version_count": 73,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:aicommits",
+  "disambiguated_at": "2026-02-17T00:10:29.069042384Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

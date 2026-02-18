@@ -1,0 +1,41 @@
+{
+  "tool": "rubberband",
+  "selected": "homebrew:rubberband",
+  "alternatives": [
+    "rubygems:rubberband",
+    "npm:rubberband",
+    "pypi:rubberband"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.9824543974812585,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:rubberband",
+      "downloads": 259422,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:rubberband",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:rubberband",
+      "downloads": 130859,
+      "version_count": 25,
+      "has_repository": true
+    },
+    {
+      "source": "npm:rubberband",
+      "downloads": 0,
+      "version_count": 8,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:rubberband",
+  "disambiguated_at": "2026-02-17T00:27:12.315640613Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,48 @@
+{
+  "tool": "redis",
+  "selected": "rubygems:redis",
+  "alternatives": [
+    "crates.io:redis",
+    "homebrew:redis",
+    "npm:redis",
+    "pypi:redis"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 61.708817780914885,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:redis",
+      "downloads": 368510,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:redis",
+      "downloads": 0,
+      "version_count": 158,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:redis",
+      "downloads": 8653413,
+      "version_count": 104,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:redis",
+      "downloads": 533991886,
+      "version_count": 98,
+      "has_repository": true
+    },
+    {
+      "source": "npm:redis",
+      "downloads": 0,
+      "version_count": 179,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:redis",
+  "disambiguated_at": "2026-02-17T00:26:46.344205802Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

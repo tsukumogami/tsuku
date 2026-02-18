@@ -1,0 +1,48 @@
+{
+  "tool": "influxdb",
+  "selected": "rubygems:influxdb",
+  "alternatives": [
+    "crates.io:influxdb",
+    "homebrew:influxdb",
+    "npm:influxdb",
+    "pypi:influxdb"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 130.49386268082378,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:influxdb",
+      "downloads": 112264,
+      "version_count": 17,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:influxdb",
+      "downloads": 0,
+      "version_count": 55,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:influxdb",
+      "downloads": 5195,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:influxdb",
+      "downloads": 14649763,
+      "version_count": 67,
+      "has_repository": true
+    },
+    {
+      "source": "npm:influxdb",
+      "downloads": 127,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:influxdb",
+  "disambiguated_at": "2026-02-17T00:18:48.681512917Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

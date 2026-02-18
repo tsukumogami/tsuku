@@ -1,0 +1,27 @@
+{
+  "tool": "appstream",
+  "selected": "homebrew:appstream",
+  "alternatives": [
+    "crates.io:appstream"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 99.43125,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:appstream",
+      "downloads": 15909,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:appstream",
+      "downloads": 160,
+      "version_count": 6,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:appstream",
+  "disambiguated_at": "2026-02-17T00:10:50.820307455Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -35,7 +35,7 @@ Current
 
 ## Upstream Design Reference
 
-This design implements Phase 2 (Observability) from [DESIGN-pipeline-dashboard.md](DESIGN-pipeline-dashboard.md).
+This design implements Phase 2 (Observability) from [DESIGN-pipeline-dashboard-2.md](DESIGN-pipeline-dashboard-2.md).
 
 **Relevant sections:**
 - Decision 1: Drill-Down Dashboard with Full Detail Pages
@@ -55,7 +55,7 @@ Operators currently debug by:
 
 This takes 3-5 minutes per failure. For a batch of 10 failures, that's 30-50 minutes of manual investigation. And some information simply isn't available: circuit breaker state lives in `batch-control.json` but never reaches the dashboard, so operators can't tell if an ecosystem is being rate-limited.
 
-The parent design (DESIGN-pipeline-dashboard.md) specified high-level requirements for drill-down navigation, failure subcategories, and new dashboard pages. This design provides the implementation spec: exact page layouts, dashboard.json schema extensions, queue-analytics changes, and failure subcategory taxonomy.
+The parent design (DESIGN-pipeline-dashboard-2.md) specified high-level requirements for drill-down navigation, failure subcategories, and new dashboard pages. This design provides the implementation spec: exact page layouts, dashboard.json schema extensions, queue-analytics changes, and failure subcategory taxonomy.
 
 ### Scope
 
@@ -615,7 +615,7 @@ flowchart TD
 
 ### Page Specifications
 
-Visual layouts for all pages are in the [parent design wireframes](DESIGN-pipeline-dashboard.md) (Page Wireframes section). A copy is in `wip/wireframes.md` for implementation reference. This section specifies data sources, content, and interactions.
+Visual layouts for all pages are in the [parent design wireframes](DESIGN-pipeline-dashboard-2.md) (Page Wireframes section). A copy is in `wip/wireframes.md` for implementation reference. This section specifies data sources, content, and interactions.
 
 **`index.html` (enhanced):** Add three new panels. Pipeline Health shows circuit breaker state per ecosystem (from `health.ecosystems`), last run / last success / runs-since-success (from `health`), with each metric linking to the relevant detail or list page. Recent Failures shows the 5 most recent entries from `failure_details`, each linking to `failure.html?id=`. Curated Overrides shows count and invalid count from `curated`, linking to `curated.html`. Failure Categories panel gains subcategory breakdown computed client-side from `failure_details`. Seeding Stats panel is deferred to Phase 3.
 

@@ -1,0 +1,46 @@
+{
+  "tool": "ocp",
+  "selected": "rubygems:ocp",
+  "alternatives": [
+    "homebrew:ocp",
+    "pypi:ocp"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 102.76148796498906,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:ocp",
+      "downloads": 457,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:ocp",
+      "downloads": 0,
+      "version_count": 6,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:ocp",
+      "downloads": 46962,
+      "version_count": 22,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:ocp",
+      "downloads": 10,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "npm:ocp",
+      "downloads": 46,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:ocp",
+  "disambiguated_at": "2026-02-17T00:23:54.31119032Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

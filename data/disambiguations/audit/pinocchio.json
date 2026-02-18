@@ -1,0 +1,40 @@
+{
+  "tool": "pinocchio",
+  "selected": "crates.io:pinocchio",
+  "alternatives": [
+    "homebrew:pinocchio",
+    "pypi:pinocchio"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 151.9227895392279,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "pypi:pinocchio",
+      "downloads": 0,
+      "version_count": 8,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:pinocchio",
+      "downloads": 803,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:pinocchio",
+      "downloads": 121994,
+      "version_count": 21,
+      "has_repository": true
+    },
+    {
+      "source": "npm:pinocchio",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:pinocchio",
+  "disambiguated_at": "2026-02-17T00:25:15.057661293Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

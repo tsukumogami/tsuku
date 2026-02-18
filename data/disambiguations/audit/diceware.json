@@ -1,0 +1,40 @@
+{
+  "tool": "diceware",
+  "selected": "homebrew:diceware",
+  "alternatives": [
+    "crates.io:diceware",
+    "pypi:diceware"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.1455696202531644,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:diceware",
+      "downloads": 0,
+      "version_count": 21,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:diceware",
+      "downloads": 497,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:diceware",
+      "downloads": 158,
+      "version_count": 24,
+      "has_repository": true
+    },
+    {
+      "source": "npm:diceware",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:diceware",
+  "disambiguated_at": "2026-02-17T00:14:25.237506497Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

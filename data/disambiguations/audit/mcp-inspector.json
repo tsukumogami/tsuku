@@ -1,0 +1,36 @@
+{
+  "tool": "mcp-inspector",
+  "selected": "homebrew:mcp-inspector",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "pypi:mcp-inspector",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:mcp-inspector",
+      "downloads": 1720,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:mcp-inspector",
+      "downloads": 337,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "npm:mcp-inspector",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:mcp-inspector",
+  "disambiguated_at": "2026-02-17T00:22:09.735914219Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "libsixel",
+  "selected": "homebrew:libsixel",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:libsixel",
+      "downloads": 2783,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:libsixel",
+  "disambiguated_at": "2026-02-17T00:21:02.156557153Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,24 @@
+{
+  "tool": "theora",
+  "selected": "homebrew:theora",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:theora",
+      "downloads": 5,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:theora",
+      "downloads": 331948,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:theora",
+  "disambiguated_at": "2026-02-17T00:29:37.660814677Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

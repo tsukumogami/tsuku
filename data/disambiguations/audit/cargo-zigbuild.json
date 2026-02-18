@@ -1,0 +1,34 @@
+{
+  "tool": "cargo-zigbuild",
+  "selected": "crates.io:cargo-zigbuild",
+  "alternatives": [
+    "homebrew:cargo-zigbuild",
+    "pypi:cargo-zigbuild"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 1427.3968253968253,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:cargo-zigbuild",
+      "downloads": 630,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:cargo-zigbuild",
+      "downloads": 0,
+      "version_count": 91,
+      "has_repository": false
+    },
+    {
+      "source": "crates.io:cargo-zigbuild",
+      "downloads": 899260,
+      "version_count": 108,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:cargo-zigbuild",
+  "disambiguated_at": "2026-02-17T00:12:37.903932313Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

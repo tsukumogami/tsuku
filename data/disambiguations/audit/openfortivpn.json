@@ -1,0 +1,18 @@
+{
+  "tool": "openfortivpn",
+  "selected": "homebrew:openfortivpn",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:openfortivpn",
+      "downloads": 6568,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:openfortivpn",
+  "disambiguated_at": "2026-02-17T00:24:09.72642938Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

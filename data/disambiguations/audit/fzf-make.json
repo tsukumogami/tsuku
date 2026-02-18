@@ -1,0 +1,27 @@
+{
+  "tool": "fzf-make",
+  "selected": "homebrew:fzf-make",
+  "alternatives": [
+    "crates.io:fzf-make"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.8656429942418427,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:fzf-make",
+      "downloads": 972,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:fzf-make",
+      "downloads": 521,
+      "version_count": 57,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:fzf-make",
+  "disambiguated_at": "2026-02-17T00:16:22.764415818Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

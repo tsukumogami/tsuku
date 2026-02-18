@@ -1,0 +1,46 @@
+{
+  "tool": "pluto",
+  "selected": "rubygems:pluto",
+  "alternatives": [
+    "homebrew:pluto",
+    "npm:pluto"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 81.5735400144196,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:pluto",
+      "downloads": 10,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:pluto",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:pluto",
+      "downloads": 2774,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:pluto",
+      "downloads": 226285,
+      "version_count": 34,
+      "has_repository": false
+    },
+    {
+      "source": "npm:pluto",
+      "downloads": 5,
+      "version_count": 9,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:pluto",
+  "disambiguated_at": "2026-02-17T00:25:23.460825899Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

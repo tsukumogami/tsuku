@@ -1,0 +1,33 @@
+{
+  "tool": "osm-pbf",
+  "selected": "homebrew:osm-pbf",
+  "alternatives": [
+    "crates.io:osm-pbf"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.5616438356164384,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:osm-pbf",
+      "downloads": 520,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:osm-pbf",
+      "downloads": 146,
+      "version_count": 6,
+      "has_repository": true
+    },
+    {
+      "source": "npm:osm-pbf",
+      "downloads": 30,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:osm-pbf",
+  "disambiguated_at": "2026-02-17T00:24:23.104138681Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

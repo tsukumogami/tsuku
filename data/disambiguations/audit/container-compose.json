@@ -1,0 +1,24 @@
+{
+  "tool": "container-compose",
+  "selected": "homebrew:container-compose",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:container-compose",
+      "downloads": 816,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:container-compose",
+      "downloads": 20,
+      "version_count": 3,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:container-compose",
+  "disambiguated_at": "2026-02-17T00:13:37.43307011Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

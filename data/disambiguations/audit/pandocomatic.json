@@ -1,0 +1,27 @@
+{
+  "tool": "pandocomatic",
+  "selected": "rubygems:pandocomatic",
+  "alternatives": [
+    "homebrew:pandocomatic"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 298.860853432282,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:pandocomatic",
+      "downloads": 539,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:pandocomatic",
+      "downloads": 161086,
+      "version_count": 90,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:pandocomatic",
+  "disambiguated_at": "2026-02-17T00:24:45.888941836Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

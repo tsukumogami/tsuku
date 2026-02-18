@@ -1,0 +1,33 @@
+{
+  "tool": "zinit",
+  "selected": "homebrew:zinit",
+  "alternatives": [
+    "crates.io:zinit"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.0924657534246576,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:zinit",
+      "downloads": 584,
+      "version_count": 13,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:zinit",
+      "downloads": 1806,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:zinit",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:zinit",
+  "disambiguated_at": "2026-02-17T00:31:49.509339967Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

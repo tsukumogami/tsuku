@@ -1,0 +1,24 @@
+{
+  "tool": "libftdi",
+  "selected": "homebrew:libftdi",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:libftdi",
+      "downloads": 7863,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:libftdi",
+      "downloads": 3,
+      "version_count": 3,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:libftdi",
+  "disambiguated_at": "2026-02-17T00:20:34.453961509Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

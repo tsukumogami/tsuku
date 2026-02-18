@@ -1,0 +1,40 @@
+{
+  "tool": "asciidoctor",
+  "selected": "rubygems:asciidoctor",
+  "alternatives": [
+    "homebrew:asciidoctor",
+    "npm:asciidoctor"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 5297.0722,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:asciidoctor",
+      "downloads": 14,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:asciidoctor",
+      "downloads": 10000,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:asciidoctor",
+      "downloads": 52970722,
+      "version_count": 55,
+      "has_repository": true
+    },
+    {
+      "source": "npm:asciidoctor",
+      "downloads": 0,
+      "version_count": 34,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:asciidoctor",
+  "disambiguated_at": "2026-02-17T00:11:03.69578302Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

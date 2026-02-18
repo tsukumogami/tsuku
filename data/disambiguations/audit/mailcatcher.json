@@ -1,0 +1,34 @@
+{
+  "tool": "mailcatcher",
+  "selected": "rubygems:mailcatcher",
+  "alternatives": [
+    "homebrew:mailcatcher",
+    "pypi:mailcatcher"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 13451.913385826772,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:mailcatcher",
+      "downloads": 635,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:mailcatcher",
+      "downloads": 0,
+      "version_count": 7,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:mailcatcher",
+      "downloads": 8541965,
+      "version_count": 56,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:mailcatcher",
+  "disambiguated_at": "2026-02-17T00:21:51.339816506Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

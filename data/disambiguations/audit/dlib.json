@@ -1,0 +1,48 @@
+{
+  "tool": "dlib",
+  "selected": "crates.io:dlib",
+  "alternatives": [
+    "rubygems:dlib",
+    "homebrew:dlib",
+    "npm:dlib",
+    "pypi:dlib"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 141.9974026662426,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:dlib",
+      "downloads": 5357704,
+      "version_count": 11,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:dlib",
+      "downloads": 0,
+      "version_count": 41,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:dlib",
+      "downloads": 5294,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:dlib",
+      "downloads": 37731,
+      "version_count": 13,
+      "has_repository": false
+    },
+    {
+      "source": "npm:dlib",
+      "downloads": 22,
+      "version_count": 94,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:dlib",
+  "disambiguated_at": "2026-02-17T00:14:32.917132889Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

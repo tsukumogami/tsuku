@@ -1,0 +1,41 @@
+{
+  "tool": "binaryen",
+  "selected": "rubygems:binaryen",
+  "alternatives": [
+    "homebrew:binaryen",
+    "crates.io:binaryen",
+    "npm:binaryen"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 25.877578176979373,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:binaryen",
+      "downloads": 9018,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:binaryen",
+      "downloads": 2300,
+      "version_count": 16,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:binaryen",
+      "downloads": 233364,
+      "version_count": 19,
+      "has_repository": false
+    },
+    {
+      "source": "npm:binaryen",
+      "downloads": 0,
+      "version_count": 1847,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:binaryen",
+  "disambiguated_at": "2026-02-17T00:11:56.748256776Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

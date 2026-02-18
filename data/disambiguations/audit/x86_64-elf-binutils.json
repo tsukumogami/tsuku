@@ -1,0 +1,18 @@
+{
+  "tool": "x86_64-elf-binutils",
+  "selected": "homebrew:x86_64-elf-binutils",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:x86_64-elf-binutils",
+      "downloads": 4136,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:x86_64-elf-binutils",
+  "disambiguated_at": "2026-02-17T00:31:21.436941387Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

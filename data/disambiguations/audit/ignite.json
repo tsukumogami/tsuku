@@ -1,0 +1,47 @@
+{
+  "tool": "ignite",
+  "selected": "rubygems:ignite",
+  "alternatives": [
+    "homebrew:ignite",
+    "crates.io:ignite",
+    "npm:ignite"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 4.174693877551021,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:ignite",
+      "downloads": 92,
+      "version_count": 7,
+      "has_repository": false
+    },
+    {
+      "source": "pypi:ignite",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:ignite",
+      "downloads": 1225,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:ignite",
+      "downloads": 5114,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:ignite",
+      "downloads": 0,
+      "version_count": 153,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:ignite",
+  "disambiguated_at": "2026-02-17T00:18:41.466380161Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,24 @@
+{
+  "tool": "ngspice",
+  "selected": "homebrew:ngspice",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:ngspice",
+      "downloads": 7,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:ngspice",
+      "downloads": 2201,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:ngspice",
+  "disambiguated_at": "2026-02-17T00:23:30.374697763Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

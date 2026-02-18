@@ -1,0 +1,24 @@
+{
+  "tool": "imlib2",
+  "selected": "homebrew:imlib2",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:imlib2",
+      "downloads": 14450,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:imlib2",
+      "downloads": 14,
+      "version_count": 2,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:imlib2",
+  "disambiguated_at": "2026-02-17T00:18:46.548232535Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

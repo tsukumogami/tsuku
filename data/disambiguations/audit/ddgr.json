@@ -1,0 +1,26 @@
+{
+  "tool": "ddgr",
+  "selected": "homebrew:ddgr",
+  "alternatives": [
+    "pypi:ddgr"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:ddgr",
+      "downloads": 0,
+      "version_count": 7,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:ddgr",
+      "downloads": 1542,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:ddgr",
+  "disambiguated_at": "2026-02-17T00:14:15.288532254Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

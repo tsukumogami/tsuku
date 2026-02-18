@@ -1,0 +1,26 @@
+{
+  "tool": "iperf3",
+  "selected": "homebrew:iperf3",
+  "alternatives": [
+    "pypi:iperf3"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:iperf3",
+      "downloads": 71733,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:iperf3",
+      "downloads": 0,
+      "version_count": 13,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:iperf3",
+  "disambiguated_at": "2026-02-17T00:18:57.199015842Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

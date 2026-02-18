@@ -1,0 +1,27 @@
+{
+  "tool": "oxlint",
+  "selected": "npm:oxlint",
+  "alternatives": [
+    "homebrew:oxlint"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 913.3317998849914,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:oxlint",
+      "downloads": 1739,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:oxlint",
+      "downloads": 1588284,
+      "version_count": 174,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:oxlint",
+  "disambiguated_at": "2026-02-17T00:24:42.787777299Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

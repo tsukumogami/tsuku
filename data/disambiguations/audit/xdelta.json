@@ -1,0 +1,24 @@
+{
+  "tool": "xdelta",
+  "selected": "homebrew:xdelta",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:xdelta",
+      "downloads": 1473,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:xdelta",
+      "downloads": 0,
+      "version_count": 0,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:xdelta",
+  "disambiguated_at": "2026-02-17T00:31:26.429865792Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

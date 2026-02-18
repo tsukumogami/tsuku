@@ -1,0 +1,40 @@
+{
+  "tool": "dolt",
+  "selected": "rubygems:dolt",
+  "alternatives": [
+    "homebrew:dolt",
+    "pypi:dolt"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 24.906239628277465,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:dolt",
+      "downloads": 6026,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:dolt",
+      "downloads": 0,
+      "version_count": 9,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:dolt",
+      "downloads": 150085,
+      "version_count": 42,
+      "has_repository": false
+    },
+    {
+      "source": "npm:dolt",
+      "downloads": 3,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:dolt",
+  "disambiguated_at": "2026-02-17T00:14:42.886842225Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,40 @@
+{
+  "tool": "sui",
+  "selected": "homebrew:sui",
+  "alternatives": [
+    "crates.io:sui",
+    "pypi:sui"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 50.737430167597765,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:sui",
+      "downloads": 9082,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:sui",
+      "downloads": 0,
+      "version_count": 8,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:sui",
+      "downloads": 179,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "npm:sui",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:sui",
+  "disambiguated_at": "2026-02-17T00:28:58.371929262Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

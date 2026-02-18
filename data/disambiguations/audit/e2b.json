@@ -1,0 +1,34 @@
+{
+  "tool": "e2b",
+  "selected": "npm:e2b",
+  "alternatives": [
+    "homebrew:e2b",
+    "pypi:e2b"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 187.08494208494207,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:e2b",
+      "downloads": 1554,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:e2b",
+      "downloads": 0,
+      "version_count": 298,
+      "has_repository": true
+    },
+    {
+      "source": "npm:e2b",
+      "downloads": 290730,
+      "version_count": 236,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:e2b",
+  "disambiguated_at": "2026-02-17T00:15:03.218468979Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

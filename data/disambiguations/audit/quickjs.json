@@ -1,0 +1,48 @@
+{
+  "tool": "quickjs",
+  "selected": "rubygems:quickjs",
+  "alternatives": [
+    "crates.io:quickjs",
+    "homebrew:quickjs",
+    "npm:quickjs",
+    "pypi:quickjs"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 14.87509238728751,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:quickjs",
+      "downloads": 1353,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:quickjs",
+      "downloads": 0,
+      "version_count": 38,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:quickjs",
+      "downloads": 731,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:quickjs",
+      "downloads": 20126,
+      "version_count": 36,
+      "has_repository": true
+    },
+    {
+      "source": "npm:quickjs",
+      "downloads": 14,
+      "version_count": 30,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:quickjs",
+  "disambiguated_at": "2026-02-17T00:26:30.722156707Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

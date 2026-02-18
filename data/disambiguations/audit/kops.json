@@ -1,0 +1,18 @@
+{
+  "tool": "kops",
+  "selected": "homebrew:kops",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:kops",
+      "downloads": 4171,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:kops",
+  "disambiguated_at": "2026-02-17T00:19:54.278458936Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,34 @@
+{
+  "tool": "selenium-server",
+  "selected": "rubygems:selenium-server",
+  "alternatives": [
+    "npm:selenium-server",
+    "homebrew:selenium-server"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.1738483234095896,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:selenium-server",
+      "downloads": 7975,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:selenium-server",
+      "downloads": 29966,
+      "version_count": 10,
+      "has_repository": false
+    },
+    {
+      "source": "npm:selenium-server",
+      "downloads": 25528,
+      "version_count": 51,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:selenium-server",
+  "disambiguated_at": "2026-02-17T00:27:41.983497443Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

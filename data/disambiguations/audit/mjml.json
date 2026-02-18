@@ -1,0 +1,41 @@
+{
+  "tool": "mjml",
+  "selected": "npm:mjml",
+  "alternatives": [
+    "rubygems:mjml",
+    "homebrew:mjml",
+    "pypi:mjml"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 27.446149363892395,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "pypi:mjml",
+      "downloads": 0,
+      "version_count": 16,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:mjml",
+      "downloads": 551,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:mjml",
+      "downloads": 41188,
+      "version_count": 8,
+      "has_repository": false
+    },
+    {
+      "source": "npm:mjml",
+      "downloads": 1130452,
+      "version_count": 175,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:mjml",
+  "disambiguated_at": "2026-02-17T00:22:36.170995137Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

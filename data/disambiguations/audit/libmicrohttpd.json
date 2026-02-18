@@ -1,0 +1,18 @@
+{
+  "tool": "libmicrohttpd",
+  "selected": "homebrew:libmicrohttpd",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:libmicrohttpd",
+      "downloads": 313913,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:libmicrohttpd",
+  "disambiguated_at": "2026-02-17T00:20:45.772598587Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

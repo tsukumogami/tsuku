@@ -1,0 +1,48 @@
+{
+  "tool": "pre-commit",
+  "selected": "rubygems:pre-commit",
+  "alternatives": [
+    "npm:pre-commit",
+    "homebrew:pre-commit",
+    "crates.io:pre-commit",
+    "pypi:pre-commit"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 6.4759324589839125,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:pre-commit",
+      "downloads": 1135,
+      "version_count": 6,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:pre-commit",
+      "downloads": 133179,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:pre-commit",
+      "downloads": 0,
+      "version_count": 201,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:pre-commit",
+      "downloads": 2353315,
+      "version_count": 69,
+      "has_repository": false
+    },
+    {
+      "source": "npm:pre-commit",
+      "downloads": 363394,
+      "version_count": 30,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:pre-commit",
+  "disambiguated_at": "2026-02-17T00:25:37.458216456Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

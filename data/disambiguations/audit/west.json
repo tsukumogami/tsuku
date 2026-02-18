@@ -1,0 +1,40 @@
+{
+  "tool": "west",
+  "selected": "homebrew:west",
+  "alternatives": [
+    "crates.io:west",
+    "pypi:west"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 9,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:west",
+      "downloads": 106,
+      "version_count": 9,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:west",
+      "downloads": 954,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:west",
+      "downloads": 0,
+      "version_count": 78,
+      "has_repository": true
+    },
+    {
+      "source": "npm:west",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:west",
+  "disambiguated_at": "2026-02-17T00:31:08.357374557Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

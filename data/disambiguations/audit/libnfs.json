@@ -1,0 +1,33 @@
+{
+  "tool": "libnfs",
+  "selected": "homebrew:libnfs",
+  "alternatives": [
+    "crates.io:libnfs"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 4.197122302158274,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:libnfs",
+      "downloads": 695,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:libnfs",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:libnfs",
+      "downloads": 2917,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:libnfs",
+  "disambiguated_at": "2026-02-17T00:20:47.787622517Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

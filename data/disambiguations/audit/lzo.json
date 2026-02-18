@@ -1,0 +1,34 @@
+{
+  "tool": "lzo",
+  "selected": "homebrew:lzo",
+  "alternatives": [
+    "rubygems:lzo",
+    "npm:lzo"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 35.55669276774154,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:lzo",
+      "downloads": 576694,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:lzo",
+      "downloads": 16219,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:lzo",
+      "downloads": 0,
+      "version_count": 15,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:lzo",
+  "disambiguated_at": "2026-02-17T00:21:45.006158463Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

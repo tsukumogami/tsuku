@@ -1,0 +1,47 @@
+{
+  "tool": "harsh",
+  "selected": "crates.io:harsh",
+  "alternatives": [
+    "rubygems:harsh",
+    "homebrew:harsh",
+    "npm:harsh"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.1551388048665725,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:harsh",
+      "downloads": 32062,
+      "version_count": 11,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:harsh",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:harsh",
+      "downloads": 486,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:harsh",
+      "downloads": 14877,
+      "version_count": 4,
+      "has_repository": false
+    },
+    {
+      "source": "npm:harsh",
+      "downloads": 0,
+      "version_count": 14,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:harsh",
+  "disambiguated_at": "2026-02-17T00:18:01.009424328Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

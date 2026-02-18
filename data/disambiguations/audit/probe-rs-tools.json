@@ -1,0 +1,27 @@
+{
+  "tool": "probe-rs-tools",
+  "selected": "crates.io:probe-rs-tools",
+  "alternatives": [
+    "homebrew:probe-rs-tools"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 30.616216216216216,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:probe-rs-tools",
+      "downloads": 11328,
+      "version_count": 9,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:probe-rs-tools",
+      "downloads": 370,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:probe-rs-tools",
+  "disambiguated_at": "2026-02-17T00:25:40.997302622Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

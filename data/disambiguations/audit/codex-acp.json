@@ -1,0 +1,18 @@
+{
+  "tool": "codex-acp",
+  "selected": "homebrew:codex-acp",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:codex-acp",
+      "downloads": 232,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:codex-acp",
+  "disambiguated_at": "2026-02-17T00:13:30.798553856Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

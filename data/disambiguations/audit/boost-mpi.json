@@ -1,0 +1,18 @@
+{
+  "tool": "boost-mpi",
+  "selected": "homebrew:boost-mpi",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:boost-mpi",
+      "downloads": 782,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:boost-mpi",
+  "disambiguated_at": "2026-02-17T00:12:06.1910357Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,26 @@
+{
+  "tool": "vscode-langservers-extracted",
+  "selected": "homebrew:vscode-langservers-extracted",
+  "alternatives": [
+    "npm:vscode-langservers-extracted"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:vscode-langservers-extracted",
+      "downloads": 2280,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:vscode-langservers-extracted",
+      "downloads": 0,
+      "version_count": 23,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:vscode-langservers-extracted",
+  "disambiguated_at": "2026-02-17T00:30:53.254067337Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

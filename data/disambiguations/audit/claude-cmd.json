@@ -1,0 +1,26 @@
+{
+  "tool": "claude-cmd",
+  "selected": "homebrew:claude-cmd",
+  "alternatives": [
+    "npm:claude-cmd"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:claude-cmd",
+      "downloads": 1112,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:claude-cmd",
+      "downloads": 0,
+      "version_count": 5,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:claude-cmd",
+  "disambiguated_at": "2026-02-17T00:13:08.715961226Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "zsh-you-should-use",
+  "selected": "homebrew:zsh-you-should-use",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:zsh-you-should-use",
+      "downloads": 1987,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:zsh-you-should-use",
+  "disambiguated_at": "2026-02-17T00:31:55.695967649Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

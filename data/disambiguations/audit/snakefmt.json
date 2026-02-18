@@ -1,0 +1,26 @@
+{
+  "tool": "snakefmt",
+  "selected": "homebrew:snakefmt",
+  "alternatives": [
+    "pypi:snakefmt"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:snakefmt",
+      "downloads": 1385,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:snakefmt",
+      "downloads": 0,
+      "version_count": 40,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:snakefmt",
+  "disambiguated_at": "2026-02-17T00:28:13.295233711Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

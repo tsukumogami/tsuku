@@ -1,0 +1,18 @@
+{
+  "tool": "iam-policy-json-to-terraform",
+  "selected": "homebrew:iam-policy-json-to-terraform",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:iam-policy-json-to-terraform",
+      "downloads": 495,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:iam-policy-json-to-terraform",
+  "disambiguated_at": "2026-02-17T00:18:34.567278512Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

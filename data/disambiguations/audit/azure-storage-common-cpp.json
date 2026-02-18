@@ -1,0 +1,24 @@
+{
+  "tool": "azure-storage-common-cpp",
+  "selected": "homebrew:azure-storage-common-cpp",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:azure-storage-common-cpp",
+      "downloads": 385,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:azure-storage-common-cpp",
+      "downloads": 1,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:azure-storage-common-cpp",
+  "disambiguated_at": "2026-02-17T00:11:33.905502356Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

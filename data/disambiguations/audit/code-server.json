@@ -1,0 +1,26 @@
+{
+  "tool": "code-server",
+  "selected": "homebrew:code-server",
+  "alternatives": [
+    "npm:code-server"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:code-server",
+      "downloads": 9422,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:code-server",
+      "downloads": 0,
+      "version_count": 363,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:code-server",
+  "disambiguated_at": "2026-02-17T00:13:28.154948437Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

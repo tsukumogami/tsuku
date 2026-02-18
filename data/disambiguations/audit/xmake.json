@@ -1,0 +1,40 @@
+{
+  "tool": "xmake",
+  "selected": "homebrew:xmake",
+  "alternatives": [
+    "crates.io:xmake",
+    "npm:xmake"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 97.83333333333333,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:xmake",
+      "downloads": 36,
+      "version_count": 9,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:xmake",
+      "downloads": 3522,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:xmake",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "npm:xmake",
+      "downloads": 0,
+      "version_count": 18,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:xmake",
+  "disambiguated_at": "2026-02-17T00:31:29.161469482Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

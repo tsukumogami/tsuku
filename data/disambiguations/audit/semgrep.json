@@ -1,0 +1,40 @@
+{
+  "tool": "semgrep",
+  "selected": "homebrew:semgrep",
+  "alternatives": [
+    "rubygems:semgrep",
+    "pypi:semgrep"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 32.118895966029726,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:semgrep",
+      "downloads": 60512,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:semgrep",
+      "downloads": 1884,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "pypi:semgrep",
+      "downloads": 0,
+      "version_count": 328,
+      "has_repository": true
+    },
+    {
+      "source": "npm:semgrep",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:semgrep",
+  "disambiguated_at": "2026-02-17T00:27:42.218600602Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

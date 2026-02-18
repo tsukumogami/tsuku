@@ -1,0 +1,24 @@
+{
+  "tool": "pypy",
+  "selected": "homebrew:pypy",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:pypy",
+      "downloads": 2961,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:pypy",
+      "downloads": 4,
+      "version_count": 4,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:pypy",
+  "disambiguated_at": "2026-02-17T00:26:03.536188331Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

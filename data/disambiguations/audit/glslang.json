@@ -1,0 +1,33 @@
+{
+  "tool": "glslang",
+  "selected": "homebrew:glslang",
+  "alternatives": [
+    "crates.io:glslang"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.053797873703087,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:glslang",
+      "downloads": 7807,
+      "version_count": 20,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:glslang",
+      "downloads": 23841,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:glslang",
+      "downloads": 0,
+      "version_count": 0,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:glslang",
+  "disambiguated_at": "2026-02-17T00:17:07.150899771Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

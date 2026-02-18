@@ -1,0 +1,18 @@
+{
+  "tool": "sonobuoy",
+  "selected": "homebrew:sonobuoy",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:sonobuoy",
+      "downloads": 455,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:sonobuoy",
+  "disambiguated_at": "2026-02-17T00:28:20.645427284Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

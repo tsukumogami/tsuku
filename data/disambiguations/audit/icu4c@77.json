@@ -1,0 +1,18 @@
+{
+  "tool": "icu4c@77",
+  "selected": "homebrew:icu4c@77",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:icu4c@77",
+      "downloads": 1646531,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:icu4c@77",
+  "disambiguated_at": "2026-02-17T00:18:39.219039754Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

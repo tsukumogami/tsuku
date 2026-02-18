@@ -1,0 +1,26 @@
+{
+  "tool": "py7zr",
+  "selected": "homebrew:py7zr",
+  "alternatives": [
+    "pypi:py7zr"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:py7zr",
+      "downloads": 0,
+      "version_count": 164,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:py7zr",
+      "downloads": 113,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:py7zr",
+  "disambiguated_at": "2026-02-17T00:25:58.483676325Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

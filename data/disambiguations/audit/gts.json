@@ -1,0 +1,41 @@
+{
+  "tool": "gts",
+  "selected": "npm:gts",
+  "alternatives": [
+    "homebrew:gts",
+    "rubygems:gts",
+    "crates.io:gts"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.626706086337972,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:gts",
+      "downloads": 5562,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:gts",
+      "downloads": 134958,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:gts",
+      "downloads": 34448,
+      "version_count": 10,
+      "has_repository": false
+    },
+    {
+      "source": "npm:gts",
+      "downloads": 489453,
+      "version_count": 53,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:gts",
+  "disambiguated_at": "2026-02-17T00:17:51.765483084Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

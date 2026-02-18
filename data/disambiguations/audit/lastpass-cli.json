@@ -1,0 +1,27 @@
+{
+  "tool": "lastpass-cli",
+  "selected": "homebrew:lastpass-cli",
+  "alternatives": [
+    "rubygems:lastpass-cli"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.3976068376068376,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:lastpass-cli",
+      "downloads": 4088,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:lastpass-cli",
+      "downloads": 2925,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:lastpass-cli",
+  "disambiguated_at": "2026-02-17T00:20:13.416735282Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

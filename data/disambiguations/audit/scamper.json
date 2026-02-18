@@ -1,0 +1,32 @@
+{
+  "tool": "scamper",
+  "selected": "homebrew:scamper",
+  "alternatives": [
+    "pypi:scamper"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:scamper",
+      "downloads": 505,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:scamper",
+      "downloads": 0,
+      "version_count": 9,
+      "has_repository": true
+    },
+    {
+      "source": "npm:scamper",
+      "downloads": 0,
+      "version_count": 0,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:scamper",
+  "disambiguated_at": "2026-02-17T00:27:29.676804394Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

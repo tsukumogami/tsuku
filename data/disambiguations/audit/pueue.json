@@ -1,0 +1,33 @@
+{
+  "tool": "pueue",
+  "selected": "crates.io:pueue",
+  "alternatives": [
+    "homebrew:pueue"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.4526958290946084,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:pueue",
+      "downloads": 983,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:pueue",
+      "downloads": 1428,
+      "version_count": 75,
+      "has_repository": true
+    },
+    {
+      "source": "npm:pueue",
+      "downloads": 4,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:pueue",
+  "disambiguated_at": "2026-02-17T00:25:53.318687374Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

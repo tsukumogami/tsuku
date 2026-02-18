@@ -1,0 +1,36 @@
+{
+  "tool": "seaweedfs",
+  "selected": "homebrew:seaweedfs",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:seaweedfs",
+      "downloads": 5,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:seaweedfs",
+      "downloads": 1148,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:seaweedfs",
+      "downloads": 783,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:seaweedfs",
+      "downloads": 6,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:seaweedfs",
+  "disambiguated_at": "2026-02-17T00:27:40.712442298Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

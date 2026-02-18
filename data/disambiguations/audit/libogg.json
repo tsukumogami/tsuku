@@ -1,0 +1,27 @@
+{
+  "tool": "libogg",
+  "selected": "homebrew:libogg",
+  "alternatives": [
+    "crates.io:libogg"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2124.532894736842,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:libogg",
+      "downloads": 152,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:libogg",
+      "downloads": 322929,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:libogg",
+  "disambiguated_at": "2026-02-17T00:20:48.939773239Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

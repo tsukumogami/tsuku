@@ -1,0 +1,40 @@
+{
+  "tool": "hk",
+  "selected": "rubygems:hk",
+  "alternatives": [
+    "homebrew:hk",
+    "crates.io:hk"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.979946524064171,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:hk",
+      "downloads": 1496,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:hk",
+      "downloads": 828,
+      "version_count": 65,
+      "has_repository": true
+    },
+    {
+      "source": "npm:hk",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "rubygems:hk",
+      "downloads": 4458,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:hk",
+  "disambiguated_at": "2026-02-17T00:18:19.105294415Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

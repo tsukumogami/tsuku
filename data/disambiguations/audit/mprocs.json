@@ -1,0 +1,41 @@
+{
+  "tool": "mprocs",
+  "selected": "npm:mprocs",
+  "alternatives": [
+    "homebrew:mprocs",
+    "crates.io:mprocs",
+    "pypi:mprocs"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 16.078151260504203,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:mprocs",
+      "downloads": 1944,
+      "version_count": 19,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:mprocs",
+      "downloads": 0,
+      "version_count": 35,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:mprocs",
+      "downloads": 2380,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:mprocs",
+      "downloads": 38266,
+      "version_count": 22,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:mprocs",
+  "disambiguated_at": "2026-02-17T00:22:54.768412677Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

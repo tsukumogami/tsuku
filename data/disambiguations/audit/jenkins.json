@@ -1,0 +1,48 @@
+{
+  "tool": "jenkins",
+  "selected": "rubygems:jenkins",
+  "alternatives": [
+    "homebrew:jenkins",
+    "crates.io:jenkins",
+    "npm:jenkins",
+    "pypi:jenkins"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 47.63265306122449,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:jenkins",
+      "downloads": 14700,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:jenkins",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:jenkins",
+      "downloads": 152,
+      "version_count": 22,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:jenkins",
+      "downloads": 700200,
+      "version_count": 8,
+      "has_repository": false
+    },
+    {
+      "source": "npm:jenkins",
+      "downloads": 0,
+      "version_count": 42,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:jenkins",
+  "disambiguated_at": "2026-02-17T00:19:12.29617129Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

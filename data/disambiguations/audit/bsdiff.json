@@ -1,0 +1,40 @@
+{
+  "tool": "bsdiff",
+  "selected": "crates.io:bsdiff",
+  "alternatives": [
+    "rubygems:bsdiff",
+    "homebrew:bsdiff"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 19.840946615299945,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:bsdiff",
+      "downloads": 477,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:bsdiff",
+      "downloads": 36051,
+      "version_count": 9,
+      "has_repository": true
+    },
+    {
+      "source": "npm:bsdiff",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:bsdiff",
+      "downloads": 1817,
+      "version_count": 4,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:bsdiff",
+  "disambiguated_at": "2026-02-17T00:12:16.045772265Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

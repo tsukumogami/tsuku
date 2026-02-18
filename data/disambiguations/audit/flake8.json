@@ -1,0 +1,32 @@
+{
+  "tool": "flake8",
+  "selected": "homebrew:flake8",
+  "alternatives": [
+    "pypi:flake8"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:flake8",
+      "downloads": 6362,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:flake8",
+      "downloads": 0,
+      "version_count": 94,
+      "has_repository": true
+    },
+    {
+      "source": "npm:flake8",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:flake8",
+  "disambiguated_at": "2026-02-17T00:15:57.018255036Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

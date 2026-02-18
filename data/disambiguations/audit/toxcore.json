@@ -1,0 +1,26 @@
+{
+  "tool": "toxcore",
+  "selected": "homebrew:toxcore",
+  "alternatives": [
+    "npm:toxcore"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:toxcore",
+      "downloads": 297,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:toxcore",
+      "downloads": 0,
+      "version_count": 28,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:toxcore",
+  "disambiguated_at": "2026-02-17T00:29:53.422597545Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

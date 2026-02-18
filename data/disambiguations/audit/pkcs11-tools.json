@@ -1,0 +1,18 @@
+{
+  "tool": "pkcs11-tools",
+  "selected": "homebrew:pkcs11-tools",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:pkcs11-tools",
+      "downloads": 883,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:pkcs11-tools",
+  "disambiguated_at": "2026-02-17T00:25:20.185379117Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

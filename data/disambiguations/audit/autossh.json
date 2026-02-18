@@ -1,0 +1,48 @@
+{
+  "tool": "autossh",
+  "selected": "rubygems:autossh",
+  "alternatives": [
+    "homebrew:autossh",
+    "crates.io:autossh",
+    "npm:autossh",
+    "pypi:autossh"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.719132207338381,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:autossh",
+      "downloads": 6868,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:autossh",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": false
+    },
+    {
+      "source": "crates.io:autossh",
+      "downloads": 70,
+      "version_count": 7,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:autossh",
+      "downloads": 25543,
+      "version_count": 8,
+      "has_repository": false
+    },
+    {
+      "source": "npm:autossh",
+      "downloads": 30,
+      "version_count": 18,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:autossh",
+  "disambiguated_at": "2026-02-17T00:11:19.977934727Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,47 @@
+{
+  "tool": "cups",
+  "selected": "homebrew:cups",
+  "alternatives": [
+    "rubygems:cups",
+    "crates.io:cups",
+    "pypi:cups"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.084776970123923,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:cups",
+      "downloads": 0,
+      "version_count": 6,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:cups",
+      "downloads": 254,
+      "version_count": 6,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:cups",
+      "downloads": 130211,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:cups",
+      "downloads": 62458,
+      "version_count": 9,
+      "has_repository": false
+    },
+    {
+      "source": "npm:cups",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:cups",
+  "disambiguated_at": "2026-02-17T00:13:59.18278056Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

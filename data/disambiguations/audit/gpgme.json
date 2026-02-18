@@ -1,0 +1,40 @@
+{
+  "tool": "gpgme",
+  "selected": "rubygems:gpgme",
+  "alternatives": [
+    "homebrew:gpgme",
+    "crates.io:gpgme"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 182.80127463335404,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:gpgme",
+      "downloads": 32569,
+      "version_count": 16,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:gpgme",
+      "downloads": 291221,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:gpgme",
+      "downloads": 53235570,
+      "version_count": 27,
+      "has_repository": false
+    },
+    {
+      "source": "npm:gpgme",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:gpgme",
+  "disambiguated_at": "2026-02-17T00:17:29.973243227Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

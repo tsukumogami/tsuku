@@ -1,0 +1,27 @@
+{
+  "tool": "apngasm",
+  "selected": "rubygems:apngasm",
+  "alternatives": [
+    "homebrew:apngasm"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 5.806673209028459,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:apngasm",
+      "downloads": 1019,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:apngasm",
+      "downloads": 5917,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:apngasm",
+  "disambiguated_at": "2026-02-17T00:10:49.377061849Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

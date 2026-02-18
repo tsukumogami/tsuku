@@ -1,0 +1,27 @@
+{
+  "tool": "groonga",
+  "selected": "homebrew:groonga",
+  "alternatives": [
+    "rubygems:groonga"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.1976663934779797,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:groonga",
+      "downloads": 55531,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:groonga",
+      "downloads": 46366,
+      "version_count": 10,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:groonga",
+  "disambiguated_at": "2026-02-17T00:17:42.914713087Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

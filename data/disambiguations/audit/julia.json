@@ -1,0 +1,47 @@
+{
+  "tool": "julia",
+  "selected": "homebrew:julia",
+  "alternatives": [
+    "rubygems:julia",
+    "crates.io:julia",
+    "pypi:julia"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.593580768722758,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:julia",
+      "downloads": 12065,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:julia",
+      "downloads": 80,
+      "version_count": 11,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:julia",
+      "downloads": 0,
+      "version_count": 19,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:julia",
+      "downloads": 7571,
+      "version_count": 3,
+      "has_repository": false
+    },
+    {
+      "source": "npm:julia",
+      "downloads": 26,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:julia",
+  "disambiguated_at": "2026-02-17T00:19:31.265710228Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

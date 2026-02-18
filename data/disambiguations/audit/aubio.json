@@ -1,0 +1,47 @@
+{
+  "tool": "aubio",
+  "selected": "rubygems:aubio",
+  "alternatives": [
+    "homebrew:aubio",
+    "crates.io:aubio",
+    "pypi:aubio"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 19.141042780748663,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:aubio",
+      "downloads": 582,
+      "version_count": 5,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:aubio",
+      "downloads": 0,
+      "version_count": 10,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:aubio",
+      "downloads": 1496,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:aubio",
+      "downloads": 28635,
+      "version_count": 11,
+      "has_repository": false
+    },
+    {
+      "source": "npm:aubio",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:aubio",
+  "disambiguated_at": "2026-02-17T00:11:14.379350998Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

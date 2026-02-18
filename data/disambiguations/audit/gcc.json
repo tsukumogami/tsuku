@@ -1,0 +1,34 @@
+{
+  "tool": "gcc",
+  "selected": "homebrew:gcc",
+  "alternatives": [
+    "crates.io:gcc",
+    "npm:gcc"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.7159409040421427,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:gcc",
+      "downloads": 1056697,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:gcc",
+      "downloads": 615812,
+      "version_count": 67,
+      "has_repository": true
+    },
+    {
+      "source": "npm:gcc",
+      "downloads": 375,
+      "version_count": 7,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:gcc",
+  "disambiguated_at": "2026-02-17T00:10:07.461686637Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

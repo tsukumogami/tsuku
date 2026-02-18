@@ -1,0 +1,46 @@
+{
+  "tool": "burp",
+  "selected": "rubygems:burp",
+  "alternatives": [
+    "homebrew:burp",
+    "pypi:burp"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 25.837696335078533,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:burp",
+      "downloads": 11,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "pypi:burp",
+      "downloads": 0,
+      "version_count": 5,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:burp",
+      "downloads": 382,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:burp",
+      "downloads": 9870,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "npm:burp",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:burp",
+  "disambiguated_at": "2026-02-17T00:12:24.581511439Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

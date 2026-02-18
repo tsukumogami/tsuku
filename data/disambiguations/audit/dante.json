@@ -1,0 +1,41 @@
+{
+  "tool": "dante",
+  "selected": "rubygems:dante",
+  "alternatives": [
+    "homebrew:dante",
+    "npm:dante",
+    "pypi:dante"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 76104.77667493797,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:dante",
+      "downloads": 403,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:dante",
+      "downloads": 0,
+      "version_count": 21,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:dante",
+      "downloads": 30670225,
+      "version_count": 11,
+      "has_repository": false
+    },
+    {
+      "source": "npm:dante",
+      "downloads": 44,
+      "version_count": 68,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:dante",
+  "disambiguated_at": "2026-02-17T00:14:06.302265668Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

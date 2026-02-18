@@ -1,0 +1,48 @@
+{
+  "tool": "blake3",
+  "selected": "crates.io:blake3",
+  "alternatives": [
+    "homebrew:blake3",
+    "rubygems:blake3",
+    "pypi:blake3",
+    "npm:blake3"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 153.37217344107012,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "rubygems:blake3",
+      "downloads": 10125,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:blake3",
+      "downloads": 0,
+      "version_count": 26,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:blake3",
+      "downloads": 17519550,
+      "version_count": 42,
+      "has_repository": true
+    },
+    {
+      "source": "npm:blake3",
+      "downloads": 0,
+      "version_count": 14,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:blake3",
+      "downloads": 114229,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:blake3",
+  "disambiguated_at": "2026-02-17T00:12:01.051979581Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

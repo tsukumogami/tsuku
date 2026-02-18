@@ -1,0 +1,24 @@
+{
+  "tool": "newrelic-cli",
+  "selected": "homebrew:newrelic-cli",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:newrelic-cli",
+      "downloads": 4758,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:newrelic-cli",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:newrelic-cli",
+  "disambiguated_at": "2026-02-17T00:23:27.217583989Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

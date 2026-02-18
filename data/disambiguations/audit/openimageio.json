@@ -1,0 +1,32 @@
+{
+  "tool": "openimageio",
+  "selected": "homebrew:openimageio",
+  "alternatives": [
+    "pypi:openimageio"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:openimageio",
+      "downloads": 6,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:openimageio",
+      "downloads": 4532,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:openimageio",
+      "downloads": 0,
+      "version_count": 14,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:openimageio",
+  "disambiguated_at": "2026-02-17T00:24:10.806878287Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

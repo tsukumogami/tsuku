@@ -1,0 +1,33 @@
+{
+  "tool": "tmux",
+  "selected": "homebrew:tmux",
+  "alternatives": [
+    "npm:tmux"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2262.503184713376,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:tmux",
+      "downloads": 57,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:tmux",
+      "downloads": 355213,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:tmux",
+      "downloads": 157,
+      "version_count": 10,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:tmux",
+  "disambiguated_at": "2026-02-17T00:10:05.264491412Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

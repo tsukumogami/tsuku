@@ -1,0 +1,27 @@
+{
+  "tool": "lspmux",
+  "selected": "crates.io:lspmux",
+  "alternatives": [
+    "homebrew:lspmux"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 5.357142857142857,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:lspmux",
+      "downloads": 225,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:lspmux",
+      "downloads": 42,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:lspmux",
+  "disambiguated_at": "2026-02-17T00:21:37.856391221Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,34 @@
+{
+  "tool": "libevent",
+  "selected": "homebrew:libevent",
+  "alternatives": [
+    "rubygems:libevent",
+    "crates.io:libevent"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 80.49295282469423,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:libevent",
+      "downloads": 4329,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:libevent",
+      "downloads": 691032,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:libevent",
+      "downloads": 8585,
+      "version_count": 2,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:libevent",
+  "disambiguated_at": "2026-02-17T00:20:32.417571478Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,27 @@
+{
+  "tool": "tre-command",
+  "selected": "homebrew:tre-command",
+  "alternatives": [
+    "crates.io:tre-command"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 4.461538461538462,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:tre-command",
+      "downloads": 143,
+      "version_count": 5,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:tre-command",
+      "downloads": 638,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:tre-command",
+  "disambiguated_at": "2026-02-17T00:29:58.27321526Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

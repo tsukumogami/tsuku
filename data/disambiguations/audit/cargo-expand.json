@@ -1,0 +1,27 @@
+{
+  "tool": "cargo-expand",
+  "selected": "crates.io:cargo-expand",
+  "alternatives": [
+    "homebrew:cargo-expand"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 439.08188976377954,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:cargo-expand",
+      "downloads": 635,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:cargo-expand",
+      "downloads": 278817,
+      "version_count": 176,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:cargo-expand",
+  "disambiguated_at": "2026-02-17T00:12:34.072215479Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

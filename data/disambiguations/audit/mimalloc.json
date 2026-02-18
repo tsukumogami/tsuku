@@ -1,0 +1,27 @@
+{
+  "tool": "mimalloc",
+  "selected": "crates.io:mimalloc",
+  "alternatives": [
+    "homebrew:mimalloc"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 2376.932754880694,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:mimalloc",
+      "downloads": 2766,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:mimalloc",
+      "downloads": 6574596,
+      "version_count": 49,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:mimalloc",
+  "disambiguated_at": "2026-02-17T00:22:28.618699988Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

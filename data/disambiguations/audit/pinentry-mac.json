@@ -1,0 +1,18 @@
+{
+  "tool": "pinentry-mac",
+  "selected": "homebrew:pinentry-mac",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:pinentry-mac",
+      "downloads": 33399,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:pinentry-mac",
+  "disambiguated_at": "2026-02-17T00:25:14.659438448Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

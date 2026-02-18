@@ -1,0 +1,40 @@
+{
+  "tool": "dfmt",
+  "selected": "homebrew:dfmt",
+  "alternatives": [
+    "crates.io:dfmt",
+    "pypi:dfmt"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 6.578378378378378,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:dfmt",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:dfmt",
+      "downloads": 185,
+      "version_count": 6,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:dfmt",
+      "downloads": 1217,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:dfmt",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:dfmt",
+  "disambiguated_at": "2026-02-17T00:14:22.190642515Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

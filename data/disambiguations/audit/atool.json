@@ -1,0 +1,36 @@
+{
+  "tool": "atool",
+  "selected": "homebrew:atool",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:atool",
+      "downloads": 583,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:atool",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:atool",
+      "downloads": 17,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "npm:atool",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:atool",
+  "disambiguated_at": "2026-02-17T00:11:13.281247541Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

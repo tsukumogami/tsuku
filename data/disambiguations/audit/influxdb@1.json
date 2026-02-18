@@ -1,0 +1,18 @@
+{
+  "tool": "influxdb@1",
+  "selected": "homebrew:influxdb@1",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:influxdb@1",
+      "downloads": 1205,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:influxdb@1",
+  "disambiguated_at": "2026-02-17T00:18:49.223930408Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,47 @@
+{
+  "tool": "rad",
+  "selected": "rubygems:rad",
+  "alternatives": [
+    "homebrew:rad",
+    "crates.io:rad",
+    "pypi:rad"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 194.65198237885463,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:rad",
+      "downloads": 137,
+      "version_count": 10,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:rad",
+      "downloads": 0,
+      "version_count": 33,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:rad",
+      "downloads": 227,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:rad",
+      "downloads": 44186,
+      "version_count": 11,
+      "has_repository": false
+    },
+    {
+      "source": "npm:rad",
+      "downloads": 3,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:rad",
+  "disambiguated_at": "2026-02-17T00:26:33.053685758Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

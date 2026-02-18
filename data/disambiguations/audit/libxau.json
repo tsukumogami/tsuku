@@ -1,0 +1,18 @@
+{
+  "tool": "libxau",
+  "selected": "homebrew:libxau",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:libxau",
+      "downloads": 871311,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:libxau",
+  "disambiguated_at": "2026-02-17T00:21:12.74248489Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

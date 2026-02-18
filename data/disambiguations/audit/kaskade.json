@@ -1,0 +1,32 @@
+{
+  "tool": "kaskade",
+  "selected": "homebrew:kaskade",
+  "alternatives": [
+    "pypi:kaskade"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:kaskade",
+      "downloads": 1162,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:kaskade",
+      "downloads": 0,
+      "version_count": 57,
+      "has_repository": true
+    },
+    {
+      "source": "npm:kaskade",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:kaskade",
+  "disambiguated_at": "2026-02-17T00:19:40.583737763Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,32 @@
+{
+  "tool": "awslogs",
+  "selected": "homebrew:awslogs",
+  "alternatives": [
+    "pypi:awslogs"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:awslogs",
+      "downloads": 2825,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:awslogs",
+      "downloads": 0,
+      "version_count": 17,
+      "has_repository": true
+    },
+    {
+      "source": "npm:awslogs",
+      "downloads": 0,
+      "version_count": 0,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:awslogs",
+  "disambiguated_at": "2026-02-17T00:11:30.422121313Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

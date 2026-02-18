@@ -1,0 +1,34 @@
+{
+  "tool": "typstyle",
+  "selected": "crates.io:typstyle",
+  "alternatives": [
+    "homebrew:typstyle",
+    "npm:typstyle"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.0220167327168648,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:typstyle",
+      "downloads": 2271,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:typstyle",
+      "downloads": 2321,
+      "version_count": 73,
+      "has_repository": true
+    },
+    {
+      "source": "npm:typstyle",
+      "downloads": 42,
+      "version_count": 44,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:typstyle",
+  "disambiguated_at": "2026-02-17T00:30:16.925194465Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,47 @@
+{
+  "tool": "flow",
+  "selected": "rubygems:flow",
+  "alternatives": [
+    "npm:flow",
+    "homebrew:flow",
+    "crates.io:flow"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 25.97954291193863,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:flow",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:flow",
+      "downloads": 3634,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:flow",
+      "downloads": 76,
+      "version_count": 8,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:flow",
+      "downloads": 162554,
+      "version_count": 21,
+      "has_repository": false
+    },
+    {
+      "source": "npm:flow",
+      "downloads": 6257,
+      "version_count": 2,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:flow",
+  "disambiguated_at": "2026-02-17T00:16:01.689836761Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

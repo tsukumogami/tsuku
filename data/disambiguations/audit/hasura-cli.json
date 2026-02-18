@@ -1,0 +1,18 @@
+{
+  "tool": "hasura-cli",
+  "selected": "npm:hasura-cli",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "npm:hasura-cli",
+      "downloads": 50278,
+      "version_count": 247,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:hasura-cli",
+  "disambiguated_at": "2026-02-17T00:18:04.682482741Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

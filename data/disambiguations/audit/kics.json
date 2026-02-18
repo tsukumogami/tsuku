@@ -1,0 +1,26 @@
+{
+  "tool": "kics",
+  "selected": "homebrew:kics",
+  "alternatives": [
+    "pypi:kics"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:kics",
+      "downloads": 0,
+      "version_count": 13,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:kics",
+      "downloads": 3014,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:kics",
+  "disambiguated_at": "2026-02-17T00:19:47.55212082Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

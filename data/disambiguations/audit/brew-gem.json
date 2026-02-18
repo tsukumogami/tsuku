@@ -1,0 +1,27 @@
+{
+  "tool": "brew-gem",
+  "selected": "rubygems:brew-gem",
+  "alternatives": [
+    "homebrew:brew-gem"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 10.286111813812294,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:brew-gem",
+      "downloads": 3953,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:brew-gem",
+      "downloads": 40661,
+      "version_count": 14,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:brew-gem",
+  "disambiguated_at": "2026-02-17T00:12:12.640723404Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

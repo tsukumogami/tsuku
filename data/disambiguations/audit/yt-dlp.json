@@ -1,0 +1,40 @@
+{
+  "tool": "yt-dlp",
+  "selected": "homebrew:yt-dlp",
+  "alternatives": [
+    "crates.io:yt-dlp",
+    "pypi:yt-dlp"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 176.7766594124048,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:yt-dlp",
+      "downloads": 649831,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:yt-dlp",
+      "downloads": 3676,
+      "version_count": 31,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:yt-dlp",
+      "downloads": 0,
+      "version_count": 566,
+      "has_repository": true
+    },
+    {
+      "source": "npm:yt-dlp",
+      "downloads": 0,
+      "version_count": 0,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:yt-dlp",
+  "disambiguated_at": "2026-02-17T00:10:12.837771323Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

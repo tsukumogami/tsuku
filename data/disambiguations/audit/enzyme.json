@@ -1,0 +1,47 @@
+{
+  "tool": "enzyme",
+  "selected": "rubygems:enzyme",
+  "alternatives": [
+    "homebrew:enzyme",
+    "npm:enzyme",
+    "pypi:enzyme"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 23.872966692486443,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:enzyme",
+      "downloads": 1291,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:enzyme",
+      "downloads": 39,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:enzyme",
+      "downloads": 0,
+      "version_count": 9,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:enzyme",
+      "downloads": 30820,
+      "version_count": 9,
+      "has_repository": false
+    },
+    {
+      "source": "npm:enzyme",
+      "downloads": 0,
+      "version_count": 54,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:enzyme",
+  "disambiguated_at": "2026-02-17T00:15:20.44211461Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

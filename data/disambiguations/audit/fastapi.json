@@ -1,0 +1,47 @@
+{
+  "tool": "fastapi",
+  "selected": "rubygems:fastapi",
+  "alternatives": [
+    "homebrew:fastapi",
+    "npm:fastapi",
+    "pypi:fastapi"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 11.436062431544359,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:fastapi",
+      "downloads": 20,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:fastapi",
+      "downloads": 7304,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:fastapi",
+      "downloads": 0,
+      "version_count": 275,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:fastapi",
+      "downloads": 83529,
+      "version_count": 30,
+      "has_repository": false
+    },
+    {
+      "source": "npm:fastapi",
+      "downloads": 410,
+      "version_count": 8,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:fastapi",
+  "disambiguated_at": "2026-02-17T00:15:36.423605826Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

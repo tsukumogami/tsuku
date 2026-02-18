@@ -1,0 +1,45 @@
+{
+  "tool": "jsonpp",
+  "selected": "rubygems:jsonpp",
+  "alternatives": [
+    "homebrew:jsonpp"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 13.599659284497445,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:jsonpp",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:jsonpp",
+      "downloads": 1761,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:jsonpp",
+      "downloads": 13,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:jsonpp",
+      "downloads": 23949,
+      "version_count": 7,
+      "has_repository": false
+    },
+    {
+      "source": "npm:jsonpp",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:jsonpp",
+  "disambiguated_at": "2026-02-17T00:19:30.15223673Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

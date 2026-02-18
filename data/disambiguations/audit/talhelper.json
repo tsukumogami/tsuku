@@ -1,0 +1,18 @@
+{
+  "tool": "talhelper",
+  "selected": "homebrew:talhelper",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:talhelper",
+      "downloads": 18495,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:talhelper",
+  "disambiguated_at": "2026-02-17T00:29:14.068507972Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

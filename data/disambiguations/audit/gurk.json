@@ -1,0 +1,40 @@
+{
+  "tool": "gurk",
+  "selected": "rubygems:gurk",
+  "alternatives": [
+    "homebrew:gurk",
+    "pypi:gurk"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 9.199570815450643,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:gurk",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:gurk",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:gurk",
+      "downloads": 466,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:gurk",
+      "downloads": 4287,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:gurk",
+  "disambiguated_at": "2026-02-17T00:17:54.352691878Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

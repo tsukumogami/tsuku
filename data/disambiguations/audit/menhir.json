@@ -1,0 +1,32 @@
+{
+  "tool": "menhir",
+  "selected": "homebrew:menhir",
+  "alternatives": [
+    "pypi:menhir"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:menhir",
+      "downloads": 8,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:menhir",
+      "downloads": 241,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:menhir",
+      "downloads": 0,
+      "version_count": 77,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:menhir",
+  "disambiguated_at": "2026-02-17T00:22:21.298309586Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

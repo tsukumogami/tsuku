@@ -1,0 +1,34 @@
+{
+  "tool": "onefetch",
+  "selected": "homebrew:onefetch",
+  "alternatives": [
+    "crates.io:onefetch",
+    "npm:onefetch"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.5814144736842106,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:onefetch",
+      "downloads": 4355,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:onefetch",
+      "downloads": 1216,
+      "version_count": 51,
+      "has_repository": true
+    },
+    {
+      "source": "npm:onefetch",
+      "downloads": 12,
+      "version_count": 31,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:onefetch",
+  "disambiguated_at": "2026-02-17T00:23:58.671736806Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

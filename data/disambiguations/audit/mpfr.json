@@ -1,0 +1,33 @@
+{
+  "tool": "mpfr",
+  "selected": "homebrew:mpfr",
+  "alternatives": [
+    "crates.io:mpfr"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 10843.163265306122,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:mpfr",
+      "downloads": 49,
+      "version_count": 8,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:mpfr",
+      "downloads": 531315,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:mpfr",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:mpfr",
+  "disambiguated_at": "2026-02-17T00:22:52.534989184Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

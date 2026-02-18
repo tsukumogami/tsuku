@@ -1,0 +1,26 @@
+{
+  "tool": "sqlite-utils",
+  "selected": "homebrew:sqlite-utils",
+  "alternatives": [
+    "pypi:sqlite-utils"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:sqlite-utils",
+      "downloads": 1472,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:sqlite-utils",
+      "downloads": 0,
+      "version_count": 129,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:sqlite-utils",
+  "disambiguated_at": "2026-02-17T00:28:35.38826781Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

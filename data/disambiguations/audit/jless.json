@@ -1,0 +1,27 @@
+{
+  "tool": "jless",
+  "selected": "homebrew:jless",
+  "alternatives": [
+    "crates.io:jless"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 4.07105719237435,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:jless",
+      "downloads": 4698,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:jless",
+      "downloads": 1154,
+      "version_count": 5,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:jless",
+  "disambiguated_at": "2026-02-17T00:10:08.951475878Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

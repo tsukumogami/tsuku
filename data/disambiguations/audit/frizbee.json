@@ -1,0 +1,27 @@
+{
+  "tool": "frizbee",
+  "selected": "crates.io:frizbee",
+  "alternatives": [
+    "homebrew:frizbee"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 61.7803738317757,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:frizbee",
+      "downloads": 214,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:frizbee",
+      "downloads": 13221,
+      "version_count": 11,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:frizbee",
+  "disambiguated_at": "2026-02-17T00:16:18.646194813Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

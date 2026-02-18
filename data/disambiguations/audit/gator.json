@@ -1,0 +1,39 @@
+{
+  "tool": "gator",
+  "selected": "rubygems:gator",
+  "alternatives": [
+    "homebrew:gator"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 40.745656706045864,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:gator",
+      "downloads": 1439,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:gator",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:gator",
+      "downloads": 58633,
+      "version_count": 23,
+      "has_repository": false
+    },
+    {
+      "source": "npm:gator",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:gator",
+  "disambiguated_at": "2026-02-17T00:16:28.869404971Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

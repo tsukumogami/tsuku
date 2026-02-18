@@ -1,0 +1,30 @@
+{
+  "tool": "zeek",
+  "selected": "homebrew:zeek",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "pypi:zeek",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:zeek",
+      "downloads": 2773,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:zeek",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:zeek",
+  "disambiguated_at": "2026-02-17T00:31:45.409633887Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

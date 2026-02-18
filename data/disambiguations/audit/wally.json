@@ -1,0 +1,46 @@
+{
+  "tool": "wally",
+  "selected": "rubygems:wally",
+  "alternatives": [
+    "crates.io:wally",
+    "homebrew:wally"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 345.3873873873874,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:wally",
+      "downloads": 324,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:wally",
+      "downloads": 444,
+      "version_count": 7,
+      "has_repository": false
+    },
+    {
+      "source": "pypi:wally",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:wally",
+      "downloads": 153352,
+      "version_count": 45,
+      "has_repository": false
+    },
+    {
+      "source": "npm:wally",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:wally",
+  "disambiguated_at": "2026-02-17T00:30:59.976238783Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

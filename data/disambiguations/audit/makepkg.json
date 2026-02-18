@@ -1,0 +1,32 @@
+{
+  "tool": "makepkg",
+  "selected": "homebrew:makepkg",
+  "alternatives": [
+    "pypi:makepkg"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:makepkg",
+      "downloads": 8,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "pypi:makepkg",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:makepkg",
+      "downloads": 593,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:makepkg",
+  "disambiguated_at": "2026-02-17T00:21:53.094995509Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

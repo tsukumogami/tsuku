@@ -1,0 +1,34 @@
+{
+  "tool": "corepack",
+  "selected": "npm:corepack",
+  "alternatives": [
+    "homebrew:corepack",
+    "crates.io:corepack"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 1655.420895522388,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:corepack",
+      "downloads": 2010,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:corepack",
+      "downloads": 90,
+      "version_count": 7,
+      "has_repository": true
+    },
+    {
+      "source": "npm:corepack",
+      "downloads": 3327396,
+      "version_count": 61,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:corepack",
+  "disambiguated_at": "2026-02-17T00:13:41.42197345Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

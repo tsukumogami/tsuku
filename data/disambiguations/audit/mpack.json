@@ -1,0 +1,30 @@
+{
+  "tool": "mpack",
+  "selected": "crates.io:mpack",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "pypi:mpack",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:mpack",
+      "downloads": 147,
+      "version_count": 9,
+      "has_repository": true
+    },
+    {
+      "source": "npm:mpack",
+      "downloads": 1,
+      "version_count": 3,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:mpack",
+  "disambiguated_at": "2026-02-17T00:22:51.546561998Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

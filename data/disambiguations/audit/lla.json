@@ -1,0 +1,40 @@
+{
+  "tool": "lla",
+  "selected": "homebrew:lla",
+  "alternatives": [
+    "crates.io:lla",
+    "pypi:lla"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.2981029810298104,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:lla",
+      "downloads": 0,
+      "version_count": 5,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:lla",
+      "downloads": 1217,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:lla",
+      "downloads": 369,
+      "version_count": 38,
+      "has_repository": true
+    },
+    {
+      "source": "npm:lla",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:lla",
+  "disambiguated_at": "2026-02-17T00:21:26.39794683Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

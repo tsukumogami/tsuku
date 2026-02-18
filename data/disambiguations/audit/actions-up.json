@@ -1,0 +1,27 @@
+{
+  "tool": "actions-up",
+  "selected": "npm:actions-up",
+  "alternatives": [
+    "homebrew:actions-up"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 21.36082474226804,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:actions-up",
+      "downloads": 97,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:actions-up",
+      "downloads": 2072,
+      "version_count": 21,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:actions-up",
+  "disambiguated_at": "2026-02-17T00:10:21.27027793Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

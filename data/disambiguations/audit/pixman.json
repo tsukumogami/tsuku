@@ -1,0 +1,27 @@
+{
+  "tool": "pixman",
+  "selected": "homebrew:pixman",
+  "alternatives": [
+    "crates.io:pixman"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 47.82679884613822,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:pixman",
+      "downloads": 24613,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:pixman",
+      "downloads": 1177161,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:pixman",
+  "disambiguated_at": "2026-02-17T00:25:19.268598873Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

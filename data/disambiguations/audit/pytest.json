@@ -1,0 +1,34 @@
+{
+  "tool": "pytest",
+  "selected": "homebrew:pytest",
+  "alternatives": [
+    "npm:pytest",
+    "pypi:pytest"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 23.953285827395092,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:pytest",
+      "downloads": 30253,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:pytest",
+      "downloads": 0,
+      "version_count": 189,
+      "has_repository": true
+    },
+    {
+      "source": "npm:pytest",
+      "downloads": 1263,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:pytest",
+  "disambiguated_at": "2026-02-17T00:26:06.36233354Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

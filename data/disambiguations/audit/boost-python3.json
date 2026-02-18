@@ -1,0 +1,18 @@
+{
+  "tool": "boost-python3",
+  "selected": "homebrew:boost-python3",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:boost-python3",
+      "downloads": 12915,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:boost-python3",
+  "disambiguated_at": "2026-02-17T00:12:06.427970356Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

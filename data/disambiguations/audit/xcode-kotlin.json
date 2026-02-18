@@ -1,0 +1,18 @@
+{
+  "tool": "xcode-kotlin",
+  "selected": "homebrew:xcode-kotlin",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:xcode-kotlin",
+      "downloads": 1299,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:xcode-kotlin",
+  "disambiguated_at": "2026-02-17T00:31:24.347129116Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

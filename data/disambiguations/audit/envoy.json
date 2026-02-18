@@ -1,0 +1,48 @@
+{
+  "tool": "envoy",
+  "selected": "rubygems:envoy",
+  "alternatives": [
+    "homebrew:envoy",
+    "crates.io:envoy",
+    "npm:envoy",
+    "pypi:envoy"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.9477904490377762,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:envoy",
+      "downloads": 1474,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:envoy",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:envoy",
+      "downloads": 5612,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:envoy",
+      "downloads": 10931,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "npm:envoy",
+      "downloads": 12,
+      "version_count": 10,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:envoy",
+  "disambiguated_at": "2026-02-17T00:15:20.210000441Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

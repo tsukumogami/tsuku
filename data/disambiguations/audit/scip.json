@@ -1,0 +1,40 @@
+{
+  "tool": "scip",
+  "selected": "crates.io:scip",
+  "alternatives": [
+    "homebrew:scip",
+    "pypi:scip"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 34.299247701309554,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:scip",
+      "downloads": 3589,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:scip",
+      "downloads": 123100,
+      "version_count": 11,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:scip",
+      "downloads": 0,
+      "version_count": 6,
+      "has_repository": true
+    },
+    {
+      "source": "npm:scip",
+      "downloads": 3,
+      "version_count": 2,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:scip",
+  "disambiguated_at": "2026-02-17T00:27:31.677513261Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

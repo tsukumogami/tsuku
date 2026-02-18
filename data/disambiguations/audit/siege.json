@@ -1,0 +1,46 @@
+{
+  "tool": "siege",
+  "selected": "rubygems:siege",
+  "alternatives": [
+    "homebrew:siege",
+    "npm:siege"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.159447881960971,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:siege",
+      "downloads": 65,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:siege",
+      "downloads": 2101,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:siege",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:siege",
+      "downloads": 2436,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "npm:siege",
+      "downloads": 706,
+      "version_count": 7,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:siege",
+  "disambiguated_at": "2026-02-17T00:28:02.496580394Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

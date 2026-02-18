@@ -1,0 +1,33 @@
+{
+  "tool": "coredns",
+  "selected": "rubygems:coredns",
+  "alternatives": [
+    "homebrew:coredns"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 5.77489539748954,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:coredns",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:coredns",
+      "downloads": 1195,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:coredns",
+      "downloads": 6901,
+      "version_count": 11,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:coredns",
+  "disambiguated_at": "2026-02-17T00:13:41.187484676Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

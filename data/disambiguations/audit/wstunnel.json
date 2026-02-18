@@ -1,0 +1,33 @@
+{
+  "tool": "wstunnel",
+  "selected": "homebrew:wstunnel",
+  "alternatives": [
+    "npm:wstunnel",
+    "pypi:wstunnel"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:wstunnel",
+      "downloads": 754,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:wstunnel",
+      "downloads": 0,
+      "version_count": 6,
+      "has_repository": true
+    },
+    {
+      "source": "npm:wstunnel",
+      "downloads": 0,
+      "version_count": 25,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:wstunnel",
+  "disambiguated_at": "2026-02-17T00:31:17.913176638Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

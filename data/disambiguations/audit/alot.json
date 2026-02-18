@@ -1,0 +1,40 @@
+{
+  "tool": "alot",
+  "selected": "crates.io:alot",
+  "alternatives": [
+    "homebrew:alot",
+    "npm:alot"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.5404411764705883,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:alot",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:alot",
+      "downloads": 544,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:alot",
+      "downloads": 838,
+      "version_count": 5,
+      "has_repository": true
+    },
+    {
+      "source": "npm:alot",
+      "downloads": 0,
+      "version_count": 54,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:alot",
+  "disambiguated_at": "2026-02-17T00:10:35.598561909Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

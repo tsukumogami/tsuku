@@ -1,0 +1,26 @@
+{
+  "tool": "ralph-orchestrator",
+  "selected": "homebrew:ralph-orchestrator",
+  "alternatives": [
+    "pypi:ralph-orchestrator"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:ralph-orchestrator",
+      "downloads": 727,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:ralph-orchestrator",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:ralph-orchestrator",
+  "disambiguated_at": "2026-02-17T00:26:36.20366521Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

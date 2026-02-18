@@ -1,0 +1,24 @@
+{
+  "tool": "mcp-get",
+  "selected": "homebrew:mcp-get",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:mcp-get",
+      "downloads": 338,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:mcp-get",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:mcp-get",
+  "disambiguated_at": "2026-02-17T00:22:09.021760969Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

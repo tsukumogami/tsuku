@@ -1,0 +1,39 @@
+{
+  "tool": "solidity",
+  "selected": "homebrew:solidity",
+  "alternatives": [
+    "rubygems:solidity"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.4922100403923833,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:solidity",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:solidity",
+      "downloads": 10344,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:solidity",
+      "downloads": 6932,
+      "version_count": 8,
+      "has_repository": false
+    },
+    {
+      "source": "npm:solidity",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:solidity",
+  "disambiguated_at": "2026-02-17T00:28:19.724641078Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

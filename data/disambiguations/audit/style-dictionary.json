@@ -1,0 +1,26 @@
+{
+  "tool": "style-dictionary",
+  "selected": "homebrew:style-dictionary",
+  "alternatives": [
+    "npm:style-dictionary"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:style-dictionary",
+      "downloads": 331,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:style-dictionary",
+      "downloads": 0,
+      "version_count": 114,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:style-dictionary",
+  "disambiguated_at": "2026-02-17T00:28:56.234891615Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

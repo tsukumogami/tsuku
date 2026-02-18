@@ -1,0 +1,18 @@
+{
+  "tool": "arcade-learning-environment",
+  "selected": "homebrew:arcade-learning-environment",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:arcade-learning-environment",
+      "downloads": 1129,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:arcade-learning-environment",
+  "disambiguated_at": "2026-02-17T00:10:53.620685839Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

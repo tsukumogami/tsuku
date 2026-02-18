@@ -1,0 +1,34 @@
+{
+  "tool": "eccodes",
+  "selected": "homebrew:eccodes",
+  "alternatives": [
+    "crates.io:eccodes",
+    "pypi:eccodes"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.2118702553485161,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:eccodes",
+      "downloads": 0,
+      "version_count": 36,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:eccodes",
+      "downloads": 2898,
+      "version_count": 30,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:eccodes",
+      "downloads": 3512,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:eccodes",
+  "disambiguated_at": "2026-02-17T00:15:06.293645628Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,27 @@
+{
+  "tool": "sqlx-cli",
+  "selected": "crates.io:sqlx-cli",
+  "alternatives": [
+    "homebrew:sqlx-cli"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 2371.219298245614,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:sqlx-cli",
+      "downloads": 798,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:sqlx-cli",
+      "downloads": 1892233,
+      "version_count": 37,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:sqlx-cli",
+  "disambiguated_at": "2026-02-17T00:28:36.592128429Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

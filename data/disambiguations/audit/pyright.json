@@ -1,0 +1,40 @@
+{
+  "tool": "pyright",
+  "selected": "npm:pyright",
+  "alternatives": [
+    "homebrew:pyright",
+    "pypi:pyright"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 30.65467314964884,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:pyright",
+      "downloads": 18510,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:pyright",
+      "downloads": 76,
+      "version_count": 3,
+      "has_repository": false
+    },
+    {
+      "source": "pypi:pyright",
+      "downloads": 0,
+      "version_count": 203,
+      "has_repository": true
+    },
+    {
+      "source": "npm:pyright",
+      "downloads": 567418,
+      "version_count": 492,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:pyright",
+  "disambiguated_at": "2026-02-17T00:26:05.030045082Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

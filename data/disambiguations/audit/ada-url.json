@@ -1,0 +1,34 @@
+{
+  "tool": "ada-url",
+  "selected": "homebrew:ada-url",
+  "alternatives": [
+    "crates.io:ada-url",
+    "pypi:ada-url"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 36.4198347107438,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:ada-url",
+      "downloads": 110170,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:ada-url",
+      "downloads": 3025,
+      "version_count": 30,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:ada-url",
+      "downloads": 0,
+      "version_count": 32,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:ada-url",
+  "disambiguated_at": "2026-02-17T00:10:21.81530731Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

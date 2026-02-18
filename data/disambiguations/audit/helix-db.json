@@ -1,0 +1,33 @@
+{
+  "tool": "helix-db",
+  "selected": "homebrew:helix-db",
+  "alternatives": [
+    "crates.io:helix-db"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.1739130434782608,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:helix-db",
+      "downloads": 250,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:helix-db",
+      "downloads": 115,
+      "version_count": 7,
+      "has_repository": true
+    },
+    {
+      "source": "npm:helix-db",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:helix-db",
+  "disambiguated_at": "2026-02-17T00:18:10.234293275Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "libraqm",
+  "selected": "homebrew:libraqm",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:libraqm",
+      "downloads": 53978,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:libraqm",
+  "disambiguated_at": "2026-02-17T00:20:56.150251346Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,33 @@
+{
+  "tool": "scipy",
+  "selected": "homebrew:scipy",
+  "alternatives": [
+    "pypi:scipy",
+    "npm:scipy"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:scipy",
+      "downloads": 33706,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:scipy",
+      "downloads": 0,
+      "version_count": 103,
+      "has_repository": true
+    },
+    {
+      "source": "npm:scipy",
+      "downloads": 0,
+      "version_count": 5,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:scipy",
+  "disambiguated_at": "2026-02-17T00:27:32.000963817Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

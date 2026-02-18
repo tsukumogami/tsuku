@@ -1,0 +1,18 @@
+{
+  "tool": "zimfw",
+  "selected": "homebrew:zimfw",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:zimfw",
+      "downloads": 1127,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:zimfw",
+  "disambiguated_at": "2026-02-17T00:31:49.041730528Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,27 @@
+{
+  "tool": "hexyl",
+  "selected": "crates.io:hexyl",
+  "alternatives": [
+    "homebrew:hexyl"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.1930153961697334,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:hexyl",
+      "downloads": 3177,
+      "version_count": 19,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:hexyl",
+      "downloads": 2663,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:hexyl",
+  "disambiguated_at": "2026-02-17T00:10:08.416659193Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

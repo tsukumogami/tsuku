@@ -1,0 +1,36 @@
+{
+  "tool": "uuu",
+  "selected": "homebrew:uuu",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:uuu",
+      "downloads": 540,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:uuu",
+      "downloads": 10,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "pypi:uuu",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:uuu",
+      "downloads": 3,
+      "version_count": 2,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:uuu",
+  "disambiguated_at": "2026-02-17T00:30:30.041931518Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

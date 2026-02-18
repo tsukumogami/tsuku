@@ -1,0 +1,48 @@
+{
+  "tool": "fmt",
+  "selected": "homebrew:fmt",
+  "alternatives": [
+    "crates.io:fmt",
+    "rubygems:fmt",
+    "npm:fmt",
+    "pypi:fmt"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 7.510607500864155,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:fmt",
+      "downloads": 46288,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "pypi:fmt",
+      "downloads": 0,
+      "version_count": 8,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:fmt",
+      "downloads": 347651,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:fmt",
+      "downloads": 5657,
+      "version_count": 10,
+      "has_repository": true
+    },
+    {
+      "source": "npm:fmt",
+      "downloads": 0,
+      "version_count": 9,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:fmt",
+  "disambiguated_at": "2026-02-17T00:16:04.080830757Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

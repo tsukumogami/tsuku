@@ -1,0 +1,48 @@
+{
+  "tool": "json5",
+  "selected": "crates.io:json5",
+  "alternatives": [
+    "rubygems:json5",
+    "homebrew:json5",
+    "pypi:json5",
+    "npm:json5"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 4.003047415622788,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:json5",
+      "downloads": 6214583,
+      "version_count": 20,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:json5",
+      "downloads": 0,
+      "version_count": 53,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:json5",
+      "downloads": 455,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:json5",
+      "downloads": 0,
+      "version_count": 27,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:json5",
+      "downloads": 1552463,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:json5",
+  "disambiguated_at": "2026-02-17T00:19:29.177086652Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

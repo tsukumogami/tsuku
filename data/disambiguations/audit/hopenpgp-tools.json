@@ -1,0 +1,18 @@
+{
+  "tool": "hopenpgp-tools",
+  "selected": "homebrew:hopenpgp-tools",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:hopenpgp-tools",
+      "downloads": 1410,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:hopenpgp-tools",
+  "disambiguated_at": "2026-02-17T00:18:22.701269448Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,41 @@
+{
+  "tool": "buildozer",
+  "selected": "rubygems:buildozer",
+  "alternatives": [
+    "homebrew:buildozer",
+    "npm:buildozer",
+    "pypi:buildozer"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.89768864717879,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:buildozer",
+      "downloads": 2942,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:buildozer",
+      "downloads": 0,
+      "version_count": 42,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:buildozer",
+      "downloads": 11467,
+      "version_count": 3,
+      "has_repository": false
+    },
+    {
+      "source": "npm:buildozer",
+      "downloads": 1250,
+      "version_count": 18,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:buildozer",
+  "disambiguated_at": "2026-02-17T00:12:18.494025315Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

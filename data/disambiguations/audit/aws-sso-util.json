@@ -1,0 +1,32 @@
+{
+  "tool": "aws-sso-util",
+  "selected": "homebrew:aws-sso-util",
+  "alternatives": [
+    "pypi:aws-sso-util"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:aws-sso-util",
+      "downloads": 16,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:aws-sso-util",
+      "downloads": 3757,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:aws-sso-util",
+      "downloads": 0,
+      "version_count": 28,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:aws-sso-util",
+  "disambiguated_at": "2026-02-17T00:11:26.8380564Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

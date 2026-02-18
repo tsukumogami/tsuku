@@ -1,0 +1,26 @@
+{
+  "tool": "pip-audit",
+  "selected": "homebrew:pip-audit",
+  "alternatives": [
+    "pypi:pip-audit"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:pip-audit",
+      "downloads": 1032,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:pip-audit",
+      "downloads": 0,
+      "version_count": 62,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:pip-audit",
+  "disambiguated_at": "2026-02-17T00:25:16.420111498Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

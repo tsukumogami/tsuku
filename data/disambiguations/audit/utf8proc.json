@@ -1,0 +1,41 @@
+{
+  "tool": "utf8proc",
+  "selected": "homebrew:utf8proc",
+  "alternatives": [
+    "rubygems:utf8proc",
+    "crates.io:utf8proc",
+    "pypi:utf8proc"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 20.721124135563294,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:utf8proc",
+      "downloads": 422483,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:utf8proc",
+      "downloads": 122,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:utf8proc",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:utf8proc",
+      "downloads": 20389,
+      "version_count": 5,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:utf8proc",
+  "disambiguated_at": "2026-02-17T00:30:28.112861773Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

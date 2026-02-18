@@ -1,0 +1,26 @@
+{
+  "tool": "podman-compose",
+  "selected": "homebrew:podman-compose",
+  "alternatives": [
+    "pypi:podman-compose"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:podman-compose",
+      "downloads": 28260,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:podman-compose",
+      "downloads": 0,
+      "version_count": 16,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:podman-compose",
+  "disambiguated_at": "2026-02-17T00:25:27.828152186Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

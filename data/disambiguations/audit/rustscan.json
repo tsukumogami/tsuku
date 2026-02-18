@@ -1,0 +1,27 @@
+{
+  "tool": "rustscan",
+  "selected": "crates.io:rustscan",
+  "alternatives": [
+    "homebrew:rustscan"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.448566166798211,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:rustscan",
+      "downloads": 3801,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:rustscan",
+      "downloads": 9307,
+      "version_count": 20,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:rustscan",
+  "disambiguated_at": "2026-02-17T00:27:18.949153659Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

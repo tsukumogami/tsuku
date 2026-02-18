@@ -1,0 +1,45 @@
+{
+  "tool": "heartbeat",
+  "selected": "rubygems:heartbeat",
+  "alternatives": [
+    "homebrew:heartbeat"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 15.254658385093167,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:heartbeat",
+      "downloads": 9,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:heartbeat",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:heartbeat",
+      "downloads": 322,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:heartbeat",
+      "downloads": 4912,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:heartbeat",
+      "downloads": 4,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:heartbeat",
+  "disambiguated_at": "2026-02-17T00:18:09.755171983Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,46 @@
+{
+  "tool": "medusa",
+  "selected": "rubygems:medusa",
+  "alternatives": [
+    "homebrew:medusa",
+    "crates.io:medusa"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 12.350727117194182,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "pypi:medusa",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:medusa",
+      "downloads": 127,
+      "version_count": 6,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:medusa",
+      "downloads": 1169,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:medusa",
+      "downloads": 14438,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "npm:medusa",
+      "downloads": 50,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:medusa",
+  "disambiguated_at": "2026-02-17T00:22:17.623862283Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

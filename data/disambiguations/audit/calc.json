@@ -1,0 +1,46 @@
+{
+  "tool": "calc",
+  "selected": "rubygems:calc",
+  "alternatives": [
+    "homebrew:calc",
+    "crates.io:calc"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 8.946738479952124,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:calc",
+      "downloads": 3342,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:calc",
+      "downloads": 1485,
+      "version_count": 7,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:calc",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:calc",
+      "downloads": 29900,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "npm:calc",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:calc",
+  "disambiguated_at": "2026-02-17T00:12:30.909856408Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,27 @@
+{
+  "tool": "sfcgal",
+  "selected": "homebrew:sfcgal",
+  "alternatives": [
+    "crates.io:sfcgal"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 147.40350877192984,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:sfcgal",
+      "downloads": 228,
+      "version_count": 10,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:sfcgal",
+      "downloads": 33608,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:sfcgal",
+  "disambiguated_at": "2026-02-17T00:27:45.628825777Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

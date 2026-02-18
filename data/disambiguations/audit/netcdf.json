@@ -1,0 +1,33 @@
+{
+  "tool": "netcdf",
+  "selected": "homebrew:netcdf",
+  "alternatives": [
+    "crates.io:netcdf"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 4.567612537662455,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:netcdf",
+      "downloads": 101570,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:netcdf",
+      "downloads": 22237,
+      "version_count": 30,
+      "has_repository": true
+    },
+    {
+      "source": "npm:netcdf",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:netcdf",
+  "disambiguated_at": "2026-02-17T00:23:23.327092284Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "uutils-diffutils",
+  "selected": "homebrew:uutils-diffutils",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:uutils-diffutils",
+      "downloads": 336,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:uutils-diffutils",
+  "disambiguated_at": "2026-02-17T00:30:29.555603881Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

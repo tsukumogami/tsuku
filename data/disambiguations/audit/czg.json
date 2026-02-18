@@ -1,0 +1,32 @@
+{
+  "tool": "czg",
+  "selected": "homebrew:czg",
+  "alternatives": [
+    "npm:czg"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:czg",
+      "downloads": 778,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:czg",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "npm:czg",
+      "downloads": 0,
+      "version_count": 88,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:czg",
+  "disambiguated_at": "2026-02-17T00:14:01.367773761Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

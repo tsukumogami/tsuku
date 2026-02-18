@@ -1,0 +1,38 @@
+{
+  "tool": "stp",
+  "selected": "homebrew:stp",
+  "alternatives": [
+    "pypi:stp"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:stp",
+      "downloads": 8,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:stp",
+      "downloads": 870,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:stp",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "npm:stp",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:stp",
+  "disambiguated_at": "2026-02-17T00:28:52.034929172Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

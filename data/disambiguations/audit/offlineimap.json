@@ -1,0 +1,26 @@
+{
+  "tool": "offlineimap",
+  "selected": "homebrew:offlineimap",
+  "alternatives": [
+    "pypi:offlineimap"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:offlineimap",
+      "downloads": 1143,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:offlineimap",
+      "downloads": 0,
+      "version_count": 39,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:offlineimap",
+  "disambiguated_at": "2026-02-17T00:23:55.666135553Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,34 @@
+{
+  "tool": "torchvision",
+  "selected": "rubygems:torchvision",
+  "alternatives": [
+    "homebrew:torchvision",
+    "pypi:torchvision"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 4.224402042461704,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:torchvision",
+      "downloads": 3721,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:torchvision",
+      "downloads": 0,
+      "version_count": 56,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:torchvision",
+      "downloads": 15719,
+      "version_count": 10,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:torchvision",
+  "disambiguated_at": "2026-02-17T00:29:52.250309913Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

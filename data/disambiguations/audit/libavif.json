@@ -1,0 +1,27 @@
+{
+  "tool": "libavif",
+  "selected": "homebrew:libavif",
+  "alternatives": [
+    "crates.io:libavif"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 97.04343534057256,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:libavif",
+      "downloads": 491525,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:libavif",
+      "downloads": 5065,
+      "version_count": 18,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:libavif",
+  "disambiguated_at": "2026-02-17T00:20:26.810780834Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

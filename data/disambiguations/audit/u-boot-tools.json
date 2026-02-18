@@ -1,0 +1,18 @@
+{
+  "tool": "u-boot-tools",
+  "selected": "homebrew:u-boot-tools",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:u-boot-tools",
+      "downloads": 1503,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:u-boot-tools",
+  "disambiguated_at": "2026-02-17T00:30:17.161104606Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

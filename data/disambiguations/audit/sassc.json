@@ -1,0 +1,27 @@
+{
+  "tool": "sassc",
+  "selected": "rubygems:sassc",
+  "alternatives": [
+    "homebrew:sassc"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 146438.97532767925,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:sassc",
+      "downloads": 1297,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:sassc",
+      "downloads": 189931351,
+      "version_count": 72,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:sassc",
+  "disambiguated_at": "2026-02-17T00:27:25.632893356Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

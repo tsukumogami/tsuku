@@ -1,0 +1,26 @@
+{
+  "tool": "labctl",
+  "selected": "homebrew:labctl",
+  "alternatives": [
+    "pypi:labctl"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:labctl",
+      "downloads": 0,
+      "version_count": 10,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:labctl",
+      "downloads": 165,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:labctl",
+  "disambiguated_at": "2026-02-17T00:20:09.985449513Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

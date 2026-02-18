@@ -1,0 +1,27 @@
+{
+  "tool": "tmuxinator",
+  "selected": "rubygems:tmuxinator",
+  "alternatives": [
+    "homebrew:tmuxinator"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 211.1833423472147,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:tmuxinator",
+      "downloads": 7396,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:tmuxinator",
+      "downloads": 1561912,
+      "version_count": 77,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:tmuxinator",
+  "disambiguated_at": "2026-02-17T00:29:47.429069493Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

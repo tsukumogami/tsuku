@@ -1,0 +1,40 @@
+{
+  "tool": "flann",
+  "selected": "homebrew:flann",
+  "alternatives": [
+    "rubygems:flann",
+    "crates.io:flann"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.3863160344426344,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:flann",
+      "downloads": 14551,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:flann",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:flann",
+      "downloads": 42,
+      "version_count": 6,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:flann",
+      "downloads": 4297,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:flann",
+  "disambiguated_at": "2026-02-17T00:15:57.919982899Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

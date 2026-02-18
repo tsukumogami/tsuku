@@ -1,0 +1,32 @@
+{
+  "tool": "gmsh",
+  "selected": "homebrew:gmsh",
+  "alternatives": [
+    "pypi:gmsh"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:gmsh",
+      "downloads": 2169,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:gmsh",
+      "downloads": 0,
+      "version_count": 24,
+      "has_repository": true
+    },
+    {
+      "source": "npm:gmsh",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:gmsh",
+  "disambiguated_at": "2026-02-17T00:17:09.296495661Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

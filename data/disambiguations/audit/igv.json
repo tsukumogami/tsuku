@@ -1,0 +1,33 @@
+{
+  "tool": "igv",
+  "selected": "homebrew:igv",
+  "alternatives": [
+    "npm:igv",
+    "pypi:igv"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:igv",
+      "downloads": 0,
+      "version_count": 9,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:igv",
+      "downloads": 926,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:igv",
+      "downloads": 0,
+      "version_count": 146,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:igv",
+  "disambiguated_at": "2026-02-17T00:18:41.923905161Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

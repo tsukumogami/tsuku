@@ -1,0 +1,34 @@
+{
+  "tool": "otel-cli",
+  "selected": "homebrew:otel-cli",
+  "alternatives": [
+    "npm:otel-cli",
+    "pypi:otel-cli"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 78.25,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:otel-cli",
+      "downloads": 939,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:otel-cli",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": false
+    },
+    {
+      "source": "npm:otel-cli",
+      "downloads": 12,
+      "version_count": 13,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:otel-cli",
+  "disambiguated_at": "2026-02-17T00:24:38.45116645Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

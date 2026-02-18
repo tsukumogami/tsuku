@@ -1,0 +1,34 @@
+{
+  "tool": "butane",
+  "selected": "homebrew:butane",
+  "alternatives": [
+    "crates.io:butane",
+    "npm:butane"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 8.477099236641221,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:butane",
+      "downloads": 2221,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:butane",
+      "downloads": 262,
+      "version_count": 16,
+      "has_repository": true
+    },
+    {
+      "source": "npm:butane",
+      "downloads": 0,
+      "version_count": 21,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:butane",
+  "disambiguated_at": "2026-02-17T00:12:24.81432291Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

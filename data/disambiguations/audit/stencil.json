@@ -1,0 +1,47 @@
+{
+  "tool": "stencil",
+  "selected": "rubygems:stencil",
+  "alternatives": [
+    "npm:stencil",
+    "homebrew:stencil",
+    "pypi:stencil"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 51.29001584786054,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:stencil",
+      "downloads": 0,
+      "version_count": 5,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:stencil",
+      "downloads": 7,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:stencil",
+      "downloads": 571,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:stencil",
+      "downloads": 32364,
+      "version_count": 7,
+      "has_repository": false
+    },
+    {
+      "source": "npm:stencil",
+      "downloads": 631,
+      "version_count": 7,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:stencil",
+  "disambiguated_at": "2026-02-17T00:28:50.290952563Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,48 @@
+{
+  "tool": "portal",
+  "selected": "rubygems:portal",
+  "alternatives": [
+    "homebrew:portal",
+    "npm:portal",
+    "crates.io:portal",
+    "pypi:portal"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 14.66764705882353,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:portal",
+      "downloads": 340,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:portal",
+      "downloads": 0,
+      "version_count": 32,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:portal",
+      "downloads": 9,
+      "version_count": 23,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:portal",
+      "downloads": 4987,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:portal",
+      "downloads": 231,
+      "version_count": 126,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:portal",
+  "disambiguated_at": "2026-02-17T00:25:31.532540807Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

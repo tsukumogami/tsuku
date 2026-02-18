@@ -1,0 +1,18 @@
+{
+  "tool": "softhsm",
+  "selected": "homebrew:softhsm",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:softhsm",
+      "downloads": 645,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:softhsm",
+  "disambiguated_at": "2026-02-17T00:28:18.523571619Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

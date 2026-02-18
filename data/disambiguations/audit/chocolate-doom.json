@@ -1,0 +1,18 @@
+{
+  "tool": "chocolate-doom",
+  "selected": "homebrew:chocolate-doom",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:chocolate-doom",
+      "downloads": 557,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:chocolate-doom",
+  "disambiguated_at": "2026-02-17T00:12:59.883484Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

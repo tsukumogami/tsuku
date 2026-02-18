@@ -1,0 +1,34 @@
+{
+  "tool": "fq",
+  "selected": "homebrew:fq",
+  "alternatives": [
+    "crates.io:fq",
+    "npm:fq"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.9558823529411766,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:fq",
+      "downloads": 68,
+      "version_count": 5,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:fq",
+      "downloads": 201,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:fq",
+      "downloads": 0,
+      "version_count": 5,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:fq",
+  "disambiguated_at": "2026-02-17T00:16:14.583382644Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}
