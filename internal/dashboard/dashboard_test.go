@@ -1257,6 +1257,45 @@ func TestResolveEcosystems(t *testing.T) {
 	}
 }
 
+func TestLoadMetricsFromDir_legacyFileSortsCorrectly(t *testing.T) {
+	// The legacy batch-runs.jsonl (no timestamp in filename) sorts after
+	// timestamped files alphabetically. Verify that runs are sorted by
+	// timestamp so the newest runs appear in the dashboard regardless
+	// of file load order.
+	dir := t.TempDir()
+
+	// Write a timestamped file with a newer run
+	newer := `{"batch_id":"2026-02-18","ecosystems":{"github":9,"homebrew":16},"total":1,"merged":1,"timestamp":"2026-02-18T14:41:33Z","duration_seconds":8}`
+	if err := os.WriteFile(filepath.Join(dir, "batch-runs-2026-02-18T14-41-33Z.jsonl"), []byte(newer), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Write a legacy file with an older run (sorts after timestamped files)
+	older := `{"batch_id":"2026-02-06-homebrew","ecosystem":"homebrew","total":5,"merged":5,"timestamp":"2026-02-06T10:00:00Z","duration_seconds":3}`
+	if err := os.WriteFile(filepath.Join(dir, "batch-runs.jsonl"), []byte(older), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	runs, _, err := loadMetricsFromDir(dir)
+	if err != nil {
+		t.Fatalf("loadMetricsFromDir: %v", err)
+	}
+
+	if len(runs) != 2 {
+		t.Fatalf("expected 2 runs, got %d", len(runs))
+	}
+
+	// Verify runs are sorted by timestamp (oldest first)
+	if runs[0].Timestamp >= runs[1].Timestamp {
+		t.Errorf("runs not sorted by timestamp: [0]=%s >= [1]=%s", runs[0].Timestamp, runs[1].Timestamp)
+	}
+
+	// The newer run should be last (and would be kept when taking "last N")
+	if runs[1].BatchID != "2026-02-18" {
+		t.Errorf("newest run should be last, got batch_id=%s", runs[1].BatchID)
+	}
+}
+
 func TestLoadFailures_perRecipeWithEcosystem(t *testing.T) {
 	// Verify that record.Ecosystem is used for pkgID prefix instead of hardcoded "homebrew"
 	dir := t.TempDir()
