@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-02-18T14:13:37Z",
+  "generated_at": "2026-02-18T14:50:36Z",
   "queue": {
     "total": 5275,
     "by_status": {
-      "failed": 24,
-      "pending": 2972,
+      "failed": 32,
+      "pending": 2963,
       "requires_manual": 2009,
-      "success": 270
+      "success": 271
     },
     "by_tier": {
       "1": {
@@ -19,10 +19,10 @@
         "success": 3
       },
       "3": {
-        "failed": 5,
-        "pending": 2972,
+        "failed": 13,
+        "pending": 2963,
         "requires_manual": 1986,
-        "success": 267
+        "success": 268
       }
     },
     "packages": {
@@ -33,7 +33,8 @@
           "ecosystem": "github",
           "priority": 1,
           "category": "deterministic_insufficient",
-          "failure_count": 1
+          "failure_count": 2,
+          "next_retry_at": "2026-02-19T14:38:38Z"
         },
         {
           "id": "github:dandavison/delta",
@@ -41,7 +42,8 @@
           "ecosystem": "github",
           "priority": 1,
           "category": "deterministic_insufficient",
-          "failure_count": 1
+          "failure_count": 2,
+          "next_retry_at": "2026-02-19T14:38:40Z"
         },
         {
           "id": "github:wagoodman/dive",
@@ -49,7 +51,8 @@
           "ecosystem": "github",
           "priority": 1,
           "category": "deterministic_insufficient",
-          "failure_count": 1
+          "failure_count": 2,
+          "next_retry_at": "2026-02-19T14:38:42Z"
         },
         {
           "id": "github:github/hub",
@@ -57,7 +60,8 @@
           "ecosystem": "github",
           "priority": 1,
           "category": "deterministic_insufficient",
-          "failure_count": 1
+          "failure_count": 2,
+          "next_retry_at": "2026-02-19T14:38:44Z"
         },
         {
           "id": "github:jqlang/jq",
@@ -65,7 +69,8 @@
           "ecosystem": "github",
           "priority": 1,
           "category": "deterministic_insufficient",
-          "failure_count": 1
+          "failure_count": 2,
+          "next_retry_at": "2026-02-19T14:38:46Z"
         },
         {
           "id": "github:ko-build/ko",
@@ -73,7 +78,8 @@
           "ecosystem": "github",
           "priority": 1,
           "category": "deterministic_insufficient",
-          "failure_count": 1
+          "failure_count": 2,
+          "next_retry_at": "2026-02-19T14:38:48Z"
         },
         {
           "id": "github:BurntSushi/ripgrep",
@@ -81,7 +87,8 @@
           "ecosystem": "github",
           "priority": 1,
           "category": "deterministic_insufficient",
-          "failure_count": 1
+          "failure_count": 2,
+          "next_retry_at": "2026-02-19T14:38:50Z"
         },
         {
           "id": "github:lotabout/skim",
@@ -89,7 +96,8 @@
           "ecosystem": "github",
           "priority": 1,
           "category": "deterministic_insufficient",
-          "failure_count": 1
+          "failure_count": 2,
+          "next_retry_at": "2026-02-19T14:38:52Z"
         },
         {
           "id": "github:smallstep/cli",
@@ -97,7 +105,8 @@
           "ecosystem": "github",
           "priority": 1,
           "category": "deterministic_insufficient",
-          "failure_count": 1
+          "failure_count": 2,
+          "next_retry_at": "2026-02-19T14:38:54Z"
         },
         {
           "id": "homebrew:go-task",
@@ -177,7 +186,8 @@
           "ecosystem": "homebrew",
           "priority": 2,
           "category": "deterministic_insufficient",
-          "failure_count": 1
+          "failure_count": 2,
+          "next_retry_at": "2026-02-19T14:38:56Z"
         },
         {
           "id": "homebrew:python@3.14",
@@ -185,7 +195,8 @@
           "ecosystem": "homebrew",
           "priority": 2,
           "category": "deterministic_insufficient",
-          "failure_count": 1
+          "failure_count": 2,
+          "next_retry_at": "2026-02-19T14:38:57Z"
         },
         {
           "id": "homebrew:0xjacky/tools/nginx-ui",
@@ -193,7 +204,8 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "validation_failed",
-          "failure_count": 1
+          "failure_count": 2,
+          "next_retry_at": "2026-02-19T14:38:58Z"
         },
         {
           "id": "homebrew:0xjuanma/tap/golazo",
@@ -201,7 +213,8 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "validation_failed",
-          "failure_count": 1
+          "failure_count": 2,
+          "next_retry_at": "2026-02-19T14:38:59Z"
         },
         {
           "id": "homebrew:2ykwang/2ykwang/mac-cleanup-go",
@@ -209,7 +222,8 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "validation_failed",
-          "failure_count": 1
+          "failure_count": 2,
+          "next_retry_at": "2026-02-19T14:39:00Z"
         },
         {
           "id": "homebrew:2ykwang/mac-cleanup-go/mac-cleanup-go",
@@ -217,7 +231,8 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "validation_failed",
-          "failure_count": 1
+          "failure_count": 2,
+          "next_retry_at": "2026-02-19T14:39:01Z"
         },
         {
           "id": "homebrew:42ailab/42plugin/forty-two-plugin",
@@ -225,73 +240,75 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "validation_failed",
-          "failure_count": 1
-        }
-      ],
-      "pending": [
+          "failure_count": 2,
+          "next_retry_at": "2026-02-19T14:39:02Z"
+        },
         {
           "id": "homebrew:5ouma/tap/gh-poi",
           "name": "5ouma/tap/gh-poi",
           "ecosystem": "homebrew",
           "priority": 3,
-          "failure_count": 0
+          "category": "validation_failed",
+          "failure_count": 1
         },
         {
           "id": "homebrew:a2ps",
           "name": "a2ps",
           "ecosystem": "homebrew",
           "priority": 3,
-          "failure_count": 0
+          "category": "validation_failed",
+          "failure_count": 1
         },
         {
           "id": "homebrew:a7ex/formulae/xcresultparser",
           "name": "a7ex/formulae/xcresultparser",
           "ecosystem": "homebrew",
           "priority": 3,
-          "failure_count": 0
+          "category": "validation_failed",
+          "failure_count": 1
         },
         {
           "id": "homebrew:aalib",
           "name": "aalib",
           "ecosystem": "homebrew",
           "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "homebrew:aarch64-elf-binutils",
-          "name": "aarch64-elf-binutils",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
+          "category": "deterministic_insufficient",
+          "failure_count": 1
         },
         {
           "id": "homebrew:aarch64-elf-gcc",
           "name": "aarch64-elf-gcc",
           "ecosystem": "homebrew",
           "priority": 3,
-          "failure_count": 0
+          "category": "validation_failed",
+          "failure_count": 1
         },
         {
           "id": "homebrew:aarch64-elf-gdb",
           "name": "aarch64-elf-gdb",
           "ecosystem": "homebrew",
           "priority": 3,
-          "failure_count": 0
+          "category": "validation_failed",
+          "failure_count": 1
         },
         {
           "id": "homebrew:abcde",
           "name": "abcde",
           "ecosystem": "homebrew",
           "priority": 3,
-          "failure_count": 0
+          "category": "deterministic_insufficient",
+          "failure_count": 1
         },
         {
           "id": "homebrew:abcm2ps",
           "name": "abcm2ps",
           "ecosystem": "homebrew",
           "priority": 3,
-          "failure_count": 0
-        },
+          "category": "validation_failed",
+          "failure_count": 1
+        }
+      ],
+      "pending": [
         {
           "id": "homebrew:abcmidi",
           "name": "abcmidi",
@@ -35387,6 +35404,13 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:aarch64-elf-binutils",
+          "name": "aarch64-elf-binutils",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
           "id": "cpan:ack",
           "name": "ack",
           "ecosystem": "cpan",
@@ -37298,13 +37322,252 @@
     }
   ],
   "failures": {
-    "deterministic": 246,
-    "deterministic_insufficient": 170,
+    "deterministic": 250,
+    "deterministic_insufficient": 183,
     "missing_dep": 4,
     "timeout": 3,
-    "validation_failed": 165
+    "validation_failed": 176
   },
   "failure_details": [
+    {
+      "id": "batch-2026-02-18T14-41-33Z-aarch64-elf-binutils",
+      "package": "aarch64-elf-binutils",
+      "ecosystem": "batch",
+      "category": "deterministic",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x86_64",
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "batch-2026-02-18T14-41-33Z",
+      "timestamp": "2026-02-18T14:41:33Z"
+    },
+    {
+      "id": "homebrew-2026-02-18T14-39-26Z-abcm2ps",
+      "package": "abcm2ps",
+      "ecosystem": "homebrew",
+      "category": "validation_failed",
+      "batch_id": "homebrew-2026-02-18T14-39-26Z",
+      "timestamp": "2026-02-18T14:39:26.525506667Z"
+    },
+    {
+      "id": "homebrew-2026-02-18T14-39-23Z-abcde",
+      "package": "abcde",
+      "ecosystem": "homebrew",
+      "category": "deterministic_insufficient",
+      "subcategory": "no_bottles",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for abcde from homebrew:abcde...\nFetching formula metadata... done (v2.9.3)\nInspecting bottle contents... failed\ndeterministic generation failed: [no_bottles] formula abcde has no bottles available",
+      "batch_id": "homebrew-2026-02-18T14-39-26Z",
+      "timestamp": "2026-02-18T14:39:23.444524012Z"
+    },
+    {
+      "id": "homebrew-2026-02-18T14-39-21Z-aarch64-elf-gdb",
+      "package": "aarch64-elf-gdb",
+      "ecosystem": "homebrew",
+      "category": "validation_failed",
+      "subcategory": "verify_pattern_mismatch",
+      "message": "Error: registry: recipe gmp not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create gmp --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi, npm",
+      "batch_id": "homebrew-2026-02-18T14-39-26Z",
+      "timestamp": "2026-02-18T14:39:21.641818211Z"
+    },
+    {
+      "id": "homebrew-2026-02-18T14-39-19Z-aarch64-elf-gcc",
+      "package": "aarch64-elf-gcc",
+      "ecosystem": "homebrew",
+      "category": "validation_failed",
+      "subcategory": "verify_pattern_mismatch",
+      "message": "Error: registry: recipe aarch64-elf-binutils not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create aarch64-elf-binutils --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi, npm",
+      "batch_id": "homebrew-2026-02-18T14-39-26Z",
+      "timestamp": "2026-02-18T14:39:19.258737125Z"
+    },
+    {
+      "id": "homebrew-2026-02-18T14-39-07Z-aalib",
+      "package": "aalib",
+      "ecosystem": "homebrew",
+      "category": "deterministic_insufficient",
+      "subcategory": "api_error",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for aalib from homebrew:aalib...\nFetching formula metadata... done (v1.4rc5)\nInspecting bottle contents... failed\ndeterministic generation failed: [api_error] failed to fetch bottle data for formula aalib",
+      "batch_id": "homebrew-2026-02-18T14-39-26Z",
+      "timestamp": "2026-02-18T14:39:07.913828076Z"
+    },
+    {
+      "id": "homebrew-2026-02-18T14-39-06Z-a7ex/formulae/xcresultparser",
+      "package": "a7ex/formulae/xcresultparser",
+      "ecosystem": "homebrew",
+      "category": "validation_failed",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: package 'a7ex/formulae/xcresultparser' not found in homebrew",
+      "batch_id": "homebrew-2026-02-18T14-39-26Z",
+      "timestamp": "2026-02-18T14:39:06.376496983Z"
+    },
+    {
+      "id": "homebrew-2026-02-18T14-39-05Z-a2ps",
+      "package": "a2ps",
+      "ecosystem": "homebrew",
+      "category": "validation_failed",
+      "subcategory": "verify_pattern_mismatch",
+      "message": "tsuku collects anonymous usage statistics to improve the tool.\nNo personal information is collected. See: https://tsuku.dev/telemetry\n\nTo opt out: tsuku config set telemetry false\n         or export TSUKU_NO_TELEMETRY=1\nError: registry: recipe bdw-gc not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create bdw-gc --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, py",
+      "batch_id": "homebrew-2026-02-18T14-39-26Z",
+      "timestamp": "2026-02-18T14:39:05.369796774Z"
+    },
+    {
+      "id": "homebrew-2026-02-18T14-39-03Z-5ouma/tap/gh-poi",
+      "package": "5ouma/tap/gh-poi",
+      "ecosystem": "homebrew",
+      "category": "validation_failed",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: package '5ouma/tap/gh-poi' not found in homebrew",
+      "batch_id": "homebrew-2026-02-18T14-39-26Z",
+      "timestamp": "2026-02-18T14:39:03.465270771Z"
+    },
+    {
+      "id": "homebrew-2026-02-18T14-39-02Z-42ailab/42plugin/forty-two-plugin",
+      "package": "42ailab/42plugin/forty-two-plugin",
+      "ecosystem": "homebrew",
+      "category": "validation_failed",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: package '42ailab/42plugin/forty-two-plugin' not found in homebrew",
+      "batch_id": "homebrew-2026-02-18T14-39-26Z",
+      "timestamp": "2026-02-18T14:39:02.458560647Z"
+    },
+    {
+      "id": "homebrew-2026-02-18T14-39-01Z-2ykwang/mac-cleanup-go/mac-cleanup-go",
+      "package": "2ykwang/mac-cleanup-go/mac-cleanup-go",
+      "ecosystem": "homebrew",
+      "category": "validation_failed",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: package '2ykwang/mac-cleanup-go/mac-cleanup-go' not found in homebrew",
+      "batch_id": "homebrew-2026-02-18T14-39-26Z",
+      "timestamp": "2026-02-18T14:39:01.451834991Z"
+    },
+    {
+      "id": "homebrew-2026-02-18T14-39-00Z-2ykwang/2ykwang/mac-cleanup-go",
+      "package": "2ykwang/2ykwang/mac-cleanup-go",
+      "ecosystem": "homebrew",
+      "category": "validation_failed",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: package '2ykwang/2ykwang/mac-cleanup-go' not found in homebrew",
+      "batch_id": "homebrew-2026-02-18T14-39-26Z",
+      "timestamp": "2026-02-18T14:39:00.445201869Z"
+    },
+    {
+      "id": "homebrew-2026-02-18T14-38-59Z-0xjuanma/tap/golazo",
+      "package": "0xjuanma/tap/golazo",
+      "ecosystem": "homebrew",
+      "category": "validation_failed",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: package '0xjuanma/tap/golazo' not found in homebrew",
+      "batch_id": "homebrew-2026-02-18T14-39-26Z",
+      "timestamp": "2026-02-18T14:38:59.439232968Z"
+    },
+    {
+      "id": "homebrew-2026-02-18T14-38-58Z-0xjacky/tools/nginx-ui",
+      "package": "0xjacky/tools/nginx-ui",
+      "ecosystem": "homebrew",
+      "category": "validation_failed",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: package '0xjacky/tools/nginx-ui' not found in homebrew",
+      "batch_id": "homebrew-2026-02-18T14-39-26Z",
+      "timestamp": "2026-02-18T14:38:58.43291817Z"
+    },
+    {
+      "id": "homebrew-2026-02-18T14-38-57Z-python@3.14",
+      "package": "python@3.14",
+      "ecosystem": "homebrew",
+      "category": "deterministic_insufficient",
+      "subcategory": "api_error",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for python@3.14 from homebrew:python@3.14...\nFetching formula metadata... done (v3.14.3)\nInspecting bottle contents... failed\ndeterministic generation failed: [api_error] failed to fetch bottle data for formula python@3.14",
+      "batch_id": "homebrew-2026-02-18T14-39-26Z",
+      "timestamp": "2026-02-18T14:38:57.426430617Z"
+    },
+    {
+      "id": "homebrew-2026-02-18T14-38-56Z-python@3.13",
+      "package": "python@3.13",
+      "ecosystem": "homebrew",
+      "category": "deterministic_insufficient",
+      "subcategory": "api_error",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for python@3.13 from homebrew:python@3.13...\nFetching formula metadata... done (v3.13.12)\nInspecting bottle contents... failed\ndeterministic generation failed: [api_error] failed to fetch bottle data for formula python@3.13",
+      "batch_id": "homebrew-2026-02-18T14-39-26Z",
+      "timestamp": "2026-02-18T14:38:56.091885359Z"
+    },
+    {
+      "id": "github-2026-02-18T14-38-54Z-step",
+      "package": "step",
+      "ecosystem": "github",
+      "category": "deterministic_insufficient",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: 'step' resolved to github (smallstep/cli), which requires LLM for recipe generation.\nRemove --deterministic-only or wait for a recipe to be contributed.",
+      "batch_id": "github-2026-02-18T14-39-26Z",
+      "timestamp": "2026-02-18T14:38:54.545872268Z"
+    },
+    {
+      "id": "github-2026-02-18T14-38-52Z-sk",
+      "package": "sk",
+      "ecosystem": "github",
+      "category": "deterministic_insufficient",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: 'sk' resolved to github (lotabout/skim), which requires LLM for recipe generation.\nRemove --deterministic-only or wait for a recipe to be contributed.",
+      "batch_id": "github-2026-02-18T14-39-26Z",
+      "timestamp": "2026-02-18T14:38:52.538870913Z"
+    },
+    {
+      "id": "github-2026-02-18T14-38-50Z-rg",
+      "package": "rg",
+      "ecosystem": "github",
+      "category": "deterministic_insufficient",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: 'rg' resolved to github (BurntSushi/ripgrep), which requires LLM for recipe generation.\nRemove --deterministic-only or wait for a recipe to be contributed.",
+      "batch_id": "github-2026-02-18T14-39-26Z",
+      "timestamp": "2026-02-18T14:38:50.531805273Z"
+    },
+    {
+      "id": "github-2026-02-18T14-38-48Z-ko",
+      "package": "ko",
+      "ecosystem": "github",
+      "category": "deterministic_insufficient",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: 'ko' resolved to github (ko-build/ko), which requires LLM for recipe generation.\nRemove --deterministic-only or wait for a recipe to be contributed.",
+      "batch_id": "github-2026-02-18T14-39-26Z",
+      "timestamp": "2026-02-18T14:38:48.524723785Z"
+    },
+    {
+      "id": "github-2026-02-18T14-38-46Z-jq",
+      "package": "jq",
+      "ecosystem": "github",
+      "category": "deterministic_insufficient",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: 'jq' resolved to github (jqlang/jq), which requires LLM for recipe generation.\nRemove --deterministic-only or wait for a recipe to be contributed.",
+      "batch_id": "github-2026-02-18T14-39-26Z",
+      "timestamp": "2026-02-18T14:38:46.517588756Z"
+    },
+    {
+      "id": "github-2026-02-18T14-38-44Z-hub",
+      "package": "hub",
+      "ecosystem": "github",
+      "category": "deterministic_insufficient",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: 'hub' resolved to github (github/hub), which requires LLM for recipe generation.\nRemove --deterministic-only or wait for a recipe to be contributed.",
+      "batch_id": "github-2026-02-18T14-39-26Z",
+      "timestamp": "2026-02-18T14:38:44.510363835Z"
+    },
+    {
+      "id": "github-2026-02-18T14-38-42Z-dive",
+      "package": "dive",
+      "ecosystem": "github",
+      "category": "deterministic_insufficient",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: 'dive' resolved to github (wagoodman/dive), which requires LLM for recipe generation.\nRemove --deterministic-only or wait for a recipe to be contributed.",
+      "batch_id": "github-2026-02-18T14-39-26Z",
+      "timestamp": "2026-02-18T14:38:42.50288641Z"
+    },
+    {
+      "id": "github-2026-02-18T14-38-40Z-delta",
+      "package": "delta",
+      "ecosystem": "github",
+      "category": "deterministic_insufficient",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: 'delta' resolved to github (dandavison/delta), which requires LLM for recipe generation.\nRemove --deterministic-only or wait for a recipe to be contributed.",
+      "batch_id": "github-2026-02-18T14-39-26Z",
+      "timestamp": "2026-02-18T14:38:40.49567951Z"
+    },
+    {
+      "id": "github-2026-02-18T14-38-38Z-bat",
+      "package": "bat",
+      "ecosystem": "github",
+      "category": "deterministic_insufficient",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: 'bat' resolved to github (sharkdp/bat), which requires LLM for recipe generation.\nRemove --deterministic-only or wait for a recipe to be contributed.",
+      "batch_id": "github-2026-02-18T14-39-26Z",
+      "timestamp": "2026-02-18T14:38:38.488970192Z"
+    },
     {
       "id": "batch-2026-02-18T14-01-11Z-watchexec",
       "package": "watchexec",
@@ -37638,8 +37901,8 @@
       "timestamp": "2026-02-18T04:27:04.521891344Z"
     },
     {
-      "id": "homebrew-2026-02-08T02-37-10Z-xh",
-      "package": "xh",
+      "id": "homebrew-2026-02-08T02-37-10Z-sd",
+      "package": "sd",
       "ecosystem": "homebrew",
       "category": "deterministic",
       "subcategory": "install_failed",
@@ -37653,8 +37916,8 @@
       "timestamp": "2026-02-08T02:37:10Z"
     },
     {
-      "id": "homebrew-2026-02-08T02-37-10Z-sd",
-      "package": "sd",
+      "id": "homebrew-2026-02-08T02-37-10Z-xh",
+      "package": "xh",
       "ecosystem": "homebrew",
       "category": "deterministic",
       "subcategory": "install_failed",
@@ -37934,6 +38197,26 @@
       "category": "deterministic",
       "subcategory": "install_failed",
       "exit_code": 6,
+      "platform": "linux-alpine-musl-x86_64",
+      "timestamp": "2026-02-06T20:45:08Z"
+    },
+    {
+      "id": "homebrew-2026-02-06T20-45-08Z-nasm",
+      "package": "nasm",
+      "ecosystem": "homebrew",
+      "category": "deterministic",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "linux-alpine-musl-x86_64",
+      "timestamp": "2026-02-06T20:45:08Z"
+    },
+    {
+      "id": "homebrew-2026-02-06T20-45-08Z-nasm",
+      "package": "nasm",
+      "ecosystem": "homebrew",
+      "category": "deterministic",
+      "subcategory": "install_failed",
+      "exit_code": 6,
       "platform": "linux-alpine-musl-arm64",
       "timestamp": "2026-02-06T20:45:08Z"
     },
@@ -37944,27 +38227,7 @@
       "category": "deterministic",
       "subcategory": "install_failed",
       "exit_code": 6,
-      "platform": "linux-alpine-musl-x86_64",
-      "timestamp": "2026-02-06T20:45:08Z"
-    },
-    {
-      "id": "homebrew-2026-02-06T20-45-08Z-nasm",
-      "package": "nasm",
-      "ecosystem": "homebrew",
-      "category": "deterministic",
-      "subcategory": "install_failed",
-      "exit_code": 6,
       "platform": "linux-alpine-musl-arm64",
-      "timestamp": "2026-02-06T20:45:08Z"
-    },
-    {
-      "id": "homebrew-2026-02-06T20-45-08Z-nasm",
-      "package": "nasm",
-      "ecosystem": "homebrew",
-      "category": "deterministic",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "linux-alpine-musl-x86_64",
       "timestamp": "2026-02-06T20:45:08Z"
     },
     {
@@ -38040,8 +38303,8 @@
       "timestamp": "2026-02-06T20:42:23.416796652Z"
     },
     {
-      "id": "homebrew-2026-02-06T19-07-05Z-bc",
-      "package": "bc",
+      "id": "homebrew-2026-02-06T19-07-05Z-websocat",
+      "package": "websocat",
       "ecosystem": "homebrew",
       "category": "deterministic",
       "subcategory": "install_failed",
@@ -38056,7 +38319,7 @@
       "category": "deterministic",
       "subcategory": "install_failed",
       "exit_code": 6,
-      "platform": "linux-alpine-musl-x86_64",
+      "platform": "linux-alpine-musl-arm64",
       "timestamp": "2026-02-06T19:07:05Z"
     },
     {
@@ -38100,13 +38363,13 @@
       "timestamp": "2026-02-06T19:07:05Z"
     },
     {
-      "id": "homebrew-2026-02-06T19-07-05Z-websocat",
-      "package": "websocat",
+      "id": "homebrew-2026-02-06T19-07-05Z-bc",
+      "package": "bc",
       "ecosystem": "homebrew",
       "category": "deterministic",
       "subcategory": "install_failed",
       "exit_code": 6,
-      "platform": "linux-alpine-musl-arm64",
+      "platform": "linux-alpine-musl-x86_64",
       "timestamp": "2026-02-06T19:07:05Z"
     },
     {
@@ -38175,23 +38438,23 @@
       "timestamp": "2026-02-06T19:01:30.594178786Z"
     },
     {
-      "id": "homebrew-2026-02-06T17-55-10Z-moreutils",
-      "package": "moreutils",
+      "id": "homebrew-2026-02-06T17-55-10Z-mit-scheme",
+      "package": "mit-scheme",
+      "ecosystem": "homebrew",
+      "category": "deterministic",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "linux-rhel-glibc-arm64",
+      "timestamp": "2026-02-06T17:55:10Z"
+    },
+    {
+      "id": "homebrew-2026-02-06T17-55-10Z-mit-scheme",
+      "package": "mit-scheme",
       "ecosystem": "homebrew",
       "category": "deterministic",
       "subcategory": "install_failed",
       "exit_code": 6,
       "platform": "linux-alpine-musl-arm64",
-      "timestamp": "2026-02-06T17:55:10Z"
-    },
-    {
-      "id": "homebrew-2026-02-06T17-55-10Z-moreutils",
-      "package": "moreutils",
-      "ecosystem": "homebrew",
-      "category": "deterministic",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "linux-alpine-musl-x86_64",
       "timestamp": "2026-02-06T17:55:10Z"
     },
     {
@@ -38221,6 +38484,16 @@
       "category": "deterministic",
       "subcategory": "install_failed",
       "exit_code": 6,
+      "platform": "linux-debian-glibc-arm64",
+      "timestamp": "2026-02-06T17:55:10Z"
+    },
+    {
+      "id": "homebrew-2026-02-06T17-55-10Z-moreutils",
+      "package": "moreutils",
+      "ecosystem": "homebrew",
+      "category": "deterministic",
+      "subcategory": "install_failed",
+      "exit_code": 6,
       "platform": "linux-alpine-musl-arm64",
       "timestamp": "2026-02-06T17:55:10Z"
     },
@@ -38235,23 +38508,23 @@
       "timestamp": "2026-02-06T17:55:10Z"
     },
     {
-      "id": "homebrew-2026-02-06T17-55-10Z-mit-scheme",
-      "package": "mit-scheme",
+      "id": "homebrew-2026-02-06T17-55-10Z-moreutils",
+      "package": "moreutils",
       "ecosystem": "homebrew",
       "category": "deterministic",
       "subcategory": "install_failed",
       "exit_code": 6,
-      "platform": "linux-rhel-glibc-arm64",
+      "platform": "linux-alpine-musl-x86_64",
       "timestamp": "2026-02-06T17:55:10Z"
     },
     {
-      "id": "homebrew-2026-02-06T17-55-10Z-mit-scheme",
-      "package": "mit-scheme",
+      "id": "homebrew-2026-02-06T17-55-10Z-chicken",
+      "package": "chicken",
       "ecosystem": "homebrew",
       "category": "deterministic",
       "subcategory": "install_failed",
       "exit_code": 6,
-      "platform": "linux-debian-glibc-arm64",
+      "platform": "linux-alpine-musl-x86_64",
       "timestamp": "2026-02-06T17:55:10Z"
     },
     {
@@ -38282,16 +38555,6 @@
       "subcategory": "install_failed",
       "exit_code": 6,
       "platform": "linux-alpine-musl-arm64",
-      "timestamp": "2026-02-06T17:55:10Z"
-    },
-    {
-      "id": "homebrew-2026-02-06T17-55-10Z-chicken",
-      "package": "chicken",
-      "ecosystem": "homebrew",
-      "category": "deterministic",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "linux-alpine-musl-x86_64",
       "timestamp": "2026-02-06T17:55:10Z"
     },
     {
@@ -38826,13 +39089,23 @@
       "timestamp": "2026-02-06T11:40:34.745445513Z"
     },
     {
-      "id": "homebrew-2026-02-06T10-56-24Z-chibi-scheme",
-      "package": "chibi-scheme",
+      "id": "homebrew-2026-02-06T10-56-24Z-periphery",
+      "package": "periphery",
       "ecosystem": "homebrew",
       "category": "deterministic",
       "subcategory": "install_failed",
       "exit_code": 6,
-      "platform": "linux-alpine-musl-x86_64",
+      "platform": "linux-alpine-musl-arm64",
+      "timestamp": "2026-02-06T10:56:24Z"
+    },
+    {
+      "id": "homebrew-2026-02-06T10-56-24Z-git-flow",
+      "package": "git-flow",
+      "ecosystem": "homebrew",
+      "category": "deterministic",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "linux-suse-glibc-arm64",
       "timestamp": "2026-02-06T10:56:24Z"
     },
     {
@@ -38846,13 +39119,13 @@
       "timestamp": "2026-02-06T10:56:24Z"
     },
     {
-      "id": "homebrew-2026-02-06T10-56-24Z-periphery",
-      "package": "periphery",
+      "id": "homebrew-2026-02-06T10-56-24Z-chibi-scheme",
+      "package": "chibi-scheme",
       "ecosystem": "homebrew",
       "category": "deterministic",
       "subcategory": "install_failed",
       "exit_code": 6,
-      "platform": "linux-alpine-musl-arm64",
+      "platform": "linux-alpine-musl-x86_64",
       "timestamp": "2026-02-06T10:56:24Z"
     },
     {
@@ -38906,13 +39179,13 @@
       "timestamp": "2026-02-06T10:56:24Z"
     },
     {
-      "id": "homebrew-2026-02-06T10-56-24Z-git-flow",
-      "package": "git-flow",
+      "id": "homebrew-2026-02-06T10-56-24Z-periphery",
+      "package": "periphery",
       "ecosystem": "homebrew",
       "category": "deterministic",
       "subcategory": "install_failed",
       "exit_code": 6,
-      "platform": "linux-suse-glibc-arm64",
+      "platform": "darwin-x86_64",
       "timestamp": "2026-02-06T10:56:24Z"
     },
     {
@@ -38966,16 +39239,6 @@
       "timestamp": "2026-02-06T10:56:24Z"
     },
     {
-      "id": "homebrew-2026-02-06T10-56-24Z-periphery",
-      "package": "periphery",
-      "ecosystem": "homebrew",
-      "category": "deterministic",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "darwin-x86_64",
-      "timestamp": "2026-02-06T10:56:24Z"
-    },
-    {
       "id": "homebrew-2026-02-06T10-51-28Z-certifi",
       "package": "certifi",
       "ecosystem": "homebrew",
@@ -39010,248 +39273,15 @@
       "subcategory": "verify_pattern_mismatch",
       "message": "Error: registry: recipe libtool not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create libtool --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi, npm",
       "timestamp": "2026-02-06T10:51:14.488811553Z"
-    },
-    {
-      "id": "homebrew-2026-02-06T10-51-06Z-kcov",
-      "package": "kcov",
-      "ecosystem": "homebrew",
-      "category": "validation_failed",
-      "subcategory": "verify_pattern_mismatch",
-      "message": "tsuku collects anonymous usage statistics to improve the tool.\nNo personal information is collected. See: https://tsuku.dev/telemetry\n\nTo opt out: tsuku config set telemetry false\n         or export TSUKU_NO_TELEMETRY=1\nError: registry: recipe dwarfutils not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create dwarfutils --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, ruby",
-      "timestamp": "2026-02-06T10:51:06.733745143Z"
-    },
-    {
-      "id": "homebrew-2026-02-06T09-58-17Z-unar",
-      "package": "unar",
-      "ecosystem": "homebrew",
-      "category": "deterministic",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "linux-alpine-musl-arm64",
-      "timestamp": "2026-02-06T09:58:17Z"
-    },
-    {
-      "id": "homebrew-2026-02-06T09-58-17Z-unar",
-      "package": "unar",
-      "ecosystem": "homebrew",
-      "category": "deterministic",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "linux-suse-glibc-arm64",
-      "timestamp": "2026-02-06T09:58:17Z"
-    },
-    {
-      "id": "homebrew-2026-02-06T09-58-17Z-unar",
-      "package": "unar",
-      "ecosystem": "homebrew",
-      "category": "deterministic",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "linux-rhel-glibc-arm64",
-      "timestamp": "2026-02-06T09:58:17Z"
-    },
-    {
-      "id": "homebrew-2026-02-06T09-58-17Z-unar",
-      "package": "unar",
-      "ecosystem": "homebrew",
-      "category": "deterministic",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "linux-debian-glibc-arm64",
-      "timestamp": "2026-02-06T09:58:17Z"
-    },
-    {
-      "id": "homebrew-2026-02-06T09-58-17Z-unar",
-      "package": "unar",
-      "ecosystem": "homebrew",
-      "category": "deterministic",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "linux-alpine-musl-x86_64",
-      "timestamp": "2026-02-06T09:58:17Z"
-    },
-    {
-      "id": "homebrew-2026-02-06T09-58-17Z-supabase",
-      "package": "supabase",
-      "ecosystem": "homebrew",
-      "category": "deterministic",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "linux-alpine-musl-x86_64",
-      "timestamp": "2026-02-06T09:58:17Z"
-    },
-    {
-      "id": "homebrew-2026-02-06T09-58-17Z-mockolo",
-      "package": "mockolo",
-      "ecosystem": "homebrew",
-      "category": "deterministic",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "linux-alpine-musl-arm64",
-      "timestamp": "2026-02-06T09:58:17Z"
-    },
-    {
-      "id": "homebrew-2026-02-06T09-58-17Z-mockolo",
-      "package": "mockolo",
-      "ecosystem": "homebrew",
-      "category": "deterministic",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "linux-alpine-musl-x86_64",
-      "timestamp": "2026-02-06T09:58:17Z"
-    },
-    {
-      "id": "homebrew-2026-02-06T09-55-06Z-gambit-scheme",
-      "package": "gambit-scheme",
-      "ecosystem": "homebrew",
-      "category": "validation_failed",
-      "subcategory": "verify_pattern_mismatch",
-      "message": "Error: registry: recipe openssl@3 not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create openssl@3 --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi, npm",
-      "timestamp": "2026-02-06T09:55:06.005273237Z"
-    },
-    {
-      "id": "homebrew-2026-02-06T09-55-03Z-php@8.4",
-      "package": "php@8.4",
-      "ecosystem": "homebrew",
-      "category": "deterministic_insufficient",
-      "subcategory": "api_error",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for php@8.4 from homebrew:php@8.4...\nFetching formula metadata... done (v8.4.17)\nInspecting bottle contents... failed\ndeterministic generation failed: [api_error] failed to fetch bottle data for formula php@8.4",
-      "timestamp": "2026-02-06T09:55:03.231439141Z"
-    },
-    {
-      "id": "homebrew-2026-02-06T09-55-01Z-tesseract-lang",
-      "package": "tesseract-lang",
-      "ecosystem": "homebrew",
-      "category": "deterministic_insufficient",
-      "subcategory": "complex_archive",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for tesseract-lang from homebrew:tesseract-lang...\nFetching formula metadata... done (v4.1.0)\nInspecting bottle contents... failed\ndeterministic generation failed: [complex_archive] formula tesseract-lang bottle contains no binaries in bin/",
-      "timestamp": "2026-02-06T09:55:01.8896345Z"
-    },
-    {
-      "id": "homebrew-2026-02-06T09-54-47Z-whisper-cpp",
-      "package": "whisper-cpp",
-      "ecosystem": "homebrew",
-      "category": "deterministic_insufficient",
-      "subcategory": "complex_archive",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for whisper-cpp from homebrew:whisper-cpp...\nFetching formula metadata... done (v1.8.3)\nInspecting bottle contents... failed\ndeterministic generation failed: [complex_archive] formula whisper-cpp bottle contains no binaries in bin/",
-      "timestamp": "2026-02-06T09:54:47.971803563Z"
-    },
-    {
-      "id": "homebrew-2026-02-06T09-54-31Z-pillow",
-      "package": "pillow",
-      "ecosystem": "homebrew",
-      "category": "deterministic_insufficient",
-      "subcategory": "complex_archive",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for pillow from homebrew:pillow...\nFetching formula metadata... done (v12.1.0)\nInspecting bottle contents... failed\ndeterministic generation failed: [complex_archive] formula pillow bottle contains no binaries in bin/",
-      "timestamp": "2026-02-06T09:54:31.448384293Z"
-    },
-    {
-      "id": "homebrew-2026-02-06T09-54-29Z-universal-ctags",
-      "package": "universal-ctags",
-      "ecosystem": "homebrew",
-      "category": "validation_failed",
-      "subcategory": "verify_pattern_mismatch",
-      "message": "Error: registry: recipe jansson not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create jansson --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi, npm",
-      "timestamp": "2026-02-06T09:54:29.541505011Z"
-    },
-    {
-      "id": "homebrew-2026-02-06T09-54-27Z-gauche",
-      "package": "gauche",
-      "ecosystem": "homebrew",
-      "category": "validation_failed",
-      "subcategory": "verify_pattern_mismatch",
-      "message": "tsuku collects anonymous usage statistics to improve the tool.\nNo personal information is collected. See: https://tsuku.dev/telemetry\n\nTo opt out: tsuku config set telemetry false\n         or export TSUKU_NO_TELEMETRY=1\nError: registry: recipe ca-certificates not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create ca-certificates --from \u003cecosystem\u003e\n\nAvailable ecosystems: crate",
-      "timestamp": "2026-02-06T09:54:27.701796269Z"
-    },
-    {
-      "id": "homebrew-2026-02-06T09-01-19Z-syncthing",
-      "package": "syncthing",
-      "ecosystem": "homebrew",
-      "category": "deterministic",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "linux-alpine-musl-x86_64",
-      "timestamp": "2026-02-06T09:01:19Z"
-    },
-    {
-      "id": "homebrew-2026-02-06T09-01-19Z-qrencode",
-      "package": "qrencode",
-      "ecosystem": "homebrew",
-      "category": "deterministic",
-      "exit_code": 8,
-      "platform": "linux-alpine-musl-arm64",
-      "timestamp": "2026-02-06T09:01:19Z"
-    },
-    {
-      "id": "homebrew-2026-02-06T09-01-19Z-qrencode",
-      "package": "qrencode",
-      "ecosystem": "homebrew",
-      "category": "deterministic",
-      "exit_code": 8,
-      "platform": "linux-alpine-musl-x86_64",
-      "timestamp": "2026-02-06T09:01:19Z"
-    },
-    {
-      "id": "homebrew-2026-02-06T09-01-19Z-openshift-cli",
-      "package": "openshift-cli",
-      "ecosystem": "homebrew",
-      "category": "deterministic",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "linux-alpine-musl-x86_64",
-      "timestamp": "2026-02-06T09:01:19Z"
-    },
-    {
-      "id": "homebrew-2026-02-06T09-01-19Z-luajit",
-      "package": "luajit",
-      "ecosystem": "homebrew",
-      "category": "deterministic",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "linux-alpine-musl-arm64",
-      "timestamp": "2026-02-06T09:01:19Z"
-    },
-    {
-      "id": "homebrew-2026-02-06T09-01-19Z-luajit",
-      "package": "luajit",
-      "ecosystem": "homebrew",
-      "category": "deterministic",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "linux-alpine-musl-x86_64",
-      "timestamp": "2026-02-06T09:01:19Z"
-    },
-    {
-      "id": "homebrew-2026-02-06T09-01-19Z-freetype",
-      "package": "freetype",
-      "ecosystem": "homebrew",
-      "category": "deterministic",
-      "exit_code": 8,
-      "platform": "linux-alpine-musl-arm64",
-      "timestamp": "2026-02-06T09:01:19Z"
-    },
-    {
-      "id": "homebrew-2026-02-06T09-01-19Z-freetype",
-      "package": "freetype",
-      "ecosystem": "homebrew",
-      "category": "deterministic",
-      "exit_code": 8,
-      "platform": "linux-alpine-musl-x86_64",
-      "timestamp": "2026-02-06T09:01:19Z"
-    },
-    {
-      "id": "homebrew-2026-02-06T09-01-19Z-aws-vault",
-      "package": "aws-vault",
-      "ecosystem": "homebrew",
-      "category": "deterministic",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "linux-alpine-musl-arm64",
-      "timestamp": "2026-02-06T09:01:19Z"
     }
   ],
   "health": {
     "ecosystems": {
+      "github": {
+        "breaker_state": "closed",
+        "failures": 1,
+        "last_failure": "2026-02-18T14:41:33Z"
+      },
       "homebrew": {
         "breaker_state": "closed",
         "failures": 0,
@@ -39261,20 +39291,29 @@
     },
     "last_run": {
       "batch_id": "2026-02-18",
-      "timestamp": "2026-02-18T14:13:16Z",
-      "succeeded": 0,
-      "failed": 0,
-      "total": 0
-    },
-    "last_successful_run": {
-      "batch_id": "2026-02-18",
-      "timestamp": "2026-02-18T14:01:11Z",
+      "ecosystems": {
+        "github": 9,
+        "homebrew": 16
+      },
+      "timestamp": "2026-02-18T14:41:33Z",
       "succeeded": 1,
       "failed": 0,
       "total": 1,
       "recipes_merged": 1
     },
-    "runs_since_last_success": 1,
+    "last_successful_run": {
+      "batch_id": "2026-02-18",
+      "ecosystems": {
+        "github": 9,
+        "homebrew": 16
+      },
+      "timestamp": "2026-02-18T14:41:33Z",
+      "succeeded": 1,
+      "failed": 0,
+      "total": 1,
+      "recipes_merged": 1
+    },
+    "runs_since_last_success": 0,
     "hours_since_last_run": 0
   },
   "runs": [
