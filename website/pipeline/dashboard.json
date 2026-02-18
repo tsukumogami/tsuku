@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-02-18T09:48:13Z",
+  "generated_at": "2026-02-18T10:45:33Z",
   "queue": {
     "total": 5275,
     "by_status": {
@@ -37248,6 +37248,13 @@
   },
   "blockers": [
     {
+      "dependency": "dav1d",
+      "count": 1,
+      "packages": [
+        "homebrew:ffmpeg"
+      ]
+    },
+    {
       "dependency": "glib",
       "count": 1,
       "packages": [
@@ -37266,13 +37273,6 @@
       "count": 1,
       "packages": [
         "homebrew:node"
-      ]
-    },
-    {
-      "dependency": "dav1d",
-      "count": 1,
-      "packages": [
-        "homebrew:ffmpeg"
       ]
     }
   ],
@@ -37378,21 +37378,6 @@
       "timestamp": "2026-02-18T04:27:04.521891344Z"
     },
     {
-      "id": "homebrew-2026-02-08T02-37-10Z-sd",
-      "package": "sd",
-      "ecosystem": "homebrew",
-      "category": "deterministic",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "homebrew-2026-02-08T02-37-10Z",
-      "timestamp": "2026-02-08T02:37:10Z"
-    },
-    {
       "id": "homebrew-2026-02-08T02-37-10Z-tealdeer",
       "package": "tealdeer",
       "ecosystem": "homebrew",
@@ -37410,6 +37395,21 @@
     {
       "id": "homebrew-2026-02-08T02-37-10Z-procs",
       "package": "procs",
+      "ecosystem": "homebrew",
+      "category": "deterministic",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "homebrew-2026-02-08T02-37-10Z",
+      "timestamp": "2026-02-08T02:37:10Z"
+    },
+    {
+      "id": "homebrew-2026-02-08T02-37-10Z-sd",
+      "package": "sd",
       "ecosystem": "homebrew",
       "category": "deterministic",
       "subcategory": "install_failed",
@@ -39238,7 +39238,7 @@
     "last_run": {
       "batch_id": "2026-02-18-homebrew",
       "ecosystem": "homebrew",
-      "timestamp": "2026-02-18T09:47:52Z",
+      "timestamp": "2026-02-18T10:45:09Z",
       "succeeded": 0,
       "failed": 0,
       "total": 0
@@ -39252,7 +39252,7 @@
       "total": 2,
       "recipes_merged": 2
     },
-    "runs_since_last_success": 4,
+    "runs_since_last_success": 5,
     "hours_since_last_run": 0
   },
   "runs": [
