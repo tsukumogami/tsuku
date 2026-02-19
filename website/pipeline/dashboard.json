@@ -1,13 +1,13 @@
 {
-  "generated_at": "2026-02-19T18:51:37Z",
+  "generated_at": "2026-02-19T19:49:11Z",
   "queue": {
     "total": 5275,
     "by_status": {
       "blocked": 5,
-      "failed": 48,
-      "pending": 2927,
+      "failed": 53,
+      "pending": 2919,
       "requires_manual": 2009,
-      "success": 286
+      "success": 289
     },
     "by_tier": {
       "1": {
@@ -21,10 +21,10 @@
       },
       "3": {
         "blocked": 5,
-        "failed": 29,
-        "pending": 2927,
+        "failed": 34,
+        "pending": 2919,
         "requires_manual": 1986,
-        "success": 283
+        "success": 286
       }
     },
     "packages": {
@@ -493,11 +493,53 @@
           "ecosystem": "npm",
           "priority": 3,
           "category": "validation_failed",
-          "failure_count": 1
+          "failure_count": 2,
+          "next_retry_at": "2026-02-20T19:39:39Z"
         },
         {
           "id": "npm:countdown",
           "name": "countdown",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "validation_failed",
+          "failure_count": 2,
+          "next_retry_at": "2026-02-20T19:39:44Z"
+        },
+        {
+          "id": "npm:datasette",
+          "name": "datasette",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "validation_failed",
+          "failure_count": 1
+        },
+        {
+          "id": "npm:dmd",
+          "name": "dmd",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "validation_failed",
+          "failure_count": 1
+        },
+        {
+          "id": "npm:e2b",
+          "name": "e2b",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "validation_failed",
+          "failure_count": 1
+        },
+        {
+          "id": "npm:ent",
+          "name": "ent",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "validation_failed",
+          "failure_count": 1
+        },
+        {
+          "id": "npm:fastmcp",
+          "name": "fastmcp",
           "ecosystem": "npm",
           "priority": 3,
           "category": "validation_failed",
@@ -3757,13 +3799,6 @@
           "failure_count": 0
         },
         {
-          "id": "npm:datasette",
-          "name": "datasette",
-          "ecosystem": "npm",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
           "id": "homebrew:datawire/blackbird/telepresence",
           "name": "datawire/blackbird/telepresence",
           "ecosystem": "homebrew",
@@ -4051,13 +4086,6 @@
           "failure_count": 0
         },
         {
-          "id": "npm:diff-so-fancy",
-          "name": "diff-so-fancy",
-          "ecosystem": "npm",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
           "id": "homebrew:diffnav",
           "name": "diffnav",
           "ecosystem": "homebrew",
@@ -4187,13 +4215,6 @@
           "id": "homebrew:dlvhdr/formulae/diffnav",
           "name": "dlvhdr/formulae/diffnav",
           "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "npm:dmd",
-          "name": "dmd",
-          "ecosystem": "npm",
           "priority": 3,
           "failure_count": 0
         },
@@ -4466,13 +4487,6 @@
           "failure_count": 0
         },
         {
-          "id": "npm:dprint",
-          "name": "dprint",
-          "ecosystem": "npm",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
           "id": "homebrew:dr-emann/tap/applesauce",
           "name": "dr-emann/tap/applesauce",
           "ecosystem": "homebrew",
@@ -4637,13 +4651,6 @@
           "id": "homebrew:e1s",
           "name": "e1s",
           "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "npm:e2b",
-          "name": "e2b",
-          "ecosystem": "npm",
           "priority": 3,
           "failure_count": 0
         },
@@ -4866,13 +4873,6 @@
           "failure_count": 0
         },
         {
-          "id": "npm:ent",
-          "name": "ent",
-          "ecosystem": "npm",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
           "id": "homebrew:ente-cli",
           "name": "ente-cli",
           "ecosystem": "homebrew",
@@ -4939,13 +4939,6 @@
           "id": "homebrew:erlang@27",
           "name": "erlang@27",
           "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "npm:esbuild",
-          "name": "esbuild",
-          "ecosystem": "npm",
           "priority": 3,
           "failure_count": 0
         },
@@ -5202,13 +5195,6 @@
           "id": "homebrew:fastly/tap/fastly",
           "name": "fastly/tap/fastly",
           "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "npm:fastmcp",
-          "name": "fastmcp",
-          "ecosystem": "npm",
           "priority": 3,
           "failure_count": 0
         },
@@ -36204,6 +36190,13 @@
           "failure_count": 0
         },
         {
+          "id": "npm:diff-so-fancy",
+          "name": "diff-so-fancy",
+          "ecosystem": "npm",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
           "id": "github:direnv/direnv",
           "name": "direnv",
           "ecosystem": "github",
@@ -36267,6 +36260,13 @@
           "failure_count": 0
         },
         {
+          "id": "npm:dprint",
+          "name": "dprint",
+          "ecosystem": "npm",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
           "id": "github:Azure/draft",
           "name": "draft",
           "ecosystem": "github",
@@ -36298,6 +36298,13 @@
           "id": "github:eksctl-io/eksctl",
           "name": "eksctl",
           "ecosystem": "github",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "npm:esbuild",
+          "name": "esbuild",
+          "ecosystem": "npm",
           "priority": 3,
           "failure_count": 0
         },
@@ -37807,16 +37814,16 @@
     }
   ],
   "failures": {
-    "deterministic": 289,
+    "deterministic": 302,
     "deterministic_insufficient": 188,
     "missing_dep": 148,
     "timeout": 3,
-    "validation_failed": 57
+    "validation_failed": 64
   },
   "failure_details": [
     {
-      "id": "batch-2026-02-19T14-31-25Z-contentful-cli",
-      "package": "contentful-cli",
+      "id": "batch-2026-02-19T19-46-28Z-esbuild",
+      "package": "esbuild",
       "ecosystem": "batch",
       "category": "deterministic",
       "subcategory": "install_failed",
@@ -37826,8 +37833,108 @@
         "linux-alpine-musl-arm64",
         "linux-alpine-musl-x86_64"
       ],
-      "batch_id": "batch-2026-02-19T14-31-25Z",
-      "timestamp": "2026-02-19T14:31:25Z"
+      "batch_id": "batch-2026-02-19T19-46-28Z",
+      "timestamp": "2026-02-19T19:46:28Z"
+    },
+    {
+      "id": "batch-2026-02-19T19-46-28Z-dprint",
+      "package": "dprint",
+      "ecosystem": "batch",
+      "category": "deterministic",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "batch-2026-02-19T19-46-28Z",
+      "timestamp": "2026-02-19T19:46:28Z"
+    },
+    {
+      "id": "batch-2026-02-19T19-46-28Z-diff-so-fancy",
+      "package": "diff-so-fancy",
+      "ecosystem": "batch",
+      "category": "deterministic",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64",
+        "linux-arch-glibc-x86_64",
+        "linux-debian-glibc-arm64",
+        "linux-debian-glibc-x86_64",
+        "linux-rhel-glibc-arm64",
+        "linux-rhel-glibc-x86_64",
+        "linux-suse-glibc-arm64",
+        "linux-suse-glibc-x86_64"
+      ],
+      "batch_id": "batch-2026-02-19T19-46-28Z",
+      "timestamp": "2026-02-19T19:46:28Z"
+    },
+    {
+      "id": "npm-2026-02-19T19-40-36Z-fastmcp",
+      "package": "fastmcp",
+      "ecosystem": "npm",
+      "category": "validation_failed",
+      "message": "Installation failed: step 1 (npm_exec) failed: npm ci failed: exit status 1\nOutput: npm error code EUSAGE\nnpm error\nnpm error `npm ci` can only install packages when your package.json and package-lock.json or npm-shrinkwrap.json are in sync. Please update your lock file with `npm install` before continuing.\nnpm error\nnpm error Missing: jose@6.1.3 from lock file\nnpm error\nnpm error Clean install a project\nnpm error\nnpm error Usage:\nnpm error npm ci\nnpm error\nnpm error Options:\nnpm error [--instal",
+      "batch_id": "npm-2026-02-19T19-40-36Z",
+      "timestamp": "2026-02-19T19:40:36.774153653Z"
+    },
+    {
+      "id": "npm-2026-02-19T19-40-22Z-ent",
+      "package": "ent",
+      "ecosystem": "npm",
+      "category": "validation_failed",
+      "message": "Installation failed: step 1 (npm_exec) failed: expected executable ent not found at /tmp/action-validator-3896133566/.install/node_modules/.bin/ent",
+      "batch_id": "npm-2026-02-19T19-40-36Z",
+      "timestamp": "2026-02-19T19:40:22.382492135Z"
+    },
+    {
+      "id": "npm-2026-02-19T19-40-15Z-e2b",
+      "package": "e2b",
+      "ecosystem": "npm",
+      "category": "validation_failed",
+      "message": "Installation failed: step 1 (npm_exec) failed: expected executable e2b not found at /tmp/action-validator-1596984653/.install/node_modules/.bin/e2b",
+      "batch_id": "npm-2026-02-19T19-40-36Z",
+      "timestamp": "2026-02-19T19:40:15.525669167Z"
+    },
+    {
+      "id": "npm-2026-02-19T19-40-01Z-dmd",
+      "package": "dmd",
+      "ecosystem": "npm",
+      "category": "validation_failed",
+      "message": "Installation failed: step 1 (npm_exec) failed: expected executable dmd not found at /tmp/action-validator-1051595371/.install/node_modules/.bin/dmd",
+      "batch_id": "npm-2026-02-19T19-40-36Z",
+      "timestamp": "2026-02-19T19:40:01.185307332Z"
+    },
+    {
+      "id": "npm-2026-02-19T19-39-50Z-datasette",
+      "package": "datasette",
+      "ecosystem": "npm",
+      "category": "validation_failed",
+      "message": "Installation failed: step 1 (npm_exec) failed: expected executable datasette not found at /tmp/action-validator-2144958597/.install/node_modules/.bin/datasette",
+      "batch_id": "npm-2026-02-19T19-40-36Z",
+      "timestamp": "2026-02-19T19:39:50.041019799Z"
+    },
+    {
+      "id": "npm-2026-02-19T19-39-44Z-countdown",
+      "package": "countdown",
+      "ecosystem": "npm",
+      "category": "validation_failed",
+      "message": "Installation failed: step 1 (npm_exec) failed: expected executable countdown not found at /tmp/action-validator-2387529179/.install/node_modules/.bin/countdown",
+      "batch_id": "npm-2026-02-19T19-40-36Z",
+      "timestamp": "2026-02-19T19:39:44.657486203Z"
+    },
+    {
+      "id": "npm-2026-02-19T19-39-39Z-chainsaw",
+      "package": "chainsaw",
+      "ecosystem": "npm",
+      "category": "validation_failed",
+      "message": "tsuku collects anonymous usage statistics to improve the tool.\nNo personal information is collected. See: https://tsuku.dev/telemetry\n\nTo opt out: tsuku config set telemetry false\n         or export TSUKU_NO_TELEMETRY=1\nInstalling eval-time dependencies: [nodejs]\nInstalling nodejs...\nChecking runtime dependencies for nodejs...\n  Resolving runtime dependency 'gcc-libs'...\nExecuting plan: gcc-libs@15.2.0\n   Work directory: /tmp/action-validator-2390780479\n   Total steps: 5 (including 0 from depend",
+      "batch_id": "npm-2026-02-19T19-40-36Z",
+      "timestamp": "2026-02-19T19:39:39.035308818Z"
     },
     {
       "id": "batch-2026-02-19T14-31-25Z-chrome-devtools-mcp",
@@ -37845,8 +37952,8 @@
       "timestamp": "2026-02-19T14:31:25Z"
     },
     {
-      "id": "batch-2026-02-19T14-31-25Z-commitlint",
-      "package": "commitlint",
+      "id": "batch-2026-02-19T14-31-25Z-corepack",
+      "package": "corepack",
       "ecosystem": "batch",
       "category": "deterministic",
       "subcategory": "install_failed",
@@ -37860,8 +37967,8 @@
       "timestamp": "2026-02-19T14:31:25Z"
     },
     {
-      "id": "batch-2026-02-19T14-31-25Z-corepack",
-      "package": "corepack",
+      "id": "batch-2026-02-19T14-31-25Z-commitlint",
+      "package": "commitlint",
       "ecosystem": "batch",
       "category": "deterministic",
       "subcategory": "install_failed",
@@ -37920,6 +38027,21 @@
       "timestamp": "2026-02-19T14:31:25Z"
     },
     {
+      "id": "batch-2026-02-19T14-31-25Z-contentful-cli",
+      "package": "contentful-cli",
+      "ecosystem": "batch",
+      "category": "deterministic",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "batch-2026-02-19T14-31-25Z",
+      "timestamp": "2026-02-19T14:31:25Z"
+    },
+    {
       "id": "npm-2026-02-19T14-15-48Z-countdown",
       "package": "countdown",
       "ecosystem": "npm",
@@ -37947,8 +38069,23 @@
       "timestamp": "2026-02-19T14:14:52.863457288Z"
     },
     {
-      "id": "batch-2026-02-19T08-54-36Z-bash-language-server",
-      "package": "bash-language-server",
+      "id": "batch-2026-02-19T08-54-36Z-aws-cdk",
+      "package": "aws-cdk",
+      "ecosystem": "batch",
+      "category": "deterministic",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "batch-2026-02-19T08-54-36Z",
+      "timestamp": "2026-02-19T08:54:36Z"
+    },
+    {
+      "id": "batch-2026-02-19T08-54-36Z-agent-browser",
+      "package": "agent-browser",
       "ecosystem": "batch",
       "category": "deterministic",
       "subcategory": "install_failed",
@@ -37977,23 +38114,8 @@
       "timestamp": "2026-02-19T08:54:36Z"
     },
     {
-      "id": "batch-2026-02-19T08-54-36Z-aws-cdk",
-      "package": "aws-cdk",
-      "ecosystem": "batch",
-      "category": "deterministic",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "batch-2026-02-19T08-54-36Z",
-      "timestamp": "2026-02-19T08:54:36Z"
-    },
-    {
-      "id": "batch-2026-02-19T08-54-36Z-agent-browser",
-      "package": "agent-browser",
+      "id": "batch-2026-02-19T08-54-36Z-bash-language-server",
+      "package": "bash-language-server",
       "ecosystem": "batch",
       "category": "deterministic",
       "subcategory": "install_failed",
@@ -38060,8 +38182,8 @@
       "timestamp": "2026-02-19T08:42:59.121683313Z"
     },
     {
-      "id": "batch-2026-02-18T15-51-38Z-advancecomp",
-      "package": "advancecomp",
+      "id": "batch-2026-02-18T15-51-38Z-actions-up",
+      "package": "actions-up",
       "ecosystem": "batch",
       "category": "deterministic",
       "subcategory": "install_failed",
@@ -38069,9 +38191,7 @@
       "platform": "multiple",
       "platforms": [
         "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64",
-        "linux-rhel-glibc-arm64",
-        "linux-rhel-glibc-x86_64"
+        "linux-alpine-musl-x86_64"
       ],
       "batch_id": "batch-2026-02-18T15-51-38Z",
       "timestamp": "2026-02-18T15:51:38Z"
@@ -38114,8 +38234,8 @@
       "timestamp": "2026-02-18T15:51:38Z"
     },
     {
-      "id": "batch-2026-02-18T15-51-38Z-actions-up",
-      "package": "actions-up",
+      "id": "batch-2026-02-18T15-51-38Z-advancecomp",
+      "package": "advancecomp",
       "ecosystem": "batch",
       "category": "deterministic",
       "subcategory": "install_failed",
@@ -38123,7 +38243,9 @@
       "platform": "multiple",
       "platforms": [
         "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
+        "linux-alpine-musl-x86_64",
+        "linux-rhel-glibc-arm64",
+        "linux-rhel-glibc-x86_64"
       ],
       "batch_id": "batch-2026-02-18T15-51-38Z",
       "timestamp": "2026-02-18T15:51:38Z"
@@ -38908,8 +39030,8 @@
       "timestamp": "2026-02-08T02:37:10Z"
     },
     {
-      "id": "homebrew-2026-02-08T02-37-10Z-xh",
-      "package": "xh",
+      "id": "homebrew-2026-02-08T02-37-10Z-tealdeer",
+      "package": "tealdeer",
       "ecosystem": "homebrew",
       "category": "deterministic",
       "subcategory": "install_failed",
@@ -38923,8 +39045,8 @@
       "timestamp": "2026-02-08T02:37:10Z"
     },
     {
-      "id": "homebrew-2026-02-08T02-37-10Z-tealdeer",
-      "package": "tealdeer",
+      "id": "homebrew-2026-02-08T02-37-10Z-xh",
+      "package": "xh",
       "ecosystem": "homebrew",
       "category": "deterministic",
       "subcategory": "install_failed",
@@ -39295,13 +39417,13 @@
       "timestamp": "2026-02-06T20:42:23.416796652Z"
     },
     {
-      "id": "homebrew-2026-02-06T19-07-05Z-smartmontools",
-      "package": "smartmontools",
+      "id": "homebrew-2026-02-06T19-07-05Z-websocat",
+      "package": "websocat",
       "ecosystem": "homebrew",
       "category": "deterministic",
       "subcategory": "install_failed",
       "exit_code": 6,
-      "platform": "linux-alpine-musl-x86_64",
+      "platform": "linux-alpine-musl-arm64",
       "timestamp": "2026-02-06T19:07:05Z"
     },
     {
@@ -39325,13 +39447,13 @@
       "timestamp": "2026-02-06T19:07:05Z"
     },
     {
-      "id": "homebrew-2026-02-06T19-07-05Z-websocat",
-      "package": "websocat",
+      "id": "homebrew-2026-02-06T19-07-05Z-smartmontools",
+      "package": "smartmontools",
       "ecosystem": "homebrew",
       "category": "deterministic",
       "subcategory": "install_failed",
       "exit_code": 6,
-      "platform": "linux-alpine-musl-arm64",
+      "platform": "linux-alpine-musl-x86_64",
       "timestamp": "2026-02-06T19:07:05Z"
     },
     {
@@ -39594,8 +39716,8 @@
       "timestamp": "2026-02-06T17:48:56.696952879Z"
     },
     {
-      "id": "homebrew-2026-02-06T17-01-06Z-glew",
-      "package": "glew",
+      "id": "homebrew-2026-02-06T17-01-06Z-sccache",
+      "package": "sccache",
       "ecosystem": "homebrew",
       "category": "deterministic",
       "subcategory": "install_failed",
@@ -39614,8 +39736,8 @@
       "timestamp": "2026-02-06T17:01:06Z"
     },
     {
-      "id": "homebrew-2026-02-06T17-01-06Z-sccache",
-      "package": "sccache",
+      "id": "homebrew-2026-02-06T17-01-06Z-glew",
+      "package": "glew",
       "ecosystem": "homebrew",
       "category": "deterministic",
       "subcategory": "install_failed",
@@ -39751,96 +39873,6 @@
       "subcategory": "complex_archive",
       "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for oci-cli from homebrew:oci-cli...\nFetching formula metadata... done (v3.73.2)\nInspecting bottle contents... failed\ndeterministic generation failed: [complex_archive] formula oci-cli bottle contains no binaries in bin/",
       "timestamp": "2026-02-06T15:50:19.95837379Z"
-    },
-    {
-      "id": "homebrew-2026-02-06T15-50-14Z-esphome",
-      "package": "esphome",
-      "ecosystem": "homebrew",
-      "category": "deterministic_insufficient",
-      "subcategory": "complex_archive",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for esphome from homebrew:esphome...\nFetching formula metadata... done (v2026.1.4)\nInspecting bottle contents... failed\ndeterministic generation failed: [complex_archive] formula esphome bottle contains no binaries in bin/",
-      "timestamp": "2026-02-06T15:50:14.132618409Z"
-    },
-    {
-      "id": "homebrew-2026-02-06T15-50-12Z-apache-arrow",
-      "package": "apache-arrow",
-      "ecosystem": "homebrew",
-      "category": "missing_dep",
-      "subcategory": "verify_pattern_mismatch",
-      "message": "Error: registry: recipe abseil not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create abseil --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi, npm",
-      "timestamp": "2026-02-06T15:50:12.287634616Z"
-    },
-    {
-      "id": "homebrew-2026-02-06T15-50-09Z-mtr",
-      "package": "mtr",
-      "ecosystem": "homebrew",
-      "category": "deterministic_insufficient",
-      "subcategory": "complex_archive",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for mtr from homebrew:mtr...\nFetching formula metadata... done (v0.96)\nInspecting bottle contents... failed\ndeterministic generation failed: [complex_archive] formula mtr bottle contains no binaries in bin/",
-      "timestamp": "2026-02-06T15:50:09.59975122Z"
-    },
-    {
-      "id": "homebrew-2026-02-06T15-50-08Z-unzip",
-      "package": "unzip",
-      "ecosystem": "homebrew",
-      "category": "deterministic_insufficient",
-      "subcategory": "api_error",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for unzip from homebrew:unzip...\nFetching formula metadata... done (v6.0)\nInspecting bottle contents... failed\ndeterministic generation failed: [api_error] failed to fetch bottle data for formula unzip",
-      "timestamp": "2026-02-06T15:50:08.143469089Z"
-    },
-    {
-      "id": "homebrew-2026-02-06T15-50-06Z-mariadb",
-      "package": "mariadb",
-      "ecosystem": "homebrew",
-      "category": "missing_dep",
-      "subcategory": "verify_pattern_mismatch",
-      "message": "tsuku collects anonymous usage statistics to improve the tool.\nNo personal information is collected. See: https://tsuku.dev/telemetry\n\nTo opt out: tsuku config set telemetry false\n         or export TSUKU_NO_TELEMETRY=1\nError: registry: recipe groonga not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create groonga --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, ",
-      "timestamp": "2026-02-06T15:50:06.156808728Z"
-    },
-    {
-      "id": "homebrew-2026-02-06T14-46-56Z-swig",
-      "package": "swig",
-      "ecosystem": "homebrew",
-      "category": "missing_dep",
-      "subcategory": "verify_pattern_mismatch",
-      "message": "Error: registry: recipe pcre2 not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create pcre2 --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi, npm",
-      "timestamp": "2026-02-06T14:46:56.349991934Z"
-    },
-    {
-      "id": "homebrew-2026-02-06T14-46-54Z-overmind",
-      "package": "overmind",
-      "ecosystem": "homebrew",
-      "category": "missing_dep",
-      "subcategory": "verify_pattern_mismatch",
-      "message": "Error: registry: recipe tmux not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create tmux --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi, npm",
-      "timestamp": "2026-02-06T14:46:54.954264708Z"
-    },
-    {
-      "id": "homebrew-2026-02-06T14-46-53Z-openssh",
-      "package": "openssh",
-      "ecosystem": "homebrew",
-      "category": "missing_dep",
-      "subcategory": "verify_pattern_mismatch",
-      "message": "Error: registry: recipe ldns not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create ldns --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi, npm",
-      "timestamp": "2026-02-06T14:46:53.599616821Z"
-    },
-    {
-      "id": "homebrew-2026-02-06T14-46-52Z-httpd",
-      "package": "httpd",
-      "ecosystem": "homebrew",
-      "category": "missing_dep",
-      "subcategory": "verify_pattern_mismatch",
-      "message": "Error: registry: recipe apr not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create apr --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi, npm",
-      "timestamp": "2026-02-06T14:46:52.078143305Z"
-    },
-    {
-      "id": "homebrew-2026-02-06T14-46-48Z-gdb",
-      "package": "gdb",
-      "ecosystem": "homebrew",
-      "category": "missing_dep",
-      "subcategory": "verify_pattern_mismatch",
-      "message": "Error: registry: recipe gmp not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create gmp --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi, npm",
-      "timestamp": "2026-02-06T14:46:48.355764653Z"
     }
   ],
   "health": {
@@ -39865,7 +39897,7 @@
       },
       "npm": {
         "breaker_state": "closed",
-        "failures": 4,
+        "failures": 0,
         "last_failure": "2026-02-19T18:51:13Z"
       },
       "rubygems": {
@@ -39878,28 +39910,39 @@
     "last_run": {
       "batch_id": "2026-02-19",
       "ecosystems": {
-        "github": 9,
-        "npm": 1
+        "npm": 10
       },
-      "timestamp": "2026-02-19T18:51:13Z",
-      "succeeded": 0,
+      "timestamp": "2026-02-19T19:46:29Z",
+      "succeeded": 3,
       "failed": 0,
-      "total": 0
+      "total": 3,
+      "recipes_merged": 3
     },
     "last_successful_run": {
       "batch_id": "2026-02-19",
       "ecosystems": {
         "npm": 10
       },
-      "timestamp": "2026-02-19T14:31:26Z",
-      "succeeded": 7,
+      "timestamp": "2026-02-19T19:46:29Z",
+      "succeeded": 3,
       "failed": 0,
-      "total": 7,
-      "recipes_merged": 7
+      "total": 3,
+      "recipes_merged": 3
     },
-    "runs_since_last_success": 4
+    "runs_since_last_success": 0
   },
   "runs": [
+    {
+      "batch_id": "2026-02-19",
+      "ecosystems": {
+        "npm": 10
+      },
+      "total": 3,
+      "merged": 3,
+      "rate": 1,
+      "duration": 8,
+      "timestamp": "2026-02-19T19:46:29Z"
+    },
     {
       "batch_id": "2026-02-19",
       "ecosystems": {
@@ -40010,19 +40053,6 @@
       "rate": 0,
       "duration": 8,
       "timestamp": "2026-02-19T09:49:06Z"
-    },
-    {
-      "batch_id": "2026-02-19",
-      "ecosystems": {
-        "crates.io": 2,
-        "npm": 5,
-        "rubygems": 3
-      },
-      "total": 4,
-      "merged": 4,
-      "rate": 1,
-      "duration": 7,
-      "timestamp": "2026-02-19T08:54:37Z"
     }
   ],
   "disambiguations": {
