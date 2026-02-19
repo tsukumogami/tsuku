@@ -603,8 +603,11 @@ func loadRecipe(path string) (*recipe.Recipe, error) {
 func findRecipesDir(t *testing.T) string {
 	t.Helper()
 
-	// Start from current directory and look for the recipes dir
+	// Start from current directory and look for the recipes dir.
+	// When running from internal/builders/, "../../recipes" reaches the
+	// public registry at the repo root where ground truth recipes live.
 	candidates := []string{
+		"../../recipes",
 		"../recipe/recipes",
 		"../../internal/recipe/recipes",
 		"internal/recipe/recipes",
