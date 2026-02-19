@@ -1,21 +1,21 @@
 {
-  "generated_at": "2026-02-19T01:36:42Z",
-  "total_recipes": 282,
+  "generated_at": "2026-02-19T08:57:04Z",
+  "total_recipes": 286,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 282,
-        "total": 282,
+        "supported": 286,
+        "total": 286,
         "pct": 100
       },
       "glibc": {
-        "supported": 282,
-        "total": 282,
+        "supported": 286,
+        "total": 286,
         "pct": 100
       },
       "musl": {
-        "supported": 282,
-        "total": 282,
+        "supported": 286,
+        "total": 286,
         "pct": 100
       }
     },
@@ -26,9 +26,9 @@
         "glibc_support": 13
       },
       "tool": {
-        "total": 269,
-        "musl_support": 269,
-        "glibc_support": 269
+        "total": 273,
+        "musl_support": 273,
+        "glibc_support": 273
       }
     }
   },
@@ -131,6 +131,18 @@
     },
     {
       "name": "age",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "agent-browser",
       "type": "tool",
       "platforms": {
         "darwin": true,
@@ -250,6 +262,18 @@
       "warnings": null
     },
     {
+      "name": "aws-cdk",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "aws-iam-authenticator",
       "type": "tool",
       "platforms": {
@@ -310,7 +334,31 @@
       "warnings": null
     },
     {
+      "name": "azurite",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "bash",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "bash-language-server",
       "type": "tool",
       "platforms": {
         "darwin": true,
