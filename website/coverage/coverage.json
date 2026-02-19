@@ -1,21 +1,21 @@
 {
-  "generated_at": "2026-02-19T20:43:26Z",
-  "total_recipes": 299,
+  "generated_at": "2026-02-19T21:41:55Z",
+  "total_recipes": 301,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 299,
-        "total": 299,
+        "supported": 301,
+        "total": 301,
         "pct": 100
       },
       "glibc": {
-        "supported": 299,
-        "total": 299,
+        "supported": 301,
+        "total": 301,
         "pct": 100
       },
       "musl": {
-        "supported": 299,
-        "total": 299,
+        "supported": 301,
+        "total": 301,
         "pct": 100
       }
     },
@@ -26,9 +26,9 @@
         "glibc_support": 13
       },
       "tool": {
-        "total": 286,
-        "musl_support": 286,
-        "glibc_support": 286
+        "total": 288,
+        "musl_support": 288,
+        "glibc_support": 288
       }
     }
   },
@@ -2110,6 +2110,18 @@
       "warnings": null
     },
     {
+      "name": "lerna",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "lf",
       "type": "tool",
       "platforms": {
@@ -2279,6 +2291,18 @@
     },
     {
       "name": "luajit",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "mbt",
       "type": "tool",
       "platforms": {
         "darwin": true,
