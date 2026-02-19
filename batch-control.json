@@ -27,7 +27,7 @@
     },
     "npm": {
       "state": "closed",
-      "failures": 4,
+      "failures": 0,
       "last_failure": "2026-02-19T18:51:13Z"
     },
     "rubygems": {

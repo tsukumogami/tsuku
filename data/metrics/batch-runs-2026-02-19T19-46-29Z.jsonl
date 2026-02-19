@@ -1,0 +1,35 @@
+{
+  "batch_id": "2026-02-19",
+  "ecosystems": {
+    "npm": 10
+  },
+  "total": 3,
+  "generated": 3,
+  "platforms": {
+    "linux-x86_64": {
+      "tested": 15,
+      "passed": 8,
+      "failed": 7
+    },
+    "linux-arm64": {
+      "tested": 12,
+      "passed": 6,
+      "failed": 6
+    },
+    "darwin-arm64": {
+      "tested": 3,
+      "passed": 3,
+      "failed": 0
+    },
+    "darwin-x86_64": {
+      "tested": 3,
+      "passed": 3,
+      "failed": 0
+    }
+  },
+  "merged": 3,
+  "excluded": 0,
+  "constrained": 3,
+  "timestamp": "2026-02-19T19:46:29Z",
+  "duration_seconds": 8
+}

@@ -6,13 +6,13 @@
   "per_ecosystem": {
     "npm": {
       "total": 10,
-      "succeeded": 7,
-      "failed": 3
+      "succeeded": 3,
+      "failed": 7
     }
   },
   "total": 10,
-  "succeeded": 7,
-  "failed": 3,
+  "succeeded": 3,
+  "failed": 7,
   "blocked": 0,
-  "timestamp": "2026-02-19T14:14:20.923144166Z"
+  "timestamp": "2026-02-19T19:39:21.450353658Z"
 }
