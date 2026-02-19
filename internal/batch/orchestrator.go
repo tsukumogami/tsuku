@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 	"unicode"
@@ -136,11 +137,16 @@ func (o *Orchestrator) Run() (*BatchResult, error) {
 		ecoResult.Total++
 
 		if genResult.Err != nil {
-			result.Failed++
-			ecoResult.Failed++
-			result.PerEcosystem[eco] = ecoResult
 			result.Failures = append(result.Failures, genResult.Failure)
-			o.recordFailure(idx)
+			if len(genResult.Failure.BlockedBy) > 0 {
+				result.Blocked++
+				pkg.Status = StatusBlocked
+			} else {
+				result.Failed++
+				ecoResult.Failed++
+				o.recordFailure(idx)
+			}
+			result.PerEcosystem[eco] = ecoResult
 			continue
 		}
 
@@ -338,11 +344,20 @@ func (o *Orchestrator) generate(bin string, pkg QueueEntry, recipePath string) g
 		lastErr = fmt.Errorf("tsuku create %s: exit %d: %s", pkg.Source, exitCode, truncateOutput(output))
 
 		if exitCode != ExitNetwork {
+			// Extract blocked_by from generate output when message indicates
+			// missing dependencies. Uses the same regex as extractMissingRecipes
+			// in cmd/tsuku/install.go.
+			blockedBy := extractBlockedByFromOutput(output)
+			category := categoryFromExitCode(exitCode)
+			if len(blockedBy) > 0 && category == "validation_failed" {
+				category = "missing_dep"
+			}
 			return generateResult{
 				Err: lastErr,
 				Failure: FailureRecord{
 					PackageID: pkg.Source,
-					Category:  categoryFromExitCode(exitCode),
+					Category:  category,
+					BlockedBy: blockedBy,
 					Message:   truncateOutput(output),
 					Timestamp: nowFunc(),
 				},
@@ -455,6 +470,8 @@ func exitCodeFrom(err error) int {
 
 func categoryFromExitCode(code int) string {
 	switch code {
+	case 3: // ExitRecipeNotFound (from cmd/tsuku/exitcodes.go)
+		return "recipe_not_found"
 	case 5:
 		return "api_error"
 	case 6:
@@ -476,6 +493,50 @@ func truncateOutput(output []byte) string {
 		return s[:500] + "..."
 	}
 	return s
+}
+
+// reNotFoundInRegistry matches "recipe X not found in registry" in command output.
+// This is the same pattern as reNotFoundInRegistry in cmd/tsuku/install.go -- kept
+// in sync manually because Go import rules prevent internal/ from importing cmd/.
+var reNotFoundInRegistry = regexp.MustCompile(`recipe (\S+) not found in registry`)
+
+// extractBlockedByFromOutput extracts dependency names from command output
+// matching the "recipe X not found in registry" pattern. Results are
+// deduplicated, validated (rejecting path-traversal characters), and capped
+// at 100 items -- consistent with extractMissingRecipes in cmd/tsuku/install.go.
+func extractBlockedByFromOutput(output []byte) []string {
+	matches := reNotFoundInRegistry.FindAllSubmatch(output, -1)
+	if len(matches) == 0 {
+		return nil
+	}
+	seen := make(map[string]bool)
+	var names []string
+	for _, m := range matches {
+		name := string(m[1])
+		if !isValidDependencyName(name) {
+			continue
+		}
+		if !seen[name] {
+			seen[name] = true
+			names = append(names, name)
+		}
+		if len(names) >= 100 {
+			break
+		}
+	}
+	return names
+}
+
+// isValidDependencyName rejects names containing path traversal or injection
+// characters. Downstream consumers like requeue-unblocked.sh use these names
+// to construct file paths, so we reject /, \, .., <, and >.
+func isValidDependencyName(name string) bool {
+	if strings.Contains(name, "/") || strings.Contains(name, "\\") ||
+		strings.Contains(name, "..") || strings.Contains(name, "<") ||
+		strings.Contains(name, ">") {
+		return false
+	}
+	return name != ""
 }
 
 // SetTsukuBin sets the path to the tsuku binary for testing.

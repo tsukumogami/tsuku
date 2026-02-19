@@ -315,6 +315,7 @@ func TestCategoryFromExitCode(t *testing.T) {
 		code int
 		want string
 	}{
+		{3, "recipe_not_found"},
 		{5, "api_error"},
 		{6, "validation_failed"},
 		{7, "validation_failed"},
@@ -1291,5 +1292,227 @@ func TestQueueEntry_Ecosystem(t *testing.T) {
 		if got := entry.Ecosystem(); got != tt.want {
 			t.Errorf("Ecosystem(%q) = %q, want %q", tt.source, got, tt.want)
 		}
+	}
+}
+
+func TestExtractBlockedByFromOutput(t *testing.T) {
+	tests := []struct {
+		name   string
+		output string
+		want   []string
+	}{
+		{
+			name:   "single dependency",
+			output: "Error: recipe bdw-gc not found in registry",
+			want:   []string{"bdw-gc"},
+		},
+		{
+			name:   "multiple dependencies",
+			output: "Error: recipe libpng not found in registry\nError: recipe libjpeg not found in registry",
+			want:   []string{"libpng", "libjpeg"},
+		},
+		{
+			name:   "deduplicates",
+			output: "recipe dav1d not found in registry\nretry: recipe dav1d not found in registry",
+			want:   []string{"dav1d"},
+		},
+		{
+			name:   "no matches returns nil",
+			output: "Error: download failed: 404 Not Found",
+			want:   nil,
+		},
+		{
+			name:   "empty output",
+			output: "",
+			want:   nil,
+		},
+		{
+			name:   "rejects path traversal with slash",
+			output: "recipe ../../etc/passwd not found in registry",
+			want:   nil,
+		},
+		{
+			name:   "rejects path traversal with backslash",
+			output: `recipe foo\bar not found in registry`,
+			want:   nil,
+		},
+		{
+			name:   "rejects dot-dot",
+			output: "recipe foo..bar not found in registry",
+			want:   nil,
+		},
+		{
+			name:   "rejects angle brackets",
+			output: "recipe <script> not found in registry",
+			want:   nil,
+		},
+		{
+			name:   "mixed valid and invalid",
+			output: "recipe libpng not found in registry\nrecipe ../../etc not found in registry\nrecipe libjpeg not found in registry",
+			want:   []string{"libpng", "libjpeg"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := extractBlockedByFromOutput([]byte(tt.output))
+			if len(got) != len(tt.want) {
+				t.Fatalf("extractBlockedByFromOutput() returned %d items, want %d: got %v", len(got), len(tt.want), got)
+			}
+			for i := range tt.want {
+				if got[i] != tt.want[i] {
+					t.Errorf("extractBlockedByFromOutput()[%d] = %q, want %q", i, got[i], tt.want[i])
+				}
+			}
+		})
+	}
+}
+
+func TestIsValidDependencyName(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+		want  bool
+	}{
+		{"valid simple name", "libpng", true},
+		{"valid with hyphen", "bdw-gc", true},
+		{"valid with at-sign", "openssl@3", true},
+		{"empty string", "", false},
+		{"contains slash", "foo/bar", false},
+		{"contains backslash", `foo\bar`, false},
+		{"contains dot-dot", "foo..bar", false},
+		{"contains less-than", "foo<bar", false},
+		{"contains greater-than", "foo>bar", false},
+		{"path traversal", "../../etc/passwd", false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := isValidDependencyName(tt.input)
+			if got != tt.want {
+				t.Errorf("isValidDependencyName(%q) = %v, want %v", tt.input, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestRun_generateBlockedByDependency(t *testing.T) {
+	tmpDir := t.TempDir()
+	fakeBin := filepath.Join(tmpDir, "tsuku")
+	// Fake binary: "create" fails with a "recipe not found in registry" message
+	script := `#!/bin/sh
+case "$1" in
+  create)
+    echo "Error: recipe bdw-gc not found in registry" >&2
+    exit 6
+    ;;
+  install) exit 0 ;;
+esac
+`
+	if err := os.WriteFile(fakeBin, []byte(script), 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	queue := &UnifiedQueue{
+		SchemaVersion: 1,
+		Entries: []QueueEntry{
+			{Name: "guile", Source: "homebrew:guile", Priority: 1, Status: StatusPending, Confidence: ConfidenceAuto},
+		},
+	}
+
+	orch := NewOrchestrator(Config{
+		BatchSize:   10,
+		MaxTier:     3,
+		QueuePath:   filepath.Join(tmpDir, "queue.json"),
+		OutputDir:   filepath.Join(tmpDir, "recipes"),
+		FailuresDir: filepath.Join(tmpDir, "failures"),
+		TsukuBin:    fakeBin,
+	}, queue)
+
+	result, err := orch.Run()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// Should be blocked, not failed
+	if result.Blocked != 1 {
+		t.Errorf("expected blocked 1, got %d", result.Blocked)
+	}
+	if result.Failed != 0 {
+		t.Errorf("expected failed 0, got %d", result.Failed)
+	}
+
+	// Failure record should have the right category and blocked_by
+	if len(result.Failures) != 1 {
+		t.Fatalf("expected 1 failure, got %d", len(result.Failures))
+	}
+	f := result.Failures[0]
+	if f.Category != "missing_dep" {
+		t.Errorf("expected category missing_dep, got %s", f.Category)
+	}
+	if len(f.BlockedBy) != 1 || f.BlockedBy[0] != "bdw-gc" {
+		t.Errorf("expected BlockedBy [bdw-gc], got %v", f.BlockedBy)
+	}
+
+	// Queue entry should be blocked, not failed
+	if queue.Entries[0].Status != StatusBlocked {
+		t.Errorf("expected queue status blocked, got %s", queue.Entries[0].Status)
+	}
+	// recordFailure should NOT have been called -- failure count stays at 0
+	if queue.Entries[0].FailureCount != 0 {
+		t.Errorf("expected failure_count 0 (no backoff for blocked), got %d", queue.Entries[0].FailureCount)
+	}
+}
+
+func TestRun_generateFailureWithoutDependencyStillFails(t *testing.T) {
+	// When generate() fails without dependency info, the entry should still
+	// be marked as failed with normal backoff.
+	tmpDir := t.TempDir()
+	fakeBin := filepath.Join(tmpDir, "tsuku")
+	script := `#!/bin/sh
+case "$1" in
+  create)
+    echo "Error: deterministic generation failed" >&2
+    exit 6
+    ;;
+  install) exit 0 ;;
+esac
+`
+	if err := os.WriteFile(fakeBin, []byte(script), 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	queue := &UnifiedQueue{
+		SchemaVersion: 1,
+		Entries: []QueueEntry{
+			{Name: "testpkg", Source: "homebrew:testpkg", Priority: 1, Status: StatusPending, Confidence: ConfidenceAuto},
+		},
+	}
+
+	orch := NewOrchestrator(Config{
+		BatchSize:   10,
+		MaxTier:     3,
+		QueuePath:   filepath.Join(tmpDir, "queue.json"),
+		OutputDir:   filepath.Join(tmpDir, "recipes"),
+		FailuresDir: filepath.Join(tmpDir, "failures"),
+		TsukuBin:    fakeBin,
+	}, queue)
+
+	result, err := orch.Run()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if result.Failed != 1 {
+		t.Errorf("expected failed 1, got %d", result.Failed)
+	}
+	if result.Blocked != 0 {
+		t.Errorf("expected blocked 0, got %d", result.Blocked)
+	}
+	if queue.Entries[0].Status != StatusFailed {
+		t.Errorf("expected queue status failed, got %s", queue.Entries[0].Status)
+	}
+	if queue.Entries[0].FailureCount != 1 {
+		t.Errorf("expected failure_count 1, got %d", queue.Entries[0].FailureCount)
 	}
 }
