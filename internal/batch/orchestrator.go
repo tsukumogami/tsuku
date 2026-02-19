@@ -468,6 +468,18 @@ func exitCodeFrom(err error) int {
 	return 1
 }
 
+// categoryFromExitCode maps a tsuku CLI exit code to a pipeline category string
+// for batch queue classification and the pipeline dashboard. These categories
+// drive retry logic, circuit breaker decisions, and the operator-facing dashboard
+// (e.g., "api_error" triggers retries, "validation_failed" counts toward the
+// circuit breaker threshold).
+//
+// NOTE: A separate categoryFromExitCode() exists in cmd/tsuku/install.go with
+// different category strings. That version maps exit codes to user-facing
+// categories for --json error output (e.g., "network_error" instead of
+// "api_error", "install_failed" instead of "validation_failed"). The two
+// functions intentionally diverge because CLI categories describe end-user
+// install outcomes while these categories drive pipeline operations.
 func categoryFromExitCode(code int) string {
 	switch code {
 	case 3: // ExitRecipeNotFound (from cmd/tsuku/exitcodes.go)

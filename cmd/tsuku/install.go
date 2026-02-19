@@ -326,7 +326,16 @@ type installError struct {
 	ExitCode       int      `json:"exit_code"`
 }
 
-// categoryFromExitCode maps an exit code to its category string.
+// categoryFromExitCode maps an exit code to its category string for the CLI's
+// --json error output. These categories are user-facing and describe what went
+// wrong from the end user's perspective (e.g., "network_error", "install_failed").
+//
+// NOTE: A separate categoryFromExitCode() exists in internal/batch/orchestrator.go
+// with different category strings. That version maps exit codes to pipeline/dashboard
+// categories (e.g., "api_error", "validation_failed") used for batch queue
+// classification and the pipeline dashboard. The two functions intentionally diverge
+// because CLI categories describe user-facing install outcomes while orchestrator
+// categories drive pipeline retry logic and operator dashboards.
 func categoryFromExitCode(code int) string {
 	switch code {
 	case ExitRecipeNotFound:
