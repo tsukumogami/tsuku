@@ -179,8 +179,8 @@ func remediateLine(line string, stats *remediationStats) (string, bool, error) {
 }
 
 // legacyRecord mirrors the legacy batch failure JSONL format for
-// in-place patching. We use json.RawMessage for fields we don't
-// modify to avoid reformatting.
+// in-place patching. Timestamp is typed as string (not time.Time)
+// to preserve original formatting during JSON round-trip.
 type legacyRecord struct {
 	SchemaVersion int             `json:"schema_version"`
 	Ecosystem     string          `json:"ecosystem,omitempty"`
