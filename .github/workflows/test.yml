@@ -300,15 +300,18 @@ jobs:
           export TSUKU_LLM_MODEL_CACHE="$HOME/.cache/tsuku-llm-models"
           go test -tags=integration -v ./internal/llm/...
 
-  # Run ground truth quality suite with local provider when prompts or baselines change.
-  # Setup steps (Go, Rust, Cargo cache, protobuf, model cache) mirror llm-integration above.
-  # Kept inline for CI readability rather than extracted into a reusable workflow.
+  # Run ground truth quality suite when prompts or baselines change.
+  # Uses a cloud API (Claude/Gemini) because recipe generation prompts exceed
+  # the local model's context window (27K+ tokens vs 16K limit). The local
+  # model is validated by llm-integration (lifecycle, gRPC, inference with
+  # small prompts); this job validates prompt quality with a capable model.
+  # Skips gracefully when no API key secret is configured.
   llm-quality:
     name: "LLM Quality Gate"
     needs: matrix
     if: ${{ needs.matrix.outputs.llm_quality == 'true' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
@@ -320,54 +323,11 @@ jobs:
           go-version-file: 'go.mod'
           cache-dependency-path: go.sum
 
-      - name: Set up Rust
-        uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: "1.80"
-
-      - name: Cache Cargo registry
-        uses: actions/cache@v5
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            tsuku-llm/target
-          key: ${{ runner.os }}-cargo-llm-${{ hashFiles('tsuku-llm/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-llm-
-
-      - name: Install protobuf compiler
-        run: sudo apt-get update && sudo apt-get install -y protobuf-compiler
-
-      - name: Build tsuku-llm
-        working-directory: tsuku-llm
-        run: cargo build --release
-
-      - name: Cache LLM model
-        uses: actions/cache@v5
-        with:
-          path: ~/.cache/tsuku-llm-models
-          key: llm-model-${{ hashFiles('tsuku-llm/src/model.rs') }}
-          restore-keys: |
-            llm-model-
-
       - name: Run LLM quality tests
         env:
-          TSUKU_LLM_BINARY: ${{ github.workspace }}/tsuku-llm/target/release/tsuku-llm
-        # Set TSUKU_LLM_MODEL_CACHE and TSUKU_HOME via shell so $HOME is expanded
-        # at runtime. The env: block passes values as literals (no shell expansion),
-        # and Go's os.Getenv does not expand ~, so using ~ there would break.
-        # actions/cache (above) handles ~ expansion on its own.
-        #
-        # TSUKU_HOME is needed because LocalProvider.Complete() starts the daemon
-        # via ServerLifecycle, which creates socket/lock files under TSUKU_HOME.
-        # The models/ symlink lets the daemon find the cached model.
-        run: |
-          export TSUKU_LLM_MODEL_CACHE="$HOME/.cache/tsuku-llm-models"
-          mkdir -p "$TSUKU_LLM_MODEL_CACHE"
-          export TSUKU_HOME="$(mktemp -d)"
-          ln -sf "$TSUKU_LLM_MODEL_CACHE" "$TSUKU_HOME/models"
-          go test -tags=integration -v -timeout 30m ./internal/builders/...
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: go test -v -timeout 25m -run TestLLMGroundTruth ./internal/builders/...
 
   # Detect changes and generate test matrices
   # Skip integration tests when only documentation files change
@@ -416,8 +376,8 @@ jobs:
             llm_quality:
               - 'internal/builders/github_release.go'
               - 'internal/builders/homebrew.go'
-              - 'tsuku-llm/src/main.rs'
               - 'internal/builders/llm-test-matrix.json'
+              - 'internal/builders/llm_integration_test.go'
               - 'testdata/llm-quality-baselines/**'
             recipes:
               - 'internal/recipe/recipes/**/*.toml'

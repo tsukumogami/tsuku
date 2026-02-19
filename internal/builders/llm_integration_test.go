@@ -332,7 +332,9 @@ func TestLLMGroundTruth(t *testing.T) {
 		"llm_github_minikube_file_no_mapping", "llm_github_kopia_macos_mapping", "llm_github_cargo-deny_musl",
 	}
 
-	// Track per-test results
+	// Track per-test results. Validation mismatches are logged (not errors)
+	// so individual subtests don't fail the parent. The baseline regression
+	// check at the end is the sole pass/fail gate.
 	results := make(map[string]string)
 
 	for _, testID := range testIDs {
@@ -343,7 +345,7 @@ func TestLLMGroundTruth(t *testing.T) {
 		}
 
 		key := baselineKey(testID, tc.Tool)
-		passed := t.Run(key, func(t *testing.T) {
+		t.Run(key, func(t *testing.T) {
 			t.Logf("Testing: %s - %s", tc.Tool, tc.Desc)
 
 			// Use a longer timeout for LLM calls (2 minutes)
@@ -354,14 +356,15 @@ func TestLLMGroundTruth(t *testing.T) {
 			groundTruthPath := filepath.Join(recipesDir, tc.Recipe)
 			expected, err := loadRecipe(groundTruthPath)
 			if err != nil {
-				t.Fatalf("Failed to load ground truth recipe: %v", err)
+				t.Logf("FAIL: could not load ground truth recipe: %v", err)
+				results[key] = baselineFail
+				return
 			}
 
 			// Select builder and build request based on test case
 			var result *BuildResult
 			var session BuildSession
 			if tc.Builder == "homebrew" {
-				// Use formula:source suffix to indicate source build
 				req := BuildRequest{
 					Package:   tc.Tool,
 					SourceArg: tc.Formula + ":source",
@@ -375,13 +378,17 @@ func TestLLMGroundTruth(t *testing.T) {
 				session, err = githubBuilder.NewSession(ctx, req, nil)
 			}
 			if err != nil {
-				t.Fatalf("Failed to create session: %v", err)
+				t.Logf("FAIL: could not create session: %v", err)
+				results[key] = baselineFail
+				return
 			}
 			defer func() { _ = session.Close() }()
 
 			result, err = session.Generate(ctx)
 			if err != nil {
-				t.Fatalf("LLM recipe generation failed: %v", err)
+				t.Logf("FAIL: LLM recipe generation failed: %v", err)
+				results[key] = baselineFail
+				return
 			}
 
 			generated := result.Recipe
@@ -394,17 +401,26 @@ func TestLLMGroundTruth(t *testing.T) {
 				t.Logf("Generated recipe saved to: %s", outputPath)
 			}
 
-			// Validate based on builder type
+			// Validate and record result
+			var mismatches []string
 			if tc.Builder == "homebrew" {
-				validateHomebrewSourceRecipe(t, tc, generated, expected)
+				mismatches = validateHomebrewSourceRecipe(t, tc, generated, expected)
 			} else {
-				validateGitHubRecipe(t, tc, generated, expected)
+				mismatches = validateGitHubRecipe(t, tc, generated, expected)
+			}
+
+			if len(mismatches) > 0 {
+				for _, m := range mismatches {
+					t.Logf("MISMATCH: %s", m)
+				}
+				results[key] = baselineFail
+			} else {
+				results[key] = baselinePass
 			}
 		})
 
-		if passed {
-			results[key] = baselinePass
-		} else {
+		// If the subtest didn't set a result (e.g., panic), mark as fail
+		if _, ok := results[key]; !ok {
 			results[key] = baselineFail
 		}
 	}
@@ -441,26 +457,30 @@ func TestLLMGroundTruth(t *testing.T) {
 	reportRegressions(t, baseline, results)
 }
 
-// validateGitHubRecipe validates a GitHub release recipe
-func validateGitHubRecipe(t *testing.T, tc llmTestCase, generated, expected *recipe.Recipe) {
+// validateGitHubRecipe validates a GitHub release recipe and returns any
+// mismatches found. Uses t.Logf for diagnostics but does not call t.Errorf
+// since the baseline regression check is the sole pass/fail gate.
+func validateGitHubRecipe(t *testing.T, tc llmTestCase, generated, expected *recipe.Recipe) []string {
 	t.Helper()
 
+	var mismatches []string
+
 	if len(generated.Steps) == 0 {
-		t.Fatal("Generated recipe has no steps")
+		return []string{"generated recipe has no steps"}
 	}
 
 	step := generated.Steps[0]
 
 	// Check action type
 	if step.Action != tc.Action {
-		t.Errorf("Action mismatch:\n  got:  %s\n  want: %s", step.Action, tc.Action)
+		mismatches = append(mismatches, fmt.Sprintf("action: got %s, want %s", step.Action, tc.Action))
 	}
 
 	// Check archive format if applicable
 	if tc.Format != "" {
 		format, _ := step.Params["archive_format"].(string)
 		if format != tc.Format {
-			t.Errorf("Archive format mismatch:\n  got:  %s\n  want: %s", format, tc.Format)
+			mismatches = append(mismatches, fmt.Sprintf("archive_format: got %s, want %s", format, tc.Format))
 		}
 	}
 
@@ -468,16 +488,16 @@ func validateGitHubRecipe(t *testing.T, tc llmTestCase, generated, expected *rec
 	osMapping := extractMapping(step.Params["os_mapping"])
 	if osMapping != nil {
 		expectedOSMapping := getOSMapping(expected)
-		checkMappingKeys(t, "os_mapping", osMapping, expectedOSMapping)
+		mismatches = append(mismatches, checkMappingKeys("os_mapping", osMapping, expectedOSMapping)...)
 	} else if tc.Action == "github_archive" {
-		t.Errorf("Missing os_mapping in generated recipe (raw type: %T)", step.Params["os_mapping"])
+		mismatches = append(mismatches, fmt.Sprintf("missing os_mapping (raw type: %T)", step.Params["os_mapping"]))
 	}
 
 	// Check arch mapping has required keys
 	archMapping := extractMapping(step.Params["arch_mapping"])
 	if archMapping != nil {
 		expectedArchMapping := getArchMapping(expected)
-		checkMappingKeys(t, "arch_mapping", archMapping, expectedArchMapping)
+		mismatches = append(mismatches, checkMappingKeys("arch_mapping", archMapping, expectedArchMapping)...)
 	}
 
 	// Log comparison for debugging
@@ -485,23 +505,28 @@ func validateGitHubRecipe(t *testing.T, tc llmTestCase, generated, expected *rec
 	if len(expected.Steps) > 0 {
 		t.Logf("Expected asset_pattern: %v", expected.Steps[0].Params["asset_pattern"])
 	}
+
+	return mismatches
 }
 
-// validateHomebrewSourceRecipe validates a Homebrew source build recipe
-func validateHomebrewSourceRecipe(t *testing.T, tc llmTestCase, generated, expected *recipe.Recipe) {
+// validateHomebrewSourceRecipe validates a Homebrew source build recipe and
+// returns any mismatches found.
+func validateHomebrewSourceRecipe(t *testing.T, tc llmTestCase, generated, expected *recipe.Recipe) []string {
 	t.Helper()
 
+	var mismatches []string
+
 	if len(generated.Steps) == 0 {
-		t.Fatal("Generated recipe has no steps")
+		return []string{"generated recipe has no steps"}
 	}
 
 	// Check that first step matches expected action
 	step := generated.Steps[0]
 	if step.Action != tc.Action {
-		t.Errorf("First action mismatch:\n  got:  %s\n  want: %s", step.Action, tc.Action)
+		mismatches = append(mismatches, fmt.Sprintf("action: got %s, want %s", step.Action, tc.Action))
 	}
 
-	// Check build system by looking for expected build action (configure_make, cmake, etc.)
+	// Check build system by looking for expected build action
 	if tc.BuildSystem != "" {
 		hasBuildAction := false
 		expectedAction := ""
@@ -530,38 +555,23 @@ func validateHomebrewSourceRecipe(t *testing.T, tc llmTestCase, generated, expec
 	hasPatches := containsFeature(tc.Features, "patches:")
 	if hasPatches {
 		t.Logf("Checking patches for %s", tc.Tool)
-
-		// Check recipe-level patches
 		if len(generated.Patches) == 0 {
-			t.Error("Expected patches but generated recipe has none")
+			mismatches = append(mismatches, "expected patches but generated recipe has none")
 		} else {
 			t.Logf("Generated recipe has %d patch(es)", len(generated.Patches))
-
-			// Check patch ordering if required
-			if containsFeature(tc.Features, "patches:ordering") {
-				t.Logf("Verifying patch ordering is preserved")
-				// Patches should maintain order from formula
-			}
-
-			// Check for URL patches
 			if containsFeature(tc.Features, "patches:url") {
 				hasURLPatch := false
 				for _, p := range generated.Patches {
 					if p.URL != "" {
 						hasURLPatch = true
-						t.Logf("Found URL patch: %s", p.URL)
 					}
 				}
 				if !hasURLPatch {
-					t.Error("Expected URL patches but found none")
+					mismatches = append(mismatches, "expected URL patches but found none")
 				}
 			}
-
-			// Check for multiple patches
-			if containsFeature(tc.Features, "patches:multiple") {
-				if len(generated.Patches) < 2 {
-					t.Errorf("Expected multiple patches, got %d", len(generated.Patches))
-				}
+			if containsFeature(tc.Features, "patches:multiple") && len(generated.Patches) < 2 {
+				mismatches = append(mismatches, fmt.Sprintf("expected multiple patches, got %d", len(generated.Patches)))
 			}
 		}
 	}
@@ -571,6 +581,8 @@ func validateHomebrewSourceRecipe(t *testing.T, tc llmTestCase, generated, expec
 	if len(expected.Steps) > 0 {
 		t.Logf("Expected recipe has %d steps", len(expected.Steps))
 	}
+
+	return mismatches
 }
 
 // containsFeature checks if a feature prefix is present in the features list
@@ -670,19 +682,18 @@ func extractMapping(v interface{}) map[string]interface{} {
 	return nil
 }
 
-// checkMappingKeys verifies that the generated mapping contains the required keys
-func checkMappingKeys(t *testing.T, name string, generated, expected map[string]interface{}) {
-	t.Helper()
-
+// checkMappingKeys verifies that the generated mapping contains the required
+// keys and returns any missing keys as mismatch strings.
+func checkMappingKeys(name string, generated, expected map[string]interface{}) []string {
 	if expected == nil {
-		return
+		return nil
 	}
 
-	// Check that all expected keys exist in generated
-	// Note: We don't check values because LLM might use different conventions
+	var mismatches []string
 	for key := range expected {
 		if _, ok := generated[key]; !ok {
-			t.Errorf("%s missing key %q (expected from ground truth)", name, key)
+			mismatches = append(mismatches, fmt.Sprintf("%s missing key %q", name, key))
 		}
 	}
+	return mismatches
 }
