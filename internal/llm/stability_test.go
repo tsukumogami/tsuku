@@ -23,7 +23,7 @@ import (
 func TestSequentialInference(t *testing.T) {
 	skipIfModelCDNUnavailable(t)
 
-	tsukuHome := t.TempDir()
+	tsukuHome := setupTsukuHome(t)
 	t.Setenv("TSUKU_HOME", tsukuHome)
 
 	// Start daemon with a generous idle timeout so it stays alive for all requests.
@@ -97,7 +97,7 @@ func TestSequentialInference(t *testing.T) {
 func TestCrashRecovery(t *testing.T) {
 	skipIfModelCDNUnavailable(t)
 
-	tsukuHome := t.TempDir()
+	tsukuHome := setupTsukuHome(t)
 	t.Setenv("TSUKU_HOME", tsukuHome)
 
 	// Start daemon for the first time.
