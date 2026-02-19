@@ -112,6 +112,9 @@ fi
 
 [[ "${QUIET_MODE:-0}" -ne 1 ]] && echo "Validating $DOC_PATH..."
 
+# Export for emit_fail to include in error messages
+export VALIDATE_DOC_PATH="$DOC_PATH"
+
 FAILED=0
 
 # Inline check: Location - must be under docs/designs/
