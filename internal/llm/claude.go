@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
 
 	"github.com/anthropics/anthropic-sdk-go"
 	"github.com/anthropics/anthropic-sdk-go/option"
+	"github.com/tsukumogami/tsuku/internal/secrets"
 )
 
 // ClaudeProvider implements the Provider interface for Claude/Anthropic models.
@@ -16,12 +16,13 @@ type ClaudeProvider struct {
 	model  anthropic.Model
 }
 
-// NewClaudeProvider creates a new Claude provider using ANTHROPIC_API_KEY from environment.
-// Returns an error if the API key is not set.
+// NewClaudeProvider creates a new Claude provider using the anthropic_api_key secret.
+// The key is resolved via environment variable first, then config file fallback.
+// Returns an error if the API key is not configured.
 func NewClaudeProvider() (*ClaudeProvider, error) {
-	apiKey := os.Getenv("ANTHROPIC_API_KEY")
-	if apiKey == "" {
-		return nil, fmt.Errorf("ANTHROPIC_API_KEY environment variable not set")
+	apiKey, err := secrets.Get("anthropic_api_key")
+	if err != nil {
+		return nil, fmt.Errorf("claude provider: %w", err)
 	}
 
 	return &ClaudeProvider{

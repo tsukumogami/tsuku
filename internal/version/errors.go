@@ -233,7 +233,7 @@ func (e *GitHubRateLimitError) Suggestion() string {
 	}
 
 	if !e.Authenticated {
-		sb.WriteString("Set GITHUB_TOKEN environment variable to increase limit from 60 to 5000 requests/hour. ")
+		sb.WriteString("Set GITHUB_TOKEN environment variable or add github_token to [secrets] in $TSUKU_HOME/config.toml to increase limit from 60 to 5000 requests/hour. ")
 	}
 
 	sb.WriteString("You can also specify a version directly: tsuku install <tool>@<version>")
