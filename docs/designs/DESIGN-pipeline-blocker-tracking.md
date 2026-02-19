@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Accepted
 problem: |
   The pipeline dashboard's "Top Blockers" panel is nearly empty despite hundreds of
   dependency-related failures. The generate phase skips dependency extraction entirely,
@@ -26,7 +26,7 @@ rationale: |
 
 ## Status
 
-Proposed
+Accepted
 
 ## Context and Problem Statement
 
