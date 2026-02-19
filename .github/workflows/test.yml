@@ -354,12 +354,18 @@ jobs:
       - name: Run LLM quality tests
         env:
           TSUKU_LLM_BINARY: ${{ github.workspace }}/tsuku-llm/target/release/tsuku-llm
-        # Set TSUKU_LLM_MODEL_CACHE via shell so $HOME is expanded at runtime.
-        # The env: block passes values as literals (no shell expansion), and
-        # Go's os.Getenv does not expand ~, so using ~ there would break.
+        # Set TSUKU_LLM_MODEL_CACHE and TSUKU_HOME via shell so $HOME is expanded
+        # at runtime. The env: block passes values as literals (no shell expansion),
+        # and Go's os.Getenv does not expand ~, so using ~ there would break.
         # actions/cache (above) handles ~ expansion on its own.
+        #
+        # TSUKU_HOME is needed because LocalProvider.Complete() starts the daemon
+        # via ServerLifecycle, which creates socket/lock files under TSUKU_HOME.
+        # The models/ symlink lets the daemon find the cached model.
         run: |
           export TSUKU_LLM_MODEL_CACHE="$HOME/.cache/tsuku-llm-models"
+          export TSUKU_HOME="$(mktemp -d)"
+          ln -sf "$TSUKU_LLM_MODEL_CACHE" "$TSUKU_HOME/models"
           go test -tags=integration -v -timeout 30m ./internal/builders/...
 
   # Detect changes and generate test matrices
