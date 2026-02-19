@@ -2,28 +2,29 @@ package search
 
 import (
 	"fmt"
-	"os"
+
+	"github.com/tsukumogami/tsuku/internal/secrets"
 )
 
 // NewSearchProvider creates a search provider based on configuration.
 // If explicit is non-empty, it specifies the provider to use (ddg, tavily, brave).
-// Otherwise, auto-selection checks environment variables in priority order:
-//   - TAVILY_API_KEY -> Tavily
-//   - BRAVE_API_KEY -> Brave
+// Otherwise, auto-selection checks for configured API keys in priority order:
+//   - tavily_api_key -> Tavily
+//   - brave_api_key -> Brave
 //   - Otherwise -> DDG (no key required)
 func NewSearchProvider(explicit string) (Provider, error) {
 	switch explicit {
 	case "tavily":
-		key := os.Getenv("TAVILY_API_KEY")
-		if key == "" {
-			return nil, fmt.Errorf("--search-provider=tavily requires TAVILY_API_KEY environment variable")
+		key, err := secrets.Get("tavily_api_key")
+		if err != nil {
+			return nil, fmt.Errorf("--search-provider=tavily requires tavily_api_key: set TAVILY_API_KEY environment variable or add tavily_api_key to [secrets] in $TSUKU_HOME/config.toml")
 		}
 		return NewTavilyProvider(key), nil
 
 	case "brave":
-		key := os.Getenv("BRAVE_API_KEY")
-		if key == "" {
-			return nil, fmt.Errorf("--search-provider=brave requires BRAVE_API_KEY environment variable")
+		key, err := secrets.Get("brave_api_key")
+		if err != nil {
+			return nil, fmt.Errorf("--search-provider=brave requires brave_api_key: set BRAVE_API_KEY environment variable or add brave_api_key to [secrets] in $TSUKU_HOME/config.toml")
 		}
 		return NewBraveProvider(key), nil
 
@@ -32,10 +33,10 @@ func NewSearchProvider(explicit string) (Provider, error) {
 
 	case "":
 		// Auto-selection based on available API keys
-		if key := os.Getenv("TAVILY_API_KEY"); key != "" {
+		if key, err := secrets.Get("tavily_api_key"); err == nil {
 			return NewTavilyProvider(key), nil
 		}
-		if key := os.Getenv("BRAVE_API_KEY"); key != "" {
+		if key, err := secrets.Get("brave_api_key"); err == nil {
 			return NewBraveProvider(key), nil
 		}
 		return NewDDGProvider(), nil

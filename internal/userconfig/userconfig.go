@@ -6,12 +6,14 @@ package userconfig
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/BurntSushi/toml"
 	"github.com/tsukumogami/tsuku/internal/config"
+	"github.com/tsukumogami/tsuku/internal/log"
 )
 
 // Config represents user-configurable settings.
@@ -22,6 +24,11 @@ type Config struct {
 
 	// LLM contains LLM-related configuration.
 	LLM LLMConfig `toml:"llm"`
+
+	// Secrets stores API keys and tokens in the [secrets] section.
+	// Values are resolved through the secrets package, which checks
+	// environment variables first and falls through to this map.
+	Secrets map[string]string `toml:"secrets,omitempty"`
 }
 
 // LLMConfig holds LLM-specific settings.
@@ -104,6 +111,18 @@ func loadFromPath(path string) (*Config, error) {
 		return nil, fmt.Errorf("failed to read config file: %w", err)
 	}
 
+	// Check permissions: warn if group/other have any access.
+	if info, err := os.Stat(path); err == nil {
+		mode := info.Mode().Perm()
+		if mode&0077 != 0 {
+			log.Default().Warn("config file has permissive permissions",
+				"path", path,
+				"mode", fmt.Sprintf("%04o", mode),
+				"expected", "0600",
+			)
+		}
+	}
+
 	if _, err := toml.Decode(string(data), userCfg); err != nil {
 		return nil, fmt.Errorf("failed to parse config file: %w", err)
 	}
@@ -121,23 +140,45 @@ func (c *Config) Save() error {
 	return c.saveToPath(cfg.ConfigFile)
 }
 
-// saveToPath writes config to a specific file path (for testing).
+// saveToPath writes config to a specific file path using atomic writes with 0600 permissions.
+// It writes to a temporary file first and renames it to the target path, preventing
+// mid-write corruption and ensuring the file always has correct permissions from creation.
 func (c *Config) saveToPath(path string) error {
 	// Ensure parent directory exists
-	dir := path[:strings.LastIndex(path, "/")]
+	dir := filepath.Dir(path)
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		return fmt.Errorf("failed to create config directory: %w", err)
 	}
 
-	f, err := os.Create(path)
+	// Create temp file in same directory (ensures same filesystem for atomic rename).
+	tmpFile, err := os.CreateTemp(dir, ".config.toml.tmp-*")
 	if err != nil {
-		return fmt.Errorf("failed to create config file: %w", err)
+		return fmt.Errorf("failed to create temp file: %w", err)
 	}
-	defer f.Close()
+	tmpPath := tmpFile.Name()
+	defer os.Remove(tmpPath) // Cleanup on error; no-op after successful rename.
 
-	encoder := toml.NewEncoder(f)
+	// Set 0600 explicitly (CreateTemp may use different umask).
+	if err := tmpFile.Chmod(0600); err != nil {
+		tmpFile.Close()
+		return fmt.Errorf("failed to set temp file permissions: %w", err)
+	}
+
+	// Write config.
+	encoder := toml.NewEncoder(tmpFile)
 	if err := encoder.Encode(c); err != nil {
+		tmpFile.Close()
 		return fmt.Errorf("failed to write config file: %w", err)
+	}
+
+	// Close before rename (required on some platforms).
+	if err := tmpFile.Close(); err != nil {
+		return fmt.Errorf("failed to close temp file: %w", err)
+	}
+
+	// Atomic rename.
+	if err := os.Rename(tmpPath, path); err != nil {
+		return fmt.Errorf("failed to rename temp file: %w", err)
 	}
 
 	return nil
@@ -217,8 +258,21 @@ func (c *Config) LLMHourlyRateLimit() int {
 
 // Get returns the value of a config key as a string.
 // Returns empty string and false if the key doesn't exist.
+// Keys with the "secrets." prefix are resolved from the Secrets map.
 func (c *Config) Get(key string) (string, bool) {
-	switch strings.ToLower(key) {
+	lowerKey := strings.ToLower(key)
+
+	// Handle secrets.* prefix.
+	if secretName, ok := strings.CutPrefix(lowerKey, "secrets."); ok {
+		if c.Secrets != nil {
+			if val, found := c.Secrets[secretName]; found && val != "" {
+				return val, true
+			}
+		}
+		return "", false
+	}
+
+	switch lowerKey {
 	case "telemetry":
 		return strconv.FormatBool(c.Telemetry), true
 	case "llm.enabled":
@@ -245,8 +299,20 @@ func (c *Config) Get(key string) (string, bool) {
 
 // Set updates a config value from a string.
 // Returns an error if the key doesn't exist or the value is invalid.
+// Keys with the "secrets." prefix are stored in the Secrets map.
 func (c *Config) Set(key, value string) error {
-	switch strings.ToLower(key) {
+	lowerKey := strings.ToLower(key)
+
+	// Handle secrets.* prefix.
+	if secretName, ok := strings.CutPrefix(lowerKey, "secrets."); ok {
+		if c.Secrets == nil {
+			c.Secrets = make(map[string]string)
+		}
+		c.Secrets[secretName] = value
+		return nil
+	}
+
+	switch lowerKey {
 	case "telemetry":
 		b, err := strconv.ParseBool(value)
 		if err != nil {

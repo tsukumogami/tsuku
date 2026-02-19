@@ -132,7 +132,7 @@ func (r *Resolver) FetchReleaseAssets(ctx context.Context, repo, tag string) ([]
 			case 404:
 				return nil, fmt.Errorf("release '%s' not found in '%s'. It may be a draft or the tag doesn't exist", tag, repo)
 			case 403:
-				return nil, fmt.Errorf("GitHub API rate limit exceeded. Set GITHUB_TOKEN environment variable to increase limits")
+				return nil, fmt.Errorf("GitHub API rate limit exceeded. Set GITHUB_TOKEN environment variable or add github_token to [secrets] in $TSUKU_HOME/config.toml to increase limits")
 			}
 		}
 
@@ -226,7 +226,7 @@ func (r *Resolver) checkRateLimit(ctx context.Context) error {
 		// If the rate limit check itself fails, check if it's a critical error
 		if resp != nil && resp.StatusCode == 403 {
 			// Likely already rate limited
-			return fmt.Errorf("GitHub API rate limit check failed with 403 (likely exhausted). Set GITHUB_TOKEN to increase limits: %w", err)
+			return fmt.Errorf("GitHub API rate limit check failed with 403 (likely exhausted). Set GITHUB_TOKEN environment variable or add github_token to [secrets] in $TSUKU_HOME/config.toml to increase limits: %w", err)
 		}
 		// For other errors (network, timeout), log but don't fail - proceed with the request
 		// The actual request will fail if there's a real issue
@@ -239,7 +239,7 @@ func (r *Resolver) checkRateLimit(ctx context.Context) error {
 
 		// If completely exhausted, return error
 		if rateLimits.Core.Remaining == 0 {
-			return fmt.Errorf("GitHub API rate limit exhausted (%d remaining). Resets at %s. Set GITHUB_TOKEN to increase limits",
+			return fmt.Errorf("GitHub API rate limit exhausted (%d remaining). Resets at %s. Set GITHUB_TOKEN environment variable or add github_token to [secrets] in $TSUKU_HOME/config.toml to increase limits",
 				rateLimits.Core.Remaining, resetTime)
 		}
 

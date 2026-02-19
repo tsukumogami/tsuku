@@ -3,6 +3,7 @@ package userconfig
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -701,5 +702,378 @@ func TestAvailableKeysIncludesBudgetSettings(t *testing.T) {
 	}
 	if _, ok := keys["llm.hourly_rate_limit"]; !ok {
 		t.Error("expected llm.hourly_rate_limit in available keys")
+	}
+}
+
+// --- Secrets section tests (Scenario 7) ---
+
+func TestSetSecretStoresInSecretsMap(t *testing.T) {
+	cfg := DefaultConfig()
+
+	if err := cfg.Set("secrets.foo_key", "bar_value"); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if cfg.Secrets == nil {
+		t.Fatal("expected Secrets map to be initialized")
+	}
+	if cfg.Secrets["foo_key"] != "bar_value" {
+		t.Errorf("expected Secrets[\"foo_key\"]=\"bar_value\", got %q", cfg.Secrets["foo_key"])
+	}
+}
+
+func TestGetSecretRetrievesFromSecretsMap(t *testing.T) {
+	cfg := DefaultConfig()
+	cfg.Secrets = map[string]string{
+		"test_api_key": "secret-123",
+	}
+
+	val, ok := cfg.Get("secrets.test_api_key")
+	if !ok {
+		t.Error("expected secrets.test_api_key to be found")
+	}
+	if val != "secret-123" {
+		t.Errorf("expected 'secret-123', got %q", val)
+	}
+}
+
+func TestGetSecretReturnsFalseWhenMissing(t *testing.T) {
+	cfg := DefaultConfig()
+
+	_, ok := cfg.Get("secrets.nonexistent")
+	if ok {
+		t.Error("expected false for missing secret")
+	}
+}
+
+func TestGetSecretReturnsFalseWhenEmpty(t *testing.T) {
+	cfg := DefaultConfig()
+	cfg.Secrets = map[string]string{
+		"empty_key": "",
+	}
+
+	_, ok := cfg.Get("secrets.empty_key")
+	if ok {
+		t.Error("expected false for empty secret value")
+	}
+}
+
+func TestSetSecretIsCaseInsensitive(t *testing.T) {
+	cfg := DefaultConfig()
+
+	if err := cfg.Set("SECRETS.My_Key", "value"); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// The stored key should be lowercase.
+	if cfg.Secrets["my_key"] != "value" {
+		t.Errorf("expected Secrets[\"my_key\"]=\"value\", got %q", cfg.Secrets["my_key"])
+	}
+}
+
+func TestSetSecretInitializesNilMap(t *testing.T) {
+	cfg := &Config{Telemetry: true}
+	if cfg.Secrets != nil {
+		t.Fatal("precondition: Secrets should be nil")
+	}
+
+	if err := cfg.Set("secrets.key", "val"); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if cfg.Secrets == nil {
+		t.Error("expected Secrets map to be initialized after Set")
+	}
+}
+
+func TestSecretsSaveAndLoadRoundTrip(t *testing.T) {
+	tmpDir := t.TempDir()
+	path := filepath.Join(tmpDir, "config.toml")
+
+	cfg := DefaultConfig()
+	cfg.Secrets = map[string]string{
+		"anthropic_api_key": "sk-ant-test",
+		"github_token":      "ghp_test",
+	}
+
+	if err := cfg.saveToPath(path); err != nil {
+		t.Fatalf("failed to save: %v", err)
+	}
+
+	loaded, err := loadFromPath(path)
+	if err != nil {
+		t.Fatalf("failed to load: %v", err)
+	}
+
+	if loaded.Secrets == nil {
+		t.Fatal("expected Secrets map to be loaded")
+	}
+	if loaded.Secrets["anthropic_api_key"] != "sk-ant-test" {
+		t.Errorf("expected 'sk-ant-test', got %q", loaded.Secrets["anthropic_api_key"])
+	}
+	if loaded.Secrets["github_token"] != "ghp_test" {
+		t.Errorf("expected 'ghp_test', got %q", loaded.Secrets["github_token"])
+	}
+}
+
+func TestSecretsSerializeToTOMLSection(t *testing.T) {
+	tmpDir := t.TempDir()
+	path := filepath.Join(tmpDir, "config.toml")
+
+	cfg := DefaultConfig()
+	cfg.Secrets = map[string]string{
+		"test_key": "test_value",
+	}
+
+	if err := cfg.saveToPath(path); err != nil {
+		t.Fatalf("failed to save: %v", err)
+	}
+
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("failed to read file: %v", err)
+	}
+
+	content := string(data)
+	if !strings.Contains(content, "[secrets]") {
+		t.Error("expected [secrets] section in TOML output")
+	}
+	if !strings.Contains(content, "test_key") {
+		t.Error("expected test_key in TOML output")
+	}
+}
+
+func TestAvailableKeysDoesNotIncludeSecrets(t *testing.T) {
+	keys := AvailableKeys()
+	for k := range keys {
+		if strings.HasPrefix(k, "secrets.") {
+			t.Errorf("AvailableKeys() should not include secrets keys, found %q", k)
+		}
+	}
+}
+
+func TestSecretsNotAffectExistingConfig(t *testing.T) {
+	tmpDir := t.TempDir()
+	path := filepath.Join(tmpDir, "config.toml")
+
+	cfg := DefaultConfig()
+	cfg.Telemetry = false
+	cfg.Secrets = map[string]string{
+		"my_key": "my_value",
+	}
+
+	if err := cfg.saveToPath(path); err != nil {
+		t.Fatalf("failed to save: %v", err)
+	}
+
+	loaded, err := loadFromPath(path)
+	if err != nil {
+		t.Fatalf("failed to load: %v", err)
+	}
+
+	// Existing config should be preserved.
+	if loaded.Telemetry {
+		t.Error("expected Telemetry=false to be preserved")
+	}
+	if loaded.Secrets["my_key"] != "my_value" {
+		t.Errorf("expected Secrets[\"my_key\"]=\"my_value\", got %q", loaded.Secrets["my_key"])
+	}
+}
+
+// --- Atomic write and permission tests (Scenario 8) ---
+
+func TestAtomicWriteProduces0600Permissions(t *testing.T) {
+	tmpDir := t.TempDir()
+	path := filepath.Join(tmpDir, "config.toml")
+
+	cfg := DefaultConfig()
+	if err := cfg.saveToPath(path); err != nil {
+		t.Fatalf("failed to save: %v", err)
+	}
+
+	info, err := os.Stat(path)
+	if err != nil {
+		t.Fatalf("failed to stat: %v", err)
+	}
+
+	perm := info.Mode().Perm()
+	if perm != 0600 {
+		t.Errorf("expected permissions 0600, got %04o", perm)
+	}
+}
+
+func TestAtomicWritePreserves0600OnOverwrite(t *testing.T) {
+	tmpDir := t.TempDir()
+	path := filepath.Join(tmpDir, "config.toml")
+
+	// First write
+	cfg := DefaultConfig()
+	if err := cfg.saveToPath(path); err != nil {
+		t.Fatalf("failed to save: %v", err)
+	}
+
+	// Manually loosen permissions to simulate an older file
+	if err := os.Chmod(path, 0644); err != nil {
+		t.Fatalf("failed to chmod: %v", err)
+	}
+
+	// Second write should restore 0600 via atomic replace
+	cfg.Telemetry = false
+	if err := cfg.saveToPath(path); err != nil {
+		t.Fatalf("failed to save (2nd): %v", err)
+	}
+
+	info, err := os.Stat(path)
+	if err != nil {
+		t.Fatalf("failed to stat: %v", err)
+	}
+	perm := info.Mode().Perm()
+	if perm != 0600 {
+		t.Errorf("expected permissions 0600 after overwrite, got %04o", perm)
+	}
+}
+
+func TestAtomicWriteDoesNotLeaveTemps(t *testing.T) {
+	tmpDir := t.TempDir()
+	path := filepath.Join(tmpDir, "config.toml")
+
+	cfg := DefaultConfig()
+	if err := cfg.saveToPath(path); err != nil {
+		t.Fatalf("failed to save: %v", err)
+	}
+
+	entries, err := os.ReadDir(tmpDir)
+	if err != nil {
+		t.Fatalf("failed to readdir: %v", err)
+	}
+
+	for _, e := range entries {
+		if strings.HasPrefix(e.Name(), ".config.toml.tmp-") {
+			t.Errorf("temp file left behind: %s", e.Name())
+		}
+	}
+}
+
+func TestAtomicWriteContentIntegrity(t *testing.T) {
+	tmpDir := t.TempDir()
+	path := filepath.Join(tmpDir, "config.toml")
+
+	cfg := DefaultConfig()
+	cfg.Telemetry = false
+	cfg.Secrets = map[string]string{
+		"key1": "val1",
+		"key2": "val2",
+	}
+
+	if err := cfg.saveToPath(path); err != nil {
+		t.Fatalf("failed to save: %v", err)
+	}
+
+	loaded, err := loadFromPath(path)
+	if err != nil {
+		t.Fatalf("failed to load: %v", err)
+	}
+
+	if loaded.Telemetry != false {
+		t.Error("expected Telemetry=false")
+	}
+	if loaded.Secrets["key1"] != "val1" {
+		t.Errorf("expected key1=val1, got %q", loaded.Secrets["key1"])
+	}
+	if loaded.Secrets["key2"] != "val2" {
+		t.Errorf("expected key2=val2, got %q", loaded.Secrets["key2"])
+	}
+}
+
+func TestPermissionWarningOnPermissiveFile(t *testing.T) {
+	tmpDir := t.TempDir()
+	path := filepath.Join(tmpDir, "config.toml")
+
+	// Write with 0644 permissions (simulating an older config file).
+	err := os.WriteFile(path, []byte("telemetry = true\n"), 0644)
+	if err != nil {
+		t.Fatalf("failed to write test file: %v", err)
+	}
+
+	// loadFromPath should succeed even with permissive permissions.
+	cfg, err := loadFromPath(path)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !cfg.Telemetry {
+		t.Error("expected Telemetry=true")
+	}
+}
+
+func TestPermissionWarningNotTriggeredFor0600(t *testing.T) {
+	tmpDir := t.TempDir()
+	path := filepath.Join(tmpDir, "config.toml")
+
+	// Write with correct 0600 permissions.
+	err := os.WriteFile(path, []byte("telemetry = true\n"), 0600)
+	if err != nil {
+		t.Fatalf("failed to write test file: %v", err)
+	}
+
+	// loadFromPath should succeed without any permission issue.
+	cfg, err := loadFromPath(path)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !cfg.Telemetry {
+		t.Error("expected Telemetry=true")
+	}
+}
+
+func TestAtomicWriteCreatesParentDirectory(t *testing.T) {
+	tmpDir := t.TempDir()
+	path := filepath.Join(tmpDir, "nested", "dir", "config.toml")
+
+	cfg := DefaultConfig()
+	if err := cfg.saveToPath(path); err != nil {
+		t.Fatalf("failed to save: %v", err)
+	}
+
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		t.Error("config file was not created in nested directory")
+	}
+
+	info, err := os.Stat(path)
+	if err != nil {
+		t.Fatalf("failed to stat: %v", err)
+	}
+	if info.Mode().Perm() != 0600 {
+		t.Errorf("expected permissions 0600, got %04o", info.Mode().Perm())
+	}
+}
+
+func TestLoadSecretsFromTOMLFile(t *testing.T) {
+	tmpDir := t.TempDir()
+	path := filepath.Join(tmpDir, "config.toml")
+
+	content := `telemetry = true
+
+[secrets]
+anthropic_api_key = "sk-ant-from-file"
+github_token = "ghp-from-file"
+`
+	err := os.WriteFile(path, []byte(content), 0600)
+	if err != nil {
+		t.Fatalf("failed to write test file: %v", err)
+	}
+
+	cfg, err := loadFromPath(path)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if cfg.Secrets == nil {
+		t.Fatal("expected Secrets map to be populated")
+	}
+	if cfg.Secrets["anthropic_api_key"] != "sk-ant-from-file" {
+		t.Errorf("expected 'sk-ant-from-file', got %q", cfg.Secrets["anthropic_api_key"])
+	}
+	if cfg.Secrets["github_token"] != "ghp-from-file" {
+		t.Errorf("expected 'ghp-from-file', got %q", cfg.Secrets["github_token"])
 	}
 }

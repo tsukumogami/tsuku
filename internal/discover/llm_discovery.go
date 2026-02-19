@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -14,6 +13,7 @@ import (
 	"github.com/tsukumogami/tsuku/internal/llm"
 	"github.com/tsukumogami/tsuku/internal/log"
 	"github.com/tsukumogami/tsuku/internal/search"
+	"github.com/tsukumogami/tsuku/internal/secrets"
 )
 
 // Constants for LLM Discovery configuration.
@@ -108,7 +108,7 @@ func (e *RateLimitError) Suggestion() string {
 	if e.Authenticated {
 		return "GitHub API rate limit exceeded. Please wait and try again."
 	}
-	return "GitHub API rate limit exceeded. Set GITHUB_TOKEN for higher limits (5000 req/hour)."
+	return "GitHub API rate limit exceeded. Set GITHUB_TOKEN environment variable or add github_token to [secrets] in $TSUKU_HOME/config.toml for higher limits (5000 req/hour)."
 }
 
 // LLMDiscoveryOption configures an LLMDiscovery instance.
@@ -794,8 +794,8 @@ func defaultHTTPGet(ctx context.Context, url string) ([]byte, error) {
 	req.Header.Set("Accept", "application/vnd.github.v3+json")
 	req.Header.Set("User-Agent", "tsuku")
 
-	// Use GITHUB_TOKEN if available for higher rate limits (5000/hr vs 60/hr)
-	token := os.Getenv("GITHUB_TOKEN")
+	// Use github_token if available for higher rate limits (5000/hr vs 60/hr)
+	token, _ := secrets.Get("github_token")
 	if token != "" {
 		req.Header.Set("Authorization", "Bearer "+token)
 	}

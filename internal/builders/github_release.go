@@ -7,7 +7,6 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -15,6 +14,7 @@ import (
 	"github.com/tsukumogami/tsuku/internal/llm"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/sandbox"
+	"github.com/tsukumogami/tsuku/internal/secrets"
 	"github.com/tsukumogami/tsuku/internal/telemetry"
 	"github.com/tsukumogami/tsuku/internal/validate"
 )
@@ -692,7 +692,7 @@ func (b *GitHubReleaseBuilder) fetchReleases(ctx context.Context, owner, repo st
 		}
 		return nil, &GitHubRateLimitError{
 			RetryAfter:    retryAfter,
-			Authenticated: os.Getenv("GITHUB_TOKEN") != "",
+			Authenticated: secrets.IsSet("github_token"),
 		}
 	}
 
@@ -762,7 +762,7 @@ func (b *GitHubReleaseBuilder) fetchRepoMeta(ctx context.Context, owner, repo st
 		}
 		return nil, &GitHubRateLimitError{
 			RetryAfter:    retryAfter,
-			Authenticated: os.Getenv("GITHUB_TOKEN") != "",
+			Authenticated: secrets.IsSet("github_token"),
 		}
 	}
 
@@ -826,8 +826,8 @@ func (b *GitHubReleaseBuilder) setGitHubHeaders(req *http.Request) {
 	req.Header.Set("User-Agent", "tsuku/1.0 (https://github.com/tsukumogami/tsuku)")
 	req.Header.Set("Accept", "application/vnd.github.v3+json")
 
-	// Use GITHUB_TOKEN if available for higher rate limits
-	if token := os.Getenv("GITHUB_TOKEN"); token != "" {
+	// Use github_token if available for higher rate limits
+	if token, err := secrets.Get("github_token"); err == nil && token != "" {
 		req.Header.Set("Authorization", "Bearer "+token)
 	}
 }

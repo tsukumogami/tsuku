@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/tsukumogami/tsuku/internal/secrets"
 )
 
 // EntryMetadata holds optional metadata extracted from API responses during validation.
@@ -68,14 +69,15 @@ type GitHubValidator struct {
 }
 
 // NewGitHubValidator creates a validator that checks GitHub repos.
-// It reads GITHUB_TOKEN from the environment for authenticated requests.
+// It resolves github_token via the secrets package (env var, then config file).
 func NewGitHubValidator(client *http.Client) *GitHubValidator {
 	if client == nil {
 		client = &http.Client{Timeout: 10 * time.Second}
 	}
+	token, _ := secrets.Get("github_token")
 	return &GitHubValidator{
 		client: client,
-		token:  os.Getenv("GITHUB_TOKEN"),
+		token:  token,
 	}
 }
 

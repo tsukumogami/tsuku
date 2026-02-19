@@ -269,6 +269,15 @@ func runEval(cmd *cobra.Command, args []string) {
 	}
 
 	// Configure plan generation
+	// When --pin-from is specified with --version, pin the top-level version
+	// to bypass version provider API calls. Golden file validation provides
+	// the exact version, so external resolution is unnecessary and fragile
+	// (e.g., Homebrew API may no longer list the pinned version as stable).
+	var pinnedVersion string
+	if evalPinFrom != "" && reqVersion != "" {
+		pinnedVersion = reqVersion
+	}
+
 	planCfg := executor.PlanConfig{
 		OS:                 evalOS,
 		Arch:               evalArch,
@@ -279,6 +288,7 @@ func runEval(cmd *cobra.Command, args []string) {
 		AutoAcceptEvalDeps: evalInstallDeps,
 		RecipeLoader:       loader,
 		Constraints:        constraints,
+		PinnedVersion:      pinnedVersion,
 		RequireEmbedded:    evalRequireEmbedded,
 		OnWarning: func(action, message string) {
 			// Output warnings to stderr so they don't mix with JSON

@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"runtime"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/tsukumogami/tsuku/internal/secrets"
 )
 
 // TapProvider resolves versions from third-party Homebrew taps via GitHub.
@@ -165,7 +166,7 @@ func (p *TapProvider) fetchFormulaFile(ctx context.Context, owner, repo, path st
 	}
 
 	// Add GitHub token for authentication if available
-	token := os.Getenv("GITHUB_TOKEN")
+	token, _ := secrets.Get("github_token")
 	if token != "" {
 		req.Header.Set("Authorization", "Bearer "+token)
 	}

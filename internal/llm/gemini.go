@@ -3,9 +3,9 @@ package llm
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/google/generative-ai-go/genai"
+	"github.com/tsukumogami/tsuku/internal/secrets"
 	"google.golang.org/api/option"
 )
 
@@ -18,15 +18,14 @@ type GeminiProvider struct {
 	model  string
 }
 
-// NewGeminiProvider creates a provider using GOOGLE_API_KEY (or GEMINI_API_KEY).
-// Returns an error if the API key is not set.
+// NewGeminiProvider creates a provider using the google_api_key secret.
+// The key is resolved via environment variables (GOOGLE_API_KEY, GEMINI_API_KEY)
+// first, then config file fallback.
+// Returns an error if the API key is not configured.
 func NewGeminiProvider(ctx context.Context) (*GeminiProvider, error) {
-	apiKey := os.Getenv("GOOGLE_API_KEY")
-	if apiKey == "" {
-		apiKey = os.Getenv("GEMINI_API_KEY")
-	}
-	if apiKey == "" {
-		return nil, fmt.Errorf("GOOGLE_API_KEY (or GEMINI_API_KEY) environment variable not set")
+	apiKey, err := secrets.Get("google_api_key")
+	if err != nil {
+		return nil, fmt.Errorf("gemini provider: %w", err)
 	}
 
 	client, err := genai.NewClient(ctx, option.WithAPIKey(apiKey))
