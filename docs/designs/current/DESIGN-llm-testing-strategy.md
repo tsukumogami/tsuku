@@ -1,5 +1,5 @@
 ---
-status: Planned
+status: Current
 problem: |
   The local LLM runtime's test infrastructure covers lifecycle management and cloud provider recipe quality but has no automated way to detect local model quality regressions or server stability failures. This gap let two failure categories -- server crashes during long inference sessions and model quality regression on Rust-style naming patterns -- reach QA without being caught by any test. Changes to prompts, models, or inference parameters can ship regressions silently.
 decision: |
@@ -12,7 +12,7 @@ rationale: |
 
 ## Status
 
-Planned
+Current
 
 **Source Issue**: [#1738 - Local LLM: server crashes and model quality gaps on complex naming patterns](https://github.com/tsukumogami/tsuku/issues/1738)
 
