@@ -1,0 +1,6 @@
+{"schema_version":1,"recipe":"graphql-cli","platform":"linux-alpine-musl-x86_64","exit_code":6,"category":"deterministic","timestamp":"2026-02-19T20:40:46Z"}
+{"schema_version":1,"recipe":"graphql-cli","platform":"linux-alpine-musl-arm64","exit_code":6,"category":"deterministic","timestamp":"2026-02-19T20:40:46Z"}
+{"schema_version":1,"recipe":"gulp-cli","platform":"linux-alpine-musl-x86_64","exit_code":6,"category":"deterministic","timestamp":"2026-02-19T20:40:46Z"}
+{"schema_version":1,"recipe":"gulp-cli","platform":"linux-alpine-musl-arm64","exit_code":6,"category":"deterministic","timestamp":"2026-02-19T20:40:46Z"}
+{"schema_version":1,"recipe":"http-server","platform":"linux-alpine-musl-x86_64","exit_code":6,"category":"deterministic","timestamp":"2026-02-19T20:40:46Z"}
+{"schema_version":1,"recipe":"http-server","platform":"linux-alpine-musl-arm64","exit_code":6,"category":"deterministic","timestamp":"2026-02-19T20:40:46Z"}
