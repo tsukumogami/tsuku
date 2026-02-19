@@ -4,17 +4,30 @@ import (
 	"context"
 	_ "embed"
 	"encoding/json"
+	"flag"
+	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"testing"
 	"time"
 
 	"github.com/BurntSushi/toml"
+	"github.com/tsukumogami/tsuku/internal/llm"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 )
 
 //go:embed llm-test-matrix.json
 var llmTestMatrixJSON []byte
+
+var updateBaseline = flag.Bool("update-baseline", false, "update quality baseline files")
+
+// qualityBaseline represents a per-provider quality baseline file.
+type qualityBaseline struct {
+	Provider  string            `json:"provider"`
+	Model     string            `json:"model"`
+	Baselines map[string]string `json:"baselines"`
+}
 
 // llmTestMatrix represents the structure of llm-test-matrix.json
 type llmTestMatrix struct {
@@ -36,39 +49,240 @@ type llmTestCase struct {
 	Features    []string `json:"features"`     // Features being tested
 }
 
+// detectProvider checks environment variables in priority order and returns
+// the provider name and a configured llm.Provider. Returns empty strings if
+// no provider is available.
+func detectProvider(t *testing.T) (string, llm.Provider) {
+	t.Helper()
+
+	// Priority 1: Local provider via TSUKU_LLM_BINARY
+	if os.Getenv("TSUKU_LLM_BINARY") != "" {
+		provider := llm.NewLocalProvider()
+		return provider.Name(), provider
+	}
+
+	// Priority 2: Claude via ANTHROPIC_API_KEY
+	if os.Getenv("ANTHROPIC_API_KEY") != "" {
+		provider, err := llm.NewClaudeProvider()
+		if err != nil {
+			t.Fatalf("ANTHROPIC_API_KEY set but failed to create Claude provider: %v", err)
+		}
+		return provider.Name(), provider
+	}
+
+	// Priority 3: Gemini via GOOGLE_API_KEY
+	if os.Getenv("GOOGLE_API_KEY") != "" {
+		provider, err := llm.NewGeminiProvider(context.Background())
+		if err != nil {
+			t.Fatalf("GOOGLE_API_KEY set but failed to create Gemini provider: %v", err)
+		}
+		return provider.Name(), provider
+	}
+
+	return "", nil
+}
+
+// baselineDir returns the path to the baselines directory, relative to the
+// repository root. The directory is resolved from the test working directory.
+func baselineDir() string {
+	candidates := []string{
+		"../../testdata/llm-quality-baselines",
+		"testdata/llm-quality-baselines",
+	}
+	for _, c := range candidates {
+		if info, err := os.Stat(c); err == nil && info.IsDir() {
+			abs, _ := filepath.Abs(c)
+			return abs
+		}
+	}
+	// Fall back to the expected location from internal/builders/
+	abs, _ := filepath.Abs("../../testdata/llm-quality-baselines")
+	return abs
+}
+
+// loadBaseline reads a per-provider baseline file. Returns nil if the file
+// does not exist (first run for this provider).
+func loadBaseline(providerName string) (*qualityBaseline, error) {
+	return loadBaselineFromDir(baselineDir(), providerName)
+}
+
+// loadBaselineFromDir reads a baseline file from a specific directory.
+func loadBaselineFromDir(dir, providerName string) (*qualityBaseline, error) {
+	path := filepath.Join(dir, providerName+".json")
+	data, err := os.ReadFile(path)
+	if os.IsNotExist(err) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("reading baseline %s: %w", path, err)
+	}
+	var b qualityBaseline
+	if err := json.Unmarshal(data, &b); err != nil {
+		return nil, fmt.Errorf("parsing baseline %s: %w", path, err)
+	}
+	return &b, nil
+}
+
+// writeBaseline writes results as a new baseline file. Returns an error if
+// the pass rate is below the minimum threshold (50%).
+func writeBaseline(providerName, model string, results map[string]string) error {
+	return writeBaselineToDir(baselineDir(), providerName, model, results)
+}
+
+// writeBaselineToDir writes a baseline file to a specific directory.
+func writeBaselineToDir(dir, providerName, model string, results map[string]string) error {
+	// Sanity check: require at least 50% pass rate
+	passed := 0
+	for _, status := range results {
+		if status == "pass" {
+			passed++
+		}
+	}
+	total := len(results)
+	if total > 0 && float64(passed)/float64(total) < 0.5 {
+		return fmt.Errorf(
+			"refusing to write baseline: only %d/%d (%.0f%%) cases passed, minimum is 50%%",
+			passed, total, float64(passed)/float64(total)*100,
+		)
+	}
+
+	b := qualityBaseline{
+		Provider:  providerName,
+		Model:     model,
+		Baselines: results,
+	}
+	data, err := json.MarshalIndent(b, "", "  ")
+	if err != nil {
+		return fmt.Errorf("marshaling baseline: %w", err)
+	}
+	data = append(data, '\n')
+
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return fmt.Errorf("creating baseline directory: %w", err)
+	}
+	path := filepath.Join(dir, providerName+".json")
+	if err := os.WriteFile(path, data, 0644); err != nil {
+		return fmt.Errorf("writing baseline %s: %w", path, err)
+	}
+	return nil
+}
+
+// baselineDiff holds the result of comparing current test results against a baseline.
+type baselineDiff struct {
+	Regressions  []string // previously-passing cases that now fail
+	Improvements []string // previously-failing cases that now pass
+}
+
+// compareBaseline computes the diff between current results and a baseline.
+func compareBaseline(baseline *qualityBaseline, results map[string]string) baselineDiff {
+	var diff baselineDiff
+
+	for name, baselineStatus := range baseline.Baselines {
+		currentStatus, ok := results[name]
+		if !ok {
+			// Test case was in baseline but not in current run -- skip
+			continue
+		}
+		if baselineStatus == "pass" && currentStatus == "fail" {
+			diff.Regressions = append(diff.Regressions, name)
+		}
+		if baselineStatus == "fail" && currentStatus == "pass" {
+			diff.Improvements = append(diff.Improvements, name)
+		}
+	}
+
+	// Sort for deterministic output
+	sort.Strings(diff.Regressions)
+	sort.Strings(diff.Improvements)
+
+	return diff
+}
+
+// reportRegressions compares current results against a baseline and reports
+// regressions (previously-passing cases that now fail). Returns true if
+// regressions were found.
+func reportRegressions(t *testing.T, baseline *qualityBaseline, results map[string]string) bool {
+	t.Helper()
+
+	diff := compareBaseline(baseline, results)
+
+	if len(diff.Improvements) > 0 {
+		t.Logf("Improvements (previously-failing cases now passing):")
+		for _, name := range diff.Improvements {
+			t.Logf("  + %s", name)
+		}
+		t.Logf("Run with -update-baseline to update the baseline file.")
+	}
+
+	if len(diff.Regressions) > 0 {
+		t.Errorf("Quality regressions detected against %s baseline:", baseline.Provider)
+		for _, name := range diff.Regressions {
+			t.Errorf("  - %s: was pass, now fail", name)
+		}
+		return true
+	}
+
+	return false
+}
+
+// providerModel returns a human-readable model identifier for the provider.
+func providerModel(providerName string) string {
+	switch providerName {
+	case "claude":
+		return llm.Model
+	case "gemini":
+		return llm.GeminiModel
+	case "local":
+		return "local"
+	default:
+		return providerName
+	}
+}
+
 // TestLLMGroundTruth validates LLM-generated recipes against ground truth.
-// This test requires ANTHROPIC_API_KEY to be set and makes real API calls.
-// It is skipped when the API key is not available.
+// The test detects the active provider from environment variables in priority
+// order: TSUKU_LLM_BINARY (local) > ANTHROPIC_API_KEY (Claude) >
+// GOOGLE_API_KEY (Gemini). It skips when no provider is configured.
+//
+// Both builders receive the detected provider via factory injection using
+// WithFactory and WithHomebrewFactory.
 //
 // Test cases are defined in llm-test-matrix.json, with each test validating
 // a specific variation to isolate failures.
 //
-// Container validation requires tsuku to be built and available in PATH.
-// If tsuku is not found, validation is skipped (recipes are still generated
-// and checked against ground truth, but not executed in a container).
+// After all cases run, results are compared against the per-provider baseline
+// in testdata/llm-quality-baselines/<provider>.json. The test fails if a
+// previously-passing case now fails (regression). Use -update-baseline to
+// write new baseline files.
 //
-// To run with full validation:
+// To run:
 //
-//	go build -o tsuku ./cmd/tsuku
-//	PATH="$(pwd):$PATH" go test -run TestLLMGroundTruth ./internal/builders/
+//	ANTHROPIC_API_KEY=sk-... go test -run TestLLMGroundTruth ./internal/builders/
+//	ANTHROPIC_API_KEY=sk-... go test -run TestLLMGroundTruth ./internal/builders/ -update-baseline
 func TestLLMGroundTruth(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping LLM integration test in short mode")
 	}
-	apiKey := os.Getenv("ANTHROPIC_API_KEY")
-	if apiKey == "" {
-		t.Skip("Skipping LLM integration test: ANTHROPIC_API_KEY not set")
+
+	providerName, provider := detectProvider(t)
+	if provider == nil {
+		t.Skip("Skipping LLM integration test: no provider configured (set TSUKU_LLM_BINARY, ANTHROPIC_API_KEY, or GOOGLE_API_KEY)")
 	}
+	t.Logf("Using provider: %s", providerName)
+
+	// Create factory with the detected provider and inject into builders
+	factory := llm.NewFactoryWithProviders(
+		map[string]llm.Provider{providerName: provider},
+		llm.WithPrimaryProvider(providerName),
+	)
+	githubBuilder := NewGitHubReleaseBuilder(WithFactory(factory))
+	homebrewBuilder := NewHomebrewBuilder(WithHomebrewFactory(factory))
 
 	// Load test matrix
 	var matrix llmTestMatrix
 	if err := json.Unmarshal(llmTestMatrixJSON, &matrix); err != nil {
 		t.Fatalf("Failed to parse llm-test-matrix.json: %v", err)
 	}
-
-	// Initialize builders
-	githubBuilder := NewGitHubReleaseBuilder()
-	homebrewBuilder := NewHomebrewBuilder()
 
 	// Find the recipes directory (relative to test file)
 	recipesDir := findRecipesDir(t)
@@ -91,6 +305,9 @@ func TestLLMGroundTruth(t *testing.T) {
 		"llm_homebrew_readline_multi_patches", "llm_homebrew_python_single_patch", "llm_homebrew_bash_patch_ordering",
 	}
 
+	// Track per-test results
+	results := make(map[string]string)
+
 	for _, testID := range testIDs {
 		tc, ok := matrix.Tests[testID]
 		if !ok {
@@ -98,7 +315,8 @@ func TestLLMGroundTruth(t *testing.T) {
 			continue
 		}
 
-		t.Run(testID+"_"+tc.Tool, func(t *testing.T) {
+		subtestName := testID + "_" + tc.Tool
+		passed := t.Run(subtestName, func(t *testing.T) {
 			t.Logf("Testing: %s - %s", tc.Tool, tc.Desc)
 
 			// Use a longer timeout for LLM calls (2 minutes)
@@ -156,7 +374,44 @@ func TestLLMGroundTruth(t *testing.T) {
 				validateGitHubRecipe(t, tc, generated, expected)
 			}
 		})
+
+		if passed {
+			results[subtestName] = "pass"
+		} else {
+			results[subtestName] = "fail"
+		}
 	}
+
+	// Log summary
+	passCount := 0
+	for _, status := range results {
+		if status == "pass" {
+			passCount++
+		}
+	}
+	t.Logf("Results: %d/%d passed", passCount, len(results))
+
+	// Handle baseline update or regression check
+	if *updateBaseline {
+		model := providerModel(providerName)
+		if err := writeBaseline(providerName, model, results); err != nil {
+			t.Fatalf("Failed to update baseline: %v", err)
+		}
+		t.Logf("Baseline written for provider %s (%d cases)", providerName, len(results))
+		return
+	}
+
+	// Load baseline for regression comparison
+	baseline, err := loadBaseline(providerName)
+	if err != nil {
+		t.Fatalf("Failed to load baseline: %v", err)
+	}
+	if baseline == nil {
+		t.Logf("No baseline file for provider %s; skipping regression check. Run with -update-baseline to create one.", providerName)
+		return
+	}
+
+	reportRegressions(t, baseline, results)
 }
 
 // validateGitHubRecipe validates a GitHub release recipe

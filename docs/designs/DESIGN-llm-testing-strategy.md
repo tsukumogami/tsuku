@@ -22,8 +22,8 @@ Planned
 
 | Issue | Dependencies | Tier |
 |-------|--------------|------|
-| [#1753: fix(llm): invalidate dead gRPC connections on server crash](https://github.com/tsukumogami/tsuku/issues/1753) | None | testable |
-| _Fix the `LocalProvider.Complete` error path to close and nil out the cached gRPC connection. Without this, the client caches a dead connection after a server crash and all subsequent requests fail._ | | |
+| ~~[#1753: fix(llm): invalidate dead gRPC connections on server crash](https://github.com/tsukumogami/tsuku/issues/1753)~~ | ~~None~~ | ~~testable~~ |
+| ~~_Fix the `LocalProvider.Complete` error path to close and nil out the cached gRPC connection. Without this, the client caches a dead connection after a server crash and all subsequent requests fail._~~ | | |
 | [#1754: test(builders): parameterize ground truth suite for multi-provider support](https://github.com/tsukumogami/tsuku/issues/1754) | None | testable |
 | _Refactor `TestLLMGroundTruth` to detect the active provider from env vars, inject via `WithFactory`/`WithHomebrewFactory`, and compare results against per-provider JSON baselines. Adds `-update-baseline` flag and commits the initial Claude baseline._ | | |
 | [#1755: test(builders): create local provider quality baselines](https://github.com/tsukumogami/tsuku/issues/1755) | [#1754](https://github.com/tsukumogami/tsuku/issues/1754) | simple |
@@ -60,8 +60,9 @@ graph LR
     classDef needsDesign fill:#e1bee7
     classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
 
-    class I1753,I1754,I1757,I1759 ready
-    class I1755,I1756,I1758 blocked
+    class I1753 done
+    class I1754,I1756,I1757,I1759 ready
+    class I1755,I1758 blocked
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design
