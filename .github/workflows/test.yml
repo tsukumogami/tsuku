@@ -290,9 +290,13 @@ jobs:
             llm-model-
 
       - name: Run LLM integration tests
-        env:
-          TSUKU_LLM_MODEL_CACHE: ~/.cache/tsuku-llm-models
-        run: go test -tags=integration -v ./internal/llm/...
+        # Set TSUKU_LLM_MODEL_CACHE via shell so $HOME is expanded at runtime.
+        # The env: block passes values as literals (no shell expansion), and
+        # Go's os.Getenv does not expand ~, so using ~ there would break.
+        # actions/cache (above) handles ~ expansion on its own.
+        run: |
+          export TSUKU_LLM_MODEL_CACHE="$HOME/.cache/tsuku-llm-models"
+          go test -tags=integration -v ./internal/llm/...
 
   # Detect changes and generate test matrices
   # Skip integration tests when only documentation files change
