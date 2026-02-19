@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-02-19T09:49:27Z",
+  "generated_at": "2026-02-19T10:47:37Z",
   "queue": {
     "total": 5275,
     "by_status": {
@@ -37827,8 +37827,8 @@
       "timestamp": "2026-02-19T08:54:36Z"
     },
     {
-      "id": "batch-2026-02-19T08-54-36Z-agent-browser",
-      "package": "agent-browser",
+      "id": "batch-2026-02-19T08-54-36Z-bash-language-server",
+      "package": "bash-language-server",
       "ecosystem": "batch",
       "category": "deterministic",
       "subcategory": "install_failed",
@@ -37857,8 +37857,8 @@
       "timestamp": "2026-02-19T08:54:36Z"
     },
     {
-      "id": "batch-2026-02-19T08-54-36Z-bash-language-server",
-      "package": "bash-language-server",
+      "id": "batch-2026-02-19T08-54-36Z-agent-browser",
+      "package": "agent-browser",
       "ecosystem": "batch",
       "category": "deterministic",
       "subcategory": "install_failed",
@@ -37925,8 +37925,8 @@
       "timestamp": "2026-02-19T08:42:59.121683313Z"
     },
     {
-      "id": "batch-2026-02-18T15-51-38Z-addons-linter",
-      "package": "addons-linter",
+      "id": "batch-2026-02-18T15-51-38Z-advancecomp",
+      "package": "advancecomp",
       "ecosystem": "batch",
       "category": "deterministic",
       "subcategory": "install_failed",
@@ -37934,7 +37934,9 @@
       "platform": "multiple",
       "platforms": [
         "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
+        "linux-alpine-musl-x86_64",
+        "linux-rhel-glibc-arm64",
+        "linux-rhel-glibc-x86_64"
       ],
       "batch_id": "batch-2026-02-18T15-51-38Z",
       "timestamp": "2026-02-18T15:51:38Z"
@@ -37962,8 +37964,8 @@
       "timestamp": "2026-02-18T15:51:38Z"
     },
     {
-      "id": "batch-2026-02-18T15-51-38Z-advancecomp",
-      "package": "advancecomp",
+      "id": "batch-2026-02-18T15-51-38Z-actions-up",
+      "package": "actions-up",
       "ecosystem": "batch",
       "category": "deterministic",
       "subcategory": "install_failed",
@@ -37971,16 +37973,14 @@
       "platform": "multiple",
       "platforms": [
         "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64",
-        "linux-rhel-glibc-arm64",
-        "linux-rhel-glibc-x86_64"
+        "linux-alpine-musl-x86_64"
       ],
       "batch_id": "batch-2026-02-18T15-51-38Z",
       "timestamp": "2026-02-18T15:51:38Z"
     },
     {
-      "id": "batch-2026-02-18T15-51-38Z-actions-up",
-      "package": "actions-up",
+      "id": "batch-2026-02-18T15-51-38Z-addons-linter",
+      "package": "addons-linter",
       "ecosystem": "batch",
       "category": "deterministic",
       "subcategory": "install_failed",
@@ -38758,8 +38758,8 @@
       "timestamp": "2026-02-18T04:27:04.521891344Z"
     },
     {
-      "id": "homebrew-2026-02-08T02-37-10Z-sd",
-      "package": "sd",
+      "id": "homebrew-2026-02-08T02-37-10Z-xh",
+      "package": "xh",
       "ecosystem": "homebrew",
       "category": "deterministic",
       "subcategory": "install_failed",
@@ -38773,8 +38773,8 @@
       "timestamp": "2026-02-08T02:37:10Z"
     },
     {
-      "id": "homebrew-2026-02-08T02-37-10Z-xh",
-      "package": "xh",
+      "id": "homebrew-2026-02-08T02-37-10Z-sd",
+      "package": "sd",
       "ecosystem": "homebrew",
       "category": "deterministic",
       "subcategory": "install_failed",
@@ -39054,7 +39054,7 @@
       "category": "deterministic",
       "subcategory": "install_failed",
       "exit_code": 6,
-      "platform": "linux-alpine-musl-arm64",
+      "platform": "linux-alpine-musl-x86_64",
       "timestamp": "2026-02-06T20:45:08Z"
     },
     {
@@ -39064,7 +39064,7 @@
       "category": "deterministic",
       "subcategory": "install_failed",
       "exit_code": 6,
-      "platform": "linux-alpine-musl-x86_64",
+      "platform": "linux-alpine-musl-arm64",
       "timestamp": "2026-02-06T20:45:08Z"
     },
     {
@@ -39160,8 +39160,8 @@
       "timestamp": "2026-02-06T20:42:23.416796652Z"
     },
     {
-      "id": "homebrew-2026-02-06T19-07-05Z-websocat",
-      "package": "websocat",
+      "id": "homebrew-2026-02-06T19-07-05Z-asciinema",
+      "package": "asciinema",
       "ecosystem": "homebrew",
       "category": "deterministic",
       "subcategory": "install_failed",
@@ -39230,8 +39230,8 @@
       "timestamp": "2026-02-06T19:07:05Z"
     },
     {
-      "id": "homebrew-2026-02-06T19-07-05Z-asciinema",
-      "package": "asciinema",
+      "id": "homebrew-2026-02-06T19-07-05Z-websocat",
+      "package": "websocat",
       "ecosystem": "homebrew",
       "category": "deterministic",
       "subcategory": "install_failed",
@@ -39804,8 +39804,8 @@
     "ecosystems": {
       "crates.io": {
         "breaker_state": "closed",
-        "failures": 2,
-        "last_failure": "2026-02-19T09:49:05Z"
+        "failures": 3,
+        "last_failure": "2026-02-19T10:47:14Z"
       },
       "github": {
         "breaker_state": "closed",
@@ -39820,13 +39820,13 @@
       },
       "npm": {
         "breaker_state": "closed",
-        "failures": 1,
-        "last_failure": "2026-02-19T09:49:05Z"
+        "failures": 2,
+        "last_failure": "2026-02-19T10:47:14Z"
       },
       "rubygems": {
         "breaker_state": "closed",
-        "failures": 2,
-        "last_failure": "2026-02-19T09:49:05Z"
+        "failures": 3,
+        "last_failure": "2026-02-19T10:47:14Z"
       }
     },
     "last_run": {
@@ -39836,7 +39836,7 @@
         "npm": 1,
         "rubygems": 4
       },
-      "timestamp": "2026-02-19T09:49:06Z",
+      "timestamp": "2026-02-19T10:47:15Z",
       "succeeded": 0,
       "failed": 0,
       "total": 0
@@ -39854,9 +39854,22 @@
       "total": 4,
       "recipes_merged": 4
     },
-    "runs_since_last_success": 1
+    "runs_since_last_success": 2
   },
   "runs": [
+    {
+      "batch_id": "2026-02-19",
+      "ecosystems": {
+        "crates.io": 5,
+        "npm": 1,
+        "rubygems": 4
+      },
+      "total": 0,
+      "merged": 0,
+      "rate": 0,
+      "duration": 8,
+      "timestamp": "2026-02-19T10:47:15Z"
+    },
     {
       "batch_id": "2026-02-19",
       "ecosystems": {
@@ -39962,14 +39975,6 @@
       "rate": 1,
       "duration": 8,
       "timestamp": "2026-02-18T14:41:33Z"
-    },
-    {
-      "batch_id": "2026-02-18",
-      "total": 0,
-      "merged": 0,
-      "rate": 0,
-      "duration": 6,
-      "timestamp": "2026-02-18T14:13:16Z"
     }
   ],
   "disambiguations": {
