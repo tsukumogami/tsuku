@@ -38,8 +38,8 @@ Planned
 | ~~_Reorders the CLI's `classifyInstallError()` so dependency errors get exit code 8, adds exit code 3 to the orchestrator's category mapping, and extracts `blocked_by` from generate-phase output. Establishes the regex pattern and validation logic that the remediation tool and dashboard fixes build on._~~ | | |
 | ~~[#1766: feat(batch): add remediation tool for misclassified failure records](https://github.com/tsukumogami/tsuku/issues/1766)~~ | ~~[#1765](https://github.com/tsukumogami/tsuku/issues/1765)~~ | ~~testable~~ |
 | ~~_Patches hundreds of existing failure records that were misclassified as `validation_failed` with empty `blocked_by`. Flips corresponding queue entries from `failed` to `blocked` and regenerates the dashboard so operators see accurate data immediately._~~ | | |
-| [#1767: fix(dashboard): compute transitive blocker impact with normalized keys](https://github.com/tsukumogami/tsuku/issues/1767) | [#1765](https://github.com/tsukumogami/tsuku/issues/1765) | testable |
-| _Rewrites `computeTransitiveBlockers()` to normalize blocker keys (stripping ecosystem prefixes) and compute recursive impact with cycle detection. Adds `direct_count` and `total_count` fields to the Blocker struct and updates the frontend to display `total_count` as the primary metric._ | | |
+| ~~[#1767: fix(dashboard): compute transitive blocker impact with normalized keys](https://github.com/tsukumogami/tsuku/issues/1767)~~ | ~~[#1765](https://github.com/tsukumogami/tsuku/issues/1765)~~ | ~~testable~~ |
+| ~~_Rewrites `computeTransitiveBlockers()` to normalize blocker keys (stripping ecosystem prefixes) and compute recursive impact with cycle detection. Adds `direct_count` and `total_count` fields to the Blocker struct and updates the frontend to display `total_count` as the primary metric._~~ | | |
 
 ### Dependency Graph
 
@@ -65,7 +65,7 @@ graph LR
 
     class I1765 done
     class I1766 done
-    class I1767 ready
+    class I1767 done
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design
