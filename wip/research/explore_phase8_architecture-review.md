@@ -1,215 +1,155 @@
-# Architecture Review: DESIGN-gpu-backend-selection.md
+# Architecture Review: DESIGN-gpu-backend-selection.md (Revised Design)
 
-## Review Scope
+**Reviewer**: Architect Reviewer
+**Date**: 2026-02-19
+**Design Status**: Proposed (revised -- platform extension + addon-to-recipe conversion)
 
-Full architectural soundness review of the GPU backend selection design document before commit. Verified all claims against the current codebase at commit `57f5c1b8`.
+## Summary
 
----
+The revised design extends the platform detection system with GPU vendor identification and converts tsuku-llm from an addon-with-embedded-manifest into a standard recipe. Both directions are architecturally sound and follow established patterns. The platform extension mirrors the libc detection pattern closely. The addon-to-recipe migration eliminates the only non-recipe binary distribution path in tsuku.
 
-## 1. Is the architecture clear enough to implement?
-
-**Yes, with two gaps that need closing before implementation.**
-
-The design correctly identifies the three-step change: manifest schema expansion, Go-side GPU detection, and variant-aware path construction. The component change list (`internal/llm/addon/`) maps directly to existing files, and the new files (`detect.go`, `detect_linux.go`, etc.) follow Go build-tag conventions for platform-specific code.
-
-### Gap 1: AddonManager state management after detection
-
-The design says `EnsureAddon()` will call `DetectBackend()` and then look up the variant in the manifest. But it doesn't specify how the `AddonManager` stores the selected backend internally. Currently, `AddonManager` has `homeDir` and `cachedPath` fields. After detection, the manager needs to remember the selected backend for:
-
-- Constructing `BinaryPath()` (needs backend segment)
-- `verifyBinary()` (needs to look up the right variant's SHA256)
-- `.variant` file writes
-
-The design should specify that `AddonManager` gains a `backend string` field set during `EnsureAddon()`, and that `BinaryPath()`, `AddonDir()`, and `verifyBinary()` use it. Without this, implementers will either thread the backend through every method (verbose) or invent their own storage pattern (divergence risk).
-
-### Gap 2: DetectBackend signature and config loading
-
-The design shows `DetectBackend(configOverride string) string` but also says the config override comes from `llm.backend` in `$TSUKU_HOME/config.toml`. Who loads the config? The addon package currently has no dependency on `userconfig`. Two options:
-
-1. The caller (`local.go` or `factory.go`) loads the config and passes the override string to `DetectBackend()`.
-2. `DetectBackend()` imports `userconfig` and loads it itself.
-
-Option 1 is correct per the existing dependency direction (`llm` -> `addon`, `llm` -> `userconfig`). The design should make this explicit to prevent someone from adding a `userconfig` import into the `addon` package, which would be a dependency direction violation (lower-level package importing higher-level config).
+Six findings total: two blocking, four advisory.
 
 ---
 
-## 2. Are there missing components or interfaces?
+## Finding 1: `NewTarget` and `NewMatchTarget` signature change cascade is under-scoped
 
-### Missing: LLMConfig interface update
+**Severity: Blocking**
 
-The `llm.Factory` accepts an `LLMConfig` interface (defined in `factory.go:22`):
+Adding a `gpu` field to `platform.Target` requires changing the constructor from `NewTarget(platform, linuxFamily, libc string)` to `NewTarget(platform, linuxFamily, libc, gpu string)`. The design acknowledges this at line 584 ("any code that constructs `MatchTarget` or `Target` must be updated") but the implementation phases don't enumerate the affected callsites.
+
+Current callsite count from the codebase:
+
+**`platform.NewTarget()`** -- approximately 49 callsites:
+- `/home/dangazineu/dev/workspace/tsuku/tsuku-5/public/tsuku/internal/executor/plan_generator.go:111` -- primary plan generation path
+- `/home/dangazineu/dev/workspace/tsuku/tsuku-5/public/tsuku/internal/executor/plan_generator.go:668` -- dependency plan generation path
+- `/home/dangazineu/dev/workspace/tsuku/tsuku-5/public/tsuku/cmd/tsuku/sysdeps.go:210,212` -- CLI system deps command
+- `/home/dangazineu/dev/workspace/tsuku/tsuku-5/public/tsuku/cmd/tsuku/info.go:447` -- CLI info command
+- 20+ test files across `internal/executor/filter_test.go`, `internal/sandbox/`, `internal/verify/`, `internal/actions/system_action_test.go`
+
+**`recipe.NewMatchTarget()`** -- approximately 27 callsites:
+- `/home/dangazineu/dev/workspace/tsuku/tsuku-5/public/tsuku/internal/executor/executor.go:132` -- runtime execution path
+- Test files across `internal/recipe/`, `internal/executor/`, `internal/actions/`
+
+The two plan generator callsites are the critical production paths. They construct `platform.Target` using `platform.NewTarget()` and pass it to `WhenClause.Matches()` via the `Matchable` interface. If the `gpu` field isn't threaded through here, GPU filtering silently does nothing (GPU value is `""`, no `when.gpu` matches fire).
+
+The `PlanConfig` struct at `/home/dangazineu/dev/workspace/tsuku/tsuku-5/public/tsuku/internal/executor/plan_generator.go:17-62` currently has `OS`, `Arch`, and `LinuxFamily` override fields. It needs a `GPU` field (auto-detect if empty, like `LinuxFamily`). The design's Phase 1 step 10 says "Update plan generator to pass GPU through `PlanConfig`" but doesn't address:
+- The constructor signature change and its 76-callsite cascade
+- The `executor.go:132` execution-time `NewMatchTarget` call
+- The `FilterStepsByTarget` path in `executor/filter.go` that passes `platform.Target` to `WhenClause.Matches()`
+
+**Recommendation**: Phase 1 should explicitly list every production-path callsite that needs GPU threading. Test callsites can pass `""` but must be updated for compilation. This is the largest mechanical change in the design and underestimating it risks a partial implementation that compiles but doesn't actually filter on GPU.
+
+---
+
+## Finding 2: `llm.backend` override creates step matching ambiguity for CUDA
+
+**Severity: Blocking**
+
+The design proposes that `installViaRecipe()` overrides the target's GPU value before plan generation (lines 411-418). The override table shows `llm.backend = cuda` maps to target GPU `"nvidia"`. But the recipe (lines 197-204) maps all GPU vendors to the Vulkan variant:
+
+```toml
+# Vulkan step
+when = { os = ["linux"], arch = "amd64", gpu = ["nvidia", "amd", "intel"] }
+asset_pattern = "tsuku-llm-v{version}-linux-amd64-vulkan"
+```
+
+If a CUDA step is added (lines 457-465):
+
+```toml
+# CUDA step
+when = { os = ["linux"], arch = "amd64", gpu = ["nvidia"] }
+asset_pattern = "tsuku-llm-v{version}-linux-amd64-cuda"
+```
+
+Both steps match when `GPU() == "nvidia"`. The recipe system's `WhenClause` matching is AND-based with all-matching-steps-execute semantics. Looking at `GeneratePlan()` in `/home/dangazineu/dev/workspace/tsuku/tsuku-5/public/tsuku/internal/executor/plan_generator.go:178-208`, every step that passes both implicit constraint and explicit `when` clause filtering is included in the plan. There is no mutual exclusivity mechanism -- both `github_file` steps would execute, downloading both Vulkan and CUDA binaries.
+
+The design acknowledges this at line 577 ("creating potential matching ambiguity") but doesn't resolve it.
+
+Three options:
+
+1. **Keep CUDA out of the recipe.** When `llm.backend = cuda`, the LLM code patches the asset pattern before plan generation rather than relying on when-clause matching. This keeps the recipe clean (no ambiguous steps) and the override in LLM-specific code.
+
+2. **Use separate recipes** (e.g., `tsuku-llm-cuda`). The override resolves the recipe name, not the target GPU.
+
+3. **Add a backend dimension** to `WhenClause`. This generalizes the problem but introduces a new matching concept for a single consumer.
+
+Option 1 is most consistent with the design's stated philosophy of keeping the `llm.backend` override in LLM-specific code. But "modify the target GPU" (the current proposal) is structurally different from "modify the recipe steps" -- the implementation path changes.
+
+**Recommendation**: Resolve before implementation. The recipe as shown (all GPU vendors -> Vulkan, no-GPU -> CPU) works without ambiguity for the default path. Only the CUDA override creates the problem. If CUDA override is deferred to a follow-up, this finding becomes moot for initial implementation.
+
+---
+
+## Finding 3: `WhenClause` serialization and deserialization need GPU support
+
+**Severity: Advisory**
+
+The design shows `WhenClause.Matches()` extension and mentions `IsEmpty()` in Phase 1 step 8. But three additional methods in `/home/dangazineu/dev/workspace/tsuku/tsuku-5/public/tsuku/internal/recipe/types.go` also need updates:
+
+- `IsEmpty()` (line 248): must check `len(w.GPU) == 0`
+- `UnmarshalTOML()` (line 367): needs GPU array parsing block following the libc pattern (lines 431-444)
+- `ToMap()` (line 489): needs GPU serialization block following the libc pattern (lines 519-521)
+
+Phase 1 step 8 says "update `Matches()`, `IsEmpty()`, and TOML unmarshaling" which covers two of three. `ToMap()` isn't mentioned. The `MergeWhenClause()` function at line 584 also needs consideration -- it merges implicit constraints with explicit when clauses, and `Constraint` at line 549 doesn't have a GPU field. The design's Phase 1 step 9 says "Update `MergeWhenClause()` for GPU constraint checking" but `recipe.Constraint` (distinct from `actions.Constraint`) would need a GPU field for this to work, which is a deeper change than the design implies.
+
+This is advisory because the libc pattern is clear precedent and an implementer following it will discover these naturally.
+
+---
+
+## Finding 4: Addon package dependency direction needs care
+
+**Severity: Advisory**
+
+The design proposes that `EnsureAddon()` calls `installViaRecipe()`, which "reuses the existing executor pipeline" (line 409). Currently, `/home/dangazineu/dev/workspace/tsuku/tsuku-5/public/tsuku/internal/llm/addon/` has no dependency on `internal/executor/` or `internal/recipe/`. The dependency flows through `cmd/tsuku/` which orchestrates both.
+
+If `installViaRecipe()` is implemented by having `addon/manager.go` import `internal/executor/`, that creates a new dependency from a specialized package to core infrastructure. Not inherently wrong, but it increases coupling.
+
+The design's Phase 2 step 3 mentions adding `LLMBackend() string` to the `LLMConfig` interface in `factory.go`. Similarly, the `AddonManager` should accept an `Installer` interface (e.g., `Install(ctx context.Context, recipeName string) error`) injected at construction time, rather than importing the executor directly. The CLI layer provides the concrete implementation.
+
+This keeps `addon/`'s dependency set narrow and follows the existing pattern where `cmd/tsuku/` is the composition root.
+
+---
+
+## Finding 5: `DetectTarget()` restructuring for non-Linux paths
+
+**Severity: Advisory**
+
+The design's `DetectTarget()` sketch (lines 324-336) correctly calls `DetectGPU()` unconditionally and routes non-Linux through `NewTarget(platform, "", "", gpu)`. But the current code at `/home/dangazineu/dev/workspace/tsuku/tsuku-5/public/tsuku/internal/platform/family.go:125-126` bypasses `NewTarget()` entirely on non-Linux:
 
 ```go
-type LLMConfig interface {
-    LLMEnabled() bool
-    LLMLocalEnabled() bool
-    LLMIdleTimeout() time.Duration
-    LLMProviders() []string
+if runtime.GOOS != "linux" {
+    return Target{Platform: platform}, nil
 }
 ```
 
-The `userconfig.Config` struct implements this interface. Adding `llm.backend` to userconfig means adding `LLMBackend() string` to the interface so the factory can pass it through. The design doesn't mention this interface, but the factory is the natural place to thread the config value from userconfig down to the addon manager.
-
-### Missing: userconfig.Get/Set for llm.backend
-
-The design says `llm.backend` is set via `tsuku config set llm.backend cpu`. The `Get()` and `Set()` methods in `userconfig.go` use a switch statement for known keys. A new `llm.backend` case needs to be added to both methods, plus the `LLMConfig` struct needs a `Backend` field, plus `AvailableKeys()` needs the entry. This is straightforward but the design should enumerate it in Phase 2 step 4 ("Add `llm.backend` config key to userconfig") to avoid an incomplete implementation.
-
-### Not missing but worth confirming: No CLI surface changes needed
-
-The design correctly avoids adding new CLI subcommands. `tsuku config set llm.backend cuda` works through the existing `config set` command once the userconfig key is registered. No CLI surface duplication.
+This direct struct literal construction means GPU won't flow into the target on macOS unless this early return is restructured to use `NewTarget()`. The design shows the correct restructured code, so this isn't a gap in intent. Worth noting because the restructuring changes the non-Linux path from a simple struct literal to a `NewTarget()` call, and the macOS test coverage for this path should be verified.
 
 ---
 
-## 3. Are the implementation phases correctly sequenced?
+## Finding 6: PCI sysfs edge cases
 
-**Phase ordering is correct but Phase 1 scope is too large.**
+**Severity: Advisory**
 
-Phase 1 combines manifest schema changes with legacy cleanup. These are both foundational but independent -- the manifest schema can change without removing `AddonPath()`, and `AddonPath()` can be refactored without changing the manifest schema. Combining them means Phase 1 touches both the data contract (manifest.json, Go types) and the caller contract (lifecycle.go, local.go). If either part has issues, the entire phase blocks.
+The design's detection approach is solid. Edge cases to address during implementation:
 
-**Recommendation**: Split Phase 1 into Phase 1a (legacy cleanup: remove `AddonPath()`, update `NewServerLifecycleWithManager()`) and Phase 1b (manifest schema + types). Phase 1a can ship and be verified independently. This reduces blast radius.
+- **Containers without PCI passthrough**: `/sys/bus/pci/devices/` may be empty or absent. `filepath.Glob` returns nil on no matches, so `DetectGPU()` naturally returns `"none"`. No special handling needed, but the function's doc comment should mention this.
 
-Phase 2 correctly depends on Phase 1 (needs the new manifest types to look up variants). Phase 3 (Rust error reporting) is correctly independent -- it can ship before or after Phase 2 since it's purely additive stderr output. Phase 4 (testing) should run throughout, not as a terminal phase, but that's a process concern not an architecture issue.
+- **Multiple discrete GPUs** (e.g., NVIDIA + AMD in a workstation): The design's priority order (NVIDIA > AMD > Intel) is reasonable for LLM use. Should be documented as a deliberate choice, not an implementation detail, since it affects which binary users get.
 
----
+- **Class code coverage**: The design lists `0x0300xx` (VGA) and `0x0302xx` (3D controller). NVIDIA Tesla/datacenter GPUs use `0x0302`. Some compute accelerators use `0x0380xx` (other display controller). The initial implementation should cover `0x0300` and `0x0302`; `0x0380` can be added if needed.
 
-## 4. Is the variant tracking (.variant file) approach sound?
-
-**Sound but slightly over-engineered for the initial scope. It works, but there's a simpler option the design should consider and reject explicitly.**
-
-The `.variant` file solves this problem: `verifyBinary()` needs to know which variant's SHA256 to check against, and the selected backend might change between runs (user changes `llm.backend` config). Without tracking, the manager would re-run detection, get a different result, and fail verification against the wrong checksum.
-
-**Simpler alternative**: Encode the backend in the directory path (`<version>/<backend>/tsuku-llm`), which the design already proposes. Then `verifyBinary()` can extract the backend from the path itself -- the parent directory name IS the variant. No `.variant` file needed.
-
-The directory layout `$TSUKU_HOME/tools/tsuku-llm/0.2.0/vulkan/tsuku-llm` already contains the variant information. When `verifyBinary(path)` is called, it can do:
-
-```go
-backend := filepath.Base(filepath.Dir(path))  // "vulkan"
-info, err := manifest.GetVariantInfo(PlatformKey(), backend)
-```
-
-This eliminates the `.variant` file entirely. The path is the source of truth.
-
-The `.variant` file would only add value if the backend weren't already in the path, or if we needed metadata beyond the backend name. Since the design proposes both the directory layout AND the `.variant` file, one of them is redundant.
-
-**Recommendation**: Drop the `.variant` file. Derive the variant from the directory structure. This removes a write-then-read coordination point and a file that could become stale.
+- **Permissions**: Confirmed that `/sys/bus/pci/devices/*/class` and `*/vendor` are world-readable (`0444`) on all major distributions. No privilege escalation needed.
 
 ---
 
-## 5. Should AddonPath removal happen before or in parallel with manifest changes?
+## Structural Assessment
 
-**Before. The design gets this right.**
+The revised design makes two architecturally sound decisions:
 
-`AddonPath()` at `manager.go:232` constructs a path without the backend segment. `NewServerLifecycleWithManager()` at `lifecycle.go:71` calls `AddonPath()` to set `addonPath`. If the manifest changes deploy first (new directory layout with backend segment), then `AddonPath()` would construct wrong paths and `NewServerLifecycleWithManager()` would break.
+1. **GPU detection follows the libc pattern exactly.** Same detection-at-target-time flow, same `Matchable` interface extension, same `WhenClause` field addition, same plan generator threading. No parallel mechanisms introduced. The code at `/home/dangazineu/dev/workspace/tsuku/tsuku-5/public/tsuku/internal/platform/libc.go` establishes the pattern and `/home/dangazineu/dev/workspace/tsuku/tsuku-5/public/tsuku/internal/recipe/types.go:302-315` shows how `WhenClause.Matches()` consumes it. The GPU extension is a direct extension of both.
 
-The design's proposed fix is also correct: `NewServerLifecycleWithManager()` should accept the binary path from `EnsureAddon()` rather than computing it independently. Looking at the call chain:
+2. **Addon-to-recipe conversion eliminates divergence.** The addon's embedded manifest (`manifest.go`), custom platform keys (`platform.go:11` -- `GOOS + "-" + GOARCH` vs the recipe system's `GOOS + "/" + GOARCH`), download code (`download.go`), and verification code (`verify.go`) are a parallel distribution path. Removing them in favor of the recipe system reduces the number of binary distribution paths from 2 to 1.
 
-1. `local.go:39` - `NewLocalProviderWithTimeout()` creates an `AddonManager` and calls `NewServerLifecycleWithManager(socketPath, addonManager)`
-2. `lifecycle.go:71` - `NewServerLifecycleWithManager()` calls `addon.AddonPath()` to get `addonPath`
-3. `local.go:57` - `Complete()` calls `p.addonManager.EnsureAddon()` which downloads and returns the path
-4. `local.go:62` - `Complete()` calls `p.lifecycle.EnsureRunning()` which uses the `addonPath` from step 2
+The two blocking findings are implementation-level design gaps, not architectural direction problems. Finding 1 (constructor cascade) is mechanical but must be planned explicitly because of the 76-callsite impact. Finding 2 (CUDA override ambiguity) is a design tension that the simplest fix is to defer the CUDA step to a follow-up, making the initial recipe unambiguous.
 
-There's a subtle timing issue here: `NewServerLifecycleWithManager()` sets `addonPath` at construction time (before download), but `EnsureAddon()` determines the actual path at download time. The current code works because the path is deterministic (version from manifest). With backends, the path depends on detection results, which aren't available at construction time.
-
-The fix: `ServerLifecycle` should accept the binary path lazily (at `EnsureRunning` time, not at construction time). The simplest change: `NewServerLifecycleWithManager()` takes the manager and resolves the path when `EnsureRunning()` is called, after `EnsureAddon()` has already run. The design mentions this but doesn't spell out the timing dependency explicitly.
-
----
-
-## 6. Directory layout analysis
-
-**The proposed layout `$TSUKU_HOME/tools/tsuku-llm/<version>/<backend>/` is sound.**
-
-Current layout:
-```
-$TSUKU_HOME/tools/tsuku-llm/<version>/tsuku-llm
-```
-
-Proposed layout:
-```
-$TSUKU_HOME/tools/tsuku-llm/<version>/<backend>/tsuku-llm
-```
-
-This is a clean extension. The version dimension already exists; adding the backend dimension underneath it is the right ordering because:
-
-1. Version upgrades are more common than backend switches. Cleaning up old versions means deleting `<version>/` directories, which correctly removes all backend variants for that version.
-2. The lock file (`<version>/<backend>/.download.lock`) scopes correctly -- two different backends can download concurrently without contention.
-3. Disk usage is bounded: at most 3 variants per version (CUDA, Vulkan, CPU) on Linux. Most users will have 1.
-
-One concern: the existing download lock path is `filepath.Join(dir, ".download.lock")` where `dir = filepath.Dir(destPath)`. With the new layout, this resolves to `<version>/<backend>/.download.lock`. Two processes downloading different backends would use different lock files, which is correct (no false contention). Two processes downloading the same backend would share a lock file, which is also correct (prevents duplicate downloads).
-
----
-
-## 7. Caller inventory verification
-
-The design says "every function that looks up platform info" must change. Verified callers of the current manifest API:
-
-| Caller | Location | Impact |
-|--------|----------|--------|
-| `GetCurrentPlatformInfo()` | `platform.go:25` | Must change to accept backend parameter |
-| `EnsureAddon()` | `manager.go:111` | Calls `GetCurrentPlatformInfo()`, needs backend |
-| `verifyBinary()` | `manager.go:156` | Calls `GetCurrentPlatformInfo()`, needs backend |
-| `GetPlatformInfo()` tests | `manager_test.go:30,40` | Must update to new API |
-| `NewServerLifecycleWithManager()` | `lifecycle.go:71` | Calls `addon.AddonPath()`, must change |
-
-No callers in `cmd/tsuku/`. The addon package is only consumed by `internal/llm/`. This limits the blast radius.
-
-**Confirmed**: the design correctly accounts for all callers. The `lifecycle.go:71` caller via `AddonPath()` is explicitly called out for cleanup.
-
----
-
-## 8. Scope boundary assessment
-
-### Correctly deferred: Vulkan VRAM detection
-
-The Vulkan VRAM bug is a Rust-side issue in `hardware.rs`. Fixing it requires changes to the Rust binary, not the Go download/selection code. The design correctly scopes this out.
-
-### Correctly deferred: Automatic runtime fallback
-
-The design argues this adds `BackendFailedError` types, exit code changes, process monitoring, and retry logic. Looking at `waitForReady()` in `lifecycle.go:218`, the current implementation polls for socket availability with a 10-second timeout. Adding fallback would mean: detect failure type -> re-run `EnsureAddon()` with different backend -> restart process. This touches `EnsureRunning()`, `waitForReady()`, and `EnsureAddon()` -- three methods across two packages. Deferring is the right call for initial scope.
-
-### Correctly deferred: Windows GPU support
-
-Only a CPU variant exists for Windows. No detection logic needed.
-
-### Benchmark gate: Actionable
-
-The 25% threshold on tokens/second is concrete and measurable. The benchmark doesn't need infrastructure -- it's "run both variants on the same machine, compare throughput." The gate is: don't mark the design Current until this benchmark is done. This prevents shipping a default that's too slow without blocking the implementation work.
-
----
-
-## Findings Summary
-
-### Blocking
-
-**1. Dependency direction risk for DetectBackend config loading.**
-The design should explicitly state that the config override for `llm.backend` is loaded by the caller (in `internal/llm/`) and passed as a string to `DetectBackend()` in the `addon` package. Without this, an implementer could import `userconfig` into the `addon` package, creating a dependency direction violation (lower-level package importing higher-level config). The `addon` package currently has zero imports outside stdlib + the `progress` package.
-
-**Severity**: Blocking. If someone adds `userconfig` to `addon`'s imports, every future `addon` consumer inherits the `userconfig` dependency, and the package can no longer be used independently.
-
-### Advisory
-
-**2. `.variant` file is redundant with the directory layout.**
-The proposed directory layout already encodes the backend: `<version>/<backend>/tsuku-llm`. The `.variant` file duplicates this information. Deriving the backend from `filepath.Base(filepath.Dir(binaryPath))` is simpler and eliminates a file coordination point. If the design wants to keep the `.variant` file for forward compatibility (e.g., future metadata), it should state that rationale explicitly.
-
-**Severity**: Advisory. The `.variant` file works and doesn't break anything, but it's unnecessary complexity that a future implementer might copy as a pattern for other metadata tracking when the path convention would suffice.
-
-**3. Phase 1 scope is large; consider splitting.**
-Phase 1 combines legacy cleanup (AddonPath removal, lifecycle refactor) with schema changes (manifest types, variant lookup). These are independent changes. Splitting reduces risk and makes review easier. Not blocking because the combined phase is still coherent and a single PR could handle it.
-
-**Severity**: Advisory.
-
-**4. Missing `LLMConfig` interface update and userconfig registration.**
-Phase 2 step 4 says "Add `llm.backend` config key to userconfig" but doesn't mention the `LLMConfig` interface in `factory.go:22` that `userconfig.Config` implements. Adding `LLMBackend() string` to the interface is necessary for the factory to thread the value to the addon manager. The design should list this explicitly.
-
-**Severity**: Advisory. An implementer reading the factory code will discover this naturally, but listing it prevents a partial implementation in the first PR.
-
-**5. Lazy path resolution in ServerLifecycle.**
-The design says `NewServerLifecycleWithManager()` should accept the binary path from the caller, but the real problem is timing: the binary path isn't known until `EnsureAddon()` runs (which happens in `Complete()`), but `ServerLifecycle` is constructed in `NewLocalProviderWithTimeout()` (before any `Complete()` call). The design should specify that `ServerLifecycle.addonPath` is set lazily, either by having `EnsureRunning()` accept a path parameter or by having the lifecycle query the manager.
-
-**Severity**: Advisory. The design's direction is correct ("accept the binary path from `EnsureAddon()` instead of computing it independently") but the mechanism needs clarification to avoid a construction-time vs. use-time mismatch.
-
-### Out of Scope
-
-- Code style and naming choices (maintainer concern)
-- Whether the 25% benchmark threshold is the right number (product decision)
-- Test coverage completeness (tester concern)
-- Whether Vulkan default is the right product choice (product decision)
+The overall direction is correct. The platform extension is the right place for GPU awareness, the recipe system is the right distribution mechanism, and the addon lifecycle code correctly stays separate since daemon management has no recipe equivalent.

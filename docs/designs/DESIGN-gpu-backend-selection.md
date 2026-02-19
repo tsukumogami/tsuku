@@ -1,11 +1,24 @@
 ---
 status: Proposed
 problem: |
-  The tsuku-llm addon builds 10 platform variants across GPU backends (CUDA, Vulkan, Metal, CPU), but the addon manifest and download system map each OS-architecture pair to a single binary. There's no mechanism to select which GPU variant to download, no hardware probing before download, and no fallback when a GPU backend fails at runtime. Users with NVIDIA GPUs get the wrong binary, and CUDA driver mismatches fail silently.
+  The tsuku-llm addon builds 10 platform variants across GPU backends (CUDA, Vulkan, Metal, CPU),
+  but the addon download system maps each OS-architecture pair to a single binary. There's no way
+  to select which GPU variant to download, and more broadly, tsuku has no awareness of GPU hardware
+  at the platform level. This prevents both the addon and any future recipes from filtering on GPU
+  capabilities the way they already filter on OS, architecture, and libc.
 decision: |
-  Expand the manifest schema to a two-level lookup (platform then backend variant) and add Go-side GPU library probing before download to select the right variant. Vulkan is the preferred GPU backend on Linux to avoid CUDA driver version coupling, with CUDA available as a user override. Automatic runtime fallback is deferred to a follow-up design after measuring detection accuracy in practice.
+  Extend the platform detection system with GPU vendor identification (via PCI sysfs on Linux,
+  system profiler on macOS) and add a gpu field to WhenClause for recipe step filtering. Then
+  convert tsuku-llm from a custom addon-with-embedded-manifest into a standard recipe that uses
+  when clauses for variant selection, with GPU driver packages as library recipe dependencies.
+  The addon lifecycle code (server start/stop, gRPC, health checks) stays separate from the recipe.
 rationale: |
-  Go-side library probing is fast, requires no extra downloads, and catches the common case (GPU libraries present on disk). Vulkan as default avoids the CUDA toolkit/driver version matrix that caused silent failures on development machines. Separate per-backend binaries (already built by CI) keep downloads small and supply chain verification simple. Deferring automatic runtime fallback keeps the initial scope tight while the config override provides a manual escape hatch for detection errors.
+  GPU detection follows the same pattern as libc detection: read a system file, return a
+  string, match it in when clauses. Reusing the existing platform and recipe infrastructure
+  means no new schema formats, no custom manifest, and any future tool that needs GPU filtering
+  gets it for free. Converting tsuku-llm to a recipe also removes the only non-recipe binary
+  distribution path in tsuku, simplifying the codebase. The addon lifecycle code stays because
+  daemon management has no recipe equivalent, but binary installation moves to the standard flow.
 ---
 
 # Design Document: GPU Backend Selection
@@ -38,199 +51,221 @@ The tsuku-llm addon delivers local LLM inference by bundling llama.cpp in a Rust
 
 But the addon download system has a 1:1 mapping from `GOOS-GOARCH` to a single binary URL. The manifest schema, embedded in the Go binary via `//go:embed`, has no backend dimension. `PlatformKey()` returns `runtime.GOOS + "-" + runtime.GOARCH` and that's the only key used to look up download info.
 
-This creates several concrete problems:
+This creates concrete problems:
 
-**Wrong binary for the hardware.** On Linux, there's no way to specify whether to download the CUDA, Vulkan, or CPU variant. The manifest points to one URL per platform. A user with an NVIDIA GPU gets the same binary as a user with no GPU at all.
+**Wrong binary for the hardware.** On Linux, there's no way to specify whether to download the CUDA, Vulkan, or CPU variant. A user with an NVIDIA GPU gets the same binary as a user with no GPU at all.
 
-**Detection happens too late.** Hardware detection (`hardware.rs`) runs inside the Rust binary at server startup. By that point, the binary is already downloaded. If it was compiled with CUDA but the system only has Vulkan, the detection code correctly identifies Vulkan but the binary can't use it because it was compiled with `--features cuda`.
+**Detection happens too late.** Hardware detection (`hardware.rs`) runs inside the Rust binary at server startup. By that point, the binary is already downloaded. If it was compiled with CUDA but the system only has Vulkan, the detection code correctly identifies Vulkan but the binary can't use it.
 
-**CUDA version coupling.** The CI builds against CUDA 12.4. Users need a compatible NVIDIA driver (>= 525.60). If the driver is older, CUDA initialization fails and the binary silently falls back to CPU with no indication of what happened. We hit this on our own development workstation: `ggml_cuda_init: failed to initialize CUDA: forward compatibility was attempted on non supported HW`.
+**CUDA version coupling.** The CI builds against CUDA 12.4. Users need a compatible NVIDIA driver (>= 525.60). If the driver is older, CUDA initialization fails silently. We hit this on our own development machine: `ggml_cuda_init: failed to initialize CUDA: forward compatibility was attempted on non supported HW`.
 
-**Vulkan VRAM detection returns zero.** `detect_vulkan()` in `hardware.rs` always returns `vram_bytes=0`. The model selector then picks the smallest model (0.5B) for all Vulkan users regardless of actual VRAM. This is a separate bug (tracked independently) but it compounds the backend selection issue: even when Vulkan is correctly selected, the model is under-provisioned.
+**No GPU awareness at the platform level.** Beyond the addon, tsuku has no concept of GPU hardware. The platform detection system (`platform.Target`) knows OS, architecture, Linux distribution family, and libc implementation. But it doesn't know whether the machine has an NVIDIA, AMD, or Intel GPU. This means no recipe can conditionally select download URLs or dependencies based on GPU hardware. The addon works around this with its own embedded manifest, but that's a one-off mechanism that doesn't help other tools or the broader recipe ecosystem.
 
 ### Scope
 
 **In scope:**
-- Manifest schema expansion to support multiple variants per platform
-- Go-side GPU hardware detection before addon download
-- Backend variant selection logic (automatic + user override)
-- Cleanup of deprecated `AddonPath()` and related legacy functions that will break with the new directory layout
+- GPU vendor detection in the `platform` package (Linux sysfs, macOS system profiler)
+- `gpu` field added to `Matchable` interface and `WhenClause`
+- tsuku-llm converted from addon-with-embedded-manifest to standard recipe
+- GPU driver packages (Vulkan loader, CUDA runtime) as library recipes
+- Cleanup of addon manifest/download code (replaced by recipe system)
+- Addon lifecycle code retained for daemon management
 
 **Out of scope:**
-- Automatic runtime fallback when GPU backend fails (deferred until detection accuracy is measured in practice; manual override via `llm.backend` config is the escape hatch)
+- Automatic runtime fallback when GPU backend fails (deferred until detection accuracy is measured; manual override via `llm.backend` config is the escape hatch)
 - Vulkan VRAM detection fix (standalone Rust bug, separate issue)
 - Windows GPU support (only CPU variant exists today)
 - Shipping multiple CUDA versions (e.g., CUDA 11 + CUDA 12)
 - Dynamic backend loading within a single binary (llama.cpp's `GGML_BACKEND_DL` mode)
-- Model selection changes (handled by existing `model.rs` logic once backend/VRAM are correct)
+- General recipe "variant selection" mechanism (tsuku-llm handles override via LLM-specific config)
+- CUDA variant selection (deferred until Vulkan vs CUDA benchmarks are complete; Vulkan serves all GPU vendors initially)
 
 ## Decision Drivers
 
-- **Supply chain security**: Manifest is embedded at compile time. Each variant needs its own SHA256 checksum. Verification flow (download → checksum → chmod → atomic rename) must stay intact.
-- **Self-contained philosophy**: Users shouldn't need to know their GPU backend or install SDKs. Detection should be automatic.
-- **Existing CI pipeline**: 10 variants are already built. The solution should use what exists rather than restructure the build.
-- **Download size**: Binaries are 50-200MB each. Bundling all variants would mean 500MB+ downloads for Linux users.
-- **Correctness over performance**: Better to download the CPU variant that works than the CUDA variant that silently falls back to CPU anyway.
-- **macOS simplicity**: Apple Silicon always uses Metal. Intel Macs use Metal too. No variant selection needed on macOS.
+- **Consistency**: tsuku already has a pattern for platform-specific filtering. Libc detection in the `platform` package feeds `WhenClause.Libc`, and recipes like `gcc-libs.toml` and `openssl.toml` use `when = { libc = ["glibc"] }` to pick the right binary. GPU detection should follow the same pattern rather than inventing a parallel mechanism in the addon package.
+- **Ecosystem value**: Other tools need GPU awareness too. Machine learning frameworks, GPU compute libraries, and graphics tools all have platform-specific binaries. Making GPU a first-class platform dimension lets any recipe filter on it, not just tsuku-llm.
+- **Supply chain security**: Manifest is currently embedded at compile time. Moving to the recipe system changes the security model. Each approach has trade-offs that need explicit analysis.
+- **Self-contained philosophy**: Users shouldn't need to know their GPU vendor or install SDKs manually. Detection should be automatic.
+- **Existing CI pipeline**: 10 variants are already built. The solution should use what exists.
+- **Download size**: Binaries are 50-200MB each. Bundling all variants would mean 500MB+ downloads.
 
 ## Considered Options
 
-### Decision 1: Distribution Model
+### Decision 1: Where GPU Awareness Lives
 
-The release pipeline already builds separate binaries per backend (one for CUDA, one for Vulkan, one for CPU on each Linux architecture). The question is whether to keep shipping separate binaries or consolidate into a single binary that loads backends at runtime.
+GPU variant selection needs to happen somewhere. The question is whether it lives in the addon package (tool-specific) or the platform package (system-wide).
 
-This matters because it determines whether we need manifest schema changes at all, and it directly affects download size and supply chain verification complexity.
+The addon currently has its own manifest, its own platform key format (`linux-amd64` vs the recipe system's `linux/amd64`), its own download and verification code, and zero overlap with the recipe system. Adding GPU detection to the addon would mean writing detection code that only benefits tsuku-llm. Adding it to the platform package makes it available to every recipe.
 
-#### Chosen: Separate per-backend binaries
+#### Chosen: Extend the platform package
 
-Keep the current model where each variant is a distinct binary compiled with exactly one feature flag (`--features cuda`, `--features vulkan`, or no features for CPU). The manifest expands to list all variants. Users download only the one they need.
+Add GPU vendor detection alongside the existing OS, architecture, Linux family, and libc detection. The `platform.Target` struct gains a `gpu` field. `DetectTarget()` gains a GPU detection step. The `Matchable` interface gains a `GPU() string` method.
 
-This fits naturally with the existing CI pipeline, which already produces these separate binaries. Each binary gets its own SHA256 checksum, so the verification flow doesn't change structurally. Download size stays reasonable (one binary per user, not all ten).
+This follows the exact pattern established by libc detection:
+- `DetectLibc()` reads an ELF binary to determine glibc vs musl
+- `DetectGPU()` reads PCI sysfs to determine GPU vendor
+- Both return a string that flows through `Matchable` into `WhenClause.Matches()`
 
-The compile-time guarantee is valuable: a CUDA binary links `libggml-cuda` statically, a Vulkan binary links `libggml-vulkan`. There's no ambiguity about which backend is active. If initialization fails, we know exactly which backend failed.
+The detection runs once per command invocation (same as libc), at `DetectTarget()` time. The result flows into plan generation, where `WhenClause` matching uses it to filter recipe steps.
 
 #### Alternatives Considered
 
-**Single bundled binary (Ollama model)**: Ship one binary per platform that includes all backend libraries. At runtime, probe each backend subprocess-style and use the first one that works.
-Rejected because download size would be 500MB+ for Linux (CUDA libs alone are large), and tsuku-llm isn't a persistent server like Ollama where amortizing a slow first-run probe makes sense. tsuku-llm starts on demand for inference and shuts down after idle timeout. The probe cost would be paid repeatedly.
+**Tool-specific detection in the addon package**: Keep detection in `internal/llm/addon/` with its own manifest schema and download code.
+Rejected because it creates a parallel platform detection path that only benefits one tool. The addon already duplicates platform logic (`PlatformKey()` vs `platform.Target`). Adding GPU detection there deepens the divergence. Any future tool that needs GPU filtering would face the same problem.
 
-**Dynamic backend loading**: Compile the main binary without GPU features, ship backend `.so` files separately, load them at runtime via `GGML_BACKEND_DL`.
-Rejected because this adds path management complexity (where do `.so` files live? how are they verified?), it's not the default mode for llama.cpp releases, and it blurs the supply chain story. Each `.so` would need separate checksum verification and the extraction flow becomes multi-file.
+**No detection (manual config only)**: Require users to set `llm.backend` explicitly.
+Rejected as the sole mechanism because it violates tsuku's self-contained philosophy. Included as an override for edge cases.
 
-### Decision 2: Manifest Schema
+### Decision 2: How to Detect GPU Hardware
 
-The current manifest maps `"GOOS-GOARCH"` to a single `{url, sha256}` pair. We need to add a backend dimension. The schema change affects `manifest.json`, the Go types (`Manifest`, `PlatformInfo`), and every function that looks up platform info.
+The platform package needs to identify what GPU hardware is present. The detection should return the most basic, immutable fact about the system: what GPU vendor's hardware is installed. Not which drivers are loaded, not which APIs are available, just the hardware.
 
-This is the foundational change that everything else builds on. Get it wrong and every downstream component gets more complex.
+This matters because drivers can be installed or removed, but the physical GPU doesn't change. Detecting at the hardware level means the result is stable across driver installations and upgrades.
 
-#### Chosen: Nested variant map with default
+#### Chosen: PCI vendor identification via sysfs (Linux) and system profiler (macOS)
 
-Expand each platform entry to contain a map of backend variants plus a default backend name:
+On Linux, read PCI device information from sysfs:
+1. Scan `/sys/bus/pci/devices/*/class` for display controller class codes (`0x0300xx` for VGA, `0x0302xx` for 3D controller)
+2. For each GPU-class device, read `/sys/bus/pci/devices/*/vendor` for the PCI vendor ID
+3. Map vendor IDs: `0x10de` = NVIDIA, `0x1002` = AMD, `0x8086` = Intel
 
-```json
-{
-  "version": "0.2.0",
-  "platforms": {
-    "darwin-arm64": {
-      "default": "metal",
-      "variants": {
-        "metal": { "url": "...", "sha256": "..." }
-      }
-    },
-    "linux-amd64": {
-      "default": "cpu",
-      "variants": {
-        "cuda": { "url": "...", "sha256": "..." },
-        "vulkan": { "url": "...", "sha256": "..." },
-        "cpu": { "url": "...", "sha256": "..." }
-      }
-    }
-  }
-}
-```
+When multiple GPUs are present (common: Intel iGPU + NVIDIA dGPU), prefer discrete GPUs over integrated. Priority: NVIDIA > AMD > Intel. The result is a single vendor string.
 
-The Go types become:
+On macOS, Apple Silicon always has an Apple GPU. Intel Macs may have AMD discrete GPUs or Intel integrated. Detection uses `system_profiler SPDisplaysDataType` or the IOKit framework.
+
+On Windows, return `"none"` for now (only CPU variant exists).
+
+This approach uses only stdlib filesystem reads. No drivers, no shared libraries, no subprocess spawning. The sysfs files are world-readable and available even before any GPU driver is installed.
+
+**Values returned by `GPU()`**: `nvidia`, `amd`, `intel`, `apple`, `none`
+
+#### Alternatives Considered
+
+**Library file probing** (`os.Stat` on `/usr/lib/libcuda.so`): Check for GPU runtime libraries at known filesystem paths.
+Rejected because it detects software, not hardware. A system with an NVIDIA GPU but no CUDA toolkit would probe as "no GPU." Path lists are distro-specific (Debian puts libraries in `/usr/lib/x86_64-linux-gnu/`, Fedora in `/usr/lib64/`, Arch in `/usr/lib/`). And library presence doesn't mean the library works; CUDA might be installed but the driver version incompatible.
+
+**Shell out to `nvidia-smi` / `lspci`**: Run GPU query tools and parse output.
+Rejected because these tools may not be installed. `nvidia-smi` ships with NVIDIA drivers (not present before driver install), and `lspci` requires the `pciutils` package. Subprocess spawning adds latency and error handling complexity. The sysfs approach gives the same information without external tools.
+
+### Decision 3: How Tools Use GPU Information
+
+With GPU detection in the platform package, the question is how recipes consume it. The existing pattern for platform-specific filtering is `WhenClause` matching: recipe steps declare conditions, the plan generator filters steps that don't match the current target.
+
+The addon currently has its own manifest schema, its own download code, and no connection to the recipe system. There are two paths: extend the addon's custom system, or migrate to the recipe system.
+
+#### Chosen: Extend WhenClause with `gpu` field; convert tsuku-llm to a recipe
+
+Add a `gpu` field to `WhenClause` following the same pattern as `libc`:
 
 ```go
-type Manifest struct {
-    Version   string                    `json:"version"`
-    Platforms map[string]PlatformEntry  `json:"platforms"`
-}
-
-type PlatformEntry struct {
-    Default  string                    `json:"default"`
-    Variants map[string]VariantInfo    `json:"variants"`
-}
-
-type VariantInfo struct {
-    URL    string `json:"url"`
-    SHA256 string `json:"sha256"`
+type WhenClause struct {
+    Platform       []string `toml:"platform,omitempty"`
+    OS             []string `toml:"os,omitempty"`
+    Arch           string   `toml:"arch,omitempty"`
+    LinuxFamily    string   `toml:"linux_family,omitempty"`
+    PackageManager string   `toml:"package_manager,omitempty"`
+    Libc           []string `toml:"libc,omitempty"`
+    GPU            []string `toml:"gpu,omitempty"`            // NEW
 }
 ```
 
-Lookup becomes two-step: `platforms[platformKey].variants[backend]`. The `default` field provides a safe fallback when GPU detection fails or returns an unsupported backend. For macOS, there's only one variant (metal) so the nesting is minimal overhead.
+Matching semantics: if `GPU` is non-empty and the target's `GPU()` returns a non-empty string, the target's GPU value must be in the list. Same AND semantics as other fields.
 
-The schema version bump from the existing format signals to any parsing code that the structure has changed.
+Then convert tsuku-llm from an addon with an embedded manifest into a standard recipe. The recipe uses `when` clauses with the `gpu` field for variant selection:
+
+```toml
+[metadata]
+name = "tsuku-llm"
+description = "Local LLM inference engine"
+
+[version]
+source = "github_releases"
+github_repo = "tsukumogami/tsuku-llm"
+
+# macOS: Metal variant (all Mac GPUs)
+[[steps]]
+action = "github_file"
+when = { os = ["darwin"], arch = "arm64" }
+repo = "tsukumogami/tsuku-llm"
+asset_pattern = "tsuku-llm-v{version}-darwin-arm64"
+
+[[steps]]
+action = "github_file"
+when = { os = ["darwin"], arch = "amd64" }
+repo = "tsukumogami/tsuku-llm"
+asset_pattern = "tsuku-llm-v{version}-darwin-amd64"
+
+# Linux AMD64: Vulkan for any GPU (avoids CUDA driver coupling)
+[[steps]]
+action = "github_file"
+when = { os = ["linux"], arch = "amd64", gpu = ["nvidia", "amd", "intel"] }
+dependencies = ["vulkan-loader"]
+repo = "tsukumogami/tsuku-llm"
+asset_pattern = "tsuku-llm-v{version}-linux-amd64-vulkan"
+
+# Linux AMD64: CPU for systems without a GPU
+[[steps]]
+action = "github_file"
+when = { os = ["linux"], arch = "amd64", gpu = ["none"] }
+repo = "tsukumogami/tsuku-llm"
+asset_pattern = "tsuku-llm-v{version}-linux-amd64-cpu"
+
+# Linux ARM64: same pattern
+[[steps]]
+action = "github_file"
+when = { os = ["linux"], arch = "arm64", gpu = ["nvidia", "amd", "intel"] }
+dependencies = ["vulkan-loader"]
+repo = "tsukumogami/tsuku-llm"
+asset_pattern = "tsuku-llm-v{version}-linux-arm64-vulkan"
+
+[[steps]]
+action = "github_file"
+when = { os = ["linux"], arch = "arm64", gpu = ["none"] }
+repo = "tsukumogami/tsuku-llm"
+asset_pattern = "tsuku-llm-v{version}-linux-arm64-cpu"
+
+# Windows: CPU only
+[[steps]]
+action = "github_file"
+when = { os = ["windows"], arch = "amd64" }
+repo = "tsukumogami/tsuku-llm"
+asset_pattern = "tsuku-llm-v{version}-windows-amd64-cpu.exe"
+
+[verify]
+command = "tsuku-llm --version"
+pattern = "{version}"
+```
+
+The `gpu` conditions are mutually exclusive because `GPU()` returns exactly one value. On a system with an NVIDIA GPU, `GPU()` returns `"nvidia"`, which matches the Vulkan step (since `"nvidia"` is in `["nvidia", "amd", "intel"]`). On a system with no GPU, `GPU()` returns `"none"`, which matches the CPU step. No step matches both.
+
+The recipe maps all GPU vendors to the Vulkan variant on Linux. This is a product decision: Vulkan works across NVIDIA, AMD, and Intel without driver version coupling. Users who want CPU-only can override via `llm.backend = cpu` config.
+
+Step-level `dependencies = ["vulkan-loader"]` pulls in the Vulkan loader library only when the Vulkan step matches. On no-GPU systems, no driver dependency is installed. This uses existing recipe dependency filtering (steps that don't match the target have their dependencies skipped).
+
+The addon lifecycle code (server start/stop, gRPC socket, health checks, idle timeout) stays in `internal/llm/`. It doesn't move to the recipe system because daemon management has no recipe equivalent. What changes is how it finds the binary: instead of downloading via embedded manifest, it looks for the recipe-installed binary at the standard `$TSUKU_HOME/tools/tsuku-llm-<version>/` path.
 
 #### Alternatives Considered
 
-**Flat composite keys** (`"linux-amd64-cuda"`, `"linux-amd64-vulkan"`): Extend the platform key to include the backend.
-Rejected because it requires prefix scanning to enumerate available backends for a platform, and there's no natural place for the `default` field. The nested schema makes the platform-to-variants relationship explicit in the data structure, which is clearer for both the detection code and human readers of the manifest.
+**Expand the addon's custom manifest schema**: Keep the embedded `manifest.json` and add a nested variant map with backend dimensions.
+Rejected because it deepens the divergence between the addon and recipe systems. The addon already duplicates platform detection, download logic, and verification code. Adding a custom schema for GPU variants means maintaining two parallel distribution paths. Converting to a recipe eliminates this duplication and gives tsuku-llm the same install experience as every other tool.
 
-**Priority-ordered variant list**: Map each platform to an array of `{backend, url, sha256}` entries, ordered by preference.
-Rejected because arrays require linear scan for lookup by backend name, and the ordering conflates download priority with data structure. Priority should be determined by the detection logic, not baked into the manifest schema.
-
-### Decision 3: Pre-download Backend Selection
-
-The Go-side addon manager needs to pick a backend variant before downloading. Currently, all hardware detection lives in `hardware.rs` (Rust), which runs after the binary is already on disk. We need some form of GPU detection in Go.
-
-The detection doesn't need to be perfect. It just needs to pick a reasonable variant. If it picks wrong, the runtime fallback chain (Decision 4) handles it.
-
-#### Chosen: Go-side library file probing with config override
-
-Port the library-probing logic from `hardware.rs` to Go. Check for GPU libraries at known filesystem paths:
-
-**CUDA detection (Linux)**:
-- Probe standard library paths across distros: Debian/Ubuntu (`/usr/lib/x86_64-linux-gnu/`), Fedora/RHEL (`/usr/lib64/`), Arch (`/usr/lib/`), and CUDA toolkit (`/usr/local/cuda/lib64/`)
-- Check for `libcuda.so.1` or `libcuda.so`
-- If found: CUDA is available
-
-**Vulkan detection (Linux)**:
-- Probe same distro-specific paths for `libvulkan.so.1` or `libvulkan.so`
-- If found: Vulkan is available
-
-**Limitations**: Library probing checks file existence, not driver functionality. In containers with GPU passthrough, libraries may be bind-mounted at non-standard paths. The `llm.backend` config override handles these edge cases.
-
-**Metal detection (macOS)**:
-- ARM64: always available (Apple Silicon)
-- AMD64: always available (Metal supported on Intel Macs)
-
-**Windows**:
-- CPU only for now (no GPU variants built)
-
-The detection returns a list of available backends. The selection priority for Linux is: **Vulkan > CUDA > CPU**. This is deliberately different from the Rust-side priority (which puts CUDA first) because:
-
-1. Vulkan works across NVIDIA, AMD, and Intel GPUs without driver version coupling
-2. CUDA requires a compatible driver version (>= 525.60 for CUDA 12)
-3. For most users, Vulkan performance is close enough to CUDA for 1-3B parameter models
-4. Users who specifically want CUDA can set `llm.backend = cuda` in config
-
-The user override via `llm.backend` in `$TSUKU_HOME/config.toml` lets power users force a specific backend. This follows the existing config pattern from the secrets manager.
-
-The selection flow:
-1. Check `llm.backend` config override. If set, use it.
-2. Run library probing for the current platform.
-3. Pick the highest-priority available backend.
-4. Look up that backend in the manifest's variant map.
-5. If the backend isn't in the manifest, fall back to `default`.
-
-#### Alternatives Considered
-
-**Shell out to nvidia-smi / vulkaninfo**: Run GPU query tools and parse their output.
-Rejected because these tools may not be installed even when the libraries are. `nvidia-smi` ships with NVIDIA drivers but `vulkaninfo` is a separate package. Subprocess spawning adds latency and error handling complexity. Library file probing is faster and sufficient for "is this backend likely to work?"
-
-**Download a tiny probe binary**: Ship a small static binary in the manifest that runs GPU detection and prints JSON to stdout.
-Rejected because it introduces a two-phase download (probe first, then real binary). The probe binary itself needs checksum verification, version management, and a manifest entry. It adds complexity without much accuracy improvement over library probing.
-
-**User configuration only**: Require users to set `llm.backend` manually.
-Rejected as the sole mechanism because it violates tsuku's self-contained philosophy. But it's included as an override alongside auto-detection for users who know what they want.
+**Add when-clause-style filtering to the addon manifest but keep it separate**: The manifest gains `when`-like conditions without fully becoming a recipe.
+Rejected for the same reason as above, just more incrementally. If we're going to add conditional filtering, we should use the system that already has it rather than reimplementing it.
 
 ### Decision 4: Runtime Failure Handling
 
-Even with good pre-download detection, things can go wrong. A CUDA library might exist on disk but the driver version might be incompatible. Vulkan might be installed but the GPU might not support the required Vulkan version.
+Even with good pre-download detection, things can go wrong. A Vulkan library might exist on disk but the GPU might not support the required Vulkan version. CUDA libraries might be present but the driver version incompatible.
 
 #### Chosen: Informative error + manual override (automatic fallback deferred)
 
 When the Rust binary can't initialize its compiled-in GPU backend, it logs a clear error message to stderr explaining what failed and suggesting the config override: `tsuku config set llm.backend cpu`. The Go side surfaces this message to the user.
 
-This is deliberately simple. Automatic fallback (detecting the failure, downloading the CPU variant, and relaunching) adds `BackendFailedError` types, Rust exit code changes, process exit monitoring in `waitForReady()`, and retry logic in `LocalProvider.Complete()`. That's significant complexity for a case that should be uncommon once library probing works. Ship detection + manual override first, measure how often detection picks wrong in practice, then add automatic fallback if needed.
-
-The Rust binary should still distinguish backend initialization failure from other crashes in its stderr output, so the error message is actionable rather than a generic "server failed to start."
+This is deliberately simple. Automatic fallback (detecting the failure, reinstalling the CPU variant, and relaunching) adds `BackendFailedError` types, Rust exit code changes, process exit monitoring in `waitForReady()`, and retry logic in `Complete()`. That's significant complexity for a case that should be uncommon once hardware detection works. Ship detection + manual override first, measure how often detection picks wrong in practice, then add automatic fallback if needed.
 
 #### Alternatives Considered
 
-**Automatic CPU fallback**: Detect backend failure via exit code 78, auto-download and launch CPU variant.
-Deferred (not rejected). This is the right long-term answer but adds complexity that isn't justified until we know how accurate library probing is. If probing has a >5% false positive rate, automatic fallback becomes worth the complexity. Tracked as a future enhancement.
+**Automatic CPU fallback**: Detect backend failure via exit code 78, auto-install and launch CPU variant.
+Deferred (not rejected). This is the right long-term answer but adds complexity that isn't justified until we know how accurate sysfs detection is. Tracked as a future enhancement.
 
 **Pre-download CPU alongside GPU**: Always download both the GPU variant and CPU variant.
 Rejected because it doubles download size for every Linux user to cover an uncommon failure case.
@@ -239,138 +274,179 @@ Rejected because it doubles download size for every Linux user to cover an uncom
 
 ### Summary
 
-The manifest schema expands from a flat platform-to-URL mapping to a nested structure where each platform contains a map of backend variants (cuda, vulkan, metal, cpu) and a default. The Go types change from `PlatformInfo{URL, SHA256}` to `PlatformEntry{Default, Variants}` with `VariantInfo{URL, SHA256}`.
+The platform detection system gains GPU vendor identification as a new dimension alongside OS, architecture, Linux family, and libc. On Linux, detection reads PCI device class and vendor files from sysfs, returning one of `nvidia`, `amd`, `intel`, or `none`. On macOS, detection returns `apple`. The `Matchable` interface gains `GPU() string`, `platform.Target` gains a `gpu` field populated during `DetectTarget()`, and `WhenClause` gains a `gpu []string` filter.
 
-Before downloading the addon, a new `DetectBackend()` function in the `addon` package probes for GPU libraries at known filesystem paths across Linux distros (Debian, Fedora, Arch). On macOS, Metal is always the answer. On Windows, CPU is the only option. The detection returns a list of available backends, with Vulkan preferred over CUDA on Linux to avoid driver version coupling.
+tsuku-llm becomes a standard recipe with `when` clauses that filter on the `gpu` field. All GPU vendors get the Vulkan variant on Linux (avoiding CUDA driver coupling), no-GPU systems get the CPU variant, and macOS gets Metal. The Vulkan loader becomes a library recipe dependency, verified via `require_command` (following the same no-sudo pattern as the existing `cuda.toml` recipe).
 
-Users can override auto-detection by setting `llm.backend` in `$TSUKU_HOME/config.toml`. This follows the same config pattern used by the secrets manager and LLM provider settings.
+The addon lifecycle code stays in `internal/llm/`. It still manages the gRPC server, socket, health checks, and idle timeout. But binary installation moves from the embedded manifest to the recipe system. `EnsureAddon()` checks whether `tsuku-llm` is installed via the recipe system, triggers installation if needed, and finds the binary at the standard tools path.
 
-The download flow changes from `GetCurrentPlatformInfo()` (one step) to `PlatformKey()` + `DetectBackend()` + manifest lookup (three steps). The atomic download, SHA256 verification, and file-lock coordination stay exactly as they are today. The binary path gains a backend segment (`$TSUKU_HOME/tools/tsuku-llm/<version>/<backend>/tsuku-llm`) so multiple variants can coexist on disk.
+Users who want to force the CPU variant set `llm.backend = cpu` in `$TSUKU_HOME/config.toml`. The LLM lifecycle code handles this override by setting the target's GPU to `"none"` before plan generation, which selects the CPU recipe step. CUDA variant selection is deferred until benchmarks validate the Vulkan-default choice.
 
-The directory structure encodes the variant (`<version>/<backend>/tsuku-llm`), so `verifyBinary()` derives the backend from the path and looks up the correct SHA256 checksum. No separate tracking file is needed.
-
-When a GPU variant fails at runtime, the Rust binary logs a clear error message to stderr with the failed backend name and suggests `tsuku config set llm.backend cpu` as a workaround. Automatic fallback (downloading CPU variant and relaunching) is deferred until detection accuracy is measured in practice.
-
-The deprecated `AddonPath()` function and its callers must be cleaned up in Phase 1, since it constructs paths without the new backend segment and will silently break.
+When a GPU variant fails at runtime, the Rust binary logs a clear error to stderr suggesting `tsuku config set llm.backend cpu` as a workaround. Automatic fallback is deferred.
 
 ### Rationale
 
-These decisions reinforce each other. Separate binaries mean the manifest can list each variant with its own checksum, and download size stays small. The nested manifest schema makes it natural to enumerate backends per platform, which the Go-side detection needs. Library file probing is fast because it's just `stat()` calls, so it doesn't add noticeable latency to the download flow.
+These decisions reinforce each other. Platform-level GPU detection means the recipe system can filter on GPU without any special cases. The recipe's `when` clauses provide variant selection using the same mechanism that already handles libc, Linux family, and architecture filtering. Step-level dependencies mean driver packages are only installed when the matching step activates.
 
-Vulkan as the default Linux GPU backend simplifies the CUDA version problem without sacrificing it entirely. Users who want CUDA performance can opt in via config, at which point they're explicitly accepting the driver compatibility risk. This is better than auto-selecting CUDA and having it silently fail.
+Converting tsuku-llm to a recipe eliminates the only non-recipe binary distribution path in tsuku. The addon package loses its embedded manifest, download code, platform key translation, and verification code. What remains is the daemon lifecycle, which is genuinely unique to tsuku-llm (no other recipe manages a long-running server).
 
-Deferring automatic runtime fallback keeps the initial implementation scope tight. The manual override via `llm.backend` is a sufficient escape hatch while we gather data on detection accuracy. If library probing turns out to have a high false positive rate (>5%), automatic fallback becomes the next iteration.
+The Vulkan-by-default choice for all Linux GPU vendors simplifies the recipe (one GPU step instead of one per vendor) and avoids CUDA driver version issues. The `llm.backend = cpu` override covers the main failure case (GPU detection correct but backend doesn't work), and CUDA variant selection can be added later once benchmarks and a recipe variant mechanism make it practical.
 
 ## Solution Architecture
 
-### Component Changes
+### Platform Detection
 
-```
-internal/llm/addon/
-├── manifest.go       # Updated types: PlatformEntry, VariantInfo
-├── manifest.json     # Expanded with variant maps
-├── platform.go       # Updated: PlatformKey() unchanged, new BackendKey()
-├── detect.go         # NEW: DetectBackend() + config override logic
-├── detect_linux.go   # NEW: Linux library probing (Debian, Fedora, Arch paths)
-├── detect_darwin.go  # NEW: macOS (always Metal)
-├── detect_windows.go # NEW: Windows (always CPU)
-├── manager.go        # Updated: uses DetectBackend(), backend in path
-├── download.go       # Unchanged
-└── verify.go         # Updated: derive backend from path, verify variant checksum
-```
-
-### Manifest Schema
-
-Current schema (v1):
-```json
-{
-  "version": "0.1.0",
-  "platforms": {
-    "linux-amd64": { "url": "...", "sha256": "..." }
-  }
-}
-```
-
-New schema (v2):
-```json
-{
-  "version": "0.2.0",
-  "platforms": {
-    "linux-amd64": {
-      "default": "cpu",
-      "variants": {
-        "cuda": { "url": "https://github.com/.../tsuku-llm-linux-amd64-cuda", "sha256": "..." },
-        "vulkan": { "url": "https://github.com/.../tsuku-llm-linux-amd64-vulkan", "sha256": "..." },
-        "cpu": { "url": "https://github.com/.../tsuku-llm-linux-amd64-cpu", "sha256": "..." }
-      }
-    },
-    "darwin-arm64": {
-      "default": "metal",
-      "variants": {
-        "metal": { "url": "https://github.com/.../tsuku-llm-darwin-arm64", "sha256": "..." }
-      }
-    }
-  }
-}
-```
-
-### Go Type Changes
+New file `internal/platform/gpu.go`:
 
 ```go
-type Manifest struct {
-    Version   string                     `json:"version"`
-    Platforms map[string]PlatformEntry   `json:"platforms"`
-}
+// DetectGPU returns the primary GPU vendor for the current system.
+// Returns one of: "nvidia", "amd", "intel", "apple", "none".
+//
+// On Linux, scans PCI devices via sysfs for display controllers.
+// When multiple GPUs are present, prefers discrete over integrated
+// (nvidia > amd > intel).
+//
+// On macOS, returns "apple" unconditionally (Apple GPU or Metal-capable Intel/AMD).
+// On Windows, returns "none" (no GPU variants built yet).
+func DetectGPU() string
+```
 
-type PlatformEntry struct {
-    Default  string                     `json:"default"`
-    Variants map[string]VariantInfo     `json:"variants"`
-}
+With platform-specific implementations:
 
-type VariantInfo struct {
-    URL    string `json:"url"`
-    SHA256 string `json:"sha256"`
+**`gpu_linux.go`**: Reads `/sys/bus/pci/devices/*/class` for GPU device classes (`0x0300xx` VGA, `0x0302xx` 3D controller). For each GPU device, reads `vendor` file and maps PCI vendor IDs: `0x10de` → `nvidia`, `0x1002` → `amd`, `0x8086` → `intel`. When multiple vendors are present, returns the highest-priority discrete GPU. Uses only `os.ReadFile` and `filepath.Glob`.
+
+**`gpu_darwin.go`**: Returns `"apple"` unconditionally. Apple Silicon has Apple GPU; Intel Macs have Metal-capable GPUs. No variant selection needed on macOS.
+
+**`gpu_windows.go`**: Returns `"none"`. Only CPU variant exists for Windows.
+
+`DetectTarget()` in `family.go` gains a GPU detection step:
+
+```go
+func DetectTarget() (Target, error) {
+    platform := runtime.GOOS + "/" + runtime.GOARCH
+    gpu := DetectGPU()
+    if runtime.GOOS != "linux" {
+        return NewTarget(platform, "", "", gpu), nil
+    }
+    family, err := DetectFamily()
+    if err != nil {
+        return Target{}, err
+    }
+    libc := DetectLibc()
+    return NewTarget(platform, family, libc, gpu), nil
 }
 ```
 
-Key methods: `GetVariantInfo(platform, backend)` for direct lookup, `GetDefaultVariant(platform)` for fallback when detection returns an unknown backend.
+### Matchable Interface and WhenClause Extension
 
-### GPU Detection
+`recipe/types.go` changes:
 
-`DetectBackend(configOverride string) string` checks the user config override first, then calls platform-specific `probeBackends()` which returns available backends in priority order. The `configOverride` is a plain string passed by the caller (e.g., `local.go` or `factory.go`). The `addon` package must not import `userconfig` to load it directly -- that would be a dependency direction violation (lower-level package importing higher-level one).
-
-When a config override is provided, validate it against a known allowlist (`cuda`, `vulkan`, `metal`, `cpu`) before using it in path construction or manifest lookup.
-
-Linux probe paths must cover the three major library layouts:
-- Debian/Ubuntu: `/usr/lib/x86_64-linux-gnu/`, `/usr/lib/aarch64-linux-gnu/`
-- Fedora/RHEL: `/usr/lib64/`
-- Arch: `/usr/lib/`
-- CUDA toolkit: `/usr/local/cuda/lib64/`
-
-Priority order on Linux: Vulkan > CUDA > CPU. macOS: always Metal. Windows: always CPU.
-
-### Variant Tracking
-
-The directory structure encodes the variant: `$TSUKU_HOME/tools/tsuku-llm/<version>/<backend>/tsuku-llm`. The `verifyBinary()` method derives the backend name from the path via `filepath.Base(filepath.Dir(binaryPath))` and looks up the corresponding checksum in the manifest. No separate tracking file is needed.
-
-### Directory Layout
-
-Binary paths gain a backend segment:
-
-```
-$TSUKU_HOME/tools/tsuku-llm/
-└── 0.2.0/
-    ├── vulkan/
-    │   └── tsuku-llm
-    └── cpu/
-        └── tsuku-llm         # only if user overrides to CPU
+```go
+type Matchable interface {
+    OS() string
+    Arch() string
+    LinuxFamily() string
+    Libc() string
+    GPU() string  // NEW: "nvidia", "amd", "intel", "apple", "none"
+}
 ```
 
-Multiple variants can coexist on disk. A user who switches backends via config keeps both binaries.
+Both implementations update:
+- `platform.Target` gains a `gpu` field and `GPU() string` method
+- `recipe.MatchTarget` gains a `gpu` field, updated constructor, and `GPU() string` method
 
-### Legacy Cleanup
+`WhenClause.Matches()` gains a GPU check following the same pattern as libc:
 
-The deprecated `AddonPath()` at `manager.go:232` and its caller in `lifecycle.go` build paths without a backend segment. These must be updated or removed in Phase 1, before the directory layout changes. `NewServerLifecycleWithManager()` should accept the binary path from `EnsureAddon()` instead of computing it independently.
+```go
+// In WhenClause.Matches():
+if len(w.GPU) > 0 {
+    gpu := target.GPU()
+    gpuMatch := false
+    for _, g := range w.GPU {
+        if g == gpu {
+            gpuMatch = true
+            break
+        }
+    }
+    if !gpuMatch {
+        return false
+    }
+}
+```
+
+### Addon Lifecycle Refactor
+
+The `internal/llm/addon/` package loses:
+- `manifest.go` and `manifest.json` (embedded manifest, Go types, parsing)
+- `platform.go` (`PlatformKey()`, `GetCurrentPlatformInfo()`)
+- `download.go` (download, verify, atomic rename logic)
+- `verify.go` (SHA256 verification, `VerifyBeforeExecution()`)
+
+The addon package retains:
+- `manager.go` (refactored: `EnsureAddon()` delegates to recipe system)
+- `lifecycle.go` (server start/stop, socket, health checks, idle timeout)
+
+`EnsureAddon()` changes from "download binary via embedded manifest" to:
+
+```go
+func (m *AddonManager) EnsureAddon(ctx context.Context) (string, error) {
+    // Check if tsuku-llm is already installed
+    binaryPath := m.findInstalledBinary()
+    if binaryPath != "" {
+        return binaryPath, nil
+    }
+
+    // Install via recipe system
+    if err := m.installViaRecipe(ctx); err != nil {
+        return "", fmt.Errorf("installing tsuku-llm: %w", err)
+    }
+
+    return m.findInstalledBinary()
+}
+```
+
+`findInstalledBinary()` looks for the tsuku-llm binary at the standard recipe installation path. This could check `state.json` for the installed version, or look for the binary in `$TSUKU_HOME/tools/tsuku-llm-<version>/`.
+
+`installViaRecipe()` loads the tsuku-llm recipe, generates a plan for the current target (applying `llm.backend` override if set), and executes it. This reuses the existing executor pipeline.
+
+The `llm.backend` override works by modifying the target's GPU value before plan generation:
+
+| Config value | Target GPU override | Effect |
+|---|---|---|
+| (unset) | (no override, use detected value) | Auto-selects Vulkan or CPU based on hardware |
+| `cpu` | `none` | Forces CPU step |
+
+Only the `cpu` override is needed initially because all GPU vendors map to Vulkan. CUDA variant selection is deferred until benchmarks validate the Vulkan-by-default choice. If CUDA support is added later, it will require a recipe variant mechanism (either a new recipe step with disambiguation, or a general variant selection feature) rather than simple GPU override.
+
+### GPU Driver Library Recipes
+
+GPU drivers become library recipes, installed as conditional dependencies of the tsuku-llm recipe's GPU steps.
+
+**`recipes/v/vulkan-loader.toml`** (sketch):
+```toml
+[metadata]
+name = "vulkan-loader"
+description = "Vulkan ICD loader library"
+type = "library"
+supported_os = ["linux"]
+
+# Verify Vulkan loader is installed (tsuku doesn't install system libraries)
+[[steps]]
+action = "require_command"
+command = "ldconfig"
+version_flag = "-p"
+version_regex = "libvulkan\\.so\\.1"
+note = "Install via your system package manager: apt install libvulkan1 (Debian/Ubuntu), dnf install vulkan-loader (Fedora), pacman -S vulkan-icd-loader (Arch)"
+
+[verify]
+command = "ldconfig -p"
+mode = "output"
+pattern = "libvulkan"
+```
+
+This follows the same pattern as the existing `cuda.toml` recipe: verify the dependency exists, tell the user how to install it if missing, but don't run sudo commands. Most Linux systems with a GPU already have the Vulkan loader installed via the desktop environment or GPU driver packages.
+
+The tsuku-llm recipe's Vulkan steps declare `dependencies = ["vulkan-loader"]`. When the step matches (any GPU vendor), the loader is verified first. When the CPU step matches (no GPU), no driver dependency is checked.
 
 ### Rust-side Error Reporting
 
@@ -382,89 +458,123 @@ ERROR: Backend "vulkan" failed to initialize.
   Suggestion: tsuku config set llm.backend cpu
 ```
 
-This is an informational message, not a protocol change. The Go side doesn't parse it. Automatic fallback (exit code 78, re-download, relaunch) is deferred to a follow-up design.
+This is an informational message, not a protocol change. The Go side doesn't parse it. Automatic fallback (exit code 78, reinstall, relaunch) is deferred to a follow-up design.
+
+### Legacy Cleanup
+
+The deprecated `AddonPath()` at `manager.go:232` and its caller in `lifecycle.go` build paths for the old directory layout. These are removed as part of the addon refactor. `NewServerLifecycleWithManager()` accepts the binary path from the recipe-installed location instead of computing it from the addon manifest.
+
+The embedded `manifest.json` and all its supporting code are removed. The platform key translation (`linux-amd64` vs `linux/amd64`) is no longer needed because the recipe system uses the standard `platform.Target` format.
 
 ## Implementation Approach
 
-### Phase 1: Manifest and Types + Legacy Cleanup
+### Phase 1: GPU Platform Detection + WhenClause Extension
 
-1. Remove deprecated `AddonPath()` and `IsInstalled()` package-level functions
-2. Update `ServerLifecycle` to accept binary path at `EnsureRunning()` time, not construction time
-3. Update `manifest.json` with the new nested schema
-4. Update Go types (`Manifest`, `PlatformEntry`, `VariantInfo`)
-5. Replace `GetPlatformInfo` with `GetVariantInfo` and `GetDefaultVariant`
-6. Update `verifyBinary()` to derive backend from directory path and look up variant-specific checksum
-7. Automate manifest generation in the release CI (10 SHA256 entries are too error-prone to copy manually)
+This phase can ship independently. It adds a new platform dimension and recipe filtering capability without changing the addon system.
 
-### Phase 2: GPU Detection
+1. Add `gpu.go` with `DetectGPU()` function signature
+2. Add `gpu_linux.go` with PCI sysfs scanning (accept test root parameter for mock sysfs)
+3. Add `gpu_darwin.go` (returns `"apple"`)
+4. Add `gpu_windows.go` (returns `"none"`)
+5. Add `gpu` field to `platform.Target`, update `NewTarget()` and `DetectTarget()`
+6. Add `GPU() string` to `Matchable` interface
+7. Update `recipe.MatchTarget` with `gpu` field and `NewMatchTarget()` constructor
 
-1. Add `detect.go` with `DetectBackend()` function (accepts config override string from caller)
-2. Add platform-specific probe files (`detect_linux.go`, `detect_darwin.go`, `detect_windows.go`)
-3. Linux probes must cover Debian, Fedora, and Arch library paths
-4. Add `llm.backend` config key to userconfig, `LLMConfig` interface, and `AvailableKeys()`
-5. Config override validated against allowlist (`cuda`, `vulkan`, `metal`, `cpu`)
-6. Wire detection into `AddonManager.EnsureAddon()` (caller loads config and passes override)
-7. Update binary path to include backend segment
+**Constructor cascade**: `NewTarget()` gains a `gpu` parameter. Production callsites that must update:
+- `executor/plan_generator.go:111` and `:668` (plan generation)
+- `cmd/tsuku/install_sandbox.go:94`, `verify.go:573`, `verify_deps.go:74` (commands)
+- `internal/builders/orchestrator.go:260` (pipeline validation)
+- `cmd/tsuku/info.go:447`, `sysdeps.go:212` (info display)
 
-### Phase 3: Rust Error Reporting
+`NewMatchTarget()` gains a `gpu` parameter. Update all callers in `executor/` and `cmd/tsuku/`.
 
-1. Add structured stderr error when compiled-in backend doesn't match hardware
-2. Include suggestion for `tsuku config set llm.backend` in the message
-3. Ensure the existing hardware detection in `hardware.rs` correctly reports when a backend is unavailable vs degraded
+8. Add `GPU []string` to `WhenClause`, update `Matches()`, `IsEmpty()`, `ToMap()`, and TOML unmarshaling
+9. Update `MergeWhenClause()` for GPU constraint checking
+10. Update `PlanConfig` with `GPU` field, pass through to target construction in `GeneratePlan()`
+11. Unit tests for GPU detection (mock sysfs directory structure)
+12. Unit tests for WhenClause GPU matching
 
-### Phase 4: Testing and Documentation
+### Phase 2: tsuku-llm Recipe + Addon Refactor
 
-1. Unit tests for manifest parsing and variant lookup
-2. Unit tests for detection logic (mock filesystem paths)
-3. Integration test: verify correct variant selection on current host
-4. Update `tsuku llm download` command to respect variant selection
-5. Developer documentation for building with GPU support locally
+Depends on Phase 1 being validated (sysfs detection works correctly on target systems). Start only after Phase 1 ships and we have confidence in GPU detection accuracy.
+
+1. Create `recipes/t/tsuku-llm.toml` with GPU-filtered steps (Vulkan + CPU only, no CUDA initially)
+2. Add `llm.backend` config key to `userconfig` (Get/Set/AvailableKeys) — initially only `cpu` override
+3. Add `LLMBackend() string` to `LLMConfig` interface in `factory.go`
+4. Refactor `AddonManager`: remove manifest/download code, add recipe-based installation via injected `Installer` interface (not direct import of `internal/executor/`)
+5. Update `EnsureAddon()` to check recipe installation state and trigger install if needed
+6. Wire `llm.backend = cpu` override into plan generation (set target GPU to `"none"`)
+7. Update `ServerLifecycle` to accept binary path from recipe installation
+8. Remove embedded `manifest.json`, `platform.go`, `download.go`, `verify.go` from addon package
+9. Integration test: verify correct variant selection on current host
+
+### Phase 3: GPU Driver Library Recipes
+
+1. Create `recipes/v/vulkan-loader.toml` (library recipe, `require_command` pattern — no sudo)
+2. Test dependency chain: tsuku-llm → vulkan-loader on a GPU system
+3. Test that missing Vulkan loader gives a clear error with installation instructions
+
+### Phase 4: Testing and Benchmarking
+
+1. End-to-end test: `tsuku install tsuku-llm` on systems with different GPU vendors
+2. Test `llm.backend` config override path
+3. Test no-GPU fallback to CPU variant
+4. Benchmark Vulkan vs CUDA on NVIDIA hardware for shipped models
 
 ### Benchmark Gate
 
-Before shipping Vulkan as the default Linux GPU backend, benchmark Vulkan vs CUDA performance on the models we ship (0.5B, 1.5B, 3B). If the gap exceeds 25% on tokens/second, reconsider the default priority order. This benchmark can be informal (run both variants on the same machine, compare throughput) but must happen before this design is marked Current.
+Before shipping Vulkan as the default Linux GPU backend, benchmark Vulkan vs CUDA performance on the models we ship (0.5B, 1.5B, 3B). If the gap exceeds 25% on tokens/second, reconsider the default. This benchmark can be informal (run both variants on the same machine, compare throughput) but must happen before this design is marked Current.
 
 ## Security Considerations
 
 ### Download verification
 
-Each variant has its own SHA256 checksum in the manifest. The verification flow (download to temp → verify checksum → chmod → atomic rename) doesn't change. Adding more variants to the manifest increases the attack surface of the manifest itself, but since it's embedded at compile time via `//go:embed`, the manifest can't be tampered with without rebuilding the tsuku binary.
+With the addon, SHA256 checksums are embedded in the Go binary at compile time via `//go:embed manifest.json`. This is tamper-proof: you can't change the checksums without rebuilding tsuku.
+
+With the recipe approach, checksums live in the recipe file (`recipes/t/tsuku-llm.toml`). Recipe checksums are git-tracked and CI-validated, but they can be updated via `tsuku update-registry`. This is the same security model used by every other recipe in tsuku (all 200+ tools). If the registry is compromised, all tools are at risk, not just tsuku-llm.
+
+The pre-execution SHA256 verification (`VerifyBeforeExecution`) can be retained by reading the plan's stored checksum and re-verifying before each server launch. This catches binary tampering after installation.
+
+The net security change: tsuku-llm moves from "checksums embedded in binary" (stronger, specific to this one tool) to "checksums in recipe" (standard model, consistent with everything else). This is a deliberate trade-off for consistency and maintainability.
 
 ### Execution isolation
 
-No change. The addon binary runs with the same permissions as the tsuku process. GPU library probing uses `os.Stat()` calls only, never loads or executes the probed libraries. This is important: we detect GPU presence by file existence, not by dlopen.
+No change to the runtime model. The tsuku-llm binary runs with the same permissions as the tsuku process.
 
-All probed paths (`/usr/lib/...`, `/usr/lib64/...`, `/usr/local/cuda/...`) require root write access. An attacker who can plant a fake `libcuda.so` to influence variant selection has already compromised the system. The `llm.backend` config override is validated against a known allowlist to prevent path traversal via config manipulation.
+GPU detection uses `os.ReadFile` on sysfs files (`/sys/bus/pci/devices/*/class`, `*/vendor`). These files are world-readable. No special permissions needed, no libraries loaded, no processes spawned.
 
 ### Supply chain risks
 
-The release pipeline produces signed binaries with checksums. Adding more variants (from 5 to 10 entries in the manifest) doesn't change the signing or checksum infrastructure. Each variant's URL points to the same GitHub release page. The risk profile is the same as today, just with more entries.
+The release pipeline produces signed binaries with checksums. Adding more variants (from 5 to 10 entries in the recipe) doesn't change the signing infrastructure. Each variant's URL points to the same GitHub release page. The `github_file` action computes checksums dynamically during plan generation (standard recipe behavior), and the plan is cached.
 
-One new risk: if the Go-side detection picks the wrong variant, the user downloads a binary they can't fully use. The Rust binary will report the mismatch via stderr, and the user can override via `llm.backend` config. No binary is executed without SHA256 verification first.
+One new risk surface: the GPU driver library recipes (`vulkan-loader`, `cuda-runtime`) install system packages via `apt_install`, `dnf_install`, etc. These trust the system's package manager and its configured repositories. This is the same trust model used by existing system-dependency recipes.
 
 ### User data exposure
 
-No change. GPU library probing reads only file metadata (existence, not contents). No new network calls are introduced beyond the existing download flow. The `llm.backend` config value is stored in `$TSUKU_HOME/config.toml` alongside other settings.
+No change. GPU detection reads only PCI device metadata from sysfs (vendor ID, device class). No network calls beyond the existing download flow. The `llm.backend` config value is stored in `$TSUKU_HOME/config.toml` alongside other settings.
 
 ## Consequences
 
 ### Positive
 
+- GPU becomes a first-class platform dimension. Any recipe can use `when = { gpu = ["nvidia"] }` to filter steps, not just tsuku-llm.
 - Users with GPUs automatically get GPU-accelerated inference without manual configuration.
-- Download size stays small (one variant per user, not all ten).
-- CUDA driver version mismatches no longer cause silent CPU fallback with the wrong model. The system downloads the right variant for the hardware.
-- Power users can force a specific backend via config.
-- Cleaning up deprecated `AddonPath()` removes a source of path-construction bugs.
+- Download size stays small (one variant per user).
+- tsuku-llm becomes a regular recipe, removing the only non-recipe binary distribution path in tsuku.
+- The addon package shrinks significantly. Manifest parsing, download logic, platform key translation, and verification code are removed.
+- GPU driver packages become installable library recipes, bringing driver management into the same system as everything else.
 
 ### Negative
 
-- The manifest schema change is a breaking change. Old tsuku versions can't parse the new manifest. This is fine because the manifest is embedded at compile time, not fetched remotely.
-- Go-side library probing may give wrong results in unusual environments (containers, custom library paths, GPU passthrough). Users must use `llm.backend` config override in these cases until automatic fallback ships.
-- Vulkan as the Linux default means NVIDIA users get slightly less performance than CUDA would provide. They can opt in to CUDA via config if they want.
-- The binary path gains a backend segment, so existing installations re-download the addon on the first run after upgrading.
+- The security model weakens slightly: embedded checksums (compile-time guarantee) are replaced by recipe checksums (git-tracked, CI-validated, but updatable). This is the standard model for all other tools. The plan cache is user-writable, so local tampering after installation is not caught unless pre-execution verification re-checks against a trusted source.
+- The addon refactor is a significant change. `EnsureAddon()` changes from direct download to recipe system delegation. The addon package must use an injected installer interface rather than importing `internal/executor/` directly, to preserve dependency direction.
+- PCI sysfs detection is Linux-specific. macOS returns a constant (`apple`), Windows returns `none`. If Windows GPU support is needed later, a new detection backend (DXGI or WMI) must be added.
+- Existing tsuku-llm installations re-download on first run after upgrading, since the binary moves from the addon path to the recipe tools path.
+- CUDA variant selection is deferred. Users who specifically want CUDA over Vulkan must wait for benchmarks and a follow-up design that adds a CUDA step without creating matching ambiguity in the recipe system.
 
 ### Risks
 
-- We haven't benchmarked Vulkan vs CUDA performance for the models we ship. The benchmark gate (25% threshold) must pass before marking this design Current.
-- GPU detection on ARM64 Linux is less well-tested than x86_64. The library paths may differ across distributions. Coverage of the three major distro families (Debian, Fedora, Arch) should catch most users.
-- Without automatic runtime fallback, a false positive from library probing (library file exists but backend can't actually init) leaves the user with a broken addon until they set `llm.backend` manually. The error message from the Rust side must be clear enough that users know what to do.
+- We haven't benchmarked Vulkan vs CUDA for the models we ship. The benchmark gate (25% threshold) must pass before marking this design Current.
+- PCI sysfs detection doesn't verify driver functionality. A system with an NVIDIA GPU but broken drivers would get the Vulkan variant, which might also fail. The manual `llm.backend cpu` override is the escape hatch.
+- The addon-to-recipe migration touches the LLM initialization path, which is timing-sensitive (server startup, socket readiness, health checks). The refactor must preserve the existing lifecycle guarantees.
+- Adding `GPU() string` to the `Matchable` interface is a breaking change. Both implementations are internal, but any code that constructs `MatchTarget` or `Target` must be updated.
