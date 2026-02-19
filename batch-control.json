@@ -17,6 +17,14 @@
       "state": "closed",
       "failures": 1,
       "last_failure": "2026-02-18T14:41:33Z"
+    },
+    "crates.io": {
+      "state": "closed",
+      "failures": 0
+    },
+    "npm": {
+      "state": "closed",
+      "failures": 0
     }
   },
   "budget": {

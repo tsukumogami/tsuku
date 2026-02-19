@@ -1,24 +1,30 @@
 {
   "batch_id": "2026-02-18",
   "ecosystems": {
-    "github": 9,
-    "homebrew": 16
+    "crates.io": 1,
+    "homebrew": 22,
+    "npm": 2
   },
   "per_ecosystem": {
-    "github": {
-      "total": 9,
-      "succeeded": 0,
-      "failed": 9
+    "crates.io": {
+      "total": 1,
+      "succeeded": 1,
+      "failed": 0
     },
     "homebrew": {
-      "total": 16,
+      "total": 22,
       "succeeded": 1,
-      "failed": 15
+      "failed": 21
+    },
+    "npm": {
+      "total": 2,
+      "succeeded": 2,
+      "failed": 0
     }
   },
   "total": 25,
-  "succeeded": 1,
-  "failed": 24,
+  "succeeded": 4,
+  "failed": 21,
   "blocked": 0,
-  "timestamp": "2026-02-18T14:38:38.482392252Z"
+  "timestamp": "2026-02-18T15:38:25.121676532Z"
 }

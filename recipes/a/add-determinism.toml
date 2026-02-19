@@ -1,0 +1,32 @@
+[metadata]
+  name = "add-determinism"
+  description = "RPM buildroot helper to strip nondeterministic bits in files"
+  homepage = "https://github.com/keszybz/add-determinism"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+unsupported_platforms = ["linux/arm64", "linux/debian", "linux/rhel", "linux/arch/amd64", "linux/suse", "linux/alpine"]
+
+[version]
+  source = "crates_io"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "cargo_install"
+  crate = "add-determinism"
+  executables = ["add-det", "linkdupes"]
+
+[verify]
+  command = "add-det --version"
+  pattern = ""
