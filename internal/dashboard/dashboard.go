@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/tsukumogami/tsuku/internal/batch"
@@ -118,9 +119,11 @@ type PackageInfo struct {
 
 // Blocker represents a dependency blocking packages.
 type Blocker struct {
-	Dependency string   `json:"dependency"`
-	Count      int      `json:"count"`
-	Packages   []string `json:"packages"` // First 5 package names
+	Dependency  string   `json:"dependency"`
+	Count       int      `json:"count"` // Total (transitive) -- kept for backward compat
+	DirectCount int      `json:"direct_count"`
+	TotalCount  int      `json:"total_count"` // Same as Count; explicit name for clarity
+	Packages    []string `json:"packages"`    // First 5 package names
 }
 
 // RunSummary summarizes a batch run.
@@ -448,57 +451,90 @@ func loadFailures(path string) (map[string][]string, map[string]int, map[string]
 	return blockers, categories, details, scanner.Err()
 }
 
-// computeTransitiveBlockers computes all packages blocked by a dependency (directly or indirectly).
-func computeTransitiveBlockers(dep string, blockers map[string][]string, memo map[string][]string) []string {
-	if result, ok := memo[dep]; ok {
-		return result
+// computeTransitiveBlockers computes the total number of packages blocked by a
+// dependency, both directly and transitively. Uses memo map with 0-initialization
+// for cycle detection: when a dependency is first visited, memo[dep] is set to 0
+// (in-progress). If the same dep is encountered again during recursion, the 0 is
+// returned, breaking the cycle.
+func computeTransitiveBlockers(dep string, blockers map[string][]string, pkgToBare map[string]string, memo map[string]int) int {
+	if count, ok := memo[dep]; ok {
+		return count // 0 if in-progress (cycle)
 	}
+	// Mark in-progress
+	memo[dep] = 0
 
-	blocked := make(map[string]bool)
-	// Add directly blocked packages
-	for _, pkg := range blockers[dep] {
-		blocked[pkg] = true
-		// Recursively add packages blocked by this package
-		for _, transitive := range computeTransitiveBlockers(pkg, blockers, memo) {
-			blocked[transitive] = true
+	// Deduplicate blocked packages for this dependency
+	seen := make(map[string]bool)
+	total := 0
+	for _, pkgID := range blockers[dep] {
+		if seen[pkgID] {
+			continue
+		}
+		seen[pkgID] = true
+		total++ // Direct dependent
+		// Check if this package itself blocks others
+		bare := pkgToBare[pkgID]
+		if _, isBlocker := blockers[bare]; isBlocker && bare != dep {
+			total += computeTransitiveBlockers(bare, blockers, pkgToBare, memo)
 		}
 	}
-
-	// Convert to slice
-	result := make([]string, 0, len(blocked))
-	for pkg := range blocked {
-		result = append(result, pkg)
-	}
-	memo[dep] = result
-	return result
+	memo[dep] = total
+	return total
 }
 
 func computeTopBlockers(blockers map[string][]string, limit int) []Blocker {
-	memo := make(map[string][]string)
+	// Build reverse index: package ID -> bare name (strip ecosystem prefix).
+	// This lets transitive lookups match "homebrew:ffmpeg" -> "ffmpeg" against
+	// blocker map keys like "ffmpeg".
+	pkgToBare := make(map[string]string)
+	for _, pkgs := range blockers {
+		for _, pkgID := range pkgs {
+			if idx := strings.Index(pkgID, ":"); idx >= 0 {
+				pkgToBare[pkgID] = pkgID[idx+1:]
+			} else {
+				pkgToBare[pkgID] = pkgID
+			}
+		}
+	}
+
+	memo := make(map[string]int)
 	result := make([]Blocker, 0, len(blockers))
 
 	for dep := range blockers {
-		unique := computeTransitiveBlockers(dep, blockers, memo)
+		// Deduplicate direct dependents
+		seen := make(map[string]bool)
+		var uniquePkgs []string
+		for _, pkgID := range blockers[dep] {
+			if !seen[pkgID] {
+				seen[pkgID] = true
+				uniquePkgs = append(uniquePkgs, pkgID)
+			}
+		}
+		directCount := len(uniquePkgs)
+		totalCount := computeTransitiveBlockers(dep, blockers, pkgToBare, memo)
 
 		b := Blocker{
-			Dependency: dep,
-			Count:      len(unique),
+			Dependency:  dep,
+			Count:       totalCount,
+			DirectCount: directCount,
+			TotalCount:  totalCount,
 		}
 		// Keep first 5 packages (sorted by name for stability)
-		packages := make([]string, len(unique))
-		copy(packages, unique)
-		sort.Strings(packages)
-		if len(packages) > 5 {
-			b.Packages = packages[:5]
+		sort.Strings(uniquePkgs)
+		if len(uniquePkgs) > 5 {
+			b.Packages = uniquePkgs[:5]
 		} else {
-			b.Packages = packages
+			b.Packages = uniquePkgs
 		}
 		result = append(result, b)
 	}
 
-	// Sort by count descending
+	// Sort by total count descending
 	sort.Slice(result, func(i, j int) bool {
-		return result[i].Count > result[j].Count
+		if result[i].TotalCount != result[j].TotalCount {
+			return result[i].TotalCount > result[j].TotalCount
+		}
+		return result[i].Dependency < result[j].Dependency
 	})
 
 	if len(result) > limit {

@@ -222,9 +222,18 @@ func TestComputeTopBlockers_deduplication(t *testing.T) {
 	if result[0].Dependency != "glib" || result[0].Count != 3 {
 		t.Errorf("glib: got count %d, want 3", result[0].Count)
 	}
+	if result[0].DirectCount != 3 {
+		t.Errorf("glib DirectCount: got %d, want 3", result[0].DirectCount)
+	}
+	if result[0].TotalCount != 3 {
+		t.Errorf("glib TotalCount: got %d, want 3", result[0].TotalCount)
+	}
 	// gmp should dedupe to 1 unique package
 	if result[1].Dependency != "gmp" || result[1].Count != 1 {
 		t.Errorf("gmp: got count %d, want 1", result[1].Count)
+	}
+	if result[1].DirectCount != 1 {
+		t.Errorf("gmp DirectCount: got %d, want 1", result[1].DirectCount)
 	}
 }
 
@@ -263,14 +272,188 @@ func TestComputeTopBlockers_sortsByCount(t *testing.T) {
 
 	result := computeTopBlockers(blockers, 10)
 
-	if result[0].Dependency != "large" || result[0].Count != 5 {
-		t.Errorf("first should be large with count 5, got %s with %d", result[0].Dependency, result[0].Count)
+	if result[0].Dependency != "large" || result[0].TotalCount != 5 {
+		t.Errorf("first should be large with total_count 5, got %s with %d", result[0].Dependency, result[0].TotalCount)
 	}
-	if result[1].Dependency != "medium" || result[1].Count != 3 {
-		t.Errorf("second should be medium with count 3, got %s with %d", result[1].Dependency, result[1].Count)
+	if result[0].Count != result[0].TotalCount {
+		t.Errorf("Count should equal TotalCount: Count=%d, TotalCount=%d", result[0].Count, result[0].TotalCount)
 	}
-	if result[2].Dependency != "small" || result[2].Count != 1 {
-		t.Errorf("third should be small with count 1, got %s with %d", result[2].Dependency, result[2].Count)
+	if result[1].Dependency != "medium" || result[1].TotalCount != 3 {
+		t.Errorf("second should be medium with total_count 3, got %s with %d", result[1].Dependency, result[1].TotalCount)
+	}
+	if result[2].Dependency != "small" || result[2].TotalCount != 1 {
+		t.Errorf("third should be small with total_count 1, got %s with %d", result[2].Dependency, result[2].TotalCount)
+	}
+}
+
+func TestComputeTopBlockers_transitiveWithNormalizedKeys(t *testing.T) {
+	// openssl blocks homebrew:curl, curl blocks homebrew:wget.
+	// The transitive chain should work because pkgToBare maps
+	// "homebrew:curl" -> "curl" which is a key in the blockers map.
+	blockers := map[string][]string{
+		"openssl": {"homebrew:curl"},
+		"curl":    {"homebrew:wget"},
+	}
+
+	result := computeTopBlockers(blockers, 10)
+
+	// Find openssl in results
+	var openssl, curl Blocker
+	for _, b := range result {
+		switch b.Dependency {
+		case "openssl":
+			openssl = b
+		case "curl":
+			curl = b
+		}
+	}
+
+	// openssl directly blocks 1 (curl), transitively blocks 2 (curl + wget)
+	if openssl.DirectCount != 1 {
+		t.Errorf("openssl DirectCount: got %d, want 1", openssl.DirectCount)
+	}
+	if openssl.TotalCount != 2 {
+		t.Errorf("openssl TotalCount: got %d, want 2", openssl.TotalCount)
+	}
+	if openssl.Count != openssl.TotalCount {
+		t.Errorf("openssl Count should equal TotalCount: Count=%d, TotalCount=%d", openssl.Count, openssl.TotalCount)
+	}
+
+	// curl directly blocks 1 (wget), no transitive
+	if curl.DirectCount != 1 {
+		t.Errorf("curl DirectCount: got %d, want 1", curl.DirectCount)
+	}
+	if curl.TotalCount != 1 {
+		t.Errorf("curl TotalCount: got %d, want 1", curl.TotalCount)
+	}
+
+	// openssl should be first (highest total_count)
+	if result[0].Dependency != "openssl" {
+		t.Errorf("first blocker should be openssl, got %s", result[0].Dependency)
+	}
+}
+
+func TestComputeTopBlockers_deepTransitiveChain(t *testing.T) {
+	// A -> B -> C -> D (chain of 3 levels)
+	blockers := map[string][]string{
+		"A": {"homebrew:B"},
+		"B": {"homebrew:C"},
+		"C": {"homebrew:D"},
+	}
+
+	result := computeTopBlockers(blockers, 10)
+
+	var counts = make(map[string]Blocker)
+	for _, b := range result {
+		counts[b.Dependency] = b
+	}
+
+	// A blocks B directly, B->C->D transitively => total 3
+	if counts["A"].TotalCount != 3 {
+		t.Errorf("A TotalCount: got %d, want 3", counts["A"].TotalCount)
+	}
+	if counts["A"].DirectCount != 1 {
+		t.Errorf("A DirectCount: got %d, want 1", counts["A"].DirectCount)
+	}
+
+	// B blocks C directly, C->D transitively => total 2
+	if counts["B"].TotalCount != 2 {
+		t.Errorf("B TotalCount: got %d, want 2", counts["B"].TotalCount)
+	}
+
+	// C blocks D directly => total 1
+	if counts["C"].TotalCount != 1 {
+		t.Errorf("C TotalCount: got %d, want 1", counts["C"].TotalCount)
+	}
+}
+
+func TestComputeTopBlockers_cycleDetection(t *testing.T) {
+	// A blocks homebrew:B, B blocks homebrew:A -- a cycle.
+	// Should not infinite loop; cycle detection via memo map returns 0.
+	blockers := map[string][]string{
+		"A": {"homebrew:B"},
+		"B": {"homebrew:A"},
+	}
+
+	result := computeTopBlockers(blockers, 10)
+
+	// Both should have some count without infinite recursion
+	if len(result) != 2 {
+		t.Fatalf("expected 2 blockers, got %d", len(result))
+	}
+
+	// With cycle detection: whichever is computed first gets the higher count.
+	// Both directly block 1 package. The second to be computed in the cycle
+	// sees the other as in-progress (memo=0) so doesn't add transitive.
+	// The first to be computed sees the second as not yet in memo, recurses,
+	// and gets the cycle-cut result.
+	totalA, totalB := 0, 0
+	for _, b := range result {
+		if b.Dependency == "A" {
+			totalA = b.TotalCount
+		}
+		if b.Dependency == "B" {
+			totalB = b.TotalCount
+		}
+	}
+
+	// Both should be positive (at least their direct dependent)
+	if totalA < 1 {
+		t.Errorf("A TotalCount should be >= 1, got %d", totalA)
+	}
+	if totalB < 1 {
+		t.Errorf("B TotalCount should be >= 1, got %d", totalB)
+	}
+}
+
+func TestComputeTopBlockers_noEcosystemPrefix(t *testing.T) {
+	// Packages without ecosystem prefix should still work
+	blockers := map[string][]string{
+		"glib": {"ffmpeg", "imagemagick"},
+	}
+
+	result := computeTopBlockers(blockers, 10)
+
+	if len(result) != 1 {
+		t.Fatalf("expected 1 blocker, got %d", len(result))
+	}
+	if result[0].TotalCount != 2 {
+		t.Errorf("glib TotalCount: got %d, want 2", result[0].TotalCount)
+	}
+	if result[0].DirectCount != 2 {
+		t.Errorf("glib DirectCount: got %d, want 2", result[0].DirectCount)
+	}
+}
+
+func TestBlockerJSON_fieldsPresent(t *testing.T) {
+	b := Blocker{
+		Dependency:  "glib",
+		Count:       5,
+		DirectCount: 3,
+		TotalCount:  5,
+		Packages:    []string{"pkg1", "pkg2"},
+	}
+
+	data, err := json.Marshal(b)
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+
+	var m map[string]interface{}
+	if err := json.Unmarshal(data, &m); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+
+	// Verify all expected JSON fields exist
+	for _, field := range []string{"dependency", "count", "direct_count", "total_count", "packages"} {
+		if _, ok := m[field]; !ok {
+			t.Errorf("missing JSON field: %s", field)
+		}
+	}
+
+	// Verify count and total_count have the same value
+	if m["count"] != m["total_count"] {
+		t.Errorf("count (%v) should equal total_count (%v)", m["count"], m["total_count"])
 	}
 }
 
