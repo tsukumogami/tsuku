@@ -66,7 +66,6 @@ type HealthStatus struct {
 	LastRun              *RunInfo                   `json:"last_run"`
 	LastSuccessfulRun    *RunInfo                   `json:"last_successful_run"`
 	RunsSinceLastSuccess int                        `json:"runs_since_last_success"`
-	HoursSinceLastRun    int                        `json:"hours_since_last_run"`
 }
 
 // EcosystemHealth represents the circuit breaker state for a single ecosystem.
@@ -832,15 +831,6 @@ func loadHealth(controlFile string, records []MetricsRecord) (*HealthStatus, err
 	// Last run is the most recent record
 	last := sorted[len(sorted)-1]
 	health.LastRun = metricsToRunInfo(last)
-
-	// Compute hours since last run
-	if ts, err := time.Parse(time.RFC3339, last.Timestamp); err == nil {
-		hours := int(time.Since(ts).Hours())
-		if hours < 0 {
-			hours = 0
-		}
-		health.HoursSinceLastRun = hours
-	}
 
 	// Find last successful run (merged > 0) and count runs since
 	runsSince := 0

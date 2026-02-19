@@ -504,10 +504,13 @@
                 // Runs since last success
                 let runsSinceHtml = `<span class="health-value"><a href="/pipeline/runs.html?since_success=true">${esc(health.runs_since_last_success)}</a></span>`;
 
-                // Warning if hours_since_last_run > 2
+                // Warning if last run was more than 2 hours ago (computed from timestamp, not stale JSON field)
                 let warningHtml = '';
-                if (health.hours_since_last_run > 2) {
-                    warningHtml = `<div class="health-warning">No run in ${esc(health.hours_since_last_run)} hours</div>`;
+                if (health.last_run && health.last_run.timestamp) {
+                    const hoursSinceRun = Math.floor((Date.now() - new Date(health.last_run.timestamp).getTime()) / 3600000);
+                    if (hoursSinceRun > 2) {
+                        warningHtml = `<div class="health-warning">No run in ${esc(hoursSinceRun)} hours</div>`;
+                    }
                 }
 
                 healthPanel = `
