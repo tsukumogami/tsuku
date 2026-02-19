@@ -576,7 +576,7 @@ func loadMetrics(path string) ([]RunSummary, []MetricsRecord, error) {
 
 		records = append(records, record)
 		runs = append(runs, RunSummary{
-			BatchID:    record.BatchID,
+			BatchID:    batchIDFromTimestamp(record.Timestamp),
 			Ecosystems: resolveEcosystems(record),
 			Total:      record.Total,
 			Merged:     record.Merged,
@@ -587,6 +587,15 @@ func loadMetrics(path string) ([]RunSummary, []MetricsRecord, error) {
 	}
 
 	return runs, records, nil
+}
+
+// batchIDFromTimestamp derives a unique, path-safe batch ID from an ISO timestamp.
+// Example: "2026-02-19T04:26:06Z" -> "2026-02-19T04-26-06Z"
+func batchIDFromTimestamp(timestamp string) string {
+	if timestamp == "" {
+		return ""
+	}
+	return strings.ReplaceAll(timestamp, ":", "-")
 }
 
 // parseMetricsLineByLine handles JSONL format where each line is a JSON object.
@@ -617,7 +626,7 @@ func parseMetricsLineByLine(data []byte) ([]RunSummary, []MetricsRecord) {
 
 		records = append(records, record)
 		runs = append(runs, RunSummary{
-			BatchID:    record.BatchID,
+			BatchID:    batchIDFromTimestamp(record.Timestamp),
 			Ecosystems: resolveEcosystems(record),
 			Total:      record.Total,
 			Merged:     record.Merged,
