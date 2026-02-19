@@ -16,6 +16,10 @@ import (
 // TestSequentialInference starts the daemon once and sends multiple inference
 // requests sequentially, verifying that the server handles sustained workloads
 // without degradation or connection issues.
+//
+// This test uses low-level gRPC calls (grpcDial + inferenceClient) rather than
+// the provider.Complete() API so we can verify the raw server behavior without
+// any reconnection or restart logic from LocalProvider masking failures.
 func TestSequentialInference(t *testing.T) {
 	skipIfModelCDNUnavailable(t)
 
@@ -80,9 +84,16 @@ func TestSequentialInference(t *testing.T) {
 
 // TestCrashRecovery verifies that LocalProvider recovers after the daemon
 // crashes unexpectedly. After a SIGKILL the first Complete call should fail
-// (stale connection), and the second call should succeed because
-// invalidateConnection clears the dead connection and EnsureRunning restarts
-// the server.
+// because the connection is stale. Subsequent calls trigger EnsureRunning,
+// which detects the dead daemon and restarts the server. However, recovery
+// is not a clean two-step process (fail once, succeed once). The restarted
+// server needs time to bind its socket and reload the model into memory, so
+// the test uses require.Eventually to poll until a call succeeds. Multiple
+// attempts may fail before the server is ready again.
+//
+// This test uses provider.Complete() (the high-level API) rather than raw gRPC
+// because we need to exercise the full reconnection and daemon-restart path
+// inside LocalProvider -- that's the behavior under test.
 func TestCrashRecovery(t *testing.T) {
 	skipIfModelCDNUnavailable(t)
 
@@ -133,7 +144,10 @@ func TestCrashRecovery(t *testing.T) {
 	}, 10*time.Second, 100*time.Millisecond, "daemon should be dead after SIGKILL")
 
 	// --- First call after crash: expect error (stale connection) ---
-	ctx, cancel = context.WithTimeout(context.Background(), 30*time.Second)
+	// Use a short timeout: the server is dead so the call should fail fast.
+	// A long timeout risks the daemon restarting within the window, which
+	// would make the stale-connection assertion unreliable.
+	ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
 	_, err = provider.Complete(ctx, &CompletionRequest{
 		SystemPrompt: "You are a helpful assistant.",
 		Messages:     []Message{{Role: RoleUser, Content: "Are you there?"}},
