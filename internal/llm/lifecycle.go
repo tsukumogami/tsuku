@@ -194,8 +194,13 @@ func (s *ServerLifecycle) EnsureRunning(ctx context.Context) error {
 		return fmt.Errorf("failed to start addon: %w", err)
 	}
 
+	// Release the probe lock so the daemon can acquire its own. We only held
+	// the lock to detect whether a daemon was already running; now that we've
+	// started one, it needs to take ownership of the lock file.
+	_ = syscall.Flock(int(fd.Fd()), syscall.LOCK_UN)
+
 	s.process = cmd.Process
-	s.lockFd = fd // Keep the lock file open; addon will acquire its own lock
+	s.lockFd = fd
 
 	// Monitor process in background
 	go func() {
@@ -203,7 +208,6 @@ func (s *ServerLifecycle) EnsureRunning(ctx context.Context) error {
 		s.mu.Lock()
 		s.process = nil
 		if s.lockFd != nil {
-			_ = syscall.Flock(int(s.lockFd.Fd()), syscall.LOCK_UN)
 			s.lockFd.Close()
 			s.lockFd = nil
 		}
