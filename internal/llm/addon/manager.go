@@ -86,16 +86,27 @@ func (m *AddonManager) IsInstalled() bool {
 // It returns the path to the verified binary.
 //
 // This method:
-// 1. Gets platform info from the embedded manifest
-// 2. If the binary exists, verifies its checksum
-// 3. If verification fails or binary is missing, downloads it
-// 4. Verifies the downloaded binary
-// 5. Returns the path to the verified binary
+// 1. If TSUKU_LLM_BINARY is set, uses that path directly (skips download/verify)
+// 2. Gets platform info from the embedded manifest
+// 3. If the binary exists, verifies its checksum
+// 4. If verification fails or binary is missing, downloads it
+// 5. Verifies the downloaded binary
+// 6. Returns the path to the verified binary
 //
 // The method is safe for concurrent calls via mutex protection.
 func (m *AddonManager) EnsureAddon(ctx context.Context) (string, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+
+	// When TSUKU_LLM_BINARY is set, use the explicit binary path directly.
+	// This skips download and checksum verification since the binary is
+	// externally provided (e.g., built from source for integration tests).
+	if path := os.Getenv("TSUKU_LLM_BINARY"); path != "" {
+		if _, err := os.Stat(path); err == nil {
+			m.cachedPath = path
+			return path, nil
+		}
+	}
 
 	// Return cached path if already verified this session
 	if m.cachedPath != "" {
@@ -147,7 +158,12 @@ func (m *AddonManager) EnsureAddon(ctx context.Context) (string, error) {
 
 // VerifyBeforeExecution verifies the addon binary checksum before execution.
 // This catches post-download tampering. Call this in ServerLifecycle.EnsureRunning().
+// When TSUKU_LLM_BINARY is set, verification is skipped since the binary is
+// externally provided and not part of the managed download pipeline.
 func (m *AddonManager) VerifyBeforeExecution(binaryPath string) error {
+	if os.Getenv("TSUKU_LLM_BINARY") != "" {
+		return nil
+	}
 	return m.verifyBinary(binaryPath)
 }
 
@@ -228,8 +244,14 @@ func (m *AddonManager) downloadAddon(ctx context.Context, info *PlatformInfo, de
 // Legacy compatibility functions
 
 // AddonPath returns the path to the tsuku-llm binary.
+// If TSUKU_LLM_BINARY is set, returns that path directly.
 // Deprecated: Use NewAddonManager().BinaryPath() instead.
 func AddonPath() string {
+	// Explicit binary path override (integration tests, development builds)
+	if path := os.Getenv("TSUKU_LLM_BINARY"); path != "" {
+		return path
+	}
+
 	home := os.Getenv("TSUKU_HOME")
 	if home == "" {
 		userHome, err := os.UserHomeDir()

@@ -290,6 +290,8 @@ jobs:
             llm-model-
 
       - name: Run LLM integration tests
+        env:
+          TSUKU_LLM_BINARY: ${{ github.workspace }}/tsuku-llm/target/release/tsuku-llm
         # Set TSUKU_LLM_MODEL_CACHE via shell so $HOME is expanded at runtime.
         # The env: block passes values as literals (no shell expansion), and
         # Go's os.Getenv does not expand ~, so using ~ there would break.

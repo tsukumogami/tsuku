@@ -37,34 +37,6 @@ Current
 | ~~[#1759: docs(llm): write manual test runbook](https://github.com/tsukumogami/tsuku/issues/1759)~~ | ~~None~~ | ~~simple~~ |
 | ~~_Write `docs/llm-testing.md` with three procedures: full 10-case benchmark with server restarts, soak test for memory leak detection, and new model validation workflow. Includes results recording templates._~~ | | |
 
-### Dependency Graph
-
-```mermaid
-graph LR
-    I1753["#1753: Fix dead gRPC connections"]
-    I1754["#1754: Parameterize ground truth"]
-    I1755["#1755: Local provider baselines"]
-    I1756["#1756: Server stability tests"]
-    I1757["#1757: Model caching in CI"]
-    I1758["#1758: CI quality gate"]
-    I1759["#1759: Manual test runbook"]
-
-    I1753 --> I1756
-    I1754 --> I1755
-    I1754 --> I1758
-    I1757 --> I1758
-
-    classDef done fill:#c8e6c9
-    classDef ready fill:#bbdefb
-    classDef blocked fill:#fff9c4
-    classDef needsDesign fill:#e1bee7
-    classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
-
-    class I1753,I1754,I1755,I1756,I1757,I1758,I1759 done
-```
-
-**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design
-
 ## Upstream Design Reference
 
 This design builds on [DESIGN-local-llm-runtime.md](DESIGN-local-llm-runtime.md), specifically Phase 5 (Testing and Quality Validation) and the "Production Ready" milestone issues #1641 (quality benchmark suite) and #1644 (E2E integration test).
