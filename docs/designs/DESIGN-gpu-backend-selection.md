@@ -1,5 +1,5 @@
 ---
-status: Accepted
+status: Planned
 problem: |
   The tsuku-llm addon builds 10 platform variants across GPU backends (CUDA, Vulkan, Metal, CPU),
   but the addon download system maps each OS-architecture pair to a single binary. There's no way
@@ -25,9 +25,73 @@ rationale: |
 
 ## Status
 
-Accepted
+Planned
 
 **Source Issue**: [#1769 - feat(llm): GPU backend selection and multi-variant addon distribution](https://github.com/tsukumogami/tsuku/issues/1769)
+
+## Implementation Issues
+
+### Milestone: [gpu-backend-selection](https://github.com/tsukumogami/tsuku/milestone/90)
+
+| Issue | Dependencies | Tier |
+|-------|--------------|------|
+| [#1773: feat(platform): add GPU vendor detection via PCI sysfs](https://github.com/tsukumogami/tsuku/issues/1773) | None | testable |
+| _Adds `DetectGPU()` to the platform package using PCI sysfs on Linux, returning vendor strings (nvidia, amd, intel, apple, none). Updates `platform.Target` and `recipe.MatchTarget` with a `gpu` field and `GPU()` method on the `Matchable` interface. Handles the constructor cascade across ~76 callsites._ | | |
+| [#1774: feat(recipe): add gpu field to WhenClause](https://github.com/tsukumogami/tsuku/issues/1774) | [#1773](https://github.com/tsukumogami/tsuku/issues/1773) | testable |
+| _With GPU exposed on `Matchable`, adds `GPU []string` to `WhenClause` following the libc pattern. Updates `Matches()`, `IsEmpty()`, `ToMap()`, `UnmarshalTOML()`, and `MergeWhenClause()` so recipes can write `when = { gpu = ["nvidia"] }`._ | | |
+| [#1775: refactor(executor): thread GPU through plan generation](https://github.com/tsukumogami/tsuku/issues/1775) | [#1773](https://github.com/tsukumogami/tsuku/issues/1773), [#1774](https://github.com/tsukumogami/tsuku/issues/1774) | testable |
+| _Adds a `GPU` field to `PlanConfig` and wires auto-detection into `GeneratePlan()`, including dependency plan propagation via `depCfg`. After this, recipe steps with `gpu` conditions actually filter at plan time._ | | |
+| [#1776: feat(recipe): add tsuku-llm and vulkan-loader recipes](https://github.com/tsukumogami/tsuku/issues/1776) | [#1775](https://github.com/tsukumogami/tsuku/issues/1775) | testable |
+| _Creates the tsuku-llm recipe with GPU-filtered steps (Vulkan for all GPU vendors, CPU for none) and the vulkan-loader library recipe using the `require_command` pattern. First real consumer of the `gpu` WhenClause field._ | | |
+| [#1777: feat(llm): add llm.backend config key](https://github.com/tsukumogami/tsuku/issues/1777) | None | simple |
+| _Registers `llm.backend` in userconfig with `cpu` as the only valid override value. Adds `LLMBackend()` to the `LLMConfig` interface. Independent of GPU detection, can start in parallel._ | | |
+| [#1778: refactor(llm): migrate addon from embedded manifest to recipe system](https://github.com/tsukumogami/tsuku/issues/1778) | [#1776](https://github.com/tsukumogami/tsuku/issues/1776), [#1777](https://github.com/tsukumogami/tsuku/issues/1777) | critical |
+| _Removes the embedded manifest, download, platform key, and verification code from the addon package. Replaces `EnsureAddon()` with recipe-based installation via an injected `Installer` interface. Wires `llm.backend=cpu` override and cleans up legacy addon paths._ | | |
+| [#1779: feat(llm): add structured error for backend init failure](https://github.com/tsukumogami/tsuku/issues/1779) | None | simple |
+| _Adds a clear stderr message in the Rust binary when the compiled-in GPU backend fails to initialize, suggesting `tsuku config set llm.backend cpu`. Informational only, no protocol changes. Independent work in the tsuku-llm repo._ | | |
+| [#1780: test(llm): benchmark Vulkan vs CUDA on shipped models](https://github.com/tsukumogami/tsuku/issues/1780) | [#1776](https://github.com/tsukumogami/tsuku/issues/1776) | testable |
+| _Runs Vulkan and CUDA variants on NVIDIA hardware for 0.5B/1.5B/3B models, measuring tokens/second. The 25% gap threshold gates marking this design as Current. CUDA variant is manually downloaded for benchmarking._ | | |
+
+### Dependency Graph
+
+```mermaid
+graph TD
+    subgraph Phase1["Phase 1: Platform Detection"]
+        I1773["#1773: GPU vendor detection via sysfs"]
+        I1774["#1774: GPU field on WhenClause"]
+        I1775["#1775: Thread GPU through plan gen"]
+    end
+
+    subgraph Phase2["Phase 2: Recipes + Config"]
+        I1776["#1776: tsuku-llm + vulkan-loader recipes"]
+        I1777["#1777: llm.backend config key"]
+    end
+
+    subgraph Phase3["Phase 3: Migration + Validation"]
+        I1778["#1778: Migrate addon to recipe system"]
+        I1779["#1779: Structured error for backend..."]
+        I1780["#1780: Benchmark Vulkan vs CUDA"]
+    end
+
+    I1773 --> I1774
+    I1773 --> I1775
+    I1774 --> I1775
+    I1775 --> I1776
+    I1776 --> I1778
+    I1777 --> I1778
+    I1776 --> I1780
+
+    classDef done fill:#c8e6c9
+    classDef ready fill:#bbdefb
+    classDef blocked fill:#fff9c4
+    classDef needsDesign fill:#e1bee7
+    classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
+
+    class I1773,I1777,I1779 ready
+    class I1774,I1775,I1776,I1778,I1780 blocked
+```
+
+**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design
 
 ## Upstream Design Reference
 
