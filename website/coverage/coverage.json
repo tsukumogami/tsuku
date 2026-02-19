@@ -1,21 +1,21 @@
 {
-  "generated_at": "2026-02-19T08:57:04Z",
-  "total_recipes": 286,
+  "generated_at": "2026-02-19T14:34:41Z",
+  "total_recipes": 293,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 286,
-        "total": 286,
+        "supported": 293,
+        "total": 293,
         "pct": 100
       },
       "glibc": {
-        "supported": 286,
-        "total": 286,
+        "supported": 293,
+        "total": 293,
         "pct": 100
       },
       "musl": {
-        "supported": 286,
-        "total": 286,
+        "supported": 293,
+        "total": 293,
         "pct": 100
       }
     },
@@ -26,9 +26,9 @@
         "glibc_support": 13
       },
       "tool": {
-        "total": 273,
-        "musl_support": 273,
-        "glibc_support": 273
+        "total": 280,
+        "musl_support": 280,
+        "glibc_support": 280
       }
     }
   },
@@ -478,6 +478,18 @@
       "warnings": null
     },
     {
+      "name": "bpmnlint",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "brotli",
       "type": "library",
       "platforms": {
@@ -503,6 +515,18 @@
     },
     {
       "name": "buf",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "bumpp",
       "type": "tool",
       "platforms": {
         "darwin": true,
@@ -670,6 +694,18 @@
       "warnings": null
     },
     {
+      "name": "chrome-devtools-mcp",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "clang-format",
       "type": "tool",
       "platforms": {
@@ -766,7 +802,55 @@
       "warnings": null
     },
     {
+      "name": "commitlint",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "contentful-cli",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "corepack",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "cosign",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "cspell",
       "type": "tool",
       "platforms": {
         "darwin": true,
