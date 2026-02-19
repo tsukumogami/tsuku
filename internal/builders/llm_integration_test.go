@@ -348,8 +348,9 @@ func TestLLMGroundTruth(t *testing.T) {
 		t.Run(key, func(t *testing.T) {
 			t.Logf("Testing: %s - %s", tc.Tool, tc.Desc)
 
-			// Use a longer timeout for LLM calls (2 minutes)
-			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+			// Per-test timeout: 10 minutes for CPU inference with local model
+			// (cloud providers finish in ~10s, but local 0.5B on CPU needs longer)
+			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 			defer cancel()
 
 			// Load ground truth recipe

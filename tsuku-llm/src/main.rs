@@ -767,13 +767,14 @@ async fn main() -> Result<()> {
     let model = Arc::new(model);
     info!("Model loaded successfully");
 
-    // Create inference context with larger context window and batch size.
-    // Default context is 512, but we need more for tool calling prompts.
-    // Multi-turn conversations with tool results can easily exceed 8K tokens.
-    // Batch size must be large enough to process the entire prompt at once.
+    // Create inference context using the model's full training context window.
+    // Recipe generation prompts can reach ~27K tokens, so we need the full 32K
+    // that Qwen2.5-0.5B supports. Batch size matches context for single-pass
+    // prompt ingestion.
+    let n_ctx = model.n_ctx_train();
     let context_params = ContextParams {
-        n_ctx: 16384,
-        n_batch: 16384,
+        n_ctx,
+        n_batch: n_ctx,
         ..Default::default()
     };
     let context = LlamaContext::new(model.clone(), context_params).context("Failed to create context")?;
