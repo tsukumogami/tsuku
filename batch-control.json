@@ -35,6 +35,11 @@
       "failures": 5,
       "last_failure": "2026-02-19T13:06:59Z",
       "opens_at": "2026-02-19T14:06:59Z"
+    },
+    "pypi": {
+      "state": "closed",
+      "failures": 1,
+      "last_failure": "2026-02-19T21:39:05Z"
     }
   },
   "budget": {
