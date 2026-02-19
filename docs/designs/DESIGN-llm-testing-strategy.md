@@ -164,7 +164,7 @@ This separation means routine Rust addon changes (hardware detection, model down
 ### Uncertainties
 
 - **CI inference time stability**: CPU-only inference time varies by hardware. CI runners may have different performance characteristics than development machines. The 5-30 second range per turn is based on dev hardware.
-- **Model download in CI**: The quality tests require the 0.5B model (~500MB). CI runners may have bandwidth constraints or HuggingFace rate limits. The existing `skipIfModelCDNUnavailable` pattern handles this gracefully.
+- **Model download in CI**: The quality tests require the 0.5B model (~500MB). CI runners may have bandwidth constraints or HuggingFace rate limits. Model caching mitigates repeat downloads, and the existing `skipIfModelCDNUnavailable` pattern handles unreachable CDN gracefully.
 - **Non-determinism**: Even at temperature 0 with greedy sampling, llama.cpp inference can produce slightly different outputs across platforms due to floating-point precision differences. Baseline expectations may need platform-specific adjustments.
 - **Crash root cause**: The stability tests are designed to detect crashes, not diagnose them. The root cause of the fly/trivy crashes may be in llama.cpp (upstream), the Rust wrapper, or the gRPC layer. The tests tell us *if* something breaks, not *why*.
 
@@ -240,6 +240,12 @@ testdata/llm-quality-baselines/
 └── gemini.json        # Expected results for Gemini
 ```
 
+**Model Caching** (CI workflow + test helper):
+
+The existing `llm-integration` CI job and each individual test function download the 0.5B model (~500MB) from scratch every time -- there's no caching at either level. This is wasteful and slow.
+
+Two fixes: (1) an `actions/cache` step in the CI workflow caches the model directory keyed by the model's SHA256 checksum from the addon manifest, eliminating repeat downloads across CI runs; (2) a `sharedModelDir(t)` test helper provides a single model directory shared across test functions within a run, with each test symlinking `$TSUKU_HOME/models/` to it. Tests keep isolated `TSUKU_HOME` directories for sockets and lock files, but share the model to avoid downloading it per-test-function. Both the existing `llm-integration` job and the new `llm-quality` job use this caching.
+
 **Stability Tests** (`internal/llm/stability_test.go`, build tag `integration`):
 
 Two test functions:
@@ -276,8 +282,8 @@ The test decomposes into provider detection, baseline loading, and regression re
 **CI quality test flow:**
 
 1. CI detects changes in prompt templates or test matrix
-2. `llm-quality` job triggers: build Rust addon, set `TSUKU_LLM_BINARY` env var
-3. `go test -tags=integration ./internal/builders/...` runs
+2. `llm-quality` job triggers: build Rust addon, restore model cache, set `TSUKU_LLM_BINARY` env var
+3. `go test -tags=integration ./internal/builders/...` runs (model cache hit skips ~500MB download)
 4. `TestLLMGroundTruth` detects `TSUKU_LLM_BINARY` env var, uses local provider
 5. Each test case generates a recipe and compares against ground truth
 6. After all cases: load `testdata/llm-quality-baselines/local.json`
@@ -314,13 +320,27 @@ Add `TestSequentialInference` and `TestCrashRecovery` to `internal/llm/stability
 
 Files: `internal/llm/stability_test.go`
 
-### Phase 4: CI Quality Gate
+### Phase 4: Model Caching in CI
 
-Add `llm-quality` job to `.github/workflows/test.yml` with change-detection triggers for prompt templates, test matrix, and baseline files. The job builds the addon, sets `TSUKU_LLM_BINARY`, and runs `go test -tags=integration ./internal/builders/...` with a generous timeout.
+The existing `llm-integration` job downloads the 0.5B model (~500MB) from HuggingFace on every run with no caching. Worse, each test function in `lifecycle_integration_test.go` uses a fresh `t.TempDir()` for `TSUKU_HOME`, so the model downloads multiple times within a single CI run.
+
+Fix both issues:
+
+1. **CI workflow**: Add an `actions/cache` step for the model file, keyed by the SHA256 checksum from the addon manifest. The cache path is a shared directory that tests can symlink or copy from. This eliminates repeat downloads across CI runs.
+
+2. **Test helper**: Add a `sharedModelDir(t)` helper that returns a shared directory for model storage across test functions within a single run. Each test still gets its own `TSUKU_HOME` (for socket/lock isolation), but the `models/` subdirectory is symlinked to the shared location. This prevents re-downloading the model for every test function.
+
+Apply this to both the existing `llm-integration` job and the new `llm-quality` job.
+
+Files: `.github/workflows/test.yml`, `internal/llm/lifecycle_integration_test.go`
+
+### Phase 5: CI Quality Gate
+
+Add `llm-quality` job to `.github/workflows/test.yml` with change-detection triggers for prompt templates, test matrix, and baseline files. The job builds the addon, sets `TSUKU_LLM_BINARY`, and runs `go test -tags=integration ./internal/builders/...` with a generous timeout. Uses the same model caching from Phase 4.
 
 Files: `.github/workflows/test.yml`
 
-### Phase 5: Manual Test Runbook
+### Phase 6: Manual Test Runbook
 
 Write `docs/llm-testing.md` with procedures for full benchmark, soak test, and new model validation. Include result recording templates and memory monitoring instructions.
 
@@ -371,10 +391,11 @@ CI environment variables (`ANTHROPIC_API_KEY`, `GOOGLE_API_KEY`) are handled as 
 - **Regression precision**: Per-test baselines show exactly which cases regressed, not just an aggregate pass rate. This makes triage faster.
 - **Structured manual testing**: The runbook replaces ad-hoc QA with a repeatable procedure, making it possible for anyone to run the stability tests that found #1738.
 - **Extends existing infrastructure**: No new test frameworks, no new CI providers, no new dependencies. The quality tests are an extension of `TestLLMGroundTruth`, the stability tests follow `lifecycle_integration_test.go` patterns, and the CI job reuses the existing addon build step.
+- **Faster existing CI**: Model caching fixes a pre-existing problem where the `llm-integration` job downloads the 0.5B model (~500MB) from scratch on every run and even re-downloads within a single run across test functions. Cached runs save minutes of download time.
 
 ### Negative
 
-- **CI time increase**: The `llm-quality` job adds ~10-15 minutes when triggered. Combined with the addon build, prompt-affecting PRs face ~20 minutes of CI.
+- **CI time increase**: The `llm-quality` job adds ~10-15 minutes when triggered. Combined with the addon build, prompt-affecting PRs face ~20 minutes of CI. Model caching reduces this on repeat runs (cache hit avoids ~500MB download).
 - **Baseline maintenance**: Provider baselines need updating when models change, prompts improve, or test cases are added. Each update requires a deliberate decision about expected behavior.
 - **Manual test gap**: The long-running stability tests that would catch the fly/trivy crashes require manual execution. There's no CI enforcement.
 - **0.5B canary limitation**: CI quality tests use the smallest model, which may not reproduce issues specific to 3B inference (different context window usage, different token generation patterns).
