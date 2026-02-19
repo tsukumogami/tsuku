@@ -293,6 +293,15 @@ func Generate(opts Options) error {
 	// Load metrics
 	runs, metricsRecords, err := loadMetricsFromDir(opts.MetricsDir)
 	if err == nil && len(runs) > 0 {
+		// Filter out empty runs (total=0) that processed no recipes.
+		filtered := runs[:0]
+		for _, r := range runs {
+			if r.Total > 0 {
+				filtered = append(filtered, r)
+			}
+		}
+		runs = filtered
+
 		// Take last 10, newest first (runs are sorted by timestamp in loadMetricsFromDir)
 		if len(runs) > 10 {
 			runs = runs[len(runs)-10:]
