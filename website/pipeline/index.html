@@ -557,7 +557,9 @@
             const blockerItems = (data.blockers || []).slice(0, 10).map(b => `
                 <a href="/pipeline/blocked.html?blocker=${encodeURIComponent(b.dependency)}" class="status-row">
                     <span class="blocker-name">${esc(b.dependency)}</span>
-                    <span class="blocker-count">${esc(b.count)} blocked</span>
+                    <span class="blocker-count" title="${esc(b.direct_count)} direct">
+                        ${esc(b.total_count)} blocked
+                    </span>
                 </a>
             `).join('') || '<div class="no-data">No blocking dependencies</div>';
 
