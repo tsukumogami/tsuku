@@ -298,7 +298,9 @@ jobs:
           export TSUKU_LLM_MODEL_CACHE="$HOME/.cache/tsuku-llm-models"
           go test -tags=integration -v ./internal/llm/...
 
-  # Run ground truth quality suite with local provider when prompts or baselines change
+  # Run ground truth quality suite with local provider when prompts or baselines change.
+  # Setup steps (Go, Rust, Cargo cache, protobuf, model cache) mirror llm-integration above.
+  # Kept inline for CI readability rather than extracted into a reusable workflow.
   llm-quality:
     name: "LLM Quality Gate"
     needs: matrix
@@ -403,7 +405,8 @@ jobs:
               - 'tsuku-llm/**'
               - 'internal/llm/**'
             llm_quality:
-              - 'internal/builders/prompts/**'
+              - 'internal/builders/github_release.go'
+              - 'internal/builders/homebrew.go'
               - 'tsuku-llm/src/main.rs'
               - 'internal/builders/llm-test-matrix.json'
               - 'testdata/llm-quality-baselines/**'
