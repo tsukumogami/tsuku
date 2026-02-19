@@ -126,6 +126,8 @@ type mockInferenceServer struct {
 	completeResponse *pb.CompletionResponse
 	completeErr      error
 	statusResponse   *pb.StatusResponse
+	statusErr        error
+	shutdownErr      error
 }
 
 func (m *mockInferenceServer) Complete(ctx context.Context, req *pb.CompletionRequest) (*pb.CompletionResponse, error) {
@@ -146,6 +148,9 @@ func (m *mockInferenceServer) Complete(ctx context.Context, req *pb.CompletionRe
 }
 
 func (m *mockInferenceServer) GetStatus(ctx context.Context, req *pb.StatusRequest) (*pb.StatusResponse, error) {
+	if m.statusErr != nil {
+		return nil, m.statusErr
+	}
 	if m.statusResponse != nil {
 		return m.statusResponse, nil
 	}
@@ -157,6 +162,9 @@ func (m *mockInferenceServer) GetStatus(ctx context.Context, req *pb.StatusReque
 }
 
 func (m *mockInferenceServer) Shutdown(ctx context.Context, req *pb.ShutdownRequest) (*pb.ShutdownResponse, error) {
+	if m.shutdownErr != nil {
+		return nil, m.shutdownErr
+	}
 	return &pb.ShutdownResponse{Accepted: true}, nil
 }
 
@@ -341,6 +349,102 @@ func TestSendRequestSucceedsOnValidResponse(t *testing.T) {
 	// Connection should still be valid after a successful call.
 	require.NotNil(t, provider.client, "client should remain set after successful call")
 	require.NotNil(t, provider.conn, "conn should remain set after successful call")
+}
+
+// TestGetStatusInvalidatesConnectionOnError verifies that a gRPC error from
+// GetStatus causes the LocalProvider to nil out its cached connection and client,
+// consistent with sendRequest behavior.
+func TestGetStatusInvalidatesConnectionOnError(t *testing.T) {
+	tmpDir := t.TempDir()
+	t.Setenv("TSUKU_HOME", tmpDir)
+
+	const bufSize = 1024 * 1024
+	lis := bufconn.Listen(bufSize)
+
+	mockServer := &mockInferenceServer{
+		statusErr: fmt.Errorf("simulated server crash"),
+	}
+	grpcServer := grpc.NewServer()
+	pb.RegisterInferenceServiceServer(grpcServer, mockServer)
+
+	go func() {
+		if err := grpcServer.Serve(lis); err != nil {
+			t.Logf("mock server error: %v", err)
+		}
+	}()
+	defer grpcServer.Stop()
+
+	ctx := context.Background()
+	conn, err := grpc.NewClient(
+		"passthrough://bufnet",
+		grpc.WithContextDialer(func(context.Context, string) (net.Conn, error) {
+			return lis.Dial()
+		}),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	require.NoError(t, err)
+
+	provider := &LocalProvider{
+		conn:   conn,
+		client: pb.NewInferenceServiceClient(conn),
+	}
+
+	require.NotNil(t, provider.conn, "conn should be set before GetStatus call")
+	require.NotNil(t, provider.client, "client should be set before GetStatus call")
+
+	_, err = provider.GetStatus(ctx)
+	require.Error(t, err)
+
+	require.Nil(t, provider.client, "client should be nil after gRPC error in GetStatus")
+	require.Nil(t, provider.conn, "conn should be nil after gRPC error in GetStatus")
+}
+
+// TestShutdownInvalidatesConnectionOnError verifies that a gRPC error from
+// Shutdown causes the LocalProvider to nil out its cached connection and client,
+// consistent with sendRequest behavior.
+func TestShutdownInvalidatesConnectionOnError(t *testing.T) {
+	tmpDir := t.TempDir()
+	t.Setenv("TSUKU_HOME", tmpDir)
+
+	const bufSize = 1024 * 1024
+	lis := bufconn.Listen(bufSize)
+
+	mockServer := &mockInferenceServer{
+		shutdownErr: fmt.Errorf("simulated server crash"),
+	}
+	grpcServer := grpc.NewServer()
+	pb.RegisterInferenceServiceServer(grpcServer, mockServer)
+
+	go func() {
+		if err := grpcServer.Serve(lis); err != nil {
+			t.Logf("mock server error: %v", err)
+		}
+	}()
+	defer grpcServer.Stop()
+
+	ctx := context.Background()
+	conn, err := grpc.NewClient(
+		"passthrough://bufnet",
+		grpc.WithContextDialer(func(context.Context, string) (net.Conn, error) {
+			return lis.Dial()
+		}),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	require.NoError(t, err)
+
+	provider := &LocalProvider{
+		conn:   conn,
+		client: pb.NewInferenceServiceClient(conn),
+	}
+
+	require.NotNil(t, provider.conn, "conn should be set before Shutdown call")
+	require.NotNil(t, provider.client, "client should be set before Shutdown call")
+
+	err = provider.Shutdown(ctx, true)
+	require.Error(t, err)
+
+	require.Nil(t, provider.client, "client should be nil after gRPC error in Shutdown")
+	require.Nil(t, provider.conn, "conn should be nil after gRPC error in Shutdown")
 }
 
 // TestFromProtoResponse verifies the proto-to-Go conversion.

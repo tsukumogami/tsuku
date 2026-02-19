@@ -72,6 +72,17 @@ func (p *LocalProvider) Complete(ctx context.Context, req *CompletionRequest) (*
 	return p.sendRequest(ctx, req)
 }
 
+// invalidateConnection closes and nils the cached gRPC connection and client
+// so that subsequent calls trigger reconnection via ensureConnection instead
+// of reusing a dead connection.
+func (p *LocalProvider) invalidateConnection() {
+	p.client = nil
+	if p.conn != nil {
+		_ = p.conn.Close()
+		p.conn = nil
+	}
+}
+
 // sendRequest converts the request to proto format, sends it over gRPC,
 // and invalidates the cached connection on error so subsequent calls
 // trigger reconnection via ensureConnection.
@@ -80,13 +91,7 @@ func (p *LocalProvider) sendRequest(ctx context.Context, req *CompletionRequest)
 
 	pbResp, err := p.client.Complete(ctx, pbReq)
 	if err != nil {
-		// Invalidate the cached connection so subsequent calls trigger
-		// reconnection via ensureConnection instead of reusing a dead connection.
-		p.client = nil
-		if p.conn != nil {
-			_ = p.conn.Close()
-			p.conn = nil
-		}
+		p.invalidateConnection()
 		return nil, fmt.Errorf("local LLM completion failed: %w", err)
 	}
 
@@ -131,7 +136,11 @@ func (p *LocalProvider) Shutdown(ctx context.Context, graceful bool) error {
 		return nil
 	}
 	_, err := p.client.Shutdown(ctx, &pb.ShutdownRequest{Graceful: graceful})
-	return err
+	if err != nil {
+		p.invalidateConnection()
+		return err
+	}
+	return nil
 }
 
 // GetStatus retrieves the addon's current status.
@@ -139,7 +148,12 @@ func (p *LocalProvider) GetStatus(ctx context.Context) (*pb.StatusResponse, erro
 	if err := p.ensureConnection(ctx); err != nil {
 		return nil, err
 	}
-	return p.client.GetStatus(ctx, &pb.StatusRequest{})
+	resp, err := p.client.GetStatus(ctx, &pb.StatusRequest{})
+	if err != nil {
+		p.invalidateConnection()
+		return nil, err
+	}
+	return resp, nil
 }
 
 // SocketPath returns the path to the Unix domain socket.
