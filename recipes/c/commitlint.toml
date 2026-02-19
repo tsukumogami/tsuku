@@ -1,0 +1,32 @@
+[metadata]
+  name = "commitlint"
+  description = "Lint your commit messages"
+  homepage = "https://commitlint.js.org/"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+supported_libc = ["glibc"]
+
+[version]
+  source = "npm"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "npm_install"
+  executables = ["commitlint"]
+  package = "commitlint"
+
+[verify]
+  command = "commitlint --version"
+  pattern = ""
