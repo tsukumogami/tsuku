@@ -2,6 +2,7 @@ package llm
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"os"
 	"path/filepath"
@@ -123,10 +124,14 @@ func TestLocalProviderIntegration(t *testing.T) {
 type mockInferenceServer struct {
 	pb.UnimplementedInferenceServiceServer
 	completeResponse *pb.CompletionResponse
+	completeErr      error
 	statusResponse   *pb.StatusResponse
 }
 
 func (m *mockInferenceServer) Complete(ctx context.Context, req *pb.CompletionRequest) (*pb.CompletionResponse, error) {
+	if m.completeErr != nil {
+		return nil, m.completeErr
+	}
 	if m.completeResponse != nil {
 		return m.completeResponse, nil
 	}
@@ -223,6 +228,119 @@ func TestLocalProviderWithMockServer(t *testing.T) {
 		require.NotNil(t, resp)
 		require.True(t, resp.Accepted)
 	})
+}
+
+// TestSendRequestInvalidatesConnectionOnError verifies that a gRPC error from
+// sendRequest causes the LocalProvider to nil out its cached connection and client.
+// This ensures subsequent calls trigger reconnection via ensureConnection
+// instead of reusing a dead connection after a server crash.
+func TestSendRequestInvalidatesConnectionOnError(t *testing.T) {
+	tmpDir := t.TempDir()
+	t.Setenv("TSUKU_HOME", tmpDir)
+
+	// Start a mock server that returns an error from Complete.
+	const bufSize = 1024 * 1024
+	lis := bufconn.Listen(bufSize)
+
+	mockServer := &mockInferenceServer{
+		completeErr: fmt.Errorf("simulated server crash"),
+	}
+	grpcServer := grpc.NewServer()
+	pb.RegisterInferenceServiceServer(grpcServer, mockServer)
+
+	go func() {
+		if err := grpcServer.Serve(lis); err != nil {
+			t.Logf("mock server error: %v", err)
+		}
+	}()
+	defer grpcServer.Stop()
+
+	// Create a client connection through bufconn.
+	ctx := context.Background()
+	conn, err := grpc.NewClient(
+		"passthrough://bufnet",
+		grpc.WithContextDialer(func(context.Context, string) (net.Conn, error) {
+			return lis.Dial()
+		}),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	require.NoError(t, err)
+
+	// Inject the connection into a LocalProvider, bypassing ensureConnection
+	// and the lifecycle/addon manager (which aren't relevant to this test).
+	provider := &LocalProvider{
+		conn:   conn,
+		client: pb.NewInferenceServiceClient(conn),
+	}
+
+	// Verify the connection fields are populated before the call.
+	require.NotNil(t, provider.conn, "conn should be set before sendRequest call")
+	require.NotNil(t, provider.client, "client should be set before sendRequest call")
+
+	// Call sendRequest directly -- this tests the gRPC call and invalidation
+	// logic without going through addon/lifecycle checks.
+	req := &CompletionRequest{
+		SystemPrompt: "test",
+		Messages:     []Message{{Role: RoleUser, Content: "hello"}},
+		MaxTokens:    10,
+	}
+	_, err = provider.sendRequest(ctx, req)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "local LLM completion failed")
+
+	// After the error, the cached connection must be invalidated.
+	require.Nil(t, provider.client, "client should be nil after gRPC error")
+	require.Nil(t, provider.conn, "conn should be nil after gRPC error")
+}
+
+// TestSendRequestSucceedsOnValidResponse verifies that sendRequest does NOT
+// invalidate the connection when the gRPC call succeeds.
+func TestSendRequestSucceedsOnValidResponse(t *testing.T) {
+	tmpDir := t.TempDir()
+	t.Setenv("TSUKU_HOME", tmpDir)
+
+	const bufSize = 1024 * 1024
+	lis := bufconn.Listen(bufSize)
+
+	mockServer := &mockInferenceServer{}
+	grpcServer := grpc.NewServer()
+	pb.RegisterInferenceServiceServer(grpcServer, mockServer)
+
+	go func() {
+		if err := grpcServer.Serve(lis); err != nil {
+			t.Logf("mock server error: %v", err)
+		}
+	}()
+	defer grpcServer.Stop()
+
+	ctx := context.Background()
+	conn, err := grpc.NewClient(
+		"passthrough://bufnet",
+		grpc.WithContextDialer(func(context.Context, string) (net.Conn, error) {
+			return lis.Dial()
+		}),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	require.NoError(t, err)
+	defer func() { _ = conn.Close() }()
+
+	provider := &LocalProvider{
+		conn:   conn,
+		client: pb.NewInferenceServiceClient(conn),
+	}
+
+	req := &CompletionRequest{
+		SystemPrompt: "test",
+		Messages:     []Message{{Role: RoleUser, Content: "hello"}},
+		MaxTokens:    10,
+	}
+	resp, err := provider.sendRequest(ctx, req)
+	require.NoError(t, err)
+	require.Equal(t, "Hello from mock server!", resp.Content)
+
+	// Connection should still be valid after a successful call.
+	require.NotNil(t, provider.client, "client should remain set after successful call")
+	require.NotNil(t, provider.conn, "conn should remain set after successful call")
 }
 
 // TestFromProtoResponse verifies the proto-to-Go conversion.

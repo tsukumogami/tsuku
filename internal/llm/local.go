@@ -68,11 +68,25 @@ func (p *LocalProvider) Complete(ctx context.Context, req *CompletionRequest) (*
 		return nil, fmt.Errorf("failed to connect to local LLM addon: %w", err)
 	}
 
-	// Convert to proto format
+	// Convert and send request
+	return p.sendRequest(ctx, req)
+}
+
+// sendRequest converts the request to proto format, sends it over gRPC,
+// and invalidates the cached connection on error so subsequent calls
+// trigger reconnection via ensureConnection.
+func (p *LocalProvider) sendRequest(ctx context.Context, req *CompletionRequest) (*CompletionResponse, error) {
 	pbReq := toProtoRequest(req)
 
 	pbResp, err := p.client.Complete(ctx, pbReq)
 	if err != nil {
+		// Invalidate the cached connection so subsequent calls trigger
+		// reconnection via ensureConnection instead of reusing a dead connection.
+		p.client = nil
+		if p.conn != nil {
+			_ = p.conn.Close()
+			p.conn = nil
+		}
 		return nil, fmt.Errorf("local LLM completion failed: %w", err)
 	}
 
