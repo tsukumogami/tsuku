@@ -9,8 +9,8 @@
   "circuit_breaker": {
     "homebrew": {
       "state": "closed",
-      "failures": 1,
-      "last_failure": "2026-02-18T15:55:47Z",
+      "failures": 2,
+      "last_failure": "2026-02-19T02:00:15Z",
       "opens_at": "2026-02-08T10:31:11Z"
     },
     "github": {
