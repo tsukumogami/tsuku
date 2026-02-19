@@ -1,21 +1,21 @@
 {
-  "generated_at": "2026-02-19T14:34:41Z",
-  "total_recipes": 293,
+  "generated_at": "2026-02-19T19:49:14Z",
+  "total_recipes": 296,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 293,
-        "total": 293,
+        "supported": 296,
+        "total": 296,
         "pct": 100
       },
       "glibc": {
-        "supported": 293,
-        "total": 293,
+        "supported": 296,
+        "total": 296,
         "pct": 100
       },
       "musl": {
-        "supported": 293,
-        "total": 293,
+        "supported": 296,
+        "total": 296,
         "pct": 100
       }
     },
@@ -26,9 +26,9 @@
         "glibc_support": 13
       },
       "tool": {
-        "total": 280,
-        "musl_support": 280,
-        "glibc_support": 280
+        "total": 283,
+        "musl_support": 283,
+        "glibc_support": 283
       }
     }
   },
@@ -946,6 +946,18 @@
       "warnings": null
     },
     {
+      "name": "diff-so-fancy",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "direnv",
       "type": "tool",
       "platforms": {
@@ -1066,6 +1078,18 @@
       "warnings": null
     },
     {
+      "name": "dprint",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "draft",
       "type": "tool",
       "platforms": {
@@ -1115,6 +1139,18 @@
     },
     {
       "name": "eksctl",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "esbuild",
       "type": "tool",
       "platforms": {
         "darwin": true,
