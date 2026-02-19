@@ -1,9 +1,10 @@
 {
-  "generated_at": "2026-02-19T04:26:21Z",
+  "generated_at": "2026-02-19T04:55:15Z",
   "queue": {
     "total": 5275,
     "by_status": {
-      "failed": 45,
+      "blocked": 5,
+      "failed": 40,
       "pending": 2946,
       "requires_manual": 2009,
       "success": 275
@@ -19,13 +20,74 @@
         "success": 3
       },
       "3": {
-        "failed": 26,
+        "blocked": 5,
+        "failed": 21,
         "pending": 2946,
         "requires_manual": 1986,
         "success": 272
       }
     },
     "packages": {
+      "blocked": [
+        {
+          "id": "homebrew:a2ps",
+          "name": "a2ps",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "missing_dep",
+          "blocked_by": [
+            "bdw-gc"
+          ],
+          "failure_count": 2,
+          "next_retry_at": "2026-02-19T15:38:27Z"
+        },
+        {
+          "id": "homebrew:aarch64-elf-gcc",
+          "name": "aarch64-elf-gcc",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "missing_dep",
+          "blocked_by": [
+            "gmp"
+          ],
+          "failure_count": 2,
+          "next_retry_at": "2026-02-19T15:38:37Z"
+        },
+        {
+          "id": "homebrew:aarch64-elf-gdb",
+          "name": "aarch64-elf-gdb",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "missing_dep",
+          "blocked_by": [
+            "gmp"
+          ],
+          "failure_count": 2,
+          "next_retry_at": "2026-02-19T15:38:39Z"
+        },
+        {
+          "id": "homebrew:aerc",
+          "name": "aerc",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "missing_dep",
+          "blocked_by": [
+            "notmuch"
+          ],
+          "failure_count": 1
+        },
+        {
+          "id": "homebrew:afflib",
+          "name": "afflib",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "missing_dep",
+          "blocked_by": [
+            "openssl@3"
+          ],
+          "failure_count": 1
+        }
+      ],
       "failed": [
         {
           "id": "github:sharkdp/bat",
@@ -253,15 +315,6 @@
           "next_retry_at": "2026-02-19T15:38:25Z"
         },
         {
-          "id": "homebrew:a2ps",
-          "name": "a2ps",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "validation_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-02-19T15:38:27Z"
-        },
-        {
           "id": "homebrew:a7ex/formulae/xcresultparser",
           "name": "a7ex/formulae/xcresultparser",
           "ecosystem": "homebrew",
@@ -278,24 +331,6 @@
           "category": "deterministic_insufficient",
           "failure_count": 2,
           "next_retry_at": "2026-02-19T15:38:29Z"
-        },
-        {
-          "id": "homebrew:aarch64-elf-gcc",
-          "name": "aarch64-elf-gcc",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "validation_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-02-19T15:38:37Z"
-        },
-        {
-          "id": "homebrew:aarch64-elf-gdb",
-          "name": "aarch64-elf-gdb",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "validation_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-02-19T15:38:39Z"
         },
         {
           "id": "homebrew:abcde",
@@ -401,22 +436,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "deterministic_insufficient",
-          "failure_count": 1
-        },
-        {
-          "id": "homebrew:aerc",
-          "name": "aerc",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "validation_failed",
-          "failure_count": 1
-        },
-        {
-          "id": "homebrew:afflib",
-          "name": "afflib",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "validation_failed",
           "failure_count": 1
         }
       ],
@@ -2432,7 +2451,10 @@
           "name": "ccache",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "blake3"
+          ],
           "failure_count": 0
         },
         {
@@ -5231,7 +5253,10 @@
           "name": "fastfetch",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "yyjson"
+          ],
           "failure_count": 0
         },
         {
@@ -5695,7 +5720,10 @@
           "name": "freetds",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "openssl@3"
+          ],
           "failure_count": 0
         },
         {
@@ -5843,7 +5871,10 @@
           "name": "gambit-scheme",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "openssl@3"
+          ],
           "failure_count": 0
         },
         {
@@ -5921,7 +5952,10 @@
           "name": "gauche",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "ca-certificates"
+          ],
           "failure_count": 0
         },
         {
@@ -6062,7 +6096,10 @@
           "name": "ghidra",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "openjdk@21"
+          ],
           "failure_count": 0
         },
         {
@@ -6140,7 +6177,10 @@
           "name": "git-crypt",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "openssl@3"
+          ],
           "failure_count": 0
         },
         {
@@ -6505,7 +6545,10 @@
           "name": "gnutls",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "ca-certificates"
+          ],
           "failure_count": 0
         },
         {
@@ -7157,7 +7200,10 @@
           "name": "guile",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "bdw-gc"
+          ],
           "failure_count": 0
         },
         {
@@ -7648,7 +7694,10 @@
           "name": "httpd",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "apr"
+          ],
           "failure_count": 0
         },
         {
@@ -8499,7 +8548,10 @@
           "name": "jpeg-xl",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "giflib"
+          ],
           "failure_count": 0
         },
         {
@@ -8773,7 +8825,10 @@
           "name": "kcov",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "dwarfutils"
+          ],
           "failure_count": 0
         },
         {
@@ -9509,7 +9564,10 @@
           "name": "leptonica",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "giflib"
+          ],
           "failure_count": 0
         },
         {
@@ -9853,7 +9911,10 @@
           "name": "libheif",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "aom"
+          ],
           "failure_count": 0
         },
         {
@@ -10709,7 +10770,10 @@
           "name": "little-cms2",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "jpeg-turbo"
+          ],
           "failure_count": 0
         },
         {
@@ -12190,7 +12254,10 @@
           "name": "mysql-client",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "libfido2"
+          ],
           "failure_count": 0
         },
         {
@@ -13000,7 +13067,10 @@
           "name": "open-mpi",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "gcc"
+          ],
           "failure_count": 0
         },
         {
@@ -13983,7 +14053,10 @@
           "name": "p11-kit",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "ca-certificates"
+          ],
           "failure_count": 0
         },
         {
@@ -15057,7 +15130,10 @@
           "name": "protoc-gen-go",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "protobuf"
+          ],
           "failure_count": 0
         },
         {
@@ -15247,7 +15323,10 @@
           "name": "pyenv-virtualenv",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "pyenv"
+          ],
           "failure_count": 0
         },
         {
@@ -17602,7 +17681,10 @@
           "name": "skopeo",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "gpgme"
+          ],
           "failure_count": 0
         },
         {
@@ -17750,7 +17832,10 @@
           "name": "socat",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "openssl@3"
+          ],
           "failure_count": 0
         },
         {
@@ -18437,7 +18522,10 @@
           "name": "swift-protobuf",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "protobuf"
+          ],
           "failure_count": 0
         },
         {
@@ -18627,7 +18715,10 @@
           "name": "tcl-tk",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "libtommath"
+          ],
           "failure_count": 0
         },
         {
@@ -18951,7 +19042,10 @@
           "name": "the_silver_searcher",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "pcre2"
+          ],
           "failure_count": 0
         },
         {
@@ -19722,7 +19816,10 @@
           "name": "universal-ctags",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "jansson"
+          ],
           "failure_count": 0
         },
         {
@@ -19730,7 +19827,10 @@
           "name": "unixodbc",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "libtool"
+          ],
           "failure_count": 0
         },
         {
@@ -20469,7 +20569,10 @@
           "name": "wireshark",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "glib"
+          ],
           "failure_count": 0
         },
         {
@@ -21048,7 +21151,10 @@
           "name": "zsh",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "pcre2"
+          ],
           "failure_count": 0
         },
         {
@@ -21137,7 +21243,10 @@
           "name": "eza",
           "ecosystem": "homebrew",
           "priority": 1,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "libgit2"
+          ],
           "failure_count": 0
         },
         {
@@ -21145,7 +21254,10 @@
           "name": "gitui",
           "ecosystem": "homebrew",
           "priority": 1,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "openssl@3"
+          ],
           "failure_count": 0
         },
         {
@@ -21153,7 +21265,10 @@
           "name": "neovim",
           "ecosystem": "homebrew",
           "priority": 1,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "tree-sitter@0.25"
+          ],
           "failure_count": 0
         },
         {
@@ -21172,7 +21287,10 @@
           "name": "shellcheck",
           "ecosystem": "homebrew",
           "priority": 1,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "gmp"
+          ],
           "failure_count": 0
         },
         {
@@ -21180,7 +21298,10 @@
           "name": "tmux",
           "ecosystem": "homebrew",
           "priority": 1,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "libevent"
+          ],
           "failure_count": 0
         },
         {
@@ -21188,7 +21309,10 @@
           "name": "vim",
           "ecosystem": "homebrew",
           "priority": 1,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "gettext"
+          ],
           "failure_count": 0
         },
         {
@@ -21196,7 +21320,10 @@
           "name": "wget",
           "ecosystem": "homebrew",
           "priority": 1,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "libidn2"
+          ],
           "failure_count": 0
         },
         {
@@ -21242,7 +21369,10 @@
           "name": "gcc",
           "ecosystem": "homebrew",
           "priority": 2,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "gmp"
+          ],
           "failure_count": 0
         },
         {
@@ -21258,7 +21388,10 @@
           "name": "gnupg",
           "ecosystem": "homebrew",
           "priority": 2,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "gnutls"
+          ],
           "failure_count": 0
         },
         {
@@ -21299,7 +21432,10 @@
           "name": "ollama",
           "ecosystem": "homebrew",
           "priority": 2,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "mlx-c"
+          ],
           "failure_count": 0
         },
         {
@@ -21307,7 +21443,10 @@
           "name": "protobuf",
           "ecosystem": "homebrew",
           "priority": 2,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "abseil"
+          ],
           "failure_count": 0
         },
         {
@@ -21315,7 +21454,10 @@
           "name": "ripgrep",
           "ecosystem": "homebrew",
           "priority": 2,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "pcre2"
+          ],
           "failure_count": 0
         },
         {
@@ -21641,7 +21783,10 @@
           "name": "ansible-lint",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "cryptography"
+          ],
           "failure_count": 0
         },
         {
@@ -21670,7 +21815,10 @@
           "name": "aom",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "jpeg-xl"
+          ],
           "failure_count": 0
         },
         {
@@ -21678,7 +21826,10 @@
           "name": "apache-arrow",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "abseil"
+          ],
           "failure_count": 0
         },
         {
@@ -21834,7 +21985,10 @@
           "name": "aria2",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "openssl@3"
+          ],
           "failure_count": 0
         },
         {
@@ -22052,7 +22206,10 @@
           "name": "autoconf",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "m4"
+          ],
           "failure_count": 0
         },
         {
@@ -22081,7 +22238,10 @@
           "name": "automake",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "autoconf"
+          ],
           "failure_count": 0
         },
         {
@@ -22216,7 +22376,10 @@
           "name": "azure-cli",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "libsodium"
+          ],
           "failure_count": 0
         },
         {
@@ -22766,7 +22929,10 @@
           "name": "cairo",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "fontconfig"
+          ],
           "failure_count": 0
         },
         {
@@ -23443,7 +23609,10 @@
           "name": "composer",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "php"
+          ],
           "failure_count": 0
         },
         {
@@ -23928,7 +24097,10 @@
           "name": "deno",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "little-cms2"
+          ],
           "failure_count": 0
         },
         {
@@ -24210,7 +24382,10 @@
           "name": "dotnet",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "icu4c@78"
+          ],
           "failure_count": 0
         },
         {
@@ -24527,7 +24702,10 @@
           "name": "emacs",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "gmp"
+          ],
           "failure_count": 0
         },
         {
@@ -24803,7 +24981,10 @@
           "name": "fbthrift",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "double-conversion"
+          ],
           "failure_count": 0
         },
         {
@@ -24980,7 +25161,10 @@
           "name": "fish",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "pcre2"
+          ],
           "failure_count": 0
         },
         {
@@ -25002,7 +25186,10 @@
           "name": "fizz",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "double-conversion"
+          ],
           "failure_count": 0
         },
         {
@@ -25319,7 +25506,10 @@
           "name": "freerdp",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "cjson"
+          ],
           "failure_count": 0
         },
         {
@@ -25489,7 +25679,10 @@
           "name": "gdal",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "apache-arrow"
+          ],
           "failure_count": 0
         },
         {
@@ -25497,7 +25690,10 @@
           "name": "gdb",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "gmp"
+          ],
           "failure_count": 0
         },
         {
@@ -25512,7 +25708,10 @@
           "name": "gdk-pixbuf",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "glib"
+          ],
           "failure_count": 0
         },
         {
@@ -25583,7 +25782,10 @@
           "name": "gettext",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "libunistring"
+          ],
           "failure_count": 0
         },
         {
@@ -25633,7 +25835,10 @@
           "name": "ghostscript",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "fontconfig"
+          ],
           "failure_count": 0
         },
         {
@@ -25753,7 +25958,10 @@
           "name": "git-delta",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "libgit2"
+          ],
           "failure_count": 0
         },
         {
@@ -25974,7 +26182,10 @@
           "name": "glib",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "pcre2"
+          ],
           "failure_count": 0
         },
         {
@@ -26074,7 +26285,10 @@
           "name": "gobject-introspection",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "cairo"
+          ],
           "failure_count": 0
         },
         {
@@ -26293,7 +26507,10 @@
           "name": "graphicsmagick",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "freetype"
+          ],
           "failure_count": 0
         },
         {
@@ -26315,7 +26532,10 @@
           "name": "graphviz",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "cairo"
+          ],
           "failure_count": 0
         },
         {
@@ -26344,7 +26564,10 @@
           "name": "grep",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "pcre2"
+          ],
           "failure_count": 0
         },
         {
@@ -26380,7 +26603,10 @@
           "name": "grpc",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "abseil"
+          ],
           "failure_count": 0
         },
         {
@@ -26409,7 +26635,10 @@
           "name": "gsasl",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "libgcrypt"
+          ],
           "failure_count": 0
         },
         {
@@ -26424,7 +26653,10 @@
           "name": "gstreamer",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "aom"
+          ],
           "failure_count": 0
         },
         {
@@ -26565,7 +26797,10 @@
           "name": "harfbuzz",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "cairo"
+          ],
           "failure_count": 0
         },
         {
@@ -26650,7 +26885,10 @@
           "name": "hdf5",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "gcc"
+          ],
           "failure_count": 0
         },
         {
@@ -27225,7 +27463,10 @@
           "name": "iperf3",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "openssl@3"
+          ],
           "failure_count": 0
         },
         {
@@ -27837,7 +28078,10 @@
           "name": "krb5",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "openssl@3"
+          ],
           "failure_count": 0
         },
         {
@@ -28048,7 +28292,10 @@
           "name": "libarchive",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "libb2"
+          ],
           "failure_count": 0
         },
         {
@@ -28064,7 +28311,10 @@
           "name": "libavif",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "aom"
+          ],
           "failure_count": 0
         },
         {
@@ -28143,7 +28393,10 @@
           "name": "libimobiledevice",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "libimobiledevice-glue"
+          ],
           "failure_count": 0
         },
         {
@@ -28256,7 +28509,10 @@
           "name": "libpq",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "icu4c@78"
+          ],
           "failure_count": 0
         },
         {
@@ -28271,7 +28527,10 @@
           "name": "libraw",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "jasper"
+          ],
           "failure_count": 0
         },
         {
@@ -28286,7 +28545,10 @@
           "name": "librsvg",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "cairo"
+          ],
           "failure_count": 0
         },
         {
@@ -28364,7 +28626,10 @@
           "name": "libtiff",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "jpeg-turbo"
+          ],
           "failure_count": 0
         },
         {
@@ -28372,7 +28637,10 @@
           "name": "libtool",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "m4"
+          ],
           "failure_count": 0
         },
         {
@@ -28528,7 +28796,10 @@
           "name": "llvm",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "python@3.14"
+          ],
           "failure_count": 0
         },
         {
@@ -28895,7 +29166,10 @@
           "name": "mariadb",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "groonga"
+          ],
           "failure_count": 0
         },
         {
@@ -29381,7 +29655,10 @@
           "name": "mkvtoolnix",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "boost"
+          ],
           "failure_count": 0
         },
         {
@@ -29488,7 +29765,10 @@
           "name": "mongodb-atlas-cli",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "mongosh"
+          ],
           "failure_count": 0
         },
         {
@@ -29546,7 +29826,10 @@
           "name": "mosh",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "protobuf"
+          ],
           "failure_count": 0
         },
         {
@@ -29638,7 +29921,10 @@
           "name": "mpv",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "ffmpeg"
+          ],
           "failure_count": 0
         },
         {
@@ -29752,7 +30038,10 @@
           "name": "mysql",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "abseil"
+          ],
           "failure_count": 0
         },
         {
@@ -29956,7 +30245,10 @@
           "name": "netpbm",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "jasper"
+          ],
           "failure_count": 0
         },
         {
@@ -30020,7 +30312,10 @@
           "name": "nginx",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "openssl@3"
+          ],
           "failure_count": 0
         },
         {
@@ -30070,7 +30365,10 @@
           "name": "nmap",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "liblinear"
+          ],
           "failure_count": 0
         },
         {
@@ -30176,7 +30474,10 @@
           "name": "nss",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "nspr"
+          ],
           "failure_count": 0
         },
         {
@@ -30248,7 +30549,10 @@
           "name": "nushell",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "openssl@3"
+          ],
           "failure_count": 0
         },
         {
@@ -30491,7 +30795,10 @@
           "name": "opencv",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "abseil"
+          ],
           "failure_count": 0
         },
         {
@@ -30527,7 +30834,10 @@
           "name": "openjpeg",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "libtiff"
+          ],
           "failure_count": 0
         },
         {
@@ -30563,7 +30873,10 @@
           "name": "openssh",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "ldns"
+          ],
           "failure_count": 0
         },
         {
@@ -30734,7 +31047,10 @@
           "name": "pandoc",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "gmp"
+          ],
           "failure_count": 0
         },
         {
@@ -30742,7 +31058,10 @@
           "name": "pango",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "cairo"
+          ],
           "failure_count": 0
         },
         {
@@ -30967,7 +31286,10 @@
           "name": "php",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "apr"
+          ],
           "failure_count": 0
         },
         {
@@ -31252,7 +31574,10 @@
           "name": "poppler",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "cairo"
+          ],
           "failure_count": 0
         },
         {
@@ -31556,7 +31881,10 @@
           "name": "pv",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "gettext"
+          ],
           "failure_count": 0
         },
         {
@@ -31754,7 +32082,10 @@
           "name": "qemu",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "capstone"
+          ],
           "failure_count": 0
         },
         {
@@ -31769,7 +32100,10 @@
           "name": "qpdf",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "jpeg-turbo"
+          ],
           "failure_count": 0
         },
         {
@@ -32461,7 +32795,10 @@
           "name": "scrcpy",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "ffmpeg"
+          ],
           "failure_count": 0
         },
         {
@@ -32653,7 +32990,10 @@
           "name": "shared-mime-info",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "glib"
+          ],
           "failure_count": 0
         },
         {
@@ -33378,7 +33718,10 @@
           "name": "subversion",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "apr"
+          ],
           "failure_count": 0
         },
         {
@@ -33499,7 +33842,10 @@
           "name": "swig",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "pcre2"
+          ],
           "failure_count": 0
         },
         {
@@ -33719,7 +34065,10 @@
           "name": "tesseract",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "cairo"
+          ],
           "failure_count": 0
         },
         {
@@ -34516,7 +34865,10 @@
           "name": "vips",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "cairo"
+          ],
           "failure_count": 0
         },
         {
@@ -34665,7 +35017,10 @@
           "name": "w3m",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "bdw-gc"
+          ],
           "failure_count": 0
         },
         {
@@ -34751,7 +35106,10 @@
           "name": "watchman",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "edencommon"
+          ],
           "failure_count": 0
         },
         {
@@ -34822,7 +35180,10 @@
           "name": "webp",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "giflib"
+          ],
           "failure_count": 0
         },
         {
@@ -35272,7 +35633,10 @@
           "name": "zellij",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "validation_failed",
+          "category": "missing_dep",
+          "blocked_by": [
+            "openssl@3"
+          ],
           "failure_count": 0
         },
         {
@@ -37314,57 +37678,133 @@
   },
   "blockers": [
     {
-      "dependency": "ada-url",
-      "count": 1,
+      "dependency": "openssl@3",
+      "count": 13,
+      "direct_count": 13,
+      "total_count": 13,
       "packages": [
-        "homebrew:node"
+        "homebrew:afflib",
+        "homebrew:aria2",
+        "homebrew:freetds",
+        "homebrew:gambit-scheme",
+        "homebrew:git-crypt"
       ]
     },
     {
-      "dependency": "dav1d",
-      "count": 1,
+      "dependency": "pcre2",
+      "count": 11,
+      "direct_count": 7,
+      "total_count": 11,
       "packages": [
-        "homebrew:ffmpeg"
+        "homebrew:fish",
+        "homebrew:glib",
+        "homebrew:grep",
+        "homebrew:ripgrep",
+        "homebrew:swig"
       ]
     },
     {
-      "dependency": "glib",
-      "count": 1,
+      "dependency": "fontconfig",
+      "count": 10,
+      "direct_count": 2,
+      "total_count": 10,
       "packages": [
-        "homebrew:imagemagick"
+        "homebrew:cairo",
+        "homebrew:ghostscript"
       ]
     },
     {
       "dependency": "gmp",
-      "count": 1,
+      "count": 10,
+      "direct_count": 8,
+      "total_count": 10,
       "packages": [
-        "homebrew:coreutils"
+        "homebrew:aarch64-elf-gcc",
+        "homebrew:aarch64-elf-gdb",
+        "homebrew:coreutils",
+        "homebrew:emacs",
+        "homebrew:gcc"
+      ]
+    },
+    {
+      "dependency": "abseil",
+      "count": 9,
+      "direct_count": 5,
+      "total_count": 9,
+      "packages": [
+        "homebrew:apache-arrow",
+        "homebrew:grpc",
+        "homebrew:mysql",
+        "homebrew:opencv",
+        "homebrew:protobuf"
+      ]
+    },
+    {
+      "dependency": "cairo",
+      "count": 8,
+      "direct_count": 8,
+      "total_count": 8,
+      "packages": [
+        "homebrew:gobject-introspection",
+        "homebrew:graphviz",
+        "homebrew:harfbuzz",
+        "homebrew:librsvg",
+        "homebrew:pango"
+      ]
+    },
+    {
+      "dependency": "giflib",
+      "count": 7,
+      "direct_count": 3,
+      "total_count": 7,
+      "packages": [
+        "homebrew:jpeg-xl",
+        "homebrew:leptonica",
+        "homebrew:webp"
+      ]
+    },
+    {
+      "dependency": "jpeg-turbo",
+      "count": 5,
+      "direct_count": 3,
+      "total_count": 5,
+      "packages": [
+        "homebrew:libtiff",
+        "homebrew:little-cms2",
+        "homebrew:qpdf"
+      ]
+    },
+    {
+      "dependency": "apr",
+      "count": 4,
+      "direct_count": 3,
+      "total_count": 4,
+      "packages": [
+        "homebrew:httpd",
+        "homebrew:php",
+        "homebrew:subversion"
+      ]
+    },
+    {
+      "dependency": "ca-certificates",
+      "count": 4,
+      "direct_count": 3,
+      "total_count": 4,
+      "packages": [
+        "homebrew:gauche",
+        "homebrew:gnutls",
+        "homebrew:p11-kit"
       ]
     }
   ],
   "failures": {
     "deterministic": 267,
     "deterministic_insufficient": 188,
-    "missing_dep": 4,
+    "missing_dep": 148,
     "timeout": 3,
-    "validation_failed": 192
+    "validation_failed": 48
   },
   "failure_details": [
-    {
-      "id": "batch-2026-02-18T15-51-38Z-actions-up",
-      "package": "actions-up",
-      "ecosystem": "batch",
-      "category": "deterministic",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "batch-2026-02-18T15-51-38Z",
-      "timestamp": "2026-02-18T15:51:38Z"
-    },
     {
       "id": "batch-2026-02-18T15-51-38Z-add-determinism",
       "package": "add-determinism",
@@ -37383,6 +37823,21 @@
         "linux-rhel-glibc-x86_64",
         "linux-suse-glibc-arm64",
         "linux-suse-glibc-x86_64"
+      ],
+      "batch_id": "batch-2026-02-18T15-51-38Z",
+      "timestamp": "2026-02-18T15:51:38Z"
+    },
+    {
+      "id": "batch-2026-02-18T15-51-38Z-actions-up",
+      "package": "actions-up",
+      "ecosystem": "batch",
+      "category": "deterministic",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
       ],
       "batch_id": "batch-2026-02-18T15-51-38Z",
       "timestamp": "2026-02-18T15:51:38Z"
@@ -37423,7 +37878,7 @@
       "id": "homebrew-2026-02-18T15-40-59Z-afflib",
       "package": "afflib",
       "ecosystem": "homebrew",
-      "category": "validation_failed",
+      "category": "missing_dep",
       "subcategory": "verify_pattern_mismatch",
       "message": "Error: registry: recipe openssl@3 not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create openssl@3 --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi, npm",
       "batch_id": "homebrew-2026-02-18T15-40-59Z",
@@ -37433,7 +37888,7 @@
       "id": "homebrew-2026-02-18T15-40-57Z-aerc",
       "package": "aerc",
       "ecosystem": "homebrew",
-      "category": "validation_failed",
+      "category": "missing_dep",
       "subcategory": "verify_pattern_mismatch",
       "message": "Error: registry: recipe notmuch not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create notmuch --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi, npm",
       "batch_id": "homebrew-2026-02-18T15-40-59Z",
@@ -37558,7 +38013,7 @@
       "id": "homebrew-2026-02-18T15-38-39Z-aarch64-elf-gdb",
       "package": "aarch64-elf-gdb",
       "ecosystem": "homebrew",
-      "category": "validation_failed",
+      "category": "missing_dep",
       "subcategory": "verify_pattern_mismatch",
       "message": "Error: registry: recipe gmp not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create gmp --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi, npm",
       "batch_id": "homebrew-2026-02-18T15-40-59Z",
@@ -37568,7 +38023,7 @@
       "id": "homebrew-2026-02-18T15-38-37Z-aarch64-elf-gcc",
       "package": "aarch64-elf-gcc",
       "ecosystem": "homebrew",
-      "category": "validation_failed",
+      "category": "missing_dep",
       "subcategory": "verify_pattern_mismatch",
       "message": "Error: registry: recipe gmp not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create gmp --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi, npm",
       "batch_id": "homebrew-2026-02-18T15-40-59Z",
@@ -37597,7 +38052,7 @@
       "id": "homebrew-2026-02-18T15-38-27Z-a2ps",
       "package": "a2ps",
       "ecosystem": "homebrew",
-      "category": "validation_failed",
+      "category": "missing_dep",
       "subcategory": "verify_pattern_mismatch",
       "message": "tsuku collects anonymous usage statistics to improve the tool.\nNo personal information is collected. See: https://tsuku.dev/telemetry\n\nTo opt out: tsuku config set telemetry false\n         or export TSUKU_NO_TELEMETRY=1\nError: registry: recipe bdw-gc not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create bdw-gc --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, py",
       "batch_id": "homebrew-2026-02-18T15-40-59Z",
@@ -37651,7 +38106,7 @@
       "id": "homebrew-2026-02-18T14-39-21Z-aarch64-elf-gdb",
       "package": "aarch64-elf-gdb",
       "ecosystem": "homebrew",
-      "category": "validation_failed",
+      "category": "missing_dep",
       "subcategory": "verify_pattern_mismatch",
       "message": "Error: registry: recipe gmp not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create gmp --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi, npm",
       "batch_id": "homebrew-2026-02-18T14-39-26Z",
@@ -37661,7 +38116,7 @@
       "id": "homebrew-2026-02-18T14-39-19Z-aarch64-elf-gcc",
       "package": "aarch64-elf-gcc",
       "ecosystem": "homebrew",
-      "category": "validation_failed",
+      "category": "missing_dep",
       "subcategory": "verify_pattern_mismatch",
       "message": "Error: registry: recipe aarch64-elf-binutils not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create aarch64-elf-binutils --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi, npm",
       "batch_id": "homebrew-2026-02-18T14-39-26Z",
@@ -37690,7 +38145,7 @@
       "id": "homebrew-2026-02-18T14-39-05Z-a2ps",
       "package": "a2ps",
       "ecosystem": "homebrew",
-      "category": "validation_failed",
+      "category": "missing_dep",
       "subcategory": "verify_pattern_mismatch",
       "message": "tsuku collects anonymous usage statistics to improve the tool.\nNo personal information is collected. See: https://tsuku.dev/telemetry\n\nTo opt out: tsuku config set telemetry false\n         or export TSUKU_NO_TELEMETRY=1\nError: registry: recipe bdw-gc not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create bdw-gc --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, py",
       "batch_id": "homebrew-2026-02-18T14-39-26Z",
@@ -38184,6 +38639,21 @@
       "timestamp": "2026-02-18T04:27:04.521891344Z"
     },
     {
+      "id": "homebrew-2026-02-08T02-37-10Z-tealdeer",
+      "package": "tealdeer",
+      "ecosystem": "homebrew",
+      "category": "deterministic",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "homebrew-2026-02-08T02-37-10Z",
+      "timestamp": "2026-02-08T02:37:10Z"
+    },
+    {
       "id": "homebrew-2026-02-08T02-37-10Z-xh",
       "package": "xh",
       "ecosystem": "homebrew",
@@ -38229,25 +38699,10 @@
       "timestamp": "2026-02-08T02:37:10Z"
     },
     {
-      "id": "homebrew-2026-02-08T02-37-10Z-tealdeer",
-      "package": "tealdeer",
-      "ecosystem": "homebrew",
-      "category": "deterministic",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "homebrew-2026-02-08T02-37-10Z",
-      "timestamp": "2026-02-08T02:37:10Z"
-    },
-    {
       "id": "homebrew-2026-02-08T02-33-24Z-gitui",
       "package": "gitui",
       "ecosystem": "homebrew",
-      "category": "validation_failed",
+      "category": "missing_dep",
       "subcategory": "verify_pattern_mismatch",
       "message": "Error: registry: recipe openssl@3 not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create openssl@3 --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi, npm",
       "batch_id": "homebrew-2026-02-08T02-33-27Z",
@@ -38257,7 +38712,7 @@
       "id": "homebrew-2026-02-08T02-33-14Z-shellcheck",
       "package": "shellcheck",
       "ecosystem": "homebrew",
-      "category": "validation_failed",
+      "category": "missing_dep",
       "subcategory": "verify_pattern_mismatch",
       "message": "Error: registry: recipe gmp not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create gmp --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi, npm",
       "batch_id": "homebrew-2026-02-08T02-33-27Z",
@@ -38267,7 +38722,7 @@
       "id": "homebrew-2026-02-08T02-33-12Z-eza",
       "package": "eza",
       "ecosystem": "homebrew",
-      "category": "validation_failed",
+      "category": "missing_dep",
       "subcategory": "verify_pattern_mismatch",
       "message": "Error: registry: recipe libgit2 not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create libgit2 --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi, npm",
       "batch_id": "homebrew-2026-02-08T02-33-27Z",
@@ -38277,7 +38732,7 @@
       "id": "homebrew-2026-02-08T02-33-10Z-vim",
       "package": "vim",
       "ecosystem": "homebrew",
-      "category": "validation_failed",
+      "category": "missing_dep",
       "subcategory": "verify_pattern_mismatch",
       "message": "Error: registry: recipe gettext not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create gettext --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi, npm",
       "batch_id": "homebrew-2026-02-08T02-33-27Z",
@@ -38287,7 +38742,7 @@
       "id": "homebrew-2026-02-08T02-33-08Z-wget",
       "package": "wget",
       "ecosystem": "homebrew",
-      "category": "validation_failed",
+      "category": "missing_dep",
       "subcategory": "verify_pattern_mismatch",
       "message": "Error: registry: recipe libidn2 not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create libidn2 --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi, npm",
       "batch_id": "homebrew-2026-02-08T02-33-27Z",
@@ -38297,7 +38752,7 @@
       "id": "homebrew-2026-02-08T02-33-05Z-tmux",
       "package": "tmux",
       "ecosystem": "homebrew",
-      "category": "validation_failed",
+      "category": "missing_dep",
       "subcategory": "verify_pattern_mismatch",
       "message": "Error: registry: recipe libevent not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create libevent --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi, npm",
       "batch_id": "homebrew-2026-02-08T02-33-27Z",
@@ -38307,7 +38762,7 @@
       "id": "homebrew-2026-02-08T02-33-03Z-neovim",
       "package": "neovim",
       "ecosystem": "homebrew",
-      "category": "validation_failed",
+      "category": "missing_dep",
       "subcategory": "verify_pattern_mismatch",
       "message": "tsuku collects anonymous usage statistics to improve the tool.\nNo personal information is collected. See: https://tsuku.dev/telemetry\n\nTo opt out: tsuku config set telemetry false\n         or export TSUKU_NO_TELEMETRY=1\nError: registry: recipe tree-sitter@0.25 not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create tree-sitter@0.25 --from \u003cecosystem\u003e\n\nAvailable ecosystems: cra",
       "batch_id": "homebrew-2026-02-08T02-33-27Z",
@@ -38332,7 +38787,7 @@
       "id": "homebrew-2026-02-07T23-29-03Z-imagemagick",
       "package": "imagemagick",
       "ecosystem": "homebrew",
-      "category": "validation_failed",
+      "category": "missing_dep",
       "subcategory": "verify_pattern_mismatch",
       "message": "Error: registry: recipe glib not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create glib --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi, npm",
       "batch_id": "homebrew-2026-02-07T23-29-03Z",
@@ -38352,7 +38807,7 @@
       "id": "homebrew-2026-02-07T23-28-55Z-coreutils",
       "package": "coreutils",
       "ecosystem": "homebrew",
-      "category": "validation_failed",
+      "category": "missing_dep",
       "subcategory": "verify_pattern_mismatch",
       "message": "Error: registry: recipe gmp not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create gmp --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi, npm",
       "batch_id": "homebrew-2026-02-07T23-29-03Z",
@@ -38381,7 +38836,7 @@
       "id": "homebrew-2026-02-07T23-28-49Z-bat",
       "package": "bat",
       "ecosystem": "homebrew",
-      "category": "validation_failed",
+      "category": "missing_dep",
       "subcategory": "verify_pattern_mismatch",
       "message": "Error: registry: recipe libgit2 not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create libgit2 --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi, npm",
       "batch_id": "homebrew-2026-02-07T23-29-03Z",
@@ -38391,7 +38846,7 @@
       "id": "homebrew-2026-02-07T23-28-47Z-ripgrep",
       "package": "ripgrep",
       "ecosystem": "homebrew",
-      "category": "validation_failed",
+      "category": "missing_dep",
       "subcategory": "verify_pattern_mismatch",
       "message": "Error: registry: recipe pcre2 not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create pcre2 --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi, npm",
       "batch_id": "homebrew-2026-02-07T23-29-03Z",
@@ -38411,7 +38866,7 @@
       "id": "homebrew-2026-02-07T23-28-44Z-jq",
       "package": "jq",
       "ecosystem": "homebrew",
-      "category": "validation_failed",
+      "category": "missing_dep",
       "subcategory": "verify_pattern_mismatch",
       "message": "tsuku collects anonymous usage statistics to improve the tool.\nNo personal information is collected. See: https://tsuku.dev/telemetry\n\nTo opt out: tsuku config set telemetry false\n         or export TSUKU_NO_TELEMETRY=1\nError: registry: recipe oniguruma not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create oniguruma --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubyge",
       "batch_id": "homebrew-2026-02-07T23-29-03Z",
@@ -38436,7 +38891,7 @@
       "id": "homebrew-2026-02-07T04-01-41Z-ffmpeg",
       "package": "ffmpeg",
       "ecosystem": "homebrew",
-      "category": "validation_failed",
+      "category": "missing_dep",
       "subcategory": "verify_pattern_mismatch",
       "message": "Error: registry: recipe dav1d not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create dav1d --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi, npm",
       "batch_id": "homebrew-2026-02-07T04-01-41Z",
@@ -38467,15 +38922,15 @@
       "id": "homebrew-2026-02-07T03-03-36Z-node",
       "package": "node",
       "ecosystem": "homebrew",
-      "category": "validation_failed",
+      "category": "missing_dep",
       "subcategory": "verify_pattern_mismatch",
       "message": "Error: registry: recipe ada-url not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create ada-url --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi, npm",
       "batch_id": "homebrew-2026-02-07T03-03-36Z",
       "timestamp": "2026-02-07T03:03:36.69166035Z"
     },
     {
-      "id": "homebrew-2026-02-06T20-45-08Z-nasm",
-      "package": "nasm",
+      "id": "homebrew-2026-02-06T20-45-08Z-tree-sitter-cli",
+      "package": "tree-sitter-cli",
       "ecosystem": "homebrew",
       "category": "deterministic",
       "subcategory": "install_failed",
@@ -38494,8 +38949,8 @@
       "timestamp": "2026-02-06T20:45:08Z"
     },
     {
-      "id": "homebrew-2026-02-06T20-45-08Z-tree-sitter-cli",
-      "package": "tree-sitter-cli",
+      "id": "homebrew-2026-02-06T20-45-08Z-nasm",
+      "package": "nasm",
       "ecosystem": "homebrew",
       "category": "deterministic",
       "subcategory": "install_failed",
@@ -38535,7 +38990,7 @@
       "id": "homebrew-2026-02-06T20-42-32Z-protoc-gen-go",
       "package": "protoc-gen-go",
       "ecosystem": "homebrew",
-      "category": "validation_failed",
+      "category": "missing_dep",
       "subcategory": "verify_pattern_mismatch",
       "message": "Error: registry: recipe protobuf not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create protobuf --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi, npm",
       "timestamp": "2026-02-06T20:42:32.126383823Z"
@@ -38544,7 +38999,7 @@
       "id": "homebrew-2026-02-06T20-42-30Z-libavif",
       "package": "libavif",
       "ecosystem": "homebrew",
-      "category": "validation_failed",
+      "category": "missing_dep",
       "subcategory": "verify_pattern_mismatch",
       "message": "Error: registry: recipe aom not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create aom --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi, npm",
       "timestamp": "2026-02-06T20:42:30.672989526Z"
@@ -38553,7 +39008,7 @@
       "id": "homebrew-2026-02-06T20-42-29Z-krb5",
       "package": "krb5",
       "ecosystem": "homebrew",
-      "category": "validation_failed",
+      "category": "missing_dep",
       "subcategory": "verify_pattern_mismatch",
       "message": "Error: registry: recipe openssl@3 not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create openssl@3 --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi, npm",
       "timestamp": "2026-02-06T20:42:29.275147711Z"
@@ -38562,7 +39017,7 @@
       "id": "homebrew-2026-02-06T20-42-27Z-shared-mime-info",
       "package": "shared-mime-info",
       "ecosystem": "homebrew",
-      "category": "validation_failed",
+      "category": "missing_dep",
       "subcategory": "verify_pattern_mismatch",
       "message": "Error: registry: recipe glib not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create glib --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi, npm",
       "timestamp": "2026-02-06T20:42:27.833760552Z"
@@ -38679,7 +39134,7 @@
       "id": "homebrew-2026-02-06T19-01-59Z-skopeo",
       "package": "skopeo",
       "ecosystem": "homebrew",
-      "category": "validation_failed",
+      "category": "missing_dep",
       "subcategory": "verify_pattern_mismatch",
       "message": "Error: registry: recipe gpgme not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create gpgme --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi, npm",
       "timestamp": "2026-02-06T19:01:59.458368422Z"
@@ -38706,7 +39161,7 @@
       "id": "homebrew-2026-02-06T19-01-41Z-ghidra",
       "package": "ghidra",
       "ecosystem": "homebrew",
-      "category": "validation_failed",
+      "category": "missing_dep",
       "subcategory": "verify_pattern_mismatch",
       "message": "tsuku collects anonymous usage statistics to improve the tool.\nNo personal information is collected. See: https://tsuku.dev/telemetry\n\nTo opt out: tsuku config set telemetry false\n         or export TSUKU_NO_TELEMETRY=1\nError: registry: recipe openjdk@21 not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create openjdk@21 --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, ruby",
       "timestamp": "2026-02-06T19:01:41.675806884Z"
@@ -38721,13 +39176,13 @@
       "timestamp": "2026-02-06T19:01:30.594178786Z"
     },
     {
-      "id": "homebrew-2026-02-06T17-55-10Z-moreutils",
-      "package": "moreutils",
+      "id": "homebrew-2026-02-06T17-55-10Z-mit-scheme",
+      "package": "mit-scheme",
       "ecosystem": "homebrew",
       "category": "deterministic",
       "subcategory": "install_failed",
       "exit_code": 6,
-      "platform": "linux-alpine-musl-arm64",
+      "platform": "linux-debian-glibc-arm64",
       "timestamp": "2026-02-06T17:55:10Z"
     },
     {
@@ -38791,13 +39246,13 @@
       "timestamp": "2026-02-06T17:55:10Z"
     },
     {
-      "id": "homebrew-2026-02-06T17-55-10Z-mit-scheme",
-      "package": "mit-scheme",
+      "id": "homebrew-2026-02-06T17-55-10Z-moreutils",
+      "package": "moreutils",
       "ecosystem": "homebrew",
       "category": "deterministic",
       "subcategory": "install_failed",
       "exit_code": 6,
-      "platform": "linux-debian-glibc-arm64",
+      "platform": "linux-alpine-musl-arm64",
       "timestamp": "2026-02-06T17:55:10Z"
     },
     {
@@ -38852,7 +39307,7 @@
       "id": "homebrew-2026-02-06T17-49-12Z-mkvtoolnix",
       "package": "mkvtoolnix",
       "ecosystem": "homebrew",
-      "category": "validation_failed",
+      "category": "missing_dep",
       "subcategory": "verify_pattern_mismatch",
       "message": "Error: registry: recipe boost not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create boost --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi, npm",
       "timestamp": "2026-02-06T17:49:12.248423155Z"
@@ -38938,7 +39393,7 @@
       "id": "homebrew-2026-02-06T16-57-07Z-open-mpi",
       "package": "open-mpi",
       "ecosystem": "homebrew",
-      "category": "validation_failed",
+      "category": "missing_dep",
       "subcategory": "verify_pattern_mismatch",
       "message": "Error: registry: recipe gcc not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create gcc --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi, npm",
       "timestamp": "2026-02-06T16:57:07.605234606Z"
@@ -38947,7 +39402,7 @@
       "id": "homebrew-2026-02-06T16-57-05Z-swift-protobuf",
       "package": "swift-protobuf",
       "ecosystem": "homebrew",
-      "category": "validation_failed",
+      "category": "missing_dep",
       "subcategory": "verify_pattern_mismatch",
       "message": "Error: registry: recipe protobuf not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create protobuf --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi, npm",
       "timestamp": "2026-02-06T16:57:05.162953715Z"
@@ -39056,7 +39511,7 @@
       "id": "homebrew-2026-02-06T15-50-12Z-apache-arrow",
       "package": "apache-arrow",
       "ecosystem": "homebrew",
-      "category": "validation_failed",
+      "category": "missing_dep",
       "subcategory": "verify_pattern_mismatch",
       "message": "Error: registry: recipe abseil not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create abseil --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi, npm",
       "timestamp": "2026-02-06T15:50:12.287634616Z"
@@ -39083,7 +39538,7 @@
       "id": "homebrew-2026-02-06T15-50-06Z-mariadb",
       "package": "mariadb",
       "ecosystem": "homebrew",
-      "category": "validation_failed",
+      "category": "missing_dep",
       "subcategory": "verify_pattern_mismatch",
       "message": "tsuku collects anonymous usage statistics to improve the tool.\nNo personal information is collected. See: https://tsuku.dev/telemetry\n\nTo opt out: tsuku config set telemetry false\n         or export TSUKU_NO_TELEMETRY=1\nError: registry: recipe groonga not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create groonga --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, ",
       "timestamp": "2026-02-06T15:50:06.156808728Z"
@@ -39092,7 +39547,7 @@
       "id": "homebrew-2026-02-06T14-46-56Z-swig",
       "package": "swig",
       "ecosystem": "homebrew",
-      "category": "validation_failed",
+      "category": "missing_dep",
       "subcategory": "verify_pattern_mismatch",
       "message": "Error: registry: recipe pcre2 not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create pcre2 --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi, npm",
       "timestamp": "2026-02-06T14:46:56.349991934Z"
@@ -39101,7 +39556,7 @@
       "id": "homebrew-2026-02-06T14-46-54Z-overmind",
       "package": "overmind",
       "ecosystem": "homebrew",
-      "category": "validation_failed",
+      "category": "missing_dep",
       "subcategory": "verify_pattern_mismatch",
       "message": "Error: registry: recipe tmux not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create tmux --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi, npm",
       "timestamp": "2026-02-06T14:46:54.954264708Z"
@@ -39110,7 +39565,7 @@
       "id": "homebrew-2026-02-06T14-46-53Z-openssh",
       "package": "openssh",
       "ecosystem": "homebrew",
-      "category": "validation_failed",
+      "category": "missing_dep",
       "subcategory": "verify_pattern_mismatch",
       "message": "Error: registry: recipe ldns not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create ldns --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi, npm",
       "timestamp": "2026-02-06T14:46:53.599616821Z"
@@ -39119,7 +39574,7 @@
       "id": "homebrew-2026-02-06T14-46-52Z-httpd",
       "package": "httpd",
       "ecosystem": "homebrew",
-      "category": "validation_failed",
+      "category": "missing_dep",
       "subcategory": "verify_pattern_mismatch",
       "message": "Error: registry: recipe apr not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create apr --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi, npm",
       "timestamp": "2026-02-06T14:46:52.078143305Z"
@@ -39128,7 +39583,7 @@
       "id": "homebrew-2026-02-06T14-46-48Z-gdb",
       "package": "gdb",
       "ecosystem": "homebrew",
-      "category": "validation_failed",
+      "category": "missing_dep",
       "subcategory": "verify_pattern_mismatch",
       "message": "Error: registry: recipe gmp not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create gmp --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi, npm",
       "timestamp": "2026-02-06T14:46:48.355764653Z"
@@ -39155,7 +39610,7 @@
       "id": "homebrew-2026-02-06T14-46-44Z-freerdp",
       "package": "freerdp",
       "ecosystem": "homebrew",
-      "category": "validation_failed",
+      "category": "missing_dep",
       "subcategory": "verify_pattern_mismatch",
       "message": "tsuku collects anonymous usage statistics to improve the tool.\nNo personal information is collected. See: https://tsuku.dev/telemetry\n\nTo opt out: tsuku config set telemetry false\n         or export TSUKU_NO_TELEMETRY=1\nError: registry: recipe cjson not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create cjson --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi",
       "timestamp": "2026-02-06T14:46:44.478567745Z"
@@ -39193,7 +39648,7 @@
       "id": "homebrew-2026-02-06T13-15-19Z-grep",
       "package": "grep",
       "ecosystem": "homebrew",
-      "category": "validation_failed",
+      "category": "missing_dep",
       "subcategory": "verify_pattern_mismatch",
       "message": "Error: registry: recipe pcre2 not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create pcre2 --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi, npm",
       "timestamp": "2026-02-06T13:15:19.800719842Z"
@@ -39238,7 +39693,7 @@
       "id": "homebrew-2026-02-06T13-15-12Z-hdf5",
       "package": "hdf5",
       "ecosystem": "homebrew",
-      "category": "validation_failed",
+      "category": "missing_dep",
       "subcategory": "verify_pattern_mismatch",
       "message": "Error: registry: recipe gcc not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create gcc --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi, npm",
       "timestamp": "2026-02-06T13:15:12.890975295Z"
@@ -39247,7 +39702,7 @@
       "id": "homebrew-2026-02-06T13-15-10Z-pv",
       "package": "pv",
       "ecosystem": "homebrew",
-      "category": "validation_failed",
+      "category": "missing_dep",
       "subcategory": "verify_pattern_mismatch",
       "message": "tsuku collects anonymous usage statistics to improve the tool.\nNo personal information is collected. See: https://tsuku.dev/telemetry\n\nTo opt out: tsuku config set telemetry false\n         or export TSUKU_NO_TELEMETRY=1\nError: registry: recipe gettext not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create gettext --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, ",
       "timestamp": "2026-02-06T13:15:10.980784029Z"
@@ -39312,7 +39767,7 @@
       "id": "homebrew-2026-02-06T11-40-47Z-zellij",
       "package": "zellij",
       "ecosystem": "homebrew",
-      "category": "validation_failed",
+      "category": "missing_dep",
       "subcategory": "verify_pattern_mismatch",
       "message": "Error: registry: recipe openssl@3 not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create openssl@3 --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi, npm",
       "timestamp": "2026-02-06T11:40:47.098892381Z"
