@@ -48,41 +48,6 @@ Current
 | ~~[#1737: feat(cli): add secrets management to tsuku config](https://github.com/tsukumogami/tsuku/issues/1737)~~ | ~~[#1734](https://github.com/tsukumogami/tsuku/issues/1734)~~ | ~~testable~~ |
 | ~~_Adds stdin-based secret input to `tsuku config set`, status-only display for `tsuku config get`, and a Secrets section in `tsuku config` output showing all known keys with set/not-set status._~~ | | |
 
-### Dependency Graph
-
-```mermaid
-graph TD
-    subgraph Phase1["Phase 1: Core"]
-        I1733["#1733: Core secrets package"]
-    end
-
-    subgraph Phase2["Phase 2: Config Integration"]
-        I1734["#1734: Userconfig secrets + atomic writes"]
-    end
-
-    subgraph Phase3["Phase 3: Migration + CLI"]
-        I1735["#1735: LLM key migration"]
-        I1736["#1736: Platform token migration"]
-        I1737["#1737: CLI secrets management"]
-    end
-
-    I1733 --> I1734
-    I1734 --> I1735
-    I1734 --> I1736
-    I1734 --> I1737
-
-    classDef done fill:#c8e6c9
-    classDef ready fill:#bbdefb
-    classDef blocked fill:#fff9c4
-    classDef needsDesign fill:#e1bee7
-    classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
-
-    class I1733 done
-    class I1734 done
-    class I1735,I1736,I1737 done
-```
-
-**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design
 
 ## Upstream Design Reference
 
@@ -384,30 +349,6 @@ Update the `tsuku config` command for secret management.
 - Show `(set)` / `(not set)` status for all known secrets in `tsuku config` display
 - Route `secrets.*` prefix in `Get()`/`Set()` to the `Secrets` map via prefix matching
 
-## Consequences
-
-### Positive
-
-- All API key resolution goes through one code path with consistent behavior
-- Users get a config file option without losing env var support
-- Error messages always tell users both ways to set a key
-- Adding a new secret is a one-line addition to the specs table
-- Config file permissions are enforced to prevent accidental exposure
-
-### Negative
-
-- `config.toml` always gets 0600 permissions, even without secrets (benign since it's single-user)
-- `userconfig.Save()` becomes more complex (atomic writes, permission enforcement)
-- The `knownKeys` table must be maintained as new providers are added
-- Setting secrets via CLI requires stdin instead of command-line args (slight UX friction)
-
-### Mitigations
-
-- Unconditional 0600 is actually simpler than conditional logic and benign for single-user installations
-- Atomic write logic is isolated and well-tested; the `userconfig` public API doesn't change
-- Each new provider already requires a code change (new builder/provider); adding one line to `knownKeys` is trivial overhead
-- Stdin-based input is standard for credential tools (`gh auth login`, `aws configure`) and supports piping for automation
-
 ## Security Considerations
 
 ### Download Verification
@@ -448,3 +389,27 @@ The secrets manager handles API keys, which are sensitive credentials. Specific 
 | Error messages leak key names | Key names (not values) appear in errors | Key names like "anthropic_api_key" are not themselves sensitive |
 | Malicious recipe reads config file | Recipes run in sandboxed containers without access to `$TSUKU_HOME/config.toml` | A recipe with shell actions running outside sandbox could read the file; sandbox enforcement is the mitigation (separate design) |
 | Secret values in shell history | Stdin-based input for `tsuku config set secrets.*` | Users who pipe values (`echo key \| tsuku config set ...`) still leave traces; this is documented |
+
+## Consequences
+
+### Positive
+
+- All API key resolution goes through one code path with consistent behavior
+- Users get a config file option without losing env var support
+- Error messages always tell users both ways to set a key
+- Adding a new secret is a one-line addition to the specs table
+- Config file permissions are enforced to prevent accidental exposure
+
+### Negative
+
+- `config.toml` always gets 0600 permissions, even without secrets (benign since it's single-user)
+- `userconfig.Save()` becomes more complex (atomic writes, permission enforcement)
+- The `knownKeys` table must be maintained as new providers are added
+- Setting secrets via CLI requires stdin instead of command-line args (slight UX friction)
+
+### Mitigations
+
+- Unconditional 0600 is actually simpler than conditional logic and benign for single-user installations
+- Atomic write logic is isolated and well-tested; the `userconfig` public API doesn't change
+- Each new provider already requires a code change (new builder/provider); adding one line to `knownKeys` is trivial overhead
+- Stdin-based input is standard for credential tools (`gh auth login`, `aws configure`) and supports piping for automation
