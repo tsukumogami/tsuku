@@ -281,12 +281,10 @@ func isValidNpmPackage(name string) bool {
 // ResolveNpm finds the npm binary from the nodejs installation
 func ResolveNpm() string {
 	// Try to find npm from tsuku's nodejs installation
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
+	toolsDir := GetToolsDir()
+	if toolsDir == "" {
 		return ""
 	}
-
-	toolsDir := filepath.Join(homeDir, ".tsuku", "tools")
 
 	// Look for nodejs-* directories
 	entries, err := os.ReadDir(toolsDir)
