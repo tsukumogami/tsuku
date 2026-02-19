@@ -418,6 +418,8 @@ The `llm.backend` override works by modifying the target's GPU value before plan
 
 Only the `cpu` override is needed initially because all GPU vendors map to Vulkan. CUDA variant selection is deferred until benchmarks validate the Vulkan-by-default choice. If CUDA support is added later, it will require a recipe variant mechanism (either a new recipe step with disambiguation, or a general variant selection feature) rather than simple GPU override.
 
+**Edge case**: If a user sets `llm.backend = cpu` on a system that already has the Vulkan variant installed, the LLM code should reinstall with the CPU variant. If a user sets a value that doesn't map to any recipe step (e.g., `vulkan` on a no-GPU system where GPU is `"none"`), the LLM code should warn and fall back to the detected value.
+
 ### GPU Driver Library Recipes
 
 GPU drivers become library recipes, installed as conditional dependencies of the tsuku-llm recipe's GPU steps.
@@ -487,6 +489,8 @@ This phase can ship independently. It adds a new platform dimension and recipe f
 - `cmd/tsuku/info.go:447`, `sysdeps.go:212` (info display)
 
 `NewMatchTarget()` gains a `gpu` parameter. Update all callers in `executor/` and `cmd/tsuku/`.
+
+To minimize churn across test files, consider adding a `TargetWithGPU(target Target, gpu string) Target` helper or a `SetGPU` setter so existing tests that don't care about GPU can pass `""` without changing constructor calls everywhere.
 
 8. Add `GPU []string` to `WhenClause`, update `Matches()`, `IsEmpty()`, `ToMap()`, and TOML unmarshaling
 9. Update `MergeWhenClause()` for GPU constraint checking
