@@ -1,0 +1,175 @@
+{
+  "design_doc": "docs/designs/DESIGN-llm-testing-strategy.md",
+  "branch": "docs/llm-testing-strategy",
+  "pr_number": 1752,
+  "integrity_hash": "sha256:af582cdcd26193ac85d44b900f411fe28c3c814f9dfd31fcffe36a8cac3b5791",
+  "issues": [
+    {
+      "number": 1753,
+      "title": "fix(llm): invalidate dead gRPC connections on server crash",
+      "status": "completed",
+      "ci_status": "passed",
+      "ci_fix_attempts": 0,
+      "issue_type": "code",
+      "dependencies": [],
+      "commits": [
+        "008378610c370c727d468f4ccc6282d321a69f32"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          "internal/llm/local.go",
+          "internal/llm/local_test.go"
+        ],
+        "tests_added": 2,
+        "key_decisions": "Extracted sendRequest method from Complete to isolate gRPC call and connection invalidation logic. Tests call sendRequest directly with bufconn mock, bypassing addon/lifecycle checks."
+      },
+      "reviewer_results": {
+        "issue": 1753,
+        "reviewers": [
+          {
+            "focus": "pragmatic",
+            "blocking_count": 0,
+            "advisory_count": 0,
+            "detail_file": "wip/research/implement-doc_review_pragmatic_issue1753.md"
+          },
+          {
+            "focus": "architect",
+            "blocking_count": 0,
+            "advisory_count": 0,
+            "detail_file": "wip/research/implement-doc_review_architect_issue1753.md"
+          },
+          {
+            "focus": "maintainer",
+            "blocking_count": 1,
+            "advisory_count": 1,
+            "detail_file": "wip/research/implement-doc_review_maintainer_issue1753.md",
+            "blocking_resolved": true,
+            "resolution_commit": "87bc3361d439640f9b040aa3d9883918f3d7057b"
+          }
+        ]
+      },
+      "testable_scenarios": [
+        "scenario-1",
+        "scenario-2"
+      ]
+    },
+    {
+      "number": 1754,
+      "title": "test(builders): parameterize ground truth suite for multi-provider support",
+      "status": "implemented",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "code",
+      "dependencies": [],
+      "commits": [
+        "ed14b560"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          "internal/builders/llm_integration_test.go",
+          "internal/builders/baseline_test.go",
+          "testdata/llm-quality-baselines/claude.json"
+        ],
+        "tests_added": 14,
+        "key_decisions": "Extracted compareBaseline as pure function returning baselineDiff struct for testability. Added writeBaselineToDir/loadBaselineFromDir helpers with directory parameter for unit tests. Provider detection: TSUKU_LLM_BINARY \u003e ANTHROPIC_API_KEY \u003e GOOGLE_API_KEY. Factory created via NewFactoryWithProviders with WithPrimaryProvider. claude.json is placeholder with all 21 pass, needs regeneration."
+      },
+      "testable_scenarios": [
+        "scenario-3",
+        "scenario-4",
+        "scenario-5",
+        "scenario-6",
+        "scenario-7"
+      ]
+    },
+    {
+      "number": 1755,
+      "title": "test(builders): create local provider quality baselines",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [
+        1754
+      ],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": [
+        "scenario-8"
+      ]
+    },
+    {
+      "number": 1756,
+      "title": "test(llm): add server stability tests",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [
+        1753
+      ],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": [
+        "scenario-9",
+        "scenario-10"
+      ]
+    },
+    {
+      "number": 1757,
+      "title": "ci(llm): add model caching for integration tests",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": [
+        "scenario-11"
+      ]
+    },
+    {
+      "number": 1758,
+      "title": "ci(llm): add quality gate for prompt and test matrix changes",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [
+        1754,
+        1757
+      ],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": [
+        "scenario-12",
+        "scenario-13"
+      ]
+    },
+    {
+      "number": 1759,
+      "title": "docs(llm): write manual test runbook",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": [
+        "scenario-14"
+      ]
+    }
+  ],
+  "skipped_issues": null,
+  "test_plan_file": null
+}
