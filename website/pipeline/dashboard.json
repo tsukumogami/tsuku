@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-02-19T05:23:00Z",
+  "generated_at": "2026-02-19T06:01:23Z",
   "queue": {
     "total": 5275,
     "by_status": {
@@ -37806,8 +37806,8 @@
   },
   "failure_details": [
     {
-      "id": "batch-2026-02-18T15-51-38Z-addons-linter",
-      "package": "addons-linter",
+      "id": "batch-2026-02-18T15-51-38Z-actions-up",
+      "package": "actions-up",
       "ecosystem": "batch",
       "category": "deterministic",
       "subcategory": "install_failed",
@@ -37860,8 +37860,8 @@
       "timestamp": "2026-02-18T15:51:38Z"
     },
     {
-      "id": "batch-2026-02-18T15-51-38Z-actions-up",
-      "package": "actions-up",
+      "id": "batch-2026-02-18T15-51-38Z-addons-linter",
+      "package": "addons-linter",
       "ecosystem": "batch",
       "category": "deterministic",
       "subcategory": "install_failed",
@@ -38639,8 +38639,8 @@
       "timestamp": "2026-02-18T04:27:04.521891344Z"
     },
     {
-      "id": "homebrew-2026-02-08T02-37-10Z-xh",
-      "package": "xh",
+      "id": "homebrew-2026-02-08T02-37-10Z-tealdeer",
+      "package": "tealdeer",
       "ecosystem": "homebrew",
       "category": "deterministic",
       "subcategory": "install_failed",
@@ -38654,8 +38654,8 @@
       "timestamp": "2026-02-08T02:37:10Z"
     },
     {
-      "id": "homebrew-2026-02-08T02-37-10Z-tealdeer",
-      "package": "tealdeer",
+      "id": "homebrew-2026-02-08T02-37-10Z-xh",
+      "package": "xh",
       "ecosystem": "homebrew",
       "category": "deterministic",
       "subcategory": "install_failed",
@@ -39176,13 +39176,13 @@
       "timestamp": "2026-02-06T19:01:30.594178786Z"
     },
     {
-      "id": "homebrew-2026-02-06T17-55-10Z-mit-scheme",
-      "package": "mit-scheme",
+      "id": "homebrew-2026-02-06T17-55-10Z-moreutils",
+      "package": "moreutils",
       "ecosystem": "homebrew",
       "category": "deterministic",
       "subcategory": "install_failed",
       "exit_code": 6,
-      "platform": "linux-debian-glibc-arm64",
+      "platform": "linux-alpine-musl-arm64",
       "timestamp": "2026-02-06T17:55:10Z"
     },
     {
@@ -39246,13 +39246,13 @@
       "timestamp": "2026-02-06T17:55:10Z"
     },
     {
-      "id": "homebrew-2026-02-06T17-55-10Z-moreutils",
-      "package": "moreutils",
+      "id": "homebrew-2026-02-06T17-55-10Z-mit-scheme",
+      "package": "mit-scheme",
       "ecosystem": "homebrew",
       "category": "deterministic",
       "subcategory": "install_failed",
       "exit_code": 6,
-      "platform": "linux-alpine-musl-arm64",
+      "platform": "linux-debian-glibc-arm64",
       "timestamp": "2026-02-06T17:55:10Z"
     },
     {
@@ -39786,8 +39786,8 @@
       },
       "homebrew": {
         "breaker_state": "closed",
-        "failures": 3,
-        "last_failure": "2026-02-19T04:26:06Z",
+        "failures": 4,
+        "last_failure": "2026-02-19T06:01:04Z",
         "opens_at": "2026-02-08T10:31:11Z"
       },
       "npm": {
@@ -39800,7 +39800,7 @@
       "ecosystems": {
         "homebrew": 10
       },
-      "timestamp": "2026-02-19T04:26:06Z",
+      "timestamp": "2026-02-19T06:01:05Z",
       "succeeded": 0,
       "failed": 0,
       "total": 0
@@ -39818,9 +39818,20 @@
       "total": 4,
       "recipes_merged": 4
     },
-    "runs_since_last_success": 3
+    "runs_since_last_success": 4
   },
   "runs": [
+    {
+      "batch_id": "2026-02-19",
+      "ecosystems": {
+        "homebrew": 10
+      },
+      "total": 0,
+      "merged": 0,
+      "rate": 0,
+      "duration": 10,
+      "timestamp": "2026-02-19T06:01:05Z"
+    },
     {
       "batch_id": "2026-02-19",
       "ecosystems": {
@@ -39916,17 +39927,6 @@
       "rate": 0,
       "duration": 6,
       "timestamp": "2026-02-18T11:40:27Z"
-    },
-    {
-      "batch_id": "2026-02-18-homebrew",
-      "ecosystems": {
-        "homebrew": 0
-      },
-      "total": 0,
-      "merged": 0,
-      "rate": 0,
-      "duration": 4,
-      "timestamp": "2026-02-18T10:45:09Z"
     }
   ],
   "disambiguations": {
