@@ -1,21 +1,21 @@
 {
-  "generated_at": "2026-02-19T19:49:14Z",
-  "total_recipes": 296,
+  "generated_at": "2026-02-19T20:43:26Z",
+  "total_recipes": 299,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 296,
-        "total": 296,
+        "supported": 299,
+        "total": 299,
         "pct": 100
       },
       "glibc": {
-        "supported": 296,
-        "total": 296,
+        "supported": 299,
+        "total": 299,
         "pct": 100
       },
       "musl": {
-        "supported": 296,
-        "total": 296,
+        "supported": 299,
+        "total": 299,
         "pct": 100
       }
     },
@@ -26,9 +26,9 @@
         "glibc_support": 13
       },
       "tool": {
-        "total": 283,
-        "musl_support": 283,
-        "glibc_support": 283
+        "total": 286,
+        "musl_support": 286,
+        "glibc_support": 286
       }
     }
   },
@@ -1654,6 +1654,18 @@
       "warnings": null
     },
     {
+      "name": "graphql-cli",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "grex",
       "type": "tool",
       "platforms": {
@@ -1691,6 +1703,18 @@
     },
     {
       "name": "grype",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "gulp-cli",
       "type": "tool",
       "platforms": {
         "darwin": true,
@@ -1775,6 +1799,18 @@
     },
     {
       "name": "htop",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "http-server",
       "type": "tool",
       "platforms": {
         "darwin": true,
