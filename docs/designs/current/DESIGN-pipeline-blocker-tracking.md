@@ -41,34 +41,6 @@ Current
 | ~~[#1767: fix(dashboard): compute transitive blocker impact with normalized keys](https://github.com/tsukumogami/tsuku/issues/1767)~~ | ~~[#1765](https://github.com/tsukumogami/tsuku/issues/1765)~~ | ~~testable~~ |
 | ~~_Rewrites `computeTransitiveBlockers()` to normalize blocker keys (stripping ecosystem prefixes) and compute recursive impact with cycle detection. Adds `direct_count` and `total_count` fields to the Blocker struct and updates the frontend to display `total_count` as the primary metric._~~ | | |
 
-### Dependency Graph
-
-```mermaid
-graph LR
-    subgraph Phase1["Phase 1: Recording Fixes"]
-        I1765["#1765: Classify dependency failures"]
-    end
-
-    subgraph Phase2["Phase 2: Data + Dashboard"]
-        I1766["#1766: Remediation tool"]
-        I1767["#1767: Transitive blocker impact"]
-    end
-
-    I1765 --> I1766
-    I1765 --> I1767
-
-    classDef done fill:#c8e6c9
-    classDef ready fill:#bbdefb
-    classDef blocked fill:#fff9c4
-    classDef needsDesign fill:#e1bee7
-    classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
-
-    class I1765 done
-    class I1766 done
-    class I1767 done
-```
-
-**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design
 
 ## Context and Problem Statement
 
