@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Accepted
 problem: |
   The tsuku-llm addon builds 10 platform variants across GPU backends (CUDA, Vulkan, Metal, CPU),
   but the addon download system maps each OS-architecture pair to a single binary. There's no way
@@ -25,7 +25,7 @@ rationale: |
 
 ## Status
 
-Proposed
+Accepted
 
 **Source Issue**: [#1769 - feat(llm): GPU backend selection and multi-variant addon distribution](https://github.com/tsukumogami/tsuku/issues/1769)
 
