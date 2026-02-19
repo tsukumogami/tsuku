@@ -268,8 +268,8 @@ anthropic_api_key = "sk-ant-from-config"
 	t.Setenv("ANTHROPIC_API_KEY", "")
 
 	// Reset cached config so it picks up the new TSUKU_HOME.
-	ResetConfig()
-	defer ResetConfig()
+	resetConfig()
+	defer resetConfig()
 
 	val, err := Get("anthropic_api_key")
 	if err != nil {
@@ -295,8 +295,8 @@ anthropic_api_key = "from-config"
 
 	t.Setenv("ANTHROPIC_API_KEY", "from-env")
 
-	ResetConfig()
-	defer ResetConfig()
+	resetConfig()
+	defer resetConfig()
 
 	val, err := Get("anthropic_api_key")
 	if err != nil {
@@ -321,8 +321,8 @@ github_token = "ghp-from-config"
 
 	t.Setenv("GITHUB_TOKEN", "")
 
-	ResetConfig()
-	defer ResetConfig()
+	resetConfig()
+	defer resetConfig()
 
 	if !IsSet("github_token") {
 		t.Error("expected IsSet to return true when config file has the key")
@@ -343,8 +343,8 @@ func TestConfigFallbackReturnsErrorWhenBothEmpty(t *testing.T) {
 
 	t.Setenv("TAVILY_API_KEY", "")
 
-	ResetConfig()
-	defer ResetConfig()
+	resetConfig()
+	defer resetConfig()
 
 	_, err := Get("tavily_api_key")
 	if err == nil {
@@ -359,8 +359,8 @@ func TestConfigFallbackHandlesMissingConfigFile(t *testing.T) {
 
 	t.Setenv("BRAVE_API_KEY", "")
 
-	ResetConfig()
-	defer ResetConfig()
+	resetConfig()
+	defer resetConfig()
 
 	_, err := Get("brave_api_key")
 	if err == nil {

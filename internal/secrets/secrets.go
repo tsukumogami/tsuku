@@ -51,9 +51,9 @@ func getConfig() (*userconfig.Config, error) {
 	return cachedCfg, configError
 }
 
-// ResetConfig resets the cached config so the next call to Get()/IsSet()
+// resetConfig resets the cached config so the next call to Get()/IsSet()
 // reloads from disk. This is intended for testing only.
-func ResetConfig() {
+func resetConfig() {
 	configOnce = sync.Once{}
 	cachedCfg = nil
 	configError = nil

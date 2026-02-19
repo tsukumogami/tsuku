@@ -22,7 +22,7 @@ var configCmd = &cobra.Command{
 
 When invoked without a subcommand, displays current configuration values.
 
-Configuration is stored in ~/.tsuku/config.toml.
+Configuration is stored in $TSUKU_HOME/config.toml.
 
 Available settings:
   telemetry           Enable anonymous usage statistics (true/false)
@@ -30,6 +30,7 @@ Available settings:
   llm.local_enabled   Enable local LLM inference via tsuku-llm addon (true/false)
   llm.idle_timeout    How long addon stays alive after last request (e.g., 5m, 30s)
   llm.providers       Preferred LLM provider order (comma-separated, e.g., claude,gemini)
+  secrets.*           API keys stored securely (use stdin for values)
 
 Examples:
   tsuku config
@@ -37,7 +38,8 @@ Examples:
   tsuku config get telemetry
   tsuku config set telemetry false
   tsuku config set llm.local_enabled true
-  tsuku config set llm.idle_timeout 10m`,
+  tsuku config set llm.idle_timeout 10m
+  echo "sk-..." | tsuku config set secrets.anthropic_api_key`,
 	Run: runConfig,
 }
 

@@ -8,9 +8,9 @@ import (
 
 // NewSearchProvider creates a search provider based on configuration.
 // If explicit is non-empty, it specifies the provider to use (ddg, tavily, brave).
-// Otherwise, auto-selection checks environment variables in priority order:
-//   - TAVILY_API_KEY -> Tavily
-//   - BRAVE_API_KEY -> Brave
+// Otherwise, auto-selection checks for configured API keys in priority order:
+//   - tavily_api_key -> Tavily
+//   - brave_api_key -> Brave
 //   - Otherwise -> DDG (no key required)
 func NewSearchProvider(explicit string) (Provider, error) {
 	switch explicit {
