@@ -24,18 +24,18 @@ Planned
 |-------|--------------|------|
 | ~~[#1753: fix(llm): invalidate dead gRPC connections on server crash](https://github.com/tsukumogami/tsuku/issues/1753)~~ | ~~None~~ | ~~testable~~ |
 | ~~_Fix the `LocalProvider.Complete` error path to close and nil out the cached gRPC connection. Without this, the client caches a dead connection after a server crash and all subsequent requests fail._~~ | | |
-| [#1754: test(builders): parameterize ground truth suite for multi-provider support](https://github.com/tsukumogami/tsuku/issues/1754) | None | testable |
-| _Refactor `TestLLMGroundTruth` to detect the active provider from env vars, inject via `WithFactory`/`WithHomebrewFactory`, and compare results against per-provider JSON baselines. Adds `-update-baseline` flag and commits the initial Claude baseline._ | | |
-| [#1755: test(builders): create local provider quality baselines](https://github.com/tsukumogami/tsuku/issues/1755) | [#1754](https://github.com/tsukumogami/tsuku/issues/1754) | simple |
-| _Run the parameterized suite from #1754 against the local Qwen model and commit the results as `testdata/llm-quality-baselines/local.json`. Documents known failures like the ast-grep Rust triple case._ | | |
-| [#1756: test(llm): add server stability tests](https://github.com/tsukumogami/tsuku/issues/1756) | [#1753](https://github.com/tsukumogami/tsuku/issues/1753) | testable |
-| _Add `TestSequentialInference` (3-5 requests through a single server) and `TestCrashRecovery` (SIGKILL + reconnection) to exercise workload patterns that short lifecycle tests miss. Depends on the connection fix from #1753._ | | |
-| [#1757: ci(llm): add model caching for integration tests](https://github.com/tsukumogami/tsuku/issues/1757) | None | testable |
-| _Add `actions/cache` for the ~500MB model file across CI runs and a `sharedModelDir(t)` helper to share the model across test functions within a single run. Fixes the pre-existing problem of re-downloading per test function._ | | |
-| [#1758: ci(llm): add quality gate for prompt and test matrix changes](https://github.com/tsukumogami/tsuku/issues/1758) | [#1754](https://github.com/tsukumogami/tsuku/issues/1754), [#1757](https://github.com/tsukumogami/tsuku/issues/1757) | testable |
-| _Add a separate `llm-quality` CI job that runs `TestLLMGroundTruth` with the local provider. Triggers only on changes to prompt templates, test matrix, or baseline files -- keeping routine LLM PRs fast._ | | |
-| [#1759: docs(llm): write manual test runbook](https://github.com/tsukumogami/tsuku/issues/1759) | None | simple |
-| _Write `docs/llm-testing.md` with three procedures: full 10-case benchmark with server restarts, soak test for memory leak detection, and new model validation workflow. Includes results recording templates._ | | |
+| ~~[#1754: test(builders): parameterize ground truth suite for multi-provider support](https://github.com/tsukumogami/tsuku/issues/1754)~~ | ~~None~~ | ~~testable~~ |
+| ~~_Refactor `TestLLMGroundTruth` to detect the active provider from env vars, inject via `WithFactory`/`WithHomebrewFactory`, and compare results against per-provider JSON baselines. Adds `-update-baseline` flag and commits the initial Claude baseline._~~ | | |
+| ~~[#1755: test(builders): create local provider quality baselines](https://github.com/tsukumogami/tsuku/issues/1755)~~ | ~~[#1754](https://github.com/tsukumogami/tsuku/issues/1754)~~ | ~~simple~~ |
+| ~~_Run the parameterized suite from #1754 against the local Qwen model and commit the results as `testdata/llm-quality-baselines/local.json`. Documents known failures like the ast-grep Rust triple case._~~ | | |
+| ~~[#1756: test(llm): add server stability tests](https://github.com/tsukumogami/tsuku/issues/1756)~~ | ~~[#1753](https://github.com/tsukumogami/tsuku/issues/1753)~~ | ~~testable~~ |
+| ~~_Add `TestSequentialInference` (3-5 requests through a single server) and `TestCrashRecovery` (SIGKILL + reconnection) to exercise workload patterns that short lifecycle tests miss. Depends on the connection fix from #1753._~~ | | |
+| ~~[#1757: ci(llm): add model caching for integration tests](https://github.com/tsukumogami/tsuku/issues/1757)~~ | ~~None~~ | ~~testable~~ |
+| ~~_Add `actions/cache` for the ~500MB model file across CI runs and a `sharedModelDir(t)` helper to share the model across test functions within a single run. Fixes the pre-existing problem of re-downloading per test function._~~ | | |
+| ~~[#1758: ci(llm): add quality gate for prompt and test matrix changes](https://github.com/tsukumogami/tsuku/issues/1758)~~ | ~~[#1754](https://github.com/tsukumogami/tsuku/issues/1754), [#1757](https://github.com/tsukumogami/tsuku/issues/1757)~~ | ~~testable~~ |
+| ~~_Add a separate `llm-quality` CI job that runs `TestLLMGroundTruth` with the local provider. Triggers only on changes to prompt templates, test matrix, or baseline files -- keeping routine LLM PRs fast._~~ | | |
+| ~~[#1759: docs(llm): write manual test runbook](https://github.com/tsukumogami/tsuku/issues/1759)~~ | ~~None~~ | ~~simple~~ |
+| ~~_Write `docs/llm-testing.md` with three procedures: full 10-case benchmark with server restarts, soak test for memory leak detection, and new model validation workflow. Includes results recording templates._~~ | | |
 
 ### Dependency Graph
 
@@ -60,9 +60,7 @@ graph LR
     classDef needsDesign fill:#e1bee7
     classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
 
-    class I1753 done
-    class I1754,I1756,I1757,I1759 ready
-    class I1755,I1758 blocked
+    class I1753,I1754,I1755,I1756,I1757,I1758,I1759 done
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design
