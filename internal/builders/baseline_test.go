@@ -4,21 +4,12 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
 func TestWriteBaseline_MinimumPassRate(t *testing.T) {
 	dir := t.TempDir()
-	origDir := os.Getenv("TSUKU_BASELINE_DIR")
-	defer func() {
-		if origDir != "" {
-			os.Setenv("TSUKU_BASELINE_DIR", origDir)
-		}
-	}()
-
-	// Override baselineDir for this test by writing to a temp directory.
-	// We call writeBaselineToDir directly instead of writeBaseline to avoid
-	// depending on working directory resolution.
 
 	tests := []struct {
 		name      string
@@ -76,7 +67,7 @@ func TestWriteBaseline_MinimumPassRate(t *testing.T) {
 				if err == nil {
 					t.Fatal("expected error but got nil")
 				}
-				if tt.errSubstr != "" && !containsSubstring(err.Error(), tt.errSubstr) {
+				if tt.errSubstr != "" && !strings.Contains(err.Error(), tt.errSubstr) {
 					t.Errorf("error %q does not contain %q", err.Error(), tt.errSubstr)
 				}
 				return
@@ -157,7 +148,7 @@ func TestReportRegressions_ImprovementOnly(t *testing.T) {
 	}
 }
 
-func TestReportRegressions_MissingTestIgnored(t *testing.T) {
+func TestReportRegressions_OrphanedDetected(t *testing.T) {
 	baseline := &qualityBaseline{
 		Provider: "test",
 		Model:    "test-model",
@@ -168,15 +159,18 @@ func TestReportRegressions_MissingTestIgnored(t *testing.T) {
 		},
 	}
 
-	// test_b is missing from current run
+	// test_b is missing from current run -- should be flagged as orphaned
 	results := map[string]string{
 		"test_a": "pass",
 		"test_c": "fail",
 	}
 
-	hadRegressions := reportRegressions(t, baseline, results)
-	if hadRegressions {
-		t.Errorf("expected no regressions when test is missing from current run")
+	diff := compareBaseline(baseline, results)
+	if len(diff.Orphaned) != 1 || diff.Orphaned[0] != "test_b" {
+		t.Errorf("expected orphaned [test_b], got %v", diff.Orphaned)
+	}
+	if len(diff.Regressions) != 0 {
+		t.Errorf("expected no regressions, got %v", diff.Regressions)
 	}
 }
 
@@ -232,6 +226,17 @@ func TestCompareBaseline_Mixed(t *testing.T) {
 	}
 	if len(diff.Improvements) != 1 || diff.Improvements[0] != "test_c" {
 		t.Errorf("expected improvement [test_c], got %v", diff.Improvements)
+	}
+	if len(diff.Orphaned) != 0 {
+		t.Errorf("expected no orphaned entries, got %v", diff.Orphaned)
+	}
+}
+
+func TestBaselineKey(t *testing.T) {
+	got := baselineKey("llm_github_stern_baseline", "stern")
+	want := "llm_github_stern_baseline_stern"
+	if got != want {
+		t.Errorf("baselineKey() = %q, want %q", got, want)
 	}
 }
 
@@ -309,18 +314,4 @@ func TestProviderModel(t *testing.T) {
 			}
 		})
 	}
-}
-
-// containsSubstring checks if s contains substr.
-func containsSubstring(s, substr string) bool {
-	return len(s) >= len(substr) && searchSubstring(s, substr)
-}
-
-func searchSubstring(s, substr string) bool {
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
-		}
-	}
-	return false
 }

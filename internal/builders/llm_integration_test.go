@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"testing"
 	"time"
 
@@ -134,7 +135,7 @@ func writeBaselineToDir(dir, providerName, model string, results map[string]stri
 	// Sanity check: require at least 50% pass rate
 	passed := 0
 	for _, status := range results {
-		if status == "pass" {
+		if status == baselinePass {
 			passed++
 		}
 	}
@@ -167,10 +168,28 @@ func writeBaselineToDir(dir, providerName, model string, results map[string]stri
 	return nil
 }
 
+// Baseline result status constants. These values are persisted in baseline JSON
+// files and used as map values in test results. Changing them requires migrating
+// existing baseline files.
+const (
+	baselinePass = "pass"
+	baselineFail = "fail"
+)
+
+// baselineKey constructs the key used to identify a test case in baseline files.
+// The format is "<testID>_<tool>" where testID comes from the test matrix and
+// tool is the tool name from the test case. This key is used both as the Go
+// subtest name and as the map key in baseline JSON files; changing this format
+// requires migrating existing baselines.
+func baselineKey(testID, tool string) string {
+	return testID + "_" + tool
+}
+
 // baselineDiff holds the result of comparing current test results against a baseline.
 type baselineDiff struct {
 	Regressions  []string // previously-passing cases that now fail
 	Improvements []string // previously-failing cases that now pass
+	Orphaned     []string // baseline entries with no matching result (test renamed or removed)
 }
 
 // compareBaseline computes the diff between current results and a baseline.
@@ -180,13 +199,14 @@ func compareBaseline(baseline *qualityBaseline, results map[string]string) basel
 	for name, baselineStatus := range baseline.Baselines {
 		currentStatus, ok := results[name]
 		if !ok {
-			// Test case was in baseline but not in current run -- skip
+			// Baseline entry has no matching result -- test was renamed or removed
+			diff.Orphaned = append(diff.Orphaned, name)
 			continue
 		}
-		if baselineStatus == "pass" && currentStatus == "fail" {
+		if baselineStatus == baselinePass && currentStatus == baselineFail {
 			diff.Regressions = append(diff.Regressions, name)
 		}
-		if baselineStatus == "fail" && currentStatus == "pass" {
+		if baselineStatus == baselineFail && currentStatus == baselinePass {
 			diff.Improvements = append(diff.Improvements, name)
 		}
 	}
@@ -194,6 +214,7 @@ func compareBaseline(baseline *qualityBaseline, results map[string]string) basel
 	// Sort for deterministic output
 	sort.Strings(diff.Regressions)
 	sort.Strings(diff.Improvements)
+	sort.Strings(diff.Orphaned)
 
 	return diff
 }
@@ -214,15 +235,22 @@ func reportRegressions(t *testing.T, baseline *qualityBaseline, results map[stri
 		t.Logf("Run with -update-baseline to update the baseline file.")
 	}
 
+	if len(diff.Orphaned) > 0 {
+		t.Errorf("Orphaned baseline entries (test renamed or removed?):")
+		for _, name := range diff.Orphaned {
+			t.Errorf("  ? %s: in baseline but not in current results", name)
+		}
+		t.Errorf("Run with -update-baseline to update the baseline file.")
+	}
+
 	if len(diff.Regressions) > 0 {
 		t.Errorf("Quality regressions detected against %s baseline:", baseline.Provider)
 		for _, name := range diff.Regressions {
 			t.Errorf("  - %s: was pass, now fail", name)
 		}
-		return true
 	}
 
-	return false
+	return len(diff.Regressions) > 0 || len(diff.Orphaned) > 0
 }
 
 // providerModel returns a human-readable model identifier for the provider.
@@ -315,8 +343,8 @@ func TestLLMGroundTruth(t *testing.T) {
 			continue
 		}
 
-		subtestName := testID + "_" + tc.Tool
-		passed := t.Run(subtestName, func(t *testing.T) {
+		key := baselineKey(testID, tc.Tool)
+		passed := t.Run(key, func(t *testing.T) {
 			t.Logf("Testing: %s - %s", tc.Tool, tc.Desc)
 
 			// Use a longer timeout for LLM calls (2 minutes)
@@ -376,16 +404,16 @@ func TestLLMGroundTruth(t *testing.T) {
 		})
 
 		if passed {
-			results[subtestName] = "pass"
+			results[key] = baselinePass
 		} else {
-			results[subtestName] = "fail"
+			results[key] = baselineFail
 		}
 	}
 
 	// Log summary
 	passCount := 0
 	for _, status := range results {
-		if status == "pass" {
+		if status == baselinePass {
 			passCount++
 		}
 	}
@@ -549,7 +577,7 @@ func validateHomebrewSourceRecipe(t *testing.T, tc llmTestCase, generated, expec
 // containsFeature checks if a feature prefix is present in the features list
 func containsFeature(features []string, prefix string) bool {
 	for _, f := range features {
-		if len(f) >= len(prefix) && f[:len(prefix)] == prefix {
+		if strings.HasPrefix(f, prefix) {
 			return true
 		}
 	}
