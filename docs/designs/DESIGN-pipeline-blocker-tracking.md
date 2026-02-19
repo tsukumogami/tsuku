@@ -1,5 +1,5 @@
 ---
-status: Accepted
+status: Planned
 problem: |
   The pipeline dashboard's "Top Blockers" panel is nearly empty despite hundreds of
   dependency-related failures. The generate phase skips dependency extraction entirely,
@@ -26,7 +26,48 @@ rationale: |
 
 ## Status
 
-Accepted
+Planned
+
+## Implementation Issues
+
+### Milestone: [pipeline-blocker-tracking](https://github.com/tsukumogami/tsuku/milestone/89)
+
+| Issue | Dependencies | Tier |
+|-------|--------------|------|
+| [#1765: fix(batch): classify dependency failures correctly in CLI and orchestrator](https://github.com/tsukumogami/tsuku/issues/1765) | None | testable |
+| _Reorders the CLI's `classifyInstallError()` so dependency errors get exit code 8, adds exit code 3 to the orchestrator's category mapping, and extracts `blocked_by` from generate-phase output. Establishes the regex pattern and validation logic that the remediation tool and dashboard fixes build on._ | | |
+| [#1766: feat(batch): add remediation tool for misclassified failure records](https://github.com/tsukumogami/tsuku/issues/1766) | [#1765](https://github.com/tsukumogami/tsuku/issues/1765) | testable |
+| _Patches hundreds of existing failure records that were misclassified as `validation_failed` with empty `blocked_by`. Flips corresponding queue entries from `failed` to `blocked` and regenerates the dashboard so operators see accurate data immediately._ | | |
+| [#1767: fix(dashboard): compute transitive blocker impact with normalized keys](https://github.com/tsukumogami/tsuku/issues/1767) | [#1765](https://github.com/tsukumogami/tsuku/issues/1765) | testable |
+| _Rewrites `computeTransitiveBlockers()` to normalize blocker keys (stripping ecosystem prefixes) and compute recursive impact with cycle detection. Adds `direct_count` and `total_count` fields to the Blocker struct and updates the frontend to display `total_count` as the primary metric._ | | |
+
+### Dependency Graph
+
+```mermaid
+graph LR
+    subgraph Phase1["Phase 1: Recording Fixes"]
+        I1765["#1765: Classify dependency failures"]
+    end
+
+    subgraph Phase2["Phase 2: Data + Dashboard"]
+        I1766["#1766: Remediation tool"]
+        I1767["#1767: Transitive blocker impact"]
+    end
+
+    I1765 --> I1766
+    I1765 --> I1767
+
+    classDef done fill:#c8e6c9
+    classDef ready fill:#bbdefb
+    classDef blocked fill:#fff9c4
+    classDef needsDesign fill:#e1bee7
+    classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
+
+    class I1765 ready
+    class I1766,I1767 blocked
+```
+
+**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design
 
 ## Context and Problem Statement
 
