@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-02-19T00:19:06Z",
+  "generated_at": "2026-02-19T00:19:58Z",
   "queue": {
     "total": 5275,
     "by_status": {
@@ -37366,6 +37366,21 @@
       "timestamp": "2026-02-18T15:51:38Z"
     },
     {
+      "id": "batch-2026-02-18T15-51-38Z-actions-up",
+      "package": "actions-up",
+      "ecosystem": "batch",
+      "category": "deterministic",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "batch-2026-02-18T15-51-38Z",
+      "timestamp": "2026-02-18T15:51:38Z"
+    },
+    {
       "id": "batch-2026-02-18T15-51-38Z-advancecomp",
       "package": "advancecomp",
       "ecosystem": "batch",
@@ -37400,21 +37415,6 @@
         "linux-rhel-glibc-x86_64",
         "linux-suse-glibc-arm64",
         "linux-suse-glibc-x86_64"
-      ],
-      "batch_id": "batch-2026-02-18T15-51-38Z",
-      "timestamp": "2026-02-18T15:51:38Z"
-    },
-    {
-      "id": "batch-2026-02-18T15-51-38Z-actions-up",
-      "package": "actions-up",
-      "ecosystem": "batch",
-      "category": "deterministic",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
       ],
       "batch_id": "batch-2026-02-18T15-51-38Z",
       "timestamp": "2026-02-18T15:51:38Z"
@@ -38199,21 +38199,6 @@
       "timestamp": "2026-02-08T02:37:10Z"
     },
     {
-      "id": "homebrew-2026-02-08T02-37-10Z-tealdeer",
-      "package": "tealdeer",
-      "ecosystem": "homebrew",
-      "category": "deterministic",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "homebrew-2026-02-08T02-37-10Z",
-      "timestamp": "2026-02-08T02:37:10Z"
-    },
-    {
       "id": "homebrew-2026-02-08T02-37-10Z-sd",
       "package": "sd",
       "ecosystem": "homebrew",
@@ -38231,6 +38216,21 @@
     {
       "id": "homebrew-2026-02-08T02-37-10Z-procs",
       "package": "procs",
+      "ecosystem": "homebrew",
+      "category": "deterministic",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "homebrew-2026-02-08T02-37-10Z",
+      "timestamp": "2026-02-08T02:37:10Z"
+    },
+    {
+      "id": "homebrew-2026-02-08T02-37-10Z-tealdeer",
+      "package": "tealdeer",
       "ecosystem": "homebrew",
       "category": "deterministic",
       "subcategory": "install_failed",
@@ -38721,13 +38721,13 @@
       "timestamp": "2026-02-06T19:01:30.594178786Z"
     },
     {
-      "id": "homebrew-2026-02-06T17-55-10Z-moreutils",
-      "package": "moreutils",
+      "id": "homebrew-2026-02-06T17-55-10Z-mit-scheme",
+      "package": "mit-scheme",
       "ecosystem": "homebrew",
       "category": "deterministic",
       "subcategory": "install_failed",
       "exit_code": 6,
-      "platform": "linux-alpine-musl-arm64",
+      "platform": "linux-debian-glibc-arm64",
       "timestamp": "2026-02-06T17:55:10Z"
     },
     {
@@ -38791,13 +38791,13 @@
       "timestamp": "2026-02-06T17:55:10Z"
     },
     {
-      "id": "homebrew-2026-02-06T17-55-10Z-mit-scheme",
-      "package": "mit-scheme",
+      "id": "homebrew-2026-02-06T17-55-10Z-moreutils",
+      "package": "moreutils",
       "ecosystem": "homebrew",
       "category": "deterministic",
       "subcategory": "install_failed",
       "exit_code": 6,
-      "platform": "linux-debian-glibc-arm64",
+      "platform": "linux-alpine-musl-arm64",
       "timestamp": "2026-02-06T17:55:10Z"
     },
     {
@@ -39689,6 +39689,11 @@
     {
       "name": "actionlint",
       "source": "github:rhysd/actionlint",
+      "validation_status": "valid"
+    },
+    {
+      "name": "add-determinism",
+      "source": "crates.io:add-determinism",
       "validation_status": "valid"
     },
     {
