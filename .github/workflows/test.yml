@@ -364,6 +364,7 @@ jobs:
         # The models/ symlink lets the daemon find the cached model.
         run: |
           export TSUKU_LLM_MODEL_CACHE="$HOME/.cache/tsuku-llm-models"
+          mkdir -p "$TSUKU_LLM_MODEL_CACHE"
           export TSUKU_HOME="$(mktemp -d)"
           ln -sf "$TSUKU_LLM_MODEL_CACHE" "$TSUKU_HOME/models"
           go test -tags=integration -v -timeout 30m ./internal/builders/...

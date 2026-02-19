@@ -83,13 +83,11 @@ func TestSequentialInference(t *testing.T) {
 }
 
 // TestCrashRecovery verifies that LocalProvider recovers after the daemon
-// crashes unexpectedly. After a SIGKILL the first Complete call should fail
-// because the connection is stale. Subsequent calls trigger EnsureRunning,
-// which detects the dead daemon and restarts the server. However, recovery
-// is not a clean two-step process (fail once, succeed once). The restarted
-// server needs time to bind its socket and reload the model into memory, so
-// the test uses require.Eventually to poll until a call succeeds. Multiple
-// attempts may fail before the server is ready again.
+// crashes unexpectedly. After a SIGKILL, EnsureRunning detects the dead
+// daemon (lock file is no longer held), cleans up the stale socket, starts
+// a fresh daemon, and waits for it to become ready. Combined with gRPC's
+// transparent reconnection to the new Unix socket, recovery is seamless:
+// the first Complete call after the crash succeeds.
 //
 // This test uses provider.Complete() (the high-level API) rather than raw gRPC
 // because we need to exercise the full reconnection and daemon-restart path
@@ -143,29 +141,14 @@ func TestCrashRecovery(t *testing.T) {
 		return !isDaemonRunning(tsukuHome)
 	}, 10*time.Second, 100*time.Millisecond, "daemon should be dead after SIGKILL")
 
-	// --- First call after crash: expect error (stale connection) ---
-	// Use a short timeout: the server is dead so the call should fail fast.
-	// A long timeout risks the daemon restarting within the window, which
-	// would make the stale-connection assertion unreliable.
-	ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
-	_, err = provider.Complete(ctx, &CompletionRequest{
-		SystemPrompt: "You are a helpful assistant.",
-		Messages:     []Message{{Role: RoleUser, Content: "Are you there?"}},
-		MaxTokens:    50,
-	})
-	cancel()
-	t.Logf("first post-crash Complete error (expected): %v", err)
-	require.Error(t, err, "first Complete after crash should fail (stale connection)")
-
-	// --- Second call: provider should reconnect / restart via EnsureRunning ---
-	// Give enough time for the addon to download (if needed), start, and load the model.
-	ctx, cancel = context.WithTimeout(context.Background(), 5*time.Minute)
-	defer cancel()
-
-	// The restart + model load can take a while on CPU, so poll with retries.
+	// --- Post-crash call: EnsureRunning restarts the daemon seamlessly ---
+	// EnsureRunning detects the dead daemon (lock is free), starts a new one,
+	// and waits for socket readiness. gRPC transparently reconnects to the
+	// new Unix socket, so the first Complete after crash should succeed.
+	// Give enough time for the addon to start and load the model.
 	var recoveryResp *CompletionResponse
 	require.Eventually(t, func() bool {
-		reqCtx, reqCancel := context.WithTimeout(ctx, 2*time.Minute)
+		reqCtx, reqCancel := context.WithTimeout(context.Background(), 2*time.Minute)
 		defer reqCancel()
 		resp, callErr := provider.Complete(reqCtx, &CompletionRequest{
 			SystemPrompt: "You are a helpful assistant.",

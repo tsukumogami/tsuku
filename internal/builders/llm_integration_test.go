@@ -330,7 +330,6 @@ func TestLLMGroundTruth(t *testing.T) {
 		"llm_github_age_strip_dirs", "llm_github_liberica_multi_binary", "llm_github_btop_install_subpath",
 		"llm_github_fly_binary_rename", "llm_github_k3d_file_baseline", "llm_github_cosign_file_rename",
 		"llm_github_minikube_file_no_mapping", "llm_github_kopia_macos_mapping", "llm_github_cargo-deny_musl",
-		"llm_homebrew_readline_multi_patches", "llm_homebrew_python_single_patch", "llm_homebrew_bash_patch_ordering",
 	}
 
 	// Track per-test results

@@ -58,6 +58,8 @@ func TestBinaryName(t *testing.T) {
 }
 
 func TestAddonPath(t *testing.T) {
+	t.Setenv("TSUKU_LLM_BINARY", "") // clear so AddonPath uses computed path
+
 	manifest, err := GetManifest()
 	require.NoError(t, err)
 
@@ -95,6 +97,8 @@ func TestAddonPath(t *testing.T) {
 }
 
 func TestIsInstalled(t *testing.T) {
+	t.Setenv("TSUKU_LLM_BINARY", "") // clear so IsInstalled uses computed path
+
 	manifest, err := GetManifest()
 	require.NoError(t, err)
 
@@ -245,6 +249,8 @@ func TestComputeChecksum(t *testing.T) {
 }
 
 func TestEnsureAddon(t *testing.T) {
+	t.Setenv("TSUKU_LLM_BINARY", "") // clear so EnsureAddon uses managed path
+
 	t.Run("downloads and verifies addon", func(t *testing.T) {
 		// Create a fake addon binary
 		fakeAddon := []byte("#!/bin/sh\necho hello")
@@ -408,6 +414,8 @@ func TestVerifyBeforeExecution(t *testing.T) {
 	})
 
 	t.Run("returns error for tampered binary", func(t *testing.T) {
+		t.Setenv("TSUKU_LLM_BINARY", "") // clear so VerifyBeforeExecution doesn't skip
+
 		fakeAddon := []byte("fake addon")
 		h := sha256.Sum256(fakeAddon)
 		checksum := hex.EncodeToString(h[:])

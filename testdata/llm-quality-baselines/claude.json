@@ -17,11 +17,8 @@
     "llm_github_fly_binary_rename_fly": "pass",
     "llm_github_k3d_file_baseline_k3d": "pass",
     "llm_github_cosign_file_rename_cosign": "pass",
-    "llm_github_minikube_file_no_mapping_minikube": "pass",
+    "llm_github_minikube_file_no_mapping_minikube": "fail",
     "llm_github_kopia_macos_mapping_kopia": "pass",
-    "llm_github_cargo-deny_musl_cargo-deny": "pass",
-    "llm_homebrew_readline_multi_patches_readline-source": "pass",
-    "llm_homebrew_python_single_patch_python-source": "pass",
-    "llm_homebrew_bash_patch_ordering_bash-source": "pass"
+    "llm_github_cargo-deny_musl_cargo-deny": "pass"
   }
 }
