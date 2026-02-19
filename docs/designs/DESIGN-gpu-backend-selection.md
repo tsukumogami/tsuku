@@ -51,6 +51,8 @@ Planned
 | _Adds a clear stderr message in the Rust binary when the compiled-in GPU backend fails to initialize, suggesting `tsuku config set llm.backend cpu`. Informational only, no protocol changes. Independent work in the tsuku-llm repo._ | | |
 | [#1780: test(llm): benchmark Vulkan vs CUDA on shipped models](https://github.com/tsukumogami/tsuku/issues/1780) | [#1776](https://github.com/tsukumogami/tsuku/issues/1776) | testable |
 | _Runs Vulkan and CUDA variants on NVIDIA hardware for 0.5B/1.5B/3B models, measuring tokens/second. The 25% gap threshold gates marking this design as Current. CUDA variant is manually downloaded for benchmarking._ | | |
+| [#1786: test(recipe): validate tsuku-llm recipe against release pipeline and document user experience](https://github.com/tsukumogami/tsuku/issues/1786) | [#1776](https://github.com/tsukumogami/tsuku/issues/1776) | testable |
+| _Validates every `asset_pattern` against actual release artifact names, configures `supported_os`/`supported_arch`/`supported_libc` metadata so unsupported platforms get clear errors, and documents the user-facing experience this milestone delivers vs. what's deferred._ | | |
 
 ### Dependency Graph
 
@@ -71,6 +73,7 @@ graph TD
         I1778["#1778: Migrate addon to recipe system"]
         I1779["#1779: Structured error for backend..."]
         I1780["#1780: Benchmark Vulkan vs CUDA"]
+        I1786["#1786: Validate recipe + document UX"]
     end
 
     I1773 --> I1774
@@ -80,6 +83,7 @@ graph TD
     I1776 --> I1778
     I1777 --> I1778
     I1776 --> I1780
+    I1776 --> I1786
 
     classDef done fill:#c8e6c9
     classDef ready fill:#bbdefb
@@ -88,10 +92,30 @@ graph TD
     classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
 
     class I1773,I1777,I1779 ready
-    class I1774,I1775,I1776,I1778,I1780 blocked
+    class I1774,I1775,I1776,I1778,I1780,I1786 blocked
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design
+
+### What Ships
+
+When this milestone is complete, users get:
+
+- **Linux with NVIDIA/AMD/Intel GPU**: `tsuku install tsuku-llm` automatically detects the GPU and installs the Vulkan variant. The Vulkan loader library is verified as a dependency.
+- **Linux without GPU**: `tsuku install tsuku-llm` installs the CPU variant automatically.
+- **macOS (ARM64 or AMD64)**: `tsuku install tsuku-llm` installs the Metal variant.
+- **Manual override**: `tsuku config set llm.backend cpu` forces the CPU variant regardless of detected GPU.
+- **Unsupported platforms**: Users on musl/Alpine Linux, unsupported architectures, or other uncovered combinations get a clear error message explaining what's supported and why.
+- **Runtime failures**: If the GPU backend fails at startup, the Rust binary prints a clear error to stderr suggesting the CPU override.
+- **Ecosystem-wide GPU filtering**: Any recipe can use `when = { gpu = ["nvidia", "amd"] }` for GPU-aware step selection.
+
+What's deferred to future work:
+
+- **CUDA variant selection**: Pending benchmark results (#1780). All GPU vendors get Vulkan initially.
+- **Windows support**: The pipeline builds a Windows CPU variant but the recipe doesn't include it yet.
+- **Automatic runtime fallback**: If the Vulkan backend fails, users must manually set `llm.backend cpu`. Automatic detection and reinstallation is deferred.
+- **musl/Alpine Linux**: No musl-linked variants are built.
+- **Multiple CUDA versions**: Only CUDA 12.4 is built. Older driver compatibility isn't addressed.
 
 ## Upstream Design Reference
 
