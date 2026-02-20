@@ -428,7 +428,12 @@
                 }
 
                 var failureDetails = data.failure_details || [];
-                var batchFailures = failureDetails.filter(function(f) { return f.batch_id === id; });
+                var runTime = new Date(run.timestamp).getTime();
+                var batchFailures = failureDetails.filter(function(f) {
+                    if (!f.timestamp) return false;
+                    var diff = Math.abs(new Date(f.timestamp).getTime() - runTime);
+                    return diff < 120000; // 120 seconds
+                });
 
                 document.title = run.batch_id + ' - Run Detail - tsuku Pipeline';
                 document.getElementById('content').innerHTML =

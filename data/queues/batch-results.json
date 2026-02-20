@@ -1,30 +1,24 @@
 {
-  "batch_id": "2026-02-18",
+  "batch_id": "2026-02-20",
   "ecosystems": {
-    "crates.io": 1,
-    "homebrew": 22,
-    "npm": 2
+    "npm": 7,
+    "pypi": 2
   },
   "per_ecosystem": {
-    "crates.io": {
-      "total": 1,
-      "succeeded": 1,
-      "failed": 0
-    },
-    "homebrew": {
-      "total": 22,
-      "succeeded": 1,
-      "failed": 21
-    },
     "npm": {
+      "total": 7,
+      "succeeded": 4,
+      "failed": 3
+    },
+    "pypi": {
       "total": 2,
-      "succeeded": 2,
-      "failed": 0
+      "succeeded": 0,
+      "failed": 2
     }
   },
-  "total": 25,
+  "total": 9,
   "succeeded": 4,
-  "failed": 21,
+  "failed": 5,
   "blocked": 0,
-  "timestamp": "2026-02-18T15:38:25.121676532Z"
+  "timestamp": "2026-02-20T05:53:58.814738448Z"
 }

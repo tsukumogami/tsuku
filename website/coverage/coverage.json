@@ -1,21 +1,21 @@
 {
-  "generated_at": "2026-02-19T01:36:42Z",
-  "total_recipes": 282,
+  "generated_at": "2026-02-20T06:11:03Z",
+  "total_recipes": 324,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 282,
-        "total": 282,
+        "supported": 324,
+        "total": 324,
         "pct": 100
       },
       "glibc": {
-        "supported": 282,
-        "total": 282,
+        "supported": 324,
+        "total": 324,
         "pct": 100
       },
       "musl": {
-        "supported": 282,
-        "total": 282,
+        "supported": 324,
+        "total": 324,
         "pct": 100
       }
     },
@@ -26,9 +26,9 @@
         "glibc_support": 13
       },
       "tool": {
-        "total": 269,
-        "musl_support": 269,
-        "glibc_support": 269
+        "total": 311,
+        "musl_support": 311,
+        "glibc_support": 311
       }
     }
   },
@@ -131,6 +131,18 @@
     },
     {
       "name": "age",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "agent-browser",
       "type": "tool",
       "platforms": {
         "darwin": true,
@@ -250,6 +262,18 @@
       "warnings": null
     },
     {
+      "name": "aws-cdk",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "aws-iam-authenticator",
       "type": "tool",
       "platforms": {
@@ -310,7 +334,31 @@
       "warnings": null
     },
     {
+      "name": "azurite",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "bash",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "bash-language-server",
       "type": "tool",
       "platforms": {
         "darwin": true,
@@ -430,6 +478,18 @@
       "warnings": null
     },
     {
+      "name": "bpmnlint",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "brotli",
       "type": "library",
       "platforms": {
@@ -455,6 +515,18 @@
     },
     {
       "name": "buf",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "bumpp",
       "type": "tool",
       "platforms": {
         "darwin": true,
@@ -622,6 +694,18 @@
       "warnings": null
     },
     {
+      "name": "chrome-devtools-mcp",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "clang-format",
       "type": "tool",
       "platforms": {
@@ -718,7 +802,55 @@
       "warnings": null
     },
     {
+      "name": "commitlint",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "contentful-cli",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "corepack",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "cosign",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "cspell",
       "type": "tool",
       "platforms": {
         "darwin": true,
@@ -803,6 +935,18 @@
     },
     {
       "name": "devspace",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "diff-so-fancy",
       "type": "tool",
       "platforms": {
         "darwin": true,
@@ -934,6 +1078,18 @@
       "warnings": null
     },
     {
+      "name": "dprint",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "draft",
       "type": "tool",
       "platforms": {
@@ -983,6 +1139,18 @@
     },
     {
       "name": "eksctl",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "esbuild",
       "type": "tool",
       "platforms": {
         "darwin": true,
@@ -1486,6 +1654,18 @@
       "warnings": null
     },
     {
+      "name": "graphql-cli",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "grex",
       "type": "tool",
       "platforms": {
@@ -1523,6 +1703,18 @@
     },
     {
       "name": "grype",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "gulp-cli",
       "type": "tool",
       "platforms": {
         "darwin": true,
@@ -1607,6 +1799,18 @@
     },
     {
       "name": "htop",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "http-server",
       "type": "tool",
       "platforms": {
         "darwin": true,
@@ -1906,6 +2110,18 @@
       "warnings": null
     },
     {
+      "name": "lerna",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "lf",
       "type": "tool",
       "platforms": {
@@ -2086,6 +2302,18 @@
       "warnings": null
     },
     {
+      "name": "mbt",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "micro",
       "type": "tool",
       "platforms": {
@@ -2170,6 +2398,18 @@
       "warnings": null
     },
     {
+      "name": "mjml",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "mkcert",
       "type": "tool",
       "platforms": {
@@ -2218,6 +2458,42 @@
       "warnings": null
     },
     {
+      "name": "mprocs",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "n",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "n8n-mcp",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "nasm",
       "type": "tool",
       "platforms": {
@@ -2254,6 +2530,18 @@
       "warnings": null
     },
     {
+      "name": "needle",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "netlify-cli",
       "type": "tool",
       "platforms": {
@@ -2278,7 +2566,31 @@
       "warnings": null
     },
     {
+      "name": "node-red",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "nomad",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "nping",
       "type": "tool",
       "platforms": {
         "darwin": true,
@@ -2302,6 +2614,18 @@
       "warnings": null
     },
     {
+      "name": "openapi-diff",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "openshift-cli",
       "type": "tool",
       "platforms": {
@@ -2314,7 +2638,43 @@
       "warnings": null
     },
     {
+      "name": "openskills",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "opentofu",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "oxfmt",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "oxlint",
       "type": "tool",
       "platforms": {
         "darwin": true,
@@ -2470,6 +2830,18 @@
       "warnings": null
     },
     {
+      "name": "prettier",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "procs",
       "type": "tool",
       "platforms": {
@@ -2495,6 +2867,18 @@
     },
     {
       "name": "pulumi",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "pyright",
       "type": "tool",
       "platforms": {
         "darwin": true,
@@ -2554,8 +2938,32 @@
       "warnings": null
     },
     {
+      "name": "react-native-cli",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "readline",
       "type": "library",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "release-it",
+      "type": "tool",
       "platforms": {
         "darwin": true,
         "glibc": true,
@@ -2578,7 +2986,31 @@
       "warnings": null
     },
     {
+      "name": "rollup",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "ruff",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "rulesync",
       "type": "tool",
       "platforms": {
         "darwin": true,
@@ -3106,6 +3538,18 @@
       "warnings": null
     },
     {
+      "name": "typescript-language-server",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "typos-cli",
       "type": "tool",
       "platforms": {
@@ -3191,6 +3635,18 @@
     },
     {
       "name": "vercel",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "vsce",
       "type": "tool",
       "platforms": {
         "darwin": true,
@@ -3346,6 +3802,30 @@
       "warnings": null
     },
     {
+      "name": "yaml-language-server",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "yarn",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "yazi",
       "type": "tool",
       "platforms": {
@@ -3359,6 +3839,18 @@
     },
     {
       "name": "yj",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "yo",
       "type": "tool",
       "platforms": {
         "darwin": true,
@@ -3408,6 +3900,18 @@
     {
       "name": "zstd",
       "type": "library",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "zx",
+      "type": "tool",
       "platforms": {
         "darwin": true,
         "glibc": true,

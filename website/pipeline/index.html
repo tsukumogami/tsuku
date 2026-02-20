@@ -82,6 +82,7 @@
 
         .status-bar.pending { background: var(--text-muted); }
         .status-bar.failed { background: #f85149; }
+        .status-bar.requires_manual { background: #bc8cff; }
         .status-bar.blocked { background: #d29922; }
         .status-bar.success { background: #3fb950; }
 
@@ -538,13 +539,15 @@
             }
 
             // Calculate status percentages
-            const statusOrder = ['pending', 'success', 'failed', 'blocked'];
+            const statusOrder = ['pending', 'success', 'failed', 'requires_manual', 'blocked'];
+            const statusDisplayLabel = { requires_manual: 'manual' };
             const statusBars = statusOrder.map(status => {
                 const count = data.queue.by_status[status] || 0;
                 const pct = (count / total * 100).toFixed(1);
+                const label = statusDisplayLabel[status] || status;
                 return `
                     <a href="/pipeline/${status}.html" class="status-row">
-                        <span class="status-label">${status}</span>
+                        <span class="status-label">${label}</span>
                         <div class="status-bar-container">
                             <div class="status-bar ${status}" style="width: ${pct}%"></div>
                         </div>
@@ -754,9 +757,23 @@
                         <div class="status-bars">
                             ${statusBars}
                         </div>
+                        ${(() => {
+                            let depBlocked = 0;
+                            const pkgLists = data.queue.packages || {};
+                            Object.values(pkgLists).forEach(list => {
+                                (list || []).forEach(pkg => {
+                                    if (pkg.blocked_by && pkg.blocked_by.length > 0) depBlocked++;
+                                });
+                            });
+                            if (depBlocked === 0) return '';
+                            return '<div style="margin-top: 0.75rem; font-size: 0.8rem; color: var(--text-muted);">' +
+                                depBlocked + ' package' + (depBlocked !== 1 ? 's' : '') +
+                                ' across all statuses have unresolved dependencies (see <a href="#blockers" style="color: var(--accent);">Top Blockers</a>)' +
+                                '</div>';
+                        })()}
                     </div>
 
-                    <div class="panel">
+                    <div class="panel" id="blockers">
                         <h2>Top Blockers</h2>
                         <div class="blocker-list">
                             ${blockerItems}

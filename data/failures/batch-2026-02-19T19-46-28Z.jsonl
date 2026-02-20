@@ -1,0 +1,13 @@
+{"schema_version":1,"recipe":"diff-so-fancy","platform":"linux-debian-glibc-x86_64","exit_code":6,"category":"deterministic","timestamp":"2026-02-19T19:46:28Z"}
+{"schema_version":1,"recipe":"diff-so-fancy","platform":"linux-rhel-glibc-x86_64","exit_code":6,"category":"deterministic","timestamp":"2026-02-19T19:46:28Z"}
+{"schema_version":1,"recipe":"diff-so-fancy","platform":"linux-arch-glibc-x86_64","exit_code":6,"category":"deterministic","timestamp":"2026-02-19T19:46:28Z"}
+{"schema_version":1,"recipe":"diff-so-fancy","platform":"linux-suse-glibc-x86_64","exit_code":6,"category":"deterministic","timestamp":"2026-02-19T19:46:28Z"}
+{"schema_version":1,"recipe":"diff-so-fancy","platform":"linux-alpine-musl-x86_64","exit_code":6,"category":"deterministic","timestamp":"2026-02-19T19:46:28Z"}
+{"schema_version":1,"recipe":"diff-so-fancy","platform":"linux-debian-glibc-arm64","exit_code":6,"category":"deterministic","timestamp":"2026-02-19T19:46:28Z"}
+{"schema_version":1,"recipe":"diff-so-fancy","platform":"linux-rhel-glibc-arm64","exit_code":6,"category":"deterministic","timestamp":"2026-02-19T19:46:28Z"}
+{"schema_version":1,"recipe":"diff-so-fancy","platform":"linux-suse-glibc-arm64","exit_code":6,"category":"deterministic","timestamp":"2026-02-19T19:46:28Z"}
+{"schema_version":1,"recipe":"diff-so-fancy","platform":"linux-alpine-musl-arm64","exit_code":6,"category":"deterministic","timestamp":"2026-02-19T19:46:28Z"}
+{"schema_version":1,"recipe":"dprint","platform":"linux-alpine-musl-x86_64","exit_code":6,"category":"deterministic","timestamp":"2026-02-19T19:46:28Z"}
+{"schema_version":1,"recipe":"dprint","platform":"linux-alpine-musl-arm64","exit_code":6,"category":"deterministic","timestamp":"2026-02-19T19:46:28Z"}
+{"schema_version":1,"recipe":"esbuild","platform":"linux-alpine-musl-x86_64","exit_code":6,"category":"deterministic","timestamp":"2026-02-19T19:46:28Z"}
+{"schema_version":1,"recipe":"esbuild","platform":"linux-alpine-musl-arm64","exit_code":6,"category":"deterministic","timestamp":"2026-02-19T19:46:28Z"}
