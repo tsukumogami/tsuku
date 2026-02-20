@@ -13,6 +13,7 @@ import (
 
 	"github.com/tsukumogami/tsuku/internal/actions"
 	"github.com/tsukumogami/tsuku/internal/log"
+	"github.com/tsukumogami/tsuku/internal/platform"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/version"
 )
@@ -127,9 +128,9 @@ func (e *Executor) shouldExecute(when *recipe.WhenClause) bool {
 		return true
 	}
 
-	// Check platform conditions (OS and arch)
+	// Check platform conditions (OS, arch, and GPU)
 	// Note: At runtime, linux_family would be detected if needed
-	target := recipe.NewMatchTarget(runtime.GOOS, runtime.GOARCH, "", "", "")
+	target := recipe.NewMatchTarget(runtime.GOOS, runtime.GOARCH, "", "", platform.DetectGPU())
 	if !when.Matches(target) {
 		return false
 	}

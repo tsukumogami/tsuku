@@ -23,7 +23,8 @@ type PlanConfig struct {
 	// Only used when OS is "linux". If empty on Linux, DetectFamily() is called.
 	LinuxFamily string
 	// GPU specifies the detected GPU vendor (nvidia, amd, intel, apple, none).
-	// Used for GPU-aware recipe step filtering. If empty, no GPU filtering is applied.
+	// Used for GPU-aware recipe step filtering. If empty, DetectGPU() is called
+	// to auto-detect the GPU vendor for the current system.
 	GPU string
 	// RecipeSource indicates where the recipe came from ("registry" or file path)
 	RecipeSource string
@@ -95,6 +96,13 @@ func (e *Executor) GeneratePlan(ctx context.Context, cfg PlanConfig) (*Installat
 		} else {
 			linuxFamily = detectedFamily
 		}
+	}
+
+	// Auto-detect GPU vendor when not provided.
+	// Mutates cfg.GPU (unlike linuxFamily above) so the value propagates
+	// to dependency plans via depCfg without additional plumbing.
+	if cfg.GPU == "" {
+		cfg.GPU = platform.DetectGPU()
 	}
 
 	// Construct target for step filtering
@@ -747,6 +755,8 @@ func generateSingleDependencyPlan(
 	depCfg := PlanConfig{
 		OS:                 cfg.OS,
 		Arch:               cfg.Arch,
+		LinuxFamily:        cfg.LinuxFamily, // Propagate for family-specific dependency filtering
+		GPU:                cfg.GPU,         // Propagate for GPU-aware dependency filtering
 		RecipeSource:       "dependency",
 		OnWarning:          cfg.OnWarning,
 		Downloader:         cfg.Downloader,

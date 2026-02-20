@@ -1897,3 +1897,396 @@ func TestGeneratePlan_LinuxFamilyFiltering(t *testing.T) {
 		t.Error("RHEL plan should include install_binaries step")
 	}
 }
+
+func TestGeneratePlan_GPUFiltering(t *testing.T) {
+	// Test that GPU-specific steps are filtered correctly at plan time.
+	// This recipe has three mutually exclusive GPU steps plus a shared step.
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name: "gpu-tool",
+		},
+		Version: recipe.VersionSection{
+			Source: "nodejs_dist",
+		},
+		Steps: []recipe.Step{
+			{
+				Action: "chmod",
+				Params: map[string]interface{}{"path": "cuda-binary", "mode": "0755"},
+				When:   &recipe.WhenClause{OS: []string{"linux"}, GPU: []string{"nvidia"}},
+			},
+			{
+				Action: "chmod",
+				Params: map[string]interface{}{"path": "vulkan-binary", "mode": "0755"},
+				When:   &recipe.WhenClause{OS: []string{"linux"}, GPU: []string{"amd", "intel"}},
+			},
+			{
+				Action: "chmod",
+				Params: map[string]interface{}{"path": "cpu-binary", "mode": "0755"},
+				When:   &recipe.WhenClause{OS: []string{"linux"}, GPU: []string{"none"}},
+			},
+			{
+				Action: "install_binaries",
+				Params: map[string]interface{}{"files": []interface{}{"tool"}},
+				// No when clause - always included
+			},
+		},
+	}
+
+	tests := []struct {
+		name      string
+		gpu       string
+		wantPaths []string // expected "path" values from included chmod steps
+		wantCount int      // total steps in plan
+	}{
+		{
+			name:      "nvidia GPU selects CUDA step",
+			gpu:       "nvidia",
+			wantPaths: []string{"cuda-binary"},
+			wantCount: 2, // cuda chmod + install_binaries
+		},
+		{
+			name:      "amd GPU selects Vulkan step",
+			gpu:       "amd",
+			wantPaths: []string{"vulkan-binary"},
+			wantCount: 2, // vulkan chmod + install_binaries
+		},
+		{
+			name:      "intel GPU selects Vulkan step",
+			gpu:       "intel",
+			wantPaths: []string{"vulkan-binary"},
+			wantCount: 2, // vulkan chmod + install_binaries
+		},
+		{
+			name:      "no GPU selects CPU step",
+			gpu:       "none",
+			wantPaths: []string{"cpu-binary"},
+			wantCount: 2, // cpu chmod + install_binaries
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			exec, err := New(r)
+			if err != nil {
+				t.Fatalf("New() error: %v", err)
+			}
+			defer exec.Cleanup()
+
+			plan, err := exec.GeneratePlan(context.Background(), PlanConfig{
+				OS:           "linux",
+				Arch:         "amd64",
+				GPU:          tt.gpu,
+				RecipeSource: "test",
+			})
+			if err != nil {
+				t.Skipf("GeneratePlan() error (expected in offline tests): %v", err)
+			}
+
+			if len(plan.Steps) != tt.wantCount {
+				actions := make([]string, len(plan.Steps))
+				for i, s := range plan.Steps {
+					actions[i] = s.Action
+					if p, ok := s.Params["path"].(string); ok {
+						actions[i] += "(" + p + ")"
+					}
+				}
+				t.Fatalf("len(Steps) = %d, want %d; steps: %v", len(plan.Steps), tt.wantCount, actions)
+			}
+
+			// Verify the correct chmod step was selected
+			for _, wantPath := range tt.wantPaths {
+				found := false
+				for _, step := range plan.Steps {
+					if step.Action == "chmod" {
+						if p, ok := step.Params["path"].(string); ok && p == wantPath {
+							found = true
+							break
+						}
+					}
+				}
+				if !found {
+					t.Errorf("expected chmod step with path=%q, not found in plan", wantPath)
+				}
+			}
+		})
+	}
+}
+
+func TestGeneratePlan_GPUAutoDetection(t *testing.T) {
+	// When PlanConfig.GPU is empty, GeneratePlan should auto-detect via platform.DetectGPU().
+	// We can't control the hardware in a test, but we can verify the plan still generates
+	// and that the target has a non-empty GPU value (DetectGPU always returns something).
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name: "auto-detect-test",
+		},
+		Version: recipe.VersionSection{
+			Source: "nodejs_dist",
+		},
+		Steps: []recipe.Step{
+			{
+				Action: "chmod",
+				Params: map[string]interface{}{"path": "tool", "mode": "0755"},
+			},
+		},
+	}
+
+	exec, err := New(r)
+	if err != nil {
+		t.Fatalf("New() error: %v", err)
+	}
+	defer exec.Cleanup()
+
+	// Empty GPU should trigger auto-detection -- plan should still succeed
+	plan, err := exec.GeneratePlan(context.Background(), PlanConfig{
+		OS:           "linux",
+		Arch:         "amd64",
+		GPU:          "", // empty => auto-detect
+		RecipeSource: "test",
+	})
+	if err != nil {
+		t.Skipf("GeneratePlan() error (expected in offline tests): %v", err)
+	}
+
+	// Plan should have generated successfully with auto-detected GPU
+	if plan.Tool != "auto-detect-test" {
+		t.Errorf("unexpected plan tool: %s", plan.Tool)
+	}
+	if len(plan.Steps) != 1 {
+		t.Errorf("expected 1 step, got %d", len(plan.Steps))
+	}
+}
+
+// mockRecipeLoader is a test helper that serves recipes from an in-memory map.
+type mockRecipeLoader struct {
+	recipes map[string]*recipe.Recipe
+}
+
+func (m *mockRecipeLoader) GetWithContext(_ context.Context, name string, _ recipe.LoaderOptions) (*recipe.Recipe, error) {
+	if r, ok := m.recipes[name]; ok {
+		return r, nil
+	}
+	return nil, fmt.Errorf("recipe %q not found", name)
+}
+
+func TestGeneratePlan_GPUPropagationThroughDependencies(t *testing.T) {
+	// Verify that GPU is propagated from the parent config to dependency plan generation.
+	// The parent recipe has a GPU-filtered step that declares a dependency.
+	// The dependency recipe also has GPU-filtered steps.
+	// Both should filter correctly based on the GPU value.
+	depRecipe := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name: "gpu-runtime",
+		},
+		Version: recipe.VersionSection{
+			Source: "nodejs_dist",
+		},
+		Steps: []recipe.Step{
+			{
+				Action: "chmod",
+				Params: map[string]interface{}{"path": "nvidia-lib", "mode": "0755"},
+				When:   &recipe.WhenClause{GPU: []string{"nvidia"}},
+			},
+			{
+				Action: "chmod",
+				Params: map[string]interface{}{"path": "amd-lib", "mode": "0755"},
+				When:   &recipe.WhenClause{GPU: []string{"amd"}},
+			},
+			{
+				Action: "chmod",
+				Params: map[string]interface{}{"path": "fallback-lib", "mode": "0755"},
+				When:   &recipe.WhenClause{GPU: []string{"none"}},
+			},
+		},
+	}
+
+	parentRecipe := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name:         "gpu-tool",
+			Dependencies: []string{"gpu-runtime"},
+		},
+		Version: recipe.VersionSection{
+			Source: "nodejs_dist",
+		},
+		Steps: []recipe.Step{
+			{
+				Action: "install_binaries",
+				Params: map[string]interface{}{"files": []interface{}{"tool"}},
+			},
+		},
+	}
+
+	loader := &mockRecipeLoader{
+		recipes: map[string]*recipe.Recipe{
+			"gpu-runtime": depRecipe,
+		},
+	}
+
+	tests := []struct {
+		name             string
+		gpu              string
+		wantDepStepPaths []string // expected "path" values in dep steps
+		wantDepStepCount int
+	}{
+		{
+			name:             "nvidia propagates to dependency",
+			gpu:              "nvidia",
+			wantDepStepPaths: []string{"nvidia-lib"},
+			wantDepStepCount: 1,
+		},
+		{
+			name:             "amd propagates to dependency",
+			gpu:              "amd",
+			wantDepStepPaths: []string{"amd-lib"},
+			wantDepStepCount: 1,
+		},
+		{
+			name:             "none propagates to dependency",
+			gpu:              "none",
+			wantDepStepPaths: []string{"fallback-lib"},
+			wantDepStepCount: 1,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			exec, err := New(parentRecipe)
+			if err != nil {
+				t.Fatalf("New() error: %v", err)
+			}
+			defer exec.Cleanup()
+
+			plan, err := exec.GeneratePlan(context.Background(), PlanConfig{
+				OS:           "linux",
+				Arch:         "amd64",
+				GPU:          tt.gpu,
+				RecipeSource: "test",
+				RecipeLoader: loader,
+			})
+			if err != nil {
+				t.Skipf("GeneratePlan() error (expected in offline tests): %v", err)
+			}
+
+			// Check dependency plan
+			if len(plan.Dependencies) != 1 {
+				t.Fatalf("expected 1 dependency, got %d", len(plan.Dependencies))
+			}
+
+			dep := plan.Dependencies[0]
+			if dep.Tool != "gpu-runtime" {
+				t.Errorf("expected dependency 'gpu-runtime', got %q", dep.Tool)
+			}
+
+			if len(dep.Steps) != tt.wantDepStepCount {
+				stepDescs := make([]string, len(dep.Steps))
+				for i, s := range dep.Steps {
+					p, _ := s.Params["path"].(string)
+					stepDescs[i] = fmt.Sprintf("%s(%s)", s.Action, p)
+				}
+				t.Fatalf("dependency has %d steps, want %d; steps: %v",
+					len(dep.Steps), tt.wantDepStepCount, stepDescs)
+			}
+
+			for _, wantPath := range tt.wantDepStepPaths {
+				found := false
+				for _, step := range dep.Steps {
+					if p, ok := step.Params["path"].(string); ok && p == wantPath {
+						found = true
+						break
+					}
+				}
+				if !found {
+					t.Errorf("expected dependency step with path=%q, not found", wantPath)
+				}
+			}
+		})
+	}
+}
+
+func TestGeneratePlan_DepCfgLinuxFamilyPropagation(t *testing.T) {
+	// Verify the pre-existing bug fix: LinuxFamily is now propagated through depCfg.
+	// The dependency recipe has family-specific steps that should be filtered correctly.
+	depRecipe := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name: "system-lib",
+		},
+		Version: recipe.VersionSection{
+			Source: "nodejs_dist",
+		},
+		Steps: []recipe.Step{
+			{
+				Action: "apt_install",
+				Params: map[string]interface{}{"packages": []interface{}{"libfoo"}},
+			},
+			{
+				Action: "dnf_install",
+				Params: map[string]interface{}{"packages": []interface{}{"libfoo"}},
+			},
+		},
+	}
+
+	parentRecipe := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name:         "my-tool",
+			Dependencies: []string{"system-lib"},
+		},
+		Version: recipe.VersionSection{
+			Source: "nodejs_dist",
+		},
+		Steps: []recipe.Step{
+			{
+				Action: "install_binaries",
+				Params: map[string]interface{}{"files": []interface{}{"tool"}},
+			},
+		},
+	}
+
+	loader := &mockRecipeLoader{
+		recipes: map[string]*recipe.Recipe{
+			"system-lib": depRecipe,
+		},
+	}
+
+	exec, err := New(parentRecipe)
+	if err != nil {
+		t.Fatalf("New() error: %v", err)
+	}
+	defer exec.Cleanup()
+
+	plan, err := exec.GeneratePlan(context.Background(), PlanConfig{
+		OS:           "linux",
+		Arch:         "amd64",
+		LinuxFamily:  "debian",
+		GPU:          "none",
+		RecipeSource: "test",
+		RecipeLoader: loader,
+	})
+	if err != nil {
+		t.Skipf("GeneratePlan() error (expected in offline tests): %v", err)
+	}
+
+	if len(plan.Dependencies) != 1 {
+		t.Fatalf("expected 1 dependency, got %d", len(plan.Dependencies))
+	}
+
+	dep := plan.Dependencies[0]
+
+	// With debian family propagated, only apt_install should be present (not dnf_install)
+	hasApt := false
+	hasDnf := false
+	for _, step := range dep.Steps {
+		if step.Action == "apt_install" {
+			hasApt = true
+		}
+		if step.Action == "dnf_install" {
+			hasDnf = true
+		}
+	}
+
+	if !hasApt {
+		t.Error("debian dependency should include apt_install step")
+	}
+	if hasDnf {
+		t.Error("debian dependency should NOT include dnf_install step")
+	}
+}

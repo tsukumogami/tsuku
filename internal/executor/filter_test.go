@@ -263,3 +263,81 @@ func TestStepMatchesTarget(t *testing.T) {
 		})
 	}
 }
+
+func TestFilterStepsByTarget_GPU(t *testing.T) {
+	t.Parallel()
+
+	steps := []recipe.Step{
+		{
+			Action: "chmod",
+			When:   &recipe.WhenClause{GPU: []string{"nvidia"}},
+			Params: map[string]interface{}{"path": "cuda-binary", "mode": "0755"},
+		},
+		{
+			Action: "chmod",
+			When:   &recipe.WhenClause{GPU: []string{"amd", "intel"}},
+			Params: map[string]interface{}{"path": "vulkan-binary", "mode": "0755"},
+		},
+		{
+			Action: "chmod",
+			When:   &recipe.WhenClause{GPU: []string{"none"}},
+			Params: map[string]interface{}{"path": "cpu-binary", "mode": "0755"},
+		},
+		{
+			Action: "install_binaries",
+			Params: map[string]interface{}{"files": []interface{}{"tool"}},
+		},
+	}
+
+	tests := []struct {
+		name     string
+		target   platform.Target
+		wantLen  int
+		wantActs []string
+	}{
+		{
+			name:     "nvidia GPU selects nvidia step plus unconditional",
+			target:   platform.NewTarget("linux/amd64", "debian", "glibc", "nvidia"),
+			wantLen:  2,
+			wantActs: []string{"chmod", "install_binaries"},
+		},
+		{
+			name:     "amd GPU selects amd/intel step plus unconditional",
+			target:   platform.NewTarget("linux/amd64", "debian", "glibc", "amd"),
+			wantLen:  2,
+			wantActs: []string{"chmod", "install_binaries"},
+		},
+		{
+			name:     "no GPU selects none step plus unconditional",
+			target:   platform.NewTarget("linux/amd64", "debian", "glibc", "none"),
+			wantLen:  2,
+			wantActs: []string{"chmod", "install_binaries"},
+		},
+		{
+			name:     "empty GPU string excludes all GPU-filtered steps",
+			target:   platform.NewTarget("linux/amd64", "debian", "glibc", ""),
+			wantLen:  1,
+			wantActs: []string{"install_binaries"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			got := FilterStepsByTarget(steps, tt.target)
+			if len(got) != tt.wantLen {
+				t.Errorf("FilterStepsByTarget() returned %d steps, want %d", len(got), tt.wantLen)
+			}
+			if tt.wantActs != nil {
+				for i, step := range got {
+					if i >= len(tt.wantActs) {
+						break
+					}
+					if step.Action != tt.wantActs[i] {
+						t.Errorf("step[%d].Action = %s, want %s", i, step.Action, tt.wantActs[i])
+					}
+				}
+			}
+		})
+	}
+}
