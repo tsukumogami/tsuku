@@ -1,21 +1,21 @@
 {
-  "generated_at": "2026-02-20T02:10:52Z",
-  "total_recipes": 317,
+  "generated_at": "2026-02-20T04:30:31Z",
+  "total_recipes": 320,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 317,
-        "total": 317,
+        "supported": 320,
+        "total": 320,
         "pct": 100
       },
       "glibc": {
-        "supported": 317,
-        "total": 317,
+        "supported": 320,
+        "total": 320,
         "pct": 100
       },
       "musl": {
-        "supported": 317,
-        "total": 317,
+        "supported": 320,
+        "total": 320,
         "pct": 100
       }
     },
@@ -26,9 +26,9 @@
         "glibc_support": 13
       },
       "tool": {
-        "total": 304,
-        "musl_support": 304,
-        "glibc_support": 304
+        "total": 307,
+        "musl_support": 307,
+        "glibc_support": 307
       }
     }
   },
@@ -2878,6 +2878,18 @@
       "warnings": null
     },
     {
+      "name": "pyright",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "qrencode",
       "type": "tool",
       "platforms": {
@@ -3526,6 +3538,18 @@
       "warnings": null
     },
     {
+      "name": "typescript-language-server",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "typos-cli",
       "type": "tool",
       "platforms": {
@@ -3611,6 +3635,18 @@
     },
     {
       "name": "vercel",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "vsce",
       "type": "tool",
       "platforms": {
         "darwin": true,
