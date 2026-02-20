@@ -48,8 +48,8 @@ Planned
 | ~~_Adds a `GPU` field to `PlanConfig` and wires auto-detection into `GeneratePlan()`, including dependency plan propagation via `depCfg`. After this, recipe steps with `gpu` conditions actually filter at plan time._~~ | | |
 | ~~[#1789: feat(recipe): add nvidia-driver and cuda-runtime dependency recipes](https://github.com/tsukumogami/tsuku/issues/1789)~~ | ~~None~~ | ~~testable~~ |
 | ~~_Creates `nvidia-driver.toml` (system PM actions per distro) and `cuda-runtime.toml` (download from NVIDIA redistributable tarballs). Establishes the CUDA dependency chain: cuda-runtime depends on nvidia-driver. First recipes to use `download_archive` for GPU compute runtimes._~~ | | |
-| [#1790: feat(recipe): add mesa-vulkan-drivers and vulkan-loader dependency recipes](https://github.com/tsukumogami/tsuku/issues/1790) | None | testable |
-| _Creates `vulkan-loader.toml` and `mesa-vulkan-drivers.toml` using system PM actions. The Vulkan loader discovers ICD drivers at runtime, and Mesa provides the AMD/Intel ICD implementations. Completes the Vulkan dependency chain for non-NVIDIA GPUs._ | | |
+| ~~[#1790: feat(recipe): add mesa-vulkan-drivers and vulkan-loader dependency recipes](https://github.com/tsukumogami/tsuku/issues/1790)~~ | ~~None~~ | ~~testable~~ |
+| ~~_Creates `vulkan-loader.toml` and `mesa-vulkan-drivers.toml` using system PM actions. The Vulkan loader discovers ICD drivers at runtime, and Mesa provides the AMD/Intel ICD implementations. Completes the Vulkan dependency chain for non-NVIDIA GPUs._~~ | | |
 | [#1791: fix(ci): align tsuku-llm release artifacts with recipe asset patterns](https://github.com/tsukumogami/tsuku/issues/1791) | None | simple |
 | _Updates the tsuku-llm release pipeline so artifact filenames include version and match the `asset_pattern` values in the recipe (e.g., `tsuku-llm-v{version}-linux-amd64-cuda`). Without this, the recipe can't find release assets._ | | |
 | [#1776: feat(recipe): add tsuku-llm recipe with GPU-filtered variant selection](https://github.com/tsukumogami/tsuku/issues/1776) | [#1775](https://github.com/tsukumogami/tsuku/issues/1775), [#1789](https://github.com/tsukumogami/tsuku/issues/1789), [#1790](https://github.com/tsukumogami/tsuku/issues/1790), [#1791](https://github.com/tsukumogami/tsuku/issues/1791) | testable |
@@ -117,9 +117,9 @@ graph TD
     classDef needsDesign fill:#e1bee7
     classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
 
-    class I1773,I1774,I1775,I1789 done
-    class I1777,I1779,I1790,I1791 ready
-    class I1776,I1778,I1780,I1786,I1792 blocked
+    class I1773,I1774,I1775,I1789,I1790 done
+    class I1777,I1779,I1791,I1792 ready
+    class I1776,I1778,I1780,I1786 blocked
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design

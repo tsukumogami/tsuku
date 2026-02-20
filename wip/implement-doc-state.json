@@ -2,7 +2,7 @@
   "design_doc": "docs/designs/DESIGN-gpu-backend-selection.md",
   "branch": "docs/gpu-backend-selection",
   "pr_number": 1770,
-  "integrity_hash": "sha256:e71e23f73e7bed812c5c6383c5b6d0d4a31868e58e6a5f7c1582362d1640c05e",
+  "integrity_hash": "sha256:7d42133ae296150ba032b09d36688d8cc1ef80075b6b5968f389d75d6f9385d0",
   "issues": [
     {
       "number": 1773,
@@ -178,8 +178,8 @@
     {
       "number": 1789,
       "title": "feat(recipe): add nvidia-driver and cuda-runtime dependency recipes",
-      "status": "pushed",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "ci_fix_attempts": 0,
       "issue_type": "code",
       "dependencies": [],
@@ -229,14 +229,48 @@
     {
       "number": 1790,
       "title": "feat(recipe): add mesa-vulkan-drivers and vulkan-loader dependency recipes",
-      "status": "pending",
+      "status": "pushed",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [],
-      "commits": [],
-      "agent_type": "",
-      "summary": null,
+      "commits": [
+        "4914eb15969f5d773c41a677d02694d309b4b330"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          "recipes/m/mesa-vulkan-drivers.toml",
+          "recipes/v/vulkan-loader.toml"
+        ],
+        "tests_added": 0,
+        "key_decisions": "Pure TOML recipe files. Followed nvidia-driver.toml and docker.toml patterns. mesa-vulkan-drivers verify uses ls on ICD JSON directories. vulkan-loader verify uses ldconfig -p for libvulkan. vulkan-loader depends on mesa-vulkan-drivers."
+      },
+      "reviewer_results": {
+        "issue": 1790,
+        "reviews": [
+          {
+            "focus": "pragmatic",
+            "blocking_count": 0,
+            "advisory_count": 3,
+            "detail_file": "wip/research/implement-doc_review_pragmatic_issue1790.md"
+          },
+          {
+            "focus": "architect",
+            "blocking_count": 0,
+            "advisory_count": 0,
+            "detail_file": "wip/research/implement-doc_review_architect_issue1790.md"
+          },
+          {
+            "focus": "maintainer",
+            "blocking_count": 0,
+            "advisory_count": 3,
+            "detail_file": "wip/research/implement-doc_review_maintainer_issue1790.md"
+          }
+        ],
+        "disposition": "pass"
+      },
       "testable_scenarios": [
         "scenario-13"
       ]
