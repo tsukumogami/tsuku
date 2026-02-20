@@ -1,21 +1,21 @@
 {
-  "generated_at": "2026-02-20T01:48:14Z",
-  "total_recipes": 311,
+  "generated_at": "2026-02-20T02:10:52Z",
+  "total_recipes": 317,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 311,
-        "total": 311,
+        "supported": 317,
+        "total": 317,
         "pct": 100
       },
       "glibc": {
-        "supported": 311,
-        "total": 311,
+        "supported": 317,
+        "total": 317,
         "pct": 100
       },
       "musl": {
-        "supported": 311,
-        "total": 311,
+        "supported": 317,
+        "total": 317,
         "pct": 100
       }
     },
@@ -26,9 +26,9 @@
         "glibc_support": 13
       },
       "tool": {
-        "total": 298,
-        "musl_support": 298,
-        "glibc_support": 298
+        "total": 304,
+        "musl_support": 304,
+        "glibc_support": 304
       }
     }
   },
@@ -2674,6 +2674,18 @@
       "warnings": null
     },
     {
+      "name": "oxlint",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "p7zip",
       "type": "tool",
       "platforms": {
@@ -2818,6 +2830,18 @@
       "warnings": null
     },
     {
+      "name": "prettier",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "procs",
       "type": "tool",
       "platforms": {
@@ -2902,8 +2926,32 @@
       "warnings": null
     },
     {
+      "name": "react-native-cli",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "readline",
       "type": "library",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "release-it",
+      "type": "tool",
       "platforms": {
         "darwin": true,
         "glibc": true,
@@ -2926,7 +2974,31 @@
       "warnings": null
     },
     {
+      "name": "rollup",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "ruff",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "rulesync",
       "type": "tool",
       "platforms": {
         "darwin": true,
