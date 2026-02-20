@@ -67,60 +67,7 @@ Current
 | ~~[#1786: test(recipe): validate tsuku-llm recipe against release pipeline and document user experience](https://github.com/tsukumogami/tsuku/issues/1786)~~ | ~~[#1776](https://github.com/tsukumogami/tsuku/issues/1776)~~ | ~~testable~~ |
 | ~~_Validates every `asset_pattern` against actual release artifact names, configures `supported_os`/`supported_arch`/`supported_libc` metadata so unsupported platforms get clear errors, and documents the user-facing experience this milestone delivers vs. what's deferred._~~ | | |
 
-### Dependency Graph
-
-```mermaid
-graph TD
-    subgraph Phase1["Phase 1: Platform Detection"]
-        I1773["#1773: GPU vendor detection via sysfs"]
-        I1774["#1774: GPU field on WhenClause"]
-        I1775["#1775: Thread GPU through plan gen"]
-    end
-
-    subgraph Phase2["Phase 2: GPU Runtime Recipes"]
-        I1789["#1789: nvidia-driver + cuda-runtime"]
-        I1790["#1790: mesa-vulkan-drivers + vulkan..."]
-        I1791["#1791: Align release artifact names"]
-    end
-
-    subgraph Phase3["Phase 3: tsuku-llm Recipe + Config"]
-        I1776["#1776: tsuku-llm GPU-filtered recipe"]
-        I1777["#1777: llm.backend config key"]
-        I1792["#1792: CI validation for GPU recipes"]
-    end
-
-    subgraph Phase4["Phase 4: Migration + Validation"]
-        I1778["#1778: Migrate addon to recipe system"]
-        I1779["#1779: Structured error for backend..."]
-        I1780["#1780: Validate GPU variant perf"]
-        I1786["#1786: Validate recipe + document UX"]
-    end
-
-    I1773 --> I1774
-    I1773 --> I1775
-    I1774 --> I1775
-    I1774 --> I1792
-    I1789 --> I1792
-    I1790 --> I1792
-    I1775 --> I1776
-    I1789 --> I1776
-    I1790 --> I1776
-    I1791 --> I1776
-    I1776 --> I1778
-    I1777 --> I1778
-    I1776 --> I1780
-    I1776 --> I1786
-
-    classDef done fill:#c8e6c9
-    classDef ready fill:#bbdefb
-    classDef blocked fill:#fff9c4
-    classDef needsDesign fill:#e1bee7
-    classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
-
-    class I1773,I1774,I1775,I1776,I1777,I1778,I1779,I1780,I1786,I1789,I1790,I1791,I1792 done
-```
-
-**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design
+All 13 issues implemented in [PR #1770](https://github.com/tsukumogami/tsuku/pull/1770).
 
 ### What Ships
 
