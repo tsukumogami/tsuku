@@ -42,8 +42,8 @@ Planned
 |-------|--------------|------|
 | ~~[#1773: feat(platform): add GPU vendor detection via PCI sysfs](https://github.com/tsukumogami/tsuku/issues/1773)~~ | ~~None~~ | ~~testable~~ |
 | ~~_Adds `DetectGPU()` to the platform package using PCI sysfs on Linux, returning vendor strings (nvidia, amd, intel, apple, none). Updates `platform.Target` and `recipe.MatchTarget` with a `gpu` field and `GPU()` method on the `Matchable` interface. Handles the constructor cascade across ~76 callsites._~~ | | |
-| [#1774: feat(recipe): add gpu field to WhenClause](https://github.com/tsukumogami/tsuku/issues/1774) | [#1773](https://github.com/tsukumogami/tsuku/issues/1773) | testable |
-| _With GPU exposed on `Matchable`, adds `GPU []string` to `WhenClause` following the libc pattern. Updates `Matches()`, `IsEmpty()`, `ToMap()`, `UnmarshalTOML()`, and `MergeWhenClause()` so recipes can write `when = { gpu = ["nvidia"] }`._ | | |
+| ~~[#1774: feat(recipe): add gpu field to WhenClause](https://github.com/tsukumogami/tsuku/issues/1774)~~ | ~~[#1773](https://github.com/tsukumogami/tsuku/issues/1773)~~ | ~~testable~~ |
+| ~~_With GPU exposed on `Matchable`, adds `GPU []string` to `WhenClause` following the libc pattern. Updates `Matches()`, `IsEmpty()`, `ToMap()`, `UnmarshalTOML()`, and `MergeWhenClause()` so recipes can write `when = { gpu = ["nvidia"] }`._~~ | | |
 | [#1775: refactor(executor): thread GPU through plan generation](https://github.com/tsukumogami/tsuku/issues/1775) | [#1773](https://github.com/tsukumogami/tsuku/issues/1773), [#1774](https://github.com/tsukumogami/tsuku/issues/1774) | testable |
 | _Adds a `GPU` field to `PlanConfig` and wires auto-detection into `GeneratePlan()`, including dependency plan propagation via `depCfg`. After this, recipe steps with `gpu` conditions actually filter at plan time._ | | |
 | [#1789: feat(recipe): add nvidia-driver and cuda-runtime dependency recipes](https://github.com/tsukumogami/tsuku/issues/1789) | None | testable |
@@ -117,9 +117,9 @@ graph TD
     classDef needsDesign fill:#e1bee7
     classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
 
-    class I1773 done
-    class I1774,I1777,I1779,I1789,I1790,I1791 ready
-    class I1775,I1776,I1778,I1780,I1786,I1792 blocked
+    class I1773,I1774 done
+    class I1775,I1777,I1779,I1789,I1790,I1791 ready
+    class I1776,I1778,I1780,I1786,I1792 blocked
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design

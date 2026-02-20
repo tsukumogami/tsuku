@@ -2,7 +2,7 @@
   "design_doc": "docs/designs/DESIGN-gpu-backend-selection.md",
   "branch": "docs/gpu-backend-selection",
   "pr_number": 1770,
-  "integrity_hash": "sha256:aaecdf681dcb01f79f9ad2642477b58adcbb97629fa68dcb39817be6d45c67bc",
+  "integrity_hash": "sha256:7e87d966e8d2316a8fdf145c9b472bac7519a60558ca5c6a98b6ff0972df72aa",
   "issues": [
     {
       "number": 1773,
@@ -60,16 +60,55 @@
     {
       "number": 1774,
       "title": "feat(recipe): add gpu field to WhenClause",
-      "status": "pending",
+      "status": "pushed",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [
         1773
       ],
-      "commits": [],
-      "agent_type": "",
-      "summary": null,
+      "commits": [
+        "ccfec662ffa8d47b96ed3fe90acdf2150b2e27d3"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          "internal/recipe/types.go",
+          "internal/recipe/platform.go",
+          "internal/recipe/types_test.go",
+          "internal/recipe/when_test.go"
+        ],
+        "tests_added": 27,
+        "key_decisions": "Followed the existing Libc pattern exactly for GPU. Added GPU field to Constraint struct for downstream #1775 to use during plan generation. MergeWhenClause propagates single-value GPU to Constraint (matching single-value OS behavior) but skips conflict detection since GPU is a filter, not a hard constraint. GPU validation uses platform.ValidGPUTypes for consistency."
+      },
+      "reviewer_results": {
+        "issue": 1774,
+        "reviews": [
+          {
+            "focus": "pragmatic",
+            "blocking_count": 0,
+            "advisory_count": 2,
+            "detail_file": "wip/research/implement-doc_review_pragmatic_issue1774.md",
+            "summary": "Clean. Follows libc pattern exactly. MergeWhenClause multi-value behavior is correct."
+          },
+          {
+            "focus": "architect",
+            "blocking_count": 0,
+            "advisory_count": 2,
+            "detail_file": "wip/research/implement-doc_review_architect_issue1774.md",
+            "summary": "Clean. GPU field follows established pattern across all touchpoints. Empty GPU in executor/info callsites is consistent with other empty dimensions."
+          },
+          {
+            "focus": "maintainer",
+            "blocking_count": 0,
+            "advisory_count": 2,
+            "detail_file": "wip/research/implement-doc_review_maintainer_issue1774.md",
+            "summary": "Clean. Advisory: GPU check has no OS gate (correct but undocumented), MergeWhenClause multi-value comment could be clearer."
+          }
+        ],
+        "disposition": "pass"
+      },
       "testable_scenarios": [
         "scenario-5",
         "scenario-6",
