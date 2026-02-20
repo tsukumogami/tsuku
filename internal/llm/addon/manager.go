@@ -70,16 +70,27 @@ func (m *AddonManager) HomeDir() string {
 // It returns the path to the installed binary.
 //
 // This method:
-// 1. Checks if tsuku-llm is already installed at the recipe tools path
-// 2. If the installed variant doesn't match the backend override, reinstalls
-// 3. If not installed, installs via the recipe system
-// 4. Cleans up legacy addon paths from pre-recipe installations
-// 5. Returns the path to the binary
+// 1. If TSUKU_LLM_BINARY is set, uses that path directly (skips installation)
+// 2. Checks if tsuku-llm is already installed at the recipe tools path
+// 3. If the installed variant doesn't match the backend override, reinstalls
+// 4. If not installed, installs via the recipe system
+// 5. Cleans up legacy addon paths from pre-recipe installations
+// 6. Returns the path to the binary
 //
 // The method is safe for concurrent calls via mutex protection.
 func (m *AddonManager) EnsureAddon(ctx context.Context) (string, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+
+	// When TSUKU_LLM_BINARY is set, use the explicit binary path directly.
+	// This skips recipe installation since the binary is externally provided
+	// (e.g., built from source for integration tests).
+	if path := os.Getenv("TSUKU_LLM_BINARY"); path != "" {
+		if _, err := os.Stat(path); err == nil {
+			m.cachedPath = path
+			return path, nil
+		}
+	}
 
 	// Return cached path if already resolved this session
 	if m.cachedPath != "" {

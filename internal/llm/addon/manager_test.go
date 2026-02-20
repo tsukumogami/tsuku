@@ -65,7 +65,45 @@ func TestNewAddonManager(t *testing.T) {
 	})
 }
 
+func TestEnsureAddon_ExplicitBinaryPath(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Create a binary at a custom location
+	customBin := filepath.Join(tmpDir, "custom-tsuku-llm")
+	require.NoError(t, os.WriteFile(customBin, []byte("#!/bin/sh\necho hello"), 0755))
+
+	t.Setenv("TSUKU_LLM_BINARY", customBin)
+
+	installer := &mockInstaller{}
+	m := NewAddonManager(tmpDir, installer, "")
+
+	path, err := m.EnsureAddon(context.Background())
+	require.NoError(t, err)
+	require.Equal(t, customBin, path)
+	require.Empty(t, installer.installCalls, "should not call installer when TSUKU_LLM_BINARY is set")
+}
+
+func TestEnsureAddon_ExplicitBinaryPath_MissingFile(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	t.Setenv("TSUKU_LLM_BINARY", filepath.Join(tmpDir, "nonexistent"))
+
+	// Falls through to recipe installation when explicit path doesn't exist
+	installer := &mockInstaller{
+		onInstall: func(_ string) {
+			createFakeBinary(t, tmpDir, "1.0.0")
+		},
+	}
+	m := NewAddonManager(tmpDir, installer, "")
+
+	path, err := m.EnsureAddon(context.Background())
+	require.NoError(t, err)
+	require.NotEmpty(t, path)
+	require.Len(t, installer.installCalls, 1, "should fall through to installer when explicit binary missing")
+}
+
 func TestEnsureAddon_AlreadyInstalled(t *testing.T) {
+	t.Setenv("TSUKU_LLM_BINARY", "")
 	tmpDir := t.TempDir()
 	binPath := createFakeBinary(t, tmpDir, "1.0.0")
 
@@ -79,6 +117,7 @@ func TestEnsureAddon_AlreadyInstalled(t *testing.T) {
 }
 
 func TestEnsureAddon_NotInstalled_InstallsViaRecipe(t *testing.T) {
+	t.Setenv("TSUKU_LLM_BINARY", "")
 	tmpDir := t.TempDir()
 
 	installer := &mockInstaller{
@@ -100,6 +139,7 @@ func TestEnsureAddon_NotInstalled_InstallsViaRecipe(t *testing.T) {
 }
 
 func TestEnsureAddon_InstallError(t *testing.T) {
+	t.Setenv("TSUKU_LLM_BINARY", "")
 	tmpDir := t.TempDir()
 
 	installer := &mockInstaller{
@@ -114,6 +154,7 @@ func TestEnsureAddon_InstallError(t *testing.T) {
 }
 
 func TestEnsureAddon_NoInstaller(t *testing.T) {
+	t.Setenv("TSUKU_LLM_BINARY", "")
 	tmpDir := t.TempDir()
 	m := NewAddonManager(tmpDir, nil, "")
 
@@ -123,6 +164,7 @@ func TestEnsureAddon_NoInstaller(t *testing.T) {
 }
 
 func TestEnsureAddon_CPUOverride_SetsGPUToNone(t *testing.T) {
+	t.Setenv("TSUKU_LLM_BINARY", "")
 	tmpDir := t.TempDir()
 
 	installer := &mockInstaller{
@@ -141,6 +183,7 @@ func TestEnsureAddon_CPUOverride_SetsGPUToNone(t *testing.T) {
 }
 
 func TestEnsureAddon_VariantMismatch_Reinstalls(t *testing.T) {
+	t.Setenv("TSUKU_LLM_BINARY", "")
 	tmpDir := t.TempDir()
 
 	// Pre-install a binary (simulates GPU variant already installed)
@@ -166,6 +209,7 @@ func TestEnsureAddon_VariantMismatch_Reinstalls(t *testing.T) {
 }
 
 func TestEnsureAddon_CachesPath(t *testing.T) {
+	t.Setenv("TSUKU_LLM_BINARY", "")
 	tmpDir := t.TempDir()
 	createFakeBinary(t, tmpDir, "1.0.0")
 
@@ -184,6 +228,7 @@ func TestEnsureAddon_CachesPath(t *testing.T) {
 }
 
 func TestEnsureAddon_CacheClearedWhenBinaryRemoved(t *testing.T) {
+	t.Setenv("TSUKU_LLM_BINARY", "")
 	tmpDir := t.TempDir()
 	binPath := createFakeBinary(t, tmpDir, "1.0.0")
 

@@ -4,12 +4,14 @@ package llm
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"net"
 	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sync"
 	"syscall"
 	"testing"
 	"time"
@@ -58,6 +60,54 @@ func skipIfModelCDNUnavailable(t *testing.T) {
 	if resp.StatusCode >= 400 {
 		t.Skipf("Model source unavailable (HTTP %d)", resp.StatusCode)
 	}
+}
+
+// sharedModelOnce ensures the process-level shared model directory is created exactly once.
+var sharedModelOnce sync.Once
+
+// sharedModelPath holds the path to the process-level shared model directory.
+var sharedModelPath string
+
+// sharedModelDir returns a directory for caching downloaded models across tests.
+// If TSUKU_LLM_MODEL_CACHE is set (CI), that directory is used directly.
+// Otherwise, a process-level temp directory is created via sync.Once so all
+// tests in the process share a single model download.
+func sharedModelDir(t *testing.T) string {
+	t.Helper()
+
+	if dir := os.Getenv("TSUKU_LLM_MODEL_CACHE"); dir != "" {
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			t.Fatalf("failed to create TSUKU_LLM_MODEL_CACHE directory %s: %v", dir, err)
+		}
+		return dir
+	}
+
+	sharedModelOnce.Do(func() {
+		dir, err := os.MkdirTemp("", "tsuku-llm-models-*")
+		if err != nil {
+			panic(fmt.Sprintf("failed to create shared model dir: %v", err))
+		}
+		sharedModelPath = dir
+	})
+	return sharedModelPath
+}
+
+// setupTsukuHome creates an isolated TSUKU_HOME with a shared model directory.
+// Each test gets its own temp directory for sockets, locks, and state, but
+// the models/ subdirectory is symlinked to a shared location so the model
+// is downloaded only once per test process.
+func setupTsukuHome(t *testing.T) string {
+	t.Helper()
+
+	tsukuHome := t.TempDir()
+	modelDir := sharedModelDir(t)
+
+	// Symlink models/ -> shared model directory
+	link := filepath.Join(tsukuHome, "models")
+	err := os.Symlink(modelDir, link)
+	require.NoError(t, err, "failed to symlink models dir")
+
+	return tsukuHome
 }
 
 // grpcDial connects to the daemon's Unix socket.
@@ -281,7 +331,7 @@ func TestIntegration_StaleSocketCleanup(t *testing.T) {
 func TestIntegration_ShortTimeoutTriggersShutdown(t *testing.T) {
 	skipIfModelCDNUnavailable(t)
 
-	tsukuHome := t.TempDir()
+	tsukuHome := setupTsukuHome(t)
 	os.Setenv("TSUKU_HOME", tsukuHome)
 	defer os.Unsetenv("TSUKU_HOME")
 
@@ -327,7 +377,7 @@ func TestIntegration_ShortTimeoutTriggersShutdown(t *testing.T) {
 func TestIntegration_SIGTERMTriggersGracefulShutdown(t *testing.T) {
 	skipIfModelCDNUnavailable(t)
 
-	tsukuHome := t.TempDir()
+	tsukuHome := setupTsukuHome(t)
 
 	// Start daemon
 	daemon := startDaemon(t, tsukuHome, 5*time.Minute)
@@ -363,7 +413,7 @@ func TestIntegration_SIGTERMTriggersGracefulShutdown(t *testing.T) {
 func TestIntegration_MultipleSIGTERMIsSafe(t *testing.T) {
 	skipIfModelCDNUnavailable(t)
 
-	tsukuHome := t.TempDir()
+	tsukuHome := setupTsukuHome(t)
 
 	// Start daemon
 	daemon := startDaemon(t, tsukuHome, 5*time.Minute)
@@ -394,7 +444,7 @@ func TestIntegration_MultipleSIGTERMIsSafe(t *testing.T) {
 func TestIntegration_gRPCGetStatus(t *testing.T) {
 	skipIfModelCDNUnavailable(t)
 
-	tsukuHome := t.TempDir()
+	tsukuHome := setupTsukuHome(t)
 	os.Setenv("TSUKU_HOME", tsukuHome)
 	defer os.Unsetenv("TSUKU_HOME")
 
@@ -429,7 +479,7 @@ func TestIntegration_gRPCGetStatus(t *testing.T) {
 func TestIntegration_gRPCComplete(t *testing.T) {
 	skipIfModelCDNUnavailable(t)
 
-	tsukuHome := t.TempDir()
+	tsukuHome := setupTsukuHome(t)
 	os.Setenv("TSUKU_HOME", tsukuHome)
 	defer os.Unsetenv("TSUKU_HOME")
 
@@ -482,7 +532,7 @@ func TestIntegration_gRPCComplete(t *testing.T) {
 func TestIntegration_gRPCShutdown(t *testing.T) {
 	skipIfModelCDNUnavailable(t)
 
-	tsukuHome := t.TempDir()
+	tsukuHome := setupTsukuHome(t)
 	os.Setenv("TSUKU_HOME", tsukuHome)
 	defer os.Unsetenv("TSUKU_HOME")
 
