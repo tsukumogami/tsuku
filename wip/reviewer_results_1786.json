@@ -1,0 +1,10 @@
+{
+  "issue": 1786,
+  "reviews": [
+    {"focus": "pragmatic", "blocking_count": 2, "advisory_count": 3, "detail_file": "wip/research/implement-doc_review_pragmatic_issue1786.md"},
+    {"focus": "architect", "blocking_count": 0, "advisory_count": 2, "detail_file": "wip/research/implement-doc_review_architect_issue1786.md"},
+    {"focus": "maintainer", "blocking_count": 0, "advisory_count": 5, "detail_file": "wip/research/implement-doc_review_maintainer_issue1786.md"}
+  ],
+  "disposition": "pass",
+  "disposition_rationale": "Pragmatic B1 (hardcoded pipeline matrix): deliberate choice over YAML parsing to keep tests deterministic. Hardcoded list serves as the assertion; if pipeline changes, test catches it. Pragmatic B2 (metadata snapshot): documents current platform support and correctly fails if changed without test update. Both are snapshot/change-detector tests by design."
+}
