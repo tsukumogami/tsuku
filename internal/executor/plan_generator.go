@@ -22,6 +22,9 @@ type PlanConfig struct {
 	// LinuxFamily specifies the target Linux distribution family (debian, rhel, arch, alpine, suse).
 	// Only used when OS is "linux". If empty on Linux, DetectFamily() is called.
 	LinuxFamily string
+	// GPU specifies the detected GPU vendor (nvidia, amd, intel, apple, none).
+	// Used for GPU-aware recipe step filtering. If empty, no GPU filtering is applied.
+	GPU string
 	// RecipeSource indicates where the recipe came from ("registry" or file path)
 	RecipeSource string
 	// OnWarning is called when a non-evaluable step is encountered
@@ -108,7 +111,7 @@ func (e *Executor) GeneratePlan(ctx context.Context, cfg PlanConfig) (*Installat
 			libc = platform.DetectLibc()
 		}
 	}
-	target := platform.NewTarget(targetOS+"/"+targetArch, linuxFamily, libc)
+	target := platform.NewTarget(targetOS+"/"+targetArch, linuxFamily, libc, cfg.GPU)
 
 	// Create version resolver
 	resolver := version.New()
@@ -665,7 +668,7 @@ func generateDependencyPlans(
 	} else if targetOS == "linux" {
 		libc = platform.DetectLibc()
 	}
-	target := platform.NewTarget(targetOS+"/"+targetArch, cfg.LinuxFamily, libc)
+	target := platform.NewTarget(targetOS+"/"+targetArch, cfg.LinuxFamily, libc, cfg.GPU)
 
 	deps := actions.ResolveDependenciesForTarget(r, targetOS, target)
 

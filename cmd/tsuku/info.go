@@ -444,7 +444,7 @@ func buildInfoTarget(family string) platform.Target {
 		}
 	}
 
-	return platform.NewTarget(platformStr, family, libc)
+	return platform.NewTarget(platformStr, family, libc, "")
 }
 
 // systemRequirementsResult holds extracted system requirements with flattened packages.

@@ -347,6 +347,7 @@ func (t *platformTarget) OS() string          { return t.os }
 func (t *platformTarget) Arch() string        { return t.arch }
 func (t *platformTarget) LinuxFamily() string { return t.linuxFamily }
 func (t *platformTarget) Libc() string        { return t.libc }
+func (t *platformTarget) GPU() string         { return "" }
 
 // resolveLibraryPath returns the path to a library's directory for recursion.
 // Libraries are installed under $TSUKU_HOME/tools/<recipe>-<version>/lib/

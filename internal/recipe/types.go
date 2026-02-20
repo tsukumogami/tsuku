@@ -193,6 +193,7 @@ type Matchable interface {
 	Arch() string
 	LinuxFamily() string
 	Libc() string
+	GPU() string
 }
 
 // MatchTarget is a lightweight struct for platform matching in recipe evaluation.
@@ -202,15 +203,17 @@ type MatchTarget struct {
 	arch        string
 	linuxFamily string
 	libc        string
+	gpu         string
 }
 
 // NewMatchTarget creates a MatchTarget for platform matching.
-func NewMatchTarget(os, arch, linuxFamily, libc string) MatchTarget {
+func NewMatchTarget(os, arch, linuxFamily, libc, gpu string) MatchTarget {
 	return MatchTarget{
 		os:          os,
 		arch:        arch,
 		linuxFamily: linuxFamily,
 		libc:        libc,
+		gpu:         gpu,
 	}
 }
 
@@ -225,6 +228,9 @@ func (m MatchTarget) LinuxFamily() string { return m.linuxFamily }
 
 // Libc returns the C library implementation.
 func (m MatchTarget) Libc() string { return m.libc }
+
+// GPU returns the GPU vendor.
+func (m MatchTarget) GPU() string { return m.gpu }
 
 // WhenClause represents platform and runtime conditions for conditional step execution.
 // Supports platform tuples ("os/arch"), OS arrays, and package manager filtering.

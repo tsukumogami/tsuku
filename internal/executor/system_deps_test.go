@@ -30,7 +30,7 @@ func TestExtractSystemPackages(t *testing.T) {
 					},
 				},
 			},
-			target:   platform.NewTarget("linux/amd64", "alpine", "musl"),
+			target:   platform.NewTarget("linux/amd64", "alpine", "musl", ""),
 			expected: []string{"zlib-dev", "openssl-dev"},
 		},
 		{
@@ -49,7 +49,7 @@ func TestExtractSystemPackages(t *testing.T) {
 					},
 				},
 			},
-			target:   platform.NewTarget("linux/amd64", "debian", "glibc"),
+			target:   platform.NewTarget("linux/amd64", "debian", "glibc", ""),
 			expected: []string{"libssl-dev", "libz-dev"},
 		},
 		{
@@ -76,7 +76,7 @@ func TestExtractSystemPackages(t *testing.T) {
 					},
 				},
 			},
-			target:   platform.NewTarget("linux/amd64", "alpine", "musl"),
+			target:   platform.NewTarget("linux/amd64", "alpine", "musl", ""),
 			expected: []string{"alpine-pkg"},
 		},
 		{
@@ -97,7 +97,7 @@ func TestExtractSystemPackages(t *testing.T) {
 					},
 				},
 			},
-			target:   platform.NewTarget("linux/amd64", "alpine", "musl"),
+			target:   platform.NewTarget("linux/amd64", "alpine", "musl", ""),
 			expected: []string{"gcc", "make", "bash"},
 		},
 		{
@@ -112,7 +112,7 @@ func TestExtractSystemPackages(t *testing.T) {
 					},
 				},
 			},
-			target:   platform.NewTarget("linux/amd64", "alpine", "musl"),
+			target:   platform.NewTarget("linux/amd64", "alpine", "musl", ""),
 			expected: nil,
 		},
 		{
@@ -120,7 +120,7 @@ func TestExtractSystemPackages(t *testing.T) {
 			recipe: &recipe.Recipe{
 				Steps: []recipe.Step{},
 			},
-			target:   platform.NewTarget("linux/amd64", "alpine", "musl"),
+			target:   platform.NewTarget("linux/amd64", "alpine", "musl", ""),
 			expected: nil,
 		},
 		{
@@ -138,7 +138,7 @@ func TestExtractSystemPackages(t *testing.T) {
 					},
 				},
 			},
-			target:   platform.NewTarget("linux/amd64", "rhel", "glibc"),
+			target:   platform.NewTarget("linux/amd64", "rhel", "glibc", ""),
 			expected: []string{"openssl-devel"},
 		},
 		{
@@ -156,7 +156,7 @@ func TestExtractSystemPackages(t *testing.T) {
 					},
 				},
 			},
-			target:   platform.NewTarget("linux/amd64", "arch", "glibc"),
+			target:   platform.NewTarget("linux/amd64", "arch", "glibc", ""),
 			expected: []string{"openssl"},
 		},
 		{
@@ -174,7 +174,7 @@ func TestExtractSystemPackages(t *testing.T) {
 					},
 				},
 			},
-			target:   platform.NewTarget("linux/amd64", "suse", "glibc"),
+			target:   platform.NewTarget("linux/amd64", "suse", "glibc", ""),
 			expected: []string{"libopenssl-devel"},
 		},
 	}
