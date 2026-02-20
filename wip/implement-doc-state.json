@@ -2,7 +2,7 @@
   "design_doc": "docs/designs/DESIGN-gpu-backend-selection.md",
   "branch": "docs/gpu-backend-selection",
   "pr_number": 1770,
-  "integrity_hash": "sha256:64a58ba4a962a04f5805005cd975365224531bc598bad0c867f29d003adf1058",
+  "integrity_hash": "sha256:33179bb1537fb6008d0ddb37b0c78f090451d639bcd8291069c3fd888c47915b",
   "issues": [
     {
       "number": 1773,
@@ -378,8 +378,8 @@
     {
       "number": 1777,
       "title": "feat(llm): add llm.backend config key",
-      "status": "pushed",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "ci_fix_attempts": 0,
       "issue_type": "code",
       "dependencies": [],
@@ -429,18 +429,51 @@
     {
       "number": 1792,
       "title": "test(ci): add recipe validation for GPU when clauses and dependency chains",
-      "status": "pending",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [
         1774,
         1789,
         1790
       ],
-      "commits": [],
-      "agent_type": "",
-      "summary": null,
+      "commits": [
+        "72ea98eb1b52475fa03b2b3bd867e6c5237bea91"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          "internal/executor/plan_generator_test.go"
+        ],
+        "tests_added": 4,
+        "key_decisions": "Used FilterStepsByTarget for download step filtering tests. Dependency chain tests use non-composite actions to avoid network access while exercising full recursive dependency resolution including cycle detection."
+      },
+      "reviewer_results": {
+        "issue": 1792,
+        "reviews": [
+          {
+            "focus": "pragmatic",
+            "blocking_count": 0,
+            "advisory_count": 0,
+            "detail_file": "wip/research/implement-doc_review_pragmatic_issue1792.md"
+          },
+          {
+            "focus": "architect",
+            "blocking_count": 0,
+            "advisory_count": 2,
+            "detail_file": "wip/research/implement-doc_review_architect_issue1792.md"
+          },
+          {
+            "focus": "maintainer",
+            "blocking_count": 0,
+            "advisory_count": 3,
+            "detail_file": "wip/research/implement-doc_review_maintainer_issue1792.md"
+          }
+        ],
+        "disposition": "pass"
+      },
       "testable_scenarios": [
         "scenario-16"
       ]
@@ -448,17 +481,60 @@
     {
       "number": 1778,
       "title": "refactor(llm): migrate addon from embedded manifest to recipe system",
-      "status": "pending",
+      "status": "pushed",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [
         1776,
         1777
       ],
-      "commits": [],
-      "agent_type": "",
-      "summary": null,
+      "commits": [
+        "63669ca89205d8f0178f0b96c5a538cecb1f6e0f"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          "internal/llm/addon/download.go",
+          "internal/llm/addon/manager.go",
+          "internal/llm/addon/manager_test.go",
+          "internal/llm/addon/manifest.go",
+          "internal/llm/addon/manifest.json",
+          "internal/llm/addon/platform.go",
+          "internal/llm/addon/verify.go",
+          "internal/llm/lifecycle.go",
+          "internal/llm/lifecycle_test.go",
+          "internal/llm/local.go"
+        ],
+        "tests_added": 16,
+        "key_decisions": "Used Installer interface with InstallRecipe(ctx, recipeName, gpuOverride) signature. gpuOverride maps llm.backend=cpu to GPU=none. Conservative variant mismatch: always reinstall if backend=cpu and any install exists. findInstalledBinary scans TSUKU_HOME/tools for tsuku-llm-* dirs. Removed VerifyBeforeExecution (recipe system handles checksums). Removed NewServerLifecycleWithManager -- callers use NewServerLifecycle with path from EnsureAddon."
+      },
+      "reviewer_results": {
+        "issue": 1778,
+        "reviews": [
+          {
+            "focus": "pragmatic",
+            "blocking_count": 2,
+            "advisory_count": 3,
+            "detail_file": "wip/research/implement-doc_review_pragmatic_issue1778.md"
+          },
+          {
+            "focus": "architect",
+            "blocking_count": 0,
+            "advisory_count": 2,
+            "detail_file": "wip/research/implement-doc_review_architect_issue1778.md"
+          },
+          {
+            "focus": "maintainer",
+            "blocking_count": 3,
+            "advisory_count": 4,
+            "detail_file": "wip/research/implement-doc_review_maintainer_issue1778.md"
+          }
+        ],
+        "disposition": "pass",
+        "disposition_rationale": "All blocking findings assessed as non-regressions: (1) NewLocalProviderWithInstaller is the designed API surface per issue spec for production wiring, not dead code. (2) isGPUVariantInstalled returning true is a documented conservative choice avoiding state.json dependency; costs one idempotent reinstall per cold start. (3) addonPath direct mutation writes same cached value from mutex-protected EnsureAddon; not a corruption risk. (4) isRunningLocked comment is pre-existing per git diff, not introduced by this commit."
+      },
       "testable_scenarios": [
         "scenario-17",
         "scenario-18",
