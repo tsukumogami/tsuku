@@ -46,10 +46,18 @@ Planned
 | _With GPU exposed on `Matchable`, adds `GPU []string` to `WhenClause` following the libc pattern. Updates `Matches()`, `IsEmpty()`, `ToMap()`, `UnmarshalTOML()`, and `MergeWhenClause()` so recipes can write `when = { gpu = ["nvidia"] }`._ | | |
 | [#1775: refactor(executor): thread GPU through plan generation](https://github.com/tsukumogami/tsuku/issues/1775) | [#1773](https://github.com/tsukumogami/tsuku/issues/1773), [#1774](https://github.com/tsukumogami/tsuku/issues/1774) | testable |
 | _Adds a `GPU` field to `PlanConfig` and wires auto-detection into `GeneratePlan()`, including dependency plan propagation via `depCfg`. After this, recipe steps with `gpu` conditions actually filter at plan time._ | | |
-| [#1776: feat(recipe): add tsuku-llm and GPU runtime dependency recipes](https://github.com/tsukumogami/tsuku/issues/1776) | [#1775](https://github.com/tsukumogami/tsuku/issues/1775) | testable |
-| _Creates the tsuku-llm recipe with GPU-filtered steps (CUDA for NVIDIA, Vulkan for AMD/Intel, CPU for none). Creates nvidia-driver (system PM), cuda-runtime (download from NVIDIA redist), and vulkan-loader (system PM) dependency recipes. First real consumer of the `gpu` WhenClause field._ | | |
+| [#1789: feat(recipe): add nvidia-driver and cuda-runtime dependency recipes](https://github.com/tsukumogami/tsuku/issues/1789) | None | testable |
+| _Creates `nvidia-driver.toml` (system PM actions per distro) and `cuda-runtime.toml` (download from NVIDIA redistributable tarballs). Establishes the CUDA dependency chain: cuda-runtime depends on nvidia-driver. First recipes to use `download_archive` for GPU compute runtimes._ | | |
+| [#1790: feat(recipe): add mesa-vulkan-drivers and vulkan-loader dependency recipes](https://github.com/tsukumogami/tsuku/issues/1790) | None | testable |
+| _Creates `vulkan-loader.toml` and `mesa-vulkan-drivers.toml` using system PM actions. The Vulkan loader discovers ICD drivers at runtime, and Mesa provides the AMD/Intel ICD implementations. Completes the Vulkan dependency chain for non-NVIDIA GPUs._ | | |
+| [#1791: fix(ci): align tsuku-llm release artifacts with recipe asset patterns](https://github.com/tsukumogami/tsuku/issues/1791) | None | simple |
+| _Updates the tsuku-llm release pipeline so artifact filenames include version and match the `asset_pattern` values in the recipe (e.g., `tsuku-llm-v{version}-linux-amd64-cuda`). Without this, the recipe can't find release assets._ | | |
+| [#1776: feat(recipe): add tsuku-llm recipe with GPU-filtered variant selection](https://github.com/tsukumogami/tsuku/issues/1776) | [#1775](https://github.com/tsukumogami/tsuku/issues/1775), [#1789](https://github.com/tsukumogami/tsuku/issues/1789), [#1790](https://github.com/tsukumogami/tsuku/issues/1790), [#1791](https://github.com/tsukumogami/tsuku/issues/1791) | testable |
+| _Creates `recipes/t/tsuku-llm.toml` with GPU-filtered `when` clauses for variant selection. NVIDIA steps depend on cuda-runtime, AMD/Intel steps depend on vulkan-loader, CPU and Metal steps have no GPU dependencies. First real consumer of the `gpu` WhenClause field._ | | |
 | [#1777: feat(llm): add llm.backend config key](https://github.com/tsukumogami/tsuku/issues/1777) | None | simple |
 | _Registers `llm.backend` in userconfig with `cpu` as the only valid override value. Adds `LLMBackend()` to the `LLMConfig` interface. Independent of GPU detection, can start in parallel._ | | |
+| [#1792: test(ci): add recipe validation for GPU when clauses and dependency chains](https://github.com/tsukumogami/tsuku/issues/1792) | [#1774](https://github.com/tsukumogami/tsuku/issues/1774) | testable |
+| _Adds CI tests that validate GPU `when` clause matching logic, step-level dependency resolution for GPU recipes, and TOML syntax for all new recipe files. Runs as part of `go test` without requiring GPU hardware._ | | |
 | [#1778: refactor(llm): migrate addon from embedded manifest to recipe system](https://github.com/tsukumogami/tsuku/issues/1778) | [#1776](https://github.com/tsukumogami/tsuku/issues/1776), [#1777](https://github.com/tsukumogami/tsuku/issues/1777) | critical |
 | _Removes the embedded manifest, download, platform key, and verification code from the addon package. Replaces `EnsureAddon()` with recipe-based installation via an injected `Installer` interface. Wires `llm.backend=cpu` override and cleans up legacy addon paths._ | | |
 | [#1779: feat(llm): add structured error for backend init failure](https://github.com/tsukumogami/tsuku/issues/1779) | None | simple |
@@ -69,12 +77,19 @@ graph TD
         I1775["#1775: Thread GPU through plan gen"]
     end
 
-    subgraph Phase2["Phase 2: Recipes + Config"]
-        I1776["#1776: tsuku-llm + GPU runtime recipes"]
-        I1777["#1777: llm.backend config key"]
+    subgraph Phase2["Phase 2: GPU Runtime Recipes"]
+        I1789["#1789: nvidia-driver + cuda-runtime"]
+        I1790["#1790: mesa-vulkan-drivers + vulkan..."]
+        I1791["#1791: Align release artifact names"]
     end
 
-    subgraph Phase3["Phase 3: Migration + Validation"]
+    subgraph Phase3["Phase 3: tsuku-llm Recipe + Config"]
+        I1776["#1776: tsuku-llm GPU-filtered recipe"]
+        I1777["#1777: llm.backend config key"]
+        I1792["#1792: CI validation for GPU recipes"]
+    end
+
+    subgraph Phase4["Phase 4: Migration + Validation"]
         I1778["#1778: Migrate addon to recipe system"]
         I1779["#1779: Structured error for backend..."]
         I1780["#1780: Validate GPU variant perf"]
@@ -84,7 +99,11 @@ graph TD
     I1773 --> I1774
     I1773 --> I1775
     I1774 --> I1775
+    I1774 --> I1792
     I1775 --> I1776
+    I1789 --> I1776
+    I1790 --> I1776
+    I1791 --> I1776
     I1776 --> I1778
     I1777 --> I1778
     I1776 --> I1780
@@ -96,8 +115,8 @@ graph TD
     classDef needsDesign fill:#e1bee7
     classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
 
-    class I1773,I1777,I1779 ready
-    class I1774,I1775,I1776,I1778,I1780,I1786 blocked
+    class I1773,I1777,I1779,I1789,I1790,I1791 ready
+    class I1774,I1775,I1776,I1778,I1780,I1786,I1792 blocked
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design
