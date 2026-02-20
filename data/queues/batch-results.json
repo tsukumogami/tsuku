@@ -1,24 +1,18 @@
 {
   "batch_id": "2026-02-19",
   "ecosystems": {
-    "npm": 9,
-    "pypi": 1
+    "npm": 10
   },
   "per_ecosystem": {
     "npm": {
-      "total": 9,
-      "succeeded": 2,
-      "failed": 7
-    },
-    "pypi": {
-      "total": 1,
-      "succeeded": 0,
-      "failed": 1
+      "total": 10,
+      "succeeded": 8,
+      "failed": 2
     }
   },
   "total": 10,
-  "succeeded": 2,
-  "failed": 8,
+  "succeeded": 8,
+  "failed": 2,
   "blocked": 0,
-  "timestamp": "2026-02-19T22:30:10.667275051Z"
+  "timestamp": "2026-02-19T23:29:26.829926731Z"
 }
