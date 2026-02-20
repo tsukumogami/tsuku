@@ -2,7 +2,7 @@
   "design_doc": "docs/designs/DESIGN-gpu-backend-selection.md",
   "branch": "docs/gpu-backend-selection",
   "pr_number": 1770,
-  "integrity_hash": "sha256:7d42133ae296150ba032b09d36688d8cc1ef80075b6b5968f389d75d6f9385d0",
+  "integrity_hash": "sha256:80c3067e2bea30334cfc1d3aee6b026392caf8615b1606d5eed5af218a5041fd",
   "issues": [
     {
       "number": 1773,
@@ -229,8 +229,8 @@
     {
       "number": 1790,
       "title": "feat(recipe): add mesa-vulkan-drivers and vulkan-loader dependency recipes",
-      "status": "pushed",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "ci_fix_attempts": 0,
       "issue_type": "code",
       "dependencies": [],
@@ -278,14 +278,48 @@
     {
       "number": 1791,
       "title": "fix(ci): align tsuku-llm release artifacts with recipe asset patterns",
-      "status": "pending",
+      "status": "pushed",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [],
-      "commits": [],
-      "agent_type": "",
-      "summary": null,
+      "commits": [
+        "17289892fb67b9dc348089912c8c2f424bc643a9"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          ".github/workflows/llm-release.yml"
+        ],
+        "tests_added": 0,
+        "key_decisions": "Renamed matrix field from artifact to artifact_suffix, added Compute artifact name step that constructs versioned filename from GITHUB_REF_NAME. Pattern tsuku-llm-v{version}-{os}-{arch}[-{backend}] matches recipe asset_pattern. Added CUDA version coupling documentation."
+      },
+      "reviewer_results": {
+        "issue": 1791,
+        "reviews": [
+          {
+            "focus": "pragmatic",
+            "blocking_count": 1,
+            "advisory_count": 2,
+            "detail_file": "wip/research/implement-doc_review_pragmatic_issue1791.md"
+          },
+          {
+            "focus": "architect",
+            "blocking_count": 0,
+            "advisory_count": 2,
+            "detail_file": "wip/research/implement-doc_review_architect_issue1791.md"
+          },
+          {
+            "focus": "maintainer",
+            "blocking_count": 0,
+            "advisory_count": 2,
+            "detail_file": "wip/research/implement-doc_review_maintainer_issue1791.md"
+          }
+        ],
+        "disposition": "pass",
+        "disposition_rationale": "Pragmatic blocking finding (CUDA x86_64 repo path used for ARM64 builds) is a pre-existing issue in the workflow file, not introduced by this commit. The git diff confirms the CUDA install step was unchanged except for adding a CUDA coupling comment. Not a regression."
+      },
       "testable_scenarios": []
     },
     {
