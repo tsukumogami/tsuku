@@ -27,8 +27,8 @@
     },
     "npm": {
       "state": "closed",
-      "failures": 0,
-      "last_failure": "2026-02-19T18:51:13Z"
+      "failures": 1,
+      "last_failure": "2026-02-20T06:56:46Z"
     },
     "rubygems": {
       "state": "open",
