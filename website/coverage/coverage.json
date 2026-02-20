@@ -1,21 +1,21 @@
 {
-  "generated_at": "2026-02-19T22:38:25Z",
-  "total_recipes": 303,
+  "generated_at": "2026-02-20T00:07:33Z",
+  "total_recipes": 311,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 303,
-        "total": 303,
+        "supported": 311,
+        "total": 311,
         "pct": 100
       },
       "glibc": {
-        "supported": 303,
-        "total": 303,
+        "supported": 311,
+        "total": 311,
         "pct": 100
       },
       "musl": {
-        "supported": 303,
-        "total": 303,
+        "supported": 311,
+        "total": 311,
         "pct": 100
       }
     },
@@ -26,9 +26,9 @@
         "glibc_support": 13
       },
       "tool": {
-        "total": 290,
-        "musl_support": 290,
-        "glibc_support": 290
+        "total": 298,
+        "musl_support": 298,
+        "glibc_support": 298
       }
     }
   },
@@ -2470,6 +2470,30 @@
       "warnings": null
     },
     {
+      "name": "n",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "n8n-mcp",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "nasm",
       "type": "tool",
       "platforms": {
@@ -2506,6 +2530,18 @@
       "warnings": null
     },
     {
+      "name": "needle",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "netlify-cli",
       "type": "tool",
       "platforms": {
@@ -2530,7 +2566,31 @@
       "warnings": null
     },
     {
+      "name": "node-red",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "nomad",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "nping",
       "type": "tool",
       "platforms": {
         "darwin": true,
@@ -2554,6 +2614,18 @@
       "warnings": null
     },
     {
+      "name": "openapi-diff",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "openshift-cli",
       "type": "tool",
       "platforms": {
@@ -2566,7 +2638,31 @@
       "warnings": null
     },
     {
+      "name": "openskills",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "opentofu",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "oxfmt",
       "type": "tool",
       "platforms": {
         "darwin": true,
