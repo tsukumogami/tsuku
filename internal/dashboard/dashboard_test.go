@@ -468,9 +468,9 @@ func TestLoadMetrics(t *testing.T) {
 		t.Fatalf("runs: got %d, want 3", len(runs))
 	}
 
-	// Check first run
-	if runs[0].BatchID != "2026-01-30-homebrew" {
-		t.Errorf("BatchID: got %q, want 2026-01-30-homebrew", runs[0].BatchID)
+	// Check first run - BatchID is derived from timestamp, not the record's batch_id
+	if runs[0].BatchID != "2026-01-30T12-00-00Z" {
+		t.Errorf("BatchID: got %q, want 2026-01-30T12-00-00Z", runs[0].BatchID)
 	}
 	if runs[0].Total != 10 {
 		t.Errorf("Total: got %d, want 10", runs[0].Total)
@@ -593,8 +593,8 @@ func TestGenerate_integration(t *testing.T) {
 	if len(dash.Runs) != 3 {
 		t.Errorf("Runs: got %d, want 3", len(dash.Runs))
 	}
-	// Should be reversed (newest first)
-	if dash.Runs[0].BatchID != "2026-02-01-homebrew" {
+	// Should be reversed (newest first) - BatchID derived from timestamp
+	if dash.Runs[0].BatchID != "2026-02-01T12-00-00Z" {
 		t.Errorf("First run should be newest: got %s", dash.Runs[0].BatchID)
 	}
 
@@ -1474,7 +1474,8 @@ func TestLoadMetricsFromDir_legacyFileSortsCorrectly(t *testing.T) {
 	}
 
 	// The newer run should be last (and would be kept when taking "last N")
-	if runs[1].BatchID != "2026-02-18" {
+	// BatchID is derived from timestamp, not the record's batch_id
+	if runs[1].BatchID != "2026-02-18T14-41-33Z" {
 		t.Errorf("newest run should be last, got batch_id=%s", runs[1].BatchID)
 	}
 }
@@ -1771,5 +1772,61 @@ func TestGenerate_withCurated(t *testing.T) {
 	}
 	if dash.Curated[1].ValidationStatus != "unknown" {
 		t.Errorf("Curated[1].ValidationStatus: got %q, want %q", dash.Curated[1].ValidationStatus, "unknown")
+	}
+}
+
+func TestBatchIDFromTimestamp(t *testing.T) {
+	tests := []struct {
+		name      string
+		timestamp string
+		want      string
+	}{
+		{"standard ISO timestamp", "2026-02-19T04:26:06Z", "2026-02-19T04-26-06Z"},
+		{"midnight", "2026-01-01T00:00:00Z", "2026-01-01T00-00-00Z"},
+		{"no colons", "2026-02-19", "2026-02-19"},
+		{"empty string", "", ""},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := batchIDFromTimestamp(tt.timestamp)
+			if got != tt.want {
+				t.Errorf("batchIDFromTimestamp(%q): got %q, want %q", tt.timestamp, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestLoadMetrics_uniqueBatchIDs(t *testing.T) {
+	// Two records with the same date-only batch_id but different timestamps
+	// should produce RunSummaries with different BatchIDs.
+	dir := t.TempDir()
+	path := filepath.Join(dir, "batch-runs.jsonl")
+	content := `{"batch_id":"2026-02-19","ecosystem":"homebrew","total":10,"merged":6,"timestamp":"2026-02-19T04:26:06Z","duration_seconds":120}
+{"batch_id":"2026-02-19","ecosystem":"cargo","total":5,"merged":3,"timestamp":"2026-02-19T10:15:30Z","duration_seconds":90}
+`
+	if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+		t.Fatalf("write temp file: %v", err)
+	}
+
+	runs, _, err := loadMetrics(path)
+	if err != nil {
+		t.Fatalf("loadMetrics: %v", err)
+	}
+
+	if len(runs) != 2 {
+		t.Fatalf("runs: got %d, want 2", len(runs))
+	}
+
+	// Each run should have a unique BatchID derived from its timestamp
+	if runs[0].BatchID == runs[1].BatchID {
+		t.Errorf("BatchIDs should be unique: both are %q", runs[0].BatchID)
+	}
+
+	if runs[0].BatchID != "2026-02-19T04-26-06Z" {
+		t.Errorf("runs[0].BatchID: got %q, want %q", runs[0].BatchID, "2026-02-19T04-26-06Z")
+	}
+	if runs[1].BatchID != "2026-02-19T10-15-30Z" {
+		t.Errorf("runs[1].BatchID: got %q, want %q", runs[1].BatchID, "2026-02-19T10-15-30Z")
 	}
 }
