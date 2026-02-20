@@ -1,3 +1,29 @@
+# Release pipeline for the tsuku-llm addon binary.
+#
+# Triggered by tags matching "tsuku-llm-v*" (e.g., tsuku-llm-v0.3.0).
+#
+# Artifact naming convention:
+#   tsuku-llm-v{version}-{os}-{arch}[-{backend}]
+#
+#   Examples for tag tsuku-llm-v0.3.0:
+#     tsuku-llm-v0.3.0-darwin-arm64
+#     tsuku-llm-v0.3.0-linux-amd64-cuda
+#     tsuku-llm-v0.3.0-linux-arm64-vulkan
+#
+#   The recipe's asset_pattern uses the same format with {version} placeholder:
+#     asset_pattern = "tsuku-llm-v{version}-linux-amd64-cuda"
+#
+#   macOS builds omit the backend suffix because Metal is the only backend
+#   for each macOS architecture.
+#
+# CUDA version coupling:
+#   This pipeline builds CUDA variants against CUDA toolkit 12.4
+#   (cuda-toolkit-12-4). The cuda-runtime recipe (recipes/c/cuda-runtime.toml)
+#   must provide ABI-compatible runtime libraries (CUDA 12.x). CUDA 12 maintains
+#   forward compatibility within the major version, so cuda-runtime's 12.6.77
+#   libraries are compatible with binaries built against 12.4.
+#   Changing the CUDA major version here requires updating cuda-runtime.toml.
+
 name: LLM Addon Release
 
 on:
@@ -20,46 +46,46 @@ jobs:
           - platform: darwin-arm64
             runner: macos-latest
             target: aarch64-apple-darwin
-            artifact: tsuku-llm-darwin-arm64
+            artifact_suffix: darwin-arm64
             backend: metal
           - platform: darwin-amd64
             runner: macos-15-intel
             target: x86_64-apple-darwin
-            artifact: tsuku-llm-darwin-amd64
+            artifact_suffix: darwin-amd64
             backend: metal
 
           # Linux AMD64 builds
           - platform: linux-amd64-cuda
             runner: ubuntu-22.04
             target: x86_64-unknown-linux-gnu
-            artifact: tsuku-llm-linux-amd64-cuda
+            artifact_suffix: linux-amd64-cuda
             backend: cuda
           - platform: linux-amd64-vulkan
             runner: ubuntu-22.04
             target: x86_64-unknown-linux-gnu
-            artifact: tsuku-llm-linux-amd64-vulkan
+            artifact_suffix: linux-amd64-vulkan
             backend: vulkan
           - platform: linux-amd64-cpu
             runner: ubuntu-22.04
             target: x86_64-unknown-linux-gnu
-            artifact: tsuku-llm-linux-amd64-cpu
+            artifact_suffix: linux-amd64-cpu
             backend: cpu
 
           # Linux ARM64 builds
           - platform: linux-arm64-cuda
             runner: ubuntu-24.04-arm
             target: aarch64-unknown-linux-gnu
-            artifact: tsuku-llm-linux-arm64-cuda
+            artifact_suffix: linux-arm64-cuda
             backend: cuda
           - platform: linux-arm64-vulkan
             runner: ubuntu-24.04-arm
             target: aarch64-unknown-linux-gnu
-            artifact: tsuku-llm-linux-arm64-vulkan
+            artifact_suffix: linux-arm64-vulkan
             backend: vulkan
           - platform: linux-arm64-cpu
             runner: ubuntu-24.04-arm
             target: aarch64-unknown-linux-gnu
-            artifact: tsuku-llm-linux-arm64-cpu
+            artifact_suffix: linux-arm64-cpu
             backend: cpu
 
     runs-on: ${{ matrix.runner }}
@@ -71,6 +97,16 @@ jobs:
           sparse-checkout: |
             tsuku-llm
             internal/llm/proto
+
+      - name: Compute artifact name
+        id: artifact
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          VERSION="${TAG#tsuku-llm-v}"
+          ARTIFACT_NAME="tsuku-llm-v${VERSION}-${{ matrix.artifact_suffix }}"
+          echo "name=${ARTIFACT_NAME}" >> "$GITHUB_OUTPUT"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Artifact name: ${ARTIFACT_NAME}"
 
       - name: Set up Rust
         uses: dtolnay/rust-toolchain@master
@@ -89,7 +125,9 @@ jobs:
       - name: Install CUDA toolkit (Linux CUDA builds)
         if: matrix.backend == 'cuda' && startsWith(matrix.runner, 'ubuntu')
         run: |
-          # Install CUDA toolkit
+          # Install CUDA 12.4 toolkit for building.
+          # CUDA version coupling: changing the major version here requires
+          # updating recipes/c/cuda-runtime.toml to provide compatible libraries.
           wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.1-1_all.deb
           sudo dpkg -i cuda-keyring_1.1-1_all.deb
           sudo apt-get update
@@ -110,7 +148,7 @@ jobs:
 
       - name: Inject version
         run: |
-          VERSION="${GITHUB_REF_NAME#tsuku-llm-v}"
+          VERSION="${{ steps.artifact.outputs.version }}"
           if [[ "$OSTYPE" == "darwin"* ]]; then
             sed -i '' "s/^version = .*/version = \"$VERSION\"/" tsuku-llm/Cargo.toml
           else
@@ -145,13 +183,13 @@ jobs:
 
       - name: Create release artifact
         run: |
-          cp tsuku-llm/target/release/tsuku-llm "${{ matrix.artifact }}"
+          cp tsuku-llm/target/release/tsuku-llm "${{ steps.artifact.outputs.name }}"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v6
         with:
-          name: ${{ matrix.artifact }}
-          path: ${{ matrix.artifact }}
+          name: ${{ steps.artifact.outputs.name }}
+          path: ${{ steps.artifact.outputs.name }}
 
   # Integration test validates binaries
   integration-test:
@@ -163,36 +201,46 @@ jobs:
         include:
           - platform: darwin-arm64
             runner: macos-latest
-            artifact: tsuku-llm-darwin-arm64
+            artifact_suffix: darwin-arm64
           - platform: darwin-amd64
             runner: macos-15-intel
-            artifact: tsuku-llm-darwin-amd64
+            artifact_suffix: darwin-amd64
           - platform: linux-amd64-cpu
             runner: ubuntu-22.04
-            artifact: tsuku-llm-linux-amd64-cpu
+            artifact_suffix: linux-amd64-cpu
           - platform: linux-arm64-cpu
             runner: ubuntu-24.04-arm
-            artifact: tsuku-llm-linux-arm64-cpu
+            artifact_suffix: linux-arm64-cpu
     runs-on: ${{ matrix.runner }}
     steps:
+      - name: Compute artifact name
+        id: artifact
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          VERSION="${TAG#tsuku-llm-v}"
+          ARTIFACT_NAME="tsuku-llm-v${VERSION}-${{ matrix.artifact_suffix }}"
+          echo "name=${ARTIFACT_NAME}" >> "$GITHUB_OUTPUT"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+
       - name: Download artifact
         uses: actions/download-artifact@v7
         with:
-          name: ${{ matrix.artifact }}
+          name: ${{ steps.artifact.outputs.name }}
 
       - name: Validate binary execution
         run: |
-          chmod +x ./${{ matrix.artifact }}
+          ARTIFACT="${{ steps.artifact.outputs.name }}"
+          VERSION="${{ steps.artifact.outputs.version }}"
+          chmod +x "./${ARTIFACT}"
           # Verify binary runs and shows help
-          ./${{ matrix.artifact }} --help
+          "./${ARTIFACT}" --help
           # Verify version output
-          VERSION="${GITHUB_REF_NAME#tsuku-llm-v}"
-          BINARY_VERSION=$(./${{ matrix.artifact }} --version 2>&1 || true)
+          BINARY_VERSION=$("./${ARTIFACT}" --version 2>&1 || true)
           echo "Binary version output: $BINARY_VERSION"
           if ! echo "$BINARY_VERSION" | grep -q "$VERSION"; then
             echo "WARNING: Version string not found in output"
           fi
-          echo "Integration test passed for ${{ matrix.artifact }}"
+          echo "Integration test passed for ${ARTIFACT}"
 
   # Create release with all artifacts
   create-release:
@@ -253,19 +301,22 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG="${GITHUB_REF_NAME}"
+          VERSION="${TAG#tsuku-llm-v}"
 
+          # Artifact naming: tsuku-llm-v{version}-{os}-{arch}[-{backend}]
+          # Must match asset_pattern values in recipes/t/tsuku-llm.toml
           EXPECTED_ARTIFACTS=(
             # macOS (Metal)
-            tsuku-llm-darwin-arm64
-            tsuku-llm-darwin-amd64
+            "tsuku-llm-v${VERSION}-darwin-arm64"
+            "tsuku-llm-v${VERSION}-darwin-amd64"
             # Linux AMD64
-            tsuku-llm-linux-amd64-cuda
-            tsuku-llm-linux-amd64-vulkan
-            tsuku-llm-linux-amd64-cpu
+            "tsuku-llm-v${VERSION}-linux-amd64-cuda"
+            "tsuku-llm-v${VERSION}-linux-amd64-vulkan"
+            "tsuku-llm-v${VERSION}-linux-amd64-cpu"
             # Linux ARM64
-            tsuku-llm-linux-arm64-cuda
-            tsuku-llm-linux-arm64-vulkan
-            tsuku-llm-linux-arm64-cpu
+            "tsuku-llm-v${VERSION}-linux-arm64-cuda"
+            "tsuku-llm-v${VERSION}-linux-arm64-vulkan"
+            "tsuku-llm-v${VERSION}-linux-arm64-cpu"
             # Checksums
             checksums.txt
           )
