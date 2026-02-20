@@ -1,0 +1,233 @@
+{
+  "design_doc": "docs/designs/DESIGN-gpu-backend-selection.md",
+  "branch": "docs/gpu-backend-selection",
+  "pr_number": 1770,
+  "integrity_hash": "sha256:44d68c4d11a1ee1658a8bac78b0a9e030906163bbbc7a41c3dbe8d4859c6ad58",
+  "issues": [
+    {
+      "number": 1773,
+      "title": "feat(platform): add GPU vendor detection via PCI sysfs",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": [
+        "scenario-1",
+        "scenario-2",
+        "scenario-3",
+        "scenario-4"
+      ]
+    },
+    {
+      "number": 1774,
+      "title": "feat(recipe): add gpu field to WhenClause",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [
+        1773
+      ],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": [
+        "scenario-5",
+        "scenario-6",
+        "scenario-7",
+        "scenario-8"
+      ]
+    },
+    {
+      "number": 1775,
+      "title": "refactor(executor): thread GPU through plan generation",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [
+        1773,
+        1774
+      ],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": [
+        "scenario-9",
+        "scenario-10"
+      ]
+    },
+    {
+      "number": 1789,
+      "title": "feat(recipe): add nvidia-driver and cuda-runtime dependency recipes",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": [
+        "scenario-11",
+        "scenario-12"
+      ]
+    },
+    {
+      "number": 1790,
+      "title": "feat(recipe): add mesa-vulkan-drivers and vulkan-loader dependency recipes",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": [
+        "scenario-13"
+      ]
+    },
+    {
+      "number": 1791,
+      "title": "fix(ci): align tsuku-llm release artifacts with recipe asset patterns",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": []
+    },
+    {
+      "number": 1776,
+      "title": "feat(recipe): add tsuku-llm recipe with GPU-filtered variant selection",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [
+        1775,
+        1789,
+        1790,
+        1791
+      ],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": [
+        "scenario-14"
+      ]
+    },
+    {
+      "number": 1777,
+      "title": "feat(llm): add llm.backend config key",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": [
+        "scenario-15"
+      ]
+    },
+    {
+      "number": 1792,
+      "title": "test(ci): add recipe validation for GPU when clauses and dependency chains",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [
+        1774,
+        1789,
+        1790
+      ],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": [
+        "scenario-16"
+      ]
+    },
+    {
+      "number": 1778,
+      "title": "refactor(llm): migrate addon from embedded manifest to recipe system",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [
+        1776,
+        1777
+      ],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": [
+        "scenario-17",
+        "scenario-18",
+        "scenario-19",
+        "scenario-20"
+      ]
+    },
+    {
+      "number": 1779,
+      "title": "feat(llm): add structured error for backend init failure",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": []
+    },
+    {
+      "number": 1780,
+      "title": "test(llm): validate GPU variant performance on shipped models",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [
+        1776
+      ],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": [
+        "scenario-21"
+      ]
+    },
+    {
+      "number": 1786,
+      "title": "test(recipe): validate tsuku-llm recipe against release pipeline and document user experience",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [
+        1776
+      ],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": [
+        "scenario-22"
+      ]
+    }
+  ],
+  "skipped_issues": null,
+  "test_plan_file": null
+}
