@@ -38,9 +38,10 @@
       "opens_at": "2026-02-19T14:06:59Z"
     },
     "pypi": {
-      "state": "closed",
-      "failures": 4,
-      "last_failure": "2026-02-20T06:08:19Z"
+      "state": "open",
+      "failures": 5,
+      "last_failure": "2026-02-20T23:30:35Z",
+      "opens_at": "2026-02-21T00:30:35Z"
     }
   },
   "budget": {
