@@ -2,7 +2,7 @@
   "design_doc": "docs/designs/DESIGN-gpu-backend-selection.md",
   "branch": "docs/gpu-backend-selection",
   "pr_number": 1770,
-  "integrity_hash": "sha256:7e87d966e8d2316a8fdf145c9b472bac7519a60558ca5c6a98b6ff0972df72aa",
+  "integrity_hash": "sha256:cb6a6a56340bde3f261a5b2ecb22cc014d47dc46ae9972db601826b653053518",
   "issues": [
     {
       "number": 1773,
@@ -60,8 +60,8 @@
     {
       "number": 1774,
       "title": "feat(recipe): add gpu field to WhenClause",
-      "status": "pushed",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "ci_fix_attempts": 0,
       "issue_type": "code",
       "dependencies": [
@@ -119,17 +119,57 @@
     {
       "number": 1775,
       "title": "refactor(executor): thread GPU through plan generation",
-      "status": "pending",
+      "status": "pushed",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [
         1773,
         1774
       ],
-      "commits": [],
-      "agent_type": "",
-      "summary": null,
+      "commits": [
+        "5eb4d94f3cd07f0601d15947dcf166fdd582f20e"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          "internal/executor/plan_generator.go",
+          "internal/executor/plan_generator_test.go",
+          "internal/executor/executor.go",
+          "internal/executor/filter_test.go"
+        ],
+        "tests_added": 11,
+        "key_decisions": "Auto-detect GPU by mutating cfg.GPU so the value propagates to generateDependencyPlans() and depCfg without additional plumbing. Fixed pre-existing LinuxFamily gap in depCfg alongside the GPU propagation. The shouldExecute() runtime path now calls DetectGPU() directly since it lacks access to PlanConfig."
+      },
+      "reviewer_results": {
+        "issue": 1775,
+        "reviews": [
+          {
+            "focus": "pragmatic",
+            "blocking_count": 0,
+            "advisory_count": 2,
+            "detail_file": "wip/research/implement-doc_review_pragmatic_issue1775.md",
+            "summary": "Clean. Minimal implementation (~6 lines of production code). cfg.GPU mutation is the simplest correct threading strategy."
+          },
+          {
+            "focus": "architect",
+            "blocking_count": 0,
+            "advisory_count": 2,
+            "detail_file": "wip/research/implement-doc_review_architect_issue1775.md",
+            "summary": "Clean. GPU threads through pipeline without parallel patterns. depCfg propagation closes the #1773 gap. eval.go --gpu flag is future work."
+          },
+          {
+            "focus": "maintainer",
+            "blocking_count": 1,
+            "advisory_count": 4,
+            "detail_file": "wip/research/implement-doc_review_maintainer_issue1775.md",
+            "summary": "One blocking: cfg.GPU mutation vs linuxFamily local variable inconsistency. FIXED: added clarifying comment explaining mutation is intentional for depCfg propagation."
+          }
+        ],
+        "disposition": "pass",
+        "disposition_rationale": "Maintainer blocking finding (comment clarity) fixed by amending the commit with a clarifying comment."
+      },
       "testable_scenarios": [
         "scenario-9",
         "scenario-10"
