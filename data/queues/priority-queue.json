@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-02-19T23:30:52Z",
+  "updated_at": "2026-02-20T01:56:15Z",
   "entries": [
     {
       "name": "bat",
@@ -35096,7 +35096,7 @@
       "name": "oxlint",
       "source": "npm:oxlint",
       "priority": 3,
-      "status": "pending",
+      "status": "success",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 0,
@@ -36916,10 +36916,10 @@
       "name": "pocketbase",
       "source": "npm:pocketbase",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
+      "failure_count": 1,
       "next_retry_at": null
     },
     {
@@ -37486,7 +37486,7 @@
       "name": "prettier",
       "source": "npm:prettier",
       "priority": 3,
-      "status": "pending",
+      "status": "success",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 0,
@@ -37826,10 +37826,10 @@
       "name": "protoc-gen-js",
       "source": "npm:protoc-gen-js",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
+      "failure_count": 1,
       "next_retry_at": null
     },
     {
@@ -38496,10 +38496,10 @@
       "name": "pyright",
       "source": "npm:pyright",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
+      "failure_count": 1,
       "next_retry_at": null
     },
     {
@@ -38816,10 +38816,10 @@
       "name": "q",
       "source": "npm:q",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
+      "failure_count": 1,
       "next_retry_at": null
     },
     {
@@ -40016,7 +40016,7 @@
       "name": "react-native-cli",
       "source": "npm:react-native-cli",
       "priority": 3,
-      "status": "pending",
+      "status": "success",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 0,
@@ -40196,7 +40196,7 @@
       "name": "release-it",
       "source": "npm:release-it",
       "priority": 3,
-      "status": "pending",
+      "status": "success",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 0,
@@ -40866,7 +40866,7 @@
       "name": "rollup",
       "source": "npm:rollup",
       "priority": 3,
-      "status": "pending",
+      "status": "success",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 0,
@@ -41246,7 +41246,7 @@
       "name": "rulesync",
       "source": "npm:rulesync",
       "priority": 3,
-      "status": "pending",
+      "status": "success",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 0,
