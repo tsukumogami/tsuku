@@ -21,6 +21,7 @@
 [metadata]
 name = "nvidia-driver"
 description = "NVIDIA GPU kernel driver"
+homepage = "https://www.nvidia.com/en-us/drivers/"
 supported_os = ["linux"]
 
 # Debian/Ubuntu

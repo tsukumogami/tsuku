@@ -19,6 +19,7 @@
 [metadata]
 name = "vulkan-loader"
 description = "Vulkan ICD loader library (libvulkan)"
+homepage = "https://vulkan.lunarg.com/"
 type = "library"
 supported_os = ["linux"]
 dependencies = ["mesa-vulkan-drivers"]

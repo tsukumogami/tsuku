@@ -21,6 +21,7 @@
 [metadata]
 name = "mesa-vulkan-drivers"
 description = "Mesa Vulkan ICD drivers (AMD RADV and Intel ANV)"
+homepage = "https://www.mesa3d.org/"
 type = "library"
 supported_os = ["linux"]
 

@@ -33,6 +33,7 @@
 [metadata]
 name = "cuda-runtime"
 description = "NVIDIA CUDA runtime libraries (libcudart)"
+homepage = "https://developer.nvidia.com/cuda-toolkit"
 type = "library"
 supported_os = ["linux"]
 dependencies = ["nvidia-driver"]
