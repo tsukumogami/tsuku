@@ -153,9 +153,14 @@ The `docs/llm-testing-strategy` branch (PR #1752) has quality gates to absorb.
 - `internal/llm/local.go` (+31 lines) - dead connection invalidation
 - `.github/workflows/test.yml` (+89 lines) - quality gate CI job
 
-**Decision needed:** Merge that branch into ours, or keep as separate PR? The
-user said "the only way of validating that tsuku-llm really works is running it
-through those quality gates."
+**Decision: Absorb into our branch.** The llm-testing-strategy branch (PR #1752)
+should be merged into `docs/gpu-backend-selection`. Our branch won't be ready to
+merge until that work is integrated and the quality gates pass. This means:
+- Merge `origin/docs/llm-testing-strategy` into our branch
+- Resolve conflicts (known: `internal/llm/addon/manager.go` and `manager_test.go`
+  -- our recipe-based manager vs their manifest-based one; keep ours and absorb
+  the `TSUKU_LLM_BINARY` env var support for integration tests)
+- Run the quality gate tests to validate tsuku-llm end-to-end
 
 ### 2. Documentation (LOW PRIORITY -- user deferred)
 
