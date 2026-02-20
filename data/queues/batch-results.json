@@ -1,18 +1,18 @@
 {
-  "batch_id": "2026-02-19",
+  "batch_id": "2026-02-20",
   "ecosystems": {
     "npm": 10
   },
   "per_ecosystem": {
     "npm": {
       "total": 10,
-      "succeeded": 8,
-      "failed": 2
+      "succeeded": 6,
+      "failed": 4
     }
   },
   "total": 10,
-  "succeeded": 8,
-  "failed": 2,
+  "succeeded": 6,
+  "failed": 4,
   "blocked": 0,
-  "timestamp": "2026-02-19T23:29:26.829926731Z"
+  "timestamp": "2026-02-20T01:54:51.157480131Z"
 }
