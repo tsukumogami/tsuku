@@ -2,7 +2,7 @@
   "design_doc": "docs/designs/DESIGN-gpu-backend-selection.md",
   "branch": "docs/gpu-backend-selection",
   "pr_number": 1770,
-  "integrity_hash": "sha256:80c3067e2bea30334cfc1d3aee6b026392caf8615b1606d5eed5af218a5041fd",
+  "integrity_hash": "sha256:b9f88a1b57fae717ce20524ddb8dec457855904d4c02d50d5f69c8bfe1440550",
   "issues": [
     {
       "number": 1773,
@@ -278,8 +278,8 @@
     {
       "number": 1791,
       "title": "fix(ci): align tsuku-llm release artifacts with recipe asset patterns",
-      "status": "pushed",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "ci_fix_attempts": 0,
       "issue_type": "code",
       "dependencies": [],
@@ -325,19 +325,52 @@
     {
       "number": 1776,
       "title": "feat(recipe): add tsuku-llm recipe with GPU-filtered variant selection",
-      "status": "pending",
+      "status": "pushed",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [
         1775,
         1789,
         1790,
         1791
       ],
-      "commits": [],
-      "agent_type": "",
-      "summary": null,
+      "commits": [
+        "4cc537e9aeb260f64ed9ca91f48981f12be596d5"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          "recipes/t/tsuku-llm.toml"
+        ],
+        "tests_added": 0,
+        "key_decisions": "9 github_file steps: 2 macOS Metal, 6 Linux GPU-filtered (2 NVIDIA+CUDA, 2 AMD/Intel+Vulkan, 2 none+CPU), 1 Windows CPU. Step-level dependencies for cuda-runtime and vulkan-loader. Asset patterns match v{version} format from #1791."
+      },
+      "reviewer_results": {
+        "issue": 1776,
+        "reviews": [
+          {
+            "focus": "pragmatic",
+            "blocking_count": 0,
+            "advisory_count": 0,
+            "detail_file": "wip/research/implement-doc_review_pragmatic_issue1776.md"
+          },
+          {
+            "focus": "architect",
+            "blocking_count": 0,
+            "advisory_count": 2,
+            "detail_file": "wip/research/implement-doc_review_architect_issue1776.md"
+          },
+          {
+            "focus": "maintainer",
+            "blocking_count": 0,
+            "advisory_count": 2,
+            "detail_file": "wip/research/implement-doc_review_maintainer_issue1776.md"
+          }
+        ],
+        "disposition": "pass"
+      },
       "testable_scenarios": [
         "scenario-14"
       ]
