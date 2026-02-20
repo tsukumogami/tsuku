@@ -26,9 +26,10 @@
       "opens_at": "2026-02-19T14:06:59Z"
     },
     "npm": {
-      "state": "closed",
-      "failures": 4,
-      "last_failure": "2026-02-20T09:41:55Z"
+      "state": "open",
+      "failures": 5,
+      "last_failure": "2026-02-20T10:38:39Z",
+      "opens_at": "2026-02-20T11:38:39Z"
     },
     "rubygems": {
       "state": "open",
