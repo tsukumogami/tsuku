@@ -2,7 +2,7 @@
   "design_doc": "docs/designs/DESIGN-gpu-backend-selection.md",
   "branch": "docs/gpu-backend-selection",
   "pr_number": 1770,
-  "integrity_hash": "sha256:4d90474eba6a8e04c9c5480b64877aa22657ce6d92ea476acd40a038a865e058",
+  "integrity_hash": "sha256:c08069f0f17943177105bde443230f531c1f31fe0dfbdde73f122ddff32c75db",
   "issues": [
     {
       "number": 1773,
@@ -645,8 +645,8 @@
     {
       "number": 1786,
       "title": "test(recipe): validate tsuku-llm recipe against release pipeline and document user experience",
-      "status": "pushed",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "ci_fix_attempts": 0,
       "issue_type": "code",
       "dependencies": [

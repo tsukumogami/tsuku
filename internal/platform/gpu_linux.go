@@ -40,6 +40,9 @@ func DetectGPU() string {
 // DetectGPUWithRoot detects the GPU vendor using a custom root path for testing.
 // An empty root uses the real filesystem root.
 func DetectGPUWithRoot(root string) string {
+	if root == "" {
+		root = "/"
+	}
 	pattern := filepath.Join(root, "sys", "bus", "pci", "devices", "*", "class")
 	classFiles, err := filepath.Glob(pattern)
 	if err != nil || len(classFiles) == 0 {
