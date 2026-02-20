@@ -64,6 +64,10 @@ type LLMConfig struct {
 	// HourlyRateLimit is the maximum LLM generations per hour.
 	// Default is 10. Set to 0 to disable the limit.
 	HourlyRateLimit *int `toml:"hourly_rate_limit,omitempty"`
+
+	// Backend overrides the auto-detected GPU backend for tsuku-llm.
+	// Valid values: "cpu" (force CPU variant). Empty or nil means auto-detect.
+	Backend *string `toml:"backend,omitempty"`
 }
 
 const (
@@ -79,6 +83,9 @@ const (
 	// IdleTimeoutEnvVar is the env var that overrides the idle timeout config.
 	IdleTimeoutEnvVar = "TSUKU_LLM_IDLE_TIMEOUT"
 )
+
+// validLLMBackends lists the valid values for llm.backend (excluding empty string which clears).
+var validLLMBackends = []string{"cpu"}
 
 // DefaultConfig returns a Config with default values.
 func DefaultConfig() *Config {
@@ -256,6 +263,15 @@ func (c *Config) LLMHourlyRateLimit() int {
 	return *c.LLM.HourlyRateLimit
 }
 
+// LLMBackend returns the GPU backend override for tsuku-llm.
+// Returns "" when unset (auto-detect) and the stored value when set.
+func (c *Config) LLMBackend() string {
+	if c.LLM.Backend == nil {
+		return ""
+	}
+	return *c.LLM.Backend
+}
+
 // Get returns the value of a config key as a string.
 // Returns empty string and false if the key doesn't exist.
 // Keys with the "secrets." prefix are resolved from the Secrets map.
@@ -292,6 +308,8 @@ func (c *Config) Get(key string) (string, bool) {
 		return strconv.FormatFloat(c.LLMDailyBudget(), 'g', -1, 64), true
 	case "llm.hourly_rate_limit":
 		return strconv.Itoa(c.LLMHourlyRateLimit()), true
+	case "llm.backend":
+		return c.LLMBackend(), true
 	default:
 		return "", false
 	}
@@ -378,6 +396,18 @@ func (c *Config) Set(key, value string) error {
 		}
 		c.LLM.HourlyRateLimit = &i
 		return nil
+	case "llm.backend":
+		if value == "" {
+			c.LLM.Backend = nil
+			return nil
+		}
+		for _, v := range validLLMBackends {
+			if value == v {
+				c.LLM.Backend = &value
+				return nil
+			}
+		}
+		return fmt.Errorf("invalid value for llm.backend: must be one of: %s", strings.Join(validLLMBackends, ", "))
 	default:
 		return fmt.Errorf("unknown config key: %s", key)
 	}
@@ -394,5 +424,6 @@ func AvailableKeys() map[string]string {
 		"llm.providers":         "Preferred LLM provider order (comma-separated, e.g., claude,gemini)",
 		"llm.daily_budget":      "Daily LLM cost limit in USD (default: 5.0, 0 to disable)",
 		"llm.hourly_rate_limit": "Max LLM generations per hour (default: 10, 0 to disable)",
+		"llm.backend":           "Override GPU backend for local LLM (cpu to force CPU, empty to auto-detect)",
 	}
 }
