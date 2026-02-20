@@ -63,6 +63,55 @@ impl Default for HardwareProfile {
     }
 }
 
+/// Returns the GPU backend this binary was compiled with, based on cargo features.
+///
+/// The binary is compiled against exactly one GPU backend. At runtime, this backend
+/// may fail to initialize if the hardware doesn't support it.
+pub fn compiled_backend() -> GpuBackend {
+    #[cfg(feature = "cuda")]
+    {
+        return GpuBackend::Cuda;
+    }
+    #[cfg(feature = "metal")]
+    {
+        return GpuBackend::Metal;
+    }
+    #[cfg(feature = "vulkan")]
+    {
+        return GpuBackend::Vulkan;
+    }
+    #[allow(unreachable_code)]
+    GpuBackend::None
+}
+
+/// Returns a human-readable description of the hardware detected at runtime.
+///
+/// This is used in error messages when the compiled backend doesn't match
+/// available hardware. Examples: "Vulkan", "CUDA", "Metal", "None".
+pub fn describe_detected_hardware(profile: &HardwareProfile) -> String {
+    match profile.gpu_backend {
+        GpuBackend::Cuda => "CUDA".to_string(),
+        GpuBackend::Metal => "Metal".to_string(),
+        GpuBackend::Vulkan => "Vulkan".to_string(),
+        GpuBackend::None => "None".to_string(),
+    }
+}
+
+/// Formats a structured error message for when the compiled-in GPU backend
+/// fails to initialize at runtime.
+///
+/// This message is written to stderr so users understand what went wrong
+/// and how to work around it (by switching to the CPU backend).
+pub fn format_backend_init_error(compiled: GpuBackend, profile: &HardwareProfile) -> String {
+    format!(
+        "ERROR: Backend \"{}\" failed to initialize.\n  \
+         Detected hardware supports: {}\n  \
+         Suggestion: tsuku config set llm.backend cpu",
+        compiled,
+        describe_detected_hardware(profile),
+    )
+}
+
 /// Detects hardware capabilities for model selection.
 pub struct HardwareDetector;
 
@@ -72,14 +121,25 @@ impl HardwareDetector {
         info!("Starting hardware detection");
 
         let cpu_features = Self::detect_cpu_features();
-        debug!("CPU features: avx2={}, avx512={}", cpu_features.avx2, cpu_features.avx512);
+        debug!(
+            "CPU features: avx2={}, avx512={}",
+            cpu_features.avx2, cpu_features.avx512
+        );
 
         let ram_bytes = Self::detect_system_ram();
-        debug!("System RAM: {} bytes ({:.1} GB)", ram_bytes, ram_bytes as f64 / 1e9);
+        debug!(
+            "System RAM: {} bytes ({:.1} GB)",
+            ram_bytes,
+            ram_bytes as f64 / 1e9
+        );
 
         let (gpu_backend, vram_bytes) = Self::detect_gpu();
-        debug!("GPU backend: {:?}, VRAM: {} bytes ({:.1} GB)",
-               gpu_backend, vram_bytes, vram_bytes as f64 / 1e9);
+        debug!(
+            "GPU backend: {:?}, VRAM: {} bytes ({:.1} GB)",
+            gpu_backend,
+            vram_bytes,
+            vram_bytes as f64 / 1e9
+        );
 
         let profile = HardwareProfile {
             gpu_backend,
@@ -148,9 +208,7 @@ impl HardwareDetector {
         #[cfg(target_os = "windows")]
         {
             // Check for CUDA driver DLL
-            let cuda_paths = [
-                "C:\\Windows\\System32\\nvcuda.dll",
-            ];
+            let cuda_paths = ["C:\\Windows\\System32\\nvcuda.dll"];
 
             for path in &cuda_paths {
                 if Path::new(path).exists() {
@@ -226,9 +284,7 @@ impl HardwareDetector {
 
         #[cfg(target_os = "windows")]
         {
-            let vulkan_paths = [
-                "C:\\Windows\\System32\\vulkan-1.dll",
-            ];
+            let vulkan_paths = ["C:\\Windows\\System32\\vulkan-1.dll"];
 
             for path in &vulkan_paths {
                 if Path::new(path).exists() {
@@ -414,7 +470,10 @@ mod tests {
         // On x86_64, AVX2 should be common on modern CPUs (2013+)
         // We can't assert it's true since older CPUs exist, but we can
         // verify the detection runs without error
-        println!("CPU features: avx2={}, avx512={}", features.avx2, features.avx512);
+        println!(
+            "CPU features: avx2={}, avx512={}",
+            features.avx2, features.avx512
+        );
     }
 
     #[test]
@@ -426,5 +485,72 @@ mod tests {
         // On CI/test systems, RAM should be detectable
         #[cfg(any(target_os = "linux", target_os = "macos"))]
         assert!(ram > 0, "Expected RAM to be detected on Linux/macOS");
+    }
+
+    #[test]
+    fn test_compiled_backend_returns_valid_variant() {
+        let backend = compiled_backend();
+        // The compiled backend should be one of the known variants.
+        // Which one depends on cargo features, but it should never panic.
+        match backend {
+            GpuBackend::Cuda | GpuBackend::Metal | GpuBackend::Vulkan | GpuBackend::None => {}
+        }
+    }
+
+    #[test]
+    fn test_describe_detected_hardware() {
+        let profile_cuda = HardwareProfile {
+            gpu_backend: GpuBackend::Cuda,
+            ..HardwareProfile::default()
+        };
+        assert_eq!(describe_detected_hardware(&profile_cuda), "CUDA");
+
+        let profile_metal = HardwareProfile {
+            gpu_backend: GpuBackend::Metal,
+            ..HardwareProfile::default()
+        };
+        assert_eq!(describe_detected_hardware(&profile_metal), "Metal");
+
+        let profile_vulkan = HardwareProfile {
+            gpu_backend: GpuBackend::Vulkan,
+            ..HardwareProfile::default()
+        };
+        assert_eq!(describe_detected_hardware(&profile_vulkan), "Vulkan");
+
+        let profile_none = HardwareProfile::default();
+        assert_eq!(describe_detected_hardware(&profile_none), "None");
+    }
+
+    #[test]
+    fn test_format_backend_init_error_vulkan_no_hardware() {
+        let profile = HardwareProfile::default(); // gpu_backend = None
+        let msg = format_backend_init_error(GpuBackend::Vulkan, &profile);
+
+        assert!(msg.contains("ERROR: Backend \"vulkan\" failed to initialize."));
+        assert!(msg.contains("Detected hardware supports: None"));
+        assert!(msg.contains("Suggestion: tsuku config set llm.backend cpu"));
+    }
+
+    #[test]
+    fn test_format_backend_init_error_cuda_with_vulkan() {
+        let profile = HardwareProfile {
+            gpu_backend: GpuBackend::Vulkan,
+            ..HardwareProfile::default()
+        };
+        let msg = format_backend_init_error(GpuBackend::Cuda, &profile);
+
+        assert!(msg.contains("ERROR: Backend \"cuda\" failed to initialize."));
+        assert!(msg.contains("Detected hardware supports: Vulkan"));
+        assert!(msg.contains("Suggestion: tsuku config set llm.backend cpu"));
+    }
+
+    #[test]
+    fn test_format_backend_init_error_metal_no_hardware() {
+        let profile = HardwareProfile::default();
+        let msg = format_backend_init_error(GpuBackend::Metal, &profile);
+
+        assert!(msg.contains("ERROR: Backend \"metal\" failed to initialize."));
+        assert!(msg.contains("Detected hardware supports: None"));
+        assert!(msg.contains("Suggestion: tsuku config set llm.backend cpu"));
     }
 }
