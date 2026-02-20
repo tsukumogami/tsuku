@@ -8,17 +8,22 @@ problem: |
   capabilities the way they already filter on OS, architecture, and libc.
 decision: |
   Extend the platform detection system with GPU vendor identification (via PCI sysfs on Linux,
-  system profiler on macOS) and add a gpu field to WhenClause for recipe step filtering. Then
-  convert tsuku-llm from a custom addon-with-embedded-manifest into a standard recipe that uses
-  when clauses for variant selection, with GPU driver packages as library recipe dependencies.
-  The addon lifecycle code (server start/stop, gRPC, health checks) stays separate from the recipe.
+  system profiler on macOS) and add a gpu field to WhenClause for recipe step filtering. GPU
+  compute runtimes (CUDA, Vulkan) are managed as standard recipes whose action types match each
+  component's distribution method: download actions for NVIDIA's redistributable tarballs,
+  system PM actions for GPU drivers and Vulkan loaders. tsuku-llm converts from addon-with-
+  embedded-manifest to a standard recipe where NVIDIA hardware gets the CUDA variant (with
+  cuda-runtime as a managed dependency) and AMD/Intel get Vulkan (with vulkan-loader as a
+  system dependency recipe).
 rationale: |
-  GPU detection follows the same pattern as libc detection: read a system file, return a
-  string, match it in when clauses. Reusing the existing platform and recipe infrastructure
-  means no new schema formats, no custom manifest, and any future tool that needs GPU filtering
-  gets it for free. Converting tsuku-llm to a recipe also removes the only non-recipe binary
-  distribution path in tsuku, simplifying the codebase. The addon lifecycle code stays because
-  daemon management has no recipe equivalent, but binary installation moves to the standard flow.
+  GPU hardware detection follows the same pattern as libc detection: read a system file, return
+  a string, match it in when clauses. But unlike libc (which is the system's identity), GPU
+  compute runtimes like CUDA are installable software — more like openssl or zlib than like
+  glibc. NVIDIA provides standalone redistributable tarballs that tsuku can download and manage
+  in $TSUKU_HOME, the same model conda uses at scale. Following the existing convention that
+  everything is a recipe (with action types determining the installation mechanism), GPU drivers
+  and runtimes become standard dependency recipes. This means tsuku detects hardware, recipes
+  map hardware to backends, and tsuku provisions whatever software dependencies are needed.
 ---
 
 # Design Document: GPU Backend Selection
@@ -41,16 +46,16 @@ Planned
 | _With GPU exposed on `Matchable`, adds `GPU []string` to `WhenClause` following the libc pattern. Updates `Matches()`, `IsEmpty()`, `ToMap()`, `UnmarshalTOML()`, and `MergeWhenClause()` so recipes can write `when = { gpu = ["nvidia"] }`._ | | |
 | [#1775: refactor(executor): thread GPU through plan generation](https://github.com/tsukumogami/tsuku/issues/1775) | [#1773](https://github.com/tsukumogami/tsuku/issues/1773), [#1774](https://github.com/tsukumogami/tsuku/issues/1774) | testable |
 | _Adds a `GPU` field to `PlanConfig` and wires auto-detection into `GeneratePlan()`, including dependency plan propagation via `depCfg`. After this, recipe steps with `gpu` conditions actually filter at plan time._ | | |
-| [#1776: feat(recipe): add tsuku-llm and vulkan-loader recipes](https://github.com/tsukumogami/tsuku/issues/1776) | [#1775](https://github.com/tsukumogami/tsuku/issues/1775) | testable |
-| _Creates the tsuku-llm recipe with GPU-filtered steps (Vulkan for all GPU vendors, CPU for none) and the vulkan-loader library recipe using the `require_command` pattern. First real consumer of the `gpu` WhenClause field._ | | |
+| [#1776: feat(recipe): add tsuku-llm and GPU runtime dependency recipes](https://github.com/tsukumogami/tsuku/issues/1776) | [#1775](https://github.com/tsukumogami/tsuku/issues/1775) | testable |
+| _Creates the tsuku-llm recipe with GPU-filtered steps (CUDA for NVIDIA, Vulkan for AMD/Intel, CPU for none). Creates nvidia-driver (system PM), cuda-runtime (download from NVIDIA redist), and vulkan-loader (system PM) dependency recipes. First real consumer of the `gpu` WhenClause field._ | | |
 | [#1777: feat(llm): add llm.backend config key](https://github.com/tsukumogami/tsuku/issues/1777) | None | simple |
 | _Registers `llm.backend` in userconfig with `cpu` as the only valid override value. Adds `LLMBackend()` to the `LLMConfig` interface. Independent of GPU detection, can start in parallel._ | | |
 | [#1778: refactor(llm): migrate addon from embedded manifest to recipe system](https://github.com/tsukumogami/tsuku/issues/1778) | [#1776](https://github.com/tsukumogami/tsuku/issues/1776), [#1777](https://github.com/tsukumogami/tsuku/issues/1777) | critical |
 | _Removes the embedded manifest, download, platform key, and verification code from the addon package. Replaces `EnsureAddon()` with recipe-based installation via an injected `Installer` interface. Wires `llm.backend=cpu` override and cleans up legacy addon paths._ | | |
 | [#1779: feat(llm): add structured error for backend init failure](https://github.com/tsukumogami/tsuku/issues/1779) | None | simple |
 | _Adds a clear stderr message in the Rust binary when the compiled-in GPU backend fails to initialize, suggesting `tsuku config set llm.backend cpu`. Informational only, no protocol changes. Independent work in the tsuku-llm repo._ | | |
-| [#1780: test(llm): benchmark Vulkan vs CUDA on shipped models](https://github.com/tsukumogami/tsuku/issues/1780) | [#1776](https://github.com/tsukumogami/tsuku/issues/1776) | testable |
-| _Runs Vulkan and CUDA variants on NVIDIA hardware for 0.5B/1.5B/3B models, measuring tokens/second. The 25% gap threshold gates marking this design as Current. CUDA variant is manually downloaded for benchmarking._ | | |
+| [#1780: test(llm): validate GPU variant performance on shipped models](https://github.com/tsukumogami/tsuku/issues/1780) | [#1776](https://github.com/tsukumogami/tsuku/issues/1776) | testable |
+| _Validates CUDA variant on NVIDIA hardware and Vulkan variant on AMD/Intel for 0.5B/1.5B/3B models, measuring tokens/second. Confirms GPU acceleration provides meaningful speedup over CPU. Must pass before this design is marked Current._ | | |
 | [#1786: test(recipe): validate tsuku-llm recipe against release pipeline and document user experience](https://github.com/tsukumogami/tsuku/issues/1786) | [#1776](https://github.com/tsukumogami/tsuku/issues/1776) | testable |
 | _Validates every `asset_pattern` against actual release artifact names, configures `supported_os`/`supported_arch`/`supported_libc` metadata so unsupported platforms get clear errors, and documents the user-facing experience this milestone delivers vs. what's deferred._ | | |
 
@@ -65,14 +70,14 @@ graph TD
     end
 
     subgraph Phase2["Phase 2: Recipes + Config"]
-        I1776["#1776: tsuku-llm + vulkan-loader recipes"]
+        I1776["#1776: tsuku-llm + GPU runtime recipes"]
         I1777["#1777: llm.backend config key"]
     end
 
     subgraph Phase3["Phase 3: Migration + Validation"]
         I1778["#1778: Migrate addon to recipe system"]
         I1779["#1779: Structured error for backend..."]
-        I1780["#1780: Benchmark Vulkan vs CUDA"]
+        I1780["#1780: Validate GPU variant perf"]
         I1786["#1786: Validate recipe + document UX"]
     end
 
@@ -101,21 +106,24 @@ graph TD
 
 When this milestone is complete, users get:
 
-- **Linux with NVIDIA/AMD/Intel GPU**: `tsuku install tsuku-llm` automatically detects the GPU and installs the Vulkan variant. The Vulkan loader library is verified as a dependency.
+- **Linux with NVIDIA GPU**: `tsuku install tsuku-llm` detects the GPU, installs the CUDA variant, and provisions the CUDA runtime libraries as a managed dependency. The nvidia driver is verified (and installed if needed) via system package manager.
+- **Linux with AMD/Intel GPU**: `tsuku install tsuku-llm` detects the GPU and installs the Vulkan variant. The Vulkan loader is verified (and installed if needed) via system package manager.
 - **Linux without GPU**: `tsuku install tsuku-llm` installs the CPU variant automatically.
 - **macOS (ARM64 or AMD64)**: `tsuku install tsuku-llm` installs the Metal variant.
 - **Manual override**: `tsuku config set llm.backend cpu` forces the CPU variant regardless of detected GPU.
 - **Unsupported platforms**: Users on musl/Alpine Linux, unsupported architectures, or other uncovered combinations get a clear error message explaining what's supported and why.
 - **Runtime failures**: If the GPU backend fails at startup, the Rust binary prints a clear error to stderr suggesting the CPU override.
 - **Ecosystem-wide GPU filtering**: Any recipe can use `when = { gpu = ["nvidia", "amd"] }` for GPU-aware step selection.
+- **Reusable GPU runtime recipes**: `nvidia-driver`, `cuda-runtime`, and `vulkan-loader` are standard recipes available to any tool that needs GPU compute dependencies.
 
 What's deferred to future work:
 
-- **CUDA variant selection**: Pending benchmark results (#1780). All GPU vendors get Vulkan initially.
+- **Vulkan variant for NVIDIA**: NVIDIA hardware gets CUDA by default. Users who want Vulkan on NVIDIA would need a future variant selection mechanism.
 - **Windows support**: The pipeline builds a Windows CPU variant but the recipe doesn't include it yet.
-- **Automatic runtime fallback**: If the Vulkan backend fails, users must manually set `llm.backend cpu`. Automatic detection and reinstallation is deferred.
+- **Automatic runtime fallback**: If the GPU backend fails, users must manually set `llm.backend cpu`. Automatic detection and reinstallation is deferred.
 - **musl/Alpine Linux**: No musl-linked variants are built.
-- **Multiple CUDA versions**: Only CUDA 12.4 is built. Older driver compatibility isn't addressed.
+- **Multiple CUDA versions**: Only the CUDA version matching the CI build is shipped. Older driver compatibility isn't addressed.
+- **Selective CUDA components**: The cuda-runtime recipe installs the minimal runtime. Recipes needing cuBLAS, cuFFT, or cuDNN would need additional component recipes.
 
 ## Upstream Design Reference
 
@@ -155,7 +163,9 @@ This creates concrete problems:
 - GPU vendor detection in the `platform` package (Linux sysfs, macOS system profiler)
 - `gpu` field added to `Matchable` interface and `WhenClause`
 - tsuku-llm converted from addon-with-embedded-manifest to standard recipe
-- GPU driver packages (Vulkan loader, CUDA runtime) as library recipes
+- GPU compute runtimes as standard recipes: `cuda-runtime` (download from NVIDIA redist), `nvidia-driver` (system PM actions), `vulkan-loader` (system PM actions)
+- NVIDIA hardware gets the CUDA variant by default (better native performance)
+- AMD/Intel hardware gets the Vulkan variant
 - Cleanup of addon manifest/download code (replaced by recipe system)
 - Addon lifecycle code retained for daemon management
 
@@ -163,10 +173,10 @@ This creates concrete problems:
 - Automatic runtime fallback when GPU backend fails (deferred until detection accuracy is measured; manual override via `llm.backend` config is the escape hatch)
 - Vulkan VRAM detection fix (standalone Rust bug, separate issue)
 - Windows GPU support (only CPU variant exists today)
-- Shipping multiple CUDA versions (e.g., CUDA 11 + CUDA 12)
+- Shipping multiple CUDA versions (e.g., CUDA 11 + CUDA 12; only the version matching the CI build is shipped)
 - Dynamic backend loading within a single binary (llama.cpp's `GGML_BACKEND_DL` mode)
 - General recipe "variant selection" mechanism (tsuku-llm handles override via LLM-specific config)
-- CUDA variant selection (deferred until Vulkan vs CUDA benchmarks are complete; Vulkan serves all GPU vendors initially)
+- Vulkan variant for NVIDIA hardware (CUDA is preferred; users who want Vulkan on NVIDIA would need a future variant selection mechanism)
 
 ## Decision Drivers
 
@@ -283,10 +293,18 @@ when = { os = ["darwin"], arch = "amd64" }
 repo = "tsukumogami/tsuku-llm"
 asset_pattern = "tsuku-llm-v{version}-darwin-amd64"
 
-# Linux AMD64: Vulkan for any GPU (avoids CUDA driver coupling)
+# Linux AMD64: CUDA for NVIDIA (native performance, tsuku provisions runtime)
 [[steps]]
 action = "github_file"
-when = { os = ["linux"], arch = "amd64", gpu = ["nvidia", "amd", "intel"] }
+when = { os = ["linux"], arch = "amd64", gpu = ["nvidia"] }
+dependencies = ["cuda-runtime"]
+repo = "tsukumogami/tsuku-llm"
+asset_pattern = "tsuku-llm-v{version}-linux-amd64-cuda"
+
+# Linux AMD64: Vulkan for AMD/Intel
+[[steps]]
+action = "github_file"
+when = { os = ["linux"], arch = "amd64", gpu = ["amd", "intel"] }
 dependencies = ["vulkan-loader"]
 repo = "tsukumogami/tsuku-llm"
 asset_pattern = "tsuku-llm-v{version}-linux-amd64-vulkan"
@@ -301,7 +319,14 @@ asset_pattern = "tsuku-llm-v{version}-linux-amd64-cpu"
 # Linux ARM64: same pattern
 [[steps]]
 action = "github_file"
-when = { os = ["linux"], arch = "arm64", gpu = ["nvidia", "amd", "intel"] }
+when = { os = ["linux"], arch = "arm64", gpu = ["nvidia"] }
+dependencies = ["cuda-runtime"]
+repo = "tsukumogami/tsuku-llm"
+asset_pattern = "tsuku-llm-v{version}-linux-arm64-cuda"
+
+[[steps]]
+action = "github_file"
+when = { os = ["linux"], arch = "arm64", gpu = ["amd", "intel"] }
 dependencies = ["vulkan-loader"]
 repo = "tsukumogami/tsuku-llm"
 asset_pattern = "tsuku-llm-v{version}-linux-arm64-vulkan"
@@ -324,11 +349,11 @@ command = "tsuku-llm --version"
 pattern = "{version}"
 ```
 
-The `gpu` conditions are mutually exclusive because `GPU()` returns exactly one value. On a system with an NVIDIA GPU, `GPU()` returns `"nvidia"`, which matches the Vulkan step (since `"nvidia"` is in `["nvidia", "amd", "intel"]`). On a system with no GPU, `GPU()` returns `"none"`, which matches the CPU step. No step matches both.
+The `gpu` conditions are mutually exclusive because `GPU()` returns exactly one value. On a system with an NVIDIA GPU, `GPU()` returns `"nvidia"`, which matches the CUDA step. On a system with an AMD GPU, `GPU()` returns `"amd"`, which matches the Vulkan step. On a system with no GPU, `GPU()` returns `"none"`, which matches the CPU step. No step matches more than one hardware configuration.
 
-The recipe maps all GPU vendors to the Vulkan variant on Linux. This is a product decision: Vulkan works across NVIDIA, AMD, and Intel without driver version coupling. Users who want CPU-only can override via `llm.backend = cpu` config.
+The recipe maps each GPU vendor to the best backend for that hardware. NVIDIA hardware gets the CUDA variant because CUDA is NVIDIA's native compute API and provides the best performance on NVIDIA GPUs. AMD and Intel hardware get the Vulkan variant because Vulkan is the cross-vendor GPU compute API that works across both. Users who want CPU-only regardless of hardware can override via `llm.backend = cpu` config.
 
-Step-level `dependencies = ["vulkan-loader"]` pulls in the Vulkan loader library only when the Vulkan step matches. On no-GPU systems, no driver dependency is installed. This uses existing recipe dependency filtering (steps that don't match the target have their dependencies skipped).
+Step-level dependencies pull in the right GPU runtime for each variant. The CUDA step depends on `cuda-runtime` (which tsuku downloads from NVIDIA's redistributable tarballs). The Vulkan steps depend on `vulkan-loader` (which tsuku verifies via system package manager actions). On no-GPU systems, no GPU runtime dependency is installed. This uses existing recipe dependency filtering (steps that don't match the target have their dependencies skipped).
 
 The addon lifecycle code (server start/stop, gRPC socket, health checks, idle timeout) stays in `internal/llm/`. It doesn't move to the recipe system because daemon management has no recipe equivalent. What changes is how it finds the binary: instead of downloading via embedded manifest, it looks for the recipe-installed binary at the standard `$TSUKU_HOME/tools/tsuku-llm-<version>/` path.
 
@@ -358,27 +383,73 @@ Deferred (not rejected). This is the right long-term answer but adds complexity 
 **Pre-download CPU alongside GPU**: Always download both the GPU variant and CPU variant.
 Rejected because it doubles download size for every Linux user to cover an uncommon failure case.
 
+### Decision 5: How GPU Compute Runtimes Are Provisioned
+
+GPU hardware detection tells us what GPU is present, but running a GPU-accelerated binary also requires compute runtime libraries (CUDA for NVIDIA, Vulkan loader for cross-vendor). The question is how tsuku handles these: are they system dependencies the user must install manually, or can tsuku manage them?
+
+The distinction matters because of a precedent: tsuku treats glibc/musl as system identity (detect and adapt, never install). GPU compute runtimes could follow that same pattern, or they could follow the pattern of dependencies like openssl and zlib that tsuku actively manages.
+
+#### Chosen: GPU runtimes are standard recipes; action types match distribution method
+
+GPU compute runtimes follow the existing convention: **everything is a recipe, and the action type determines the installation mechanism.** This is the same pattern used by the docker recipe (brew_cask on macOS, apt_install on Debian, dnf_install on Fedora) and library recipes like openssl (homebrew bottles on glibc, apk on musl).
+
+Unlike glibc/musl (which are the system's identity and can't be swapped), GPU runtimes are installable software. CUDA is more like zlib than like glibc — it's a dependency tsuku can provision. NVIDIA provides standalone redistributable tarballs at `developer.download.nvidia.com/compute/cuda/redist/` with per-component downloads, JSON manifests, and SHA256 checksums. This is the same distribution model that conda uses to install CUDA in user space, proven at scale.
+
+The dependency chain for each GPU variant:
+
+```
+tsuku-llm (cuda step, nvidia hardware)
+  └── cuda-runtime recipe (download_archive from NVIDIA redist → $TSUKU_HOME)
+        └── nvidia-driver recipe (apt_install / dnf_install / pacman_install)
+
+tsuku-llm (vulkan step, amd/intel hardware)
+  └── vulkan-loader recipe (apt_install / dnf_install / pacman_install)
+
+tsuku-llm (cpu step, no GPU)
+  └── (no GPU dependencies)
+```
+
+Each component uses the action type that matches how it's distributed:
+
+| Component | Action type | Why |
+|-----------|------------|-----|
+| CUDA runtime libs | `download_archive` | NVIDIA provides redistributable tarballs, installable to `$TSUKU_HOME` without root |
+| NVIDIA GPU driver | `apt_install` / `dnf_install` / etc. | Kernel-coupled, requires root, distributed via system package managers |
+| Vulkan loader | `apt_install` / `dnf_install` / etc. | Already installed on most GPU-equipped Linux systems, distributed via system PMs |
+
+The key boundary: `libcuda.so` (the driver-level CUDA interface) is kernel-coupled and must come from the system's nvidia-driver package. Everything above it in the CUDA stack — `libcudart`, `libcublas`, etc. — can live in user space.
+
+#### Alternatives Considered
+
+**System dependency only (verify, don't install)**: Treat CUDA like the current cuda.toml recipe: `require_command` + manual instructions.
+Rejected because NVIDIA explicitly provides redistributable tarballs for this use case. Telling users to "go install CUDA yourself" when tsuku can download the exact components needed is a poor UX that violates tsuku's self-contained philosophy.
+
+**Detect installed runtimes instead of hardware**: Probe for `libcuda.so`, `libvulkan.so` on the filesystem and select the binary that matches available runtimes.
+Rejected because it detects software state, not hardware fact. A system with an NVIDIA GPU but no CUDA installed yet would probe as "no CUDA" and get the wrong binary. Since tsuku can install CUDA as a dependency, the right approach is: detect hardware, pick the best backend for that hardware, and provision the runtime.
+
 ## Decision Outcome
 
 ### Summary
 
 The platform detection system gains GPU vendor identification as a new dimension alongside OS, architecture, Linux family, and libc. On Linux, detection reads PCI device class and vendor files from sysfs, returning one of `nvidia`, `amd`, `intel`, or `none`. On macOS, detection returns `apple`. The `Matchable` interface gains `GPU() string`, `platform.Target` gains a `gpu` field populated during `DetectTarget()`, and `WhenClause` gains a `gpu []string` filter.
 
-tsuku-llm becomes a standard recipe with `when` clauses that filter on the `gpu` field. All GPU vendors get the Vulkan variant on Linux (avoiding CUDA driver coupling), no-GPU systems get the CPU variant, and macOS gets Metal. The Vulkan loader becomes a library recipe dependency, verified via `require_command` (following the same no-sudo pattern as the existing `cuda.toml` recipe).
+tsuku-llm becomes a standard recipe with `when` clauses that filter on the `gpu` field. NVIDIA hardware gets the CUDA variant (best native performance), AMD/Intel get Vulkan, no-GPU systems get CPU, and macOS gets Metal. GPU compute runtimes are provisioned as standard recipes: `cuda-runtime` downloads NVIDIA's redistributable tarballs to `$TSUKU_HOME`, `nvidia-driver` and `vulkan-loader` use system package manager actions. This follows the existing convention that everything is a recipe — the action type determines the installation mechanism.
 
 The addon lifecycle code stays in `internal/llm/`. It still manages the gRPC server, socket, health checks, and idle timeout. But binary installation moves from the embedded manifest to the recipe system. `EnsureAddon()` checks whether `tsuku-llm` is installed via the recipe system, triggers installation if needed, and finds the binary at the standard tools path.
 
-Users who want to force the CPU variant set `llm.backend = cpu` in `$TSUKU_HOME/config.toml`. The LLM lifecycle code handles this override by setting the target's GPU to `"none"` before plan generation, which selects the CPU recipe step. CUDA variant selection is deferred until benchmarks validate the Vulkan-default choice.
+Users who want to force the CPU variant set `llm.backend = cpu` in `$TSUKU_HOME/config.toml`. The LLM lifecycle code handles this override by setting the target's GPU to `"none"` before plan generation, which selects the CPU recipe step.
 
 When a GPU variant fails at runtime, the Rust binary logs a clear error to stderr suggesting `tsuku config set llm.backend cpu` as a workaround. Automatic fallback is deferred.
 
 ### Rationale
 
-These decisions reinforce each other. Platform-level GPU detection means the recipe system can filter on GPU without any special cases. The recipe's `when` clauses provide variant selection using the same mechanism that already handles libc, Linux family, and architecture filtering. Step-level dependencies mean driver packages are only installed when the matching step activates.
+These decisions form a coherent stack. At the bottom, platform-level GPU detection identifies hardware — an immutable fact about the system, like OS or architecture. In the middle, `WhenClause` filtering lets recipes map hardware to the right binary variant, using the same mechanism that handles libc, Linux family, and architecture filtering. At the top, GPU compute runtimes are managed as standard recipes with action types matching how each component is distributed.
+
+The separation between hardware detection (platform layer) and runtime provisioning (recipe layer) is important. tsuku detects that the system has NVIDIA hardware. The tsuku-llm recipe decides that NVIDIA hardware should get the CUDA variant. The cuda-runtime recipe provisions the CUDA libraries. The nvidia-driver recipe ensures the kernel driver is present. Each layer does one thing.
+
+CUDA is the right default for NVIDIA because it's NVIDIA's native compute API. Unlike the Vulkan path (which requires a cross-vendor loader and ICD driver layer), CUDA talks directly to the NVIDIA driver. Since tsuku can install the CUDA runtime libraries in user space (NVIDIA provides redistributable tarballs for exactly this purpose), there's no reason to add a Vulkan indirection layer on hardware that has a better native option. AMD and Intel get Vulkan because Vulkan is their cross-vendor compute API.
 
 Converting tsuku-llm to a recipe eliminates the only non-recipe binary distribution path in tsuku. The addon package loses its embedded manifest, download code, platform key translation, and verification code. What remains is the daemon lifecycle, which is genuinely unique to tsuku-llm (no other recipe manages a long-running server).
-
-The Vulkan-by-default choice for all Linux GPU vendors simplifies the recipe (one GPU step instead of one per vendor) and avoids CUDA driver version issues. The `llm.backend = cpu` override covers the main failure case (GPU detection correct but backend doesn't work), and CUDA variant selection can be added later once benchmarks and a recipe variant mechanism make it practical.
 
 ## Solution Architecture
 
@@ -501,16 +572,87 @@ The `llm.backend` override works by modifying the target's GPU value before plan
 
 | Config value | Target GPU override | Effect |
 |---|---|---|
-| (unset) | (no override, use detected value) | Auto-selects Vulkan or CPU based on hardware |
-| `cpu` | `none` | Forces CPU step |
+| (unset) | (no override, use detected value) | Auto-selects CUDA/Vulkan/CPU based on hardware |
+| `cpu` | `none` | Forces CPU step regardless of GPU hardware |
 
-Only the `cpu` override is needed initially because all GPU vendors map to Vulkan. CUDA variant selection is deferred until benchmarks validate the Vulkan-by-default choice. If CUDA support is added later, it will require a recipe variant mechanism (either a new recipe step with disambiguation, or a general variant selection feature) rather than simple GPU override.
+Only the `cpu` override is needed initially. Each GPU vendor maps to exactly one backend (NVIDIA → CUDA, AMD/Intel → Vulkan), so there's no ambiguity to resolve. A future variant selection mechanism could allow forcing Vulkan on NVIDIA hardware, but that's out of scope.
 
-**Edge case**: If a user sets `llm.backend = cpu` on a system that already has the Vulkan variant installed, the LLM code should reinstall with the CPU variant. If a user sets a value that doesn't map to any recipe step (e.g., `vulkan` on a no-GPU system where GPU is `"none"`), the LLM code should warn and fall back to the detected value.
+**Edge case**: If a user sets `llm.backend = cpu` on a system that already has a GPU variant installed, the LLM code should reinstall with the CPU variant.
 
-### GPU Driver Library Recipes
+### GPU Runtime Dependency Recipes
 
-GPU drivers become library recipes, installed as conditional dependencies of the tsuku-llm recipe's GPU steps.
+GPU compute runtimes are standard recipes. The action type in each step determines the installation mechanism, following the same convention used by docker.toml (brew_cask on macOS, apt_install on Debian, dnf_install on Fedora) and library recipes like openssl.
+
+**`recipes/n/nvidia-driver.toml`** (sketch):
+```toml
+[metadata]
+name = "nvidia-driver"
+description = "NVIDIA GPU kernel driver"
+supported_os = ["linux"]
+
+# Debian/Ubuntu
+[[steps]]
+action = "apt_install"
+packages = ["nvidia-driver"]
+
+# Fedora/RHEL
+[[steps]]
+action = "dnf_install"
+packages = ["akmod-nvidia"]
+
+# Arch Linux
+[[steps]]
+action = "pacman_install"
+packages = ["nvidia"]
+
+# openSUSE
+[[steps]]
+action = "zypper_install"
+packages = ["nvidia-driver-G06-kmp-default"]
+
+# Verify driver is functional
+[[steps]]
+action = "require_command"
+command = "nvidia-smi"
+
+[verify]
+command = "nvidia-smi --query-gpu=driver_version --format=csv,noheader"
+pattern = "{version}"
+```
+
+**`recipes/c/cuda-runtime.toml`** (sketch):
+```toml
+[metadata]
+name = "cuda-runtime"
+description = "NVIDIA CUDA runtime libraries"
+type = "library"
+supported_os = ["linux"]
+dependencies = ["nvidia-driver"]
+
+# Download CUDA runtime from NVIDIA redistributable tarballs
+# The NVIDIA redist index provides per-component .tar.xz archives
+# with JSON manifests and SHA256 checksums
+[[steps]]
+action = "download_archive"
+url = "https://developer.download.nvidia.com/compute/cuda/redist/cuda_cudart/linux-x86_64/cuda_cudart-linux-x86_64-{version}-archive.tar.xz"
+when = { os = ["linux"], arch = "amd64" }
+archive_format = "tar.xz"
+strip_dirs = 1
+
+[[steps]]
+action = "download_archive"
+url = "https://developer.download.nvidia.com/compute/cuda/redist/cuda_cudart/linux-aarch64/cuda_cudart-linux-aarch64-{version}-archive.tar.xz"
+when = { os = ["linux"], arch = "arm64" }
+archive_format = "tar.xz"
+strip_dirs = 1
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = ["lib/libcudart.so"]
+```
+
+The `cuda-runtime` recipe depends on `nvidia-driver`. When tsuku resolves this dependency chain, the nvidia-driver recipe's system PM steps verify (and can install) the kernel driver, then the cuda-runtime recipe downloads the user-space CUDA libraries from NVIDIA's redistributable archive to `$TSUKU_HOME`. The `libcuda.so` driver interface is provided by the nvidia-driver package — it's kernel-coupled and must come from the system's package manager.
 
 **`recipes/v/vulkan-loader.toml`** (sketch):
 ```toml
@@ -520,13 +662,30 @@ description = "Vulkan ICD loader library"
 type = "library"
 supported_os = ["linux"]
 
-# Verify Vulkan loader is installed (tsuku doesn't install system libraries)
+# Debian/Ubuntu
 [[steps]]
-action = "require_command"
-command = "ldconfig"
-version_flag = "-p"
-version_regex = "libvulkan\\.so\\.1"
-note = "Install via your system package manager: apt install libvulkan1 (Debian/Ubuntu), dnf install vulkan-loader (Fedora), pacman -S vulkan-icd-loader (Arch)"
+action = "apt_install"
+packages = ["libvulkan1"]
+
+# Fedora/RHEL
+[[steps]]
+action = "dnf_install"
+packages = ["vulkan-loader"]
+
+# Arch Linux
+[[steps]]
+action = "pacman_install"
+packages = ["vulkan-icd-loader"]
+
+# Alpine
+[[steps]]
+action = "apk_install"
+packages = ["vulkan-loader"]
+
+# openSUSE
+[[steps]]
+action = "zypper_install"
+packages = ["libvulkan1"]
 
 [verify]
 command = "ldconfig -p"
@@ -534,9 +693,9 @@ mode = "output"
 pattern = "libvulkan"
 ```
 
-This follows the same pattern as the existing `cuda.toml` recipe: verify the dependency exists, tell the user how to install it if missing, but don't run sudo commands. Most Linux systems with a GPU already have the Vulkan loader installed via the desktop environment or GPU driver packages.
+The vulkan-loader recipe uses system PM actions because the Vulkan loader is distributed via system package managers on every major Linux distribution. Most systems with a GPU already have it installed. The recipe ensures it's present and provides the right installation command per distro if it's missing.
 
-The tsuku-llm recipe's Vulkan steps declare `dependencies = ["vulkan-loader"]`. When the step matches (any GPU vendor), the loader is verified first. When the CPU step matches (no GPU), no driver dependency is checked.
+The tsuku-llm recipe's CUDA steps declare `dependencies = ["cuda-runtime"]` (which transitively pulls in nvidia-driver). The Vulkan steps declare `dependencies = ["vulkan-loader"]`. The CPU steps have no GPU dependencies. Step-level dependencies mean only the dependencies for the matching step are resolved.
 
 ### Rust-side Error Reporting
 
@@ -586,11 +745,21 @@ To minimize churn across test files, consider adding a `TargetWithGPU(target Tar
 11. Unit tests for GPU detection (mock sysfs directory structure)
 12. Unit tests for WhenClause GPU matching
 
-### Phase 2: tsuku-llm Recipe + Addon Refactor
+### Phase 2: GPU Runtime Dependency Recipes
 
-Depends on Phase 1 being validated (sysfs detection works correctly on target systems). Start only after Phase 1 ships and we have confidence in GPU detection accuracy.
+Depends on Phase 1 being validated. Can be developed in parallel with the addon refactor.
 
-1. Create `recipes/t/tsuku-llm.toml` with GPU-filtered steps (Vulkan + CPU only, no CUDA initially)
+1. Create `recipes/n/nvidia-driver.toml` (system PM actions per distro family)
+2. Create `recipes/c/cuda-runtime.toml` (download from NVIDIA redist, depends on nvidia-driver)
+3. Create `recipes/v/vulkan-loader.toml` (system PM actions per distro family)
+4. Test dependency chains: cuda-runtime → nvidia-driver, vulkan-loader standalone
+5. Test that missing system packages give clear error with installation commands
+
+### Phase 3: tsuku-llm Recipe + Addon Refactor
+
+Depends on Phases 1 and 2.
+
+1. Create `recipes/t/tsuku-llm.toml` with GPU-filtered steps (CUDA for nvidia, Vulkan for amd/intel, CPU for none)
 2. Add `llm.backend` config key to `userconfig` (Get/Set/AvailableKeys) — initially only `cpu` override
 3. Add `LLMBackend() string` to `LLMConfig` interface in `factory.go`
 4. Refactor `AddonManager`: remove manifest/download code, add recipe-based installation via injected `Installer` interface (not direct import of `internal/executor/`)
@@ -600,22 +769,17 @@ Depends on Phase 1 being validated (sysfs detection works correctly on target sy
 8. Remove embedded `manifest.json`, `platform.go`, `download.go`, `verify.go` from addon package
 9. Integration test: verify correct variant selection on current host
 
-### Phase 3: GPU Driver Library Recipes
-
-1. Create `recipes/v/vulkan-loader.toml` (library recipe, `require_command` pattern — no sudo)
-2. Test dependency chain: tsuku-llm → vulkan-loader on a GPU system
-3. Test that missing Vulkan loader gives a clear error with installation instructions
-
-### Phase 4: Testing and Benchmarking
+### Phase 4: Testing and Validation
 
 1. End-to-end test: `tsuku install tsuku-llm` on systems with different GPU vendors
 2. Test `llm.backend` config override path
 3. Test no-GPU fallback to CPU variant
-4. Benchmark Vulkan vs CUDA on NVIDIA hardware for shipped models
+4. Validate CUDA performance on NVIDIA hardware for shipped models
+5. Validate Vulkan performance on AMD/Intel hardware
 
-### Benchmark Gate
+### Performance Validation
 
-Before shipping Vulkan as the default Linux GPU backend, benchmark Vulkan vs CUDA performance on the models we ship (0.5B, 1.5B, 3B). If the gap exceeds 25% on tokens/second, reconsider the default. This benchmark can be informal (run both variants on the same machine, compare throughput) but must happen before this design is marked Current.
+Run the CUDA variant on NVIDIA hardware for the models we ship (0.5B, 1.5B, 3B). Measure tokens/second and compare against the CPU variant to confirm GPU acceleration works as expected. This validation can be informal (run on a dev machine, confirm meaningful speedup) but must happen before this design is marked Current.
 
 ## Security Considerations
 
@@ -624,6 +788,8 @@ Before shipping Vulkan as the default Linux GPU backend, benchmark Vulkan vs CUD
 With the addon, SHA256 checksums are embedded in the Go binary at compile time via `//go:embed manifest.json`. This is tamper-proof: you can't change the checksums without rebuilding tsuku.
 
 With the recipe approach, checksums live in the recipe file (`recipes/t/tsuku-llm.toml`). Recipe checksums are git-tracked and CI-validated, but they can be updated via `tsuku update-registry`. This is the same security model used by every other recipe in tsuku (all 200+ tools). If the registry is compromised, all tools are at risk, not just tsuku-llm.
+
+The cuda-runtime recipe downloads from NVIDIA's redistributable archive (`developer.download.nvidia.com`). These tarballs have SHA256 checksums in NVIDIA's JSON manifests. The recipe should pin specific component versions and validate checksums, same as any other download action.
 
 The pre-execution SHA256 verification (`VerifyBeforeExecution`) can be retained by reading the plan's stored checksum and re-verifying before each server launch. This catches binary tampering after installation.
 
@@ -639,7 +805,7 @@ GPU detection uses `os.ReadFile` on sysfs files (`/sys/bus/pci/devices/*/class`,
 
 The release pipeline produces signed binaries with checksums. Adding more variants (from 5 to 10 entries in the recipe) doesn't change the signing infrastructure. Each variant's URL points to the same GitHub release page. The `github_file` action computes checksums dynamically during plan generation (standard recipe behavior), and the plan is cached.
 
-One new risk surface: the GPU driver library recipes (`vulkan-loader`, `cuda-runtime`) install system packages via `apt_install`, `dnf_install`, etc. These trust the system's package manager and its configured repositories. This is the same trust model used by existing system-dependency recipes.
+New risk surfaces: The `nvidia-driver` and `vulkan-loader` recipes use system package manager actions (`apt_install`, `dnf_install`, etc.). These trust the system's package manager and its configured repositories — the same trust model used by the existing docker recipe and other system dependency recipes. The `cuda-runtime` recipe downloads from NVIDIA's CDN (`developer.download.nvidia.com`), which is a new download origin but one operated by the GPU vendor. The NVIDIA redist JSON manifests include SHA256 checksums for verification.
 
 ### User data exposure
 
@@ -651,10 +817,12 @@ No change. GPU detection reads only PCI device metadata from sysfs (vendor ID, d
 
 - GPU becomes a first-class platform dimension. Any recipe can use `when = { gpu = ["nvidia"] }` to filter steps, not just tsuku-llm.
 - Users with GPUs automatically get GPU-accelerated inference without manual configuration.
-- Download size stays small (one variant per user).
+- NVIDIA users get the CUDA variant (native performance) with the runtime libraries managed by tsuku. No manual CUDA installation needed.
+- Download size stays small (one variant per user, plus runtime libraries as needed).
 - tsuku-llm becomes a regular recipe, removing the only non-recipe binary distribution path in tsuku.
 - The addon package shrinks significantly. Manifest parsing, download logic, platform key translation, and verification code are removed.
-- GPU driver packages become installable library recipes, bringing driver management into the same system as everything else.
+- GPU runtimes follow the existing "everything is a recipe" convention. nvidia-driver uses system PM actions (like docker), cuda-runtime uses download actions (like any tool), vulkan-loader uses system PM actions. No new patterns.
+- The separation of hardware detection (platform layer) from runtime provisioning (recipe layer) means tsuku doesn't have opinions about backends — recipes make that choice.
 
 ### Negative
 
@@ -662,11 +830,12 @@ No change. GPU detection reads only PCI device metadata from sysfs (vendor ID, d
 - The addon refactor is a significant change. `EnsureAddon()` changes from direct download to recipe system delegation. The addon package must use an injected installer interface rather than importing `internal/executor/` directly, to preserve dependency direction.
 - PCI sysfs detection is Linux-specific. macOS returns a constant (`apple`), Windows returns `none`. If Windows GPU support is needed later, a new detection backend (DXGI or WMI) must be added.
 - Existing tsuku-llm installations re-download on first run after upgrading, since the binary moves from the addon path to the recipe tools path.
-- CUDA variant selection is deferred. Users who specifically want CUDA over Vulkan must wait for benchmarks and a follow-up design that adds a CUDA step without creating matching ambiguity in the recipe system.
+- CUDA runtime libraries add download size for NVIDIA users. The minimal set (`cuda_cudart`) is ~1 MB, but if the tsuku-llm binary links against additional CUDA libraries, the dependency could grow.
+- System PM actions for nvidia-driver and vulkan-loader may require sudo. tsuku's current system PM actions verify/install via the system package manager, which may prompt for elevated privileges. This matches the docker recipe precedent but is a step beyond tsuku's "no sudo" default.
 
 ### Risks
 
-- We haven't benchmarked Vulkan vs CUDA for the models we ship. The benchmark gate (25% threshold) must pass before marking this design Current.
-- PCI sysfs detection doesn't verify driver functionality. A system with an NVIDIA GPU but broken drivers would get the Vulkan variant, which might also fail. The manual `llm.backend cpu` override is the escape hatch.
+- PCI sysfs detection doesn't verify driver functionality. A system with an NVIDIA GPU but no driver installed would get the CUDA variant, triggering nvidia-driver installation via system PM. If the user can't install the driver (no sudo, unsupported GPU), the `llm.backend cpu` override is the escape hatch.
+- CUDA runtime version must be compatible with the installed NVIDIA driver. Newer CUDA requires newer drivers. The cuda-runtime recipe should detect the driver version (via `nvidia-smi`) and warn if incompatible.
 - The addon-to-recipe migration touches the LLM initialization path, which is timing-sensitive (server startup, socket readiness, health checks). The refactor must preserve the existing lifecycle guarantees.
 - Adding `GPU() string` to the `Matchable` interface is a breaking change. Both implementations are internal, but any code that constructs `MatchTarget` or `Target` must be updated.
