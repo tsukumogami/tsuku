@@ -2,7 +2,7 @@
   "design_doc": "docs/designs/DESIGN-gpu-backend-selection.md",
   "branch": "docs/gpu-backend-selection",
   "pr_number": 1770,
-  "integrity_hash": "sha256:33179bb1537fb6008d0ddb37b0c78f090451d639bcd8291069c3fd888c47915b",
+  "integrity_hash": "sha256:08a08eebf0cc4e7e9c7f2a7c0124815e505b75ee8411a510cc3fc1f86c812e3f",
   "issues": [
     {
       "number": 1773,
@@ -481,8 +481,8 @@
     {
       "number": 1778,
       "title": "refactor(llm): migrate addon from embedded manifest to recipe system",
-      "status": "pushed",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "ci_fix_attempts": 0,
       "issue_type": "code",
       "dependencies": [
@@ -545,14 +545,49 @@
     {
       "number": 1779,
       "title": "feat(llm): add structured error for backend init failure",
-      "status": "pending",
+      "status": "pushed",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [],
-      "commits": [],
-      "agent_type": "",
-      "summary": null,
+      "commits": [
+        "14d306d220fddd4b4ab3219c1eb35a826847e9f6"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          "tsuku-llm/src/hardware.rs",
+          "tsuku-llm/src/main.rs"
+        ],
+        "tests_added": 5,
+        "key_decisions": "Added error formatting to hardware.rs since it depends on hardware types. compiled_backend() uses cfg(feature) for compile-time detection. Error emitted at model loading and context creation failure points."
+      },
+      "reviewer_results": {
+        "issue": 1779,
+        "reviews": [
+          {
+            "focus": "pragmatic",
+            "blocking_count": 1,
+            "advisory_count": 2,
+            "detail_file": "wip/research/implement-doc_review_pragmatic_issue1779.md"
+          },
+          {
+            "focus": "architect",
+            "blocking_count": 0,
+            "advisory_count": 1,
+            "detail_file": "wip/research/implement-doc_review_architect_issue1779.md"
+          },
+          {
+            "focus": "maintainer",
+            "blocking_count": 1,
+            "advisory_count": 3,
+            "detail_file": "wip/research/implement-doc_review_maintainer_issue1779.md"
+          }
+        ],
+        "disposition": "pass",
+        "disposition_rationale": "Pragmatic B1 (describe_detected_hardware wrapper): provides title-cased names for user messages vs Display lowercase - intentional formatting difference, not dead code. Maintainer B1 (error for non-GPU failures): the underlying error is logged via error!() macro to stderr alongside the structured message. Both diagnostics reach stderr. The issue spec says this is informational only, not parsed by the CLI."
+      },
       "testable_scenarios": []
     },
     {

@@ -1,0 +1,10 @@
+{
+  "issue": 1779,
+  "reviews": [
+    {"focus": "pragmatic", "blocking_count": 1, "advisory_count": 2, "detail_file": "wip/research/implement-doc_review_pragmatic_issue1779.md"},
+    {"focus": "architect", "blocking_count": 0, "advisory_count": 1, "detail_file": "wip/research/implement-doc_review_architect_issue1779.md"},
+    {"focus": "maintainer", "blocking_count": 1, "advisory_count": 3, "detail_file": "wip/research/implement-doc_review_maintainer_issue1779.md"}
+  ],
+  "disposition": "pass",
+  "disposition_rationale": "Pragmatic B1 (describe_detected_hardware wrapper): provides title-cased names for user messages vs Display lowercase - intentional formatting difference, not dead code. Maintainer B1 (error for non-GPU failures): the underlying error is logged via error!() macro to stderr alongside the structured message. Both diagnostics reach stderr. The issue spec says this is informational only, not parsed by the CLI."
+}
