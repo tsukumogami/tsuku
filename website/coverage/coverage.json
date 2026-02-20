@@ -1,21 +1,21 @@
 {
-  "generated_at": "2026-02-20T04:30:31Z",
-  "total_recipes": 320,
+  "generated_at": "2026-02-20T06:11:03Z",
+  "total_recipes": 324,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 320,
-        "total": 320,
+        "supported": 324,
+        "total": 324,
         "pct": 100
       },
       "glibc": {
-        "supported": 320,
-        "total": 320,
+        "supported": 324,
+        "total": 324,
         "pct": 100
       },
       "musl": {
-        "supported": 320,
-        "total": 320,
+        "supported": 324,
+        "total": 324,
         "pct": 100
       }
     },
@@ -26,9 +26,9 @@
         "glibc_support": 13
       },
       "tool": {
-        "total": 307,
-        "musl_support": 307,
-        "glibc_support": 307
+        "total": 311,
+        "musl_support": 311,
+        "glibc_support": 311
       }
     }
   },
@@ -3802,6 +3802,30 @@
       "warnings": null
     },
     {
+      "name": "yaml-language-server",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "yarn",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "yazi",
       "type": "tool",
       "platforms": {
@@ -3815,6 +3839,18 @@
     },
     {
       "name": "yj",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "yo",
       "type": "tool",
       "platforms": {
         "darwin": true,
@@ -3864,6 +3900,18 @@
     {
       "name": "zstd",
       "type": "library",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "zx",
+      "type": "tool",
       "platforms": {
         "darwin": true,
         "glibc": true,
