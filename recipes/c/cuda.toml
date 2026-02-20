@@ -5,6 +5,9 @@ homepage = "https://developer.nvidia.com/cuda-toolkit"
 version_format = "semver"
 # CUDA requires NVIDIA GPU drivers and cannot be installed via tsuku
 supported_os = ["linux"]
+# NOTE: If you only need to run pre-built CUDA binaries (not compile them),
+# use the "cuda-runtime" recipe instead. It provides only libcudart.so
+# from NVIDIA's redistributable archive, without requiring manual installation.
 
 # Manual installation instructions for Linux
 [[steps]]

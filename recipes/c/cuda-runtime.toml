@@ -1,0 +1,61 @@
+# cuda-runtime - NVIDIA CUDA runtime libraries (minimal)
+#
+# Downloads only the cuda_cudart component from NVIDIA's redistributable
+# archive. This provides libcudart.so (the CUDA runtime API) needed to run
+# pre-built CUDA binaries. It does NOT include nvcc, development headers,
+# or other toolkit components -- use the "cuda" recipe for the full toolkit.
+#
+# CUDA version coupling:
+#   The CUDA runtime version must be ABI-compatible with the version used to
+#   compile the consuming binary (e.g., tsuku-llm). If the tsuku-llm CI
+#   pipeline builds against CUDA 12.6, this recipe must provide CUDA 12.6.x
+#   runtime libraries. A mismatch causes runtime initialization failures.
+#   See issue #1791 for release pipeline coordination.
+#
+# NVIDIA redistributable URL format (verified 2026-02-19):
+#   Base: https://developer.download.nvidia.com/compute/cuda/redist/
+#   Index: {base}/redistrib_{cuda_version}.json
+#   Component: {base}/cuda_cudart/{platform}/cuda_cudart-{platform}-{version}-archive.tar.xz
+#   Platforms: linux-x86_64, linux-aarch64 (sbsa for server ARM64)
+#
+#   The {version} in the URL is the component version (e.g., 12.6.77),
+#   which differs from the CUDA toolkit version (e.g., 12.6.3). The JSON
+#   manifest at the index URL maps toolkit versions to component versions.
+#
+# To check available versions:
+#   curl -s https://developer.download.nvidia.com/compute/cuda/redist/redistrib_12.6.3.json \
+#     | jq '.cuda_cudart'
+#
+# Driver compatibility:
+#   CUDA 12.x requires NVIDIA driver >= 525.60. The nvidia-driver dependency
+#   ensures a driver is present, but does not enforce a minimum version.
+
+[metadata]
+name = "cuda-runtime"
+description = "NVIDIA CUDA runtime libraries (libcudart)"
+type = "library"
+supported_os = ["linux"]
+dependencies = ["nvidia-driver"]
+
+# Linux x86_64: Download cuda_cudart from NVIDIA redistributable archive
+[[steps]]
+action = "download_archive"
+url = "https://developer.download.nvidia.com/compute/cuda/redist/cuda_cudart/linux-x86_64/cuda_cudart-linux-x86_64-12.6.77-archive.tar.xz"
+when = { os = ["linux"], arch = "amd64" }
+strip_dirs = 1
+
+# Linux aarch64 (sbsa): Download cuda_cudart from NVIDIA redistributable archive
+[[steps]]
+action = "download_archive"
+url = "https://developer.download.nvidia.com/compute/cuda/redist/cuda_cudart/linux-sbsa/cuda_cudart-linux-sbsa-12.6.77-archive.tar.xz"
+when = { os = ["linux"], arch = "arm64" }
+strip_dirs = 1
+
+# Register the runtime library outputs
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = [
+    "lib/libcudart.so",
+    "lib/libcudart.so.12",
+]
