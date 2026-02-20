@@ -4,7 +4,8 @@
   "version": "2.5.1",
   "platform": {
     "os": "linux",
-    "arch": "amd64"
+    "arch": "amd64",
+    "linux_family": "rhel"
   },
   "deterministic": true,
   "dependencies": [
@@ -100,9 +101,7 @@
           "bin/pkg-config",
           "bin/pkgconf",
           "lib/libpkgconf.so",
-          "lib/libpkgconf.dylib",
           "lib/libpkgconf.so.7",
-          "lib/libpkgconf.7.dylib",
           "lib/libpkgconf.so.7.0.0"
         ]
       },
@@ -111,7 +110,7 @@
     }
   ],
   "verify": {
-    "command": "{install_dir}/bin/pkg-config --version",
+    "command": "pkg-config --version",
     "pattern": "{version}"
   }
 }
