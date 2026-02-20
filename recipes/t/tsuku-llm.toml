@@ -10,7 +10,6 @@
 #   - Linux + NVIDIA GPU: CUDA variant (depends on cuda-runtime)
 #   - Linux + AMD/Intel GPU: Vulkan variant (depends on vulkan-loader)
 #   - Linux + no GPU: CPU variant (no GPU dependencies)
-#   - Windows: CPU only
 #
 # To force the CPU variant regardless of hardware:
 #   tsuku config set llm.backend cpu
@@ -19,9 +18,10 @@
 name = "tsuku-llm"
 description = "Local LLM inference engine"
 homepage = "https://github.com/tsukumogami/tsuku-llm"
-supported_os = ["linux", "darwin", "windows"]
+supported_os = ["linux", "darwin"]
 supported_arch = ["amd64", "arm64"]
 supported_libc = ["glibc"]
+unsupported_reason = "All variants are built against glibc. musl/Alpine Linux is not supported because llama.cpp and CUDA runtime libraries require glibc. Windows is not supported because the release pipeline does not produce Windows artifacts."
 
 [version]
 source = "github_releases"
@@ -93,14 +93,6 @@ action = "github_file"
 when = { os = ["linux"], arch = "arm64", gpu = ["none"] }
 repo = "tsukumogami/tsuku-llm"
 asset_pattern = "tsuku-llm-v{version}-linux-arm64-cpu"
-binary = "tsuku-llm"
-
-# Windows amd64: CPU-only variant
-[[steps]]
-action = "github_file"
-when = { os = ["windows"], arch = "amd64" }
-repo = "tsukumogami/tsuku-llm"
-asset_pattern = "tsuku-llm-v{version}-windows-amd64-cpu.exe"
 binary = "tsuku-llm"
 
 [verify]

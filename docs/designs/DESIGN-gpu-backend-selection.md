@@ -127,22 +127,38 @@ graph TD
 
 When this milestone is complete, users get:
 
-- **Linux with NVIDIA GPU**: `tsuku install tsuku-llm` detects the GPU, installs the CUDA variant, and provisions the CUDA runtime libraries as a managed dependency. The nvidia driver is verified (and installed if needed) via system package manager.
-- **Linux with AMD/Intel GPU**: `tsuku install tsuku-llm` detects the GPU and installs the Vulkan variant. The Vulkan loader is verified (and installed if needed) via system package manager.
-- **Linux without GPU**: `tsuku install tsuku-llm` installs the CPU variant automatically.
-- **macOS (ARM64 or AMD64)**: `tsuku install tsuku-llm` installs the Metal variant.
+- **Linux with NVIDIA GPU (glibc)**: `tsuku install tsuku-llm` detects the GPU, installs the CUDA variant, and provisions the CUDA runtime libraries as a managed dependency. The nvidia driver is verified (and installed if needed) via system package manager.
+- **Linux with AMD/Intel GPU (glibc)**: `tsuku install tsuku-llm` detects the GPU and installs the Vulkan variant. The Vulkan loader is verified (and installed if needed) via system package manager.
+- **Linux without GPU (glibc)**: `tsuku install tsuku-llm` installs the CPU variant automatically.
+- **macOS (ARM64 or AMD64)**: `tsuku install tsuku-llm` installs the Metal variant (all Macs have Metal-capable GPUs).
 - **Manual override**: `tsuku config set llm.backend cpu` forces the CPU variant regardless of detected GPU.
-- **Unsupported platforms**: Users on musl/Alpine Linux, unsupported architectures, or other uncovered combinations get a clear error message explaining what's supported and why.
+- **Unsupported platforms**: Users on unsupported platforms get a clear error message explaining what's supported and why. See the table below for details.
 - **Runtime failures**: If the GPU backend fails at startup, the Rust binary prints a clear error to stderr suggesting the CPU override.
 - **Ecosystem-wide GPU filtering**: Any recipe can use `when = { gpu = ["nvidia", "amd"] }` for GPU-aware step selection.
 - **Reusable GPU runtime recipes**: `nvidia-driver`, `cuda-runtime`, and `vulkan-loader` are standard recipes available to any tool that needs GPU compute dependencies.
 
+#### Platform support matrix
+
+| Platform | Variant | Status |
+|----------|---------|--------|
+| macOS ARM64 | Metal | Supported |
+| macOS AMD64 | Metal | Supported |
+| Linux AMD64 (glibc) + NVIDIA | CUDA | Supported |
+| Linux AMD64 (glibc) + AMD/Intel | Vulkan | Supported |
+| Linux AMD64 (glibc) + no GPU | CPU | Supported |
+| Linux ARM64 (glibc) + NVIDIA | CUDA | Supported |
+| Linux ARM64 (glibc) + AMD/Intel | Vulkan | Supported |
+| Linux ARM64 (glibc) + no GPU | CPU | Supported |
+| Linux (musl/Alpine) | -- | Not supported: all variants are built against glibc; llama.cpp and CUDA runtime libraries require glibc |
+| Windows | -- | Not supported: the release pipeline does not produce Windows artifacts |
+| Other architectures (386, riscv64, etc.) | -- | Not supported: the release pipeline only builds for amd64 and arm64 |
+
 What's deferred to future work:
 
 - **Vulkan variant for NVIDIA**: NVIDIA hardware gets CUDA by default. Users who want Vulkan on NVIDIA would need a future variant selection mechanism.
-- **Windows support**: The pipeline builds a Windows CPU variant but the recipe doesn't include it yet.
+- **Windows support**: No Windows artifacts are produced by the release pipeline. Adding Windows would require cross-compilation or Windows CI runners.
 - **Automatic runtime fallback**: If the GPU backend fails, users must manually set `llm.backend cpu`. Automatic detection and reinstallation is deferred.
-- **musl/Alpine Linux**: No musl-linked variants are built.
+- **musl/Alpine Linux**: All variants link against glibc. Building musl-compatible binaries would require static linking or musl cross-compilation, plus musl-compatible CUDA runtime libraries (which NVIDIA doesn't provide).
 - **Multiple CUDA versions**: Only the CUDA version matching the CI build is shipped. Older driver compatibility isn't addressed.
 - **Selective CUDA components**: The cuda-runtime recipe installs the minimal runtime. Recipes needing cuBLAS, cuFFT, or cuDNN would need additional component recipes.
 
