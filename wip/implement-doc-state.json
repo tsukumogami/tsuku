@@ -2,7 +2,7 @@
   "design_doc": "docs/designs/DESIGN-gpu-backend-selection.md",
   "branch": "docs/gpu-backend-selection",
   "pr_number": 1770,
-  "integrity_hash": "sha256:b9f88a1b57fae717ce20524ddb8dec457855904d4c02d50d5f69c8bfe1440550",
+  "integrity_hash": "sha256:64a58ba4a962a04f5805005cd975365224531bc598bad0c867f29d003adf1058",
   "issues": [
     {
       "number": 1773,
@@ -325,8 +325,8 @@
     {
       "number": 1776,
       "title": "feat(recipe): add tsuku-llm recipe with GPU-filtered variant selection",
-      "status": "pushed",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "ci_fix_attempts": 0,
       "issue_type": "code",
       "dependencies": [
@@ -378,14 +378,50 @@
     {
       "number": 1777,
       "title": "feat(llm): add llm.backend config key",
-      "status": "pending",
+      "status": "pushed",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [],
-      "commits": [],
-      "agent_type": "",
-      "summary": null,
+      "commits": [
+        "fa82fa43f588cd2816fe71531aee12d889fce1df"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          "internal/userconfig/userconfig.go",
+          "internal/userconfig/userconfig_test.go",
+          "internal/llm/factory.go",
+          "internal/llm/factory_test.go"
+        ],
+        "tests_added": 11,
+        "key_decisions": "Backend as *string to distinguish unset from empty, matching existing optional field patterns. validLLMBackends slice for easy extension. Only updated LLMConfig interface in internal/llm/factory.go."
+      },
+      "reviewer_results": {
+        "issue": 1777,
+        "reviews": [
+          {
+            "focus": "pragmatic",
+            "blocking_count": 0,
+            "advisory_count": 2,
+            "detail_file": "wip/research/implement-doc_review_pragmatic_issue1777.md"
+          },
+          {
+            "focus": "architect",
+            "blocking_count": 0,
+            "advisory_count": 0,
+            "detail_file": "wip/research/implement-doc_review_architect_issue1777.md"
+          },
+          {
+            "focus": "maintainer",
+            "blocking_count": 0,
+            "advisory_count": 2,
+            "detail_file": "wip/research/implement-doc_review_maintainer_issue1777.md"
+          }
+        ],
+        "disposition": "pass"
+      },
       "testable_scenarios": [
         "scenario-15"
       ]
