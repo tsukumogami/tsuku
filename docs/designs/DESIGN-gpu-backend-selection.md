@@ -138,19 +138,20 @@ When this milestone is complete, users get:
 
 #### Platform support matrix
 
-| Platform | Variant | Status |
-|----------|---------|--------|
-| macOS ARM64 | Metal | Supported |
-| macOS AMD64 | Metal | Supported |
-| Linux AMD64 (glibc) + NVIDIA | CUDA | Supported |
-| Linux AMD64 (glibc) + AMD/Intel | Vulkan | Supported |
-| Linux AMD64 (glibc) + no GPU | CPU | Supported |
-| Linux ARM64 (glibc) + NVIDIA | CUDA | Supported |
-| Linux ARM64 (glibc) + AMD/Intel | Vulkan | Supported |
-| Linux ARM64 (glibc) + no GPU | CPU | Supported |
-| Linux (musl/Alpine) | -- | Not supported: all variants are built against glibc; llama.cpp and CUDA runtime libraries require glibc |
-| Windows | -- | Not supported: the release pipeline does not produce Windows artifacts |
-| Other architectures (386, riscv64, etc.) | -- | Not supported: the release pipeline only builds for amd64 and arm64 |
+**Supported platforms:**
+- macOS ARM64 -- Metal variant
+- macOS AMD64 -- Metal variant
+- Linux AMD64 (glibc) + NVIDIA -- CUDA variant
+- Linux AMD64 (glibc) + AMD/Intel -- Vulkan variant
+- Linux AMD64 (glibc) + no GPU -- CPU variant
+- Linux ARM64 (glibc) + NVIDIA -- CUDA variant
+- Linux ARM64 (glibc) + AMD/Intel -- Vulkan variant
+- Linux ARM64 (glibc) + no GPU -- CPU variant
+
+**Not supported:**
+- Linux (musl/Alpine) -- all variants are built against glibc; llama.cpp and CUDA runtime libraries require glibc
+- Windows -- the release pipeline does not produce Windows artifacts
+- Other architectures (386, riscv64, etc.) -- the release pipeline only builds for amd64 and arm64
 
 What's deferred to future work:
 
