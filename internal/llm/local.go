@@ -35,8 +35,25 @@ func NewLocalProvider() *LocalProvider {
 // The idle timeout is passed to the addon server when starting it.
 func NewLocalProviderWithTimeout(idleTimeout time.Duration) *LocalProvider {
 	socketPath := SocketPath()
-	addonManager := addon.NewAddonManager()
-	lifecycle := NewServerLifecycleWithManager(socketPath, addonManager)
+	// Create addon manager without an installer -- the LocalProvider is used
+	// as a fallback LLM provider and does not drive installation itself.
+	// The caller (typically the install command) handles installation.
+	addonManager := addon.NewAddonManager("", nil, "")
+	lifecycle := NewServerLifecycle(socketPath, "")
+	lifecycle.SetIdleTimeout(idleTimeout)
+
+	return &LocalProvider{
+		addonManager: addonManager,
+		lifecycle:    lifecycle,
+	}
+}
+
+// NewLocalProviderWithInstaller creates a local provider wired with an Installer
+// so it can install the addon via the recipe system when needed.
+func NewLocalProviderWithInstaller(installer addon.Installer, backendOverride string, idleTimeout time.Duration) *LocalProvider {
+	socketPath := SocketPath()
+	addonManager := addon.NewAddonManager("", installer, backendOverride)
+	lifecycle := NewServerLifecycle(socketPath, "")
 	lifecycle.SetIdleTimeout(idleTimeout)
 
 	return &LocalProvider{
@@ -53,12 +70,16 @@ func (p *LocalProvider) Name() string {
 // Complete sends a completion request to the local addon.
 // It ensures the addon is downloaded, verified, and running before sending the request.
 func (p *LocalProvider) Complete(ctx context.Context, req *CompletionRequest) (*CompletionResponse, error) {
-	// Ensure addon is downloaded and verified
-	if _, err := p.addonManager.EnsureAddon(ctx); err != nil {
+	// Ensure addon is installed via recipe system
+	addonPath, err := p.addonManager.EnsureAddon(ctx)
+	if err != nil {
 		return nil, fmt.Errorf("failed to ensure addon: %w", err)
 	}
 
-	// Ensure the addon server is running (includes pre-execution verification)
+	// Update lifecycle with the resolved binary path
+	p.lifecycle.addonPath = addonPath
+
+	// Ensure the addon server is running
 	if err := p.lifecycle.EnsureRunning(ctx); err != nil {
 		return nil, fmt.Errorf("local LLM addon not available: %w", err)
 	}

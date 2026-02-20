@@ -2,10 +2,7 @@ package addon
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
-	"net/http"
-	"net/http/httptest"
+	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -14,424 +11,292 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestManifest(t *testing.T) {
-	t.Run("parses embedded manifest", func(t *testing.T) {
-		manifest, err := GetManifest()
-		require.NoError(t, err)
-		require.NotNil(t, manifest)
-		require.NotEmpty(t, manifest.Version)
-		require.NotEmpty(t, manifest.Platforms)
+// mockInstaller is a test double for the Installer interface.
+type mockInstaller struct {
+	installCalls []installCall
+	installErr   error
+	// onInstall simulates installing by creating a binary in the tools dir
+	onInstall func(homeDir string)
+}
+
+type installCall struct {
+	recipeName  string
+	gpuOverride string
+}
+
+func (m *mockInstaller) InstallRecipe(ctx context.Context, recipeName string, gpuOverride string) error {
+	m.installCalls = append(m.installCalls, installCall{recipeName: recipeName, gpuOverride: gpuOverride})
+	if m.onInstall != nil {
+		// The test doesn't know the homeDir; callers set onInstall with closure over it
+		m.onInstall("")
+	}
+	if m.installErr != nil {
+		return m.installErr
+	}
+	return nil
+}
+
+// createFakeBinary creates a fake tsuku-llm binary at the recipe tools path.
+func createFakeBinary(t *testing.T, homeDir, version string) string {
+	t.Helper()
+	binName := "tsuku-llm"
+	if runtime.GOOS == "windows" {
+		binName = "tsuku-llm.exe"
+	}
+	toolDir := filepath.Join(homeDir, "tools", "tsuku-llm-"+version, "bin")
+	require.NoError(t, os.MkdirAll(toolDir, 0755))
+	binPath := filepath.Join(toolDir, binName)
+	require.NoError(t, os.WriteFile(binPath, []byte("#!/bin/sh\necho hello"), 0755))
+	return binPath
+}
+
+func TestNewAddonManager(t *testing.T) {
+	t.Run("uses provided home dir", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		m := NewAddonManager(tmpDir, nil, "")
+		require.Equal(t, tmpDir, m.HomeDir())
 	})
 
-	t.Run("has current platform", func(t *testing.T) {
-		manifest, err := GetManifest()
-		require.NoError(t, err)
-
-		info, err := manifest.GetPlatformInfo(PlatformKey())
-		require.NoError(t, err)
-		require.NotEmpty(t, info.URL)
-		require.NotEmpty(t, info.SHA256)
-	})
-
-	t.Run("returns error for unsupported platform", func(t *testing.T) {
-		manifest, err := GetManifest()
-		require.NoError(t, err)
-
-		_, err = manifest.GetPlatformInfo("unsupported-platform")
-		require.Error(t, err)
-		require.Contains(t, err.Error(), "unsupported platform")
+	t.Run("uses TSUKU_HOME when homeDir is empty", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		t.Setenv("TSUKU_HOME", tmpDir)
+		m := NewAddonManager("", nil, "")
+		require.Equal(t, tmpDir, m.HomeDir())
 	})
 }
 
-func TestPlatformKey(t *testing.T) {
-	key := PlatformKey()
-	require.Equal(t, runtime.GOOS+"-"+runtime.GOARCH, key)
+func TestEnsureAddon_AlreadyInstalled(t *testing.T) {
+	tmpDir := t.TempDir()
+	binPath := createFakeBinary(t, tmpDir, "1.0.0")
+
+	installer := &mockInstaller{}
+	m := NewAddonManager(tmpDir, installer, "")
+
+	path, err := m.EnsureAddon(context.Background())
+	require.NoError(t, err)
+	require.Equal(t, binPath, path)
+	require.Empty(t, installer.installCalls, "should not call installer when binary exists")
+}
+
+func TestEnsureAddon_NotInstalled_InstallsViaRecipe(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	installer := &mockInstaller{
+		onInstall: func(_ string) {
+			// Simulate recipe installation creating the binary
+			createFakeBinary(t, tmpDir, "1.0.0")
+		},
+	}
+	m := NewAddonManager(tmpDir, installer, "")
+
+	path, err := m.EnsureAddon(context.Background())
+	require.NoError(t, err)
+	require.NotEmpty(t, path)
+
+	// Verify installer was called correctly
+	require.Len(t, installer.installCalls, 1)
+	require.Equal(t, "tsuku-llm", installer.installCalls[0].recipeName)
+	require.Equal(t, "", installer.installCalls[0].gpuOverride, "no override when backend is empty")
+}
+
+func TestEnsureAddon_InstallError(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	installer := &mockInstaller{
+		installErr: fmt.Errorf("network timeout"),
+	}
+	m := NewAddonManager(tmpDir, installer, "")
+
+	_, err := m.EnsureAddon(context.Background())
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "installing tsuku-llm")
+	require.Contains(t, err.Error(), "network timeout")
+}
+
+func TestEnsureAddon_NoInstaller(t *testing.T) {
+	tmpDir := t.TempDir()
+	m := NewAddonManager(tmpDir, nil, "")
+
+	_, err := m.EnsureAddon(context.Background())
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "no installer configured")
+}
+
+func TestEnsureAddon_CPUOverride_SetsGPUToNone(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	installer := &mockInstaller{
+		onInstall: func(_ string) {
+			createFakeBinary(t, tmpDir, "1.0.0")
+		},
+	}
+	m := NewAddonManager(tmpDir, installer, "cpu")
+
+	path, err := m.EnsureAddon(context.Background())
+	require.NoError(t, err)
+	require.NotEmpty(t, path)
+
+	require.Len(t, installer.installCalls, 1)
+	require.Equal(t, "none", installer.installCalls[0].gpuOverride, "should override GPU to 'none' when backend is 'cpu'")
+}
+
+func TestEnsureAddon_VariantMismatch_Reinstalls(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Pre-install a binary (simulates GPU variant already installed)
+	createFakeBinary(t, tmpDir, "1.0.0")
+
+	installCount := 0
+	installer := &mockInstaller{
+		onInstall: func(_ string) {
+			installCount++
+			// Recipe system replaces the existing binary
+			createFakeBinary(t, tmpDir, "1.0.0")
+		},
+	}
+
+	// User sets llm.backend=cpu but there's already an installation
+	m := NewAddonManager(tmpDir, installer, "cpu")
+
+	path, err := m.EnsureAddon(context.Background())
+	require.NoError(t, err)
+	require.NotEmpty(t, path)
+	require.Equal(t, 1, installCount, "should reinstall when variant mismatch detected")
+	require.Equal(t, "none", installer.installCalls[0].gpuOverride)
+}
+
+func TestEnsureAddon_CachesPath(t *testing.T) {
+	tmpDir := t.TempDir()
+	createFakeBinary(t, tmpDir, "1.0.0")
+
+	installer := &mockInstaller{}
+	m := NewAddonManager(tmpDir, installer, "")
+
+	// First call
+	path1, err := m.EnsureAddon(context.Background())
+	require.NoError(t, err)
+
+	// Second call should use cached path
+	path2, err := m.EnsureAddon(context.Background())
+	require.NoError(t, err)
+	require.Equal(t, path1, path2)
+	require.Empty(t, installer.installCalls, "should not install twice")
+}
+
+func TestEnsureAddon_CacheClearedWhenBinaryRemoved(t *testing.T) {
+	tmpDir := t.TempDir()
+	binPath := createFakeBinary(t, tmpDir, "1.0.0")
+
+	installer := &mockInstaller{
+		onInstall: func(_ string) {
+			createFakeBinary(t, tmpDir, "2.0.0")
+		},
+	}
+	m := NewAddonManager(tmpDir, installer, "")
+
+	// First call caches the path
+	path1, err := m.EnsureAddon(context.Background())
+	require.NoError(t, err)
+	require.Equal(t, binPath, path1)
+
+	// Remove the binary
+	require.NoError(t, os.RemoveAll(filepath.Dir(filepath.Dir(binPath))))
+
+	// Second call should detect removal and reinstall
+	path2, err := m.EnsureAddon(context.Background())
+	require.NoError(t, err)
+	require.NotEmpty(t, path2)
+	require.Len(t, installer.installCalls, 1)
+}
+
+func TestFindInstalledBinary_FlatLayout(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Create binary in flat layout (no bin/ subdirectory)
+	binName := "tsuku-llm"
+	if runtime.GOOS == "windows" {
+		binName = "tsuku-llm.exe"
+	}
+	toolDir := filepath.Join(tmpDir, "tools", "tsuku-llm-1.0.0")
+	require.NoError(t, os.MkdirAll(toolDir, 0755))
+	flatPath := filepath.Join(toolDir, binName)
+	require.NoError(t, os.WriteFile(flatPath, []byte("fake"), 0755))
+
+	m := NewAddonManager(tmpDir, nil, "")
+	found := m.findInstalledBinary()
+	require.Equal(t, flatPath, found)
+}
+
+func TestFindInstalledBinary_BinLayout(t *testing.T) {
+	tmpDir := t.TempDir()
+	binPath := createFakeBinary(t, tmpDir, "2.0.0")
+
+	m := NewAddonManager(tmpDir, nil, "")
+	found := m.findInstalledBinary()
+	require.Equal(t, binPath, found)
+}
+
+func TestFindInstalledBinary_NoTools(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	m := NewAddonManager(tmpDir, nil, "")
+	found := m.findInstalledBinary()
+	require.Empty(t, found)
+}
+
+func TestFindInstalledBinary_OtherToolsOnly(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Create some other tool, not tsuku-llm
+	otherDir := filepath.Join(tmpDir, "tools", "some-tool-1.0.0", "bin")
+	require.NoError(t, os.MkdirAll(otherDir, 0755))
+	require.NoError(t, os.WriteFile(filepath.Join(otherDir, "some-tool"), []byte("fake"), 0755))
+
+	m := NewAddonManager(tmpDir, nil, "")
+	found := m.findInstalledBinary()
+	require.Empty(t, found)
+}
+
+func TestCleanupLegacyPath(t *testing.T) {
+	t.Run("removes legacy addons directory", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		legacyPath := filepath.Join(tmpDir, "addons", "tsuku-llm")
+		require.NoError(t, os.MkdirAll(legacyPath, 0755))
+		require.NoError(t, os.WriteFile(filepath.Join(legacyPath, "tsuku-llm"), []byte("old"), 0755))
+
+		m := NewAddonManager(tmpDir, nil, "")
+		m.cleanupLegacyPath()
+
+		_, err := os.Stat(legacyPath)
+		require.True(t, os.IsNotExist(err), "legacy addons dir should be removed")
+	})
+
+	t.Run("removes old tools/tsuku-llm directory", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		legacyPath := filepath.Join(tmpDir, "tools", "tsuku-llm")
+		require.NoError(t, os.MkdirAll(filepath.Join(legacyPath, "0.1.0"), 0755))
+		require.NoError(t, os.WriteFile(filepath.Join(legacyPath, "0.1.0", "tsuku-llm"), []byte("old"), 0755))
+
+		m := NewAddonManager(tmpDir, nil, "")
+		m.cleanupLegacyPath()
+
+		_, err := os.Stat(legacyPath)
+		require.True(t, os.IsNotExist(err), "legacy tools/tsuku-llm dir should be removed")
+	})
+
+	t.Run("does nothing when no legacy paths exist", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		m := NewAddonManager(tmpDir, nil, "")
+		// Should not panic
+		m.cleanupLegacyPath()
+	})
 }
 
 func TestBinaryName(t *testing.T) {
-	name := BinaryName()
+	name := binaryName()
 	if runtime.GOOS == "windows" {
 		require.Equal(t, "tsuku-llm.exe", name)
 	} else {
 		require.Equal(t, "tsuku-llm", name)
 	}
-}
-
-func TestAddonPath(t *testing.T) {
-	manifest, err := GetManifest()
-	require.NoError(t, err)
-
-	t.Run("uses TSUKU_HOME when set", func(t *testing.T) {
-		tmpDir := t.TempDir()
-		t.Setenv("TSUKU_HOME", tmpDir)
-
-		path := AddonPath()
-
-		binName := "tsuku-llm"
-		if runtime.GOOS == "windows" {
-			binName = "tsuku-llm.exe"
-		}
-
-		// Now includes version in path
-		require.Equal(t, filepath.Join(tmpDir, "tools", "tsuku-llm", manifest.Version, binName), path)
-	})
-
-	t.Run("defaults to ~/.tsuku when TSUKU_HOME not set", func(t *testing.T) {
-		t.Setenv("TSUKU_HOME", "")
-
-		homeDir, err := os.UserHomeDir()
-		require.NoError(t, err)
-
-		path := AddonPath()
-
-		binName := "tsuku-llm"
-		if runtime.GOOS == "windows" {
-			binName = "tsuku-llm.exe"
-		}
-
-		// Now includes version in path
-		require.Equal(t, filepath.Join(homeDir, ".tsuku", "tools", "tsuku-llm", manifest.Version, binName), path)
-	})
-}
-
-func TestIsInstalled(t *testing.T) {
-	manifest, err := GetManifest()
-	require.NoError(t, err)
-
-	t.Run("returns false when addon not installed", func(t *testing.T) {
-		tmpDir := t.TempDir()
-		t.Setenv("TSUKU_HOME", tmpDir)
-
-		require.False(t, IsInstalled())
-	})
-
-	t.Run("returns true when addon exists", func(t *testing.T) {
-		tmpDir := t.TempDir()
-		t.Setenv("TSUKU_HOME", tmpDir)
-
-		// Create the addon binary at versioned path
-		binName := "tsuku-llm"
-		if runtime.GOOS == "windows" {
-			binName = "tsuku-llm.exe"
-		}
-		addonDir := filepath.Join(tmpDir, "tools", "tsuku-llm", manifest.Version)
-		require.NoError(t, os.MkdirAll(addonDir, 0755))
-		require.NoError(t, os.WriteFile(filepath.Join(addonDir, binName), []byte("fake"), 0755))
-
-		require.True(t, IsInstalled())
-	})
-}
-
-func TestAddonManager(t *testing.T) {
-	t.Run("creates manager with custom home", func(t *testing.T) {
-		tmpDir := t.TempDir()
-		m := NewAddonManagerWithHome(tmpDir)
-		require.Equal(t, tmpDir, m.HomeDir())
-	})
-
-	t.Run("creates manager with TSUKU_HOME env", func(t *testing.T) {
-		tmpDir := t.TempDir()
-		t.Setenv("TSUKU_HOME", tmpDir)
-
-		m := NewAddonManager()
-		require.Equal(t, tmpDir, m.HomeDir())
-	})
-
-	t.Run("returns correct addon dir", func(t *testing.T) {
-		tmpDir := t.TempDir()
-		m := NewAddonManagerWithHome(tmpDir)
-
-		manifest, err := GetManifest()
-		require.NoError(t, err)
-
-		dir, err := m.AddonDir()
-		require.NoError(t, err)
-		require.Equal(t, filepath.Join(tmpDir, "tools", "tsuku-llm", manifest.Version), dir)
-	})
-
-	t.Run("returns correct binary path", func(t *testing.T) {
-		tmpDir := t.TempDir()
-		m := NewAddonManagerWithHome(tmpDir)
-
-		manifest, err := GetManifest()
-		require.NoError(t, err)
-
-		path, err := m.BinaryPath()
-		require.NoError(t, err)
-		require.Equal(t, filepath.Join(tmpDir, "tools", "tsuku-llm", manifest.Version, BinaryName()), path)
-	})
-
-	t.Run("IsInstalled returns false when not present", func(t *testing.T) {
-		tmpDir := t.TempDir()
-		m := NewAddonManagerWithHome(tmpDir)
-		require.False(t, m.IsInstalled())
-	})
-
-	t.Run("IsInstalled returns true when present", func(t *testing.T) {
-		tmpDir := t.TempDir()
-		m := NewAddonManagerWithHome(tmpDir)
-
-		// Create the binary
-		dir, err := m.AddonDir()
-		require.NoError(t, err)
-		require.NoError(t, os.MkdirAll(dir, 0755))
-
-		path, err := m.BinaryPath()
-		require.NoError(t, err)
-		require.NoError(t, os.WriteFile(path, []byte("fake"), 0755))
-
-		require.True(t, m.IsInstalled())
-	})
-}
-
-func TestVerifyChecksum(t *testing.T) {
-	t.Run("verifies correct checksum", func(t *testing.T) {
-		tmpDir := t.TempDir()
-		filePath := filepath.Join(tmpDir, "test")
-		content := []byte("hello world")
-		require.NoError(t, os.WriteFile(filePath, content, 0644))
-
-		// Compute expected checksum
-		h := sha256.Sum256(content)
-		expected := hex.EncodeToString(h[:])
-
-		err := VerifyChecksum(filePath, expected)
-		require.NoError(t, err)
-	})
-
-	t.Run("rejects incorrect checksum", func(t *testing.T) {
-		tmpDir := t.TempDir()
-		filePath := filepath.Join(tmpDir, "test")
-		require.NoError(t, os.WriteFile(filePath, []byte("hello world"), 0644))
-
-		err := VerifyChecksum(filePath, "badchecksum")
-		require.Error(t, err)
-		require.Contains(t, err.Error(), "checksum mismatch")
-	})
-
-	t.Run("handles uppercase checksum", func(t *testing.T) {
-		tmpDir := t.TempDir()
-		filePath := filepath.Join(tmpDir, "test")
-		content := []byte("hello world")
-		require.NoError(t, os.WriteFile(filePath, content, 0644))
-
-		h := sha256.Sum256(content)
-		expected := hex.EncodeToString(h[:])
-
-		// Pass uppercase version
-		err := VerifyChecksum(filePath, "  "+expected+"  ") // With whitespace
-		require.NoError(t, err)
-	})
-
-	t.Run("returns error for missing file", func(t *testing.T) {
-		err := VerifyChecksum("/nonexistent/file", "checksum")
-		require.Error(t, err)
-		require.Contains(t, err.Error(), "failed to open file")
-	})
-}
-
-func TestComputeChecksum(t *testing.T) {
-	tmpDir := t.TempDir()
-	filePath := filepath.Join(tmpDir, "test")
-	content := []byte("hello world")
-	require.NoError(t, os.WriteFile(filePath, content, 0644))
-
-	h := sha256.Sum256(content)
-	expected := hex.EncodeToString(h[:])
-
-	actual, err := ComputeChecksum(filePath)
-	require.NoError(t, err)
-	require.Equal(t, expected, actual)
-}
-
-func TestEnsureAddon(t *testing.T) {
-	t.Run("downloads and verifies addon", func(t *testing.T) {
-		// Create a fake addon binary
-		fakeAddon := []byte("#!/bin/sh\necho hello")
-		h := sha256.Sum256(fakeAddon)
-		checksum := hex.EncodeToString(h[:])
-
-		// Set up mock server
-		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			_, _ = w.Write(fakeAddon)
-		}))
-		defer server.Close()
-
-		// Create temp manifest with mock URL
-		tmpDir := t.TempDir()
-		t.Setenv("TSUKU_HOME", tmpDir)
-
-		// Temporarily override the manifest for testing
-		oldManifest := cachedManifest
-		cachedManifest = &Manifest{
-			Version: "test",
-			Platforms: map[string]PlatformInfo{
-				PlatformKey(): {
-					URL:    server.URL + "/tsuku-llm",
-					SHA256: checksum,
-				},
-			},
-		}
-		defer func() { cachedManifest = oldManifest }()
-
-		m := NewAddonManagerWithHome(tmpDir)
-		path, err := m.EnsureAddon(context.Background())
-		require.NoError(t, err)
-		require.NotEmpty(t, path)
-
-		// Verify the file exists and is executable
-		info, err := os.Stat(path)
-		require.NoError(t, err)
-		require.True(t, info.Mode()&0100 != 0, "binary should be executable")
-
-		// Verify content
-		content, err := os.ReadFile(path)
-		require.NoError(t, err)
-		require.Equal(t, fakeAddon, content)
-	})
-
-	t.Run("uses existing verified addon", func(t *testing.T) {
-		fakeAddon := []byte("fake addon content")
-		h := sha256.Sum256(fakeAddon)
-		checksum := hex.EncodeToString(h[:])
-
-		tmpDir := t.TempDir()
-		t.Setenv("TSUKU_HOME", tmpDir)
-
-		// Set up manifest
-		oldManifest := cachedManifest
-		cachedManifest = &Manifest{
-			Version: "test",
-			Platforms: map[string]PlatformInfo{
-				PlatformKey(): {
-					URL:    "http://should-not-be-called/",
-					SHA256: checksum,
-				},
-			},
-		}
-		defer func() { cachedManifest = oldManifest }()
-
-		m := NewAddonManagerWithHome(tmpDir)
-
-		// Pre-create the binary
-		dir, err := m.AddonDir()
-		require.NoError(t, err)
-		require.NoError(t, os.MkdirAll(dir, 0755))
-
-		binaryPath, err := m.BinaryPath()
-		require.NoError(t, err)
-		require.NoError(t, os.WriteFile(binaryPath, fakeAddon, 0755))
-
-		// EnsureAddon should return existing path without downloading
-		path, err := m.EnsureAddon(context.Background())
-		require.NoError(t, err)
-		require.Equal(t, binaryPath, path)
-	})
-
-	t.Run("re-downloads on checksum mismatch", func(t *testing.T) {
-		newAddon := []byte("new addon content")
-		h := sha256.Sum256(newAddon)
-		checksum := hex.EncodeToString(h[:])
-
-		downloadCount := 0
-		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			downloadCount++
-			_, _ = w.Write(newAddon)
-		}))
-		defer server.Close()
-
-		tmpDir := t.TempDir()
-		t.Setenv("TSUKU_HOME", tmpDir)
-
-		oldManifest := cachedManifest
-		cachedManifest = &Manifest{
-			Version: "test",
-			Platforms: map[string]PlatformInfo{
-				PlatformKey(): {
-					URL:    server.URL + "/tsuku-llm",
-					SHA256: checksum,
-				},
-			},
-		}
-		defer func() { cachedManifest = oldManifest }()
-
-		m := NewAddonManagerWithHome(tmpDir)
-
-		// Pre-create a binary with wrong content
-		dir, err := m.AddonDir()
-		require.NoError(t, err)
-		require.NoError(t, os.MkdirAll(dir, 0755))
-
-		binaryPath, err := m.BinaryPath()
-		require.NoError(t, err)
-		require.NoError(t, os.WriteFile(binaryPath, []byte("wrong content"), 0755))
-
-		// EnsureAddon should detect mismatch and re-download
-		path, err := m.EnsureAddon(context.Background())
-		require.NoError(t, err)
-		require.Equal(t, binaryPath, path)
-		require.Equal(t, 1, downloadCount)
-
-		// Verify new content
-		content, err := os.ReadFile(path)
-		require.NoError(t, err)
-		require.Equal(t, newAddon, content)
-	})
-}
-
-func TestVerifyBeforeExecution(t *testing.T) {
-	t.Run("returns nil for valid binary", func(t *testing.T) {
-		fakeAddon := []byte("fake addon")
-		h := sha256.Sum256(fakeAddon)
-		checksum := hex.EncodeToString(h[:])
-
-		tmpDir := t.TempDir()
-
-		oldManifest := cachedManifest
-		cachedManifest = &Manifest{
-			Version: "test",
-			Platforms: map[string]PlatformInfo{
-				PlatformKey(): {
-					URL:    "http://unused/",
-					SHA256: checksum,
-				},
-			},
-		}
-		defer func() { cachedManifest = oldManifest }()
-
-		binaryPath := filepath.Join(tmpDir, "tsuku-llm")
-		require.NoError(t, os.WriteFile(binaryPath, fakeAddon, 0755))
-
-		m := NewAddonManagerWithHome(tmpDir)
-		err := m.VerifyBeforeExecution(binaryPath)
-		require.NoError(t, err)
-	})
-
-	t.Run("returns error for tampered binary", func(t *testing.T) {
-		fakeAddon := []byte("fake addon")
-		h := sha256.Sum256(fakeAddon)
-		checksum := hex.EncodeToString(h[:])
-
-		tmpDir := t.TempDir()
-
-		oldManifest := cachedManifest
-		cachedManifest = &Manifest{
-			Version: "test",
-			Platforms: map[string]PlatformInfo{
-				PlatformKey(): {
-					URL:    "http://unused/",
-					SHA256: checksum,
-				},
-			},
-		}
-		defer func() { cachedManifest = oldManifest }()
-
-		binaryPath := filepath.Join(tmpDir, "tsuku-llm")
-		require.NoError(t, os.WriteFile(binaryPath, []byte("tampered"), 0755))
-
-		m := NewAddonManagerWithHome(tmpDir)
-		err := m.VerifyBeforeExecution(binaryPath)
-		require.Error(t, err)
-		require.Contains(t, err.Error(), "checksum mismatch")
-	})
 }

@@ -13,7 +13,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	"github.com/tsukumogami/tsuku/internal/llm/addon"
 	pb "github.com/tsukumogami/tsuku/internal/llm/proto"
 )
 
@@ -29,11 +28,10 @@ const IdleTimeoutEnvVar = "TSUKU_LLM_IDLE_TIMEOUT"
 type ServerLifecycle struct {
 	mu sync.Mutex
 
-	socketPath   string
-	lockPath     string
-	addonPath    string
-	idleTimeout  time.Duration
-	addonManager *addon.AddonManager // optional: for pre-execution verification
+	socketPath  string
+	lockPath    string
+	addonPath   string
+	idleTimeout time.Duration
 
 	process *os.Process
 	lockFd  *os.File // holds the lock file when we started the server
@@ -62,19 +60,6 @@ func NewServerLifecycle(socketPath, addonPath string) *ServerLifecycle {
 		lockPath:    socketPath + ".lock",
 		addonPath:   addonPath,
 		idleTimeout: GetIdleTimeout(),
-	}
-}
-
-// NewServerLifecycleWithManager creates a lifecycle manager with an AddonManager
-// for pre-execution checksum verification.
-func NewServerLifecycleWithManager(socketPath string, manager *addon.AddonManager) *ServerLifecycle {
-	addonPath := addon.AddonPath()
-	return &ServerLifecycle{
-		socketPath:   socketPath,
-		lockPath:     socketPath + ".lock",
-		addonPath:    addonPath,
-		idleTimeout:  GetIdleTimeout(),
-		addonManager: manager,
 	}
 }
 
@@ -131,8 +116,6 @@ func (s *ServerLifecycle) isRunningLocked() bool {
 // It uses the lock file protocol to reliably detect running state.
 // If the socket file exists but no daemon holds the lock, it cleans up
 // the stale socket before starting.
-// When an AddonManager is configured, this also verifies the addon checksum
-// before execution to detect post-download tampering.
 func (s *ServerLifecycle) EnsureRunning(ctx context.Context) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -141,13 +124,6 @@ func (s *ServerLifecycle) EnsureRunning(ctx context.Context) error {
 	if s.addonPath != "" {
 		if _, err := os.Stat(s.addonPath); os.IsNotExist(err) {
 			return fmt.Errorf("tsuku-llm addon not installed at %s", s.addonPath)
-		}
-	}
-
-	// Verify addon checksum before execution (catches post-download tampering)
-	if s.addonManager != nil && s.addonPath != "" {
-		if err := s.addonManager.VerifyBeforeExecution(s.addonPath); err != nil {
-			return fmt.Errorf("addon verification failed: %w", err)
 		}
 	}
 
