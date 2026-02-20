@@ -1,0 +1,19 @@
+[metadata]
+  name = "corepack"
+  description = "Zero-runtime-dependency package manager bridge for Node.js"
+  homepage = "https://github.com/nodejs/corepack#readme"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+supported_libc = ["glibc"]
+
+[[steps]]
+  action = "npm_install"
+  executables = ["corepack", "pnpm", "pnpx", "yarn", "yarnpkg"]
+  package = "corepack"
+
+[verify]
+  command = "corepack --version"
+  pattern = ""

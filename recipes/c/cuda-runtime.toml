@@ -38,17 +38,20 @@ type = "library"
 supported_os = ["linux"]
 dependencies = ["nvidia-driver"]
 
+[version]
+source = "manual"
+
 # Linux x86_64: Download cuda_cudart from NVIDIA redistributable archive
 [[steps]]
 action = "download_archive"
-url = "https://developer.download.nvidia.com/compute/cuda/redist/cuda_cudart/linux-x86_64/cuda_cudart-linux-x86_64-12.6.77-archive.tar.xz"
+url = "https://developer.download.nvidia.com/compute/cuda/redist/cuda_cudart/linux-x86_64/cuda_cudart-linux-x86_64-{version}-archive.tar.xz"
 when = { os = ["linux"], arch = "amd64" }
 strip_dirs = 1
 
 # Linux aarch64 (sbsa): Download cuda_cudart from NVIDIA redistributable archive
 [[steps]]
 action = "download_archive"
-url = "https://developer.download.nvidia.com/compute/cuda/redist/cuda_cudart/linux-sbsa/cuda_cudart-linux-sbsa-12.6.77-archive.tar.xz"
+url = "https://developer.download.nvidia.com/compute/cuda/redist/cuda_cudart/linux-sbsa/cuda_cudart-linux-sbsa-{version}-archive.tar.xz"
 when = { os = ["linux"], arch = "arm64" }
 strip_dirs = 1
 

@@ -1,0 +1,19 @@
+[metadata]
+  name = "bpmnlint"
+  description = "Validate your BPMN diagrams based on configurable lint rules"
+  homepage = "https://github.com/bpmn-io/bpmnlint#readme"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+supported_libc = ["glibc"]
+
+[[steps]]
+  action = "npm_install"
+  executables = ["bpmnlint"]
+  package = "bpmnlint"
+
+[verify]
+  command = "bpmnlint --version"
+  pattern = ""

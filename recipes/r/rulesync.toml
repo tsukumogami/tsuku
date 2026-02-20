@@ -1,0 +1,19 @@
+[metadata]
+  name = "rulesync"
+  description = "Unified AI rules management CLI tool that generates configuration files for various AI development tools"
+  homepage = "https://github.com/dyoshikawa/rulesync#readme"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+supported_libc = ["glibc"]
+
+[[steps]]
+  action = "npm_install"
+  executables = ["rulesync"]
+  package = "rulesync"
+
+[verify]
+  command = "rulesync --version"
+  pattern = ""

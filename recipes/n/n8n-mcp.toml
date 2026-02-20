@@ -1,0 +1,19 @@
+[metadata]
+  name = "n8n-mcp"
+  description = "Integration between n8n workflow automation and Model Context Protocol (MCP)"
+  homepage = "https://github.com/czlonkowski/n8n-mcp#readme"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+unsupported_platforms = ["linux/arm64"]
+
+[[steps]]
+  action = "npm_install"
+  executables = ["n8n-mcp"]
+  package = "n8n-mcp"
+
+[verify]
+  command = "n8n-mcp --version"
+  pattern = ""
