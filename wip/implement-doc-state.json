@@ -2,7 +2,7 @@
   "design_doc": "docs/designs/DESIGN-gpu-backend-selection.md",
   "branch": "docs/gpu-backend-selection",
   "pr_number": 1770,
-  "integrity_hash": "sha256:cb6a6a56340bde3f261a5b2ecb22cc014d47dc46ae9972db601826b653053518",
+  "integrity_hash": "sha256:e71e23f73e7bed812c5c6383c5b6d0d4a31868e58e6a5f7c1582362d1640c05e",
   "issues": [
     {
       "number": 1773,
@@ -119,8 +119,8 @@
     {
       "number": 1775,
       "title": "refactor(executor): thread GPU through plan generation",
-      "status": "pushed",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "ci_fix_attempts": 0,
       "issue_type": "code",
       "dependencies": [
@@ -178,14 +178,49 @@
     {
       "number": 1789,
       "title": "feat(recipe): add nvidia-driver and cuda-runtime dependency recipes",
-      "status": "pending",
+      "status": "pushed",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [],
-      "commits": [],
-      "agent_type": "",
-      "summary": null,
+      "commits": [
+        "81c2802328707d891208fac624d97ee0943cbad8"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          "recipes/n/nvidia-driver.toml",
+          "recipes/c/cuda-runtime.toml",
+          "recipes/c/cuda.toml"
+        ],
+        "tests_added": 0,
+        "key_decisions": "Pure TOML recipe files. cuda-runtime uses NVIDIA redistributable CDN URLs with pinned version 12.6.77. nvidia-driver verify uses mode=output since versioning is system-PM-managed. Cross-reference added in existing cuda.toml."
+      },
+      "reviewer_results": {
+        "issue": 1789,
+        "reviews": [
+          {
+            "focus": "pragmatic",
+            "blocking_count": 0,
+            "advisory_count": 2,
+            "detail_file": "wip/research/implement-doc_review_pragmatic_issue1789.md"
+          },
+          {
+            "focus": "architect",
+            "blocking_count": 0,
+            "advisory_count": 2,
+            "detail_file": "wip/research/implement-doc_review_architect_issue1789.md"
+          },
+          {
+            "focus": "maintainer",
+            "blocking_count": 0,
+            "advisory_count": 3,
+            "detail_file": "wip/research/implement-doc_review_maintainer_issue1789.md"
+          }
+        ],
+        "disposition": "pass"
+      },
       "testable_scenarios": [
         "scenario-11",
         "scenario-12"

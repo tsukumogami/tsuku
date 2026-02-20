@@ -13,7 +13,7 @@ Total scenarios: 22
 **Commands**:
 - `go test ./internal/platform/ -run 'TestDetectGPU$' -v -count=1`
 **Expected**: `DetectGPU()` returns one of the valid values: "nvidia", "amd", "intel", "apple", "none". On the CI runner (Linux without a discrete GPU), it returns either "intel" (integrated graphics) or "none". Test passes without error.
-**Status**: pending
+**Status**: passed
 
 ---
 
@@ -24,7 +24,7 @@ Total scenarios: 22
 **Commands**:
 - `go test ./internal/platform/ -run 'TestDetectGPUWithRoot' -v -count=1`
 **Expected**: `DetectGPUWithRoot()` correctly identifies nvidia, amd, intel, and none from mock sysfs structures under `internal/platform/testdata/gpu/`. Dual-GPU scenarios (nvidia+intel, amd+intel) return the discrete GPU vendor (nvidia or amd).
-**Status**: pending
+**Status**: passed
 
 ---
 
@@ -35,7 +35,7 @@ Total scenarios: 22
 **Commands**:
 - `go test ./internal/platform/ -run 'TestTarget.*GPU' -v -count=1`
 **Expected**: `NewTarget("linux/amd64", "debian", "glibc", "nvidia")` creates a Target whose `GPU()` method returns "nvidia". Targets constructed with empty gpu string return "".
-**Status**: pending
+**Status**: passed
 
 ---
 
@@ -47,7 +47,7 @@ Total scenarios: 22
 - `go build ./...`
 - `go vet ./...`
 **Expected**: Build succeeds with GPU() on both `platform.Target` and `recipe.MatchTarget`. All ~76 callsites updated. No compile errors.
-**Status**: pending
+**Status**: passed
 
 ---
 
@@ -58,7 +58,7 @@ Total scenarios: 22
 **Commands**:
 - `go test ./internal/recipe/ -run 'TestWhenClause.*GPU' -v -count=1`
 **Expected**: WhenClause with `GPU: ["nvidia"]` matches a target with GPU()="nvidia", does not match GPU()="amd" or GPU()="none". WhenClause with `GPU: ["amd", "intel"]` matches both "amd" and "intel" targets. WhenClause with empty GPU matches all targets. AND semantics with other fields: `{os=["linux"], gpu=["nvidia"]}` only matches linux+nvidia, not darwin+nvidia.
-**Status**: pending
+**Status**: passed
 
 ---
 
@@ -69,7 +69,7 @@ Total scenarios: 22
 **Commands**:
 - `go test ./internal/recipe/ -run 'TestWhenClause.*IsEmpty' -v -count=1`
 **Expected**: A WhenClause with only GPU set (`GPU: ["nvidia"]`) returns `false` for `IsEmpty()`. A WhenClause with all fields empty (including GPU) returns `true`.
-**Status**: pending
+**Status**: passed
 
 ---
 
@@ -80,7 +80,7 @@ Total scenarios: 22
 **Commands**:
 - `go test ./internal/recipe/ -run 'TestUnmarshalTOML.*gpu' -v -count=1`
 **Expected**: A TOML step with `when = { gpu = ["nvidia"] }` unmarshals correctly into a WhenClause with `GPU: ["nvidia"]`. Single-string value `when = { gpu = "nvidia" }` also parses (converted to single-element array, matching libc pattern).
-**Status**: pending
+**Status**: passed
 
 ---
 
@@ -91,7 +91,7 @@ Total scenarios: 22
 **Commands**:
 - `go test ./internal/recipe/ -run 'TestToMap.*GPU' -v -count=1`
 **Expected**: A WhenClause with `GPU: ["nvidia", "amd"]` serialized via ToMap produces `{"gpu": ["nvidia", "amd"]}` in the when map. A WhenClause with empty GPU omits the gpu key from the map.
-**Status**: pending
+**Status**: passed
 
 ---
 
@@ -102,7 +102,7 @@ Total scenarios: 22
 **Commands**:
 - `go test ./internal/executor/ -run 'TestGeneratePlan.*GPU' -v -count=1`
 **Expected**: With `PlanConfig.GPU = ""`, GeneratePlan calls `platform.DetectGPU()` to auto-detect. With `PlanConfig.GPU = "nvidia"`, the detected value is overridden. A recipe with a `gpu = ["nvidia"]` step is included in the plan when GPU is "nvidia" and excluded when GPU is "none".
-**Status**: pending
+**Status**: passed
 
 ---
 
@@ -113,7 +113,7 @@ Total scenarios: 22
 **Commands**:
 - `go test ./internal/executor/ -run 'TestDep.*GPU' -v -count=1`
 **Expected**: When a parent recipe step has `dependencies = ["cuda-runtime"]` and matches only for `gpu = ["nvidia"]`, the dependency plan generation also receives the GPU value "nvidia" through depCfg. The dependency chain filters correctly.
-**Status**: pending
+**Status**: passed
 
 ---
 
