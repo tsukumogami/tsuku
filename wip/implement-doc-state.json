@@ -2,19 +2,54 @@
   "design_doc": "docs/designs/DESIGN-gpu-backend-selection.md",
   "branch": "docs/gpu-backend-selection",
   "pr_number": 1770,
-  "integrity_hash": "sha256:44d68c4d11a1ee1658a8bac78b0a9e030906163bbbc7a41c3dbe8d4859c6ad58",
+  "integrity_hash": "sha256:aaecdf681dcb01f79f9ad2642477b58adcbb97629fa68dcb39817be6d45c67bc",
   "issues": [
     {
       "number": 1773,
       "title": "feat(platform): add GPU vendor detection via PCI sysfs",
-      "status": "pending",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [],
-      "commits": [],
-      "agent_type": "",
-      "summary": null,
+      "commits": [
+        "11368f2749e89b2e1b08c6bc6cc22280b9768747"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [],
+        "tests_added": 14,
+        "key_decisions": "Used SetGPU() value-receiver method on Target for test convenience. Added GPU field to PlanConfig. Production callsites via DetectTarget() get GPU detection automatically. Manual target constructors pass empty GPU string."
+      },
+      "reviewer_results": {
+        "issue": 1773,
+        "reviews": [
+          {
+            "focus": "pragmatic",
+            "blocking_count": 0,
+            "advisory_count": 4,
+            "detail_file": "wip/research/implement-doc_review_pragmatic_issue1773.md",
+            "summary": "No blocking findings. Implementation is correct, follows libc pattern closely. Advisory: ValidGPUTypes/SetGPU/PlanConfig.GPU exported but no production callers yet (intended for downstream issues)."
+          },
+          {
+            "focus": "architect",
+            "blocking_count": 0,
+            "advisory_count": 2,
+            "detail_file": "wip/research/implement-doc_review_architect_issue1773.md",
+            "summary": "No blocking findings. Follows libc detection pattern exactly. Advisory: manual target constructors pass empty GPU (correct today, #1775 will wire real values)."
+          },
+          {
+            "focus": "maintainer",
+            "blocking_count": 1,
+            "advisory_count": 4,
+            "detail_file": "wip/research/implement-doc_review_maintainer_issue1773.md",
+            "summary": "One blocking finding: depCfg in plan_generator.go:747 omits GPU (and LinuxFamily). DISPOSITION: Already tracked in #1775 (refactor: thread GPU through plan generation), which explicitly depends on #1773. Not a regression - pre-existing gap. Advisory: SetGPU naming (WithGPU preferred), ValidGPUTypes/pciVendorToGPU disconnect risk, executor.go:132 empty GPU."
+          }
+        ],
+        "disposition": "pass",
+        "disposition_rationale": "Maintainer blocking finding (depCfg GPU propagation) is already tracked in #1775 which depends on #1773. Not a regression introduced by this change."
+      },
       "testable_scenarios": [
         "scenario-1",
         "scenario-2",
