@@ -62,8 +62,8 @@ Planned
 | ~~_Removes the embedded manifest, download, platform key, and verification code from the addon package. Replaces `EnsureAddon()` with recipe-based installation via an injected `Installer` interface. Wires `llm.backend=cpu` override and cleans up legacy addon paths._~~ | | |
 | ~~[#1779: feat(llm): add structured error for backend init failure](https://github.com/tsukumogami/tsuku/issues/1779)~~ | ~~None~~ | ~~simple~~ |
 | ~~_Adds a clear stderr message in the Rust binary when the compiled-in GPU backend fails to initialize, suggesting `tsuku config set llm.backend cpu`. Informational only, no protocol changes. Independent work in the tsuku-llm repo._~~ | | |
-| [#1780: test(llm): validate GPU variant performance on shipped models](https://github.com/tsukumogami/tsuku/issues/1780) | [#1776](https://github.com/tsukumogami/tsuku/issues/1776) | testable |
-| _Validates CUDA variant on NVIDIA hardware and Vulkan variant on AMD/Intel for 0.5B/1.5B/3B models, measuring tokens/second. Confirms GPU acceleration provides meaningful speedup over CPU. Must pass before this design is marked Current._ | | |
+| ~~[#1780: test(llm): validate GPU variant performance on shipped models](https://github.com/tsukumogami/tsuku/issues/1780)~~ | ~~[#1776](https://github.com/tsukumogami/tsuku/issues/1776)~~ | ~~testable~~ |
+| ~~_Validates CUDA variant on NVIDIA hardware and Vulkan variant on AMD/Intel for 0.5B/1.5B/3B models, measuring tokens/second. Confirms GPU acceleration provides meaningful speedup over CPU. Must pass before this design is marked Current._~~ | | |
 | [#1786: test(recipe): validate tsuku-llm recipe against release pipeline and document user experience](https://github.com/tsukumogami/tsuku/issues/1786) | [#1776](https://github.com/tsukumogami/tsuku/issues/1776) | testable |
 | _Validates every `asset_pattern` against actual release artifact names, configures `supported_os`/`supported_arch`/`supported_libc` metadata so unsupported platforms get clear errors, and documents the user-facing experience this milestone delivers vs. what's deferred._ | | |
 
@@ -117,8 +117,8 @@ graph TD
     classDef needsDesign fill:#e1bee7
     classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
 
-    class I1773,I1774,I1775,I1776,I1777,I1778,I1779,I1789,I1790,I1791,I1792 done
-    class I1780,I1786 ready
+    class I1773,I1774,I1775,I1776,I1777,I1778,I1779,I1780,I1789,I1790,I1791,I1792 done
+    class I1786 ready
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design
