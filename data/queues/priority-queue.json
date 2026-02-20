@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-02-20T04:21:42Z",
+  "updated_at": "2026-02-20T06:00:01Z",
   "entries": [
     {
       "name": "bat",
@@ -43339,8 +43339,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": null
+      "failure_count": 2,
+      "next_retry_at": "2026-02-21T05:54:15.893066897Z"
     },
     {
       "name": "sile",
@@ -46379,8 +46379,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": null
+      "failure_count": 2,
+      "next_retry_at": "2026-02-21T05:54:22.268429994Z"
     },
     {
       "name": "tdlib",
@@ -50009,8 +50009,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": null
+      "failure_count": 2,
+      "next_retry_at": "2026-02-21T05:59:16.570158033Z"
     },
     {
       "name": "vmware-tanzu/carvel/vendir",
@@ -50469,8 +50469,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": null
+      "failure_count": 2,
+      "next_retry_at": "2026-02-21T05:59:22.38393854Z"
     },
     {
       "name": "wasm-bindgen",
@@ -50686,10 +50686,10 @@
       "name": "webdav",
       "source": "npm:webdav",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
+      "failure_count": 1,
       "next_retry_at": null
     },
     {
@@ -51896,7 +51896,7 @@
       "name": "yaml-language-server",
       "source": "npm:yaml-language-server",
       "priority": 3,
-      "status": "pending",
+      "status": "success",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 0,
@@ -51986,7 +51986,7 @@
       "name": "yarn",
       "source": "npm:yarn",
       "priority": 3,
-      "status": "pending",
+      "status": "success",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 0,
@@ -52106,7 +52106,7 @@
       "name": "yo",
       "source": "npm:yo",
       "priority": 3,
-      "status": "pending",
+      "status": "success",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 0,
@@ -52746,7 +52746,7 @@
       "name": "zx",
       "source": "npm:zx",
       "priority": 3,
-      "status": "pending",
+      "status": "success",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 0,
