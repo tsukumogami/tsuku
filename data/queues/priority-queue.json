@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-02-19T22:31:24Z",
+  "updated_at": "2026-02-19T23:30:52Z",
   "entries": [
     {
       "name": "bat",
@@ -29809,8 +29809,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": null
+      "failure_count": 2,
+      "next_retry_at": "2026-02-20T23:29:47.627672175Z"
     },
     {
       "name": "minio-mc",
@@ -30489,8 +30489,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": null
+      "failure_count": 2,
+      "next_retry_at": "2026-02-20T23:29:53.257104992Z"
     },
     {
       "name": "mongosh",
@@ -31236,7 +31236,7 @@
       "name": "n",
       "source": "npm:n",
       "priority": 3,
-      "status": "pending",
+      "status": "success",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 0,
@@ -31246,7 +31246,7 @@
       "name": "n8n-mcp",
       "source": "npm:n8n-mcp",
       "priority": 3,
-      "status": "pending",
+      "status": "success",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 0,
@@ -31606,7 +31606,7 @@
       "name": "needle",
       "source": "npm:needle",
       "priority": 3,
-      "status": "pending",
+      "status": "success",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 0,
@@ -32336,7 +32336,7 @@
       "name": "node-red",
       "source": "npm:node-red",
       "priority": 3,
-      "status": "pending",
+      "status": "success",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 0,
@@ -32576,7 +32576,7 @@
       "name": "nping",
       "source": "npm:nping",
       "priority": 3,
-      "status": "pending",
+      "status": "success",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 0,
@@ -33396,7 +33396,7 @@
       "name": "openapi-diff",
       "source": "npm:openapi-diff",
       "priority": 3,
-      "status": "pending",
+      "status": "success",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 0,
@@ -33846,7 +33846,7 @@
       "name": "openskills",
       "source": "npm:openskills",
       "priority": 3,
-      "status": "pending",
+      "status": "success",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 0,
@@ -35066,7 +35066,7 @@
       "name": "oxfmt",
       "source": "npm:oxfmt",
       "priority": 3,
-      "status": "pending",
+      "status": "success",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 0,
