@@ -2389,6 +2389,39 @@ func TestMergeWhenClause_SingleOSSetsConstraint(t *testing.T) {
 	}
 }
 
+func TestMergeWhenClause_SingleGPU(t *testing.T) {
+	when := &WhenClause{GPU: []string{"nvidia"}}
+	result, err := MergeWhenClause(nil, when)
+	if err != nil {
+		t.Fatalf("MergeWhenClause(nil, gpu=nvidia) error = %v", err)
+	}
+	if result.GPU != "nvidia" {
+		t.Errorf("MergeWhenClause().GPU = %q, want %q", result.GPU, "nvidia")
+	}
+}
+
+func TestMergeWhenClause_MultiGPULeavesEmpty(t *testing.T) {
+	when := &WhenClause{GPU: []string{"amd", "intel"}}
+	result, err := MergeWhenClause(nil, when)
+	if err != nil {
+		t.Fatalf("MergeWhenClause(nil, gpu=[amd,intel]) error = %v", err)
+	}
+	if result.GPU != "" {
+		t.Errorf("MergeWhenClause().GPU = %q, want empty (multi-GPU)", result.GPU)
+	}
+}
+
+func TestConstraint_Clone_IncludesGPU(t *testing.T) {
+	c := &Constraint{
+		OS:  "linux",
+		GPU: "nvidia",
+	}
+	result := c.Clone()
+	if result.GPU != "nvidia" {
+		t.Errorf("Clone().GPU = %q, want %q", result.GPU, "nvidia")
+	}
+}
+
 func TestMergeWhenClause_MultiOSLeavesEmpty(t *testing.T) {
 	// When implicit has no OS and when has multiple OSes, leave empty
 	implicit := &Constraint{}
