@@ -56,7 +56,7 @@ Planned
 | _Creates `recipes/t/tsuku-llm.toml` with GPU-filtered `when` clauses for variant selection. NVIDIA steps depend on cuda-runtime, AMD/Intel steps depend on vulkan-loader, CPU and Metal steps have no GPU dependencies. First real consumer of the `gpu` WhenClause field._ | | |
 | [#1777: feat(llm): add llm.backend config key](https://github.com/tsukumogami/tsuku/issues/1777) | None | simple |
 | _Registers `llm.backend` in userconfig with `cpu` as the only valid override value. Adds `LLMBackend()` to the `LLMConfig` interface. Independent of GPU detection, can start in parallel._ | | |
-| [#1792: test(ci): add recipe validation for GPU when clauses and dependency chains](https://github.com/tsukumogami/tsuku/issues/1792) | [#1774](https://github.com/tsukumogami/tsuku/issues/1774) | testable |
+| [#1792: test(ci): add recipe validation for GPU when clauses and dependency chains](https://github.com/tsukumogami/tsuku/issues/1792) | [#1774](https://github.com/tsukumogami/tsuku/issues/1774), [#1789](https://github.com/tsukumogami/tsuku/issues/1789), [#1790](https://github.com/tsukumogami/tsuku/issues/1790) | testable |
 | _Adds CI tests that validate GPU `when` clause matching logic, step-level dependency resolution for GPU recipes, and TOML syntax for all new recipe files. Runs as part of `go test` without requiring GPU hardware._ | | |
 | [#1778: refactor(llm): migrate addon from embedded manifest to recipe system](https://github.com/tsukumogami/tsuku/issues/1778) | [#1776](https://github.com/tsukumogami/tsuku/issues/1776), [#1777](https://github.com/tsukumogami/tsuku/issues/1777) | critical |
 | _Removes the embedded manifest, download, platform key, and verification code from the addon package. Replaces `EnsureAddon()` with recipe-based installation via an injected `Installer` interface. Wires `llm.backend=cpu` override and cleans up legacy addon paths._ | | |
@@ -100,6 +100,8 @@ graph TD
     I1773 --> I1775
     I1774 --> I1775
     I1774 --> I1792
+    I1789 --> I1792
+    I1790 --> I1792
     I1775 --> I1776
     I1789 --> I1776
     I1790 --> I1776
