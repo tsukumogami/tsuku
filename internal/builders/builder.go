@@ -4,6 +4,7 @@ import (
 	"context"
 	"strings"
 
+	"github.com/tsukumogami/tsuku/internal/llm"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/sandbox"
 )
@@ -234,6 +235,11 @@ type SessionOptions struct {
 	// DeterministicOnly when true, skip LLM fallback and return
 	// DeterministicFailedError on failure.
 	DeterministicOnly bool
+
+	// LLMFactoryOptions are additional options forwarded to llm.NewFactory
+	// when creating the LLM factory inside builders. This allows the CLI layer
+	// to inject a prompter (e.g., AutoApprovePrompter for --yes).
+	LLMFactoryOptions []llm.FactoryOption
 }
 
 // BuildFunc is a function that generates a recipe for a package.

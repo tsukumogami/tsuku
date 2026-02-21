@@ -20,6 +20,7 @@ import (
 	"github.com/tsukumogami/tsuku/internal/discover"
 	"github.com/tsukumogami/tsuku/internal/install"
 	"github.com/tsukumogami/tsuku/internal/llm"
+	"github.com/tsukumogami/tsuku/internal/llm/addon"
 	"github.com/tsukumogami/tsuku/internal/log"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/sandbox"
@@ -568,11 +569,19 @@ func runCreate(cmd *cobra.Command, args []string) {
 		progressReporter = &cliProgressReporter{out: os.Stdout}
 	}
 
+	// When --yes is set, use AutoApprovePrompter to skip download confirmation
+	// prompts. Otherwise the factory defaults to InteractivePrompter.
+	var llmFactoryOptions []llm.FactoryOption
+	if createAutoApprove {
+		llmFactoryOptions = append(llmFactoryOptions, llm.WithPrompter(&addon.AutoApprovePrompter{}))
+	}
+
 	sessionOpts := &builders.SessionOptions{
 		ProgressReporter:  progressReporter,
 		LLMConfig:         userCfg,
 		LLMStateTracker:   stateManager,
 		DeterministicOnly: createDeterministicOnly,
+		LLMFactoryOptions: llmFactoryOptions,
 	}
 
 	// Build request for use throughout
@@ -1029,11 +1038,19 @@ func runDiscoveryWithOptions(toolName string, searchProviderName string) (*disco
 		HasAPIKey:         false, // Will be set to true if NewLLMDiscovery succeeds
 	}
 
+	// Forward --yes flag to LLM factory via discovery options so
+	// addon/model download prompts are auto-approved.
+	var discoveryLLMOpts []llm.FactoryOption
+	if createAutoApprove {
+		discoveryLLMOpts = append(discoveryLLMOpts, llm.WithPrompter(&addon.AutoApprovePrompter{}))
+	}
+
 	llmDiscovery, err := discover.NewLLMDiscovery(globalCtx,
 		discover.WithConfirmFunc(confirmLLMDiscovery),
 		discover.WithSearchProvider(searchProvider),
 		discover.WithStateTracker(stateTracker),
 		discover.WithConfig(userCfg),
+		discover.WithLLMFactoryOptions(discoveryLLMOpts...),
 	)
 	if err != nil {
 		// No LLM provider available - use disabled discovery

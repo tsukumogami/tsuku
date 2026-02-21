@@ -67,14 +67,15 @@ type DiscoveryMetrics struct {
 // LLMDiscovery resolves tool names via LLM web search as a last resort.
 // This is the third and final stage of the resolver chain.
 type LLMDiscovery struct {
-	factory      *llm.Factory
-	search       search.Provider
-	confirm      ConfirmFunc
-	httpGet      HTTPGetFunc
-	logger       log.Logger
-	disabled     bool // Set when no LLM provider is available
-	stateTracker LLMStateTracker
-	config       LLMConfig
+	factory           *llm.Factory
+	search            search.Provider
+	confirm           ConfirmFunc
+	httpGet           HTTPGetFunc
+	logger            log.Logger
+	disabled          bool // Set when no LLM provider is available
+	stateTracker      LLMStateTracker
+	config            LLMConfig
+	llmFactoryOptions []llm.FactoryOption // Options forwarded to llm.NewFactory
 }
 
 // ConfirmFunc is a callback for user confirmation.
@@ -149,24 +150,33 @@ func WithConfig(cfg LLMConfig) LLMDiscoveryOption {
 	}
 }
 
+// WithLLMFactoryOptions passes additional options to llm.NewFactory.
+// This allows the CLI layer to inject a prompter (e.g., AutoApprovePrompter for --yes).
+func WithLLMFactoryOptions(fopts ...llm.FactoryOption) LLMDiscoveryOption {
+	return func(d *LLMDiscovery) {
+		d.llmFactoryOptions = fopts
+	}
+}
+
 // NewLLMDiscovery creates an LLM-based discovery resolver.
 func NewLLMDiscovery(ctx context.Context, opts ...LLMDiscoveryOption) (*LLMDiscovery, error) {
-	factory, err := llm.NewFactory(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("llm discovery: %w", err)
-	}
-
+	// Apply options to a temporary struct to capture factory options
+	// before creating the factory.
 	d := &LLMDiscovery{
-		factory: factory,
 		search:  search.NewDDGProvider(),
 		confirm: defaultConfirm,
 		httpGet: defaultHTTPGet,
 		logger:  log.Default(),
 	}
-
 	for _, opt := range opts {
 		opt(d)
 	}
+
+	factory, err := llm.NewFactory(ctx, d.llmFactoryOptions...)
+	if err != nil {
+		return nil, fmt.Errorf("llm discovery: %w", err)
+	}
+	d.factory = factory
 
 	return d, nil
 }

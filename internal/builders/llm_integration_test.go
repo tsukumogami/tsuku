@@ -6,9 +6,11 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"math"
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -176,6 +178,51 @@ const (
 	baselineFail = "fail"
 )
 
+// testCaseMetrics tracks latency and repair turn data for a single test case.
+type testCaseMetrics struct {
+	Latency        time.Duration // wall-clock time for Generate call
+	RepairAttempts int           // number of repair turns the builder used
+}
+
+// parseBenchmarkTimeout reads the per-test-case timeout from the
+// LLM_BENCHMARK_TIMEOUT environment variable. The value is parsed as seconds.
+// Returns the default (10 minutes) if the variable is unset or invalid.
+func parseBenchmarkTimeout() time.Duration {
+	const defaultTimeout = 10 * time.Minute
+
+	raw := os.Getenv("LLM_BENCHMARK_TIMEOUT")
+	if raw == "" {
+		return defaultTimeout
+	}
+
+	seconds, err := strconv.Atoi(raw)
+	if err != nil || seconds <= 0 {
+		return defaultTimeout
+	}
+	return time.Duration(seconds) * time.Second
+}
+
+// percentile computes the p-th percentile from a sorted slice of durations.
+// p must be in [0, 100]. The slice must be non-empty and sorted ascending.
+func percentile(sorted []time.Duration, p float64) time.Duration {
+	if len(sorted) == 0 {
+		return 0
+	}
+	if len(sorted) == 1 {
+		return sorted[0]
+	}
+	// Use nearest-rank method
+	rank := (p / 100.0) * float64(len(sorted)-1)
+	lower := int(math.Floor(rank))
+	upper := int(math.Ceil(rank))
+	if lower == upper {
+		return sorted[lower]
+	}
+	// Linear interpolation
+	frac := rank - float64(lower)
+	return sorted[lower] + time.Duration(frac*float64(sorted[upper]-sorted[lower]))
+}
+
 // baselineKey constructs the key used to identify a test case in baseline files.
 // The format is "<testID>_<tool>" where testID comes from the test matrix and
 // tool is the tool name from the test case. This key is used both as the Go
@@ -267,6 +314,61 @@ func providerModel(providerName string) string {
 	}
 }
 
+// logBenchmarkSummary logs latency percentiles and repair turn statistics
+// collected from the test run. Called once after all subtests complete.
+func logBenchmarkSummary(t *testing.T, metrics map[string]*testCaseMetrics) {
+	t.Helper()
+
+	if len(metrics) == 0 {
+		return
+	}
+
+	// Collect latency values and repair turn counts.
+	var latencies []time.Duration
+	totalRepairs := 0
+	firstTryCount := 0
+
+	for _, m := range metrics {
+		latencies = append(latencies, m.Latency)
+		totalRepairs += m.RepairAttempts
+		if m.RepairAttempts == 0 {
+			firstTryCount++
+		}
+	}
+
+	// Sort latencies for percentile computation.
+	sort.Slice(latencies, func(i, j int) bool {
+		return latencies[i] < latencies[j]
+	})
+
+	p50 := percentile(latencies, 50)
+	p99 := percentile(latencies, 99)
+	avgRepairs := float64(totalRepairs) / float64(len(metrics))
+	firstTryRate := float64(firstTryCount) / float64(len(metrics)) * 100
+
+	t.Logf("--- Benchmark Summary ---")
+	t.Logf("  Test cases:      %d", len(metrics))
+	t.Logf("  Latency p50:     %s", p50.Round(time.Millisecond))
+	t.Logf("  Latency p99:     %s", p99.Round(time.Millisecond))
+	t.Logf("  Latency min:     %s", latencies[0].Round(time.Millisecond))
+	t.Logf("  Latency max:     %s", latencies[len(latencies)-1].Round(time.Millisecond))
+	t.Logf("  Repair turns:    %d total (avg %.1f per case)", totalRepairs, avgRepairs)
+	t.Logf("  First-try rate:  %.0f%% (%d/%d)", firstTryRate, firstTryCount, len(metrics))
+
+	// Per-case breakdown for debugging slow or repair-heavy cases.
+	t.Logf("--- Per-Case Metrics ---")
+	// Sort keys for deterministic output.
+	keys := make([]string, 0, len(metrics))
+	for k := range metrics {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for _, k := range keys {
+		m := metrics[k]
+		t.Logf("  %-50s  latency=%s  repairs=%d", k, m.Latency.Round(time.Millisecond), m.RepairAttempts)
+	}
+}
+
 // TestLLMGroundTruth validates LLM-generated recipes against ground truth.
 // The test detects the active provider from environment variables in priority
 // order: TSUKU_LLM_BINARY (local) > ANTHROPIC_API_KEY (Claude) >
@@ -332,10 +434,18 @@ func TestLLMGroundTruth(t *testing.T) {
 		"llm_github_minikube_file_no_mapping", "llm_github_kopia_macos_mapping", "llm_github_cargo-deny_musl",
 	}
 
+	// Per-test-case timeout, configurable via LLM_BENCHMARK_TIMEOUT (seconds).
+	// Default is 10 minutes to accommodate CPU inference with local models.
+	perTestTimeout := parseBenchmarkTimeout()
+	t.Logf("Per-test timeout: %s (set LLM_BENCHMARK_TIMEOUT in seconds to override)", perTestTimeout)
+
 	// Track per-test results. Validation mismatches are logged (not errors)
 	// so individual subtests don't fail the parent. The baseline regression
 	// check at the end is the sole pass/fail gate.
 	results := make(map[string]string)
+
+	// Track latency and repair turn metrics per test case.
+	metrics := make(map[string]*testCaseMetrics)
 
 	for _, testID := range testIDs {
 		tc, ok := matrix.Tests[testID]
@@ -348,9 +458,7 @@ func TestLLMGroundTruth(t *testing.T) {
 		t.Run(key, func(t *testing.T) {
 			t.Logf("Testing: %s - %s", tc.Tool, tc.Desc)
 
-			// Per-test timeout: 10 minutes for CPU inference with local model
-			// (cloud providers finish in ~10s, but local 0.5B on CPU needs longer)
-			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+			ctx, cancel := context.WithTimeout(context.Background(), perTestTimeout)
 			defer cancel()
 
 			// Load ground truth recipe
@@ -385,12 +493,28 @@ func TestLLMGroundTruth(t *testing.T) {
 			}
 			defer func() { _ = session.Close() }()
 
+			// Time the Generate call to capture inference latency.
+			genStart := time.Now()
 			result, err = session.Generate(ctx)
+			genDuration := time.Since(genStart)
+
 			if err != nil {
-				t.Logf("FAIL: LLM recipe generation failed: %v", err)
+				t.Logf("FAIL: LLM recipe generation failed after %s: %v", genDuration.Round(time.Millisecond), err)
 				results[key] = baselineFail
+				// Still record metrics for failed cases -- latency data on
+				// failures is useful for diagnosing timeout issues.
+				metrics[key] = &testCaseMetrics{
+					Latency: genDuration,
+				}
 				return
 			}
+
+			// Record metrics from the build result.
+			metrics[key] = &testCaseMetrics{
+				Latency:        genDuration,
+				RepairAttempts: result.RepairAttempts,
+			}
+			t.Logf("Generate completed in %s (repair attempts: %d)", genDuration.Round(time.Millisecond), result.RepairAttempts)
 
 			generated := result.Recipe
 
@@ -426,7 +550,7 @@ func TestLLMGroundTruth(t *testing.T) {
 		}
 	}
 
-	// Log summary
+	// Log pass/fail summary
 	passCount := 0
 	for _, status := range results {
 		if status == baselinePass {
@@ -434,6 +558,9 @@ func TestLLMGroundTruth(t *testing.T) {
 		}
 	}
 	t.Logf("Results: %d/%d passed", passCount, len(results))
+
+	// Log latency and repair turn summary
+	logBenchmarkSummary(t, metrics)
 
 	// Handle baseline update or regression check
 	if *updateBaseline {

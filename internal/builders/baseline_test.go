@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestWriteBaseline_MinimumPassRate(t *testing.T) {
@@ -311,6 +312,125 @@ func TestProviderModel(t *testing.T) {
 			model := providerModel(tt.provider)
 			if model == "" {
 				t.Errorf("providerModel(%q) returned empty string", tt.provider)
+			}
+		})
+	}
+}
+
+func TestPercentile(t *testing.T) {
+	tests := []struct {
+		name   string
+		values []time.Duration
+		p      float64
+		want   time.Duration
+	}{
+		{
+			name:   "single value",
+			values: []time.Duration{5 * time.Second},
+			p:      50,
+			want:   5 * time.Second,
+		},
+		{
+			name:   "p50 of two values",
+			values: []time.Duration{2 * time.Second, 8 * time.Second},
+			p:      50,
+			want:   5 * time.Second,
+		},
+		{
+			name:   "p0 returns minimum",
+			values: []time.Duration{1 * time.Second, 2 * time.Second, 3 * time.Second},
+			p:      0,
+			want:   1 * time.Second,
+		},
+		{
+			name:   "p100 returns maximum",
+			values: []time.Duration{1 * time.Second, 2 * time.Second, 3 * time.Second},
+			p:      100,
+			want:   3 * time.Second,
+		},
+		{
+			name:   "p50 of three values",
+			values: []time.Duration{1 * time.Second, 2 * time.Second, 3 * time.Second},
+			p:      50,
+			want:   2 * time.Second,
+		},
+		{
+			name:   "p99 skews toward max",
+			values: []time.Duration{1 * time.Second, 2 * time.Second, 10 * time.Second},
+			p:      99,
+			want:   9*time.Second + 840*time.Millisecond, // interpolated
+		},
+		{
+			name:   "empty returns zero",
+			values: []time.Duration{},
+			p:      50,
+			want:   0,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := percentile(tt.values, tt.p)
+			// Allow 1ms tolerance for floating-point interpolation.
+			diff := got - tt.want
+			if diff < 0 {
+				diff = -diff
+			}
+			if diff > time.Millisecond {
+				t.Errorf("percentile(p%.0f) = %s, want %s", tt.p, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestParseBenchmarkTimeout(t *testing.T) {
+	tests := []struct {
+		name   string
+		envVal string
+		want   time.Duration
+	}{
+		{
+			name:   "unset returns default",
+			envVal: "",
+			want:   10 * time.Minute,
+		},
+		{
+			name:   "valid seconds",
+			envVal: "300",
+			want:   5 * time.Minute,
+		},
+		{
+			name:   "invalid returns default",
+			envVal: "not-a-number",
+			want:   10 * time.Minute,
+		},
+		{
+			name:   "zero returns default",
+			envVal: "0",
+			want:   10 * time.Minute,
+		},
+		{
+			name:   "negative returns default",
+			envVal: "-5",
+			want:   10 * time.Minute,
+		},
+		{
+			name:   "60 seconds",
+			envVal: "60",
+			want:   1 * time.Minute,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.envVal != "" {
+				t.Setenv("LLM_BENCHMARK_TIMEOUT", tt.envVal)
+			} else {
+				t.Setenv("LLM_BENCHMARK_TIMEOUT", "")
+			}
+			got := parseBenchmarkTimeout()
+			if got != tt.want {
+				t.Errorf("parseBenchmarkTimeout() = %s, want %s", got, tt.want)
 			}
 		})
 	}
