@@ -1,0 +1,41 @@
+{
+  "tool": "sipp",
+  "selected": "rubygems:sipp",
+  "alternatives": [
+    "homebrew:sipp",
+    "crates.io:sipp",
+    "npm:sipp"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 16.030201342281877,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:sipp",
+      "downloads": 894,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:sipp",
+      "downloads": 333,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:sipp",
+      "downloads": 14331,
+      "version_count": 9,
+      "has_repository": false
+    },
+    {
+      "source": "npm:sipp",
+      "downloads": 0,
+      "version_count": 30,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:sipp",
+  "disambiguated_at": "2026-02-17T00:28:07.463664516Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

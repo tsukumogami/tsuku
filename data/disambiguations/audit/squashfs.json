@@ -1,0 +1,30 @@
+{
+  "tool": "squashfs",
+  "selected": "homebrew:squashfs",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:squashfs",
+      "downloads": 56,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:squashfs",
+      "downloads": 7615,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:squashfs",
+      "downloads": 1,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:squashfs",
+  "disambiguated_at": "2026-02-17T00:28:40.051824677Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

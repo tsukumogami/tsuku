@@ -346,6 +346,128 @@ func (b *NpmBuilder) Probe(ctx context.Context, name string) (*ProbeResult, erro
 	return result, nil
 }
 
+// npmSearchResponse represents the npm registry search API response.
+type npmSearchResponse struct {
+	Objects []struct {
+		Package struct {
+			Name string `json:"name"`
+		} `json:"package"`
+	} `json:"objects"`
+	Total int `json:"total"`
+}
+
+// Discover lists popular CLI packages from npm by searching for packages
+// with the "cli" keyword, sorted by popularity. It paginates through results
+// up to the requested limit (max 1000) and fetches weekly download counts
+// for each candidate. Rate limited to 2 requests/second.
+func (b *NpmBuilder) Discover(ctx context.Context, limit int) ([]DiscoveryCandidate, error) {
+	if limit <= 0 {
+		return nil, nil
+	}
+	const maxLimit = 1000
+	if limit > maxLimit {
+		limit = maxLimit
+	}
+
+	const pageSize = 250
+	var candidates []DiscoveryCandidate
+	offset := 0
+
+	for len(candidates) < limit {
+		select {
+		case <-ctx.Done():
+			return candidates, ctx.Err()
+		default:
+		}
+
+		baseURL, err := url.Parse(b.npmRegistryURL)
+		if err != nil {
+			return nil, fmt.Errorf("invalid base URL: %w", err)
+		}
+		apiURL := baseURL.JoinPath("-", "v1", "search")
+
+		q := apiURL.Query()
+		q.Set("text", "keywords:cli")
+		q.Set("popularity", "1.0")
+		q.Set("size", fmt.Sprintf("%d", pageSize))
+		q.Set("from", fmt.Sprintf("%d", offset))
+		apiURL.RawQuery = q.Encode()
+
+		req, err := http.NewRequestWithContext(ctx, "GET", apiURL.String(), nil)
+		if err != nil {
+			return nil, fmt.Errorf("create search request: %w", err)
+		}
+		req.Header.Set("User-Agent", "tsuku/1.0 (https://github.com/tsukumogami/tsuku)")
+		req.Header.Set("Accept", "application/json")
+
+		resp, err := b.httpClient.Do(req)
+		if err != nil {
+			return nil, fmt.Errorf("fetch npm search page at offset %d: %w", offset, err)
+		}
+
+		if resp.StatusCode == 429 {
+			resp.Body.Close()
+			return nil, fmt.Errorf("npm rate limit exceeded at offset %d", offset)
+		}
+		if resp.StatusCode != 200 {
+			resp.Body.Close()
+			return nil, fmt.Errorf("npm returned status %d at offset %d", resp.StatusCode, offset)
+		}
+
+		limitedReader := io.LimitReader(resp.Body, maxNpmResponseSize)
+		var searchResp npmSearchResponse
+		if err := json.NewDecoder(limitedReader).Decode(&searchResp); err != nil {
+			resp.Body.Close()
+			return nil, fmt.Errorf("parse npm search response at offset %d: %w", offset, err)
+		}
+		resp.Body.Close()
+
+		if len(searchResp.Objects) == 0 {
+			break
+		}
+
+		for _, obj := range searchResp.Objects {
+			if len(candidates) >= limit {
+				break
+			}
+
+			name := obj.Package.Name
+			if name == "" {
+				continue
+			}
+
+			// Rate limit: 2 req/s for download count fetches.
+			select {
+			case <-ctx.Done():
+				return candidates, ctx.Err()
+			case <-time.After(500 * time.Millisecond):
+			}
+
+			downloads := b.fetchWeeklyDownloads(ctx, name)
+			candidates = append(candidates, DiscoveryCandidate{
+				Name:      name,
+				Downloads: downloads,
+			})
+		}
+
+		// If we got fewer than a full page, there are no more results.
+		if len(searchResp.Objects) < pageSize {
+			break
+		}
+
+		offset += pageSize
+
+		// Rate limit: 2 req/s between search pages.
+		select {
+		case <-ctx.Done():
+			return candidates, ctx.Err()
+		case <-time.After(500 * time.Millisecond):
+		}
+	}
+
+	return candidates, nil
+}
+
 // fetchWeeklyDownloads fetches the last-week download count from the npm downloads API.
 // Returns 0 on any error.
 func (b *NpmBuilder) fetchWeeklyDownloads(ctx context.Context, name string) int {

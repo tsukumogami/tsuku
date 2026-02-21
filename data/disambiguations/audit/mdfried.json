@@ -1,0 +1,27 @@
+{
+  "tool": "mdfried",
+  "selected": "crates.io:mdfried",
+  "alternatives": [
+    "homebrew:mdfried"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.0371517027863777,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:mdfried",
+      "downloads": 646,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:mdfried",
+      "downloads": 670,
+      "version_count": 44,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:mdfried",
+  "disambiguated_at": "2026-02-17T00:22:14.905086132Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

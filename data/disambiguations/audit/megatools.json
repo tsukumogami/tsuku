@@ -1,0 +1,26 @@
+{
+  "tool": "megatools",
+  "selected": "homebrew:megatools",
+  "alternatives": [
+    "pypi:megatools"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:megatools",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:megatools",
+      "downloads": 1516,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:megatools",
+  "disambiguated_at": "2026-02-17T00:22:18.096548073Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

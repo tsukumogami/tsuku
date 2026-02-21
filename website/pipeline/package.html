@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Package detail in tsuku pipeline">
+    <title>Package Detail - tsuku Pipeline</title>
+    <link rel="stylesheet" href="/assets/style.css">
+    <style>
+        .detail-card {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .detail-card h2 {
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            color: var(--text-muted);
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 140px 1fr;
+            gap: 0.5rem 1rem;
+            align-items: baseline;
+        }
+
+        .detail-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .detail-value {
+            font-size: 0.9rem;
+            word-break: break-word;
+        }
+
+        .detail-value a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .detail-value a:hover {
+            text-decoration: underline;
+        }
+
+        .package-name {
+            font-family: "SF Mono", Consolas, monospace;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status-pending { background: var(--text-muted); color: var(--bg); }
+        .status-blocked { background: #d29922; color: #000; }
+        .status-failed { background: #f85149; color: #fff; }
+        .status-success { background: #3fb950; color: #000; }
+        .status-historical { background: var(--border); color: var(--text-muted); }
+
+        .priority-badge {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .priority-1 { background: #3fb950; color: #000; }
+        .priority-2 { background: #d29922; color: #000; }
+        .priority-3 { background: var(--text-muted); color: var(--bg); }
+
+        .category-badge {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            background: #f85149;
+            color: #fff;
+        }
+
+        .subcategory-badge {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            background: var(--text-muted);
+            color: var(--bg);
+        }
+
+        .failure-count {
+            font-family: "SF Mono", Consolas, monospace;
+            font-size: 0.85rem;
+        }
+
+        .failure-count.has-failures {
+            color: #f85149;
+            font-weight: 600;
+        }
+
+        .dep-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .dep-badge {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-family: "SF Mono", Consolas, monospace;
+            background: #d29922;
+            color: #000;
+            text-decoration: none;
+        }
+
+        .dep-badge:hover {
+            opacity: 0.85;
+        }
+
+        .source-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+        }
+
+        .source-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+        }
+
+        .source-selected {
+            color: #3fb950;
+            font-weight: 600;
+        }
+
+        .source-alt {
+            color: var(--text-muted);
+        }
+
+        .package-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .package-table th,
+        .package-table td {
+            text-align: left;
+            padding: 0.5rem 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .package-table th {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .package-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .package-table tbody tr {
+            cursor: pointer;
+            transition: background 0.15s ease;
+        }
+
+        .package-table tbody tr:hover {
+            background: var(--bg);
+        }
+
+        .package-table tbody tr a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .timestamp {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .actions {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .actions h2 {
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            color: var(--text-muted);
+        }
+
+        .action-links {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background: var(--bg);
+            color: var(--text);
+            text-decoration: none;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: border-color 0.15s ease;
+        }
+
+        .action-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-muted);
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 1rem;
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        .error-state {
+            text-align: center;
+            padding: 3rem 2rem;
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-muted);
+        }
+
+        .error-state h2 {
+            margin-bottom: 0.5rem;
+            color: var(--text);
+        }
+
+        .empty-state {
+            padding: 1.5rem;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 600px) {
+            .detail-grid {
+                grid-template-columns: 1fr;
+                gap: 0.25rem;
+            }
+            .detail-label {
+                margin-top: 0.5rem;
+            }
+            .package-table {
+                font-size: 0.85rem;
+            }
+            .timestamp {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="/" class="logo">tsuku</a>
+            <a href="https://github.com/tsukumogami/tsuku" class="github-link" aria-label="GitHub">
+                <svg viewBox="0 0 16 16" width="24" height="24" fill="currentColor">
+                    <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+                </svg>
+            </a>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero">
+            <h1>Package Detail</h1>
+            <p class="tagline">Per-package status and history</p>
+        </section>
+
+        <a href="#" id="back-link" class="back-link">&larr; Back</a>
+
+        <div id="content">
+            <div class="loading">Loading...</div>
+        </div>
+
+        <section class="links">
+            <a href="/pipeline/" class="link-btn">Back to Dashboard</a>
+        </section>
+    </main>
+
+    <footer>
+        <p>
+            <a href="/telemetry">Privacy</a>
+            <span class="sep">|</span>
+            <a href="https://github.com/tsukumogami/tsuku">GitHub</a>
+        </p>
+    </footer>
+
+    <script>
+        function esc(s) {
+            if (s == null) return '';
+            const div = document.createElement('div');
+            div.textContent = String(s);
+            return div.innerHTML;
+        }
+
+        function formatDate(isoString) {
+            const date = new Date(isoString);
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                timeZoneName: 'short'
+            });
+        }
+
+        // Set back link to referrer or fallback to /pipeline/
+        (function() {
+            var backLink = document.getElementById('back-link');
+            if (document.referrer && document.referrer.indexOf('/pipeline/') !== -1) {
+                backLink.href = document.referrer;
+            } else {
+                backLink.href = '/pipeline/';
+            }
+        })();
+
+        // Find package across all queue status lists
+        function findPackageInQueue(data, pkgId) {
+            var statuses = ['pending', 'blocked', 'failed', 'success'];
+            var packages = data.queue && data.queue.packages ? data.queue.packages : {};
+            for (var i = 0; i < statuses.length; i++) {
+                var status = statuses[i];
+                var list = packages[status] || [];
+                for (var j = 0; j < list.length; j++) {
+                    if (list[j].id === pkgId) {
+                        return { pkg: list[j], status: status };
+                    }
+                }
+            }
+            return null;
+        }
+
+        // Find failures for this package
+        function findFailures(data, pkgName) {
+            var details = data.failure_details || [];
+            return details
+                .filter(function(f) { return f.package === pkgName; })
+                .sort(function(a, b) {
+                    return new Date(b.timestamp) - new Date(a.timestamp);
+                });
+        }
+
+        // Find disambiguation entry for this package
+        function findDisambiguation(data, toolName) {
+            var disamb = data.disambiguations;
+            if (!disamb || !disamb.entries) return null;
+            for (var i = 0; i < disamb.entries.length; i++) {
+                if (disamb.entries[i].tool === toolName) {
+                    return disamb.entries[i];
+                }
+            }
+            return null;
+        }
+
+        // Check if this package blocks others
+        function findBlockedPackages(data, pkgName) {
+            var blockers = data.blockers || [];
+            for (var i = 0; i < blockers.length; i++) {
+                if (blockers[i].dependency === pkgName) {
+                    return blockers[i];
+                }
+            }
+            return null;
+        }
+
+        function renderStatus(result, failures, blockerInfo) {
+            var pkg = result ? result.pkg : null;
+            var status = result ? result.status : 'historical';
+            var name = pkg ? pkg.name : '';
+            var ecosystem = pkg ? pkg.ecosystem : '';
+            var priority = pkg ? pkg.priority : 0;
+            var failureCount = pkg ? (pkg.failure_count || 0) : 0;
+            var nextRetryAt = pkg ? (pkg.next_retry_at || '') : '';
+
+            var html = '<div class="detail-card">';
+            html += '<h2>Status</h2>';
+            html += '<div class="detail-grid">';
+
+            // Name
+            html += '<span class="detail-label">Name</span>';
+            html += '<span class="detail-value package-name">' + esc(name) + '</span>';
+
+            // Ecosystem
+            html += '<span class="detail-label">Ecosystem</span>';
+            html += '<span class="detail-value">' + esc(ecosystem) + '</span>';
+
+            // Queue Status
+            html += '<span class="detail-label">Queue Status</span>';
+            html += '<span class="detail-value"><span class="status-badge status-' +
+                esc(status) + '">' + esc(status) + '</span></span>';
+
+            // Priority
+            if (priority > 0) {
+                html += '<span class="detail-label">Priority</span>';
+                html += '<span class="detail-value"><span class="priority-badge priority-' +
+                    esc(String(priority)) + '">P' + esc(String(priority)) + '</span></span>';
+            }
+
+            // Failure count
+            if (failureCount > 0 || status === 'failed') {
+                var fcClass = failureCount > 0 ? 'failure-count has-failures' : 'failure-count';
+                html += '<span class="detail-label">Failure Count</span>';
+                html += '<span class="detail-value"><span class="' + fcClass + '">' +
+                    esc(String(failureCount)) + '</span></span>';
+            }
+
+            // Next retry at
+            if (nextRetryAt) {
+                html += '<span class="detail-label">Next Retry</span>';
+                html += '<span class="detail-value">' + esc(formatDate(nextRetryAt)) + '</span>';
+            }
+
+            // Category (for failed packages)
+            if (pkg && pkg.category) {
+                html += '<span class="detail-label">Category</span>';
+                html += '<span class="detail-value"><span class="category-badge">' +
+                    esc(pkg.category) + '</span></span>';
+            }
+
+            // Blocked by
+            if (pkg && pkg.blocked_by && pkg.blocked_by.length > 0) {
+                html += '<span class="detail-label">Blocked By</span>';
+                html += '<span class="detail-value"><div class="dep-list">';
+                pkg.blocked_by.forEach(function(dep) {
+                    html += '<a href="package.html?id=' + encodeURIComponent(dep) +
+                        '" class="dep-badge">' + esc(dep) + '</a>';
+                });
+                html += '</div></span>';
+            }
+
+            // Blocks others
+            if (blockerInfo) {
+                html += '<span class="detail-label">Blocks</span>';
+                html += '<span class="detail-value"><div class="dep-list">';
+                (blockerInfo.packages || []).forEach(function(p) {
+                    html += '<a href="package.html?id=' + encodeURIComponent(p) +
+                        '" class="dep-badge">' + esc(p) + '</a>';
+                });
+                html += '</div></span>';
+            }
+
+            html += '</div></div>';
+            return html;
+        }
+
+        function renderDisambiguation(entry) {
+            if (!entry) return '';
+
+            var html = '<div class="detail-card">';
+            html += '<h2>Disambiguation</h2>';
+            html += '<div class="detail-grid">';
+
+            // Selection reason
+            html += '<span class="detail-label">Selection</span>';
+            html += '<span class="detail-value">' + esc(entry.selection_reason) + '</span>';
+
+            // Selected source
+            html += '<span class="detail-label">Selected Source</span>';
+            html += '<span class="detail-value"><div class="source-list">' +
+                '<span class="source-item source-selected">' + esc(entry.selected) + '</span>' +
+                '</div></span>';
+
+            // Alternative sources
+            if (entry.alternatives && entry.alternatives.length > 0) {
+                html += '<span class="detail-label">Alternatives</span>';
+                html += '<span class="detail-value"><div class="source-list">';
+                entry.alternatives.forEach(function(alt) {
+                    html += '<span class="source-item source-alt">' + esc(alt) + '</span>';
+                });
+                html += '</div></span>';
+            }
+
+            // High risk flag
+            if (entry.high_risk) {
+                html += '<span class="detail-label">Risk</span>';
+                html += '<span class="detail-value"><span class="category-badge">High Risk</span></span>';
+            }
+
+            html += '</div></div>';
+            return html;
+        }
+
+        function renderAttemptHistory(failures) {
+            var html = '<div class="detail-card">';
+            html += '<h2>Attempt History</h2>';
+
+            if (failures.length === 0) {
+                html += '<div class="empty-state">No failures recorded</div>';
+                html += '</div>';
+                return html;
+            }
+
+            var rows = failures.map(function(f) {
+                return '<tr onclick="window.location=\'failure.html?id=' +
+                    encodeURIComponent(f.id) + '\'">' +
+                    '<td><a href="failure.html?id=' + encodeURIComponent(f.id) + '">' +
+                    '<span class="category-badge">' + esc(f.category) + '</span></a></td>' +
+                    '<td>' + (f.subcategory
+                        ? '<span class="subcategory-badge">' + esc(f.subcategory) + '</span>'
+                        : '-') + '</td>' +
+                    '<td>' + esc(f.platform || '-') + '</td>' +
+                    '<td class="timestamp">' + esc(formatDate(f.timestamp)) + '</td>' +
+                    '</tr>';
+            }).join('');
+
+            html += '<table class="package-table">' +
+                '<thead><tr>' +
+                '<th>Category</th>' +
+                '<th>Subcategory</th>' +
+                '<th>Platform</th>' +
+                '<th>Timestamp</th>' +
+                '</tr></thead>' +
+                '<tbody>' + rows + '</tbody>' +
+                '</table>';
+            html += '</div>';
+            return html;
+        }
+
+        function renderActions(result, pkgId) {
+            var pkg = result ? result.pkg : null;
+            var name = pkg ? pkg.name : pkgId;
+
+            var issueTitle = encodeURIComponent('[Package] ' + name);
+            var issueBody = encodeURIComponent(
+                '## Package Details\n\n' +
+                '- **Package**: ' + name + '\n' +
+                (pkg ? '- **Ecosystem**: ' + pkg.ecosystem + '\n' : '') +
+                (pkg && pkg.category ? '- **Category**: ' + pkg.category + '\n' : '') +
+                '\n## Context\n\nDashboard link: package.html?id=' + pkgId + '\n'
+            );
+
+            var html = '<div class="actions">';
+            html += '<h2>Actions</h2>';
+            html += '<div class="action-links">';
+            html += '<a href="https://github.com/tsukumogami/tsuku/issues/new?title=' +
+                issueTitle + '&body=' + issueBody +
+                '" class="action-btn" target="_blank" rel="noopener">File issue</a>';
+            html += '<a href="https://github.com/tsukumogami/tsuku/actions/workflows/batch.yml' +
+                '" class="action-btn" target="_blank" rel="noopener">Retry</a>';
+            html += '<a href="https://github.com/tsukumogami/tsuku/edit/main/data/queues/priority-queue.json' +
+                '" class="action-btn" target="_blank" rel="noopener">Exclude</a>';
+            html += '</div></div>';
+            return html;
+        }
+
+        function renderError(title, message) {
+            return '<div class="error-state"><h2>' + esc(title) + '</h2><p>' + esc(message) + '</p>' +
+                '<p style="margin-top: 1rem;"><a href="/pipeline/" style="color: var(--accent);">&larr; Back to Dashboard</a></p></div>';
+        }
+
+        async function load() {
+            var params = new URLSearchParams(window.location.search);
+            var pkgId = params.get('id');
+
+            if (!pkgId) {
+                document.getElementById('content').innerHTML =
+                    renderError('No package selected', 'Provide an id parameter to view a package. Browse the queue lists to find one.');
+                return;
+            }
+
+            try {
+                var response = await fetch('/pipeline/dashboard.json');
+                var data = await response.json();
+
+                // Look up package in queue
+                var result = findPackageInQueue(data, pkgId);
+
+                // Extract the name from the id for failure/disambiguation lookups
+                // ID format is "ecosystem:name" (e.g. "homebrew:neovim")
+                var pkgName = pkgId.indexOf(':') !== -1 ? pkgId.substring(pkgId.indexOf(':') + 1) : pkgId;
+
+                // Find failures by package name
+                var failures = findFailures(data, pkgName);
+
+                // If not in queue and no failures, package is not found
+                if (!result && failures.length === 0) {
+                    document.getElementById('content').innerHTML =
+                        renderError('Package not found',
+                            'No package matches id "' + pkgId + '" in the queue or failure history.');
+                    return;
+                }
+
+                // If only in failures (not in queue), treat as historical
+                var name = result ? result.pkg.name : pkgName;
+
+                // Find disambiguation entry
+                var disambEntry = findDisambiguation(data, name);
+
+                // Check if this package blocks others
+                var blockerInfo = findBlockedPackages(data, name);
+
+                // Update page title
+                document.title = name + ' - Package Detail - tsuku Pipeline';
+
+                // Render all sections
+                var html = '';
+                html += renderStatus(result, failures, blockerInfo);
+                html += renderDisambiguation(disambEntry);
+                html += renderAttemptHistory(failures);
+                html += renderActions(result, pkgId);
+
+                document.getElementById('content').innerHTML = html;
+            } catch (error) {
+                document.getElementById('content').innerHTML =
+                    '<div class="loading">Error loading data: ' + esc(error.message) + '</div>';
+            }
+        }
+
+        load();
+    </script>
+</body>
+</html>

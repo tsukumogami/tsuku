@@ -1,0 +1,18 @@
+{
+  "tool": "x-cmd",
+  "selected": "homebrew:x-cmd",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:x-cmd",
+      "downloads": 2191,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:x-cmd",
+  "disambiguated_at": "2026-02-17T00:31:20.256859743Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

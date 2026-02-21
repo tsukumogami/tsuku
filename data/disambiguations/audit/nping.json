@@ -1,0 +1,18 @@
+{
+  "tool": "nping",
+  "selected": "npm:nping",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "npm:nping",
+      "downloads": 2,
+      "version_count": 8,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:nping",
+  "disambiguated_at": "2026-02-17T00:23:42.435843147Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

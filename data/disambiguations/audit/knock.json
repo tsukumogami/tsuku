@@ -1,0 +1,46 @@
+{
+  "tool": "knock",
+  "selected": "rubygems:knock",
+  "alternatives": [
+    "homebrew:knock",
+    "crates.io:knock"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1423.174481168332,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:knock",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "crates.io:knock",
+      "downloads": 104,
+      "version_count": 9,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:knock",
+      "downloads": 1301,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:knock",
+      "downloads": 1851550,
+      "version_count": 13,
+      "has_repository": false
+    },
+    {
+      "source": "npm:knock",
+      "downloads": 7,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:knock",
+  "disambiguated_at": "2026-02-17T00:19:51.260890487Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

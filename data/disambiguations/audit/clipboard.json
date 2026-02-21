@@ -1,0 +1,48 @@
+{
+  "tool": "clipboard",
+  "selected": "rubygems:clipboard",
+  "alternatives": [
+    "crates.io:clipboard",
+    "homebrew:clipboard",
+    "npm:clipboard",
+    "pypi:clipboard"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 251.47551065231715,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:clipboard",
+      "downloads": 1384,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:clipboard",
+      "downloads": 63742,
+      "version_count": 13,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:clipboard",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "npm:clipboard",
+      "downloads": 0,
+      "version_count": 47,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:clipboard",
+      "downloads": 16029552,
+      "version_count": 39,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:clipboard",
+  "disambiguated_at": "2026-02-17T00:13:14.826654778Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

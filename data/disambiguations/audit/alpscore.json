@@ -1,0 +1,18 @@
+{
+  "tool": "alpscore",
+  "selected": "homebrew:alpscore",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:alpscore",
+      "downloads": 362,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:alpscore",
+  "disambiguated_at": "2026-02-17T00:10:36.061618516Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,26 @@
+{
+  "tool": "cmctl",
+  "selected": "homebrew:cmctl",
+  "alternatives": [
+    "pypi:cmctl"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:cmctl",
+      "downloads": 7374,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:cmctl",
+      "downloads": 0,
+      "version_count": 5,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:cmctl",
+  "disambiguated_at": "2026-02-17T00:13:25.219110027Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

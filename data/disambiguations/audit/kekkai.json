@@ -1,0 +1,38 @@
+{
+  "tool": "kekkai",
+  "selected": "homebrew:kekkai",
+  "alternatives": [
+    "pypi:kekkai"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:kekkai",
+      "downloads": 6,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "pypi:kekkai",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:kekkai",
+      "downloads": 144,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:kekkai",
+      "downloads": 2,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:kekkai",
+  "disambiguated_at": "2026-02-17T00:19:44.448776806Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

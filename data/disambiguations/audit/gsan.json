@@ -1,0 +1,26 @@
+{
+  "tool": "gsan",
+  "selected": "homebrew:gsan",
+  "alternatives": [
+    "pypi:gsan"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:gsan",
+      "downloads": 243,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:gsan",
+      "downloads": 0,
+      "version_count": 11,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:gsan",
+  "disambiguated_at": "2026-02-17T00:17:44.550606045Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

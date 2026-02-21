@@ -1,0 +1,18 @@
+{
+  "tool": "cppzmq",
+  "selected": "homebrew:cppzmq",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:cppzmq",
+      "downloads": 20160,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:cppzmq",
+  "disambiguated_at": "2026-02-17T00:13:48.189598908Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

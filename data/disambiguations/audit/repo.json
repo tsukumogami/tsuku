@@ -1,0 +1,46 @@
+{
+  "tool": "repo",
+  "selected": "homebrew:repo",
+  "alternatives": [
+    "rubygems:repo",
+    "crates.io:repo"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.5470918704560477,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:repo",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:repo",
+      "downloads": 9363,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:repo",
+      "downloads": 731,
+      "version_count": 76,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:repo",
+      "downloads": 6052,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:repo",
+      "downloads": 44,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:repo",
+  "disambiguated_at": "2026-02-17T00:26:51.331909882Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

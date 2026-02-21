@@ -1,0 +1,32 @@
+{
+  "tool": "mcp-scan",
+  "selected": "homebrew:mcp-scan",
+  "alternatives": [
+    "pypi:mcp-scan"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:mcp-scan",
+      "downloads": 0,
+      "version_count": 81,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:mcp-scan",
+      "downloads": 314,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:mcp-scan",
+      "downloads": 0,
+      "version_count": 0,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:mcp-scan",
+  "disambiguated_at": "2026-02-17T00:22:10.432778577Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,26 @@
+{
+  "tool": "litecli",
+  "selected": "homebrew:litecli",
+  "alternatives": [
+    "pypi:litecli"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:litecli",
+      "downloads": 0,
+      "version_count": 35,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:litecli",
+      "downloads": 2063,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:litecli",
+  "disambiguated_at": "2026-02-17T00:21:24.290562761Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

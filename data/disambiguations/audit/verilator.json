@@ -1,0 +1,40 @@
+{
+  "tool": "verilator",
+  "selected": "homebrew:verilator",
+  "alternatives": [
+    "crates.io:verilator",
+    "pypi:verilator"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 50.37410071942446,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:verilator",
+      "downloads": 7002,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:verilator",
+      "downloads": 139,
+      "version_count": 7,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:verilator",
+      "downloads": 0,
+      "version_count": 7,
+      "has_repository": true
+    },
+    {
+      "source": "npm:verilator",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:verilator",
+  "disambiguated_at": "2026-02-17T00:30:38.962185415Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

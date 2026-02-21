@@ -1,0 +1,39 @@
+{
+  "tool": "reuse",
+  "selected": "homebrew:reuse",
+  "alternatives": [
+    "pypi:reuse",
+    "npm:reuse"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:reuse",
+      "downloads": 5,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:reuse",
+      "downloads": 1191,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:reuse",
+      "downloads": 0,
+      "version_count": 36,
+      "has_repository": true
+    },
+    {
+      "source": "npm:reuse",
+      "downloads": 0,
+      "version_count": 15,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:reuse",
+  "disambiguated_at": "2026-02-17T00:26:55.410882971Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

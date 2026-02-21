@@ -1,0 +1,32 @@
+{
+  "tool": "you-get",
+  "selected": "homebrew:you-get",
+  "alternatives": [
+    "pypi:you-get"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:you-get",
+      "downloads": 2103,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:you-get",
+      "downloads": 0,
+      "version_count": 174,
+      "has_repository": true
+    },
+    {
+      "source": "npm:you-get",
+      "downloads": 0,
+      "version_count": 0,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:you-get",
+  "disambiguated_at": "2026-02-17T00:31:41.584710007Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,40 @@
+{
+  "tool": "countdown",
+  "selected": "npm:countdown",
+  "alternatives": [
+    "homebrew:countdown",
+    "crates.io:countdown"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 33.90510948905109,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:countdown",
+      "downloads": 189,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:countdown",
+      "downloads": 411,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:countdown",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "npm:countdown",
+      "downloads": 13935,
+      "version_count": 6,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:countdown",
+  "disambiguated_at": "2026-02-17T00:13:43.952918631Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

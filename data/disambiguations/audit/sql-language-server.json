@@ -1,0 +1,26 @@
+{
+  "tool": "sql-language-server",
+  "selected": "homebrew:sql-language-server",
+  "alternatives": [
+    "npm:sql-language-server"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:sql-language-server",
+      "downloads": 653,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:sql-language-server",
+      "downloads": 0,
+      "version_count": 42,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:sql-language-server",
+  "disambiguated_at": "2026-02-17T00:28:33.167948118Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

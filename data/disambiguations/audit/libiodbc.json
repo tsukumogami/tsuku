@@ -1,0 +1,18 @@
+{
+  "tool": "libiodbc",
+  "selected": "homebrew:libiodbc",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:libiodbc",
+      "downloads": 1842,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:libiodbc",
+  "disambiguated_at": "2026-02-17T00:20:41.779849106Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,40 @@
+{
+  "tool": "mu",
+  "selected": "rubygems:mu",
+  "alternatives": [
+    "homebrew:mu",
+    "npm:mu"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 33.439755973563805,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:mu",
+      "downloads": 15,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:mu",
+      "downloads": 3934,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:mu",
+      "downloads": 131552,
+      "version_count": 38,
+      "has_repository": false
+    },
+    {
+      "source": "npm:mu",
+      "downloads": 0,
+      "version_count": 18,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:mu",
+  "disambiguated_at": "2026-02-17T00:23:00.452856463Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

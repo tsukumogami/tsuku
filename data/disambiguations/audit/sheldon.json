@@ -1,0 +1,48 @@
+{
+  "tool": "sheldon",
+  "selected": "rubygems:sheldon",
+  "alternatives": [
+    "homebrew:sheldon",
+    "crates.io:sheldon",
+    "npm:sheldon",
+    "pypi:sheldon"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 11.141374837872892,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:sheldon",
+      "downloads": 4626,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:sheldon",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:sheldon",
+      "downloads": 1087,
+      "version_count": 36,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:sheldon",
+      "downloads": 51540,
+      "version_count": 28,
+      "has_repository": false
+    },
+    {
+      "source": "npm:sheldon",
+      "downloads": 5,
+      "version_count": 7,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:sheldon",
+  "disambiguated_at": "2026-02-17T00:27:49.746816587Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,46 @@
+{
+  "tool": "axel",
+  "selected": "rubygems:axel",
+  "alternatives": [
+    "homebrew:axel",
+    "pypi:axel"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.5890410958904109,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:axel",
+      "downloads": 9,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "pypi:axel",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:axel",
+      "downloads": 2701,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:axel",
+      "downloads": 4292,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:axel",
+      "downloads": 17,
+      "version_count": 3,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:axel",
+  "disambiguated_at": "2026-02-17T00:11:30.8813197Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

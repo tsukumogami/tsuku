@@ -1,0 +1,48 @@
+{
+  "tool": "monero",
+  "selected": "crates.io:monero",
+  "alternatives": [
+    "rubygems:monero",
+    "homebrew:monero",
+    "npm:monero",
+    "pypi:monero"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.6684664625661008,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:monero",
+      "downloads": 1529,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:monero",
+      "downloads": 0,
+      "version_count": 27,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:monero",
+      "downloads": 29974,
+      "version_count": 30,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:monero",
+      "downloads": 17965,
+      "version_count": 9,
+      "has_repository": false
+    },
+    {
+      "source": "npm:monero",
+      "downloads": 2,
+      "version_count": 7,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:monero",
+  "disambiguated_at": "2026-02-17T00:22:44.009239755Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

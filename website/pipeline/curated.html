@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Curated overrides in tsuku pipeline">
+    <title>Curated Overrides - tsuku Pipeline</title>
+    <link rel="stylesheet" href="/assets/style.css">
+    <style>
+        .summary-panel {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .summary-card {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem 1.5rem;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .summary-card .label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 0.25rem;
+        }
+
+        .summary-card .value {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .summary-card .value.valid { color: #3fb950; }
+        .summary-card .value.invalid { color: #f85149; }
+
+        .package-list {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .package-list h2 {
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            color: var(--text-muted);
+        }
+
+        .package-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .package-table th,
+        .package-table td {
+            text-align: left;
+            padding: 0.5rem 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .package-table th {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .package-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .package-table tbody tr {
+            cursor: pointer;
+            transition: background 0.15s ease;
+        }
+
+        .package-table tbody tr:hover {
+            background: var(--bg);
+        }
+
+        .package-table tbody tr a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .package-name {
+            font-family: "SF Mono", Consolas, monospace;
+            font-weight: 600;
+        }
+
+        .source {
+            font-family: "SF Mono", Consolas, monospace;
+            font-size: 0.9rem;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status-valid { background: #3fb950; color: #000; }
+        .status-invalid { background: #f85149; color: #fff; }
+        .status-unknown { background: var(--text-muted); color: var(--bg); }
+
+        .filter-bar {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-bar label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .filter-bar select {
+            padding: 0.4rem 0.6rem;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background: var(--bg);
+            color: var(--text);
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+
+        .filter-bar select:hover {
+            border-color: var(--accent);
+        }
+
+        .actions {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .actions a {
+            display: inline-block;
+            padding: 0.4rem 0.8rem;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-decoration: none;
+        }
+
+        .actions a:hover {
+            border-color: var(--accent);
+            color: var(--text);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-muted);
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 1rem;
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 600px) {
+            .package-table {
+                font-size: 0.85rem;
+            }
+            .source {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="/" class="logo">tsuku</a>
+            <a href="https://github.com/tsukumogami/tsuku" class="github-link" aria-label="GitHub">
+                <svg viewBox="0 0 16 16" width="24" height="24" fill="currentColor">
+                    <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+                </svg>
+            </a>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero">
+            <h1>Curated Overrides</h1>
+            <p class="tagline">Manually selected package sources</p>
+        </section>
+
+        <a href="/pipeline/" class="back-link">&larr; Back to Dashboard</a>
+
+        <div id="content">
+            <div class="loading">Loading...</div>
+        </div>
+
+        <section class="links">
+            <a href="/pipeline/" class="link-btn">Back to Dashboard</a>
+        </section>
+    </main>
+
+    <footer>
+        <p>
+            <a href="/telemetry">Privacy</a>
+            <span class="sep">|</span>
+            <a href="https://github.com/tsukumogami/tsuku">GitHub</a>
+        </p>
+    </footer>
+
+    <script>
+        function esc(s) {
+            if (s == null) return '';
+            const div = document.createElement('div');
+            div.textContent = String(s);
+            return div.innerHTML;
+        }
+
+        var allCurated = [];
+
+        function getParams() {
+            var params = new URLSearchParams(window.location.search);
+            return {
+                status: params.get('status') || ''
+            };
+        }
+
+        function updateURL(filters) {
+            var params = new URLSearchParams();
+            if (filters.status) params.set('status', filters.status);
+            var qs = params.toString();
+            var url = window.location.pathname + (qs ? '?' + qs : '');
+            history.pushState(null, '', url);
+        }
+
+        function normalizeStatus(s) {
+            if (s === 'valid' || s === 'invalid') return s;
+            return 'unknown';
+        }
+
+        function statusBadgeClass(s) {
+            var n = normalizeStatus(s);
+            return 'status-' + n;
+        }
+
+        function statusLabel(s) {
+            return normalizeStatus(s);
+        }
+
+        function computeSummary(curated) {
+            var total = curated.length;
+            var valid = 0;
+            var invalid = 0;
+            curated.forEach(function(c) {
+                var s = normalizeStatus(c.validation_status);
+                if (s === 'valid') valid++;
+                else if (s === 'invalid') invalid++;
+            });
+            return { total: total, valid: valid, invalid: invalid };
+        }
+
+        function applyFilters(curated, filters) {
+            if (!filters.status) return curated;
+            return curated.filter(function(c) {
+                return normalizeStatus(c.validation_status) === filters.status;
+            });
+        }
+
+        function collectStatuses(curated) {
+            var vals = new Set();
+            curated.forEach(function(c) {
+                vals.add(normalizeStatus(c.validation_status));
+            });
+            return Array.from(vals).sort();
+        }
+
+        function renderSummary(curated) {
+            var s = computeSummary(curated);
+            return '<div class="summary-panel">' +
+                '<div class="summary-card">' +
+                    '<div class="label">Total</div>' +
+                    '<div class="value">' + s.total + '</div>' +
+                '</div>' +
+                '<div class="summary-card">' +
+                    '<div class="label">Valid</div>' +
+                    '<div class="value valid">' + s.valid + '</div>' +
+                '</div>' +
+                '<div class="summary-card">' +
+                    '<div class="label">Invalid</div>' +
+                    '<div class="value invalid">' + s.invalid + '</div>' +
+                '</div>' +
+            '</div>';
+        }
+
+        function renderActions() {
+            return '<div class="actions">' +
+                '<a href="https://github.com/tsukumogami/tsuku/edit/main/data/queues/priority-queue.json" target="_blank" rel="noopener">Add Override</a>' +
+                '<a href="https://github.com/tsukumogami/tsuku/edit/main/data/queues/priority-queue.json" target="_blank" rel="noopener">Remove Override</a>' +
+                '<a href="https://github.com/tsukumogami/tsuku/issues/new?title=Fix+invalid+curated+overrides&labels=pipeline" target="_blank" rel="noopener">Fix Invalid</a>' +
+            '</div>';
+        }
+
+        function renderFilters(curated, filters) {
+            var statuses = collectStatuses(curated);
+
+            function opts(values, selected) {
+                return values.map(function(v) {
+                    return '<option value="' + esc(v) + '"' + (v === selected ? ' selected' : '') + '>' + esc(v) + '</option>';
+                }).join('');
+            }
+
+            return '<div class="filter-bar">' +
+                '<label>Status: ' +
+                    '<select id="filter-status">' +
+                        '<option value="">All</option>' +
+                        opts(statuses, filters.status) +
+                    '</select>' +
+                '</label>' +
+            '</div>';
+        }
+
+        function renderTable(filtered) {
+            if (filtered.length === 0) {
+                return '<div class="loading">No curated overrides match the current filters</div>';
+            }
+
+            var rows = filtered.map(function(c) {
+                var badgeClass = statusBadgeClass(c.validation_status);
+                var label = statusLabel(c.validation_status);
+
+                return '<tr onclick="window.location=\'package.html?id=' + encodeURIComponent(c.source) + '\'">' +
+                    '<td class="package-name"><a href="package.html?id=' + encodeURIComponent(c.source) + '">' + esc(c.name) + '</a></td>' +
+                    '<td class="source">' + esc(c.source) + '</td>' +
+                    '<td>' + esc(c.reason || '-') + '</td>' +
+                    '<td><span class="status-badge ' + esc(badgeClass) + '">' + esc(label) + '</span></td>' +
+                '</tr>';
+            }).join('');
+
+            return '<div class="package-list">' +
+                '<h2>' + filtered.length + ' override' + (filtered.length !== 1 ? 's' : '') + '</h2>' +
+                '<table class="package-table">' +
+                    '<thead>' +
+                        '<tr>' +
+                            '<th>Package</th>' +
+                            '<th>Source</th>' +
+                            '<th>Reason</th>' +
+                            '<th>Validation Status</th>' +
+                        '</tr>' +
+                    '</thead>' +
+                    '<tbody>' +
+                        rows +
+                    '</tbody>' +
+                '</table>' +
+            '</div>';
+        }
+
+        function renderCurated(curated, filters) {
+            if (!curated || curated.length === 0) {
+                return '<div class="loading">No curated overrides available</div>';
+            }
+
+            var filtered = applyFilters(curated, filters);
+            return renderSummary(curated) +
+                renderActions() +
+                renderFilters(curated, filters) +
+                renderTable(filtered);
+        }
+
+        function render() {
+            var filters = getParams();
+            var content = document.getElementById('content');
+            content.innerHTML = renderCurated(allCurated, filters);
+
+            var statusSelect = document.getElementById('filter-status');
+            if (statusSelect) statusSelect.addEventListener('change', onFilterChange);
+        }
+
+        function onFilterChange() {
+            var filters = {
+                status: document.getElementById('filter-status').value
+            };
+            updateURL(filters);
+            render();
+        }
+
+        window.addEventListener('popstate', function() {
+            render();
+        });
+
+        async function load() {
+            try {
+                var response = await fetch('/pipeline/dashboard.json');
+                var data = await response.json();
+                allCurated = data.curated || [];
+                render();
+            } catch (error) {
+                document.getElementById('content').innerHTML =
+                    '<div class="loading">Error loading data: ' + esc(error.message) + '</div>';
+            }
+        }
+
+        load();
+    </script>
+</body>
+</html>

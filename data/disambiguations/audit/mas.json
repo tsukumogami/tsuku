@@ -1,0 +1,32 @@
+{
+  "tool": "mas",
+  "selected": "homebrew:mas",
+  "alternatives": [
+    "pypi:mas"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:mas",
+      "downloads": 125623,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:mas",
+      "downloads": 0,
+      "version_count": 7,
+      "has_repository": true
+    },
+    {
+      "source": "npm:mas",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:mas",
+  "disambiguated_at": "2026-02-17T00:22:01.948093803Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

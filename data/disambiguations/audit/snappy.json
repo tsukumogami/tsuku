@@ -1,0 +1,48 @@
+{
+  "tool": "snappy",
+  "selected": "rubygems:snappy",
+  "alternatives": [
+    "homebrew:snappy",
+    "crates.io:snappy",
+    "npm:snappy",
+    "pypi:snappy"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 33.54174582746011,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:snappy",
+      "downloads": 6207,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:snappy",
+      "downloads": 440559,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:snappy",
+      "downloads": 0,
+      "version_count": 24,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:snappy",
+      "downloads": 14777118,
+      "version_count": 36,
+      "has_repository": true
+    },
+    {
+      "source": "npm:snappy",
+      "downloads": 0,
+      "version_count": 72,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:snappy",
+  "disambiguated_at": "2026-02-17T00:28:14.878673989Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

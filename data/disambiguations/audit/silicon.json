@@ -1,0 +1,48 @@
+{
+  "tool": "silicon",
+  "selected": "rubygems:silicon",
+  "alternatives": [
+    "homebrew:silicon",
+    "crates.io:silicon",
+    "npm:silicon",
+    "pypi:silicon"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 10.143907563025211,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:silicon",
+      "downloads": 952,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:silicon",
+      "downloads": 532,
+      "version_count": 17,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:silicon",
+      "downloads": 0,
+      "version_count": 7,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:silicon",
+      "downloads": 9657,
+      "version_count": 5,
+      "has_repository": false
+    },
+    {
+      "source": "npm:silicon",
+      "downloads": 4,
+      "version_count": 6,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:silicon",
+  "disambiguated_at": "2026-02-17T00:28:04.868301184Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

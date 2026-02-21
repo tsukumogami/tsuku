@@ -1,0 +1,32 @@
+{
+  "tool": "cpplint",
+  "selected": "homebrew:cpplint",
+  "alternatives": [
+    "pypi:cpplint"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:cpplint",
+      "downloads": 2912,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:cpplint",
+      "downloads": 0,
+      "version_count": 33,
+      "has_repository": true
+    },
+    {
+      "source": "npm:cpplint",
+      "downloads": 3,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:cpplint",
+  "disambiguated_at": "2026-02-17T00:13:46.850908488Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

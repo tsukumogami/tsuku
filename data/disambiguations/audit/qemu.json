@@ -1,0 +1,47 @@
+{
+  "tool": "qemu",
+  "selected": "homebrew:qemu",
+  "alternatives": [
+    "rubygems:qemu",
+    "crates.io:qemu",
+    "npm:qemu"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 19.311942446043165,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:qemu",
+      "downloads": 335545,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:qemu",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:qemu",
+      "downloads": 1514,
+      "version_count": 18,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:qemu",
+      "downloads": 17375,
+      "version_count": 5,
+      "has_repository": false
+    },
+    {
+      "source": "npm:qemu",
+      "downloads": 29,
+      "version_count": 6,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:qemu",
+  "disambiguated_at": "2026-02-17T00:26:15.410098865Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

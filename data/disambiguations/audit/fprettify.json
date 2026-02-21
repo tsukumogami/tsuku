@@ -1,0 +1,26 @@
+{
+  "tool": "fprettify",
+  "selected": "homebrew:fprettify",
+  "alternatives": [
+    "pypi:fprettify"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:fprettify",
+      "downloads": 0,
+      "version_count": 7,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:fprettify",
+      "downloads": 1638,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:fprettify",
+  "disambiguated_at": "2026-02-17T00:16:14.112133555Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,46 @@
+{
+  "tool": "polaris",
+  "selected": "rubygems:polaris",
+  "alternatives": [
+    "homebrew:polaris",
+    "npm:polaris"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 82.30196078431372,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:polaris",
+      "downloads": 13,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:polaris",
+      "downloads": 255,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:polaris",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:polaris",
+      "downloads": 20987,
+      "version_count": 5,
+      "has_repository": false
+    },
+    {
+      "source": "npm:polaris",
+      "downloads": 0,
+      "version_count": 7,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:polaris",
+  "disambiguated_at": "2026-02-17T00:25:29.29160554Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

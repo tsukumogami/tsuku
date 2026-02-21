@@ -1,0 +1,26 @@
+{
+  "tool": "hmmer",
+  "selected": "homebrew:hmmer",
+  "alternatives": [
+    "pypi:hmmer"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:hmmer",
+      "downloads": 822,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:hmmer",
+      "downloads": 0,
+      "version_count": 21,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:hmmer",
+  "disambiguated_at": "2026-02-17T00:18:20.285123683Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,32 @@
+{
+  "tool": "libzim",
+  "selected": "homebrew:libzim",
+  "alternatives": [
+    "pypi:libzim"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:libzim",
+      "downloads": 0,
+      "version_count": 20,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:libzim",
+      "downloads": 479,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:libzim",
+      "downloads": 20,
+      "version_count": 4,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:libzim",
+  "disambiguated_at": "2026-02-17T00:21:19.550571499Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "include-what-you-use",
+  "selected": "homebrew:include-what-you-use",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:include-what-you-use",
+      "downloads": 1976,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:include-what-you-use",
+  "disambiguated_at": "2026-02-17T00:18:47.25279777Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

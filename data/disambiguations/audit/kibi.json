@@ -1,0 +1,40 @@
+{
+  "tool": "kibi",
+  "selected": "rubygems:kibi",
+  "alternatives": [
+    "crates.io:kibi",
+    "homebrew:kibi"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 37.8125,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:kibi",
+      "downloads": 206,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:kibi",
+      "downloads": 11495,
+      "version_count": 3,
+      "has_repository": false
+    },
+    {
+      "source": "crates.io:kibi",
+      "downloads": 304,
+      "version_count": 10,
+      "has_repository": true
+    },
+    {
+      "source": "npm:kibi",
+      "downloads": 0,
+      "version_count": 0,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:kibi",
+  "disambiguated_at": "2026-02-17T00:19:47.312045539Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

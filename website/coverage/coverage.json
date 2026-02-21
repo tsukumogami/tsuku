@@ -1,21 +1,21 @@
 {
-  "generated_at": "2026-02-08T23:37:55Z",
-  "total_recipes": 274,
+  "generated_at": "2026-02-21T00:57:40Z",
+  "total_recipes": 324,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 274,
-        "total": 274,
+        "supported": 324,
+        "total": 324,
         "pct": 100
       },
       "glibc": {
-        "supported": 274,
-        "total": 274,
+        "supported": 324,
+        "total": 324,
         "pct": 100
       },
       "musl": {
-        "supported": 274,
-        "total": 274,
+        "supported": 324,
+        "total": 324,
         "pct": 100
       }
     },
@@ -26,13 +26,25 @@
         "glibc_support": 13
       },
       "tool": {
-        "total": 261,
-        "musl_support": 261,
-        "glibc_support": 261
+        "total": 311,
+        "musl_support": 311,
+        "glibc_support": 311
       }
     }
   },
   "recipes": [
+    {
+      "name": "aarch64-elf-binutils",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
     {
       "name": "ack",
       "type": "tool",
@@ -70,7 +82,67 @@
       "warnings": null
     },
     {
+      "name": "actions-up",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "add-determinism",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "addons-linter",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "advancecomp",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "age",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "agent-browser",
       "type": "tool",
       "platforms": {
         "darwin": true,
@@ -190,6 +262,18 @@
       "warnings": null
     },
     {
+      "name": "aws-cdk",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "aws-iam-authenticator",
       "type": "tool",
       "platforms": {
@@ -250,7 +334,31 @@
       "warnings": null
     },
     {
+      "name": "azurite",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "bash",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "bash-language-server",
       "type": "tool",
       "platforms": {
         "darwin": true,
@@ -370,6 +478,18 @@
       "warnings": null
     },
     {
+      "name": "bpmnlint",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "brotli",
       "type": "library",
       "platforms": {
@@ -395,6 +515,18 @@
     },
     {
       "name": "buf",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "bumpp",
       "type": "tool",
       "platforms": {
         "darwin": true,
@@ -562,6 +694,18 @@
       "warnings": null
     },
     {
+      "name": "chrome-devtools-mcp",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "clang-format",
       "type": "tool",
       "platforms": {
@@ -658,7 +802,55 @@
       "warnings": null
     },
     {
+      "name": "commitlint",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "contentful-cli",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "corepack",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "cosign",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "cspell",
       "type": "tool",
       "platforms": {
         "darwin": true,
@@ -718,6 +910,18 @@
       "warnings": null
     },
     {
+      "name": "curlie",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "dasel",
       "type": "tool",
       "platforms": {
@@ -731,6 +935,18 @@
     },
     {
       "name": "devspace",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "diff-so-fancy",
       "type": "tool",
       "platforms": {
         "darwin": true,
@@ -862,6 +1078,18 @@
       "warnings": null
     },
     {
+      "name": "dprint",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "draft",
       "type": "tool",
       "platforms": {
@@ -911,6 +1139,18 @@
     },
     {
       "name": "eksctl",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "esbuild",
       "type": "tool",
       "platforms": {
         "darwin": true,
@@ -1414,6 +1654,30 @@
       "warnings": null
     },
     {
+      "name": "graphql-cli",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "grex",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "gron",
       "type": "tool",
       "platforms": {
@@ -1439,6 +1703,18 @@
     },
     {
       "name": "grype",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "gulp-cli",
       "type": "tool",
       "platforms": {
         "darwin": true,
@@ -1523,6 +1799,18 @@
     },
     {
       "name": "htop",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "http-server",
       "type": "tool",
       "platforms": {
         "darwin": true,
@@ -1822,6 +2110,18 @@
       "warnings": null
     },
     {
+      "name": "lerna",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "lf",
       "type": "tool",
       "platforms": {
@@ -2002,6 +2302,18 @@
       "warnings": null
     },
     {
+      "name": "mbt",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "micro",
       "type": "tool",
       "platforms": {
@@ -2086,6 +2398,18 @@
       "warnings": null
     },
     {
+      "name": "mjml",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "mkcert",
       "type": "tool",
       "platforms": {
@@ -2134,6 +2458,42 @@
       "warnings": null
     },
     {
+      "name": "mprocs",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "n",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "n8n-mcp",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "nasm",
       "type": "tool",
       "platforms": {
@@ -2170,6 +2530,18 @@
       "warnings": null
     },
     {
+      "name": "needle",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "netlify-cli",
       "type": "tool",
       "platforms": {
@@ -2194,7 +2566,31 @@
       "warnings": null
     },
     {
+      "name": "node-red",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "nomad",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "nping",
       "type": "tool",
       "platforms": {
         "darwin": true,
@@ -2218,6 +2614,18 @@
       "warnings": null
     },
     {
+      "name": "openapi-diff",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "openshift-cli",
       "type": "tool",
       "platforms": {
@@ -2230,7 +2638,43 @@
       "warnings": null
     },
     {
+      "name": "openskills",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "opentofu",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "oxfmt",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "oxlint",
       "type": "tool",
       "platforms": {
         "darwin": true,
@@ -2386,6 +2830,18 @@
       "warnings": null
     },
     {
+      "name": "prettier",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "procs",
       "type": "tool",
       "platforms": {
@@ -2411,6 +2867,18 @@
     },
     {
       "name": "pulumi",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "pyright",
       "type": "tool",
       "platforms": {
         "darwin": true,
@@ -2470,8 +2938,32 @@
       "warnings": null
     },
     {
+      "name": "react-native-cli",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "readline",
       "type": "library",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "release-it",
+      "type": "tool",
       "platforms": {
         "darwin": true,
         "glibc": true,
@@ -2494,7 +2986,31 @@
       "warnings": null
     },
     {
+      "name": "rollup",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "ruff",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "rulesync",
       "type": "tool",
       "platforms": {
         "darwin": true,
@@ -3022,6 +3538,18 @@
       "warnings": null
     },
     {
+      "name": "typescript-language-server",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "typos-cli",
       "type": "tool",
       "platforms": {
@@ -3118,7 +3646,31 @@
       "warnings": null
     },
     {
+      "name": "vsce",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "watch",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "watchexec",
       "type": "tool",
       "platforms": {
         "darwin": true,
@@ -3250,6 +3802,30 @@
       "warnings": null
     },
     {
+      "name": "yaml-language-server",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "yarn",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "yazi",
       "type": "tool",
       "platforms": {
@@ -3263,6 +3839,18 @@
     },
     {
       "name": "yj",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "yo",
       "type": "tool",
       "platforms": {
         "darwin": true,
@@ -3320,6 +3908,18 @@
       "gaps": null,
       "errors": null,
       "warnings": null
+    },
+    {
+      "name": "zx",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
     }
   ],
   "exclusions": [
@@ -3334,19 +3934,14 @@
       "reason": "npm_install toolchain version drift (Node.js versions not pinned)"
     },
     {
-      "recipe": "curl",
-      "issue": "https://github.com/tsukumogami/tsuku/issues/879",
-      "reason": "configure auto-detects homebrew nghttp2/libidn2 but linker cannot find them (macOS)"
-    },
-    {
       "recipe": "git",
       "issue": "https://github.com/tsukumogami/tsuku/issues/953",
       "reason": "compile_from_source toolchain version drift (macOS build failures)"
     },
     {
       "recipe": "netlify-cli",
-      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
-      "reason": "npm_install toolchain version drift (Node.js versions not pinned)"
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1592",
+      "reason": "npm EBADPLATFORM: @rollup/rollup-android-arm-eabi declares Android-only platform"
     },
     {
       "recipe": "serve",
@@ -3372,6 +3967,206 @@
       "recipe": "wrangler",
       "issue": "https://github.com/tsukumogami/tsuku/issues/953",
       "reason": "npm_install toolchain version drift (Node.js versions not pinned)"
+    },
+    {
+      "recipe": "bundler",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1580",
+      "reason": "gem_install binstubs execute system Ruby instead of installed gem"
+    },
+    {
+      "recipe": "fpm",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1580",
+      "reason": "gem_install binstubs execute system Ruby instead of installed gem"
+    },
+    {
+      "recipe": "jekyll",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1580",
+      "reason": "gem_install binstubs execute system Ruby instead of installed gem"
+    },
+    {
+      "recipe": "bash",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1665",
+      "reason": "Missing library (exit 127) - Homebrew bottle library dependencies not found"
+    },
+    {
+      "recipe": "c-ares",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1665",
+      "reason": "Missing library (exit 127) - Homebrew bottle library dependencies not found"
+    },
+    {
+      "recipe": "chibi-scheme",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1665",
+      "reason": "Missing library (exit 127) - Homebrew bottle library dependencies not found"
+    },
+    {
+      "recipe": "chicken",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1665",
+      "reason": "Missing library (exit 127) - Homebrew bottle library dependencies not found"
+    },
+    {
+      "recipe": "cloc",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1665",
+      "reason": "Missing library (exit 127) - Homebrew bottle library dependencies not found"
+    },
+    {
+      "recipe": "cocoapods",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1665",
+      "reason": "Missing library (exit 127) - Homebrew bottle library dependencies not found"
+    },
+    {
+      "recipe": "exiftool",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1665",
+      "reason": "Missing library (exit 127) - Homebrew bottle library dependencies not found"
+    },
+    {
+      "recipe": "glew",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1665",
+      "reason": "Missing library (exit 127) - Homebrew bottle library dependencies not found"
+    },
+    {
+      "recipe": "jpeg",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1665",
+      "reason": "Missing library (exit 127) - Homebrew bottle library dependencies not found"
+    },
+    {
+      "recipe": "lcov",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1665",
+      "reason": "Missing library (exit 127) - Homebrew bottle library dependencies not found"
+    },
+    {
+      "recipe": "lua-language-server",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1665",
+      "reason": "Missing library (exit 127) - Homebrew bottle library dependencies not found"
+    },
+    {
+      "recipe": "moreutils",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1665",
+      "reason": "Missing library (exit 127) - Homebrew bottle library dependencies not found"
+    },
+    {
+      "recipe": "p7zip",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1665",
+      "reason": "Missing library (exit 127) - Homebrew bottle library dependencies not found"
+    },
+    {
+      "recipe": "pkgconf",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1665",
+      "reason": "Missing library (exit 127) - Homebrew bottle library dependencies not found"
+    },
+    {
+      "recipe": "qrencode",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1665",
+      "reason": "Missing library (exit 127) - Homebrew bottle library dependencies not found"
+    },
+    {
+      "recipe": "swiftlint",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1665",
+      "reason": "Missing library (exit 127) - Homebrew bottle library dependencies not found"
+    },
+    {
+      "recipe": "xcbeautify",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1665",
+      "reason": "Missing library (exit 127) - Homebrew bottle library dependencies not found"
+    },
+    {
+      "recipe": "ctlptl",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1664",
+      "reason": "Verify command uses --version but tool doesn't support it"
+    },
+    {
+      "recipe": "dasel",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1664",
+      "reason": "Verify command uses --version but tool doesn't support it"
+    },
+    {
+      "recipe": "helm",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1664",
+      "reason": "Verify command uses --version but tool doesn't support it"
+    },
+    {
+      "recipe": "hugo",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1664",
+      "reason": "Verify command uses --version but tool doesn't support it"
+    },
+    {
+      "recipe": "kubernetes-cli",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1664",
+      "reason": "Verify command uses --version but tool doesn't support it"
+    },
+    {
+      "recipe": "openshift-cli",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1664",
+      "reason": "Verify command uses --version but tool doesn't support it"
+    },
+    {
+      "recipe": "xclogparser",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1664",
+      "reason": "Verify command uses --version but tool doesn't support it"
+    },
+    {
+      "recipe": "yj",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1664",
+      "reason": "Verify command uses --version but tool doesn't support it"
+    },
+    {
+      "recipe": "biome",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1666",
+      "reason": "Verification failure - pattern mismatch"
+    },
+    {
+      "recipe": "bun",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1666",
+      "reason": "Verification failure - recipe validation failed"
+    },
+    {
+      "recipe": "docker-buildx",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1666",
+      "reason": "Verification failure - exit status 1"
+    },
+    {
+      "recipe": "docker-credential-helper-ecr",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1666",
+      "reason": "Verification failure - exit status 2"
+    },
+    {
+      "recipe": "goimports",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1666",
+      "reason": "Verification failure - exit status 2"
+    },
+    {
+      "recipe": "liberica",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1666",
+      "reason": "Verification failure - recipe validation failed"
+    },
+    {
+      "recipe": "lima",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1666",
+      "reason": "Verification failure - exit status 1"
+    },
+    {
+      "recipe": "lua",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1666",
+      "reason": "Verification failure - exit status 1"
+    },
+    {
+      "recipe": "luajit",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1666",
+      "reason": "Verification failure - exit status 1"
+    },
+    {
+      "recipe": "sevenzip",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1666",
+      "reason": "Verification failure - Command Line Error (exit 7)"
+    },
+    {
+      "recipe": "sshpass",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1666",
+      "reason": "Verification failure - exit status 1"
+    },
+    {
+      "recipe": "spatialite",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1662",
+      "reason": "Transient network error - 502 Bad Gateway downloading dependencies"
     }
   ]
 }

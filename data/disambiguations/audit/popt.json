@@ -1,0 +1,34 @@
+{
+  "tool": "popt",
+  "selected": "homebrew:popt",
+  "alternatives": [
+    "npm:popt",
+    "pypi:popt"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 8081.125,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:popt",
+      "downloads": 64649,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:popt",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "npm:popt",
+      "downloads": 8,
+      "version_count": 13,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:popt",
+  "disambiguated_at": "2026-02-17T00:25:30.818799835Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

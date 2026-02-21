@@ -1,0 +1,27 @@
+{
+  "tool": "b3sum",
+  "selected": "crates.io:b3sum",
+  "alternatives": [
+    "homebrew:b3sum"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 7.884465261514442,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:b3sum",
+      "downloads": 1281,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:b3sum",
+      "downloads": 10100,
+      "version_count": 42,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:b3sum",
+  "disambiguated_at": "2026-02-17T00:11:36.496586613Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

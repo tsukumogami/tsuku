@@ -1,0 +1,40 @@
+{
+  "tool": "nx",
+  "selected": "rubygems:nx",
+  "alternatives": [
+    "homebrew:nx",
+    "crates.io:nx"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.1578586135895677,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:nx",
+      "downloads": 128,
+      "version_count": 6,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:nx",
+      "downloads": 7285,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:nx",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "rubygems:nx",
+      "downloads": 15720,
+      "version_count": 5,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:nx",
+  "disambiguated_at": "2026-02-17T00:23:49.381173309Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

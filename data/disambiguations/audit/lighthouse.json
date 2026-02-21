@@ -1,0 +1,40 @@
+{
+  "tool": "lighthouse",
+  "selected": "rubygems:lighthouse",
+  "alternatives": [
+    "homebrew:lighthouse",
+    "pypi:lighthouse"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 7.892487046632124,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:lighthouse",
+      "downloads": 61,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:lighthouse",
+      "downloads": 0,
+      "version_count": 14,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:lighthouse",
+      "downloads": 772,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:lighthouse",
+      "downloads": 6093,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:lighthouse",
+  "disambiguated_at": "2026-02-17T00:21:20.645035358Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

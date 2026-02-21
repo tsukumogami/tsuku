@@ -1,0 +1,47 @@
+{
+  "tool": "zip",
+  "selected": "crates.io:zip",
+  "alternatives": [
+    "rubygems:zip",
+    "homebrew:zip",
+    "npm:zip"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 5.876744025155932,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:zip",
+      "downloads": 122677,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:zip",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:zip",
+      "downloads": 25568438,
+      "version_count": 121,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:zip",
+      "downloads": 4350783,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:zip",
+      "downloads": 0,
+      "version_count": 10,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:zip",
+  "disambiguated_at": "2026-02-17T00:31:50.051270656Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

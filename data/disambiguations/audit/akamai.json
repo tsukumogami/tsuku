@@ -1,0 +1,40 @@
+{
+  "tool": "akamai",
+  "selected": "rubygems:akamai",
+  "alternatives": [
+    "homebrew:akamai",
+    "npm:akamai"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.7626465266304776,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:akamai",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:akamai",
+      "downloads": 12711,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:akamai",
+      "downloads": 35116,
+      "version_count": 6,
+      "has_repository": false
+    },
+    {
+      "source": "npm:akamai",
+      "downloads": 0,
+      "version_count": 7,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:akamai",
+  "disambiguated_at": "2026-02-17T00:10:32.088949183Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

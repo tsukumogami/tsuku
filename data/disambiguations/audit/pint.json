@@ -1,0 +1,47 @@
+{
+  "tool": "pint",
+  "selected": "rubygems:pint",
+  "alternatives": [
+    "homebrew:pint",
+    "pypi:pint",
+    "npm:pint"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 8.993732590529248,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:pint",
+      "downloads": 1436,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:pint",
+      "downloads": 17,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:pint",
+      "downloads": 0,
+      "version_count": 61,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:pint",
+      "downloads": 12915,
+      "version_count": 5,
+      "has_repository": false
+    },
+    {
+      "source": "npm:pint",
+      "downloads": 0,
+      "version_count": 8,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:pint",
+  "disambiguated_at": "2026-02-17T00:25:15.569592158Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

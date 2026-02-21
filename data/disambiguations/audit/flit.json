@@ -1,0 +1,47 @@
+{
+  "tool": "flit",
+  "selected": "rubygems:flit",
+  "alternatives": [
+    "homebrew:flit",
+    "pypi:flit",
+    "npm:flit"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 17.6,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:flit",
+      "downloads": 650,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:flit",
+      "downloads": 0,
+      "version_count": 53,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:flit",
+      "downloads": 11440,
+      "version_count": 4,
+      "has_repository": false
+    },
+    {
+      "source": "crates.io:flit",
+      "downloads": 69,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "npm:flit",
+      "downloads": 0,
+      "version_count": 9,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:flit",
+  "disambiguated_at": "2026-02-17T00:16:00.970710142Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

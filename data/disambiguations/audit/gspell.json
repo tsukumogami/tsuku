@@ -1,0 +1,33 @@
+{
+  "tool": "gspell",
+  "selected": "homebrew:gspell",
+  "alternatives": [
+    "crates.io:gspell"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 295.9130434782609,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:gspell",
+      "downloads": 46,
+      "version_count": 7,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:gspell",
+      "downloads": 13612,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:gspell",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:gspell",
+  "disambiguated_at": "2026-02-17T00:17:45.952636868Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

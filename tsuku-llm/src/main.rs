@@ -3,6 +3,11 @@
 //! This binary provides local inference capabilities via gRPC over Unix domain sockets.
 //! It bundles llama.cpp and handles hardware detection, model management, and inference.
 
+mod hardware;
+mod llama;
+mod model;
+mod models;
+
 use std::fs::File;
 use std::os::unix::io::AsRawFd;
 use std::path::PathBuf;
@@ -13,10 +18,12 @@ use std::time::Duration;
 use anyhow::{bail, Context, Result};
 use clap::{Parser, Subcommand};
 use tokio::net::UnixListener;
-use tokio::sync::mpsc;
+use tokio::sync::{mpsc, Mutex};
 use tokio_stream::wrappers::UnixListenerStream;
 use tonic::{Request, Response, Status};
-use tracing::{info, warn};
+use tracing::{debug, error, info, warn};
+
+use llama::{ContextParams, LlamaContext, LlamaModel, ModelParams, Sampler};
 
 // Generated from proto/llm.proto
 pub mod proto {
@@ -133,23 +140,50 @@ struct LlmServer {
     /// Loaded model name.
     model_name: String,
 
+    /// Hardware profile detected at startup.
+    hardware_profile: hardware::HardwareProfile,
+
     /// Signal to initiate shutdown.
     shutdown_tx: mpsc::Sender<()>,
+
+    /// Signal that there's activity (resets idle timeout).
+    activity_tx: mpsc::Sender<()>,
 
     /// Whether the server is shutting down.
     shutting_down: Arc<AtomicBool>,
 
     /// Count of in-flight requests.
     in_flight: Arc<AtomicUsize>,
+
+    /// The loaded model (shared for creating new contexts if needed).
+    model: Arc<LlamaModel>,
+
+    /// Inference context (protected by mutex since it's not Sync).
+    context: Mutex<LlamaContext>,
+
+    /// Token sampler for inference.
+    sampler: Sampler,
 }
 
 impl LlmServer {
-    fn new(model_name: String, shutdown_tx: mpsc::Sender<()>) -> Self {
+    fn new(
+        model_name: String,
+        hardware_profile: hardware::HardwareProfile,
+        shutdown_tx: mpsc::Sender<()>,
+        activity_tx: mpsc::Sender<()>,
+        model: Arc<LlamaModel>,
+        context: LlamaContext,
+    ) -> Self {
         Self {
             model_name,
+            hardware_profile,
             shutdown_tx,
+            activity_tx,
             shutting_down: Arc::new(AtomicBool::new(false)),
             in_flight: Arc::new(AtomicUsize::new(0)),
+            model,
+            context: Mutex::new(context),
+            sampler: Sampler::greedy(),
         }
     }
 
@@ -159,6 +193,136 @@ impl LlmServer {
 
     fn in_flight(&self) -> Arc<AtomicUsize> {
         self.in_flight.clone()
+    }
+
+    /// Build a prompt string from messages using ChatML format.
+    ///
+    /// Qwen 2.5 uses the ChatML template:
+    /// ```
+    /// <|im_start|>system
+    /// {system_prompt}<|im_end|>
+    /// <|im_start|>user
+    /// {user_message}<|im_end|>
+    /// <|im_start|>assistant
+    /// ```
+    ///
+    /// When tools are provided, adds tool calling instructions to the system prompt.
+    fn build_prompt(
+        &self,
+        system_prompt: &str,
+        messages: &[proto::Message],
+        tools: &[proto::ToolDef],
+    ) -> String {
+        let mut prompt = String::new();
+
+        // Build effective system prompt with tool instructions if tools provided
+        let effective_system_prompt = if tools.is_empty() {
+            system_prompt.to_string()
+        } else {
+            let tool_descriptions: Vec<String> = tools
+                .iter()
+                .map(|t| format!("- {}: {}", t.name, t.description))
+                .collect();
+
+            format!(
+                "{}\n\nYou have access to the following tools:\n{}\n\n\
+                 When you need to use a tool, respond with ONLY a JSON object in this exact format:\n\
+                 {{\"name\": \"tool_name\", \"arguments\": {{...}}}}\n\n\
+                 Do not include any other text before or after the JSON.",
+                system_prompt,
+                tool_descriptions.join("\n")
+            )
+        };
+
+        // Add system prompt
+        if !effective_system_prompt.is_empty() {
+            prompt.push_str("<|im_start|>system\n");
+            prompt.push_str(&effective_system_prompt);
+            prompt.push_str("<|im_end|>\n");
+        }
+
+        // Add each message
+        for msg in messages {
+            let role = match proto::Role::try_from(msg.role) {
+                Ok(proto::Role::User) => "user",
+                Ok(proto::Role::Assistant) => "assistant",
+                Ok(proto::Role::Tool) => "tool",
+                _ => "user", // Default to user for unknown roles
+            };
+
+            prompt.push_str(&format!("<|im_start|>{}\n", role));
+            prompt.push_str(&msg.content);
+            prompt.push_str("<|im_end|>\n");
+        }
+
+        // Add assistant start token for completion
+        prompt.push_str("<|im_start|>assistant\n");
+        prompt
+    }
+
+    /// Extract JSON object from model output.
+    ///
+    /// The model may output text before/after the JSON. This function finds
+    /// the first complete JSON object in the content.
+    fn extract_json(content: &str) -> Option<&str> {
+        // Find the first '{' and match to its closing '}'
+        let start = content.find('{')?;
+        let bytes = content.as_bytes();
+        let mut depth = 0;
+        let mut in_string = false;
+        let mut escape_next = false;
+
+        for (i, &byte) in bytes[start..].iter().enumerate() {
+            if escape_next {
+                escape_next = false;
+                continue;
+            }
+
+            match byte {
+                b'\\' if in_string => escape_next = true,
+                b'"' => in_string = !in_string,
+                b'{' if !in_string => depth += 1,
+                b'}' if !in_string => {
+                    depth -= 1;
+                    if depth == 0 {
+                        return Some(&content[start..start + i + 1]);
+                    }
+                }
+                _ => {}
+            }
+        }
+        None
+    }
+
+    /// Parse tool call from content, extracting JSON if needed.
+    ///
+    /// Expected format: {"name": "tool_name", "arguments": {...}}
+    fn parse_tool_call(content: &str) -> Option<proto::ToolCall> {
+        // Try to extract JSON from the content
+        let json_str = Self::extract_json(content).or_else(|| {
+            // Fallback: try parsing the trimmed content directly
+            Some(content.trim())
+        })?;
+
+        let value: serde_json::Value = serde_json::from_str(json_str).ok()?;
+
+        let name = value.get("name")?.as_str()?;
+        let arguments = value.get("arguments")?;
+
+        // Generate a simple unique ID using timestamp
+        let id = format!(
+            "call_{}",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_nanos()
+        );
+
+        Some(proto::ToolCall {
+            id,
+            name: name.to_string(),
+            arguments_json: arguments.to_string(),
+        })
     }
 }
 
@@ -172,6 +336,9 @@ impl InferenceService for LlmServer {
             return Err(Status::unavailable("Server is shutting down"));
         }
 
+        // Signal activity to reset idle timeout (ignore if channel is full)
+        let _ = self.activity_tx.try_send(());
+
         // Track in-flight requests
         self.in_flight.fetch_add(1, Ordering::SeqCst);
         let _guard = scopeguard::guard((), |_| {
@@ -180,24 +347,140 @@ impl InferenceService for LlmServer {
 
         let req = request.into_inner();
         info!(
-            "Complete request: {} messages, {} tools",
+            "Complete request: {} messages, {} tools, system_prompt: {} chars",
             req.messages.len(),
-            req.tools.len()
+            req.tools.len(),
+            req.system_prompt.len()
         );
 
-        // TODO: Actual inference via llama.cpp
-        // For now, return a stub response
+        // Build prompt from messages using ChatML format
+        let prompt = self.build_prompt(&req.system_prompt, &req.messages, &req.tools);
+        debug!("Built prompt ({} chars):\n{}", prompt.len(), &prompt[..prompt.len().min(500)]);
+
+        // Acquire context lock for inference
+        let mut ctx = self.context.lock().await;
+
+        // Clear KV cache for fresh generation
+        ctx.clear_kv_cache();
+
+        // Tokenize the prompt
+        let tokens = ctx.tokenize(&prompt, true, true).map_err(|e| {
+            error!("Tokenization failed: {}", e);
+            Status::internal(format!("Tokenization failed: {}", e))
+        })?;
+
+        let input_tokens = tokens.len();
+        debug!("Tokenized {} input tokens", input_tokens);
+
+        // Decode prompt tokens
+        ctx.decode(&tokens, 0).map_err(|e| {
+            error!("Decode failed: {}", e);
+            Status::internal(format!("Decode failed: {}", e))
+        })?;
+
+        // Generate response tokens
+        let mut output_tokens: Vec<i32> = Vec::new();
+        let max_tokens = if req.max_tokens > 0 {
+            req.max_tokens as usize
+        } else {
+            512 // Default if not specified
+        };
+        let mut pos = tokens.len() as i32;
+
+        // NOTE: Grammar-constrained generation is disabled due to llama.cpp compatibility
+        // issues with Qwen models (crashes with "Unexpected empty grammar stack").
+        // See: https://github.com/ggml-org/llama.cpp/issues/11938
+        // TODO: Re-enable when upstream fix is available (file issue to track).
+        // Instead, we use prompt engineering + JSON extraction.
+        let _ = &req.json_schema; // Suppress unused warning
+
+        // Track the batch index where logits are available.
+        // After prompt decode, logits are at the last token index.
+        // After single-token decodes, logits are at index 0.
+        let mut logits_idx = (tokens.len() - 1) as i32;
+
+        // Generation timeout: 5 minutes max per turn.
+        // CPU inference is slow (~18 tokens/sec) and tool call JSON can be very verbose,
+        // especially for the extract_pattern tool which includes platform mappings.
+        const GENERATION_TIMEOUT: Duration = Duration::from_secs(300);
+        let generation_start = std::time::Instant::now();
+        let mut timed_out = false;
+
+        for _ in 0..max_tokens {
+            // Check timeout
+            if generation_start.elapsed() > GENERATION_TIMEOUT {
+                warn!("Generation timeout reached after 5 minutes");
+                timed_out = true;
+                break;
+            }
+
+            // Sample next token using regular sampling
+            let logits = ctx.get_logits(logits_idx);
+            let next_token = self.sampler.sample(logits);
+
+            // Check for EOS (token 0 or 2 are common EOS tokens)
+            if next_token == 0 || next_token == 2 {
+                debug!("EOS token {} encountered", next_token);
+                break;
+            }
+
+            output_tokens.push(next_token);
+
+            // Decode the new token
+            ctx.decode(&[next_token], pos).map_err(|e| {
+                error!("Decode failed during generation: {}", e);
+                Status::internal(format!("Decode failed: {}", e))
+            })?;
+
+            pos += 1;
+            // After single-token decode, logits are at batch index 0
+            logits_idx = 0;
+        }
+
+        // Detokenize output
+        let content = ctx.detokenize(&output_tokens).map_err(|e| {
+            error!("Detokenization failed: {}", e);
+            Status::internal(format!("Detokenization failed: {}", e))
+        })?;
+
+        info!(
+            "Generated {} tokens in {:?}: {}",
+            output_tokens.len(),
+            generation_start.elapsed(),
+            if content.len() > 100 {
+                format!("{}...", &content[..100])
+            } else {
+                content.clone()
+            }
+        );
+
+        // Parse tool calls if tools were provided in the request
+        let mut tool_calls = Vec::new();
+        let stop_reason = if timed_out {
+            "timeout".to_string()
+        } else if output_tokens.len() >= max_tokens {
+            "max_tokens".to_string()
+        } else if !req.tools.is_empty() {
+            // Try to parse tool call from content (using JSON extraction)
+            if let Some(tool_call) = Self::parse_tool_call(&content) {
+                info!("Parsed tool call: {} with args {}", tool_call.name, tool_call.arguments_json);
+                tool_calls.push(tool_call);
+                "tool_use".to_string()
+            } else {
+                debug!("No tool call found in response: {}", content);
+                "end_turn".to_string()
+            }
+        } else {
+            "end_turn".to_string()
+        };
+
         let response = CompletionResponse {
-            content: format!(
-                "[STUB] Model {} received prompt with {} messages",
-                self.model_name,
-                req.messages.len()
-            ),
-            tool_calls: vec![],
-            stop_reason: "end_turn".to_string(),
+            content,
+            tool_calls,
+            stop_reason,
             usage: Some(Usage {
-                input_tokens: 100, // Placeholder
-                output_tokens: 50, // Placeholder
+                input_tokens: input_tokens as i32,
+                output_tokens: output_tokens.len() as i32,
             }),
         };
 
@@ -225,13 +508,15 @@ impl InferenceService for LlmServer {
         &self,
         _request: Request<StatusRequest>,
     ) -> Result<Response<StatusResponse>, Status> {
-        // TODO: Real hardware detection and model info
+        // Signal activity to reset idle timeout (ignore if channel is full)
+        let _ = self.activity_tx.try_send(());
+
         let response = StatusResponse {
             ready: !self.shutting_down.load(Ordering::SeqCst),
             model_name: self.model_name.clone(),
-            model_size_bytes: 0, // TODO: Actual model size
-            backend: "cpu".to_string(), // TODO: Detect hardware
-            available_vram_bytes: 0,
+            model_size_bytes: 0, // TODO: Actual model size when model is loaded
+            backend: self.hardware_profile.gpu_backend.to_string(),
+            available_vram_bytes: self.hardware_profile.vram_bytes as i64,
         };
 
         Ok(Response::new(response))
@@ -313,14 +598,19 @@ fn cleanup_files(socket: &PathBuf, lock: &PathBuf) {
 }
 
 /// Wait for in-flight requests to complete with a timeout.
-async fn wait_for_in_flight(in_flight: &Arc<AtomicUsize>, timeout: Duration) {
+/// Returns true if interrupted by a second signal, false otherwise.
+async fn wait_for_in_flight(
+    in_flight: &Arc<AtomicUsize>,
+    timeout: Duration,
+    sigterm: &mut tokio::signal::unix::Signal,
+) -> bool {
     let start = std::time::Instant::now();
 
     loop {
         let count = in_flight.load(Ordering::SeqCst);
         if count == 0 {
             info!("All in-flight requests completed");
-            return;
+            return false;
         }
 
         if start.elapsed() >= timeout {
@@ -328,7 +618,7 @@ async fn wait_for_in_flight(in_flight: &Arc<AtomicUsize>, timeout: Duration) {
                 "Grace period expired with {} in-flight requests",
                 count
             );
-            return;
+            return false;
         }
 
         info!(
@@ -336,7 +626,15 @@ async fn wait_for_in_flight(in_flight: &Arc<AtomicUsize>, timeout: Duration) {
             count,
             (timeout - start.elapsed()).as_secs_f32()
         );
-        tokio::time::sleep(Duration::from_millis(100)).await;
+
+        // Wait for either the poll interval or a second SIGTERM
+        tokio::select! {
+            _ = tokio::time::sleep(Duration::from_millis(100)) => {}
+            _ = sigterm.recv() => {
+                warn!("Received second SIGTERM during grace period, forcing immediate cleanup");
+                return true;
+            }
+        }
     }
 }
 
@@ -367,6 +665,12 @@ async fn main() -> Result<()> {
     // Try to acquire the lock file first
     let _lock_file = acquire_lock(&lock)?;
 
+    // Set up SIGTERM handler EARLY - before any long-running operations like model download.
+    // This ensures we can catch SIGTERM during startup and clean up properly.
+    #[cfg(unix)]
+    let mut sigterm = tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
+        .context("Failed to register SIGTERM handler")?;
+
     // Now that we have the lock, remove stale socket if it exists
     if socket.exists() {
         std::fs::remove_file(&socket).context("Failed to remove stale socket")?;
@@ -382,21 +686,118 @@ async fn main() -> Result<()> {
     let listener = UnixListener::bind(&socket).context("Failed to bind Unix socket")?;
     let stream = UnixListenerStream::new(listener);
 
+    // Detect hardware
+    let hardware_profile = hardware::HardwareDetector::detect();
+    info!(
+        "Hardware: {} RAM, {:?} GPU",
+        hardware_profile.ram_bytes / (1024 * 1024 * 1024),
+        hardware_profile.gpu_backend
+    );
+
+    // Select and load model
+    let selector = model::ModelSelector::new();
+    let model_spec = selector.select(&hardware_profile).context("Model selection failed")?;
+    let model_name = model_spec.name.clone();
+    info!("Selected model: {} (backend: {:?})", model_name, model_spec.backend);
+
+    // Get models directory
+    let models_dir = std::env::var("TSUKU_HOME")
+        .ok()
+        .map(PathBuf::from)
+        .unwrap_or_else(|| {
+            dirs::home_dir()
+                .expect("Could not determine home directory")
+                .join(".tsuku")
+        })
+        .join("models");
+
+    // Ensure model is available - check for SIGTERM during download
+    let model_manager = models::ModelManager::new(models_dir.clone());
+    let model_path = model_manager.model_path(&model_name);
+
+    if !model_manager.is_available(&model_name).await {
+        info!("Model not found locally, downloading...");
+        let download_future = model_manager.download(&model_name, |progress| {
+            info!(
+                "Download progress: {} bytes",
+                progress.bytes_downloaded
+            );
+        });
+
+        tokio::select! {
+            result = download_future => {
+                result.context("Failed to download model")?;
+            }
+            _ = sigterm.recv() => {
+                info!("SIGTERM received during model download, cleaning up");
+                cleanup_files(&socket, &lock);
+                info!("Server shutdown complete (reason: SIGTERM during startup)");
+                std::process::exit(0);
+            }
+        }
+    }
+
+    info!("Loading model from {:?}", model_path);
+
+    // Load model (blocking operation, run in spawn_blocking)
+    // Check for SIGTERM during model loading
+    let model_params = match model_spec.backend {
+        model::Backend::Cpu => ModelParams::for_cpu(),
+        _ => ModelParams::for_gpu(),
+    };
+    let load_future = tokio::task::spawn_blocking({
+        let path = model_path.clone();
+        move || LlamaModel::load_from_file(&path, model_params)
+    });
+
+    let model = tokio::select! {
+        result = load_future => {
+            result
+                .context("Model loading task panicked")?
+                .context("Failed to load model")?
+        }
+        _ = sigterm.recv() => {
+            info!("SIGTERM received during model loading, cleaning up");
+            cleanup_files(&socket, &lock);
+            info!("Server shutdown complete (reason: SIGTERM during startup)");
+            std::process::exit(0);
+        }
+    };
+
+    let model = Arc::new(model);
+    info!("Model loaded successfully");
+
+    // Create inference context with larger context window and batch size.
+    // Default context is 512, but we need more for tool calling prompts.
+    // Multi-turn conversations with tool results can easily exceed 8K tokens.
+    // Batch size must be large enough to process the entire prompt at once.
+    let context_params = ContextParams {
+        n_ctx: 16384,
+        n_batch: 16384,
+        ..Default::default()
+    };
+    let context = LlamaContext::new(model.clone(), context_params).context("Failed to create context")?;
+    info!("Inference context created");
+
     // Create shutdown channel
     let (shutdown_tx, mut shutdown_rx) = mpsc::channel::<()>(1);
 
+    // Create activity channel for idle timeout reset
+    let (activity_tx, mut activity_rx) = mpsc::channel::<()>(16);
+
     // Create the server
-    let model_name = "stub-model".to_string(); // TODO: Load actual model
-    let server = LlmServer::new(model_name, shutdown_tx.clone());
+    let server = LlmServer::new(
+        model_name,
+        hardware_profile,
+        shutdown_tx.clone(),
+        activity_tx,
+        model,
+        context,
+    );
     let shutting_down = server.shutting_down();
     let in_flight = server.in_flight();
 
     info!("Server ready, waiting for connections...");
-
-    // Set up SIGTERM handler
-    #[cfg(unix)]
-    let mut sigterm = tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
-        .context("Failed to register SIGTERM handler")?;
 
     // Run the server with graceful shutdown
     let server_future = tonic::transport::Server::builder()
@@ -406,33 +807,54 @@ async fn main() -> Result<()> {
             info!("Shutdown signal received");
         });
 
-    // Main event loop
-    let shutdown_reason = tokio::select! {
-        result = server_future => {
-            result.context("Server error")?;
-            "server stopped"
+    // Main event loop with activity-based idle timeout.
+    // The idle timeout resets whenever there's activity (request starts).
+    let shutdown_reason: &str;
+    let mut idle_deadline = tokio::time::Instant::now() + idle_timeout;
+
+    // Pin the server future so we can poll it in a loop
+    tokio::pin!(server_future);
+
+    loop {
+        tokio::select! {
+            result = &mut server_future => {
+                result.context("Server error")?;
+                shutdown_reason = "server stopped";
+                break;
+            }
+            _ = tokio::time::sleep_until(idle_deadline) => {
+                info!("Idle timeout reached, initiating shutdown");
+                shutdown_reason = "idle timeout";
+                break;
+            }
+            _ = sigterm.recv() => {
+                info!("SIGTERM received, initiating graceful shutdown");
+                shutdown_reason = "SIGTERM";
+                break;
+            }
+            _ = activity_rx.recv() => {
+                // Activity received, reset the idle deadline
+                idle_deadline = tokio::time::Instant::now() + idle_timeout;
+            }
         }
-        _ = tokio::time::sleep(idle_timeout) => {
-            info!("Idle timeout reached, initiating shutdown");
-            "idle timeout"
-        }
-        _ = sigterm.recv() => {
-            info!("SIGTERM received, initiating graceful shutdown");
-            "SIGTERM"
-        }
-    };
+    }
 
     // Mark server as shutting down
     shutting_down.store(true, Ordering::SeqCst);
 
     // Wait for in-flight requests with grace period
-    wait_for_in_flight(&in_flight, SHUTDOWN_GRACE_PERIOD).await;
+    // Pass sigterm so we can detect a second signal during grace period
+    let _interrupted = wait_for_in_flight(&in_flight, SHUTDOWN_GRACE_PERIOD, &mut sigterm).await;
 
     // Clean up files
     cleanup_files(&socket, &lock);
 
     info!("Server shutdown complete (reason: {})", shutdown_reason);
-    Ok(())
+
+    // Exit explicitly with code 0 to prevent the default signal handler
+    // from terminating the process with "signal: terminated" status.
+    // This ensures the process exits cleanly after all cleanup is done.
+    std::process::exit(0);
 }
 
 // Bring in scopeguard for the in-flight request tracking RAII guard

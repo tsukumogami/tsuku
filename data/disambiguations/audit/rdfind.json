@@ -1,0 +1,18 @@
+{
+  "tool": "rdfind",
+  "selected": "homebrew:rdfind",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:rdfind",
+      "downloads": 929,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:rdfind",
+  "disambiguated_at": "2026-02-17T00:26:42.763684701Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

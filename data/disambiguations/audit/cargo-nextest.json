@@ -1,0 +1,27 @@
+{
+  "tool": "cargo-nextest",
+  "selected": "crates.io:cargo-nextest",
+  "alternatives": [
+    "homebrew:cargo-nextest"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 243.177734375,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:cargo-nextest",
+      "downloads": 4096,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:cargo-nextest",
+      "downloads": 996056,
+      "version_count": 150,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:cargo-nextest",
+  "disambiguated_at": "2026-02-17T00:12:36.352278345Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

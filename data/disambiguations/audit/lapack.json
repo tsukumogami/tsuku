@@ -1,0 +1,41 @@
+{
+  "tool": "lapack",
+  "selected": "crates.io:lapack",
+  "alternatives": [
+    "rubygems:lapack",
+    "homebrew:lapack",
+    "npm:lapack"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 7.118324770356531,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:lapack",
+      "downloads": 4528,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:lapack",
+      "downloads": 45721,
+      "version_count": 56,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:lapack",
+      "downloads": 6423,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "npm:lapack",
+      "downloads": 8,
+      "version_count": 9,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:lapack",
+  "disambiguated_at": "2026-02-17T00:20:13.185349555Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

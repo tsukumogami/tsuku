@@ -1,0 +1,27 @@
+{
+  "tool": "precice",
+  "selected": "homebrew:precice",
+  "alternatives": [
+    "crates.io:precice"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 5.3076923076923075,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:precice",
+      "downloads": 207,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:precice",
+      "downloads": 39,
+      "version_count": 7,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:precice",
+  "disambiguated_at": "2026-02-17T00:25:37.693089106Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

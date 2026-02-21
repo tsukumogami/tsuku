@@ -1,0 +1,41 @@
+{
+  "tool": "qsv",
+  "selected": "homebrew:qsv",
+  "alternatives": [
+    "crates.io:qsv",
+    "pypi:qsv",
+    "npm:qsv"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.3518518518518516,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:qsv",
+      "downloads": 6350,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:qsv",
+      "downloads": 0,
+      "version_count": 15,
+      "has_repository": false
+    },
+    {
+      "source": "crates.io:qsv",
+      "downloads": 2700,
+      "version_count": 193,
+      "has_repository": true
+    },
+    {
+      "source": "npm:qsv",
+      "downloads": 0,
+      "version_count": 15,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:qsv",
+  "disambiguated_at": "2026-02-17T00:26:17.686894559Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

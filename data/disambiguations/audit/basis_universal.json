@@ -1,0 +1,33 @@
+{
+  "tool": "basis_universal",
+  "selected": "crates.io:basis_universal",
+  "alternatives": [
+    "homebrew:basis_universal"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 153.23101265822785,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:basis_universal",
+      "downloads": 316,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:basis_universal",
+      "downloads": 48421,
+      "version_count": 8,
+      "has_repository": true
+    },
+    {
+      "source": "npm:basis_universal",
+      "downloads": 23,
+      "version_count": 2,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:basis_universal",
+  "disambiguated_at": "2026-02-17T00:11:45.78996471Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

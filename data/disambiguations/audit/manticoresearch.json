@@ -1,0 +1,41 @@
+{
+  "tool": "manticoresearch",
+  "selected": "homebrew:manticoresearch",
+  "alternatives": [
+    "npm:manticoresearch",
+    "crates.io:manticoresearch",
+    "pypi:manticoresearch"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.4229166666666666,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:manticoresearch",
+      "downloads": 146,
+      "version_count": 5,
+      "has_repository": false
+    },
+    {
+      "source": "pypi:manticoresearch",
+      "downloads": 0,
+      "version_count": 20,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:manticoresearch",
+      "downloads": 1163,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:manticoresearch",
+      "downloads": 480,
+      "version_count": 16,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:manticoresearch",
+  "disambiguated_at": "2026-02-17T00:21:55.939726952Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

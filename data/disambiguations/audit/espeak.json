@@ -1,0 +1,24 @@
+{
+  "tool": "espeak",
+  "selected": "homebrew:espeak",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:espeak",
+      "downloads": 5530,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:espeak",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:espeak",
+  "disambiguated_at": "2026-02-17T00:15:24.013519811Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

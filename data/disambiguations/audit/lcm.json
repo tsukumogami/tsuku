@@ -1,0 +1,40 @@
+{
+  "tool": "lcm",
+  "selected": "npm:lcm",
+  "alternatives": [
+    "homebrew:lcm",
+    "pypi:lcm"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 149.09640831758034,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:lcm",
+      "downloads": 69,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:lcm",
+      "downloads": 529,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:lcm",
+      "downloads": 0,
+      "version_count": 9,
+      "has_repository": false
+    },
+    {
+      "source": "npm:lcm",
+      "downloads": 78872,
+      "version_count": 3,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:lcm",
+  "disambiguated_at": "2026-02-17T00:20:17.933499693Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,26 @@
+{
+  "tool": "packmol",
+  "selected": "homebrew:packmol",
+  "alternatives": [
+    "pypi:packmol"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:packmol",
+      "downloads": 635,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:packmol",
+      "downloads": 0,
+      "version_count": 6,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:packmol",
+  "disambiguated_at": "2026-02-17T00:24:43.778473083Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

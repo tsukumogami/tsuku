@@ -1,0 +1,36 @@
+{
+  "tool": "gitmoji",
+  "selected": "homebrew:gitmoji",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:gitmoji",
+      "downloads": 9,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:gitmoji",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:gitmoji",
+      "downloads": 2140,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:gitmoji",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:gitmoji",
+  "disambiguated_at": "2026-02-17T00:16:58.53720914Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

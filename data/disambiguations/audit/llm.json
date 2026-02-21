@@ -1,0 +1,48 @@
+{
+  "tool": "llm",
+  "selected": "homebrew:llm",
+  "alternatives": [
+    "crates.io:llm",
+    "rubygems:llm",
+    "pypi:llm",
+    "npm:llm"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.5977113544441157,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:llm",
+      "downloads": 16196,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:llm",
+      "downloads": 10137,
+      "version_count": 32,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:llm",
+      "downloads": 0,
+      "version_count": 56,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:llm",
+      "downloads": 1211,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "npm:llm",
+      "downloads": 0,
+      "version_count": 9,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:llm",
+  "disambiguated_at": "2026-02-17T00:21:28.037847612Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

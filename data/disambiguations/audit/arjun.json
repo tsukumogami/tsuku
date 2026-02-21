@@ -1,0 +1,40 @@
+{
+  "tool": "arjun",
+  "selected": "rubygems:arjun",
+  "alternatives": [
+    "homebrew:arjun",
+    "pypi:arjun"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 4.1042047531992685,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:arjun",
+      "downloads": 547,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:arjun",
+      "downloads": 0,
+      "version_count": 17,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:arjun",
+      "downloads": 2245,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:arjun",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:arjun",
+  "disambiguated_at": "2026-02-17T00:10:59.08748841Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

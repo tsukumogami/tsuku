@@ -1,0 +1,48 @@
+{
+  "tool": "glm",
+  "selected": "rubygems:glm",
+  "alternatives": [
+    "homebrew:glm",
+    "crates.io:glm",
+    "npm:glm",
+    "pypi:glm"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.18115234375,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:glm",
+      "downloads": 6025,
+      "version_count": 14,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:glm",
+      "downloads": 0,
+      "version_count": 19,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:glm",
+      "downloads": 12095,
+      "version_count": 3,
+      "has_repository": false
+    },
+    {
+      "source": "npm:glm",
+      "downloads": 3943,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:glm",
+      "downloads": 10240,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:glm",
+  "disambiguated_at": "2026-02-17T00:17:05.019171383Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

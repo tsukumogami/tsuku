@@ -1,0 +1,18 @@
+{
+  "tool": "dosbox-staging",
+  "selected": "homebrew:dosbox-staging",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:dosbox-staging",
+      "downloads": 1263,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:dosbox-staging",
+  "disambiguated_at": "2026-02-17T00:14:44.779470268Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

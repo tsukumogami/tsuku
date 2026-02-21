@@ -1,0 +1,26 @@
+{
+  "tool": "jupytext",
+  "selected": "homebrew:jupytext",
+  "alternatives": [
+    "pypi:jupytext"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:jupytext",
+      "downloads": 792,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:jupytext",
+      "downloads": 0,
+      "version_count": 145,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:jupytext",
+  "disambiguated_at": "2026-02-17T00:19:32.730245544Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

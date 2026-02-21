@@ -1,0 +1,47 @@
+{
+  "tool": "reshape",
+  "selected": "rubygems:reshape",
+  "alternatives": [
+    "homebrew:reshape",
+    "crates.io:reshape",
+    "npm:reshape"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 94.95901639344262,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:reshape",
+      "downloads": 122,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:reshape",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:reshape",
+      "downloads": 98,
+      "version_count": 15,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:reshape",
+      "downloads": 11585,
+      "version_count": 3,
+      "has_repository": false
+    },
+    {
+      "source": "npm:reshape",
+      "downloads": 0,
+      "version_count": 13,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:reshape",
+  "disambiguated_at": "2026-02-17T00:26:52.428669459Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

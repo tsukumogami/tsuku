@@ -1,0 +1,26 @@
+{
+  "tool": "nuxi",
+  "selected": "homebrew:nuxi",
+  "alternatives": [
+    "npm:nuxi"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:nuxi",
+      "downloads": 299,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:nuxi",
+      "downloads": 0,
+      "version_count": 108,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:nuxi",
+  "disambiguated_at": "2026-02-17T00:23:48.431140108Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

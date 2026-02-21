@@ -1,0 +1,36 @@
+{
+  "tool": "dra",
+  "selected": "homebrew:dra",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:dra",
+      "downloads": 48,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:dra",
+      "downloads": 465,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:dra",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:dra",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:dra",
+  "disambiguated_at": "2026-02-17T00:14:50.088739773Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

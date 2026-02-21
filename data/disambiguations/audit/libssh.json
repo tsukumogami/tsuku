@@ -1,0 +1,33 @@
+{
+  "tool": "libssh",
+  "selected": "homebrew:libssh",
+  "alternatives": [
+    "rubygems:libssh"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 32.54309122420041,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:libssh",
+      "downloads": 10,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:libssh",
+      "downloads": 413102,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:libssh",
+      "downloads": 12694,
+      "version_count": 5,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:libssh",
+  "disambiguated_at": "2026-02-17T00:21:04.506704932Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,34 @@
+{
+  "tool": "mongosh",
+  "selected": "homebrew:mongosh",
+  "alternatives": [
+    "crates.io:mongosh",
+    "npm:mongosh"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 841.6518518518518,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:mongosh",
+      "downloads": 227246,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:mongosh",
+      "downloads": 270,
+      "version_count": 15,
+      "has_repository": true
+    },
+    {
+      "source": "npm:mongosh",
+      "downloads": 0,
+      "version_count": 116,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:mongosh",
+  "disambiguated_at": "2026-02-17T00:22:46.671966964Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

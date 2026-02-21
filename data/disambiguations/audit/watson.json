@@ -1,0 +1,48 @@
+{
+  "tool": "watson",
+  "selected": "rubygems:watson",
+  "alternatives": [
+    "homebrew:watson",
+    "crates.io:watson",
+    "npm:watson",
+    "pypi:watson"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 7.756637168141593,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:watson",
+      "downloads": 678,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:watson",
+      "downloads": 138,
+      "version_count": 25,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:watson",
+      "downloads": 0,
+      "version_count": 6,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:watson",
+      "downloads": 5259,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:watson",
+      "downloads": 0,
+      "version_count": 7,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:watson",
+  "disambiguated_at": "2026-02-17T00:31:03.856775073Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

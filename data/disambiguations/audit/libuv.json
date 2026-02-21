@@ -1,0 +1,34 @@
+{
+  "tool": "libuv",
+  "selected": "homebrew:libuv",
+  "alternatives": [
+    "rubygems:libuv",
+    "crates.io:libuv"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 5.23379575872395,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:libuv",
+      "downloads": 856406,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:libuv",
+      "downloads": 164,
+      "version_count": 20,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:libuv",
+      "downloads": 163630,
+      "version_count": 62,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:libuv",
+  "disambiguated_at": "2026-02-17T00:21:08.777782792Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

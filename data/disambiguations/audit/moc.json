@@ -1,0 +1,47 @@
+{
+  "tool": "moc",
+  "selected": "rubygems:moc",
+  "alternatives": [
+    "crates.io:moc",
+    "homebrew:moc",
+    "npm:moc"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 10.142595978062158,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:moc",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:moc",
+      "downloads": 977,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:moc",
+      "downloads": 2735,
+      "version_count": 23,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:moc",
+      "downloads": 27740,
+      "version_count": 8,
+      "has_repository": false
+    },
+    {
+      "source": "npm:moc",
+      "downloads": 15,
+      "version_count": 9,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:moc",
+  "disambiguated_at": "2026-02-17T00:22:40.730684988Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

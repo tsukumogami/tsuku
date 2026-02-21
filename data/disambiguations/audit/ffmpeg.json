@@ -1,0 +1,48 @@
+{
+  "tool": "ffmpeg",
+  "selected": "homebrew:ffmpeg",
+  "alternatives": [
+    "npm:ffmpeg",
+    "rubygems:ffmpeg",
+    "crates.io:ffmpeg",
+    "pypi:ffmpeg"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 20.08858555785437,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:ffmpeg",
+      "downloads": 0,
+      "version_count": 5,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:ffmpeg",
+      "downloads": 1592382,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:ffmpeg",
+      "downloads": 581,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "npm:ffmpeg",
+      "downloads": 79268,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:ffmpeg",
+      "downloads": 61768,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:ffmpeg",
+  "disambiguated_at": "2026-02-17T00:10:07.118557317Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

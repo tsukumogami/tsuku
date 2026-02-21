@@ -1,0 +1,48 @@
+{
+  "tool": "allegro",
+  "selected": "rubygems:allegro",
+  "alternatives": [
+    "homebrew:allegro",
+    "crates.io:allegro",
+    "pypi:allegro",
+    "npm:allegro"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 8.332247557003257,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:allegro",
+      "downloads": 0,
+      "version_count": 21,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:allegro",
+      "downloads": 1535,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:allegro",
+      "downloads": 1357,
+      "version_count": 49,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:allegro",
+      "downloads": 12790,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "npm:allegro",
+      "downloads": 0,
+      "version_count": 7,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:allegro",
+  "disambiguated_at": "2026-02-17T00:10:34.670802653Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

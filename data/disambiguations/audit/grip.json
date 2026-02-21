@@ -1,0 +1,41 @@
+{
+  "tool": "grip",
+  "selected": "rubygems:grip",
+  "alternatives": [
+    "homebrew:grip",
+    "pypi:grip",
+    "npm:grip"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 18.058935000947507,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:grip",
+      "downloads": 0,
+      "version_count": 27,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:grip",
+      "downloads": 5277,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:grip",
+      "downloads": 95297,
+      "version_count": 23,
+      "has_repository": false
+    },
+    {
+      "source": "npm:grip",
+      "downloads": 0,
+      "version_count": 21,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:grip",
+  "disambiguated_at": "2026-02-17T00:17:40.14148204Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

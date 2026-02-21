@@ -1,0 +1,34 @@
+{
+  "tool": "git-filter-repo",
+  "selected": "homebrew:git-filter-repo",
+  "alternatives": [
+    "npm:git-filter-repo",
+    "pypi:git-filter-repo"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 57.57166806370495,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:git-filter-repo",
+      "downloads": 68683,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:git-filter-repo",
+      "downloads": 0,
+      "version_count": 14,
+      "has_repository": true
+    },
+    {
+      "source": "npm:git-filter-repo",
+      "downloads": 1193,
+      "version_count": 30,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:git-filter-repo",
+  "disambiguated_at": "2026-02-17T00:16:49.629902144Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,26 @@
+{
+  "tool": "kpcli",
+  "selected": "homebrew:kpcli",
+  "alternatives": [
+    "pypi:kpcli"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:kpcli",
+      "downloads": 0,
+      "version_count": 11,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:kpcli",
+      "downloads": 279,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:kpcli",
+  "disambiguated_at": "2026-02-17T00:19:56.578138236Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

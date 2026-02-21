@@ -1,0 +1,41 @@
+{
+  "tool": "decasify",
+  "selected": "crates.io:decasify",
+  "alternatives": [
+    "homebrew:decasify",
+    "npm:decasify",
+    "pypi:decasify"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.2165354330708662,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:decasify",
+      "downloads": 254,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:decasify",
+      "downloads": 0,
+      "version_count": 26,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:decasify",
+      "downloads": 309,
+      "version_count": 43,
+      "has_repository": true
+    },
+    {
+      "source": "npm:decasify",
+      "downloads": 16,
+      "version_count": 23,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:decasify",
+  "disambiguated_at": "2026-02-17T00:14:15.980002212Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

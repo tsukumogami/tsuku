@@ -1,0 +1,32 @@
+{
+  "tool": "tippecanoe",
+  "selected": "homebrew:tippecanoe",
+  "alternatives": [
+    "npm:tippecanoe"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:tippecanoe",
+      "downloads": 4322,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:tippecanoe",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "npm:tippecanoe",
+      "downloads": 0,
+      "version_count": 10,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:tippecanoe",
+  "disambiguated_at": "2026-02-17T00:29:44.413200033Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

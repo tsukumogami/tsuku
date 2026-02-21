@@ -1,0 +1,27 @@
+{
+  "tool": "crowdin",
+  "selected": "homebrew:crowdin",
+  "alternatives": [
+    "npm:crowdin"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 10.797872340425531,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:crowdin",
+      "downloads": 3045,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:crowdin",
+      "downloads": 282,
+      "version_count": 16,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:crowdin",
+  "disambiguated_at": "2026-02-17T00:13:51.661035616Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

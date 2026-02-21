@@ -10,27 +10,30 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"time"
 
-	"github.com/tsukumogami/tsuku/internal/seed"
+	"github.com/tsukumogami/tsuku/internal/batch"
 )
 
 // Options configures dashboard generation.
 type Options struct {
-	QueueFile          string // Path to priority-queue.json or queues directory
+	QueueFile          string // Path to unified priority-queue.json file
 	FailuresDir        string // Directory containing failures JSONL files
 	MetricsDir         string // Directory containing metrics JSONL files
 	DisambiguationsDir string // Directory containing disambiguation JSONL files
+	ControlFile        string // Path to batch-control.json for circuit breaker state
 	OutputFile         string // Path to output dashboard.json
 }
 
 // DefaultOptions returns options with default file paths.
 func DefaultOptions() Options {
 	return Options{
-		QueueFile:          "data/queues",
+		QueueFile:          "data/queues/priority-queue.json",
 		FailuresDir:        "data/failures",
 		MetricsDir:         "data/metrics",
 		DisambiguationsDir: "data/disambiguations",
+		ControlFile:        "batch-control.json",
 		OutputFile:         "website/pipeline/dashboard.json",
 	}
 }
@@ -41,8 +44,48 @@ type Dashboard struct {
 	Queue           QueueStatus           `json:"queue"`
 	Blockers        []Blocker             `json:"blockers"`
 	Failures        map[string]int        `json:"failures"`
+	FailureDetails  []FailureDetail       `json:"failure_details,omitempty"`
+	Health          *HealthStatus         `json:"health,omitempty"`
 	Runs            []RunSummary          `json:"runs,omitempty"`
 	Disambiguations *DisambiguationStatus `json:"disambiguations,omitempty"`
+	Curated         []CuratedOverride     `json:"curated,omitempty"`
+}
+
+// CuratedOverride represents a queue entry with curated confidence,
+// surfaced in the dashboard for visibility into manual source selections.
+type CuratedOverride struct {
+	Name             string `json:"name"`
+	Source           string `json:"source"`
+	Reason           string `json:"reason,omitempty"`
+	ValidationStatus string `json:"validation_status"` // "valid", "invalid", "unknown"
+}
+
+// HealthStatus summarizes pipeline health including circuit breaker state
+// and run tracking across ecosystems.
+type HealthStatus struct {
+	Ecosystems           map[string]EcosystemHealth `json:"ecosystems"`
+	LastRun              *RunInfo                   `json:"last_run"`
+	LastSuccessfulRun    *RunInfo                   `json:"last_successful_run"`
+	RunsSinceLastSuccess int                        `json:"runs_since_last_success"`
+}
+
+// EcosystemHealth represents the circuit breaker state for a single ecosystem.
+type EcosystemHealth struct {
+	BreakerState string `json:"breaker_state"`
+	Failures     int    `json:"failures"`
+	LastFailure  string `json:"last_failure,omitempty"`
+	OpensAt      string `json:"opens_at,omitempty"`
+}
+
+// RunInfo summarizes a single batch run for health tracking purposes.
+type RunInfo struct {
+	BatchID       string         `json:"batch_id"`
+	Ecosystems    map[string]int `json:"ecosystems,omitempty"`
+	Timestamp     string         `json:"timestamp"`
+	Succeeded     int            `json:"succeeded"`
+	Failed        int            `json:"failed"`
+	Total         int            `json:"total"`
+	RecipesMerged int            `json:"recipes_merged,omitempty"`
 }
 
 // DisambiguationStatus summarizes disambiguation activity across batch runs.
@@ -64,28 +107,34 @@ type QueueStatus struct {
 
 // PackageInfo contains details about a package for display.
 type PackageInfo struct {
-	ID        string   `json:"id"`
-	Name      string   `json:"name"`
-	Ecosystem string   `json:"ecosystem"`
-	Priority  int      `json:"priority"`
-	Category  string   `json:"category,omitempty"`   // For failed packages
-	BlockedBy []string `json:"blocked_by,omitempty"` // For blocked packages
+	ID           string   `json:"id"`
+	Name         string   `json:"name"`
+	Ecosystem    string   `json:"ecosystem"`
+	Priority     int      `json:"priority"`
+	Category     string   `json:"category,omitempty"`      // For failed packages
+	BlockedBy    []string `json:"blocked_by,omitempty"`    // For blocked packages
+	FailureCount int      `json:"failure_count"`           // Consecutive failures from unified queue
+	NextRetryAt  string   `json:"next_retry_at,omitempty"` // Earliest retry time (ISO 8601)
 }
 
 // Blocker represents a dependency blocking packages.
 type Blocker struct {
-	Dependency string   `json:"dependency"`
-	Count      int      `json:"count"`
-	Packages   []string `json:"packages"` // First 5 package names
+	Dependency  string   `json:"dependency"`
+	Count       int      `json:"count"` // Total (transitive) -- kept for backward compat
+	DirectCount int      `json:"direct_count"`
+	TotalCount  int      `json:"total_count"` // Same as Count; explicit name for clarity
+	Packages    []string `json:"packages"`    // First 5 package names
 }
 
 // RunSummary summarizes a batch run.
 type RunSummary struct {
-	BatchID   string  `json:"batch_id"`
-	Total     int     `json:"total"`
-	Merged    int     `json:"merged"`
-	Rate      float64 `json:"rate"`
-	Timestamp string  `json:"timestamp"`
+	BatchID    string         `json:"batch_id"`
+	Ecosystems map[string]int `json:"ecosystems,omitempty"`
+	Total      int            `json:"total"`
+	Merged     int            `json:"merged"`
+	Rate       float64        `json:"rate"`
+	Duration   int            `json:"duration,omitempty"`
+	Timestamp  string         `json:"timestamp"`
 }
 
 // FailureRecord represents one line in failures JSONL.
@@ -95,6 +144,7 @@ type FailureRecord struct {
 	Ecosystem     string           `json:"ecosystem,omitempty"`
 	Environment   string           `json:"environment,omitempty"`
 	UpdatedAt     string           `json:"updated_at,omitempty"`
+	Timestamp     string           `json:"timestamp,omitempty"` // Per-recipe format timestamp
 	Failures      []PackageFailure `json:"failures,omitempty"`
 	// Per-recipe format fields
 	Recipe    string   `json:"recipe,omitempty"`
@@ -114,16 +164,18 @@ type PackageFailure struct {
 }
 
 // MetricsRecord represents one line in batch-runs.jsonl.
+// Supports both old format (ecosystem string) and new format (ecosystems object).
 type MetricsRecord struct {
-	BatchID         string `json:"batch_id"`
-	Ecosystem       string `json:"ecosystem"`
-	Total           int    `json:"total"`
-	Generated       int    `json:"generated"`
-	Merged          int    `json:"merged"`
-	Excluded        int    `json:"excluded"`
-	Constrained     int    `json:"constrained"`
-	Timestamp       string `json:"timestamp"`
-	DurationSeconds int    `json:"duration_seconds"`
+	BatchID         string         `json:"batch_id"`
+	Ecosystem       string         `json:"ecosystem,omitempty"`
+	Ecosystems      map[string]int `json:"ecosystems,omitempty"`
+	Total           int            `json:"total"`
+	Generated       int            `json:"generated"`
+	Merged          int            `json:"merged"`
+	Excluded        int            `json:"excluded"`
+	Constrained     int            `json:"constrained"`
+	Timestamp       string         `json:"timestamp"`
+	DurationSeconds int            `json:"duration_seconds"`
 }
 
 // DisambiguationFile represents one line in disambiguation JSONL files.
@@ -145,62 +197,61 @@ type DisambiguationRecord struct {
 	HighRisk        bool     `json:"high_risk"`
 }
 
-// loadQueueFromPathOrDir loads queue from a file or aggregates all queues from a directory.
-func loadQueueFromPathOrDir(path string) (*seed.PriorityQueue, error) {
-	info, err := os.Stat(path)
+// loadQueue loads the unified queue from a single file.
+// Returns an empty queue if the file doesn't exist. Returns an error if the
+// file contains entries that fail validation (e.g. legacy seed format files
+// with missing source or invalid priority), or if a non-empty file produces
+// zero entries (likely a legacy format mismatch).
+func loadQueue(path string) (*batch.UnifiedQueue, error) {
+	q, err := batch.LoadUnifiedQueue(path)
 	if err != nil {
-		// Return empty queue for missing file (matches seed.Load behavior)
-		if os.IsNotExist(err) {
-			return &seed.PriorityQueue{
-				SchemaVersion: 1,
-				Packages:      []seed.Package{},
-				UpdatedAt:     time.Now().UTC().Format(time.RFC3339),
-			}, nil
-		}
 		return nil, err
 	}
-
-	// Single file case
-	if !info.IsDir() {
-		return seed.Load(path)
-	}
-
-	// Directory case: aggregate all ecosystem queue files
-	pattern := filepath.Join(path, "priority-queue-*.json")
-	files, err := filepath.Glob(pattern)
-	if err != nil {
-		return nil, fmt.Errorf("glob queues: %w", err)
-	}
-
-	if len(files) == 0 {
-		// Return empty queue if directory has no queue files (matches seed.Load behavior)
-		return &seed.PriorityQueue{
-			SchemaVersion: 1,
-			Packages:      []seed.Package{},
-			UpdatedAt:     time.Now().UTC().Format(time.RFC3339),
-		}, nil
-	}
-
-	// Load and merge all queues
-	aggregated := &seed.PriorityQueue{
-		SchemaVersion: 1,
-		Packages:      []seed.Package{},
-		UpdatedAt:     time.Now().UTC().Format(time.RFC3339),
-	}
-
-	for _, file := range files {
-		q, err := seed.Load(file)
-		if err != nil {
-			continue // Skip malformed files
-		}
-		aggregated.Packages = append(aggregated.Packages, q.Packages...)
-		// Use the most recent update time
-		if q.UpdatedAt > aggregated.UpdatedAt {
-			aggregated.UpdatedAt = q.UpdatedAt
+	// Detect legacy format: file exists and has content, but no entries parsed.
+	// This happens when a seed-format file (with "packages" key) is loaded by
+	// the unified loader (which expects "entries" key).
+	if len(q.Entries) == 0 {
+		info, statErr := os.Stat(path)
+		if statErr == nil && info.Size() > 2 { // >2 bytes rules out "{}"
+			return nil, fmt.Errorf("queue file %s has content but no entries parsed; check format (expected unified schema with \"entries\" key)", path)
 		}
 	}
+	for i, entry := range q.Entries {
+		if err := entry.Validate(); err != nil {
+			return nil, fmt.Errorf("queue entry %d (%s): %w", i, entry.Name, err)
+		}
+	}
+	return q, nil
+}
 
-	return aggregated, nil
+// loadCurated filters the unified queue for entries with curated confidence
+// and maps them to CuratedOverride records. The ValidationStatus is derived
+// from the entry's queue status: "success" and "pending" map to "valid",
+// "failed" maps to "invalid", and everything else maps to "unknown".
+func loadCurated(queue *batch.UnifiedQueue) []CuratedOverride {
+	var curated []CuratedOverride
+	for _, entry := range queue.Entries {
+		if entry.Confidence != batch.ConfidenceCurated {
+			continue
+		}
+
+		var validationStatus string
+		switch entry.Status {
+		case batch.StatusSuccess, batch.StatusPending:
+			validationStatus = "valid"
+		case batch.StatusFailed:
+			validationStatus = "invalid"
+		default:
+			validationStatus = "unknown"
+		}
+
+		curated = append(curated, CuratedOverride{
+			Name:             entry.Name,
+			Source:           entry.Source,
+			ValidationStatus: validationStatus,
+		})
+	}
+	return curated
 }
 
 // Generate reads pipeline data files and produces dashboard.json.
@@ -210,28 +261,51 @@ func Generate(opts Options) error {
 		Failures:    make(map[string]int),
 	}
 
-	// Load failures first to get details for packages
-	blockerCounts, failureCounts, failureDetails, err := loadFailuresFromDir(opts.FailuresDir)
+	// Load failures to get details for packages
+	_, failureCounts, failureDetails, err := loadFailuresFromDir(opts.FailuresDir)
 	if err != nil {
 		// Non-fatal: failures directory might not exist yet
-		blockerCounts = make(map[string][]string)
 		failureCounts = make(map[string]int)
 		failureDetails = make(map[string]FailureDetails)
 	}
-	dash.Blockers = computeTopBlockers(blockerCounts, 10)
 	dash.Failures = failureCounts
 
-	// Load queue (from file or directory)
-	queue, err := loadQueueFromPathOrDir(opts.QueueFile)
+	// Load unified queue
+	queue, err := loadQueue(opts.QueueFile)
 	if err != nil {
 		return fmt.Errorf("load queue: %w", err)
 	}
 	dash.Queue = computeQueueStatus(queue, failureDetails)
 
+	// Derive top blockers from actual blocked packages in the queue,
+	// not from all failure history.
+	blockerCounts := buildBlockerCountsFromQueue(dash.Queue.Packages[batch.StatusBlocked])
+	dash.Blockers = computeTopBlockers(blockerCounts, 10)
+
+	// Load curated overrides from queue
+	if curated := loadCurated(queue); len(curated) > 0 {
+		dash.Curated = curated
+	}
+
+	// Load individual failure detail records
+	detailRecords, detailErr := loadFailureDetailRecords(opts.FailuresDir, queue)
+	if detailErr == nil && len(detailRecords) > 0 {
+		dash.FailureDetails = detailRecords
+	}
+
 	// Load metrics
-	runs, err := loadMetricsFromDir(opts.MetricsDir)
+	runs, metricsRecords, err := loadMetricsFromDir(opts.MetricsDir)
 	if err == nil && len(runs) > 0 {
-		// Take last 10, newest first
+		// Filter out empty runs (total=0) that processed no recipes.
+		filtered := runs[:0]
+		for _, r := range runs {
+			if r.Total > 0 {
+				filtered = append(filtered, r)
+			}
+		}
+		runs = filtered
+
+		// Take last 10, newest first (runs are sorted by timestamp in loadMetricsFromDir)
 		if len(runs) > 10 {
 			runs = runs[len(runs)-10:]
 		}
@@ -240,6 +314,12 @@ func Generate(opts Options) error {
 			runs[i], runs[j] = runs[j], runs[i]
 		}
 		dash.Runs = runs
+	}
+
+	// Load health status
+	health, err := loadHealth(opts.ControlFile, metricsRecords)
+	if err == nil && health != nil {
+		dash.Health = health
 	}
 
 	// Load disambiguations
@@ -262,36 +342,46 @@ func Generate(opts Options) error {
 	return nil
 }
 
-func computeQueueStatus(queue *seed.PriorityQueue, failureDetails map[string]FailureDetails) QueueStatus {
+func computeQueueStatus(queue *batch.UnifiedQueue, failureDetails map[string]FailureDetails) QueueStatus {
 	status := QueueStatus{
-		Total:    len(queue.Packages),
+		Total:    len(queue.Entries),
 		ByStatus: make(map[string]int),
 		ByTier:   make(map[int]map[string]int),
 		Packages: make(map[string][]PackageInfo),
 	}
 
-	for _, pkg := range queue.Packages {
-		status.ByStatus[pkg.Status]++
+	for _, entry := range queue.Entries {
+		status.ByStatus[entry.Status]++
 
-		if _, ok := status.ByTier[pkg.Tier]; !ok {
-			status.ByTier[pkg.Tier] = make(map[string]int)
+		if _, ok := status.ByTier[entry.Priority]; !ok {
+			status.ByTier[entry.Priority] = make(map[string]int)
 		}
-		status.ByTier[pkg.Tier][pkg.Status]++
+		status.ByTier[entry.Priority][entry.Status]++
 
-		// Build package info with failure details if available
+		// Build package info with failure details if available.
+		// ID is constructed as "ecosystem:name" to match failure detail keys.
+		id := entry.Source
+		var nextRetry string
+		if entry.NextRetryAt != nil {
+			nextRetry = entry.NextRetryAt.Format("2006-01-02T15:04:05Z")
+		}
 		info := PackageInfo{
-			ID:        pkg.ID,
-			Name:      pkg.Name,
-			Ecosystem: pkg.Source,
-			Priority:  pkg.Tier,
+			ID:           id,
+			Name:         entry.Name,
+			Ecosystem:    entry.Ecosystem(),
+			Priority:     entry.Priority,
+			FailureCount: entry.FailureCount,
+			NextRetryAt:  nextRetry,
 		}
 
-		if details, ok := failureDetails[pkg.ID]; ok {
+		if details, ok := failureDetails[id]; ok {
 			info.Category = details.Category
-			info.BlockedBy = details.BlockedBy
+			if entry.Status == batch.StatusBlocked {
+				info.BlockedBy = details.BlockedBy
+			}
 		}
 
-		status.Packages[pkg.Status] = append(status.Packages[pkg.Status], info)
+		status.Packages[entry.Status] = append(status.Packages[entry.Status], info)
 	}
 
 	// Sort packages by priority (lower number = higher priority)
@@ -356,7 +446,11 @@ func loadFailures(path string) (map[string][]string, map[string]int, map[string]
 
 			// Track blocked_by for missing_dep failures in per-recipe format
 			if len(record.BlockedBy) > 0 {
-				pkgID := "homebrew:" + record.Recipe // Assume homebrew for now
+				eco := record.Ecosystem
+				if eco == "" {
+					eco = "homebrew" // last-resort fallback for pre-unified records
+				}
+				pkgID := eco + ":" + record.Recipe
 				details[pkgID] = FailureDetails{
 					Category:  record.Category,
 					BlockedBy: record.BlockedBy,
@@ -371,57 +465,102 @@ func loadFailures(path string) (map[string][]string, map[string]int, map[string]
 	return blockers, categories, details, scanner.Err()
 }
 
-// computeTransitiveBlockers computes all packages blocked by a dependency (directly or indirectly).
-func computeTransitiveBlockers(dep string, blockers map[string][]string, memo map[string][]string) []string {
-	if result, ok := memo[dep]; ok {
-		return result
+// computeTransitiveBlockers computes the total number of packages blocked by a
+// dependency, both directly and transitively. Uses memo map with 0-initialization
+// for cycle detection: when a dependency is first visited, memo[dep] is set to 0
+// (in-progress). If the same dep is encountered again during recursion, the 0 is
+// returned, breaking the cycle.
+func computeTransitiveBlockers(dep string, blockers map[string][]string, pkgToBare map[string]string, memo map[string]int) int {
+	if count, ok := memo[dep]; ok {
+		return count // 0 if in-progress (cycle)
 	}
+	// Mark in-progress
+	memo[dep] = 0
 
-	blocked := make(map[string]bool)
-	// Add directly blocked packages
-	for _, pkg := range blockers[dep] {
-		blocked[pkg] = true
-		// Recursively add packages blocked by this package
-		for _, transitive := range computeTransitiveBlockers(pkg, blockers, memo) {
-			blocked[transitive] = true
+	// Deduplicate blocked packages for this dependency
+	seen := make(map[string]bool)
+	total := 0
+	for _, pkgID := range blockers[dep] {
+		if seen[pkgID] {
+			continue
+		}
+		seen[pkgID] = true
+		total++ // Direct dependent
+		// Check if this package itself blocks others
+		bare := pkgToBare[pkgID]
+		if _, isBlocker := blockers[bare]; isBlocker && bare != dep {
+			total += computeTransitiveBlockers(bare, blockers, pkgToBare, memo)
 		}
 	}
+	memo[dep] = total
+	return total
+}
 
-	// Convert to slice
-	result := make([]string, 0, len(blocked))
-	for pkg := range blocked {
-		result = append(result, pkg)
+// buildBlockerCountsFromQueue builds a blocker map from actual blocked packages
+// in the queue, rather than from all failure history.
+func buildBlockerCountsFromQueue(packages []PackageInfo) map[string][]string {
+	blockers := make(map[string][]string)
+	for _, pkg := range packages {
+		for _, dep := range pkg.BlockedBy {
+			blockers[dep] = append(blockers[dep], pkg.ID)
+		}
 	}
-	memo[dep] = result
-	return result
+	return blockers
 }
 
 func computeTopBlockers(blockers map[string][]string, limit int) []Blocker {
-	memo := make(map[string][]string)
+	// Build reverse index: package ID -> bare name (strip ecosystem prefix).
+	// This lets transitive lookups match "homebrew:ffmpeg" -> "ffmpeg" against
+	// blocker map keys like "ffmpeg".
+	pkgToBare := make(map[string]string)
+	for _, pkgs := range blockers {
+		for _, pkgID := range pkgs {
+			if idx := strings.Index(pkgID, ":"); idx >= 0 {
+				pkgToBare[pkgID] = pkgID[idx+1:]
+			} else {
+				pkgToBare[pkgID] = pkgID
+			}
+		}
+	}
+
+	memo := make(map[string]int)
 	result := make([]Blocker, 0, len(blockers))
 
 	for dep := range blockers {
-		unique := computeTransitiveBlockers(dep, blockers, memo)
+		// Deduplicate direct dependents
+		seen := make(map[string]bool)
+		var uniquePkgs []string
+		for _, pkgID := range blockers[dep] {
+			if !seen[pkgID] {
+				seen[pkgID] = true
+				uniquePkgs = append(uniquePkgs, pkgID)
+			}
+		}
+		directCount := len(uniquePkgs)
+		totalCount := computeTransitiveBlockers(dep, blockers, pkgToBare, memo)
 
 		b := Blocker{
-			Dependency: dep,
-			Count:      len(unique),
+			Dependency:  dep,
+			Count:       totalCount,
+			DirectCount: directCount,
+			TotalCount:  totalCount,
 		}
 		// Keep first 5 packages (sorted by name for stability)
-		packages := make([]string, len(unique))
-		copy(packages, unique)
-		sort.Strings(packages)
-		if len(packages) > 5 {
-			b.Packages = packages[:5]
+		sort.Strings(uniquePkgs)
+		if len(uniquePkgs) > 5 {
+			b.Packages = uniquePkgs[:5]
 		} else {
-			b.Packages = packages
+			b.Packages = uniquePkgs
 		}
 		result = append(result, b)
 	}
 
-	// Sort by count descending
+	// Sort by total count descending
 	sort.Slice(result, func(i, j int) bool {
-		return result[i].Count > result[j].Count
+		if result[i].TotalCount != result[j].TotalCount {
+			return result[i].TotalCount > result[j].TotalCount
+		}
+		return result[i].Dependency < result[j].Dependency
 	})
 
 	if len(result) > limit {
@@ -430,13 +569,14 @@ func computeTopBlockers(blockers map[string][]string, limit int) []Blocker {
 	return result
 }
 
-func loadMetrics(path string) ([]RunSummary, error) {
+func loadMetrics(path string) ([]RunSummary, []MetricsRecord, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	var runs []RunSummary
+	var records []MetricsRecord
 
 	// Try streaming decoder first for pretty-printed JSON objects
 	decoder := json.NewDecoder(bytes.NewReader(data))
@@ -447,7 +587,7 @@ func loadMetrics(path string) ([]RunSummary, error) {
 				break
 			}
 			// If streaming fails, fall back to line-by-line parsing
-			runs = parseMetricsLineByLine(data)
+			runs, records = parseMetricsLineByLine(data)
 			break
 		}
 
@@ -460,22 +600,35 @@ func loadMetrics(path string) ([]RunSummary, error) {
 			rate = float64(record.Merged) / float64(record.Total)
 		}
 
+		records = append(records, record)
 		runs = append(runs, RunSummary{
-			BatchID:   record.BatchID,
-			Total:     record.Total,
-			Merged:    record.Merged,
-			Rate:      rate,
-			Timestamp: record.Timestamp,
+			BatchID:    batchIDFromTimestamp(record.Timestamp),
+			Ecosystems: resolveEcosystems(record),
+			Total:      record.Total,
+			Merged:     record.Merged,
+			Rate:       rate,
+			Duration:   record.DurationSeconds,
+			Timestamp:  record.Timestamp,
 		})
 	}
 
-	return runs, nil
+	return runs, records, nil
+}
+
+// batchIDFromTimestamp derives a unique, path-safe batch ID from an ISO timestamp.
+// Example: "2026-02-19T04:26:06Z" -> "2026-02-19T04-26-06Z"
+func batchIDFromTimestamp(timestamp string) string {
+	if timestamp == "" {
+		return ""
+	}
+	return strings.ReplaceAll(timestamp, ":", "-")
 }
 
 // parseMetricsLineByLine handles JSONL format where each line is a JSON object.
 // Malformed lines are skipped.
-func parseMetricsLineByLine(data []byte) []RunSummary {
+func parseMetricsLineByLine(data []byte) ([]RunSummary, []MetricsRecord) {
 	var runs []RunSummary
+	var records []MetricsRecord
 	scanner := bufio.NewScanner(bytes.NewReader(data))
 	for scanner.Scan() {
 		line := scanner.Bytes()
@@ -497,15 +650,18 @@ func parseMetricsLineByLine(data []byte) []RunSummary {
 			rate = float64(record.Merged) / float64(record.Total)
 		}
 
+		records = append(records, record)
 		runs = append(runs, RunSummary{
-			BatchID:   record.BatchID,
-			Total:     record.Total,
-			Merged:    record.Merged,
-			Rate:      rate,
-			Timestamp: record.Timestamp,
+			BatchID:    batchIDFromTimestamp(record.Timestamp),
+			Ecosystems: resolveEcosystems(record),
+			Total:      record.Total,
+			Merged:     record.Merged,
+			Rate:       rate,
+			Duration:   record.DurationSeconds,
+			Timestamp:  record.Timestamp,
 		})
 	}
-	return runs
+	return runs, records
 }
 
 // loadFailuresFromDir aggregates failures across all JSONL files in a directory.
@@ -556,30 +712,43 @@ func loadFailuresFromDir(dir string) (map[string][]string, map[string]int, map[s
 // loadMetricsFromDir aggregates metrics across all JSONL files in a directory.
 // Supports both timestamped files (batch-runs-2026-02-06T14:30:00Z.jsonl) and legacy
 // files (batch-runs.jsonl) for backward compatibility.
-func loadMetricsFromDir(dir string) ([]RunSummary, error) {
+func loadMetricsFromDir(dir string) ([]RunSummary, []MetricsRecord, error) {
 	var allRuns []RunSummary
+	var allRecords []MetricsRecord
 
 	// Glob for all JSONL files that start with "batch-runs"
 	pattern := filepath.Join(dir, "batch-runs*.jsonl")
 	files, err := filepath.Glob(pattern)
 	if err != nil {
-		return nil, fmt.Errorf("glob metrics: %w", err)
+		return nil, nil, fmt.Errorf("glob metrics: %w", err)
 	}
 
 	if len(files) == 0 {
-		return nil, fmt.Errorf("no metrics files found")
+		return nil, nil, fmt.Errorf("no metrics files found")
 	}
 
 	// Aggregate across all files
 	for _, path := range files {
-		runs, err := loadMetrics(path)
+		runs, records, err := loadMetrics(path)
 		if err != nil {
 			continue // Skip files that can't be read
 		}
 		allRuns = append(allRuns, runs...)
+		allRecords = append(allRecords, records...)
 	}
 
-	return allRuns, nil
+	// Sort by timestamp so newest runs are last regardless of file load order.
+	// The legacy batch-runs.jsonl (no timestamp in filename) sorts after
+	// timestamped files alphabetically, which would otherwise put old runs
+	// at the end of the slice.
+	sort.Slice(allRuns, func(i, j int) bool {
+		return allRuns[i].Timestamp < allRuns[j].Timestamp
+	})
+	sort.Slice(allRecords, func(i, j int) bool {
+		return allRecords[i].Timestamp < allRecords[j].Timestamp
+	})
+
+	return allRuns, allRecords, nil
 }
 
 // loadDisambiguationsFromDir aggregates disambiguation records across all JSONL files
@@ -665,4 +834,120 @@ func loadDisambiguationFile(path string) ([]DisambiguationRecord, error) {
 	}
 
 	return allRecords, scanner.Err()
+}
+
+// batchControlFile represents the top-level structure of batch-control.json.
+type batchControlFile struct {
+	CircuitBreaker map[string]circuitBreakerState `json:"circuit_breaker"`
+}
+
+// circuitBreakerState represents a single ecosystem's circuit breaker entry.
+type circuitBreakerState struct {
+	State       string `json:"state"`
+	Failures    int    `json:"failures"`
+	LastFailure string `json:"last_failure,omitempty"`
+	OpensAt     string `json:"opens_at,omitempty"`
+}
+
+// loadHealth reads batch-control.json for circuit breaker state and scans
+// metrics records to compute run tracking fields. Returns nil if the control
+// file doesn't exist and no metrics records are available.
+func loadHealth(controlFile string, records []MetricsRecord) (*HealthStatus, error) {
+	var ecosystems map[string]EcosystemHealth
+
+	// Read circuit breaker state from batch-control.json
+	data, err := os.ReadFile(controlFile)
+	if err == nil {
+		var control batchControlFile
+		if err := json.Unmarshal(data, &control); err != nil {
+			return nil, fmt.Errorf("parse control file: %w", err)
+		}
+		ecosystems = make(map[string]EcosystemHealth, len(control.CircuitBreaker))
+		for name, cb := range control.CircuitBreaker {
+			ecosystems[name] = EcosystemHealth{
+				BreakerState: cb.State,
+				Failures:     cb.Failures,
+				LastFailure:  cb.LastFailure,
+				OpensAt:      cb.OpensAt,
+			}
+		}
+	} else if !os.IsNotExist(err) {
+		return nil, fmt.Errorf("read control file: %w", err)
+	}
+
+	// If there are no records and no control file, nothing to report
+	if ecosystems == nil && len(records) == 0 {
+		return nil, nil
+	}
+
+	health := &HealthStatus{
+		Ecosystems: ecosystems,
+	}
+	if health.Ecosystems == nil {
+		health.Ecosystems = make(map[string]EcosystemHealth)
+	}
+
+	if len(records) == 0 {
+		return health, nil
+	}
+
+	// Sort records by timestamp to find last run and last successful run.
+	// Work on a copy to avoid mutating the caller's slice.
+	sorted := make([]MetricsRecord, len(records))
+	copy(sorted, records)
+	sort.Slice(sorted, func(i, j int) bool {
+		return sorted[i].Timestamp < sorted[j].Timestamp
+	})
+
+	// Last run is the most recent record
+	last := sorted[len(sorted)-1]
+	health.LastRun = metricsToRunInfo(last)
+
+	// Find last successful run (merged > 0) and count runs since
+	runsSince := 0
+	for i := len(sorted) - 1; i >= 0; i-- {
+		rec := sorted[i]
+		if rec.Merged > 0 {
+			health.LastSuccessfulRun = metricsToRunInfo(rec)
+			health.RunsSinceLastSuccess = runsSince
+			break
+		}
+		runsSince++
+	}
+	// If no successful run found, runs_since_last_success = total records
+	if health.LastSuccessfulRun == nil {
+		health.RunsSinceLastSuccess = len(sorted)
+	}
+
+	return health, nil
+}
+
+// resolveEcosystems normalizes ecosystem data from a MetricsRecord.
+// New format records have an ecosystems map; old format records have a single
+// ecosystem string which is synthesized into {ecosystem: total}.
+func resolveEcosystems(rec MetricsRecord) map[string]int {
+	if len(rec.Ecosystems) > 0 {
+		return rec.Ecosystems
+	}
+	if rec.Ecosystem != "" {
+		return map[string]int{rec.Ecosystem: rec.Total}
+	}
+	return nil
+}
+
+// metricsToRunInfo converts a MetricsRecord into a RunInfo.
+func metricsToRunInfo(rec MetricsRecord) *RunInfo {
+	failed := rec.Total - rec.Merged
+	if failed < 0 {
+		failed = 0
+	}
+	return &RunInfo{
+		BatchID:       rec.BatchID,
+		Ecosystems:    resolveEcosystems(rec),
+		Timestamp:     rec.Timestamp,
+		Succeeded:     rec.Merged,
+		Failed:        failed,
+		Total:         rec.Total,
+		RecipesMerged: rec.Merged,
+	}
 }

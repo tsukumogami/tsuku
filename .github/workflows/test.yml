@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
     branches: [main]
   schedule:
     # Run nightly at 00:00 UTC for recipe validation
@@ -13,8 +14,8 @@ jobs:
   # Ensure no temporary work artifacts are committed
   check-artifacts:
     name: Check Artifacts
-    # Skip on scheduled runs (nightly recipe validation)
-    if: ${{ github.event_name != 'schedule' }}
+    # Skip on scheduled runs and draft PRs (wip/ artifacts are expected during drafts)
+    if: ${{ github.event_name != 'schedule' && github.event.pull_request.draft != true }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
@@ -249,6 +250,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        with:
+          submodules: true
 
       - name: Set up Go
         uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5  # v6.2.0
@@ -262,7 +265,7 @@ jobs:
           toolchain: "1.80"
 
       - name: Cache Cargo registry
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.cargo/registry

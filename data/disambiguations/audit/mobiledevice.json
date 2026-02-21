@@ -1,0 +1,18 @@
+{
+  "tool": "mobiledevice",
+  "selected": "homebrew:mobiledevice",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:mobiledevice",
+      "downloads": 455,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:mobiledevice",
+  "disambiguated_at": "2026-02-17T00:22:40.495185392Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

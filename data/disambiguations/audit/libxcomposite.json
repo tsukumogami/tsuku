@@ -1,0 +1,18 @@
+{
+  "tool": "libxcomposite",
+  "selected": "homebrew:libxcomposite",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:libxcomposite",
+      "downloads": 2276,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:libxcomposite",
+  "disambiguated_at": "2026-02-17T00:21:13.704618153Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

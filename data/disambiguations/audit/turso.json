@@ -1,0 +1,34 @@
+{
+  "tool": "turso",
+  "selected": "crates.io:turso",
+  "alternatives": [
+    "homebrew:turso",
+    "npm:turso"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 105.03237858032378,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:turso",
+      "downloads": 84341,
+      "version_count": 31,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:turso",
+      "downloads": 803,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:turso",
+      "downloads": 462,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:turso",
+  "disambiguated_at": "2026-02-17T00:30:11.712605584Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

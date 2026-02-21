@@ -1,0 +1,26 @@
+{
+  "tool": "s5cmd",
+  "selected": "homebrew:s5cmd",
+  "alternatives": [
+    "pypi:s5cmd"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:s5cmd",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:s5cmd",
+      "downloads": 1560,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:s5cmd",
+  "disambiguated_at": "2026-02-17T00:27:21.653912925Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

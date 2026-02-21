@@ -1,0 +1,48 @@
+{
+  "tool": "watcher",
+  "selected": "rubygems:watcher",
+  "alternatives": [
+    "homebrew:watcher",
+    "crates.io:watcher",
+    "npm:watcher",
+    "pypi:watcher"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 13.859310344827586,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:watcher",
+      "downloads": 725,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:watcher",
+      "downloads": 112,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:watcher",
+      "downloads": 0,
+      "version_count": 6,
+      "has_repository": false
+    },
+    {
+      "source": "rubygems:watcher",
+      "downloads": 10048,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "npm:watcher",
+      "downloads": 0,
+      "version_count": 16,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:watcher",
+  "disambiguated_at": "2026-02-17T00:31:03.317705709Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

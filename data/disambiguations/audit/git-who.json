@@ -1,0 +1,33 @@
+{
+  "tool": "git-who",
+  "selected": "homebrew:git-who",
+  "alternatives": [
+    "crates.io:git-who"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 67.88888888888889,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:git-who",
+      "downloads": 36,
+      "version_count": 5,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:git-who",
+      "downloads": 2444,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:git-who",
+      "downloads": 0,
+      "version_count": 0,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:git-who",
+  "disambiguated_at": "2026-02-17T00:16:55.415947782Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

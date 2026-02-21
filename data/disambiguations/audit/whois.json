@@ -1,0 +1,48 @@
+{
+  "tool": "whois",
+  "selected": "rubygems:whois",
+  "alternatives": [
+    "npm:whois",
+    "homebrew:whois",
+    "crates.io:whois",
+    "pypi:whois"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 371.8140436926003,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:whois",
+      "downloads": 169,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:whois",
+      "downloads": 8373,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:whois",
+      "downloads": 0,
+      "version_count": 42,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:whois",
+      "downloads": 14858061,
+      "version_count": 131,
+      "has_repository": true
+    },
+    {
+      "source": "npm:whois",
+      "downloads": 39961,
+      "version_count": 49,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:whois",
+  "disambiguated_at": "2026-02-17T00:31:10.873489117Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

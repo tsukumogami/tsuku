@@ -1,0 +1,18 @@
+{
+  "tool": "jenkins-lts",
+  "selected": "homebrew:jenkins-lts",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:jenkins-lts",
+      "downloads": 24267,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:jenkins-lts",
+  "disambiguated_at": "2026-02-17T00:19:12.990959327Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -8,7 +8,6 @@ import (
 	"io"
 	"net"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
@@ -17,6 +16,7 @@ import (
 
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/httputil"
+	"github.com/tsukumogami/tsuku/internal/secrets"
 )
 
 // VersionInfo contains both the original tag and normalized version
@@ -70,14 +70,14 @@ func validateIP(ip net.IP, host string) error {
 }
 
 // New creates a new version resolver with optional configuration.
-// If GITHUB_TOKEN environment variable is set, it will be used for authenticated requests.
+// If github_token is available (via env var or config file), it will be used for authenticated requests.
 // Options can be used to override default registry URLs for testing.
 func New(opts ...Option) *Resolver {
 	var githubHTTPClient *http.Client
 	authenticated := false
 
-	// Check for GitHub token in environment
-	if token := os.Getenv("GITHUB_TOKEN"); token != "" {
+	// Check for GitHub token via secrets package (env var, then config file)
+	if token, err := secrets.Get("github_token"); err == nil && token != "" {
 		ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token})
 		githubHTTPClient = oauth2.NewClient(context.Background(), ts)
 		authenticated = true

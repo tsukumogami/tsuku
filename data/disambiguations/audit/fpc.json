@@ -1,0 +1,33 @@
+{
+  "tool": "fpc",
+  "selected": "homebrew:fpc",
+  "alternatives": [
+    "pypi:fpc",
+    "npm:fpc"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:fpc",
+      "downloads": 1281,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:fpc",
+      "downloads": 0,
+      "version_count": 88,
+      "has_repository": true
+    },
+    {
+      "source": "npm:fpc",
+      "downloads": 0,
+      "version_count": 30,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:fpc",
+  "disambiguated_at": "2026-02-17T00:16:13.420116398Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

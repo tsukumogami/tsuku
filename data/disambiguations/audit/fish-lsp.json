@@ -1,0 +1,26 @@
+{
+  "tool": "fish-lsp",
+  "selected": "homebrew:fish-lsp",
+  "alternatives": [
+    "npm:fish-lsp"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:fish-lsp",
+      "downloads": 1395,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:fish-lsp",
+      "downloads": 0,
+      "version_count": 81,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:fish-lsp",
+  "disambiguated_at": "2026-02-17T00:15:55.519630546Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

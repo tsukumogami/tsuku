@@ -1,0 +1,24 @@
+{
+  "tool": "hexedit",
+  "selected": "homebrew:hexedit",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:hexedit",
+      "downloads": 1479,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:hexedit",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:hexedit",
+  "disambiguated_at": "2026-02-17T00:18:15.126859798Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

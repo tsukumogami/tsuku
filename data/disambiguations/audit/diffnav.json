@@ -1,0 +1,18 @@
+{
+  "tool": "diffnav",
+  "selected": "homebrew:diffnav",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:diffnav",
+      "downloads": 520,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:diffnav",
+  "disambiguated_at": "2026-02-17T00:14:27.439117755Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,26 @@
+{
+  "tool": "help2man",
+  "selected": "homebrew:help2man",
+  "alternatives": [
+    "pypi:help2man"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:help2man",
+      "downloads": 0,
+      "version_count": 7,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:help2man",
+      "downloads": 6917,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:help2man",
+  "disambiguated_at": "2026-02-17T00:18:12.960570377Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

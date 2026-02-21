@@ -7,11 +7,10 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 	"unicode"
-
-	"github.com/tsukumogami/tsuku/internal/seed"
 )
 
 // installResult is the subset of tsuku install --json output that the
@@ -27,6 +26,13 @@ const ExitNetwork = 5
 // MaxRetries is the number of retry attempts for transient failures.
 const MaxRetries = 3
 
+// MaxBackoff is the maximum backoff duration for exponential retry delays.
+const MaxBackoff = 7 * 24 * time.Hour // 7 days
+
+// defaultRateLimit is the sleep duration used for ecosystems not present in the
+// ecosystemRateLimits map, ensuring safe defaults for new ecosystems.
+const defaultRateLimit = 1 * time.Second
+
 // ecosystemRateLimits defines the sleep duration between package generations
 // per ecosystem, to respect API rate limits.
 var ecosystemRateLimits = map[string]time.Duration{
@@ -38,46 +44,68 @@ var ecosystemRateLimits = map[string]time.Duration{
 	"rubygems": 6 * time.Second,
 	"cpan":     1 * time.Second,
 	"cask":     1 * time.Second,
+	"github":   2 * time.Second,
 }
+
+// nowFunc is the time source used by the orchestrator. Tests replace it
+// to control time-dependent behavior (backoff, retry windows).
+var nowFunc = func() time.Time { return time.Now().UTC() }
 
 // Config holds batch generation settings.
 type Config struct {
-	Ecosystem   string
 	BatchSize   int
 	MaxTier     int
 	QueuePath   string
 	OutputDir   string
 	FailuresDir string
 
+	// ControlFile is the path to batch-control.json (default: "batch-control.json").
+	ControlFile string
+
+	// BreakerState holds per-ecosystem circuit breaker state populated from
+	// batch-control.json at startup. Values are "closed", "open", or "half-open".
+	// Ecosystems not present are treated as closed.
+	BreakerState map[string]string
+
+	// FilterEcosystem, when set, restricts candidate selection to entries
+	// matching this ecosystem. Used for manual dispatch debugging.
+	FilterEcosystem string
+
 	// TsukuBin overrides the tsuku binary path. If empty, "tsuku" is used
 	// from PATH.
 	TsukuBin string
 }
 
-// Orchestrator manages batch recipe generation.
+// Orchestrator manages batch recipe generation using the unified queue.
 type Orchestrator struct {
 	cfg   Config
-	queue *seed.PriorityQueue
+	queue *UnifiedQueue
 }
 
-// NewOrchestrator creates an orchestrator with the given config and queue.
-func NewOrchestrator(cfg Config, queue *seed.PriorityQueue) *Orchestrator {
+// NewOrchestrator creates an orchestrator with the given config and unified queue.
+func NewOrchestrator(cfg Config, queue *UnifiedQueue) *Orchestrator {
 	return &Orchestrator{cfg: cfg, queue: queue}
 }
 
-// Run processes pending packages from the queue. It selects packages matching
-// the configured ecosystem and tier, invokes tsuku create for each, and
-// collects results. Queue statuses are updated in place.
+// Run processes pending entries from the unified queue. It selects eligible
+// entries across all ecosystems, invokes tsuku create for each with per-entry
+// rate limiting, and collects results. Queue entries are updated in place with
+// status changes, failure counts, and backoff timestamps.
 func (o *Orchestrator) Run() (*BatchResult, error) {
 	candidates := o.selectCandidates()
 	if len(candidates) == 0 {
-		return &BatchResult{BatchID: generateBatchID(o.cfg.Ecosystem)}, nil
+		return &BatchResult{
+			BatchID:      generateBatchID(),
+			Ecosystems:   map[string]int{},
+			PerEcosystem: map[string]EcosystemResult{},
+		}, nil
 	}
 
 	result := &BatchResult{
-		BatchID:   generateBatchID(o.cfg.Ecosystem),
-		Ecosystem: o.cfg.Ecosystem,
-		Timestamp: time.Now().UTC(),
+		BatchID:      generateBatchID(),
+		Ecosystems:   map[string]int{},
+		PerEcosystem: map[string]EcosystemResult{},
+		Timestamp:    nowFunc(),
 	}
 
 	bin := o.cfg.TsukuBin
@@ -85,80 +113,143 @@ func (o *Orchestrator) Run() (*BatchResult, error) {
 		bin = "tsuku"
 	}
 
-	rateLimit := ecosystemRateLimits[o.cfg.Ecosystem]
+	for i, idx := range candidates {
+		pkg := &o.queue.Entries[idx]
+		eco := pkg.Ecosystem()
 
-	for i, pkg := range candidates {
-		// Rate limit: sleep between packages (not before the first one)
-		if i > 0 && rateLimit > 0 {
+		// Per-entry rate limiting using the entry's ecosystem.
+		rateLimit := ecosystemRateLimits[eco]
+		if rateLimit == 0 {
+			rateLimit = defaultRateLimit
+		}
+		if i > 0 {
 			time.Sleep(rateLimit)
 		}
-		o.setStatus(pkg.ID, "in_progress")
+
+		// Track ecosystem entry counts.
+		result.Ecosystems[eco]++
 
 		recipePath := recipeOutputPath(o.cfg.OutputDir, pkg.Name)
-		genResult := o.generate(bin, pkg, recipePath)
+		genResult := o.generate(bin, *pkg, recipePath)
 		result.Total++
 
+		ecoResult := result.PerEcosystem[eco]
+		ecoResult.Total++
+
 		if genResult.Err != nil {
-			result.Failed++
 			result.Failures = append(result.Failures, genResult.Failure)
-			o.setStatus(pkg.ID, "failed")
+			if len(genResult.Failure.BlockedBy) > 0 {
+				result.Blocked++
+				pkg.Status = StatusBlocked
+			} else {
+				result.Failed++
+				ecoResult.Failed++
+				o.recordFailure(idx)
+			}
+			result.PerEcosystem[eco] = ecoResult
 			continue
 		}
 
 		// Validate the generated recipe by attempting installation.
-		valResult := o.validate(bin, pkg, recipePath)
+		valResult := o.validate(bin, *pkg, recipePath)
 		if valResult.Err != nil {
 			result.Failures = append(result.Failures, valResult.Failure)
 			os.Remove(recipePath)
 			if valResult.Failure.Category == "missing_dep" || valResult.Failure.Category == "recipe_not_found" {
 				result.Blocked++
-				o.setStatus(pkg.ID, "blocked")
+				pkg.Status = StatusBlocked
 			} else {
 				result.Failed++
-				o.setStatus(pkg.ID, "failed")
+				ecoResult.Failed++
+				o.recordFailure(idx)
 			}
+			result.PerEcosystem[eco] = ecoResult
 			continue
 		}
 
 		result.Succeeded++
+		ecoResult.Succeeded++
+		result.PerEcosystem[eco] = ecoResult
 		result.Recipes = append(result.Recipes, recipePath)
-		o.setStatus(pkg.ID, "success")
+		o.recordSuccess(idx)
 	}
 
 	return result, nil
 }
 
-// SaveResults writes failure records and updates the queue file.
+// SaveResults writes the batch result JSON, per-ecosystem failure records, and
+// updates the queue file.
 func (o *Orchestrator) SaveResults(result *BatchResult) error {
-	if err := o.queue.Save(o.cfg.QueuePath); err != nil {
+	if err := SaveUnifiedQueue(o.cfg.QueuePath, o.queue); err != nil {
 		return fmt.Errorf("save queue: %w", err)
 	}
 
+	// Write batch results JSON for downstream consumption (workflow breaker updates, dashboard).
+	resultsDir := filepath.Dir(o.cfg.QueuePath)
+	resultsPath := filepath.Join(resultsDir, "batch-results.json")
+	resultsData, err := json.MarshalIndent(result, "", "  ")
+	if err != nil {
+		return fmt.Errorf("marshal batch results: %w", err)
+	}
+	resultsData = append(resultsData, '\n')
+	if err := os.WriteFile(resultsPath, resultsData, 0644); err != nil {
+		return fmt.Errorf("write batch results: %w", err)
+	}
+
+	// Group failures by ecosystem and write separate failure files per ecosystem.
 	if len(result.Failures) > 0 {
-		if err := WriteFailures(o.cfg.FailuresDir, o.cfg.Ecosystem, result.Failures); err != nil {
-			return fmt.Errorf("write failures: %w", err)
+		grouped := make(map[string][]FailureRecord)
+		for _, f := range result.Failures {
+			eco := strings.SplitN(f.PackageID, ":", 2)[0]
+			grouped[eco] = append(grouped[eco], f)
+		}
+		for eco, failures := range grouped {
+			if err := WriteFailures(o.cfg.FailuresDir, eco, failures); err != nil {
+				return fmt.Errorf("write failures for %s: %w", eco, err)
+			}
 		}
 	}
 
 	return nil
 }
 
-// selectCandidates picks pending packages matching ecosystem and tier.
-func (o *Orchestrator) selectCandidates() []seed.Package {
-	var candidates []seed.Package
-	prefix := o.cfg.Ecosystem + ":"
+// selectCandidates returns indices into queue.Entries for entries that are
+// eligible for processing: pending/failed status, within priority limit,
+// not in a backoff window, and not blocked by circuit breaker state.
+// When Config.FilterEcosystem is set, only entries matching that ecosystem
+// are selected.
+func (o *Orchestrator) selectCandidates() []int {
+	var candidates []int
+	halfOpenCounts := make(map[string]int)
+	now := nowFunc()
 
-	for _, pkg := range o.queue.Packages {
-		if pkg.Status != "pending" {
+	for i, entry := range o.queue.Entries {
+		if entry.Status != StatusPending && entry.Status != StatusFailed {
 			continue
 		}
-		if !strings.HasPrefix(pkg.ID, prefix) {
+		eco := entry.Ecosystem()
+		if o.cfg.FilterEcosystem != "" && eco != o.cfg.FilterEcosystem {
 			continue
 		}
-		if pkg.Tier > o.cfg.MaxTier {
+		// Per-entry circuit breaker check.
+		state := o.cfg.BreakerState[eco]
+		if state == "open" {
 			continue
 		}
-		candidates = append(candidates, pkg)
+		if state == "half-open" && halfOpenCounts[eco] >= 1 {
+			continue
+		}
+		if entry.Priority > o.cfg.MaxTier {
+			continue
+		}
+		// Skip entries in a backoff window
+		if entry.NextRetryAt != nil && entry.NextRetryAt.After(now) {
+			continue
+		}
+		candidates = append(candidates, i)
+		if state == "half-open" {
+			halfOpenCounts[eco]++
+		}
 		if len(candidates) >= o.cfg.BatchSize {
 			break
 		}
@@ -167,16 +258,69 @@ func (o *Orchestrator) selectCandidates() []seed.Package {
 	return candidates
 }
 
+// recordFailure increments the failure count, sets the status to failed,
+// and computes the next retry time using exponential backoff.
+func (o *Orchestrator) recordFailure(idx int) {
+	entry := &o.queue.Entries[idx]
+	entry.FailureCount++
+	entry.Status = StatusFailed
+	entry.NextRetryAt = calculateNextRetryAt(entry.FailureCount, nowFunc())
+}
+
+// recordSuccess resets failure tracking and marks the entry as successful.
+func (o *Orchestrator) recordSuccess(idx int) {
+	entry := &o.queue.Entries[idx]
+	entry.FailureCount = 0
+	entry.NextRetryAt = nil
+	entry.Status = StatusSuccess
+}
+
+// calculateNextRetryAt computes the backoff delay based on consecutive failures.
+//
+// Schedule:
+//   - 1st failure (count=1): no delay, retry on next batch
+//   - 2nd failure (count=2): now + 24 hours
+//   - 3rd failure (count=3): now + 72 hours
+//   - 4th+ failure: double previous delay, capped at 7 days
+func calculateNextRetryAt(failureCount int, now time.Time) *time.Time {
+	if failureCount <= 1 {
+		return nil
+	}
+
+	var delay time.Duration
+	switch failureCount {
+	case 2:
+		delay = 24 * time.Hour
+	case 3:
+		delay = 72 * time.Hour
+	default:
+		// 4th+: start from 72h and double for each additional failure.
+		// count=4 -> 144h, count=5 -> 288h, etc., capped at MaxBackoff.
+		delay = 72 * time.Hour
+		for i := 3; i < failureCount; i++ {
+			delay *= 2
+			if delay > MaxBackoff {
+				delay = MaxBackoff
+				break
+			}
+		}
+	}
+
+	t := now.Add(delay)
+	return &t
+}
+
 type generateResult struct {
 	Err     error
 	Failure FailureRecord
 }
 
 // generate invokes tsuku create for a single package with retry on network errors.
-func (o *Orchestrator) generate(bin string, pkg seed.Package, recipePath string) generateResult {
+// It uses the entry's Source field directly for the --from flag.
+func (o *Orchestrator) generate(bin string, pkg QueueEntry, recipePath string) generateResult {
 	args := []string{
 		"create", pkg.Name,
-		"--from", pkg.ID,
+		"--from", pkg.Source,
 		"--output", recipePath,
 		"--yes",
 		"--skip-sandbox",
@@ -197,16 +341,25 @@ func (o *Orchestrator) generate(bin string, pkg seed.Package, recipePath string)
 		}
 
 		exitCode := exitCodeFrom(err)
-		lastErr = fmt.Errorf("tsuku create %s: exit %d: %s", pkg.ID, exitCode, truncateOutput(output))
+		lastErr = fmt.Errorf("tsuku create %s: exit %d: %s", pkg.Source, exitCode, truncateOutput(output))
 
 		if exitCode != ExitNetwork {
+			// Extract blocked_by from generate output when message indicates
+			// missing dependencies. Uses the same regex as extractMissingRecipes
+			// in cmd/tsuku/install.go.
+			blockedBy := extractBlockedByFromOutput(output)
+			category := categoryFromExitCode(exitCode)
+			if len(blockedBy) > 0 && category == "validation_failed" {
+				category = "missing_dep"
+			}
 			return generateResult{
 				Err: lastErr,
 				Failure: FailureRecord{
-					PackageID: pkg.ID,
-					Category:  categoryFromExitCode(exitCode),
+					PackageID: pkg.Source,
+					Category:  category,
+					BlockedBy: blockedBy,
 					Message:   truncateOutput(output),
-					Timestamp: time.Now().UTC(),
+					Timestamp: nowFunc(),
 				},
 			}
 		}
@@ -215,10 +368,10 @@ func (o *Orchestrator) generate(bin string, pkg seed.Package, recipePath string)
 	return generateResult{
 		Err: lastErr,
 		Failure: FailureRecord{
-			PackageID: pkg.ID,
+			PackageID: pkg.Source,
 			Category:  "api_error",
 			Message:   fmt.Sprintf("failed after %d retries: %v", MaxRetries, lastErr),
-			Timestamp: time.Now().UTC(),
+			Timestamp: nowFunc(),
 		},
 	}
 }
@@ -227,11 +380,8 @@ func (o *Orchestrator) generate(bin string, pkg seed.Package, recipePath string)
 // It uses the same retry logic as generate for transient network errors.
 // On failure, it parses the structured JSON response from --json to extract
 // the failure category and missing dependency names.
-func (o *Orchestrator) validate(bin string, pkg seed.Package, recipePath string) generateResult {
+func (o *Orchestrator) validate(bin string, pkg QueueEntry, recipePath string) generateResult {
 	args := []string{"install", "--json", "--recipe", recipePath}
-	if pkg.ForceOverride {
-		args = append(args, "--force")
-	}
 
 	var lastErr error
 	var lastStdout, lastStderr []byte
@@ -253,18 +403,18 @@ func (o *Orchestrator) validate(bin string, pkg seed.Package, recipePath string)
 		lastStdout = stdout.Bytes()
 		lastStderr = stderr.Bytes()
 		exitCode := exitCodeFrom(err)
-		lastErr = fmt.Errorf("tsuku install %s: exit %d: %s", pkg.ID, exitCode, truncateOutput(lastStderr))
+		lastErr = fmt.Errorf("tsuku install %s: exit %d: %s", pkg.Source, exitCode, truncateOutput(lastStderr))
 
 		if exitCode != ExitNetwork {
 			category, blockedBy := parseInstallJSON(lastStdout, exitCode)
 			return generateResult{
 				Err: lastErr,
 				Failure: FailureRecord{
-					PackageID: pkg.ID,
+					PackageID: pkg.Source,
 					Category:  category,
 					BlockedBy: blockedBy,
 					Message:   truncateOutput(lastStderr),
-					Timestamp: time.Now().UTC(),
+					Timestamp: nowFunc(),
 				},
 			}
 		}
@@ -274,11 +424,11 @@ func (o *Orchestrator) validate(bin string, pkg seed.Package, recipePath string)
 	return generateResult{
 		Err: lastErr,
 		Failure: FailureRecord{
-			PackageID: pkg.ID,
+			PackageID: pkg.Source,
 			Category:  category,
 			BlockedBy: blockedBy,
 			Message:   fmt.Sprintf("failed after %d retries: %s", MaxRetries, truncateOutput(lastStderr)),
-			Timestamp: time.Now().UTC(),
+			Timestamp: nowFunc(),
 		},
 	}
 }
@@ -298,17 +448,8 @@ func parseInstallJSON(stdout []byte, exitCode int) (category string, blockedBy [
 	return cat, result.MissingRecipes
 }
 
-func (o *Orchestrator) setStatus(id, status string) {
-	for i := range o.queue.Packages {
-		if o.queue.Packages[i].ID == id {
-			o.queue.Packages[i].Status = status
-			return
-		}
-	}
-}
-
-func generateBatchID(ecosystem string) string {
-	return fmt.Sprintf("%s-%s", time.Now().UTC().Format("2006-01-02"), ecosystem)
+func generateBatchID() string {
+	return nowFunc().Format("2006-01-02")
 }
 
 // recipeOutputPath computes the recipe file path: recipes/{first-letter}/{name}.toml
@@ -327,8 +468,22 @@ func exitCodeFrom(err error) int {
 	return 1
 }
 
+// categoryFromExitCode maps a tsuku CLI exit code to a pipeline category string
+// for batch queue classification and the pipeline dashboard. These categories
+// drive retry logic, circuit breaker decisions, and the operator-facing dashboard
+// (e.g., "api_error" triggers retries, "validation_failed" counts toward the
+// circuit breaker threshold).
+//
+// NOTE: A separate categoryFromExitCode() exists in cmd/tsuku/install.go with
+// different category strings. That version maps exit codes to user-facing
+// categories for --json error output (e.g., "network_error" instead of
+// "api_error", "install_failed" instead of "validation_failed"). The two
+// functions intentionally diverge because CLI categories describe end-user
+// install outcomes while these categories drive pipeline operations.
 func categoryFromExitCode(code int) string {
 	switch code {
+	case 3: // ExitRecipeNotFound (from cmd/tsuku/exitcodes.go)
+		return "recipe_not_found"
 	case 5:
 		return "api_error"
 	case 6:
@@ -350,6 +505,50 @@ func truncateOutput(output []byte) string {
 		return s[:500] + "..."
 	}
 	return s
+}
+
+// reNotFoundInRegistry matches "recipe X not found in registry" in command output.
+// This is the same pattern as reNotFoundInRegistry in cmd/tsuku/install.go -- kept
+// in sync manually because Go import rules prevent internal/ from importing cmd/.
+var reNotFoundInRegistry = regexp.MustCompile(`recipe (\S+) not found in registry`)
+
+// extractBlockedByFromOutput extracts dependency names from command output
+// matching the "recipe X not found in registry" pattern. Results are
+// deduplicated, validated (rejecting path-traversal characters), and capped
+// at 100 items -- consistent with extractMissingRecipes in cmd/tsuku/install.go.
+func extractBlockedByFromOutput(output []byte) []string {
+	matches := reNotFoundInRegistry.FindAllSubmatch(output, -1)
+	if len(matches) == 0 {
+		return nil
+	}
+	seen := make(map[string]bool)
+	var names []string
+	for _, m := range matches {
+		name := string(m[1])
+		if !isValidDependencyName(name) {
+			continue
+		}
+		if !seen[name] {
+			seen[name] = true
+			names = append(names, name)
+		}
+		if len(names) >= 100 {
+			break
+		}
+	}
+	return names
+}
+
+// isValidDependencyName rejects names containing path traversal or injection
+// characters. Downstream consumers like requeue-unblocked.sh use these names
+// to construct file paths, so we reject /, \, .., <, and >.
+func isValidDependencyName(name string) bool {
+	if strings.Contains(name, "/") || strings.Contains(name, "\\") ||
+		strings.Contains(name, "..") || strings.Contains(name, "<") ||
+		strings.Contains(name, ">") {
+		return false
+	}
+	return name != ""
 }
 
 // SetTsukuBin sets the path to the tsuku binary for testing.

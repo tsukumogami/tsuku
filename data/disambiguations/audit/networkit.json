@@ -1,0 +1,26 @@
+{
+  "tool": "networkit",
+  "selected": "homebrew:networkit",
+  "alternatives": [
+    "pypi:networkit"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:networkit",
+      "downloads": 978,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:networkit",
+      "downloads": 0,
+      "version_count": 37,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:networkit",
+  "disambiguated_at": "2026-02-17T00:23:26.507707913Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

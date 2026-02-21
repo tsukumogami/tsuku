@@ -1,0 +1,34 @@
+{
+  "tool": "yadm",
+  "selected": "rubygems:yadm",
+  "alternatives": [
+    "homebrew:yadm",
+    "pypi:yadm"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.8011583011583012,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:yadm",
+      "downloads": 2590,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:yadm",
+      "downloads": 0,
+      "version_count": 80,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:yadm",
+      "downloads": 4665,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:yadm",
+  "disambiguated_at": "2026-02-17T00:31:34.084146974Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

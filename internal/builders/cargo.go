@@ -367,3 +367,108 @@ func (b *CargoBuilder) Probe(ctx context.Context, name string) (*ProbeResult, er
 		HasRepository: info.Crate.Repository != "",
 	}, nil
 }
+
+// cratesIOSearchResponse represents the crates.io category listing response.
+type cratesIOSearchResponse struct {
+	Crates []struct {
+		Name            string `json:"name"`
+		RecentDownloads int    `json:"recent_downloads"`
+	} `json:"crates"`
+	Meta struct {
+		Total int `json:"total"`
+	} `json:"meta"`
+}
+
+// Discover lists popular CLI crates from crates.io by querying the
+// command-line-utilities category sorted by downloads. It paginates
+// through results up to the requested limit, enforcing 1 request/second
+// rate limiting between pages.
+func (b *CargoBuilder) Discover(ctx context.Context, limit int) ([]DiscoveryCandidate, error) {
+	if limit <= 0 {
+		return nil, nil
+	}
+
+	const perPage = 100
+	var candidates []DiscoveryCandidate
+	page := 1
+
+	for len(candidates) < limit {
+		select {
+		case <-ctx.Done():
+			return candidates, ctx.Err()
+		default:
+		}
+
+		baseURL, err := url.Parse(b.cratesIOBaseURL)
+		if err != nil {
+			return nil, fmt.Errorf("invalid base URL: %w", err)
+		}
+		apiURL := baseURL.JoinPath("api", "v1", "crates")
+
+		q := apiURL.Query()
+		q.Set("category", "command-line-utilities")
+		q.Set("sort", "downloads")
+		q.Set("per_page", fmt.Sprintf("%d", perPage))
+		q.Set("page", fmt.Sprintf("%d", page))
+		apiURL.RawQuery = q.Encode()
+
+		req, err := http.NewRequestWithContext(ctx, "GET", apiURL.String(), nil)
+		if err != nil {
+			return nil, fmt.Errorf("create request: %w", err)
+		}
+		req.Header.Set("User-Agent", "tsuku/1.0 (https://github.com/tsukumogami/tsuku)")
+		req.Header.Set("Accept", "application/json")
+
+		resp, err := b.httpClient.Do(req)
+		if err != nil {
+			return nil, fmt.Errorf("fetch crates page %d: %w", page, err)
+		}
+
+		if resp.StatusCode == 429 {
+			resp.Body.Close()
+			return nil, fmt.Errorf("crates.io rate limit exceeded on page %d", page)
+		}
+		if resp.StatusCode != 200 {
+			resp.Body.Close()
+			return nil, fmt.Errorf("crates.io returned status %d on page %d", resp.StatusCode, page)
+		}
+
+		limitedReader := io.LimitReader(resp.Body, maxCratesIOResponseSize)
+		var searchResp cratesIOSearchResponse
+		if err := json.NewDecoder(limitedReader).Decode(&searchResp); err != nil {
+			resp.Body.Close()
+			return nil, fmt.Errorf("parse crates page %d: %w", page, err)
+		}
+		resp.Body.Close()
+
+		if len(searchResp.Crates) == 0 {
+			break
+		}
+
+		for _, c := range searchResp.Crates {
+			if len(candidates) >= limit {
+				break
+			}
+			candidates = append(candidates, DiscoveryCandidate{
+				Name:      c.Name,
+				Downloads: c.RecentDownloads,
+			})
+		}
+
+		// If we got fewer than a full page, there are no more results.
+		if len(searchResp.Crates) < perPage {
+			break
+		}
+
+		page++
+
+		// Rate limit: 1 request/second between pages.
+		select {
+		case <-ctx.Done():
+			return candidates, ctx.Err()
+		case <-time.After(1 * time.Second):
+		}
+	}
+
+	return candidates, nil
+}

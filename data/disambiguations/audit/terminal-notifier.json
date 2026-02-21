@@ -1,0 +1,41 @@
+{
+  "tool": "terminal-notifier",
+  "selected": "rubygems:terminal-notifier",
+  "alternatives": [
+    "homebrew:terminal-notifier",
+    "npm:terminal-notifier",
+    "pypi:terminal-notifier"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1639.0207139898002,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:terminal-notifier",
+      "downloads": 70001,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:terminal-notifier",
+      "downloads": 0,
+      "version_count": 5,
+      "has_repository": false
+    },
+    {
+      "source": "rubygems:terminal-notifier",
+      "downloads": 114733089,
+      "version_count": 17,
+      "has_repository": false
+    },
+    {
+      "source": "npm:terminal-notifier",
+      "downloads": 901,
+      "version_count": 3,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:terminal-notifier",
+  "disambiguated_at": "2026-02-17T00:29:28.144996517Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,27 @@
+{
+  "tool": "fastmod",
+  "selected": "crates.io:fastmod",
+  "alternatives": [
+    "homebrew:fastmod"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.2094395280235988,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:fastmod",
+      "downloads": 749,
+      "version_count": 12,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:fastmod",
+      "downloads": 339,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:fastmod",
+  "disambiguated_at": "2026-02-17T00:15:38.261208847Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

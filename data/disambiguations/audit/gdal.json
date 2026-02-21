@@ -1,0 +1,48 @@
+{
+  "tool": "gdal",
+  "selected": "crates.io:gdal",
+  "alternatives": [
+    "homebrew:gdal",
+    "rubygems:gdal",
+    "pypi:gdal",
+    "npm:gdal"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 4.815947728420376,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:gdal",
+      "downloads": 130702,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:gdal",
+      "downloads": 629454,
+      "version_count": 25,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:gdal",
+      "downloads": 0,
+      "version_count": 92,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:gdal",
+      "downloads": 121756,
+      "version_count": 10,
+      "has_repository": false
+    },
+    {
+      "source": "npm:gdal",
+      "downloads": 0,
+      "version_count": 32,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:gdal",
+  "disambiguated_at": "2026-02-17T00:16:32.955021996Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

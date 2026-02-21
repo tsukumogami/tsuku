@@ -1,0 +1,45 @@
+{
+  "tool": "batt",
+  "selected": "rubygems:batt",
+  "alternatives": [
+    "homebrew:batt"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 6.335059760956176,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:batt",
+      "downloads": 10,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:batt",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:batt",
+      "downloads": 2510,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:batt",
+      "downloads": 15901,
+      "version_count": 4,
+      "has_repository": false
+    },
+    {
+      "source": "npm:batt",
+      "downloads": 1,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:batt",
+  "disambiguated_at": "2026-02-17T00:11:47.223348933Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,26 @@
+{
+  "tool": "gmic",
+  "selected": "homebrew:gmic",
+  "alternatives": [
+    "pypi:gmic"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:gmic",
+      "downloads": 0,
+      "version_count": 25,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:gmic",
+      "downloads": 3257,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:gmic",
+  "disambiguated_at": "2026-02-17T00:17:08.550794499Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

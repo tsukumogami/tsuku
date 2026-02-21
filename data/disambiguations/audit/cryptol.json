@@ -1,0 +1,26 @@
+{
+  "tool": "cryptol",
+  "selected": "homebrew:cryptol",
+  "alternatives": [
+    "pypi:cryptol"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:cryptol",
+      "downloads": 0,
+      "version_count": 18,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:cryptol",
+      "downloads": 314,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:cryptol",
+  "disambiguated_at": "2026-02-17T00:13:53.448347083Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

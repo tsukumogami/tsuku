@@ -1,0 +1,27 @@
+{
+  "tool": "openconnect",
+  "selected": "homebrew:openconnect",
+  "alternatives": [
+    "npm:openconnect"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1609,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:openconnect",
+      "downloads": 11263,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:openconnect",
+      "downloads": 7,
+      "version_count": 10,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:openconnect",
+  "disambiguated_at": "2026-02-17T00:24:07.416974944Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

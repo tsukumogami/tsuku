@@ -1,0 +1,18 @@
+{
+  "tool": "libatomic_ops",
+  "selected": "homebrew:libatomic_ops",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:libatomic_ops",
+      "downloads": 1685,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:libatomic_ops",
+  "disambiguated_at": "2026-02-17T00:20:26.581174153Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

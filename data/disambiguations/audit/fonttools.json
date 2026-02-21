@@ -1,0 +1,41 @@
+{
+  "tool": "fonttools",
+  "selected": "homebrew:fonttools",
+  "alternatives": [
+    "crates.io:fonttools",
+    "npm:fonttools",
+    "pypi:fonttools"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 42.98139534883721,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:fonttools",
+      "downloads": 215,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:fonttools",
+      "downloads": 9241,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:fonttools",
+      "downloads": 0,
+      "version_count": 231,
+      "has_repository": true
+    },
+    {
+      "source": "npm:fonttools",
+      "downloads": 171,
+      "version_count": 8,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:fonttools",
+  "disambiguated_at": "2026-02-17T00:16:06.909727393Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

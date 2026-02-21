@@ -1,0 +1,18 @@
+{
+  "tool": "pdfcpu",
+  "selected": "homebrew:pdfcpu",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:pdfcpu",
+      "downloads": 3555,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:pdfcpu",
+  "disambiguated_at": "2026-02-17T00:24:55.221717672Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

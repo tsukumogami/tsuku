@@ -1,0 +1,18 @@
+{
+  "tool": "mono-libgdiplus",
+  "selected": "homebrew:mono-libgdiplus",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:mono-libgdiplus",
+      "downloads": 10945,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:mono-libgdiplus",
+  "disambiguated_at": "2026-02-17T00:22:47.659187852Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

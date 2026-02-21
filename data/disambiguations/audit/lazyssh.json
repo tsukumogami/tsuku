@@ -1,0 +1,34 @@
+{
+  "tool": "lazyssh",
+  "selected": "homebrew:lazyssh",
+  "alternatives": [
+    "crates.io:lazyssh",
+    "pypi:lazyssh"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 10.08433734939759,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:lazyssh",
+      "downloads": 83,
+      "version_count": 12,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:lazyssh",
+      "downloads": 837,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:lazyssh",
+      "downloads": 0,
+      "version_count": 24,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:lazyssh",
+  "disambiguated_at": "2026-02-17T00:20:15.869270038Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

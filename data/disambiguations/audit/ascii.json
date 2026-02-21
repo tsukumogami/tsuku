@@ -1,0 +1,47 @@
+{
+  "tool": "ascii",
+  "selected": "crates.io:ascii",
+  "alternatives": [
+    "rubygems:ascii",
+    "homebrew:ascii",
+    "pypi:ascii"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 202.61225041082324,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "pypi:ascii",
+      "downloads": 0,
+      "version_count": 13,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:ascii",
+      "downloads": 718,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:ascii",
+      "downloads": 9000644,
+      "version_count": 33,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:ascii",
+      "downloads": 44423,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "npm:ascii",
+      "downloads": 22,
+      "version_count": 4,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:ascii",
+  "disambiguated_at": "2026-02-17T00:11:03.126463645Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

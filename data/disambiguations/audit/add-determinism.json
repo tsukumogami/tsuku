@@ -1,0 +1,27 @@
+{
+  "tool": "add-determinism",
+  "selected": "crates.io:add-determinism",
+  "alternatives": [
+    "homebrew:add-determinism"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 10.17117117117117,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:add-determinism",
+      "downloads": 111,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:add-determinism",
+      "downloads": 1129,
+      "version_count": 18,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:add-determinism",
+  "disambiguated_at": "2026-02-17T00:10:22.289849378Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

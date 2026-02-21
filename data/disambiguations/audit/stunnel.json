@@ -1,0 +1,26 @@
+{
+  "tool": "stunnel",
+  "selected": "homebrew:stunnel",
+  "alternatives": [
+    "npm:stunnel"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:stunnel",
+      "downloads": 3573,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:stunnel",
+      "downloads": 0,
+      "version_count": 17,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:stunnel",
+  "disambiguated_at": "2026-02-17T00:28:55.802243117Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

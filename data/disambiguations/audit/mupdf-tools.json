@@ -1,0 +1,18 @@
+{
+  "tool": "mupdf-tools",
+  "selected": "homebrew:mupdf-tools",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:mupdf-tools",
+      "downloads": 7725,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:mupdf-tools",
+  "disambiguated_at": "2026-02-17T00:23:01.891800423Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

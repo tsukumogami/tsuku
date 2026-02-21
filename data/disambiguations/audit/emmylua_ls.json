@@ -1,0 +1,27 @@
+{
+  "tool": "emmylua_ls",
+  "selected": "crates.io:emmylua_ls",
+  "alternatives": [
+    "homebrew:emmylua_ls"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.3536121673003803,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:emmylua_ls",
+      "downloads": 263,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:emmylua_ls",
+      "downloads": 619,
+      "version_count": 33,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:emmylua_ls",
+  "disambiguated_at": "2026-02-17T00:15:15.018329845Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

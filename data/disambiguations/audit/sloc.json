@@ -1,0 +1,46 @@
+{
+  "tool": "sloc",
+  "selected": "rubygems:sloc",
+  "alternatives": [
+    "homebrew:sloc",
+    "npm:sloc"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 19.119217081850532,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:sloc",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:sloc",
+      "downloads": 25,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:sloc",
+      "downloads": 562,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:sloc",
+      "downloads": 10745,
+      "version_count": 4,
+      "has_repository": false
+    },
+    {
+      "source": "npm:sloc",
+      "downloads": 0,
+      "version_count": 25,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:sloc",
+  "disambiguated_at": "2026-02-17T00:28:11.513305978Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

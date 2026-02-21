@@ -1,0 +1,47 @@
+{
+  "tool": "aha",
+  "selected": "rubygems:aha",
+  "alternatives": [
+    "homebrew:aha",
+    "crates.io:aha",
+    "pypi:aha"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.9442406456346295,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:aha",
+      "downloads": 0,
+      "version_count": 6,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:aha",
+      "downloads": 529,
+      "version_count": 11,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:aha",
+      "downloads": 2726,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:aha",
+      "downloads": 8026,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "npm:aha",
+      "downloads": 20,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:aha",
+  "disambiguated_at": "2026-02-17T00:10:27.745119717Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

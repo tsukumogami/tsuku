@@ -1,0 +1,46 @@
+{
+  "tool": "prism-cli",
+  "selected": "rubygems:prism-cli",
+  "alternatives": [
+    "npm:prism-cli",
+    "homebrew:prism-cli"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 21.26923076923077,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:prism-cli",
+      "downloads": 4,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:prism-cli",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:prism-cli",
+      "downloads": 443,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:prism-cli",
+      "downloads": 25991,
+      "version_count": 14,
+      "has_repository": false
+    },
+    {
+      "source": "npm:prism-cli",
+      "downloads": 1222,
+      "version_count": 10,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:prism-cli",
+  "disambiguated_at": "2026-02-17T00:25:40.496141953Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

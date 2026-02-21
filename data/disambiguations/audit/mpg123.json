@@ -1,0 +1,40 @@
+{
+  "tool": "mpg123",
+  "selected": "homebrew:mpg123",
+  "alternatives": [
+    "npm:mpg123",
+    "pypi:mpg123"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 8883.58064516129,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:mpg123",
+      "downloads": 20,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:mpg123",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:mpg123",
+      "downloads": 550782,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:mpg123",
+      "downloads": 62,
+      "version_count": 8,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:mpg123",
+  "disambiguated_at": "2026-02-17T00:22:52.807708087Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

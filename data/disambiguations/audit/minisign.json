@@ -1,0 +1,47 @@
+{
+  "tool": "minisign",
+  "selected": "crates.io:minisign",
+  "alternatives": [
+    "rubygems:minisign",
+    "homebrew:minisign",
+    "npm:minisign"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 26.497693017533066,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "pypi:minisign",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:minisign",
+      "downloads": 4755,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:minisign",
+      "downloads": 172288,
+      "version_count": 41,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:minisign",
+      "downloads": 6502,
+      "version_count": 8,
+      "has_repository": true
+    },
+    {
+      "source": "npm:minisign",
+      "downloads": 53,
+      "version_count": 7,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:minisign",
+  "disambiguated_at": "2026-02-17T00:22:33.752188387Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

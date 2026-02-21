@@ -1,0 +1,18 @@
+{
+  "tool": "brew-php-switcher",
+  "selected": "homebrew:brew-php-switcher",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:brew-php-switcher",
+      "downloads": 3017,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:brew-php-switcher",
+  "disambiguated_at": "2026-02-17T00:12:12.874829946Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

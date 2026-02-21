@@ -1,0 +1,47 @@
+{
+  "tool": "pwntools",
+  "selected": "rubygems:pwntools",
+  "alternatives": [
+    "homebrew:pwntools",
+    "crates.io:pwntools",
+    "pypi:pwntools"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 5.544512663085188,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:pwntools",
+      "downloads": 2606,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:pwntools",
+      "downloads": 37,
+      "version_count": 8,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:pwntools",
+      "downloads": 0,
+      "version_count": 122,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:pwntools",
+      "downloads": 14449,
+      "version_count": 6,
+      "has_repository": true
+    },
+    {
+      "source": "npm:pwntools",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:pwntools",
+  "disambiguated_at": "2026-02-17T00:25:57.377014199Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

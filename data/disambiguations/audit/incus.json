@@ -1,0 +1,30 @@
+{
+  "tool": "incus",
+  "selected": "homebrew:incus",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:incus",
+      "downloads": 3039,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:incus",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "npm:incus",
+      "downloads": 1,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:incus",
+  "disambiguated_at": "2026-02-17T00:18:47.484454891Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

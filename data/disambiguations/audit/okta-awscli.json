@@ -1,0 +1,26 @@
+{
+  "tool": "okta-awscli",
+  "selected": "homebrew:okta-awscli",
+  "alternatives": [
+    "pypi:okta-awscli"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:okta-awscli",
+      "downloads": 1241,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:okta-awscli",
+      "downloads": 0,
+      "version_count": 26,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:okta-awscli",
+  "disambiguated_at": "2026-02-17T00:23:57.134559767Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

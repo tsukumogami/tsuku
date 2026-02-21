@@ -1,0 +1,47 @@
+{
+  "tool": "notcurses",
+  "selected": "homebrew:notcurses",
+  "alternatives": [
+    "rubygems:notcurses",
+    "crates.io:notcurses",
+    "pypi:notcurses"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.0795081967213114,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:notcurses",
+      "downloads": 1317,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:notcurses",
+      "downloads": 0,
+      "version_count": 132,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:notcurses",
+      "downloads": 575,
+      "version_count": 48,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:notcurses",
+      "downloads": 1220,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "npm:notcurses",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:notcurses",
+  "disambiguated_at": "2026-02-17T00:23:40.054047179Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

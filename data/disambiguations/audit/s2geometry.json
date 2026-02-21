@@ -1,0 +1,24 @@
+{
+  "tool": "s2geometry",
+  "selected": "homebrew:s2geometry",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "pypi:s2geometry",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:s2geometry",
+      "downloads": 402,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:s2geometry",
+  "disambiguated_at": "2026-02-17T00:27:20.704527015Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

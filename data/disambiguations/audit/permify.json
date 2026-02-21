@@ -1,0 +1,40 @@
+{
+  "tool": "permify",
+  "selected": "rubygems:permify",
+  "alternatives": [
+    "homebrew:permify",
+    "pypi:permify"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 33.6695652173913,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:permify",
+      "downloads": 115,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:permify",
+      "downloads": 0,
+      "version_count": 9,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:permify",
+      "downloads": 3872,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "npm:permify",
+      "downloads": 2,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:permify",
+  "disambiguated_at": "2026-02-17T00:25:00.050703899Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

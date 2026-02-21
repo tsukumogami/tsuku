@@ -1,0 +1,26 @@
+{
+  "tool": "python-lsp-server",
+  "selected": "homebrew:python-lsp-server",
+  "alternatives": [
+    "pypi:python-lsp-server"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:python-lsp-server",
+      "downloads": 10317,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:python-lsp-server",
+      "downloads": 0,
+      "version_count": 35,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:python-lsp-server",
+  "disambiguated_at": "2026-02-17T00:26:08.257205589Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

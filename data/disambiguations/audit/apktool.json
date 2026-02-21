@@ -1,0 +1,33 @@
+{
+  "tool": "apktool",
+  "selected": "homebrew:apktool",
+  "alternatives": [
+    "rubygems:apktool"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 5.540421455938698,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:apktool",
+      "downloads": 57842,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:apktool",
+      "downloads": 10440,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "npm:apktool",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:apktool",
+  "disambiguated_at": "2026-02-17T00:10:49.092193926Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

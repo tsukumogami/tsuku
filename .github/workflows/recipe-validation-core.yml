@@ -21,10 +21,10 @@ jobs:
       has_recipes: ${{ steps.collect.outputs.has_recipes }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version-file: 'go.mod'
           cache-dependency-path: go.sum
@@ -94,7 +94,7 @@ jobs:
 
       - name: Upload binaries
         if: steps.collect.outputs.has_recipes == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: tsuku-binaries
           path: tsuku-*
@@ -133,10 +133,10 @@ jobs:
             install_cmd: "apk add --no-cache curl bash ca-certificates"
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Download binaries
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: tsuku-binaries
 
@@ -202,7 +202,7 @@ jobs:
           echo "$RESULTS" > validation-results-linux-${{ matrix.family }}-x86_64.json
 
       - name: Upload results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: validation-results-linux-${{ matrix.family }}-x86_64
           path: validation-results-linux-${{ matrix.family }}-x86_64.json
@@ -237,10 +237,10 @@ jobs:
             install_cmd: "apk add --no-cache curl bash ca-certificates"
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Download binaries
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: tsuku-binaries
 
@@ -306,7 +306,7 @@ jobs:
           echo "$RESULTS" > validation-results-linux-${{ matrix.family }}-arm64.json
 
       - name: Upload results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: validation-results-linux-${{ matrix.family }}-arm64
           path: validation-results-linux-${{ matrix.family }}-arm64.json
@@ -321,10 +321,10 @@ jobs:
     timeout-minutes: 120
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Download binaries
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: tsuku-binaries
 
@@ -375,7 +375,7 @@ jobs:
           echo "$RESULTS" > validation-results-darwin-arm64.json
 
       - name: Upload results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: validation-results-darwin-arm64
           path: validation-results-darwin-arm64.json
@@ -390,10 +390,10 @@ jobs:
     timeout-minutes: 120
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Download binaries
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: tsuku-binaries
 
@@ -444,7 +444,7 @@ jobs:
           echo "$RESULTS" > validation-results-darwin-x86_64.json
 
       - name: Upload results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: validation-results-darwin-x86_64
           path: validation-results-darwin-x86_64.json
@@ -458,10 +458,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Download all results
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           pattern: validation-results-*
           merge-multiple: true

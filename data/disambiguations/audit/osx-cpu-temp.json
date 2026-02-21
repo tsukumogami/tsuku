@@ -1,0 +1,18 @@
+{
+  "tool": "osx-cpu-temp",
+  "selected": "homebrew:osx-cpu-temp",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:osx-cpu-temp",
+      "downloads": 6590,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:osx-cpu-temp",
+  "disambiguated_at": "2026-02-17T00:24:37.164120445Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

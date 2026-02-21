@@ -3,8 +3,9 @@ package llm
 import (
 	"context"
 	"fmt"
-	"os"
 	"time"
+
+	"github.com/tsukumogami/tsuku/internal/secrets"
 )
 
 // Factory creates and manages LLM providers with circuit breakers.
@@ -115,9 +116,9 @@ func shouldRegisterLocal(o *factoryOptions) bool {
 }
 
 // NewFactory creates a factory with available providers.
-// It auto-detects available providers based on environment variables:
-// - Claude: Available if ANTHROPIC_API_KEY is set
-// - Gemini: Available if GOOGLE_API_KEY or GEMINI_API_KEY is set
+// It auto-detects available providers based on configured secrets:
+// - Claude: Available if anthropic_api_key is set (env var or config file)
+// - Gemini: Available if google_api_key is set (env var or config file)
 // - Local: Available if local_enabled=true in config (lowest priority fallback)
 //
 // Returns ErrLLMDisabled if LLM features are explicitly disabled via WithConfig or WithEnabled.
@@ -146,7 +147,7 @@ func NewFactory(ctx context.Context, opts ...FactoryOption) (*Factory, error) {
 	}
 
 	// Auto-detect and initialize Claude provider
-	if os.Getenv("ANTHROPIC_API_KEY") != "" {
+	if secrets.IsSet("anthropic_api_key") {
 		provider, err := NewClaudeProvider()
 		if err == nil {
 			f.providers["claude"] = provider
@@ -155,7 +156,7 @@ func NewFactory(ctx context.Context, opts ...FactoryOption) (*Factory, error) {
 	}
 
 	// Auto-detect and initialize Gemini provider
-	if os.Getenv("GOOGLE_API_KEY") != "" || os.Getenv("GEMINI_API_KEY") != "" {
+	if secrets.IsSet("google_api_key") {
 		provider, err := NewGeminiProvider(ctx)
 		if err == nil {
 			f.providers["gemini"] = provider
@@ -172,7 +173,7 @@ func NewFactory(ctx context.Context, opts ...FactoryOption) (*Factory, error) {
 	}
 
 	if len(f.providers) == 0 {
-		return nil, fmt.Errorf("no LLM providers available: set ANTHROPIC_API_KEY or GOOGLE_API_KEY, or enable local LLM")
+		return nil, fmt.Errorf("no LLM providers available: set ANTHROPIC_API_KEY or GOOGLE_API_KEY environment variable, or add keys to [secrets] in $TSUKU_HOME/config.toml, or enable local LLM")
 	}
 
 	return f, nil

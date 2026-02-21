@@ -1,0 +1,47 @@
+{
+  "tool": "spark",
+  "selected": "rubygems:spark",
+  "alternatives": [
+    "homebrew:spark",
+    "npm:spark",
+    "pypi:spark"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 5.190441176470588,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:spark",
+      "downloads": 0,
+      "version_count": 5,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:spark",
+      "downloads": 15,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:spark",
+      "downloads": 1360,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:spark",
+      "downloads": 7059,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:spark",
+      "downloads": 0,
+      "version_count": 26,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:spark",
+  "disambiguated_at": "2026-02-17T00:28:22.688626268Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

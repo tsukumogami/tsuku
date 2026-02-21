@@ -1,0 +1,24 @@
+{
+  "tool": "pandoc-crossref",
+  "selected": "homebrew:pandoc-crossref",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:pandoc-crossref",
+      "downloads": 6531,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:pandoc-crossref",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:pandoc-crossref",
+  "disambiguated_at": "2026-02-17T00:24:45.426612267Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

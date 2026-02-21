@@ -1,0 +1,27 @@
+{
+  "tool": "libxkbcommon",
+  "selected": "homebrew:libxkbcommon",
+  "alternatives": [
+    "rubygems:libxkbcommon"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 5.112183055040198,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:libxkbcommon",
+      "downloads": 41332,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:libxkbcommon",
+      "downloads": 8085,
+      "version_count": 3,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:libxkbcommon",
+  "disambiguated_at": "2026-02-17T00:21:16.094012768Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

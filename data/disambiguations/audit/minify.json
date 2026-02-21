@@ -1,0 +1,41 @@
+{
+  "tool": "minify",
+  "selected": "npm:minify",
+  "alternatives": [
+    "rubygems:minify",
+    "crates.io:minify",
+    "homebrew:minify"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.679995153277596,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:minify",
+      "downloads": 12783,
+      "version_count": 5,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:minify",
+      "downloads": 1891,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:minify",
+      "downloads": 16506,
+      "version_count": 4,
+      "has_repository": false
+    },
+    {
+      "source": "npm:minify",
+      "downloads": 27730,
+      "version_count": 170,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:minify",
+  "disambiguated_at": "2026-02-17T00:22:30.704194697Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

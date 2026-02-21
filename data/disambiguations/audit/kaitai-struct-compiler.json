@@ -1,0 +1,26 @@
+{
+  "tool": "kaitai-struct-compiler",
+  "selected": "homebrew:kaitai-struct-compiler",
+  "alternatives": [
+    "npm:kaitai-struct-compiler"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:kaitai-struct-compiler",
+      "downloads": 558,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:kaitai-struct-compiler",
+      "downloads": 0,
+      "version_count": 250,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:kaitai-struct-compiler",
+  "disambiguated_at": "2026-02-17T00:19:37.555068808Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

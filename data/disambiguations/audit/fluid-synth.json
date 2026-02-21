@@ -1,0 +1,18 @@
+{
+  "tool": "fluid-synth",
+  "selected": "homebrew:fluid-synth",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:fluid-synth",
+      "downloads": 34260,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:fluid-synth",
+  "disambiguated_at": "2026-02-17T00:16:02.970636976Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -81,7 +81,7 @@ func (e *GitHubRateLimitError) Suggestion() string {
 	}
 	suggestion := fmt.Sprintf("Try again in: %d minutes", minutes)
 	if !e.Authenticated {
-		suggestion += "\nOr set GITHUB_TOKEN for higher limits (5000 req/hour)"
+		suggestion += "\nOr set GITHUB_TOKEN environment variable or add github_token to [secrets] in $TSUKU_HOME/config.toml for higher limits (5000 req/hour)"
 	}
 	return suggestion
 }

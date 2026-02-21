@@ -1,0 +1,46 @@
+{
+  "tool": "sdl3",
+  "selected": "homebrew:sdl3",
+  "alternatives": [
+    "crates.io:sdl3",
+    "pypi:sdl3"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.6818207877085363,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:sdl3",
+      "downloads": 29336,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:sdl3",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:sdl3",
+      "downloads": 17443,
+      "version_count": 84,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:sdl3",
+      "downloads": 902,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "npm:sdl3",
+      "downloads": 1,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:sdl3",
+  "disambiguated_at": "2026-02-17T00:27:39.780432046Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,48 @@
+{
+  "tool": "lmdb",
+  "selected": "npm:lmdb",
+  "alternatives": [
+    "rubygems:lmdb",
+    "crates.io:lmdb",
+    "homebrew:lmdb",
+    "pypi:lmdb"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 10.66370797220996,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:lmdb",
+      "downloads": 18319,
+      "version_count": 11,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:lmdb",
+      "downloads": 10055,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:lmdb",
+      "downloads": 387333,
+      "version_count": 23,
+      "has_repository": false
+    },
+    {
+      "source": "pypi:lmdb",
+      "downloads": 0,
+      "version_count": 56,
+      "has_repository": true
+    },
+    {
+      "source": "npm:lmdb",
+      "downloads": 4130406,
+      "version_count": 192,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:lmdb",
+  "disambiguated_at": "2026-02-17T00:21:30.562249591Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

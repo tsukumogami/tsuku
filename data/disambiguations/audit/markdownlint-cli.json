@@ -1,0 +1,26 @@
+{
+  "tool": "markdownlint-cli",
+  "selected": "homebrew:markdownlint-cli",
+  "alternatives": [
+    "npm:markdownlint-cli"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:markdownlint-cli",
+      "downloads": 13445,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:markdownlint-cli",
+      "downloads": 0,
+      "version_count": 63,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:markdownlint-cli",
+  "disambiguated_at": "2026-02-17T00:22:00.435978748Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

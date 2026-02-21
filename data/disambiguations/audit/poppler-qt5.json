@@ -1,0 +1,18 @@
+{
+  "tool": "poppler-qt5",
+  "selected": "homebrew:poppler-qt5",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:poppler-qt5",
+      "downloads": 13377,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:poppler-qt5",
+  "disambiguated_at": "2026-02-17T00:25:30.572945185Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

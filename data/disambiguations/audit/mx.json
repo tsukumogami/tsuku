@@ -1,0 +1,46 @@
+{
+  "tool": "mx",
+  "selected": "rubygems:mx",
+  "alternatives": [
+    "homebrew:mx",
+    "crates.io:mx"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.7022016222479721,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:mx",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:mx",
+      "downloads": 1726,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:mx",
+      "downloads": 1213,
+      "version_count": 50,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:mx",
+      "downloads": 2938,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:mx",
+      "downloads": 16,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:mx",
+  "disambiguated_at": "2026-02-17T00:23:04.061619872Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,34 @@
+{
+  "tool": "klog",
+  "selected": "homebrew:klog",
+  "alternatives": [
+    "crates.io:klog",
+    "npm:klog"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.4487179487179487,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:klog",
+      "downloads": 113,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:klog",
+      "downloads": 78,
+      "version_count": 14,
+      "has_repository": true
+    },
+    {
+      "source": "npm:klog",
+      "downloads": 0,
+      "version_count": 10,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:klog",
+  "disambiguated_at": "2026-02-17T00:19:50.234383904Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

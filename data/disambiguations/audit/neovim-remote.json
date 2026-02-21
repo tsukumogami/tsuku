@@ -1,0 +1,26 @@
+{
+  "tool": "neovim-remote",
+  "selected": "homebrew:neovim-remote",
+  "alternatives": [
+    "pypi:neovim-remote"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:neovim-remote",
+      "downloads": 0,
+      "version_count": 78,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:neovim-remote",
+      "downloads": 1316,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:neovim-remote",
+  "disambiguated_at": "2026-02-17T00:23:21.142222143Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

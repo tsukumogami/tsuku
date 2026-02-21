@@ -4,6 +4,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/tsukumogami/tsuku/internal/batch"
 )
 
 func TestMerge_deduplicates(t *testing.T) {
@@ -81,7 +83,7 @@ func TestLoad_missingFile(t *testing.T) {
 	}
 }
 
-func TestAssignTier(t *testing.T) {
+func TestAssignTier_Homebrew(t *testing.T) {
 	tests := []struct {
 		formula string
 		count   int
@@ -124,5 +126,59 @@ func TestSave_createsDirectory(t *testing.T) {
 	q := &PriorityQueue{SchemaVersion: 1, Packages: []Package{}}
 	if err := q.Save(path); err != nil {
 		t.Fatalf("save: %v", err)
+	}
+}
+
+func TestFilterByName_DeduplicatesCaseInsensitive(t *testing.T) {
+	queue := &batch.UnifiedQueue{
+		Entries: []batch.QueueEntry{
+			{Name: "ripgrep", Source: "cargo:ripgrep"},
+			{Name: "Bat", Source: "homebrew:bat"},
+		},
+	}
+
+	packages := []Package{
+		{ID: "cargo:ripgrep", Name: "ripgrep"},     // exists (exact case)
+		{ID: "cargo:bat", Name: "bat"},             // exists (different case)
+		{ID: "cargo:fd-find", Name: "fd-find"},     // new
+		{ID: "cargo:hyperfine", Name: "hyperfine"}, // new
+		{ID: "homebrew:RIPGREP", Name: "RIPGREP"},  // exists (upper case)
+	}
+
+	kept := FilterByName(packages, queue)
+	if len(kept) != 2 {
+		t.Fatalf("expected 2 kept, got %d", len(kept))
+	}
+	names := map[string]bool{}
+	for _, p := range kept {
+		names[p.Name] = true
+	}
+	if !names["fd-find"] {
+		t.Error("expected fd-find to be kept")
+	}
+	if !names["hyperfine"] {
+		t.Error("expected hyperfine to be kept")
+	}
+}
+
+func TestFilterByName_EmptyQueue(t *testing.T) {
+	queue := &batch.UnifiedQueue{Entries: []batch.QueueEntry{}}
+	packages := []Package{
+		{Name: "tool1"},
+		{Name: "tool2"},
+	}
+	kept := FilterByName(packages, queue)
+	if len(kept) != 2 {
+		t.Errorf("expected 2 kept for empty queue, got %d", len(kept))
+	}
+}
+
+func TestFilterByName_EmptyPackages(t *testing.T) {
+	queue := &batch.UnifiedQueue{
+		Entries: []batch.QueueEntry{{Name: "jq"}},
+	}
+	kept := FilterByName(nil, queue)
+	if len(kept) != 0 {
+		t.Errorf("expected 0 kept for nil packages, got %d", len(kept))
 	}
 }

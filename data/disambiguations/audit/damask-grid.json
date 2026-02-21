@@ -1,0 +1,18 @@
+{
+  "tool": "damask-grid",
+  "selected": "homebrew:damask-grid",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:damask-grid",
+      "downloads": 294,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:damask-grid",
+  "disambiguated_at": "2026-02-17T00:14:05.217126227Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

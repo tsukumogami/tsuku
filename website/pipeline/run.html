@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Batch run detail in tsuku pipeline">
+    <title>Run Detail - tsuku Pipeline</title>
+    <link rel="stylesheet" href="/assets/style.css">
+    <style>
+        .detail-card {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .detail-card h2 {
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            color: var(--text-muted);
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 140px 1fr;
+            gap: 0.5rem 1rem;
+            align-items: baseline;
+        }
+
+        .detail-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .detail-value {
+            font-size: 0.9rem;
+            word-break: break-word;
+        }
+
+        .detail-value a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .detail-value a:hover {
+            text-decoration: underline;
+        }
+
+        .batch-id {
+            font-family: "SF Mono", Consolas, monospace;
+            font-size: 0.9rem;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status-success { background: #3fb950; color: #000; }
+        .status-failed { background: #f85149; color: #fff; }
+
+        .package-list {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .package-list h2 {
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            color: var(--text-muted);
+        }
+
+        .package-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .package-table th,
+        .package-table td {
+            text-align: left;
+            padding: 0.5rem 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .package-table th {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .package-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .package-table tbody tr {
+            cursor: pointer;
+            transition: background 0.15s ease;
+        }
+
+        .package-table tbody tr:hover {
+            background: var(--bg);
+        }
+
+        .package-table tbody tr a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .package-name {
+            font-family: "SF Mono", Consolas, monospace;
+        }
+
+        .category-badge {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            background: #f85149;
+            color: #fff;
+        }
+
+        .subcategory-badge {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            background: var(--text-muted);
+            color: var(--bg);
+        }
+
+        .platform-tag {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            background: var(--bg);
+            border: 1px solid var(--border);
+        }
+
+        .actions {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .actions h2 {
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            color: var(--text-muted);
+        }
+
+        .action-links {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background: var(--bg);
+            color: var(--text);
+            text-decoration: none;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: border-color 0.15s ease;
+        }
+
+        .action-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .timestamp {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-muted);
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 1rem;
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        .error-state {
+            text-align: center;
+            padding: 3rem 2rem;
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-muted);
+        }
+
+        .error-state h2 {
+            margin-bottom: 0.5rem;
+            color: var(--text);
+        }
+
+        .no-failures {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        @media (max-width: 600px) {
+            .detail-grid {
+                grid-template-columns: 1fr;
+                gap: 0.25rem;
+            }
+            .detail-label {
+                margin-top: 0.5rem;
+            }
+            .package-table {
+                font-size: 0.85rem;
+            }
+            .timestamp {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="/" class="logo">tsuku</a>
+            <a href="https://github.com/tsukumogami/tsuku" class="github-link" aria-label="GitHub">
+                <svg viewBox="0 0 16 16" width="24" height="24" fill="currentColor">
+                    <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+                </svg>
+            </a>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero">
+            <h1>Run Detail</h1>
+            <p class="tagline">Batch run summary and outcomes</p>
+        </section>
+
+        <a href="/pipeline/runs.html" class="back-link">&larr; Back to Runs</a>
+
+        <div id="content">
+            <div class="loading">Loading...</div>
+        </div>
+
+        <section class="links">
+            <a href="/pipeline/runs.html" class="link-btn">Back to Runs</a>
+        </section>
+    </main>
+
+    <footer>
+        <p>
+            <a href="/telemetry">Privacy</a>
+            <span class="sep">|</span>
+            <a href="https://github.com/tsukumogami/tsuku">GitHub</a>
+        </p>
+    </footer>
+
+    <script>
+        function esc(s) {
+            if (s == null) return '';
+            const div = document.createElement('div');
+            div.textContent = String(s);
+            return div.innerHTML;
+        }
+
+        function formatDate(isoString) {
+            const date = new Date(isoString);
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                timeZoneName: 'short'
+            });
+        }
+
+        function formatDuration(seconds) {
+            if (!seconds && seconds !== 0) return '-';
+            var m = Math.floor(seconds / 60);
+            var s = seconds % 60;
+            if (m > 0) return m + 'm ' + s + 's';
+            return s + 's';
+        }
+
+        function renderError(title, message) {
+            return '<div class="error-state"><h2>' + esc(title) + '</h2><p>' + esc(message) + '</p></div>';
+        }
+
+        function getEcosystems(run) {
+            if (run.ecosystems && typeof run.ecosystems === 'object') {
+                return run.ecosystems;
+            }
+            if (run.ecosystem) {
+                var obj = {};
+                obj[run.ecosystem] = run.total;
+                return obj;
+            }
+            return {};
+        }
+
+        function renderSummary(run) {
+            var failed = run.total - run.merged;
+            var statusClass = run.merged > 0 ? 'status-success' : 'status-failed';
+            var statusText = run.merged > 0 ? 'success' : 'failed';
+
+            var eco = getEcosystems(run);
+            var ecoKeys = Object.keys(eco).sort();
+            var ecoText = ecoKeys.length === 0 ? '-' : ecoKeys.map(function(k) { return k + ': ' + eco[k]; }).join(', ');
+
+            var html = '<div class="detail-card">';
+            html += '<h2>Batch Summary</h2>';
+            html += '<div class="detail-grid">';
+
+            html += '<span class="detail-label">Batch ID</span>';
+            html += '<span class="detail-value batch-id">' + esc(run.batch_id) + '</span>';
+
+            html += '<span class="detail-label">Ecosystems</span>';
+            html += '<span class="detail-value">' + esc(ecoText) + '</span>';
+
+            html += '<span class="detail-label">Status</span>';
+            html += '<span class="detail-value"><span class="status-badge ' + statusClass + '">' + esc(statusText) + '</span></span>';
+
+            html += '<span class="detail-label">Timestamp</span>';
+            html += '<span class="detail-value">' + esc(formatDate(run.timestamp)) + '</span>';
+
+            html += '<span class="detail-label">Duration</span>';
+            html += '<span class="detail-value">' + esc(formatDuration(run.duration)) + '</span>';
+
+            html += '<span class="detail-label">Succeeded</span>';
+            html += '<span class="detail-value">' + esc(String(run.merged)) + '</span>';
+
+            html += '<span class="detail-label">Failed</span>';
+            html += '<span class="detail-value">' + esc(String(failed)) + '</span>';
+
+            html += '<span class="detail-label">Total</span>';
+            html += '<span class="detail-value">' + esc(String(run.total)) + '</span>';
+
+            html += '</div></div>';
+            return html;
+        }
+
+        function renderFailures(failures) {
+            if (failures.length === 0) {
+                return '<div class="package-list"><h2>Packages Processed</h2>' +
+                    '<div class="no-failures">No failures recorded for this batch</div></div>';
+            }
+
+            var rows = failures.map(function(f) {
+                return '<tr onclick="window.location=\'failure.html?id=' + encodeURIComponent(f.id) + '\'">' +
+                    '<td class="package-name"><a href="failure.html?id=' + encodeURIComponent(f.id) + '">' + esc(f.package) + '</a></td>' +
+                    '<td><span class="category-badge">' + esc(f.category) + '</span></td>' +
+                    '<td>' + (f.subcategory ? '<span class="subcategory-badge">' + esc(f.subcategory) + '</span>' : '-') + '</td>' +
+                    '<td>' + (f.platform ? '<span class="platform-tag">' + esc(f.platform) + '</span>' : '-') + '</td>' +
+                    '<td class="timestamp">' + esc(formatDate(f.timestamp)) + '</td>' +
+                    '</tr>';
+            }).join('');
+
+            return '<div class="package-list">' +
+                '<h2>' + esc(String(failures.length)) + ' failure' + (failures.length !== 1 ? 's' : '') + ' in this batch</h2>' +
+                '<table class="package-table">' +
+                '<thead><tr>' +
+                '<th>Package</th>' +
+                '<th>Category</th>' +
+                '<th>Subcategory</th>' +
+                '<th>Platform</th>' +
+                '<th>Timestamp</th>' +
+                '</tr></thead>' +
+                '<tbody>' + rows + '</tbody>' +
+                '</table></div>';
+        }
+
+        function renderActions(run) {
+            var html = '<div class="actions">';
+            html += '<h2>Actions</h2>';
+            html += '<div class="action-links">';
+            html += '<a href="https://github.com/tsukumogami/tsuku/actions/workflows/batch-generation.yml" class="action-btn" target="_blank" rel="noopener">Retry batch</a>';
+            html += '<a href="https://github.com/tsukumogami/tsuku/actions" class="action-btn" target="_blank" rel="noopener">View workflow logs</a>';
+            html += '</div></div>';
+            return html;
+        }
+
+        async function load() {
+            var params = new URLSearchParams(window.location.search);
+            var id = params.get('id');
+
+            if (!id) {
+                document.getElementById('content').innerHTML =
+                    renderError('No run selected', 'Provide an id parameter to view a batch run. Browse the runs list to find one.');
+                return;
+            }
+
+            try {
+                var response = await fetch('/pipeline/dashboard.json');
+                var data = await response.json();
+                var runs = data.runs || [];
+                var run = runs.find(function(r) { return r.batch_id === id; });
+
+                if (!run) {
+                    document.getElementById('content').innerHTML =
+                        renderError('Run not found', 'No batch run matches id "' + id + '". It may have aged out of the dashboard. Check the runs list for current records.');
+                    return;
+                }
+
+                var failureDetails = data.failure_details || [];
+                var runTime = new Date(run.timestamp).getTime();
+                var batchFailures = failureDetails.filter(function(f) {
+                    if (!f.timestamp) return false;
+                    var diff = Math.abs(new Date(f.timestamp).getTime() - runTime);
+                    return diff < 120000; // 120 seconds
+                });
+
+                document.title = run.batch_id + ' - Run Detail - tsuku Pipeline';
+                document.getElementById('content').innerHTML =
+                    renderSummary(run) + renderFailures(batchFailures) + renderActions(run);
+            } catch (error) {
+                document.getElementById('content').innerHTML =
+                    '<div class="loading">Error loading data: ' + esc(error.message) + '</div>';
+            }
+        }
+
+        load();
+    </script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+{
+  "tool": "fastmcp",
+  "selected": "npm:fastmcp",
+  "alternatives": [
+    "homebrew:fastmcp",
+    "pypi:fastmcp"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 162.34372049102927,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:fastmcp",
+      "downloads": 11,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:fastmcp",
+      "downloads": 0,
+      "version_count": 83,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:fastmcp",
+      "downloads": 1059,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:fastmcp",
+      "downloads": 171922,
+      "version_count": 148,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:fastmcp",
+  "disambiguated_at": "2026-02-17T00:15:38.027984494Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

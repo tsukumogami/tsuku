@@ -1,0 +1,48 @@
+{
+  "tool": "srt",
+  "selected": "rubygems:srt",
+  "alternatives": [
+    "homebrew:srt",
+    "crates.io:srt",
+    "npm:srt",
+    "pypi:srt"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.9334178457219184,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:srt",
+      "downloads": 395,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:srt",
+      "downloads": 279249,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:srt",
+      "downloads": 0,
+      "version_count": 30,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:srt",
+      "downloads": 539905,
+      "version_count": 17,
+      "has_repository": false
+    },
+    {
+      "source": "npm:srt",
+      "downloads": 329,
+      "version_count": 3,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:srt",
+  "disambiguated_at": "2026-02-17T00:28:41.175790588Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

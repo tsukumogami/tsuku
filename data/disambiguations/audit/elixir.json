@@ -1,0 +1,41 @@
+{
+  "tool": "elixir",
+  "selected": "homebrew:elixir",
+  "alternatives": [
+    "rubygems:elixir",
+    "npm:elixir",
+    "pypi:elixir"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 8.110897559100518,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:elixir",
+      "downloads": 42201,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:elixir",
+      "downloads": 0,
+      "version_count": 11,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:elixir",
+      "downloads": 5203,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:elixir",
+      "downloads": 148,
+      "version_count": 11,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:elixir",
+  "disambiguated_at": "2026-02-17T00:15:13.950814839Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

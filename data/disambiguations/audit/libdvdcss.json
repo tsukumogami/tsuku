@@ -1,0 +1,18 @@
+{
+  "tool": "libdvdcss",
+  "selected": "homebrew:libdvdcss",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:libdvdcss",
+      "downloads": 12326,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:libdvdcss",
+  "disambiguated_at": "2026-02-17T00:20:31.087233572Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,48 @@
+{
+  "tool": "bcrypt",
+  "selected": "rubygems:bcrypt",
+  "alternatives": [
+    "npm:bcrypt",
+    "crates.io:bcrypt",
+    "homebrew:bcrypt",
+    "pypi:bcrypt"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 98.788982984276,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:bcrypt",
+      "downloads": 1234,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:bcrypt",
+      "downloads": 1653888,
+      "version_count": 35,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:bcrypt",
+      "downloads": 0,
+      "version_count": 28,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:bcrypt",
+      "downloads": 368473324,
+      "version_count": 54,
+      "has_repository": false
+    },
+    {
+      "source": "npm:bcrypt",
+      "downloads": 3729903,
+      "version_count": 55,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:bcrypt",
+  "disambiguated_at": "2026-02-17T00:11:49.618688941Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,40 @@
+{
+  "tool": "enet",
+  "selected": "crates.io:enet",
+  "alternatives": [
+    "homebrew:enet",
+    "npm:enet"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.4726962457337884,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:enet",
+      "downloads": 863,
+      "version_count": 8,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:enet",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:enet",
+      "downloads": 586,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:enet",
+      "downloads": 263,
+      "version_count": 26,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:enet",
+  "disambiguated_at": "2026-02-17T00:15:17.097822471Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

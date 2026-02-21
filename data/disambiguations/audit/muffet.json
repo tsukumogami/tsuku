@@ -1,0 +1,27 @@
+{
+  "tool": "muffet",
+  "selected": "homebrew:muffet",
+  "alternatives": [
+    "npm:muffet"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 350.375,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:muffet",
+      "downloads": 2803,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:muffet",
+      "downloads": 8,
+      "version_count": 19,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:muffet",
+  "disambiguated_at": "2026-02-17T00:23:00.760888778Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

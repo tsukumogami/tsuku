@@ -1,0 +1,27 @@
+{
+  "tool": "libmediainfo",
+  "selected": "homebrew:libmediainfo",
+  "alternatives": [
+    "rubygems:libmediainfo"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.5331179321486268,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:libmediainfo",
+      "downloads": 16133,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:libmediainfo",
+      "downloads": 10523,
+      "version_count": 3,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:libmediainfo",
+  "disambiguated_at": "2026-02-17T00:20:45.160154755Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

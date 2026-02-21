@@ -1,0 +1,40 @@
+{
+  "tool": "autotrace",
+  "selected": "homebrew:autotrace",
+  "alternatives": [
+    "rubygems:autotrace",
+    "pypi:autotrace"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.0603053435114504,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:autotrace",
+      "downloads": 1389,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:autotrace",
+      "downloads": 0,
+      "version_count": 18,
+      "has_repository": false
+    },
+    {
+      "source": "rubygems:autotrace",
+      "downloads": 1310,
+      "version_count": 5,
+      "has_repository": true
+    },
+    {
+      "source": "npm:autotrace",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:autotrace",
+  "disambiguated_at": "2026-02-17T00:11:20.208250388Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,48 @@
+{
+  "tool": "mysql",
+  "selected": "rubygems:mysql",
+  "alternatives": [
+    "homebrew:mysql",
+    "crates.io:mysql",
+    "npm:mysql",
+    "pypi:mysql"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 26.65858317269389,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:mysql",
+      "downloads": 397889,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:mysql",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:mysql",
+      "downloads": 245360,
+      "version_count": 136,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:mysql",
+      "downloads": 10607157,
+      "version_count": 14,
+      "has_repository": false
+    },
+    {
+      "source": "npm:mysql",
+      "downloads": 0,
+      "version_count": 65,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:mysql",
+  "disambiguated_at": "2026-02-17T00:23:05.574620147Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

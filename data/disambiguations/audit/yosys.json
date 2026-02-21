@@ -1,0 +1,26 @@
+{
+  "tool": "yosys",
+  "selected": "homebrew:yosys",
+  "alternatives": [
+    "npm:yosys"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:yosys",
+      "downloads": 3559,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:yosys",
+      "downloads": 0,
+      "version_count": 75,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:yosys",
+  "disambiguated_at": "2026-02-17T00:31:41.346612411Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

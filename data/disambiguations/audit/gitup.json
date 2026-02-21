@@ -1,0 +1,46 @@
+{
+  "tool": "gitup",
+  "selected": "rubygems:gitup",
+  "alternatives": [
+    "homebrew:gitup",
+    "pypi:gitup"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 114.3047619047619,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:gitup",
+      "downloads": 20,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:gitup",
+      "downloads": 840,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:gitup",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:gitup",
+      "downloads": 96016,
+      "version_count": 3,
+      "has_repository": false
+    },
+    {
+      "source": "npm:gitup",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:gitup",
+  "disambiguated_at": "2026-02-17T00:16:59.86219054Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,33 @@
+{
+  "tool": "macchanger",
+  "selected": "homebrew:macchanger",
+  "alternatives": [
+    "crates.io:macchanger"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 7.862068965517241,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:macchanger",
+      "downloads": 29,
+      "version_count": 5,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:macchanger",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:macchanger",
+      "downloads": 228,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:macchanger",
+  "disambiguated_at": "2026-02-17T00:21:47.04563203Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

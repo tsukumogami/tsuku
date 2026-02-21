@@ -1,0 +1,33 @@
+{
+  "tool": "hcl2json",
+  "selected": "homebrew:hcl2json",
+  "alternatives": [
+    "crates.io:hcl2json"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 27.21965317919075,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:hcl2json",
+      "downloads": 4709,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:hcl2json",
+      "downloads": 173,
+      "version_count": 15,
+      "has_repository": true
+    },
+    {
+      "source": "npm:hcl2json",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:hcl2json",
+  "disambiguated_at": "2026-02-17T00:18:07.073987271Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

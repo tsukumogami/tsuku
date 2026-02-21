@@ -1,0 +1,26 @@
+{
+  "tool": "ptpython",
+  "selected": "homebrew:ptpython",
+  "alternatives": [
+    "pypi:ptpython"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:ptpython",
+      "downloads": 679,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:ptpython",
+      "downloads": 0,
+      "version_count": 79,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:ptpython",
+  "disambiguated_at": "2026-02-17T00:25:53.08012379Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

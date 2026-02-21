@@ -1,0 +1,39 @@
+{
+  "tool": "amass",
+  "selected": "homebrew:amass",
+  "alternatives": [
+    "pypi:amass",
+    "npm:amass"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:amass",
+      "downloads": 28,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:amass",
+      "downloads": 0,
+      "version_count": 12,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:amass",
+      "downloads": 4709,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:amass",
+      "downloads": 0,
+      "version_count": 9,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:amass",
+  "disambiguated_at": "2026-02-17T00:10:36.666316914Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

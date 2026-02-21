@@ -1,0 +1,41 @@
+{
+  "tool": "gettext",
+  "selected": "rubygems:gettext",
+  "alternatives": [
+    "homebrew:gettext",
+    "crates.io:gettext",
+    "npm:gettext"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 23.18432979288246,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:gettext",
+      "downloads": 32415,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:gettext",
+      "downloads": 2572742,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:gettext",
+      "downloads": 59647299,
+      "version_count": 98,
+      "has_repository": false
+    },
+    {
+      "source": "npm:gettext",
+      "downloads": 750,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:gettext",
+  "disambiguated_at": "2026-02-17T00:16:38.680702877Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

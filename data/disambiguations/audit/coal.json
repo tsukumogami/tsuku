@@ -1,0 +1,46 @@
+{
+  "tool": "coal",
+  "selected": "rubygems:coal",
+  "alternatives": [
+    "homebrew:coal",
+    "npm:coal"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.7838125665601705,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:coal",
+      "downloads": 15,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:coal",
+      "downloads": 939,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:coal",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:coal",
+      "downloads": 3553,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:coal",
+      "downloads": 9,
+      "version_count": 21,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:coal",
+  "disambiguated_at": "2026-02-17T00:13:26.143445517Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

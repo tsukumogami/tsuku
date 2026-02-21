@@ -1,0 +1,27 @@
+{
+  "tool": "docker-machine",
+  "selected": "homebrew:docker-machine",
+  "alternatives": [
+    "npm:docker-machine"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 636.1219512195122,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:docker-machine",
+      "downloads": 26081,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:docker-machine",
+      "downloads": 41,
+      "version_count": 5,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:docker-machine",
+  "disambiguated_at": "2026-02-17T00:14:39.188270443Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

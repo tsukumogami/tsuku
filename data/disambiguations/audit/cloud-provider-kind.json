@@ -1,0 +1,18 @@
+{
+  "tool": "cloud-provider-kind",
+  "selected": "homebrew:cloud-provider-kind",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:cloud-provider-kind",
+      "downloads": 1390,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:cloud-provider-kind",
+  "disambiguated_at": "2026-02-17T00:13:17.949001233Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

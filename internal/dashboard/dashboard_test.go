@@ -4,20 +4,21 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
-	"github.com/tsukumogami/tsuku/internal/seed"
+	"github.com/tsukumogami/tsuku/internal/batch"
 )
 
 func TestComputeQueueStatus_aggregates(t *testing.T) {
-	queue := &seed.PriorityQueue{
-		Packages: []seed.Package{
-			{ID: "jq", Tier: 1, Status: "success"},
-			{ID: "fd", Tier: 1, Status: "pending"},
-			{ID: "bat", Tier: 1, Status: "failed"},
-			{ID: "fzf", Tier: 2, Status: "pending"},
-			{ID: "ripgrep", Tier: 2, Status: "blocked"},
-			{ID: "exa", Tier: 2, Status: "success"},
+	queue := &batch.UnifiedQueue{
+		Entries: []batch.QueueEntry{
+			{Name: "jq", Source: "homebrew:jq", Priority: 1, Status: "success", Confidence: "curated"},
+			{Name: "fd", Source: "homebrew:fd", Priority: 1, Status: "pending", Confidence: "auto"},
+			{Name: "bat", Source: "homebrew:bat", Priority: 1, Status: "failed", Confidence: "auto"},
+			{Name: "fzf", Source: "homebrew:fzf", Priority: 2, Status: "pending", Confidence: "auto"},
+			{Name: "ripgrep", Source: "cargo:ripgrep", Priority: 2, Status: "blocked", Confidence: "curated"},
+			{Name: "exa", Source: "homebrew:exa", Priority: 2, Status: "success", Confidence: "auto"},
 		},
 	}
 
@@ -49,8 +50,87 @@ func TestComputeQueueStatus_aggregates(t *testing.T) {
 	}
 }
 
+func TestComputeQueueStatus_blockedByOnlyForBlocked(t *testing.T) {
+	queue := &batch.UnifiedQueue{
+		Entries: []batch.QueueEntry{
+			{Name: "blocked-tool", Source: "homebrew:blocked-tool", Priority: 1, Status: "blocked", Confidence: "auto"},
+			{Name: "pending-tool", Source: "homebrew:pending-tool", Priority: 1, Status: "pending", Confidence: "auto"},
+			{Name: "failed-tool", Source: "homebrew:failed-tool", Priority: 1, Status: "failed", Confidence: "auto"},
+		},
+	}
+	details := map[string]FailureDetails{
+		"homebrew:blocked-tool": {Category: "missing_dep", BlockedBy: []string{"libfoo"}},
+		"homebrew:pending-tool": {Category: "missing_dep", BlockedBy: []string{"libbar"}},
+		"homebrew:failed-tool":  {Category: "missing_dep", BlockedBy: []string{"libbaz"}},
+	}
+
+	status := computeQueueStatus(queue, details)
+
+	// Blocked entry should have BlockedBy populated
+	blockedPkgs := status.Packages["blocked"]
+	if len(blockedPkgs) != 1 {
+		t.Fatalf("blocked packages: got %d, want 1", len(blockedPkgs))
+	}
+	if len(blockedPkgs[0].BlockedBy) != 1 || blockedPkgs[0].BlockedBy[0] != "libfoo" {
+		t.Errorf("blocked BlockedBy: got %v, want [libfoo]", blockedPkgs[0].BlockedBy)
+	}
+
+	// Pending entry should NOT have BlockedBy populated
+	pendingPkgs := status.Packages["pending"]
+	if len(pendingPkgs) != 1 {
+		t.Fatalf("pending packages: got %d, want 1", len(pendingPkgs))
+	}
+	if len(pendingPkgs[0].BlockedBy) != 0 {
+		t.Errorf("pending BlockedBy should be empty: got %v", pendingPkgs[0].BlockedBy)
+	}
+
+	// Failed entry should NOT have BlockedBy populated
+	failedPkgs := status.Packages["failed"]
+	if len(failedPkgs) != 1 {
+		t.Fatalf("failed packages: got %d, want 1", len(failedPkgs))
+	}
+	if len(failedPkgs[0].BlockedBy) != 0 {
+		t.Errorf("failed BlockedBy should be empty: got %v", failedPkgs[0].BlockedBy)
+	}
+
+	// Category should still be set for all statuses
+	if pendingPkgs[0].Category != "missing_dep" {
+		t.Errorf("pending Category: got %q, want %q", pendingPkgs[0].Category, "missing_dep")
+	}
+	if failedPkgs[0].Category != "missing_dep" {
+		t.Errorf("failed Category: got %q, want %q", failedPkgs[0].Category, "missing_dep")
+	}
+}
+
+func TestBuildBlockerCountsFromQueue(t *testing.T) {
+	packages := []PackageInfo{
+		{ID: "homebrew:curl", BlockedBy: []string{"openssl", "zlib"}},
+		{ID: "homebrew:wget", BlockedBy: []string{"openssl"}},
+		{ID: "homebrew:jq", BlockedBy: nil},
+	}
+
+	counts := buildBlockerCountsFromQueue(packages)
+
+	if len(counts["openssl"]) != 2 {
+		t.Errorf("openssl: got %d blocked, want 2", len(counts["openssl"]))
+	}
+	if len(counts["zlib"]) != 1 {
+		t.Errorf("zlib: got %d blocked, want 1", len(counts["zlib"]))
+	}
+	if len(counts) != 2 {
+		t.Errorf("total blockers: got %d, want 2", len(counts))
+	}
+}
+
+func TestBuildBlockerCountsFromQueue_empty(t *testing.T) {
+	counts := buildBlockerCountsFromQueue(nil)
+	if len(counts) != 0 {
+		t.Errorf("empty input should produce empty map: got %v", counts)
+	}
+}
+
 func TestComputeQueueStatus_empty(t *testing.T) {
-	queue := &seed.PriorityQueue{Packages: []seed.Package{}}
+	queue := &batch.UnifiedQueue{Entries: []batch.QueueEntry{}}
 	status := computeQueueStatus(queue, nil)
 
 	if status.Total != 0 {
@@ -77,12 +157,16 @@ func TestLoadFailures_legacyFormat(t *testing.T) {
 	if len(blockers["gmp"]) != 2 {
 		t.Errorf("gmp blockers: got %d, want 2", len(blockers["gmp"]))
 	}
+	// pcre2 blocks: cargo:ripgrep
+	if len(blockers["pcre2"]) != 1 {
+		t.Errorf("pcre2 blockers: got %d, want 1", len(blockers["pcre2"]))
+	}
 
 	// Check categories from both formats
-	// Legacy: 2 missing_dep, 1 validation_failed
+	// Legacy batch: 2 missing_dep + 1 validation_failed, cargo batch: 1 missing_dep
 	// Per-recipe: 1 api_error, 1 validation_failed
-	if categories["missing_dep"] != 2 {
-		t.Errorf("missing_dep: got %d, want 2", categories["missing_dep"])
+	if categories["missing_dep"] != 3 {
+		t.Errorf("missing_dep: got %d, want 3", categories["missing_dep"])
 	}
 	if categories["validation_failed"] != 2 {
 		t.Errorf("validation_failed: got %d, want 2", categories["validation_failed"])
@@ -221,9 +305,18 @@ func TestComputeTopBlockers_deduplication(t *testing.T) {
 	if result[0].Dependency != "glib" || result[0].Count != 3 {
 		t.Errorf("glib: got count %d, want 3", result[0].Count)
 	}
+	if result[0].DirectCount != 3 {
+		t.Errorf("glib DirectCount: got %d, want 3", result[0].DirectCount)
+	}
+	if result[0].TotalCount != 3 {
+		t.Errorf("glib TotalCount: got %d, want 3", result[0].TotalCount)
+	}
 	// gmp should dedupe to 1 unique package
 	if result[1].Dependency != "gmp" || result[1].Count != 1 {
 		t.Errorf("gmp: got count %d, want 1", result[1].Count)
+	}
+	if result[1].DirectCount != 1 {
+		t.Errorf("gmp DirectCount: got %d, want 1", result[1].DirectCount)
 	}
 }
 
@@ -262,20 +355,194 @@ func TestComputeTopBlockers_sortsByCount(t *testing.T) {
 
 	result := computeTopBlockers(blockers, 10)
 
-	if result[0].Dependency != "large" || result[0].Count != 5 {
-		t.Errorf("first should be large with count 5, got %s with %d", result[0].Dependency, result[0].Count)
+	if result[0].Dependency != "large" || result[0].TotalCount != 5 {
+		t.Errorf("first should be large with total_count 5, got %s with %d", result[0].Dependency, result[0].TotalCount)
 	}
-	if result[1].Dependency != "medium" || result[1].Count != 3 {
-		t.Errorf("second should be medium with count 3, got %s with %d", result[1].Dependency, result[1].Count)
+	if result[0].Count != result[0].TotalCount {
+		t.Errorf("Count should equal TotalCount: Count=%d, TotalCount=%d", result[0].Count, result[0].TotalCount)
 	}
-	if result[2].Dependency != "small" || result[2].Count != 1 {
-		t.Errorf("third should be small with count 1, got %s with %d", result[2].Dependency, result[2].Count)
+	if result[1].Dependency != "medium" || result[1].TotalCount != 3 {
+		t.Errorf("second should be medium with total_count 3, got %s with %d", result[1].Dependency, result[1].TotalCount)
+	}
+	if result[2].Dependency != "small" || result[2].TotalCount != 1 {
+		t.Errorf("third should be small with total_count 1, got %s with %d", result[2].Dependency, result[2].TotalCount)
+	}
+}
+
+func TestComputeTopBlockers_transitiveWithNormalizedKeys(t *testing.T) {
+	// openssl blocks homebrew:curl, curl blocks homebrew:wget.
+	// The transitive chain should work because pkgToBare maps
+	// "homebrew:curl" -> "curl" which is a key in the blockers map.
+	blockers := map[string][]string{
+		"openssl": {"homebrew:curl"},
+		"curl":    {"homebrew:wget"},
+	}
+
+	result := computeTopBlockers(blockers, 10)
+
+	// Find openssl in results
+	var openssl, curl Blocker
+	for _, b := range result {
+		switch b.Dependency {
+		case "openssl":
+			openssl = b
+		case "curl":
+			curl = b
+		}
+	}
+
+	// openssl directly blocks 1 (curl), transitively blocks 2 (curl + wget)
+	if openssl.DirectCount != 1 {
+		t.Errorf("openssl DirectCount: got %d, want 1", openssl.DirectCount)
+	}
+	if openssl.TotalCount != 2 {
+		t.Errorf("openssl TotalCount: got %d, want 2", openssl.TotalCount)
+	}
+	if openssl.Count != openssl.TotalCount {
+		t.Errorf("openssl Count should equal TotalCount: Count=%d, TotalCount=%d", openssl.Count, openssl.TotalCount)
+	}
+
+	// curl directly blocks 1 (wget), no transitive
+	if curl.DirectCount != 1 {
+		t.Errorf("curl DirectCount: got %d, want 1", curl.DirectCount)
+	}
+	if curl.TotalCount != 1 {
+		t.Errorf("curl TotalCount: got %d, want 1", curl.TotalCount)
+	}
+
+	// openssl should be first (highest total_count)
+	if result[0].Dependency != "openssl" {
+		t.Errorf("first blocker should be openssl, got %s", result[0].Dependency)
+	}
+}
+
+func TestComputeTopBlockers_deepTransitiveChain(t *testing.T) {
+	// A -> B -> C -> D (chain of 3 levels)
+	blockers := map[string][]string{
+		"A": {"homebrew:B"},
+		"B": {"homebrew:C"},
+		"C": {"homebrew:D"},
+	}
+
+	result := computeTopBlockers(blockers, 10)
+
+	var counts = make(map[string]Blocker)
+	for _, b := range result {
+		counts[b.Dependency] = b
+	}
+
+	// A blocks B directly, B->C->D transitively => total 3
+	if counts["A"].TotalCount != 3 {
+		t.Errorf("A TotalCount: got %d, want 3", counts["A"].TotalCount)
+	}
+	if counts["A"].DirectCount != 1 {
+		t.Errorf("A DirectCount: got %d, want 1", counts["A"].DirectCount)
+	}
+
+	// B blocks C directly, C->D transitively => total 2
+	if counts["B"].TotalCount != 2 {
+		t.Errorf("B TotalCount: got %d, want 2", counts["B"].TotalCount)
+	}
+
+	// C blocks D directly => total 1
+	if counts["C"].TotalCount != 1 {
+		t.Errorf("C TotalCount: got %d, want 1", counts["C"].TotalCount)
+	}
+}
+
+func TestComputeTopBlockers_cycleDetection(t *testing.T) {
+	// A blocks homebrew:B, B blocks homebrew:A -- a cycle.
+	// Should not infinite loop; cycle detection via memo map returns 0.
+	blockers := map[string][]string{
+		"A": {"homebrew:B"},
+		"B": {"homebrew:A"},
+	}
+
+	result := computeTopBlockers(blockers, 10)
+
+	// Both should have some count without infinite recursion
+	if len(result) != 2 {
+		t.Fatalf("expected 2 blockers, got %d", len(result))
+	}
+
+	// With cycle detection: whichever is computed first gets the higher count.
+	// Both directly block 1 package. The second to be computed in the cycle
+	// sees the other as in-progress (memo=0) so doesn't add transitive.
+	// The first to be computed sees the second as not yet in memo, recurses,
+	// and gets the cycle-cut result.
+	totalA, totalB := 0, 0
+	for _, b := range result {
+		if b.Dependency == "A" {
+			totalA = b.TotalCount
+		}
+		if b.Dependency == "B" {
+			totalB = b.TotalCount
+		}
+	}
+
+	// Both should be positive (at least their direct dependent)
+	if totalA < 1 {
+		t.Errorf("A TotalCount should be >= 1, got %d", totalA)
+	}
+	if totalB < 1 {
+		t.Errorf("B TotalCount should be >= 1, got %d", totalB)
+	}
+}
+
+func TestComputeTopBlockers_noEcosystemPrefix(t *testing.T) {
+	// Packages without ecosystem prefix should still work
+	blockers := map[string][]string{
+		"glib": {"ffmpeg", "imagemagick"},
+	}
+
+	result := computeTopBlockers(blockers, 10)
+
+	if len(result) != 1 {
+		t.Fatalf("expected 1 blocker, got %d", len(result))
+	}
+	if result[0].TotalCount != 2 {
+		t.Errorf("glib TotalCount: got %d, want 2", result[0].TotalCount)
+	}
+	if result[0].DirectCount != 2 {
+		t.Errorf("glib DirectCount: got %d, want 2", result[0].DirectCount)
+	}
+}
+
+func TestBlockerJSON_fieldsPresent(t *testing.T) {
+	b := Blocker{
+		Dependency:  "glib",
+		Count:       5,
+		DirectCount: 3,
+		TotalCount:  5,
+		Packages:    []string{"pkg1", "pkg2"},
+	}
+
+	data, err := json.Marshal(b)
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+
+	var m map[string]interface{}
+	if err := json.Unmarshal(data, &m); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+
+	// Verify all expected JSON fields exist
+	for _, field := range []string{"dependency", "count", "direct_count", "total_count", "packages"} {
+		if _, ok := m[field]; !ok {
+			t.Errorf("missing JSON field: %s", field)
+		}
+	}
+
+	// Verify count and total_count have the same value
+	if m["count"] != m["total_count"] {
+		t.Errorf("count (%v) should equal total_count (%v)", m["count"], m["total_count"])
 	}
 }
 
 func TestLoadMetrics(t *testing.T) {
 	path := filepath.Join("testdata", "batch-runs.jsonl")
-	runs, err := loadMetrics(path)
+	runs, records, err := loadMetrics(path)
 	if err != nil {
 		t.Fatalf("loadMetrics: %v", err)
 	}
@@ -284,9 +551,9 @@ func TestLoadMetrics(t *testing.T) {
 		t.Fatalf("runs: got %d, want 3", len(runs))
 	}
 
-	// Check first run
-	if runs[0].BatchID != "2026-01-30-homebrew" {
-		t.Errorf("BatchID: got %q, want 2026-01-30-homebrew", runs[0].BatchID)
+	// Check first run - BatchID is derived from timestamp, not the record's batch_id
+	if runs[0].BatchID != "2026-01-30T12-00-00Z" {
+		t.Errorf("BatchID: got %q, want 2026-01-30T12-00-00Z", runs[0].BatchID)
 	}
 	if runs[0].Total != 10 {
 		t.Errorf("Total: got %d, want 10", runs[0].Total)
@@ -300,10 +567,23 @@ func TestLoadMetrics(t *testing.T) {
 	if runs[0].Rate != expectedRate {
 		t.Errorf("Rate: got %f, want %f", runs[0].Rate, expectedRate)
 	}
+
+	// Check ecosystems and duration are populated
+	if runs[0].Ecosystems["homebrew"] != 10 {
+		t.Errorf("Ecosystems[homebrew]: got %d, want 10", runs[0].Ecosystems["homebrew"])
+	}
+	if runs[0].Duration != 120 {
+		t.Errorf("Duration: got %d, want 120", runs[0].Duration)
+	}
+
+	// Check that records are also returned
+	if len(records) != 3 {
+		t.Errorf("records: got %d, want 3", len(records))
+	}
 }
 
 func TestLoadMetrics_missingFile(t *testing.T) {
-	_, err := loadMetrics("/nonexistent/path.jsonl")
+	_, _, err := loadMetrics("/nonexistent/path.jsonl")
 	if err == nil {
 		t.Error("expected error for missing file, got nil")
 	}
@@ -320,7 +600,7 @@ not valid json
 		t.Fatalf("write temp file: %v", err)
 	}
 
-	runs, err := loadMetrics(path)
+	runs, _, err := loadMetrics(path)
 	if err != nil {
 		t.Fatalf("loadMetrics: %v", err)
 	}
@@ -340,7 +620,7 @@ func TestLoadMetrics_zeroTotal(t *testing.T) {
 		t.Fatalf("write temp file: %v", err)
 	}
 
-	runs, err := loadMetrics(path)
+	runs, _, err := loadMetrics(path)
 	if err != nil {
 		t.Fatalf("loadMetrics: %v", err)
 	}
@@ -382,9 +662,12 @@ func TestGenerate_integration(t *testing.T) {
 		t.Errorf("Queue.Total: got %d, want 6", dash.Queue.Total)
 	}
 
-	// Verify blockers
-	if len(dash.Blockers) == 0 {
-		t.Error("expected blockers, got none")
+	// Verify blockers are derived from queue (only the blocked cargo:ripgrep entry)
+	if len(dash.Blockers) != 1 {
+		t.Errorf("Blockers: got %d, want 1 (pcre2 from blocked cargo:ripgrep)", len(dash.Blockers))
+	}
+	if len(dash.Blockers) > 0 && dash.Blockers[0].Dependency != "pcre2" {
+		t.Errorf("Blockers[0].Dependency: got %q, want %q", dash.Blockers[0].Dependency, "pcre2")
 	}
 
 	// Verify failures
@@ -396,8 +679,8 @@ func TestGenerate_integration(t *testing.T) {
 	if len(dash.Runs) != 3 {
 		t.Errorf("Runs: got %d, want 3", len(dash.Runs))
 	}
-	// Should be reversed (newest first)
-	if dash.Runs[0].BatchID != "2026-02-01-homebrew" {
+	// Should be reversed (newest first) - BatchID derived from timestamp
+	if dash.Runs[0].BatchID != "2026-02-01T12-00-00Z" {
 		t.Errorf("First run should be newest: got %s", dash.Runs[0].BatchID)
 	}
 
@@ -487,7 +770,7 @@ func TestGenerate_missingQueueFile(t *testing.T) {
 		OutputFile:  outputPath,
 	}
 
-	// seed.Load returns empty queue for missing file, so this should succeed
+	// batch.LoadUnifiedQueue returns empty queue for missing file, so this should succeed
 	if err := Generate(opts); err != nil {
 		t.Fatalf("Generate: %v", err)
 	}
@@ -698,6 +981,137 @@ func TestGenerate_WithDisambiguations(t *testing.T) {
 	}
 }
 
+func TestComputeQueueStatus_unifiedQueueFields(t *testing.T) {
+	// Verify that unified queue fields (Ecosystem, Priority, Confidence, FailureCount)
+	// are correctly mapped to PackageInfo.
+	queue := &batch.UnifiedQueue{
+		Entries: []batch.QueueEntry{
+			{Name: "ripgrep", Source: "cargo:ripgrep", Priority: 1, Status: "success", Confidence: "curated", FailureCount: 0},
+			{Name: "bat", Source: "homebrew:bat", Priority: 2, Status: "failed", Confidence: "auto", FailureCount: 3},
+			{Name: "fd", Source: "github:sharkdp/fd", Priority: 1, Status: "pending", Confidence: "curated", FailureCount: 0},
+		},
+	}
+
+	status := computeQueueStatus(queue, nil)
+
+	if status.Total != 3 {
+		t.Errorf("Total: got %d, want 3", status.Total)
+	}
+
+	// Check that Ecosystem() is correctly extracted from Source
+	successPkgs := status.Packages["success"]
+	if len(successPkgs) != 1 {
+		t.Fatalf("success packages: got %d, want 1", len(successPkgs))
+	}
+	if successPkgs[0].Ecosystem != "cargo" {
+		t.Errorf("Ecosystem: got %q, want %q", successPkgs[0].Ecosystem, "cargo")
+	}
+	if successPkgs[0].Priority != 1 {
+		t.Errorf("Priority: got %d, want 1", successPkgs[0].Priority)
+	}
+
+	// Check the failed entry uses homebrew ecosystem
+	failedPkgs := status.Packages["failed"]
+	if len(failedPkgs) != 1 {
+		t.Fatalf("failed packages: got %d, want 1", len(failedPkgs))
+	}
+	if failedPkgs[0].Ecosystem != "homebrew" {
+		t.Errorf("Ecosystem: got %q, want %q", failedPkgs[0].Ecosystem, "homebrew")
+	}
+
+	// Check github ecosystem
+	pendingPkgs := status.Packages["pending"]
+	if len(pendingPkgs) != 1 {
+		t.Fatalf("pending packages: got %d, want 1", len(pendingPkgs))
+	}
+	if pendingPkgs[0].Ecosystem != "github" {
+		t.Errorf("Ecosystem: got %q, want %q", pendingPkgs[0].Ecosystem, "github")
+	}
+}
+
+func TestComputeQueueStatus_idUsesSource(t *testing.T) {
+	// Verify that PackageInfo.ID uses the full Source field (ecosystem:identifier).
+	queue := &batch.UnifiedQueue{
+		Entries: []batch.QueueEntry{
+			{Name: "ripgrep", Source: "cargo:ripgrep", Priority: 1, Status: "success", Confidence: "curated"},
+		},
+	}
+
+	status := computeQueueStatus(queue, nil)
+
+	pkgs := status.Packages["success"]
+	if len(pkgs) != 1 {
+		t.Fatalf("packages: got %d, want 1", len(pkgs))
+	}
+	if pkgs[0].ID != "cargo:ripgrep" {
+		t.Errorf("ID: got %q, want %q", pkgs[0].ID, "cargo:ripgrep")
+	}
+}
+
+func TestLoadQueue_unifiedFormat(t *testing.T) {
+	// Verify that loadQueue correctly reads the unified queue testdata.
+	queue, err := loadQueue(filepath.Join("testdata", "priority-queue.json"))
+	if err != nil {
+		t.Fatalf("loadQueue: %v", err)
+	}
+
+	if len(queue.Entries) != 6 {
+		t.Fatalf("entries: got %d, want 6", len(queue.Entries))
+	}
+
+	// Verify unified queue fields are populated
+	bat := queue.Entries[2] // bat has failure_count: 2 in testdata
+	if bat.Name != "bat" {
+		t.Errorf("Name: got %q, want %q", bat.Name, "bat")
+	}
+	if bat.FailureCount != 2 {
+		t.Errorf("FailureCount: got %d, want 2", bat.FailureCount)
+	}
+	if bat.Confidence != "auto" {
+		t.Errorf("Confidence: got %q, want %q", bat.Confidence, "auto")
+	}
+	if bat.Ecosystem() != "homebrew" {
+		t.Errorf("Ecosystem: got %q, want %q", bat.Ecosystem(), "homebrew")
+	}
+
+	// Verify a curated entry
+	jq := queue.Entries[0]
+	if jq.Confidence != "curated" {
+		t.Errorf("Confidence: got %q, want %q", jq.Confidence, "curated")
+	}
+}
+
+func TestLoadQueue_missingFile(t *testing.T) {
+	// Verify that missing file returns an empty queue (not an error).
+	queue, err := loadQueue("/nonexistent/priority-queue.json")
+	if err != nil {
+		t.Fatalf("loadQueue: %v", err)
+	}
+	if len(queue.Entries) != 0 {
+		t.Errorf("entries: got %d, want 0", len(queue.Entries))
+	}
+}
+
+func TestLoadQueue_legacyFormatReturnsError(t *testing.T) {
+	// Legacy seed format files (with "tier" instead of "priority", no "source")
+	// should produce a clear validation error, not silently degrade.
+	dir := t.TempDir()
+	path := filepath.Join(dir, "priority-queue.json")
+	content := `{"packages":[{"id":"homebrew:jq","name":"jq","source":"homebrew","tier":1,"status":"pending","added_at":"2026-01-01T00:00:00Z"}]}`
+	if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+		t.Fatalf("write temp file: %v", err)
+	}
+
+	_, err := loadQueue(path)
+	if err == nil {
+		t.Fatal("expected error for legacy format file, got nil")
+	}
+	// Error should mention format mismatch
+	if !strings.Contains(err.Error(), "no entries parsed") {
+		t.Errorf("error should mention format mismatch: %v", err)
+	}
+}
+
 func TestGenerate_MissingDisambiguationsDir(t *testing.T) {
 	dir := t.TempDir()
 	outputPath := filepath.Join(dir, "dashboard.json")
@@ -728,5 +1142,777 @@ func TestGenerate_MissingDisambiguationsDir(t *testing.T) {
 	// Disambiguations should be omitted (nil)
 	if dash.Disambiguations != nil {
 		t.Errorf("Disambiguations should be nil: %v", dash.Disambiguations)
+	}
+}
+
+func TestLoadHealth_withControlFileAndRecords(t *testing.T) {
+	controlPath := filepath.Join("testdata", "batch-control.json")
+	records := []MetricsRecord{
+		{BatchID: "2026-02-01-homebrew", Ecosystem: "homebrew", Total: 10, Merged: 6, Timestamp: "2026-02-01T12:00:00Z"},
+		{BatchID: "2026-02-02-homebrew", Ecosystem: "homebrew", Total: 8, Merged: 0, Timestamp: "2026-02-02T12:00:00Z"},
+		{BatchID: "2026-02-03-homebrew", Ecosystem: "homebrew", Total: 12, Merged: 5, Timestamp: "2026-02-03T12:00:00Z"},
+	}
+
+	health, err := loadHealth(controlPath, records)
+	if err != nil {
+		t.Fatalf("loadHealth: %v", err)
+	}
+	if health == nil {
+		t.Fatal("health should not be nil")
+	}
+
+	// Check circuit breaker state was loaded
+	if len(health.Ecosystems) != 2 {
+		t.Errorf("Ecosystems: got %d, want 2", len(health.Ecosystems))
+	}
+	hw := health.Ecosystems["homebrew"]
+	if hw.BreakerState != "closed" {
+		t.Errorf("homebrew BreakerState: got %q, want %q", hw.BreakerState, "closed")
+	}
+	if hw.Failures != 0 {
+		t.Errorf("homebrew Failures: got %d, want 0", hw.Failures)
+	}
+
+	npm := health.Ecosystems["npm"]
+	if npm.BreakerState != "open" {
+		t.Errorf("npm BreakerState: got %q, want %q", npm.BreakerState, "open")
+	}
+	if npm.Failures != 3 {
+		t.Errorf("npm Failures: got %d, want 3", npm.Failures)
+	}
+
+	// Check last run
+	if health.LastRun == nil {
+		t.Fatal("LastRun should not be nil")
+	}
+	if health.LastRun.BatchID != "2026-02-03-homebrew" {
+		t.Errorf("LastRun.BatchID: got %q, want %q", health.LastRun.BatchID, "2026-02-03-homebrew")
+	}
+	if health.LastRun.Total != 12 {
+		t.Errorf("LastRun.Total: got %d, want 12", health.LastRun.Total)
+	}
+
+	// Check last successful run (the most recent with Merged > 0)
+	if health.LastSuccessfulRun == nil {
+		t.Fatal("LastSuccessfulRun should not be nil")
+	}
+	if health.LastSuccessfulRun.BatchID != "2026-02-03-homebrew" {
+		t.Errorf("LastSuccessfulRun.BatchID: got %q, want %q", health.LastSuccessfulRun.BatchID, "2026-02-03-homebrew")
+	}
+
+	// runs_since_last_success should be 0 since the last run is the successful one
+	if health.RunsSinceLastSuccess != 0 {
+		t.Errorf("RunsSinceLastSuccess: got %d, want 0", health.RunsSinceLastSuccess)
+	}
+}
+
+func TestLoadHealth_runsSinceLastSuccess(t *testing.T) {
+	// Create a temporary control file
+	dir := t.TempDir()
+	controlPath := filepath.Join(dir, "batch-control.json")
+	if err := os.WriteFile(controlPath, []byte(`{"circuit_breaker":{}}`), 0644); err != nil {
+		t.Fatalf("write control file: %v", err)
+	}
+
+	records := []MetricsRecord{
+		{BatchID: "run-1", Ecosystem: "homebrew", Total: 10, Merged: 5, Timestamp: "2026-02-01T12:00:00Z"},
+		{BatchID: "run-2", Ecosystem: "homebrew", Total: 10, Merged: 0, Timestamp: "2026-02-02T12:00:00Z"},
+		{BatchID: "run-3", Ecosystem: "homebrew", Total: 10, Merged: 0, Timestamp: "2026-02-03T12:00:00Z"},
+		{BatchID: "run-4", Ecosystem: "homebrew", Total: 10, Merged: 0, Timestamp: "2026-02-04T12:00:00Z"},
+	}
+
+	health, err := loadHealth(controlPath, records)
+	if err != nil {
+		t.Fatalf("loadHealth: %v", err)
+	}
+
+	// Last successful run should be run-1
+	if health.LastSuccessfulRun == nil {
+		t.Fatal("LastSuccessfulRun should not be nil")
+	}
+	if health.LastSuccessfulRun.BatchID != "run-1" {
+		t.Errorf("LastSuccessfulRun.BatchID: got %q, want %q", health.LastSuccessfulRun.BatchID, "run-1")
+	}
+
+	// 3 runs since last success (run-2, run-3, run-4)
+	if health.RunsSinceLastSuccess != 3 {
+		t.Errorf("RunsSinceLastSuccess: got %d, want 3", health.RunsSinceLastSuccess)
+	}
+
+	// Last run should be run-4
+	if health.LastRun.BatchID != "run-4" {
+		t.Errorf("LastRun.BatchID: got %q, want %q", health.LastRun.BatchID, "run-4")
+	}
+}
+
+func TestLoadHealth_noSuccessfulRuns(t *testing.T) {
+	dir := t.TempDir()
+	controlPath := filepath.Join(dir, "batch-control.json")
+	if err := os.WriteFile(controlPath, []byte(`{"circuit_breaker":{}}`), 0644); err != nil {
+		t.Fatalf("write control file: %v", err)
+	}
+
+	records := []MetricsRecord{
+		{BatchID: "run-1", Ecosystem: "homebrew", Total: 10, Merged: 0, Timestamp: "2026-02-01T12:00:00Z"},
+		{BatchID: "run-2", Ecosystem: "homebrew", Total: 10, Merged: 0, Timestamp: "2026-02-02T12:00:00Z"},
+	}
+
+	health, err := loadHealth(controlPath, records)
+	if err != nil {
+		t.Fatalf("loadHealth: %v", err)
+	}
+
+	if health.LastSuccessfulRun != nil {
+		t.Errorf("LastSuccessfulRun should be nil when no runs have merges, got %v", health.LastSuccessfulRun)
+	}
+
+	// All runs count toward runs_since_last_success
+	if health.RunsSinceLastSuccess != 2 {
+		t.Errorf("RunsSinceLastSuccess: got %d, want 2", health.RunsSinceLastSuccess)
+	}
+}
+
+func TestLoadHealth_missingControlFile(t *testing.T) {
+	records := []MetricsRecord{
+		{BatchID: "run-1", Ecosystem: "homebrew", Total: 10, Merged: 5, Timestamp: "2026-02-01T12:00:00Z"},
+	}
+
+	health, err := loadHealth("/nonexistent/batch-control.json", records)
+	if err != nil {
+		t.Fatalf("loadHealth: %v", err)
+	}
+
+	// Health should still be returned (from metrics records)
+	if health == nil {
+		t.Fatal("health should not be nil when records exist")
+	}
+
+	// Ecosystems map should be empty (no control file)
+	if len(health.Ecosystems) != 0 {
+		t.Errorf("Ecosystems should be empty: %v", health.Ecosystems)
+	}
+
+	// Run tracking should still work
+	if health.LastRun == nil {
+		t.Fatal("LastRun should not be nil")
+	}
+	if health.LastRun.BatchID != "run-1" {
+		t.Errorf("LastRun.BatchID: got %q, want %q", health.LastRun.BatchID, "run-1")
+	}
+}
+
+func TestLoadHealth_noControlFileNoRecords(t *testing.T) {
+	health, err := loadHealth("/nonexistent/batch-control.json", nil)
+	if err != nil {
+		t.Fatalf("loadHealth: %v", err)
+	}
+
+	// Should return nil when there's nothing to report
+	if health != nil {
+		t.Errorf("health should be nil when no control file and no records, got %v", health)
+	}
+}
+
+func TestLoadHealth_controlFileOnly(t *testing.T) {
+	controlPath := filepath.Join("testdata", "batch-control.json")
+
+	health, err := loadHealth(controlPath, nil)
+	if err != nil {
+		t.Fatalf("loadHealth: %v", err)
+	}
+
+	if health == nil {
+		t.Fatal("health should not be nil with control file")
+	}
+
+	// Should have ecosystem data from control file
+	if len(health.Ecosystems) != 2 {
+		t.Errorf("Ecosystems: got %d, want 2", len(health.Ecosystems))
+	}
+
+	// Run tracking should be empty
+	if health.LastRun != nil {
+		t.Errorf("LastRun should be nil without records, got %v", health.LastRun)
+	}
+	if health.LastSuccessfulRun != nil {
+		t.Errorf("LastSuccessfulRun should be nil without records, got %v", health.LastSuccessfulRun)
+	}
+}
+
+func TestLoadHealth_runInfoFields(t *testing.T) {
+	records := []MetricsRecord{
+		{BatchID: "run-1", Ecosystem: "homebrew", Total: 10, Merged: 8, Timestamp: "2026-02-01T12:00:00Z"},
+	}
+
+	health, err := loadHealth("/nonexistent/batch-control.json", records)
+	if err != nil {
+		t.Fatalf("loadHealth: %v", err)
+	}
+
+	ri := health.LastRun
+	if ri == nil {
+		t.Fatal("LastRun should not be nil")
+	}
+
+	// Verify RunInfo field mapping
+	if ri.BatchID != "run-1" {
+		t.Errorf("BatchID: got %q, want %q", ri.BatchID, "run-1")
+	}
+	if ri.Ecosystems["homebrew"] != 10 {
+		t.Errorf("Ecosystems[homebrew]: got %d, want 10", ri.Ecosystems["homebrew"])
+	}
+	if ri.Timestamp != "2026-02-01T12:00:00Z" {
+		t.Errorf("Timestamp: got %q, want %q", ri.Timestamp, "2026-02-01T12:00:00Z")
+	}
+	if ri.Succeeded != 8 {
+		t.Errorf("Succeeded: got %d, want 8", ri.Succeeded)
+	}
+	if ri.Failed != 2 {
+		t.Errorf("Failed: got %d, want 2 (total - merged)", ri.Failed)
+	}
+	if ri.Total != 10 {
+		t.Errorf("Total: got %d, want 10", ri.Total)
+	}
+	if ri.RecipesMerged != 8 {
+		t.Errorf("RecipesMerged: got %d, want 8", ri.RecipesMerged)
+	}
+}
+
+func TestLoadMetrics_ecosystemAndDuration(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "batch-runs.jsonl")
+	content := `{"batch_id":"run-1","ecosystem":"npm","total":5,"merged":3,"timestamp":"2026-01-01T00:00:00Z","duration_seconds":90}
+{"batch_id":"run-2","ecosystem":"cargo","total":8,"merged":6,"timestamp":"2026-01-02T00:00:00Z","duration_seconds":200}
+`
+	if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+		t.Fatalf("write temp file: %v", err)
+	}
+
+	runs, records, err := loadMetrics(path)
+	if err != nil {
+		t.Fatalf("loadMetrics: %v", err)
+	}
+
+	if len(runs) != 2 {
+		t.Fatalf("runs: got %d, want 2", len(runs))
+	}
+
+	// Check ecosystems propagation (old format: single ecosystem synthesized into map)
+	if runs[0].Ecosystems["npm"] != 5 {
+		t.Errorf("runs[0].Ecosystems[npm]: got %d, want 5", runs[0].Ecosystems["npm"])
+	}
+	if runs[1].Ecosystems["cargo"] != 8 {
+		t.Errorf("runs[1].Ecosystems[cargo]: got %d, want 8", runs[1].Ecosystems["cargo"])
+	}
+
+	// Check duration propagation
+	if runs[0].Duration != 90 {
+		t.Errorf("runs[0].Duration: got %d, want 90", runs[0].Duration)
+	}
+	if runs[1].Duration != 200 {
+		t.Errorf("runs[1].Duration: got %d, want 200", runs[1].Duration)
+	}
+
+	// Check records are returned
+	if len(records) != 2 {
+		t.Errorf("records: got %d, want 2", len(records))
+	}
+	if records[0].DurationSeconds != 90 {
+		t.Errorf("records[0].DurationSeconds: got %d, want 90", records[0].DurationSeconds)
+	}
+}
+
+func TestLoadMetrics_newEcosystemsFormat(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "batch-runs.jsonl")
+	content := `{"batch_id":"2026-02-17","ecosystems":{"homebrew":3,"cargo":5,"github":2},"total":10,"merged":8,"timestamp":"2026-02-17T12:00:00Z","duration_seconds":120}
+`
+	if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+		t.Fatalf("write temp file: %v", err)
+	}
+
+	runs, records, err := loadMetrics(path)
+	if err != nil {
+		t.Fatalf("loadMetrics: %v", err)
+	}
+
+	if len(runs) != 1 {
+		t.Fatalf("runs: got %d, want 1", len(runs))
+	}
+
+	// New format: ecosystems map should be passed through directly
+	if runs[0].Ecosystems["homebrew"] != 3 {
+		t.Errorf("Ecosystems[homebrew]: got %d, want 3", runs[0].Ecosystems["homebrew"])
+	}
+	if runs[0].Ecosystems["cargo"] != 5 {
+		t.Errorf("Ecosystems[cargo]: got %d, want 5", runs[0].Ecosystems["cargo"])
+	}
+	if runs[0].Ecosystems["github"] != 2 {
+		t.Errorf("Ecosystems[github]: got %d, want 2", runs[0].Ecosystems["github"])
+	}
+	if len(runs[0].Ecosystems) != 3 {
+		t.Errorf("Ecosystems count: got %d, want 3", len(runs[0].Ecosystems))
+	}
+
+	// Records should also carry the ecosystems map
+	if records[0].Ecosystems["cargo"] != 5 {
+		t.Errorf("records[0].Ecosystems[cargo]: got %d, want 5", records[0].Ecosystems["cargo"])
+	}
+}
+
+func TestLoadMetrics_mixedOldAndNewFormat(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "batch-runs.jsonl")
+	content := `{"batch_id":"old-run","ecosystem":"homebrew","total":10,"merged":6,"timestamp":"2026-02-01T12:00:00Z","duration_seconds":100}
+{"batch_id":"new-run","ecosystems":{"homebrew":3,"cargo":5},"total":8,"merged":7,"timestamp":"2026-02-17T12:00:00Z","duration_seconds":90}
+`
+	if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+		t.Fatalf("write temp file: %v", err)
+	}
+
+	runs, _, err := loadMetrics(path)
+	if err != nil {
+		t.Fatalf("loadMetrics: %v", err)
+	}
+
+	if len(runs) != 2 {
+		t.Fatalf("runs: got %d, want 2", len(runs))
+	}
+
+	// Old format: single ecosystem synthesized to {ecosystem: total}
+	if runs[0].Ecosystems["homebrew"] != 10 {
+		t.Errorf("old run Ecosystems[homebrew]: got %d, want 10", runs[0].Ecosystems["homebrew"])
+	}
+	if len(runs[0].Ecosystems) != 1 {
+		t.Errorf("old run Ecosystems count: got %d, want 1", len(runs[0].Ecosystems))
+	}
+
+	// New format: ecosystems map passed through directly
+	if runs[1].Ecosystems["homebrew"] != 3 {
+		t.Errorf("new run Ecosystems[homebrew]: got %d, want 3", runs[1].Ecosystems["homebrew"])
+	}
+	if runs[1].Ecosystems["cargo"] != 5 {
+		t.Errorf("new run Ecosystems[cargo]: got %d, want 5", runs[1].Ecosystems["cargo"])
+	}
+}
+
+func TestResolveEcosystems(t *testing.T) {
+	// New format takes precedence
+	rec := MetricsRecord{
+		Ecosystem:  "homebrew",
+		Ecosystems: map[string]int{"homebrew": 3, "cargo": 5},
+		Total:      8,
+	}
+	eco := resolveEcosystems(rec)
+	if eco["homebrew"] != 3 || eco["cargo"] != 5 {
+		t.Errorf("new format: got %v, want {homebrew:3, cargo:5}", eco)
+	}
+
+	// Old format synthesizes {ecosystem: total}
+	rec2 := MetricsRecord{
+		Ecosystem: "npm",
+		Total:     12,
+	}
+	eco2 := resolveEcosystems(rec2)
+	if eco2["npm"] != 12 {
+		t.Errorf("old format: got %v, want {npm:12}", eco2)
+	}
+
+	// Neither set returns nil
+	rec3 := MetricsRecord{Total: 5}
+	eco3 := resolveEcosystems(rec3)
+	if eco3 != nil {
+		t.Errorf("empty: got %v, want nil", eco3)
+	}
+}
+
+func TestLoadMetricsFromDir_legacyFileSortsCorrectly(t *testing.T) {
+	// The legacy batch-runs.jsonl (no timestamp in filename) sorts after
+	// timestamped files alphabetically. Verify that runs are sorted by
+	// timestamp so the newest runs appear in the dashboard regardless
+	// of file load order.
+	dir := t.TempDir()
+
+	// Write a timestamped file with a newer run
+	newer := `{"batch_id":"2026-02-18","ecosystems":{"github":9,"homebrew":16},"total":1,"merged":1,"timestamp":"2026-02-18T14:41:33Z","duration_seconds":8}`
+	if err := os.WriteFile(filepath.Join(dir, "batch-runs-2026-02-18T14-41-33Z.jsonl"), []byte(newer), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Write a legacy file with an older run (sorts after timestamped files)
+	older := `{"batch_id":"2026-02-06-homebrew","ecosystem":"homebrew","total":5,"merged":5,"timestamp":"2026-02-06T10:00:00Z","duration_seconds":3}`
+	if err := os.WriteFile(filepath.Join(dir, "batch-runs.jsonl"), []byte(older), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	runs, _, err := loadMetricsFromDir(dir)
+	if err != nil {
+		t.Fatalf("loadMetricsFromDir: %v", err)
+	}
+
+	if len(runs) != 2 {
+		t.Fatalf("expected 2 runs, got %d", len(runs))
+	}
+
+	// Verify runs are sorted by timestamp (oldest first)
+	if runs[0].Timestamp >= runs[1].Timestamp {
+		t.Errorf("runs not sorted by timestamp: [0]=%s >= [1]=%s", runs[0].Timestamp, runs[1].Timestamp)
+	}
+
+	// The newer run should be last (and would be kept when taking "last N")
+	// BatchID is derived from timestamp, not the record's batch_id
+	if runs[1].BatchID != "2026-02-18T14-41-33Z" {
+		t.Errorf("newest run should be last, got batch_id=%s", runs[1].BatchID)
+	}
+}
+
+func TestLoadFailures_perRecipeWithEcosystem(t *testing.T) {
+	// Verify that record.Ecosystem is used for pkgID prefix instead of hardcoded "homebrew"
+	dir := t.TempDir()
+	path := filepath.Join(dir, "failures.jsonl")
+	content := `{"schema_version":1,"ecosystem":"cargo","recipe":"ripgrep","platform":"linux-x86_64","exit_code":8,"category":"missing_dep","blocked_by":["pcre2"]}
+`
+	if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+		t.Fatalf("write temp file: %v", err)
+	}
+
+	_, _, details, err := loadFailures(path)
+	if err != nil {
+		t.Fatalf("loadFailures: %v", err)
+	}
+
+	// Should use "cargo:" prefix, not "homebrew:"
+	if _, ok := details["cargo:ripgrep"]; !ok {
+		t.Errorf("expected details[cargo:ripgrep], got keys: %v", details)
+	}
+	if _, ok := details["homebrew:ripgrep"]; ok {
+		t.Error("should not have homebrew:ripgrep key")
+	}
+}
+
+func TestGenerate_withHealth(t *testing.T) {
+	dir := t.TempDir()
+	outputPath := filepath.Join(dir, "dashboard.json")
+
+	opts := Options{
+		QueueFile:          filepath.Join("testdata", "priority-queue.json"),
+		FailuresDir:        "testdata",
+		MetricsDir:         "testdata",
+		DisambiguationsDir: "/nonexistent",
+		ControlFile:        filepath.Join("testdata", "batch-control.json"),
+		OutputFile:         outputPath,
+	}
+
+	if err := Generate(opts); err != nil {
+		t.Fatalf("Generate: %v", err)
+	}
+
+	data, err := os.ReadFile(outputPath)
+	if err != nil {
+		t.Fatalf("read output: %v", err)
+	}
+
+	var dash Dashboard
+	if err := json.Unmarshal(data, &dash); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+
+	// Health should be populated
+	if dash.Health == nil {
+		t.Fatal("Health should be populated when control file and metrics exist")
+	}
+
+	// Check circuit breaker from control file
+	if len(dash.Health.Ecosystems) != 2 {
+		t.Errorf("Ecosystems: got %d, want 2", len(dash.Health.Ecosystems))
+	}
+
+	// Check run tracking from metrics
+	if dash.Health.LastRun == nil {
+		t.Fatal("LastRun should not be nil")
+	}
+	if dash.Health.LastRun.BatchID != "2026-02-01-homebrew" {
+		t.Errorf("LastRun.BatchID: got %q, want %q", dash.Health.LastRun.BatchID, "2026-02-01-homebrew")
+	}
+
+	// All three runs in testdata have merges, so last successful = last run
+	if dash.Health.LastSuccessfulRun == nil {
+		t.Fatal("LastSuccessfulRun should not be nil")
+	}
+
+	// Verify runs also have ecosystems and duration
+	if len(dash.Runs) == 0 {
+		t.Fatal("Runs should not be empty")
+	}
+	if dash.Runs[0].Ecosystems["homebrew"] != 15 {
+		t.Errorf("Runs[0].Ecosystems[homebrew]: got %d, want 15", dash.Runs[0].Ecosystems["homebrew"])
+	}
+	if dash.Runs[0].Duration != 180 { // newest first (2026-02-01-homebrew has 180s)
+		t.Errorf("Runs[0].Duration: got %d, want 180", dash.Runs[0].Duration)
+	}
+}
+
+func TestGenerate_missingControlFile(t *testing.T) {
+	dir := t.TempDir()
+	outputPath := filepath.Join(dir, "dashboard.json")
+
+	opts := Options{
+		QueueFile:          filepath.Join("testdata", "priority-queue.json"),
+		FailuresDir:        "testdata",
+		MetricsDir:         "testdata",
+		DisambiguationsDir: "/nonexistent",
+		ControlFile:        "/nonexistent/batch-control.json",
+		OutputFile:         outputPath,
+	}
+
+	// Should not error, missing control file is non-fatal
+	if err := Generate(opts); err != nil {
+		t.Fatalf("Generate: %v", err)
+	}
+
+	data, err := os.ReadFile(outputPath)
+	if err != nil {
+		t.Fatalf("read output: %v", err)
+	}
+
+	var dash Dashboard
+	if err := json.Unmarshal(data, &dash); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+
+	// Health should still be populated from metrics records alone
+	if dash.Health == nil {
+		t.Fatal("Health should not be nil when metrics exist")
+	}
+	if len(dash.Health.Ecosystems) != 0 {
+		t.Errorf("Ecosystems should be empty without control file: %v", dash.Health.Ecosystems)
+	}
+	if dash.Health.LastRun == nil {
+		t.Fatal("LastRun should be populated from metrics")
+	}
+}
+
+func TestLoadHealth_malformedControlFile(t *testing.T) {
+	dir := t.TempDir()
+	controlPath := filepath.Join(dir, "batch-control.json")
+	if err := os.WriteFile(controlPath, []byte("not valid json"), 0644); err != nil {
+		t.Fatalf("write control file: %v", err)
+	}
+
+	_, err := loadHealth(controlPath, nil)
+	if err == nil {
+		t.Error("expected error for malformed control file, got nil")
+	}
+	if !strings.Contains(err.Error(), "parse control file") {
+		t.Errorf("error should mention parse control file: %v", err)
+	}
+}
+
+func TestLoadCurated_filtersCuratedEntries(t *testing.T) {
+	queue := &batch.UnifiedQueue{
+		Entries: []batch.QueueEntry{
+			{Name: "jq", Source: "homebrew:jq", Priority: 1, Status: "success", Confidence: "curated"},
+			{Name: "fd", Source: "homebrew:fd", Priority: 1, Status: "pending", Confidence: "auto"},
+			{Name: "ripgrep", Source: "cargo:ripgrep", Priority: 2, Status: "blocked", Confidence: "curated"},
+			{Name: "bat", Source: "homebrew:bat", Priority: 1, Status: "failed", Confidence: "curated"},
+			{Name: "exa", Source: "homebrew:exa", Priority: 2, Status: "success", Confidence: "auto"},
+		},
+	}
+
+	curated := loadCurated(queue)
+
+	if len(curated) != 3 {
+		t.Fatalf("curated: got %d, want 3", len(curated))
+	}
+
+	// Verify jq (success -> valid)
+	if curated[0].Name != "jq" {
+		t.Errorf("curated[0].Name: got %q, want %q", curated[0].Name, "jq")
+	}
+	if curated[0].Source != "homebrew:jq" {
+		t.Errorf("curated[0].Source: got %q, want %q", curated[0].Source, "homebrew:jq")
+	}
+	if curated[0].ValidationStatus != "valid" {
+		t.Errorf("curated[0].ValidationStatus: got %q, want %q", curated[0].ValidationStatus, "valid")
+	}
+
+	// Verify ripgrep (blocked -> unknown)
+	if curated[1].Name != "ripgrep" {
+		t.Errorf("curated[1].Name: got %q, want %q", curated[1].Name, "ripgrep")
+	}
+	if curated[1].ValidationStatus != "unknown" {
+		t.Errorf("curated[1].ValidationStatus: got %q, want %q", curated[1].ValidationStatus, "unknown")
+	}
+
+	// Verify bat (failed -> invalid)
+	if curated[2].Name != "bat" {
+		t.Errorf("curated[2].Name: got %q, want %q", curated[2].Name, "bat")
+	}
+	if curated[2].ValidationStatus != "invalid" {
+		t.Errorf("curated[2].ValidationStatus: got %q, want %q", curated[2].ValidationStatus, "invalid")
+	}
+}
+
+func TestLoadCurated_noCuratedEntries(t *testing.T) {
+	queue := &batch.UnifiedQueue{
+		Entries: []batch.QueueEntry{
+			{Name: "fd", Source: "homebrew:fd", Priority: 1, Status: "pending", Confidence: "auto"},
+			{Name: "exa", Source: "homebrew:exa", Priority: 2, Status: "success", Confidence: "auto"},
+		},
+	}
+
+	curated := loadCurated(queue)
+
+	if len(curated) != 0 {
+		t.Errorf("curated should be empty when no curated entries: got %d", len(curated))
+	}
+}
+
+func TestLoadCurated_emptyQueue(t *testing.T) {
+	queue := &batch.UnifiedQueue{Entries: []batch.QueueEntry{}}
+
+	curated := loadCurated(queue)
+
+	if len(curated) != 0 {
+		t.Errorf("curated should be empty for empty queue: got %d", len(curated))
+	}
+}
+
+func TestLoadCurated_statusMapping(t *testing.T) {
+	// Test all status values to verify the mapping is complete.
+	tests := []struct {
+		status string
+		want   string
+	}{
+		{"success", "valid"},
+		{"pending", "valid"},
+		{"failed", "invalid"},
+		{"blocked", "unknown"},
+		{"requires_manual", "unknown"},
+		{"excluded", "unknown"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.status, func(t *testing.T) {
+			queue := &batch.UnifiedQueue{
+				Entries: []batch.QueueEntry{
+					{Name: "tool", Source: "homebrew:tool", Priority: 1, Status: tt.status, Confidence: "curated"},
+				},
+			}
+
+			curated := loadCurated(queue)
+
+			if len(curated) != 1 {
+				t.Fatalf("curated: got %d, want 1", len(curated))
+			}
+			if curated[0].ValidationStatus != tt.want {
+				t.Errorf("ValidationStatus for status %q: got %q, want %q", tt.status, curated[0].ValidationStatus, tt.want)
+			}
+		})
+	}
+}
+
+func TestGenerate_withCurated(t *testing.T) {
+	dir := t.TempDir()
+	outputPath := filepath.Join(dir, "dashboard.json")
+
+	opts := Options{
+		QueueFile:          filepath.Join("testdata", "priority-queue.json"),
+		FailuresDir:        "testdata",
+		MetricsDir:         "testdata",
+		DisambiguationsDir: "/nonexistent",
+		ControlFile:        "/nonexistent/batch-control.json",
+		OutputFile:         outputPath,
+	}
+
+	if err := Generate(opts); err != nil {
+		t.Fatalf("Generate: %v", err)
+	}
+
+	data, err := os.ReadFile(outputPath)
+	if err != nil {
+		t.Fatalf("read output: %v", err)
+	}
+
+	var dash Dashboard
+	if err := json.Unmarshal(data, &dash); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+
+	// The testdata queue has 2 curated entries: jq (success) and ripgrep (blocked)
+	if len(dash.Curated) != 2 {
+		t.Fatalf("Curated: got %d, want 2", len(dash.Curated))
+	}
+
+	// Verify jq
+	if dash.Curated[0].Name != "jq" {
+		t.Errorf("Curated[0].Name: got %q, want %q", dash.Curated[0].Name, "jq")
+	}
+	if dash.Curated[0].ValidationStatus != "valid" {
+		t.Errorf("Curated[0].ValidationStatus: got %q, want %q", dash.Curated[0].ValidationStatus, "valid")
+	}
+
+	// Verify ripgrep
+	if dash.Curated[1].Name != "ripgrep" {
+		t.Errorf("Curated[1].Name: got %q, want %q", dash.Curated[1].Name, "ripgrep")
+	}
+	if dash.Curated[1].ValidationStatus != "unknown" {
+		t.Errorf("Curated[1].ValidationStatus: got %q, want %q", dash.Curated[1].ValidationStatus, "unknown")
+	}
+}
+
+func TestBatchIDFromTimestamp(t *testing.T) {
+	tests := []struct {
+		name      string
+		timestamp string
+		want      string
+	}{
+		{"standard ISO timestamp", "2026-02-19T04:26:06Z", "2026-02-19T04-26-06Z"},
+		{"midnight", "2026-01-01T00:00:00Z", "2026-01-01T00-00-00Z"},
+		{"no colons", "2026-02-19", "2026-02-19"},
+		{"empty string", "", ""},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := batchIDFromTimestamp(tt.timestamp)
+			if got != tt.want {
+				t.Errorf("batchIDFromTimestamp(%q): got %q, want %q", tt.timestamp, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestLoadMetrics_uniqueBatchIDs(t *testing.T) {
+	// Two records with the same date-only batch_id but different timestamps
+	// should produce RunSummaries with different BatchIDs.
+	dir := t.TempDir()
+	path := filepath.Join(dir, "batch-runs.jsonl")
+	content := `{"batch_id":"2026-02-19","ecosystem":"homebrew","total":10,"merged":6,"timestamp":"2026-02-19T04:26:06Z","duration_seconds":120}
+{"batch_id":"2026-02-19","ecosystem":"cargo","total":5,"merged":3,"timestamp":"2026-02-19T10:15:30Z","duration_seconds":90}
+`
+	if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+		t.Fatalf("write temp file: %v", err)
+	}
+
+	runs, _, err := loadMetrics(path)
+	if err != nil {
+		t.Fatalf("loadMetrics: %v", err)
+	}
+
+	if len(runs) != 2 {
+		t.Fatalf("runs: got %d, want 2", len(runs))
+	}
+
+	// Each run should have a unique BatchID derived from its timestamp
+	if runs[0].BatchID == runs[1].BatchID {
+		t.Errorf("BatchIDs should be unique: both are %q", runs[0].BatchID)
+	}
+
+	if runs[0].BatchID != "2026-02-19T04-26-06Z" {
+		t.Errorf("runs[0].BatchID: got %q, want %q", runs[0].BatchID, "2026-02-19T04-26-06Z")
+	}
+	if runs[1].BatchID != "2026-02-19T10-15-30Z" {
+		t.Errorf("runs[1].BatchID: got %q, want %q", runs[1].BatchID, "2026-02-19T10-15-30Z")
 	}
 }

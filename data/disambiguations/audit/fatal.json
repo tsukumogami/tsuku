@@ -1,0 +1,33 @@
+{
+  "tool": "fatal",
+  "selected": "homebrew:fatal",
+  "alternatives": [
+    "crates.io:fatal"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 4.036363636363636,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:fatal",
+      "downloads": 165,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:fatal",
+      "downloads": 666,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:fatal",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:fatal",
+  "disambiguated_at": "2026-02-17T00:15:39.423869606Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

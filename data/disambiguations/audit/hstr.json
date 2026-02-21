@@ -1,0 +1,27 @@
+{
+  "tool": "hstr",
+  "selected": "crates.io:hstr",
+  "alternatives": [
+    "homebrew:hstr"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 3631.1182364729457,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:hstr",
+      "downloads": 998,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:hstr",
+      "downloads": 3623856,
+      "version_count": 38,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:hstr",
+  "disambiguated_at": "2026-02-17T00:18:23.78266816Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

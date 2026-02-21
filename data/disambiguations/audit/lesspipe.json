@@ -1,0 +1,18 @@
+{
+  "tool": "lesspipe",
+  "selected": "homebrew:lesspipe",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:lesspipe",
+      "downloads": 3268,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:lesspipe",
+  "disambiguated_at": "2026-02-17T00:20:23.138442014Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

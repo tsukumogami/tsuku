@@ -1,0 +1,26 @@
+{
+  "tool": "libsass",
+  "selected": "homebrew:libsass",
+  "alternatives": [
+    "pypi:libsass"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:libsass",
+      "downloads": 9837,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:libsass",
+      "downloads": 0,
+      "version_count": 64,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:libsass",
+  "disambiguated_at": "2026-02-17T00:21:00.491023251Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,48 @@
+{
+  "tool": "needle",
+  "selected": "npm:needle",
+  "alternatives": [
+    "rubygems:needle",
+    "homebrew:needle",
+    "crates.io:needle",
+    "pypi:needle"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 103.88062213452498,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:needle",
+      "downloads": 153,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:needle",
+      "downloads": 0,
+      "version_count": 13,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:needle",
+      "downloads": 1776,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:needle",
+      "downloads": 103386,
+      "version_count": 8,
+      "has_repository": false
+    },
+    {
+      "source": "npm:needle",
+      "downloads": 10739802,
+      "version_count": 112,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:needle",
+  "disambiguated_at": "2026-02-17T00:23:17.531827551Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

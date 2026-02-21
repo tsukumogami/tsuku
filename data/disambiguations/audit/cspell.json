@@ -1,0 +1,33 @@
+{
+  "tool": "cspell",
+  "selected": "npm:cspell",
+  "alternatives": [
+    "homebrew:cspell"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 557.6127926898915,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "pypi:cspell",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:cspell",
+      "downloads": 1751,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:cspell",
+      "downloads": 976380,
+      "version_count": 465,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:cspell",
+  "disambiguated_at": "2026-02-17T00:13:55.863985303Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

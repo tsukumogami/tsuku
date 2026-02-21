@@ -1,0 +1,18 @@
+{
+  "tool": "cfr-decompiler",
+  "selected": "homebrew:cfr-decompiler",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:cfr-decompiler",
+      "downloads": 1051,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:cfr-decompiler",
+  "disambiguated_at": "2026-02-17T00:12:49.512257609Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

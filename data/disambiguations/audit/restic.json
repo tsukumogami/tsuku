@@ -1,0 +1,30 @@
+{
+  "tool": "restic",
+  "selected": "homebrew:restic",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:restic",
+      "downloads": 9,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:restic",
+      "downloads": 8497,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:restic",
+      "downloads": 4,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:restic",
+  "disambiguated_at": "2026-02-17T00:26:53.560481667Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

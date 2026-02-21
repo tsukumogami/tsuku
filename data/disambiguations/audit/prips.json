@@ -1,0 +1,26 @@
+{
+  "tool": "prips",
+  "selected": "homebrew:prips",
+  "alternatives": [
+    "pypi:prips"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:prips",
+      "downloads": 358,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:prips",
+      "downloads": 0,
+      "version_count": 5,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:prips",
+  "disambiguated_at": "2026-02-17T00:25:40.146126117Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,47 @@
+{
+  "tool": "neovim",
+  "selected": "rubygems:neovim",
+  "alternatives": [
+    "homebrew:neovim",
+    "npm:neovim",
+    "pypi:neovim"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.9789932102655117,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:neovim",
+      "downloads": 536398,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:neovim",
+      "downloads": 0,
+      "version_count": 61,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:neovim",
+      "downloads": 74,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:neovim",
+      "downloads": 1597926,
+      "version_count": 31,
+      "has_repository": false
+    },
+    {
+      "source": "npm:neovim",
+      "downloads": 21856,
+      "version_count": 42,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:neovim",
+  "disambiguated_at": "2026-02-17T00:10:03.948724858Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

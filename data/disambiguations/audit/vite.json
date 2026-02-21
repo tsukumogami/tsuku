@@ -1,0 +1,32 @@
+{
+  "tool": "vite",
+  "selected": "homebrew:vite",
+  "alternatives": [
+    "pypi:vite"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:vite",
+      "downloads": 22,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:vite",
+      "downloads": 19846,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:vite",
+      "downloads": 0,
+      "version_count": 15,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:vite",
+  "disambiguated_at": "2026-02-17T00:30:47.503979519Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

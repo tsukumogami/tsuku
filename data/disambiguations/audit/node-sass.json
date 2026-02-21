@@ -1,0 +1,26 @@
+{
+  "tool": "node-sass",
+  "selected": "homebrew:node-sass",
+  "alternatives": [
+    "npm:node-sass"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:node-sass",
+      "downloads": 4806,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:node-sass",
+      "downloads": 0,
+      "version_count": 148,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:node-sass",
+  "disambiguated_at": "2026-02-17T00:23:36.650624046Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

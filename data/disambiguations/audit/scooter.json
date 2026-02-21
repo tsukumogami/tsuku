@@ -1,0 +1,48 @@
+{
+  "tool": "scooter",
+  "selected": "rubygems:scooter",
+  "alternatives": [
+    "homebrew:scooter",
+    "npm:scooter",
+    "crates.io:scooter",
+    "pypi:scooter"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 49.94277539341917,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:scooter",
+      "downloads": 1398,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:scooter",
+      "downloads": 0,
+      "version_count": 9,
+      "has_repository": false
+    },
+    {
+      "source": "crates.io:scooter",
+      "downloads": 305,
+      "version_count": 21,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:scooter",
+      "downloads": 69820,
+      "version_count": 22,
+      "has_repository": false
+    },
+    {
+      "source": "npm:scooter",
+      "downloads": 318,
+      "version_count": 24,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:scooter",
+  "disambiguated_at": "2026-02-17T00:27:32.62572884Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

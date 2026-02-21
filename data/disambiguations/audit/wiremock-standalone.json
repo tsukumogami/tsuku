@@ -1,0 +1,27 @@
+{
+  "tool": "wiremock-standalone",
+  "selected": "npm:wiremock-standalone",
+  "alternatives": [
+    "homebrew:wiremock-standalone"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.6226993865030677,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:wiremock-standalone",
+      "downloads": 652,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:wiremock-standalone",
+      "downloads": 1710,
+      "version_count": 22,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:wiremock-standalone",
+  "disambiguated_at": "2026-02-17T00:31:15.262420127Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

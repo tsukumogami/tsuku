@@ -1,0 +1,47 @@
+{
+  "tool": "libusb",
+  "selected": "homebrew:libusb",
+  "alternatives": [
+    "rubygems:libusb",
+    "crates.io:libusb",
+    "pypi:libusb"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.1803398948526715,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:libusb",
+      "downloads": 4132,
+      "version_count": 8,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:libusb",
+      "downloads": 499324,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:libusb",
+      "downloads": 0,
+      "version_count": 31,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:libusb",
+      "downloads": 229012,
+      "version_count": 75,
+      "has_repository": true
+    },
+    {
+      "source": "npm:libusb",
+      "downloads": 1,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:libusb",
+  "disambiguated_at": "2026-02-17T00:21:08.058640967Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

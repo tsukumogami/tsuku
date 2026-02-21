@@ -1,0 +1,27 @@
+{
+  "tool": "ekphos",
+  "selected": "crates.io:ekphos",
+  "alternatives": [
+    "homebrew:ekphos"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 4.225895316804408,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:ekphos",
+      "downloads": 363,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:ekphos",
+      "downloads": 1534,
+      "version_count": 20,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:ekphos",
+  "disambiguated_at": "2026-02-17T00:15:12.273812806Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

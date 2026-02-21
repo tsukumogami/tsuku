@@ -1,0 +1,41 @@
+{
+  "tool": "rocksdb",
+  "selected": "crates.io:rocksdb",
+  "alternatives": [
+    "homebrew:rocksdb",
+    "npm:rocksdb",
+    "pypi:rocksdb"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 1006.1668834789073,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:rocksdb",
+      "downloads": 5381,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:rocksdb",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:rocksdb",
+      "downloads": 5414184,
+      "version_count": 57,
+      "has_repository": true
+    },
+    {
+      "source": "npm:rocksdb",
+      "downloads": 2546,
+      "version_count": 25,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:rocksdb",
+  "disambiguated_at": "2026-02-17T00:27:04.142315521Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

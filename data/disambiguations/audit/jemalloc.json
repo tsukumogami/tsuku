@@ -1,0 +1,34 @@
+{
+  "tool": "jemalloc",
+  "selected": "rubygems:jemalloc",
+  "alternatives": [
+    "homebrew:jemalloc",
+    "crates.io:jemalloc"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 19.664256845221153,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:jemalloc",
+      "downloads": 907,
+      "version_count": 6,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:jemalloc",
+      "downloads": 17567,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:jemalloc",
+      "downloads": 345442,
+      "version_count": 8,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:jemalloc",
+  "disambiguated_at": "2026-02-17T00:19:11.368764783Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

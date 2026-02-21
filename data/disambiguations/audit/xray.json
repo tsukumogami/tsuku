@@ -1,0 +1,46 @@
+{
+  "tool": "xray",
+  "selected": "rubygems:xray",
+  "alternatives": [
+    "homebrew:xray",
+    "pypi:xray"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 45.532545287073994,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:xray",
+      "downloads": 16,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:xray",
+      "downloads": 6514,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:xray",
+      "downloads": 0,
+      "version_count": 17,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:xray",
+      "downloads": 296599,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:xray",
+      "downloads": 78,
+      "version_count": 4,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:xray",
+  "disambiguated_at": "2026-02-17T00:31:31.661715115Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

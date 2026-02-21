@@ -1,0 +1,27 @@
+{
+  "tool": "vcpkg",
+  "selected": "crates.io:vcpkg",
+  "alternatives": [
+    "homebrew:vcpkg"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 4047.864906832298,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:vcpkg",
+      "downloads": 10304,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:vcpkg",
+      "downloads": 41709200,
+      "version_count": 27,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:vcpkg",
+  "disambiguated_at": "2026-02-17T00:30:36.343823081Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

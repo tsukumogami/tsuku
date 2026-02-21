@@ -1,0 +1,47 @@
+{
+  "tool": "zabbix",
+  "selected": "rubygems:zabbix",
+  "alternatives": [
+    "homebrew:zabbix",
+    "npm:zabbix",
+    "pypi:zabbix"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 179.36417556346382,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:zabbix",
+      "downloads": 10,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:zabbix",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:zabbix",
+      "downloads": 1686,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:zabbix",
+      "downloads": 302408,
+      "version_count": 4,
+      "has_repository": false
+    },
+    {
+      "source": "npm:zabbix",
+      "downloads": 0,
+      "version_count": 7,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:zabbix",
+  "disambiguated_at": "2026-02-17T00:31:44.056804718Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

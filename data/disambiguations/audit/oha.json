@@ -1,0 +1,40 @@
+{
+  "tool": "oha",
+  "selected": "homebrew:oha",
+  "alternatives": [
+    "crates.io:oha",
+    "rubygems:oha"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.1234148550724639,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:oha",
+      "downloads": 4961,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:oha",
+      "downloads": 4416,
+      "version_count": 68,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:oha",
+      "downloads": 2368,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "npm:oha",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:oha",
+  "disambiguated_at": "2026-02-17T00:23:56.311536528Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

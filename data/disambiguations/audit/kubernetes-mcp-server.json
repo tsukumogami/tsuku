@@ -1,0 +1,34 @@
+{
+  "tool": "kubernetes-mcp-server",
+  "selected": "npm:kubernetes-mcp-server",
+  "alternatives": [
+    "homebrew:kubernetes-mcp-server",
+    "pypi:kubernetes-mcp-server"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 7.413333333333333,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:kubernetes-mcp-server",
+      "downloads": 375,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:kubernetes-mcp-server",
+      "downloads": 0,
+      "version_count": 37,
+      "has_repository": true
+    },
+    {
+      "source": "npm:kubernetes-mcp-server",
+      "downloads": 2780,
+      "version_count": 52,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:kubernetes-mcp-server",
+  "disambiguated_at": "2026-02-17T00:20:05.443086148Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

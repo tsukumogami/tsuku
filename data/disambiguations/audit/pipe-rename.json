@@ -1,0 +1,27 @@
+{
+  "tool": "pipe-rename",
+  "selected": "homebrew:pipe-rename",
+  "alternatives": [
+    "crates.io:pipe-rename"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.8979591836734695,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:pipe-rename",
+      "downloads": 279,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:pipe-rename",
+      "downloads": 147,
+      "version_count": 20,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:pipe-rename",
+  "disambiguated_at": "2026-02-17T00:25:17.15942137Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

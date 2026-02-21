@@ -1,0 +1,41 @@
+{
+  "tool": "tombi",
+  "selected": "homebrew:tombi",
+  "alternatives": [
+    "crates.io:tombi",
+    "npm:tombi",
+    "pypi:tombi"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 22.5,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:tombi",
+      "downloads": 2385,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:tombi",
+      "downloads": 106,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:tombi",
+      "downloads": 0,
+      "version_count": 84,
+      "has_repository": true
+    },
+    {
+      "source": "npm:tombi",
+      "downloads": 0,
+      "version_count": 129,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:tombi",
+  "disambiguated_at": "2026-02-17T00:29:49.870818228Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

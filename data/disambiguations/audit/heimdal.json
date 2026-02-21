@@ -1,0 +1,41 @@
+{
+  "tool": "heimdal",
+  "selected": "rubygems:heimdal",
+  "alternatives": [
+    "homebrew:heimdal",
+    "crates.io:heimdal",
+    "npm:heimdal"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.0875420875420874,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:heimdal",
+      "downloads": 1485,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:heimdal",
+      "downloads": 96,
+      "version_count": 8,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:heimdal",
+      "downloads": 3100,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:heimdal",
+      "downloads": 0,
+      "version_count": 6,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:heimdal",
+  "disambiguated_at": "2026-02-17T00:18:09.983335529Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

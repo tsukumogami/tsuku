@@ -1,0 +1,41 @@
+{
+  "tool": "sdb",
+  "selected": "homebrew:sdb",
+  "alternatives": [
+    "crates.io:sdb",
+    "npm:sdb",
+    "pypi:sdb"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 4.070588235294117,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:sdb",
+      "downloads": 85,
+      "version_count": 10,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:sdb",
+      "downloads": 346,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:sdb",
+      "downloads": 0,
+      "version_count": 6,
+      "has_repository": true
+    },
+    {
+      "source": "npm:sdb",
+      "downloads": 5,
+      "version_count": 15,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:sdb",
+  "disambiguated_at": "2026-02-17T00:27:37.268735177Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

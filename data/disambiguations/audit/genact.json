@@ -1,0 +1,27 @@
+{
+  "tool": "genact",
+  "selected": "homebrew:genact",
+  "alternatives": [
+    "crates.io:genact"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.6373365041617123,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:genact",
+      "downloads": 841,
+      "version_count": 27,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:genact",
+      "downloads": 1377,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:genact",
+  "disambiguated_at": "2026-02-17T00:16:35.514791235Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,26 @@
+{
+  "tool": "fleet-cli",
+  "selected": "homebrew:fleet-cli",
+  "alternatives": [
+    "npm:fleet-cli"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:fleet-cli",
+      "downloads": 576,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:fleet-cli",
+      "downloads": 0,
+      "version_count": 24,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:fleet-cli",
+  "disambiguated_at": "2026-02-17T00:15:59.231249762Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

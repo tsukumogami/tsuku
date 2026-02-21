@@ -1,0 +1,48 @@
+{
+  "tool": "mpv",
+  "selected": "homebrew:mpv",
+  "alternatives": [
+    "rubygems:mpv",
+    "crates.io:mpv",
+    "npm:mpv",
+    "pypi:mpv"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.8339104384702174,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:mpv",
+      "downloads": 1087,
+      "version_count": 5,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:mpv",
+      "downloads": 72840,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:mpv",
+      "downloads": 0,
+      "version_count": 8,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:mpv",
+      "downloads": 25703,
+      "version_count": 12,
+      "has_repository": false
+    },
+    {
+      "source": "npm:mpv",
+      "downloads": 0,
+      "version_count": 11,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:mpv",
+  "disambiguated_at": "2026-02-17T00:22:54.997740738Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

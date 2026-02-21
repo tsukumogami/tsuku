@@ -1,0 +1,27 @@
+{
+  "tool": "ctags",
+  "selected": "homebrew:ctags",
+  "alternatives": [
+    "npm:ctags"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 41.76,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:ctags",
+      "downloads": 4176,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:ctags",
+      "downloads": 100,
+      "version_count": 18,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:ctags",
+  "disambiguated_at": "2026-02-17T00:13:57.439326508Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

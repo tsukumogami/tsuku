@@ -1,0 +1,27 @@
+{
+  "tool": "taskwarrior-tui",
+  "selected": "homebrew:taskwarrior-tui",
+  "alternatives": [
+    "crates.io:taskwarrior-tui"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 6.8915254237288135,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:taskwarrior-tui",
+      "downloads": 2033,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:taskwarrior-tui",
+      "downloads": 295,
+      "version_count": 19,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:taskwarrior-tui",
+  "disambiguated_at": "2026-02-17T00:29:17.16735158Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,48 @@
+{
+  "tool": "nut",
+  "selected": "rubygems:nut",
+  "alternatives": [
+    "homebrew:nut",
+    "crates.io:nut",
+    "npm:nut",
+    "pypi:nut"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 28.863005050505052,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:nut",
+      "downloads": 935,
+      "version_count": 5,
+      "has_repository": false
+    },
+    {
+      "source": "pypi:nut",
+      "downloads": 0,
+      "version_count": 13,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:nut",
+      "downloads": 1584,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:nut",
+      "downloads": 45719,
+      "version_count": 24,
+      "has_repository": true
+    },
+    {
+      "source": "npm:nut",
+      "downloads": 6,
+      "version_count": 19,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:nut",
+  "disambiguated_at": "2026-02-17T00:23:48.191608728Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

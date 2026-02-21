@@ -1,0 +1,34 @@
+{
+  "tool": "krep",
+  "selected": "homebrew:krep",
+  "alternatives": [
+    "crates.io:krep",
+    "npm:krep"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 78.66666666666667,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:krep",
+      "downloads": 9,
+      "version_count": 5,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:krep",
+      "downloads": 708,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:krep",
+      "downloads": 0,
+      "version_count": 38,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:krep",
+  "disambiguated_at": "2026-02-17T00:19:57.957956179Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

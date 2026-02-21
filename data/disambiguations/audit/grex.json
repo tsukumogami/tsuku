@@ -1,0 +1,41 @@
+{
+  "tool": "grex",
+  "selected": "crates.io:grex",
+  "alternatives": [
+    "homebrew:grex",
+    "npm:grex",
+    "pypi:grex"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 10.478801169590643,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:grex",
+      "downloads": 1368,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:grex",
+      "downloads": 14335,
+      "version_count": 16,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:grex",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "npm:grex",
+      "downloads": 11,
+      "version_count": 40,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:grex",
+  "disambiguated_at": "2026-02-17T00:10:08.180109027Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,24 @@
+{
+  "tool": "chrome-cli",
+  "selected": "homebrew:chrome-cli",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:chrome-cli",
+      "downloads": 2063,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:chrome-cli",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:chrome-cli",
+  "disambiguated_at": "2026-02-17T00:13:01.559014083Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

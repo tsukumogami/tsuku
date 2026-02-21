@@ -1,0 +1,33 @@
+{
+  "tool": "mycli",
+  "selected": "homebrew:mycli",
+  "alternatives": [
+    "pypi:mycli",
+    "npm:mycli"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:mycli",
+      "downloads": 20906,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:mycli",
+      "downloads": 0,
+      "version_count": 95,
+      "has_repository": true
+    },
+    {
+      "source": "npm:mycli",
+      "downloads": 0,
+      "version_count": 21,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:mycli",
+  "disambiguated_at": "2026-02-17T00:23:04.443703544Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

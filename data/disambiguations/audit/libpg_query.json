@@ -1,0 +1,18 @@
+{
+  "tool": "libpg_query",
+  "selected": "homebrew:libpg_query",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:libpg_query",
+      "downloads": 404,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:libpg_query",
+  "disambiguated_at": "2026-02-17T00:20:52.325449243Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

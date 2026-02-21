@@ -1,0 +1,27 @@
+{
+  "tool": "codebook-lsp",
+  "selected": "homebrew:codebook-lsp",
+  "alternatives": [
+    "crates.io:codebook-lsp"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.1124780316344465,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:codebook-lsp",
+      "downloads": 633,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:codebook-lsp",
+      "downloads": 569,
+      "version_count": 22,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:codebook-lsp",
+  "disambiguated_at": "2026-02-17T00:13:28.856156509Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

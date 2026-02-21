@@ -1,0 +1,46 @@
+{
+  "tool": "harper",
+  "selected": "rubygems:harper",
+  "alternatives": [
+    "homebrew:harper",
+    "pypi:harper"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 4.690629011553273,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:harper",
+      "downloads": 0,
+      "version_count": 8,
+      "has_repository": false
+    },
+    {
+      "source": "crates.io:harper",
+      "downloads": 88,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:harper",
+      "downloads": 6232,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:harper",
+      "downloads": 29232,
+      "version_count": 8,
+      "has_repository": false
+    },
+    {
+      "source": "npm:harper",
+      "downloads": 1,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:harper",
+  "disambiguated_at": "2026-02-17T00:18:00.639105634Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

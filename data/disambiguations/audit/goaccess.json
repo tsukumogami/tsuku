@@ -1,0 +1,18 @@
+{
+  "tool": "goaccess",
+  "selected": "homebrew:goaccess",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:goaccess",
+      "downloads": 3699,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:goaccess",
+  "disambiguated_at": "2026-02-17T00:17:18.803872404Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

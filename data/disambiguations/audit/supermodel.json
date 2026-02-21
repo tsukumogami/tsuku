@@ -1,0 +1,39 @@
+{
+  "tool": "supermodel",
+  "selected": "rubygems:supermodel",
+  "alternatives": [
+    "homebrew:supermodel"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 355.0627802690583,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:supermodel",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:supermodel",
+      "downloads": 223,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:supermodel",
+      "downloads": 79179,
+      "version_count": 12,
+      "has_repository": false
+    },
+    {
+      "source": "npm:supermodel",
+      "downloads": 2,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:supermodel",
+  "disambiguated_at": "2026-02-17T00:29:00.825112832Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

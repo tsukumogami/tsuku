@@ -1,0 +1,32 @@
+{
+  "tool": "cpdf",
+  "selected": "homebrew:cpdf",
+  "alternatives": [
+    "pypi:cpdf"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:cpdf",
+      "downloads": 0,
+      "version_count": 7,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:cpdf",
+      "downloads": 1008,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:cpdf",
+      "downloads": 8,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:cpdf",
+  "disambiguated_at": "2026-02-17T00:13:45.436300838Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

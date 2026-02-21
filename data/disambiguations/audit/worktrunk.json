@@ -1,0 +1,27 @@
+{
+  "tool": "worktrunk",
+  "selected": "crates.io:worktrunk",
+  "alternatives": [
+    "homebrew:worktrunk"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.7036379769299024,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:worktrunk",
+      "downloads": 1127,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:worktrunk",
+      "downloads": 4174,
+      "version_count": 78,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:worktrunk",
+  "disambiguated_at": "2026-02-17T00:31:17.059972915Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "dspdfviewer",
+  "selected": "homebrew:dspdfviewer",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:dspdfviewer",
+      "downloads": 792,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:dspdfviewer",
+  "disambiguated_at": "2026-02-17T00:14:52.033543021Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

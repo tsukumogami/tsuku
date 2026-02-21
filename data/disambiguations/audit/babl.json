@@ -1,0 +1,40 @@
+{
+  "tool": "babl",
+  "selected": "rubygems:babl",
+  "alternatives": [
+    "homebrew:babl",
+    "crates.io:babl"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 69.89128094725511,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:babl",
+      "downloads": 929,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:babl",
+      "downloads": 220,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "npm:babl",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:babl",
+      "downloads": 64929,
+      "version_count": 23,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:babl",
+  "disambiguated_at": "2026-02-17T00:11:37.425865094Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,33 @@
+{
+  "tool": "transcrypt",
+  "selected": "homebrew:transcrypt",
+  "alternatives": [
+    "pypi:transcrypt",
+    "npm:transcrypt"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:transcrypt",
+      "downloads": 2738,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:transcrypt",
+      "downloads": 0,
+      "version_count": 227,
+      "has_repository": true
+    },
+    {
+      "source": "npm:transcrypt",
+      "downloads": 0,
+      "version_count": 14,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:transcrypt",
+  "disambiguated_at": "2026-02-17T00:29:55.546225558Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

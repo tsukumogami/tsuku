@@ -1,0 +1,34 @@
+{
+  "tool": "yamllint",
+  "selected": "rubygems:yamllint",
+  "alternatives": [
+    "homebrew:yamllint",
+    "pypi:yamllint"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 28.754422829255066,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:yamllint",
+      "downloads": 44259,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:yamllint",
+      "downloads": 0,
+      "version_count": 75,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:yamllint",
+      "downloads": 1272642,
+      "version_count": 9,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:yamllint",
+  "disambiguated_at": "2026-02-17T00:31:36.068356218Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,47 @@
+{
+  "tool": "git-review",
+  "selected": "rubygems:git-review",
+  "alternatives": [
+    "homebrew:git-review",
+    "npm:git-review",
+    "pypi:git-review"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 112.08031674208145,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:git-review",
+      "downloads": 11,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:git-review",
+      "downloads": 0,
+      "version_count": 38,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:git-review",
+      "downloads": 1768,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:git-review",
+      "downloads": 198158,
+      "version_count": 41,
+      "has_repository": false
+    },
+    {
+      "source": "npm:git-review",
+      "downloads": 458,
+      "version_count": 4,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:git-review",
+  "disambiguated_at": "2026-02-17T00:16:53.025252856Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

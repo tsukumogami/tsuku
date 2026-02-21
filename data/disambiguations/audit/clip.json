@@ -1,0 +1,48 @@
+{
+  "tool": "clip",
+  "selected": "rubygems:clip",
+  "alternatives": [
+    "homebrew:clip",
+    "crates.io:clip",
+    "npm:clip",
+    "pypi:clip"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 54.02425876010782,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:clip",
+      "downloads": 217,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "pypi:clip",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:clip",
+      "downloads": 742,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:clip",
+      "downloads": 40086,
+      "version_count": 8,
+      "has_repository": false
+    },
+    {
+      "source": "npm:clip",
+      "downloads": 0,
+      "version_count": 6,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:clip",
+  "disambiguated_at": "2026-02-17T00:13:14.595347532Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -146,18 +146,61 @@ GitHub personal access token for API requests.
 
 - **Default:** (unset - anonymous requests)
 - **Example:** `export GITHUB_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxx`
+- **Config alternative:** `tsuku config set secrets.github_token`
+
+Tsuku checks the `GITHUB_TOKEN` environment variable first. If it isn't set, tsuku looks for `github_token` in the `[secrets]` section of `$TSUKU_HOME/config.toml`.
 
 GitHub's API has rate limits:
 - Anonymous: 60 requests/hour
 - Authenticated: 5,000 requests/hour
 
-If you're installing many tools or hitting rate limits, set this variable to a personal access token with no special permissions (public repo access only is sufficient).
+If you're installing many tools or hitting rate limits, set a personal access token with no special permissions (public repo access only is sufficient).
 
 To create a token:
 1. Go to https://github.com/settings/tokens
 2. Click "Generate new token (classic)"
 3. Select no scopes (public repo access is default)
-4. Copy the token and set the environment variable
+4. Copy the token and either set the environment variable or store it via `tsuku config set secrets.github_token`
+
+### ANTHROPIC_API_KEY
+
+Anthropic API key for Claude, used by LLM-powered recipe generation.
+
+- **Default:** (unset)
+- **Example:** `export ANTHROPIC_API_KEY=sk-ant-xxxxxxxxxxxxxxxxxxxx`
+- **Config alternative:** `tsuku config set secrets.anthropic_api_key`
+
+The environment variable is checked first. If unset, tsuku falls back to `anthropic_api_key` in the `[secrets]` section of `$TSUKU_HOME/config.toml`.
+
+### GOOGLE_API_KEY / GEMINI_API_KEY
+
+Google API key for Gemini, used by LLM-powered recipe generation.
+
+- **Default:** (unset)
+- **Example:** `export GOOGLE_API_KEY=AIza...`
+- **Config alternative:** `tsuku config set secrets.google_api_key`
+
+Tsuku checks `GOOGLE_API_KEY` first, then `GEMINI_API_KEY`. If neither is set, it falls back to `google_api_key` in the `[secrets]` section of `$TSUKU_HOME/config.toml`.
+
+### TAVILY_API_KEY
+
+Tavily search API key, used for web search during tool discovery.
+
+- **Default:** (unset)
+- **Example:** `export TAVILY_API_KEY=tvly-xxxxxxxxxxxxxxxxxxxx`
+- **Config alternative:** `tsuku config set secrets.tavily_api_key`
+
+The environment variable is checked first. If unset, tsuku falls back to `tavily_api_key` in the `[secrets]` section of `$TSUKU_HOME/config.toml`.
+
+### BRAVE_API_KEY
+
+Brave search API key, used as an alternative search provider during tool discovery.
+
+- **Default:** (unset)
+- **Example:** `export BRAVE_API_KEY=BSA...`
+- **Config alternative:** `tsuku config set secrets.brave_api_key`
+
+The environment variable is checked first. If unset, tsuku falls back to `brave_api_key` in the `[secrets]` section of `$TSUKU_HOME/config.toml`.
 
 ## Summary Table
 
@@ -175,3 +218,7 @@ To create a token:
 | `TSUKU_TELEMETRY_DEBUG` | (unset) | Print telemetry to stderr |
 | `TSUKU_DEBUG` | (unset) | Enable verbose debug output |
 | `GITHUB_TOKEN` | (unset) | GitHub API token |
+| `ANTHROPIC_API_KEY` | (unset) | Anthropic API key for Claude |
+| `GOOGLE_API_KEY` / `GEMINI_API_KEY` | (unset) | Google API key for Gemini |
+| `TAVILY_API_KEY` | (unset) | Tavily search API key |
+| `BRAVE_API_KEY` | (unset) | Brave search API key |

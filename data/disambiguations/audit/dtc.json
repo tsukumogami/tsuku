@@ -1,0 +1,39 @@
+{
+  "tool": "dtc",
+  "selected": "homebrew:dtc",
+  "alternatives": [
+    "npm:dtc"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 5074,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:dtc",
+      "downloads": 22,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:dtc",
+      "downloads": 50740,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:dtc",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "npm:dtc",
+      "downloads": 10,
+      "version_count": 17,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:dtc",
+  "disambiguated_at": "2026-02-17T00:14:53.386153503Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

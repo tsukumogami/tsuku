@@ -1,0 +1,27 @@
+{
+  "tool": "qrtool",
+  "selected": "homebrew:qrtool",
+  "alternatives": [
+    "crates.io:qrtool"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.4180790960451977,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:qrtool",
+      "downloads": 1210,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:qrtool",
+      "downloads": 354,
+      "version_count": 60,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:qrtool",
+  "disambiguated_at": "2026-02-17T00:26:16.956530524Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

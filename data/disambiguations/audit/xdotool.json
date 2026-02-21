@@ -1,0 +1,41 @@
+{
+  "tool": "xdotool",
+  "selected": "homebrew:xdotool",
+  "alternatives": [
+    "crates.io:xdotool",
+    "npm:xdotool",
+    "pypi:xdotool"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.6660649819494586,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:xdotool",
+      "downloads": 554,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:xdotool",
+      "downloads": 1477,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:xdotool",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    },
+    {
+      "source": "npm:xdotool",
+      "downloads": 30,
+      "version_count": 51,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:xdotool",
+  "disambiguated_at": "2026-02-17T00:31:27.142495387Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

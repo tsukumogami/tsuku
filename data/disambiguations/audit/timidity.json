@@ -1,0 +1,33 @@
+{
+  "tool": "timidity",
+  "selected": "homebrew:timidity",
+  "alternatives": [
+    "npm:timidity",
+    "pypi:timidity"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:timidity",
+      "downloads": 992,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:timidity",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "npm:timidity",
+      "downloads": 0,
+      "version_count": 13,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:timidity",
+  "disambiguated_at": "2026-02-17T00:29:42.48368487Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,34 @@
+{
+  "tool": "cjson",
+  "selected": "homebrew:cjson",
+  "alternatives": [
+    "crates.io:cjson",
+    "npm:cjson"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 50.4554715741045,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:cjson",
+      "downloads": 307072,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:cjson",
+      "downloads": 6086,
+      "version_count": 3,
+      "has_repository": false
+    },
+    {
+      "source": "npm:cjson",
+      "downloads": 0,
+      "version_count": 15,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:cjson",
+  "disambiguated_at": "2026-02-17T00:13:06.064885693Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

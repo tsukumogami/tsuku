@@ -1,0 +1,38 @@
+{
+  "tool": "john",
+  "selected": "homebrew:john",
+  "alternatives": [
+    "pypi:john"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:john",
+      "downloads": 7636,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:john",
+      "downloads": 17,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "pypi:john",
+      "downloads": 0,
+      "version_count": 16,
+      "has_repository": true
+    },
+    {
+      "source": "npm:john",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:john",
+  "disambiguated_at": "2026-02-17T00:19:19.896091308Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

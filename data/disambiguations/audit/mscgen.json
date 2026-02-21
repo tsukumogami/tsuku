@@ -1,0 +1,27 @@
+{
+  "tool": "mscgen",
+  "selected": "rubygems:mscgen",
+  "alternatives": [
+    "homebrew:mscgen"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.146715951094683,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:mscgen",
+      "downloads": 7034,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:mscgen",
+      "downloads": 8066,
+      "version_count": 2,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:mscgen",
+  "disambiguated_at": "2026-02-17T00:22:57.169708132Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

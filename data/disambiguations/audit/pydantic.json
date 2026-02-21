@@ -1,0 +1,32 @@
+{
+  "tool": "pydantic",
+  "selected": "homebrew:pydantic",
+  "alternatives": [
+    "pypi:pydantic"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:pydantic",
+      "downloads": 39303,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:pydantic",
+      "downloads": 0,
+      "version_count": 194,
+      "has_repository": true
+    },
+    {
+      "source": "npm:pydantic",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:pydantic",
+  "disambiguated_at": "2026-02-17T00:25:59.496113324Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "pyqt",
+  "selected": "homebrew:pyqt",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:pyqt",
+      "downloads": 80603,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:pyqt",
+  "disambiguated_at": "2026-02-17T00:26:04.067772701Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,41 @@
+{
+  "tool": "gat",
+  "selected": "rubygems:gat",
+  "alternatives": [
+    "homebrew:gat",
+    "npm:gat",
+    "pypi:gat"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 25.780207134637514,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:gat",
+      "downloads": 0,
+      "version_count": 14,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:gat",
+      "downloads": 869,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:gat",
+      "downloads": 22403,
+      "version_count": 5,
+      "has_repository": false
+    },
+    {
+      "source": "npm:gat",
+      "downloads": 2,
+      "version_count": 10,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:gat",
+  "disambiguated_at": "2026-02-17T00:16:28.635216887Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

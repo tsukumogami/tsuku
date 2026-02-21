@@ -1,0 +1,40 @@
+{
+  "tool": "hackrf",
+  "selected": "homebrew:hackrf",
+  "alternatives": [
+    "rubygems:hackrf",
+    "npm:hackrf"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 3.038971807628524,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:hackrf",
+      "downloads": 20,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:hackrf",
+      "downloads": 3665,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:hackrf",
+      "downloads": 1206,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "npm:hackrf",
+      "downloads": 0,
+      "version_count": 12,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:hackrf",
+  "disambiguated_at": "2026-02-17T00:17:55.844845421Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

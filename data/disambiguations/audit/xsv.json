@@ -1,0 +1,47 @@
+{
+  "tool": "xsv",
+  "selected": "rubygems:xsv",
+  "alternatives": [
+    "crates.io:xsv",
+    "homebrew:xsv",
+    "npm:xsv"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 445.25276112338275,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "pypi:xsv",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:xsv",
+      "downloads": 1309,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:xsv",
+      "downloads": 3169,
+      "version_count": 90,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:xsv",
+      "downloads": 1411006,
+      "version_count": 43,
+      "has_repository": true
+    },
+    {
+      "source": "npm:xsv",
+      "downloads": 0,
+      "version_count": 6,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:xsv",
+  "disambiguated_at": "2026-02-17T00:31:32.919313826Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

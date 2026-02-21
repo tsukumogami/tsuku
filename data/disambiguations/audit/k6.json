@@ -1,0 +1,33 @@
+{
+  "tool": "k6",
+  "selected": "npm:k6",
+  "alternatives": [
+    "homebrew:k6"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.6413369629102608,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:k6",
+      "downloads": 64654,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:k6",
+      "downloads": 170773,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:k6",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:k6",
+  "disambiguated_at": "2026-02-17T00:19:36.039431291Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

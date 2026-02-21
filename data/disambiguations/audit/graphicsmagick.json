@@ -1,0 +1,40 @@
+{
+  "tool": "graphicsmagick",
+  "selected": "rubygems:graphicsmagick",
+  "alternatives": [
+    "homebrew:graphicsmagick",
+    "crates.io:graphicsmagick"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.0231541499592995,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:graphicsmagick",
+      "downloads": 66338,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:graphicsmagick",
+      "downloads": 288,
+      "version_count": 16,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:graphicsmagick",
+      "downloads": 134212,
+      "version_count": 7,
+      "has_repository": false
+    },
+    {
+      "source": "npm:graphicsmagick",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:graphicsmagick",
+  "disambiguated_at": "2026-02-17T00:17:36.093330648Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

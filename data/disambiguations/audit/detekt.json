@@ -1,0 +1,24 @@
+{
+  "tool": "detekt",
+  "selected": "homebrew:detekt",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:detekt",
+      "downloads": 1706,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:detekt",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:detekt",
+  "disambiguated_at": "2026-02-17T00:14:20.393241296Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

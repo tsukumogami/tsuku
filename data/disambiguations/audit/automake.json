@@ -1,0 +1,26 @@
+{
+  "tool": "automake",
+  "selected": "homebrew:automake",
+  "alternatives": [
+    "npm:automake"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:automake",
+      "downloads": 341704,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:automake",
+      "downloads": 0,
+      "version_count": 5,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:automake",
+  "disambiguated_at": "2026-02-17T00:11:18.7726749Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,27 @@
+{
+  "tool": "sdl2_mixer",
+  "selected": "homebrew:sdl2_mixer",
+  "alternatives": [
+    "crates.io:sdl2_mixer"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 48.01466992665037,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:sdl2_mixer",
+      "downloads": 409,
+      "version_count": 23,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:sdl2_mixer",
+      "downloads": 19638,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:sdl2_mixer",
+  "disambiguated_at": "2026-02-17T00:27:39.073818164Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

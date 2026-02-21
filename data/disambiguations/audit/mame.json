@@ -1,0 +1,27 @@
+{
+  "tool": "mame",
+  "selected": "homebrew:mame",
+  "alternatives": [
+    "crates.io:mame"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 48.875,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:mame",
+      "downloads": 8602,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:mame",
+      "downloads": 176,
+      "version_count": 12,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:mame",
+  "disambiguated_at": "2026-02-17T00:21:54.371823024Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,24 @@
+{
+  "tool": "jjui",
+  "selected": "homebrew:jjui",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:jjui",
+      "downloads": 3228,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:jjui",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:jjui",
+  "disambiguated_at": "2026-02-17T00:19:17.600263252Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

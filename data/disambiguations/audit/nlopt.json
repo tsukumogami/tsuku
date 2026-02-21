@@ -1,0 +1,47 @@
+{
+  "tool": "nlopt",
+  "selected": "homebrew:nlopt",
+  "alternatives": [
+    "crates.io:nlopt",
+    "rubygems:nlopt",
+    "pypi:nlopt"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.7545422158888493,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:nlopt",
+      "downloads": 5614,
+      "version_count": 15,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:nlopt",
+      "downloads": 9850,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:nlopt",
+      "downloads": 0,
+      "version_count": 10,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:nlopt",
+      "downloads": 1959,
+      "version_count": 4,
+      "has_repository": false
+    },
+    {
+      "source": "npm:nlopt",
+      "downloads": 23,
+      "version_count": 3,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:nlopt",
+  "disambiguated_at": "2026-02-17T00:23:34.608114132Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

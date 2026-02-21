@@ -13,3 +13,6 @@
 # Serves recipes/index.html for all /recipes/* paths, letting client-side router handle the URL
 # Must come before any catch-all rule
 /recipes/*  /recipes/index.html  200
+
+# Legacy failed.html redirects to new failures list page
+/pipeline/failed.html  /pipeline/failures.html  301

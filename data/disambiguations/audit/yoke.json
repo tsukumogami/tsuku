@@ -1,0 +1,47 @@
+{
+  "tool": "yoke",
+  "selected": "crates.io:yoke",
+  "alternatives": [
+    "rubygems:yoke",
+    "homebrew:yoke",
+    "pypi:yoke"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 4311.149930679342,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:yoke",
+      "downloads": 65300988,
+      "version_count": 22,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:yoke",
+      "downloads": 0,
+      "version_count": 15,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:yoke",
+      "downloads": 1113,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:yoke",
+      "downloads": 15147,
+      "version_count": 5,
+      "has_repository": false
+    },
+    {
+      "source": "npm:yoke",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:yoke",
+  "disambiguated_at": "2026-02-17T00:31:40.868628274Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

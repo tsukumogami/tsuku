@@ -1,0 +1,40 @@
+{
+  "tool": "git-delta",
+  "selected": "homebrew:git-delta",
+  "alternatives": [
+    "rubygems:git-delta",
+    "crates.io:git-delta"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.2342646393653665,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:git-delta",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:git-delta",
+      "downloads": 35474,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:git-delta",
+      "downloads": 8027,
+      "version_count": 50,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:git-delta",
+      "downloads": 28741,
+      "version_count": 8,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:git-delta",
+  "disambiguated_at": "2026-02-17T00:16:48.999762916Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

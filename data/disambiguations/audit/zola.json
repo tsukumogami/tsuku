@@ -1,0 +1,39 @@
+{
+  "tool": "zola",
+  "selected": "homebrew:zola",
+  "alternatives": [
+    "rubygems:zola"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.2958663646659117,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:zola",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:zola",
+      "downloads": 4577,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:zola",
+      "downloads": 3532,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:zola",
+      "downloads": 0,
+      "version_count": 0,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:zola",
+  "disambiguated_at": "2026-02-17T00:31:51.680748267Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

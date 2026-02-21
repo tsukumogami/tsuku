@@ -1,0 +1,47 @@
+{
+  "tool": "snowflake",
+  "selected": "crates.io:snowflake",
+  "alternatives": [
+    "rubygems:snowflake",
+    "homebrew:snowflake",
+    "pypi:snowflake"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 17.013302752293576,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:snowflake",
+      "downloads": 365,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:snowflake",
+      "downloads": 74178,
+      "version_count": 8,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:snowflake",
+      "downloads": 0,
+      "version_count": 37,
+      "has_repository": false
+    },
+    {
+      "source": "rubygems:snowflake",
+      "downloads": 4360,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:snowflake",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:snowflake",
+  "disambiguated_at": "2026-02-17T00:28:16.050545763Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

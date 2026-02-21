@@ -1,0 +1,46 @@
+{
+  "tool": "buildkit",
+  "selected": "rubygems:buildkit",
+  "alternatives": [
+    "homebrew:buildkit",
+    "pypi:buildkit"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 857.1420098478067,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:buildkit",
+      "downloads": 8,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:buildkit",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:buildkit",
+      "downloads": 8936,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:buildkit",
+      "downloads": 7659421,
+      "version_count": 18,
+      "has_repository": false
+    },
+    {
+      "source": "npm:buildkit",
+      "downloads": 4,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:buildkit",
+  "disambiguated_at": "2026-02-17T00:12:17.956072146Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,40 @@
+{
+  "tool": "mq",
+  "selected": "rubygems:mq",
+  "alternatives": [
+    "homebrew:mq",
+    "crates.io:mq"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 17.21087160262418,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:mq",
+      "downloads": 471,
+      "version_count": 20,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:mq",
+      "downloads": 1067,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:mq",
+      "downloads": 18364,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "npm:mq",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:mq",
+  "disambiguated_at": "2026-02-17T00:22:55.27277814Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

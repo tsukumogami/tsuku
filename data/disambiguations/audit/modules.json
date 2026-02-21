@@ -1,0 +1,47 @@
+{
+  "tool": "modules",
+  "selected": "rubygems:modules",
+  "alternatives": [
+    "homebrew:modules",
+    "cpan:modules",
+    "npm:modules"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 34.48442367601246,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:modules",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:modules",
+      "downloads": 642,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:modules",
+      "downloads": 22139,
+      "version_count": 11,
+      "has_repository": false
+    },
+    {
+      "source": "npm:modules",
+      "downloads": 0,
+      "version_count": 17,
+      "has_repository": true
+    },
+    {
+      "source": "cpan:modules",
+      "downloads": 1,
+      "version_count": 0,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:modules",
+  "disambiguated_at": "2026-02-17T00:22:42.164673386Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

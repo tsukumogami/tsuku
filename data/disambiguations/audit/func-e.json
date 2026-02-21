@@ -1,0 +1,32 @@
+{
+  "tool": "func-e",
+  "selected": "homebrew:func-e",
+  "alternatives": [
+    "npm:func-e"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:func-e",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:func-e",
+      "downloads": 239,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:func-e",
+      "downloads": 0,
+      "version_count": 7,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:func-e",
+  "disambiguated_at": "2026-02-17T00:16:20.787087082Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

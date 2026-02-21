@@ -4,7 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 	"time"
+
+	"github.com/tsukumogami/tsuku/internal/batch"
 )
 
 // Package represents a single entry in the priority queue.
@@ -74,4 +77,22 @@ func (q *PriorityQueue) Merge(newPackages []Package) int {
 		}
 	}
 	return added
+}
+
+// FilterByName removes packages whose Name (case-insensitive) matches any
+// existing entry in the unified queue. This is name-based deduplication,
+// which is different from the ID-based deduplication in Merge().
+func FilterByName(packages []Package, queue *batch.UnifiedQueue) []Package {
+	existing := make(map[string]bool, len(queue.Entries))
+	for _, e := range queue.Entries {
+		existing[strings.ToLower(e.Name)] = true
+	}
+
+	var kept []Package
+	for _, p := range packages {
+		if !existing[strings.ToLower(p.Name)] {
+			kept = append(kept, p)
+		}
+	}
+	return kept
 }

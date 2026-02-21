@@ -1,0 +1,40 @@
+{
+  "tool": "xq",
+  "selected": "homebrew:xq",
+  "alternatives": [
+    "crates.io:xq",
+    "npm:xq"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.281461434370771,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:xq",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:xq",
+      "downloads": 3372,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:xq",
+      "downloads": 1478,
+      "version_count": 61,
+      "has_repository": true
+    },
+    {
+      "source": "npm:xq",
+      "downloads": 0,
+      "version_count": 13,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:xq",
+  "disambiguated_at": "2026-02-17T00:31:31.392853217Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

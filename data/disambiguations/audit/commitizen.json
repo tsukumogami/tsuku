@@ -1,0 +1,33 @@
+{
+  "tool": "commitizen",
+  "selected": "homebrew:commitizen",
+  "alternatives": [
+    "pypi:commitizen",
+    "npm:commitizen"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:commitizen",
+      "downloads": 16716,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:commitizen",
+      "downloads": 0,
+      "version_count": 271,
+      "has_repository": true
+    },
+    {
+      "source": "npm:commitizen",
+      "downloads": 0,
+      "version_count": 81,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:commitizen",
+  "disambiguated_at": "2026-02-17T00:13:32.965681656Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

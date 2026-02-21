@@ -1,0 +1,26 @@
+{
+  "tool": "aerleon",
+  "selected": "homebrew:aerleon",
+  "alternatives": [
+    "pypi:aerleon"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:aerleon",
+      "downloads": 0,
+      "version_count": 19,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:aerleon",
+      "downloads": 303,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:aerleon",
+  "disambiguated_at": "2026-02-17T00:10:24.99506356Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

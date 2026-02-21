@@ -1,0 +1,46 @@
+{
+  "tool": "slides",
+  "selected": "rubygems:slides",
+  "alternatives": [
+    "homebrew:slides",
+    "crates.io:slides"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 44.78173190984579,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:slides",
+      "downloads": 843,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:slides",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:slides",
+      "downloads": 29,
+      "version_count": 6,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:slides",
+      "downloads": 37751,
+      "version_count": 11,
+      "has_repository": false
+    },
+    {
+      "source": "npm:slides",
+      "downloads": 9,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:slides",
+  "disambiguated_at": "2026-02-17T00:28:10.945415074Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

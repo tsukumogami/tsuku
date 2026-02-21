@@ -1,0 +1,24 @@
+{
+  "tool": "aws-lc",
+  "selected": "homebrew:aws-lc",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:aws-lc",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:aws-lc",
+      "downloads": 861,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:aws-lc",
+  "disambiguated_at": "2026-02-17T00:11:25.364908093Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

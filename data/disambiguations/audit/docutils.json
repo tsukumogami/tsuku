@@ -1,0 +1,32 @@
+{
+  "tool": "docutils",
+  "selected": "homebrew:docutils",
+  "alternatives": [
+    "pypi:docutils"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:docutils",
+      "downloads": 0,
+      "version_count": 53,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:docutils",
+      "downloads": 50734,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:docutils",
+      "downloads": 0,
+      "version_count": 4,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:docutils",
+  "disambiguated_at": "2026-02-17T00:14:41.400214539Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

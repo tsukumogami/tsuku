@@ -1,0 +1,18 @@
+{
+  "tool": "sdl12-compat",
+  "selected": "homebrew:sdl12-compat",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:sdl12-compat",
+      "downloads": 9704,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:sdl12-compat",
+  "disambiguated_at": "2026-02-17T00:27:38.133351547Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,46 @@
+{
+  "tool": "hive",
+  "selected": "rubygems:hive",
+  "alternatives": [
+    "homebrew:hive",
+    "npm:hive"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 6.533049040511727,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:hive",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:hive",
+      "downloads": 8,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:hive",
+      "downloads": 938,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:hive",
+      "downloads": 6128,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:hive",
+      "downloads": 46,
+      "version_count": 56,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:hive",
+  "disambiguated_at": "2026-02-17T00:18:18.131764673Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,27 @@
+{
+  "tool": "goffice",
+  "selected": "rubygems:goffice",
+  "alternatives": [
+    "homebrew:goffice"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 28.20216306156406,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:goffice",
+      "downloads": 3606,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:goffice",
+      "downloads": 101697,
+      "version_count": 78,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:goffice",
+  "disambiguated_at": "2026-02-17T00:17:20.308234109Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

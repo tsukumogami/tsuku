@@ -290,6 +290,15 @@ func TestClassifyInstallError(t *testing.T) {
 			want: ExitDependencyFailed,
 		},
 		{
+			name: "dependency failure wrapping RegistryError NotFound",
+			err: fmt.Errorf("failed to install dependency 'bdw-gc': %w", &registry.RegistryError{
+				Type:    registry.ErrTypeNotFound,
+				Recipe:  "bdw-gc",
+				Message: "recipe bdw-gc not found in registry",
+			}),
+			want: ExitDependencyFailed,
+		},
+		{
 			name: "generic install error",
 			err:  fmt.Errorf("extraction failed: bad tarball"),
 			want: ExitInstallFailed,

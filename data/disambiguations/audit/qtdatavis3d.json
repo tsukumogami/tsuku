@@ -1,0 +1,18 @@
+{
+  "tool": "qtdatavis3d",
+  "selected": "homebrew:qtdatavis3d",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:qtdatavis3d",
+      "downloads": 32719,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:qtdatavis3d",
+  "disambiguated_at": "2026-02-17T00:26:21.178177856Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -1,0 +1,40 @@
+{
+  "tool": "infisical",
+  "selected": "homebrew:infisical",
+  "alternatives": [
+    "crates.io:infisical",
+    "pypi:infisical"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.0463936208771294,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:infisical",
+      "downloads": 2887,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:infisical",
+      "downloads": 0,
+      "version_count": 11,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:infisical",
+      "downloads": 2759,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "npm:infisical",
+      "downloads": 0,
+      "version_count": 0,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:infisical",
+  "disambiguated_at": "2026-02-17T00:18:48.067011091Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

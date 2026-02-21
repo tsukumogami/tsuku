@@ -1,0 +1,41 @@
+{
+  "tool": "global",
+  "selected": "rubygems:global",
+  "alternatives": [
+    "homebrew:global",
+    "crates.io:global",
+    "npm:global"
+  ],
+  "selection_reason": "10x_popularity_gap",
+  "downloads_ratio": 1140.6722925457102,
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "crates.io:global",
+      "downloads": 794,
+      "version_count": 10,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:global",
+      "downloads": 1422,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:global",
+      "downloads": 1622036,
+      "version_count": 14,
+      "has_repository": true
+    },
+    {
+      "source": "npm:global",
+      "downloads": 0,
+      "version_count": 21,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:global",
+  "disambiguated_at": "2026-02-17T00:17:05.248598231Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

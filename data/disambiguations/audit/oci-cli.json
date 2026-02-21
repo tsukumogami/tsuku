@@ -1,0 +1,26 @@
+{
+  "tool": "oci-cli",
+  "selected": "homebrew:oci-cli",
+  "alternatives": [
+    "pypi:oci-cli"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "pypi:oci-cli",
+      "downloads": 0,
+      "version_count": 222,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:oci-cli",
+      "downloads": 39018,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:oci-cli",
+  "disambiguated_at": "2026-02-17T00:23:53.639293501Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

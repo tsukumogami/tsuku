@@ -1,0 +1,48 @@
+{
+  "tool": "up",
+  "selected": "rubygems:up",
+  "alternatives": [
+    "homebrew:up",
+    "crates.io:up",
+    "npm:up",
+    "pypi:up"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 17.82051282051282,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:up",
+      "downloads": 68,
+      "version_count": 5,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:up",
+      "downloads": 0,
+      "version_count": 3,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:up",
+      "downloads": 546,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:up",
+      "downloads": 9730,
+      "version_count": 2,
+      "has_repository": false
+    },
+    {
+      "source": "npm:up",
+      "downloads": 0,
+      "version_count": 11,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:up",
+  "disambiguated_at": "2026-02-17T00:30:24.74013578Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

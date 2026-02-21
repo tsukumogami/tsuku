@@ -1,0 +1,27 @@
+{
+  "tool": "shared-mime-info",
+  "selected": "rubygems:shared-mime-info",
+  "alternatives": [
+    "homebrew:shared-mime-info"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 9.842319024784794,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:shared-mime-info",
+      "downloads": 346180,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:shared-mime-info",
+      "downloads": 3407214,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:shared-mime-info",
+  "disambiguated_at": "2026-02-17T00:27:48.726246672Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

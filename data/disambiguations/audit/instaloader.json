@@ -1,0 +1,32 @@
+{
+  "tool": "instaloader",
+  "selected": "homebrew:instaloader",
+  "alternatives": [
+    "pypi:instaloader"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:instaloader",
+      "downloads": 2613,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:instaloader",
+      "downloads": 0,
+      "version_count": 139,
+      "has_repository": true
+    },
+    {
+      "source": "npm:instaloader",
+      "downloads": 0,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:instaloader",
+  "disambiguated_at": "2026-02-17T00:18:52.248958046Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

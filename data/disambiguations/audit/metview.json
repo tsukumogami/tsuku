@@ -1,0 +1,26 @@
+{
+  "tool": "metview",
+  "selected": "homebrew:metview",
+  "alternatives": [
+    "pypi:metview"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:metview",
+      "downloads": 911,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:metview",
+      "downloads": 0,
+      "version_count": 40,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:metview",
+  "disambiguated_at": "2026-02-17T00:22:24.574205453Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

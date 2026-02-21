@@ -1,0 +1,18 @@
+{
+  "tool": "zlib-ng-compat",
+  "selected": "homebrew:zlib-ng-compat",
+  "alternatives": null,
+  "selection_reason": "single_match",
+  "high_risk": false,
+  "probe_results": [
+    {
+      "source": "homebrew:zlib-ng-compat",
+      "downloads": 61826,
+      "version_count": 0,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:zlib-ng-compat",
+  "disambiguated_at": "2026-02-17T00:31:50.962637652Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

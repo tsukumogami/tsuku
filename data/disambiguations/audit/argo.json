@@ -1,0 +1,46 @@
+{
+  "tool": "argo",
+  "selected": "homebrew:argo",
+  "alternatives": [
+    "rubygems:argo",
+    "npm:argo"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 1.6098473510924873,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:argo",
+      "downloads": 14,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "pypi:argo",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "homebrew:argo",
+      "downloads": 10757,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:argo",
+      "downloads": 0,
+      "version_count": 26,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:argo",
+      "downloads": 6682,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:argo",
+  "disambiguated_at": "2026-02-17T00:10:55.33944746Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -294,9 +294,16 @@ func runRecipeBasedInstall(recipePath, toolName string) error {
 }
 
 // classifyInstallError maps an install error to the appropriate exit code.
-// It uses typed error unwrapping for registry errors and string matching
-// for dependency wrapper errors.
+// It checks the dependency wrapper string before using typed error unwrapping,
+// because a dependency failure wrapping a RegistryError should be classified
+// as a dependency error (exit 8), not by the inner error's type (exit 3).
 func classifyInstallError(err error) int {
+	// Dependency wrapper check FIRST -- a dependency failure wrapping
+	// a RegistryError should be classified as dependency, not by the
+	// inner error type.
+	if strings.Contains(err.Error(), "failed to install dependency") {
+		return ExitDependencyFailed // 8
+	}
 	var regErr *registry.RegistryError
 	if errors.As(err, &regErr) {
 		switch regErr.Type {
@@ -306,9 +313,6 @@ func classifyInstallError(err error) int {
 			registry.ErrTypeTimeout, registry.ErrTypeConnection, registry.ErrTypeTLS:
 			return ExitNetwork // 5
 		}
-	}
-	if strings.Contains(err.Error(), "failed to install dependency") {
-		return ExitDependencyFailed // 8
 	}
 	return ExitInstallFailed // 6
 }
@@ -322,7 +326,16 @@ type installError struct {
 	ExitCode       int      `json:"exit_code"`
 }
 
-// categoryFromExitCode maps an exit code to its category string.
+// categoryFromExitCode maps an exit code to its category string for the CLI's
+// --json error output. These categories are user-facing and describe what went
+// wrong from the end user's perspective (e.g., "network_error", "install_failed").
+//
+// NOTE: A separate categoryFromExitCode() exists in internal/batch/orchestrator.go
+// with different category strings. That version maps exit codes to pipeline/dashboard
+// categories (e.g., "api_error", "validation_failed") used for batch queue
+// classification and the pipeline dashboard. The two functions intentionally diverge
+// because CLI categories describe user-facing install outcomes while orchestrator
+// categories drive pipeline retry logic and operator dashboards.
 func categoryFromExitCode(code int) string {
 	switch code {
 	case ExitRecipeNotFound:

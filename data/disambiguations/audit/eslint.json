@@ -1,0 +1,26 @@
+{
+  "tool": "eslint",
+  "selected": "homebrew:eslint",
+  "alternatives": [
+    "npm:eslint"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:eslint",
+      "downloads": 16623,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "npm:eslint",
+      "downloads": 0,
+      "version_count": 409,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:eslint",
+  "disambiguated_at": "2026-02-17T00:15:23.378246408Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

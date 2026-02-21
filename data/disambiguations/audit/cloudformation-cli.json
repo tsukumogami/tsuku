@@ -1,0 +1,26 @@
+{
+  "tool": "cloudformation-cli",
+  "selected": "homebrew:cloudformation-cli",
+  "alternatives": [
+    "pypi:cloudformation-cli"
+  ],
+  "selection_reason": "priority_fallback",
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:cloudformation-cli",
+      "downloads": 1412,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:cloudformation-cli",
+      "downloads": 0,
+      "version_count": 55,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:cloudformation-cli",
+  "disambiguated_at": "2026-02-17T00:13:19.813400365Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

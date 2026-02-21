@@ -1,0 +1,40 @@
+{
+  "tool": "bsc",
+  "selected": "homebrew:bsc",
+  "alternatives": [
+    "crates.io:bsc",
+    "npm:bsc"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 2.7586206896551726,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "crates.io:bsc",
+      "downloads": 116,
+      "version_count": 6,
+      "has_repository": true
+    },
+    {
+      "source": "homebrew:bsc",
+      "downloads": 320,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:bsc",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": true
+    },
+    {
+      "source": "npm:bsc",
+      "downloads": 0,
+      "version_count": 6,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:bsc",
+  "disambiguated_at": "2026-02-17T00:12:15.808707902Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

@@ -67,3 +67,17 @@ supply chain risks, user data exposure.
 ```
 
 Valid status values: Proposed, Accepted, Planned, Current, Superseded
+
+## Mermaid Diagram Reference
+
+When status is "Planned", include a dependency graph with standard class definitions:
+
+```
+classDef done fill:#c8e6c9
+classDef ready fill:#bbdefb
+classDef blocked fill:#fff9c4
+classDef needsDesign fill:#e1bee7
+classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
+```
+
+**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design

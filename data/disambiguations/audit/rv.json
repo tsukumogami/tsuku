@@ -1,0 +1,47 @@
+{
+  "tool": "rv",
+  "selected": "crates.io:rv",
+  "alternatives": [
+    "rubygems:rv",
+    "homebrew:rv",
+    "pypi:rv"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 4.856227512445168,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:rv",
+      "downloads": 1251,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:rv",
+      "downloads": 0,
+      "version_count": 6,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:rv",
+      "downloads": 98528,
+      "version_count": 63,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:rv",
+      "downloads": 20289,
+      "version_count": 5,
+      "has_repository": false
+    },
+    {
+      "source": "npm:rv",
+      "downloads": 75,
+      "version_count": 2,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:rv",
+  "disambiguated_at": "2026-02-17T00:27:19.182596711Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

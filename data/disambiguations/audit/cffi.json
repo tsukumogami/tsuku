@@ -1,0 +1,40 @@
+{
+  "tool": "cffi",
+  "selected": "homebrew:cffi",
+  "alternatives": [
+    "crates.io:cffi",
+    "pypi:cffi"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 215.724795640327,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:cffi",
+      "downloads": 237513,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "crates.io:cffi",
+      "downloads": 1101,
+      "version_count": 9,
+      "has_repository": true
+    },
+    {
+      "source": "pypi:cffi",
+      "downloads": 0,
+      "version_count": 78,
+      "has_repository": true
+    },
+    {
+      "source": "npm:cffi",
+      "downloads": 0,
+      "version_count": 1,
+      "has_repository": false
+    }
+  ],
+  "previous_source": "homebrew:cffi",
+  "disambiguated_at": "2026-02-17T00:12:48.41713377Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}

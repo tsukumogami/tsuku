@@ -1,0 +1,34 @@
+{
+  "tool": "shiki",
+  "selected": "rubygems:shiki",
+  "alternatives": [
+    "homebrew:shiki",
+    "npm:shiki"
+  ],
+  "selection_reason": "priority_fallback",
+  "downloads_ratio": 47.108695652173914,
+  "high_risk": true,
+  "probe_results": [
+    {
+      "source": "homebrew:shiki",
+      "downloads": 92,
+      "version_count": 0,
+      "has_repository": true
+    },
+    {
+      "source": "rubygems:shiki",
+      "downloads": 4334,
+      "version_count": 1,
+      "has_repository": false
+    },
+    {
+      "source": "npm:shiki",
+      "downloads": 0,
+      "version_count": 190,
+      "has_repository": true
+    }
+  ],
+  "previous_source": "homebrew:shiki",
+  "disambiguated_at": "2026-02-17T00:27:51.16344061Z",
+  "seeding_run": "2026-02-17T00:10:01.867521792Z"
+}
