@@ -31,10 +31,6 @@ class TestCanonicalNameCollision(unittest.TestCase):
     See: generate-registry.py lines 339-345 for the canonical name collision check.
     """
 
-    def _build_recipes(self, recipe_list):
-        """Build a list of parsed recipe dicts for cross-recipe validation."""
-        return recipe_list
-
     def _run_cross_recipe_validation(self, recipes):
         """Run the cross-recipe satisfies validation from main().
 
