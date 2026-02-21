@@ -29,34 +29,6 @@ Current
 | ~~[#1829: feat(registry): include satisfies data in registry manifest](https://github.com/tsukumogami/tsuku/issues/1829)~~ | [#1826](https://github.com/tsukumogami/tsuku/issues/1826) | testable |
 | ~~_Extends the registry generation script to emit `satisfies` data in the manifest JSON and wires the loader to populate its index from that data. Adds cross-recipe duplicate detection at CI time so conflicting `satisfies` claims are caught before merge._~~ | | |
 
-### Dependency Graph
-
-```mermaid
-graph LR
-    subgraph Phase1["Phase 1: Foundation"]
-        I1826["#1826: Add satisfies field + loader"]
-    end
-
-    subgraph Phase2["Phase 2: Consumers"]
-        I1827["#1827: Create command check"]
-        I1828["#1828: Data cleanup + migration"]
-        I1829["#1829: Registry integration"]
-    end
-
-    I1826 --> I1827
-    I1826 --> I1828
-    I1826 --> I1829
-
-    classDef done fill:#c8e6c9
-    classDef ready fill:#bbdefb
-    classDef blocked fill:#fff9c4
-    classDef needsDesign fill:#e1bee7
-    classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
-
-    class I1826,I1827,I1828,I1829 done
-```
-
-**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design
 
 ## Context and Problem Statement
 
