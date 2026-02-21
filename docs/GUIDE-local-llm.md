@@ -8,8 +8,8 @@ When you run `tsuku create <tool> --from github:owner/repo` without cloud API ke
 
 1. **Addon check.** tsuku looks for the `tsuku-llm` binary in `$TSUKU_HOME/tools/`. If it's not installed, tsuku prompts you to download it (~50 MB).
 2. **Server startup.** tsuku starts `tsuku-llm serve` as a background process. The server binds to a Unix domain socket at `$TSUKU_HOME/llm.sock`.
-3. **Hardware detection.** The addon detects your GPU (CUDA, Metal, or Vulkan), available VRAM, system RAM, and CPU features. It picks the largest model that fits your hardware.
-4. **Model download.** If the selected model isn't cached yet, the addon downloads it (0.5-2.5 GB depending on selection). You're prompted before the download starts.
+3. **Hardware detection.** The addon detects your GPU (CUDA, Metal, or Vulkan), available VRAM, and CPU features. It picks the largest model that fits your hardware. A GPU with 8 GB+ VRAM is required.
+4. **Model download.** If the selected model isn't cached yet, the addon downloads it (4.9-9.1 GB depending on selection). You're prompted before the download starts.
 5. **Inference.** tsuku sends requests to the addon over gRPC. The addon constrains output to valid JSON using grammar rules, same as cloud providers.
 6. **Idle shutdown.** After 5 minutes with no requests, the server shuts itself down. If you run `tsuku create` again within that window, the server is already warm.
 
@@ -17,19 +17,23 @@ The addon is a separate Rust binary that bundles llama.cpp. tsuku's core Go bina
 
 ## Hardware Requirements
 
-The addon detects your hardware at startup and selects a model automatically. You don't need to pick one yourself.
+A GPU with at least 8 GB VRAM is required. CPU-only inference isn't supported because models below 7B (the minimum for acceptable quality) are too slow on CPU to be practical.
 
-| Available Resources | Model | Download Size | Expected Quality |
-|---------------------|-------|---------------|------------------|
-| 8 GB+ VRAM (CUDA/Metal) | Qwen 2.5 3B Q4 | ~2.5 GB | Near-cloud |
-| 4-8 GB VRAM | Qwen 2.5 1.5B Q4 | ~1.5 GB | Good |
-| CPU only, 8 GB+ RAM | Qwen 2.5 1.5B Q4 | ~1.5 GB | Good (slower) |
-| CPU only, < 8 GB RAM | Qwen 2.5 0.5B Q4 | ~500 MB | Adequate |
-| < 4 GB RAM | Disabled | -- | -- |
+The addon detects your GPU at startup and selects a model automatically. You don't need to pick one yourself.
 
-GPU inference is noticeably faster (a few seconds per turn vs. 5-30 seconds on CPU). If you have an NVIDIA or Apple Silicon GPU, the addon uses it automatically.
+| Available VRAM | Model | Download Size | Expected Quality |
+|----------------|-------|---------------|------------------|
+| 14 GB+ | Qwen 2.5 14B Q4 | ~9.1 GB (3 files) | Near-cloud |
+| 8-14 GB | Qwen 2.5 7B Q4 | ~4.9 GB (2 files) | Good |
+| < 8 GB or no GPU | Not supported | -- | -- |
 
-Systems with less than 4 GB of RAM can't run local inference. Configure a cloud provider instead (see [Cloud Providers](#falling-back-to-cloud-providers) below).
+Supported GPU backends, in priority order:
+
+1. **CUDA** -- NVIDIA GPUs with installed drivers
+2. **Metal** -- Apple Silicon Macs (unified memory; ~75% of system RAM counts as VRAM)
+3. **Vulkan** -- AMD, Intel, or NVIDIA fallback
+
+If your system doesn't have a supported GPU with 8 GB+ VRAM, configure a cloud provider instead (see [Cloud Providers](#falling-back-to-cloud-providers) below).
 
 ## Configuration
 
@@ -48,12 +52,9 @@ local_enabled = true
 # needed. Default: true
 local_preemptive = true
 
-# Override automatic model selection. Leave unset for auto-detection.
-# local_model = "qwen2.5-1.5b-instruct-q4"
-
-# Override automatic GPU backend. Leave unset for auto-detection.
-# Valid values: "cpu"
-# local_backend = "cpu"
+# Override auto-detected GPU backend for the tsuku-llm binary variant.
+# Valid values: "cpu" (force CPU variant). Leave unset for auto-detection.
+# backend = "cpu"
 
 # How long the addon server stays alive after the last request.
 # Default: 5m
@@ -66,20 +67,31 @@ Use `tsuku config set` and `tsuku config get` to modify these values:
 # Disable local inference entirely
 tsuku config set llm.local_enabled false
 
-# Force CPU backend
+# Force CPU backend variant
 tsuku config set llm.backend cpu
 
 # Check current idle timeout
 tsuku config get llm.idle_timeout
 ```
 
-### Environment Variable Override
+There's no config key for overriding model selection. The addon picks the best model for your GPU automatically.
 
-The `TSUKU_LLM_IDLE_TIMEOUT` environment variable overrides the config file's `idle_timeout` value. It accepts Go duration strings like `30s`, `5m`, or `10m`.
+### Environment Variable Overrides
+
+The addon reads several environment variables that take precedence over config and auto-detection:
+
+| Variable | Purpose | Example |
+|----------|---------|---------|
+| `TSUKU_LLM_MODEL` | Override model selection | `qwen2.5-7b-instruct-q4` |
+| `TSUKU_LLM_BACKEND` | Override inference backend | `cuda`, `metal`, `vulkan` |
+| `TSUKU_LLM_IDLE_TIMEOUT` | Override idle timeout | `30s`, `10m` |
 
 ```bash
 # Short timeout for testing
 TSUKU_LLM_IDLE_TIMEOUT=10s tsuku create ripgrep --from github:BurntSushi/ripgrep
+
+# Force a specific model
+TSUKU_LLM_MODEL=qwen2.5-7b-instruct-q4 tsuku create ripgrep --from github:BurntSushi/ripgrep
 ```
 
 ## Pre-Downloading for CI and Offline Use
@@ -131,7 +143,7 @@ Continue? [Y/n]
 After the addon installs and starts, it checks whether a model is cached:
 
 ```
-Local LLM requires downloading LLM model (Qwen 2.5 1.5B Q4) (1.5 GB).
+Local LLM requires downloading LLM model (Qwen 2.5 7B Q4) (4.9 GB).
 Continue? [Y/n]
 ```
 
@@ -160,7 +172,7 @@ This retries the download. If the addon is already present but the model isn't, 
 This means tsuku couldn't find any working provider. Check:
 
 - **Local inference disabled?** Run `tsuku config get llm.local_enabled`. If it's `false`, either set it to `true` or configure a cloud API key.
-- **Insufficient hardware?** Systems with less than 4 GB RAM can't run local inference. Set a cloud API key instead.
+- **No GPU or insufficient VRAM?** Local inference requires a GPU with 8 GB+ VRAM. If you don't have one, set a cloud API key instead.
 
 ### Addon server won't start
 
@@ -176,15 +188,15 @@ rm $TSUKU_HOME/llm.sock $TSUKU_HOME/llm.sock.lock
 
 The server lifecycle manager normally handles stale socket cleanup, but manual removal works if something goes wrong.
 
-### Slow inference on CPU
+### GPU not detected
 
-CPU-only inference takes 5-30 seconds per turn depending on your CPU and model size. This is expected. If you have a discrete GPU that isn't being detected, check that the appropriate drivers are installed. The addon logs the detected backend at startup.
+If the addon reports "no GPU detected" even though you have a discrete GPU, check that the appropriate drivers are installed. The addon logs the detected backend at startup.
 
-To speed things up:
+- **NVIDIA**: Install the NVIDIA driver (provides `libcuda.so` and `nvidia-smi`)
+- **AMD/Intel**: Install Vulkan drivers (`libvulkan.so`)
+- **Apple Silicon**: Metal is detected automatically; no driver install needed
 
-- Install GPU drivers if you have discrete graphics
-- Use a smaller model: `tsuku config set llm.local_model qwen2.5-0.5b-instruct-q4`
-- Switch to a cloud provider for faster results
+If you can't get GPU acceleration working, switch to a cloud provider for now.
 
 ### Falling Back to Cloud Providers
 

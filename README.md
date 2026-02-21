@@ -116,7 +116,7 @@ Some recipe builders use LLM analysis to generate recipes from complex sources:
 - `--from rubygems` - Uses RubyGems API
 - `--from cask:<name>` - Uses Homebrew Cask API (macOS applications)
 
-**Local inference is the default.** When no cloud API keys are configured, tsuku runs a small language model locally using the `tsuku-llm` addon. On first use, tsuku prompts to download the addon binary (~50 MB) and a model (0.5-2.5 GB depending on your hardware). The addon detects your GPU and RAM to pick the right model size automatically.
+**Local inference is the default.** When no cloud API keys are configured, tsuku runs a language model locally using the `tsuku-llm` addon. This requires a GPU with at least 8 GB VRAM (CUDA, Metal, or Vulkan). On first use, tsuku prompts to download the addon binary (~50 MB) and a model (4.9-9.1 GB depending on your GPU). The addon detects your GPU and picks the right model size automatically.
 
 To pre-download everything for CI or offline use:
 
