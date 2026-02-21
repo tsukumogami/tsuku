@@ -6,15 +6,16 @@
 #   tsuku-llm-v{version}-{os}-{arch}[-{backend}]
 #
 #   Examples for tag tsuku-llm-v0.3.0:
-#     tsuku-llm-v0.3.0-darwin-arm64
-#     tsuku-llm-v0.3.0-linux-amd64-cuda
-#     tsuku-llm-v0.3.0-linux-arm64-vulkan
+#     tsuku-llm-v0.3.0-darwin-arm64        (Metal)
+#     tsuku-llm-v0.3.0-linux-amd64-cuda    (NVIDIA)
+#     tsuku-llm-v0.3.0-linux-arm64-vulkan  (AMD/Intel)
 #
 #   The recipe's asset_pattern uses the same format with {version} placeholder:
 #     asset_pattern = "tsuku-llm-v{version}-linux-amd64-cuda"
 #
 #   macOS builds omit the backend suffix because Metal is the only backend
-#   for each macOS architecture.
+#   for each macOS architecture. CPU-only builds were removed because
+#   tsuku-llm requires a GPU with at least 8 GB VRAM.
 #
 # CUDA version coupling:
 #   This pipeline builds CUDA variants against CUDA toolkit 12.4
@@ -65,12 +66,6 @@ jobs:
             target: x86_64-unknown-linux-gnu
             artifact_suffix: linux-amd64-vulkan
             backend: vulkan
-          - platform: linux-amd64-cpu
-            runner: ubuntu-22.04
-            target: x86_64-unknown-linux-gnu
-            artifact_suffix: linux-amd64-cpu
-            backend: cpu
-
           # Linux ARM64 builds
           - platform: linux-arm64-cuda
             runner: ubuntu-24.04-arm
@@ -82,12 +77,6 @@ jobs:
             target: aarch64-unknown-linux-gnu
             artifact_suffix: linux-arm64-vulkan
             backend: vulkan
-          - platform: linux-arm64-cpu
-            runner: ubuntu-24.04-arm
-            target: aarch64-unknown-linux-gnu
-            artifact_suffix: linux-arm64-cpu
-            backend: cpu
-
     runs-on: ${{ matrix.runner }}
     steps:
       - name: Checkout
@@ -172,9 +161,6 @@ jobs:
             vulkan)
               cargo build --release --features vulkan
               ;;
-            cpu)
-              cargo build --release
-              ;;
           esac
 
       - name: Sign binary (macOS)
@@ -205,12 +191,6 @@ jobs:
           - platform: darwin-amd64
             runner: macos-15-intel
             artifact_suffix: darwin-amd64
-          - platform: linux-amd64-cpu
-            runner: ubuntu-22.04
-            artifact_suffix: linux-amd64-cpu
-          - platform: linux-arm64-cpu
-            runner: ubuntu-24.04-arm
-            artifact_suffix: linux-arm64-cpu
     runs-on: ${{ matrix.runner }}
     steps:
       - name: Compute artifact name
@@ -312,11 +292,9 @@ jobs:
             # Linux AMD64
             "tsuku-llm-v${VERSION}-linux-amd64-cuda"
             "tsuku-llm-v${VERSION}-linux-amd64-vulkan"
-            "tsuku-llm-v${VERSION}-linux-amd64-cpu"
             # Linux ARM64
             "tsuku-llm-v${VERSION}-linux-arm64-cuda"
             "tsuku-llm-v${VERSION}-linux-arm64-vulkan"
-            "tsuku-llm-v${VERSION}-linux-arm64-cpu"
             # Checksums
             checksums.txt
           )

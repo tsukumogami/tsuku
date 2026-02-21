@@ -1,18 +1,12 @@
 # tsuku-llm - Local LLM inference engine
 #
-# GPU-accelerated inference powered by llama.cpp. Builds are produced for
-# multiple GPU backends: Metal on macOS, CUDA on Linux with NVIDIA hardware,
-# Vulkan on Linux with AMD/Intel hardware, and a CPU fallback for systems
-# without a discrete GPU or when GPU acceleration isn't available.
+# GPU-accelerated inference powered by llama.cpp. Requires a GPU with at
+# least 8 GB VRAM to run the minimum supported model (7B).
 #
 # Variant selection is automatic via GPU hardware detection:
 #   - macOS: Metal (all Macs have Metal-capable GPUs)
 #   - Linux + NVIDIA GPU: CUDA variant (depends on cuda-runtime)
 #   - Linux + AMD/Intel GPU: Vulkan variant (depends on vulkan-loader)
-#   - Linux + no GPU: CPU variant (no GPU dependencies)
-#
-# To force the CPU variant regardless of hardware:
-#   tsuku config set llm.backend cpu
 
 [metadata]
 name = "tsuku-llm"
@@ -57,14 +51,6 @@ repo = "tsukumogami/tsuku-llm"
 asset_pattern = "tsuku-llm-v{version}-linux-amd64-vulkan"
 binary = "tsuku-llm"
 
-# Linux amd64: CPU variant for systems without a GPU
-[[steps]]
-action = "github_file"
-when = { os = ["linux"], arch = "amd64", gpu = ["none"] }
-repo = "tsukumogami/tsuku-llm"
-asset_pattern = "tsuku-llm-v{version}-linux-amd64-cpu"
-binary = "tsuku-llm"
-
 # Linux arm64: CUDA variant for NVIDIA GPUs
 [[steps]]
 action = "github_file"
@@ -81,14 +67,6 @@ when = { os = ["linux"], arch = "arm64", gpu = ["amd", "intel"] }
 dependencies = ["vulkan-loader"]
 repo = "tsukumogami/tsuku-llm"
 asset_pattern = "tsuku-llm-v{version}-linux-arm64-vulkan"
-binary = "tsuku-llm"
-
-# Linux arm64: CPU variant for systems without a GPU
-[[steps]]
-action = "github_file"
-when = { os = ["linux"], arch = "arm64", gpu = ["none"] }
-repo = "tsukumogami/tsuku-llm"
-asset_pattern = "tsuku-llm-v{version}-linux-arm64-cpu"
 binary = "tsuku-llm"
 
 [verify]
