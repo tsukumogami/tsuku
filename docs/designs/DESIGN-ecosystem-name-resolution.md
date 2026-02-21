@@ -53,8 +53,8 @@ graph LR
     classDef needsDesign fill:#e1bee7
     classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
 
-    class I1826 ready
-    class I1827,I1828,I1829 blocked
+    class I1826,I1827,I1828 done
+    class I1829 ready
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design
