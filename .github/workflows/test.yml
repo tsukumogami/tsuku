@@ -24,7 +24,7 @@ jobs:
           failed=0
           for dir in issue_work wip; do
             if [ -d "$dir" ] && [ "$(ls -A "$dir" 2>/dev/null)" ]; then
-              echo "::error::$dir/ contains intermediate work artifacts that should not be merged into main. Delete this folder before merging the Pull Request."
+              echo "::error::$dir/ contains intermediate work artifacts that should not be merged into main. Delete this folder before merging, or convert the PR to a draft while work is in progress."
               ls -la "$dir/"
               failed=1
             fi
