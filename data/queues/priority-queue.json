@@ -50236,8 +50236,8 @@
       "name": "vulkan-loader",
       "source": "homebrew:vulkan-loader",
       "priority": 3,
-      "status": "pending",
-      "confidence": "auto",
+      "status": "success",
+      "confidence": "curated",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 0,
       "next_retry_at": null
