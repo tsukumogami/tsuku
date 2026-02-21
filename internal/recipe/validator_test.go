@@ -1746,3 +1746,99 @@ command = "test-tool --version"
 			len(bytesResult.Warnings), len(recipeResult.Warnings))
 	}
 }
+
+func TestValidateBytes_HomepageValidHTTPS(t *testing.T) {
+	recipe := `
+[metadata]
+name = "test-tool"
+homepage = "https://example.com"
+
+[[steps]]
+action = "download"
+url = "https://example.com/{version}/test.tar.gz"
+
+[verify]
+command = "test --version"
+`
+	result := ValidateBytes([]byte(recipe))
+	if !result.Valid {
+		t.Errorf("expected valid recipe with HTTPS homepage, got errors: %v", result.Errors)
+	}
+}
+
+func TestValidateBytes_HomepageHTTPRejected(t *testing.T) {
+	recipe := `
+[metadata]
+name = "test-tool"
+homepage = "http://example.com"
+
+[[steps]]
+action = "download"
+url = "https://example.com/{version}/test.tar.gz"
+
+[verify]
+command = "test --version"
+`
+	result := ValidateBytes([]byte(recipe))
+	if result.Valid {
+		t.Error("expected invalid recipe due to HTTP homepage")
+	}
+	if !hasError(result, "metadata.homepage", "https://") {
+		t.Error("expected error about homepage requiring https://")
+	}
+}
+
+func TestValidateBytes_HomepageDangerousSchemes(t *testing.T) {
+	tests := []struct {
+		name     string
+		homepage string
+		scheme   string
+	}{
+		{"javascript", "javascript:alert(1)", "javascript:"},
+		{"data", "data:text/html,<h1>evil</h1>", "data:"},
+		{"vbscript", "vbscript:MsgBox(1)", "vbscript:"},
+		{"mixed case javascript", "JavaScript:alert(1)", "javascript:"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			recipe := fmt.Sprintf(`
+[metadata]
+name = "test-tool"
+homepage = %q
+
+[[steps]]
+action = "download"
+url = "https://example.com/{version}/test.tar.gz"
+
+[verify]
+command = "test --version"
+`, tt.homepage)
+			result := ValidateBytes([]byte(recipe))
+			if result.Valid {
+				t.Errorf("expected invalid recipe with %s homepage", tt.scheme)
+			}
+			if !hasError(result, "metadata.homepage", "dangerous scheme") {
+				t.Errorf("expected error about dangerous scheme for %s", tt.homepage)
+			}
+		})
+	}
+}
+
+func TestValidateBytes_HomepageEmpty(t *testing.T) {
+	recipe := `
+[metadata]
+name = "test-tool"
+
+[[steps]]
+action = "download"
+url = "https://example.com/{version}/test.tar.gz"
+
+[verify]
+command = "test --version"
+`
+	result := ValidateBytes([]byte(recipe))
+	if !result.Valid {
+		t.Errorf("expected valid recipe without homepage, got errors: %v", result.Errors)
+	}
+}
