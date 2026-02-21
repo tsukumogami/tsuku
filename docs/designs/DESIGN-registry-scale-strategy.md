@@ -1,6 +1,6 @@
 ---
 status: Planned
-problem: Tsuku has 155 registry recipes but thousands of developer tools exist across ecosystems (8K+ Homebrew formulas, 200K+ Rust crates, 11M+ npm packages). Manual recipe creation doesn't scale, and missing system dependencies block many formulas.
+problem: Tsuku has 329 registry recipes and an operational hourly batch pipeline, but thousands of developer tools remain uncovered across ecosystems (8K+ Homebrew formulas, 200K+ Rust crates, 11M+ npm packages). The pipeline works. The remaining challenge is closing quality gaps, resolving script/schema debt, and deciding whether file-based failure tracking needs to move to a database backend.
 decision: Adopt fully deterministic batch generation with structured failure analysis. Failures reveal capability gaps that drive manual fixes. LLM builders remain a user feature, not part of automation.
 rationale: A deterministic-only pipeline produces consistent, analyzable results. Failures are valuable data that identify which capabilities to build next. Keeping LLM out of automation ensures predictable costs and enables systematic gap analysis.
 ---
@@ -13,64 +13,66 @@ Planned
 
 ## Implementation Issues
 
-### Milestone: [Tool Backlog Visibility](https://github.com/tsukumogami/tsuku/milestone/50)
+### Milestone: [registry-scale-strategy](https://github.com/tsukumogami/tsuku/milestone/92)
 
-| Issue | Title | Dependencies | Tier |
-|-------|-------|--------------|------|
-| ~~[#1186](https://github.com/tsukumogami/tsuku/issues/1186)~~ | design priority queue and failure record schemas | None | testable |
-| ~~[#1187](https://github.com/tsukumogami/tsuku/issues/1187)~~ | design batch operations and rollback procedures | None | testable |
-
-### Milestone: [Visibility Infrastructure Schemas](https://github.com/tsukumogami/tsuku/milestone/57)
-
-| Issue | Title | Dependencies | Tier |
-|-------|-------|--------------|------|
-| ~~[#1199](https://github.com/tsukumogami/tsuku/issues/1199)~~ | ~~feat(data): add priority queue and failure record schemas~~ | ~~[#1186](https://github.com/tsukumogami/tsuku/issues/1186)~~ | ~~testable~~ |
-| ~~[#1200](https://github.com/tsukumogami/tsuku/issues/1200)~~ | ~~feat(data): add dependency name mapping structure~~ | ~~[#1186](https://github.com/tsukumogami/tsuku/issues/1186)~~ | ~~simple~~ |
-| ~~[#1201](https://github.com/tsukumogami/tsuku/issues/1201)~~ | ~~feat(scripts): add schema validation scripts~~ | ~~[#1199](https://github.com/tsukumogami/tsuku/issues/1199)~~ | ~~testable~~ |
-| ~~[#1202](https://github.com/tsukumogami/tsuku/issues/1202)~~ | ~~feat(scripts): add queue seed script for Homebrew~~ | ~~[#1199](https://github.com/tsukumogami/tsuku/issues/1199)~~ | ~~testable~~ |
-| ~~[#1203](https://github.com/tsukumogami/tsuku/issues/1203)~~ | ~~feat(scripts): add gap analysis script~~ | ~~[#1199](https://github.com/tsukumogami/tsuku/issues/1199)~~ | ~~testable~~ |
-
-### Milestone: [Batch Operations Control Plane](https://github.com/tsukumogami/tsuku/milestone/55)
-
-Implements [#1187](https://github.com/tsukumogami/tsuku/issues/1187). See [DESIGN-batch-operations.md](current/DESIGN-batch-operations.md) for issue details.
-
-### Milestone: [Batch Operations Observability](https://github.com/tsukumogami/tsuku/milestone/56)
-
-Implements [#1187](https://github.com/tsukumogami/tsuku/issues/1187). See [DESIGN-batch-operations.md](current/DESIGN-batch-operations.md) for issue details.
-
-### Milestone: [Deterministic Homebrew Builder](https://github.com/tsukumogami/tsuku/milestone/51)
-
-| Issue | Title | Dependencies | Tier |
-|-------|-------|--------------|------|
-| ~~[#1188](https://github.com/tsukumogami/tsuku/issues/1188)~~ | ~~design homebrew deterministic mode~~ | ~~[#1186](https://github.com/tsukumogami/tsuku/issues/1186)~~ | ~~testable~~ |
-| ~~[#1266](https://github.com/tsukumogami/tsuku/issues/1266)~~ | ~~structured deterministic-failed error path~~ | ~~[#1188](https://github.com/tsukumogami/tsuku/issues/1188)~~ | ~~testable~~ |
-
-### Milestone: [Batch Pipeline](https://github.com/tsukumogami/tsuku/milestone/52)
-
-| Issue | Title | Dependencies | Tier |
-|-------|-------|--------------|------|
-| ~~[#1241](https://github.com/tsukumogami/tsuku/issues/1241)~~ | ~~seed priority queue pipeline~~ | ~~[#1199](https://github.com/tsukumogami/tsuku/issues/1199)~~, ~~[#1202](https://github.com/tsukumogami/tsuku/issues/1202)~~ | ~~testable~~ |
-| ~~[#1189](https://github.com/tsukumogami/tsuku/issues/1189)~~ | ~~design batch recipe generation CI pipeline~~ | ~~[#1186](https://github.com/tsukumogami/tsuku/issues/1186)~~, ~~[#1187](https://github.com/tsukumogami/tsuku/issues/1187)~~, ~~[#1188](https://github.com/tsukumogami/tsuku/issues/1188)~~, ~~[#1241](https://github.com/tsukumogami/tsuku/issues/1241)~~ | ~~testable~~ |
-| ~~[#1267](https://github.com/tsukumogami/tsuku/issues/1267)~~ | ~~skip existing recipes in seed tool~~ | ~~[#1241](https://github.com/tsukumogami/tsuku/issues/1241)~~ | ~~simple~~ |
-| ~~[#1268](https://github.com/tsukumogami/tsuku/issues/1268)~~ | ~~CI validation of queue against registry~~ | ~~[#1267](https://github.com/tsukumogami/tsuku/issues/1267)~~ | ~~testable~~ |
-| ~~[#1273](https://github.com/tsukumogami/tsuku/issues/1273)~~ | ~~Structured JSON output for CLI + batch integration~~ | ~~None~~ | ~~testable~~ |
-| ~~[#1412](https://github.com/tsukumogami/tsuku/issues/1412)~~ | ~~Scheduled triggers for queue seeding and batch generation~~ | ~~[#1268](https://github.com/tsukumogami/tsuku/issues/1268)~~ | ~~testable~~ |
-
-Implements [#1189](https://github.com/tsukumogami/tsuku/issues/1189). See [DESIGN-batch-recipe-generation.md](current/DESIGN-batch-recipe-generation.md) for issue details.
-
-### Milestone: [Failure Backend](https://github.com/tsukumogami/tsuku/milestone/53)
-
-| Issue | Title | Dependencies | Tier |
-|-------|-------|--------------|------|
-| [#1190](https://github.com/tsukumogami/tsuku/issues/1190) | design failure analysis backend | [#1189](https://github.com/tsukumogami/tsuku/issues/1189) | testable |
-| [#1277](https://github.com/tsukumogami/tsuku/issues/1277) | top-blockers report for gap analysis | None | simple |
-| [#1278](https://github.com/tsukumogami/tsuku/issues/1278) | hybrid prioritization (popularity + blocking impact) | [#1277](https://github.com/tsukumogami/tsuku/issues/1277) | testable |
-
-### Milestone: [Multi-Ecosystem](https://github.com/tsukumogami/tsuku/milestone/54)
-
-| Issue | Title | Dependencies | Tier |
-|-------|-------|--------------|------|
-| [#1191](https://github.com/tsukumogami/tsuku/issues/1191) | design system library backfill strategy | [#1190](https://github.com/tsukumogami/tsuku/issues/1190) | simple |
+| Issue | Dependencies | Tier |
+|-------|--------------|------|
+| ~~[M50: Tool Backlog Visibility](https://github.com/tsukumogami/tsuku/milestone/50)~~ | ~~None~~ | |
+| ~~_Design schemas and operational procedures needed before batch generation can safely operate._~~ | | |
+| ~~[#1186: design priority queue and failure record schemas](https://github.com/tsukumogami/tsuku/issues/1186)~~ | ~~None~~ | ~~testable~~ |
+| ~~_Package entity schema, scoring algorithm, and static file formats for the priority queue and failure records._~~ | | |
+| ~~[#1187: design batch operations and rollback procedures](https://github.com/tsukumogami/tsuku/issues/1187)~~ | ~~None~~ | ~~testable~~ |
+| ~~_Rollback scripts, emergency stop procedures, and runbooks for batch auto-merge operations._~~ | | |
+| ~~[M57: Visibility Infrastructure Schemas](https://github.com/tsukumogami/tsuku/milestone/57)~~ | ~~M50~~ | |
+| ~~_Implements the schemas and scripts designed in M50._~~ | | |
+| ~~[#1199: feat(data): add priority queue and failure record schemas](https://github.com/tsukumogami/tsuku/issues/1199)~~ | ~~[#1186](https://github.com/tsukumogami/tsuku/issues/1186)~~ | ~~testable~~ |
+| ~~_JSON schema files defining structure for priority queue and failure records._~~ | | |
+| ~~[#1200: feat(data): add dependency name mapping structure](https://github.com/tsukumogami/tsuku/issues/1200)~~ | ~~[#1186](https://github.com/tsukumogami/tsuku/issues/1186)~~ | ~~simple~~ |
+| ~~_`data/dep-mapping.json` translating ecosystem-specific dependency names (e.g., Homebrew formula names) to tsuku recipe names._~~ | | |
+| ~~[#1201: feat(scripts): add schema validation scripts](https://github.com/tsukumogami/tsuku/issues/1201)~~ | ~~[#1199](https://github.com/tsukumogami/tsuku/issues/1199)~~ | ~~testable~~ |
+| ~~_Validation scripts verifying priority queue and failure record files conform to their JSON schemas._~~ | | |
+| ~~[#1202: feat(scripts): add queue seed script for Homebrew](https://github.com/tsukumogami/tsuku/issues/1202)~~ | ~~[#1199](https://github.com/tsukumogami/tsuku/issues/1199)~~ | ~~testable~~ |
+| ~~_Seed script populating the priority queue with Homebrew formulas, assigning tiers based on download counts._~~ | | |
+| ~~[#1203: feat(scripts): add gap analysis script](https://github.com/tsukumogami/tsuku/issues/1203)~~ | ~~[#1199](https://github.com/tsukumogami/tsuku/issues/1199)~~ | ~~testable~~ |
+| ~~_Gap analysis script querying failure data to identify which packages are blocked by specific missing dependencies._~~ | | |
+| ~~[M55: Batch Operations Control Plane](https://github.com/tsukumogami/tsuku/milestone/55)~~ | ~~M50~~ | |
+| ~~_Implements [#1187](https://github.com/tsukumogami/tsuku/issues/1187). See [DESIGN-batch-operations.md](current/DESIGN-batch-operations.md) for issues._~~ | | |
+| ~~[M56: Batch Operations Observability](https://github.com/tsukumogami/tsuku/milestone/56)~~ | ~~M55~~ | |
+| ~~_Implements [#1187](https://github.com/tsukumogami/tsuku/issues/1187). See [DESIGN-batch-operations.md](current/DESIGN-batch-operations.md) for issues._~~ | | |
+| ~~[M51: Deterministic Homebrew Builder](https://github.com/tsukumogami/tsuku/milestone/51)~~ | ~~M50~~ | |
+| ~~_Refactor the Homebrew builder to defer LLM initialization, enabling deterministic-only recipe generation._~~ | | |
+| ~~[#1188: design homebrew deterministic mode](https://github.com/tsukumogami/tsuku/issues/1188)~~ | ~~[#1186](https://github.com/tsukumogami/tsuku/issues/1186)~~ | ~~testable~~ |
+| ~~_Design the builder refactor so deterministic-only generation works without an LLM API key._~~ | | |
+| ~~[#1266: structured deterministic-failed error path](https://github.com/tsukumogami/tsuku/issues/1266)~~ | ~~[#1188](https://github.com/tsukumogami/tsuku/issues/1188)~~ | ~~testable~~ |
+| ~~_Produce a structured `DeterministicFailedError` instead of crashing when bottle inspection succeeds but no LLM keys are present._~~ | | |
+| ~~[M52: Batch Pipeline](https://github.com/tsukumogami/tsuku/milestone/52)~~ | ~~M51, M57~~ | |
+| ~~_Hourly CI pipeline for batch generation. See [DESIGN-batch-recipe-generation.md](DESIGN-batch-recipe-generation.md) for additional issues._~~ | | |
+| ~~[#1241: seed priority queue pipeline](https://github.com/tsukumogami/tsuku/issues/1241)~~ | ~~[#1199](https://github.com/tsukumogami/tsuku/issues/1199)~~, ~~[#1202](https://github.com/tsukumogami/tsuku/issues/1202)~~ | ~~testable~~ |
+| ~~_CI workflow populating `data/priority-queue.json` from ecosystem registry APIs._~~ | | |
+| ~~[#1189: design batch recipe generation CI pipeline](https://github.com/tsukumogami/tsuku/issues/1189)~~ | ~~[#1186](https://github.com/tsukumogami/tsuku/issues/1186)~~, ~~[#1187](https://github.com/tsukumogami/tsuku/issues/1187)~~, ~~[#1188](https://github.com/tsukumogami/tsuku/issues/1188)~~, ~~[#1241](https://github.com/tsukumogami/tsuku/issues/1241)~~ | ~~testable~~ |
+| ~~_Design the CI pipeline including validation gates, SLIs, and circuit breaker._~~ | | |
+| ~~[#1267: skip existing recipes in seed tool](https://github.com/tsukumogami/tsuku/issues/1267)~~ | ~~[#1241](https://github.com/tsukumogami/tsuku/issues/1241)~~ | ~~simple~~ |
+| ~~_Skip packages that already have recipes when populating the priority queue._~~ | | |
+| ~~[#1268: CI validation of queue against registry](https://github.com/tsukumogami/tsuku/issues/1268)~~ | ~~[#1267](https://github.com/tsukumogami/tsuku/issues/1267)~~ | ~~testable~~ |
+| ~~_CI check preventing queue entries that duplicate existing recipes._~~ | | |
+| ~~[#1273: structured JSON output for CLI + batch integration](https://github.com/tsukumogami/tsuku/issues/1273)~~ | ~~None~~ | ~~testable~~ |
+| ~~_Structured JSON output for CLI commands, adopted across batch orchestrator, CI workflows, and test infrastructure._~~ | | |
+| ~~[#1412: scheduled triggers for queue seeding and batch generation](https://github.com/tsukumogami/tsuku/issues/1412)~~ | ~~[#1268](https://github.com/tsukumogami/tsuku/issues/1268)~~ | ~~testable~~ |
+| ~~_Automated cron triggers replacing manual `workflow_dispatch` for queue seeding and batch generation._~~ | | |
+| ~~[#1253: pinned release support](https://github.com/tsukumogami/tsuku/issues/1253)~~ | ~~None~~ | ~~testable~~ |
+| ~~_Install a pinned tsuku release in batch-generate via `install.sh`, with fallback to building from source._~~ | | |
+| [M53: Failure Backend](https://github.com/tsukumogami/tsuku/milestone/53) | M52 | |
+| _Gap analysis and prioritization tooling. File-based JSONL in `data/failures/` is the chosen approach; D1 migration was dropped._ | | |
+| ~~[#1190: design failure analysis backend](https://github.com/tsukumogami/tsuku/issues/1190)~~ | ~~[#1189](https://github.com/tsukumogami/tsuku/issues/1189)~~ | ~~testable~~ |
+| ~~_Closed as not planned. File-based JSONL approach is sufficient; D1 migration not justified at current scale._~~ | | |
+| [#1277: top-blockers report for gap analysis](https://github.com/tsukumogami/tsuku/issues/1277) | None | simple |
+| _Report ranking missing recipes by how many other recipes they block._ | | |
+| [#1278: hybrid prioritization (popularity + blocking impact)](https://github.com/tsukumogami/tsuku/issues/1278) | [#1277](https://github.com/tsukumogami/tsuku/issues/1277) | testable |
+| _Combine package popularity with transitive blocking impact for queue ordering._ | | |
+| [M54: Multi-Ecosystem](https://github.com/tsukumogami/tsuku/milestone/54) | M53 | |
+| _All deterministic builders integrated and running. System library backfill remains._ | | |
+| [#1191: design system library backfill strategy](https://github.com/tsukumogami/tsuku/issues/1191) | None | simple |
+| _Strategy for adding common system library recipes (libpng, sqlite, curl, etc.) to unblock dependent tools. No longer blocked on #1190._ | | |
 
 ### Dependency Graph
 
@@ -101,6 +103,7 @@ graph TD
         I1268["#1268: CI queue vs registry check"]
         I1273["#1273: Structured JSON CLI output"]
         I1412["#1412: Scheduled triggers"]
+        I1253["#1253: Pinned release support"]
     end
 
     subgraph M_FailureBackend["Failure Backend"]
@@ -130,7 +133,6 @@ graph TD
     I1267 --> I1268
     I1268 --> I1412
     I1189 --> I1190
-    I1190 --> I1191
     I1277 --> I1278
 
     classDef done fill:#c8e6c9
@@ -151,30 +153,78 @@ graph TD
     class I1268 done
     class I1273 done
     class I1266 done
-    class I1190 needsDesign
+    class I1412 done
+    class I1253 done
+    class I1190 done
     class I1277 ready
     class I1278 blocked
-    class I1412 done
-    class I1191 blocked
+    class I1191 ready
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
 
+## Implementation Progress
+
+This section summarizes what shipped, what diverged from the original design, and what remains. Added during the Feb 2026 revision when the registry reached 329 recipes.
+
+### What Shipped
+
+| Phase | Status | Milestone | Summary |
+|-------|--------|-----------|---------|
+| 0 (Visibility) | COMPLETE | M50, M57 closed | Schemas, scripts, priority queue seeded |
+| 1a (Homebrew Deterministic) | COMPLETE | M51 closed | `DeterministicFailedError`, lazy LLM init, deterministic-only mode |
+| 1b (Batch Pipeline) | COMPLETE | M52 closed | Hourly pipeline, orchestrator, circuit breaker, SLI metrics, auto-merge |
+| 2 (Failure Backend + macOS) | PARTIAL | M53 open (2 issues) | macOS running, dashboard built; D1 migration dropped, file-based approach kept |
+| 3 (Multi-Ecosystem) | COMPLETE | M54 (builders done) | Cargo, NPM, PyPI, RubyGems, Go, CPAN, Cask all integrated |
+| 4 (Automation) | PARTIAL | No milestone | Auto-merge done, checksum drift monitoring; re-queue script broken |
+| 5 (Platform Matrix) | MOSTLY DONE | No milestone | 11-environment matrix (exceeds 5-env plan), dashboard, state reconciliation |
+
+### What Diverged from the Original Design
+
+1. **Failure backend stayed file-based.** The design called for Cloudflare Worker + D1. In practice, JSONL files in `data/failures/` with a dashboard at `website/pipeline/` have handled analysis needs. The D1 migration (#1190) is an open question, not a certainty.
+
+2. **Circuit breaker uses consecutive failures, not rate.** The design specified rate-based thresholds. Implementation uses 5 consecutive failures as the trip signal, stored in `batch-control.json`. Simpler, and it works.
+
+3. **11 environments instead of 5.** The validation matrix grew to 5 Linux x86_64 distros + 4 Linux arm64 + 2 macOS. This catches distro-specific glibc differences and was worth the CI cost.
+
+4. **Auto-merge arrived early.** Originally Phase 4, auto-merge was built in Phase 1b and gated on validation pass plus `run_command` absence.
+
+5. **Source builds removed.** The design mentioned source builds as a fallback. Source builds are no longer supported in the pipeline.
+
+6. **Purpose-built CLI tools.** The design assumed the existing `tsuku create` CLI would be wrapped. Instead, several dedicated tools were built: `cmd/batch-generate/`, `cmd/seed-queue/`, `cmd/queue-analytics/`, `cmd/bootstrap-queue/`.
+
+7. **Disambiguation system.** Not in the original design. A full disambiguation system with audit trail was built to handle package name collisions across ecosystems.
+
+8. **Discovery system.** Not in the original design. A system for finding new tools to add to the queue was built.
+
+9. **Dep mapping.** `data/dep-mapping.json` provides Homebrew dependency name resolution, beyond the original "blocked_by" tracking.
+
+### What Remains
+
+See the Remaining Work section at the end of this document for the full list. Key items:
+- 3 open issues across 2 milestones
+- Script format mismatches (gap-analysis.sh, requeue-unblocked.sh)
+- Schema file vs live format divergence
+- System library backfill strategy (#1191)
+- DESIGN-system-lib-backfill.md never created (#1191)
+
 ## Context and Problem Statement
 
-Tsuku has successfully separated embedded recipes (17 core bootstrapping tools) from registry recipes (155 installable tools). The registry separation design enables scaling beyond a few hundred recipes, but the current recipe count is far below the potential: Homebrew alone has 8,170 formulas, and popular vendor taps (HashiCorp, MongoDB, AWS) add hundreds more.
+Tsuku's registry has grown from 155 recipes to 329, driven by an automated batch pipeline that runs hourly. The pipeline covers all major deterministic ecosystems: Homebrew (143 recipes, 43.5%), GitHub releases (97, 29.5%), NPM (52, 15.8%), plus Go, PyPI, Cargo, Gem, Nix, and CPAN. An 11-environment validation matrix (5 Linux x86_64 distros, 4 Linux arm64, 2 macOS) tests every generated recipe before merge.
 
-Three challenges prevent scaling to thousands of recipes:
+The initial question of "how to build the pipeline" has been answered. What remains:
 
-1. **Generation is manual**: Each recipe requires running `tsuku create --from <source>` and validating the output. There's no batch generation or CI pipeline.
+1. **Quality gaps in tooling**: Several scripts have format mismatches with the live data. `gap-analysis.sh` reads `*.json` but failures are now `*.jsonl`. `requeue-unblocked.sh` reads the old `priority-queue-$ECOSYSTEM.json` format instead of the unified `priority-queue.json`. JSON schema files describe the old seed format (`packages[]`) but the live queue uses `entries[]`.
 
-2. **System dependencies are incomplete**: Many Homebrew formulas depend on libraries (libpng, sqlite, curl) that tsuku doesn't yet provide. When these deps are missing, recipes fail to install.
+2. **System dependencies are still incomplete**: About 50 recipes (15% exclusion rate) can't be generated because they need system libraries tsuku doesn't provide. Adding ~20 core libraries would unblock hundreds of Homebrew formulas.
 
-3. **Quality assurance at scale**: With hundreds of recipes, how do we ensure they work? Sandbox validation helps for LLM-generated recipes, but deterministic recipes skip sandbox testing.
+3. **Failure analysis needs attention**: The failure backend stayed file-based (JSONL in `data/failures/`) rather than migrating to a database. This works for current scale but limits querying and automated re-queue. The design for the failure analysis backend (#1190) was never created.
+
+4. **Pipeline operations debt**: The batch-operations workflow process job is a stub. The circuit breaker uses consecutive failure counting (5 failures) rather than the rate-based approach in the original design. These work but diverge from spec.
 
 ### Why Now
 
-The recipe registry separation (M30-M32) is nearing completion. The infrastructure exists to host thousands of recipes, but without recipes to host, the infrastructure provides no user value. Scaling the registry is the natural next step to make tsuku useful for real-world development.
+The batch pipeline is operational and generating recipes at steady pace. The registry has doubled in size since this design was written. Addressing the remaining gaps will improve pipeline reliability and unblock the next wave of recipes.
 
 ### Success Criteria
 
@@ -185,7 +235,7 @@ The recipe registry separation (M30-M32) is nearing completion. The infrastructu
 - **Platform coverage**: >90% of recipes work on linux-glibc and darwin; musl coverage is best-effort
 
 **Infrastructure metrics (secondary):**
-- **Short term**: 500 validated recipes covering the most-requested developer tools
+- **Short term**: 500 validated recipes covering the most-requested developer tools (329 achieved, 66% of target)
 - **Medium term**: 2,000+ recipes across all major ecosystems (Homebrew, crates.io, npm, PyPI)
 - **Quality bar**: <1% installation failure rate for validated recipes
 
@@ -194,11 +244,12 @@ The recipe registry separation (M30-M32) is nearing completion. The infrastructu
 ### Scope
 
 **In scope:**
-- Automated batch generation of recipes from known sources
-- Prioritization criteria for which recipes to generate first
-- System dependency backfill strategy
-- Quality assurance for generated recipes
+- Automated batch generation of recipes from known sources (operational)
+- Prioritization criteria for which recipes to generate first (operational)
+- System dependency backfill strategy (not yet started)
+- Quality assurance for generated recipes (operational, 11-environment matrix)
 - Support for popular Homebrew taps (hashicorp, mongodb, etc.)
+- Closing tooling debt (script format mismatches, schema drift)
 
 **Out of scope:**
 - User-submitted recipes (community contributions)
@@ -234,9 +285,9 @@ Analysis of existing tsuku builders reveals which are ready for scale and which 
 | GitHub Release | Active | **No (LLM-only)** | **No** | Major: no deterministic path |
 
 **Key findings:**
-- 8 builders are fully deterministic and ready for batch generation
-- Homebrew is 85-90% deterministic via bottle inspection; LLM fallback handles edge cases
-- **GitHub Release builder is LLM-only** - significant gap since many tools distribute via GitHub releases
+- 8 builders are fully deterministic and integrated in the batch pipeline
+- Homebrew is 85-90% deterministic via bottle inspection; LLM fallback handles edge cases interactively
+- **GitHub Release builder is LLM-only** but accounts for 97 recipes (29.5% of registry), suggesting manual creation at scale is viable for this ecosystem
 
 ### Builder Gaps Requiring Tactical Work
 
@@ -511,9 +562,9 @@ The registry scale strategy is a **fully deterministic pipeline** that generates
 
 ### Target Environments
 
-Validation runs across a matrix of target environments. Recipes can have **partial platform coverage** - a recipe that works on 3 of 5 environments is still valuable and should merge with appropriate platform constraints.
+Validation runs across an 11-environment matrix, exceeding the original 5-environment plan. Recipes can have **partial platform coverage** - a recipe that works on some environments is still valuable and merges with appropriate platform constraints.
 
-**Target environment matrix:**
+**Original plan (5 environments):**
 
 | Environment | Runner | Priority | Notes |
 |-------------|--------|----------|-------|
@@ -523,9 +574,11 @@ Validation runs across a matrix of target environments. Recipes can have **parti
 | `darwin-arm64` | macos-14 | High | Apple Silicon (primary Mac target) |
 | `linux-musl-x86_64` | alpine container | Low | Alpine/container use cases |
 
+**Actual implementation (11 environments):** The pipeline now validates across 5 Linux x86_64 distros, 4 Linux arm64 distros, and 2 macOS environments. This broader matrix catches distro-specific issues (glibc version differences, package manager behavior) that the original 5-environment plan would have missed.
+
 **Platform-specific considerations:**
 
-- **Homebrew bottles**: Only available for glibc Linux and macOS. Musl users need alternative sources or source builds.
+- **Homebrew bottles**: Only available for glibc Linux and macOS. Musl users need alternative sources. (Note: source builds are no longer supported in the pipeline.)
 - **Ecosystem builders**: Cargo/Go binaries built on the runner match the runner's libc. Musl requires explicit cross-compilation.
 - **macOS costs**: 10x Linux CI minutes. May sample or defer to nightly for cost control.
 
@@ -534,7 +587,7 @@ Validation runs across a matrix of target environments. Recipes can have **parti
 **Contributor backfill path:** When a recipe doesn't support an environment, contributors can:
 1. Add an alternative source that works (e.g., `--from cargo:ripgrep` might build a musl-compatible binary)
 2. Add platform-specific download URLs if upstream provides musl binaries
-3. Add source build steps for environments without pre-built binaries
+3. Add platform-specific download URLs if upstream provides alternative binaries
 
 This allows the automated pipeline to handle the common cases while community contributions fill gaps for niche environments.
 
@@ -618,17 +671,13 @@ The batch pipeline runs in **deterministic-only mode** (no LLM fallback). Failur
 | Category | Capability Needed | Example |
 |----------|-------------------|---------|
 | `no_bottles` | Homebrew source fallback | formulas without bottles |
-| `build_from_source` | Source build action | tools requiring compilation |
+| `build_from_source` | ~~Source build action~~ No longer supported | tools requiring compilation (excluded from pipeline) |
 | `no_platform_assets` | Platform matrix expansion | tools missing Linux/macOS builds |
 | `missing_dependency` | System library recipes | tools needing libpng, sqlite |
 | `binary_not_found` | Improved executable discovery | non-standard binary locations |
 | `complex_archive` | Advanced archive inspection | nested or unusual structures |
 
-**Storage:** Backend storage (R2, D1, or similar) with JSONL ingestion per batch run, enabling:
-- Capability gap reports showing which dependencies block the most popular packages
-- Feedback loop to re-prioritize the queue (skip structural failures, retry transient ones)
-- Historical tracking of gap closure over time
-- Query interface for operators to analyze patterns
+**Storage:** The original design called for backend storage (R2, D1, or similar). In practice, failure records are stored as file-based JSONL in `data/failures/`, which has been sufficient for current scale. SLI metrics live in `data/metrics/`. A full HTML dashboard at `website/pipeline/` provides operator visibility. The open question is whether the file-based approach needs to migrate to D1 as recipe count grows (see Remaining Work).
 
 **No API key = deterministic-only:** Running `tsuku create` without LLM API keys (ANTHROPIC_API_KEY, GOOGLE_API_KEY) naturally produces deterministic-only behavior for ecosystem builders. The Homebrew builder requires refactoring to support this pattern - currently it fails early if no LLM is available, even when deterministic bottle inspection would succeed. After refactoring, Homebrew should attempt deterministic generation first and only fail if both deterministic fails AND no LLM is available.
 
@@ -706,7 +755,7 @@ When a package fails due to missing dependencies, the failure record must track 
 
 This creates a feedback loop: failures identify missing capabilities, capabilities are added, blocked packages automatically retry.
 
-**Implementation note:** This is backend infrastructure (similar to telemetry worker), not part of the tsuku CLI. **Architecture constraint:** Must be Cloudflare-based (Worker + D1/R2) to maintain consistency with existing telemetry infrastructure and avoid new operational surface area.
+**Implementation note:** The original plan called for Cloudflare-based infrastructure (Worker + D1/R2) to maintain consistency with existing telemetry. In practice, the file-based approach (JSONL in `data/failures/`, scripts for analysis, HTML dashboard at `website/pipeline/`) has handled current needs. The re-queue trigger described above isn't yet operational: `requeue-unblocked.sh` exists but has a format mismatch with the unified queue file.
 
 ### Generation Flow
 
@@ -789,7 +838,9 @@ This is a strategic design. Implementation follows a **walking skeleton** approa
 
 **Timing**: Runs in parallel with Phase 0 and Phase 1a. No dependencies on batch infrastructure.
 
-### Phase 0: Visibility Infrastructure (No Batch Recipes)
+### Phase 0: Visibility Infrastructure (No Batch Recipes) -- COMPLETE
+
+**Status**: Delivered. Schemas in `data/schemas/`, scripts for seeding/validation/gap-analysis/rollback, priority queue seeded. M57 closed.
 
 **Goal**: Build the tracking system before generating anything. See the scope, understand the gap.
 
@@ -817,7 +868,9 @@ This is a strategic design. Implementation follows a **walking skeleton** approa
 
 **What's NOT in Phase 0**: No batch recipe generation, no CI workflows, no backend services.
 
-### Phase 1a: Homebrew Builder Validation (Single Formula)
+### Phase 1a: Homebrew Builder Validation (Single Formula) -- COMPLETE
+
+**Status**: Delivered. `DeterministicFailedError` in `internal/builders/errors.go`, deterministic-only mode in `homebrew.go`, LLM lazily initialized. M51 closed.
 
 **Goal**: Validate the Homebrew builder produces correct deterministic output or structured failure before attempting batch generation.
 
@@ -839,7 +892,9 @@ This is a strategic design. Implementation follows a **walking skeleton** approa
 
 **What's NOT in Phase 1a**: No batch workflow, no CI pipeline, no queue integration.
 
-### Phase 1b: Batch Pipeline Integration (Homebrew, Linux Only)
+### Phase 1b: Batch Pipeline Integration (Homebrew, Linux Only) -- COMPLETE
+
+**Status**: Delivered. `batch-generate.yml` runs hourly, `internal/batch/orchestrator.go` manages generation, circuit breaker in `batch-control.json`, SLI metrics in `data/metrics/`, auto-merge gated on validation and `run_command` absence. M52 closed (16/16).
 
 **Goal**: Integrate Homebrew builder with batch workflow. Generate, validate, track failures, and merge for ONE ecosystem.
 
@@ -853,8 +908,13 @@ This is a strategic design. Implementation follows a **walking skeleton** approa
 - **Failure tracking**: File-based JSONL with blocked-by extraction
 - **Operational controls**: Emergency stop, recipe rollback, runbooks
 - **Basic SLI collection**: Success rate, validation pass rate (JSONL-based)
-- **Circuit breaker**: Auto-pause ecosystem if success rate <50% for 10 consecutive attempts
+- **Circuit breaker**: Auto-pause ecosystem on 5 consecutive failures (originally designed as rate-based; implemented as consecutive count in `batch-control.json`)
 - **Rate limiting (RATE-1)**: Conservative defaults (1 req/sec for GitHub API)
+
+**Divergences from plan**:
+- Circuit breaker uses 5 consecutive failures, not rate-based as originally designed
+- Auto-merge was implemented here (originally planned for Phase 4)
+- Multiple purpose-built CLI tools were created: `cmd/batch-generate/`, `cmd/seed-queue/`, `cmd/queue-analytics/`, `cmd/bootstrap-queue/`
 
 **Deliverables**:
 1. Batch generation workflow for Homebrew + Linux
@@ -873,21 +933,29 @@ This is a strategic design. Implementation follows a **walking skeleton** approa
 
 **What's NOT in Phase 1b**: No other ecosystems, no macOS, no auto-merge, no backend services.
 
-### Phase 2: Failure Analysis Backend + macOS Platform
+### Phase 2: Failure Analysis Backend + macOS Platform -- PARTIALLY COMPLETE
+
+**Status**: macOS validation is running. Full dashboard at `website/pipeline/`. The failure backend uses file-based JSONL in `data/failures/`; the Cloudflare Worker/D1 migration was dropped (#1190 closed as not planned). M53 still open with 2 issues (#1277, #1278).
 
 **Goal**: Move from files to backend service. Add macOS platform validation.
 
 **Rationale**: Now that we have failure data, we need to query it efficiently. Adding macOS is minimal incremental effort once the pipeline exists.
 
-**Components**:
-- **Failure storage backend** (DESIGN-batch-failure-analysis.md): Cloudflare Worker + D1
-- **Query API**: Packages blocked by X, top gaps by impact
-- **Priority queue migration**: Move from static JSON to D1
-- **Platform matrix**: Add darwin-arm64 validation
-- **Cost controls**: macOS budget caps, sampling strategy (validate in dry-run first)
-- **Observability**: SLI metrics, SLO definitions, alerting
+**Planned components**:
+- **Failure storage backend** (DESIGN-batch-failure-analysis.md): Cloudflare Worker + D1 -- NOT BUILT, stayed file-based
+- **Query API**: Packages blocked by X, top gaps by impact -- NOT BUILT as API; dashboard provides some visibility
+- **Priority queue migration**: Move from static JSON to D1 -- NOT DONE
+- **Platform matrix**: Add darwin-arm64 validation -- DONE (exceeded: 11 environments vs planned 5)
+- **Cost controls**: macOS budget caps, sampling strategy -- DONE
+- **Observability**: SLI metrics, SLO definitions, alerting -- DONE (SLI metrics in `data/metrics/`, dashboard at `website/pipeline/`)
 
-**Deliverables**:
+**Divergences from plan**:
+- The D1 migration didn't happen. File-based JSONL has been sufficient for current needs.
+- DESIGN-batch-failure-analysis.md was never created (issue #1190 remains open)
+- Platform matrix grew to 11 environments instead of the planned 5
+- A full HTML dashboard was built beyond what was specified
+
+**Deliverables (as planned)**:
 1. Cloudflare Worker + D1 for failure and queue storage
 2. Query API for gap analysis
 3. macOS validation with cost controls
@@ -901,7 +969,9 @@ This is a strategic design. Implementation follows a **walking skeleton** approa
 - Alerting fires on simulated success rate drop
 - 200+ recipes validated on both Linux and macOS
 
-### Phase 3: Multi-Ecosystem Deterministic
+### Phase 3: Multi-Ecosystem Deterministic -- COMPLETE
+
+**Status**: All deterministic builders integrated and running. Cargo, NPM, PyPI, RubyGems, Go, CPAN, and Cask are all producing recipes in the hourly pipeline.
 
 **Goal**: Add remaining deterministic ecosystems. All use the same infrastructure.
 
@@ -916,22 +986,26 @@ This is a strategic design. Implementation follows a **walking skeleton** approa
 2. Cross-ecosystem priority queue with popularity scoring
 3. Per-ecosystem failure tracking and controls
 
+**Note on exit criteria**: The registry has 329 recipes, not the 1000+ target. Most growth came from Homebrew (143) and GitHub releases (97) rather than the deterministic ecosystems. NPM is the strongest deterministic contributor at 52 recipes.
+
 **Exit Criteria**:
 - Each ecosystem generates at least 50 recipes
 - Per-ecosystem pause/resume tested
 - Rate limiting prevents API throttling (no 429 errors in logs)
 - 1000+ total recipes in registry
 
-### Phase 4: Automation & Intelligence
+### Phase 4: Automation & Intelligence -- PARTIALLY COMPLETE
+
+**Status**: Auto-merge is implemented and gated on validation pass + `run_command` absence. Checksum drift monitoring exists (`checksum-drift.yaml`). Re-queue script exists but has a format mismatch (`requeue-unblocked.sh` reads old `priority-queue-$ECOSYSTEM.json` instead of unified `priority-queue.json`).
 
 **Goal**: Auto-merge, re-queue triggers, advanced analysis.
 
 **Components**:
-- **Auto-merge** (DESIGN-batch-recipe-generation.md): For recipes passing all gates
-- **Re-queue triggers** (DESIGN-batch-failure-analysis.md): Auto re-queue when deps available
-- **Structural vs transient classification**: Don't retry structural failures
-- **Post-merge monitoring**: Checksum drift detection
-- **Request-based priority**: Boost packages users are requesting
+- **Auto-merge** (DESIGN-batch-recipe-generation.md): For recipes passing all gates -- DONE
+- **Re-queue triggers** (DESIGN-batch-failure-analysis.md): Auto re-queue when deps available -- EXISTS BUT BROKEN (format mismatch)
+- **Structural vs transient classification**: Don't retry structural failures -- DONE
+- **Post-merge monitoring**: Checksum drift detection -- DONE (`checksum-drift.yaml`)
+- **Request-based priority**: Boost packages users are requesting -- NOT DONE
 
 **Deliverables**:
 1. Auto-merge for safe recipes (no `run_command`)
@@ -945,16 +1019,24 @@ This is a strategic design. Implementation follows a **walking skeleton** approa
 - Post-merge monitoring detects simulated checksum change
 - 5000+ recipes in registry
 
-### Phase 5: Platform Matrix Completion + Operational Polish
+### Phase 5: Platform Matrix Completion + Operational Polish -- MOSTLY COMPLETE
+
+**Status**: 11-environment validation matrix operational (exceeds the 5-environment plan). Dashboard at `website/pipeline/`. State reconciliation exists. Some script debt remains.
 
 **Goal**: Complete platform coverage, operational dashboards.
 
 **Components**:
-- **Remaining platforms**: linux-glibc-arm64, darwin-x86_64, linux-musl-x86_64
-- **Cross-job coordination**: Distributed rate limiting (RATE-2)
-- **Dashboards**: Historical trends, operator visibility
-- **Advanced alerting**: Fatigue prevention, severity tuning
-- **State reconciliation**: Detect/repair queue inconsistencies
+- **Remaining platforms**: linux-glibc-arm64, darwin-x86_64, linux-musl-x86_64 -- DONE (and then some: 11 environments total)
+- **Cross-job coordination**: Distributed rate limiting (RATE-2) -- DONE
+- **Dashboards**: Historical trends, operator visibility -- DONE (`website/pipeline/`)
+- **Advanced alerting**: Fatigue prevention, severity tuning -- PARTIALLY DONE
+- **State reconciliation**: Detect/repair queue inconsistencies -- DONE
+
+**Divergences from plan**:
+- Validation matrix grew to 11 environments (5 Linux x86_64 distros + 4 Linux arm64 + 2 macOS)
+- Full HTML dashboard pages were built, going beyond the original spec
+- `batch-operations.yml` process job is still a stub with placeholder code
+- Some scripts have format mismatches with live data (see Remaining Work)
 
 **Deliverables**:
 1. Full 5-environment validation matrix
@@ -970,69 +1052,75 @@ This is a strategic design. Implementation follows a **walking skeleton** approa
 
 ### Phase Summary
 
-| Phase | Goal | Recipes Out | Key Infrastructure |
-|-------|------|-------------|-------------------|
-| Spike | Validate assumption | 0 | Homebrew deterministic rate measurement |
-| Day 1 | Quick user value | ~20 | Manual generation, sampled macOS |
-| 0 | Visibility | 0 | Queue + schema + rollback scripts |
-| 1a | Builder validation | 0 | Homebrew deterministic mode |
-| 1b | Homebrew E2E | ~100 | Batch pipeline + SLIs + circuit breaker |
-| 2 | Backend + macOS | ~200 | D1 + query API + observability |
-| 3 | Multi-ecosystem | ~1000 | All deterministic builders |
-| 4 | Automation | ~5000 | Auto-merge + re-queue |
-| 5 | Full platform | ~10000+ | Complete matrix + dashboards |
+| Phase | Goal | Planned Recipes | Actual State | Key Infrastructure |
+|-------|------|-----------------|--------------|-------------------|
+| Spike | Validate assumption | 0 | COMPLETE | Homebrew deterministic rate measurement |
+| Day 1 | Quick user value | ~20 | COMPLETE | Manual generation, sampled macOS |
+| 0 | Visibility | 0 | COMPLETE | Queue + schema + rollback scripts |
+| 1a | Builder validation | 0 | COMPLETE | Homebrew deterministic mode |
+| 1b | Homebrew E2E | ~100 | COMPLETE (143 Homebrew) | Batch pipeline + SLIs + circuit breaker |
+| 2 | Backend + macOS | ~200 | PARTIAL (329 total, no D1) | File-based failures + macOS + dashboard |
+| 3 | Multi-ecosystem | ~1000 | COMPLETE (all builders) | All deterministic builders |
+| 4 | Automation | ~5000 | PARTIAL (329 total) | Auto-merge done, re-queue broken |
+| 5 | Full platform | ~10000+ | MOSTLY DONE (11 envs) | 11-env matrix + dashboard |
+
+**Note on recipe counts**: The registry reached 329 recipes across all phases combined, well below the original Phase 4 target of 5,000. Recipe growth is steady but slower than projected. The 50 excluded recipes (15% exclusion rate) and the system library gap account for part of the shortfall. Getting to 500 requires addressing the exclusion backlog and fixing the re-queue pipeline.
 
 ### Milestones
 
-Milestones align with phases:
+Milestones align with phases. 5 of 8 milestones are closed.
 
-- **Validation Spike**: Pre-Phase 0 - Validate Homebrew deterministic rate (gate: >70% to proceed)
-- **Day 1 Batch**: Parallel track - 20 high-impact tools manually generated and merged
-- **Tool Backlog Visibility**: Phase 0 - Queue schema, failure schema, rollback scripts, seeded data
-- **Deterministic Homebrew Builder**: Phase 1a - Homebrew deterministic mode validated on single formulas
-- **Batch Pipeline**: Phase 1b - Batch workflow, SLIs, circuit breaker, 50+ recipes merged
-- **Failure Backend**: Phase 2 - Cloudflare Worker + D1, query API, macOS validation, observability
-- **Multi-Ecosystem**: Phase 3 - All ecosystem builders, cross-ecosystem scoring, ecosystem controls
-- **Automation**: Phase 4 - Auto-merge, re-queue triggers, post-merge monitoring
-- **Platform Complete**: Phase 5 - Full platform matrix, dashboards, state reconciliation
+- **Validation Spike**: Pre-Phase 0 - CLOSED - Homebrew deterministic rate validated
+- **Day 1 Batch**: Parallel track - CLOSED - High-impact tools manually generated and merged
+- **Tool Backlog Visibility (M50)**: Phase 0 - CLOSED - Queue schema, failure schema, rollback scripts, seeded data
+- **Visibility Infrastructure Schemas (M57)**: Phase 0 - CLOSED - Schemas and scripts delivered
+- **Deterministic Homebrew Builder (M51)**: Phase 1a - CLOSED - Homebrew deterministic mode validated
+- **Batch Pipeline (M52)**: Phase 1b - CLOSED - Batch workflow, SLIs, circuit breaker, 143 Homebrew recipes
+- **Failure Backend (M53)**: Phase 2 - OPEN (2 issues: #1277, #1278) - File-based failures operational, D1 migration dropped
+- **Multi-Ecosystem (M54)**: Phase 3+ - OPEN (1 issue: #1191 system library backfill) - All builders integrated
 
 ## Required Tactical Designs
 
 Tactical designs are organized by phase, reflecting the walking skeleton approach.
 
-### Pre-Phase 0 (Validation)
+### Pre-Phase 0 (Validation) -- COMPLETE
 
-| Design | Phase | Purpose |
-|--------|-------|---------|
-| (No design needed) | Spike | Run bottle inspection on 500 formulas to validate deterministic rate |
+| Design | Phase | Status | Purpose |
+|--------|-------|--------|---------|
+| (No design needed) | Spike | DONE | Run bottle inspection on 500 formulas to validate deterministic rate |
 
-### Phase 0-1b Prerequisites (Required for First Batch Recipe)
+### Phase 0-1b Prerequisites (Required for First Batch Recipe) -- COMPLETE
 
-| Design | Phase | Purpose |
-|--------|-------|---------|
-| DESIGN-homebrew-deterministic-mode.md | 1a | Refactor Homebrew builder to defer LLM initialization, enabling deterministic-only runs |
-| DESIGN-priority-queue.md | 0 | Package entity schema, scoring algorithm, static file format, schema versioning |
-| DESIGN-batch-recipe-generation.md | 1b | CI pipeline for batch generation, validation gates, SLIs, circuit breaker |
-| DESIGN-batch-operations.md | 0-1b | Rollback scripts (Phase 0), emergency stop, runbooks (Phase 1b) |
+| Design | Phase | Status | Purpose |
+|--------|-------|--------|---------|
+| [DESIGN-homebrew-deterministic-mode.md](current/DESIGN-homebrew-deterministic-mode.md) | 1a | Current | Refactor Homebrew builder to defer LLM initialization, enabling deterministic-only runs |
+| [DESIGN-priority-queue.md](current/DESIGN-priority-queue.md) | 0 | Current | Package entity schema, scoring algorithm, static file format, schema versioning |
+| [DESIGN-batch-recipe-generation.md](DESIGN-batch-recipe-generation.md) | 1b | Current | CI pipeline for batch generation, validation gates, SLIs, circuit breaker |
+| [DESIGN-batch-operations.md](current/DESIGN-batch-operations.md) | 0-1b | Current | Rollback scripts (Phase 0), emergency stop, runbooks (Phase 1b) |
+
 
 ### Phase 2+ Infrastructure (Required for Scale)
 
-| Design | Phase | Purpose |
-|--------|-------|---------|
-| DESIGN-batch-failure-analysis.md | 2 | Backend failure storage, query API, re-queue triggers |
-| DESIGN-system-lib-backfill.md | 3+ | Strategy for adding common library recipes (parallel workstream) |
+| Design | Phase | Status | Purpose |
+|--------|-------|--------|---------|
+| ~~DESIGN-batch-failure-analysis.md~~ | ~~2~~ | ~~NOT NEEDED (#1190 closed)~~ | ~~File-based JSONL approach kept; D1 migration dropped~~ |
+| DESIGN-system-lib-backfill.md | 3+ | NEVER CREATED (#1191 open) | Strategy for adding common library recipes (parallel workstream) |
+
+**On DESIGN-batch-failure-analysis.md**: Dropped. The file-based approach (JSONL in `data/failures/`, dashboard at `website/pipeline/`) is sufficient at current scale. #1190 was closed as not planned. The remaining M53 issues (#1277 top-blockers, #1278 hybrid prioritization) will build on the existing JSONL files.
+
+**On DESIGN-system-lib-backfill.md**: No longer blocked (was on #1190, now closed). With ~50 excluded recipes (15% exclusion rate) due to missing system libraries, this remains relevant for unlocking the next wave of growth.
 
 ### Design Notes
 
-**Validation spike is blocking**: Do not proceed to Phase 1 if Homebrew deterministic rate is <70%. The entire phasing assumes 85-90%.
+**Validation spike is blocking**: Do not proceed to Phase 1 if Homebrew deterministic rate is <70%. The entire phasing assumes 85-90%. (VALIDATED: rate met expectations.)
 
-**Phase 1 is split for risk reduction**: Phase 1a validates the Homebrew builder in isolation. Phase 1b integrates with batch pipeline. This prevents "big bang" integration risk.
+**Phase 1 is split for risk reduction**: Phase 1a validates the Homebrew builder in isolation. Phase 1b integrates with batch pipeline. This prevents "big bang" integration risk. (BOTH COMPLETE.)
 
-**Operational controls are front-loaded**: Rollback scripts are Phase 0 (before any recipes). SLIs and circuit breaker are Phase 1b (before scale). This addresses critique that observability came too late.
+**Operational controls are front-loaded**: Rollback scripts are Phase 0 (before any recipes). SLIs and circuit breaker are Phase 1b (before scale). This addresses critique that observability came too late. (DELIVERED.)
 
-**Day 1 batch is independent**: The parallel track of 20 high-impact tools requires no tactical designs. It uses existing `tsuku create` workflow with manual validation.
+**Day 1 batch is independent**: The parallel track of 20 high-impact tools requires no tactical designs. It uses existing `tsuku create` workflow with manual validation. (DONE.)
 
-**GitHub Release deterministic path**: Not included - GitHub releases are handled manually via user-facing LLM builder. This is explicitly out of scope for the automated pipeline.
+**GitHub Release deterministic path**: Not included - GitHub releases are handled manually via user-facing LLM builder. This is explicitly out of scope for the automated pipeline. (97 GitHub release recipes created manually, confirming this approach works.)
 
 ## Security Considerations
 
@@ -1120,54 +1208,74 @@ The following security requirements MUST be addressed in tactical designs:
 - **Cost**: LLM generation costs are bounded by prioritization
 - **Time**: Generating 5,000 recipes takes weeks, not days
 
-## Open Questions for Tactical Designs
+## Remaining Work
 
-Analysis by specialized agents identified the following unknowns that must be resolved during tactical design.
+This section replaces the original "Open Questions for Tactical Designs" section. Most questions from the original were answered during implementation. What remains is concrete work, not open questions.
 
-### High Priority (Blocks Implementation)
+### Script and Schema Debt
 
-| Question | Context | Tactical Design |
-|----------|---------|-----------------|
-| Validate Homebrew deterministic rate | The 85-90% estimate drives capacity planning but is unverified. Run bottle inspection against a sample of 500 formulas to validate. | Pre-work before tactical designs |
-| What storage backend for priority queue? | Options: D1 database, R2 JSON files, SQLite in repo. Affects query capability and concurrency. | DESIGN-priority-queue.md |
-| How to coordinate rate limits across parallel CI jobs? | RubyGems has 300/5min limit. GitHub Actions runners share IPs. | DESIGN-batch-recipe-generation.md |
-| What batch size per CI job? | Trade-off: more recipes = higher timeout risk. Estimate: 50-100 for Linux, 20-30 for macOS. | DESIGN-batch-recipe-generation.md |
-| How to map Homebrew deps to tsuku recipe names? | Formula depends on `libyaml`, tsuku might call it `yaml`. Enables `blocked_by` tracking. | DESIGN-batch-failure-analysis.md |
-| ~~How to distinguish structural vs transient failures?~~ | ~~Resolved: CLI exit code 5 (`ExitNetwork`) = transient (retry up to 3x). All other non-zero = structural (fail immediately). See Per-Environment Validation Results section.~~ | ~~DESIGN-batch-recipe-generation.md~~ |
-| How to run validation matrix efficiently? | 5 environments × N packages = 5N CI jobs. Parallelize? Sequential? Sample low-priority environments? | DESIGN-batch-recipe-generation.md |
-| ~~What's the minimum platform coverage to merge?~~ | ~~Resolved: At least 1 platform. Partial coverage acceptable — constrained recipe is more useful than no recipe. See Per-Environment Validation Results section.~~ | ~~DESIGN-batch-recipe-generation.md~~ |
+These are bugs and inconsistencies between scripts, schemas, and live data formats:
 
-### Medium Priority (Needed for Scale)
+| Item | Problem | Fix |
+|------|---------|-----|
+| `gap-analysis.sh` | Reads `*.json` but failures are now `*.jsonl` | Update glob pattern |
+| `requeue-unblocked.sh` | Reads old `priority-queue-$ECOSYSTEM.json` format | Update to read unified `priority-queue.json` |
+| `batch-operations.yml` process job | Stub with placeholder code | Implement or remove |
+| JSON schema files (`data/schemas/`) | Describe old seed format (`packages[]`) | Update to match live `entries[]` format |
 
-| Question | Context | Tactical Design |
-|----------|---------|-----------------|
-| How to aggregate popularity across ecosystems? | npm downloads vs crates.io downloads vs GitHub stars. Different scales. | DESIGN-priority-queue.md |
-| What failure record schema fields? | Per-environment results, blocked_by per environment, aggregation for reporting. Schema versioning? | DESIGN-batch-failure-analysis.md |
-| How to handle partial CI run recovery? | If batch fails after 50 of 100 packages, how to resume without re-processing? | DESIGN-batch-recipe-generation.md |
-| Platform validation cost strategy? | macOS costs 10x Linux ($400/month at scale). Musl requires container setup. ARM runners may have limited availability. How to balance coverage vs cost? | DESIGN-batch-recipe-generation.md |
-| What reports do operators need? | Gap reports, coverage dashboards, trend analysis. Format: JSON API? Markdown? | DESIGN-batch-failure-analysis.md |
+### Open Design Questions
 
-### Lower Priority (Can Iterate)
+| Question | Context | Status |
+|----------|---------|--------|
+| ~~Is D1 migration still needed?~~ | ~~File-based JSONL in `data/failures/` works at 329 recipes. D1 migration was dropped (#1190 closed as not planned). The file-based approach is sufficient; gap analysis tooling (#1277, #1278) will build on JSONL.~~ | ~~Resolved~~ |
+| System library backfill strategy | ~50 excluded recipes (15% exclusion rate) can't be generated due to missing system deps. Adding ~20 core libraries would unblock hundreds of Homebrew formulas. | Needs DESIGN-system-lib-backfill.md (#1191) |
+| What to do about the 50 excluded recipes | These are tools the pipeline can't generate deterministically. Manual creation? Improved heuristics? Accept the gap? | No issue yet |
+| ~~Request-based priority boosting~~ | ~~User install telemetry could feed into queue scoring. Decided not to pursue for now; popularity-based ordering is sufficient.~~ | ~~Deferred~~ |
 
-| Question | Context |
-|----------|---------|
-| What is "stale" for a recipe? | Upstream version changes but recipe was generated for older version. |
-| How do user requests (telemetry/issues) feed into queue? | Integration between telemetry worker and priority queue. |
-| What emergency stop procedures are needed? | Halt batch processing, rollback merged recipes, disable ecosystem. |
-| What access control for manual intervention? | Who can pause/resume ecosystems, adjust priorities? |
+### Open Issues
 
-### Required Operations Designs
+3 issues remain across 2 milestones:
 
-Based on critique analysis, operations designs are elevated to required status:
+| Issue | Milestone | Description |
+|-------|-----------|-------------|
+| [#1277](https://github.com/tsukumogami/tsuku/issues/1277) | M53 (Failure Backend) | Top-blockers report for gap analysis |
+| [#1278](https://github.com/tsukumogami/tsuku/issues/1278) | M53 (Failure Backend) | Hybrid prioritization (popularity + blocking impact) |
+| [#1191](https://github.com/tsukumogami/tsuku/issues/1191) | M54 (Multi-Ecosystem) | Design system library backfill strategy |
 
-| Design | Target Repo | Purpose |
-|--------|-------------|---------|
-| DESIGN-batch-operations.md | tsuku | Runbooks, emergency procedures, cost controls, incident response, rollback capabilities |
+### Documentation Debt
 
-**Why required**: Operations readiness is not optional for a system that auto-merges recipes. Without runbooks and emergency procedures, operators will improvise during incidents. This design must define: cost caps, SLIs/SLOs, alerting thresholds, and manual intervention tooling.
+| Item | Action |
+|------|--------|
+| ~~DESIGN-batch-failure-analysis.md~~ | ~~Not needed. #1190 closed as not planned. File-based approach kept.~~ |
+| DESIGN-system-lib-backfill.md | Never created. Issue #1191 still open. No longer blocked. |
 
-### Proposed Additional Tactical Designs
+### Resolved Questions (from original Open Questions section)
 
-The following design is recommended but not required:
+These were open when the design was written and have since been answered by implementation:
 
-1. **DESIGN-operator-dashboard.md**: Minimum viable reports, dashboard infrastructure, success metrics, alerting
+| Question | Resolution |
+|----------|------------|
+| Validate Homebrew deterministic rate | Validated. Rate met the 85-90% estimate. |
+| Storage backend for priority queue | Static JSON files in repo. Works at current scale. |
+| Rate limit coordination across CI jobs | Handled by orchestrator in `internal/batch/orchestrator.go`. |
+| Batch size per CI job | Determined empirically during pipeline operation. |
+| Homebrew dep name mapping | Solved via `data/dep-mapping.json`. |
+| Structural vs transient failure distinction | CLI exit code 5 (`ExitNetwork`) = transient. All others = structural. |
+| Minimum platform coverage to merge | At least 1 platform. Partial coverage is fine. |
+| Validation matrix efficiency | 11-environment matrix runs in parallel. Cost is acceptable. |
+| Popularity aggregation across ecosystems | Handled by priority queue scoring in seed tools. |
+| Partial CI run recovery | Orchestrator handles resume. |
+| Platform validation cost strategy | macOS runs hourly, cost managed via sampling. |
+| Operator reports | Full HTML dashboard at `website/pipeline/`. |
+| Emergency stop procedures | Circuit breaker in `batch-control.json`, emergency stop tested. |
+
+### Built Beyond Original Scope
+
+These capabilities weren't in the original design but were built during implementation:
+
+- **Disambiguation system** with audit trail for package name collisions across ecosystems
+- **11-environment validation matrix** (original spec: 5 environments)
+- **Purpose-built CLI tools**: `cmd/batch-generate/`, `cmd/seed-queue/`, `cmd/queue-analytics/`, `cmd/bootstrap-queue/`
+- **Dependency name mapping** (`data/dep-mapping.json`) for Homebrew dep resolution
+- **Full HTML dashboard** at `website/pipeline/` with pipeline status and metrics
+- **Discovery system** for finding new tools to add to the queue
