@@ -40,30 +40,6 @@ Current
 | ~~[#1816: docs(ci): document batch size configuration and tuning](https://github.com/tsukumogami/tsuku/issues/1816)~~ | [#1814](https://github.com/tsukumogami/tsuku/issues/1814), [#1815](https://github.com/tsukumogami/tsuku/issues/1815) | simple |
 | ~~_Documents the config file format, `workflow_dispatch` override, and tuning guidance. Notes the follow-up work for `validate-golden-execution.yml` per-recipe jobs._~~ | | |
 
-### Dependency Graph
-
-```mermaid
-graph LR
-    I1814["#1814: Batch test-changed-recipes"]
-    I1815["#1815: Batch validate-golden-recipes"]
-    I1816["#1816: Document batch config"]
-
-    I1814 --> I1815
-    I1814 --> I1816
-    I1815 --> I1816
-
-    classDef done fill:#c8e6c9
-    classDef ready fill:#bbdefb
-    classDef blocked fill:#fff9c4
-    classDef needsDesign fill:#e1bee7
-    classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
-
-    class I1814 done
-    class I1815 done
-    class I1816 done
-```
-
-**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design
 
 ## Context and Problem Statement
 
