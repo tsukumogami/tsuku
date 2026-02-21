@@ -59,14 +59,14 @@ Planned
 | ~~_Automated cron triggers replacing manual `workflow_dispatch` for queue seeding and batch generation._~~ | | |
 | ~~[#1253: pinned release support](https://github.com/tsukumogami/tsuku/issues/1253)~~ | ~~None~~ | ~~testable~~ |
 | ~~_Install a pinned tsuku release in batch-generate via `install.sh`, with fallback to building from source._~~ | | |
-| [M53: Failure Backend](https://github.com/tsukumogami/tsuku/milestone/53) | [M52](https://github.com/tsukumogami/tsuku/milestone/52) | |
-| _Gap analysis and prioritization tooling. File-based JSONL in `data/failures/` is the chosen approach; D1 migration was dropped._ | | |
+| ~~[M53: Failure Backend](https://github.com/tsukumogami/tsuku/milestone/53)~~ | ~~[M52](https://github.com/tsukumogami/tsuku/milestone/52)~~ | |
+| ~~_Gap analysis and prioritization tooling. File-based JSONL in `data/failures/` is the chosen approach; D1 migration was dropped._~~ | | |
 | ~~[#1190: design failure analysis backend](https://github.com/tsukumogami/tsuku/issues/1190)~~ | ~~[#1189](https://github.com/tsukumogami/tsuku/issues/1189)~~ | ~~testable~~ |
 | ~~_Closed as not planned. File-based JSONL approach is sufficient; D1 migration not justified at current scale._~~ | | |
 | ~~[#1277: top-blockers report for gap analysis](https://github.com/tsukumogami/tsuku/issues/1277)~~ | ~~None~~ | ~~simple~~ |
 | ~~_Closed. Functionality shipped via pipeline dashboard (`website/pipeline/`) with transitive blocker computation in `internal/dashboard/`._~~ | | |
-| [#1278: re-order queue entries within tiers by blocking impact](https://github.com/tsukumogami/tsuku/issues/1278) | None | testable |
-| _Use existing transitive blocker computation to re-order entries within priority tiers, so high-impact packages are generated first._ | | |
+| ~~[#1278: re-order queue entries within tiers by blocking impact](https://github.com/tsukumogami/tsuku/issues/1278)~~ | ~~None~~ | ~~testable~~ |
+| ~~_Use existing transitive blocker computation to re-order entries within priority tiers, so high-impact packages are generated first._~~ | | |
 | [M54: Multi-Ecosystem](https://github.com/tsukumogami/tsuku/milestone/54) | [M53](https://github.com/tsukumogami/tsuku/milestone/53) | |
 | _All deterministic builders integrated and running. System library backfill remains._ | | |
 | [#1191: design system library backfill strategy](https://github.com/tsukumogami/tsuku/issues/1191) | None | simple |
@@ -153,7 +153,7 @@ graph TD
     class I1253 done
     class I1190 done
     class I1277 done
-    class I1278 ready
+    class I1278 done
     class I1191 needsDesign
 ```
 
@@ -170,7 +170,7 @@ This section summarizes what shipped, what diverged from the original design, an
 | 0 (Visibility) | COMPLETE | M50, M57 closed | Schemas, scripts, priority queue seeded |
 | 1a (Homebrew Deterministic) | COMPLETE | M51 closed | `DeterministicFailedError`, lazy LLM init, deterministic-only mode |
 | 1b (Batch Pipeline) | COMPLETE | M52 closed | Hourly pipeline, orchestrator, circuit breaker, SLI metrics, auto-merge |
-| 2 (Failure Backend + macOS) | PARTIAL | M53 open (2 issues) | macOS running, dashboard built; D1 migration dropped, file-based approach kept |
+| 2 (Failure Backend + macOS) | COMPLETE | M53 closed | macOS running, dashboard built; D1 migration dropped, file-based approach kept; within-tier reordering via `cmd/reorder-queue/` |
 | 3 (Multi-Ecosystem) | COMPLETE | M54 (builders done) | Cargo, NPM, PyPI, RubyGems, Go, CPAN, Cask all integrated |
 | 4 (Automation) | PARTIAL | No milestone | Auto-merge done, checksum drift monitoring; re-queue script broken |
 | 5 (Platform Matrix) | MOSTLY DONE | No milestone | 11-environment matrix (exceeds 5-env plan), dashboard, state reconciliation |
@@ -187,7 +187,7 @@ This section summarizes what shipped, what diverged from the original design, an
 
 5. **Source builds removed.** The design mentioned source builds as a fallback. Source builds are no longer supported in the pipeline.
 
-6. **Purpose-built CLI tools.** The design assumed the existing `tsuku create` CLI would be wrapped. Instead, several dedicated tools were built: `cmd/batch-generate/`, `cmd/seed-queue/`, `cmd/queue-analytics/`, `cmd/bootstrap-queue/`.
+6. **Purpose-built CLI tools.** The design assumed the existing `tsuku create` CLI would be wrapped. Instead, several dedicated tools were built: `cmd/batch-generate/`, `cmd/seed-queue/`, `cmd/queue-analytics/`, `cmd/bootstrap-queue/`, `cmd/reorder-queue/`.
 
 7. **Disambiguation system.** Not in the original design. A full disambiguation system with audit trail was built to handle package name collisions across ecosystems.
 
@@ -198,7 +198,7 @@ This section summarizes what shipped, what diverged from the original design, an
 ### What Remains
 
 See the Remaining Work section at the end of this document for the full list. Key items:
-- 2 open issues across 2 milestones
+- 1 open issue across 1 milestone
 - Script format mismatches (gap-analysis.sh, requeue-unblocked.sh)
 - Schema file vs live format divergence
 - System library backfill strategy (#1191)
@@ -910,7 +910,7 @@ This is a strategic design. Implementation follows a **walking skeleton** approa
 **Divergences from plan**:
 - Circuit breaker uses 5 consecutive failures, not rate-based as originally designed
 - Auto-merge was implemented here (originally planned for Phase 4)
-- Multiple purpose-built CLI tools were created: `cmd/batch-generate/`, `cmd/seed-queue/`, `cmd/queue-analytics/`, `cmd/bootstrap-queue/`
+- Multiple purpose-built CLI tools were created: `cmd/batch-generate/`, `cmd/seed-queue/`, `cmd/queue-analytics/`, `cmd/bootstrap-queue/`, `cmd/reorder-queue/`
 
 **Deliverables**:
 1. Batch generation workflow for Homebrew + Linux
@@ -931,7 +931,7 @@ This is a strategic design. Implementation follows a **walking skeleton** approa
 
 ### Phase 2: Failure Analysis Backend + macOS Platform -- PARTIALLY COMPLETE
 
-**Status**: macOS validation is running. Full dashboard at `website/pipeline/`. The failure backend uses file-based JSONL in `data/failures/`; the Cloudflare Worker/D1 migration was dropped (#1190 closed as not planned). Top-blockers report (#1277) shipped via dashboard. M53 still open with 1 issue (#1278).
+**Status**: macOS validation is running. Full dashboard at `website/pipeline/`. The failure backend uses file-based JSONL in `data/failures/`; the Cloudflare Worker/D1 migration was dropped (#1190 closed as not planned). Top-blockers report (#1277) shipped via dashboard. Within-tier reordering (#1278) shipped via `cmd/reorder-queue/` and shared `internal/blocker` package. M53 closed.
 
 **Goal**: Move from files to backend service. Add macOS platform validation.
 
@@ -1055,7 +1055,7 @@ This is a strategic design. Implementation follows a **walking skeleton** approa
 | 0 | Visibility | 0 | COMPLETE | Queue + schema + rollback scripts |
 | 1a | Builder validation | 0 | COMPLETE | Homebrew deterministic mode |
 | 1b | Homebrew E2E | ~100 | COMPLETE (143 Homebrew) | Batch pipeline + SLIs + circuit breaker |
-| 2 | Backend + macOS | ~200 | PARTIAL (329 total, no D1) | File-based failures + macOS + dashboard |
+| 2 | Backend + macOS | ~200 | COMPLETE (329 total, no D1) | File-based failures + macOS + dashboard + within-tier reordering |
 | 3 | Multi-ecosystem | ~1000 | COMPLETE (all builders) | All deterministic builders |
 | 4 | Automation | ~5000 | PARTIAL (329 total) | Auto-merge done, re-queue broken |
 | 5 | Full platform | ~10000+ | MOSTLY DONE (11 envs) | 11-env matrix + dashboard |
@@ -1064,7 +1064,7 @@ This is a strategic design. Implementation follows a **walking skeleton** approa
 
 ### Milestones
 
-Milestones align with phases. 5 of 8 milestones are closed.
+Milestones align with phases. 6 of 8 milestones are closed.
 
 - **Validation Spike**: Pre-Phase 0 - CLOSED - Homebrew deterministic rate validated
 - **Day 1 Batch**: Parallel track - CLOSED - High-impact tools manually generated and merged
@@ -1072,7 +1072,7 @@ Milestones align with phases. 5 of 8 milestones are closed.
 - **Visibility Infrastructure Schemas (M57)**: Phase 0 - CLOSED - Schemas and scripts delivered
 - **Deterministic Homebrew Builder (M51)**: Phase 1a - CLOSED - Homebrew deterministic mode validated
 - **Batch Pipeline (M52)**: Phase 1b - CLOSED - Batch workflow, SLIs, circuit breaker, 143 Homebrew recipes
-- **Failure Backend (M53)**: Phase 2 - OPEN (1 issue: #1278) - File-based failures operational, D1 migration dropped, top-blockers shipped via dashboard
+- **Failure Backend (M53)**: Phase 2 - CLOSED - File-based failures operational, D1 migration dropped, top-blockers shipped via dashboard, within-tier reordering shipped
 - **Multi-Ecosystem (M54)**: Phase 3+ - OPEN (1 issue: #1191 system library backfill) - All builders integrated
 
 ## Required Tactical Designs
@@ -1102,7 +1102,7 @@ Tactical designs are organized by phase, reflecting the walking skeleton approac
 | ~~DESIGN-batch-failure-analysis.md~~ | ~~2~~ | ~~NOT NEEDED (#1190 closed)~~ | ~~File-based JSONL approach kept; D1 migration dropped~~ |
 | DESIGN-system-lib-backfill.md | 3+ | NEVER CREATED (#1191 open) | Strategy for adding common library recipes (parallel workstream) |
 
-**On DESIGN-batch-failure-analysis.md**: Dropped. The file-based approach (JSONL in `data/failures/`, dashboard at `website/pipeline/`) is sufficient at current scale. #1190 was closed as not planned. Top-blockers (#1277) shipped via dashboard. The remaining M53 issue (#1278 within-tier reordering) builds on the existing JSONL files.
+**On DESIGN-batch-failure-analysis.md**: Dropped. The file-based approach (JSONL in `data/failures/`, dashboard at `website/pipeline/`) is sufficient at current scale. #1190 was closed as not planned. Top-blockers (#1277) shipped via dashboard. Within-tier reordering (#1278) shipped via `cmd/reorder-queue/` using the shared `internal/blocker` package. M53 is fully closed.
 
 **On DESIGN-system-lib-backfill.md**: No longer blocked (was on #1190, now closed). With ~50 excluded recipes (15% exclusion rate) due to missing system libraries, this remains relevant for unlocking the next wave of growth.
 
@@ -1230,11 +1230,10 @@ These are bugs and inconsistencies between scripts, schemas, and live data forma
 
 ### Open Issues
 
-2 issues remain across 2 milestones:
+1 issue remains across 1 milestone:
 
 | Issue | Milestone | Description |
 |-------|-----------|-------------|
-| [#1278](https://github.com/tsukumogami/tsuku/issues/1278) | M53 (Failure Backend) | Re-order queue entries within tiers by blocking impact |
 | [#1191](https://github.com/tsukumogami/tsuku/issues/1191) | M54 (Multi-Ecosystem) | Design system library backfill strategy |
 
 ### Documentation Debt
@@ -1270,7 +1269,7 @@ These capabilities weren't in the original design but were built during implemen
 
 - **Disambiguation system** with audit trail for package name collisions across ecosystems
 - **11-environment validation matrix** (original spec: 5 environments)
-- **Purpose-built CLI tools**: `cmd/batch-generate/`, `cmd/seed-queue/`, `cmd/queue-analytics/`, `cmd/bootstrap-queue/`
+- **Purpose-built CLI tools**: `cmd/batch-generate/`, `cmd/seed-queue/`, `cmd/queue-analytics/`, `cmd/bootstrap-queue/`, `cmd/reorder-queue/`
 - **Dependency name mapping** (`data/dep-mapping.json`) for Homebrew dep resolution
 - **Full HTML dashboard** at `website/pipeline/` with pipeline status and metrics
 - **Discovery system** for finding new tools to add to the queue
