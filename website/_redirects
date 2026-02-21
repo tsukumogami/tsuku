@@ -14,5 +14,6 @@
 # Must come before any catch-all rule
 /recipes/*  /recipes/index.html  200
 
-# Legacy failed.html redirects to new failures list page
-/pipeline/failed.html  /pipeline/failures.html  301
+# Legacy failed path redirects to failures list page
+/pipeline/failed      /pipeline/failures.html  301
+/pipeline/failed.html /pipeline/failures.html  301
