@@ -153,7 +153,7 @@ graph TD
     class I1253 done
     class I1190 done
     class I1277 done
-    class I1278 ready
+    class I1278 done
     class I1191 needsDesign
 ```
 
