@@ -1,0 +1,14 @@
+{"schema_version":1,"recipe":"angle-grinder","platform":"linux-alpine-musl-x86_64","exit_code":6,"category":"deterministic","timestamp":"2026-02-21T07:27:58Z"}
+{"schema_version":1,"recipe":"angle-grinder","platform":"linux-alpine-musl-arm64","exit_code":6,"category":"deterministic","timestamp":"2026-02-21T07:27:58Z"}
+{"schema_version":1,"recipe":"ansifilter","platform":"linux-alpine-musl-x86_64","exit_code":6,"category":"deterministic","timestamp":"2026-02-21T07:27:58Z"}
+{"schema_version":1,"recipe":"ansifilter","platform":"linux-alpine-musl-arm64","exit_code":6,"category":"deterministic","timestamp":"2026-02-21T07:27:58Z"}
+{"schema_version":1,"recipe":"anycable-go","platform":"linux-alpine-musl-x86_64","exit_code":6,"category":"deterministic","timestamp":"2026-02-21T07:27:58Z"}
+{"schema_version":1,"recipe":"anyquery","platform":"linux-alpine-musl-x86_64","exit_code":6,"category":"deterministic","timestamp":"2026-02-21T07:27:58Z"}
+{"schema_version":1,"recipe":"anyquery","platform":"linux-alpine-musl-arm64","exit_code":6,"category":"deterministic","timestamp":"2026-02-21T07:27:58Z"}
+{"schema_version":1,"recipe":"apr-util","platform":"linux-alpine-musl-x86_64","exit_code":8,"category":"missing_dep","timestamp":"2026-02-21T07:27:58Z"}
+{"schema_version":1,"recipe":"apr-util","platform":"linux-debian-glibc-arm64","exit_code":6,"category":"deterministic","timestamp":"2026-02-21T07:27:58Z"}
+{"schema_version":1,"recipe":"apr-util","platform":"linux-rhel-glibc-arm64","exit_code":6,"category":"deterministic","timestamp":"2026-02-21T07:27:58Z"}
+{"schema_version":1,"recipe":"apr-util","platform":"linux-suse-glibc-arm64","exit_code":6,"category":"deterministic","timestamp":"2026-02-21T07:27:58Z"}
+{"schema_version":1,"recipe":"apr-util","platform":"linux-alpine-musl-arm64","exit_code":8,"category":"missing_dep","timestamp":"2026-02-21T07:27:58Z"}
+{"schema_version":1,"recipe":"apr-util","platform":"darwin-arm64","exit_code":6,"category":"deterministic","timestamp":"2026-02-21T07:27:58Z"}
+{"schema_version":1,"recipe":"apr-util","platform":"darwin-x86_64","exit_code":6,"category":"deterministic","timestamp":"2026-02-21T07:27:58Z"}
