@@ -20,8 +20,18 @@
     },
     "rubygems": {
       "state": "closed",
+      "failures": 2,
+      "last_failure": "2026-02-21T13:48:29Z"
+    },
+    "crates.io": {
+      "state": "closed",
       "failures": 1,
-      "last_failure": "2026-02-21T07:27:59Z"
+      "last_failure": "2026-02-21T13:48:29Z"
+    },
+    "npm": {
+      "state": "closed",
+      "failures": 1,
+      "last_failure": "2026-02-21T13:48:29Z"
     }
   },
   "budget": {
