@@ -71,7 +71,7 @@ The strategy needs to handle both small PRs (1-5 recipes, where overhead matters
 
 #### Chosen: Ceiling-division batching with configurable batch size
 
-The detection job takes the list of N recipes and splits them into ceil(N / BATCH_SIZE) groups. Each group becomes one matrix entry containing a JSON array of recipes. The batch size is a workflow-level variable (default: 15), tunable without code changes. A guard clause clamps the value to the range 1-50 to prevent accidental single-job aggregation or per-recipe fallback via `workflow_dispatch` inputs.
+The detection job takes the list of N recipes and splits them into ceil(N / BATCH_SIZE) groups. Each group becomes one matrix entry containing a JSON array of recipes. Batch sizes are configured in a JSON config file (`ci-batch-config.json` or similar) alongside the existing `test-matrix.json`, making them easy to review and change without touching workflow YAML. Workflows read their batch sizes from this file in the detection job. A `workflow_dispatch` input provides an override for manual runs, useful for experimenting with different sizes. A guard clause clamps all values to the range 1-50.
 
 For a PR with 70 recipes and BATCH_SIZE=15: ceil(70/15) = 5 jobs, each handling 13-15 recipes. For a PR with 3 recipes: ceil(3/15) = 1 job handling all 3.
 
@@ -237,18 +237,39 @@ batch_recipes() {
 }
 ```
 
-For multi-platform workflows, the detection job calls `batch_recipes` once per platform with the appropriate batch size:
+### Batch Size Configuration
+
+Batch sizes live in a JSON config file at the repo root:
+
+```json
+{
+  "batch_sizes": {
+    "test-changed-recipes": {
+      "linux": 15
+    },
+    "validate-golden-recipes": {
+      "default": 20
+    },
+    "validate-golden-execution": {
+      "ubuntu": 15,
+      "alpine": 5,
+      "rhel": 10,
+      "suse": 10,
+      "arch": 8
+    }
+  }
+}
+```
+
+Workflows read their batch sizes in the detection job:
 
 ```bash
-# Per-platform batch sizes (tunable)
-BATCH_UBUNTU=15
-BATCH_ALPINE=5
-BATCH_RHEL=10
-
-BATCHES_UBUNTU=$(batch_recipes "$RECIPES" "$BATCH_UBUNTU")
-BATCHES_ALPINE=$(batch_recipes "$RECIPES" "$BATCH_ALPINE")
-# ... etc.
+BATCH_SIZE=$(jq -r '.batch_sizes["test-changed-recipes"].linux // 15' ci-batch-config.json)
 ```
+
+For `workflow_dispatch`, an optional `batch_size_override` input takes precedence over the config file when provided. This lets contributors experiment with different sizes on manual runs without committing config changes.
+
+For multi-platform workflows, the detection job calls `batch_recipes` once per platform with the appropriate batch size from the config.
 
 The detection job outputs:
 - `batches`: JSON array of batch objects (for single-platform workflows)
