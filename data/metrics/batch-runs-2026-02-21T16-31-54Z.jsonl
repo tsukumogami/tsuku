@@ -1,0 +1,38 @@
+{
+  "batch_id": "2026-02-21",
+  "ecosystems": {
+    "crates.io": 5,
+    "homebrew": 1,
+    "npm": 1,
+    "rubygems": 3
+  },
+  "total": 0,
+  "generated": 0,
+  "platforms": {
+    "linux-x86_64": {
+      "tested": 0,
+      "passed": 0,
+      "failed": 0
+    },
+    "linux-arm64": {
+      "tested": 0,
+      "passed": 0,
+      "failed": 0
+    },
+    "darwin-arm64": {
+      "tested": 0,
+      "passed": 0,
+      "failed": 0
+    },
+    "darwin-x86_64": {
+      "tested": 0,
+      "passed": 0,
+      "failed": 0
+    }
+  },
+  "merged": 0,
+  "excluded": 0,
+  "constrained": 0,
+  "timestamp": "2026-02-21T16:31:54Z",
+  "duration_seconds": 10
+}
