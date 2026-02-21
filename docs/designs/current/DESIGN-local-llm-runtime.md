@@ -1,5 +1,5 @@
 ---
-status: Planned
+status: Current
 problem: |
   tsuku's recipe generation requires cloud API keys (Anthropic or Google), breaking the self-contained promise. Users must create accounts, set up billing, and configure environment variables before core LLM features work. Small open-source models (1.5-3B parameters) now handle structured extraction well enough for tsuku's use cases.
 decision: |
@@ -12,7 +12,7 @@ rationale: |
 
 ## Status
 
-Planned
+Current
 
 **Source Issue**: [#1421 - feat: local LLM runtime via Rust addon](https://github.com/tsukumogami/tsuku/issues/1421)
 
@@ -64,93 +64,16 @@ Planned
 
 | Issue | Dependencies | Tier |
 |-------|--------------|------|
-| [#1641: test(llm): add quality benchmark suite](https://github.com/tsukumogami/tsuku/issues/1641) | [#1640](https://github.com/tsukumogami/tsuku/issues/1640) | testable |
-| _Compare local model recipe quality against Claude/Gemini baselines. Document quality expectations per hardware profile._ | | |
-| [#1642: feat(llm): add download permission prompts and progress UX](https://github.com/tsukumogami/tsuku/issues/1642) | [#1629](https://github.com/tsukumogami/tsuku/issues/1629), [#1637](https://github.com/tsukumogami/tsuku/issues/1637) | simple |
-| _Prompt user before addon/model downloads. Show progress bars during downloads and spinner during inference._ | | |
-| [#1643: feat(llm): implement tsuku llm download command](https://github.com/tsukumogami/tsuku/issues/1643) | [#1629](https://github.com/tsukumogami/tsuku/issues/1629), [#1637](https://github.com/tsukumogami/tsuku/issues/1637) | simple |
-| _CLI command to pre-download addon and models for CI/offline use. Hardware detection selects appropriate model._ | | |
-| [#1644: test(llm): add end-to-end integration test without cloud keys](https://github.com/tsukumogami/tsuku/issues/1644) | [#1640](https://github.com/tsukumogami/tsuku/issues/1640), [#1632](https://github.com/tsukumogami/tsuku/issues/1632) | testable |
-| _Test creates recipe using local inference with no cloud API keys configured. Validates full flow from factory fallback to recipe output._ | | |
-| [#1645: docs(llm): update documentation for local inference](https://github.com/tsukumogami/tsuku/issues/1645) | [#1632](https://github.com/tsukumogami/tsuku/issues/1632), [#1636](https://github.com/tsukumogami/tsuku/issues/1636) | simple |
-| _Document config options, hardware requirements table, and troubleshooting guide for local LLM runtime._ | | |
-
-### Dependency Graph
-
-```mermaid
-graph TD
-    subgraph M1["Local LLM Foundation"]
-        I1628["#1628: Local provider skeleton"]
-        I1629["#1629: Addon download"]
-        I1630["#1630: Idle timeout"]
-        I1631["#1631: SIGTERM handler"]
-        I1632["#1632: Factory integration"]
-        I1633["#1633: Rust build pipeline"]
-        I1634["#1634: Lifecycle tests"]
-    end
-
-    subgraph M2["Inference Runtime"]
-        I1635["#1635: Hardware detection"]
-        I1636["#1636: Model selection"]
-        I1637["#1637: Model download"]
-        I1638["#1638: llama.cpp integration"]
-        I1672["#1672: HuggingFace manifest"]
-        I1675["#1675: SIGTERM cleanup ✓"]
-        I1676["#1676: Tokenization fix ✓"]
-        I1639["#1639: GBNF grammar ✓"]
-        I1640["#1640: Complete RPC ✓"]
-    end
-
-    subgraph M3["Production Ready"]
-        I1641["#1641: Quality benchmark"]
-        I1642["#1642: Download UX"]
-        I1643["#1643: llm download cmd"]
-        I1644["#1644: E2E test"]
-        I1645["#1645: Documentation"]
-    end
-
-    I1628 --> I1629
-    I1628 --> I1630
-    I1628 --> I1631
-    I1628 --> I1632
-    I1630 --> I1632
-    I1628 --> I1633
-    I1628 --> I1634
-    I1630 --> I1634
-    I1631 --> I1634
-    I1628 --> I1635
-    I1635 --> I1636
-    I1636 --> I1637
-    I1633 --> I1638
-    I1637 --> I1638
-    I1638 --> I1672
-    I1631 --> I1675
-    I1638 --> I1676
-    I1638 --> I1639
-    I1672 --> I1640
-    I1675 --> I1640
-    I1676 --> I1640
-    I1639 --> I1640
-    I1640 --> I1641
-    I1629 --> I1642
-    I1637 --> I1642
-    I1629 --> I1643
-    I1637 --> I1643
-    I1640 --> I1644
-    I1632 --> I1644
-    I1632 --> I1645
-    I1636 --> I1645
-
-    classDef done fill:#c8e6c9
-    classDef ready fill:#bbdefb
-    classDef blocked fill:#fff9c4
-    classDef needsDesign fill:#e1bee7
-
-    class I1628,I1629,I1630,I1631,I1632,I1633,I1634,I1635,I1636,I1637,I1638,I1672,I1675,I1676,I1639,I1640 done
-    class I1641,I1642,I1643,I1644,I1645 ready
-```
-
-**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
+| ~~[#1641: test(llm): add quality benchmark suite](https://github.com/tsukumogami/tsuku/issues/1641)~~ | ~~[#1640](https://github.com/tsukumogami/tsuku/issues/1640)~~ | ~~testable~~ |
+| ~~_Compare local model recipe quality against Claude/Gemini baselines. Document quality expectations per hardware profile._~~ | | |
+| ~~[#1642: feat(llm): add download permission prompts and progress UX](https://github.com/tsukumogami/tsuku/issues/1642)~~ | ~~[#1629](https://github.com/tsukumogami/tsuku/issues/1629), [#1637](https://github.com/tsukumogami/tsuku/issues/1637)~~ | ~~simple~~ |
+| ~~_Prompt user before addon/model downloads. Show progress bars during downloads and spinner during inference._~~ | | |
+| ~~[#1643: feat(llm): implement tsuku llm download command](https://github.com/tsukumogami/tsuku/issues/1643)~~ | ~~[#1629](https://github.com/tsukumogami/tsuku/issues/1629), [#1637](https://github.com/tsukumogami/tsuku/issues/1637)~~ | ~~simple~~ |
+| ~~_CLI command to pre-download addon and models for CI/offline use. Hardware detection selects appropriate model._~~ | | |
+| ~~[#1644: test(llm): add end-to-end integration test without cloud keys](https://github.com/tsukumogami/tsuku/issues/1644)~~ | ~~[#1640](https://github.com/tsukumogami/tsuku/issues/1640), [#1632](https://github.com/tsukumogami/tsuku/issues/1632)~~ | ~~testable~~ |
+| ~~_Test creates recipe using local inference with no cloud API keys configured. Validates full flow from factory fallback to recipe output._~~ | | |
+| ~~[#1645: docs(llm): update documentation for local inference](https://github.com/tsukumogami/tsuku/issues/1645)~~ | ~~[#1632](https://github.com/tsukumogami/tsuku/issues/1632), [#1636](https://github.com/tsukumogami/tsuku/issues/1636)~~ | ~~simple~~ |
+| ~~_Document config options, hardware requirements table, and troubleshooting guide for local LLM runtime._~~ | | |
 
 ## Context and Problem Statement
 

@@ -447,6 +447,96 @@ func TestShutdownInvalidatesConnectionOnError(t *testing.T) {
 	require.Nil(t, provider.conn, "conn should be nil after gRPC error in Shutdown")
 }
 
+// TestTriggerModelDownload verifies that TriggerModelDownload sends a lightweight
+// Complete request and succeeds when the server responds.
+func TestTriggerModelDownload(t *testing.T) {
+	tmpDir := t.TempDir()
+	t.Setenv("TSUKU_HOME", tmpDir)
+
+	const bufSize = 1024 * 1024
+	lis := bufconn.Listen(bufSize)
+
+	mockServer := &mockInferenceServer{}
+	grpcServer := grpc.NewServer()
+	pb.RegisterInferenceServiceServer(grpcServer, mockServer)
+
+	go func() {
+		if err := grpcServer.Serve(lis); err != nil {
+			t.Logf("mock server error: %v", err)
+		}
+	}()
+	defer grpcServer.Stop()
+
+	ctx := context.Background()
+	conn, err := grpc.NewClient(
+		"passthrough://bufnet",
+		grpc.WithContextDialer(func(context.Context, string) (net.Conn, error) {
+			return lis.Dial()
+		}),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	require.NoError(t, err)
+	defer func() { _ = conn.Close() }()
+
+	provider := &LocalProvider{
+		conn:   conn,
+		client: pb.NewInferenceServiceClient(conn),
+	}
+
+	err = provider.TriggerModelDownload(ctx)
+	require.NoError(t, err)
+
+	// Connection should still be valid after a successful trigger
+	require.NotNil(t, provider.client, "client should remain set after successful trigger")
+	require.NotNil(t, provider.conn, "conn should remain set after successful trigger")
+}
+
+// TestTriggerModelDownloadError verifies that TriggerModelDownload returns an error
+// and invalidates the connection when the Complete call fails.
+func TestTriggerModelDownloadError(t *testing.T) {
+	tmpDir := t.TempDir()
+	t.Setenv("TSUKU_HOME", tmpDir)
+
+	const bufSize = 1024 * 1024
+	lis := bufconn.Listen(bufSize)
+
+	mockServer := &mockInferenceServer{
+		completeErr: fmt.Errorf("model not available"),
+	}
+	grpcServer := grpc.NewServer()
+	pb.RegisterInferenceServiceServer(grpcServer, mockServer)
+
+	go func() {
+		if err := grpcServer.Serve(lis); err != nil {
+			t.Logf("mock server error: %v", err)
+		}
+	}()
+	defer grpcServer.Stop()
+
+	ctx := context.Background()
+	conn, err := grpc.NewClient(
+		"passthrough://bufnet",
+		grpc.WithContextDialer(func(context.Context, string) (net.Conn, error) {
+			return lis.Dial()
+		}),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	require.NoError(t, err)
+
+	provider := &LocalProvider{
+		conn:   conn,
+		client: pb.NewInferenceServiceClient(conn),
+	}
+
+	err = provider.TriggerModelDownload(ctx)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "model download failed")
+
+	// Connection should be invalidated after error
+	require.Nil(t, provider.client, "client should be nil after trigger error")
+	require.Nil(t, provider.conn, "conn should be nil after trigger error")
+}
+
 // TestFromProtoResponse verifies the proto-to-Go conversion.
 func TestFromProtoResponse(t *testing.T) {
 	pbResp := &pb.CompletionResponse{

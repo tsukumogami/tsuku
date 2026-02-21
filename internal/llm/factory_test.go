@@ -5,6 +5,8 @@ import (
 	"os"
 	"testing"
 	"time"
+
+	"github.com/tsukumogami/tsuku/internal/llm/addon"
 )
 
 // mockProvider is a simple mock implementation of Provider for testing.
@@ -603,5 +605,110 @@ func TestWithConfigEmptyProviders(t *testing.T) {
 	// claude should still be primary (default when config has no providers)
 	if provider.Name() != "claude" {
 		t.Errorf("GetProvider returned %q, want %q (default)", provider.Name(), "claude")
+	}
+}
+
+func TestNewFactory_DefaultsToInteractivePrompter(t *testing.T) {
+	// Clear all API keys so only local provider is created
+	originalAnthropic := os.Getenv("ANTHROPIC_API_KEY")
+	originalGoogle := os.Getenv("GOOGLE_API_KEY")
+	originalGemini := os.Getenv("GEMINI_API_KEY")
+	_ = os.Unsetenv("ANTHROPIC_API_KEY")
+	_ = os.Unsetenv("GOOGLE_API_KEY")
+	_ = os.Unsetenv("GEMINI_API_KEY")
+	defer func() {
+		_ = os.Setenv("ANTHROPIC_API_KEY", originalAnthropic)
+		_ = os.Setenv("GOOGLE_API_KEY", originalGoogle)
+		_ = os.Setenv("GEMINI_API_KEY", originalGemini)
+	}()
+
+	ctx := context.Background()
+	factory, err := NewFactory(ctx)
+	if err != nil {
+		t.Fatalf("NewFactory should succeed: %v", err)
+	}
+
+	// The local provider should have a prompter set (InteractivePrompter)
+	provider, ok := factory.providers["local"]
+	if !ok {
+		t.Fatal("factory should have local provider")
+	}
+	localProvider, ok := provider.(*LocalProvider)
+	if !ok {
+		t.Fatal("local provider should be *LocalProvider")
+	}
+	if localProvider.prompter == nil {
+		t.Error("local provider prompter should not be nil (should default to InteractivePrompter)")
+	}
+	if _, ok := localProvider.prompter.(*addon.InteractivePrompter); !ok {
+		t.Errorf("local provider prompter should be *InteractivePrompter, got %T", localProvider.prompter)
+	}
+}
+
+func TestNewFactory_WithAutoApprovePrompter(t *testing.T) {
+	// Clear all API keys so only local provider is created
+	originalAnthropic := os.Getenv("ANTHROPIC_API_KEY")
+	originalGoogle := os.Getenv("GOOGLE_API_KEY")
+	originalGemini := os.Getenv("GEMINI_API_KEY")
+	_ = os.Unsetenv("ANTHROPIC_API_KEY")
+	_ = os.Unsetenv("GOOGLE_API_KEY")
+	_ = os.Unsetenv("GEMINI_API_KEY")
+	defer func() {
+		_ = os.Setenv("ANTHROPIC_API_KEY", originalAnthropic)
+		_ = os.Setenv("GOOGLE_API_KEY", originalGoogle)
+		_ = os.Setenv("GEMINI_API_KEY", originalGemini)
+	}()
+
+	ctx := context.Background()
+	factory, err := NewFactory(ctx, WithPrompter(&addon.AutoApprovePrompter{}))
+	if err != nil {
+		t.Fatalf("NewFactory should succeed: %v", err)
+	}
+
+	provider, ok := factory.providers["local"]
+	if !ok {
+		t.Fatal("factory should have local provider")
+	}
+	localProvider, ok := provider.(*LocalProvider)
+	if !ok {
+		t.Fatal("local provider should be *LocalProvider")
+	}
+	if _, ok := localProvider.prompter.(*addon.AutoApprovePrompter); !ok {
+		t.Errorf("local provider prompter should be *AutoApprovePrompter, got %T", localProvider.prompter)
+	}
+}
+
+func TestNewFactory_WithNilPrompterExplicit(t *testing.T) {
+	// Clear all API keys so only local provider is created
+	originalAnthropic := os.Getenv("ANTHROPIC_API_KEY")
+	originalGoogle := os.Getenv("GOOGLE_API_KEY")
+	originalGemini := os.Getenv("GEMINI_API_KEY")
+	_ = os.Unsetenv("ANTHROPIC_API_KEY")
+	_ = os.Unsetenv("GOOGLE_API_KEY")
+	_ = os.Unsetenv("GEMINI_API_KEY")
+	defer func() {
+		_ = os.Setenv("ANTHROPIC_API_KEY", originalAnthropic)
+		_ = os.Setenv("GOOGLE_API_KEY", originalGoogle)
+		_ = os.Setenv("GEMINI_API_KEY", originalGemini)
+	}()
+
+	ctx := context.Background()
+	// Explicitly passing nil prompter should be honored (no default override)
+	factory, err := NewFactory(ctx, WithPrompter(nil))
+	if err != nil {
+		t.Fatalf("NewFactory should succeed: %v", err)
+	}
+
+	provider, ok := factory.providers["local"]
+	if !ok {
+		t.Fatal("factory should have local provider")
+	}
+	localProvider, ok := provider.(*LocalProvider)
+	if !ok {
+		t.Fatal("local provider should be *LocalProvider")
+	}
+	// When explicitly set to nil, the default should NOT override
+	if localProvider.prompter != nil {
+		t.Errorf("local provider prompter should be nil when explicitly set, got %T", localProvider.prompter)
 	}
 }
