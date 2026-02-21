@@ -29,65 +29,6 @@ Current
 | ~~[M63](https://github.com/tsukumogami/tsuku/milestone/63)~~ | ~~Merge Job Completion (batch_id, recipe tracking, circuit breaker update, queue sync)~~ | ~~None~~ | |
 | ~~[M64](https://github.com/tsukumogami/tsuku/milestone/64)~~ | ~~Merge Job Observability (SLI metrics, auto-merge gating)~~ | ~~[M63](https://github.com/tsukumogami/tsuku/milestone/63)~~ | |
 
-### Dependency Graph
-
-```mermaid
-graph LR
-    subgraph Phase1["Phase 1: Foundation"]
-        I1252["#1252: Preflight + rate limiting"]
-    end
-
-    subgraph Phase2["Phase 2: Validation"]
-        I1254["#1254: Multi-platform validation"]
-        M60["M60: Platform Validation (Foundation)"]
-    end
-
-    subgraph Phase3["Phase 3: Merge Job"]
-        I1256["#1256: Platform constraints"]
-        M63["M63: Merge Job Completion"]
-    end
-
-    subgraph Phase4["Phase 4: Observability + CI"]
-        I1255["#1255: Circuit breaker (preflight)"]
-        I1257["#1257: SLI metrics (superseded)"]
-        M64["M64: Merge Job Observability"]
-        I1258["#1258: PR CI filtering"]
-    end
-
-    subgraph Future["Future Work"]
-        I1253["#1253: Pinned release + source fallback"]
-        I1273["#1273: Structured JSON CLI output"]
-        I1287["#1287: Auto-install toolchains"]
-        M61["M61: Platform Validation (Refinements)"]
-    end
-
-    I1252 --> I1254
-    I1254 --> M60
-    M60 --> I1256
-    M60 --> M63
-    I1256 --> I1258
-    I1258 --> I1253
-    M63 --> I1255
-    I1252 --> I1255
-    M63 --> M64
-
-    classDef done fill:#c8e6c9
-    classDef ready fill:#bbdefb
-    classDef blocked fill:#fff9c4
-    classDef needsDesign fill:#e1bee7
-
-    class I1254,I1273,I1257,I1287 done
-    class M60,I1256 done
-    class M63 done
-    class I1252 done
-    class I1255 done
-    class I1258 done
-    class M61 done
-    class I1253 done
-    class M64 done
-```
-
-**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
 
 ## Upstream Design Reference
 
