@@ -1,0 +1,27 @@
+{
+  "format_version": 4,
+  "tool": "cmake",
+  "version": "4.2.3",
+  "platform": {
+    "os": "linux",
+    "arch": "amd64",
+    "linux_family": "alpine"
+  },
+  "deterministic": false,
+  "steps": [
+    {
+      "action": "apk_install",
+      "params": {
+        "packages": [
+          "cmake"
+        ]
+      },
+      "evaluable": false,
+      "deterministic": false
+    }
+  ],
+  "verify": {
+    "command": "cmake --version",
+    "pattern": "cmake version {version}"
+  }
+}

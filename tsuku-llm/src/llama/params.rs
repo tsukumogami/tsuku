@@ -30,19 +30,10 @@ impl Default for ModelParams {
 }
 
 impl ModelParams {
-    /// Create model params optimized for GPU inference.
+    /// Create model params for GPU inference (offloads all layers).
     pub fn for_gpu() -> Self {
         Self {
             n_gpu_layers: -1, // Offload all layers
-            use_mmap: true,
-            use_mlock: false,
-        }
-    }
-
-    /// Create model params for CPU-only inference.
-    pub fn for_cpu() -> Self {
-        Self {
-            n_gpu_layers: 0, // No GPU offload
             use_mmap: true,
             use_mlock: false,
         }

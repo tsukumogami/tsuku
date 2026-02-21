@@ -1,37 +1,50 @@
-// Package addon provides download and verification for the tsuku-llm addon binary.
-// The addon is downloaded on demand with SHA256 verification at download time
-// and before each execution to prevent post-download tampering.
+// Package addon provides lifecycle management for the tsuku-llm addon binary.
+// Installation is delegated to the recipe system via an injected Installer interface.
+// This package retains only binary location and daemon lifecycle coordination.
 package addon
 
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"sync"
-	"syscall"
 )
 
-// AddonManager handles downloading, verifying, and locating the tsuku-llm addon.
+// Installer abstracts the recipe-based installation pipeline.
+// Production code wires the real executor implementation; tests use a mock.
+type Installer interface {
+	// InstallRecipe loads a recipe by name, generates a plan for the current
+	// target (with the given GPU override applied), and executes it.
+	// gpuOverride is passed to PlanConfig.GPU; "" means auto-detect.
+	InstallRecipe(ctx context.Context, recipeName string, gpuOverride string) error
+}
+
+// AddonManager handles locating and ensuring the tsuku-llm addon is installed.
+// Binary installation is delegated to the recipe system via the Installer interface.
 type AddonManager struct {
 	mu sync.Mutex
 
 	// homeDir is the tsuku home directory ($TSUKU_HOME or ~/.tsuku)
 	homeDir string
 
+	// installer provides recipe-based installation
+	installer Installer
+
+	// backendOverride is the llm.backend config value (unused, GPU required)
+	backendOverride string
+
 	// cachedPath is the verified addon path (set after successful EnsureAddon)
 	cachedPath string
 }
 
-// NewAddonManager creates a new addon manager using the default home directory.
-func NewAddonManager() *AddonManager {
-	return NewAddonManagerWithHome("")
-}
-
-// NewAddonManagerWithHome creates a new addon manager with a custom home directory.
+// NewAddonManager creates a new addon manager with the given installer and backend override.
 // If homeDir is empty, it uses TSUKU_HOME env var or defaults to ~/.tsuku.
-func NewAddonManagerWithHome(homeDir string) *AddonManager {
+// backendOverride is accepted for compatibility but CPU inference is no longer supported.
+func NewAddonManager(homeDir string, installer Installer, backendOverride string) *AddonManager {
 	if homeDir == "" {
 		homeDir = os.Getenv("TSUKU_HOME")
 	}
@@ -42,7 +55,9 @@ func NewAddonManagerWithHome(homeDir string) *AddonManager {
 	}
 
 	return &AddonManager{
-		homeDir: homeDir,
+		homeDir:         homeDir,
+		installer:       installer,
+		backendOverride: backendOverride,
 	}
 }
 
@@ -51,212 +66,141 @@ func (m *AddonManager) HomeDir() string {
 	return m.homeDir
 }
 
-// AddonDir returns the versioned directory for the addon.
-// Format: $TSUKU_HOME/tools/tsuku-llm/<version>/
-func (m *AddonManager) AddonDir() (string, error) {
-	manifest, err := GetManifest()
-	if err != nil {
-		return "", err
-	}
-	return filepath.Join(m.homeDir, "tools", "tsuku-llm", manifest.Version), nil
-}
-
-// BinaryPath returns the full path to the addon binary.
-// Format: $TSUKU_HOME/tools/tsuku-llm/<version>/tsuku-llm
-func (m *AddonManager) BinaryPath() (string, error) {
-	dir, err := m.AddonDir()
-	if err != nil {
-		return "", err
-	}
-	return filepath.Join(dir, BinaryName()), nil
-}
-
-// IsInstalled checks if the addon binary exists at the expected path.
-// Note: This does not verify the checksum.
-func (m *AddonManager) IsInstalled() bool {
-	path, err := m.BinaryPath()
-	if err != nil {
-		return false
-	}
-	_, err = os.Stat(path)
-	return err == nil
-}
-
-// EnsureAddon ensures the addon is downloaded and verified.
-// It returns the path to the verified binary.
+// EnsureAddon ensures the addon is installed via the recipe system.
+// It returns the path to the installed binary.
 //
 // This method:
-// 1. Gets platform info from the embedded manifest
-// 2. If the binary exists, verifies its checksum
-// 3. If verification fails or binary is missing, downloads it
-// 4. Verifies the downloaded binary
-// 5. Returns the path to the verified binary
+// 1. If TSUKU_LLM_BINARY is set, uses that path directly (skips installation)
+// 2. Checks if tsuku-llm is already installed at the recipe tools path
+// 3. If the installed variant doesn't match the backend override, reinstalls
+// 4. If not installed, installs via the recipe system
+// 5. Cleans up legacy addon paths from pre-recipe installations
+// 6. Returns the path to the binary
 //
 // The method is safe for concurrent calls via mutex protection.
 func (m *AddonManager) EnsureAddon(ctx context.Context) (string, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	// Return cached path if already verified this session
+	// When TSUKU_LLM_BINARY is set, use the explicit binary path directly.
+	// This skips recipe installation since the binary is externally provided
+	// (e.g., built from source for integration tests).
+	if path := os.Getenv("TSUKU_LLM_BINARY"); path != "" {
+		if _, err := os.Stat(path); err == nil {
+			m.cachedPath = path
+			return path, nil
+		}
+	}
+
+	// Return cached path if already resolved this session
 	if m.cachedPath != "" {
-		// Re-verify to catch tampering
-		if err := m.verifyBinary(m.cachedPath); err == nil {
+		if _, err := os.Stat(m.cachedPath); err == nil {
 			return m.cachedPath, nil
 		}
-		// Verification failed - clear cache and re-download
+		// Binary disappeared since last check - clear cache
 		m.cachedPath = ""
 	}
 
-	// Get platform info
-	platformInfo, err := GetCurrentPlatformInfo()
-	if err != nil {
-		return "", err
-	}
+	// Check if already installed
+	binaryPath := m.findInstalledBinary()
 
-	binaryPath, err := m.BinaryPath()
-	if err != nil {
-		return "", err
-	}
-
-	// Check if binary exists
-	if _, err := os.Stat(binaryPath); err == nil {
-		// Verify existing binary
-		if err := m.verifyBinary(binaryPath); err == nil {
-			m.cachedPath = binaryPath
-			return binaryPath, nil
+	if binaryPath == "" {
+		// Not installed - install via recipe system
+		if err := m.installViaRecipe(ctx); err != nil {
+			return "", fmt.Errorf("installing tsuku-llm: %w", err)
 		}
-		// Verification failed - need to re-download
-		fmt.Println("   Existing addon failed verification, re-downloading...")
+		binaryPath = m.findInstalledBinary()
 	}
 
-	// Download addon
-	if err := m.downloadAddon(ctx, platformInfo, binaryPath); err != nil {
-		return "", err
+	if binaryPath == "" {
+		return "", fmt.Errorf("tsuku-llm installation succeeded but binary not found at expected path")
 	}
 
-	// Verify downloaded binary
-	if err := m.verifyBinary(binaryPath); err != nil {
-		// Clean up invalid download
-		_ = os.Remove(binaryPath)
-		return "", fmt.Errorf("downloaded addon failed verification: %w", err)
-	}
+	// Clean up legacy addon path if it exists
+	m.cleanupLegacyPath()
 
 	m.cachedPath = binaryPath
 	return binaryPath, nil
 }
 
-// VerifyBeforeExecution verifies the addon binary checksum before execution.
-// This catches post-download tampering. Call this in ServerLifecycle.EnsureRunning().
-func (m *AddonManager) VerifyBeforeExecution(binaryPath string) error {
-	return m.verifyBinary(binaryPath)
-}
-
-// verifyBinary verifies the binary at path against the expected checksum.
-func (m *AddonManager) verifyBinary(path string) error {
-	platformInfo, err := GetCurrentPlatformInfo()
+// findInstalledBinary looks for the tsuku-llm binary at the standard recipe
+// installation path: $TSUKU_HOME/tools/tsuku-llm-<version>/bin/tsuku-llm
+// It scans for any installed version directory.
+func (m *AddonManager) findInstalledBinary() string {
+	toolsDir := filepath.Join(m.homeDir, "tools")
+	entries, err := os.ReadDir(toolsDir)
 	if err != nil {
-		return err
+		return ""
 	}
 
-	return VerifyChecksum(path, platformInfo.SHA256)
-}
+	binName := binaryName()
 
-// downloadAddon downloads the addon binary with proper setup.
-func (m *AddonManager) downloadAddon(ctx context.Context, info *PlatformInfo, destPath string) error {
-	// Create addon directory
-	dir := filepath.Dir(destPath)
-	if err := os.MkdirAll(dir, 0755); err != nil {
-		return fmt.Errorf("failed to create addon directory: %w", err)
-	}
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			continue
+		}
+		name := entry.Name()
+		if !strings.HasPrefix(name, "tsuku-llm-") {
+			continue
+		}
 
-	// Acquire lock to prevent concurrent downloads
-	lockPath := filepath.Join(dir, ".download.lock")
-	lockFile, err := os.OpenFile(lockPath, os.O_CREATE|os.O_RDWR, 0600)
-	if err != nil {
-		return fmt.Errorf("failed to open download lock: %w", err)
-	}
-	defer lockFile.Close()
+		// Check bin/ subdirectory first (standard recipe layout)
+		binPath := filepath.Join(toolsDir, name, "bin", binName)
+		if _, err := os.Stat(binPath); err == nil {
+			return binPath
+		}
 
-	// Acquire exclusive lock (blocking)
-	if err := syscall.Flock(int(lockFile.Fd()), syscall.LOCK_EX); err != nil {
-		return fmt.Errorf("failed to acquire download lock: %w", err)
-	}
-	defer func() {
-		_ = syscall.Flock(int(lockFile.Fd()), syscall.LOCK_UN)
-	}()
-
-	// Check again after acquiring lock (another process may have downloaded)
-	if _, err := os.Stat(destPath); err == nil {
-		if err := m.verifyBinary(destPath); err == nil {
-			return nil // Already downloaded and verified
+		// Check root of tool directory (flat layout)
+		rootPath := filepath.Join(toolsDir, name, binName)
+		if _, err := os.Stat(rootPath); err == nil {
+			return rootPath
 		}
 	}
 
-	fmt.Printf("   Downloading tsuku-llm addon...\n")
-	fmt.Printf("   URL: %s\n", info.URL)
-
-	// Download to temp file
-	tmpPath := destPath + ".tmp"
-	if err := Download(ctx, info.URL, tmpPath); err != nil {
-		_ = os.Remove(tmpPath)
-		return err
-	}
-
-	// Verify checksum before moving to final location
-	fmt.Println("   Verifying checksum...")
-	if err := VerifyChecksum(tmpPath, info.SHA256); err != nil {
-		_ = os.Remove(tmpPath)
-		return fmt.Errorf("checksum verification failed: %w", err)
-	}
-
-	// Make executable
-	if err := os.Chmod(tmpPath, 0755); err != nil {
-		_ = os.Remove(tmpPath)
-		return fmt.Errorf("failed to make addon executable: %w", err)
-	}
-
-	// Atomic rename to final location
-	if err := os.Rename(tmpPath, destPath); err != nil {
-		_ = os.Remove(tmpPath)
-		return fmt.Errorf("failed to install addon: %w", err)
-	}
-
-	fmt.Println("   tsuku-llm addon installed successfully")
-	return nil
+	return ""
 }
 
-// Legacy compatibility functions
+// installViaRecipe delegates installation to the recipe system.
+func (m *AddonManager) installViaRecipe(ctx context.Context) error {
+	if m.installer == nil {
+		return fmt.Errorf("no installer configured")
+	}
 
-// AddonPath returns the path to the tsuku-llm binary.
-// Deprecated: Use NewAddonManager().BinaryPath() instead.
-func AddonPath() string {
-	home := os.Getenv("TSUKU_HOME")
-	if home == "" {
-		userHome, err := os.UserHomeDir()
+	return m.installer.InstallRecipe(ctx, "tsuku-llm", "")
+}
+
+// cleanupLegacyPath removes the old addon installation path if it exists.
+// Before the recipe migration, the addon was installed to:
+//   - $TSUKU_HOME/addons/tsuku-llm/
+//   - $TSUKU_HOME/tools/tsuku-llm/<version>/ (old manifest-based layout)
+//
+// This prevents 50-200MB of orphaned binaries from persisting after upgrade.
+func (m *AddonManager) cleanupLegacyPath() {
+	legacyPaths := []string{
+		filepath.Join(m.homeDir, "addons", "tsuku-llm"),
+		filepath.Join(m.homeDir, "tools", "tsuku-llm"), // old non-versioned layout
+	}
+
+	for _, legacyPath := range legacyPaths {
+		info, err := os.Stat(legacyPath)
 		if err != nil {
-			return ""
+			continue
 		}
-		home = filepath.Join(userHome, ".tsuku")
+		// Only remove if it's a directory (the old layout) and not the recipe layout
+		// (recipe layout uses tsuku-llm-<version>, not tsuku-llm/)
+		if info.IsDir() {
+			slog.Info("removing legacy addon installation", "path", legacyPath)
+			if err := os.RemoveAll(legacyPath); err != nil {
+				slog.Warn("failed to remove legacy addon path", "path", legacyPath, "error", err)
+			}
+		}
 	}
-
-	binName := "tsuku-llm"
-	if runtime.GOOS == "windows" {
-		binName = "tsuku-llm.exe"
-	}
-
-	// Return versioned path if manifest available
-	manifest, err := GetManifest()
-	if err == nil {
-		return filepath.Join(home, "tools", "tsuku-llm", manifest.Version, binName)
-	}
-
-	// Fallback to legacy path for compatibility
-	return filepath.Join(home, "tools", "tsuku-llm", binName)
 }
 
-// IsInstalled checks if the addon is installed.
-// Deprecated: Use NewAddonManager().IsInstalled() instead.
-func IsInstalled() bool {
-	_, err := os.Stat(AddonPath())
-	return err == nil
+// binaryName returns the addon binary name for the current platform.
+func binaryName() string {
+	if runtime.GOOS == "windows" {
+		return "tsuku-llm.exe"
+	}
+	return "tsuku-llm"
 }

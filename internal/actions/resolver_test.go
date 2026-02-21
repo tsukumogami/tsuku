@@ -1432,7 +1432,7 @@ func TestResolveDependenciesForTarget_StepDependenciesWithMatchingWhen(t *testin
 	}
 
 	// Create a target that matches (glibc Linux)
-	target := recipe.NewMatchTarget("linux", "amd64", "debian", "glibc")
+	target := recipe.NewMatchTarget("linux", "amd64", "debian", "glibc", "")
 
 	deps := ResolveDependenciesForTarget(r, "linux", target)
 
@@ -1460,7 +1460,7 @@ func TestResolveDependenciesForTarget_StepDependenciesWithNonMatchingWhen(t *tes
 	}
 
 	// Create a target that doesn't match (musl Linux)
-	target := recipe.NewMatchTarget("linux", "amd64", "alpine", "musl")
+	target := recipe.NewMatchTarget("linux", "amd64", "alpine", "musl", "")
 
 	deps := ResolveDependenciesForTarget(r, "linux", target)
 
@@ -1494,7 +1494,7 @@ func TestResolveDependenciesForTarget_MultipleStepsSelectiveMatching(t *testing.
 	}
 
 	// On glibc: should only see openssl-glibc
-	glibcTarget := recipe.NewMatchTarget("linux", "amd64", "debian", "glibc")
+	glibcTarget := recipe.NewMatchTarget("linux", "amd64", "debian", "glibc", "")
 	glibcDeps := ResolveDependenciesForTarget(r, "linux", glibcTarget)
 
 	if glibcDeps.InstallTime["openssl-glibc"] != "latest" {
@@ -1502,7 +1502,7 @@ func TestResolveDependenciesForTarget_MultipleStepsSelectiveMatching(t *testing.
 	}
 
 	// On musl: should have no dependencies (musl step has no deps)
-	muslTarget := recipe.NewMatchTarget("linux", "amd64", "alpine", "musl")
+	muslTarget := recipe.NewMatchTarget("linux", "amd64", "alpine", "musl", "")
 	muslDeps := ResolveDependenciesForTarget(r, "linux", muslTarget)
 
 	if _, has := muslDeps.InstallTime["openssl-glibc"]; has {
@@ -1560,7 +1560,7 @@ func TestResolveDependenciesForTarget_StepWithNoWhenAlwaysMatches(t *testing.T) 
 	}
 
 	// Even with a target, step with no When should match
-	target := recipe.NewMatchTarget("linux", "amd64", "alpine", "musl")
+	target := recipe.NewMatchTarget("linux", "amd64", "alpine", "musl", "")
 	deps := ResolveDependenciesForTarget(r, "linux", target)
 
 	if deps.InstallTime["curl"] != "latest" {

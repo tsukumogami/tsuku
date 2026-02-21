@@ -24,8 +24,10 @@ const (
 	maxGitHubResponseSize = 10 * 1024 * 1024
 	// maxREADMESize limits README content (1MB)
 	maxREADMESize = 1 * 1024 * 1024
-	// releasesToFetch is the number of releases to fetch for pattern inference
-	releasesToFetch = 5
+	// releasesToFetch is the number of releases to fetch for pattern inference.
+	// Three releases is enough to establish the naming convention while keeping
+	// the prompt compact (two for pattern, one for confirmation).
+	releasesToFetch = 3
 	// MaxTurns is the maximum number of conversation turns to prevent infinite loops.
 	MaxTurns = 5
 	// MaxRepairAttempts is the maximum number of times to retry after validation failure.
@@ -649,6 +651,86 @@ type repoMeta struct {
 	Homepage    string
 }
 
+// filterReleaseAssets removes assets that are irrelevant to tsuku's target
+// platforms (linux/darwin x amd64/arm64). This reduces LLM prompt size by
+// stripping Windows builds, checksums, package formats, and architectures
+// we don't support. Ambiguous filenames (no OS/arch indicators) are kept
+// since they might be universal binaries.
+func filterReleaseAssets(assets []string) []string {
+	filtered := make([]string, 0, len(assets))
+	for _, name := range assets {
+		if isIrrelevantAsset(name) {
+			continue
+		}
+		filtered = append(filtered, name)
+	}
+	return filtered
+}
+
+func isIrrelevantAsset(name string) bool {
+	lower := strings.ToLower(name)
+
+	// Checksum and signature files
+	for _, suffix := range []string{
+		".sha256", ".sha512", ".md5", ".sig", ".asc",
+		".sbom", ".pem", ".jsonl",
+	} {
+		if strings.HasSuffix(lower, suffix) {
+			return true
+		}
+	}
+	for _, pattern := range []string{"checksums", "shasums", "sha256sum", "sha1sum"} {
+		if strings.Contains(lower, pattern) {
+			return true
+		}
+	}
+
+	// Windows
+	for _, suffix := range []string{".exe", ".msi"} {
+		if strings.HasSuffix(lower, suffix) {
+			return true
+		}
+	}
+	for _, pattern := range []string{"windows", "win32", "win64"} {
+		if strings.Contains(lower, pattern) {
+			return true
+		}
+	}
+
+	// Package formats we don't use
+	for _, suffix := range []string{".deb", ".rpm", ".apk", ".pkg", ".dmg", ".snap"} {
+		if strings.HasSuffix(lower, suffix) {
+			return true
+		}
+	}
+
+	// Architectures we don't target (careful not to match arm64/aarch64)
+	for _, arch := range []string{
+		"i386", "i586", "i686", "s390x", "ppc64le", "ppc64",
+		"mips", "riscv", "armv6", "armv7",
+	} {
+		if strings.Contains(lower, arch) {
+			return true
+		}
+	}
+	// "386" needs careful matching to avoid false positives on version numbers.
+	// Only match when preceded by _ or - (not . which appears in versions).
+	if idx := strings.Index(lower, "386"); idx >= 0 {
+		if idx == 0 || lower[idx-1] == '_' || lower[idx-1] == '-' {
+			return true
+		}
+	}
+
+	// Source archives
+	for _, pattern := range []string{"-src.", "-source.", ".src."} {
+		if strings.Contains(lower, pattern) {
+			return true
+		}
+	}
+
+	return false
+}
+
 // fetchReleases fetches the last N releases from GitHub API.
 func (b *GitHubReleaseBuilder) fetchReleases(ctx context.Context, owner, repo string) ([]llm.Release, error) {
 	baseURL, err := url.Parse(b.githubBaseURL)
@@ -707,7 +789,7 @@ func (b *GitHubReleaseBuilder) fetchReleases(ctx context.Context, owner, repo st
 		return nil, fmt.Errorf("failed to parse releases: %w", err)
 	}
 
-	// Convert to llm.Release format
+	// Convert to llm.Release format, filtering out irrelevant assets
 	releases := make([]llm.Release, 0, len(ghReleases))
 	for _, r := range ghReleases {
 		assets := make([]string, 0, len(r.Assets))
@@ -716,7 +798,7 @@ func (b *GitHubReleaseBuilder) fetchReleases(ctx context.Context, owner, repo st
 		}
 		releases = append(releases, llm.Release{
 			Tag:    r.TagName,
-			Assets: assets,
+			Assets: filterReleaseAssets(assets),
 		})
 	}
 
@@ -1042,8 +1124,8 @@ Recent releases:
 	if genCtx.readme != "" {
 		// Truncate README if too long
 		readme := genCtx.readme
-		if len(readme) > 10000 {
-			readme = readme[:10000] + "\n...(truncated)"
+		if len(readme) > 3000 {
+			readme = readme[:3000] + "\n...(truncated)"
 		}
 		msg += fmt.Sprintf("README.md:\n%s\n", readme)
 	}

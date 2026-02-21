@@ -427,6 +427,7 @@ type mockLLMConfig struct {
 	localEnabled bool
 	idleTimeout  time.Duration
 	providers    []string
+	backend      string
 }
 
 func (m *mockLLMConfig) LLMEnabled() bool {
@@ -446,6 +447,10 @@ func (m *mockLLMConfig) LLMIdleTimeout() time.Duration {
 
 func (m *mockLLMConfig) LLMProviders() []string {
 	return m.providers
+}
+
+func (m *mockLLMConfig) LLMBackend() string {
+	return m.backend
 }
 
 func TestNewFactoryWithConfigDisabled(t *testing.T) {

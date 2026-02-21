@@ -54,6 +54,16 @@ func TestWhenClause_IsEmpty(t *testing.T) {
 			when: &WhenClause{Libc: []string{}},
 			want: true,
 		},
+		{
+			name: "clause with gpu is not empty",
+			when: &WhenClause{GPU: []string{"nvidia"}},
+			want: false,
+		},
+		{
+			name: "clause with empty gpu array is empty",
+			when: &WhenClause{GPU: []string{}},
+			want: true,
+		},
 	}
 
 	for _, tt := range tests {
@@ -176,7 +186,7 @@ func TestWhenClause_Matches(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			target := NewMatchTarget(tt.os, tt.arch, "", "")
+			target := NewMatchTarget(tt.os, tt.arch, "", "", "")
 			if got := tt.when.Matches(target); got != tt.want {
 				t.Errorf("Matches(%s, %s) = %v, want %v", tt.os, tt.arch, got, tt.want)
 			}
@@ -276,7 +286,7 @@ func TestWhenClause_Matches_ArchAndLinuxFamily(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			target := NewMatchTarget(tt.os, tt.arch, tt.linuxFamily, "")
+			target := NewMatchTarget(tt.os, tt.arch, tt.linuxFamily, "", "")
 			if got := tt.when.Matches(target); got != tt.want {
 				t.Errorf("Matches() = %v, want %v", got, tt.want)
 			}
@@ -383,7 +393,125 @@ func TestWhenClause_Matches_Libc(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			target := NewMatchTarget(tt.os, tt.arch, tt.linuxFamily, tt.libc)
+			target := NewMatchTarget(tt.os, tt.arch, tt.linuxFamily, tt.libc, "")
+			if got := tt.when.Matches(target); got != tt.want {
+				t.Errorf("Matches() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+// TestWhenClause_Matches_GPU tests the GPU filter in Matches method
+func TestWhenClause_Matches_GPU(t *testing.T) {
+	tests := []struct {
+		name string
+		when *WhenClause
+		os   string
+		arch string
+		gpu  string
+		want bool
+	}{
+		{
+			name: "empty gpu matches any gpu",
+			when: &WhenClause{},
+			os:   "linux", arch: "amd64", gpu: "nvidia",
+			want: true,
+		},
+		{
+			name: "empty gpu matches no gpu",
+			when: &WhenClause{},
+			os:   "linux", arch: "amd64", gpu: "none",
+			want: true,
+		},
+		{
+			name: "gpu=nvidia matches nvidia target",
+			when: &WhenClause{GPU: []string{"nvidia"}},
+			os:   "linux", arch: "amd64", gpu: "nvidia",
+			want: true,
+		},
+		{
+			name: "gpu=nvidia does not match amd target",
+			when: &WhenClause{GPU: []string{"nvidia"}},
+			os:   "linux", arch: "amd64", gpu: "amd",
+			want: false,
+		},
+		{
+			name: "gpu=nvidia does not match none target",
+			when: &WhenClause{GPU: []string{"nvidia"}},
+			os:   "linux", arch: "amd64", gpu: "none",
+			want: false,
+		},
+		{
+			name: "gpu=[amd,intel] matches amd target",
+			when: &WhenClause{GPU: []string{"amd", "intel"}},
+			os:   "linux", arch: "amd64", gpu: "amd",
+			want: true,
+		},
+		{
+			name: "gpu=[amd,intel] matches intel target",
+			when: &WhenClause{GPU: []string{"amd", "intel"}},
+			os:   "linux", arch: "amd64", gpu: "intel",
+			want: true,
+		},
+		{
+			name: "gpu=[amd,intel] does not match nvidia target",
+			when: &WhenClause{GPU: []string{"amd", "intel"}},
+			os:   "linux", arch: "amd64", gpu: "nvidia",
+			want: false,
+		},
+		{
+			name: "gpu=none matches no-gpu target",
+			when: &WhenClause{GPU: []string{"none"}},
+			os:   "linux", arch: "amd64", gpu: "none",
+			want: true,
+		},
+		{
+			name: "gpu=apple matches apple target",
+			when: &WhenClause{GPU: []string{"apple"}},
+			os:   "darwin", arch: "arm64", gpu: "apple",
+			want: true,
+		},
+		{
+			name: "gpu filter with empty target gpu does not match",
+			when: &WhenClause{GPU: []string{"nvidia"}},
+			os:   "linux", arch: "amd64", gpu: "",
+			want: false,
+		},
+		{
+			name: "combined OS and gpu filter - both match",
+			when: &WhenClause{OS: []string{"linux"}, GPU: []string{"nvidia"}},
+			os:   "linux", arch: "amd64", gpu: "nvidia",
+			want: true,
+		},
+		{
+			name: "combined OS and gpu filter - OS matches, gpu does not",
+			when: &WhenClause{OS: []string{"linux"}, GPU: []string{"nvidia"}},
+			os:   "linux", arch: "amd64", gpu: "amd",
+			want: false,
+		},
+		{
+			name: "combined OS and gpu filter - OS does not match",
+			when: &WhenClause{OS: []string{"darwin"}, GPU: []string{"nvidia"}},
+			os:   "linux", arch: "amd64", gpu: "nvidia",
+			want: false,
+		},
+		{
+			name: "combined OS, arch, and gpu - all match",
+			when: &WhenClause{OS: []string{"linux"}, Arch: "amd64", GPU: []string{"nvidia"}},
+			os:   "linux", arch: "amd64", gpu: "nvidia",
+			want: true,
+		},
+		{
+			name: "combined OS, arch, and gpu - arch does not match",
+			when: &WhenClause{OS: []string{"linux"}, Arch: "arm64", GPU: []string{"nvidia"}},
+			os:   "linux", arch: "amd64", gpu: "nvidia",
+			want: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			target := NewMatchTarget(tt.os, tt.arch, "", "", tt.gpu)
 			if got := tt.when.Matches(target); got != tt.want {
 				t.Errorf("Matches() = %v, want %v", got, tt.want)
 			}
@@ -394,7 +522,7 @@ func TestWhenClause_Matches_Libc(t *testing.T) {
 // TestMatchTarget tests the MatchTarget struct and NewMatchTarget constructor
 func TestMatchTarget(t *testing.T) {
 	t.Run("NewMatchTarget creates correct values", func(t *testing.T) {
-		target := NewMatchTarget("linux", "amd64", "debian", "glibc")
+		target := NewMatchTarget("linux", "amd64", "debian", "glibc", "")
 		if target.OS() != "linux" {
 			t.Errorf("OS() = %q, want %q", target.OS(), "linux")
 		}
@@ -410,12 +538,26 @@ func TestMatchTarget(t *testing.T) {
 	})
 
 	t.Run("MatchTarget with empty linux_family", func(t *testing.T) {
-		target := NewMatchTarget("darwin", "arm64", "", "")
+		target := NewMatchTarget("darwin", "arm64", "", "", "")
 		if target.LinuxFamily() != "" {
 			t.Errorf("LinuxFamily() = %q, want empty", target.LinuxFamily())
 		}
 		if target.Libc() != "" {
 			t.Errorf("Libc() = %q, want empty", target.Libc())
+		}
+	})
+
+	t.Run("NewMatchTarget with GPU", func(t *testing.T) {
+		target := NewMatchTarget("linux", "amd64", "debian", "glibc", "nvidia")
+		if target.GPU() != "nvidia" {
+			t.Errorf("GPU() = %q, want %q", target.GPU(), "nvidia")
+		}
+	})
+
+	t.Run("MatchTarget with empty GPU", func(t *testing.T) {
+		target := NewMatchTarget("linux", "amd64", "debian", "glibc", "")
+		if target.GPU() != "" {
+			t.Errorf("GPU() = %q, want empty", target.GPU())
 		}
 	})
 }
@@ -605,6 +747,84 @@ command = "echo test"
 	}
 }
 
+// TestWhenClause_UnmarshalTOML_GPU tests unmarshaling gpu arrays
+func TestWhenClause_UnmarshalTOML_GPU(t *testing.T) {
+	tests := []struct {
+		name    string
+		toml    string
+		wantGPU []string
+	}{
+		{
+			name: "single value array",
+			toml: `
+[[steps]]
+action = "run_command"
+when = { gpu = ["nvidia"] }
+command = "echo test"
+`,
+			wantGPU: []string{"nvidia"},
+		},
+		{
+			name: "multiple values",
+			toml: `
+[[steps]]
+action = "run_command"
+when = { gpu = ["amd", "intel"] }
+command = "echo test"
+`,
+			wantGPU: []string{"amd", "intel"},
+		},
+		{
+			name: "single string converted to array",
+			toml: `
+[[steps]]
+action = "run_command"
+when = { gpu = "nvidia" }
+command = "echo test"
+`,
+			wantGPU: []string{"nvidia"},
+		},
+		{
+			name: "combined with os and arch filters",
+			toml: `
+[[steps]]
+action = "run_command"
+when = { os = ["linux"], arch = "amd64", gpu = ["nvidia"] }
+command = "echo test"
+`,
+			wantGPU: []string{"nvidia"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var recipe struct {
+				Steps []Step `toml:"steps"`
+			}
+
+			err := toml.Unmarshal([]byte(tt.toml), &recipe)
+			if err != nil {
+				t.Fatalf("Unmarshal() error = %v", err)
+			}
+
+			step := recipe.Steps[0]
+			if step.When == nil {
+				t.Fatal("When should not be nil")
+			}
+
+			if len(step.When.GPU) != len(tt.wantGPU) {
+				t.Fatalf("GPU length = %d, want %d", len(step.When.GPU), len(tt.wantGPU))
+			}
+
+			for i, want := range tt.wantGPU {
+				if step.When.GPU[i] != want {
+					t.Errorf("GPU[%d] = %s, want %s", i, step.When.GPU[i], want)
+				}
+			}
+		})
+	}
+}
+
 // TestWhenClause_UnmarshalTOML_MutualExclusivity tests that platform and OS cannot coexist
 func TestWhenClause_UnmarshalTOML_MutualExclusivity(t *testing.T) {
 	tomlData := `
@@ -701,6 +921,68 @@ func TestWhenClause_ToMap_Libc(t *testing.T) {
 
 	if libc[1] != "musl" {
 		t.Errorf("libc[1] = %s, want musl", libc[1])
+	}
+}
+
+// TestWhenClause_ToMap_GPU tests serialization of gpu field
+func TestWhenClause_ToMap_GPU(t *testing.T) {
+	step := Step{
+		Action: "github_file",
+		When: &WhenClause{
+			OS:  []string{"linux"},
+			GPU: []string{"nvidia", "amd"},
+		},
+		Params: map[string]interface{}{
+			"repo": "owner/repo",
+		},
+	}
+
+	m := step.ToMap()
+
+	whenMap, ok := m["when"].(map[string]interface{})
+	if !ok {
+		t.Fatal("when field should be a map")
+	}
+
+	gpu, ok := whenMap["gpu"].([]string)
+	if !ok {
+		t.Fatal("gpu should be a []string")
+	}
+
+	if len(gpu) != 2 {
+		t.Fatalf("gpu length = %d, want 2", len(gpu))
+	}
+
+	if gpu[0] != "nvidia" {
+		t.Errorf("gpu[0] = %s, want nvidia", gpu[0])
+	}
+
+	if gpu[1] != "amd" {
+		t.Errorf("gpu[1] = %s, want amd", gpu[1])
+	}
+}
+
+// TestWhenClause_ToMap_GPU_Empty tests that empty gpu is not serialized
+func TestWhenClause_ToMap_GPU_Empty(t *testing.T) {
+	step := Step{
+		Action: "github_file",
+		When: &WhenClause{
+			OS: []string{"linux"},
+		},
+		Params: map[string]interface{}{
+			"repo": "owner/repo",
+		},
+	}
+
+	m := step.ToMap()
+
+	whenMap, ok := m["when"].(map[string]interface{})
+	if !ok {
+		t.Fatal("when field should be a map")
+	}
+
+	if _, ok := whenMap["gpu"]; ok {
+		t.Error("gpu should not be in when map when empty")
 	}
 }
 
@@ -871,6 +1153,72 @@ func TestWhenClause_ValidationErrors(t *testing.T) {
 					{
 						Action: "run_command",
 						When:   &WhenClause{OS: []string{"linux"}, Libc: []string{"glibc", "musl"}},
+					},
+				},
+			},
+			wantErrs: 0,
+		},
+		// GPU validation tests
+		{
+			name: "invalid gpu value",
+			recipe: &Recipe{
+				Metadata: MetadataSection{Name: "test"},
+				Steps: []Step{
+					{
+						Action: "run_command",
+						When:   &WhenClause{GPU: []string{"invalid"}},
+					},
+				},
+			},
+			wantErrs: 1,
+		},
+		{
+			name: "valid gpu value nvidia",
+			recipe: &Recipe{
+				Metadata: MetadataSection{Name: "test"},
+				Steps: []Step{
+					{
+						Action: "run_command",
+						When:   &WhenClause{GPU: []string{"nvidia"}},
+					},
+				},
+			},
+			wantErrs: 0,
+		},
+		{
+			name: "valid gpu values amd and intel",
+			recipe: &Recipe{
+				Metadata: MetadataSection{Name: "test"},
+				Steps: []Step{
+					{
+						Action: "run_command",
+						When:   &WhenClause{GPU: []string{"amd", "intel"}},
+					},
+				},
+			},
+			wantErrs: 0,
+		},
+		{
+			name: "valid gpu value none",
+			recipe: &Recipe{
+				Metadata: MetadataSection{Name: "test"},
+				Steps: []Step{
+					{
+						Action: "run_command",
+						When:   &WhenClause{GPU: []string{"none"}},
+					},
+				},
+			},
+			wantErrs: 0,
+		},
+		{
+			name: "valid gpu with os and arch",
+			recipe: &Recipe{
+				Metadata: MetadataSection{Name: "test"},
+				Steps: []Step{
+					{
+						Action: "run_command",
+						When:   &WhenClause{OS: []string{"linux"}, Arch: "amd64", GPU: []string{"nvidia"}},
 					},
 				},
 			},

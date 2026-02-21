@@ -193,6 +193,7 @@ type Matchable interface {
 	Arch() string
 	LinuxFamily() string
 	Libc() string
+	GPU() string
 }
 
 // MatchTarget is a lightweight struct for platform matching in recipe evaluation.
@@ -202,15 +203,17 @@ type MatchTarget struct {
 	arch        string
 	linuxFamily string
 	libc        string
+	gpu         string
 }
 
 // NewMatchTarget creates a MatchTarget for platform matching.
-func NewMatchTarget(os, arch, linuxFamily, libc string) MatchTarget {
+func NewMatchTarget(os, arch, linuxFamily, libc, gpu string) MatchTarget {
 	return MatchTarget{
 		os:          os,
 		arch:        arch,
 		linuxFamily: linuxFamily,
 		libc:        libc,
+		gpu:         gpu,
 	}
 }
 
@@ -225,6 +228,9 @@ func (m MatchTarget) LinuxFamily() string { return m.linuxFamily }
 
 // Libc returns the C library implementation.
 func (m MatchTarget) Libc() string { return m.libc }
+
+// GPU returns the GPU vendor.
+func (m MatchTarget) GPU() string { return m.gpu }
 
 // WhenClause represents platform and runtime conditions for conditional step execution.
 // Supports platform tuples ("os/arch"), OS arrays, and package manager filtering.
@@ -242,6 +248,7 @@ type WhenClause struct {
 	LinuxFamily    string   `toml:"linux_family,omitempty"`    // Linux family filter: "debian", "rhel", etc.
 	PackageManager string   `toml:"package_manager,omitempty"` // Runtime check (brew, apt, etc.)
 	Libc           []string `toml:"libc,omitempty"`            // Libc filter: ["glibc"], ["musl"], or both
+	GPU            []string `toml:"gpu,omitempty"`             // GPU vendor filter: ["nvidia"], ["amd", "intel"], etc.
 }
 
 // IsEmpty returns true if the when clause has no conditions (matches all platforms).
@@ -249,7 +256,7 @@ func (w *WhenClause) IsEmpty() bool {
 	return w == nil ||
 		(len(w.Platform) == 0 && len(w.OS) == 0 &&
 			w.Arch == "" && w.LinuxFamily == "" && w.PackageManager == "" &&
-			len(w.Libc) == 0)
+			len(w.Libc) == 0 && len(w.GPU) == 0)
 }
 
 // Matches returns true if the when clause conditions are satisfied for the given target.
@@ -310,6 +317,21 @@ func (w *WhenClause) Matches(target Matchable) bool {
 			}
 		}
 		if !libcMatch {
+			return false
+		}
+	}
+
+	// Check GPU filter
+	if len(w.GPU) > 0 {
+		gpu := target.GPU()
+		gpuMatch := false
+		for _, g := range w.GPU {
+			if g == gpu {
+				gpuMatch = true
+				break
+			}
+		}
+		if !gpuMatch {
 			return false
 		}
 	}
@@ -443,6 +465,22 @@ func (s *Step) UnmarshalTOML(data interface{}) error {
 			}
 		}
 
+		// Parse gpu array
+		if gpuData, ok := whenData["gpu"]; ok {
+			switch v := gpuData.(type) {
+			case []interface{}:
+				s.When.GPU = make([]string, 0, len(v))
+				for _, item := range v {
+					if str, ok := item.(string); ok {
+						s.When.GPU = append(s.When.GPU, str)
+					}
+				}
+			case string:
+				// Single string value, convert to array
+				s.When.GPU = []string{v}
+			}
+		}
+
 		// Validate mutual exclusivity
 		if len(s.When.Platform) > 0 && len(s.When.OS) > 0 {
 			return fmt.Errorf("when clause cannot have both 'platform' and 'os' fields")
@@ -519,6 +557,9 @@ func (s Step) ToMap() map[string]interface{} {
 		if len(s.When.Libc) > 0 {
 			whenMap["libc"] = s.When.Libc
 		}
+		if len(s.When.GPU) > 0 {
+			whenMap["gpu"] = s.When.GPU
+		}
 		result["when"] = whenMap
 	}
 
@@ -550,6 +591,7 @@ type Constraint struct {
 	OS          string // e.g., "linux", "darwin", or empty (any)
 	Arch        string // e.g., "amd64", "arm64", or empty (any)
 	LinuxFamily string // e.g., "debian", or empty (any linux)
+	GPU         string // e.g., "nvidia", "amd", or empty (any GPU)
 }
 
 // Clone returns a copy of the constraint, or an empty constraint if c is nil.
@@ -562,6 +604,7 @@ func (c *Constraint) Clone() *Constraint {
 		OS:          c.OS,
 		Arch:        c.Arch,
 		LinuxFamily: c.LinuxFamily,
+		GPU:         c.GPU,
 	}
 }
 
@@ -635,6 +678,11 @@ func MergeWhenClause(implicit *Constraint, when *WhenClause) (*Constraint, error
 				result.Arch, when.Arch)
 		}
 		result.Arch = when.Arch
+	}
+
+	// Propagate GPU filter (single value only, no conflict detection needed)
+	if len(when.GPU) == 1 {
+		result.GPU = when.GPU[0]
 	}
 
 	// Validate final constraint (catches invalid combinations like darwin+debian)

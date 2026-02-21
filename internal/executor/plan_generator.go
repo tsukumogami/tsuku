@@ -22,6 +22,10 @@ type PlanConfig struct {
 	// LinuxFamily specifies the target Linux distribution family (debian, rhel, arch, alpine, suse).
 	// Only used when OS is "linux". If empty on Linux, DetectFamily() is called.
 	LinuxFamily string
+	// GPU specifies the detected GPU vendor (nvidia, amd, intel, apple, none).
+	// Used for GPU-aware recipe step filtering. If empty, DetectGPU() is called
+	// to auto-detect the GPU vendor for the current system.
+	GPU string
 	// RecipeSource indicates where the recipe came from ("registry" or file path)
 	RecipeSource string
 	// OnWarning is called when a non-evaluable step is encountered
@@ -94,6 +98,13 @@ func (e *Executor) GeneratePlan(ctx context.Context, cfg PlanConfig) (*Installat
 		}
 	}
 
+	// Auto-detect GPU vendor when not provided.
+	// Mutates cfg.GPU (unlike linuxFamily above) so the value propagates
+	// to dependency plans via depCfg without additional plumbing.
+	if cfg.GPU == "" {
+		cfg.GPU = platform.DetectGPU()
+	}
+
 	// Construct target for step filtering
 	// This target is used to filter steps by both explicit When clauses and implicit action constraints
 	// Determine libc on Linux platforms
@@ -108,7 +119,7 @@ func (e *Executor) GeneratePlan(ctx context.Context, cfg PlanConfig) (*Installat
 			libc = platform.DetectLibc()
 		}
 	}
-	target := platform.NewTarget(targetOS+"/"+targetArch, linuxFamily, libc)
+	target := platform.NewTarget(targetOS+"/"+targetArch, linuxFamily, libc, cfg.GPU)
 
 	// Create version resolver
 	resolver := version.New()
@@ -665,7 +676,7 @@ func generateDependencyPlans(
 	} else if targetOS == "linux" {
 		libc = platform.DetectLibc()
 	}
-	target := platform.NewTarget(targetOS+"/"+targetArch, cfg.LinuxFamily, libc)
+	target := platform.NewTarget(targetOS+"/"+targetArch, cfg.LinuxFamily, libc, cfg.GPU)
 
 	deps := actions.ResolveDependenciesForTarget(r, targetOS, target)
 
@@ -744,6 +755,8 @@ func generateSingleDependencyPlan(
 	depCfg := PlanConfig{
 		OS:                 cfg.OS,
 		Arch:               cfg.Arch,
+		LinuxFamily:        cfg.LinuxFamily, // Propagate for family-specific dependency filtering
+		GPU:                cfg.GPU,         // Propagate for GPU-aware dependency filtering
 		RecipeSource:       "dependency",
 		OnWarning:          cfg.OnWarning,
 		Downloader:         cfg.Downloader,

@@ -224,18 +224,16 @@ func TestServerLifecycle_IdleTimeout(t *testing.T) {
 	})
 }
 
-func TestServerLifecycleWithManager_IdleTimeout(t *testing.T) {
+func TestServerLifecycle_WithAddonPath_IdleTimeout(t *testing.T) {
 	t.Run("uses default timeout", func(t *testing.T) {
 		t.Setenv(IdleTimeoutEnvVar, "")
-		t.Setenv("TSUKU_HOME", t.TempDir())
-		lifecycle := NewServerLifecycleWithManager("/tmp/test.sock", nil)
+		lifecycle := NewServerLifecycle("/tmp/test.sock", "/path/to/addon")
 		require.Equal(t, DefaultIdleTimeout, lifecycle.IdleTimeout())
 	})
 
 	t.Run("uses env var timeout", func(t *testing.T) {
 		t.Setenv(IdleTimeoutEnvVar, "1m")
-		t.Setenv("TSUKU_HOME", t.TempDir())
-		lifecycle := NewServerLifecycleWithManager("/tmp/test.sock", nil)
+		lifecycle := NewServerLifecycle("/tmp/test.sock", "/path/to/addon")
 		require.Equal(t, 1*time.Minute, lifecycle.IdleTimeout())
 	})
 }

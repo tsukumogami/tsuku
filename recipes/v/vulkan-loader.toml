@@ -1,0 +1,56 @@
+# vulkan-loader - Vulkan ICD loader library (libvulkan)
+#
+# The Vulkan loader is the central dispatch library that connects Vulkan
+# applications to GPU-specific ICD (Installable Client Driver) implementations.
+# At runtime it discovers ICD drivers (Mesa RADV for AMD, Mesa ANV for Intel)
+# via JSON manifests in /usr/share/vulkan/icd.d/ and /etc/vulkan/icd.d/.
+#
+# Without mesa-vulkan-drivers installed, the loader finds no ICDs and reports
+# zero Vulkan-capable devices. Both the loader and drivers must be present
+# for Vulkan compute workloads (e.g., llama.cpp Vulkan backend) to function.
+#
+# Distro-specific notes:
+#   - Debian/Ubuntu: "libvulkan1" provides libvulkan.so.
+#   - Fedora/RHEL: "vulkan-loader" provides libvulkan.so.
+#   - Arch Linux: "vulkan-icd-loader" provides libvulkan.so.
+#   - Alpine: "vulkan-loader" provides libvulkan.so.
+#   - openSUSE: "libvulkan1" provides libvulkan.so.
+
+[metadata]
+name = "vulkan-loader"
+description = "Vulkan ICD loader library (libvulkan)"
+homepage = "https://vulkan.lunarg.com/"
+type = "library"
+supported_os = ["linux"]
+dependencies = ["mesa-vulkan-drivers"]
+
+# Debian/Ubuntu
+[[steps]]
+action = "apt_install"
+packages = ["libvulkan1"]
+
+# Fedora/RHEL
+[[steps]]
+action = "dnf_install"
+packages = ["vulkan-loader"]
+
+# Arch Linux
+[[steps]]
+action = "pacman_install"
+packages = ["vulkan-icd-loader"]
+
+# Alpine
+[[steps]]
+action = "apk_install"
+packages = ["vulkan-loader"]
+
+# openSUSE
+[[steps]]
+action = "zypper_install"
+packages = ["libvulkan1"]
+
+[verify]
+command = "ldconfig -p"
+mode = "output"
+pattern = "libvulkan"
+reason = "Confirms libvulkan.so is registered in the dynamic linker cache"

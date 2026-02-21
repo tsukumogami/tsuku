@@ -50,6 +50,9 @@ func iRun(ctx context.Context, command string) (context.Context, error) {
 	if len(state.hiddenBinaries) > 0 {
 		env = append(env, "PATH="+filteredPATH(state.hiddenBinaries))
 	}
+	for k, v := range state.envOverrides {
+		env = append(env, k+"="+v)
+	}
 	cmd.Env = env
 
 	var stdout, stderr strings.Builder

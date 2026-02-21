@@ -272,6 +272,170 @@ func TestGitHubReleaseBuilder_FetchReleases_NotFound(t *testing.T) {
 	}
 }
 
+func TestFilterReleaseAssets(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    []string
+		expected []string
+	}{
+		{
+			name:     "empty input",
+			input:    []string{},
+			expected: []string{},
+		},
+		{
+			name: "keeps linux and darwin assets",
+			input: []string{
+				"tool_linux_amd64.tar.gz",
+				"tool_linux_arm64.tar.gz",
+				"tool_darwin_amd64.tar.gz",
+				"tool_darwin_arm64.tar.gz",
+			},
+			expected: []string{
+				"tool_linux_amd64.tar.gz",
+				"tool_linux_arm64.tar.gz",
+				"tool_darwin_amd64.tar.gz",
+				"tool_darwin_arm64.tar.gz",
+			},
+		},
+		{
+			name: "removes windows assets",
+			input: []string{
+				"tool_linux_amd64.tar.gz",
+				"tool_windows_amd64.zip",
+				"tool_Windows_arm64.zip",
+				"tool.exe",
+				"tool_win64.msi",
+			},
+			expected: []string{
+				"tool_linux_amd64.tar.gz",
+			},
+		},
+		{
+			name: "removes checksum and signature files",
+			input: []string{
+				"tool_linux_amd64.tar.gz",
+				"tool_linux_amd64.tar.gz.sha256",
+				"checksums.txt",
+				"SHASUMS256.txt",
+				"tool.sig",
+				"tool.asc",
+				"tool.sbom",
+			},
+			expected: []string{
+				"tool_linux_amd64.tar.gz",
+			},
+		},
+		{
+			name: "removes package formats",
+			input: []string{
+				"tool_linux_amd64.tar.gz",
+				"tool_amd64.deb",
+				"tool.x86_64.rpm",
+				"tool.apk",
+				"tool.pkg",
+				"tool.dmg",
+				"tool.snap",
+			},
+			expected: []string{
+				"tool_linux_amd64.tar.gz",
+			},
+		},
+		{
+			name: "removes irrelevant architectures",
+			input: []string{
+				"tool_linux_amd64.tar.gz",
+				"tool_linux_arm64.tar.gz",
+				"tool_linux_i386.tar.gz",
+				"tool_linux_i686.tar.gz",
+				"tool_linux_s390x.tar.gz",
+				"tool_linux_ppc64le.tar.gz",
+				"tool_linux_mips64.tar.gz",
+				"tool_linux_riscv64.tar.gz",
+				"tool_linux_armv7.tar.gz",
+				"tool_linux_armv6.tar.gz",
+			},
+			expected: []string{
+				"tool_linux_amd64.tar.gz",
+				"tool_linux_arm64.tar.gz",
+			},
+		},
+		{
+			name: "removes 386 with separator but not in version numbers",
+			input: []string{
+				"tool_linux_386.tar.gz",
+				"tool-386.tar.gz",
+				"tool_v1.3.386.tar.gz", // version number, keep
+			},
+			expected: []string{
+				"tool_v1.3.386.tar.gz",
+			},
+		},
+		{
+			name: "removes source archives",
+			input: []string{
+				"tool_linux_amd64.tar.gz",
+				"tool-src.tar.gz",
+				"tool-source.tar.gz",
+			},
+			expected: []string{
+				"tool_linux_amd64.tar.gz",
+			},
+		},
+		{
+			name: "keeps ambiguous assets without OS/arch",
+			input: []string{
+				"tool-v1.0.0.tar.gz",
+				"tool-v1.0.0.zip",
+			},
+			expected: []string{
+				"tool-v1.0.0.tar.gz",
+				"tool-v1.0.0.zip",
+			},
+		},
+		{
+			name: "realistic liberica-like filtering",
+			input: []string{
+				"bellsoft-jdk21-linux-amd64.tar.gz",
+				"bellsoft-jdk21-linux-amd64-crac.tar.gz",
+				"bellsoft-jdk21-linux-aarch64.tar.gz",
+				"bellsoft-jdk21-macos-amd64.tar.gz",
+				"bellsoft-jdk21-macos-aarch64.tar.gz",
+				"bellsoft-jdk21-windows-amd64.zip",
+				"bellsoft-jdk21-windows-amd64.msi",
+				"bellsoft-jdk21-linux-i586.tar.gz",
+				"bellsoft-jdk21-linux-ppc64le.tar.gz",
+				"bellsoft-jdk21-linux-riscv64.tar.gz",
+				"bellsoft-jdk21-linux-amd64.deb",
+				"bellsoft-jdk21-linux-amd64.rpm",
+				"sha1sum.txt",
+			},
+			expected: []string{
+				"bellsoft-jdk21-linux-amd64.tar.gz",
+				"bellsoft-jdk21-linux-amd64-crac.tar.gz",
+				"bellsoft-jdk21-linux-aarch64.tar.gz",
+				"bellsoft-jdk21-macos-amd64.tar.gz",
+				"bellsoft-jdk21-macos-aarch64.tar.gz",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := filterReleaseAssets(tt.input)
+			if len(got) != len(tt.expected) {
+				t.Fatalf("filterReleaseAssets() returned %d assets, want %d\ngot:  %v\nwant: %v",
+					len(got), len(tt.expected), got, tt.expected)
+			}
+			for i, asset := range got {
+				if asset != tt.expected[i] {
+					t.Errorf("asset[%d] = %q, want %q", i, asset, tt.expected[i])
+				}
+			}
+		})
+	}
+}
+
 func TestGitHubReleaseBuilder_FetchRepoMeta(t *testing.T) {
 	mockProv := &mockProvider{name: "mock"}
 	factory := createMockFactory(mockProv)

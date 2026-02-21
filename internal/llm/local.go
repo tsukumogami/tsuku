@@ -35,8 +35,25 @@ func NewLocalProvider() *LocalProvider {
 // The idle timeout is passed to the addon server when starting it.
 func NewLocalProviderWithTimeout(idleTimeout time.Duration) *LocalProvider {
 	socketPath := SocketPath()
-	addonManager := addon.NewAddonManager()
-	lifecycle := NewServerLifecycleWithManager(socketPath, addonManager)
+	// Create addon manager without an installer -- the LocalProvider is used
+	// as a fallback LLM provider and does not drive installation itself.
+	// The caller (typically the install command) handles installation.
+	addonManager := addon.NewAddonManager("", nil, "")
+	lifecycle := NewServerLifecycle(socketPath, "")
+	lifecycle.SetIdleTimeout(idleTimeout)
+
+	return &LocalProvider{
+		addonManager: addonManager,
+		lifecycle:    lifecycle,
+	}
+}
+
+// NewLocalProviderWithInstaller creates a local provider wired with an Installer
+// so it can install the addon via the recipe system when needed.
+func NewLocalProviderWithInstaller(installer addon.Installer, backendOverride string, idleTimeout time.Duration) *LocalProvider {
+	socketPath := SocketPath()
+	addonManager := addon.NewAddonManager("", installer, backendOverride)
+	lifecycle := NewServerLifecycle(socketPath, "")
 	lifecycle.SetIdleTimeout(idleTimeout)
 
 	return &LocalProvider{
@@ -53,12 +70,16 @@ func (p *LocalProvider) Name() string {
 // Complete sends a completion request to the local addon.
 // It ensures the addon is downloaded, verified, and running before sending the request.
 func (p *LocalProvider) Complete(ctx context.Context, req *CompletionRequest) (*CompletionResponse, error) {
-	// Ensure addon is downloaded and verified
-	if _, err := p.addonManager.EnsureAddon(ctx); err != nil {
+	// Ensure addon is installed via recipe system
+	addonPath, err := p.addonManager.EnsureAddon(ctx)
+	if err != nil {
 		return nil, fmt.Errorf("failed to ensure addon: %w", err)
 	}
 
-	// Ensure the addon server is running (includes pre-execution verification)
+	// Update lifecycle with the resolved binary path
+	p.lifecycle.addonPath = addonPath
+
+	// Ensure the addon server is running
 	if err := p.lifecycle.EnsureRunning(ctx); err != nil {
 		return nil, fmt.Errorf("local LLM addon not available: %w", err)
 	}
@@ -68,11 +89,30 @@ func (p *LocalProvider) Complete(ctx context.Context, req *CompletionRequest) (*
 		return nil, fmt.Errorf("failed to connect to local LLM addon: %w", err)
 	}
 
-	// Convert to proto format
+	// Convert and send request
+	return p.sendRequest(ctx, req)
+}
+
+// invalidateConnection closes and nils the cached gRPC connection and client
+// so that subsequent calls trigger reconnection via ensureConnection instead
+// of reusing a dead connection.
+func (p *LocalProvider) invalidateConnection() {
+	p.client = nil
+	if p.conn != nil {
+		_ = p.conn.Close()
+		p.conn = nil
+	}
+}
+
+// sendRequest converts the request to proto format, sends it over gRPC,
+// and invalidates the cached connection on error so subsequent calls
+// trigger reconnection via ensureConnection.
+func (p *LocalProvider) sendRequest(ctx context.Context, req *CompletionRequest) (*CompletionResponse, error) {
 	pbReq := toProtoRequest(req)
 
 	pbResp, err := p.client.Complete(ctx, pbReq)
 	if err != nil {
+		p.invalidateConnection()
 		return nil, fmt.Errorf("local LLM completion failed: %w", err)
 	}
 
@@ -117,7 +157,11 @@ func (p *LocalProvider) Shutdown(ctx context.Context, graceful bool) error {
 		return nil
 	}
 	_, err := p.client.Shutdown(ctx, &pb.ShutdownRequest{Graceful: graceful})
-	return err
+	if err != nil {
+		p.invalidateConnection()
+		return err
+	}
+	return nil
 }
 
 // GetStatus retrieves the addon's current status.
@@ -125,7 +169,12 @@ func (p *LocalProvider) GetStatus(ctx context.Context) (*pb.StatusResponse, erro
 	if err := p.ensureConnection(ctx); err != nil {
 		return nil, err
 	}
-	return p.client.GetStatus(ctx, &pb.StatusRequest{})
+	resp, err := p.client.GetStatus(ctx, &pb.StatusRequest{})
+	if err != nil {
+		p.invalidateConnection()
+		return nil, err
+	}
+	return resp, nil
 }
 
 // SocketPath returns the path to the Unix domain socket.

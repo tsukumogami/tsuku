@@ -122,8 +122,9 @@ func DetectFamily() (string, error) {
 // For non-Linux platforms, returns Target with empty LinuxFamily and Libc.
 func DetectTarget() (Target, error) {
 	platform := runtime.GOOS + "/" + runtime.GOARCH
+	gpu := DetectGPU()
 	if runtime.GOOS != "linux" {
-		return Target{Platform: platform}, nil
+		return NewTarget(platform, "", "", gpu), nil
 	}
 
 	family, err := DetectFamily()
@@ -132,5 +133,5 @@ func DetectTarget() (Target, error) {
 	}
 
 	libc := DetectLibc()
-	return NewTarget(platform, family, libc), nil
+	return NewTarget(platform, family, libc, gpu), nil
 }

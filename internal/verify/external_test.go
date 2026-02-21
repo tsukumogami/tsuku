@@ -108,7 +108,7 @@ func TestCheckExternalLibrary_NonLibrary(t *testing.T) {
 		},
 	}
 
-	target := platform.NewTarget("linux/amd64", "alpine", "musl")
+	target := platform.NewTarget("linux/amd64", "alpine", "musl", "")
 	info, err := CheckExternalLibrary(r, target)
 	if err != nil {
 		t.Errorf("CheckExternalLibrary() error = %v", err)
@@ -132,7 +132,7 @@ func TestCheckExternalLibrary_NoMatchingSteps(t *testing.T) {
 		},
 	}
 
-	target := platform.NewTarget("linux/amd64", "alpine", "musl")
+	target := platform.NewTarget("linux/amd64", "alpine", "musl", "")
 	info, err := CheckExternalLibrary(r, target)
 	if err != nil {
 		t.Errorf("CheckExternalLibrary() error = %v", err)
@@ -158,7 +158,7 @@ func TestCheckExternalLibrary_WrongFamily(t *testing.T) {
 	}
 
 	// Target is debian, not alpine
-	target := platform.NewTarget("linux/amd64", "debian", "glibc")
+	target := platform.NewTarget("linux/amd64", "debian", "glibc", "")
 	info, err := CheckExternalLibrary(r, target)
 	if err != nil {
 		t.Errorf("CheckExternalLibrary() error = %v", err)

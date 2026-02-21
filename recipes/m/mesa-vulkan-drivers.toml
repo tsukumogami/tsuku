@@ -1,0 +1,57 @@
+# mesa-vulkan-drivers - Mesa Vulkan ICD drivers for AMD and Intel GPUs
+#
+# Provides the Vulkan Installable Client Driver (ICD) implementations for
+# AMD (RADV) and Intel (ANV) GPUs. The Vulkan loader discovers these drivers
+# at runtime via ICD JSON manifest files in /usr/share/vulkan/icd.d/ or
+# /etc/vulkan/icd.d/.
+#
+# Without these drivers, no AMD or Intel GPUs are visible to Vulkan
+# applications, even if the Vulkan loader is installed.
+#
+# Distro-specific notes:
+#   - Debian/Ubuntu: "mesa-vulkan-drivers" provides both radeon and intel ICDs.
+#   - Fedora/RHEL: "mesa-vulkan-drivers" provides both radeon and intel ICDs.
+#   - Arch Linux: AMD and Intel drivers are separate packages. "vulkan-radeon"
+#     provides RADV, "vulkan-intel" provides ANV.
+#   - Alpine: AMD and Intel drivers are separate packages. "mesa-vulkan-ati"
+#     provides RADV, "mesa-vulkan-intel" provides ANV.
+#   - openSUSE: "Mesa-vulkan-device-select" pulls in the Mesa Vulkan driver
+#     layer for device selection, which depends on the ICD drivers.
+
+[metadata]
+name = "mesa-vulkan-drivers"
+description = "Mesa Vulkan ICD drivers (AMD RADV and Intel ANV)"
+homepage = "https://www.mesa3d.org/"
+type = "library"
+supported_os = ["linux"]
+
+# Debian/Ubuntu
+[[steps]]
+action = "apt_install"
+packages = ["mesa-vulkan-drivers"]
+
+# Fedora/RHEL
+[[steps]]
+action = "dnf_install"
+packages = ["mesa-vulkan-drivers"]
+
+# Arch Linux (separate packages for each vendor)
+[[steps]]
+action = "pacman_install"
+packages = ["vulkan-radeon", "vulkan-intel"]
+
+# Alpine (separate packages for each vendor)
+[[steps]]
+action = "apk_install"
+packages = ["mesa-vulkan-ati", "mesa-vulkan-intel"]
+
+# openSUSE
+[[steps]]
+action = "zypper_install"
+packages = ["Mesa-vulkan-device-select"]
+
+[verify]
+command = "ls /usr/share/vulkan/icd.d/*.json /etc/vulkan/icd.d/*.json 2>/dev/null"
+mode = "output"
+pattern = "."
+reason = "ICD JSON files confirm Mesa Vulkan drivers are installed; exact filenames vary by distro"

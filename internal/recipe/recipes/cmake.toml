@@ -2,24 +2,45 @@
 name = "cmake"
 description = "Cross-platform build system generator"
 homepage = "https://cmake.org/"
-dependencies = ["openssl", "patchelf"]
 binaries = ["bin/cmake", "bin/ctest", "bin/cpack"]
 
+# glibc Linux: Homebrew bottles with step-level dependencies
 [[steps]]
 action = "homebrew"
 formula = "cmake"
+when = { os = ["linux"], libc = ["glibc"] }
+dependencies = ["openssl", "patchelf"]
 
 [[steps]]
 action = "set_rpath"
 binaries = ["bin/cmake", "bin/ctest", "bin/cpack", "bin/ccmake"]
 rpath = "$ORIGIN/../lib:{libs_dir}/openssl-{deps.openssl.version}/lib"
+when = { os = ["linux"], libc = ["glibc"] }
 
 [[steps]]
 action = "install_binaries"
 install_mode = "directory"
 outputs = ["bin/cmake", "bin/ctest", "bin/cpack", "bin/ccmake"]
+when = { os = ["linux"], libc = ["glibc"] }
+
+# musl Linux: System packages (apk handles transitive deps)
+[[steps]]
+action = "apk_install"
+packages = ["cmake"]
+when = { os = ["linux"], libc = ["musl"] }
+
+# macOS: Homebrew
+[[steps]]
+action = "homebrew"
+formula = "cmake"
+when = { os = ["darwin"] }
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = ["bin/cmake", "bin/ctest", "bin/cpack", "bin/ccmake"]
+when = { os = ["darwin"] }
 
 [verify]
-# Use absolute path to ensure we verify the installed binary, not system cmake
-command = "{install_dir}/bin/cmake --version"
+command = "cmake --version"
 pattern = "cmake version {version}"

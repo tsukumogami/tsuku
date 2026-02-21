@@ -24,6 +24,7 @@ type LLMConfig interface {
 	LLMLocalEnabled() bool
 	LLMIdleTimeout() time.Duration
 	LLMProviders() []string
+	LLMBackend() string
 }
 
 // ErrLLMDisabled is returned when LLM features are disabled via configuration.

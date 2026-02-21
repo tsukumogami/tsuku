@@ -1,0 +1,27 @@
+{
+  "format_version": 4,
+  "tool": "pkg-config",
+  "version": "2.5.1",
+  "platform": {
+    "os": "linux",
+    "arch": "amd64",
+    "linux_family": "alpine"
+  },
+  "deterministic": false,
+  "steps": [
+    {
+      "action": "apk_install",
+      "params": {
+        "packages": [
+          "pkgconf"
+        ]
+      },
+      "evaluable": false,
+      "deterministic": false
+    }
+  ],
+  "verify": {
+    "command": "pkg-config --version",
+    "pattern": "{version}"
+  }
+}

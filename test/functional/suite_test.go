@@ -2,6 +2,7 @@ package functional
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -22,8 +23,9 @@ type testState struct {
 	stdout         string
 	stderr         string
 	exitCode       int
-	hiddenBinaries []string // binaries to hide from PATH (e.g., "cargo", "gem")
-	emptyRegistry  bool     // when true, use an empty registry instead of repo's recipes/
+	hiddenBinaries []string          // binaries to hide from PATH (e.g., "cargo", "gem")
+	emptyRegistry  bool              // when true, use an empty registry instead of repo's recipes/
+	envOverrides   map[string]string // per-scenario env var overrides (appended last to win)
 }
 
 func getState(ctx context.Context) *testState {
@@ -103,8 +105,10 @@ func initializeScenario(ctx *godog.ScenarioContext, binPath string) {
 
 		// Parse @requires-no-<binary> tags to hide binaries from PATH
 		// Parse @empty-registry tag to use an empty registry for discovery tests
+		// Parse @fake-llm-binary tag to create a fake tsuku-llm that exits with GPU error
 		var hidden []string
 		emptyRegistry := false
+		envOverrides := make(map[string]string)
 		for _, tag := range sc.Tags {
 			if strings.HasPrefix(tag.Name, "@requires-no-") {
 				binary := strings.TrimPrefix(tag.Name, "@requires-no-")
@@ -112,6 +116,18 @@ func initializeScenario(ctx *godog.ScenarioContext, binPath string) {
 			}
 			if tag.Name == "@empty-registry" {
 				emptyRegistry = true
+			}
+			if tag.Name == "@fake-llm-binary" {
+				fakeBin := filepath.Join(homeDir, "fake-tsuku-llm")
+				script := "#!/bin/sh\necho 'no GPU detected: tsuku-llm requires a GPU with at least 8 GB VRAM' >&2\nexit 1\n"
+				if err := os.WriteFile(fakeBin, []byte(script), 0o755); err != nil {
+					return ctx, fmt.Errorf("creating fake LLM binary: %w", err)
+				}
+				envOverrides["TSUKU_LLM_BINARY"] = fakeBin
+				// Strip cloud API keys so the factory falls back to local provider
+				envOverrides["ANTHROPIC_API_KEY"] = ""
+				envOverrides["GOOGLE_API_KEY"] = ""
+				envOverrides["GEMINI_API_KEY"] = ""
 			}
 		}
 
@@ -121,6 +137,7 @@ func initializeScenario(ctx *godog.ScenarioContext, binPath string) {
 			repoRoot:       repoRoot,
 			hiddenBinaries: hidden,
 			emptyRegistry:  emptyRegistry,
+			envOverrides:   envOverrides,
 		}
 		return setState(ctx, state), nil
 	})

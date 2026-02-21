@@ -39,7 +39,16 @@ fn compile_llama_cpp() -> Result<(), Box<dyn std::error::Error>> {
     #[cfg(feature = "cuda")]
     {
         cmake_config.define("GGML_CUDA", "ON");
-        println!("cargo:warning=Building with CUDA support");
+        // Allow overriding CUDA architectures via env var for cross-compilation
+        // or when the toolkit is older than the installed GPU (e.g. toolkit 12.0
+        // with Blackwell sm_120). Use "90-virtual" to generate PTX that the
+        // driver can JIT-compile for newer architectures.
+        if let Ok(archs) = env::var("TSUKU_CUDA_ARCHITECTURES") {
+            cmake_config.define("CMAKE_CUDA_ARCHITECTURES", &archs);
+            println!("cargo:warning=Building with CUDA support (architectures: {})", archs);
+        } else {
+            println!("cargo:warning=Building with CUDA support (native architectures)");
+        }
     }
 
     #[cfg(not(feature = "cuda"))]

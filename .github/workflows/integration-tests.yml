@@ -49,7 +49,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        family: [debian, rhel, arch, alpine, suse]
+        # alpine excluded: pkg-config uses apk_install (not homebrew) on musl
+        family: [debian, rhel, arch, suse]
     steps:
       - name: Checkout code
         uses: actions/checkout@v6

@@ -1,0 +1,27 @@
+{
+  "format_version": 4,
+  "tool": "ninja",
+  "version": "1.13.2",
+  "platform": {
+    "os": "linux",
+    "arch": "amd64",
+    "linux_family": "alpine"
+  },
+  "deterministic": false,
+  "steps": [
+    {
+      "action": "apk_install",
+      "params": {
+        "packages": [
+          "ninja-build"
+        ]
+      },
+      "evaluable": false,
+      "deterministic": false
+    }
+  ],
+  "verify": {
+    "command": "ninja --version",
+    "pattern": "{version}"
+  }
+}
