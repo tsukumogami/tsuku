@@ -420,7 +420,9 @@ func (l *Loader) lookupSatisfiesEmbeddedOnly(name string) (string, bool) {
 }
 
 // LookupSatisfies checks whether a name is satisfied by an existing recipe.
-// This is the public API for downstream callers (e.g., tsuku create in #1827).
+// It exposes the satisfies index for callers that need the mapping without
+// loading the full recipe. Currently unused -- tsuku create uses
+// GetWithContext instead, which includes the satisfies fallback.
 // Returns the canonical recipe name and true if found, or "" and false.
 func (l *Loader) LookupSatisfies(name string) (string, bool) {
 	return l.lookupSatisfies(name)

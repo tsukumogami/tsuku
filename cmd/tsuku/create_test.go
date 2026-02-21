@@ -749,43 +749,27 @@ func TestCheckExistingRecipe_NilLoader(t *testing.T) {
 	}
 }
 
-func TestCheckExistingRecipe_ForceSkipsCheck(t *testing.T) {
-	// Verify that --force bypasses the satisfies duplicate check.
-	// The production code in runCreate (create.go:485) guards the check
-	// with `if !createForce`. This test sets the flag and exercises that
-	// same guard to confirm the check block is never entered.
+func TestCheckExistingRecipe_AlwaysReportsMatch(t *testing.T) {
+	// checkExistingRecipe is a pure lookup helper: it always reports whether
+	// a recipe exists, regardless of any flags. The --force bypass lives at
+	// the call site in runCreate (create.go:485), not inside the helper.
+	//
+	// This test confirms the helper returns a match for both direct and
+	// satisfies lookups, which is the correct behavior -- callers decide
+	// whether to act on the result.
 	l := newTestLoader(t)
 
-	// Confirm the recipe IS found when force is off (precondition).
-	oldForce := createForce
-	createForce = false
-	defer func() { createForce = oldForce }()
-
-	if _, found := checkExistingRecipe(l, "openssl"); !found {
-		t.Fatal("precondition failed: expected recipe to exist")
+	// Direct name match should always be reported.
+	if canonicalName, found := checkExistingRecipe(l, "openssl"); !found {
+		t.Fatal("expected checkExistingRecipe to find 'openssl'")
+	} else if canonicalName != "openssl" {
+		t.Errorf("expected canonical name 'openssl', got %q", canonicalName)
 	}
 
-	// Now set --force and replicate the guard from runCreate.
-	createForce = true
-
-	checkReached := false
-	if !createForce {
-		if _, found := checkExistingRecipe(l, "openssl"); found {
-			checkReached = true
-		}
-	}
-	if checkReached {
-		t.Fatal("expected satisfies check to be bypassed when --force is set")
-	}
-
-	// Also verify the satisfies path is bypassed with --force.
-	checkReached = false
-	if !createForce {
-		if _, found := checkExistingRecipe(l, "openssl@3"); found {
-			checkReached = true
-		}
-	}
-	if checkReached {
-		t.Fatal("expected satisfies fallback check to be bypassed when --force is set")
+	// Satisfies fallback match should always be reported.
+	if canonicalName, found := checkExistingRecipe(l, "openssl@3"); !found {
+		t.Fatal("expected checkExistingRecipe to find 'openssl@3' via satisfies")
+	} else if canonicalName != "openssl" {
+		t.Errorf("expected canonical name 'openssl', got %q", canonicalName)
 	}
 }

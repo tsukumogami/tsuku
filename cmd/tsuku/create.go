@@ -131,7 +131,7 @@ var (
 
 func init() {
 	createCmd.Flags().StringVar(&createFrom, "from", "", "Source: ecosystem name or github:owner/repo (required)")
-	createCmd.Flags().BoolVar(&createForce, "force", false, "Overwrite existing local recipe")
+	createCmd.Flags().BoolVar(&createForce, "force", false, "Skip duplicate/satisfies checks and overwrite existing recipe")
 	createCmd.Flags().BoolVar(&createAutoApprove, "yes", false, "Skip recipe preview confirmation")
 	createCmd.Flags().BoolVar(&createSkipSandbox, "skip-sandbox", false, "Skip container sandbox testing (use when Docker is unavailable)")
 	createCmd.Flags().BoolVar(&createDeterministicOnly, "deterministic-only", false, "Skip LLM fallback; exit with structured error if deterministic generation fails")
