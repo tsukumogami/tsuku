@@ -45,6 +45,8 @@ jobs:
       # when needed by npm_install recipes
 
       - name: Create recipe for prettier
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./tsuku create prettier --from npm --yes
 
       - name: Verify recipe was created
@@ -88,6 +90,8 @@ jobs:
       # when needed by npm_install recipes
 
       - name: Create recipe for prettier
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./tsuku create prettier --from npm --yes
 
       - name: Verify recipe was created

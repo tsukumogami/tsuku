@@ -45,6 +45,8 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Create recipe for hyperfine
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./tsuku create hyperfine --from crates.io --yes
 
       - name: Verify recipe was created
@@ -88,6 +90,8 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Create recipe for hyperfine
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./tsuku create hyperfine --from crates.io --yes
 
       - name: Verify recipe was created

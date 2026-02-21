@@ -50,6 +50,8 @@ jobs:
         run: pip install pipx
 
       - name: Create recipe for ruff
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./tsuku create ruff --from pypi --yes
 
       - name: Verify recipe was created
@@ -98,6 +100,8 @@ jobs:
         run: pip install pipx
 
       - name: Create recipe for ruff
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./tsuku create ruff --from pypi --yes
 
       - name: Verify recipe was created
