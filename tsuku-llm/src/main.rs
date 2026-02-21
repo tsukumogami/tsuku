@@ -387,7 +387,7 @@ impl InferenceService for LlmServer {
         let max_tokens = if req.max_tokens > 0 {
             req.max_tokens as usize
         } else {
-            512 // Default if not specified
+            4096 // Default: enough for extract_pattern JSON with platform mappings
         };
         let mut pos = tokens.len() as i32;
 
@@ -422,9 +422,10 @@ impl InferenceService for LlmServer {
             let logits = ctx.get_logits(logits_idx);
             let next_token = self.sampler.sample(logits);
 
-            // Check for EOS (token 0 or 2 are common EOS tokens)
-            if next_token == 0 || next_token == 2 {
-                debug!("EOS token {} encountered", next_token);
+            // Check for end-of-generation tokens using the model's vocabulary.
+            // For Qwen 2.5, this includes <|im_end|> (151645), <|endoftext|> (151643), etc.
+            if self.model.is_eog(next_token) {
+                debug!("EOG token {} encountered", next_token);
                 break;
             }
 
@@ -698,8 +699,12 @@ async fn main() -> Result<()> {
         hardware_profile.gpu_backend
     );
 
-    // Select and load model
-    let selector = model::ModelSelector::new();
+    // Select and load model (env overrides for testing)
+    let model_config = model::ModelConfig {
+        local_model: std::env::var("TSUKU_LLM_MODEL").ok().filter(|s| !s.is_empty()),
+        local_backend: std::env::var("TSUKU_LLM_BACKEND").ok().filter(|s| !s.is_empty()),
+    };
+    let selector = model::ModelSelector::with_config(model_config);
     let model_spec = selector
         .select(&hardware_profile)
         .context("Model selection failed")?;
@@ -786,11 +791,16 @@ async fn main() -> Result<()> {
     let model = Arc::new(model);
     info!("Model loaded successfully");
 
-    // Create inference context using the model's full training context window.
-    // Recipe generation prompts can reach ~27K tokens, so we need the full 32K
-    // that Qwen2.5-0.5B supports. Batch size matches context for single-pass
-    // prompt ingestion.
-    let n_ctx = model.n_ctx_train();
+    // Create inference context with a VRAM-aware context window.
+    // Recipe generation prompts can reach ~27K tokens. We cap context size
+    // rather than using n_ctx_train() because larger models have huge training
+    // contexts (14B has 128K) that would exhaust GPU VRAM on KV cache alone.
+    //
+    // Context budget: 14B Q4_K_M model = 8.1 GB, KV cache = ~0.19 GB/K tokens.
+    // On a 16 GB GPU (~13.7 GB free), 32K context would need 6 GB KV = 14.1 GB total (OOM).
+    // 24K context needs 4.5 GB KV = 12.6 GB total (fits with headroom).
+    const MAX_CTX: u32 = 24576;
+    let n_ctx = model.n_ctx_train().min(MAX_CTX);
     let context_params = ContextParams {
         n_ctx,
         n_batch: n_ctx,

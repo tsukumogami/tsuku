@@ -88,6 +88,14 @@ impl LlamaModel {
         unsafe { bindings::llama_model_get_vocab(self.ptr.as_ptr()) }
     }
 
+    /// Check if a token is an end-of-generation token.
+    ///
+    /// For Qwen 2.5, EOG tokens include `<|im_end|>` (151645),
+    /// `<|endoftext|>` (151643), and other special tokens.
+    pub fn is_eog(&self, token: i32) -> bool {
+        unsafe { bindings::llama_vocab_is_eog(self.vocab(), token) }
+    }
+
     /// Get the raw model pointer.
     ///
     /// # Safety
