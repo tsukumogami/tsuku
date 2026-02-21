@@ -15,7 +15,7 @@
     "llm_github_k3d_file_baseline_k3d": "pass",
     "llm_github_k9s_capitalized_os_k9s": "pass",
     "llm_github_kopia_macos_mapping_kopia": "pass",
-    "llm_github_liberica_multi_binary_liberica": "fail",
+    "llm_github_liberica_multi_binary_liberica": "pass",
     "llm_github_minikube_file_no_mapping_minikube": "pass",
     "llm_github_stern_baseline_stern": "pass",
     "llm_github_tflint_zip_tflint": "pass",
