@@ -69,12 +69,14 @@ fi
 "$TSUKU" install --recipe "$CURL_RECIPE" --force
 echo ""
 
-# Locate the tsuku-installed curl binary
-TSUKU_CURL="$TSUKU_HOME/bin/curl"
+# Locate the tsuku-installed curl binary (symlinked to tools/current/)
+TSUKU_CURL="$TSUKU_HOME/tools/current/curl"
 if [ ! -x "$TSUKU_CURL" ]; then
     echo "ERROR: curl binary not found at $TSUKU_CURL"
-    echo "Contents of TSUKU_HOME/bin:"
-    ls -la "$TSUKU_HOME/bin/" 2>/dev/null || echo "(empty)"
+    echo "Contents of TSUKU_HOME/tools/current:"
+    ls -la "$TSUKU_HOME/tools/current/" 2>/dev/null || echo "(empty)"
+    echo "Contents of TSUKU_HOME/tools:"
+    ls "$TSUKU_HOME/tools/" 2>/dev/null || echo "(empty)"
     exit 1
 fi
 echo "curl binary: $TSUKU_CURL"
