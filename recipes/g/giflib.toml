@@ -1,0 +1,43 @@
+[metadata]
+name = "giflib"
+description = "Library and utilities for processing GIFs"
+homepage = "https://giflib.sourceforge.net/"
+type = "library"
+
+# glibc Linux: Homebrew bottle
+[[steps]]
+action = "homebrew"
+formula = "giflib"
+when = { os = ["linux"], libc = ["glibc"] }
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = [
+    "lib/libgif.so",
+    "lib/libgif.a",
+    "include/gif_lib.h",
+]
+when = { os = ["linux"], libc = ["glibc"] }
+
+# musl Linux: Alpine package
+[[steps]]
+action = "apk_install"
+packages = ["giflib-dev"]
+when = { os = ["linux"], libc = ["musl"] }
+
+# macOS: Homebrew
+[[steps]]
+action = "homebrew"
+formula = "giflib"
+when = { os = ["darwin"] }
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = [
+    "lib/libgif.dylib",
+    "lib/libgif.a",
+    "include/gif_lib.h",
+]
+when = { os = ["darwin"] }

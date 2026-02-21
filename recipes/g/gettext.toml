@@ -1,0 +1,43 @@
+[metadata]
+name = "gettext"
+description = "GNU internationalization and localization support"
+homepage = "https://www.gnu.org/software/gettext/"
+type = "library"
+
+# glibc Linux: Homebrew bottle
+[[steps]]
+action = "homebrew"
+formula = "gettext"
+when = { os = ["linux"], libc = ["glibc"] }
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = [
+    "lib/libintl.so",
+    "lib/libintl.a",
+    "include/libintl.h",
+]
+when = { os = ["linux"], libc = ["glibc"] }
+
+# musl Linux: Alpine package (libintl is part of musl or provided by musl-libintl)
+[[steps]]
+action = "apk_install"
+packages = ["gettext-dev"]
+when = { os = ["linux"], libc = ["musl"] }
+
+# macOS: Homebrew
+[[steps]]
+action = "homebrew"
+formula = "gettext"
+when = { os = ["darwin"] }
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = [
+    "lib/libintl.dylib",
+    "lib/libintl.a",
+    "include/libintl.h",
+]
+when = { os = ["darwin"] }

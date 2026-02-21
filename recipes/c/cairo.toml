@@ -1,0 +1,47 @@
+[metadata]
+name = "cairo"
+description = "Vector graphics library with cross-device output support"
+homepage = "https://cairographics.org/"
+type = "library"
+
+# glibc Linux: Homebrew bottle
+[[steps]]
+action = "homebrew"
+formula = "cairo"
+when = { os = ["linux"], libc = ["glibc"] }
+dependencies = ["fontconfig", "glib", "pixman"]
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = [
+    "lib/libcairo.so",
+    "lib/libcairo.a",
+    "lib/pkgconfig/cairo.pc",
+    "include/cairo/cairo.h",
+]
+when = { os = ["linux"], libc = ["glibc"] }
+
+# musl Linux: Alpine package
+[[steps]]
+action = "apk_install"
+packages = ["cairo-dev"]
+when = { os = ["linux"], libc = ["musl"] }
+
+# macOS: Homebrew
+[[steps]]
+action = "homebrew"
+formula = "cairo"
+when = { os = ["darwin"] }
+dependencies = ["fontconfig", "glib", "pixman"]
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = [
+    "lib/libcairo.dylib",
+    "lib/libcairo.a",
+    "lib/pkgconfig/cairo.pc",
+    "include/cairo/cairo.h",
+]
+when = { os = ["darwin"] }

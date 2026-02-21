@@ -21,6 +21,7 @@ on:
       - 'testdata/recipes/*.toml'
       - 'test/scripts/verify-*.sh'
       - 'test/scripts/test-*-provisioning.sh'
+      - 'test/scripts/test-tls-cacerts.sh'
       - '.github/workflows/build-essentials.yml'
       - 'go.mod'
   pull_request:
@@ -41,6 +42,7 @@ on:
       - 'scripts/*.sh'
       - 'test/scripts/verify-*.sh'
       - 'test/scripts/test-*-provisioning.sh'
+      - 'test/scripts/test-tls-cacerts.sh'
       - '.github/workflows/build-essentials.yml'
       - 'go.mod'
 
@@ -213,6 +215,31 @@ jobs:
 
       - name: "Verify tool functionality"
         run: ./test/scripts/verify-tool.sh git-source
+
+  # Test TLS CA certificate discovery - validates that tsuku-installed tools
+  # can find and use tsuku-installed CA certs for HTTPS requests
+  test-tls-cacerts-linux:
+    name: "Linux x86_64: tls-cacerts"
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+
+      - name: Set up Go
+        uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5  # v6.2.0
+        with:
+          go-version-file: 'go.mod'
+          cache-dependency-path: go.sum
+
+      - name: Build tsuku
+        run: CGO_ENABLED=0 go build -o tsuku ./cmd/tsuku
+
+      - name: "Test TLS with tsuku-installed CA certs and curl"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
+        run: ./test/scripts/test-tls-cacerts.sh ./tsuku
 
   # Test zig installation - Linux only
   test-zig-linux:

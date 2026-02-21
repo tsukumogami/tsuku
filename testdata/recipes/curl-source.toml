@@ -1,0 +1,49 @@
+[metadata]
+name = "curl"
+description = "Command line tool for transferring data with URLs"
+homepage = "https://curl.se/"
+dependencies = ["openssl", "zlib"]
+binaries = ["bin/curl"]
+supported_os = ["linux"]
+
+[version]
+source = "homebrew"
+formula = "curl"
+
+[[steps]]
+action = "download"
+url = "https://curl.se/download/curl-{version}.tar.gz"
+signature_url = "https://curl.se/download/curl-{version}.tar.gz.asc"
+signature_key_url = "https://daniel.haxx.se/mykey.asc"
+signature_key_fingerprint = "27EDEAF22F3ABCEB50DB9A125CC908FDB71E12C2"
+
+[[steps]]
+action = "extract"
+archive = "curl-{version}.tar.gz"
+format = "tar.gz"
+
+[[steps]]
+action = "setup_build_env"
+
+[[steps]]
+action = "configure_make"
+source_dir = "curl-{version}"
+configure_args = ["--with-openssl", "--with-zlib", "--disable-silent-rules", "--without-libpsl"]
+executables = ["curl"]
+
+# NOTE: set_rpath only targets the binary, not the shared library, for cross-platform
+# compatibility. macOS uses .dylib while Linux uses .so for library naming.
+# See issue #653 for future improvement of cross-platform library RPATH support.
+[[steps]]
+action = "set_rpath"
+binaries = [".install/bin/curl"]
+rpath = "$ORIGIN/../lib:{libs_dir}/openssl-{deps.openssl.version}/lib:{libs_dir}/zlib-{deps.zlib.version}/lib"
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = ["bin/curl"]
+
+[verify]
+command = "curl --version"
+pattern = "curl {version}"

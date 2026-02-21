@@ -196,6 +196,7 @@ jobs:
       - name: "Install ${{ matrix.recipe.tool }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TSUKU_REGISTRY_URL: ${{ github.workspace }}
         run: ./tsuku install --force --recipe ${{ matrix.recipe.path }}
 
   # Test all macOS-compatible recipes in a single job (reduces runner queue pressure)
@@ -221,6 +222,7 @@ jobs:
       - name: Test all macOS recipes
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TSUKU_REGISTRY_URL: ${{ github.workspace }}
         run: |
           RECIPES='${{ needs.matrix.outputs.macos_recipes }}'
           CACHE_DIR="${{ runner.temp }}/tsuku-cache/downloads"

@@ -1,0 +1,49 @@
+[metadata]
+name = "jpeg-turbo"
+description = "JPEG image codec that aids compression and decompression"
+homepage = "https://www.libjpeg-turbo.org/"
+type = "library"
+
+# glibc Linux: Homebrew bottle
+[[steps]]
+action = "homebrew"
+formula = "jpeg-turbo"
+when = { os = ["linux"], libc = ["glibc"] }
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = [
+    "lib/libjpeg.so",
+    "lib/libjpeg.a",
+    "lib/libturbojpeg.so",
+    "lib/libturbojpeg.a",
+    "lib/pkgconfig/libjpeg.pc",
+    "include/jpeglib.h",
+]
+when = { os = ["linux"], libc = ["glibc"] }
+
+# musl Linux: Alpine package
+[[steps]]
+action = "apk_install"
+packages = ["libjpeg-turbo-dev"]
+when = { os = ["linux"], libc = ["musl"] }
+
+# macOS: Homebrew
+[[steps]]
+action = "homebrew"
+formula = "jpeg-turbo"
+when = { os = ["darwin"] }
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = [
+    "lib/libjpeg.dylib",
+    "lib/libjpeg.a",
+    "lib/libturbojpeg.dylib",
+    "lib/libturbojpeg.a",
+    "lib/pkgconfig/libjpeg.pc",
+    "include/jpeglib.h",
+]
+when = { os = ["darwin"] }
