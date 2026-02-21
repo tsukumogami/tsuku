@@ -109,8 +109,8 @@ func TestGetCachedManifest_ValidCachedFile(t *testing.T) {
 		SchemaVersion: "1.2.0",
 		Recipes: []ManifestRecipe{
 			{
-				Name:      "libcurl",
-				Satisfies: map[string][]string{"homebrew": {"curl"}},
+				Name:      "sqlite",
+				Satisfies: map[string][]string{"homebrew": {"sqlite3"}},
 			},
 		},
 	}
@@ -134,8 +134,8 @@ func TestGetCachedManifest_ValidCachedFile(t *testing.T) {
 	if len(manifest.Recipes) != 1 {
 		t.Fatalf("expected 1 recipe, got %d", len(manifest.Recipes))
 	}
-	if manifest.Recipes[0].Name != "libcurl" {
-		t.Errorf("expected recipe name 'libcurl', got %q", manifest.Recipes[0].Name)
+	if manifest.Recipes[0].Name != "sqlite" {
+		t.Errorf("expected recipe name 'sqlite', got %q", manifest.Recipes[0].Name)
 	}
 }
 

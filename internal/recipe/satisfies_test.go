@@ -573,7 +573,9 @@ func TestSatisfies_GetEmbeddedOnly_NoCrossRecipeCycle(t *testing.T) {
 // --- Registry Manifest Integration Tests ---
 
 func TestSatisfies_BuildIndex_IncludesManifestData(t *testing.T) {
-	// Create a cached manifest with satisfies data from a registry-only recipe
+	// Create a cached manifest with satisfies data from a registry-only recipe.
+	// Note: libcurl does NOT claim "curl" here because "curl" is a canonical recipe
+	// name and the registry generator (generate-registry.py) rejects such collisions.
 	cacheDir := t.TempDir()
 	manifestJSON := `{
 		"schema_version": "1.2.0",
@@ -594,10 +596,7 @@ func TestSatisfies_BuildIndex_IncludesManifestData(t *testing.T) {
 				"description": "curl library",
 				"homepage": "https://curl.se",
 				"dependencies": [],
-				"runtime_dependencies": [],
-				"satisfies": {
-					"homebrew": ["curl"]
-				}
+				"runtime_dependencies": []
 			},
 			{
 				"name": "serve",
@@ -627,12 +626,10 @@ func TestSatisfies_BuildIndex_IncludesManifestData(t *testing.T) {
 		t.Error("expected sqlite3 in satisfies index from manifest")
 	}
 
+	// libcurl should NOT have any satisfies entries in the index
+	// because it doesn't declare any (curl is a separate canonical recipe)
 	if canonicalName, ok := loader.satisfiesIndex["curl"]; ok {
-		if canonicalName != "libcurl" {
-			t.Errorf("expected curl -> libcurl, got -> %s", canonicalName)
-		}
-	} else {
-		t.Error("expected curl in satisfies index from manifest")
+		t.Errorf("unexpected satisfies index entry: curl -> %s (curl is a canonical recipe name, not a satisfies alias)", canonicalName)
 	}
 }
 
