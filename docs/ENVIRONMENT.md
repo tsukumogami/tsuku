@@ -140,6 +140,25 @@ This overrides the `idle_timeout` setting in the `[llm]` section of `$TSUKU_HOME
 
 The server starts on demand when local inference is needed and stays alive to serve subsequent requests. A longer timeout keeps the model loaded between multiple `tsuku create` calls. A shorter timeout frees resources sooner.
 
+### TSUKU_LLM_MODEL
+
+Override automatic model selection in the tsuku-llm addon.
+
+- **Default:** (unset -- addon auto-selects based on GPU VRAM)
+- **Example:** `export TSUKU_LLM_MODEL=qwen2.5-7b-instruct-q4_k_m`
+
+This is read directly by the tsuku-llm addon binary, not by the Go CLI. The value must match a model name in the addon's built-in manifest.
+
+### TSUKU_LLM_BACKEND
+
+Override automatic backend detection in the tsuku-llm addon.
+
+- **Default:** (unset -- addon auto-detects GPU type)
+- **Valid values:** `cuda`, `metal`, `vulkan`
+- **Example:** `export TSUKU_LLM_BACKEND=vulkan`
+
+This is read directly by the tsuku-llm addon binary. Use this when automatic GPU detection selects the wrong backend (e.g., forcing Vulkan on a system with both CUDA and Vulkan support).
+
 ## Development and Debugging
 
 ### TSUKU_DEBUG
@@ -231,6 +250,8 @@ The environment variable is checked first. If unset, tsuku falls back to `brave_
 | `TSUKU_TELEMETRY` | (unset) | Disable telemetry when `0` or `false` |
 | `TSUKU_TELEMETRY_DEBUG` | (unset) | Print telemetry to stderr |
 | `TSUKU_LLM_IDLE_TIMEOUT` | `5m` | Local LLM addon server idle timeout |
+| `TSUKU_LLM_MODEL` | (unset) | Override addon model selection |
+| `TSUKU_LLM_BACKEND` | (unset) | Override addon backend detection |
 | `TSUKU_DEBUG` | (unset) | Enable verbose debug output |
 | `GITHUB_TOKEN` | (unset) | GitHub API token |
 | `ANTHROPIC_API_KEY` | (unset) | Anthropic API key for Claude |
