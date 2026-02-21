@@ -1,11 +1,16 @@
 package main
 
 import (
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/tsukumogami/tsuku/internal/discover"
 	"github.com/tsukumogami/tsuku/internal/recipe"
+	"github.com/tsukumogami/tsuku/internal/registry"
 )
 
 func TestParseFromFlag(t *testing.T) {
@@ -634,4 +639,124 @@ func TestFormatDisambiguationPrompt(t *testing.T) {
 			t.Errorf("'(recommended)' not attached to first match in:\n%s", got)
 		}
 	})
+}
+
+// --- checkExistingRecipe Tests ---
+
+// newTestLoader creates a loader with embedded recipes and a registry that
+// returns 404 for all requests. This isolates tests from the real registry,
+// ensuring the satisfies fallback is exercised instead of an exact name
+// match from a remote registry recipe.
+func newTestLoader(t *testing.T) *recipe.Loader {
+	t.Helper()
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	t.Cleanup(server.Close)
+
+	reg := registry.New(t.TempDir())
+	reg.BaseURL = server.URL
+
+	return recipe.NewWithLocalRecipes(reg, t.TempDir())
+}
+
+func TestCheckExistingRecipe_SatisfiesMatchPreventsGeneration(t *testing.T) {
+	// The embedded openssl recipe satisfies "openssl@3". With the registry
+	// returning 404 for everything, exact name lookup for "openssl@3" fails
+	// and the satisfies fallback resolves it to "openssl".
+	l := newTestLoader(t)
+
+	canonicalName, found := checkExistingRecipe(l, "openssl@3")
+	if !found {
+		t.Fatal("expected checkExistingRecipe to find openssl@3 via satisfies fallback")
+	}
+	if canonicalName != "openssl" {
+		t.Errorf("expected canonical name 'openssl', got %q", canonicalName)
+	}
+}
+
+func TestCheckExistingRecipe_DirectNameMatchLocal(t *testing.T) {
+	// A local recipe exists with the exact name requested.
+	recipesDir := t.TempDir()
+	recipeContent := `[metadata]
+name = "my-tool"
+
+[[steps]]
+action = "download"
+url = "https://example.com/tool.tar.gz"
+
+[verify]
+command = "my-tool --version"
+`
+	if err := os.WriteFile(filepath.Join(recipesDir, "my-tool.toml"), []byte(recipeContent), 0644); err != nil {
+		t.Fatalf("Failed to write local recipe: %v", err)
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	defer server.Close()
+
+	reg := registry.New(t.TempDir())
+	reg.BaseURL = server.URL
+	l := recipe.NewWithoutEmbedded(reg, recipesDir)
+
+	canonicalName, found := checkExistingRecipe(l, "my-tool")
+	if !found {
+		t.Fatal("expected checkExistingRecipe to find 'my-tool' directly")
+	}
+	if canonicalName != "my-tool" {
+		t.Errorf("expected canonical name 'my-tool', got %q", canonicalName)
+	}
+}
+
+func TestCheckExistingRecipe_DirectNameMatchEmbedded(t *testing.T) {
+	// The embedded openssl recipe should be found by direct name lookup.
+	l := newTestLoader(t)
+
+	canonicalName, found := checkExistingRecipe(l, "openssl")
+	if !found {
+		t.Fatal("expected checkExistingRecipe to find embedded 'openssl'")
+	}
+	if canonicalName != "openssl" {
+		t.Errorf("expected canonical name 'openssl', got %q", canonicalName)
+	}
+}
+
+func TestCheckExistingRecipe_NoMatchAllowsGeneration(t *testing.T) {
+	// When no recipe matches, checkExistingRecipe should return false.
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	defer server.Close()
+
+	reg := registry.New(t.TempDir())
+	reg.BaseURL = server.URL
+	l := recipe.NewWithoutEmbedded(reg, t.TempDir())
+
+	_, found := checkExistingRecipe(l, "nonexistent-tool")
+	if found {
+		t.Error("expected checkExistingRecipe to return false for nonexistent tool")
+	}
+}
+
+func TestCheckExistingRecipe_NilLoader(t *testing.T) {
+	// When the loader is nil, checkExistingRecipe should return false gracefully.
+	_, found := checkExistingRecipe(nil, "anything")
+	if found {
+		t.Error("expected checkExistingRecipe to return false for nil loader")
+	}
+}
+
+func TestCheckExistingRecipe_ForceSkipsCheck(t *testing.T) {
+	// Verify that the recipe WOULD be found if checked, documenting that
+	// the --force skip is at the call site in runCreate, not inside
+	// checkExistingRecipe.
+	l := newTestLoader(t)
+
+	_, found := checkExistingRecipe(l, "openssl")
+	if !found {
+		t.Fatal("expected recipe to exist (test setup verification)")
+	}
 }
