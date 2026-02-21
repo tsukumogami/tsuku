@@ -34,7 +34,7 @@ Planned
 | Issue | Dependencies | Tier |
 |-------|--------------|------|
 | ~~[#1814: ci(test-recipes): batch Linux per-recipe jobs in test-changed-recipes](https://github.com/tsukumogami/tsuku/issues/1814)~~ | None | testable |
-| _Creates `.github/ci-batch-config.json` and converts the `test-linux` job from per-recipe to per-batch matrix. Establishes the inner-loop pattern (TSUKU_HOME isolation, download cache sharing, failure accumulation) that the next issue reuses._ | | |
+| ~~_Creates `.github/ci-batch-config.json` and converts the `test-linux` job from per-recipe to per-batch matrix. Establishes the inner-loop pattern (TSUKU_HOME isolation, download cache sharing, failure accumulation) that the next issue reuses._~~ | | |
 | [#1815: ci(golden-recipes): batch per-recipe jobs in validate-golden-recipes](https://github.com/tsukumogami/tsuku/issues/1815) | [#1814](https://github.com/tsukumogami/tsuku/issues/1814) | testable |
 | _Applies the same batching pattern to `validate-golden-recipes.yml`, handling its different matrix shape (`recipe`/`category` vs `tool`/`path`) and updating the cache key strategy for batched jobs._ | | |
 | [#1816: docs(ci): document batch size configuration and tuning](https://github.com/tsukumogami/tsuku/issues/1816) | [#1814](https://github.com/tsukumogami/tsuku/issues/1814), [#1815](https://github.com/tsukumogami/tsuku/issues/1815) | simple |
