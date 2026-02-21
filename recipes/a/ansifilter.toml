@@ -1,7 +1,7 @@
 [metadata]
   name = "ansifilter"
   description = "Strip or convert ANSI codes into HTML, (La)Tex, RTF, or BBCode"
-  homepage = "http://andre-simon.de/doku/ansifilter/en/ansifilter.php"
+  homepage = "https://andre-simon.de/doku/ansifilter/en/ansifilter.php"
   version_format = ""
   requires_sudo = false
   tier = 0
