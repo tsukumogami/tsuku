@@ -757,20 +757,6 @@
                         <div class="status-bars">
                             ${statusBars}
                         </div>
-                        ${(() => {
-                            let depBlocked = 0;
-                            const pkgLists = data.queue.packages || {};
-                            Object.values(pkgLists).forEach(list => {
-                                (list || []).forEach(pkg => {
-                                    if (pkg.blocked_by && pkg.blocked_by.length > 0) depBlocked++;
-                                });
-                            });
-                            if (depBlocked === 0) return '';
-                            return '<div style="margin-top: 0.75rem; font-size: 0.8rem; color: var(--text-muted);">' +
-                                depBlocked + ' package' + (depBlocked !== 1 ? 's' : '') +
-                                ' across all statuses have unresolved dependencies (see <a href="#blockers" style="color: var(--accent);">Top Blockers</a>)' +
-                                '</div>';
-                        })()}
                     </div>
 
                     <div class="panel" id="blockers">
@@ -807,7 +793,7 @@
                 <div class="raw-data-links">
                     Raw data:
                     <a href="https://github.com/tsukumogami/tsuku/blob/main/data/priority-queue.json">queue</a>
-                    <a href="https://github.com/tsukumogami/tsuku/blob/main/data/failures/homebrew.jsonl">failures</a>
+                    <a href="https://github.com/tsukumogami/tsuku/tree/main/data/failures">failures</a>
                     <a href="https://github.com/tsukumogami/tsuku/blob/main/data/metrics/batch-runs.jsonl">metrics</a>
                 </div>
             `;

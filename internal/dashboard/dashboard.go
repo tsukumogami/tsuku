@@ -261,15 +261,13 @@ func Generate(opts Options) error {
 		Failures:    make(map[string]int),
 	}
 
-	// Load failures first to get details for packages
-	blockerCounts, failureCounts, failureDetails, err := loadFailuresFromDir(opts.FailuresDir)
+	// Load failures to get details for packages
+	_, failureCounts, failureDetails, err := loadFailuresFromDir(opts.FailuresDir)
 	if err != nil {
 		// Non-fatal: failures directory might not exist yet
-		blockerCounts = make(map[string][]string)
 		failureCounts = make(map[string]int)
 		failureDetails = make(map[string]FailureDetails)
 	}
-	dash.Blockers = computeTopBlockers(blockerCounts, 10)
 	dash.Failures = failureCounts
 
 	// Load unified queue
@@ -278,6 +276,11 @@ func Generate(opts Options) error {
 		return fmt.Errorf("load queue: %w", err)
 	}
 	dash.Queue = computeQueueStatus(queue, failureDetails)
+
+	// Derive top blockers from actual blocked packages in the queue,
+	// not from all failure history.
+	blockerCounts := buildBlockerCountsFromQueue(dash.Queue.Packages[batch.StatusBlocked])
+	dash.Blockers = computeTopBlockers(blockerCounts, 10)
 
 	// Load curated overrides from queue
 	if curated := loadCurated(queue); len(curated) > 0 {
@@ -373,7 +376,9 @@ func computeQueueStatus(queue *batch.UnifiedQueue, failureDetails map[string]Fai
 
 		if details, ok := failureDetails[id]; ok {
 			info.Category = details.Category
-			info.BlockedBy = details.BlockedBy
+			if entry.Status == batch.StatusBlocked {
+				info.BlockedBy = details.BlockedBy
+			}
 		}
 
 		status.Packages[entry.Status] = append(status.Packages[entry.Status], info)
@@ -489,6 +494,18 @@ func computeTransitiveBlockers(dep string, blockers map[string][]string, pkgToBa
 	}
 	memo[dep] = total
 	return total
+}
+
+// buildBlockerCountsFromQueue builds a blocker map from actual blocked packages
+// in the queue, rather than from all failure history.
+func buildBlockerCountsFromQueue(packages []PackageInfo) map[string][]string {
+	blockers := make(map[string][]string)
+	for _, pkg := range packages {
+		for _, dep := range pkg.BlockedBy {
+			blockers[dep] = append(blockers[dep], pkg.ID)
+		}
+	}
+	return blockers
 }
 
 func computeTopBlockers(blockers map[string][]string, limit int) []Blocker {
