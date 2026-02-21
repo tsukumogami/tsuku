@@ -17,7 +17,8 @@ decision: |
   update-queue-status.yml the sole writer of priority-queue.json on main by
   removing queue writes from batch-generate.yml's PR creation step. Recipe
   existence is checked via queue status (entries marked "success") rather than
-  filesystem lookups.
+  filesystem lookups. A one-time migration re-queues all currently-blocked
+  entries to accelerate clearing stale ecosystem name mismatches.
 rationale: |
   Consolidating into Go eliminates the format mismatch and avoids duplicating
   failure-loading logic that already exists in internal/reorder/. A single
@@ -122,19 +123,21 @@ This matches how the tool is actually used: workflows don't need to run one with
 
 The requeue logic needs to know whether a blocker dependency's recipe now exists. The bash script checks the filesystem (`recipes/{first-letter}/{name}.toml`). But the Go tool already has the full queue loaded, and `update-queue-status.yml` marks merged recipes as "success" in the queue before our tool runs.
 
-#### Chosen: Queue Status Check with Satisfies Resolution
+#### Chosen: Queue Status Check
 
-A dependency is "resolved" if its name (or a name it's satisfied by) appears in the queue with status "success". The tool loads the full queue and builds a resolved-names set from all "success" entries. It also builds a satisfies index from recipe metadata: if recipe `openssl` declares `satisfies.homebrew = ["openssl@3"]`, then `openssl@3` is also considered resolved when `openssl` is in the queue as "success".
+A dependency is "resolved" if its name appears in the queue with status "success". The tool loads the full queue and builds a resolved-names set from all "success" entries. For each blocked entry, it checks whether all entries in its `blocked_by` list are in the resolved set. If so, it flips the entry from "blocked" to "pending".
 
-This is necessary because `blocked_by` names in failure records use ecosystem package names (e.g., `"openssl@3"`, `"sqlite3"`), which may differ from recipe names (`"openssl"`, `"sqlite"`). PR #1824 introduced the `satisfies` metadata field that declares these mappings. Without satisfies resolution, the requeue check would miss dependencies that are resolved under a different name.
-
-The check is self-contained -- no filesystem access needed. `update-queue-status.yml` marks recipes as "success" in the same workflow run before queue-maintain executes. The satisfies index can be built from the registry manifest (already available to the Go code) or from recipe TOML files on disk.
+The check is self-contained -- no filesystem access, no recipe loading. `update-queue-status.yml` marks recipes as "success" in the same workflow run before queue-maintain executes, so the queue already reflects the current state.
 
 Embedded recipes (`internal/recipe/recipes/`) don't need special handling: `missing_dep` failures only fire when `tsuku install` can't find a recipe at install time, and embedded recipes are always found. No embedded recipe name appears in `blocked_by` arrays across the failure data.
+
+**Name mismatch handling**: `blocked_by` names in failure records use ecosystem package names (e.g., `"openssl@3"`), which may differ from recipe names (e.g., `"openssl"`). PR #1824 introduced `satisfies` metadata that lets the recipe loader resolve these at install time. This means future batch runs won't produce `missing_dep` failures for names covered by satisfies mappings -- the problem is self-healing in new data. Existing failure records with stale `blocked_by` names will age out as new batch runs replace them. To accelerate this transition, a one-time migration step will re-queue all currently-blocked entries (see Implementation Approach, Phase 5).
 
 #### Alternatives Considered
 
 **Filesystem check**: Look for `recipes/{first-letter}/{name}.toml` or `internal/recipe/recipes/{name}.toml`. Same approach as the bash script. Requires recipe files in the checkout and couples the tool to the directory layout.
+
+**Queue status with satisfies resolution**: Build a satisfies index from recipe metadata so names like `openssl@3` resolve to `openssl`. Rejected because the satisfies-aware loader (PR #1824) already prevents these mismatches from occurring in new failure data, making the resolution logic unnecessary ongoing complexity for a transient problem.
 
 **Both checks**: Check queue status first, fall back to filesystem. Adds complexity for an edge case that doesn't exist in practice (see embedded recipe analysis above).
 
@@ -166,11 +169,13 @@ We're replacing `scripts/requeue-unblocked.sh` and `cmd/reorder-queue/` with a s
 
 The workflow integration makes `update-queue-status.yml` the single owner of `priority-queue.json` on main. After marking merged recipes as "success" (its existing behavior), it builds and runs `queue-maintain`, which requeues any newly-unblockable packages and reorders the queue. The queue modifications from `batch-generate.yml`'s PR creation step are removed -- when batch PRs merge, `update-queue-status.yml` handles the queue state. `batch-generate.yml` still runs `queue-maintain` locally during its generate and merge jobs (replacing the current `requeue-unblocked.sh` calls), but those queue changes stay in the batch working tree and only the recipe files go into the batch PR.
 
-The requeue logic checks recipe existence via queue status ("success" entries) with satisfies resolution. A blocker is considered resolved if its name appears as a "success" entry in the queue, OR if any "success" recipe declares that it satisfies that name via the `satisfies` metadata field (PR #1824). This handles cases where `blocked_by` names use ecosystem package names (e.g., `"openssl@3"`) that differ from recipe names (e.g., `"openssl"`). In `update-queue-status.yml`, the status-update step runs first and marks recipes as "success" before `queue-maintain` executes. In `batch-generate.yml`, the batch orchestrator marks generated recipes in its working tree before `queue-maintain` runs.
+The requeue logic checks recipe existence via queue status: a blocker is "resolved" if its name appears as a "success" entry in the queue. In `update-queue-status.yml`, the status-update step runs first and marks recipes as "success" before `queue-maintain` executes. In `batch-generate.yml`, the batch orchestrator marks generated recipes in its working tree before `queue-maintain` runs.
+
+Some existing `blocked_by` entries use ecosystem package names (e.g., `"openssl@3"`) that differ from recipe names (e.g., `"openssl"`). The exact-match check won't catch these, but PR #1824's `satisfies` metadata means the recipe loader now resolves these names at install time. Future batch runs won't produce `missing_dep` failures for covered names, so the stale data ages out naturally. To accelerate this, a one-time migration step re-queues all currently-blocked entries so they get retried with the satisfies-aware loader.
 
 ### Rationale
 
-Consolidating into Go removes the format mismatch (the shell script's legacy queue format) and eliminates code duplication (both requeue and reorder load the same failure data). The single-command design reflects reality: these operations are always sequential and share inputs, so running them as one avoids coordination overhead. The queue-status check for recipe existence keeps the tool self-contained since it already has the full queue loaded. And making `update-queue-status.yml` the single owner of the queue file on main eliminates the concurrent-writer problem that exists today between two workflows with separate concurrency groups.
+Consolidating into Go removes the format mismatch (the shell script's legacy queue format) and eliminates code duplication (both requeue and reorder load the same failure data). The single-command design reflects reality: these operations are always sequential and share inputs, so running them as one avoids coordination overhead. The queue-status check for recipe existence keeps the tool self-contained since it already has the full queue loaded. Making `update-queue-status.yml` the single owner of the queue file on main eliminates the concurrent-writer problem that exists today between two workflows with separate concurrency groups. A one-time migration re-queues all currently-blocked entries to accelerate clearing stale `blocked_by` data that uses ecosystem names not yet covered by the exact-match check.
 
 ## Solution Architecture
 
@@ -201,10 +206,9 @@ The `Run()` function:
 1. Loads the blocker map via the shared function in `internal/blocker/`
 2. Builds a reverse index: package-to-blockers (inverting the blocker-to-packages map from failure data)
 3. Builds a set of "resolved" dependency names from entries in the queue with status "success"
-4. Extends the resolved set using satisfies mappings: for each "success" entry, loads its recipe metadata and adds any names it satisfies (e.g., if `openssl` is "success" and declares `satisfies.homebrew = ["openssl@3"]`, then `openssl@3` is also resolved). Uses the existing `internal/recipe` loader's satisfies index for this.
-5. For each blocked entry, looks up its blockers (from the reverse index) and checks each against the resolved set
-6. If all blockers are resolved, flips status from "blocked" to "pending"
-7. Modifies the queue in place, returns the result
+4. For each blocked entry, looks up its blockers (from the reverse index) and checks each against the resolved set
+5. If all blockers are resolved, flips status from "blocked" to "pending"
+6. Modifies the queue in place, returns the result
 
 ### Modified Package: `internal/reorder/`
 
@@ -311,7 +315,20 @@ Rename `cmd/reorder-queue/` to `cmd/queue-maintain/`. Wire in both requeue and r
 4. Adjust `git add` in batch-generate to exclude the unified queue file
 5. Delete `scripts/requeue-unblocked.sh`
 
-### Phase 5: Cleanup and documentation
+### Phase 5: One-time migration -- re-queue blocked entries
+
+Flip all currently-blocked entries in the unified queue to "pending". This forces the batch pipeline to retry them with the satisfies-aware recipe loader (PR #1824), which resolves ecosystem name mismatches (e.g., `openssl@3` -> `openssl`) at install time. Without this step, entries with stale `blocked_by` names would remain blocked until their old failure records age out naturally.
+
+This is a one-time operation run manually or as part of the first deployment. Since the exact-match requeue logic can't resolve ecosystem name mismatches, the migration uses a direct jq transformation:
+
+```bash
+jq '(.entries[] | select(.status == "blocked")).status = "pending"' \
+  data/queues/priority-queue.json > tmp.json && mv tmp.json data/queues/priority-queue.json
+```
+
+After the migration, the normal requeue logic (exact-match queue status check) handles all future cases correctly because the satisfies-aware loader prevents new `missing_dep` failures for covered ecosystem names.
+
+### Phase 6: Cleanup and documentation
 
 1. Update `DESIGN-registry-scale-strategy.md` to mark the format mismatch as resolved
 2. Update the stale comment in `internal/batch/orchestrator.go` (line 543) that references `requeue-unblocked.sh` constructing file paths from dependency names -- the filesystem path rationale no longer applies after migration to queue-status checks
@@ -349,3 +366,4 @@ No user data is accessed or transmitted. The queue and failure data contain pack
 
 - Queue state in batch PRs no longer reflects which recipes the batch successfully generated. The queue updates happen after PR merge via `update-queue-status.yml` instead. This means the batch PR diff won't show queue entry status changes, making it slightly harder to review batch results at a glance.
 - Renaming `cmd/reorder-queue/` to `cmd/queue-maintain/` requires updating any documentation or scripts that reference the old name.
+- The one-time migration (Phase 5) will flood the batch pipeline with retries for all currently-blocked entries. Most will succeed (dependencies now resolved via satisfies), but some may fail again and re-block. This is a temporary spike, not a permanent cost.
