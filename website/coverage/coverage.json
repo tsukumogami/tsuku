@@ -1,22 +1,22 @@
 {
-  "generated_at": "2026-02-21T06:58:33Z",
-  "total_recipes": 340,
+  "generated_at": "2026-02-21T07:30:55Z",
+  "total_recipes": 345,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 284,
-        "total": 340,
-        "pct": 83.52941176470588
+        "supported": 288,
+        "total": 345,
+        "pct": 83.47826086956522
       },
       "glibc": {
-        "supported": 310,
-        "total": 340,
-        "pct": 91.17647058823529
+        "supported": 315,
+        "total": 345,
+        "pct": 91.30434782608695
       },
       "musl": {
-        "supported": 175,
-        "total": 340,
-        "pct": 51.470588235294116
+        "supported": 176,
+        "total": 345,
+        "pct": 51.01449275362319
       }
     },
     "by_category": {
@@ -26,9 +26,9 @@
         "glibc_support": 22
       },
       "tool": {
-        "total": 318,
-        "musl_support": 153,
-        "glibc_support": 288
+        "total": 323,
+        "musl_support": 154,
+        "glibc_support": 293
       }
     }
   },
@@ -215,6 +215,20 @@
       "warnings": null
     },
     {
+      "name": "angle-grinder",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": false
+      },
+      "gaps": [
+        "musl"
+      ],
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "annie",
       "type": "tool",
       "platforms": {
@@ -223,6 +237,48 @@
         "musl": true
       },
       "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "ansifilter",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": false
+      },
+      "gaps": [
+        "musl"
+      ],
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "anycable-go",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": false
+      },
+      "gaps": [
+        "musl"
+      ],
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "anyquery",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": false
+      },
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -249,6 +305,20 @@
         "musl": true
       },
       "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "apr-util",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
       "errors": null,
       "warnings": null
     },
