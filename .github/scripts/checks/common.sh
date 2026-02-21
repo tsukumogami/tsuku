@@ -44,8 +44,13 @@ emit_pass() {
 
 # emit_fail - Output a failing check message
 # Usage: emit_fail "Check failed: reason"
+# If VALIDATE_DOC_PATH is set (exported by the orchestrator), it is included.
 emit_fail() {
-    echo "[FAIL] $1" >&2
+    if [[ -n "${VALIDATE_DOC_PATH:-}" ]]; then
+        echo "[FAIL] $VALIDATE_DOC_PATH: $1" >&2
+    else
+        echo "[FAIL] $1" >&2
+    fi
 }
 
 # extract_frontmatter - Extract YAML frontmatter from a document

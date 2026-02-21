@@ -112,6 +112,9 @@ if [[ ! -f "$DOC_PATH" ]]; then
     exit $EXIT_ERROR
 fi
 
+# Export for emit_fail to include in error messages (when called standalone)
+export VALIDATE_DOC_PATH="${VALIDATE_DOC_PATH:-$DOC_PATH}"
+
 # Get normalized status from frontmatter (uses shared function from common.sh)
 FM_STATUS=$(get_frontmatter_status "$DOC_PATH")
 
