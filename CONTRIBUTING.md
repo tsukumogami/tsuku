@@ -611,6 +611,8 @@ These workflows run automatically on pull requests:
 | `validate-golden-code.yml` | Plan generation code changes | Validates ALL golden files when core code changes |
 | `validate-golden-execution.yml` | Golden file changes | Executes plans on platform matrix to verify downloads |
 
+Recipe CI workflows use **batched jobs**: each check may test multiple recipes rather than one per job. If a batch fails, expand the job's log in the GitHub Actions UI and look for the `::group::` section of the specific recipe to find per-recipe results. Batch sizes are configured in `.github/ci-batch-config.json`. See [docs/workflow-validation-guide.md](docs/workflow-validation-guide.md#ci-batch-configuration) for tuning details.
+
 ### Design Reference
 
 For the complete design rationale, validation workflows, and security considerations, see [docs/DESIGN-golden-plan-testing.md](docs/DESIGN-golden-plan-testing.md).
