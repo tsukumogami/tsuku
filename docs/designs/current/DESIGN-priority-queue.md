@@ -366,12 +366,12 @@ Start with the simplest viable approach for Phase 0, prioritizing schema correct
 By choosing the simplest options, we accept:
 
 1. **Limited scalability**: Single file (1A) may need migration at 10K+ packages
-2. **Coarse ordering**: Tiered scoring (2C) doesn't distinguish within tiers
+2. ~~**Coarse ordering**: Tiered scoring (2C) doesn't distinguish within tiers~~ **Addressed**: [#1278](https://github.com/tsukumogami/tsuku/issues/1278) added within-tier sub-ordering by transitive blocking impact. The `cmd/reorder-queue/` tool reads failure data from `data/failures/` and reorders entries within each tier so packages that unblock the most other packages are processed first. The transitive blocker computation lives in `internal/blocker/`, shared with the pipeline dashboard.
 3. **No history**: Latest-only failures (3A) can't detect flaky patterns
 
 These are acceptable because:
 - Phase 0 target is 100-500 packages, well within single-file limits
-- Tier 1 (curated) + Tier 2 (popularity threshold) covers the high-value packages
+- ~~Tier 1 (curated) + Tier 2 (popularity threshold) covers the high-value packages~~ Within-tier ordering now uses transitive blocking impact, surfacing high-leverage packages (e.g., a tier-3 library that blocks tier-1 tools) earlier in the batch pipeline
 - Flakiness detection is explicitly out of scope until Phase 2
 
 ## Solution Architecture
