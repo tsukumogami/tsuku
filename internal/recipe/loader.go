@@ -360,14 +360,17 @@ func (l *Loader) CacheRecipe(name string, r *Recipe) {
 	l.recipes[name] = r
 }
 
-// buildSatisfiesIndex scans embedded recipes (and registry manifest data when
-// available) for satisfies entries. Called lazily on first fallback lookup.
+// buildSatisfiesIndex scans embedded recipes and the registry manifest for
+// satisfies entries. Called lazily on first fallback lookup.
 // The index is keyed by bare package name (not prefixed by ecosystem),
 // because callers don't know which ecosystem a dependency comes from.
+//
+// Priority: embedded entries take precedence over manifest entries.
+// If the same package name appears in both, the embedded recipe wins.
 func (l *Loader) buildSatisfiesIndex() {
 	l.satisfiesIndex = make(map[string]string)
 
-	// Scan embedded recipes
+	// Scan embedded recipes first (higher priority)
 	if l.embedded != nil {
 		for _, name := range l.embedded.List() {
 			data, ok := l.embedded.Get(name)
@@ -392,7 +395,26 @@ func (l *Loader) buildSatisfiesIndex() {
 		}
 	}
 
-	// Registry manifest entries would be added here by #1829
+	// Scan registry manifest for satisfies entries from registry-only recipes.
+	// Uses the cached manifest (no network fetch during index build).
+	// Embedded entries take priority: if a package name is already indexed
+	// from an embedded recipe, the manifest entry is skipped.
+	if l.registry != nil {
+		manifest, err := l.registry.GetCachedManifest()
+		if err == nil && manifest != nil {
+			for _, entry := range manifest.Recipes {
+				for _, pkgNames := range entry.Satisfies {
+					for _, pkgName := range pkgNames {
+						if _, exists := l.satisfiesIndex[pkgName]; !exists {
+							l.satisfiesIndex[pkgName] = entry.Name
+						}
+						// No warning for manifest duplicates: the generate script
+						// already validates cross-recipe duplicates at CI time.
+					}
+				}
+			}
+		}
+	}
 }
 
 // lookupSatisfies checks if a name is satisfied by another recipe.

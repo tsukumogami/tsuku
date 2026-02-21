@@ -5,9 +5,6 @@ homepage = "https://curl.se/libcurl/"
 type = "library"
 dependencies = ["brotli", "libnghttp2", "libnghttp3", "libngtcp2", "libssh2", "openssl", "zlib", "zstd"]
 
-[metadata.satisfies]
-homebrew = ["curl"]
-
 [[steps]]
 action = "homebrew"
 formula = "curl"

@@ -570,6 +570,195 @@ func TestSatisfies_GetEmbeddedOnly_NoCrossRecipeCycle(t *testing.T) {
 	}
 }
 
+// --- Registry Manifest Integration Tests ---
+
+func TestSatisfies_BuildIndex_IncludesManifestData(t *testing.T) {
+	// Create a cached manifest with satisfies data from a registry-only recipe
+	cacheDir := t.TempDir()
+	manifestJSON := `{
+		"schema_version": "1.2.0",
+		"generated_at": "2026-01-01T00:00:00Z",
+		"recipes": [
+			{
+				"name": "sqlite",
+				"description": "SQLite database engine",
+				"homepage": "https://sqlite.org",
+				"dependencies": [],
+				"runtime_dependencies": [],
+				"satisfies": {
+					"homebrew": ["sqlite3"]
+				}
+			},
+			{
+				"name": "libcurl",
+				"description": "curl library",
+				"homepage": "https://curl.se",
+				"dependencies": [],
+				"runtime_dependencies": [],
+				"satisfies": {
+					"homebrew": ["curl"]
+				}
+			},
+			{
+				"name": "serve",
+				"description": "HTTP server",
+				"homepage": "https://example.com",
+				"dependencies": [],
+				"runtime_dependencies": []
+			}
+		]
+	}`
+	if err := os.WriteFile(filepath.Join(cacheDir, "manifest.json"), []byte(manifestJSON), 0644); err != nil {
+		t.Fatalf("Failed to write manifest: %v", err)
+	}
+
+	reg := registry.New(cacheDir)
+	loader := NewWithoutEmbedded(reg, "")
+
+	// Trigger index build
+	loader.satisfiesOnce.Do(loader.buildSatisfiesIndex)
+
+	// Manifest entries should be in the index
+	if canonicalName, ok := loader.satisfiesIndex["sqlite3"]; ok {
+		if canonicalName != "sqlite" {
+			t.Errorf("expected sqlite3 -> sqlite, got -> %s", canonicalName)
+		}
+	} else {
+		t.Error("expected sqlite3 in satisfies index from manifest")
+	}
+
+	if canonicalName, ok := loader.satisfiesIndex["curl"]; ok {
+		if canonicalName != "libcurl" {
+			t.Errorf("expected curl -> libcurl, got -> %s", canonicalName)
+		}
+	} else {
+		t.Error("expected curl in satisfies index from manifest")
+	}
+}
+
+func TestSatisfies_BuildIndex_EmbeddedOverManifest(t *testing.T) {
+	// When both embedded and manifest claim the same package name,
+	// embedded should win (higher priority).
+	cacheDir := t.TempDir()
+	manifestJSON := `{
+		"schema_version": "1.2.0",
+		"generated_at": "2026-01-01T00:00:00Z",
+		"recipes": [
+			{
+				"name": "other-openssl",
+				"description": "Alternative openssl",
+				"homepage": "https://example.com",
+				"dependencies": [],
+				"runtime_dependencies": [],
+				"satisfies": {
+					"homebrew": ["openssl@3"]
+				}
+			}
+		]
+	}`
+	if err := os.WriteFile(filepath.Join(cacheDir, "manifest.json"), []byte(manifestJSON), 0644); err != nil {
+		t.Fatalf("Failed to write manifest: %v", err)
+	}
+
+	reg := registry.New(cacheDir)
+	loader := New(reg) // Includes embedded recipes (openssl claims openssl@3)
+
+	// Trigger index build
+	loader.satisfiesOnce.Do(loader.buildSatisfiesIndex)
+
+	// Embedded openssl should win over manifest's other-openssl
+	canonicalName, ok := loader.satisfiesIndex["openssl@3"]
+	if !ok {
+		t.Fatal("expected openssl@3 in satisfies index")
+	}
+	if canonicalName != "openssl" {
+		t.Errorf("expected embedded 'openssl' to win over manifest, got %q", canonicalName)
+	}
+}
+
+func TestSatisfies_BuildIndex_NoManifest(t *testing.T) {
+	// When no manifest is cached, the index should still work with embedded data only
+	cacheDir := t.TempDir()
+	reg := registry.New(cacheDir)
+	loader := New(reg)
+
+	// Trigger index build (no manifest file exists)
+	loader.satisfiesOnce.Do(loader.buildSatisfiesIndex)
+
+	// Embedded openssl@3 should still be in the index
+	canonicalName, ok := loader.satisfiesIndex["openssl@3"]
+	if !ok {
+		t.Fatal("expected openssl@3 in satisfies index from embedded recipes")
+	}
+	if canonicalName != "openssl" {
+		t.Errorf("expected openssl@3 -> openssl, got -> %s", canonicalName)
+	}
+}
+
+func TestSatisfies_ManifestRecipeResolvable(t *testing.T) {
+	// End-to-end: a registry-only recipe with satisfies entries
+	// should be resolvable through the satisfies fallback.
+	// We simulate this with a local recipe and a cached manifest.
+
+	// Create a local recipe that the manifest claims satisfies "test-alias@2"
+	localRecipe := `[metadata]
+name = "test-registry-recipe"
+type = "library"
+
+[metadata.satisfies]
+testeco = ["test-alias@2"]
+
+[[steps]]
+action = "download"
+url = "https://example.com/test.tar.gz"
+`
+	recipesDir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(recipesDir, "test-registry-recipe.toml"), []byte(localRecipe), 0644); err != nil {
+		t.Fatalf("Failed to write recipe: %v", err)
+	}
+
+	// Create a cached manifest declaring the same satisfies mapping
+	cacheDir := t.TempDir()
+	manifestJSON := `{
+		"schema_version": "1.2.0",
+		"generated_at": "2026-01-01T00:00:00Z",
+		"recipes": [
+			{
+				"name": "test-registry-recipe",
+				"description": "Test registry recipe",
+				"homepage": "https://example.com",
+				"dependencies": [],
+				"runtime_dependencies": [],
+				"satisfies": {
+					"testeco": ["test-alias@2"]
+				}
+			}
+		]
+	}`
+	if err := os.WriteFile(filepath.Join(cacheDir, "manifest.json"), []byte(manifestJSON), 0644); err != nil {
+		t.Fatalf("Failed to write manifest: %v", err)
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	defer server.Close()
+
+	reg := registry.New(cacheDir)
+	reg.BaseURL = server.URL
+	loader := NewWithoutEmbedded(reg, recipesDir)
+
+	// Look up the alias through the satisfies fallback
+	recipe, err := loader.GetWithContext(context.Background(), "test-alias@2", LoaderOptions{})
+	if err != nil {
+		t.Fatalf("GetWithContext() failed for manifest satisfies alias: %v", err)
+	}
+
+	if recipe.Metadata.Name != "test-registry-recipe" {
+		t.Errorf("expected recipe name 'test-registry-recipe', got %q", recipe.Metadata.Name)
+	}
+}
+
 func TestSatisfies_LoadDirect_SkipsSatisfiesFallback(t *testing.T) {
 	// Verify that loadDirect doesn't use the satisfies fallback by looking
 	// up a name that exists only in the satisfies index (not as a real recipe).
