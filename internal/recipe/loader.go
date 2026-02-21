@@ -130,9 +130,13 @@ func (l *Loader) GetWithContext(ctx context.Context, name string, opts LoaderOpt
 		return recipe, nil
 	}
 
-	// Satisfies fallback: check if another recipe satisfies this name
+	// Satisfies fallback: check if another recipe satisfies this name.
+	// Load the canonical recipe through the 4-tier chain directly (cache,
+	// local, embedded, registry) without re-entering the satisfies path.
+	// This prevents infinite recursion when cross-recipe satisfies entries
+	// form a cycle.
 	if canonicalName, ok := l.lookupSatisfies(name); ok {
-		return l.GetWithContext(ctx, canonicalName, opts)
+		return l.loadDirect(ctx, canonicalName)
 	}
 
 	return nil, err
@@ -158,9 +162,11 @@ func (l *Loader) getEmbeddedOnly(name string) (*Recipe, error) {
 		}
 	}
 
-	// Satisfies fallback (restricted to embedded-only index entries)
+	// Satisfies fallback (restricted to embedded-only index entries).
+	// Load the canonical recipe from embedded directly, without re-entering
+	// the satisfies path, to prevent infinite recursion from cross-recipe cycles.
 	if canonicalName, ok := l.lookupSatisfiesEmbeddedOnly(name); ok {
-		return l.getEmbeddedOnly(canonicalName)
+		return l.loadEmbeddedDirect(canonicalName)
 	}
 
 	// Recipe not found in embedded FS - return actionable error
@@ -171,6 +177,77 @@ func (l *Loader) getEmbeddedOnly(name string) (*Recipe, error) {
 			"network access.\n\n"+
 			"To fix: ensure the recipe exists in internal/recipe/recipes/",
 		name,
+	)
+}
+
+// loadDirect loads a recipe through the 4-tier chain (cache, local, embedded,
+// registry) without the satisfies fallback. This is used when loading a
+// canonical recipe resolved from the satisfies index, to prevent infinite
+// recursion if cross-recipe satisfies entries form a cycle.
+func (l *Loader) loadDirect(ctx context.Context, name string) (*Recipe, error) {
+	// Check in-memory cache first
+	if recipe, ok := l.recipes[name]; ok {
+		return recipe, nil
+	}
+
+	// Check local recipes directory if configured
+	if l.recipesDir != "" {
+		localRecipe, localErr := l.loadLocalRecipe(name)
+		if localErr == nil && localRecipe != nil {
+			l.warnIfShadows(ctx, name)
+			l.recipes[name] = localRecipe
+			return localRecipe, nil
+		}
+		if localErr != nil && !os.IsNotExist(localErr) {
+			return nil, localErr
+		}
+	}
+
+	// Check embedded recipes
+	if l.embedded != nil {
+		if data, ok := l.embedded.Get(name); ok {
+			recipe, err := l.parseBytes(data)
+			if err != nil {
+				return nil, fmt.Errorf("failed to parse embedded recipe %s: %w", name, err)
+			}
+			l.recipes[name] = recipe
+			return recipe, nil
+		}
+	}
+
+	// Fetch from registry (disk cache or remote)
+	recipe, err := l.fetchFromRegistry(ctx, name)
+	if err == nil {
+		l.recipes[name] = recipe
+		return recipe, nil
+	}
+
+	return nil, fmt.Errorf("recipe %q not found (resolved from satisfies index)", name)
+}
+
+// loadEmbeddedDirect loads a recipe from embedded FS only, without the
+// satisfies fallback. This is the non-recursive counterpart of getEmbeddedOnly,
+// used when loading a canonical recipe resolved from the satisfies index.
+func (l *Loader) loadEmbeddedDirect(name string) (*Recipe, error) {
+	// Check in-memory cache first
+	if recipe, ok := l.recipes[name]; ok {
+		return recipe, nil
+	}
+
+	// Check embedded recipes only
+	if l.embedded != nil {
+		if data, ok := l.embedded.Get(name); ok {
+			recipe, err := l.parseBytes(data)
+			if err != nil {
+				return nil, fmt.Errorf("failed to parse embedded recipe %s: %w", name, err)
+			}
+			l.recipes[name] = recipe
+			return recipe, nil
+		}
+	}
+
+	return nil, fmt.Errorf(
+		"recipe %q not found in embedded registry (resolved from satisfies index)", name,
 	)
 }
 

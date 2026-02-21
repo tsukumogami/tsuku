@@ -502,3 +502,102 @@ func TestSatisfies_ClearCacheResetsIndex(t *testing.T) {
 		t.Error("expected satisfiesIndex to be nil after ClearCache")
 	}
 }
+
+// --- Cross-Recipe Cycle Tests ---
+
+func TestSatisfies_GetWithContext_NoCrossRecipeCycle(t *testing.T) {
+	// Simulate a cross-recipe satisfies cycle:
+	//   "alias-a" -> satisfies index -> "recipe-b"
+	//   "recipe-b" doesn't exist as a real recipe
+	//   but if "recipe-b" were looked up through satisfies again, it could
+	//   map to "alias-a" (or another chain) causing infinite recursion.
+	//
+	// With the fix, loadDirect skips the satisfies fallback, so even if
+	// canonicalName is itself in the satisfies index, it won't recurse.
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	defer server.Close()
+
+	cacheDir := t.TempDir()
+	reg := registry.New(cacheDir)
+	reg.BaseURL = server.URL
+
+	loader := NewWithoutEmbedded(reg, "")
+
+	// Create a cycle: alias-a -> recipe-b -> alias-a
+	loader.satisfiesOnce.Do(func() {
+		loader.satisfiesIndex = map[string]string{
+			"alias-a":  "recipe-b",
+			"recipe-b": "alias-a",
+		}
+	})
+
+	// This should NOT hang or stack-overflow. loadDirect doesn't re-enter
+	// the satisfies path, so "recipe-b" is looked up directly and fails
+	// with a not-found error instead of recursing.
+	_, err := loader.GetWithContext(context.Background(), "alias-a", LoaderOptions{})
+	if err == nil {
+		t.Fatal("expected error for unresolvable satisfies cycle, got nil")
+	}
+
+	// Verify the error mentions the canonical name that wasn't found
+	if !strings.Contains(err.Error(), "recipe-b") {
+		t.Errorf("expected error to mention 'recipe-b', got: %v", err)
+	}
+}
+
+func TestSatisfies_GetEmbeddedOnly_NoCrossRecipeCycle(t *testing.T) {
+	// Same cycle test but for the embedded-only path.
+	reg := registry.New(t.TempDir())
+	loader := NewWithoutEmbedded(reg, "")
+
+	// Create a cycle in the satisfies index
+	loader.satisfiesOnce.Do(func() {
+		loader.satisfiesIndex = map[string]string{
+			"alias-x":  "recipe-y",
+			"recipe-y": "alias-x",
+		}
+	})
+
+	// For embedded-only, lookupSatisfiesEmbeddedOnly checks that the
+	// canonical recipe exists in embedded FS. Since we use NewWithoutEmbedded,
+	// this will already return false for "recipe-y", but the important thing
+	// is that loadEmbeddedDirect doesn't recurse even if it were called.
+	_, err := loader.Get("alias-x", LoaderOptions{RequireEmbedded: true})
+	if err == nil {
+		t.Fatal("expected error for unresolvable satisfies cycle in embedded mode")
+	}
+}
+
+func TestSatisfies_LoadDirect_SkipsSatisfiesFallback(t *testing.T) {
+	// Verify that loadDirect doesn't use the satisfies fallback by looking
+	// up a name that exists only in the satisfies index (not as a real recipe).
+	// loadDirect should return not-found rather than recursing through satisfies.
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	defer server.Close()
+
+	cacheDir := t.TempDir()
+	reg := registry.New(cacheDir)
+	reg.BaseURL = server.URL
+
+	loader := NewWithoutEmbedded(reg, "")
+
+	// "phantom" exists in the satisfies index but not as a real recipe
+	loader.satisfiesOnce.Do(func() {
+		loader.satisfiesIndex = map[string]string{
+			"phantom": "also-phantom",
+		}
+	})
+
+	// loadDirect should NOT follow the satisfies index for "phantom"
+	_, err := loader.loadDirect(context.Background(), "phantom")
+	if err == nil {
+		t.Fatal("expected loadDirect to return error for non-existent recipe")
+	}
+	if !strings.Contains(err.Error(), "phantom") {
+		t.Errorf("expected error to mention 'phantom', got: %v", err)
+	}
+}
