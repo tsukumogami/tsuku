@@ -1,5 +1,5 @@
 ---
-status: Accepted
+status: Planned
 problem: |
   Tsuku's recipe resolution uses exact name matching with no fallback. When Homebrew calls a package `openssl@3` but the tsuku recipe is named `openssl`, the system fails to connect them. This produces duplicate recipes from the batch pipeline, false blockers on the dashboard, and `tsuku create` generating inferior copies of existing recipes. A static mapping file was tried (#1200) but never wired in, and the approach doesn't scale.
 decision: |
@@ -10,7 +10,52 @@ rationale: |
 
 # DESIGN: Ecosystem Name Resolution
 
-**Status:** Accepted
+**Status:** Planned
+
+## Implementation Issues
+
+### Milestone: [ecosystem-name-resolution](https://github.com/tsukumogami/tsuku/milestone/93)
+
+| Issue | Dependencies | Tier |
+|-------|--------------|------|
+| [#1826: feat(recipe): add satisfies metadata field and loader fallback](https://github.com/tsukumogami/tsuku/issues/1826) | None | testable |
+| _Adds the `Satisfies` field to the recipe metadata struct and a lazy-built index in the loader. When exact name lookup fails, the loader falls back to this index to resolve ecosystem names like `openssl@3` to their canonical recipe. Includes validation and the first `satisfies` entry on the embedded `openssl` recipe._ | | |
+| [#1827: feat(cli): check satisfies index before generating recipes in tsuku create](https://github.com/tsukumogami/tsuku/issues/1827) | [#1826](https://github.com/tsukumogami/tsuku/issues/1826) | testable |
+| _With the loader fallback in place, `tsuku create` checks for existing recipes via the satisfies index before generating. Users running `tsuku create openssl@3 --from homebrew` see a clear message that `openssl` already covers that name, with `--force` to override._ | | |
+| [#1828: fix(recipes): clean up ecosystem name mismatches and migrate dep-mapping](https://github.com/tsukumogami/tsuku/issues/1828) | [#1826](https://github.com/tsukumogami/tsuku/issues/1826) | testable |
+| _Deletes the duplicate `openssl@3.toml`, fixes `apr-util`'s dependency reference, and migrates the 5 non-trivial entries from `dep-mapping.json` to `satisfies` fields on their respective embedded recipes. Deprecates the dead mapping file._ | | |
+| [#1829: feat(registry): include satisfies data in registry manifest](https://github.com/tsukumogami/tsuku/issues/1829) | [#1826](https://github.com/tsukumogami/tsuku/issues/1826) | testable |
+| _Extends the registry generation script to emit `satisfies` data in the manifest JSON and wires the loader to populate its index from that data. Adds cross-recipe duplicate detection at CI time so conflicting `satisfies` claims are caught before merge._ | | |
+
+### Dependency Graph
+
+```mermaid
+graph LR
+    subgraph Phase1["Phase 1: Foundation"]
+        I1826["#1826: Add satisfies field + loader"]
+    end
+
+    subgraph Phase2["Phase 2: Consumers"]
+        I1827["#1827: Create command check"]
+        I1828["#1828: Data cleanup + migration"]
+        I1829["#1829: Registry integration"]
+    end
+
+    I1826 --> I1827
+    I1826 --> I1828
+    I1826 --> I1829
+
+    classDef done fill:#c8e6c9
+    classDef ready fill:#bbdefb
+    classDef blocked fill:#fff9c4
+    classDef needsDesign fill:#e1bee7
+    classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
+
+    class I1826 ready
+    class I1827,I1828,I1829 blocked
+```
+
+**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design
 
 ## Context and Problem Statement
 
