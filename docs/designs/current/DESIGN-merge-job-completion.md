@@ -42,7 +42,7 @@ Observability and scale improvements: SLI metrics for trend analysis and auto-me
 
 ## Upstream Design Reference
 
-This design completes the merge job (Job 4) from [DESIGN-batch-recipe-generation.md](../DESIGN-batch-recipe-generation.md). The platform validation foundation was delivered by [DESIGN-batch-platform-validation.md](DESIGN-batch-platform-validation.md) (M60).
+This design completes the merge job (Job 4) from [DESIGN-batch-recipe-generation.md](DESIGN-batch-recipe-generation.md). The platform validation foundation was delivered by [DESIGN-batch-platform-validation.md](DESIGN-batch-platform-validation.md) (M60).
 
 **Relevant upstream sections:**
 - Job Architecture (Job 4: merge)

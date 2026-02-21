@@ -1,15 +1,15 @@
 ---
-status: Planned
+status: Current
 problem: No CI pipeline exists to orchestrate batch recipe generation across deterministic ecosystem builders, validate recipes across target environments, record failures with structured metadata, and merge passing recipes at scale.
-decision: A manually-triggered GitHub Actions workflow that reads from the priority queue, runs per-ecosystem generation jobs with progressive validation (Linux first, macOS on pass), records failures to JSONL artifacts, and creates one PR per batch with auto-merge gated on validation and run_command absence.
-rationale: Manual trigger gives operators control over batch timing and size without requiring external orchestration. Per-ecosystem jobs isolate failures and enable ecosystem-specific rate limiting. Progressive validation reduces macOS CI cost by 80%+ since most failures surface on Linux. JSONL artifacts in the repo keep failure data versioned and auditable without requiring backend infrastructure in this phase.
+decision: A GitHub Actions workflow (scheduled hourly + manual dispatch) that reads from the priority queue, runs a Go orchestrator for generation with progressive validation (Linux first, then arm64/musl/macOS on pass), records failures to JSONL artifacts, and creates one PR per batch with auto-merge gated on validation and run_command absence.
+rationale: Scheduled trigger with manual override gives steady throughput while preserving operator control. A single Go orchestrator (rather than per-ecosystem jobs) simplifies failure isolation while still supporting per-ecosystem rate limiting and circuit breaking. Progressive validation reduces macOS CI cost by 80%+ since most failures surface on Linux. JSONL artifacts in the repo keep failure data versioned and auditable without requiring backend infrastructure. Building tsuku from source catches CLI regressions immediately, validated by the circuit breaker as the safety net.
 ---
 
 # DESIGN: Batch Recipe Generation CI Pipeline
 
 ## Status
 
-Planned
+Current
 
 ## Implementation Issues
 
@@ -18,7 +18,7 @@ Planned
 | Issue | Title | Dependencies | Tier |
 |-------|-------|--------------|------|
 | ~~[#1252](https://github.com/tsukumogami/tsuku/issues/1252)~~ | ~~Preflight job and rate limiting~~ | ~~None~~ | ~~testable~~ |
-| [#1253](https://github.com/tsukumogami/tsuku/issues/1253) | Pinned release with source fallback | [#1258](https://github.com/tsukumogami/tsuku/issues/1258) | simple |
+| ~~[#1253](https://github.com/tsukumogami/tsuku/issues/1253)~~ | ~~Pinned release with source fallback~~ | ~~[#1258](https://github.com/tsukumogami/tsuku/issues/1258)~~ | ~~simple~~ |
 | ~~[#1254](https://github.com/tsukumogami/tsuku/issues/1254)~~ | ~~Multi-platform validation jobs~~ | ~~[#1252](https://github.com/tsukumogami/tsuku/issues/1252)~~ | ~~testable~~ |
 | ~~[#1255](https://github.com/tsukumogami/tsuku/issues/1255)~~ | ~~Circuit breaker integration (preflight side)~~ | ~~[#1252](https://github.com/tsukumogami/tsuku/issues/1252), [M63](https://github.com/tsukumogami/tsuku/milestone/63)~~ | ~~testable~~ |
 | ~~[#1256](https://github.com/tsukumogami/tsuku/issues/1256)~~ | ~~Platform constraints in merge job~~ | ~~[M60](https://github.com/tsukumogami/tsuku/milestone/60)~~ | ~~testable~~ |
@@ -29,69 +29,10 @@ Planned
 | ~~[M63](https://github.com/tsukumogami/tsuku/milestone/63)~~ | ~~Merge Job Completion (batch_id, recipe tracking, circuit breaker update, queue sync)~~ | ~~None~~ | |
 | ~~[M64](https://github.com/tsukumogami/tsuku/milestone/64)~~ | ~~Merge Job Observability (SLI metrics, auto-merge gating)~~ | ~~[M63](https://github.com/tsukumogami/tsuku/milestone/63)~~ | |
 
-### Dependency Graph
-
-```mermaid
-graph LR
-    subgraph Phase1["Phase 1: Foundation"]
-        I1252["#1252: Preflight + rate limiting"]
-    end
-
-    subgraph Phase2["Phase 2: Validation"]
-        I1254["#1254: Multi-platform validation"]
-        M60["M60: Platform Validation (Foundation)"]
-    end
-
-    subgraph Phase3["Phase 3: Merge Job"]
-        I1256["#1256: Platform constraints"]
-        M63["M63: Merge Job Completion"]
-    end
-
-    subgraph Phase4["Phase 4: Observability + CI"]
-        I1255["#1255: Circuit breaker (preflight)"]
-        I1257["#1257: SLI metrics (superseded)"]
-        M64["M64: Merge Job Observability"]
-        I1258["#1258: PR CI filtering"]
-    end
-
-    subgraph Future["Future Work"]
-        I1253["#1253: Pinned release + source fallback"]
-        I1273["#1273: Structured JSON CLI output"]
-        I1287["#1287: Auto-install toolchains"]
-        M61["M61: Platform Validation (Refinements)"]
-    end
-
-    I1252 --> I1254
-    I1254 --> M60
-    M60 --> I1256
-    M60 --> M63
-    I1256 --> I1258
-    I1258 --> I1253
-    M63 --> I1255
-    I1252 --> I1255
-    M63 --> M64
-
-    classDef done fill:#c8e6c9
-    classDef ready fill:#bbdefb
-    classDef blocked fill:#fff9c4
-    classDef needsDesign fill:#e1bee7
-
-    class I1254,I1273,I1257,I1287 done
-    class M60,I1256 done
-    class M63 done
-    class I1252 done
-    class I1255 done
-    class I1258 done
-    class M61 done
-    class I1253 ready
-    class M64 done
-```
-
-**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
 
 ## Upstream Design Reference
 
-This design implements part of [DESIGN-registry-scale-strategy.md](DESIGN-registry-scale-strategy.md).
+This design implements part of [DESIGN-registry-scale-strategy.md](../DESIGN-registry-scale-strategy.md).
 
 **Relevant sections:**
 - Decision 1: Fully deterministic batch generation
@@ -104,9 +45,9 @@ This design implements part of [DESIGN-registry-scale-strategy.md](DESIGN-regist
 - CI workflow that generates failure records (required by #1190)
 
 **Dependent designs:**
-- [DESIGN-batch-operations.md](current/DESIGN-batch-operations.md): Control plane, rollback, emergency stop
-- [DESIGN-homebrew-deterministic-mode.md](current/DESIGN-homebrew-deterministic-mode.md): Homebrew DeterministicOnly session option
-- [DESIGN-seed-queue-pipeline.md](current/DESIGN-seed-queue-pipeline.md): Queue population and lifecycle model
+- [DESIGN-batch-operations.md](DESIGN-batch-operations.md): Control plane, rollback, emergency stop
+- [DESIGN-homebrew-deterministic-mode.md](DESIGN-homebrew-deterministic-mode.md): Homebrew DeterministicOnly session option
+- [DESIGN-seed-queue-pipeline.md](DESIGN-seed-queue-pipeline.md): Queue population and lifecycle model
 
 ## Context and Problem Statement
 
@@ -373,6 +314,46 @@ Option 4A (JSONL in repo) matches the existing `data/schemas/` pattern and avoid
 - JSONL files grow the repo. Acceptable at expected scale (hundreds of failures per run = kilobytes). A cleanup script can archive old records.
 - macOS-specific failures are discovered after Linux validation. Acceptable because most failures are platform-independent, and the 80% cost savings outweigh the delay.
 
+## Implementation Amendments
+
+The following changes emerged during implementation and represent improvements over the original design. The core decisions (progressive validation, selective exclusion, JSONL failure recording) held, but the operational model evolved.
+
+### Trigger Model: Manual → Scheduled + Manual
+
+The design chose Option 1A (manual dispatch only) with the note that "a cron trigger can be added once success rates are validated." After the pipeline proved reliable, an hourly `schedule` trigger was added alongside manual `workflow_dispatch`. This matches Option 1B from the original analysis. The manual dispatch still supports ecosystem, batch_size, and tier parameters for targeted runs.
+
+### Job Architecture: Per-Ecosystem Jobs → Single Orchestrator
+
+The design specified separate per-ecosystem generation jobs in a matrix. The implementation uses a single Go orchestrator (`cmd/batch-generate`) that processes all ecosystems sequentially in one job. This simplifies artifact passing and job coordination while still supporting per-ecosystem rate limiting and circuit breaking within the orchestrator loop.
+
+The separate preflight job was folded into the generate job — the orchestrator reads the queue, checks circuit breaker state, and selects packages inline rather than through a dedicated preflight step.
+
+### Platform Validation: More Granular Than Designed
+
+The design described 5 target environments. The implementation validates across more granular Linux families using Docker containers:
+
+- **Linux x86_64**: 5 families (debian, fedora, arch, opensuse, alpine) on `ubuntu-latest`
+- **Linux arm64**: 4 families (debian, fedora, opensuse, alpine) on `ubuntu-24.04-arm`
+- **macOS arm64**: native on `macos-14`
+- **macOS x86_64**: native on `macos-15-intel`
+
+### CLI Building: Build-from-Source is Permanent
+
+The design deferred version pinning to #1253 "once the pipeline stabilizes." After operating the pipeline, build-from-source proved to be the better permanent approach:
+
+- Catches CLI regressions immediately (a missing `--output` flag was caught early via PR #1264)
+- Build time is negligible (~30-40 seconds for 4 platform binaries vs hours of validation)
+- The circuit breaker handles broken-commit scenarios by tripping on consecutive failures
+- Eliminates version pinning complexity (`TSUKU_VERSION` env var, fallback logic)
+
+Issue #1253 was closed as not-planned. The design's own reasoning — "a broken CLI release gets caught immediately by batch failures tripping the circuit breaker" — validates build-from-source as the right long-term choice.
+
+### Operational Defaults
+
+- Default batch size: 10 (reduced from design's 25 for more frequent, smaller batches)
+- Default tier: 3 (broadened from design's 2 to process all queue tiers)
+- Concurrency group: `queue-operations` (shared with other queue-touching workflows)
+
 ## Solution Architecture
 
 ### Overview
@@ -385,23 +366,23 @@ The pipeline is a GitHub Actions workflow with three job tiers: queue reading, p
 # .github/workflows/batch-generate.yml
 name: Batch Recipe Generation
 on:
+  schedule:
+    - cron: '0 * * * *'  # Hourly
   workflow_dispatch:
     inputs:
       ecosystem:
-        description: 'Ecosystem to process (or "all")'
-        required: true
-        default: 'all'
-        type: choice
-        options: [all, cargo, npm, pypi, rubygems, go, cpan, cask, homebrew]
+        description: 'Ecosystem to process (empty = all)'
+        required: false
+        type: string
       batch_size:
         description: 'Max recipes per ecosystem'
         required: true
-        default: '25'
+        default: '10'
         type: number
       tier:
         description: 'Queue tier (1=critical, 2=popular, 3=all)'
         required: true
-        default: '2'
+        default: '3'
         type: choice
         options: ['1', '2', '3']
       skip_macos:
@@ -411,7 +392,7 @@ on:
         type: boolean
 
 concurrency:
-  group: batch-generate
+  group: queue-operations
   cancel-in-progress: false
 
 permissions:
@@ -594,7 +575,7 @@ The batch pipeline invokes the released `tsuku` binary rather than importing `in
 - `tsuku validate --strict <recipe>` -- schema validation
 - `tsuku install --plan <recipe> --sandbox` -- sandbox validation
 
-**CLI installation:** Each generate job builds `tsuku` from source (`go build ./cmd/tsuku`). This catches CLI regressions immediately rather than waiting for a release. Version pinning via `install.sh` is deferred to #1253 once the pipeline stabilizes.
+**CLI installation:** Each generate job builds `tsuku` from source (`go build ./cmd/tsuku`). This catches CLI regressions immediately rather than waiting for a release. Build-from-source is the permanent approach — see "Implementation Amendments" above for rationale.
 
 **Why not Go API:** If the CLI doesn't work, there's little value in generating recipes that users can't install. A broken CLI release gets caught immediately by batch failures tripping the circuit breaker, rather than being masked by internal API calls that bypass the CLI entirely.
 
@@ -738,12 +719,10 @@ No user-identifying information is transmitted. CI tokens are GitHub-provided GI
 
 ### Negative
 
-- Manual trigger requires operator attention (no automatic cadence)
 - JSONL files in repo increase repo size over time
 - macOS-specific failures discovered after Linux validation
 
 ### Mitigations
 
-- Add cron trigger once pipeline reliability is proven (1A → 1B transition)
 - Archive old failure records periodically (keep last 90 days in repo)
 - Weekly macOS sweep validates all recently merged recipes
