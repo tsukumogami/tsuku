@@ -65,10 +65,10 @@ Planned
 | _Gap analysis and prioritization tooling. File-based JSONL in `data/failures/` is the chosen approach; D1 migration was dropped._ | | |
 | ~~[#1190: design failure analysis backend](https://github.com/tsukumogami/tsuku/issues/1190)~~ | ~~[#1189](https://github.com/tsukumogami/tsuku/issues/1189)~~ | ~~testable~~ |
 | ~~_Closed as not planned. File-based JSONL approach is sufficient; D1 migration not justified at current scale._~~ | | |
-| [#1277: top-blockers report for gap analysis](https://github.com/tsukumogami/tsuku/issues/1277) | None | simple |
-| _Report ranking missing recipes by how many other recipes they block._ | | |
-| [#1278: hybrid prioritization (popularity + blocking impact)](https://github.com/tsukumogami/tsuku/issues/1278) | [#1277](https://github.com/tsukumogami/tsuku/issues/1277) | testable |
-| _Combine package popularity with transitive blocking impact for queue ordering._ | | |
+| ~~[#1277: top-blockers report for gap analysis](https://github.com/tsukumogami/tsuku/issues/1277)~~ | ~~None~~ | ~~simple~~ |
+| ~~_Closed. Functionality shipped via pipeline dashboard (`website/pipeline/`) with transitive blocker computation in `internal/dashboard/`._~~ | | |
+| [#1278: re-order queue entries within tiers by blocking impact](https://github.com/tsukumogami/tsuku/issues/1278) | None | testable |
+| _Use existing transitive blocker computation to re-order entries within priority tiers, so high-impact packages are generated first._ | | |
 | [M54: Multi-Ecosystem](https://github.com/tsukumogami/tsuku/milestone/54) | M53 | |
 | _All deterministic builders integrated and running. System library backfill remains._ | | |
 | [#1191: design system library backfill strategy](https://github.com/tsukumogami/tsuku/issues/1191) | None | simple |
@@ -133,8 +133,6 @@ graph TD
     I1267 --> I1268
     I1268 --> I1412
     I1189 --> I1190
-    I1277 --> I1278
-
     classDef done fill:#c8e6c9
     classDef ready fill:#bbdefb
     classDef blocked fill:#fff9c4
@@ -156,8 +154,8 @@ graph TD
     class I1412 done
     class I1253 done
     class I1190 done
-    class I1277 ready
-    class I1278 blocked
+    class I1277 done
+    class I1278 ready
     class I1191 ready
 ```
 
@@ -202,7 +200,7 @@ This section summarizes what shipped, what diverged from the original design, an
 ### What Remains
 
 See the Remaining Work section at the end of this document for the full list. Key items:
-- 3 open issues across 2 milestones
+- 2 open issues across 2 milestones
 - Script format mismatches (gap-analysis.sh, requeue-unblocked.sh)
 - Schema file vs live format divergence
 - System library backfill strategy (#1191)
@@ -935,7 +933,7 @@ This is a strategic design. Implementation follows a **walking skeleton** approa
 
 ### Phase 2: Failure Analysis Backend + macOS Platform -- PARTIALLY COMPLETE
 
-**Status**: macOS validation is running. Full dashboard at `website/pipeline/`. The failure backend uses file-based JSONL in `data/failures/`; the Cloudflare Worker/D1 migration was dropped (#1190 closed as not planned). M53 still open with 2 issues (#1277, #1278).
+**Status**: macOS validation is running. Full dashboard at `website/pipeline/`. The failure backend uses file-based JSONL in `data/failures/`; the Cloudflare Worker/D1 migration was dropped (#1190 closed as not planned). Top-blockers report (#1277) shipped via dashboard. M53 still open with 1 issue (#1278).
 
 **Goal**: Move from files to backend service. Add macOS platform validation.
 
@@ -1076,7 +1074,7 @@ Milestones align with phases. 5 of 8 milestones are closed.
 - **Visibility Infrastructure Schemas (M57)**: Phase 0 - CLOSED - Schemas and scripts delivered
 - **Deterministic Homebrew Builder (M51)**: Phase 1a - CLOSED - Homebrew deterministic mode validated
 - **Batch Pipeline (M52)**: Phase 1b - CLOSED - Batch workflow, SLIs, circuit breaker, 143 Homebrew recipes
-- **Failure Backend (M53)**: Phase 2 - OPEN (2 issues: #1277, #1278) - File-based failures operational, D1 migration dropped
+- **Failure Backend (M53)**: Phase 2 - OPEN (1 issue: #1278) - File-based failures operational, D1 migration dropped, top-blockers shipped via dashboard
 - **Multi-Ecosystem (M54)**: Phase 3+ - OPEN (1 issue: #1191 system library backfill) - All builders integrated
 
 ## Required Tactical Designs
@@ -1106,7 +1104,7 @@ Tactical designs are organized by phase, reflecting the walking skeleton approac
 | ~~DESIGN-batch-failure-analysis.md~~ | ~~2~~ | ~~NOT NEEDED (#1190 closed)~~ | ~~File-based JSONL approach kept; D1 migration dropped~~ |
 | DESIGN-system-lib-backfill.md | 3+ | NEVER CREATED (#1191 open) | Strategy for adding common library recipes (parallel workstream) |
 
-**On DESIGN-batch-failure-analysis.md**: Dropped. The file-based approach (JSONL in `data/failures/`, dashboard at `website/pipeline/`) is sufficient at current scale. #1190 was closed as not planned. The remaining M53 issues (#1277 top-blockers, #1278 hybrid prioritization) will build on the existing JSONL files.
+**On DESIGN-batch-failure-analysis.md**: Dropped. The file-based approach (JSONL in `data/failures/`, dashboard at `website/pipeline/`) is sufficient at current scale. #1190 was closed as not planned. Top-blockers (#1277) shipped via dashboard. The remaining M53 issue (#1278 within-tier reordering) builds on the existing JSONL files.
 
 **On DESIGN-system-lib-backfill.md**: No longer blocked (was on #1190, now closed). With ~50 excluded recipes (15% exclusion rate) due to missing system libraries, this remains relevant for unlocking the next wave of growth.
 
@@ -1227,19 +1225,18 @@ These are bugs and inconsistencies between scripts, schemas, and live data forma
 
 | Question | Context | Status |
 |----------|---------|--------|
-| ~~Is D1 migration still needed?~~ | ~~File-based JSONL in `data/failures/` works at 329 recipes. D1 migration was dropped (#1190 closed as not planned). The file-based approach is sufficient; gap analysis tooling (#1277, #1278) will build on JSONL.~~ | ~~Resolved~~ |
+| ~~Is D1 migration still needed?~~ | ~~File-based JSONL in `data/failures/` works at 329 recipes. D1 migration was dropped (#1190 closed as not planned). Top-blockers report (#1277) shipped via dashboard. Remaining work (#1278) builds on existing JSONL.~~ | ~~Resolved~~ |
 | System library backfill strategy | ~50 excluded recipes (15% exclusion rate) can't be generated due to missing system deps. Adding ~20 core libraries would unblock hundreds of Homebrew formulas. | Needs DESIGN-system-lib-backfill.md (#1191) |
 | What to do about the 50 excluded recipes | These are tools the pipeline can't generate deterministically. Manual creation? Improved heuristics? Accept the gap? | No issue yet |
 | ~~Request-based priority boosting~~ | ~~User install telemetry could feed into queue scoring. Decided not to pursue for now; popularity-based ordering is sufficient.~~ | ~~Deferred~~ |
 
 ### Open Issues
 
-3 issues remain across 2 milestones:
+2 issues remain across 2 milestones:
 
 | Issue | Milestone | Description |
 |-------|-----------|-------------|
-| [#1277](https://github.com/tsukumogami/tsuku/issues/1277) | M53 (Failure Backend) | Top-blockers report for gap analysis |
-| [#1278](https://github.com/tsukumogami/tsuku/issues/1278) | M53 (Failure Backend) | Hybrid prioritization (popularity + blocking impact) |
+| [#1278](https://github.com/tsukumogami/tsuku/issues/1278) | M53 (Failure Backend) | Re-order queue entries within tiers by blocking impact |
 | [#1191](https://github.com/tsukumogami/tsuku/issues/1191) | M54 (Multi-Ecosystem) | Design system library backfill strategy |
 
 ### Documentation Debt
