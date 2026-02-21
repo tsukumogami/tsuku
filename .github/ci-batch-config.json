@@ -1,0 +1,7 @@
+{
+  "batch_sizes": {
+    "test-changed-recipes": {
+      "linux": 15
+    }
+  }
+}
