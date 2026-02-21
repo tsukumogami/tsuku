@@ -7,11 +7,12 @@ problem: |
   doesn't scale to bulk recipe changes like schema migrations or builder upgrades
   that touch 100+ recipes at once.
 decision: |
-  Split per-recipe matrix jobs into fixed-size batches using ceiling division
-  (default: 15 recipes per batch). Each batch runs on one runner that builds
-  tsuku once and loops through its recipes with per-recipe TSUKU_HOME isolation
-  and failure accumulation. The batch size is configurable and clamped to 1-50.
-  Multi-platform workflows cross the batch dimension with the platform dimension.
+  Split per-recipe matrix jobs into fixed-size batches using ceiling division.
+  Each batch runs on one runner that builds tsuku once and loops through its
+  recipes with per-recipe TSUKU_HOME isolation and failure accumulation. Batch
+  sizes are configurable per platform (e.g., 15 for ubuntu, 5 for alpine) to
+  even out job durations across platforms with different speeds. Multi-platform
+  workflows cross the batch dimension with the platform dimension.
 rationale: |
   Ceiling-division batching is the simplest strategy that bounds job count without
   requiring per-recipe timing data or changes to the detection logic. The inner-loop
@@ -122,27 +123,33 @@ The job name includes the batch range for identification: `Linux (batch 1/5)` or
 
 `validate-golden-execution.yml` tests recipes across Linux distribution families (debian, rhel, alpine, suse, arch). Each family runs in a separate container image, so the batching dimension is recipes-per-family, not just recipes-per-runner. The question is whether batching applies uniformly across all platforms.
 
-#### Chosen: Batch at the recipe level, keep platform dimension orthogonal
+#### Chosen: Batch at the recipe level with per-platform batch sizes, keep platform dimension orthogonal
 
-For workflows that test across platforms or families, the matrix has two dimensions: batch and platform. A batch of 15 recipes tested on 5 families produces 5 jobs (one per family, each running 15 recipes). With 75 recipes across 5 families: ceil(75/15) * 5 = 25 jobs instead of 75 * 5 = 375.
+For workflows that test across platforms or families, the matrix has two dimensions: batch and platform. The batch size is configurable per platform, since some platforms are significantly slower than others. For example, alpine source builds might use a batch size of 5 while ubuntu-latest uses 15. This keeps job durations roughly even across platforms despite different per-recipe execution times.
 
-The detection job outputs both the batched recipe list and the platform/family list. The matrix uses `include` or cross-product to generate batch x platform combinations.
+The detection job accepts a batch size map (platform -> size) and splits recipes into per-platform batches accordingly. For workflows with a single Linux target, there's just one batch size. For multi-family workflows, each family gets its own batch count:
 
-For plain-Linux workflows (`test-changed-recipes.yml`, `validate-golden-recipes.yml`) where there's only one Linux target (ubuntu-latest), the matrix is just batches.
+```
+ubuntu-latest: ceil(N / 15) batches
+alpine:        ceil(N / 5) batches
+rhel:          ceil(N / 10) batches
+```
+
+The batch size map is a workflow-level variable with sensible defaults, tunable as CI timing data reveals which platforms are slower. The detection job outputs per-platform batch arrays; the matrix uses `include` to generate batch x platform combinations.
 
 #### Alternatives Considered
 
-**Per-family batch sizing**: Use different batch sizes per family (e.g., smaller batches for slower alpine builds). Rejected because it adds configuration complexity without clear benefit. If a family is consistently slow, that's better addressed by profiling the slow recipes than by shrinking batch sizes.
+**Uniform batch size across all platforms**: Use the same batch size everywhere. Simpler, but leads to either alpine jobs running too long (if sized for ubuntu) or ubuntu jobs being unnecessarily split (if sized for alpine). Per-platform sizing adds a small configuration surface but directly addresses the variance in platform speed.
 
 ## Decision Outcome
 
-**Chosen: Ceiling-division batching + grouping-based failure reporting + orthogonal platform dimension**
+**Chosen: Ceiling-division batching + per-platform batch sizes + grouping-based failure reporting**
 
 ### Summary
 
 The detection job in each workflow takes its existing recipe list and splits it into fixed-size batches using ceiling division. The default batch size is 15 recipes, configurable via a workflow input. Each batch becomes one matrix entry containing a JSON array of recipe objects. The execution job builds tsuku once, then loops through its assigned recipes with `::group::` annotations for log clarity and exit-code accumulation for failure reporting.
 
-For multi-platform workflows, the batch dimension is crossed with the platform dimension. A workflow that tests 60 recipes across 5 Linux families produces ceil(60/15) * 5 = 20 jobs instead of 60 * 5 = 300. Each job runs all its batch's recipes on one platform.
+For multi-platform workflows, the batch dimension is crossed with the platform dimension. Each platform gets its own batch size to account for speed differences (e.g., 15 for ubuntu, 5 for alpine). A workflow that tests 60 recipes across 5 families with varying batch sizes produces a manageable number of jobs instead of 60 * 5 = 300. Each job runs all its batch's recipes on one platform.
 
 Failure handling preserves per-recipe granularity: each recipe runs in a named group, failures produce `::error::` annotations with the recipe name, and the job exits non-zero after running all recipes in the batch (not fail-fast). The job name includes the batch index (`Linux (batch 1/4)`) so authors can correlate failures across the GitHub Actions UI.
 
@@ -156,7 +163,7 @@ Ceiling-division batching is the simplest strategy that bounds job count. It doe
 
 The grouping-based failure reporting is already proven in the macOS path. Adopting it for Linux batches means less new code and consistent behavior across platforms.
 
-Keeping the platform dimension orthogonal avoids entangling batch logic with platform selection. The detection job doesn't need to know about families; it just splits recipes into batches. The workflow matrix handles the cross-product.
+Keeping the platform dimension orthogonal avoids entangling batch logic with platform selection. The detection job splits recipes into batches independently for each platform, using per-platform batch sizes to account for speed differences. The workflow matrix handles the cross-product. Per-platform sizing adds a small configuration surface, but it directly addresses the real-world variance where alpine builds take 3-5x longer than ubuntu.
 
 ## Solution Architecture
 
@@ -230,10 +237,24 @@ batch_recipes() {
 }
 ```
 
+For multi-platform workflows, the detection job calls `batch_recipes` once per platform with the appropriate batch size:
+
+```bash
+# Per-platform batch sizes (tunable)
+BATCH_UBUNTU=15
+BATCH_ALPINE=5
+BATCH_RHEL=10
+
+BATCHES_UBUNTU=$(batch_recipes "$RECIPES" "$BATCH_UBUNTU")
+BATCHES_ALPINE=$(batch_recipes "$RECIPES" "$BATCH_ALPINE")
+# ... etc.
+```
+
 The detection job outputs:
-- `batches`: JSON array of batch objects (for matrix)
+- `batches`: JSON array of batch objects (for single-platform workflows)
 - `batch_count`: Number of batches (for job naming)
 - `has_recipes`: Boolean (existing, unchanged)
+- For multi-platform workflows: per-platform batch arrays and counts
 
 ## Implementation Approach
 
