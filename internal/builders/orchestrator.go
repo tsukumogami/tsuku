@@ -52,6 +52,20 @@ type OrchestratorConfig struct {
 	// KeyCacheDir is the directory for caching PGP public keys ($TSUKU_HOME/cache/keys).
 	// Used for PGP signature verification.
 	KeyCacheDir string
+
+	// OnEvalDepsNeeded is called when eval-time dependencies are missing during
+	// plan generation. The callback should install the dependencies and return nil.
+	// If nil and deps are missing, plan generation fails with an error.
+	OnEvalDepsNeeded func(deps []string, autoAccept bool) error
+
+	// AutoAcceptEvalDeps controls whether OnEvalDepsNeeded installs dependencies
+	// without prompting. Typically tied to the --yes flag.
+	AutoAcceptEvalDeps bool
+
+	// RecipeLoader loads recipes for dependency resolution during plan generation.
+	// When set, plans include embedded dependency trees so sandbox containers can
+	// install deps without registry access.
+	RecipeLoader actions.RecipeLoader
 }
 
 // Orchestrator coordinates the build → sandbox → repair cycle.
@@ -295,11 +309,14 @@ func (o *Orchestrator) generatePlan(ctx context.Context, r *recipe.Recipe) (*exe
 
 	// Generate a fully resolved plan
 	plan, err := exec.GeneratePlan(ctx, executor.PlanConfig{
-		OS:            runtime.GOOS,
-		Arch:          runtime.GOARCH,
-		RecipeSource:  "create",
-		Downloader:    downloader,
-		DownloadCache: downloadCache,
+		OS:                 runtime.GOOS,
+		Arch:               runtime.GOARCH,
+		RecipeSource:       "create",
+		Downloader:         downloader,
+		DownloadCache:      downloadCache,
+		OnEvalDepsNeeded:   o.config.OnEvalDepsNeeded,
+		AutoAcceptEvalDeps: o.config.AutoAcceptEvalDeps,
+		RecipeLoader:       o.config.RecipeLoader,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate plan: %w", err)
