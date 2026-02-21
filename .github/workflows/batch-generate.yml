@@ -977,6 +977,16 @@ jobs:
             exit 0
           fi
 
+          # Transition open breakers to half-open before updating outcomes.
+          # The generate job does this on its runner, but the merge job has a
+          # fresh checkout so the file still says "open". check_breaker.sh
+          # transitions open -> half-open when opens_at has passed, which lets
+          # update_breaker.sh correctly handle the half-open + failure -> open
+          # (with fresh timeout) transition.
+          for eco in $(jq -r '.per_ecosystem | keys[]' "$RESULTS_FILE" 2>/dev/null); do
+            ./scripts/check_breaker.sh "$eco"
+          done
+
           # Iterate over each ecosystem in per_ecosystem breakdown
           for eco in $(jq -r '.per_ecosystem | keys[]' "$RESULTS_FILE" 2>/dev/null); do
             FAILED=$(jq -r --arg e "$eco" '.per_ecosystem[$e].failed // 0' "$RESULTS_FILE")
