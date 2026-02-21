@@ -1,0 +1,5 @@
+[
+  {"review_focus": "pragmatic", "blocking_count": 0, "advisory_count": 3, "note": "Original blocking (recursive GetWithContext) fixed in 802e293a"},
+  {"review_focus": "architect", "blocking_count": 0, "advisory_count": 2},
+  {"review_focus": "maintainer", "blocking_count": 0, "advisory_count": 4}
+]

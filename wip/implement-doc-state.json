@@ -1,0 +1,291 @@
+{
+  "design_doc": "docs/designs/DESIGN-ecosystem-name-resolution.md",
+  "branch": "docs/ecosystem-name-resolution",
+  "pr_number": 1824,
+  "integrity_hash": "sha256:27bc9bdb40ef8c015cd1c7072976cf7ddf0db21473854e77d2e518e8728d2b12",
+  "issues": [
+    {
+      "number": 1826,
+      "title": "feat(recipe): add satisfies metadata field and loader fallback",
+      "status": "completed",
+      "ci_status": "passed",
+      "ci_fix_attempts": 0,
+      "issue_type": "code",
+      "dependencies": [],
+      "commits": [
+        "0144abc52495e451aa8a6378d886d6d828d40b87",
+        "0144abc52495e451aa8a6378d886d6d828d40b87",
+        "802e293aa844c6f0cf7f1c038db9b6f5819d5ce9"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          "internal/recipe/loader.go",
+          "internal/recipe/satisfies_test.go"
+        ],
+        "tests_added": 3,
+        "key_decisions": "Extracted loadDirect and loadEmbeddedDirect methods to avoid recursive GetWithContext calls in satisfies fallback. Adds cycle safety.",
+        "requirements_map": [
+          {
+            "ac": "No recursive satisfies fallback",
+            "status": "implemented",
+            "evidence": "loadDirect and loadEmbeddedDirect methods"
+          }
+        ]
+      },
+      "reviewer_results": [
+        {
+          "review_focus": "pragmatic",
+          "blocking_count": 0,
+          "advisory_count": 3,
+          "note": "Original blocking (recursive GetWithContext) fixed in 802e293a"
+        },
+        {
+          "review_focus": "architect",
+          "blocking_count": 0,
+          "advisory_count": 2
+        },
+        {
+          "review_focus": "maintainer",
+          "blocking_count": 0,
+          "advisory_count": 4
+        }
+      ],
+      "testable_scenarios": [
+        "scenario-1",
+        "scenario-2",
+        "scenario-3",
+        "scenario-4",
+        "scenario-5",
+        "scenario-6",
+        "scenario-7"
+      ]
+    },
+    {
+      "number": 1827,
+      "title": "feat(cli): check satisfies index before generating recipes in tsuku create",
+      "status": "completed",
+      "ci_status": "passed",
+      "ci_fix_attempts": 0,
+      "issue_type": "code",
+      "dependencies": [
+        1826
+      ],
+      "commits": [
+        "eda691ab2bfee5bc47f7bd492d930fbb6d6e99bc"
+      ],
+      "agent_type": "coder",
+      "summary": null,
+      "reviewer_results": [
+        {
+          "review_focus": "pragmatic",
+          "blocking_count": 1,
+          "advisory_count": 2,
+          "note": "Tautological force test fixed in 30e9448e"
+        },
+        {
+          "review_focus": "architect",
+          "blocking_count": 0,
+          "advisory_count": 2,
+          "note": "LookupSatisfies comment and --force description updated in 30e9448e"
+        },
+        {
+          "review_focus": "maintainer",
+          "blocking_count": 1,
+          "advisory_count": 3,
+          "note": "Tautological force test fixed in 30e9448e"
+        }
+      ],
+      "testable_scenarios": [
+        "scenario-8",
+        "scenario-9"
+      ]
+    },
+    {
+      "number": 1828,
+      "title": "fix(recipes): clean up ecosystem name mismatches and migrate dep-mapping",
+      "status": "completed",
+      "ci_status": "passed",
+      "ci_fix_attempts": 0,
+      "issue_type": "code",
+      "dependencies": [
+        1826
+      ],
+      "commits": [
+        "eba7e1310abbe9e7b3ec759a20340b5764cb1e3d"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          "data/dep-mapping.json",
+          "data/README.md",
+          "docs/designs/current/DESIGN-priority-queue.md",
+          "internal/recipe/recipes/gcc-libs.toml",
+          "internal/recipe/recipes/python-standalone.toml",
+          "recipes/a/apr-util.toml",
+          "recipes/l/libcurl.toml",
+          "recipes/l/libnghttp2.toml",
+          "recipes/o/openssl@3.toml",
+          "recipes/s/sqlite.toml",
+          "website/pipeline/dashboard.json"
+        ],
+        "tests_added": 0,
+        "key_decisions": "Fully deleted dep-mapping.json. Identity mappings not migrated since loader exact-match handles them. Dashboard regenerated via queue-analytics tool.",
+        "requirements_map": [
+          {
+            "ac": "openssl@3.toml deleted",
+            "status": "implemented",
+            "evidence": "File deleted"
+          },
+          {
+            "ac": "apr-util references openssl",
+            "status": "implemented",
+            "evidence": "apr-util.toml line 7"
+          },
+          {
+            "ac": "gcc-libs has satisfies",
+            "status": "implemented",
+            "evidence": "gcc-libs.toml lines 13-14"
+          },
+          {
+            "ac": "python-standalone has satisfies",
+            "status": "implemented",
+            "evidence": "python-standalone.toml lines 7-8"
+          },
+          {
+            "ac": "sqlite has satisfies",
+            "status": "implemented",
+            "evidence": "sqlite.toml lines 9-10"
+          },
+          {
+            "ac": "libcurl has satisfies",
+            "status": "implemented",
+            "evidence": "libcurl.toml lines 8-9"
+          },
+          {
+            "ac": "libnghttp2 has satisfies",
+            "status": "implemented",
+            "evidence": "libnghttp2.toml lines 8-9"
+          },
+          {
+            "ac": "dep-mapping.json deleted",
+            "status": "implemented",
+            "evidence": "File deleted"
+          },
+          {
+            "ac": "data/README.md updated",
+            "status": "implemented",
+            "evidence": "Removed dep-mapping section"
+          },
+          {
+            "ac": "DESIGN-priority-queue.md updated",
+            "status": "implemented",
+            "evidence": "Line 487 updated"
+          },
+          {
+            "ac": "Other references cleaned",
+            "status": "implemented",
+            "evidence": "Grep confirmed"
+          },
+          {
+            "ac": "dashboard.json regenerated",
+            "status": "implemented",
+            "evidence": "Regenerated via queue-analytics"
+          },
+          {
+            "ac": "Tests pass",
+            "status": "implemented",
+            "evidence": "go test ./... passed"
+          }
+        ]
+      },
+      "reviewer_results": [
+        {
+          "review_focus": "pragmatic",
+          "blocking_count": 0,
+          "advisory_count": 1
+        }
+      ],
+      "testable_scenarios": [
+        "scenario-10",
+        "scenario-11",
+        "scenario-13"
+      ]
+    },
+    {
+      "number": 1829,
+      "title": "feat(registry): include satisfies data in registry manifest",
+      "status": "pushed",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "code",
+      "dependencies": [
+        1826
+      ],
+      "commits": [
+        "0b431bf4d570d4cfea93e32e253c0ef21b3dab38"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          "internal/recipe/loader.go",
+          "internal/recipe/satisfies_test.go",
+          "internal/registry/manifest.go",
+          "internal/registry/manifest_test.go",
+          "scripts/generate-registry.py",
+          "recipes/l/libcurl.toml"
+        ],
+        "tests_added": 13,
+        "key_decisions": "New internal/registry package for manifest fetching/parsing. Schema version bumped to 1.2.0 in generate-registry.py with satisfies data and cross-recipe duplicate detection. Loader buildSatisfiesIndex reads registry manifest when available.",
+        "requirements_map": [
+          {
+            "ac": "Registry manifest includes satisfies data",
+            "status": "implemented",
+            "evidence": "generate-registry.py satisfies field in recipe output"
+          },
+          {
+            "ac": "Schema version 1.2.0",
+            "status": "implemented",
+            "evidence": "generate-registry.py SCHEMA_VERSION constant"
+          },
+          {
+            "ac": "Cross-recipe duplicate detection",
+            "status": "implemented",
+            "evidence": "generate-registry.py validates no duplicate satisfies entries"
+          },
+          {
+            "ac": "Loader reads manifest satisfies",
+            "status": "implemented",
+            "evidence": "loader.go buildSatisfiesIndex registry integration"
+          }
+        ]
+      },
+      "reviewer_results": [
+        {
+          "review_focus": "pragmatic",
+          "blocking_count": 1,
+          "advisory_count": 3,
+          "note": "Dead FetchManifest code removed in 365464e1"
+        },
+        {
+          "review_focus": "architect",
+          "blocking_count": 0,
+          "advisory_count": 1
+        },
+        {
+          "review_focus": "maintainer",
+          "blocking_count": 0,
+          "advisory_count": 2
+        }
+      ],
+      "testable_scenarios": [
+        "scenario-12"
+      ]
+    }
+  ],
+  "skipped_issues": null,
+  "test_plan_file": null
+}
