@@ -1,0 +1,335 @@
+{
+  "design_doc": "docs/designs/DESIGN-local-llm-runtime.md",
+  "branch": "impl/local-llm-runtime",
+  "pr_number": null,
+  "integrity_hash": "sha256:047b89da4f8f7130e89d9c225efaac1eecf77ebda0cfc221c06653cff65f37a2",
+  "issues": [
+    {
+      "number": 1628,
+      "title": "feat(llm): complete local provider skeleton with lifecycle management",
+      "status": "completed",
+      "ci_status": "passed",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": []
+    },
+    {
+      "number": 1629,
+      "title": "feat(llm): implement addon download and verification",
+      "status": "completed",
+      "ci_status": "passed",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [
+        1628
+      ],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": []
+    },
+    {
+      "number": 1630,
+      "title": "feat(llm): add configurable idle timeout",
+      "status": "completed",
+      "ci_status": "passed",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [
+        1628
+      ],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": []
+    },
+    {
+      "number": 1631,
+      "title": "feat(llm): implement SIGTERM handler for graceful shutdown",
+      "status": "completed",
+      "ci_status": "passed",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [
+        1628
+      ],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": []
+    },
+    {
+      "number": 1632,
+      "title": "feat(llm): integrate LocalProvider into factory with config",
+      "status": "completed",
+      "ci_status": "passed",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [
+        1628,
+        1630
+      ],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": []
+    },
+    {
+      "number": 1633,
+      "title": "ci(llm): add Rust addon build pipeline",
+      "status": "completed",
+      "ci_status": "passed",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [
+        1628
+      ],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": []
+    },
+    {
+      "number": 1634,
+      "title": "test(llm): add lifecycle integration tests",
+      "status": "completed",
+      "ci_status": "passed",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [
+        1628,
+        1630,
+        1631
+      ],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": []
+    },
+    {
+      "number": 1635,
+      "title": "feat(llm): implement hardware detection",
+      "status": "completed",
+      "ci_status": "passed",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [
+        1628
+      ],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": []
+    },
+    {
+      "number": 1636,
+      "title": "feat(llm): implement model selection based on hardware",
+      "status": "completed",
+      "ci_status": "passed",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [
+        1635
+      ],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": []
+    },
+    {
+      "number": 1637,
+      "title": "feat(llm): implement model download with progress",
+      "status": "completed",
+      "ci_status": "passed",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [
+        1636
+      ],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": []
+    },
+    {
+      "number": 1638,
+      "title": "feat(llm): integrate llama.cpp for inference",
+      "status": "completed",
+      "ci_status": "passed",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [
+        1633,
+        1637
+      ],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": []
+    },
+    {
+      "number": 1672,
+      "title": "feat(llm): configure model manifest with HuggingFace URLs",
+      "status": "completed",
+      "ci_status": "passed",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [
+        1637,
+        1638
+      ],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": []
+    },
+    {
+      "number": 1675,
+      "title": "fix(llm): daemon socket not cleaned up on SIGTERM",
+      "status": "completed",
+      "ci_status": "passed",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [
+        1631
+      ],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": []
+    },
+    {
+      "number": 1676,
+      "title": "fix(llm): tokenization fails with negative count from llama_tokenize",
+      "status": "completed",
+      "ci_status": "passed",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [
+        1638
+      ],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": []
+    },
+    {
+      "number": 1639,
+      "title": "feat(llm): implement GBNF grammar constraints for JSON",
+      "status": "completed",
+      "ci_status": "passed",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [
+        1638
+      ],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": []
+    },
+    {
+      "number": 1640,
+      "title": "feat(llm): wire Complete RPC to llama.cpp inference",
+      "status": "completed",
+      "ci_status": "passed",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [
+        1639,
+        1672,
+        1675,
+        1676
+      ],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": []
+    },
+    {
+      "number": 1641,
+      "title": "test(llm): add quality benchmark suite",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [
+        1640
+      ],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": []
+    },
+    {
+      "number": 1642,
+      "title": "feat(llm): add download permission prompts and progress UX",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [
+        1629,
+        1637
+      ],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": []
+    },
+    {
+      "number": 1643,
+      "title": "feat(llm): implement tsuku llm download command",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [
+        1629,
+        1637
+      ],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": []
+    },
+    {
+      "number": 1644,
+      "title": "test(llm): add end-to-end integration test without cloud keys",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [
+        1640,
+        1632
+      ],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": []
+    },
+    {
+      "number": 1645,
+      "title": "docs(llm): update documentation for local inference",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [
+        1632,
+        1636
+      ],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": []
+    }
+  ],
+  "skipped_issues": null,
+  "test_plan_file": null
+}
