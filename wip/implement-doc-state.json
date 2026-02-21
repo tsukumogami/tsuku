@@ -2,7 +2,7 @@
   "design_doc": "docs/designs/DESIGN-local-llm-runtime.md",
   "branch": "impl/local-llm-runtime-v2",
   "pr_number": 1810,
-  "integrity_hash": "sha256:80d6998afb53a147a6f5307e74bd697fff74dd2874cb68457b66186ce8491441",
+  "integrity_hash": "sha256:cf716cdfb987c0bfc4ac2a4d401d738efa4e56bf65833ecfac3c2875334c3e74",
   "issues": [
     {
       "number": 1628,
@@ -601,7 +601,7 @@
     {
       "number": 1645,
       "title": "docs(llm): update documentation for local inference",
-      "status": "in_progress",
+      "status": "scrutinized",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
       "issue_type": "code",
@@ -609,9 +609,42 @@
         1632,
         1636
       ],
-      "commits": [],
-      "agent_type": "",
-      "summary": null,
+      "commits": [
+        "2a6e8ff2"
+      ],
+      "agent_type": "techwriter",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          "README.md",
+          "docs/ENVIRONMENT.md",
+          "docs/GUIDE-local-llm.md"
+        ],
+        "tests_added": 0,
+        "key_decisions": "Local-first framing in README. Hardware table from actual model selection code. Config reference from actual config struct. TSUKU_LLM_IDLE_TIMEOUT documented with format and default.",
+        "requirements_map": [
+          {
+            "ac": "config reference",
+            "status": "implemented"
+          },
+          {
+            "ac": "env var override",
+            "status": "implemented"
+          },
+          {
+            "ac": "hardware requirements",
+            "status": "implemented"
+          },
+          {
+            "ac": "troubleshooting",
+            "status": "implemented"
+          },
+          {
+            "ac": "documentation location",
+            "status": "implemented"
+          }
+        ]
+      },
       "testable_scenarios": [
         "scenario-15",
         "scenario-16"
