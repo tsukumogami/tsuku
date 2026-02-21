@@ -106,7 +106,23 @@ func main() {
 	}
 
 	for _, r := range recipes {
-		report := recipe.AnalyzeRecipeCoverage(r)
+		// Use SupportedPlatforms for step analysis + metadata constraints,
+		// then SupportsPlatformWithLibc to distinguish glibc vs musl.
+		supportedPlatforms := recipe.SupportedPlatforms(r)
+
+		hasLinux := false
+		hasDarwin := false
+		for _, p := range supportedPlatforms {
+			if p.OS == "linux" {
+				hasLinux = true
+			}
+			if p.OS == "darwin" {
+				hasDarwin = true
+			}
+		}
+
+		hasGlibc := hasLinux && r.SupportsPlatformWithLibc("linux", "amd64", "glibc")
+		hasMusl := hasLinux && r.SupportsPlatformWithLibc("linux", "amd64", "musl")
 
 		// Determine recipe type
 		recipeType := "tool"
@@ -116,9 +132,9 @@ func main() {
 
 		// Build coverage data
 		platforms := map[string]bool{
-			"glibc":  report.HasGlibc,
-			"musl":   report.HasMusl,
-			"darwin": report.HasDarwin,
+			"glibc":  hasGlibc,
+			"musl":   hasMusl,
+			"darwin": hasDarwin,
 		}
 
 		var gaps []string
@@ -131,22 +147,25 @@ func main() {
 		}
 		sort.Strings(gaps)
 
+		// Get warnings/errors from coverage analysis (musl gap detection for libraries)
+		coverageReport := recipe.AnalyzeRecipeCoverage(r)
+
 		coverageReports = append(coverageReports, RecipeCoverage{
 			Name:      r.Metadata.Name,
 			Type:      recipeType,
 			Platforms: platforms,
 			Gaps:      gaps,
-			Errors:    report.Errors,
-			Warnings:  report.Warnings,
+			Errors:    coverageReport.Errors,
+			Warnings:  coverageReport.Warnings,
 		})
 
 		// Update category stats
 		stats := categoryCounts[recipeType]
 		stats.Total++
-		if report.HasMusl {
+		if hasMusl {
 			stats.MuslSupport++
 		}
-		if report.HasGlibc {
+		if hasGlibc {
 			stats.GlibcSupport++
 		}
 	}
