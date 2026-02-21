@@ -2,18 +2,38 @@
 name = "openssl@3"
 description = "Cryptography and SSL/TLS toolkit"
 homepage = "https://openssl-library.org"
-dependencies = ["ca-certificates"]
 binaries = ["bin/openssl"]
-supported_libc = ["glibc"]
 
+# glibc Linux: Homebrew bottle
 [[steps]]
 action = "homebrew"
 formula = "openssl@3"
+when = { os = ["linux"], libc = ["glibc"] }
+dependencies = ["ca-certificates"]
 
 [[steps]]
 action = "install_binaries"
 install_mode = "directory"
 outputs = ["bin/openssl"]
+when = { os = ["linux"], libc = ["glibc"] }
+
+# musl Linux: Alpine package
+[[steps]]
+action = "apk_install"
+packages = ["openssl"]
+when = { os = ["linux"], libc = ["musl"] }
+
+# macOS: Homebrew
+[[steps]]
+action = "homebrew"
+formula = "openssl@3"
+when = { os = ["darwin"] }
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = ["bin/openssl"]
+when = { os = ["darwin"] }
 
 [verify]
 command = "openssl version"

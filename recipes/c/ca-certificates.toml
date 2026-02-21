@@ -3,11 +3,12 @@ name = "ca-certificates"
 description = "Mozilla CA certificate store"
 homepage = "https://curl.se/docs/caextract.html"
 type = "library"
-supported_libc = ["glibc"]
 
+# glibc Linux: Homebrew bottle
 [[steps]]
 action = "homebrew"
 formula = "ca-certificates"
+when = { os = ["linux"], libc = ["glibc"] }
 
 [[steps]]
 action = "install_binaries"
@@ -15,3 +16,24 @@ install_mode = "directory"
 outputs = [
     "share/ca-certificates/cacert.pem",
 ]
+when = { os = ["linux"], libc = ["glibc"] }
+
+# musl Linux: Alpine package
+[[steps]]
+action = "apk_install"
+packages = ["ca-certificates"]
+when = { os = ["linux"], libc = ["musl"] }
+
+# macOS: Homebrew
+[[steps]]
+action = "homebrew"
+formula = "ca-certificates"
+when = { os = ["darwin"] }
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = [
+    "share/ca-certificates/cacert.pem",
+]
+when = { os = ["darwin"] }

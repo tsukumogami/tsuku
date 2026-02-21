@@ -3,16 +3,36 @@ name = "pcre2"
 description = "Perl compatible regular expressions library with a new API"
 homepage = "https://www.pcre.org/"
 binaries = ["bin/pcre2grep", "bin/pcre2test"]
-supported_libc = ["glibc"]
 
+# glibc Linux: Homebrew bottle
 [[steps]]
 action = "homebrew"
 formula = "pcre2"
+when = { os = ["linux"], libc = ["glibc"] }
 
 [[steps]]
 action = "install_binaries"
 install_mode = "directory"
 outputs = ["bin/pcre2grep", "bin/pcre2test"]
+when = { os = ["linux"], libc = ["glibc"] }
+
+# musl Linux: Alpine package
+[[steps]]
+action = "apk_install"
+packages = ["pcre2-tools"]
+when = { os = ["linux"], libc = ["musl"] }
+
+# macOS: Homebrew
+[[steps]]
+action = "homebrew"
+formula = "pcre2"
+when = { os = ["darwin"] }
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = ["bin/pcre2grep", "bin/pcre2test"]
+when = { os = ["darwin"] }
 
 [verify]
 command = "pcre2grep --version"

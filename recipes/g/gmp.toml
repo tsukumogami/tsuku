@@ -3,11 +3,12 @@ name = "gmp"
 description = "GNU multiple precision arithmetic library"
 homepage = "https://gmplib.org/"
 type = "library"
-supported_libc = ["glibc"]
 
+# glibc Linux: Homebrew bottle
 [[steps]]
 action = "homebrew"
 formula = "gmp"
+when = { os = ["linux"], libc = ["glibc"] }
 
 [[steps]]
 action = "install_binaries"
@@ -21,3 +22,30 @@ outputs = [
     "include/gmp.h",
     "include/gmpxx.h",
 ]
+when = { os = ["linux"], libc = ["glibc"] }
+
+# musl Linux: Alpine package
+[[steps]]
+action = "apk_install"
+packages = ["gmp-dev"]
+when = { os = ["linux"], libc = ["musl"] }
+
+# macOS: Homebrew
+[[steps]]
+action = "homebrew"
+formula = "gmp"
+when = { os = ["darwin"] }
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = [
+    "lib/libgmp.dylib",
+    "lib/libgmp.a",
+    "lib/libgmpxx.dylib",
+    "lib/libgmpxx.a",
+    "lib/pkgconfig/gmp.pc",
+    "include/gmp.h",
+    "include/gmpxx.h",
+]
+when = { os = ["darwin"] }

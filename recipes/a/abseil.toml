@@ -3,11 +3,12 @@ name = "abseil"
 description = "C++ Common Libraries"
 homepage = "https://abseil.io"
 type = "library"
-supported_libc = ["glibc"]
 
+# glibc Linux: Homebrew bottle
 [[steps]]
 action = "homebrew"
 formula = "abseil"
+when = { os = ["linux"], libc = ["glibc"] }
 
 [[steps]]
 action = "install_binaries"
@@ -17,3 +18,26 @@ outputs = [
     "lib/libabsl_strings.so",
     "lib/libabsl_status.so",
 ]
+when = { os = ["linux"], libc = ["glibc"] }
+
+# musl Linux: Alpine package
+[[steps]]
+action = "apk_install"
+packages = ["abseil-cpp-dev"]
+when = { os = ["linux"], libc = ["musl"] }
+
+# macOS: Homebrew
+[[steps]]
+action = "homebrew"
+formula = "abseil"
+when = { os = ["darwin"] }
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = [
+    "lib/libabsl_base.dylib",
+    "lib/libabsl_strings.dylib",
+    "lib/libabsl_status.dylib",
+]
+when = { os = ["darwin"] }
