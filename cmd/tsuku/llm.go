@@ -20,10 +20,7 @@ The local LLM runtime runs inference locally using a small language model,
 enabling recipe generation without cloud API keys.`,
 }
 
-var (
-	llmDownloadForce bool
-	llmDownloadYes   bool
-)
+var llmDownloadYes bool
 
 var llmDownloadCmd = &cobra.Command{
 	Use:   "download",
@@ -37,14 +34,12 @@ appropriate model size. To override automatic model selection, set
 local_model in $TSUKU_HOME/config.toml.
 
 Examples:
-  tsuku llm download          # Auto-detect hardware, download addon + model
-  tsuku llm download --force  # Re-download even if files exist
-  tsuku llm download --yes    # Skip confirmation prompts (CI)`,
+  tsuku llm download        # Auto-detect hardware, download addon + model
+  tsuku llm download --yes  # Skip confirmation prompts (CI)`,
 	RunE: runLLMDownload,
 }
 
 func init() {
-	llmDownloadCmd.Flags().BoolVar(&llmDownloadForce, "force", false, "Re-download even if files already exist")
 	llmDownloadCmd.Flags().BoolVar(&llmDownloadYes, "yes", false, "Skip download confirmation prompts")
 
 	llmCmd.AddCommand(llmDownloadCmd)
@@ -127,7 +122,7 @@ func runLLMDownload(cmd *cobra.Command, args []string) error {
 	}
 
 	// Step 4: Check if everything is already present
-	if status.Ready && status.ModelName != "" && !llmDownloadForce {
+	if status.Ready && status.ModelName != "" {
 		fmt.Fprintln(os.Stderr, "")
 		fmt.Fprintln(os.Stderr, "Addon and model already present.")
 		printDownloadSummary(addonPath, status.ModelName, status.ModelSizeBytes)

@@ -56,13 +56,14 @@ func TestLLMDownloadFlags(t *testing.T) {
 		}
 	})
 
-	t.Run("force flag exists", func(t *testing.T) {
+	t.Run("force flag removed", func(t *testing.T) {
+		// The --force flag was removed because the underlying infrastructure
+		// (EnsureAddon, TriggerModelDownload) has no support for forced
+		// re-download. The flag was misleading for CI scripts expecting
+		// clean-slate builds.
 		f := llmDownloadCmd.Flags().Lookup("force")
-		if f == nil {
-			t.Fatal("expected --force flag on download command")
-		}
-		if f.DefValue != "false" {
-			t.Errorf("--force default = %q, want %q", f.DefValue, "false")
+		if f != nil {
+			t.Fatal("--force flag should not exist; infrastructure does not support forced re-download")
 		}
 	})
 
