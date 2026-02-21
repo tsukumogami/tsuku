@@ -46,9 +46,10 @@ jobs:
         with:
           ruby-version: '3.2'
 
-      # TODO(#1287): remove --skip-sandbox once toolchains auto-install in sandbox
       - name: Create recipe for bundler
-        run: ./tsuku create bundler --from rubygems --yes --skip-sandbox
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./tsuku create bundler --from rubygems --yes
 
       - name: Verify recipe was created
         run: |
@@ -92,9 +93,10 @@ jobs:
         with:
           ruby-version: '3.2'
 
-      # TODO(#1287): remove --skip-sandbox once toolchains auto-install in sandbox
       - name: Create recipe for bundler
-        run: ./tsuku create bundler --from rubygems --yes --skip-sandbox
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./tsuku create bundler --from rubygems --yes
 
       - name: Verify recipe was created
         run: |
