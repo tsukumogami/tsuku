@@ -122,9 +122,13 @@ This matches how the tool is actually used: workflows don't need to run one with
 
 The requeue logic needs to know whether a blocker dependency's recipe now exists. The bash script checks the filesystem (`recipes/{first-letter}/{name}.toml`). But the Go tool already has the full queue loaded, and `update-queue-status.yml` marks merged recipes as "success" in the queue before our tool runs.
 
-#### Chosen: Queue Status Check
+#### Chosen: Queue Status Check with Satisfies Resolution
 
-A dependency is "resolved" if its name appears in the queue with status "success". This is self-contained -- no filesystem access needed. It works because `update-queue-status.yml` marks recipes as "success" in the same workflow run, before the queue-maintain step executes on the modified local files. The tool already loads the full queue, so this check is a simple map lookup.
+A dependency is "resolved" if its name (or a name it's satisfied by) appears in the queue with status "success". The tool loads the full queue and builds a resolved-names set from all "success" entries. It also builds a satisfies index from recipe metadata: if recipe `openssl` declares `satisfies.homebrew = ["openssl@3"]`, then `openssl@3` is also considered resolved when `openssl` is in the queue as "success".
+
+This is necessary because `blocked_by` names in failure records use ecosystem package names (e.g., `"openssl@3"`, `"sqlite3"`), which may differ from recipe names (`"openssl"`, `"sqlite"`). PR #1824 introduced the `satisfies` metadata field that declares these mappings. Without satisfies resolution, the requeue check would miss dependencies that are resolved under a different name.
+
+The check is self-contained -- no filesystem access needed. `update-queue-status.yml` marks recipes as "success" in the same workflow run before queue-maintain executes. The satisfies index can be built from the registry manifest (already available to the Go code) or from recipe TOML files on disk.
 
 Embedded recipes (`internal/recipe/recipes/`) don't need special handling: `missing_dep` failures only fire when `tsuku install` can't find a recipe at install time, and embedded recipes are always found. No embedded recipe name appears in `blocked_by` arrays across the failure data.
 
@@ -162,7 +166,7 @@ We're replacing `scripts/requeue-unblocked.sh` and `cmd/reorder-queue/` with a s
 
 The workflow integration makes `update-queue-status.yml` the single owner of `priority-queue.json` on main. After marking merged recipes as "success" (its existing behavior), it builds and runs `queue-maintain`, which requeues any newly-unblockable packages and reorders the queue. The queue modifications from `batch-generate.yml`'s PR creation step are removed -- when batch PRs merge, `update-queue-status.yml` handles the queue state. `batch-generate.yml` still runs `queue-maintain` locally during its generate and merge jobs (replacing the current `requeue-unblocked.sh` calls), but those queue changes stay in the batch working tree and only the recipe files go into the batch PR.
 
-The requeue logic checks recipe existence via queue status ("success" entries), not the filesystem. This works because in the `update-queue-status.yml` workflow, the status-update step runs first and marks recipes as "success" in the local working tree before `queue-maintain` executes. In `batch-generate.yml`, the batch orchestrator has already marked generated recipes in its working tree before `queue-maintain` runs.
+The requeue logic checks recipe existence via queue status ("success" entries) with satisfies resolution. A blocker is considered resolved if its name appears as a "success" entry in the queue, OR if any "success" recipe declares that it satisfies that name via the `satisfies` metadata field (PR #1824). This handles cases where `blocked_by` names use ecosystem package names (e.g., `"openssl@3"`) that differ from recipe names (e.g., `"openssl"`). In `update-queue-status.yml`, the status-update step runs first and marks recipes as "success" before `queue-maintain` executes. In `batch-generate.yml`, the batch orchestrator marks generated recipes in its working tree before `queue-maintain` runs.
 
 ### Rationale
 
@@ -196,10 +200,11 @@ func Run(queue *batch.UnifiedQueue, failuresDir string) (*Result, error)
 The `Run()` function:
 1. Loads the blocker map via the shared function in `internal/blocker/`
 2. Builds a reverse index: package-to-blockers (inverting the blocker-to-packages map from failure data)
-3. Builds a set of "resolved" dependency names: entries in the queue with status "success"
-4. For each blocked entry, looks up its blockers (from the reverse index) and checks each against the resolved set
-5. If all blockers are resolved, flips status from "blocked" to "pending"
-6. Modifies the queue in place, returns the result
+3. Builds a set of "resolved" dependency names from entries in the queue with status "success"
+4. Extends the resolved set using satisfies mappings: for each "success" entry, loads its recipe metadata and adds any names it satisfies (e.g., if `openssl` is "success" and declares `satisfies.homebrew = ["openssl@3"]`, then `openssl@3` is also resolved). Uses the existing `internal/recipe` loader's satisfies index for this.
+5. For each blocked entry, looks up its blockers (from the reverse index) and checks each against the resolved set
+6. If all blockers are resolved, flips status from "blocked" to "pending"
+7. Modifies the queue in place, returns the result
 
 ### Modified Package: `internal/reorder/`
 
