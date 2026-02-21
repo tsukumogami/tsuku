@@ -2,7 +2,7 @@
   "design_doc": "docs/designs/DESIGN-local-llm-runtime.md",
   "branch": "impl/local-llm-runtime-v2",
   "pr_number": 1810,
-  "integrity_hash": "sha256:4bbc30e7e4c80d7f498ebd5e3a26ada4ece645bbe9104ac454b0174dc59ecf4d",
+  "integrity_hash": "sha256:24bbcec9abaccadfe98e266276c5e98a3fc4a22c47b06314cf60960270c27643",
   "issues": [
     {
       "number": 1628,
@@ -322,8 +322,8 @@
     {
       "number": 1642,
       "title": "feat(llm): add download permission prompts and progress UX",
-      "status": "scrutinized",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "ci_fix_attempts": 0,
       "issue_type": "code",
       "dependencies": [
@@ -380,6 +380,31 @@
           }
         ]
       },
+      "reviewer_results": {
+        "issue": 1642,
+        "reviews": [
+          {
+            "focus": "pragmatic",
+            "blocking_count": 0,
+            "advisory_count": 2,
+            "detail_file": "wip/research/implement-doc_review_pragmatic_issue1642.md"
+          },
+          {
+            "focus": "architect",
+            "blocking_count": 0,
+            "advisory_count": 2,
+            "detail_file": "wip/research/implement-doc_review_architect_issue1642.md"
+          },
+          {
+            "focus": "maintainer",
+            "blocking_count": 0,
+            "advisory_count": 6,
+            "detail_file": "wip/research/implement-doc_review_maintainer_issue1642.md"
+          }
+        ],
+        "overall_blocking": 0,
+        "verdict": "pass"
+      },
       "testable_scenarios": [
         "scenario-5",
         "scenario-6",
@@ -390,17 +415,71 @@
     {
       "number": 1643,
       "title": "feat(llm): implement tsuku llm download command",
-      "status": "pending",
+      "status": "scrutinized",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [
         1629,
         1637
       ],
-      "commits": [],
-      "agent_type": "",
-      "summary": null,
+      "commits": [
+        "c6117cbec0077365f7f7404875fca77fe6e44cbd"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          "cmd/tsuku/llm.go",
+          "cmd/tsuku/llm_test.go",
+          "cmd/tsuku/main.go"
+        ],
+        "tests_added": 7,
+        "key_decisions": "Reused existing AddonManager and ServerLifecycle APIs. Model download delegated to addon server. FormatSize reused from #1642. Exit code 2 deferred since gRPC has no model validation endpoint.",
+        "requirements_map": [
+          {
+            "ac": "downloads addon binary",
+            "status": "implemented"
+          },
+          {
+            "ac": "hardware detection selects model",
+            "status": "implemented"
+          },
+          {
+            "ac": "model downloads with progress",
+            "status": "implemented"
+          },
+          {
+            "ac": "SHA256 verification",
+            "status": "implemented"
+          },
+          {
+            "ac": "--model flag overrides",
+            "status": "implemented"
+          },
+          {
+            "ac": "--force re-downloads",
+            "status": "implemented"
+          },
+          {
+            "ac": "exit 0 when cached",
+            "status": "implemented"
+          },
+          {
+            "ac": "exit 1 on failure",
+            "status": "implemented"
+          },
+          {
+            "ac": "exit 2 invalid model",
+            "status": "deviated",
+            "reason": "gRPC API lacks model validation endpoint"
+          },
+          {
+            "ac": "works in CI",
+            "status": "implemented"
+          }
+        ]
+      },
       "testable_scenarios": [
         "scenario-9",
         "scenario-10",
