@@ -126,6 +126,20 @@ Enable or disable stale-if-error fallback behavior.
 
 When enabled, tsuku will fall back to cached recipes when the registry is unavailable (subject to `TSUKU_RECIPE_CACHE_MAX_STALE`). Disable this for strict freshness requirements.
 
+## Local LLM Runtime
+
+### TSUKU_LLM_IDLE_TIMEOUT
+
+Idle timeout for the local LLM addon server. The server shuts itself down after this duration with no inference requests.
+
+- **Default:** `5m`
+- **Format:** Go duration string (e.g., `30s`, `5m`, `10m`)
+- **Example:** `export TSUKU_LLM_IDLE_TIMEOUT=10s`
+
+This overrides the `idle_timeout` setting in the `[llm]` section of `$TSUKU_HOME/config.toml`. Useful for testing (short timeouts for quick cleanup) and CI pipelines that need different timeout behavior without modifying config files.
+
+The server starts on demand when local inference is needed and stays alive to serve subsequent requests. A longer timeout keeps the model loaded between multiple `tsuku create` calls. A shorter timeout frees resources sooner.
+
 ## Development and Debugging
 
 ### TSUKU_DEBUG
@@ -216,6 +230,7 @@ The environment variable is checked first. If unset, tsuku falls back to `brave_
 | `TSUKU_NO_TELEMETRY` | (unset) | Disable telemetry when set |
 | `TSUKU_TELEMETRY` | (unset) | Disable telemetry when `0` or `false` |
 | `TSUKU_TELEMETRY_DEBUG` | (unset) | Print telemetry to stderr |
+| `TSUKU_LLM_IDLE_TIMEOUT` | `5m` | Local LLM addon server idle timeout |
 | `TSUKU_DEBUG` | (unset) | Enable verbose debug output |
 | `GITHUB_TOKEN` | (unset) | GitHub API token |
 | `ANTHROPIC_API_KEY` | (unset) | Anthropic API key for Claude |

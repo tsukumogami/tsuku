@@ -103,7 +103,7 @@ tsuku create firefox --from cask:firefox
 
 #### LLM-Powered Recipe Generation
 
-Some recipe builders use LLM analysis to generate recipes from complex sources. These require an API key:
+Some recipe builders use LLM analysis to generate recipes from complex sources:
 
 **Builders requiring LLM**:
 - `--from github:owner/repo` - Analyzes GitHub releases
@@ -116,7 +116,18 @@ Some recipe builders use LLM analysis to generate recipes from complex sources. 
 - `--from rubygems` - Uses RubyGems API
 - `--from cask:<name>` - Uses Homebrew Cask API (macOS applications)
 
-To use LLM-powered builders, set an API key for Claude or Gemini:
+**Local inference is the default.** When no cloud API keys are configured, tsuku runs a small language model locally using the `tsuku-llm` addon. On first use, tsuku prompts to download the addon binary (~50 MB) and a model (0.5-2.5 GB depending on your hardware). The addon detects your GPU and RAM to pick the right model size automatically.
+
+To pre-download everything for CI or offline use:
+
+```bash
+tsuku llm download        # Interactive -- prompts before downloading
+tsuku llm download --yes  # Skip prompts (for CI)
+```
+
+See the [Local LLM Guide](docs/GUIDE-local-llm.md) for hardware requirements, configuration, and troubleshooting.
+
+**Cloud providers (optional).** If you prefer cloud inference or want higher quality on unusual release layouts, set an API key for Claude or Gemini:
 
 ```bash
 # Claude (Anthropic)
@@ -135,7 +146,7 @@ tsuku config set secrets.anthropic_api_key
 
 See [Secrets Management](#secrets-management) below for details.
 
-Cost per recipe generation: ~$0.02-0.15 depending on complexity.
+Cost per cloud recipe generation: ~$0.02-0.15 depending on complexity.
 
 #### Dependency Discovery
 
@@ -201,6 +212,20 @@ tsuku recipes --local
 ```
 
 Use `--force` to overwrite an existing local recipe.
+
+### Local LLM Management
+
+tsuku includes a local inference runtime for LLM-powered recipe generation. The `tsuku llm` commands manage this runtime:
+
+```bash
+# Pre-download the addon binary and model for your hardware
+tsuku llm download
+
+# Skip confirmation prompts (useful in CI)
+tsuku llm download --yes
+```
+
+The `download` command detects your GPU, VRAM, and system RAM, then downloads the appropriate model. Run it ahead of time to avoid download prompts during `tsuku create`. See the [Local LLM Guide](docs/GUIDE-local-llm.md) for details.
 
 ### Secrets Management
 
