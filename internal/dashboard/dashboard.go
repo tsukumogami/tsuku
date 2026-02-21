@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/tsukumogami/tsuku/internal/batch"
+	"github.com/tsukumogami/tsuku/internal/blocker"
 )
 
 // Options configures dashboard generation.
@@ -465,37 +466,6 @@ func loadFailures(path string) (map[string][]string, map[string]int, map[string]
 	return blockers, categories, details, scanner.Err()
 }
 
-// computeTransitiveBlockers computes the total number of packages blocked by a
-// dependency, both directly and transitively. Uses memo map with 0-initialization
-// for cycle detection: when a dependency is first visited, memo[dep] is set to 0
-// (in-progress). If the same dep is encountered again during recursion, the 0 is
-// returned, breaking the cycle.
-func computeTransitiveBlockers(dep string, blockers map[string][]string, pkgToBare map[string]string, memo map[string]int) int {
-	if count, ok := memo[dep]; ok {
-		return count // 0 if in-progress (cycle)
-	}
-	// Mark in-progress
-	memo[dep] = 0
-
-	// Deduplicate blocked packages for this dependency
-	seen := make(map[string]bool)
-	total := 0
-	for _, pkgID := range blockers[dep] {
-		if seen[pkgID] {
-			continue
-		}
-		seen[pkgID] = true
-		total++ // Direct dependent
-		// Check if this package itself blocks others
-		bare := pkgToBare[pkgID]
-		if _, isBlocker := blockers[bare]; isBlocker && bare != dep {
-			total += computeTransitiveBlockers(bare, blockers, pkgToBare, memo)
-		}
-	}
-	memo[dep] = total
-	return total
-}
-
 // buildBlockerCountsFromQueue builds a blocker map from actual blocked packages
 // in the queue, rather than from all failure history.
 func buildBlockerCountsFromQueue(packages []PackageInfo) map[string][]string {
@@ -509,20 +479,7 @@ func buildBlockerCountsFromQueue(packages []PackageInfo) map[string][]string {
 }
 
 func computeTopBlockers(blockers map[string][]string, limit int) []Blocker {
-	// Build reverse index: package ID -> bare name (strip ecosystem prefix).
-	// This lets transitive lookups match "homebrew:ffmpeg" -> "ffmpeg" against
-	// blocker map keys like "ffmpeg".
-	pkgToBare := make(map[string]string)
-	for _, pkgs := range blockers {
-		for _, pkgID := range pkgs {
-			if idx := strings.Index(pkgID, ":"); idx >= 0 {
-				pkgToBare[pkgID] = pkgID[idx+1:]
-			} else {
-				pkgToBare[pkgID] = pkgID
-			}
-		}
-	}
-
+	pkgToBare := blocker.BuildPkgToBare(blockers)
 	memo := make(map[string]int)
 	result := make([]Blocker, 0, len(blockers))
 
@@ -537,7 +494,7 @@ func computeTopBlockers(blockers map[string][]string, limit int) []Blocker {
 			}
 		}
 		directCount := len(uniquePkgs)
-		totalCount := computeTransitiveBlockers(dep, blockers, pkgToBare, memo)
+		totalCount := blocker.ComputeTransitiveBlockers(dep, blockers, pkgToBare, memo)
 
 		b := Blocker{
 			Dependency:  dep,

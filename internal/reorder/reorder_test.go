@@ -571,62 +571,6 @@ func TestReorder_CycleDetection(t *testing.T) {
 	}
 }
 
-// TestComputeTransitiveBlockers_directOnly verifies basic direct blocking count.
-func TestComputeTransitiveBlockers_directOnly(t *testing.T) {
-	blockers := map[string][]string{
-		"gmp": {"homebrew:ffmpeg", "homebrew:coreutils"},
-	}
-	pkgToBare := map[string]string{
-		"homebrew:ffmpeg":    "ffmpeg",
-		"homebrew:coreutils": "coreutils",
-	}
-	memo := make(map[string]int)
-
-	count := computeTransitiveBlockers("gmp", blockers, pkgToBare, memo)
-	if count != 2 {
-		t.Errorf("gmp direct count: got %d, want 2", count)
-	}
-}
-
-// TestComputeTransitiveBlockers_chain verifies multi-level transitive blocking.
-func TestComputeTransitiveBlockers_chain(t *testing.T) {
-	// A blocks B, B blocks C, C blocks D
-	blockers := map[string][]string{
-		"A": {"homebrew:B"},
-		"B": {"homebrew:C"},
-		"C": {"homebrew:D"},
-	}
-	pkgToBare := map[string]string{
-		"homebrew:B": "B",
-		"homebrew:C": "C",
-		"homebrew:D": "D",
-	}
-	memo := make(map[string]int)
-
-	count := computeTransitiveBlockers("A", blockers, pkgToBare, memo)
-	if count != 3 {
-		t.Errorf("A transitive count: got %d, want 3 (B+C+D)", count)
-	}
-}
-
-// TestComputeTransitiveBlockers_deduplication verifies duplicate package IDs
-// are counted only once.
-func TestComputeTransitiveBlockers_deduplication(t *testing.T) {
-	blockers := map[string][]string{
-		"gmp": {"homebrew:ffmpeg", "homebrew:ffmpeg", "homebrew:coreutils"},
-	}
-	pkgToBare := map[string]string{
-		"homebrew:ffmpeg":    "ffmpeg",
-		"homebrew:coreutils": "coreutils",
-	}
-	memo := make(map[string]int)
-
-	count := computeTransitiveBlockers("gmp", blockers, pkgToBare, memo)
-	if count != 2 {
-		t.Errorf("gmp count with dupes: got %d, want 2", count)
-	}
-}
-
 // TestComputeScores verifies score computation for queue entries.
 func TestComputeScores(t *testing.T) {
 	entries := []batch.QueueEntry{

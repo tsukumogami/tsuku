@@ -11,9 +11,9 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
-	"strings"
 
 	"github.com/tsukumogami/tsuku/internal/batch"
+	"github.com/tsukumogami/tsuku/internal/blocker"
 )
 
 // Options configures the reorder operation.
@@ -129,68 +129,16 @@ func Run(opts Options) (*Result, error) {
 // The score for an entry is the total number of packages that are transitively
 // blocked by that entry's name appearing in blocked_by fields.
 func computeScores(entries []batch.QueueEntry, blockers map[string][]string) map[string]int {
-	// Build a set of entry names for lookup
-	entryNames := make(map[string]bool, len(entries))
-	for _, e := range entries {
-		entryNames[e.Name] = true
-	}
-
-	// Build reverse index: package ID -> bare name (strip ecosystem prefix).
-	// This lets transitive lookups match "homebrew:ffmpeg" -> "ffmpeg" against
-	// blocker map keys.
-	pkgToBare := make(map[string]string)
-	for _, pkgs := range blockers {
-		for _, pkgID := range pkgs {
-			if idx := strings.Index(pkgID, ":"); idx >= 0 {
-				pkgToBare[pkgID] = pkgID[idx+1:]
-			} else {
-				pkgToBare[pkgID] = pkgID
-			}
-		}
-	}
-
+	pkgToBare := blocker.BuildPkgToBare(blockers)
 	memo := make(map[string]int)
 	scores := make(map[string]int, len(entries))
 	for _, e := range entries {
 		if _, isBlocker := blockers[e.Name]; isBlocker {
-			scores[e.Name] = computeTransitiveBlockers(e.Name, blockers, pkgToBare, memo)
+			scores[e.Name] = blocker.ComputeTransitiveBlockers(e.Name, blockers, pkgToBare, memo)
 		}
 	}
 
 	return scores
-}
-
-// computeTransitiveBlockers counts the total number of packages blocked by a
-// dependency, both directly and transitively. Uses memo map with 0-initialization
-// for cycle detection: when a dependency is first visited, memo[dep] is set to 0
-// (in-progress). If the same dep is encountered again during recursion, the 0 is
-// returned, breaking the cycle.
-//
-// This is the same algorithm used in internal/dashboard/dashboard.go.
-func computeTransitiveBlockers(dep string, blockers map[string][]string, pkgToBare map[string]string, memo map[string]int) int {
-	if count, ok := memo[dep]; ok {
-		return count // 0 if in-progress (cycle)
-	}
-	// Mark in-progress
-	memo[dep] = 0
-
-	// Deduplicate blocked packages for this dependency
-	seen := make(map[string]bool)
-	total := 0
-	for _, pkgID := range blockers[dep] {
-		if seen[pkgID] {
-			continue
-		}
-		seen[pkgID] = true
-		total++ // Direct dependent
-		// Check if this package itself blocks others
-		bare := pkgToBare[pkgID]
-		if _, isBlocker := blockers[bare]; isBlocker && bare != dep {
-			total += computeTransitiveBlockers(bare, blockers, pkgToBare, memo)
-		}
-	}
-	memo[dep] = total
-	return total
 }
 
 // loadBlockerMap reads all JSONL files in a directory and builds a map of
