@@ -4,6 +4,10 @@ description = "Mozilla CA certificate store"
 homepage = "https://curl.se/docs/caextract.html"
 type = "library"
 
+[version]
+source = "homebrew"
+formula = "ca-certificates"
+
 [[steps]]
 action = "download_file"
 url = "https://curl.se/ca/cacert-2025-12-02.pem"
@@ -11,12 +15,7 @@ checksum = "f1407d974c5ed87d544bd931a278232e13925177e239fca370619aba63c757b4"
 dest = "cacert.pem"
 
 [[steps]]
-action = "run_command"
-command = "mkdir -p {install_dir}/share/ca-certificates && cp cacert.pem {install_dir}/share/ca-certificates/cacert.pem"
-
-[[steps]]
 action = "install_binaries"
-install_mode = "directory"
 outputs = [
-    "share/ca-certificates/cacert.pem",
+    { src = "cacert.pem", dest = "share/ca-certificates/cacert.pem" },
 ]

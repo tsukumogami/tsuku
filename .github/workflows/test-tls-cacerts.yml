@@ -1,0 +1,92 @@
+name: Test TLS CA Certificates
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'internal/recipe/recipes/ca-certificates.toml'
+      - 'recipes/c/curl.toml'
+      - 'testdata/recipes/curl-source.toml'
+      - 'test/scripts/test-tls-cacerts.sh'
+      - '.github/workflows/test-tls-cacerts.yml'
+  workflow_dispatch:
+
+jobs:
+  # Test on Ubuntu natively (debian family)
+  test-debian:
+    name: "TLS test (debian)"
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+
+      - name: Set up Go
+        uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5  # v6.2.0
+        with:
+          go-version-file: 'go.mod'
+          cache-dependency-path: go.sum
+
+      - name: Build tsuku
+        run: CGO_ENABLED=0 go build -o tsuku ./cmd/tsuku
+
+      - name: Run TLS test
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./test/scripts/test-tls-cacerts.sh ./tsuku
+
+  # Test in slim containers for non-debian Linux families
+  test-containers:
+    name: "TLS test (${{ matrix.family }})"
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        family: [alpine, rhel, arch, suse]
+        include:
+          - family: alpine
+            image: alpine:3.21
+          - family: rhel
+            image: fedora:41
+          - family: arch
+            image: archlinux:base
+          - family: suse
+            image: opensuse/tumbleweed
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+
+      - name: Set up Go
+        uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5  # v6.2.0
+        with:
+          go-version-file: 'go.mod'
+          cache-dependency-path: go.sum
+
+      - name: Build tsuku (static binary for containers)
+        run: CGO_ENABLED=0 go build -o tsuku ./cmd/tsuku
+
+      - name: Run TLS test in container
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          docker run --rm \
+            -v "$PWD:/workspace" \
+            -e GITHUB_TOKEN="$GITHUB_TOKEN" \
+            -e FAMILY="${{ matrix.family }}" \
+            -w /workspace \
+            "${{ matrix.image }}" \
+            sh -c '
+              set -e
+
+              # Install bash (required by test script)
+              case "$FAMILY" in
+                alpine) apk add --no-cache bash ;;
+              esac
+
+              # Install system deps for curl recipe (openssl headers, etc.)
+              ./.github/scripts/install-recipe-deps.sh "$FAMILY" curl ./tsuku
+
+              # Run the TLS integration test
+              ./test/scripts/test-tls-cacerts.sh ./tsuku
+            '
