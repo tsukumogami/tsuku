@@ -1,22 +1,22 @@
 {
-  "generated_at": "2026-02-21T00:57:40Z",
+  "generated_at": "2026-02-21T02:17:06Z",
   "total_recipes": 324,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 324,
+        "supported": 272,
         "total": 324,
-        "pct": 100
+        "pct": 83.9506172839506
       },
       "glibc": {
-        "supported": 324,
+        "supported": 310,
         "total": 324,
-        "pct": 100
+        "pct": 95.67901234567901
       },
       "musl": {
-        "supported": 324,
+        "supported": 161,
         "total": 324,
-        "pct": 100
+        "pct": 49.691358024691354
       }
     },
     "by_category": {
@@ -27,8 +27,8 @@
       },
       "tool": {
         "total": 311,
-        "musl_support": 311,
-        "glibc_support": 311
+        "musl_support": 148,
+        "glibc_support": 297
       }
     }
   },
@@ -37,11 +37,13 @@
       "name": "aarch64-elf-binutils",
       "type": "tool",
       "platforms": {
-        "darwin": true,
+        "darwin": false,
         "glibc": true,
         "musl": true
       },
-      "gaps": null,
+      "gaps": [
+        "darwin"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -63,9 +65,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -87,9 +91,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -111,9 +117,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -147,9 +155,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -195,9 +205,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -219,9 +231,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -243,9 +257,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -267,9 +283,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -303,9 +321,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -315,9 +335,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -339,9 +361,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -349,11 +373,13 @@
       "name": "bash",
       "type": "tool",
       "platforms": {
-        "darwin": true,
+        "darwin": false,
         "glibc": true,
         "musl": true
       },
-      "gaps": null,
+      "gaps": [
+        "darwin"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -363,9 +389,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -375,9 +403,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -386,10 +416,13 @@
       "type": "tool",
       "platforms": {
         "darwin": true,
-        "glibc": true,
-        "musl": true
+        "glibc": false,
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "glibc",
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -397,11 +430,13 @@
       "name": "biome",
       "type": "tool",
       "platforms": {
-        "darwin": true,
+        "darwin": false,
         "glibc": true,
         "musl": true
       },
-      "gaps": null,
+      "gaps": [
+        "darwin"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -411,9 +446,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -423,9 +460,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -434,10 +473,13 @@
       "type": "tool",
       "platforms": {
         "darwin": true,
-        "glibc": true,
-        "musl": true
+        "glibc": false,
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "glibc",
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -459,9 +501,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -483,9 +527,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -505,11 +551,13 @@
       "name": "btop",
       "type": "tool",
       "platforms": {
-        "darwin": true,
+        "darwin": false,
         "glibc": true,
         "musl": true
       },
-      "gaps": null,
+      "gaps": [
+        "darwin"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -519,9 +567,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -531,9 +581,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -541,11 +593,13 @@
       "name": "bun",
       "type": "tool",
       "platforms": {
-        "darwin": true,
+        "darwin": false,
         "glibc": true,
         "musl": true
       },
-      "gaps": null,
+      "gaps": [
+        "darwin"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -565,11 +619,14 @@
       "name": "c-ares",
       "type": "tool",
       "platforms": {
-        "darwin": true,
+        "darwin": false,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "darwin",
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -673,11 +730,14 @@
       "name": "chibi-scheme",
       "type": "tool",
       "platforms": {
-        "darwin": true,
+        "darwin": false,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "darwin",
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -685,11 +745,14 @@
       "name": "chicken",
       "type": "tool",
       "platforms": {
-        "darwin": true,
+        "darwin": false,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "darwin",
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -699,9 +762,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -711,9 +776,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -721,11 +788,14 @@
       "name": "cliproxyapi",
       "type": "tool",
       "platforms": {
-        "darwin": true,
+        "darwin": false,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "darwin",
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -733,11 +803,13 @@
       "name": "cloc",
       "type": "tool",
       "platforms": {
-        "darwin": true,
+        "darwin": false,
         "glibc": true,
         "musl": true
       },
-      "gaps": null,
+      "gaps": [
+        "darwin"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -759,9 +831,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -781,11 +855,13 @@
       "name": "cocoapods",
       "type": "tool",
       "platforms": {
-        "darwin": true,
+        "darwin": false,
         "glibc": true,
         "musl": true
       },
-      "gaps": null,
+      "gaps": [
+        "darwin"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -807,9 +883,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -819,9 +897,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -831,9 +911,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -855,9 +937,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -865,11 +949,14 @@
       "name": "ctlptl",
       "type": "tool",
       "platforms": {
-        "darwin": true,
+        "darwin": false,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "darwin",
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -877,11 +964,13 @@
       "name": "cuda",
       "type": "tool",
       "platforms": {
-        "darwin": true,
+        "darwin": false,
         "glibc": true,
         "musl": true
       },
-      "gaps": null,
+      "gaps": [
+        "darwin"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -901,11 +990,13 @@
       "name": "curl",
       "type": "tool",
       "platforms": {
-        "darwin": true,
+        "darwin": false,
         "glibc": true,
         "musl": true
       },
-      "gaps": null,
+      "gaps": [
+        "darwin"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -925,11 +1016,13 @@
       "name": "dasel",
       "type": "tool",
       "platforms": {
-        "darwin": true,
+        "darwin": false,
         "glibc": true,
         "musl": true
       },
-      "gaps": null,
+      "gaps": [
+        "darwin"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -997,11 +1090,13 @@
       "name": "docker-buildx",
       "type": "tool",
       "platforms": {
-        "darwin": true,
+        "darwin": false,
         "glibc": true,
         "musl": true
       },
-      "gaps": null,
+      "gaps": [
+        "darwin"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -1021,11 +1116,13 @@
       "name": "docker-credential-helper",
       "type": "tool",
       "platforms": {
-        "darwin": true,
+        "darwin": false,
         "glibc": true,
         "musl": true
       },
-      "gaps": null,
+      "gaps": [
+        "darwin"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -1033,11 +1130,13 @@
       "name": "docker-credential-helper-ecr",
       "type": "tool",
       "platforms": {
-        "darwin": true,
+        "darwin": false,
         "glibc": true,
         "musl": true
       },
-      "gaps": null,
+      "gaps": [
+        "darwin"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -1059,9 +1158,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -1071,9 +1172,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -1083,9 +1186,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -1095,9 +1200,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -1107,9 +1214,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -1131,9 +1240,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -1155,9 +1266,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -1165,11 +1278,14 @@
       "name": "exiftool",
       "type": "tool",
       "platforms": {
-        "darwin": true,
+        "darwin": false,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "darwin",
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -1191,9 +1307,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -1203,9 +1321,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -1275,9 +1395,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -1287,9 +1409,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -1323,9 +1447,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -1347,9 +1473,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -1369,11 +1497,13 @@
       "name": "git-flow",
       "type": "tool",
       "platforms": {
-        "darwin": true,
+        "darwin": false,
         "glibc": true,
         "musl": true
       },
-      "gaps": null,
+      "gaps": [
+        "darwin"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -1383,9 +1513,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -1429,11 +1561,14 @@
       "name": "glew",
       "type": "tool",
       "platforms": {
-        "darwin": true,
+        "darwin": false,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "darwin",
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -1453,11 +1588,13 @@
       "name": "gnu-sed",
       "type": "tool",
       "platforms": {
-        "darwin": true,
+        "darwin": false,
         "glibc": true,
         "musl": true
       },
-      "gaps": null,
+      "gaps": [
+        "darwin"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -1465,11 +1602,13 @@
       "name": "gnu-tar",
       "type": "tool",
       "platforms": {
-        "darwin": true,
+        "darwin": false,
         "glibc": true,
         "musl": true
       },
-      "gaps": null,
+      "gaps": [
+        "darwin"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -1491,9 +1630,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -1537,11 +1678,13 @@
       "name": "goimports",
       "type": "tool",
       "platforms": {
-        "darwin": true,
+        "darwin": false,
         "glibc": true,
         "musl": true
       },
-      "gaps": null,
+      "gaps": [
+        "darwin"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -1621,11 +1764,14 @@
       "name": "goreman",
       "type": "tool",
       "platforms": {
-        "darwin": true,
+        "darwin": false,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "darwin",
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -1659,9 +1805,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -1671,9 +1819,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -1683,9 +1833,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -1695,9 +1847,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -1719,9 +1873,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -1743,9 +1899,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -1755,9 +1913,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -1765,11 +1925,13 @@
       "name": "hello-nix",
       "type": "tool",
       "platforms": {
-        "darwin": true,
+        "darwin": false,
         "glibc": true,
         "musl": true
       },
-      "gaps": null,
+      "gaps": [
+        "darwin"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -1777,11 +1939,13 @@
       "name": "helm",
       "type": "tool",
       "platforms": {
-        "darwin": true,
+        "darwin": false,
         "glibc": true,
         "musl": true
       },
-      "gaps": null,
+      "gaps": [
+        "darwin"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -1791,9 +1955,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -1802,10 +1968,13 @@
       "type": "tool",
       "platforms": {
         "darwin": true,
-        "glibc": true,
-        "musl": true
+        "glibc": false,
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "glibc",
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -1815,9 +1984,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -1827,9 +1998,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -1837,11 +2010,14 @@
       "name": "hugo",
       "type": "tool",
       "platforms": {
-        "darwin": true,
+        "darwin": false,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "darwin",
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -1862,10 +2038,13 @@
       "type": "tool",
       "platforms": {
         "darwin": true,
-        "glibc": true,
-        "musl": true
+        "glibc": false,
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "glibc",
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -1875,9 +2054,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -1899,9 +2080,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -1921,11 +2104,14 @@
       "name": "jpeg",
       "type": "tool",
       "platforms": {
-        "darwin": true,
+        "darwin": false,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "darwin",
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -2041,11 +2227,13 @@
       "name": "kubernetes-cli",
       "type": "tool",
       "platforms": {
-        "darwin": true,
+        "darwin": false,
         "glibc": true,
         "musl": true
       },
-      "gaps": null,
+      "gaps": [
+        "darwin"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -2101,11 +2289,14 @@
       "name": "lcov",
       "type": "tool",
       "platforms": {
-        "darwin": true,
+        "darwin": false,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "darwin",
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -2115,9 +2306,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -2149,11 +2342,13 @@
       "name": "liberica",
       "type": "tool",
       "platforms": {
-        "darwin": true,
+        "darwin": false,
         "glibc": true,
         "musl": true
       },
-      "gaps": null,
+      "gaps": [
+        "darwin"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -2235,9 +2430,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -2245,11 +2442,14 @@
       "name": "lima",
       "type": "tool",
       "platforms": {
-        "darwin": true,
+        "darwin": false,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "darwin",
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -2269,11 +2469,14 @@
       "name": "lua",
       "type": "tool",
       "platforms": {
-        "darwin": true,
+        "darwin": false,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "darwin",
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -2281,11 +2484,14 @@
       "name": "lua-language-server",
       "type": "tool",
       "platforms": {
-        "darwin": true,
+        "darwin": false,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "darwin",
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -2293,11 +2499,14 @@
       "name": "luajit",
       "type": "tool",
       "platforms": {
-        "darwin": true,
+        "darwin": false,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "darwin",
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -2307,9 +2516,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -2355,9 +2566,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -2367,9 +2580,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -2379,9 +2594,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -2389,11 +2606,13 @@
       "name": "mit-scheme",
       "type": "tool",
       "platforms": {
-        "darwin": true,
+        "darwin": false,
         "glibc": true,
         "musl": true
       },
-      "gaps": null,
+      "gaps": [
+        "darwin"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -2403,9 +2622,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -2415,9 +2636,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -2439,9 +2662,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -2449,11 +2674,14 @@
       "name": "moreutils",
       "type": "tool",
       "platforms": {
-        "darwin": true,
+        "darwin": false,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "darwin",
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -2463,9 +2691,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -2475,9 +2705,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -2499,9 +2731,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -2510,10 +2744,13 @@
       "type": "tool",
       "platforms": {
         "darwin": true,
-        "glibc": true,
-        "musl": true
+        "glibc": false,
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "glibc",
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -2522,10 +2759,13 @@
       "type": "tool",
       "platforms": {
         "darwin": true,
-        "glibc": true,
-        "musl": true
+        "glibc": false,
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "glibc",
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -2535,9 +2775,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -2557,11 +2799,13 @@
       "name": "nix-portable",
       "type": "tool",
       "platforms": {
-        "darwin": true,
+        "darwin": false,
         "glibc": true,
         "musl": true
       },
-      "gaps": null,
+      "gaps": [
+        "darwin"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -2571,9 +2815,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -2583,9 +2829,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -2595,9 +2843,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -2607,9 +2857,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -2619,9 +2871,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -2629,11 +2883,14 @@
       "name": "openshift-cli",
       "type": "tool",
       "platforms": {
-        "darwin": true,
+        "darwin": false,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "darwin",
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -2643,9 +2900,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -2667,9 +2926,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -2679,9 +2940,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -2689,11 +2952,14 @@
       "name": "p7zip",
       "type": "tool",
       "platforms": {
-        "darwin": true,
+        "darwin": false,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "darwin",
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -2713,11 +2979,13 @@
       "name": "periphery",
       "type": "tool",
       "platforms": {
-        "darwin": true,
+        "darwin": false,
         "glibc": true,
         "musl": true
       },
-      "gaps": null,
+      "gaps": [
+        "darwin"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -2751,9 +3019,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -2761,11 +3031,14 @@
       "name": "pkgconf",
       "type": "tool",
       "platforms": {
-        "darwin": true,
+        "darwin": false,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "darwin",
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -2786,10 +3059,13 @@
       "type": "tool",
       "platforms": {
         "darwin": true,
-        "glibc": true,
-        "musl": true
+        "glibc": false,
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "glibc",
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -2799,9 +3075,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -2823,9 +3101,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -2835,9 +3115,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -2847,9 +3129,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -2883,9 +3167,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -2893,11 +3179,14 @@
       "name": "qrencode",
       "type": "tool",
       "platforms": {
-        "darwin": true,
+        "darwin": false,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "darwin",
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -2931,9 +3220,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -2943,9 +3234,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -2967,9 +3260,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -2991,9 +3286,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -3003,9 +3300,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -3015,9 +3314,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -3027,9 +3328,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -3039,9 +3342,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -3063,9 +3368,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -3075,9 +3382,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -3087,9 +3396,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -3121,11 +3432,14 @@
       "name": "sevenzip",
       "type": "tool",
       "platforms": {
-        "darwin": true,
+        "darwin": false,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "darwin",
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -3159,9 +3473,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -3170,10 +3486,13 @@
       "type": "tool",
       "platforms": {
         "darwin": true,
-        "glibc": true,
-        "musl": true
+        "glibc": false,
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "glibc",
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -3182,10 +3501,13 @@
       "type": "tool",
       "platforms": {
         "darwin": true,
-        "glibc": true,
-        "musl": true
+        "glibc": false,
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "glibc",
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -3193,11 +3515,13 @@
       "name": "spatialite",
       "type": "tool",
       "platforms": {
-        "darwin": true,
+        "darwin": false,
         "glibc": true,
         "musl": true
       },
-      "gaps": null,
+      "gaps": [
+        "darwin"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -3206,10 +3530,13 @@
       "type": "tool",
       "platforms": {
         "darwin": true,
-        "glibc": true,
-        "musl": true
+        "glibc": false,
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "glibc",
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -3217,11 +3544,14 @@
       "name": "sshpass",
       "type": "tool",
       "platforms": {
-        "darwin": true,
+        "darwin": false,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "darwin",
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -3255,9 +3585,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -3266,10 +3598,13 @@
       "type": "tool",
       "platforms": {
         "darwin": true,
-        "glibc": true,
-        "musl": true
+        "glibc": false,
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "glibc",
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -3279,9 +3614,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -3291,9 +3628,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -3315,9 +3654,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -3327,9 +3668,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -3339,9 +3682,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -3351,9 +3696,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -3363,9 +3710,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -3399,9 +3748,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -3447,9 +3798,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -3459,9 +3812,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -3471,9 +3826,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -3483,9 +3840,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -3519,9 +3878,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -3543,9 +3904,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -3555,9 +3918,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -3566,10 +3931,13 @@
       "type": "tool",
       "platforms": {
         "darwin": true,
-        "glibc": true,
-        "musl": true
+        "glibc": false,
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "glibc",
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -3577,11 +3945,14 @@
       "name": "uutils-coreutils",
       "type": "tool",
       "platforms": {
-        "darwin": true,
+        "darwin": false,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "darwin",
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -3591,9 +3962,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -3603,9 +3976,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -3651,9 +4026,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -3662,10 +4039,13 @@
       "type": "tool",
       "platforms": {
         "darwin": true,
-        "glibc": true,
-        "musl": true
+        "glibc": false,
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "glibc",
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -3675,9 +4055,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -3699,9 +4081,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -3709,11 +4093,14 @@
       "name": "wimlib",
       "type": "tool",
       "platforms": {
-        "darwin": true,
+        "darwin": false,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "darwin",
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -3723,9 +4110,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -3747,9 +4136,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -3757,11 +4148,14 @@
       "name": "xclogparser",
       "type": "tool",
       "platforms": {
-        "darwin": true,
+        "darwin": false,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "darwin",
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -3771,9 +4165,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -3782,10 +4178,13 @@
       "type": "tool",
       "platforms": {
         "darwin": true,
-        "glibc": true,
-        "musl": true
+        "glibc": false,
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "glibc",
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -3793,11 +4192,14 @@
       "name": "xz",
       "type": "tool",
       "platforms": {
-        "darwin": true,
+        "darwin": false,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "darwin",
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -3807,9 +4209,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -3819,9 +4223,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -3831,9 +4237,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -3841,11 +4249,13 @@
       "name": "yj",
       "type": "tool",
       "platforms": {
-        "darwin": true,
+        "darwin": false,
         "glibc": true,
         "musl": true
       },
-      "gaps": null,
+      "gaps": [
+        "darwin"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -3855,9 +4265,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -3879,9 +4291,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -3891,9 +4305,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -3915,9 +4331,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     }
