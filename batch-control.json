@@ -38,8 +38,8 @@
     },
     "pypi": {
       "state": "closed",
-      "failures": 3,
-      "last_failure": "2026-02-21T20:40:58Z"
+      "failures": 4,
+      "last_failure": "2026-02-21T21:32:24Z"
     }
   },
   "budget": {
