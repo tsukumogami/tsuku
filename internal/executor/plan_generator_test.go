@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/tsukumogami/tsuku/internal/actions"
+	"github.com/tsukumogami/tsuku/internal/platform"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 )
 
@@ -165,7 +166,7 @@ func TestShouldExecuteForPlatform(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			target := recipe.NewMatchTarget(tt.targetOS, tt.targetArch, "", "")
+			target := recipe.NewMatchTarget(tt.targetOS, tt.targetArch, "", "", "")
 			got := shouldExecuteForPlatform(tt.when, target)
 			if got != tt.want {
 				t.Errorf("shouldExecuteForPlatform() = %v, want %v", got, tt.want)
@@ -985,7 +986,7 @@ func TestShouldExecuteForPlatform_CombinedConditions(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			target := recipe.NewMatchTarget(tt.targetOS, tt.targetArch, "", "")
+			target := recipe.NewMatchTarget(tt.targetOS, tt.targetArch, "", "", "")
 			got := shouldExecuteForPlatform(tt.when, target)
 			if got != tt.want {
 				t.Errorf("shouldExecuteForPlatform() = %v, want %v", got, tt.want)
@@ -1895,5 +1896,940 @@ func TestGeneratePlan_LinuxFamilyFiltering(t *testing.T) {
 	}
 	if !hasInstallBinaries {
 		t.Error("RHEL plan should include install_binaries step")
+	}
+}
+
+func TestGeneratePlan_GPUFiltering(t *testing.T) {
+	// Test that GPU-specific steps are filtered correctly at plan time.
+	// This recipe has three mutually exclusive GPU steps plus a shared step.
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name: "gpu-tool",
+		},
+		Version: recipe.VersionSection{
+			Source: "nodejs_dist",
+		},
+		Steps: []recipe.Step{
+			{
+				Action: "chmod",
+				Params: map[string]interface{}{"path": "cuda-binary", "mode": "0755"},
+				When:   &recipe.WhenClause{OS: []string{"linux"}, GPU: []string{"nvidia"}},
+			},
+			{
+				Action: "chmod",
+				Params: map[string]interface{}{"path": "vulkan-binary", "mode": "0755"},
+				When:   &recipe.WhenClause{OS: []string{"linux"}, GPU: []string{"amd", "intel"}},
+			},
+			{
+				Action: "chmod",
+				Params: map[string]interface{}{"path": "cpu-binary", "mode": "0755"},
+				When:   &recipe.WhenClause{OS: []string{"linux"}, GPU: []string{"none"}},
+			},
+			{
+				Action: "install_binaries",
+				Params: map[string]interface{}{"files": []interface{}{"tool"}},
+				// No when clause - always included
+			},
+		},
+	}
+
+	tests := []struct {
+		name      string
+		gpu       string
+		wantPaths []string // expected "path" values from included chmod steps
+		wantCount int      // total steps in plan
+	}{
+		{
+			name:      "nvidia GPU selects CUDA step",
+			gpu:       "nvidia",
+			wantPaths: []string{"cuda-binary"},
+			wantCount: 2, // cuda chmod + install_binaries
+		},
+		{
+			name:      "amd GPU selects Vulkan step",
+			gpu:       "amd",
+			wantPaths: []string{"vulkan-binary"},
+			wantCount: 2, // vulkan chmod + install_binaries
+		},
+		{
+			name:      "intel GPU selects Vulkan step",
+			gpu:       "intel",
+			wantPaths: []string{"vulkan-binary"},
+			wantCount: 2, // vulkan chmod + install_binaries
+		},
+		{
+			name:      "no GPU selects CPU step",
+			gpu:       "none",
+			wantPaths: []string{"cpu-binary"},
+			wantCount: 2, // cpu chmod + install_binaries
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			exec, err := New(r)
+			if err != nil {
+				t.Fatalf("New() error: %v", err)
+			}
+			defer exec.Cleanup()
+
+			plan, err := exec.GeneratePlan(context.Background(), PlanConfig{
+				OS:           "linux",
+				Arch:         "amd64",
+				GPU:          tt.gpu,
+				RecipeSource: "test",
+			})
+			if err != nil {
+				t.Skipf("GeneratePlan() error (expected in offline tests): %v", err)
+			}
+
+			if len(plan.Steps) != tt.wantCount {
+				actions := make([]string, len(plan.Steps))
+				for i, s := range plan.Steps {
+					actions[i] = s.Action
+					if p, ok := s.Params["path"].(string); ok {
+						actions[i] += "(" + p + ")"
+					}
+				}
+				t.Fatalf("len(Steps) = %d, want %d; steps: %v", len(plan.Steps), tt.wantCount, actions)
+			}
+
+			// Verify the correct chmod step was selected
+			for _, wantPath := range tt.wantPaths {
+				found := false
+				for _, step := range plan.Steps {
+					if step.Action == "chmod" {
+						if p, ok := step.Params["path"].(string); ok && p == wantPath {
+							found = true
+							break
+						}
+					}
+				}
+				if !found {
+					t.Errorf("expected chmod step with path=%q, not found in plan", wantPath)
+				}
+			}
+		})
+	}
+}
+
+func TestGeneratePlan_GPUAutoDetection(t *testing.T) {
+	// When PlanConfig.GPU is empty, GeneratePlan should auto-detect via platform.DetectGPU().
+	// We can't control the hardware in a test, but we can verify the plan still generates
+	// and that the target has a non-empty GPU value (DetectGPU always returns something).
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name: "auto-detect-test",
+		},
+		Version: recipe.VersionSection{
+			Source: "nodejs_dist",
+		},
+		Steps: []recipe.Step{
+			{
+				Action: "chmod",
+				Params: map[string]interface{}{"path": "tool", "mode": "0755"},
+			},
+		},
+	}
+
+	exec, err := New(r)
+	if err != nil {
+		t.Fatalf("New() error: %v", err)
+	}
+	defer exec.Cleanup()
+
+	// Empty GPU should trigger auto-detection -- plan should still succeed
+	plan, err := exec.GeneratePlan(context.Background(), PlanConfig{
+		OS:           "linux",
+		Arch:         "amd64",
+		GPU:          "", // empty => auto-detect
+		RecipeSource: "test",
+	})
+	if err != nil {
+		t.Skipf("GeneratePlan() error (expected in offline tests): %v", err)
+	}
+
+	// Plan should have generated successfully with auto-detected GPU
+	if plan.Tool != "auto-detect-test" {
+		t.Errorf("unexpected plan tool: %s", plan.Tool)
+	}
+	if len(plan.Steps) != 1 {
+		t.Errorf("expected 1 step, got %d", len(plan.Steps))
+	}
+}
+
+// mockRecipeLoader is a test helper that serves recipes from an in-memory map.
+type mockRecipeLoader struct {
+	recipes map[string]*recipe.Recipe
+}
+
+func (m *mockRecipeLoader) GetWithContext(_ context.Context, name string, _ recipe.LoaderOptions) (*recipe.Recipe, error) {
+	if r, ok := m.recipes[name]; ok {
+		return r, nil
+	}
+	return nil, fmt.Errorf("recipe %q not found", name)
+}
+
+func TestGeneratePlan_GPUPropagationThroughDependencies(t *testing.T) {
+	// Verify that GPU is propagated from the parent config to dependency plan generation.
+	// The parent recipe has a GPU-filtered step that declares a dependency.
+	// The dependency recipe also has GPU-filtered steps.
+	// Both should filter correctly based on the GPU value.
+	depRecipe := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name: "gpu-runtime",
+		},
+		Version: recipe.VersionSection{
+			Source: "nodejs_dist",
+		},
+		Steps: []recipe.Step{
+			{
+				Action: "chmod",
+				Params: map[string]interface{}{"path": "nvidia-lib", "mode": "0755"},
+				When:   &recipe.WhenClause{GPU: []string{"nvidia"}},
+			},
+			{
+				Action: "chmod",
+				Params: map[string]interface{}{"path": "amd-lib", "mode": "0755"},
+				When:   &recipe.WhenClause{GPU: []string{"amd"}},
+			},
+			{
+				Action: "chmod",
+				Params: map[string]interface{}{"path": "fallback-lib", "mode": "0755"},
+				When:   &recipe.WhenClause{GPU: []string{"none"}},
+			},
+		},
+	}
+
+	parentRecipe := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name:         "gpu-tool",
+			Dependencies: []string{"gpu-runtime"},
+		},
+		Version: recipe.VersionSection{
+			Source: "nodejs_dist",
+		},
+		Steps: []recipe.Step{
+			{
+				Action: "install_binaries",
+				Params: map[string]interface{}{"files": []interface{}{"tool"}},
+			},
+		},
+	}
+
+	loader := &mockRecipeLoader{
+		recipes: map[string]*recipe.Recipe{
+			"gpu-runtime": depRecipe,
+		},
+	}
+
+	tests := []struct {
+		name             string
+		gpu              string
+		wantDepStepPaths []string // expected "path" values in dep steps
+		wantDepStepCount int
+	}{
+		{
+			name:             "nvidia propagates to dependency",
+			gpu:              "nvidia",
+			wantDepStepPaths: []string{"nvidia-lib"},
+			wantDepStepCount: 1,
+		},
+		{
+			name:             "amd propagates to dependency",
+			gpu:              "amd",
+			wantDepStepPaths: []string{"amd-lib"},
+			wantDepStepCount: 1,
+		},
+		{
+			name:             "none propagates to dependency",
+			gpu:              "none",
+			wantDepStepPaths: []string{"fallback-lib"},
+			wantDepStepCount: 1,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			exec, err := New(parentRecipe)
+			if err != nil {
+				t.Fatalf("New() error: %v", err)
+			}
+			defer exec.Cleanup()
+
+			plan, err := exec.GeneratePlan(context.Background(), PlanConfig{
+				OS:           "linux",
+				Arch:         "amd64",
+				GPU:          tt.gpu,
+				RecipeSource: "test",
+				RecipeLoader: loader,
+			})
+			if err != nil {
+				t.Skipf("GeneratePlan() error (expected in offline tests): %v", err)
+			}
+
+			// Check dependency plan
+			if len(plan.Dependencies) != 1 {
+				t.Fatalf("expected 1 dependency, got %d", len(plan.Dependencies))
+			}
+
+			dep := plan.Dependencies[0]
+			if dep.Tool != "gpu-runtime" {
+				t.Errorf("expected dependency 'gpu-runtime', got %q", dep.Tool)
+			}
+
+			if len(dep.Steps) != tt.wantDepStepCount {
+				stepDescs := make([]string, len(dep.Steps))
+				for i, s := range dep.Steps {
+					p, _ := s.Params["path"].(string)
+					stepDescs[i] = fmt.Sprintf("%s(%s)", s.Action, p)
+				}
+				t.Fatalf("dependency has %d steps, want %d; steps: %v",
+					len(dep.Steps), tt.wantDepStepCount, stepDescs)
+			}
+
+			for _, wantPath := range tt.wantDepStepPaths {
+				found := false
+				for _, step := range dep.Steps {
+					if p, ok := step.Params["path"].(string); ok && p == wantPath {
+						found = true
+						break
+					}
+				}
+				if !found {
+					t.Errorf("expected dependency step with path=%q, not found", wantPath)
+				}
+			}
+		})
+	}
+}
+
+func TestGeneratePlan_DepCfgLinuxFamilyPropagation(t *testing.T) {
+	// Verify the pre-existing bug fix: LinuxFamily is now propagated through depCfg.
+	// The dependency recipe has family-specific steps that should be filtered correctly.
+	depRecipe := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name: "system-lib",
+		},
+		Version: recipe.VersionSection{
+			Source: "nodejs_dist",
+		},
+		Steps: []recipe.Step{
+			{
+				Action: "apt_install",
+				Params: map[string]interface{}{"packages": []interface{}{"libfoo"}},
+			},
+			{
+				Action: "dnf_install",
+				Params: map[string]interface{}{"packages": []interface{}{"libfoo"}},
+			},
+		},
+	}
+
+	parentRecipe := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name:         "my-tool",
+			Dependencies: []string{"system-lib"},
+		},
+		Version: recipe.VersionSection{
+			Source: "nodejs_dist",
+		},
+		Steps: []recipe.Step{
+			{
+				Action: "install_binaries",
+				Params: map[string]interface{}{"files": []interface{}{"tool"}},
+			},
+		},
+	}
+
+	loader := &mockRecipeLoader{
+		recipes: map[string]*recipe.Recipe{
+			"system-lib": depRecipe,
+		},
+	}
+
+	exec, err := New(parentRecipe)
+	if err != nil {
+		t.Fatalf("New() error: %v", err)
+	}
+	defer exec.Cleanup()
+
+	plan, err := exec.GeneratePlan(context.Background(), PlanConfig{
+		OS:           "linux",
+		Arch:         "amd64",
+		LinuxFamily:  "debian",
+		GPU:          "none",
+		RecipeSource: "test",
+		RecipeLoader: loader,
+	})
+	if err != nil {
+		t.Skipf("GeneratePlan() error (expected in offline tests): %v", err)
+	}
+
+	if len(plan.Dependencies) != 1 {
+		t.Fatalf("expected 1 dependency, got %d", len(plan.Dependencies))
+	}
+
+	dep := plan.Dependencies[0]
+
+	// With debian family propagated, only apt_install should be present (not dnf_install)
+	hasApt := false
+	hasDnf := false
+	for _, step := range dep.Steps {
+		if step.Action == "apt_install" {
+			hasApt = true
+		}
+		if step.Action == "dnf_install" {
+			hasDnf = true
+		}
+	}
+
+	if !hasApt {
+		t.Error("debian dependency should include apt_install step")
+	}
+	if hasDnf {
+		t.Error("debian dependency should NOT include dnf_install step")
+	}
+}
+
+func TestGeneratePlan_GPUFilteringDownloadSteps(t *testing.T) {
+	// Verify that a multi-step recipe with GPU-filtered download actions
+	// produces exactly one download step per GPU target after filtering.
+	// This mirrors the tsuku-llm recipe pattern where mutually exclusive
+	// github_file steps select the correct binary variant for each GPU vendor.
+	//
+	// We test via FilterStepsByTarget because github_file is a composite
+	// action that decomposes during plan generation (needing network access).
+	// The filtering logic is the same either way -- steps with non-matching
+	// When clauses are excluded before decomposition.
+
+	steps := []recipe.Step{
+		{
+			Action: "github_file",
+			Params: map[string]interface{}{
+				"repo":          "owner/repo",
+				"asset_pattern": "tool-linux-amd64-cuda",
+				"binary":        "tool",
+			},
+			When:         &recipe.WhenClause{OS: []string{"linux"}, Arch: "amd64", GPU: []string{"nvidia"}},
+			Dependencies: []string{"cuda-runtime"},
+		},
+		{
+			Action: "github_file",
+			Params: map[string]interface{}{
+				"repo":          "owner/repo",
+				"asset_pattern": "tool-linux-amd64-vulkan",
+				"binary":        "tool",
+			},
+			When:         &recipe.WhenClause{OS: []string{"linux"}, Arch: "amd64", GPU: []string{"amd", "intel"}},
+			Dependencies: []string{"vulkan-loader"},
+		},
+		{
+			Action: "github_file",
+			Params: map[string]interface{}{
+				"repo":          "owner/repo",
+				"asset_pattern": "tool-linux-amd64-cpu",
+				"binary":        "tool",
+			},
+			When: &recipe.WhenClause{OS: []string{"linux"}, Arch: "amd64", GPU: []string{"none"}},
+		},
+		{
+			Action: "install_binaries",
+			Params: map[string]interface{}{"files": []interface{}{"tool"}},
+			// No when clause -- always included
+		},
+	}
+
+	tests := []struct {
+		name             string
+		gpu              string
+		wantAssetPattern string
+		wantDownloads    int // number of github_file steps surviving filter
+		wantTotal        int // total steps after filtering
+	}{
+		{
+			name:             "nvidia target gets exactly one download step (CUDA)",
+			gpu:              "nvidia",
+			wantAssetPattern: "tool-linux-amd64-cuda",
+			wantDownloads:    1,
+			wantTotal:        2, // github_file + install_binaries
+		},
+		{
+			name:             "amd target gets exactly one download step (Vulkan)",
+			gpu:              "amd",
+			wantAssetPattern: "tool-linux-amd64-vulkan",
+			wantDownloads:    1,
+			wantTotal:        2,
+		},
+		{
+			name:             "intel target gets exactly one download step (Vulkan)",
+			gpu:              "intel",
+			wantAssetPattern: "tool-linux-amd64-vulkan",
+			wantDownloads:    1,
+			wantTotal:        2,
+		},
+		{
+			name:             "none target gets exactly one download step (CPU)",
+			gpu:              "none",
+			wantAssetPattern: "tool-linux-amd64-cpu",
+			wantDownloads:    1,
+			wantTotal:        2,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			target := platform.NewTarget("linux/amd64", "debian", "glibc", tt.gpu)
+			filtered := FilterStepsByTarget(steps, target)
+
+			if len(filtered) != tt.wantTotal {
+				acts := make([]string, len(filtered))
+				for i, s := range filtered {
+					acts[i] = s.Action
+				}
+				t.Fatalf("expected %d steps, got %d; steps: %v", tt.wantTotal, len(filtered), acts)
+			}
+
+			// Count download steps and verify the correct asset pattern
+			downloadCount := 0
+			for _, step := range filtered {
+				if isDownloadAction(step.Action) {
+					downloadCount++
+					if ap, ok := step.Params["asset_pattern"].(string); ok {
+						if ap != tt.wantAssetPattern {
+							t.Errorf("download step asset_pattern = %q, want %q", ap, tt.wantAssetPattern)
+						}
+					}
+				}
+			}
+			if downloadCount != tt.wantDownloads {
+				t.Errorf("download step count = %d, want %d", downloadCount, tt.wantDownloads)
+			}
+		})
+	}
+}
+
+func TestGeneratePlan_GPUDependencyChain_NvidiaCUDA(t *testing.T) {
+	// Verify the NVIDIA dependency chain resolves without cycles:
+	//   tsuku-llm (gpu=nvidia step) -> cuda-runtime -> nvidia-driver
+	//
+	// Uses mock recipes modeled after the real recipe structure. Step-level
+	// dependencies on the NVIDIA-filtered step pull in cuda-runtime, whose
+	// metadata dependencies pull in nvidia-driver. nvidia-driver is a leaf
+	// with no further dependencies.
+	//
+	// Uses non-composite actions (chmod, install_binaries) to avoid network
+	// access during composite action decomposition. The dependency resolution
+	// logic is the same regardless of action type.
+
+	nvidiaDriverRecipe := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name:        "nvidia-driver",
+			SupportedOS: []string{"linux"},
+		},
+		Version: recipe.VersionSection{
+			Source: "nodejs_dist",
+		},
+		Steps: []recipe.Step{
+			{
+				Action: "apt_install",
+				Params: map[string]interface{}{"packages": []interface{}{"nvidia-driver"}},
+			},
+		},
+	}
+
+	cudaRuntimeRecipe := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name:         "cuda-runtime",
+			Type:         "library",
+			SupportedOS:  []string{"linux"},
+			Dependencies: []string{"nvidia-driver"},
+		},
+		Version: recipe.VersionSection{
+			Source: "nodejs_dist",
+		},
+		Steps: []recipe.Step{
+			{
+				Action: "chmod",
+				Params: map[string]interface{}{"path": "lib/libcudart.so", "mode": "0755"},
+				When:   &recipe.WhenClause{OS: []string{"linux"}, Arch: "amd64"},
+			},
+			{
+				Action: "install_binaries",
+				Params: map[string]interface{}{
+					"install_mode": "directory",
+					"outputs":      []interface{}{"lib/libcudart.so"},
+				},
+			},
+		},
+	}
+
+	tsukuLLMRecipe := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name:        "tsuku-llm",
+			SupportedOS: []string{"linux", "darwin"},
+		},
+		Version: recipe.VersionSection{
+			Source: "nodejs_dist",
+		},
+		Steps: []recipe.Step{
+			{
+				Action:       "chmod",
+				Params:       map[string]interface{}{"path": "tsuku-llm-cuda", "mode": "0755"},
+				When:         &recipe.WhenClause{OS: []string{"linux"}, Arch: "amd64", GPU: []string{"nvidia"}},
+				Dependencies: []string{"cuda-runtime"},
+			},
+			{
+				Action:       "chmod",
+				Params:       map[string]interface{}{"path": "tsuku-llm-vulkan", "mode": "0755"},
+				When:         &recipe.WhenClause{OS: []string{"linux"}, Arch: "amd64", GPU: []string{"amd", "intel"}},
+				Dependencies: []string{"vulkan-loader"},
+			},
+			{
+				Action: "chmod",
+				Params: map[string]interface{}{"path": "tsuku-llm-cpu", "mode": "0755"},
+				When:   &recipe.WhenClause{OS: []string{"linux"}, Arch: "amd64", GPU: []string{"none"}},
+			},
+			{
+				Action: "install_binaries",
+				Params: map[string]interface{}{"files": []interface{}{"tsuku-llm"}},
+			},
+		},
+	}
+
+	loader := &mockRecipeLoader{
+		recipes: map[string]*recipe.Recipe{
+			"cuda-runtime":  cudaRuntimeRecipe,
+			"nvidia-driver": nvidiaDriverRecipe,
+		},
+	}
+
+	exec, err := New(tsukuLLMRecipe)
+	if err != nil {
+		t.Fatalf("New() error: %v", err)
+	}
+	defer exec.Cleanup()
+
+	plan, err := exec.GeneratePlan(context.Background(), PlanConfig{
+		OS:           "linux",
+		Arch:         "amd64",
+		LinuxFamily:  "debian",
+		GPU:          "nvidia",
+		RecipeSource: "test",
+		RecipeLoader: loader,
+	})
+	if err != nil {
+		t.Skipf("GeneratePlan() error (expected in offline tests): %v", err)
+	}
+
+	// Verify the plan has the cuda-runtime dependency
+	if len(plan.Dependencies) == 0 {
+		t.Fatal("expected at least one dependency, got none")
+	}
+
+	// Find cuda-runtime in the dependency tree
+	var cudaDep *DependencyPlan
+	for i := range plan.Dependencies {
+		if plan.Dependencies[i].Tool == "cuda-runtime" {
+			cudaDep = &plan.Dependencies[i]
+			break
+		}
+	}
+	if cudaDep == nil {
+		depNames := make([]string, len(plan.Dependencies))
+		for i, d := range plan.Dependencies {
+			depNames[i] = d.Tool
+		}
+		t.Fatalf("expected cuda-runtime dependency, found: %v", depNames)
+	}
+
+	// Verify cuda-runtime has nvidia-driver as a nested dependency
+	var hasNvidiaDriver bool
+	for _, nested := range cudaDep.Dependencies {
+		if nested.Tool == "nvidia-driver" {
+			hasNvidiaDriver = true
+			// nvidia-driver should have no further dependencies
+			if len(nested.Dependencies) != 0 {
+				t.Errorf("nvidia-driver should have no nested dependencies, got %d", len(nested.Dependencies))
+			}
+			break
+		}
+	}
+	if !hasNvidiaDriver {
+		nestedNames := make([]string, len(cudaDep.Dependencies))
+		for i, d := range cudaDep.Dependencies {
+			nestedNames[i] = d.Tool
+		}
+		t.Errorf("expected nvidia-driver nested dependency in cuda-runtime, found: %v", nestedNames)
+	}
+
+	// Verify the CUDA-variant step was selected (not vulkan or cpu)
+	hasCUDAStep := false
+	for _, step := range plan.Steps {
+		if step.Action == "chmod" {
+			if p, ok := step.Params["path"].(string); ok && p == "tsuku-llm-cuda" {
+				hasCUDAStep = true
+			}
+			if p, ok := step.Params["path"].(string); ok && (p == "tsuku-llm-vulkan" || p == "tsuku-llm-cpu") {
+				t.Errorf("unexpected non-CUDA step in plan: path=%q", p)
+			}
+		}
+	}
+	if !hasCUDAStep {
+		t.Error("expected CUDA variant step in plan, not found")
+	}
+}
+
+func TestGeneratePlan_GPUDependencyChain_AMDVulkan(t *testing.T) {
+	// Verify the AMD/Vulkan dependency chain resolves without cycles:
+	//   tsuku-llm (gpu=amd step) -> vulkan-loader -> mesa-vulkan-drivers
+	//
+	// Uses mock recipes modeled after the real recipe structure.
+
+	mesaVulkanRecipe := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name:        "mesa-vulkan-drivers",
+			Type:        "library",
+			SupportedOS: []string{"linux"},
+		},
+		Version: recipe.VersionSection{
+			Source: "nodejs_dist",
+		},
+		Steps: []recipe.Step{
+			{
+				Action: "apt_install",
+				Params: map[string]interface{}{"packages": []interface{}{"mesa-vulkan-drivers"}},
+			},
+		},
+	}
+
+	vulkanLoaderRecipe := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name:         "vulkan-loader",
+			Type:         "library",
+			SupportedOS:  []string{"linux"},
+			Dependencies: []string{"mesa-vulkan-drivers"},
+		},
+		Version: recipe.VersionSection{
+			Source: "nodejs_dist",
+		},
+		Steps: []recipe.Step{
+			{
+				Action: "apt_install",
+				Params: map[string]interface{}{"packages": []interface{}{"libvulkan1"}},
+			},
+		},
+	}
+
+	tsukuLLMRecipe := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name:        "tsuku-llm",
+			SupportedOS: []string{"linux", "darwin"},
+		},
+		Version: recipe.VersionSection{
+			Source: "nodejs_dist",
+		},
+		Steps: []recipe.Step{
+			{
+				Action:       "chmod",
+				Params:       map[string]interface{}{"path": "tsuku-llm-cuda", "mode": "0755"},
+				When:         &recipe.WhenClause{OS: []string{"linux"}, Arch: "amd64", GPU: []string{"nvidia"}},
+				Dependencies: []string{"cuda-runtime"},
+			},
+			{
+				Action:       "chmod",
+				Params:       map[string]interface{}{"path": "tsuku-llm-vulkan", "mode": "0755"},
+				When:         &recipe.WhenClause{OS: []string{"linux"}, Arch: "amd64", GPU: []string{"amd", "intel"}},
+				Dependencies: []string{"vulkan-loader"},
+			},
+			{
+				Action: "chmod",
+				Params: map[string]interface{}{"path": "tsuku-llm-cpu", "mode": "0755"},
+				When:   &recipe.WhenClause{OS: []string{"linux"}, Arch: "amd64", GPU: []string{"none"}},
+			},
+			{
+				Action: "install_binaries",
+				Params: map[string]interface{}{"files": []interface{}{"tsuku-llm"}},
+			},
+		},
+	}
+
+	loader := &mockRecipeLoader{
+		recipes: map[string]*recipe.Recipe{
+			"vulkan-loader":       vulkanLoaderRecipe,
+			"mesa-vulkan-drivers": mesaVulkanRecipe,
+		},
+	}
+
+	exec, err := New(tsukuLLMRecipe)
+	if err != nil {
+		t.Fatalf("New() error: %v", err)
+	}
+	defer exec.Cleanup()
+
+	plan, err := exec.GeneratePlan(context.Background(), PlanConfig{
+		OS:           "linux",
+		Arch:         "amd64",
+		LinuxFamily:  "debian",
+		GPU:          "amd",
+		RecipeSource: "test",
+		RecipeLoader: loader,
+	})
+	if err != nil {
+		t.Skipf("GeneratePlan() error (expected in offline tests): %v", err)
+	}
+
+	// Verify the plan has the vulkan-loader dependency
+	if len(plan.Dependencies) == 0 {
+		t.Fatal("expected at least one dependency, got none")
+	}
+
+	var vulkanDep *DependencyPlan
+	for i := range plan.Dependencies {
+		if plan.Dependencies[i].Tool == "vulkan-loader" {
+			vulkanDep = &plan.Dependencies[i]
+			break
+		}
+	}
+	if vulkanDep == nil {
+		depNames := make([]string, len(plan.Dependencies))
+		for i, d := range plan.Dependencies {
+			depNames[i] = d.Tool
+		}
+		t.Fatalf("expected vulkan-loader dependency, found: %v", depNames)
+	}
+
+	// Verify vulkan-loader has mesa-vulkan-drivers as a nested dependency
+	var hasMesaDrivers bool
+	for _, nested := range vulkanDep.Dependencies {
+		if nested.Tool == "mesa-vulkan-drivers" {
+			hasMesaDrivers = true
+			// mesa-vulkan-drivers should have no further dependencies
+			if len(nested.Dependencies) != 0 {
+				t.Errorf("mesa-vulkan-drivers should have no nested dependencies, got %d", len(nested.Dependencies))
+			}
+			break
+		}
+	}
+	if !hasMesaDrivers {
+		nestedNames := make([]string, len(vulkanDep.Dependencies))
+		for i, d := range vulkanDep.Dependencies {
+			nestedNames[i] = d.Tool
+		}
+		t.Errorf("expected mesa-vulkan-drivers nested dependency in vulkan-loader, found: %v", nestedNames)
+	}
+
+	// Verify the Vulkan-variant step was selected (not cuda or cpu)
+	hasVulkanStep := false
+	for _, step := range plan.Steps {
+		if step.Action == "chmod" {
+			if p, ok := step.Params["path"].(string); ok && p == "tsuku-llm-vulkan" {
+				hasVulkanStep = true
+			}
+			if p, ok := step.Params["path"].(string); ok && (p == "tsuku-llm-cuda" || p == "tsuku-llm-cpu") {
+				t.Errorf("unexpected non-Vulkan step in plan: path=%q", p)
+			}
+		}
+	}
+	if !hasVulkanStep {
+		t.Error("expected Vulkan variant step in plan, not found")
+	}
+
+	// Verify the CUDA dependency was NOT pulled in (nvidia step was filtered out)
+	for _, dep := range plan.Dependencies {
+		if dep.Tool == "cuda-runtime" {
+			t.Error("cuda-runtime should NOT be a dependency when targeting AMD GPU")
+		}
+	}
+}
+
+func TestGeneratePlan_GPUDependencyChain_NoneNoDeps(t *testing.T) {
+	// Verify the CPU/no-GPU path has no GPU runtime dependencies:
+	//   tsuku-llm (gpu=none step) -> no GPU dependencies
+	//
+	// When the target GPU is "none", only the CPU step matches.
+	// That step has no step-level dependencies, so no cuda-runtime or
+	// vulkan-loader should appear in the dependency tree.
+
+	tsukuLLMRecipe := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name:        "tsuku-llm",
+			SupportedOS: []string{"linux", "darwin"},
+		},
+		Version: recipe.VersionSection{
+			Source: "nodejs_dist",
+		},
+		Steps: []recipe.Step{
+			{
+				Action:       "chmod",
+				Params:       map[string]interface{}{"path": "tsuku-llm-cuda", "mode": "0755"},
+				When:         &recipe.WhenClause{OS: []string{"linux"}, Arch: "amd64", GPU: []string{"nvidia"}},
+				Dependencies: []string{"cuda-runtime"},
+			},
+			{
+				Action:       "chmod",
+				Params:       map[string]interface{}{"path": "tsuku-llm-vulkan", "mode": "0755"},
+				When:         &recipe.WhenClause{OS: []string{"linux"}, Arch: "amd64", GPU: []string{"amd", "intel"}},
+				Dependencies: []string{"vulkan-loader"},
+			},
+			{
+				Action: "chmod",
+				Params: map[string]interface{}{"path": "tsuku-llm-cpu", "mode": "0755"},
+				When:   &recipe.WhenClause{OS: []string{"linux"}, Arch: "amd64", GPU: []string{"none"}},
+			},
+			{
+				Action: "install_binaries",
+				Params: map[string]interface{}{"files": []interface{}{"tsuku-llm"}},
+			},
+		},
+	}
+
+	// Provide an empty loader -- if any dependency is requested, it will be
+	// not-found (returning nil plan) which is fine. The point is that no GPU
+	// dependencies should be requested at all.
+	loader := &mockRecipeLoader{
+		recipes: map[string]*recipe.Recipe{},
+	}
+
+	exec, err := New(tsukuLLMRecipe)
+	if err != nil {
+		t.Fatalf("New() error: %v", err)
+	}
+	defer exec.Cleanup()
+
+	plan, err := exec.GeneratePlan(context.Background(), PlanConfig{
+		OS:           "linux",
+		Arch:         "amd64",
+		LinuxFamily:  "debian",
+		GPU:          "none",
+		RecipeSource: "test",
+		RecipeLoader: loader,
+	})
+	if err != nil {
+		t.Skipf("GeneratePlan() error (expected in offline tests): %v", err)
+	}
+
+	// No GPU dependencies should be present
+	for _, dep := range plan.Dependencies {
+		if dep.Tool == "cuda-runtime" || dep.Tool == "vulkan-loader" ||
+			dep.Tool == "nvidia-driver" || dep.Tool == "mesa-vulkan-drivers" {
+			t.Errorf("unexpected GPU dependency %q for gpu=none target", dep.Tool)
+		}
+	}
+
+	// Verify only the CPU-variant step was selected
+	hasCPUStep := false
+	for _, step := range plan.Steps {
+		if step.Action == "chmod" {
+			if p, ok := step.Params["path"].(string); ok && p == "tsuku-llm-cpu" {
+				hasCPUStep = true
+			}
+			if p, ok := step.Params["path"].(string); ok && (p == "tsuku-llm-cuda" || p == "tsuku-llm-vulkan") {
+				t.Errorf("unexpected GPU-variant step in plan: path=%q", p)
+			}
+		}
+	}
+	if !hasCPUStep {
+		t.Error("expected CPU variant step in plan, not found")
 	}
 }

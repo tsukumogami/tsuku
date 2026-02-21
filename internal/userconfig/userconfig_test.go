@@ -1047,6 +1047,183 @@ func TestAtomicWriteCreatesParentDirectory(t *testing.T) {
 	}
 }
 
+// --- LLM backend config tests (Scenario 15) ---
+
+func TestGetLLMBackendDefault(t *testing.T) {
+	cfg := DefaultConfig()
+	val, ok := cfg.Get("llm.backend")
+	if !ok {
+		t.Error("expected llm.backend key to exist")
+	}
+	if val != "" {
+		t.Errorf("expected empty string for default, got %q", val)
+	}
+}
+
+func TestLLMBackendDefault(t *testing.T) {
+	cfg := DefaultConfig()
+	if cfg.LLMBackend() != "" {
+		t.Errorf("expected LLMBackend() to default to empty string, got %q", cfg.LLMBackend())
+	}
+}
+
+func TestSetLLMBackendCPU(t *testing.T) {
+	cfg := DefaultConfig()
+
+	if err := cfg.Set("llm.backend", "cpu"); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if cfg.LLMBackend() != "cpu" {
+		t.Errorf("expected LLMBackend()='cpu', got %q", cfg.LLMBackend())
+	}
+
+	// Verify via Get
+	val, ok := cfg.Get("llm.backend")
+	if !ok {
+		t.Error("expected llm.backend key to exist")
+	}
+	if val != "cpu" {
+		t.Errorf("expected 'cpu' via Get, got %q", val)
+	}
+}
+
+func TestSetLLMBackendClearWithEmptyString(t *testing.T) {
+	cfg := DefaultConfig()
+
+	// Set to cpu first
+	if err := cfg.Set("llm.backend", "cpu"); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if cfg.LLMBackend() != "cpu" {
+		t.Errorf("expected LLMBackend()='cpu', got %q", cfg.LLMBackend())
+	}
+
+	// Clear with empty string
+	if err := cfg.Set("llm.backend", ""); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if cfg.LLMBackend() != "" {
+		t.Errorf("expected LLMBackend()='' after clearing, got %q", cfg.LLMBackend())
+	}
+
+	// Backend pointer should be nil after clearing
+	if cfg.LLM.Backend != nil {
+		t.Error("expected Backend to be nil after clearing with empty string")
+	}
+}
+
+func TestSetLLMBackendInvalid(t *testing.T) {
+	cfg := DefaultConfig()
+
+	err := cfg.Set("llm.backend", "invalid")
+	if err == nil {
+		t.Error("expected error for invalid backend value")
+	}
+
+	// Error message should list valid values
+	if err != nil && !strings.Contains(err.Error(), "cpu") {
+		t.Errorf("error should mention valid values, got: %v", err)
+	}
+}
+
+func TestSetLLMBackendCaseInsensitiveKey(t *testing.T) {
+	cfg := DefaultConfig()
+
+	if err := cfg.Set("LLM.BACKEND", "cpu"); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if cfg.LLMBackend() != "cpu" {
+		t.Errorf("expected LLMBackend()='cpu' (case insensitive key), got %q", cfg.LLMBackend())
+	}
+}
+
+func TestLLMBackendTOMLRoundTrip(t *testing.T) {
+	tmpDir := t.TempDir()
+	path := filepath.Join(tmpDir, "config.toml")
+
+	cfg := DefaultConfig()
+	backend := "cpu"
+	cfg.LLM.Backend = &backend
+
+	if err := cfg.saveToPath(path); err != nil {
+		t.Fatalf("failed to save: %v", err)
+	}
+
+	loaded, err := loadFromPath(path)
+	if err != nil {
+		t.Fatalf("failed to load: %v", err)
+	}
+	if loaded.LLMBackend() != "cpu" {
+		t.Errorf("expected LLMBackend()='cpu' after save/load, got %q", loaded.LLMBackend())
+	}
+}
+
+func TestLLMBackendTOMLRoundTripUnset(t *testing.T) {
+	tmpDir := t.TempDir()
+	path := filepath.Join(tmpDir, "config.toml")
+
+	cfg := DefaultConfig()
+	// Backend is nil (unset)
+
+	if err := cfg.saveToPath(path); err != nil {
+		t.Fatalf("failed to save: %v", err)
+	}
+
+	loaded, err := loadFromPath(path)
+	if err != nil {
+		t.Fatalf("failed to load: %v", err)
+	}
+	if loaded.LLMBackend() != "" {
+		t.Errorf("expected LLMBackend()='' after save/load of unset value, got %q", loaded.LLMBackend())
+	}
+}
+
+func TestLoadLLMBackendFromFile(t *testing.T) {
+	tmpDir := t.TempDir()
+	path := filepath.Join(tmpDir, "config.toml")
+
+	content := `telemetry = true
+
+[llm]
+backend = "cpu"
+`
+	err := os.WriteFile(path, []byte(content), 0644)
+	if err != nil {
+		t.Fatalf("failed to write test file: %v", err)
+	}
+
+	cfg, err := loadFromPath(path)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if cfg.LLMBackend() != "cpu" {
+		t.Errorf("expected LLMBackend()='cpu' from file, got %q", cfg.LLMBackend())
+	}
+}
+
+func TestAvailableKeysIncludesLLMBackend(t *testing.T) {
+	keys := AvailableKeys()
+	desc, ok := keys["llm.backend"]
+	if !ok {
+		t.Error("expected llm.backend in available keys")
+	}
+	if !strings.Contains(desc, "cpu") {
+		t.Errorf("expected llm.backend description to mention cpu, got %q", desc)
+	}
+}
+
+func TestSetLLMBackendRejectsMultipleInvalidValues(t *testing.T) {
+	cfg := DefaultConfig()
+
+	invalidValues := []string{"cuda", "vulkan", "metal", "gpu", "auto", "GPU", "CPU"}
+	for _, v := range invalidValues {
+		err := cfg.Set("llm.backend", v)
+		if err == nil {
+			t.Errorf("expected error for invalid backend value %q", v)
+		}
+	}
+}
+
 func TestLoadSecretsFromTOMLFile(t *testing.T) {
 	tmpDir := t.TempDir()
 	path := filepath.Join(tmpDir, "config.toml")

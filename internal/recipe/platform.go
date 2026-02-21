@@ -449,6 +449,18 @@ func (r *Recipe) ValidateStepsAgainstPlatforms() []error {
 					}
 				}
 			}
+
+			// Validate GPU filter values
+			if len(step.When.GPU) > 0 {
+				for _, gpu := range step.When.GPU {
+					if !slices.Contains(platform.ValidGPUTypes, gpu) {
+						errors = append(errors, &StepValidationError{
+							StepIndex: i,
+							Message:   fmt.Sprintf("when.gpu contains invalid value '%s'; must be one of: %v", gpu, platform.ValidGPUTypes),
+						})
+					}
+				}
+			}
 		}
 	}
 

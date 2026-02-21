@@ -16,7 +16,7 @@ import (
 func TestIntegration_ActivityResetsIdleTimeout(t *testing.T) {
 	skipIfModelCDNUnavailable(t)
 
-	tsukuHome := t.TempDir()
+	tsukuHome := setupTsukuHome(t)
 	os.Setenv("TSUKU_HOME", tsukuHome)
 	defer os.Unsetenv("TSUKU_HOME")
 

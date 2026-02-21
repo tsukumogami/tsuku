@@ -1,0 +1,56 @@
+# nvidia-driver - NVIDIA GPU kernel driver
+#
+# The NVIDIA kernel driver (including libcuda.so) is distributed via system
+# package managers and requires root to install. It is kernel-coupled and
+# cannot be installed to $TSUKU_HOME.
+#
+# This recipe verifies the driver is present and provides installation
+# commands per distro family when it is missing. It does not manage driver
+# versioning -- that is handled by the system package manager.
+#
+# Distro-specific notes:
+#   - Debian/Ubuntu: The "nvidia-driver" meta-package pulls the recommended
+#     driver version. Ubuntu users may also use "ubuntu-drivers install".
+#   - Fedora/RHEL: Requires RPM Fusion (nonfree) repository to be enabled.
+#     See https://rpmfusion.org/Configuration for setup instructions.
+#   - Arch Linux: The "nvidia" package tracks the latest driver for the
+#     current kernel. Use "nvidia-lts" for the LTS kernel.
+#   - openSUSE: The G06 driver series covers GPUs from Maxwell (900-series)
+#     and newer. Older GPUs need G05 or G04 packages.
+
+[metadata]
+name = "nvidia-driver"
+description = "NVIDIA GPU kernel driver"
+homepage = "https://www.nvidia.com/en-us/drivers/"
+supported_os = ["linux"]
+
+# Debian/Ubuntu
+[[steps]]
+action = "apt_install"
+packages = ["nvidia-driver"]
+
+# Fedora/RHEL (requires RPM Fusion nonfree repository)
+[[steps]]
+action = "dnf_install"
+packages = ["akmod-nvidia"]
+
+# Arch Linux
+[[steps]]
+action = "pacman_install"
+packages = ["nvidia"]
+
+# openSUSE
+[[steps]]
+action = "zypper_install"
+packages = ["nvidia-driver-G06-kmp-default"]
+
+# Verify the driver is functional
+[[steps]]
+action = "require_command"
+command = "nvidia-smi"
+
+[verify]
+command = "nvidia-smi --query-gpu=driver_version --format=csv,noheader"
+mode = "output"
+pattern = "."
+reason = "Driver versioning is managed by the system package manager; any valid output confirms the driver is functional"

@@ -6,7 +6,6 @@ version_format = "semver"
 supported_os = ["linux"]
 
 [version]
-github_repo = "oven-sh/bun"
 tag_prefix = "bun-v"
 
 [[steps]]

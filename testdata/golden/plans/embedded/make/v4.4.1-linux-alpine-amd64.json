@@ -1,0 +1,26 @@
+{
+  "format_version": 4,
+  "tool": "make",
+  "version": "4.4.1",
+  "platform": {
+    "os": "linux",
+    "arch": "amd64",
+    "linux_family": "alpine"
+  },
+  "deterministic": false,
+  "steps": [
+    {
+      "action": "apk_install",
+      "params": {
+        "packages": [
+          "make"
+        ]
+      },
+      "evaluable": false,
+      "deterministic": false
+    }
+  ],
+  "verify": {
+    "command": "gmake --version"
+  }
+}

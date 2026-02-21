@@ -182,7 +182,7 @@ func TestSandboxIntegration(t *testing.T) {
 		reqs := sandbox.ComputeSandboxRequirements(plan)
 
 		// Create debian target
-		debianTarget := platform.NewTarget("linux/amd64", "debian", "glibc")
+		debianTarget := platform.NewTarget("linux/amd64", "debian", "glibc", "")
 
 		// Test sandbox with multiple packages
 		result, err := exec.Sandbox(ctx, plan, debianTarget, reqs)

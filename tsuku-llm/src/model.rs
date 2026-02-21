@@ -8,6 +8,10 @@ use std::collections::HashMap;
 use crate::hardware::{GpuBackend, HardwareProfile};
 
 /// Inference backend for model execution.
+///
+/// GPU acceleration is required — CPU-only inference is not supported
+/// because models below 7B (the minimum for acceptable quality) are
+/// too slow on CPU to be practical.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Backend {
     /// NVIDIA CUDA acceleration
@@ -16,8 +20,6 @@ pub enum Backend {
     Metal,
     /// Vulkan acceleration (AMD, Intel, NVIDIA fallback)
     Vulkan,
-    /// CPU-only inference
-    Cpu,
 }
 
 impl std::fmt::Display for Backend {
@@ -26,7 +28,6 @@ impl std::fmt::Display for Backend {
             Backend::Cuda => write!(f, "cuda"),
             Backend::Metal => write!(f, "metal"),
             Backend::Vulkan => write!(f, "vulkan"),
-            Backend::Cpu => write!(f, "cpu"),
         }
     }
 }
@@ -39,19 +40,7 @@ impl std::str::FromStr for Backend {
             "cuda" => Ok(Backend::Cuda),
             "metal" => Ok(Backend::Metal),
             "vulkan" => Ok(Backend::Vulkan),
-            "cpu" => Ok(Backend::Cpu),
-            _ => Err(format!("unknown backend: {}", s)),
-        }
-    }
-}
-
-impl From<GpuBackend> for Backend {
-    fn from(gpu: GpuBackend) -> Self {
-        match gpu {
-            GpuBackend::Cuda => Backend::Cuda,
-            GpuBackend::Metal => Backend::Metal,
-            GpuBackend::Vulkan => Backend::Vulkan,
-            GpuBackend::None => Backend::Cpu,
+            _ => Err(format!("unknown backend: {} (gpu required, cpu not supported)", s)),
         }
     }
 }
@@ -76,9 +65,11 @@ pub struct ModelSpec {
 /// Error during model selection.
 #[derive(Debug, Clone)]
 pub enum SelectionError {
-    /// System doesn't meet minimum resource requirements
-    InsufficientResources {
-        ram_gb: f64,
+    /// No GPU detected — GPU acceleration is required
+    NoGpuDetected,
+    /// GPU doesn't have enough VRAM for the minimum model (7B)
+    InsufficientVram {
+        vram_gb: f64,
         minimum_gb: f64,
     },
     /// Config specifies unknown model name
@@ -95,11 +86,17 @@ pub enum SelectionError {
 impl std::fmt::Display for SelectionError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            SelectionError::InsufficientResources { ram_gb, minimum_gb } => {
+            SelectionError::NoGpuDetected => {
                 write!(
                     f,
-                    "insufficient resources: {:.1}GB RAM available, {:.1}GB required",
-                    ram_gb, minimum_gb
+                    "no GPU detected: tsuku-llm requires a GPU with at least 8 GB VRAM"
+                )
+            }
+            SelectionError::InsufficientVram { vram_gb, minimum_gb } => {
+                write!(
+                    f,
+                    "insufficient VRAM: {:.1} GB available, {:.1} GB required for minimum model (7B)",
+                    vram_gb, minimum_gb
                 )
             }
             SelectionError::InvalidConfigModel { name } => {
@@ -119,12 +116,14 @@ impl std::error::Error for SelectionError {}
 pub struct ModelEntry {
     /// Quantization level
     pub quantization: String,
-    /// Expected file size in bytes
+    /// Expected file size in bytes (total across all split files)
     pub size_bytes: u64,
-    /// SHA256 checksum
+    /// SHA256 checksum (of the first split file, or the single file)
     pub sha256: String,
-    /// Download URL
+    /// Download URL (first split file URL, or single file URL)
     pub download_url: String,
+    /// Number of split GGUF files (1 = single file, >1 = split)
+    pub split_count: u32,
     /// Supported backends for this model
     pub supported_backends: Vec<Backend>,
 }
@@ -146,42 +145,31 @@ impl ModelManifest {
     pub fn new() -> Self {
         let mut models = HashMap::new();
 
-        // Qwen 2.5 3B Instruct Q4
+        // Qwen 2.5 14B Instruct Q4 (split into 3 files, ~9 GB total)
         models.insert(
-            "qwen2.5-3b-instruct-q4".to_string(),
+            "qwen2.5-14b-instruct-q4".to_string(),
             ModelEntry {
                 quantization: "q4_k_m".to_string(),
-                size_bytes: 2_104_932_768,
-                sha256: "626b4a6678b86442240e33df819e00132d3ba7dddfe1cdc4fbb18e0a9615c62d".to_string(),
-                download_url: "https://huggingface.co/Qwen/Qwen2.5-3B-Instruct-GGUF/resolve/main/qwen2.5-3b-instruct-q4_k_m.gguf"
+                size_bytes: 9_147_539_680,
+                sha256: "".to_string(), // TODO: compute after download validation
+                download_url: "https://huggingface.co/Qwen/Qwen2.5-14B-Instruct-GGUF/resolve/main/qwen2.5-14b-instruct-q4_k_m-00001-of-00003.gguf"
                     .to_string(),
-                supported_backends: vec![Backend::Cuda, Backend::Metal, Backend::Vulkan, Backend::Cpu],
+                split_count: 3,
+                supported_backends: vec![Backend::Cuda, Backend::Metal, Backend::Vulkan],
             },
         );
 
-        // Qwen 2.5 1.5B Instruct Q4
+        // Qwen 2.5 7B Instruct Q4 (split into 2 files, ~4.7 GB total)
         models.insert(
-            "qwen2.5-1.5b-instruct-q4".to_string(),
+            "qwen2.5-7b-instruct-q4".to_string(),
             ModelEntry {
                 quantization: "q4_k_m".to_string(),
-                size_bytes: 1_117_320_736,
-                sha256: "6a1a2eb6d15622bf3c96857206351ba97e1af16c30d7a74ee38970e434e9407e".to_string(),
-                download_url: "https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct-GGUF/resolve/main/qwen2.5-1.5b-instruct-q4_k_m.gguf"
+                size_bytes: 4_940_752_032,
+                sha256: "".to_string(), // TODO: compute after download validation
+                download_url: "https://huggingface.co/Qwen/Qwen2.5-7B-Instruct-GGUF/resolve/main/qwen2.5-7b-instruct-q4_k_m-00001-of-00002.gguf"
                     .to_string(),
-                supported_backends: vec![Backend::Cuda, Backend::Metal, Backend::Vulkan, Backend::Cpu],
-            },
-        );
-
-        // Qwen 2.5 0.5B Instruct Q4
-        models.insert(
-            "qwen2.5-0.5b-instruct-q4".to_string(),
-            ModelEntry {
-                quantization: "q4_k_m".to_string(),
-                size_bytes: 491_400_032,
-                sha256: "74a4da8c9fdbcd15bd1f6d01d621410d31c6fc00986f5eb687824e7b93d7a9db".to_string(),
-                download_url: "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF/resolve/main/qwen2.5-0.5b-instruct-q4_k_m.gguf"
-                    .to_string(),
-                supported_backends: vec![Backend::Cuda, Backend::Metal, Backend::Vulkan, Backend::Cpu],
+                split_count: 2,
+                supported_backends: vec![Backend::Cuda, Backend::Metal, Backend::Vulkan],
             },
         );
 
@@ -214,14 +202,14 @@ pub struct ModelSelector {
     config: ModelConfig,
 }
 
-// Memory thresholds in bytes
+// VRAM thresholds in bytes.
+// Model VRAM usage (Q4_K_M with 24K context, approximate):
+//   14B: ~12.6 GB (model 8.1 GB + KV cache 4.5 GB)
+//   7B:  ~6.5 GB  (model 4.7 GB + KV cache 1.5 GB + compute 0.3 GB)
 const GB: u64 = 1_000_000_000;
-const MINIMUM_RAM_GB: f64 = 4.0;
-const VRAM_THRESHOLD_HIGH: u64 = 8 * GB;
-const VRAM_THRESHOLD_MED: u64 = 4 * GB;
-const RAM_THRESHOLD_HIGH: u64 = 16 * GB;
-const RAM_THRESHOLD_MED: u64 = 8 * GB;
-const RAM_THRESHOLD_MIN: u64 = 4 * GB;
+const VRAM_THRESHOLD_14B: u64 = 14 * GB;
+const VRAM_THRESHOLD_7B: u64 = 8 * GB;
+const MINIMUM_VRAM_GB: f64 = 8.0;
 
 impl ModelSelector {
     /// Create a new selector with the default manifest.
@@ -246,50 +234,42 @@ impl ModelSelector {
     }
 
     /// Select the best model for the given hardware profile.
+    ///
+    /// Requires a GPU with at least 8 GB VRAM. Returns an error if no
+    /// GPU is detected or VRAM is insufficient for the minimum model (7B).
     pub fn select(&self, profile: &HardwareProfile) -> Result<ModelSpec, SelectionError> {
         // Check for config overrides first
         if let Some(ref model_name) = self.config.local_model {
             return self.build_spec_from_override(model_name, profile);
         }
 
-        // Check minimum resources
-        let ram_gb = profile.ram_bytes as f64 / GB as f64;
-        if profile.ram_bytes < RAM_THRESHOLD_MIN {
-            return Err(SelectionError::InsufficientResources {
-                ram_gb,
-                minimum_gb: MINIMUM_RAM_GB,
+        // Require GPU
+        if profile.gpu_backend == GpuBackend::None {
+            return Err(SelectionError::NoGpuDetected);
+        }
+
+        // Require minimum VRAM for 7B model
+        if profile.vram_bytes < VRAM_THRESHOLD_7B {
+            let vram_gb = profile.vram_bytes as f64 / GB as f64;
+            return Err(SelectionError::InsufficientVram {
+                vram_gb,
+                minimum_gb: MINIMUM_VRAM_GB,
             });
         }
 
-        // Apply selection table
         let model_name = self.select_model_for_hardware(profile);
         let backend = self.select_backend(profile)?;
 
         self.build_spec(&model_name, backend)
     }
 
-    /// Select model based on hardware capabilities.
+    /// Select model based on VRAM. Caller must ensure GPU is present and
+    /// has at least VRAM_THRESHOLD_7B.
     fn select_model_for_hardware(&self, profile: &HardwareProfile) -> String {
-        let has_gpu = profile.gpu_backend != GpuBackend::None;
-
-        if has_gpu {
-            // GPU path: select based on VRAM
-            if profile.vram_bytes >= VRAM_THRESHOLD_HIGH {
-                "qwen2.5-3b-instruct-q4".to_string()
-            } else if profile.vram_bytes >= VRAM_THRESHOLD_MED {
-                "qwen2.5-1.5b-instruct-q4".to_string()
-            } else {
-                "qwen2.5-0.5b-instruct-q4".to_string()
-            }
+        if profile.vram_bytes >= VRAM_THRESHOLD_14B {
+            "qwen2.5-14b-instruct-q4".to_string()
         } else {
-            // CPU-only path: select based on system RAM
-            if profile.ram_bytes >= RAM_THRESHOLD_HIGH {
-                "qwen2.5-3b-instruct-q4".to_string()
-            } else if profile.ram_bytes >= RAM_THRESHOLD_MED {
-                "qwen2.5-1.5b-instruct-q4".to_string()
-            } else {
-                "qwen2.5-0.5b-instruct-q4".to_string()
-            }
+            "qwen2.5-7b-instruct-q4".to_string()
         }
     }
 
@@ -300,19 +280,21 @@ impl ModelSelector {
             let backend: Backend = backend_str.parse().map_err(|_| {
                 SelectionError::InvalidConfigBackend {
                     backend: backend_str.clone(),
-                    reason: format!(
-                        "must be one of: cuda, metal, vulkan, cpu"
-                    ),
+                    reason: "must be one of: cuda, metal, vulkan".to_string(),
                 }
             })?;
 
-            // Validate the backend is available
             self.validate_backend(backend, profile)?;
             return Ok(backend);
         }
 
         // Auto-select based on detected GPU
-        Ok(Backend::from(profile.gpu_backend))
+        match profile.gpu_backend {
+            GpuBackend::Cuda => Ok(Backend::Cuda),
+            GpuBackend::Metal => Ok(Backend::Metal),
+            GpuBackend::Vulkan => Ok(Backend::Vulkan),
+            GpuBackend::None => Err(SelectionError::NoGpuDetected),
+        }
     }
 
     /// Validate that a backend is available on the current hardware.
@@ -338,15 +320,11 @@ impl ModelSelector {
             }
             Backend::Vulkan => {
                 if profile.gpu_backend != GpuBackend::Vulkan && profile.gpu_backend != GpuBackend::Cuda {
-                    // Vulkan is also available on CUDA systems as fallback
                     return Err(SelectionError::InvalidConfigBackend {
                         backend: backend_str,
                         reason: "Vulkan not available on this system".to_string(),
                     });
                 }
-            }
-            Backend::Cpu => {
-                // CPU is always available
             }
         }
 
@@ -432,85 +410,44 @@ mod tests {
         }
     }
 
-    // Selection table tests
+    // Selection tests - GPU path
 
     #[test]
-    fn test_gpu_high_vram_selects_3b() {
-        // VRAM >= 8GB + GPU: 3B Q4
+    fn test_gpu_16gb_vram_selects_14b() {
+        let selector = ModelSelector::new();
+        let profile = make_profile(GpuBackend::Cuda, 16, 32);
+
+        let spec = selector.select(&profile).unwrap();
+        assert_eq!(spec.name, "qwen2.5-14b-instruct-q4");
+        assert_eq!(spec.backend, Backend::Cuda);
+    }
+
+    #[test]
+    fn test_gpu_8gb_vram_selects_7b() {
         let selector = ModelSelector::new();
         let profile = make_profile(GpuBackend::Cuda, 8, 16);
 
         let spec = selector.select(&profile).unwrap();
-        assert_eq!(spec.name, "qwen2.5-3b-instruct-q4");
+        assert_eq!(spec.name, "qwen2.5-7b-instruct-q4");
         assert_eq!(spec.backend, Backend::Cuda);
     }
 
     #[test]
-    fn test_gpu_medium_vram_selects_1_5b() {
-        // VRAM 4-8GB + GPU: 1.5B Q4
+    fn test_gpu_low_vram_returns_error() {
         let selector = ModelSelector::new();
-        let profile = make_profile(GpuBackend::Cuda, 6, 16);
-
-        let spec = selector.select(&profile).unwrap();
-        assert_eq!(spec.name, "qwen2.5-1.5b-instruct-q4");
-        assert_eq!(spec.backend, Backend::Cuda);
-    }
-
-    #[test]
-    fn test_gpu_low_vram_selects_0_5b() {
-        // VRAM < 4GB + GPU: 0.5B Q4
-        let selector = ModelSelector::new();
-        let profile = make_profile(GpuBackend::Vulkan, 2, 16);
-
-        let spec = selector.select(&profile).unwrap();
-        assert_eq!(spec.name, "qwen2.5-0.5b-instruct-q4");
-        assert_eq!(spec.backend, Backend::Vulkan);
-    }
-
-    #[test]
-    fn test_cpu_high_ram_selects_3b() {
-        // CPU only, RAM >= 16GB: 3B Q4
-        let selector = ModelSelector::new();
-        let profile = make_profile(GpuBackend::None, 0, 16);
-
-        let spec = selector.select(&profile).unwrap();
-        assert_eq!(spec.name, "qwen2.5-3b-instruct-q4");
-        assert_eq!(spec.backend, Backend::Cpu);
-    }
-
-    #[test]
-    fn test_cpu_medium_ram_selects_1_5b() {
-        // CPU only, RAM >= 8GB: 1.5B Q4
-        let selector = ModelSelector::new();
-        let profile = make_profile(GpuBackend::None, 0, 8);
-
-        let spec = selector.select(&profile).unwrap();
-        assert_eq!(spec.name, "qwen2.5-1.5b-instruct-q4");
-        assert_eq!(spec.backend, Backend::Cpu);
-    }
-
-    #[test]
-    fn test_cpu_low_ram_selects_0_5b() {
-        // CPU only, RAM >= 4GB: 0.5B Q4
-        let selector = ModelSelector::new();
-        let profile = make_profile(GpuBackend::None, 0, 4);
-
-        let spec = selector.select(&profile).unwrap();
-        assert_eq!(spec.name, "qwen2.5-0.5b-instruct-q4");
-        assert_eq!(spec.backend, Backend::Cpu);
-    }
-
-    #[test]
-    fn test_insufficient_ram_returns_error() {
-        // RAM < 4GB: local inference disabled
-        let selector = ModelSelector::new();
-        let profile = make_profile(GpuBackend::None, 0, 2);
+        let profile = make_profile(GpuBackend::Vulkan, 4, 16);
 
         let result = selector.select(&profile);
-        assert!(matches!(
-            result,
-            Err(SelectionError::InsufficientResources { .. })
-        ));
+        assert!(matches!(result, Err(SelectionError::InsufficientVram { .. })));
+    }
+
+    #[test]
+    fn test_no_gpu_returns_error() {
+        let selector = ModelSelector::new();
+        let profile = make_profile(GpuBackend::None, 0, 32);
+
+        let result = selector.select(&profile);
+        assert!(matches!(result, Err(SelectionError::NoGpuDetected)));
     }
 
     // Config override tests
@@ -518,29 +455,15 @@ mod tests {
     #[test]
     fn test_config_model_override() {
         let config = ModelConfig {
-            local_model: Some("qwen2.5-0.5b-instruct-q4".to_string()),
+            local_model: Some("qwen2.5-7b-instruct-q4".to_string()),
             local_backend: None,
         };
         let selector = ModelSelector::with_config(config);
         let profile = make_profile(GpuBackend::Cuda, 16, 32);
 
-        // Should use config model despite having plenty of VRAM
+        // Should use config model despite having plenty of VRAM for 14B
         let spec = selector.select(&profile).unwrap();
-        assert_eq!(spec.name, "qwen2.5-0.5b-instruct-q4");
-    }
-
-    #[test]
-    fn test_config_backend_override() {
-        let config = ModelConfig {
-            local_model: None,
-            local_backend: Some("cpu".to_string()),
-        };
-        let selector = ModelSelector::with_config(config);
-        let profile = make_profile(GpuBackend::Cuda, 16, 32);
-
-        // Should use CPU backend despite having CUDA
-        let spec = selector.select(&profile).unwrap();
-        assert_eq!(spec.backend, Backend::Cpu);
+        assert_eq!(spec.name, "qwen2.5-7b-instruct-q4");
     }
 
     #[test]
@@ -576,20 +499,17 @@ mod tests {
     }
 
     #[test]
-    fn test_incompatible_backend_returns_error() {
+    fn test_no_gpu_with_backend_override_returns_error() {
         let config = ModelConfig {
             local_model: None,
             local_backend: Some("cuda".to_string()),
         };
         let selector = ModelSelector::with_config(config);
-        // No GPU available
         let profile = make_profile(GpuBackend::None, 0, 16);
 
+        // No GPU detected, so selection fails before backend override matters
         let result = selector.select(&profile);
-        assert!(matches!(
-            result,
-            Err(SelectionError::InvalidConfigBackend { .. })
-        ));
+        assert!(matches!(result, Err(SelectionError::NoGpuDetected)));
     }
 
     // Backend selection tests
@@ -608,17 +528,18 @@ mod tests {
         assert_eq!("cuda".parse::<Backend>().unwrap(), Backend::Cuda);
         assert_eq!("metal".parse::<Backend>().unwrap(), Backend::Metal);
         assert_eq!("vulkan".parse::<Backend>().unwrap(), Backend::Vulkan);
-        assert_eq!("cpu".parse::<Backend>().unwrap(), Backend::Cpu);
         assert_eq!("CUDA".parse::<Backend>().unwrap(), Backend::Cuda); // case insensitive
+        assert!("cpu".parse::<Backend>().is_err());
         assert!("invalid".parse::<Backend>().is_err());
     }
 
     #[test]
     fn test_model_manifest_has_all_models() {
         let manifest = ModelManifest::new();
-        assert!(manifest.get("qwen2.5-3b-instruct-q4").is_some());
-        assert!(manifest.get("qwen2.5-1.5b-instruct-q4").is_some());
-        assert!(manifest.get("qwen2.5-0.5b-instruct-q4").is_some());
+        assert!(manifest.get("qwen2.5-14b-instruct-q4").is_some());
+        assert!(manifest.get("qwen2.5-7b-instruct-q4").is_some());
+        assert!(manifest.get("qwen2.5-3b-instruct-q4").is_none()); // removed: below quality floor
+        assert!(manifest.get("qwen2.5-0.5b-instruct-q4").is_none()); // removed: below quality floor
     }
 
     #[test]
@@ -630,7 +551,6 @@ mod tests {
         assert!(!spec.name.is_empty());
         assert!(!spec.quantization.is_empty());
         assert!(spec.size_bytes > 0);
-        assert!(!spec.sha256.is_empty());
         assert!(!spec.download_url.is_empty());
     }
 }

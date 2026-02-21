@@ -246,6 +246,11 @@
       "recipe": "spatialite",
       "issue": "https://github.com/tsukumogami/tsuku/issues/1662",
       "reason": "Transient network error - 502 Bad Gateway downloading dependencies"
+    },
+    {
+      "recipe": "tsuku-llm",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1769",
+      "reason": "No published release artifacts yet (tsukumogami/tsuku-llm repo not created)"
     }
   ]
 }

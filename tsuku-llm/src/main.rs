@@ -96,7 +96,7 @@ fn parse_duration(s: &str) -> Result<Duration, String> {
             let unit = &s[unit_start..i];
 
             let multiplier = match unit {
-                "ns" => continue, // Nanoseconds too small, skip
+                "ns" => continue,        // Nanoseconds too small, skip
                 "us" | "µs" => continue, // Microseconds too small, skip
                 "ms" => {
                     // Milliseconds: only add if >= 1000
@@ -355,7 +355,11 @@ impl InferenceService for LlmServer {
 
         // Build prompt from messages using ChatML format
         let prompt = self.build_prompt(&req.system_prompt, &req.messages, &req.tools);
-        debug!("Built prompt ({} chars):\n{}", prompt.len(), &prompt[..prompt.len().min(500)]);
+        debug!(
+            "Built prompt ({} chars):\n{}",
+            prompt.len(),
+            &prompt[..prompt.len().min(500)]
+        );
 
         // Acquire context lock for inference
         let mut ctx = self.context.lock().await;
@@ -383,7 +387,7 @@ impl InferenceService for LlmServer {
         let max_tokens = if req.max_tokens > 0 {
             req.max_tokens as usize
         } else {
-            512 // Default if not specified
+            4096 // Default: enough for extract_pattern JSON with platform mappings
         };
         let mut pos = tokens.len() as i32;
 
@@ -418,9 +422,10 @@ impl InferenceService for LlmServer {
             let logits = ctx.get_logits(logits_idx);
             let next_token = self.sampler.sample(logits);
 
-            // Check for EOS (token 0 or 2 are common EOS tokens)
-            if next_token == 0 || next_token == 2 {
-                debug!("EOS token {} encountered", next_token);
+            // Check for end-of-generation tokens using the model's vocabulary.
+            // For Qwen 2.5, this includes <|im_end|> (151645), <|endoftext|> (151643), etc.
+            if self.model.is_eog(next_token) {
+                debug!("EOG token {} encountered", next_token);
                 break;
             }
 
@@ -463,7 +468,10 @@ impl InferenceService for LlmServer {
         } else if !req.tools.is_empty() {
             // Try to parse tool call from content (using JSON extraction)
             if let Some(tool_call) = Self::parse_tool_call(&content) {
-                info!("Parsed tool call: {} with args {}", tool_call.name, tool_call.arguments_json);
+                info!(
+                    "Parsed tool call: {} with args {}",
+                    tool_call.name, tool_call.arguments_json
+                );
                 tool_calls.push(tool_call);
                 "tool_use".to_string()
             } else {
@@ -614,10 +622,7 @@ async fn wait_for_in_flight(
         }
 
         if start.elapsed() >= timeout {
-            warn!(
-                "Grace period expired with {} in-flight requests",
-                count
-            );
+            warn!("Grace period expired with {} in-flight requests", count);
             return false;
         }
 
@@ -694,11 +699,20 @@ async fn main() -> Result<()> {
         hardware_profile.gpu_backend
     );
 
-    // Select and load model
-    let selector = model::ModelSelector::new();
-    let model_spec = selector.select(&hardware_profile).context("Model selection failed")?;
+    // Select and load model (env overrides for testing)
+    let model_config = model::ModelConfig {
+        local_model: std::env::var("TSUKU_LLM_MODEL").ok().filter(|s| !s.is_empty()),
+        local_backend: std::env::var("TSUKU_LLM_BACKEND").ok().filter(|s| !s.is_empty()),
+    };
+    let selector = model::ModelSelector::with_config(model_config);
+    let model_spec = selector
+        .select(&hardware_profile)
+        .context("Model selection failed")?;
     let model_name = model_spec.name.clone();
-    info!("Selected model: {} (backend: {:?})", model_name, model_spec.backend);
+    info!(
+        "Selected model: {} (backend: {:?})",
+        model_name, model_spec.backend
+    );
 
     // Get models directory
     let models_dir = std::env::var("TSUKU_HOME")
@@ -718,10 +732,7 @@ async fn main() -> Result<()> {
     if !model_manager.is_available(&model_name).await {
         info!("Model not found locally, downloading...");
         let download_future = model_manager.download(&model_name, |progress| {
-            info!(
-                "Download progress: {} bytes",
-                progress.bytes_downloaded
-            );
+            info!("Download progress: {} bytes", progress.bytes_downloaded);
         });
 
         tokio::select! {
@@ -741,10 +752,7 @@ async fn main() -> Result<()> {
 
     // Load model (blocking operation, run in spawn_blocking)
     // Check for SIGTERM during model loading
-    let model_params = match model_spec.backend {
-        model::Backend::Cpu => ModelParams::for_cpu(),
-        _ => ModelParams::for_gpu(),
-    };
+    let model_params = ModelParams::for_gpu();
     let load_future = tokio::task::spawn_blocking({
         let path = model_path.clone();
         move || LlamaModel::load_from_file(&path, model_params)
@@ -752,9 +760,22 @@ async fn main() -> Result<()> {
 
     let model = tokio::select! {
         result = load_future => {
-            result
-                .context("Model loading task panicked")?
-                .context("Failed to load model")?
+            match result.context("Model loading task panicked")? {
+                Ok(m) => m,
+                Err(e) => {
+                    // Model loading failed -- this is where a compiled-in GPU backend
+                    // fails to initialize (e.g., Vulkan loader missing, CUDA driver
+                    // incompatible). Write a structured error to stderr.
+                    let compiled = hardware::compiled_backend();
+                    let error_msg = hardware::format_backend_init_error(
+                        compiled, &hardware_profile,
+                    );
+                    eprintln!("{}", error_msg);
+                    error!("Model loading failed: {}", e);
+                    cleanup_files(&socket, &lock);
+                    std::process::exit(1);
+                }
+            }
         }
         _ = sigterm.recv() => {
             info!("SIGTERM received during model loading, cleaning up");
@@ -767,16 +788,34 @@ async fn main() -> Result<()> {
     let model = Arc::new(model);
     info!("Model loaded successfully");
 
-    // Create inference context with larger context window and batch size.
-    // Default context is 512, but we need more for tool calling prompts.
-    // Multi-turn conversations with tool results can easily exceed 8K tokens.
-    // Batch size must be large enough to process the entire prompt at once.
+    // Create inference context with a VRAM-aware context window.
+    // Recipe generation prompts can reach ~27K tokens. We cap context size
+    // rather than using n_ctx_train() because larger models have huge training
+    // contexts (14B has 128K) that would exhaust GPU VRAM on KV cache alone.
+    //
+    // Context budget: 14B Q4_K_M model = 8.1 GB, KV cache = ~0.19 GB/K tokens.
+    // On a 16 GB GPU (~13.7 GB free), 32K context would need 6 GB KV = 14.1 GB total (OOM).
+    // 24K context needs 4.5 GB KV = 12.6 GB total (fits with headroom).
+    const MAX_CTX: u32 = 24576;
+    let n_ctx = model.n_ctx_train().min(MAX_CTX);
     let context_params = ContextParams {
-        n_ctx: 16384,
-        n_batch: 16384,
+        n_ctx,
+        n_batch: n_ctx,
         ..Default::default()
     };
-    let context = LlamaContext::new(model.clone(), context_params).context("Failed to create context")?;
+    let context = match LlamaContext::new(model.clone(), context_params) {
+        Ok(ctx) => ctx,
+        Err(e) => {
+            // Context creation can also fail when the GPU backend can't initialize
+            // (e.g., insufficient VRAM, unsupported GPU API version).
+            let compiled = hardware::compiled_backend();
+            let error_msg = hardware::format_backend_init_error(compiled, &hardware_profile);
+            eprintln!("{}", error_msg);
+            error!("Context creation failed: {}", e);
+            cleanup_files(&socket, &lock);
+            std::process::exit(1);
+        }
+    };
     info!("Inference context created");
 
     // Create shutdown channel

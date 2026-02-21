@@ -17,8 +17,8 @@ import "strings"
 var ValidLinuxFamilies = []string{"debian", "rhel", "arch", "alpine", "suse"}
 
 // Target represents the platform being targeted for plan generation.
-// It combines platform (os/arch) with linux_family and libc for filtering
-// package manager actions and binary compatibility.
+// It combines platform (os/arch) with linux_family, libc, and gpu for filtering
+// package manager actions, binary compatibility, and GPU-aware recipe selection.
 type Target struct {
 	// Platform is the combined os/arch string (e.g., "linux/amd64", "darwin/arm64").
 	Platform string
@@ -34,15 +34,28 @@ type Target struct {
 	// (darwin, windows), this field is empty.
 	// Access via Libc() method.
 	libc string
+
+	// gpu identifies the primary GPU vendor (e.g., "nvidia", "amd", "intel", "apple", "none").
+	// Populated by DetectGPU() during target detection.
+	// Access via GPU() method.
+	gpu string
 }
 
-// NewTarget creates a Target with the given platform, linux family, and libc.
-func NewTarget(platform, linuxFamily, libc string) Target {
+// NewTarget creates a Target with the given platform, linux family, libc, and gpu.
+func NewTarget(platform, linuxFamily, libc, gpu string) Target {
 	return Target{
 		Platform:    platform,
 		linuxFamily: linuxFamily,
 		libc:        libc,
+		gpu:         gpu,
 	}
+}
+
+// SetGPU returns a copy of the Target with the gpu field set to the given value.
+// This is useful in tests that don't care about GPU and construct targets without it.
+func (t Target) SetGPU(gpu string) Target {
+	t.gpu = gpu
+	return t
 }
 
 // OS returns the operating system from the Platform field.
@@ -80,4 +93,10 @@ func (t Target) LinuxFamily() string {
 // Returns empty string for non-Linux platforms.
 func (t Target) Libc() string {
 	return t.libc
+}
+
+// GPU returns the primary GPU vendor.
+// Returns one of: "nvidia", "amd", "intel", "apple", "none", or "".
+func (t Target) GPU() string {
+	return t.gpu
 }

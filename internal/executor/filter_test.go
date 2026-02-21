@@ -20,7 +20,7 @@ func TestFilterStepsByTarget(t *testing.T) {
 		{
 			name:     "empty steps returns empty",
 			steps:    []recipe.Step{},
-			target:   platform.NewTarget("linux/amd64", "debian", "glibc"),
+			target:   platform.NewTarget("linux/amd64", "debian", "glibc", ""),
 			wantLen:  0,
 			wantActs: nil,
 		},
@@ -30,7 +30,7 @@ func TestFilterStepsByTarget(t *testing.T) {
 				{Action: "download_file", Params: map[string]interface{}{}},
 				{Action: "extract", Params: map[string]interface{}{}},
 			},
-			target:   platform.NewTarget("linux/amd64", "debian", "glibc"),
+			target:   platform.NewTarget("linux/amd64", "debian", "glibc", ""),
 			wantLen:  2,
 			wantActs: []string{"download_file", "extract"},
 		},
@@ -39,7 +39,7 @@ func TestFilterStepsByTarget(t *testing.T) {
 			steps: []recipe.Step{
 				{Action: "apt_install", Params: map[string]interface{}{"packages": []interface{}{"curl"}}},
 			},
-			target:   platform.NewTarget("linux/amd64", "rhel", "glibc"),
+			target:   platform.NewTarget("linux/amd64", "rhel", "glibc", ""),
 			wantLen:  0,
 			wantActs: nil,
 		},
@@ -48,7 +48,7 @@ func TestFilterStepsByTarget(t *testing.T) {
 			steps: []recipe.Step{
 				{Action: "brew_cask", Params: map[string]interface{}{"packages": []interface{}{"docker"}}},
 			},
-			target:   platform.NewTarget("linux/amd64", "debian", "glibc"),
+			target:   platform.NewTarget("linux/amd64", "debian", "glibc", ""),
 			wantLen:  0,
 			wantActs: nil,
 		},
@@ -57,7 +57,7 @@ func TestFilterStepsByTarget(t *testing.T) {
 			steps: []recipe.Step{
 				{Action: "apt_install", Params: map[string]interface{}{"packages": []interface{}{"curl"}}},
 			},
-			target:   platform.NewTarget("linux/amd64", "debian", "glibc"),
+			target:   platform.NewTarget("linux/amd64", "debian", "glibc", ""),
 			wantLen:  1,
 			wantActs: []string{"apt_install"},
 		},
@@ -66,7 +66,7 @@ func TestFilterStepsByTarget(t *testing.T) {
 			steps: []recipe.Step{
 				{Action: "brew_cask", Params: map[string]interface{}{"packages": []interface{}{"docker"}}},
 			},
-			target:   platform.NewTarget("darwin/arm64", "", ""),
+			target:   platform.NewTarget("darwin/arm64", "", "", ""),
 			wantLen:  1,
 			wantActs: []string{"brew_cask"},
 		},
@@ -75,7 +75,7 @@ func TestFilterStepsByTarget(t *testing.T) {
 			steps: []recipe.Step{
 				{Action: "dnf_install", Params: map[string]interface{}{"packages": []interface{}{"docker"}}},
 			},
-			target:   platform.NewTarget("linux/amd64", "rhel", "glibc"),
+			target:   platform.NewTarget("linux/amd64", "rhel", "glibc", ""),
 			wantLen:  1,
 			wantActs: []string{"dnf_install"},
 		},
@@ -84,7 +84,7 @@ func TestFilterStepsByTarget(t *testing.T) {
 			steps: []recipe.Step{
 				{Action: "pacman_install", Params: map[string]interface{}{"packages": []interface{}{"curl"}}},
 			},
-			target:   platform.NewTarget("linux/amd64", "debian", "glibc"),
+			target:   platform.NewTarget("linux/amd64", "debian", "glibc", ""),
 			wantLen:  0,
 			wantActs: nil,
 		},
@@ -97,7 +97,7 @@ func TestFilterStepsByTarget(t *testing.T) {
 					Params: map[string]interface{}{},
 				},
 			},
-			target:   platform.NewTarget("darwin/arm64", "", ""),
+			target:   platform.NewTarget("darwin/arm64", "", "", ""),
 			wantLen:  0,
 			wantActs: nil,
 		},
@@ -110,7 +110,7 @@ func TestFilterStepsByTarget(t *testing.T) {
 					Params: map[string]interface{}{},
 				},
 			},
-			target:   platform.NewTarget("linux/amd64", "debian", "glibc"),
+			target:   platform.NewTarget("linux/amd64", "debian", "glibc", ""),
 			wantLen:  1,
 			wantActs: []string{"download_file"},
 		},
@@ -122,7 +122,7 @@ func TestFilterStepsByTarget(t *testing.T) {
 				{Action: "dnf_install", Params: map[string]interface{}{"packages": []interface{}{"docker"}}},
 				{Action: "download_file", Params: map[string]interface{}{}},
 			},
-			target:   platform.NewTarget("linux/amd64", "debian", "glibc"),
+			target:   platform.NewTarget("linux/amd64", "debian", "glibc", ""),
 			wantLen:  2,
 			wantActs: []string{"apt_install", "download_file"},
 		},
@@ -134,7 +134,7 @@ func TestFilterStepsByTarget(t *testing.T) {
 				{Action: "brew_install", Params: map[string]interface{}{"packages": []interface{}{"wget"}}},
 				{Action: "download_file", Params: map[string]interface{}{}},
 			},
-			target:   platform.NewTarget("darwin/arm64", "", ""),
+			target:   platform.NewTarget("darwin/arm64", "", "", ""),
 			wantLen:  3,
 			wantActs: []string{"brew_cask", "brew_install", "download_file"},
 		},
@@ -174,31 +174,31 @@ func TestStepMatchesTarget(t *testing.T) {
 		{
 			name:   "action without constraint matches any target",
 			step:   recipe.Step{Action: "extract", Params: map[string]interface{}{}},
-			target: platform.NewTarget("linux/amd64", "rhel", "glibc"),
+			target: platform.NewTarget("linux/amd64", "rhel", "glibc", ""),
 			want:   true,
 		},
 		{
 			name:   "apt_install matches debian",
 			step:   recipe.Step{Action: "apt_install", Params: map[string]interface{}{"packages": []interface{}{"curl"}}},
-			target: platform.NewTarget("linux/amd64", "debian", "glibc"),
+			target: platform.NewTarget("linux/amd64", "debian", "glibc", ""),
 			want:   true,
 		},
 		{
 			name:   "apt_install does not match rhel",
 			step:   recipe.Step{Action: "apt_install", Params: map[string]interface{}{"packages": []interface{}{"curl"}}},
-			target: platform.NewTarget("linux/amd64", "rhel", "glibc"),
+			target: platform.NewTarget("linux/amd64", "rhel", "glibc", ""),
 			want:   false,
 		},
 		{
 			name:   "brew_install matches darwin",
 			step:   recipe.Step{Action: "brew_install", Params: map[string]interface{}{"packages": []interface{}{"curl"}}},
-			target: platform.NewTarget("darwin/arm64", "", ""),
+			target: platform.NewTarget("darwin/arm64", "", "", ""),
 			want:   true,
 		},
 		{
 			name:   "brew_install does not match linux",
 			step:   recipe.Step{Action: "brew_install", Params: map[string]interface{}{"packages": []interface{}{"curl"}}},
-			target: platform.NewTarget("linux/amd64", "debian", "glibc"),
+			target: platform.NewTarget("linux/amd64", "debian", "glibc", ""),
 			want:   false,
 		},
 		{
@@ -208,7 +208,7 @@ func TestStepMatchesTarget(t *testing.T) {
 				When:   &recipe.WhenClause{OS: []string{"darwin"}},
 				Params: map[string]interface{}{},
 			},
-			target: platform.NewTarget("linux/amd64", "debian", "glibc"),
+			target: platform.NewTarget("linux/amd64", "debian", "glibc", ""),
 			want:   false,
 		},
 		{
@@ -218,7 +218,7 @@ func TestStepMatchesTarget(t *testing.T) {
 				When:   &recipe.WhenClause{Platform: []string{"darwin/arm64"}},
 				Params: map[string]interface{}{},
 			},
-			target: platform.NewTarget("linux/amd64", "debian", "glibc"),
+			target: platform.NewTarget("linux/amd64", "debian", "glibc", ""),
 			want:   false,
 		},
 		{
@@ -228,7 +228,7 @@ func TestStepMatchesTarget(t *testing.T) {
 				When:   &recipe.WhenClause{Platform: []string{"linux/amd64"}},
 				Params: map[string]interface{}{},
 			},
-			target: platform.NewTarget("linux/amd64", "debian", "glibc"),
+			target: platform.NewTarget("linux/amd64", "debian", "glibc", ""),
 			want:   true,
 		},
 		{
@@ -238,7 +238,7 @@ func TestStepMatchesTarget(t *testing.T) {
 				When:   &recipe.WhenClause{Platform: []string{"linux/arm64"}},
 				Params: map[string]interface{}{"packages": []interface{}{"curl"}},
 			},
-			target: platform.NewTarget("linux/amd64", "debian", "glibc"),
+			target: platform.NewTarget("linux/amd64", "debian", "glibc", ""),
 			want:   false,
 		},
 		{
@@ -248,7 +248,7 @@ func TestStepMatchesTarget(t *testing.T) {
 				When:   &recipe.WhenClause{Platform: []string{"linux/amd64"}},
 				Params: map[string]interface{}{"packages": []interface{}{"curl"}},
 			},
-			target: platform.NewTarget("linux/amd64", "debian", "glibc"),
+			target: platform.NewTarget("linux/amd64", "debian", "glibc", ""),
 			want:   true,
 		},
 	}
@@ -259,6 +259,84 @@ func TestStepMatchesTarget(t *testing.T) {
 			got := stepMatchesTarget(tt.step, tt.target)
 			if got != tt.want {
 				t.Errorf("stepMatchesTarget() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestFilterStepsByTarget_GPU(t *testing.T) {
+	t.Parallel()
+
+	steps := []recipe.Step{
+		{
+			Action: "chmod",
+			When:   &recipe.WhenClause{GPU: []string{"nvidia"}},
+			Params: map[string]interface{}{"path": "cuda-binary", "mode": "0755"},
+		},
+		{
+			Action: "chmod",
+			When:   &recipe.WhenClause{GPU: []string{"amd", "intel"}},
+			Params: map[string]interface{}{"path": "vulkan-binary", "mode": "0755"},
+		},
+		{
+			Action: "chmod",
+			When:   &recipe.WhenClause{GPU: []string{"none"}},
+			Params: map[string]interface{}{"path": "cpu-binary", "mode": "0755"},
+		},
+		{
+			Action: "install_binaries",
+			Params: map[string]interface{}{"files": []interface{}{"tool"}},
+		},
+	}
+
+	tests := []struct {
+		name     string
+		target   platform.Target
+		wantLen  int
+		wantActs []string
+	}{
+		{
+			name:     "nvidia GPU selects nvidia step plus unconditional",
+			target:   platform.NewTarget("linux/amd64", "debian", "glibc", "nvidia"),
+			wantLen:  2,
+			wantActs: []string{"chmod", "install_binaries"},
+		},
+		{
+			name:     "amd GPU selects amd/intel step plus unconditional",
+			target:   platform.NewTarget("linux/amd64", "debian", "glibc", "amd"),
+			wantLen:  2,
+			wantActs: []string{"chmod", "install_binaries"},
+		},
+		{
+			name:     "no GPU selects none step plus unconditional",
+			target:   platform.NewTarget("linux/amd64", "debian", "glibc", "none"),
+			wantLen:  2,
+			wantActs: []string{"chmod", "install_binaries"},
+		},
+		{
+			name:     "empty GPU string excludes all GPU-filtered steps",
+			target:   platform.NewTarget("linux/amd64", "debian", "glibc", ""),
+			wantLen:  1,
+			wantActs: []string{"install_binaries"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			got := FilterStepsByTarget(steps, tt.target)
+			if len(got) != tt.wantLen {
+				t.Errorf("FilterStepsByTarget() returned %d steps, want %d", len(got), tt.wantLen)
+			}
+			if tt.wantActs != nil {
+				for i, step := range got {
+					if i >= len(tt.wantActs) {
+						break
+					}
+					if step.Action != tt.wantActs[i] {
+						t.Errorf("step[%d].Action = %s, want %s", i, step.Action, tt.wantActs[i])
+					}
+				}
 			}
 		})
 	}

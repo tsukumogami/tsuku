@@ -5,14 +5,35 @@ homepage = "https://www.gnu.org/software/make/"
 # Homebrew's make installs as gmake on macOS, make on Linux - see #1581
 binaries = ["bin/gmake"]
 
+# glibc Linux: Homebrew bottles
 [[steps]]
 action = "homebrew"
 formula = "make"
+when = { os = ["linux"], libc = ["glibc"] }
 
 [[steps]]
 action = "install_binaries"
 install_mode = "directory"
 outputs = ["bin/gmake"]
+when = { os = ["linux"], libc = ["glibc"] }
+
+# musl Linux: System packages
+[[steps]]
+action = "apk_install"
+packages = ["make"]
+when = { os = ["linux"], libc = ["musl"] }
+
+# macOS: Homebrew
+[[steps]]
+action = "homebrew"
+formula = "make"
+when = { os = ["darwin"] }
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = ["bin/gmake"]
+when = { os = ["darwin"] }
 
 [verify]
 # Use PATH-based verification since binary name differs by platform

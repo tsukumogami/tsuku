@@ -3,7 +3,7 @@ name = "railway"
 description = "Railway CLI"
 homepage = "https://github.com/railwayapp/cli"
 version_format = "semver"
-unsupported_platforms = ["linux/arm64", "linux/alpine"]
+unsupported_platforms = ["linux/arm64"]
 
 [[steps]]
 action = "github_archive"
