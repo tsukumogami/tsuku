@@ -10,7 +10,9 @@ rationale: |
 
 # DESIGN: Ecosystem Name Resolution
 
-**Status:** Planned
+## Status
+
+Planned
 
 ## Implementation Issues
 
