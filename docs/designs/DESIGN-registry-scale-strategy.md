@@ -56,7 +56,7 @@ Implements [#1187](https://github.com/tsukumogami/tsuku/issues/1187). See [DESIG
 | ~~[#1273](https://github.com/tsukumogami/tsuku/issues/1273)~~ | ~~Structured JSON output for CLI + batch integration~~ | ~~None~~ | ~~testable~~ |
 | ~~[#1412](https://github.com/tsukumogami/tsuku/issues/1412)~~ | ~~Scheduled triggers for queue seeding and batch generation~~ | ~~[#1268](https://github.com/tsukumogami/tsuku/issues/1268)~~ | ~~testable~~ |
 
-Implements [#1189](https://github.com/tsukumogami/tsuku/issues/1189). See [DESIGN-batch-recipe-generation.md](DESIGN-batch-recipe-generation.md) for issue details.
+Implements [#1189](https://github.com/tsukumogami/tsuku/issues/1189). See [DESIGN-batch-recipe-generation.md](current/DESIGN-batch-recipe-generation.md) for issue details.
 
 ### Milestone: [Failure Backend](https://github.com/tsukumogami/tsuku/milestone/53)
 
@@ -152,7 +152,7 @@ graph TD
     class I1273 done
     class I1266 done
     class I1190 needsDesign
-    class I1277 needsDesign
+    class I1277 ready
     class I1278 blocked
     class I1412 done
     class I1191 blocked
