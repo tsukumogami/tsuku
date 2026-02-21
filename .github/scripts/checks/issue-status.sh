@@ -61,6 +61,9 @@ if [[ ! -f "$DOC_PATH" ]]; then
     exit $EXIT_ERROR
 fi
 
+# Export for emit_fail to include in error messages (when called standalone)
+export VALIDATE_DOC_PATH="${VALIDATE_DOC_PATH:-$DOC_PATH}"
+
 # Check for required tools
 if ! command -v gh &> /dev/null; then
     echo "Warning: gh CLI not found, skipping issue status validation" >&2
