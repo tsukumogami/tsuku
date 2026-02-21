@@ -186,6 +186,6 @@ Total scenarios: 14
 - `grep -l 'ci-batch-config' docs/workflow-validation-guide.md CONTRIBUTING.md`
 - `grep -l 'batch' CONTRIBUTING.md`
 **Expected**: At least one of `docs/workflow-validation-guide.md` or `CONTRIBUTING.md` documents: (1) what batch sizes control and where they're configured, (2) how to use the `batch_size_override` input, (3) the valid range 1-50, and (4) guidelines for when to increase or decrease batch sizes. `CONTRIBUTING.md` mentions that recipe CI uses batched jobs.
-**Status**: pending
+**Status**: passed (validated #1816)
 
 ---
