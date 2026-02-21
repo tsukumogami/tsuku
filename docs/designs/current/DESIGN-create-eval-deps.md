@@ -1,5 +1,5 @@
 ---
-status: Accepted
+status: Current
 problem: |
   When tsuku create runs with sandbox validation enabled (the default), plan
   generation fails for ecosystem recipes (npm, cargo, pypi, gem) because the
@@ -29,7 +29,7 @@ rationale: |
 
 ## Status
 
-Accepted
+Current
 
 ## Context and Problem Statement
 
