@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-02-20T06:00:01Z",
+  "updated_at": "2026-02-21T06:14:54Z",
   "entries": [
     {
       "name": "bat",
@@ -9,8 +9,8 @@
       "status": "failed",
       "confidence": "curated",
       "disambiguated_at": null,
-      "failure_count": 2,
-      "next_retry_at": "2026-02-19T14:38:38.488971775Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-02-24T06:13:30.875620816Z"
     },
     {
       "name": "delta",
@@ -19,8 +19,8 @@
       "status": "failed",
       "confidence": "curated",
       "disambiguated_at": null,
-      "failure_count": 2,
-      "next_retry_at": "2026-02-19T14:38:40.495680713Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-02-24T06:13:32.884275436Z"
     },
     {
       "name": "dive",
@@ -29,8 +29,8 @@
       "status": "failed",
       "confidence": "curated",
       "disambiguated_at": null,
-      "failure_count": 2,
-      "next_retry_at": "2026-02-19T14:38:42.502887421Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-02-24T06:13:34.893587332Z"
     },
     {
       "name": "eza",
@@ -59,8 +59,8 @@
       "status": "failed",
       "confidence": "curated",
       "disambiguated_at": null,
-      "failure_count": 2,
-      "next_retry_at": "2026-02-19T14:38:44.510364616Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-02-24T06:13:36.90236253Z"
     },
     {
       "name": "jq",
@@ -69,8 +69,8 @@
       "status": "failed",
       "confidence": "curated",
       "disambiguated_at": null,
-      "failure_count": 2,
-      "next_retry_at": "2026-02-19T14:38:46.517590309Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-02-24T06:13:38.911666679Z"
     },
     {
       "name": "ko",
@@ -79,8 +79,8 @@
       "status": "failed",
       "confidence": "curated",
       "disambiguated_at": null,
-      "failure_count": 2,
-      "next_retry_at": "2026-02-19T14:38:48.524724666Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-02-24T06:13:40.920409522Z"
     },
     {
       "name": "neovim",
@@ -109,8 +109,8 @@
       "status": "failed",
       "confidence": "curated",
       "disambiguated_at": null,
-      "failure_count": 2,
-      "next_retry_at": "2026-02-19T14:38:50.531806204Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-02-24T06:13:42.929169187Z"
     },
     {
       "name": "shellcheck",
@@ -129,8 +129,8 @@
       "status": "failed",
       "confidence": "curated",
       "disambiguated_at": null,
-      "failure_count": 2,
-      "next_retry_at": "2026-02-19T14:38:52.538871694Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-02-24T06:13:44.937755087Z"
     },
     {
       "name": "step",
@@ -139,8 +139,8 @@
       "status": "failed",
       "confidence": "curated",
       "disambiguated_at": null,
-      "failure_count": 2,
-      "next_retry_at": "2026-02-19T14:38:54.545873059Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-02-24T06:13:46.945591918Z"
     },
     {
       "name": "task",
@@ -149,8 +149,8 @@
       "status": "failed",
       "confidence": "curated",
       "disambiguated_at": null,
-      "failure_count": 2,
-      "next_retry_at": "2026-02-19T13:58:51.609585061Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-02-24T06:13:51.407702314Z"
     },
     {
       "name": "tmux",
@@ -189,8 +189,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-02-19T13:58:52.616836253Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-02-24T06:13:52.416870032Z"
     },
     {
       "name": "awscli",
@@ -319,8 +319,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-02-19T13:58:53.739915113Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-02-24T06:13:53.677861623Z"
     },
     {
       "name": "nvm",
@@ -349,8 +349,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-02-19T13:58:54.860111821Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-02-24T06:13:54.942523874Z"
     },
     {
       "name": "pnpm",
@@ -359,8 +359,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-02-19T13:58:56.206524705Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-02-24T06:13:56.654327224Z"
     },
     {
       "name": "protobuf",
@@ -379,8 +379,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-02-19T13:58:57.575940801Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-02-24T06:13:58.306913285Z"
     },
     {
       "name": "python@3.11",
@@ -389,8 +389,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-02-19T13:58:58.711371555Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-02-24T06:13:59.5569802Z"
     },
     {
       "name": "python@3.12",
@@ -399,8 +399,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-02-19T13:58:59.837785858Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-02-24T06:14:00.808190795Z"
     },
     {
       "name": "python@3.13",
@@ -409,8 +409,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-02-19T14:38:56.091887083Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-02-24T06:14:02.135389508Z"
     },
     {
       "name": "python@3.14",
@@ -419,8 +419,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-02-19T14:38:57.4264322Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-02-24T06:14:03.397894201Z"
     },
     {
       "name": "ripgrep",
@@ -459,8 +459,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-02-19T14:38:58.432918872Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-02-24T06:14:04.404934265Z"
     },
     {
       "name": "0xjuanma/tap/golazo",
@@ -469,8 +469,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-02-19T14:38:59.439233559Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-02-24T06:14:05.411512725Z"
     },
     {
       "name": "2ykwang/2ykwang/mac-cleanup-go",
@@ -479,8 +479,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-02-19T14:39:00.445202581Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-02-24T06:14:06.419089102Z"
     },
     {
       "name": "2ykwang/mac-cleanup-go/mac-cleanup-go",
@@ -489,8 +489,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-02-19T14:39:01.451835953Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-02-24T06:14:07.427599218Z"
     },
     {
       "name": "42ailab/42plugin/forty-two-plugin",
@@ -499,8 +499,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-02-19T14:39:02.458561829Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-02-24T06:14:08.435384456Z"
     },
     {
       "name": "5ouma/tap/gh-poi",
@@ -509,8 +509,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-02-19T15:38:25.128228233Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-02-24T06:14:09.443634973Z"
     },
     {
       "name": "a2ps",
@@ -529,8 +529,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-02-19T15:38:28.089897367Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-02-24T06:14:10.451649158Z"
     },
     {
       "name": "aalib",
@@ -539,8 +539,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-02-19T15:38:29.526723266Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-02-24T06:14:11.803389241Z"
     },
     {
       "name": "aarch64-elf-binutils",
@@ -589,8 +589,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-02-19T15:38:41.110945495Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-02-24T06:14:13.167738278Z"
     },
     {
       "name": "abcm2ps",
@@ -599,8 +599,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-02-19T15:38:44.07776549Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-02-24T06:14:15.660266328Z"
     },
     {
       "name": "abcmidi",
@@ -609,8 +609,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": null
+      "failure_count": 2,
+      "next_retry_at": "2026-02-22T06:14:18.341810854Z"
     },
     {
       "name": "abduco",
@@ -619,8 +619,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": null
+      "failure_count": 2,
+      "next_retry_at": "2026-02-22T06:14:20.797891678Z"
     },
     {
       "name": "abi3audit",
@@ -639,8 +639,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": null
+      "failure_count": 2,
+      "next_retry_at": "2026-02-22T06:14:22.671603425Z"
     },
     {
       "name": "achannarasappa/tap/ticker",
@@ -649,8 +649,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": null
+      "failure_count": 2,
+      "next_retry_at": "2026-02-22T06:14:23.679804391Z"
     },
     {
       "name": "ack",
@@ -679,8 +679,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": null
+      "failure_count": 2,
+      "next_retry_at": "2026-02-22T06:14:25.067893975Z"
     },
     {
       "name": "acpica",
@@ -689,8 +689,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": null
+      "failure_count": 2,
+      "next_retry_at": "2026-02-22T06:14:27.745746099Z"
     },
     {
       "name": "acronym",
@@ -709,8 +709,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": null
+      "failure_count": 2,
+      "next_retry_at": "2026-02-22T06:14:28.753937134Z"
     },
     {
       "name": "act",
@@ -729,8 +729,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": null
+      "failure_count": 2,
+      "next_retry_at": "2026-02-22T06:14:31.923583425Z"
     },
     {
       "name": "actionlint",
@@ -799,8 +799,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": null
+      "failure_count": 2,
+      "next_retry_at": "2026-02-22T06:14:34.466149642Z"
     },
     {
       "name": "addons-linter",
@@ -819,8 +819,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": null
+      "failure_count": 2,
+      "next_retry_at": "2026-02-22T06:14:35.474048665Z"
     },
     {
       "name": "adios2",
@@ -859,8 +859,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": null
+      "failure_count": 2,
+      "next_retry_at": "2026-02-22T06:14:37.004160954Z"
     },
     {
       "name": "aerc",
@@ -896,10 +896,10 @@
       "name": "afl++",
       "source": "homebrew:afl++",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
+      "failure_count": 1,
       "next_retry_at": null
     },
     {
@@ -916,10 +916,10 @@
       "name": "agavra/tap/tuicr",
       "source": "homebrew:agavra/tap/tuicr",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
+      "failure_count": 1,
       "next_retry_at": null
     },
     {
@@ -976,10 +976,10 @@
       "name": "agrinman/tap/tunnelto",
       "source": "homebrew:agrinman/tap/tunnelto",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
+      "failure_count": 1,
       "next_retry_at": null
     },
     {
@@ -1036,10 +1036,10 @@
       "name": "aider",
       "source": "homebrew:aider",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
+      "failure_count": 1,
       "next_retry_at": null
     },
     {
@@ -1056,17 +1056,17 @@
       "name": "airbytehq/tap/abctl",
       "source": "homebrew:airbytehq/tap/abctl",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
+      "failure_count": 1,
       "next_retry_at": null
     },
     {
       "name": "aircrack-ng",
       "source": "homebrew:aircrack-ng",
       "priority": 3,
-      "status": "pending",
+      "status": "blocked",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 0,
@@ -1106,10 +1106,10 @@
       "name": "aisk/tap/timeout",
       "source": "homebrew:aisk/tap/timeout",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
+      "failure_count": 1,
       "next_retry_at": null
     },
     {
@@ -1136,17 +1136,17 @@
       "name": "akeylesslabs/tap/akeyless",
       "source": "homebrew:akeylesslabs/tap/akeyless",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
+      "failure_count": 1,
       "next_retry_at": null
     },
     {
       "name": "alass",
       "source": "homebrew:alass",
       "priority": 3,
-      "status": "pending",
+      "status": "success",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 0,
@@ -1156,7 +1156,7 @@
       "name": "alda",
       "source": "homebrew:alda",
       "priority": 3,
-      "status": "pending",
+      "status": "blocked",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 0,
