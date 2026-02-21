@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Accepted
 spawned_from:
   issue: 1825
   repo: tsukumogami/tsuku
@@ -33,7 +33,7 @@ rationale: |
 
 ## Status
 
-Proposed
+Accepted
 
 Ref #1825
 
