@@ -9,6 +9,12 @@ on:
       - 'testdata/golden/exclusions.json'
       - '.github/workflows/validate-golden-recipes.yml'
   workflow_dispatch:
+    inputs:
+      batch_size_override:
+        description: 'Override batch size (1-50, 0 = use config default)'
+        required: false
+        type: number
+        default: 0
 
 jobs:
   validate-exclusions:
@@ -60,8 +66,9 @@ jobs:
     needs: validate-exclusions
     runs-on: ubuntu-latest
     outputs:
-      recipes: ${{ steps.changed.outputs.recipes }}
       has_changes: ${{ steps.changed.outputs.has_changes }}
+      batches: ${{ steps.batch.outputs.batches }}
+      batch_count: ${{ steps.batch.outputs.batch_count }}
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
@@ -139,16 +146,74 @@ jobs:
           fi
           echo "recipes=$JSON" >> $GITHUB_OUTPUT
 
+      - name: Split recipes into batches
+        id: batch
+        run: |
+          RECIPES='${{ steps.changed.outputs.recipes }}'
+
+          # Handle empty or missing recipes
+          if [ -z "$RECIPES" ] || [ "$RECIPES" = "[]" ]; then
+            echo "batches=[]" >> $GITHUB_OUTPUT
+            echo "batch_count=0" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Determine batch size: workflow_dispatch override > config file > default
+          BATCH_SIZE=0
+          OVERRIDE="${{ inputs.batch_size_override }}"
+          if [ -n "$OVERRIDE" ] && [ "$OVERRIDE" != "0" ]; then
+            BATCH_SIZE="$OVERRIDE"
+            # Clamp to 1-50 range
+            if [ "$BATCH_SIZE" -lt 1 ] 2>/dev/null; then
+              echo "::warning::batch_size_override ($BATCH_SIZE) is below minimum, clamping to 1"
+              BATCH_SIZE=1
+            elif [ "$BATCH_SIZE" -gt 50 ] 2>/dev/null; then
+              echo "::warning::batch_size_override ($BATCH_SIZE) exceeds maximum, clamping to 50"
+              BATCH_SIZE=50
+            fi
+          fi
+
+          # If no valid override, read from config file
+          if [ "$BATCH_SIZE" -eq 0 ] 2>/dev/null || [ "$BATCH_SIZE" = "0" ]; then
+            if [ -f .github/ci-batch-config.json ]; then
+              BATCH_SIZE=$(jq -r '.batch_sizes["validate-golden-recipes"].default // 20' .github/ci-batch-config.json)
+            else
+              BATCH_SIZE=20
+            fi
+          fi
+
+          echo "Using batch size: $BATCH_SIZE"
+
+          # Split recipes into batches using ceiling division
+          BATCHES=$(echo "$RECIPES" | jq -c --argjson bs "$BATCH_SIZE" '
+            . as $all |
+            [range(0; length; $bs)] |
+            to_entries |
+            map({batch_id: .key, recipes: $all[.value:.value + $bs]})
+          ')
+
+          echo "batches=$BATCHES" >> $GITHUB_OUTPUT
+
+          BATCH_COUNT=$(echo "$BATCHES" | jq 'length')
+          echo "batch_count=$BATCH_COUNT" >> $GITHUB_OUTPUT
+
+          echo "Generated $BATCH_COUNT batches"
+
   validate-golden:
-    name: "Validate: ${{ matrix.item.recipe }}"
+    name: "Validate (batch ${{ matrix.batch.batch_id + 1 }}/${{ needs.detect-changes.outputs.batch_count }})"
     needs: [detect-changes, r2-health-check]
     if: needs.detect-changes.outputs.has_changes == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
-        item: ${{ fromJson(needs.detect-changes.outputs.recipes) }}
+        batch: ${{ fromJson(needs.detect-changes.outputs.batches) }}
+    env:
+      R2_BUCKET_URL: ${{ secrets.R2_BUCKET_URL }}
+      R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID_READONLY }}
+      R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY_READONLY }}
+      R2_AVAILABLE: ${{ needs.r2-health-check.outputs.r2_available }}
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
@@ -159,62 +224,70 @@ jobs:
           go-version-file: 'go.mod'
           cache-dependency-path: go.sum
 
-      - name: Cache downloads
-        uses: actions/cache@b7e8d49f17405cc70c1c120101943203c98d3a4b  # v5.0.3
-        with:
-          path: ~/.tsuku/cache/downloads
-          key: golden-downloads-${{ matrix.item.recipe }}-${{ matrix.item.category }}
-          restore-keys: |
-            golden-downloads-${{ matrix.item.recipe }}-
-            golden-downloads-
-
       - name: Build tsuku
         run: CGO_ENABLED=0 go build -o tsuku ./cmd/tsuku
 
-      - name: Validate golden files
+      - name: Validate batch recipes
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          R2_BUCKET_URL: ${{ secrets.R2_BUCKET_URL }}
-          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID_READONLY }}
-          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY_READONLY }}
-          R2_AVAILABLE: ${{ needs.r2-health-check.outputs.r2_available }}
         run: |
-          RECIPE="${{ matrix.item.recipe }}"
-          CATEGORY="${{ matrix.item.category }}"
+          RECIPES='${{ toJson(matrix.batch.recipes) }}'
+          FAIL_FILE="${{ runner.temp }}/failed-recipes.txt"
+          : > "$FAIL_FILE"
 
-          echo "Validating golden files for $RECIPE ($CATEGORY)..."
+          COUNT=$(echo "$RECIPES" | jq 'length')
+          for i in $(seq 0 $((COUNT - 1))); do
+            RECIPE=$(echo "$RECIPES" | jq -r ".[$i].recipe")
+            CATEGORY=$(echo "$RECIPES" | jq -r ".[$i].category")
+            echo "::group::Validate $RECIPE"
 
-          # Determine golden source based on category and R2 availability
-          if [[ "$CATEGORY" == "embedded" ]]; then
-            # Embedded recipes always use git
-            export TSUKU_GOLDEN_SOURCE=git
-          elif [[ "$R2_AVAILABLE" == "true" ]]; then
-            # Registry recipes use R2 when available
-            export TSUKU_GOLDEN_SOURCE=r2
+            echo "Validating golden files for $RECIPE ($CATEGORY)..."
 
-            # Check if golden files exist in R2 for this recipe
-            # New recipes won't have golden files yet - skip validation with notice
-            if ! ./scripts/check-golden-exists.sh "$RECIPE" --category "$CATEGORY"; then
-              echo "::notice::Skipping validation for new recipe '$RECIPE' - golden files will be generated after merge"
-              exit 0
-            fi
-          else
-            # R2 unavailable - skip registry recipe validation with warning
-            echo "::warning::Skipping $RECIPE validation - R2 unavailable (registry recipes require R2 golden files)"
-            echo "Registry recipe validation will be performed by nightly workflow when R2 is available"
-            exit 0
-          fi
-
-          echo "Using TSUKU_GOLDEN_SOURCE=$TSUKU_GOLDEN_SOURCE"
-
-          if ! ./scripts/validate-golden.sh "$RECIPE" --category "$CATEGORY"; then
-            echo ""
-            echo "::error::Golden files are out of date for recipe '$RECIPE'."
+            # Determine golden source based on category and R2 availability
             if [[ "$CATEGORY" == "embedded" ]]; then
-              echo "::error::Run './scripts/regenerate-golden.sh $RECIPE --category $CATEGORY' and commit the changes."
+              # Embedded recipes always use git
+              export TSUKU_GOLDEN_SOURCE=git
+            elif [[ "$R2_AVAILABLE" == "true" ]]; then
+              # Registry recipes use R2 when available
+              export TSUKU_GOLDEN_SOURCE=r2
+
+              # Check if golden files exist in R2 for this recipe
+              # New recipes won't have golden files yet - skip validation with notice
+              if ! ./scripts/check-golden-exists.sh "$RECIPE" --category "$CATEGORY"; then
+                echo "::notice::Skipping validation for new recipe '$RECIPE' - golden files will be generated after merge"
+                echo "::endgroup::"
+                continue
+              fi
             else
-              echo "::error::Golden files in R2 don't match. The post-merge workflow will regenerate them after merge."
-              echo "::error::If this is unexpected, check that the recipe changes are correct."
+              # R2 unavailable - skip registry recipe validation with warning
+              echo "::warning::Skipping $RECIPE validation - R2 unavailable (registry recipes require R2 golden files)"
+              echo "Registry recipe validation will be performed by nightly workflow when R2 is available"
+              echo "::endgroup::"
+              continue
             fi
+
+            echo "Using TSUKU_GOLDEN_SOURCE=$TSUKU_GOLDEN_SOURCE"
+
+            if ! ./scripts/validate-golden.sh "$RECIPE" --category "$CATEGORY"; then
+              echo ""
+              echo "::error::Golden files are out of date for recipe '$RECIPE'."
+              if [[ "$CATEGORY" == "embedded" ]]; then
+                echo "::error::Run './scripts/regenerate-golden.sh $RECIPE --category $CATEGORY' and commit the changes."
+              else
+                echo "::error::Golden files in R2 don't match. The post-merge workflow will regenerate them after merge."
+                echo "::error::If this is unexpected, check that the recipe changes are correct."
+              fi
+              echo "$RECIPE" >> "$FAIL_FILE"
+            fi
+
+            echo "::endgroup::"
+          done
+
+          # Report failures at end (don't fail fast)
+          if [ -s "$FAIL_FILE" ]; then
+            FAILED=$(cat "$FAIL_FILE" | tr '\n' ' ')
+            echo "::error::Failed recipes: $FAILED"
             exit 1
           fi
+
+          echo "All batch recipes passed"

@@ -9,6 +9,12 @@ on:
       - 'testdata/golden/execution-exclusions.json'
       - '.github/workflows/test-changed-recipes.yml'
   workflow_dispatch:
+    inputs:
+      batch_size_override:
+        description: 'Override Linux batch size (1-50, 0 = use config default)'
+        required: false
+        type: number
+        default: 0
 
 jobs:
   # Detect changed recipes and generate matrix
@@ -20,6 +26,9 @@ jobs:
       has_changes: ${{ steps.changed.outputs.has_changes }}
       macos_recipes: ${{ steps.changed.outputs.macos_recipes }}
       has_macos: ${{ steps.changed.outputs.has_macos }}
+      linux_batches: ${{ steps.batch.outputs.linux_batches }}
+      has_linux_batches: ${{ steps.batch.outputs.has_linux_batches }}
+      batch_count: ${{ steps.batch.outputs.batch_count }}
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
@@ -166,17 +175,76 @@ jobs:
             echo "macos_recipes=$MACOS_JSON" >> $GITHUB_OUTPUT
           fi
 
-  # Test each changed recipe on Linux
+      - name: Split Linux recipes into batches
+        id: batch
+        run: |
+          RECIPES='${{ steps.changed.outputs.recipes }}'
+
+          # Handle empty or missing recipes
+          if [ -z "$RECIPES" ] || [ "$RECIPES" = "[]" ]; then
+            echo "linux_batches=[]" >> $GITHUB_OUTPUT
+            echo "has_linux_batches=false" >> $GITHUB_OUTPUT
+            echo "batch_count=0" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Determine batch size: workflow_dispatch override > config file > default
+          BATCH_SIZE=0
+          OVERRIDE="${{ inputs.batch_size_override }}"
+          if [ -n "$OVERRIDE" ] && [ "$OVERRIDE" != "0" ]; then
+            BATCH_SIZE="$OVERRIDE"
+            # Clamp to 1-50 range
+            if [ "$BATCH_SIZE" -lt 1 ] 2>/dev/null; then
+              echo "::warning::batch_size_override ($BATCH_SIZE) is below minimum, clamping to 1"
+              BATCH_SIZE=1
+            elif [ "$BATCH_SIZE" -gt 50 ] 2>/dev/null; then
+              echo "::warning::batch_size_override ($BATCH_SIZE) exceeds maximum, clamping to 50"
+              BATCH_SIZE=50
+            fi
+          fi
+
+          # If no valid override, read from config file
+          if [ "$BATCH_SIZE" -eq 0 ] 2>/dev/null || [ "$BATCH_SIZE" = "0" ]; then
+            if [ -f .github/ci-batch-config.json ]; then
+              BATCH_SIZE=$(jq -r '.batch_sizes["test-changed-recipes"].linux // 15' .github/ci-batch-config.json)
+            else
+              BATCH_SIZE=15
+            fi
+          fi
+
+          echo "Using batch size: $BATCH_SIZE"
+
+          # Split recipes into batches using ceiling division
+          BATCHES=$(echo "$RECIPES" | jq -c --argjson bs "$BATCH_SIZE" '
+            . as $all |
+            [range(0; length; $bs)] |
+            to_entries |
+            map({batch_id: .key, recipes: $all[.value:.value + $bs]})
+          ')
+
+          echo "linux_batches=$BATCHES" >> $GITHUB_OUTPUT
+
+          BATCH_COUNT=$(echo "$BATCHES" | jq 'length')
+          echo "batch_count=$BATCH_COUNT" >> $GITHUB_OUTPUT
+          if [ "$BATCH_COUNT" -gt 0 ]; then
+            echo "has_linux_batches=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_linux_batches=false" >> $GITHUB_OUTPUT
+          fi
+
+          echo "Generated $BATCH_COUNT Linux batches"
+
+  # Test Linux recipes in batches (each batch builds once and tests multiple recipes)
   test-linux:
-    name: "Linux: ${{ matrix.recipe.tool }}"
+    name: "Linux (batch ${{ matrix.batch.batch_id + 1 }}/${{ needs.matrix.outputs.batch_count }})"
     needs: matrix
-    if: ${{ needs.matrix.outputs.has_changes == 'true' }}
+    if: ${{ needs.matrix.outputs.has_linux_batches == 'true' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
-        recipe: ${{ fromJson(needs.matrix.outputs.recipes) }}
+        batch: ${{ fromJson(needs.matrix.outputs.linux_batches) }}
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
@@ -190,14 +258,49 @@ jobs:
       - name: Build tsuku
         run: CGO_ENABLED=0 go build -o tsuku ./cmd/tsuku
 
-      - name: Setup PATH
-        run: echo "$HOME/.tsuku/bin" >> $GITHUB_PATH
-
-      - name: "Install ${{ matrix.recipe.tool }}"
+      - name: Test batch recipes
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TSUKU_REGISTRY_URL: ${{ github.workspace }}
-        run: ./tsuku install --force --recipe ${{ matrix.recipe.path }}
+        run: |
+          RECIPES='${{ toJson(matrix.batch.recipes) }}'
+          CACHE_DIR="${{ runner.temp }}/tsuku-cache/downloads"
+          FAIL_FILE="${{ runner.temp }}/failed-recipes.txt"
+          mkdir -p "$CACHE_DIR"
+          : > "$FAIL_FILE"
+
+          # Save original PATH so each iteration starts clean. We use
+          # "export PATH" rather than GITHUB_PATH because within a single
+          # step's for-loop each iteration needs its own PATH that doesn't
+          # leak into subsequent iterations.
+          ORIG_PATH="$PATH"
+
+          COUNT=$(echo "$RECIPES" | jq 'length')
+          for i in $(seq 0 $((COUNT - 1))); do
+            tool=$(echo "$RECIPES" | jq -r ".[$i].tool")
+            recipe_path=$(echo "$RECIPES" | jq -r ".[$i].path")
+            echo "::group::Testing $tool"
+
+            # Fresh TSUKU_HOME per recipe with shared download cache
+            export TSUKU_HOME="${{ runner.temp }}/tsuku-$tool"
+            mkdir -p "$TSUKU_HOME/cache"
+            ln -s "$CACHE_DIR" "$TSUKU_HOME/cache/downloads"
+            export PATH="$TSUKU_HOME/bin:$ORIG_PATH"
+
+            if ! ./tsuku install --force --recipe "$recipe_path"; then
+              echo "$tool" >> "$FAIL_FILE"
+            fi
+            echo "::endgroup::"
+          done
+
+          # Report failures at end (don't fail fast)
+          if [ -s "$FAIL_FILE" ]; then
+            FAILED=$(cat "$FAIL_FILE" | tr '\n' ' ')
+            echo "::error::Failed recipes: $FAILED"
+            exit 1
+          fi
+
+          echo "All batch recipes passed"
 
   # Test all macOS-compatible recipes in a single job (reduces runner queue pressure)
   test-macos:
@@ -230,6 +333,12 @@ jobs:
           mkdir -p "$CACHE_DIR"
           : > "$FAIL_FILE"
 
+          # Save original PATH so each iteration starts clean. We use
+          # "export PATH" rather than GITHUB_PATH because within a single
+          # step's for-loop each iteration needs its own PATH that doesn't
+          # leak into subsequent iterations.
+          ORIG_PATH="$PATH"
+
           COUNT=$(echo "$RECIPES" | jq 'length')
           for i in $(seq 0 $((COUNT - 1))); do
             tool=$(echo "$RECIPES" | jq -r ".[$i].tool")
@@ -240,7 +349,7 @@ jobs:
             export TSUKU_HOME="${{ runner.temp }}/tsuku-$tool"
             mkdir -p "$TSUKU_HOME/cache"
             ln -s "$CACHE_DIR" "$TSUKU_HOME/cache/downloads"
-            echo "$TSUKU_HOME/bin" >> "$GITHUB_PATH"
+            export PATH="$TSUKU_HOME/bin:$ORIG_PATH"
 
             if ! ./tsuku install --force --recipe "$recipe_path"; then
               echo "$tool" >> "$FAIL_FILE"
