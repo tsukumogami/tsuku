@@ -25,14 +25,16 @@
       "opens_at": "2026-02-21T17:31:53Z"
     },
     "crates.io": {
-      "state": "closed",
-      "failures": 4,
-      "last_failure": "2026-02-21T16:31:53Z"
+      "state": "open",
+      "failures": 5,
+      "last_failure": "2026-02-21T17:31:24Z",
+      "opens_at": "2026-02-21T18:31:24Z"
     },
     "npm": {
-      "state": "closed",
-      "failures": 4,
-      "last_failure": "2026-02-21T16:31:53Z"
+      "state": "open",
+      "failures": 5,
+      "last_failure": "2026-02-21T17:31:24Z",
+      "opens_at": "2026-02-21T18:31:24Z"
     }
   },
   "budget": {
