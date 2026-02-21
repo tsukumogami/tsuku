@@ -4,18 +4,10 @@ description = "Mozilla CA certificate store"
 homepage = "https://curl.se/docs/caextract.html"
 type = "library"
 
-# glibc Linux: Homebrew bottle
+# glibc Linux: System package (no Homebrew Linux bottle exists for this formula)
 [[steps]]
-action = "homebrew"
-formula = "ca-certificates"
-when = { os = ["linux"], libc = ["glibc"] }
-
-[[steps]]
-action = "install_binaries"
-install_mode = "directory"
-outputs = [
-    "share/ca-certificates/cacert.pem",
-]
+action = "apt_install"
+packages = ["ca-certificates"]
 when = { os = ["linux"], libc = ["glibc"] }
 
 # musl Linux: Alpine package

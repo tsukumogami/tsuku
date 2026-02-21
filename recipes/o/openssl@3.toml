@@ -9,7 +9,6 @@ binaries = ["bin/openssl"]
 action = "homebrew"
 formula = "openssl@3"
 when = { os = ["linux"], libc = ["glibc"] }
-dependencies = ["ca-certificates"]
 
 [[steps]]
 action = "install_binaries"
