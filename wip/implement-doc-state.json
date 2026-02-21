@@ -2,7 +2,7 @@
   "design_doc": "docs/designs/DESIGN-local-llm-runtime.md",
   "branch": "impl/local-llm-runtime-v2",
   "pr_number": 1810,
-  "integrity_hash": "sha256:005d37009ed9facdb152d443ba69b951a547a7d56dba1223451ec1eb90131bb2",
+  "integrity_hash": "sha256:4bbc30e7e4c80d7f498ebd5e3a26ada4ece645bbe9104ac454b0174dc59ecf4d",
   "issues": [
     {
       "number": 1628,
@@ -253,8 +253,8 @@
     {
       "number": 1641,
       "title": "test(llm): add quality benchmark suite",
-      "status": "pushed",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "ci_fix_attempts": 0,
       "issue_type": "code",
       "dependencies": [
@@ -322,17 +322,64 @@
     {
       "number": 1642,
       "title": "feat(llm): add download permission prompts and progress UX",
-      "status": "pending",
+      "status": "scrutinized",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [
         1629,
         1637
       ],
-      "commits": [],
-      "agent_type": "",
-      "summary": null,
+      "commits": [
+        "dc894884c6a2a4c6a062f76760317aa85d5ca002"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          "internal/llm/addon/prompter.go",
+          "internal/llm/addon/prompter_test.go",
+          "internal/progress/spinner.go",
+          "internal/progress/spinner_test.go",
+          "internal/llm/addon/manager.go",
+          "internal/llm/addon/manager_test.go",
+          "internal/llm/factory.go",
+          "internal/llm/local.go"
+        ],
+        "tests_added": 28,
+        "key_decisions": "Prompter nil by default for backward compat. Model readiness via GetStatus RPC. Spinner writes to stderr. Factory WithPrompter option for clean wiring.",
+        "requirements_map": [
+          {
+            "ac": "addon download prompt",
+            "status": "implemented"
+          },
+          {
+            "ac": "model download prompt",
+            "status": "implemented"
+          },
+          {
+            "ac": "decline with cloud provider message",
+            "status": "implemented"
+          },
+          {
+            "ac": "download progress bars",
+            "status": "deviated",
+            "reason": "addon downloads already use progress.Writer; model downloads inside Rust addon would need proto streaming changes"
+          },
+          {
+            "ac": "inference spinner",
+            "status": "implemented"
+          },
+          {
+            "ac": "non-TTY suppression",
+            "status": "implemented"
+          },
+          {
+            "ac": "--yes flag skips prompts",
+            "status": "implemented"
+          }
+        ]
+      },
       "testable_scenarios": [
         "scenario-5",
         "scenario-6",
