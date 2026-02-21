@@ -4,6 +4,9 @@ description = "Standalone Python distribution (execution dependency for pip-base
 homepage = "https://github.com/indygreg/python-build-standalone"
 version_format = "custom"
 
+[metadata.satisfies]
+homebrew = ["python@3"]
+
 [[steps]]
 action = "github_archive"
 repo = "indygreg/python-build-standalone"
