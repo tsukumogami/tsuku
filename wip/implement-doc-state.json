@@ -2,7 +2,7 @@
   "design_doc": "docs/designs/DESIGN-recipe-ci-batching.md",
   "branch": "docs/recipe-ci-batching",
   "pr_number": 1811,
-  "integrity_hash": "sha256:8079f757f2d4863799711b0c637ebe1a023e5a3017522cdc210e581ca120c607",
+  "integrity_hash": "sha256:9ccaa625d1504d7c9815a667a25d60d45e40119ec6f48514ceae9fe6973b4f79",
   "issues": [
     {
       "number": 1814,
@@ -57,7 +57,7 @@
     {
       "number": 1815,
       "title": "ci(golden-recipes): batch per-recipe jobs in validate-golden-recipes",
-      "status": "scrutinized",
+      "status": "pushed",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
       "issue_type": "code",
@@ -134,6 +134,23 @@
           }
         ]
       },
+      "reviewer_results": [
+        {
+          "review_focus": "pragmatic",
+          "blocking_count": 0,
+          "advisory_count": 1
+        },
+        {
+          "review_focus": "architect",
+          "blocking_count": 0,
+          "advisory_count": 0
+        },
+        {
+          "review_focus": "maintainer",
+          "blocking_count": 0,
+          "advisory_count": 3
+        }
+      ],
       "testable_scenarios": [
         "scenario-2",
         "scenario-9",
