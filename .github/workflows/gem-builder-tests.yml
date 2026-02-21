@@ -49,7 +49,7 @@ jobs:
       - name: Create recipe for bundler
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./tsuku create bundler --from rubygems --yes
+        run: ./tsuku create bundler --from rubygems --yes --force
 
       - name: Verify recipe was created
         run: |
@@ -96,7 +96,7 @@ jobs:
       - name: Create recipe for bundler
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./tsuku create bundler --from rubygems --yes
+        run: ./tsuku create bundler --from rubygems --yes --force
 
       - name: Verify recipe was created
         run: |

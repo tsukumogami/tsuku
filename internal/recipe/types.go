@@ -146,19 +146,20 @@ func (r *Recipe) ToTOML() ([]byte, error) {
 
 // MetadataSection contains recipe metadata
 type MetadataSection struct {
-	Name                     string   `toml:"name"`
-	Description              string   `toml:"description"`
-	Homepage                 string   `toml:"homepage"`
-	VersionFormat            string   `toml:"version_format"`
-	RequiresSudo             bool     `toml:"requires_sudo"`
-	Dependencies             []string `toml:"dependencies"`               // Install-time dependencies (replaces implicit)
-	RuntimeDependencies      []string `toml:"runtime_dependencies"`       // Runtime dependencies (replaces implicit)
-	ExtraDependencies        []string `toml:"extra_dependencies"`         // Additional install-time dependencies (extends implicit)
-	ExtraRuntimeDependencies []string `toml:"extra_runtime_dependencies"` // Additional runtime dependencies (extends implicit)
-	Tier                     int      `toml:"tier"`                       // Installation tier: 1=binary, 2=package manager, 3=nix
-	Type                     string   `toml:"type"`                       // Recipe type: "tool" (default) or "library"
-	LLMValidation            string   `toml:"llm_validation,omitempty"`   // LLM validation status: "skipped" or empty
-	Binaries                 []string `toml:"binaries,omitempty"`         // Explicit binary paths for homebrew recipes
+	Name                     string              `toml:"name"`
+	Description              string              `toml:"description"`
+	Homepage                 string              `toml:"homepage"`
+	VersionFormat            string              `toml:"version_format"`
+	RequiresSudo             bool                `toml:"requires_sudo"`
+	Dependencies             []string            `toml:"dependencies"`               // Install-time dependencies (replaces implicit)
+	RuntimeDependencies      []string            `toml:"runtime_dependencies"`       // Runtime dependencies (replaces implicit)
+	ExtraDependencies        []string            `toml:"extra_dependencies"`         // Additional install-time dependencies (extends implicit)
+	ExtraRuntimeDependencies []string            `toml:"extra_runtime_dependencies"` // Additional runtime dependencies (extends implicit)
+	Tier                     int                 `toml:"tier"`                       // Installation tier: 1=binary, 2=package manager, 3=nix
+	Type                     string              `toml:"type"`                       // Recipe type: "tool" (default) or "library"
+	LLMValidation            string              `toml:"llm_validation,omitempty"`   // LLM validation status: "skipped" or empty
+	Binaries                 []string            `toml:"binaries,omitempty"`         // Explicit binary paths for homebrew recipes
+	Satisfies                map[string][]string `toml:"satisfies,omitempty"`        // Ecosystem name mappings: ecosystem -> []package_names
 
 	// Platform constraints (optional, defaults provide universal support)
 	SupportedOS          []string `toml:"supported_os,omitempty"`          // Allowed OS values (default: all OS)

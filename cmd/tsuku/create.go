@@ -131,7 +131,7 @@ var (
 
 func init() {
 	createCmd.Flags().StringVar(&createFrom, "from", "", "Source: ecosystem name or github:owner/repo (required)")
-	createCmd.Flags().BoolVar(&createForce, "force", false, "Overwrite existing local recipe")
+	createCmd.Flags().BoolVar(&createForce, "force", false, "Skip duplicate/satisfies checks and overwrite existing recipe")
 	createCmd.Flags().BoolVar(&createAutoApprove, "yes", false, "Skip recipe preview confirmation")
 	createCmd.Flags().BoolVar(&createSkipSandbox, "skip-sandbox", false, "Skip container sandbox testing (use when Docker is unavailable)")
 	createCmd.Flags().BoolVar(&createDeterministicOnly, "deterministic-only", false, "Skip LLM fallback; exit with structured error if deterministic generation fails")
@@ -459,8 +459,40 @@ func normalizeEcosystem(name string) string {
 	}
 }
 
+// checkExistingRecipe checks whether an existing recipe already covers the
+// requested tool name. It uses the recipe loader (including the satisfies
+// fallback) so that ecosystem aliases like "openssl@3" resolve to their
+// canonical recipe. Returns (canonicalName, true) when a match is found,
+// or ("", false) when no recipe covers the name.
+func checkExistingRecipe(l *recipe.Loader, toolName string) (string, bool) {
+	if l == nil {
+		return "", false
+	}
+	r, err := l.GetWithContext(context.Background(), toolName, recipe.LoaderOptions{})
+	if err != nil {
+		return "", false
+	}
+	return r.Metadata.Name, true
+}
+
 func runCreate(cmd *cobra.Command, args []string) {
 	toolName := args[0]
+
+	// Check for existing recipe before any builder work, API calls, or
+	// toolchain checks. The loader covers all tiers (cache, local,
+	// embedded, registry) plus the satisfies fallback, so ecosystem
+	// aliases like "openssl@3" are caught here too.
+	if !createForce {
+		if canonicalName, found := checkExistingRecipe(loader, toolName); found {
+			if canonicalName == toolName {
+				fmt.Fprintf(os.Stderr, "Error: recipe '%s' already exists. Use --force to create anyway.\n", toolName)
+			} else {
+				fmt.Fprintf(os.Stderr, "Error: recipe '%s' already satisfies '%s'. Use --force to create anyway.\n",
+					canonicalName, toolName)
+			}
+			exitWithCode(ExitGeneral)
+		}
+	}
 
 	// Warn if skipping review
 	if createAutoApprove {
@@ -738,7 +770,11 @@ func runCreate(cmd *cobra.Command, args []string) {
 		recipePath = createOutput
 	}
 
-	// Check if recipe already exists
+	// Guard against overwriting an existing file at the output path.
+	// The early loader check (above) catches recipes in the standard
+	// locations (local, embedded, registry, satisfies). This additional
+	// check is needed when --output points to a custom path outside the
+	// loader's search directories.
 	if _, err := os.Stat(recipePath); err == nil && !createForce {
 		fmt.Fprintf(os.Stderr, "Error: recipe already exists at %s\n", recipePath)
 		fmt.Fprintf(os.Stderr, "Use --force to overwrite\n")

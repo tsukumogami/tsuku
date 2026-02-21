@@ -317,6 +317,32 @@ command = "{binary} --version"
 pattern = "{version}"
 ```
 
+### Ecosystem Name Mapping (satisfies)
+
+Recipes can declare which ecosystem-specific package names they cover using an optional `[metadata.satisfies]` section. Each key is an ecosystem name (like `homebrew`), and each value is a list of package names in that ecosystem:
+
+```toml
+[metadata]
+name = "openssl"
+type = "library"
+
+[metadata.satisfies]
+homebrew = ["openssl@3"]
+```
+
+This tells tsuku that the `openssl` recipe already handles what Homebrew calls `openssl@3`. When the recipe loader can't find a recipe by exact name, it checks `satisfies` entries across all recipes as a fallback.
+
+Use this field when your recipe covers a tool that other ecosystems name differently. Common cases:
+
+- Homebrew versioned formulas (`openssl@3`, `python@3.14`)
+- Different naming conventions across ecosystems (`sqlite3` vs `sqlite`)
+
+The field is optional and backward compatible. Recipes without it work exactly as before. Validation rejects:
+
+- Empty package names or ecosystem names
+- Ecosystem names with non-alphanumeric characters (except hyphens)
+- Self-referential entries (a recipe claiming to satisfy its own name)
+
 ### Version Inference
 
 Many actions automatically infer the version source from their parameters, so an explicit `[version]` section is often unnecessary:

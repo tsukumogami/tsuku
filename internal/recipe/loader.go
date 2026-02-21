@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 
 	"github.com/BurntSushi/toml"
 	"github.com/tsukumogami/tsuku/internal/registry"
@@ -24,8 +25,10 @@ type Loader struct {
 	recipes          map[string]*Recipe
 	registry         *registry.Registry
 	embedded         *EmbeddedRegistry
-	recipesDir       string           // Local recipes directory (~/.tsuku/recipes)
-	constraintLookup ConstraintLookup // Optional lookup for step analysis (nil skips analysis)
+	recipesDir       string            // Local recipes directory ($TSUKU_HOME/recipes)
+	constraintLookup ConstraintLookup  // Optional lookup for step analysis (nil skips analysis)
+	satisfiesIndex   map[string]string // package_name -> recipe_name (ecosystem-agnostic, lazy-built)
+	satisfiesOnce    sync.Once         // ensures buildSatisfiesIndex runs once
 }
 
 // New creates a new recipe loader with the given registry
@@ -122,12 +125,21 @@ func (l *Loader) GetWithContext(ctx context.Context, name string, opts LoaderOpt
 
 	// Fetch from registry (disk cache or remote)
 	recipe, err := l.fetchFromRegistry(ctx, name)
-	if err != nil {
-		return nil, err
+	if err == nil {
+		l.recipes[name] = recipe
+		return recipe, nil
 	}
 
-	l.recipes[name] = recipe
-	return recipe, nil
+	// Satisfies fallback: check if another recipe satisfies this name.
+	// Load the canonical recipe through the 4-tier chain directly (cache,
+	// local, embedded, registry) without re-entering the satisfies path.
+	// This prevents infinite recursion when cross-recipe satisfies entries
+	// form a cycle.
+	if canonicalName, ok := l.lookupSatisfies(name); ok {
+		return l.loadDirect(ctx, canonicalName)
+	}
+
+	return nil, err
 }
 
 // getEmbeddedOnly loads a recipe from embedded FS only, returning a clear error if not found.
@@ -150,6 +162,13 @@ func (l *Loader) getEmbeddedOnly(name string) (*Recipe, error) {
 		}
 	}
 
+	// Satisfies fallback (restricted to embedded-only index entries).
+	// Load the canonical recipe from embedded directly, without re-entering
+	// the satisfies path, to prevent infinite recursion from cross-recipe cycles.
+	if canonicalName, ok := l.lookupSatisfiesEmbeddedOnly(name); ok {
+		return l.loadEmbeddedDirect(canonicalName)
+	}
+
 	// Recipe not found in embedded FS - return actionable error
 	return nil, fmt.Errorf(
 		"recipe %q not found in embedded registry\n\n"+
@@ -158,6 +177,77 @@ func (l *Loader) getEmbeddedOnly(name string) (*Recipe, error) {
 			"network access.\n\n"+
 			"To fix: ensure the recipe exists in internal/recipe/recipes/",
 		name,
+	)
+}
+
+// loadDirect loads a recipe through the 4-tier chain (cache, local, embedded,
+// registry) without the satisfies fallback. This is used when loading a
+// canonical recipe resolved from the satisfies index, to prevent infinite
+// recursion if cross-recipe satisfies entries form a cycle.
+func (l *Loader) loadDirect(ctx context.Context, name string) (*Recipe, error) {
+	// Check in-memory cache first
+	if recipe, ok := l.recipes[name]; ok {
+		return recipe, nil
+	}
+
+	// Check local recipes directory if configured
+	if l.recipesDir != "" {
+		localRecipe, localErr := l.loadLocalRecipe(name)
+		if localErr == nil && localRecipe != nil {
+			l.warnIfShadows(ctx, name)
+			l.recipes[name] = localRecipe
+			return localRecipe, nil
+		}
+		if localErr != nil && !os.IsNotExist(localErr) {
+			return nil, localErr
+		}
+	}
+
+	// Check embedded recipes
+	if l.embedded != nil {
+		if data, ok := l.embedded.Get(name); ok {
+			recipe, err := l.parseBytes(data)
+			if err != nil {
+				return nil, fmt.Errorf("failed to parse embedded recipe %s: %w", name, err)
+			}
+			l.recipes[name] = recipe
+			return recipe, nil
+		}
+	}
+
+	// Fetch from registry (disk cache or remote)
+	recipe, err := l.fetchFromRegistry(ctx, name)
+	if err == nil {
+		l.recipes[name] = recipe
+		return recipe, nil
+	}
+
+	return nil, fmt.Errorf("recipe %q not found (resolved from satisfies index)", name)
+}
+
+// loadEmbeddedDirect loads a recipe from embedded FS only, without the
+// satisfies fallback. This is the non-recursive counterpart of getEmbeddedOnly,
+// used when loading a canonical recipe resolved from the satisfies index.
+func (l *Loader) loadEmbeddedDirect(name string) (*Recipe, error) {
+	// Check in-memory cache first
+	if recipe, ok := l.recipes[name]; ok {
+		return recipe, nil
+	}
+
+	// Check embedded recipes only
+	if l.embedded != nil {
+		if data, ok := l.embedded.Get(name); ok {
+			recipe, err := l.parseBytes(data)
+			if err != nil {
+				return nil, fmt.Errorf("failed to parse embedded recipe %s: %w", name, err)
+			}
+			l.recipes[name] = recipe
+			return recipe, nil
+		}
+	}
+
+	return nil, fmt.Errorf(
+		"recipe %q not found in embedded registry (resolved from satisfies index)", name,
 	)
 }
 
@@ -255,16 +345,109 @@ func (l *Loader) Registry() *registry.Registry {
 	return l.registry
 }
 
-// ClearCache clears the in-memory recipe cache
-// This forces recipes to be re-fetched from the registry on next access
+// ClearCache clears the in-memory recipe cache and satisfies index.
+// This forces recipes to be re-fetched from the registry on next access,
+// and the satisfies index to be rebuilt on next fallback lookup.
 func (l *Loader) ClearCache() {
 	l.recipes = make(map[string]*Recipe)
+	l.satisfiesIndex = nil
+	l.satisfiesOnce = sync.Once{}
 }
 
 // CacheRecipe adds a recipe to the in-memory cache
 // This is useful for testing or loading recipes from non-standard sources
 func (l *Loader) CacheRecipe(name string, r *Recipe) {
 	l.recipes[name] = r
+}
+
+// buildSatisfiesIndex scans embedded recipes and the registry manifest for
+// satisfies entries. Called lazily on first fallback lookup.
+// The index is keyed by bare package name (not prefixed by ecosystem),
+// because callers don't know which ecosystem a dependency comes from.
+//
+// Priority: embedded entries take precedence over manifest entries.
+// If the same package name appears in both, the embedded recipe wins.
+func (l *Loader) buildSatisfiesIndex() {
+	l.satisfiesIndex = make(map[string]string)
+
+	// Scan embedded recipes first (higher priority)
+	if l.embedded != nil {
+		for _, name := range l.embedded.List() {
+			data, ok := l.embedded.Get(name)
+			if !ok {
+				continue
+			}
+			var r Recipe
+			if err := toml.Unmarshal(data, &r); err != nil {
+				continue
+			}
+			for _, pkgNames := range r.Metadata.Satisfies {
+				for _, pkgName := range pkgNames {
+					if _, exists := l.satisfiesIndex[pkgName]; !exists {
+						l.satisfiesIndex[pkgName] = name
+					} else {
+						// Duplicate: warn at runtime, prefer first match (embedded over registry)
+						fmt.Printf("Warning: duplicate satisfies entry %q (claimed by %q and %q)\n",
+							pkgName, l.satisfiesIndex[pkgName], name)
+					}
+				}
+			}
+		}
+	}
+
+	// Scan registry manifest for satisfies entries from registry-only recipes.
+	// Uses the cached manifest (no network fetch during index build).
+	// Embedded entries take priority: if a package name is already indexed
+	// from an embedded recipe, the manifest entry is skipped.
+	if l.registry != nil {
+		manifest, err := l.registry.GetCachedManifest()
+		if err == nil && manifest != nil {
+			for _, entry := range manifest.Recipes {
+				for _, pkgNames := range entry.Satisfies {
+					for _, pkgName := range pkgNames {
+						if _, exists := l.satisfiesIndex[pkgName]; !exists {
+							l.satisfiesIndex[pkgName] = entry.Name
+						}
+						// No warning for manifest duplicates: the generate script
+						// already validates cross-recipe duplicates at CI time.
+					}
+				}
+			}
+		}
+	}
+}
+
+// lookupSatisfies checks if a name is satisfied by another recipe.
+// Searches across all ecosystems. Returns the satisfying recipe name
+// and true, or "" and false. Triggers lazy index build on first call.
+func (l *Loader) lookupSatisfies(name string) (string, bool) {
+	l.satisfiesOnce.Do(l.buildSatisfiesIndex)
+	canonicalName, ok := l.satisfiesIndex[name]
+	return canonicalName, ok
+}
+
+// lookupSatisfiesEmbeddedOnly checks if a name is satisfied by an embedded recipe.
+// Like lookupSatisfies but verifies the canonical recipe exists in embedded FS.
+func (l *Loader) lookupSatisfiesEmbeddedOnly(name string) (string, bool) {
+	l.satisfiesOnce.Do(l.buildSatisfiesIndex)
+	canonicalName, ok := l.satisfiesIndex[name]
+	if !ok {
+		return "", false
+	}
+	// Verify the canonical recipe is actually embedded
+	if l.embedded != nil && l.embedded.Has(canonicalName) {
+		return canonicalName, true
+	}
+	return "", false
+}
+
+// LookupSatisfies checks whether a name is satisfied by an existing recipe.
+// It exposes the satisfies index for callers that need the mapping without
+// loading the full recipe. Currently unused -- tsuku create uses
+// GetWithContext instead, which includes the satisfies fallback.
+// Returns the canonical recipe name and true if found, or "" and false.
+func (l *Loader) LookupSatisfies(name string) (string, bool) {
+	return l.lookupSatisfies(name)
 }
 
 // RecipeSource indicates where a recipe comes from

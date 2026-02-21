@@ -47,7 +47,7 @@ jobs:
       - name: Create recipe for hyperfine
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./tsuku create hyperfine --from crates.io --yes
+        run: ./tsuku create hyperfine --from crates.io --yes --force
 
       - name: Verify recipe was created
         run: |
@@ -92,7 +92,7 @@ jobs:
       - name: Create recipe for hyperfine
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./tsuku create hyperfine --from crates.io --yes
+        run: ./tsuku create hyperfine --from crates.io --yes --force
 
       - name: Verify recipe was created
         run: |

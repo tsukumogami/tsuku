@@ -6,6 +6,9 @@ dependencies = ["readline"]
 binaries = ["bin/sqlite3"]
 supported_os = ["darwin"]
 
+[metadata.satisfies]
+homebrew = ["sqlite3"]
+
 [[steps]]
 action = "homebrew"
 formula = "sqlite"
