@@ -1,0 +1,5 @@
+[
+  {"review_focus": "pragmatic", "blocking_count": 1, "advisory_count": 2, "note": "Tautological force test fixed in 30e9448e"},
+  {"review_focus": "architect", "blocking_count": 0, "advisory_count": 2, "note": "LookupSatisfies comment and --force description updated in 30e9448e"},
+  {"review_focus": "maintainer", "blocking_count": 1, "advisory_count": 3, "note": "Tautological force test fixed in 30e9448e"}
+]
