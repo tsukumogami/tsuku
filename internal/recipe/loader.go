@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 
 	"github.com/BurntSushi/toml"
 	"github.com/tsukumogami/tsuku/internal/registry"
@@ -24,8 +25,10 @@ type Loader struct {
 	recipes          map[string]*Recipe
 	registry         *registry.Registry
 	embedded         *EmbeddedRegistry
-	recipesDir       string           // Local recipes directory (~/.tsuku/recipes)
-	constraintLookup ConstraintLookup // Optional lookup for step analysis (nil skips analysis)
+	recipesDir       string            // Local recipes directory ($TSUKU_HOME/recipes)
+	constraintLookup ConstraintLookup  // Optional lookup for step analysis (nil skips analysis)
+	satisfiesIndex   map[string]string // package_name -> recipe_name (ecosystem-agnostic, lazy-built)
+	satisfiesOnce    sync.Once         // ensures buildSatisfiesIndex runs once
 }
 
 // New creates a new recipe loader with the given registry
@@ -122,12 +125,17 @@ func (l *Loader) GetWithContext(ctx context.Context, name string, opts LoaderOpt
 
 	// Fetch from registry (disk cache or remote)
 	recipe, err := l.fetchFromRegistry(ctx, name)
-	if err != nil {
-		return nil, err
+	if err == nil {
+		l.recipes[name] = recipe
+		return recipe, nil
 	}
 
-	l.recipes[name] = recipe
-	return recipe, nil
+	// Satisfies fallback: check if another recipe satisfies this name
+	if canonicalName, ok := l.lookupSatisfies(name); ok {
+		return l.GetWithContext(ctx, canonicalName, opts)
+	}
+
+	return nil, err
 }
 
 // getEmbeddedOnly loads a recipe from embedded FS only, returning a clear error if not found.
@@ -148,6 +156,11 @@ func (l *Loader) getEmbeddedOnly(name string) (*Recipe, error) {
 			l.recipes[name] = recipe
 			return recipe, nil
 		}
+	}
+
+	// Satisfies fallback (restricted to embedded-only index entries)
+	if canonicalName, ok := l.lookupSatisfiesEmbeddedOnly(name); ok {
+		return l.getEmbeddedOnly(canonicalName)
 	}
 
 	// Recipe not found in embedded FS - return actionable error
@@ -255,16 +268,85 @@ func (l *Loader) Registry() *registry.Registry {
 	return l.registry
 }
 
-// ClearCache clears the in-memory recipe cache
-// This forces recipes to be re-fetched from the registry on next access
+// ClearCache clears the in-memory recipe cache and satisfies index.
+// This forces recipes to be re-fetched from the registry on next access,
+// and the satisfies index to be rebuilt on next fallback lookup.
 func (l *Loader) ClearCache() {
 	l.recipes = make(map[string]*Recipe)
+	l.satisfiesIndex = nil
+	l.satisfiesOnce = sync.Once{}
 }
 
 // CacheRecipe adds a recipe to the in-memory cache
 // This is useful for testing or loading recipes from non-standard sources
 func (l *Loader) CacheRecipe(name string, r *Recipe) {
 	l.recipes[name] = r
+}
+
+// buildSatisfiesIndex scans embedded recipes (and registry manifest data when
+// available) for satisfies entries. Called lazily on first fallback lookup.
+// The index is keyed by bare package name (not prefixed by ecosystem),
+// because callers don't know which ecosystem a dependency comes from.
+func (l *Loader) buildSatisfiesIndex() {
+	l.satisfiesIndex = make(map[string]string)
+
+	// Scan embedded recipes
+	if l.embedded != nil {
+		for _, name := range l.embedded.List() {
+			data, ok := l.embedded.Get(name)
+			if !ok {
+				continue
+			}
+			var r Recipe
+			if err := toml.Unmarshal(data, &r); err != nil {
+				continue
+			}
+			for _, pkgNames := range r.Metadata.Satisfies {
+				for _, pkgName := range pkgNames {
+					if _, exists := l.satisfiesIndex[pkgName]; !exists {
+						l.satisfiesIndex[pkgName] = name
+					} else {
+						// Duplicate: warn at runtime, prefer first match (embedded over registry)
+						fmt.Printf("Warning: duplicate satisfies entry %q (claimed by %q and %q)\n",
+							pkgName, l.satisfiesIndex[pkgName], name)
+					}
+				}
+			}
+		}
+	}
+
+	// Registry manifest entries would be added here by #1829
+}
+
+// lookupSatisfies checks if a name is satisfied by another recipe.
+// Searches across all ecosystems. Returns the satisfying recipe name
+// and true, or "" and false. Triggers lazy index build on first call.
+func (l *Loader) lookupSatisfies(name string) (string, bool) {
+	l.satisfiesOnce.Do(l.buildSatisfiesIndex)
+	canonicalName, ok := l.satisfiesIndex[name]
+	return canonicalName, ok
+}
+
+// lookupSatisfiesEmbeddedOnly checks if a name is satisfied by an embedded recipe.
+// Like lookupSatisfies but verifies the canonical recipe exists in embedded FS.
+func (l *Loader) lookupSatisfiesEmbeddedOnly(name string) (string, bool) {
+	l.satisfiesOnce.Do(l.buildSatisfiesIndex)
+	canonicalName, ok := l.satisfiesIndex[name]
+	if !ok {
+		return "", false
+	}
+	// Verify the canonical recipe is actually embedded
+	if l.embedded != nil && l.embedded.Has(canonicalName) {
+		return canonicalName, true
+	}
+	return "", false
+}
+
+// LookupSatisfies checks whether a name is satisfied by an existing recipe.
+// This is the public API for downstream callers (e.g., tsuku create in #1827).
+// Returns the canonical recipe name and true if found, or "" and false.
+func (l *Loader) LookupSatisfies(name string) (string, bool) {
+	return l.lookupSatisfies(name)
 }
 
 // RecipeSource indicates where a recipe comes from
