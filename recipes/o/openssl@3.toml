@@ -1,0 +1,20 @@
+[metadata]
+name = "openssl@3"
+description = "Cryptography and SSL/TLS toolkit"
+homepage = "https://openssl-library.org"
+dependencies = ["ca-certificates"]
+binaries = ["bin/openssl"]
+supported_libc = ["glibc"]
+
+[[steps]]
+action = "homebrew"
+formula = "openssl@3"
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = ["bin/openssl"]
+
+[verify]
+command = "openssl version"
+pattern = "OpenSSL {version}"

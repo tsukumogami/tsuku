@@ -1,0 +1,23 @@
+[metadata]
+name = "gmp"
+description = "GNU multiple precision arithmetic library"
+homepage = "https://gmplib.org/"
+type = "library"
+supported_libc = ["glibc"]
+
+[[steps]]
+action = "homebrew"
+formula = "gmp"
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = [
+    "lib/libgmp.so",
+    "lib/libgmp.a",
+    "lib/libgmpxx.so",
+    "lib/libgmpxx.a",
+    "lib/pkgconfig/gmp.pc",
+    "include/gmp.h",
+    "include/gmpxx.h",
+]

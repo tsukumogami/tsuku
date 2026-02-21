@@ -1,0 +1,19 @@
+[metadata]
+name = "jpeg-turbo"
+description = "JPEG image codec that aids compression and decompression"
+homepage = "https://www.libjpeg-turbo.org/"
+binaries = ["bin/cjpeg", "bin/djpeg", "bin/jpegtran"]
+supported_libc = ["glibc"]
+
+[[steps]]
+action = "homebrew"
+formula = "jpeg-turbo"
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = ["bin/cjpeg", "bin/djpeg", "bin/jpegtran", "bin/rdjpgcom", "bin/wrjpgcom"]
+
+[verify]
+command = "jpegtran -version"
+pattern = ""

@@ -1,0 +1,17 @@
+[metadata]
+name = "ca-certificates"
+description = "Mozilla CA certificate store"
+homepage = "https://curl.se/docs/caextract.html"
+type = "library"
+supported_libc = ["glibc"]
+
+[[steps]]
+action = "homebrew"
+formula = "ca-certificates"
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = [
+    "share/ca-certificates/cacert.pem",
+]

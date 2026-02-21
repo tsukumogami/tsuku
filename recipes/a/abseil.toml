@@ -1,0 +1,19 @@
+[metadata]
+name = "abseil"
+description = "C++ Common Libraries"
+homepage = "https://abseil.io"
+type = "library"
+supported_libc = ["glibc"]
+
+[[steps]]
+action = "homebrew"
+formula = "abseil"
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = [
+    "lib/libabsl_base.so",
+    "lib/libabsl_strings.so",
+    "lib/libabsl_status.so",
+]

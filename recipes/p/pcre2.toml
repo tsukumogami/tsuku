@@ -1,0 +1,19 @@
+[metadata]
+name = "pcre2"
+description = "Perl compatible regular expressions library with a new API"
+homepage = "https://www.pcre.org/"
+binaries = ["bin/pcre2grep", "bin/pcre2test"]
+supported_libc = ["glibc"]
+
+[[steps]]
+action = "homebrew"
+formula = "pcre2"
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = ["bin/pcre2grep", "bin/pcre2test"]
+
+[verify]
+command = "pcre2grep --version"
+pattern = "pcre2grep version {version}"

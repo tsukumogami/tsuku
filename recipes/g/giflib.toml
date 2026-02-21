@@ -1,0 +1,19 @@
+[metadata]
+name = "giflib"
+description = "Library and utilities for processing GIFs"
+homepage = "https://giflib.sourceforge.net/"
+binaries = ["bin/gif2rgb", "bin/giftext", "bin/giftool"]
+supported_libc = ["glibc"]
+
+[[steps]]
+action = "homebrew"
+formula = "giflib"
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = ["bin/gif2rgb", "bin/gifbuild", "bin/gifclrmp", "bin/giffix", "bin/giftext", "bin/giftool"]
+
+[verify]
+command = "giftext --version"
+pattern = ""

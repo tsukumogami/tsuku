@@ -1,0 +1,21 @@
+[metadata]
+name = "cairo"
+description = "Vector graphics library with cross-device output support"
+homepage = "https://cairographics.org/"
+type = "library"
+dependencies = ["fontconfig", "glib", "pixman"]
+supported_libc = ["glibc"]
+
+[[steps]]
+action = "homebrew"
+formula = "cairo"
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = [
+    "lib/libcairo.so",
+    "lib/libcairo.a",
+    "lib/pkgconfig/cairo.pc",
+    "include/cairo/cairo.h",
+]

@@ -1,0 +1,19 @@
+[metadata]
+name = "fontconfig"
+description = "XML-based font configuration API for X Windows"
+homepage = "https://wiki.freedesktop.org/www/Software/fontconfig/"
+binaries = ["bin/fc-list", "bin/fc-cache", "bin/fc-match"]
+supported_libc = ["glibc"]
+
+[[steps]]
+action = "homebrew"
+formula = "fontconfig"
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = ["bin/fc-list", "bin/fc-cache", "bin/fc-match", "bin/fc-cat", "bin/fc-pattern", "bin/fc-query", "bin/fc-scan", "bin/fc-validate"]
+
+[verify]
+command = "fc-list --version"
+pattern = "fontconfig version {version}"
