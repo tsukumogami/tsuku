@@ -1,8 +1,8 @@
 {
   "design_doc": "docs/designs/DESIGN-local-llm-runtime.md",
-  "branch": "impl/local-llm-runtime",
-  "pr_number": null,
-  "integrity_hash": "sha256:047b89da4f8f7130e89d9c225efaac1eecf77ebda0cfc221c06653cff65f37a2",
+  "branch": "impl/local-llm-runtime-v2",
+  "pr_number": 1810,
+  "integrity_hash": "sha256:833579dbbdefecdbcf93cf0a06c413d74e478d0232fec2ec6132403912f15975",
   "issues": [
     {
       "number": 1628,
@@ -263,7 +263,12 @@
       "commits": [],
       "agent_type": "",
       "summary": null,
-      "testable_scenarios": []
+      "testable_scenarios": [
+        "scenario-1",
+        "scenario-2",
+        "scenario-3",
+        "scenario-4"
+      ]
     },
     {
       "number": 1642,
@@ -279,7 +284,12 @@
       "commits": [],
       "agent_type": "",
       "summary": null,
-      "testable_scenarios": []
+      "testable_scenarios": [
+        "scenario-5",
+        "scenario-6",
+        "scenario-7",
+        "scenario-8"
+      ]
     },
     {
       "number": 1643,
@@ -295,7 +305,12 @@
       "commits": [],
       "agent_type": "",
       "summary": null,
-      "testable_scenarios": []
+      "testable_scenarios": [
+        "scenario-9",
+        "scenario-10",
+        "scenario-11",
+        "scenario-12"
+      ]
     },
     {
       "number": 1644,
@@ -311,7 +326,10 @@
       "commits": [],
       "agent_type": "",
       "summary": null,
-      "testable_scenarios": []
+      "testable_scenarios": [
+        "scenario-13",
+        "scenario-14"
+      ]
     },
     {
       "number": 1645,
@@ -327,9 +345,12 @@
       "commits": [],
       "agent_type": "",
       "summary": null,
-      "testable_scenarios": []
+      "testable_scenarios": [
+        "scenario-15",
+        "scenario-16"
+      ]
     }
   ],
   "skipped_issues": null,
-  "test_plan_file": null
+  "test_plan_file": "wip/implement-doc_local-llm-runtime_test_plan.md"
 }
