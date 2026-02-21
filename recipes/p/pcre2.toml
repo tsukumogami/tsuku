@@ -4,10 +4,6 @@ description = "Perl compatible regular expressions library with a new API"
 homepage = "https://www.pcre.org/"
 binaries = ["bin/pcre2grep", "bin/pcre2test"]
 
-[version]
-source = "homebrew"
-formula = "pcre2"
-
 # glibc Linux: Homebrew bottle
 [[steps]]
 action = "homebrew"
@@ -24,6 +20,7 @@ when = { os = ["linux"], libc = ["glibc"] }
 [[steps]]
 action = "download"
 url = "https://github.com/PCRE2Project/pcre2/releases/download/pcre2-{version}/pcre2-{version}.tar.gz"
+checksum_url = "https://github.com/PCRE2Project/pcre2/releases/download/pcre2-{version}/pcre2-{version}.tar.gz.sha256"
 when = { os = ["linux"], libc = ["musl"] }
 
 [[steps]]

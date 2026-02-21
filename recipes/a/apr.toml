@@ -4,10 +4,6 @@ description = "Apache Portable Runtime library"
 homepage = "https://apr.apache.org/"
 binaries = ["bin/apr-1-config"]
 
-[version]
-source = "homebrew"
-formula = "apr"
-
 # glibc Linux: Homebrew bottle
 [[steps]]
 action = "homebrew"
@@ -24,6 +20,7 @@ when = { os = ["linux"], libc = ["glibc"] }
 [[steps]]
 action = "download"
 url = "https://archive.apache.org/dist/apr/apr-{version}.tar.gz"
+skip_verification_reason = "Apache archive uses rotating PGP keys from multiple committers; key fingerprint changes with each release signer"
 when = { os = ["linux"], libc = ["musl"] }
 
 [[steps]]
