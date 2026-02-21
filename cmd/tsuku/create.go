@@ -667,6 +667,11 @@ func runCreate(cmd *cobra.Command, args []string) {
 			ToolsDir:         cfg.ToolsDir,
 			LibsDir:          cfg.LibsDir,
 			DownloadCacheDir: cfg.DownloadCacheDir,
+			OnEvalDepsNeeded: func(deps []string, autoAccept bool) error {
+				return installEvalDeps(deps, autoAccept)
+			},
+			AutoAcceptEvalDeps: createAutoApprove,
+			RecipeLoader:       loader,
 		}),
 	)
 
