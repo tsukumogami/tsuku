@@ -110,6 +110,11 @@ type HomebrewSession struct {
 	tools        []llm.ToolDef
 	totalUsage   llm.Usage
 
+	// llmFactoryOptions are forwarded to llm.NewFactory when creating the
+	// factory lazily in ensureLLMProvider. This allows the CLI layer to
+	// inject a prompter (e.g., AutoApprovePrompter for --yes).
+	llmFactoryOptions []llm.FactoryOption
+
 	// Generation context
 	genCtx  *homebrewGenContext
 	formula string
@@ -402,6 +407,12 @@ func (b *HomebrewBuilder) NewSession(ctx context.Context, req BuildRequest, opts
 	// Check if deterministic-only mode is requested
 	deterministicOnly := opts != nil && opts.DeterministicOnly
 
+	// Capture factory options for deferred LLM initialization
+	var llmFactoryOptions []llm.FactoryOption
+	if opts != nil {
+		llmFactoryOptions = opts.LLMFactoryOptions
+	}
+
 	return &HomebrewSession{
 		builder:           b,
 		req:               req,
@@ -410,6 +421,7 @@ func (b *HomebrewBuilder) NewSession(ctx context.Context, req BuildRequest, opts
 		messages:          messages,
 		systemPrompt:      systemPrompt,
 		tools:             tools,
+		llmFactoryOptions: llmFactoryOptions,
 		genCtx:            genCtx,
 		formula:           formula,
 		deterministicOnly: deterministicOnly,
@@ -526,7 +538,7 @@ func (s *HomebrewSession) ensureLLMProvider(ctx context.Context) error {
 	factory := s.factory
 	if factory == nil {
 		var err error
-		factory, err = llm.NewFactory(ctx)
+		factory, err = llm.NewFactory(ctx, s.llmFactoryOptions...)
 		if err != nil {
 			return fmt.Errorf("failed to create LLM factory: %w", err)
 		}

@@ -33,14 +33,15 @@ var ErrLLMDisabled = fmt.Errorf("LLM features are disabled via configuration")
 
 // factoryOptions holds configuration for creating a factory.
 type factoryOptions struct {
-	primary         string
-	enabled         bool
-	localEnabled    bool
-	idleTimeout     time.Duration
-	preferredOrder  []string
-	enabledExplicit bool // Whether enabled was explicitly set
-	config          LLMConfig
-	prompter        addon.Prompter
+	primary          string
+	enabled          bool
+	localEnabled     bool
+	idleTimeout      time.Duration
+	preferredOrder   []string
+	enabledExplicit  bool // Whether enabled was explicitly set
+	prompterExplicit bool // Whether prompter was explicitly set via WithPrompter
+	config           LLMConfig
+	prompter         addon.Prompter
 }
 
 // FactoryOption configures a Factory.
@@ -102,10 +103,12 @@ func WithProviderOrder(providers []string) FactoryOption {
 // WithPrompter sets the download prompter for LocalProvider.
 // Use &addon.AutoApprovePrompter{} for --yes flag behavior,
 // or &addon.InteractivePrompter{} for interactive prompts.
-// If nil, downloads proceed without prompting (legacy behavior).
+// If no WithPrompter option is passed, NewFactory defaults to InteractivePrompter
+// so that production callers always prompt before large downloads.
 func WithPrompter(p addon.Prompter) FactoryOption {
 	return func(o *factoryOptions) {
 		o.prompter = p
+		o.prompterExplicit = true
 	}
 }
 
@@ -148,6 +151,14 @@ func NewFactory(ctx context.Context, opts ...FactoryOption) (*Factory, error) {
 		opt(o)
 	}
 
+	// Default prompter to InteractivePrompter when not explicitly set.
+	// This ensures production callers always prompt before large downloads.
+	// Tests that need to bypass prompting should pass WithPrompter explicitly
+	// (e.g., &addon.AutoApprovePrompter{} or &addon.NilPrompter{}).
+	if !o.prompterExplicit {
+		o.prompter = &addon.InteractivePrompter{}
+	}
+
 	// Check if LLM is explicitly disabled
 	if o.enabledExplicit && !o.enabled {
 		return nil, ErrLLMDisabled
@@ -181,9 +192,7 @@ func NewFactory(ctx context.Context, opts ...FactoryOption) (*Factory, error) {
 	// LocalProvider is lowest priority - only used when no cloud providers are available
 	if shouldRegisterLocal(o) {
 		provider := NewLocalProviderWithTimeout(o.idleTimeout)
-		if o.prompter != nil {
-			provider.SetPrompter(o.prompter)
-		}
+		provider.SetPrompter(o.prompter)
 		f.providers["local"] = provider
 		f.breakers["local"] = NewCircuitBreaker("local")
 	}
