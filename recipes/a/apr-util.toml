@@ -1,0 +1,36 @@
+[metadata]
+  name = "apr-util"
+  description = "Companion library to apr, the Apache Portable Runtime library"
+  homepage = "https://apr.apache.org/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["apr", "openssl@3"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+supported_os = ["linux"]
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "apr-util"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "apr-util"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/apu-1-config"]
+
+[verify]
+  command = "apu-1-config --version"
+  pattern = ""

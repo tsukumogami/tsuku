@@ -1,24 +1,24 @@
 {
   "batch_id": "2026-02-21",
   "ecosystems": {
-    "github": 9,
-    "homebrew": 41
+    "homebrew": 49,
+    "rubygems": 1
   },
   "per_ecosystem": {
-    "github": {
-      "total": 9,
-      "succeeded": 0,
-      "failed": 9
-    },
     "homebrew": {
-      "total": 41,
-      "succeeded": 1,
-      "failed": 38
+      "total": 49,
+      "succeeded": 5,
+      "failed": 41
+    },
+    "rubygems": {
+      "total": 1,
+      "succeeded": 0,
+      "failed": 1
     }
   },
   "total": 50,
-  "succeeded": 1,
-  "failed": 47,
-  "blocked": 2,
-  "timestamp": "2026-02-21T06:13:30.867478947Z"
+  "succeeded": 5,
+  "failed": 42,
+  "blocked": 3,
+  "timestamp": "2026-02-21T07:20:43.73955531Z"
 }
