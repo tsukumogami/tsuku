@@ -2,7 +2,7 @@
   "design_doc": "docs/designs/DESIGN-local-llm-runtime.md",
   "branch": "impl/local-llm-runtime-v2",
   "pr_number": 1810,
-  "integrity_hash": "sha256:833579dbbdefecdbcf93cf0a06c413d74e478d0232fec2ec6132403912f15975",
+  "integrity_hash": "sha256:8d8d7e89b2fc35712eb9e7a27ddc0d669965d0863d08d096574608803dd7856e",
   "issues": [
     {
       "number": 1628,
@@ -253,16 +253,40 @@
     {
       "number": 1641,
       "title": "test(llm): add quality benchmark suite",
-      "status": "pending",
+      "status": "scrutinized",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [
         1640
       ],
-      "commits": [],
-      "agent_type": "",
-      "summary": null,
+      "commits": [
+        "23b96e651d2d48c250482ef12d4b271d15d846ca"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          "internal/builders/llm_integration_test.go",
+          "internal/builders/baseline_test.go"
+        ],
+        "tests_added": 13,
+        "key_decisions": "Extended existing TestLLMGroundTruth rather than creating new test files. Used BuildResult.RepairAttempts for repair tracking. Metrics logged in test output, not separate JSON.",
+        "requirements_map": [
+          {
+            "ac": "latency metrics",
+            "status": "implemented"
+          },
+          {
+            "ac": "repair turn tracking",
+            "status": "implemented"
+          },
+          {
+            "ac": "configurable timeout",
+            "status": "implemented"
+          }
+        ]
+      },
       "testable_scenarios": [
         "scenario-1",
         "scenario-2",

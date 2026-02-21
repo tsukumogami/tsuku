@@ -13,7 +13,7 @@ Total scenarios: 16
 **Commands**:
 - `TSUKU_LLM_BINARY=$TSUKU_HOME/tools/tsuku-llm-*/bin/tsuku-llm go test -v -run TestLLMGroundTruth ./internal/builders/ -count=1`
 **Expected**: Test completes without panics, produces pass/fail results for all 18 test matrix cases, and results are serialized per the existing baseline format in `testdata/llm-quality-baselines/local.json`.
-**Status**: pending
+**Status**: skipped (environment: tsuku-llm addon not available; unit tests for baseline infrastructure all pass -- 15/15 subtests)
 
 ---
 
@@ -24,7 +24,7 @@ Total scenarios: 16
 **Commands**:
 - `go test -v -run TestLLMGroundTruth ./internal/builders/ -count=1`
 **Expected**: When a test case that previously passed now fails, the test output contains "Quality regressions detected". When a previously failing case now passes, the output contains "Improvements". The `-update-baseline` flag writes a new baseline file that includes all current results.
-**Status**: pending
+**Status**: skipped (environment: requires LLM provider; unit tests for regression detection all pass -- 10/10 subtests)
 
 ---
 
@@ -38,7 +38,7 @@ Total scenarios: 16
 - `ANTHROPIC_API_KEY=sk-... go test -v -run TestLLMGroundTruth ./internal/builders/ -count=1 -update-baseline`
 - Compare `testdata/llm-quality-baselines/local.json` vs `testdata/llm-quality-baselines/claude.json`
 **Expected**: Local provider baseline shows pass rate within 10% of Claude baseline. Both baselines exist and contain results for all 18 test matrix cases. The local baseline is writable (requires >= 50% pass rate per `writeBaseline` threshold).
-**Status**: pending
+**Status**: skipped (environment: requires tsuku-llm addon + cloud API keys; baseline files exist with 18 cases each, provider detection and model identification unit tests pass -- 4/4 subtests)
 
 ---
 
@@ -50,7 +50,7 @@ Total scenarios: 16
 **Commands**:
 - `TSUKU_LLM_BINARY=/path/to/tsuku-llm go test -v -run TestRecipeQualityBenchmark ./internal/llm/ -count=1`
 **Expected**: Test output logs latency per test case (p50, p99). Metrics are exportable to JSON. Hardware profile (GPU type, VRAM, model selected) is logged at test start. Latency falls within documented expectations: GPU inference <10s/turn, CPU inference <60s/turn.
-**Status**: pending
+**Status**: skipped (environment: requires running inference on hardware with known GPU; percentile and timeout parsing unit tests all pass -- 13/13 subtests)
 
 ---
 
