@@ -71,7 +71,7 @@ The strategy needs to handle both small PRs (1-5 recipes, where overhead matters
 
 #### Chosen: Ceiling-division batching with configurable batch size
 
-The detection job takes the list of N recipes and splits them into ceil(N / BATCH_SIZE) groups. Each group becomes one matrix entry containing a JSON array of recipes. Batch sizes are configured in a JSON config file (`ci-batch-config.json` or similar) alongside the existing `test-matrix.json`, making them easy to review and change without touching workflow YAML. Workflows read their batch sizes from this file in the detection job. A `workflow_dispatch` input provides an override for manual runs, useful for experimenting with different sizes. A guard clause clamps all values to the range 1-50.
+The detection job takes the list of N recipes and splits them into ceil(N / BATCH_SIZE) groups. Each group becomes one matrix entry containing a JSON array of recipes. Batch sizes are configured in a JSON config file (`.github/ci-batch-config.json` or similar) alongside the existing `test-matrix.json`, making them easy to review and change without touching workflow YAML. Workflows read their batch sizes from this file in the detection job. A `workflow_dispatch` input provides an override for manual runs, useful for experimenting with different sizes. A guard clause clamps all values to the range 1-50.
 
 For a PR with 70 recipes and BATCH_SIZE=15: ceil(70/15) = 5 jobs, each handling 13-15 recipes. For a PR with 3 recipes: ceil(3/15) = 1 job handling all 3.
 
@@ -264,7 +264,7 @@ Batch sizes live in a JSON config file at the repo root:
 Workflows read their batch sizes in the detection job:
 
 ```bash
-BATCH_SIZE=$(jq -r '.batch_sizes["test-changed-recipes"].linux // 15' ci-batch-config.json)
+BATCH_SIZE=$(jq -r '.batch_sizes["test-changed-recipes"].linux // 15' .github/ci-batch-config.json)
 ```
 
 For `workflow_dispatch`, an optional `batch_size_override` input takes precedence over the config file when provided. This lets contributors experiment with different sizes on manual runs without committing config changes.
