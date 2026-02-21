@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Accepted
 problem: |
   Recipe-triggered CI workflows spawn one GitHub Actions job per changed recipe.
   PR #1770 produced 153 per-recipe jobs, each paying ~30-45 seconds of cold-start
@@ -25,7 +25,7 @@ rationale: |
 
 ## Status
 
-Proposed
+Accepted
 
 ## Context and Problem Statement
 
