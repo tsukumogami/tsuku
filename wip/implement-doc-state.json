@@ -2,7 +2,7 @@
   "design_doc": "docs/designs/DESIGN-recipe-ci-batching.md",
   "branch": "docs/recipe-ci-batching",
   "pr_number": 1811,
-  "integrity_hash": "sha256:5ba5e04120bbea5d5b4a7559b5b2f714e8499d25ce1c149442a27c23c8564401",
+  "integrity_hash": "sha256:656b3e7eabeeb165e2c42eafa72fbafa891731d964b84bced7e7397fa37f4dd0",
   "issues": [
     {
       "number": 1814,
@@ -161,7 +161,7 @@
     {
       "number": 1816,
       "title": "docs(ci): document batch size configuration and tuning",
-      "status": "scrutinized",
+      "status": "pushed",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
       "issue_type": "code",
@@ -224,6 +224,23 @@
           }
         ]
       },
+      "reviewer_results": [
+        {
+          "review_focus": "pragmatic",
+          "blocking_count": 0,
+          "advisory_count": 0
+        },
+        {
+          "review_focus": "architect",
+          "blocking_count": 0,
+          "advisory_count": 1
+        },
+        {
+          "review_focus": "maintainer",
+          "blocking_count": 0,
+          "advisory_count": 2
+        }
+      ],
       "testable_scenarios": [
         "scenario-14"
       ]
