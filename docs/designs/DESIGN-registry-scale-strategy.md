@@ -152,7 +152,7 @@ graph TD
     class I1273 done
     class I1266 done
     class I1190 needsDesign
-    class I1277 needsDesign
+    class I1277 ready
     class I1278 blocked
     class I1412 done
     class I1191 blocked
