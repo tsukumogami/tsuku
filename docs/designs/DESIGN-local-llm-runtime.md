@@ -64,8 +64,8 @@ Planned
 
 | Issue | Dependencies | Tier |
 |-------|--------------|------|
-| [#1641: test(llm): add quality benchmark suite](https://github.com/tsukumogami/tsuku/issues/1641) | [#1640](https://github.com/tsukumogami/tsuku/issues/1640) | testable |
-| _Compare local model recipe quality against Claude/Gemini baselines. Document quality expectations per hardware profile._ | | |
+| ~~[#1641: test(llm): add quality benchmark suite](https://github.com/tsukumogami/tsuku/issues/1641)~~ | ~~[#1640](https://github.com/tsukumogami/tsuku/issues/1640)~~ | ~~testable~~ |
+| ~~_Compare local model recipe quality against Claude/Gemini baselines. Document quality expectations per hardware profile._~~ | | |
 | [#1642: feat(llm): add download permission prompts and progress UX](https://github.com/tsukumogami/tsuku/issues/1642) | [#1629](https://github.com/tsukumogami/tsuku/issues/1629), [#1637](https://github.com/tsukumogami/tsuku/issues/1637) | simple |
 | _Prompt user before addon/model downloads. Show progress bars during downloads and spinner during inference._ | | |
 | [#1643: feat(llm): implement tsuku llm download command](https://github.com/tsukumogami/tsuku/issues/1643) | [#1629](https://github.com/tsukumogami/tsuku/issues/1629), [#1637](https://github.com/tsukumogami/tsuku/issues/1637) | simple |
@@ -146,8 +146,8 @@ graph TD
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1628,I1629,I1630,I1631,I1632,I1633,I1634,I1635,I1636,I1637,I1638,I1672,I1675,I1676,I1639,I1640 done
-    class I1641,I1642,I1643,I1644,I1645 ready
+    class I1628,I1629,I1630,I1631,I1632,I1633,I1634,I1635,I1636,I1637,I1638,I1672,I1675,I1676,I1639,I1640,I1641 done
+    class I1642,I1643,I1644,I1645 ready
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design

@@ -2,7 +2,7 @@
   "design_doc": "docs/designs/DESIGN-local-llm-runtime.md",
   "branch": "impl/local-llm-runtime-v2",
   "pr_number": 1810,
-  "integrity_hash": "sha256:8d8d7e89b2fc35712eb9e7a27ddc0d669965d0863d08d096574608803dd7856e",
+  "integrity_hash": "sha256:005d37009ed9facdb152d443ba69b951a547a7d56dba1223451ec1eb90131bb2",
   "issues": [
     {
       "number": 1628,
@@ -253,7 +253,7 @@
     {
       "number": 1641,
       "title": "test(llm): add quality benchmark suite",
-      "status": "scrutinized",
+      "status": "pushed",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
       "issue_type": "code",
@@ -286,6 +286,31 @@
             "status": "implemented"
           }
         ]
+      },
+      "reviewer_results": {
+        "issue": 1641,
+        "reviews": [
+          {
+            "focus": "pragmatic",
+            "blocking_count": 0,
+            "advisory_count": 3,
+            "detail_file": "wip/research/implement-doc_review_pragmatic_issue1641.md"
+          },
+          {
+            "focus": "architect",
+            "blocking_count": 0,
+            "advisory_count": 1,
+            "detail_file": "wip/research/implement-doc_review_architect_issue1641.md"
+          },
+          {
+            "focus": "maintainer",
+            "blocking_count": 0,
+            "advisory_count": 5,
+            "detail_file": "wip/research/implement-doc_review_maintainer_issue1641.md"
+          }
+        ],
+        "overall_blocking": 0,
+        "verdict": "pass"
       },
       "testable_scenarios": [
         "scenario-1",
