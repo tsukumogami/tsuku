@@ -9,6 +9,7 @@ binaries = ["bin/fc-list", "bin/fc-cache", "bin/fc-match"]
 action = "homebrew"
 formula = "fontconfig"
 when = { os = ["linux"], libc = ["glibc"] }
+dependencies = ["freetype", "gettext"]
 
 [[steps]]
 action = "install_binaries"
@@ -27,6 +28,7 @@ when = { os = ["linux"], libc = ["musl"] }
 action = "homebrew"
 formula = "fontconfig"
 when = { os = ["darwin"] }
+dependencies = ["freetype", "gettext"]
 
 [[steps]]
 action = "install_binaries"
