@@ -13,8 +13,6 @@ Planned
 
 ## Implementation Issues
 
-### Milestone: [registry-scale-strategy](https://github.com/tsukumogami/tsuku/milestone/92)
-
 | Issue | Dependencies | Tier |
 |-------|--------------|------|
 | ~~[M50: Tool Backlog Visibility](https://github.com/tsukumogami/tsuku/milestone/50)~~ | ~~None~~ | |
