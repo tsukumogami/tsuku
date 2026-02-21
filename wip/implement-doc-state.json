@@ -2,7 +2,7 @@
   "design_doc": "docs/designs/DESIGN-registry-scale-strategy.md",
   "branch": "docs/registry-scale-refresh",
   "pr_number": 1820,
-  "integrity_hash": "sha256:003ad504293280d3b888ce229dbb9ae80716954cc4f7dc8feb7b75031efb8a5a",
+  "integrity_hash": "sha256:24c6c91ef041011b9956822e4b443a9faf78f60784e827ab294c555494915b83",
   "issues": [
     {
       "number": 1186,
@@ -256,14 +256,48 @@
     {
       "number": 1278,
       "title": "re-order queue entries within tiers by blocking impact",
-      "status": "pending",
+      "status": "scrutinized",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [],
-      "commits": [],
-      "agent_type": "",
-      "summary": null,
+      "commits": [
+        "30464d8d"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          "internal/reorder/reorder.go",
+          "internal/reorder/reorder_test.go",
+          "cmd/reorder-queue/main.go"
+        ],
+        "tests_added": 16,
+        "key_decisions": "Created internal/reorder package with standalone transitive blocker algorithm rather than exporting from internal/dashboard. Same DFS with cycle detection. New cmd/reorder-queue CLI with --dry-run and --json flags.",
+        "requirements_map": [
+          {
+            "ac": "scoring formula",
+            "status": "implemented"
+          },
+          {
+            "ac": "Go tool",
+            "status": "implemented"
+          },
+          {
+            "ac": "reuse dashboard computation",
+            "status": "deviated",
+            "reason": "reimplemented same algorithm - dashboard funcs unexported and coupled to dashboard types"
+          },
+          {
+            "ac": "tier boundaries preserved",
+            "status": "implemented"
+          },
+          {
+            "ac": "periodic maintenance step",
+            "status": "implemented"
+          }
+        ]
+      },
       "testable_scenarios": [
         "scenario-1",
         "scenario-2",

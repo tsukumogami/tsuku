@@ -1,0 +1,10 @@
+{
+  "issue": 1278,
+  "reviews": [
+    {"focus": "pragmatic", "blocking_count": 0, "advisory_count": 2},
+    {"focus": "architect", "blocking_count": 0, "advisory_count": 1},
+    {"focus": "maintainer", "blocking_count": 0, "advisory_count": 4}
+  ],
+  "overall_blocking": 0,
+  "overall_advisory": 7
+}

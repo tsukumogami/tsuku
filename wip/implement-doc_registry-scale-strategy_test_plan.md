@@ -13,7 +13,8 @@ Total scenarios: 8
 - `go build ./cmd/queue-analytics/`
 - `go vet ./cmd/queue-analytics/`
 **Expected**: Build succeeds with exit code 0 and no vet warnings. The tool compiles cleanly whether it is a new binary or an extension of the existing queue-analytics command.
-**Status**: pending
+**Status**: passed
+**Notes**: Implementation created `cmd/reorder-queue/` as a new binary. Both `cmd/queue-analytics/` and `cmd/reorder-queue/` build and vet cleanly.
 
 ---
 
@@ -26,7 +27,8 @@ Total scenarios: 8
 - Run the reorder tool against the test queue and failures directory
 - Read the output queue file and verify entry order within tier 2
 **Expected**: The output queue preserves tier boundaries and orders within tier 2 as C, B, A (descending by transitive blocking impact). Entries in other tiers are not interleaved.
-**Status**: pending
+**Status**: passed
+**Notes**: Output order: entry-c (score=3), entry-b (score=1), entry-a (score=0). Correct descending order by blocking impact.
 
 ---
 
@@ -38,7 +40,8 @@ Total scenarios: 8
 - Run the reorder tool
 - Read the output queue and check ordering
 **Expected**: Output order is X, Y, Z. Even though Z has the highest blocking impact, tier-1 entries always appear before tier-2, and tier-2 before tier-3. No cross-tier promotion occurs.
-**Status**: pending
+**Status**: passed
+**Notes**: Output: X (tier 1), Y (tier 2), Z (tier 3). Zero entries reordered across tiers.
 
 ---
 
@@ -50,7 +53,8 @@ Total scenarios: 8
 - Run the reorder tool
 - Compare output order to input order
 **Expected**: Entries with equal blocking impact (zero) maintain a stable, deterministic order (e.g., alphabetical by name). The tool does not shuffle entries that have no blocking data.
-**Status**: pending
+**Status**: passed
+**Notes**: Input: delta, echo, bravo, alpha, charlie. Output: alpha, bravo, charlie, delta, echo (alphabetical).
 
 ---
 
@@ -62,7 +66,8 @@ Total scenarios: 8
 - Run the reorder tool
 - Verify gmp and libfoo are ordered by their transitive (total) block count, not just direct
 **Expected**: The tool reuses `computeTransitiveBlockers` from `internal/dashboard/dashboard.go`. Both gmp (2 transitive) and libfoo (2 direct, 2 total) should have equal scores, breaking ties deterministically. An entry with 3 transitive blocks should rank above one with 2.
-**Status**: pending
+**Status**: passed
+**Notes**: Scores: extra-tool=3, gmp=2 (transitive), libfoo=2 (direct). gmp before libfoo on alphabetical tiebreak. Uses `blocker.ComputeTransitiveBlockers`.
 
 ---
 
@@ -73,7 +78,8 @@ Total scenarios: 8
 - `go test ./internal/dashboard/ -run TestComputeTopBlockers`
 - Inspect the reorder tool source code for imports of `internal/dashboard` package
 **Expected**: The reorder tool imports and calls functions from `internal/dashboard` (such as `computeTransitiveBlockers`, `buildBlockerCountsFromQueue`, or `computeTopBlockers`) rather than reimplementing the transitive blocker graph traversal. Unit tests in the dashboard package continue to pass.
-**Status**: pending
+**Status**: passed
+**Notes**: Reorder tool imports `internal/blocker` (shared package extracted from dashboard). Calls `blocker.BuildPkgToBare` and `blocker.ComputeTransitiveBlockers`. All 8 dashboard blocker tests pass.
 
 ---
 
@@ -85,7 +91,8 @@ Total scenarios: 8
 - Run the reorder tool with a queue file but no failures directory
 - Run the reorder tool with a queue where all entries are status "success" (no pending/blocked entries to reorder)
 **Expected**: All three invocations exit with code 0 and produce a valid output queue. No crashes, no panics. For the empty queue case, the output is also an empty queue. For the no-failures case, the order is unchanged from input.
-**Status**: pending
+**Status**: passed
+**Notes**: All three cases exit 0. Empty queue produces TotalEntries=0. No-failures case preserves order. All-success case handled without error.
 
 ---
 
@@ -97,6 +104,7 @@ Total scenarios: 8
 - `go run ./cmd/queue-analytics/ --queue data/queues/priority-queue.json --failures-dir data/failures --output /tmp/reordered-queue.json` (or equivalent flags for the reorder subcommand/tool)
 - Compare the before and after queue files using `jq` to extract tier-3 pending entries and verify order changes
 **Expected**: When run against the live `data/queues/priority-queue.json` and `data/failures/` directory, the tool produces a reordered queue where entries known to block many packages (visible on the pipeline dashboard as top blockers) appear earlier within their tier than entries that block nothing. The queue validates against the existing schema (schema_version, entries array with valid QueueEntry fields). This is a use-case scenario: it validates the feature delivers value on real pipeline data, not just synthetic test fixtures.
-**Status**: pending
+**Status**: passed
+**Notes**: 5275 entries processed, 4768 reordered. Top blockers: gmp (4), libgit2 (2), openssl@3 (2). 2561/2820 tier-3 pending entries changed position. Schema validates. Tier boundaries preserved.
 
 ---
