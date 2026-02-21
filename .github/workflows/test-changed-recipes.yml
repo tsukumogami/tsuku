@@ -28,6 +28,7 @@ jobs:
       has_macos: ${{ steps.changed.outputs.has_macos }}
       linux_batches: ${{ steps.batch.outputs.linux_batches }}
       has_linux_batches: ${{ steps.batch.outputs.has_linux_batches }}
+      batch_count: ${{ steps.batch.outputs.batch_count }}
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
@@ -183,6 +184,7 @@ jobs:
           if [ -z "$RECIPES" ] || [ "$RECIPES" = "[]" ]; then
             echo "linux_batches=[]" >> $GITHUB_OUTPUT
             echo "has_linux_batches=false" >> $GITHUB_OUTPUT
+            echo "batch_count=0" >> $GITHUB_OUTPUT
             exit 0
           fi
 
@@ -223,6 +225,7 @@ jobs:
           echo "linux_batches=$BATCHES" >> $GITHUB_OUTPUT
 
           BATCH_COUNT=$(echo "$BATCHES" | jq 'length')
+          echo "batch_count=$BATCH_COUNT" >> $GITHUB_OUTPUT
           if [ "$BATCH_COUNT" -gt 0 ]; then
             echo "has_linux_batches=true" >> $GITHUB_OUTPUT
           else
@@ -233,7 +236,7 @@ jobs:
 
   # Test Linux recipes in batches (each batch builds once and tests multiple recipes)
   test-linux:
-    name: "Linux batch ${{ matrix.batch.batch_id }}"
+    name: "Linux (batch ${{ matrix.batch.batch_id + 1 }}/${{ needs.matrix.outputs.batch_count }})"
     needs: matrix
     if: ${{ needs.matrix.outputs.has_linux_batches == 'true' }}
     runs-on: ubuntu-latest
@@ -266,6 +269,12 @@ jobs:
           mkdir -p "$CACHE_DIR"
           : > "$FAIL_FILE"
 
+          # Save original PATH so each iteration starts clean. We use
+          # "export PATH" rather than GITHUB_PATH because within a single
+          # step's for-loop each iteration needs its own PATH that doesn't
+          # leak into subsequent iterations.
+          ORIG_PATH="$PATH"
+
           COUNT=$(echo "$RECIPES" | jq 'length')
           for i in $(seq 0 $((COUNT - 1))); do
             tool=$(echo "$RECIPES" | jq -r ".[$i].tool")
@@ -276,7 +285,7 @@ jobs:
             export TSUKU_HOME="${{ runner.temp }}/tsuku-$tool"
             mkdir -p "$TSUKU_HOME/cache"
             ln -s "$CACHE_DIR" "$TSUKU_HOME/cache/downloads"
-            export PATH="$TSUKU_HOME/bin:$PATH"
+            export PATH="$TSUKU_HOME/bin:$ORIG_PATH"
 
             if ! ./tsuku install --force --recipe "$recipe_path"; then
               echo "$tool" >> "$FAIL_FILE"
@@ -324,6 +333,12 @@ jobs:
           mkdir -p "$CACHE_DIR"
           : > "$FAIL_FILE"
 
+          # Save original PATH so each iteration starts clean. We use
+          # "export PATH" rather than GITHUB_PATH because within a single
+          # step's for-loop each iteration needs its own PATH that doesn't
+          # leak into subsequent iterations.
+          ORIG_PATH="$PATH"
+
           COUNT=$(echo "$RECIPES" | jq 'length')
           for i in $(seq 0 $((COUNT - 1))); do
             tool=$(echo "$RECIPES" | jq -r ".[$i].tool")
@@ -334,7 +349,7 @@ jobs:
             export TSUKU_HOME="${{ runner.temp }}/tsuku-$tool"
             mkdir -p "$TSUKU_HOME/cache"
             ln -s "$CACHE_DIR" "$TSUKU_HOME/cache/downloads"
-            echo "$TSUKU_HOME/bin" >> "$GITHUB_PATH"
+            export PATH="$TSUKU_HOME/bin:$ORIG_PATH"
 
             if ! ./tsuku install --force --recipe "$recipe_path"; then
               echo "$tool" >> "$FAIL_FILE"
