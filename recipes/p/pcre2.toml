@@ -4,6 +4,10 @@ description = "Perl compatible regular expressions library with a new API"
 homepage = "https://www.pcre.org/"
 binaries = ["bin/pcre2grep", "bin/pcre2test"]
 
+[version]
+source = "homebrew"
+formula = "pcre2"
+
 # glibc Linux: Homebrew bottle
 [[steps]]
 action = "homebrew"
@@ -16,10 +20,32 @@ install_mode = "directory"
 outputs = ["bin/pcre2grep", "bin/pcre2test"]
 when = { os = ["linux"], libc = ["glibc"] }
 
-# musl Linux: Alpine package
+# musl Linux: compile from source
 [[steps]]
-action = "apk_install"
-packages = ["pcre2-tools"]
+action = "download"
+url = "https://github.com/PCRE2Project/pcre2/releases/download/pcre2-{version}/pcre2-{version}.tar.gz"
+when = { os = ["linux"], libc = ["musl"] }
+
+[[steps]]
+action = "extract"
+archive = "pcre2-{version}.tar.gz"
+format = "tar.gz"
+when = { os = ["linux"], libc = ["musl"] }
+
+[[steps]]
+action = "setup_build_env"
+when = { os = ["linux"], libc = ["musl"] }
+
+[[steps]]
+action = "configure_make"
+source_dir = "pcre2-{version}"
+executables = ["pcre2grep"]
+when = { os = ["linux"], libc = ["musl"] }
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = ["bin/pcre2grep", "bin/pcre2test"]
 when = { os = ["linux"], libc = ["musl"] }
 
 # macOS: Homebrew

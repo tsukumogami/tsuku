@@ -4,6 +4,10 @@ description = "Apache Portable Runtime library"
 homepage = "https://apr.apache.org/"
 binaries = ["bin/apr-1-config"]
 
+[version]
+source = "homebrew"
+formula = "apr"
+
 # glibc Linux: Homebrew bottle
 [[steps]]
 action = "homebrew"
@@ -16,10 +20,32 @@ install_mode = "directory"
 outputs = ["bin/apr-1-config"]
 when = { os = ["linux"], libc = ["glibc"] }
 
-# musl Linux: Alpine package
+# musl Linux: compile from source
 [[steps]]
-action = "apk_install"
-packages = ["apr-dev"]
+action = "download"
+url = "https://archive.apache.org/dist/apr/apr-{version}.tar.gz"
+when = { os = ["linux"], libc = ["musl"] }
+
+[[steps]]
+action = "extract"
+archive = "apr-{version}.tar.gz"
+format = "tar.gz"
+when = { os = ["linux"], libc = ["musl"] }
+
+[[steps]]
+action = "setup_build_env"
+when = { os = ["linux"], libc = ["musl"] }
+
+[[steps]]
+action = "configure_make"
+source_dir = "apr-{version}"
+executables = ["apr-1-config"]
+when = { os = ["linux"], libc = ["musl"] }
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = ["bin/apr-1-config"]
 when = { os = ["linux"], libc = ["musl"] }
 
 # macOS: Homebrew

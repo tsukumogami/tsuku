@@ -4,23 +4,15 @@ description = "Mozilla CA certificate store"
 homepage = "https://curl.se/docs/caextract.html"
 type = "library"
 
-# glibc Linux: System package (no Homebrew Linux bottle exists for this formula)
 [[steps]]
-action = "apt_install"
-packages = ["ca-certificates"]
-when = { os = ["linux"], libc = ["glibc"] }
+action = "download_file"
+url = "https://curl.se/ca/cacert-2025-12-02.pem"
+checksum = "f1407d974c5ed87d544bd931a278232e13925177e239fca370619aba63c757b4"
+dest = "cacert.pem"
 
-# musl Linux: Alpine package
 [[steps]]
-action = "apk_install"
-packages = ["ca-certificates"]
-when = { os = ["linux"], libc = ["musl"] }
-
-# macOS: Homebrew
-[[steps]]
-action = "homebrew"
-formula = "ca-certificates"
-when = { os = ["darwin"] }
+action = "run_command"
+command = "mkdir -p {install_dir}/share/ca-certificates && cp cacert.pem {install_dir}/share/ca-certificates/cacert.pem"
 
 [[steps]]
 action = "install_binaries"
@@ -28,4 +20,3 @@ install_mode = "directory"
 outputs = [
     "share/ca-certificates/cacert.pem",
 ]
-when = { os = ["darwin"] }
