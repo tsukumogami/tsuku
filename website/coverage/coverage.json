@@ -1,22 +1,22 @@
 {
-  "generated_at": "2026-02-21T02:17:06Z",
-  "total_recipes": 324,
+  "generated_at": "2026-02-21T06:33:10Z",
+  "total_recipes": 325,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 272,
-        "total": 324,
-        "pct": 83.9506172839506
+        "supported": 273,
+        "total": 325,
+        "pct": 84
       },
       "glibc": {
-        "supported": 310,
-        "total": 324,
-        "pct": 95.67901234567901
+        "supported": 311,
+        "total": 325,
+        "pct": 95.6923076923077
       },
       "musl": {
         "supported": 161,
-        "total": 324,
-        "pct": 49.691358024691354
+        "total": 325,
+        "pct": 49.53846153846154
       }
     },
     "by_category": {
@@ -26,9 +26,9 @@
         "glibc_support": 13
       },
       "tool": {
-        "total": 311,
+        "total": 312,
         "musl_support": 148,
-        "glibc_support": 297
+        "glibc_support": 298
       }
     }
   },
@@ -172,6 +172,20 @@
         "musl": true
       },
       "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "alass",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": false
+      },
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
