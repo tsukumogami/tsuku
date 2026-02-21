@@ -1,0 +1,5 @@
+[
+  {"review_focus": "pragmatic", "blocking_count": 1, "advisory_count": 3, "note": "Dead FetchManifest code removed in 365464e1"},
+  {"review_focus": "architect", "blocking_count": 0, "advisory_count": 1},
+  {"review_focus": "maintainer", "blocking_count": 0, "advisory_count": 2}
+]
