@@ -1,22 +1,22 @@
 {
-  "generated_at": "2026-02-21T15:55:23Z",
-  "total_recipes": 345,
+  "generated_at": "2026-02-21T23:05:00Z",
+  "total_recipes": 344,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 288,
-        "total": 345,
-        "pct": 83.47826086956522
+        "supported": 287,
+        "total": 344,
+        "pct": 83.43023255813954
       },
       "glibc": {
-        "supported": 315,
-        "total": 345,
-        "pct": 91.30434782608695
+        "supported": 314,
+        "total": 344,
+        "pct": 91.27906976744185
       },
       "musl": {
-        "supported": 176,
-        "total": 345,
-        "pct": 51.01449275362319
+        "supported": 175,
+        "total": 344,
+        "pct": 50.872093023255815
       }
     },
     "by_category": {
@@ -26,9 +26,9 @@
         "glibc_support": 22
       },
       "tool": {
-        "total": 323,
-        "musl_support": 154,
-        "glibc_support": 293
+        "total": 322,
+        "musl_support": 153,
+        "glibc_support": 292
       }
     }
   },
@@ -3139,18 +3139,6 @@
       "gaps": [
         "musl"
       ],
-      "errors": null,
-      "warnings": null
-    },
-    {
-      "name": "openssl@3",
-      "type": "tool",
-      "platforms": {
-        "darwin": true,
-        "glibc": true,
-        "musl": true
-      },
-      "gaps": null,
       "errors": null,
       "warnings": null
     },
