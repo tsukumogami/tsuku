@@ -1,24 +1,24 @@
 {
-  "batch_id": "2026-02-20",
+  "batch_id": "2026-02-21",
   "ecosystems": {
-    "npm": 7,
-    "pypi": 2
+    "github": 9,
+    "homebrew": 41
   },
   "per_ecosystem": {
-    "npm": {
-      "total": 7,
-      "succeeded": 4,
-      "failed": 3
-    },
-    "pypi": {
-      "total": 2,
+    "github": {
+      "total": 9,
       "succeeded": 0,
-      "failed": 2
+      "failed": 9
+    },
+    "homebrew": {
+      "total": 41,
+      "succeeded": 1,
+      "failed": 38
     }
   },
-  "total": 9,
-  "succeeded": 4,
-  "failed": 5,
-  "blocked": 0,
-  "timestamp": "2026-02-20T05:53:58.814738448Z"
+  "total": 50,
+  "succeeded": 1,
+  "failed": 47,
+  "blocked": 2,
+  "timestamp": "2026-02-21T06:13:30.867478947Z"
 }
