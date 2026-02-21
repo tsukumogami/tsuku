@@ -23,7 +23,7 @@ Planned
 | ~~_Package entity schema, scoring algorithm, and static file formats for the priority queue and failure records._~~ | | |
 | ~~[#1187: design batch operations and rollback procedures](https://github.com/tsukumogami/tsuku/issues/1187)~~ | ~~None~~ | ~~testable~~ |
 | ~~_Rollback scripts, emergency stop procedures, and runbooks for batch auto-merge operations._~~ | | |
-| ~~[M57: Visibility Infrastructure Schemas](https://github.com/tsukumogami/tsuku/milestone/57)~~ | ~~M50~~ | |
+| ~~[M57: Visibility Infrastructure Schemas](https://github.com/tsukumogami/tsuku/milestone/57)~~ | ~~[M50](https://github.com/tsukumogami/tsuku/milestone/50)~~ | |
 | ~~_Implements the schemas and scripts designed in M50._~~ | | |
 | ~~[#1199: feat(data): add priority queue and failure record schemas](https://github.com/tsukumogami/tsuku/issues/1199)~~ | ~~[#1186](https://github.com/tsukumogami/tsuku/issues/1186)~~ | ~~testable~~ |
 | ~~_JSON schema files defining structure for priority queue and failure records._~~ | | |
@@ -35,17 +35,17 @@ Planned
 | ~~_Seed script populating the priority queue with Homebrew formulas, assigning tiers based on download counts._~~ | | |
 | ~~[#1203: feat(scripts): add gap analysis script](https://github.com/tsukumogami/tsuku/issues/1203)~~ | ~~[#1199](https://github.com/tsukumogami/tsuku/issues/1199)~~ | ~~testable~~ |
 | ~~_Gap analysis script querying failure data to identify which packages are blocked by specific missing dependencies._~~ | | |
-| ~~[M55: Batch Operations Control Plane](https://github.com/tsukumogami/tsuku/milestone/55)~~ | ~~M50~~ | |
+| ~~[M55: Batch Operations Control Plane](https://github.com/tsukumogami/tsuku/milestone/55)~~ | ~~[M50](https://github.com/tsukumogami/tsuku/milestone/50)~~ | |
 | ~~_Implements [#1187](https://github.com/tsukumogami/tsuku/issues/1187). See [DESIGN-batch-operations.md](current/DESIGN-batch-operations.md) for issues._~~ | | |
-| ~~[M56: Batch Operations Observability](https://github.com/tsukumogami/tsuku/milestone/56)~~ | ~~M55~~ | |
+| ~~[M56: Batch Operations Observability](https://github.com/tsukumogami/tsuku/milestone/56)~~ | ~~[M55](https://github.com/tsukumogami/tsuku/milestone/55)~~ | |
 | ~~_Implements [#1187](https://github.com/tsukumogami/tsuku/issues/1187). See [DESIGN-batch-operations.md](current/DESIGN-batch-operations.md) for issues._~~ | | |
-| ~~[M51: Deterministic Homebrew Builder](https://github.com/tsukumogami/tsuku/milestone/51)~~ | ~~M50~~ | |
+| ~~[M51: Deterministic Homebrew Builder](https://github.com/tsukumogami/tsuku/milestone/51)~~ | ~~[M50](https://github.com/tsukumogami/tsuku/milestone/50)~~ | |
 | ~~_Refactor the Homebrew builder to defer LLM initialization, enabling deterministic-only recipe generation._~~ | | |
 | ~~[#1188: design homebrew deterministic mode](https://github.com/tsukumogami/tsuku/issues/1188)~~ | ~~[#1186](https://github.com/tsukumogami/tsuku/issues/1186)~~ | ~~testable~~ |
 | ~~_Design the builder refactor so deterministic-only generation works without an LLM API key._~~ | | |
 | ~~[#1266: structured deterministic-failed error path](https://github.com/tsukumogami/tsuku/issues/1266)~~ | ~~[#1188](https://github.com/tsukumogami/tsuku/issues/1188)~~ | ~~testable~~ |
 | ~~_Produce a structured `DeterministicFailedError` instead of crashing when bottle inspection succeeds but no LLM keys are present._~~ | | |
-| ~~[M52: Batch Pipeline](https://github.com/tsukumogami/tsuku/milestone/52)~~ | ~~M51, M57~~ | |
+| ~~[M52: Batch Pipeline](https://github.com/tsukumogami/tsuku/milestone/52)~~ | ~~[M51](https://github.com/tsukumogami/tsuku/milestone/51)~~, ~~[M57](https://github.com/tsukumogami/tsuku/milestone/57)~~ | |
 | ~~_Hourly CI pipeline for batch generation. See [DESIGN-batch-recipe-generation.md](DESIGN-batch-recipe-generation.md) for additional issues._~~ | | |
 | ~~[#1241: seed priority queue pipeline](https://github.com/tsukumogami/tsuku/issues/1241)~~ | ~~[#1199](https://github.com/tsukumogami/tsuku/issues/1199)~~, ~~[#1202](https://github.com/tsukumogami/tsuku/issues/1202)~~ | ~~testable~~ |
 | ~~_CI workflow populating `data/priority-queue.json` from ecosystem registry APIs._~~ | | |
@@ -61,7 +61,7 @@ Planned
 | ~~_Automated cron triggers replacing manual `workflow_dispatch` for queue seeding and batch generation._~~ | | |
 | ~~[#1253: pinned release support](https://github.com/tsukumogami/tsuku/issues/1253)~~ | ~~None~~ | ~~testable~~ |
 | ~~_Install a pinned tsuku release in batch-generate via `install.sh`, with fallback to building from source._~~ | | |
-| [M53: Failure Backend](https://github.com/tsukumogami/tsuku/milestone/53) | M52 | |
+| [M53: Failure Backend](https://github.com/tsukumogami/tsuku/milestone/53) | [M52](https://github.com/tsukumogami/tsuku/milestone/52) | |
 | _Gap analysis and prioritization tooling. File-based JSONL in `data/failures/` is the chosen approach; D1 migration was dropped._ | | |
 | ~~[#1190: design failure analysis backend](https://github.com/tsukumogami/tsuku/issues/1190)~~ | ~~[#1189](https://github.com/tsukumogami/tsuku/issues/1189)~~ | ~~testable~~ |
 | ~~_Closed as not planned. File-based JSONL approach is sufficient; D1 migration not justified at current scale._~~ | | |
@@ -69,7 +69,7 @@ Planned
 | ~~_Closed. Functionality shipped via pipeline dashboard (`website/pipeline/`) with transitive blocker computation in `internal/dashboard/`._~~ | | |
 | [#1278: re-order queue entries within tiers by blocking impact](https://github.com/tsukumogami/tsuku/issues/1278) | None | testable |
 | _Use existing transitive blocker computation to re-order entries within priority tiers, so high-impact packages are generated first._ | | |
-| [M54: Multi-Ecosystem](https://github.com/tsukumogami/tsuku/milestone/54) | M53 | |
+| [M54: Multi-Ecosystem](https://github.com/tsukumogami/tsuku/milestone/54) | [M53](https://github.com/tsukumogami/tsuku/milestone/53) | |
 | _All deterministic builders integrated and running. System library backfill remains._ | | |
 | [#1191: design system library backfill strategy](https://github.com/tsukumogami/tsuku/issues/1191) | None | simple |
 | _Strategy for adding common system library recipes (libpng, sqlite, curl, etc.) to unblock dependent tools. No longer blocked on #1190._ | | |
@@ -156,7 +156,7 @@ graph TD
     class I1190 done
     class I1277 done
     class I1278 ready
-    class I1191 ready
+    class I1191 needsDesign
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
