@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Accepted
 problem: |
   Tsuku's recipe resolution uses exact name matching with no fallback. When Homebrew calls a package `openssl@3` but the tsuku recipe is named `openssl`, the system fails to connect them. This produces duplicate recipes from the batch pipeline, false blockers on the dashboard, and `tsuku create` generating inferior copies of existing recipes. A static mapping file was tried (#1200) but never wired in, and the approach doesn't scale.
 decision: |
@@ -10,7 +10,7 @@ rationale: |
 
 # DESIGN: Ecosystem Name Resolution
 
-**Status:** Proposed
+**Status:** Accepted
 
 ## Context and Problem Statement
 
