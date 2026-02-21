@@ -237,6 +237,34 @@ func (p *LocalProvider) ensureModelReady(ctx context.Context) error {
 	return nil
 }
 
+// TriggerModelDownload sends a lightweight Complete request to the addon server
+// to trigger model download and loading. The addon downloads the model on first
+// inference call, so a trivial request forces this to happen. After the call
+// completes, the model is downloaded, loaded, and verified.
+func (p *LocalProvider) TriggerModelDownload(ctx context.Context) error {
+	if err := p.ensureConnection(ctx); err != nil {
+		return fmt.Errorf("failed to connect to addon: %w", err)
+	}
+
+	// Send a minimal completion request. The addon will download and load
+	// the model before responding. This is the only way to trigger model
+	// download since the gRPC API has no dedicated DownloadModel RPC.
+	req := &pb.CompletionRequest{
+		SystemPrompt: "Respond with OK.",
+		Messages: []*pb.Message{
+			{Role: pb.Role_ROLE_USER, Content: "OK"},
+		},
+		MaxTokens: 4,
+	}
+
+	_, err := p.client.Complete(ctx, req)
+	if err != nil {
+		p.invalidateConnection()
+		return fmt.Errorf("model download failed: %w", err)
+	}
+	return nil
+}
+
 // Shutdown sends a shutdown request to the addon.
 func (p *LocalProvider) Shutdown(ctx context.Context, graceful bool) error {
 	if p.client == nil {

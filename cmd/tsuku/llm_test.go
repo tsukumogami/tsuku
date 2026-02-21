@@ -46,13 +46,13 @@ func TestLLMCommandStructure(t *testing.T) {
 }
 
 func TestLLMDownloadFlags(t *testing.T) {
-	t.Run("model flag exists", func(t *testing.T) {
+	t.Run("model flag removed", func(t *testing.T) {
+		// The --model flag was removed because the addon selects models based
+		// on hardware detection and the gRPC API has no way to request a
+		// specific model. Model override is done via config.toml local_model.
 		f := llmDownloadCmd.Flags().Lookup("model")
-		if f == nil {
-			t.Fatal("expected --model flag on download command")
-		}
-		if f.DefValue != "" {
-			t.Errorf("--model default = %q, want empty string", f.DefValue)
+		if f != nil {
+			t.Fatal("--model flag should not exist; model override is via config.toml local_model")
 		}
 	})
 

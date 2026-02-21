@@ -21,7 +21,6 @@ enabling recipe generation without cloud API keys.`,
 }
 
 var (
-	llmDownloadModel string
 	llmDownloadForce bool
 	llmDownloadYes   bool
 )
@@ -34,18 +33,17 @@ for local inference. This prepares the local LLM runtime for offline or
 CI use without waiting for on-demand downloads during recipe generation.
 
 The command detects available hardware (GPU, VRAM, RAM) and selects the
-appropriate model size. Use --model to override automatic selection.
+appropriate model size. To override automatic model selection, set
+local_model in $TSUKU_HOME/config.toml.
 
 Examples:
-  tsuku llm download                                     # Auto-detect hardware, download addon + model
-  tsuku llm download --model qwen2.5-0.5b-instruct-q4   # Override model selection
-  tsuku llm download --force                             # Re-download even if files exist
-  tsuku llm download --yes                               # Skip confirmation prompts (CI)`,
+  tsuku llm download          # Auto-detect hardware, download addon + model
+  tsuku llm download --force  # Re-download even if files exist
+  tsuku llm download --yes    # Skip confirmation prompts (CI)`,
 	RunE: runLLMDownload,
 }
 
 func init() {
-	llmDownloadCmd.Flags().StringVar(&llmDownloadModel, "model", "", "Override auto-selected model (e.g., qwen2.5-0.5b-instruct-q4)")
 	llmDownloadCmd.Flags().BoolVar(&llmDownloadForce, "force", false, "Re-download even if files already exist")
 	llmDownloadCmd.Flags().BoolVar(&llmDownloadYes, "yes", false, "Skip download confirmation prompts")
 
@@ -53,9 +51,10 @@ func init() {
 }
 
 // runLLMDownload implements the 'tsuku llm download' command.
-// It ensures the addon binary is installed, starts it to detect hardware,
-// and reports the selected model. The addon handles model downloading
-// when inference is first needed.
+// It ensures the addon binary is installed, starts the addon server to detect
+// hardware, and triggers a model download by sending a lightweight inference
+// request. The addon downloads the model on first inference call (no dedicated
+// DownloadModel RPC exists), so a trivial Complete request forces the download.
 func runLLMDownload(cmd *cobra.Command, args []string) error {
 	ctx := globalCtx
 	if ctx == nil {
@@ -122,13 +121,9 @@ func runLLMDownload(cmd *cobra.Command, args []string) error {
 		fmt.Fprintf(os.Stderr, "VRAM: %s\n", addon.FormatSize(status.AvailableVramBytes))
 	}
 
-	// Determine effective model name
-	effectiveModel := status.ModelName
-	if llmDownloadModel != "" {
-		effectiveModel = llmDownloadModel
-		fmt.Fprintf(os.Stderr, "Selected model: %s (override via --model)\n", effectiveModel)
-	} else if effectiveModel != "" {
-		fmt.Fprintf(os.Stderr, "Selected model: %s\n", effectiveModel)
+	// Display selected model from addon's hardware-based selection
+	if status.ModelName != "" {
+		fmt.Fprintf(os.Stderr, "Selected model: %s\n", status.ModelName)
 	}
 
 	// Step 4: Check if everything is already present
@@ -139,38 +134,56 @@ func runLLMDownload(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	// Step 5: Model needs downloading -- prompt and report
-	if !status.Ready || status.ModelName == "" || llmDownloadForce {
-		modelDesc := "LLM model"
-		if effectiveModel != "" {
-			modelDesc = fmt.Sprintf("LLM model (%s)", effectiveModel)
-		}
-
-		// Prompt for model download confirmation
-		ok, promptErr := prompter.ConfirmDownload(ctx, modelDesc, status.ModelSizeBytes)
-		if promptErr != nil {
-			if errors.Is(promptErr, addon.ErrDownloadDeclined) {
-				fmt.Fprintln(os.Stderr, "Error: model download declined")
-				fmt.Fprintln(os.Stderr, "Use --yes to skip confirmation prompts.")
-				exitWithCode(ExitGeneral)
-				return nil
-			}
-			fmt.Fprintf(os.Stderr, "Error: %v\n", promptErr)
-			exitWithCode(ExitGeneral)
-			return nil
-		}
-		if !ok {
-			fmt.Fprintln(os.Stderr, "Error: model download declined")
-			exitWithCode(ExitGeneral)
-			return nil
-		}
+	// Step 5: Model needs downloading -- prompt for confirmation
+	modelDesc := "LLM model"
+	if status.ModelName != "" {
+		modelDesc = fmt.Sprintf("LLM model (%s)", status.ModelName)
 	}
 
-	// The addon server handles model downloading on first inference.
-	// The download command ensures the addon is running and reports status.
+	ok, promptErr := prompter.ConfirmDownload(ctx, modelDesc, status.ModelSizeBytes)
+	if promptErr != nil {
+		if errors.Is(promptErr, addon.ErrDownloadDeclined) {
+			fmt.Fprintln(os.Stderr, "Error: model download declined")
+			fmt.Fprintln(os.Stderr, "Use --yes to skip confirmation prompts.")
+			exitWithCode(ExitGeneral)
+			return nil
+		}
+		fmt.Fprintf(os.Stderr, "Error: %v\n", promptErr)
+		exitWithCode(ExitGeneral)
+		return nil
+	}
+	if !ok {
+		fmt.Fprintln(os.Stderr, "Error: model download declined")
+		exitWithCode(ExitGeneral)
+		return nil
+	}
+
+	// Step 6: Trigger model download by sending a lightweight inference request.
+	// The addon downloads and loads the model on the first Complete call.
+	fmt.Fprintln(os.Stderr, "\nDownloading model...")
+	if err := provider.TriggerModelDownload(ctx); err != nil {
+		fmt.Fprintf(os.Stderr, "Error: failed to download model: %v\n", err)
+		exitWithCode(ExitGeneral)
+		return nil
+	}
+
+	// Step 7: Verify the model is now ready
+	status, err = provider.GetStatus(ctx)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: failed to verify model status: %v\n", err)
+		exitWithCode(ExitGeneral)
+		return nil
+	}
+
+	if !status.Ready || status.ModelName == "" {
+		fmt.Fprintln(os.Stderr, "Error: model download completed but model is not ready")
+		exitWithCode(ExitGeneral)
+		return nil
+	}
+
 	fmt.Fprintln(os.Stderr, "")
 	fmt.Fprintln(os.Stderr, "Download complete.")
-	printDownloadSummary(addonPath, effectiveModel, status.ModelSizeBytes)
+	printDownloadSummary(addonPath, status.ModelName, status.ModelSizeBytes)
 
 	return nil
 }
