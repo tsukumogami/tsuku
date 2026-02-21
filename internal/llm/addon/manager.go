@@ -160,27 +160,6 @@ func (m *AddonManager) findInstalledBinary() string {
 	return ""
 }
 
-// isGPUVariantInstalled checks if the currently installed tsuku-llm directory
-// name contains a GPU backend indicator (cuda or vulkan in the asset name).
-// This is a heuristic: recipe-installed directories follow the pattern
-// tsuku-llm-<version> and the plan's asset name determines the variant.
-// When the user sets llm.backend=cpu, we check if the installed binary
-// came from a GPU-specific step by looking at the installation state.
-func (m *AddonManager) isGPUVariantInstalled() bool {
-	// Conservative check: look for non-CPU variant directories.
-	// The recipe system installs to tsuku-llm-<version>/ regardless of variant,
-	// so we can't distinguish variants by directory name alone.
-	// For the initial implementation, assume any existing installation that
-	// was done without the cpu override might be a GPU variant.
-	// A more precise check would read state.json, but that creates a dependency
-	// on the install package that the issue spec avoids.
-	//
-	// The simplest correct approach: if backendOverride is "cpu" and there's
-	// an installed binary, always reinstall. The recipe system handles
-	// idempotency and this case (switching from GPU to CPU) should be rare.
-	return true
-}
-
 // installViaRecipe delegates installation to the recipe system.
 func (m *AddonManager) installViaRecipe(ctx context.Context) error {
 	if m.installer == nil {

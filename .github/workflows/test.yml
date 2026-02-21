@@ -289,7 +289,18 @@ jobs:
           restore-keys: |
             llm-model-
 
+      - name: Check GPU availability
+        id: gpu-check
+        run: |
+          if ls /dev/nvidia* >/dev/null 2>&1 || ls /dev/dri/renderD* >/dev/null 2>&1; then
+            echo "gpu=true" >> $GITHUB_OUTPUT
+          else
+            echo "gpu=false" >> $GITHUB_OUTPUT
+            echo "::warning::No GPU detected — skipping LLM integration tests (GPU required since CPU inference was removed)"
+          fi
+
       - name: Run LLM integration tests
+        if: steps.gpu-check.outputs.gpu == 'true'
         env:
           TSUKU_LLM_BINARY: ${{ github.workspace }}/tsuku-llm/target/release/tsuku-llm
         # Set TSUKU_LLM_MODEL_CACHE via shell so $HOME is expanded at runtime.
@@ -303,7 +314,6 @@ jobs:
   # Run ground truth quality suite with local provider when prompts or baselines change.
   # Setup steps (Go, Rust, Cargo cache, protobuf, model cache) mirror llm-integration above.
   # Kept inline for CI readability rather than extracted into a reusable workflow.
-  # Uses a 10-minute per-test timeout (vs 2-min default) for CPU inference on CI runners.
   llm-quality:
     name: "LLM Quality Gate"
     needs: matrix
@@ -352,7 +362,18 @@ jobs:
           restore-keys: |
             llm-model-
 
+      - name: Check GPU availability
+        id: gpu-check
+        run: |
+          if ls /dev/nvidia* >/dev/null 2>&1 || ls /dev/dri/renderD* >/dev/null 2>&1; then
+            echo "gpu=true" >> $GITHUB_OUTPUT
+          else
+            echo "gpu=false" >> $GITHUB_OUTPUT
+            echo "::warning::No GPU detected — skipping LLM quality tests (GPU required since CPU inference was removed)"
+          fi
+
       - name: Run LLM quality tests
+        if: steps.gpu-check.outputs.gpu == 'true'
         env:
           TSUKU_LLM_BINARY: ${{ github.workspace }}/tsuku-llm/target/release/tsuku-llm
           GITHUB_TOKEN: ${{ github.token }}
