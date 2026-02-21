@@ -52,7 +52,7 @@ jobs:
       - name: Create recipe for ruff
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./tsuku create ruff --from pypi --yes
+        run: ./tsuku create ruff --from pypi --yes --force
 
       - name: Verify recipe was created
         run: |
@@ -102,7 +102,7 @@ jobs:
       - name: Create recipe for ruff
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./tsuku create ruff --from pypi --yes
+        run: ./tsuku create ruff --from pypi --yes --force
 
       - name: Verify recipe was created
         run: |

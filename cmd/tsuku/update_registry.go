@@ -46,6 +46,10 @@ Use --dry-run to see what would be refreshed without making network requests.`,
 			return
 		}
 
+		// Fetch the registry manifest (recipes.json) so the satisfies
+		// index can resolve ecosystem names for registry-only recipes.
+		refreshManifest(ctx, reg)
+
 		if registryRecipeName != "" {
 			runSingleRecipeRefresh(ctx, cachedReg, registryRecipeName)
 			return
@@ -216,6 +220,17 @@ func forceRegistryRefreshAll(ctx context.Context, cachedReg *registry.CachedRegi
 	}
 
 	return stats
+}
+
+// refreshManifest fetches the registry manifest and caches it locally.
+// The manifest provides the satisfies index for ecosystem name resolution.
+// Errors are non-fatal: the CLI continues working without the manifest,
+// but ecosystem name resolution for registry-only recipes won't work.
+func refreshManifest(ctx context.Context, reg *registry.Registry) {
+	_, err := reg.FetchManifest(ctx)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: failed to fetch registry manifest: %v\n", err)
+	}
 }
 
 // formatAgeDuration formats a duration for human-readable display.

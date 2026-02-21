@@ -10,6 +10,9 @@ homepage = "https://gcc.gnu.org/"
 type = "library"
 supported_os = ["linux"]
 
+[metadata.satisfies]
+homebrew = ["gcc"]
+
 # glibc Linux: Download gcc bottle and extract runtime libraries
 [[steps]]
 action = "homebrew"

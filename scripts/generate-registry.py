@@ -20,7 +20,7 @@ import tomllib
 from datetime import datetime, timezone
 from pathlib import Path
 
-SCHEMA_VERSION = "1.1.0"
+SCHEMA_VERSION = "1.2.0"
 MAX_DESCRIPTION_LENGTH = 200
 MAX_FILE_SIZE = 100 * 1024  # 100KB
 # Recipe directories: registry recipes and embedded recipes
@@ -30,6 +30,7 @@ OUTPUT_FILE = OUTPUT_DIR / "recipes.json"
 
 # Validation patterns
 NAME_PATTERN = re.compile(r"^[a-z0-9@.-]+$")
+ECOSYSTEM_PATTERN = re.compile(r"^[a-z][a-z0-9-]*$")
 # Accept paths from registry (recipes/<letter>/<name>.toml) or embedded (internal/recipe/recipes/<name>.toml)
 PATH_PATTERN = re.compile(r"^(recipes/[a-z]/[a-z0-9@.-]+\.toml|internal/recipe/recipes/[a-z0-9@.-]+\.toml)$")
 
@@ -182,6 +183,46 @@ def validate_metadata(file_path: Path, metadata: dict) -> list[ValidationError]:
                             f"{field} contains invalid name '{dep}' (must match {NAME_PATTERN.pattern})"
                         ))
 
+    # Validate satisfies structure
+    if "satisfies" in metadata:
+        satisfies = metadata["satisfies"]
+        if not isinstance(satisfies, dict):
+            errors.append(ValidationError(
+                path_str,
+                "satisfies must be a table (map of ecosystem -> package name arrays)"
+            ))
+        else:
+            for ecosystem, pkg_names in satisfies.items():
+                if not isinstance(ecosystem, str):
+                    errors.append(ValidationError(
+                        path_str,
+                        f"satisfies key must be a string, got {type(ecosystem).__name__}"
+                    ))
+                elif not ECOSYSTEM_PATTERN.match(ecosystem):
+                    errors.append(ValidationError(
+                        path_str,
+                        f"satisfies ecosystem name '{ecosystem}' must be lowercase alphanumeric with hyphens"
+                    ))
+
+                if not isinstance(pkg_names, list):
+                    errors.append(ValidationError(
+                        path_str,
+                        f"satisfies.{ecosystem} must be an array of strings"
+                    ))
+                else:
+                    for pkg_name in pkg_names:
+                        if not isinstance(pkg_name, str):
+                            errors.append(ValidationError(
+                                path_str,
+                                f"satisfies.{ecosystem} contains non-string value: {pkg_name}"
+                            ))
+                        elif not NAME_PATTERN.match(pkg_name):
+                            errors.append(ValidationError(
+                                path_str,
+                                f"satisfies.{ecosystem} contains invalid name '{pkg_name}' "
+                                f"(must match {NAME_PATTERN.pattern})"
+                            ))
+
     return errors
 
 
@@ -219,13 +260,20 @@ def parse_recipe(file_path: Path) -> tuple[dict | None, list[ValidationError]]:
         return None, errors
 
     # Return extracted metadata with dependencies (default to empty arrays)
-    return {
+    result = {
         "name": metadata["name"],
         "description": metadata["description"],
         "homepage": metadata["homepage"],
         "dependencies": metadata.get("dependencies", []),
         "runtime_dependencies": metadata.get("runtime_dependencies", []),
-    }, []
+    }
+
+    # Include satisfies only when present (omit empty objects from JSON)
+    satisfies = metadata.get("satisfies")
+    if satisfies:
+        result["satisfies"] = satisfies
+
+    return result, []
 
 
 def generate_json(recipes: list[dict]) -> dict:
@@ -269,6 +317,32 @@ def main() -> int:
                     f"recipe '{recipe['name']}'",
                     f"runtime_dependency '{dep}' references non-existent recipe"
                 ))
+
+    # Validate cross-recipe satisfies entries
+    # Track all claimed package names: pkg_name -> recipe_name
+    satisfies_claims: dict[str, str] = {}
+    for recipe in recipes:
+        satisfies = recipe.get("satisfies", {})
+        for ecosystem, pkg_names in satisfies.items():
+            for pkg_name in pkg_names:
+                # Check for duplicate claims across recipes
+                if pkg_name in satisfies_claims:
+                    all_errors.append(ValidationError(
+                        f"recipe '{recipe['name']}'",
+                        f"duplicate satisfies entry: '{pkg_name}' is already claimed "
+                        f"by recipe '{satisfies_claims[pkg_name]}' "
+                        f"(in ecosystem '{ecosystem}')"
+                    ))
+                else:
+                    satisfies_claims[pkg_name] = recipe["name"]
+
+                # Check if a satisfies entry matches another recipe's canonical name
+                if pkg_name in recipe_names and pkg_name != recipe["name"]:
+                    all_errors.append(ValidationError(
+                        f"recipe '{recipe['name']}'",
+                        f"satisfies entry '{pkg_name}' conflicts with existing "
+                        f"recipe canonical name '{pkg_name}'"
+                    ))
 
     # Report errors
     if all_errors:

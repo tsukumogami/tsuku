@@ -47,7 +47,7 @@ jobs:
       - name: Create recipe for prettier
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./tsuku create prettier --from npm --yes
+        run: ./tsuku create prettier --from npm --yes --force
 
       - name: Verify recipe was created
         run: |
@@ -92,7 +92,7 @@ jobs:
       - name: Create recipe for prettier
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./tsuku create prettier --from npm --yes
+        run: ./tsuku create prettier --from npm --yes --force
 
       - name: Verify recipe was created
         run: |

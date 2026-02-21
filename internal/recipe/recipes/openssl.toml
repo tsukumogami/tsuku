@@ -5,6 +5,9 @@ homepage = "https://openssl-library.org/"
 type = "library"
 binaries = ["bin/openssl"]
 
+[metadata.satisfies]
+homebrew = ["openssl@3"]
+
 # glibc Linux: Homebrew bottles with step-level dependencies
 [[steps]]
 action = "homebrew"

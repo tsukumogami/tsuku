@@ -4,6 +4,9 @@ description = "Multi-protocol file transfer library"
 homepage = "https://curl.se/libcurl/"
 type = "library"
 dependencies = ["brotli", "libnghttp2", "libnghttp3", "libngtcp2", "libssh2", "openssl", "zlib", "zstd"]
+# No [metadata.satisfies] for homebrew "curl" -- that name is the canonical recipe
+# recipes/c/curl.toml (the CLI tool). This recipe installs the library via
+# Homebrew's curl formula but is a distinct package from the curl CLI.
 
 [[steps]]
 action = "homebrew"

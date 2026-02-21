@@ -2,6 +2,7 @@ package recipe
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 )
 
@@ -50,6 +51,9 @@ func ValidateStructural(r *Recipe) []ValidationError {
 		errors = append(errors, ValidationError{Field: "verify.command", Message: "command is required"})
 	}
 
+	// Satisfies validation
+	errors = append(errors, validateSatisfies(r)...)
+
 	// Patch validation
 	for i, patch := range r.Patches {
 		patchField := fmt.Sprintf("patches[%d]", i)
@@ -58,6 +62,46 @@ func ValidateStructural(r *Recipe) []ValidationError {
 		}
 		if patch.URL == "" && patch.Data == "" {
 			errors = append(errors, ValidationError{Field: patchField, Message: "must specify either 'url' or 'data'"})
+		}
+	}
+
+	return errors
+}
+
+// ecosystemNamePattern matches valid ecosystem names: lowercase alphanumeric with hyphens.
+var ecosystemNamePattern = regexp.MustCompile(`^[a-z][a-z0-9-]*$`)
+
+// validateSatisfies checks the satisfies metadata field for well-formedness.
+func validateSatisfies(r *Recipe) []ValidationError {
+	var errors []ValidationError
+
+	for ecosystem, pkgNames := range r.Metadata.Satisfies {
+		field := fmt.Sprintf("metadata.satisfies.%s", ecosystem)
+
+		// Ecosystem name must be well-formed: lowercase, alphanumeric, hyphens only
+		if !ecosystemNamePattern.MatchString(ecosystem) {
+			errors = append(errors, ValidationError{
+				Field:   field,
+				Message: fmt.Sprintf("ecosystem name %q must be lowercase alphanumeric with hyphens", ecosystem),
+			})
+		}
+
+		for _, pkgName := range pkgNames {
+			// Self-referential: recipe cannot list its own name
+			if pkgName == r.Metadata.Name {
+				errors = append(errors, ValidationError{
+					Field:   field,
+					Message: fmt.Sprintf("self-referential entry: recipe %q cannot satisfy its own name", pkgName),
+				})
+			}
+
+			// Empty package name
+			if pkgName == "" {
+				errors = append(errors, ValidationError{
+					Field:   field,
+					Message: "package name must not be empty",
+				})
+			}
 		}
 	}
 

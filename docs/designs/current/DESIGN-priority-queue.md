@@ -484,10 +484,7 @@ Per-ecosystem-environment files (e.g., `data/failures/homebrew-linux-glibc.json`
 }
 ```
 
-This mapping is maintained in `data/dep-mapping.json` and validated:
-- Each mapping entry must reference an existing tsuku recipe or be marked `"pending"`
-- Mappings are code-reviewed (supply chain control point)
-- Batch pipeline validates `blocked_by` entries against this mapping
+This mapping was originally maintained in `data/dep-mapping.json`, but that file has been replaced by per-recipe `[metadata.satisfies]` fields (see [DESIGN-ecosystem-name-resolution.md](../DESIGN-ecosystem-name-resolution.md)). Each recipe now declares which ecosystem package names it satisfies, and the recipe loader resolves these names automatically via a fallback index.
 
 ### Data Flow
 
