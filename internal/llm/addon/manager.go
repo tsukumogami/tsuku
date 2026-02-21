@@ -34,7 +34,7 @@ type AddonManager struct {
 	// installer provides recipe-based installation
 	installer Installer
 
-	// backendOverride is the llm.backend config value ("cpu" or "")
+	// backendOverride is the llm.backend config value (unused, GPU required)
 	backendOverride string
 
 	// cachedPath is the verified addon path (set after successful EnsureAddon)
@@ -43,7 +43,7 @@ type AddonManager struct {
 
 // NewAddonManager creates a new addon manager with the given installer and backend override.
 // If homeDir is empty, it uses TSUKU_HOME env var or defaults to ~/.tsuku.
-// backendOverride should come from LLMConfig.LLMBackend() ("cpu" or "").
+// backendOverride is accepted for compatibility but CPU inference is no longer supported.
 func NewAddonManager(homeDir string, installer Installer, backendOverride string) *AddonManager {
 	if homeDir == "" {
 		homeDir = os.Getenv("TSUKU_HOME")
@@ -103,17 +103,6 @@ func (m *AddonManager) EnsureAddon(ctx context.Context) (string, error) {
 
 	// Check if already installed
 	binaryPath := m.findInstalledBinary()
-
-	// Check for variant mismatch: user set llm.backend=cpu but a GPU variant is installed
-	if binaryPath != "" && m.backendOverride == "cpu" {
-		if m.isGPUVariantInstalled() {
-			slog.Info("llm.backend=cpu but GPU variant installed, reinstalling with CPU variant")
-			if err := m.installViaRecipe(ctx); err != nil {
-				return "", fmt.Errorf("reinstalling tsuku-llm with CPU variant: %w", err)
-			}
-			binaryPath = m.findInstalledBinary()
-		}
-	}
 
 	if binaryPath == "" {
 		// Not installed - install via recipe system
@@ -198,12 +187,7 @@ func (m *AddonManager) installViaRecipe(ctx context.Context) error {
 		return fmt.Errorf("no installer configured")
 	}
 
-	gpuOverride := ""
-	if m.backendOverride == "cpu" {
-		gpuOverride = "none"
-	}
-
-	return m.installer.InstallRecipe(ctx, "tsuku-llm", gpuOverride)
+	return m.installer.InstallRecipe(ctx, "tsuku-llm", "")
 }
 
 // cleanupLegacyPath removes the old addon installation path if it exists.

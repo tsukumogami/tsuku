@@ -133,12 +133,6 @@ mod tests {
     }
 
     #[test]
-    fn test_model_params_for_cpu() {
-        let params = ModelParams::for_cpu();
-        assert_eq!(params.n_gpu_layers, 0);
-    }
-
-    #[test]
     fn test_load_nonexistent_file() {
         let result = LlamaModel::load_from_file(
             Path::new("/nonexistent/path/to/model.gguf"),

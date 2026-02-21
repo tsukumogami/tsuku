@@ -752,10 +752,7 @@ async fn main() -> Result<()> {
 
     // Load model (blocking operation, run in spawn_blocking)
     // Check for SIGTERM during model loading
-    let model_params = match model_spec.backend {
-        model::Backend::Cpu => ModelParams::for_cpu(),
-        _ => ModelParams::for_gpu(),
-    };
+    let model_params = ModelParams::for_gpu();
     let load_future = tokio::task::spawn_blocking({
         let path = model_path.clone();
         move || LlamaModel::load_from_file(&path, model_params)

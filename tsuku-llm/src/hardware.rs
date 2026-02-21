@@ -99,14 +99,11 @@ pub fn describe_detected_hardware(profile: &HardwareProfile) -> String {
 
 /// Formats a structured error message for when the compiled-in GPU backend
 /// fails to initialize at runtime.
-///
-/// This message is written to stderr so users understand what went wrong
-/// and how to work around it (by switching to the CPU backend).
 pub fn format_backend_init_error(compiled: GpuBackend, profile: &HardwareProfile) -> String {
     format!(
         "ERROR: Backend \"{}\" failed to initialize.\n  \
          Detected hardware supports: {}\n  \
-         Suggestion: tsuku config set llm.backend cpu",
+         GPU acceleration is required for tsuku-llm (minimum 8 GB VRAM).",
         compiled,
         describe_detected_hardware(profile),
     )
@@ -528,7 +525,7 @@ mod tests {
 
         assert!(msg.contains("ERROR: Backend \"vulkan\" failed to initialize."));
         assert!(msg.contains("Detected hardware supports: None"));
-        assert!(msg.contains("Suggestion: tsuku config set llm.backend cpu"));
+        assert!(msg.contains("GPU acceleration is required"));
     }
 
     #[test]
@@ -541,7 +538,7 @@ mod tests {
 
         assert!(msg.contains("ERROR: Backend \"cuda\" failed to initialize."));
         assert!(msg.contains("Detected hardware supports: Vulkan"));
-        assert!(msg.contains("Suggestion: tsuku config set llm.backend cpu"));
+        assert!(msg.contains("GPU acceleration is required"));
     }
 
     #[test]
@@ -551,6 +548,6 @@ mod tests {
 
         assert!(msg.contains("ERROR: Backend \"metal\" failed to initialize."));
         assert!(msg.contains("Detected hardware supports: None"));
-        assert!(msg.contains("Suggestion: tsuku config set llm.backend cpu"));
+        assert!(msg.contains("GPU acceleration is required"));
     }
 }

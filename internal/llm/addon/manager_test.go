@@ -163,51 +163,6 @@ func TestEnsureAddon_NoInstaller(t *testing.T) {
 	require.Contains(t, err.Error(), "no installer configured")
 }
 
-func TestEnsureAddon_CPUOverride_SetsGPUToNone(t *testing.T) {
-	t.Setenv("TSUKU_LLM_BINARY", "")
-	tmpDir := t.TempDir()
-
-	installer := &mockInstaller{
-		onInstall: func(_ string) {
-			createFakeBinary(t, tmpDir, "1.0.0")
-		},
-	}
-	m := NewAddonManager(tmpDir, installer, "cpu")
-
-	path, err := m.EnsureAddon(context.Background())
-	require.NoError(t, err)
-	require.NotEmpty(t, path)
-
-	require.Len(t, installer.installCalls, 1)
-	require.Equal(t, "none", installer.installCalls[0].gpuOverride, "should override GPU to 'none' when backend is 'cpu'")
-}
-
-func TestEnsureAddon_VariantMismatch_Reinstalls(t *testing.T) {
-	t.Setenv("TSUKU_LLM_BINARY", "")
-	tmpDir := t.TempDir()
-
-	// Pre-install a binary (simulates GPU variant already installed)
-	createFakeBinary(t, tmpDir, "1.0.0")
-
-	installCount := 0
-	installer := &mockInstaller{
-		onInstall: func(_ string) {
-			installCount++
-			// Recipe system replaces the existing binary
-			createFakeBinary(t, tmpDir, "1.0.0")
-		},
-	}
-
-	// User sets llm.backend=cpu but there's already an installation
-	m := NewAddonManager(tmpDir, installer, "cpu")
-
-	path, err := m.EnsureAddon(context.Background())
-	require.NoError(t, err)
-	require.NotEmpty(t, path)
-	require.Equal(t, 1, installCount, "should reinstall when variant mismatch detected")
-	require.Equal(t, "none", installer.installCalls[0].gpuOverride)
-}
-
 func TestEnsureAddon_CachesPath(t *testing.T) {
 	t.Setenv("TSUKU_LLM_BINARY", "")
 	tmpDir := t.TempDir()

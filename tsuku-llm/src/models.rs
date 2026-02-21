@@ -495,7 +495,7 @@ mod tests {
                 sha256: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855".to_string(), // SHA256 of empty file
                 download_url: "https://example.com/test-model.gguf".to_string(),
                 split_count: 1,
-                supported_backends: vec![Backend::Cpu],
+                supported_backends: vec![Backend::Cuda],
             },
         );
         ModelManifest { models }
@@ -505,8 +505,8 @@ mod tests {
     async fn test_model_path() {
         let manager = ModelManager::new(PathBuf::from("/tmp/models"));
         assert_eq!(
-            manager.model_path("qwen2.5-3b-instruct-q4"),
-            PathBuf::from("/tmp/models/qwen2.5-3b-instruct-q4.gguf")
+            manager.model_path("qwen2.5-7b-instruct-q4"),
+            PathBuf::from("/tmp/models/qwen2.5-7b-instruct-q4_k_m-00001-of-00002.gguf")
         );
     }
 
@@ -637,7 +637,7 @@ mod tests {
                 sha256: "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9".to_string(),
                 download_url: "https://httpbin.org/base64/aGVsbG8gd29ybGQ=".to_string(),
                 split_count: 1,
-                supported_backends: vec![Backend::Cpu],
+                supported_backends: vec![Backend::Cuda],
             },
         );
         let manifest = ModelManifest { models };
@@ -689,7 +689,7 @@ mod tests {
                 sha256: "0000000000000000000000000000000000000000000000000000000000000000".to_string(),
                 download_url: "https://httpbin.org/base64/aGVsbG8gd29ybGQ=".to_string(),
                 split_count: 1,
-                supported_backends: vec![Backend::Cpu],
+                supported_backends: vec![Backend::Cuda],
             },
         );
         let manifest = ModelManifest { models };
@@ -733,7 +733,7 @@ mod tests {
                 sha256: "".to_string(),
                 download_url: "https://example.com/split-model-q4_k_m-00001-of-00003.gguf".to_string(),
                 split_count: 3,
-                supported_backends: vec![Backend::Cpu],
+                supported_backends: vec![Backend::Cuda],
             },
         );
         let manifest = ModelManifest { models };
@@ -758,7 +758,7 @@ mod tests {
                 sha256: "".to_string(),
                 download_url: "https://example.com/no-checksum.gguf".to_string(),
                 split_count: 1,
-                supported_backends: vec![Backend::Cpu],
+                supported_backends: vec![Backend::Cuda],
             },
         );
         let manifest = ModelManifest { models };
