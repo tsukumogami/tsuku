@@ -50,6 +50,85 @@ func TestComputeQueueStatus_aggregates(t *testing.T) {
 	}
 }
 
+func TestComputeQueueStatus_blockedByOnlyForBlocked(t *testing.T) {
+	queue := &batch.UnifiedQueue{
+		Entries: []batch.QueueEntry{
+			{Name: "blocked-tool", Source: "homebrew:blocked-tool", Priority: 1, Status: "blocked", Confidence: "auto"},
+			{Name: "pending-tool", Source: "homebrew:pending-tool", Priority: 1, Status: "pending", Confidence: "auto"},
+			{Name: "failed-tool", Source: "homebrew:failed-tool", Priority: 1, Status: "failed", Confidence: "auto"},
+		},
+	}
+	details := map[string]FailureDetails{
+		"homebrew:blocked-tool": {Category: "missing_dep", BlockedBy: []string{"libfoo"}},
+		"homebrew:pending-tool": {Category: "missing_dep", BlockedBy: []string{"libbar"}},
+		"homebrew:failed-tool":  {Category: "missing_dep", BlockedBy: []string{"libbaz"}},
+	}
+
+	status := computeQueueStatus(queue, details)
+
+	// Blocked entry should have BlockedBy populated
+	blockedPkgs := status.Packages["blocked"]
+	if len(blockedPkgs) != 1 {
+		t.Fatalf("blocked packages: got %d, want 1", len(blockedPkgs))
+	}
+	if len(blockedPkgs[0].BlockedBy) != 1 || blockedPkgs[0].BlockedBy[0] != "libfoo" {
+		t.Errorf("blocked BlockedBy: got %v, want [libfoo]", blockedPkgs[0].BlockedBy)
+	}
+
+	// Pending entry should NOT have BlockedBy populated
+	pendingPkgs := status.Packages["pending"]
+	if len(pendingPkgs) != 1 {
+		t.Fatalf("pending packages: got %d, want 1", len(pendingPkgs))
+	}
+	if len(pendingPkgs[0].BlockedBy) != 0 {
+		t.Errorf("pending BlockedBy should be empty: got %v", pendingPkgs[0].BlockedBy)
+	}
+
+	// Failed entry should NOT have BlockedBy populated
+	failedPkgs := status.Packages["failed"]
+	if len(failedPkgs) != 1 {
+		t.Fatalf("failed packages: got %d, want 1", len(failedPkgs))
+	}
+	if len(failedPkgs[0].BlockedBy) != 0 {
+		t.Errorf("failed BlockedBy should be empty: got %v", failedPkgs[0].BlockedBy)
+	}
+
+	// Category should still be set for all statuses
+	if pendingPkgs[0].Category != "missing_dep" {
+		t.Errorf("pending Category: got %q, want %q", pendingPkgs[0].Category, "missing_dep")
+	}
+	if failedPkgs[0].Category != "missing_dep" {
+		t.Errorf("failed Category: got %q, want %q", failedPkgs[0].Category, "missing_dep")
+	}
+}
+
+func TestBuildBlockerCountsFromQueue(t *testing.T) {
+	packages := []PackageInfo{
+		{ID: "homebrew:curl", BlockedBy: []string{"openssl", "zlib"}},
+		{ID: "homebrew:wget", BlockedBy: []string{"openssl"}},
+		{ID: "homebrew:jq", BlockedBy: nil},
+	}
+
+	counts := buildBlockerCountsFromQueue(packages)
+
+	if len(counts["openssl"]) != 2 {
+		t.Errorf("openssl: got %d blocked, want 2", len(counts["openssl"]))
+	}
+	if len(counts["zlib"]) != 1 {
+		t.Errorf("zlib: got %d blocked, want 1", len(counts["zlib"]))
+	}
+	if len(counts) != 2 {
+		t.Errorf("total blockers: got %d, want 2", len(counts))
+	}
+}
+
+func TestBuildBlockerCountsFromQueue_empty(t *testing.T) {
+	counts := buildBlockerCountsFromQueue(nil)
+	if len(counts) != 0 {
+		t.Errorf("empty input should produce empty map: got %v", counts)
+	}
+}
+
 func TestComputeQueueStatus_empty(t *testing.T) {
 	queue := &batch.UnifiedQueue{Entries: []batch.QueueEntry{}}
 	status := computeQueueStatus(queue, nil)
@@ -78,12 +157,16 @@ func TestLoadFailures_legacyFormat(t *testing.T) {
 	if len(blockers["gmp"]) != 2 {
 		t.Errorf("gmp blockers: got %d, want 2", len(blockers["gmp"]))
 	}
+	// pcre2 blocks: cargo:ripgrep
+	if len(blockers["pcre2"]) != 1 {
+		t.Errorf("pcre2 blockers: got %d, want 1", len(blockers["pcre2"]))
+	}
 
 	// Check categories from both formats
-	// Legacy: 2 missing_dep, 1 validation_failed
+	// Legacy batch: 2 missing_dep + 1 validation_failed, cargo batch: 1 missing_dep
 	// Per-recipe: 1 api_error, 1 validation_failed
-	if categories["missing_dep"] != 2 {
-		t.Errorf("missing_dep: got %d, want 2", categories["missing_dep"])
+	if categories["missing_dep"] != 3 {
+		t.Errorf("missing_dep: got %d, want 3", categories["missing_dep"])
 	}
 	if categories["validation_failed"] != 2 {
 		t.Errorf("validation_failed: got %d, want 2", categories["validation_failed"])
@@ -579,9 +662,12 @@ func TestGenerate_integration(t *testing.T) {
 		t.Errorf("Queue.Total: got %d, want 6", dash.Queue.Total)
 	}
 
-	// Verify blockers
-	if len(dash.Blockers) == 0 {
-		t.Error("expected blockers, got none")
+	// Verify blockers are derived from queue (only the blocked cargo:ripgrep entry)
+	if len(dash.Blockers) != 1 {
+		t.Errorf("Blockers: got %d, want 1 (pcre2 from blocked cargo:ripgrep)", len(dash.Blockers))
+	}
+	if len(dash.Blockers) > 0 && dash.Blockers[0].Dependency != "pcre2" {
+		t.Errorf("Blockers[0].Dependency: got %q, want %q", dash.Blockers[0].Dependency, "pcre2")
 	}
 
 	// Verify failures
