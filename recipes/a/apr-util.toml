@@ -11,11 +11,11 @@
 supported_os = ["linux"]
 
 [version]
-  source = "homebrew"
+  source = ""
   github_repo = ""
   tag_prefix = ""
   module = ""
-  formula = "apr-util"
+  formula = ""
   cask = ""
   tap = ""
   fossil_repo = ""

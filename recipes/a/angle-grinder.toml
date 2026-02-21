@@ -10,11 +10,11 @@
 supported_libc = ["glibc"]
 
 [version]
-  source = "homebrew"
+  source = ""
   github_repo = ""
   tag_prefix = ""
   module = ""
-  formula = "angle-grinder"
+  formula = ""
   cask = ""
   tap = ""
   fossil_repo = ""

@@ -136,6 +136,21 @@ func validateMetadata(result *ValidationResult, r *Recipe) {
 	if !validTypes[r.Metadata.Type] {
 		result.addError("metadata.type", fmt.Sprintf("invalid type '%s' (valid values: tool, library)", r.Metadata.Type))
 	}
+
+	// Validate homepage URL scheme
+	if r.Metadata.Homepage != "" {
+		if !strings.HasPrefix(r.Metadata.Homepage, "https://") {
+			result.addError("metadata.homepage", fmt.Sprintf("homepage must start with https:// (got: %s)", r.Metadata.Homepage))
+		}
+		// Reject dangerous schemes that might be embedded
+		dangerousSchemes := []string{"javascript:", "data:", "vbscript:"}
+		lowerHomepage := strings.ToLower(r.Metadata.Homepage)
+		for _, scheme := range dangerousSchemes {
+			if strings.Contains(lowerHomepage, scheme) {
+				result.addError("metadata.homepage", fmt.Sprintf("homepage contains dangerous scheme: %s", scheme))
+			}
+		}
+	}
 }
 
 // validateVersion checks the version section
