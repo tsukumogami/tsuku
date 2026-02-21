@@ -39,6 +39,10 @@ type AddonManager struct {
 
 	// cachedPath is the verified addon path (set after successful EnsureAddon)
 	cachedPath string
+
+	// prompter handles user confirmation before downloads.
+	// If nil, downloads proceed without prompting (legacy behavior).
+	prompter Prompter
 }
 
 // NewAddonManager creates a new addon manager with the given installer and backend override.
@@ -65,6 +69,16 @@ func NewAddonManager(homeDir string, installer Installer, backendOverride string
 func (m *AddonManager) HomeDir() string {
 	return m.homeDir
 }
+
+// SetPrompter sets the prompter used for download confirmation.
+// When set, EnsureAddon will prompt the user before installing the addon.
+func (m *AddonManager) SetPrompter(p Prompter) {
+	m.prompter = p
+}
+
+// estimatedAddonSize is the approximate size of the tsuku-llm addon binary.
+// Used when prompting the user before download.
+const estimatedAddonSize int64 = 50 * 1024 * 1024 // ~50 MB
 
 // EnsureAddon ensures the addon is installed via the recipe system.
 // It returns the path to the installed binary.
@@ -105,6 +119,17 @@ func (m *AddonManager) EnsureAddon(ctx context.Context) (string, error) {
 	binaryPath := m.findInstalledBinary()
 
 	if binaryPath == "" {
+		// Prompt user before downloading, if a prompter is configured
+		if m.prompter != nil {
+			ok, err := m.prompter.ConfirmDownload(ctx, "tsuku-llm inference addon", estimatedAddonSize)
+			if err != nil {
+				return "", err
+			}
+			if !ok {
+				return "", ErrDownloadDeclined
+			}
+		}
+
 		// Not installed - install via recipe system
 		if err := m.installViaRecipe(ctx); err != nil {
 			return "", fmt.Errorf("installing tsuku-llm: %w", err)

@@ -3,6 +3,7 @@ package llm
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net"
 	"os"
@@ -14,7 +15,12 @@ import (
 
 	"github.com/tsukumogami/tsuku/internal/llm/addon"
 	pb "github.com/tsukumogami/tsuku/internal/llm/proto"
+	"github.com/tsukumogami/tsuku/internal/progress"
 )
+
+// localMaxTokens caps the MaxTokens for local inference to keep latency
+// reasonable on CPU (~15 tok/s).
+const localMaxTokens = 2048
 
 // LocalProvider implements the Provider interface using the local tsuku-llm addon.
 // It communicates with the addon over gRPC via Unix domain sockets.
@@ -23,6 +29,13 @@ type LocalProvider struct {
 	lifecycle    *ServerLifecycle
 	conn         *grpc.ClientConn
 	client       pb.InferenceServiceClient
+
+	// prompter handles user confirmation before downloads.
+	prompter addon.Prompter
+
+	// modelPrompted tracks whether we already prompted for model download
+	// this session, to avoid re-prompting on subsequent Complete calls.
+	modelPrompted bool
 }
 
 // NewLocalProvider creates a new local provider with default idle timeout.
@@ -62,6 +75,13 @@ func NewLocalProviderWithInstaller(installer addon.Installer, backendOverride st
 	}
 }
 
+// SetPrompter sets the prompter used for download confirmation.
+// It also configures the prompter on the addon manager.
+func (p *LocalProvider) SetPrompter(prompter addon.Prompter) {
+	p.prompter = prompter
+	p.addonManager.SetPrompter(prompter)
+}
+
 // Name returns the provider identifier.
 func (p *LocalProvider) Name() string {
 	return "local"
@@ -69,10 +89,14 @@ func (p *LocalProvider) Name() string {
 
 // Complete sends a completion request to the local addon.
 // It ensures the addon is downloaded, verified, and running before sending the request.
+// If the user declines a download prompt, it returns a helpful error about cloud providers.
 func (p *LocalProvider) Complete(ctx context.Context, req *CompletionRequest) (*CompletionResponse, error) {
 	// Ensure addon is installed via recipe system
 	addonPath, err := p.addonManager.EnsureAddon(ctx)
 	if err != nil {
+		if errors.Is(err, addon.ErrDownloadDeclined) {
+			return nil, fmt.Errorf("local LLM addon download declined; configure ANTHROPIC_API_KEY or GOOGLE_API_KEY for cloud inference instead")
+		}
 		return nil, fmt.Errorf("failed to ensure addon: %w", err)
 	}
 
@@ -89,8 +113,31 @@ func (p *LocalProvider) Complete(ctx context.Context, req *CompletionRequest) (*
 		return nil, fmt.Errorf("failed to connect to local LLM addon: %w", err)
 	}
 
-	// Convert and send request
-	return p.sendRequest(ctx, req)
+	// Check model readiness and prompt for model download if needed
+	if err := p.ensureModelReady(ctx); err != nil {
+		if errors.Is(err, addon.ErrDownloadDeclined) {
+			return nil, fmt.Errorf("model download declined; configure ANTHROPIC_API_KEY or GOOGLE_API_KEY for cloud inference instead")
+		}
+		return nil, err
+	}
+
+	// Cap MaxTokens for local inference to keep latency reasonable
+	if req.MaxTokens > localMaxTokens || req.MaxTokens == 0 {
+		req.MaxTokens = localMaxTokens
+	}
+
+	// Show spinner during inference
+	spinner := progress.NewSpinner(os.Stderr)
+	spinner.Start("Generating...")
+
+	resp, err := p.sendRequest(ctx, req)
+	if err != nil {
+		spinner.StopWithMessage("Generation failed.")
+		return nil, err
+	}
+
+	spinner.Stop()
+	return resp, nil
 }
 
 // invalidateConnection closes and nils the cached gRPC connection and client
@@ -148,6 +195,45 @@ func (p *LocalProvider) Close() error {
 		p.client = nil
 		return err
 	}
+	return nil
+}
+
+// ensureModelReady checks if the addon has a model loaded and prompts for
+// download if necessary. The addon server reports model status via GetStatus.
+// If the model is not yet downloaded and a prompter is configured, the user
+// is asked to confirm the download.
+func (p *LocalProvider) ensureModelReady(ctx context.Context) error {
+	status, err := p.client.GetStatus(ctx, &pb.StatusRequest{})
+	if err != nil {
+		// If GetStatus fails, the server may still be starting up.
+		// Don't block inference on this -- let the Complete RPC handle it.
+		return nil
+	}
+
+	// If the server reports ready with a model loaded, nothing to do
+	if status.Ready && status.ModelName != "" {
+		return nil
+	}
+
+	// Model not yet loaded -- prompt for download if we haven't already
+	if p.prompter != nil && !p.modelPrompted {
+		p.modelPrompted = true
+
+		modelSize := status.ModelSizeBytes
+		description := "LLM model"
+		if status.ModelName != "" {
+			description = fmt.Sprintf("LLM model (%s)", status.ModelName)
+		}
+
+		ok, err := p.prompter.ConfirmDownload(ctx, description, modelSize)
+		if err != nil {
+			return err
+		}
+		if !ok {
+			return addon.ErrDownloadDeclined
+		}
+	}
+
 	return nil
 }
 

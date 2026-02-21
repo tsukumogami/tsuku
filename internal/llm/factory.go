@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/tsukumogami/tsuku/internal/llm/addon"
 	"github.com/tsukumogami/tsuku/internal/secrets"
 )
 
@@ -39,6 +40,7 @@ type factoryOptions struct {
 	preferredOrder  []string
 	enabledExplicit bool // Whether enabled was explicitly set
 	config          LLMConfig
+	prompter        addon.Prompter
 }
 
 // FactoryOption configures a Factory.
@@ -94,6 +96,16 @@ func WithProviderOrder(providers []string) FactoryOption {
 			o.preferredOrder = providers
 			o.primary = providers[0]
 		}
+	}
+}
+
+// WithPrompter sets the download prompter for LocalProvider.
+// Use &addon.AutoApprovePrompter{} for --yes flag behavior,
+// or &addon.InteractivePrompter{} for interactive prompts.
+// If nil, downloads proceed without prompting (legacy behavior).
+func WithPrompter(p addon.Prompter) FactoryOption {
+	return func(o *factoryOptions) {
+		o.prompter = p
 	}
 }
 
@@ -169,6 +181,9 @@ func NewFactory(ctx context.Context, opts ...FactoryOption) (*Factory, error) {
 	// LocalProvider is lowest priority - only used when no cloud providers are available
 	if shouldRegisterLocal(o) {
 		provider := NewLocalProviderWithTimeout(o.idleTimeout)
+		if o.prompter != nil {
+			provider.SetPrompter(o.prompter)
+		}
 		f.providers["local"] = provider
 		f.breakers["local"] = NewCircuitBreaker("local")
 	}

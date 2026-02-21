@@ -300,3 +300,129 @@ func TestBinaryName(t *testing.T) {
 		require.Equal(t, "tsuku-llm", name)
 	}
 }
+
+// mockPrompter is a test double for the Prompter interface.
+type mockPrompter struct {
+	confirmCalls []confirmCall
+	approved     bool
+	err          error
+}
+
+type confirmCall struct {
+	description string
+	sizeBytes   int64
+}
+
+func (m *mockPrompter) ConfirmDownload(ctx context.Context, description string, sizeBytes int64) (bool, error) {
+	m.confirmCalls = append(m.confirmCalls, confirmCall{description: description, sizeBytes: sizeBytes})
+	if m.err != nil {
+		return false, m.err
+	}
+	return m.approved, nil
+}
+
+func TestEnsureAddon_WithPrompter_Approved(t *testing.T) {
+	t.Setenv("TSUKU_LLM_BINARY", "")
+	tmpDir := t.TempDir()
+
+	installer := &mockInstaller{
+		onInstall: func(_ string) {
+			createFakeBinary(t, tmpDir, "1.0.0")
+		},
+	}
+	prompter := &mockPrompter{approved: true}
+
+	m := NewAddonManager(tmpDir, installer, "")
+	m.SetPrompter(prompter)
+
+	path, err := m.EnsureAddon(context.Background())
+	require.NoError(t, err)
+	require.NotEmpty(t, path)
+
+	// Verify prompter was called before installation
+	require.Len(t, prompter.confirmCalls, 1)
+	require.Contains(t, prompter.confirmCalls[0].description, "tsuku-llm")
+	require.Equal(t, estimatedAddonSize, prompter.confirmCalls[0].sizeBytes)
+
+	// Verify installer was called after approval
+	require.Len(t, installer.installCalls, 1)
+}
+
+func TestEnsureAddon_WithPrompter_Declined(t *testing.T) {
+	t.Setenv("TSUKU_LLM_BINARY", "")
+	tmpDir := t.TempDir()
+
+	installer := &mockInstaller{}
+	prompter := &mockPrompter{approved: false, err: ErrDownloadDeclined}
+
+	m := NewAddonManager(tmpDir, installer, "")
+	m.SetPrompter(prompter)
+
+	_, err := m.EnsureAddon(context.Background())
+	require.ErrorIs(t, err, ErrDownloadDeclined)
+
+	// Verify prompter was called but installer was NOT called
+	require.Len(t, prompter.confirmCalls, 1)
+	require.Empty(t, installer.installCalls, "installer should not be called when download is declined")
+}
+
+func TestEnsureAddon_WithPrompter_AlreadyInstalled(t *testing.T) {
+	t.Setenv("TSUKU_LLM_BINARY", "")
+	tmpDir := t.TempDir()
+	createFakeBinary(t, tmpDir, "1.0.0")
+
+	prompter := &mockPrompter{approved: true}
+	m := NewAddonManager(tmpDir, nil, "")
+	m.SetPrompter(prompter)
+
+	path, err := m.EnsureAddon(context.Background())
+	require.NoError(t, err)
+	require.NotEmpty(t, path)
+
+	// When already installed, prompter should NOT be called
+	require.Empty(t, prompter.confirmCalls, "should not prompt when addon is already installed")
+}
+
+func TestEnsureAddon_WithAutoApprovePrompter(t *testing.T) {
+	t.Setenv("TSUKU_LLM_BINARY", "")
+	tmpDir := t.TempDir()
+
+	installer := &mockInstaller{
+		onInstall: func(_ string) {
+			createFakeBinary(t, tmpDir, "1.0.0")
+		},
+	}
+
+	m := NewAddonManager(tmpDir, installer, "")
+	m.SetPrompter(&AutoApprovePrompter{})
+
+	path, err := m.EnsureAddon(context.Background())
+	require.NoError(t, err)
+	require.NotEmpty(t, path)
+	require.Len(t, installer.installCalls, 1)
+}
+
+func TestEnsureAddon_WithNilPrompter(t *testing.T) {
+	t.Setenv("TSUKU_LLM_BINARY", "")
+	tmpDir := t.TempDir()
+
+	installer := &mockInstaller{}
+	m := NewAddonManager(tmpDir, installer, "")
+	m.SetPrompter(&NilPrompter{})
+
+	_, err := m.EnsureAddon(context.Background())
+	require.ErrorIs(t, err, ErrDownloadDeclined)
+	require.Empty(t, installer.installCalls, "installer should not be called when NilPrompter declines")
+}
+
+func TestSetPrompter(t *testing.T) {
+	m := NewAddonManager(t.TempDir(), nil, "")
+
+	// Initially nil
+	require.Nil(t, m.prompter)
+
+	// Set a prompter
+	p := &AutoApprovePrompter{}
+	m.SetPrompter(p)
+	require.NotNil(t, m.prompter)
+}
