@@ -1,0 +1,62 @@
+[metadata]
+name = "pcre2"
+description = "Perl compatible regular expressions library with a new API"
+homepage = "https://www.pcre.org/"
+binaries = ["bin/pcre2grep", "bin/pcre2test"]
+
+# glibc Linux: Homebrew bottle
+[[steps]]
+action = "homebrew"
+formula = "pcre2"
+when = { os = ["linux"], libc = ["glibc"] }
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = ["bin/pcre2grep", "bin/pcre2test"]
+when = { os = ["linux"], libc = ["glibc"] }
+
+# musl Linux: compile from source
+[[steps]]
+action = "download"
+url = "https://github.com/PCRE2Project/pcre2/releases/download/pcre2-{version}/pcre2-{version}.tar.gz"
+checksum_url = "https://github.com/PCRE2Project/pcre2/releases/download/pcre2-{version}/pcre2-{version}.tar.gz.sha256"
+when = { os = ["linux"], libc = ["musl"] }
+
+[[steps]]
+action = "extract"
+archive = "pcre2-{version}.tar.gz"
+format = "tar.gz"
+when = { os = ["linux"], libc = ["musl"] }
+
+[[steps]]
+action = "setup_build_env"
+when = { os = ["linux"], libc = ["musl"] }
+
+[[steps]]
+action = "configure_make"
+source_dir = "pcre2-{version}"
+executables = ["pcre2grep"]
+when = { os = ["linux"], libc = ["musl"] }
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = ["bin/pcre2grep", "bin/pcre2test"]
+when = { os = ["linux"], libc = ["musl"] }
+
+# macOS: Homebrew
+[[steps]]
+action = "homebrew"
+formula = "pcre2"
+when = { os = ["darwin"] }
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = ["bin/pcre2grep", "bin/pcre2test"]
+when = { os = ["darwin"] }
+
+[verify]
+command = "pcre2grep --version"
+pattern = "pcre2grep version {version}"

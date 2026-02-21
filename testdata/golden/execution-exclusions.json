@@ -251,6 +251,11 @@
       "recipe": "tsuku-llm",
       "issue": "https://github.com/tsukumogami/tsuku/issues/1769",
       "reason": "No published release artifacts yet (tsukumogami/tsuku-llm repo not created)"
+    },
+    {
+      "recipe": "fontconfig",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1665",
+      "reason": "Missing library (abort trap) - libintl.8.dylib rpath not resolved on macOS"
     }
   ]
 }

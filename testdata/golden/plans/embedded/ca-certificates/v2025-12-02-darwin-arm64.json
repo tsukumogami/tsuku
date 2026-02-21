@@ -1,0 +1,36 @@
+{
+  "format_version": 4,
+  "tool": "ca-certificates",
+  "version": "2025-12-02",
+  "platform": {
+    "os": "darwin",
+    "arch": "arm64"
+  },
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "f1407d974c5ed87d544bd931a278232e13925177e239fca370619aba63c757b4",
+        "dest": "cacert.pem",
+        "url": "https://curl.se/ca/cacert-2025-12-02.pem"
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "outputs": [
+          {
+            "dest": "share/ca-certificates/cacert.pem",
+            "src": "cacert.pem"
+          }
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "recipe_type": "library"
+}
