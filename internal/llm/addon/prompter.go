@@ -57,7 +57,7 @@ func (p *InteractivePrompter) ConfirmDownload(ctx context.Context, description s
 	} else {
 		fmt.Fprintf(output, "\nLocal LLM requires downloading %s.\n", description)
 	}
-	fmt.Fprint(output, "Continue? [Y/n] ")
+	_, _ = fmt.Fprint(output, "Continue? [Y/n] ")
 
 	// Read response
 	scanner := bufio.NewScanner(input)

@@ -123,7 +123,7 @@ func (s *Spinner) animate() {
 			if len(line) < 80 {
 				line += strings.Repeat(" ", 80-len(line))
 			}
-			fmt.Fprint(s.output, line)
+			_, _ = fmt.Fprint(s.output, line)
 
 			frame++
 		}
