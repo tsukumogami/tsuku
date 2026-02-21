@@ -1,5 +1,0 @@
-[
-  {"review_focus": "pragmatic", "blocking_count": 1, "advisory_count": 3, "note": "FetchManifest wired into update-registry in f750c28e"},
-  {"review_focus": "architect", "blocking_count": 0, "advisory_count": 2},
-  {"review_focus": "maintainer", "blocking_count": 0, "advisory_count": 2}
-]
