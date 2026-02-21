@@ -2,7 +2,7 @@
   "design_doc": "docs/designs/DESIGN-local-llm-runtime.md",
   "branch": "impl/local-llm-runtime-v2",
   "pr_number": 1810,
-  "integrity_hash": "sha256:24bbcec9abaccadfe98e266276c5e98a3fc4a22c47b06314cf60960270c27643",
+  "integrity_hash": "sha256:3c916544e328c5a8376dfd1f8eddc8701c656f9521c11df4889fb5d5b230fdfc",
   "issues": [
     {
       "number": 1628,
@@ -415,8 +415,8 @@
     {
       "number": 1643,
       "title": "feat(llm): implement tsuku llm download command",
-      "status": "scrutinized",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "ci_fix_attempts": 0,
       "issue_type": "code",
       "dependencies": [
@@ -480,6 +480,32 @@
           }
         ]
       },
+      "reviewer_results": {
+        "issue": 1643,
+        "reviews": [
+          {
+            "focus": "pragmatic",
+            "blocking_count": 1,
+            "advisory_count": 3,
+            "detail_file": "wip/research/implement-doc_review_pragmatic_issue1643.md",
+            "note": "blocking finding (--force flag) addressed by removing flag"
+          },
+          {
+            "focus": "architect",
+            "blocking_count": 0,
+            "advisory_count": 2,
+            "detail_file": "wip/research/implement-doc_review_architect_issue1643.md"
+          },
+          {
+            "focus": "maintainer",
+            "blocking_count": 0,
+            "advisory_count": 6,
+            "detail_file": "wip/research/implement-doc_review_maintainer_issue1643.md"
+          }
+        ],
+        "overall_blocking": 0,
+        "verdict": "pass (after fix)"
+      },
       "testable_scenarios": [
         "scenario-9",
         "scenario-10",
@@ -490,17 +516,58 @@
     {
       "number": 1644,
       "title": "test(llm): add end-to-end integration test without cloud keys",
-      "status": "pending",
+      "status": "scrutinized",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [
         1640,
         1632
       ],
-      "commits": [],
-      "agent_type": "",
-      "summary": null,
+      "commits": [
+        "48f90a5944a38818e1862776cb9d8ad7bb81ea9c"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          "internal/llm/local_e2e_test.go"
+        ],
+        "tests_added": 2,
+        "key_decisions": "E2E build tag. Skip when addon not found. Factory fallback + Complete call. Validates tool call structure not TOML. CI workflow deferred.",
+        "requirements_map": [
+          {
+            "ac": "test file exists",
+            "status": "implemented"
+          },
+          {
+            "ac": "factory fallback",
+            "status": "implemented"
+          },
+          {
+            "ac": "generates recipe",
+            "status": "implemented"
+          },
+          {
+            "ac": "TOML validation",
+            "status": "deviated",
+            "reason": "validates tool call structure at provider layer instead"
+          },
+          {
+            "ac": "skips cleanly",
+            "status": "implemented"
+          },
+          {
+            "ac": "build tag",
+            "status": "implemented"
+          },
+          {
+            "ac": "CI workflow",
+            "status": "deviated",
+            "reason": "optional per issue, deferred"
+          }
+        ]
+      },
       "testable_scenarios": [
         "scenario-13",
         "scenario-14"

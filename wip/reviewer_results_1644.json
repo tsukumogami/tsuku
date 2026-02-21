@@ -1,0 +1,10 @@
+{
+  "issue": 1644,
+  "reviews": [
+    {"focus": "pragmatic", "blocking_count": 0, "advisory_count": 4, "detail_file": "wip/research/implement-doc_review_pragmatic_issue1644.md"},
+    {"focus": "architect", "blocking_count": 0, "advisory_count": 2, "detail_file": "wip/research/implement-doc_review_architect_issue1644.md"},
+    {"focus": "maintainer", "blocking_count": 0, "advisory_count": 3, "detail_file": "wip/research/implement-doc_review_maintainer_issue1644.md"}
+  ],
+  "overall_blocking": 0,
+  "verdict": "pass"
+}
