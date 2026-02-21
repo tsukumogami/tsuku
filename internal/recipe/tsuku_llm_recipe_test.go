@@ -61,10 +61,8 @@ func pipelineBuildMatrix() []string {
 		"darwin-amd64",
 		"linux-amd64-cuda",
 		"linux-amd64-vulkan",
-		"linux-amd64-cpu",
 		"linux-arm64-cuda",
 		"linux-arm64-vulkan",
-		"linux-arm64-cpu",
 	}
 }
 
@@ -269,11 +267,9 @@ func TestTsukuLLMRecipeStepCoverage(t *testing.T) {
 		{"linux-amd64-nvidia", "linux", "amd64", "nvidia"},
 		{"linux-amd64-amd", "linux", "amd64", "amd"},
 		{"linux-amd64-intel", "linux", "amd64", "intel"},
-		{"linux-amd64-none", "linux", "amd64", "none"},
 		{"linux-arm64-nvidia", "linux", "arm64", "nvidia"},
 		{"linux-arm64-amd", "linux", "arm64", "amd"},
 		{"linux-arm64-intel", "linux", "arm64", "intel"},
-		{"linux-arm64-none", "linux", "arm64", "none"},
 	}
 
 	for _, tc := range targets {
