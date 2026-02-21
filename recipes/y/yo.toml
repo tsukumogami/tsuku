@@ -1,7 +1,7 @@
 [metadata]
   name = "yo"
   description = "CLI tool for running Yeoman generators"
-  homepage = "http://yeoman.io"
+  homepage = "https://yeoman.io"
   version_format = ""
   requires_sudo = false
   tier = 0
