@@ -1,13 +1,13 @@
 {
-  "generated_at": "2026-02-21T06:46:01Z",
+  "generated_at": "2026-02-21T06:59:52Z",
   "queue": {
     "total": 5275,
     "by_status": {
       "blocked": 7,
-      "failed": 78,
+      "failed": 76,
       "pending": 2862,
-      "requires_manual": 2009,
-      "success": 319
+      "requires_manual": 2001,
+      "success": 329
     },
     "by_tier": {
       "1": {
@@ -15,16 +15,16 @@
         "requires_manual": 8
       },
       "2": {
-        "failed": 9,
+        "failed": 8,
         "requires_manual": 15,
-        "success": 3
+        "success": 4
       },
       "3": {
         "blocked": 7,
-        "failed": 59,
+        "failed": 58,
         "pending": 2862,
-        "requires_manual": 1986,
-        "success": 316
+        "requires_manual": 1978,
+        "success": 325
       }
     },
     "packages": {
@@ -214,15 +214,6 @@
           "next_retry_at": "2026-02-24T06:13:53Z"
         },
         {
-          "id": "homebrew:openssl@3",
-          "name": "openssl@3",
-          "ecosystem": "homebrew",
-          "priority": 2,
-          "category": "deterministic_insufficient",
-          "failure_count": 3,
-          "next_retry_at": "2026-02-24T06:13:54Z"
-        },
-        {
           "id": "homebrew:pnpm",
           "name": "pnpm",
           "ecosystem": "homebrew",
@@ -383,15 +374,6 @@
           "category": "validation_failed",
           "failure_count": 2,
           "next_retry_at": "2026-02-22T06:14:20Z"
-        },
-        {
-          "id": "homebrew:abseil",
-          "name": "abseil",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "deterministic_insufficient",
-          "failure_count": 2,
-          "next_retry_at": "2026-02-22T06:14:22Z"
         },
         {
           "id": "homebrew:achannarasappa/tap/ticker",
@@ -21415,13 +21397,6 @@
           "failure_count": 0
         },
         {
-          "id": "homebrew:apr",
-          "name": "apr",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
           "id": "homebrew:aptos",
           "name": "aptos",
           "ecosystem": "homebrew",
@@ -22425,13 +22400,6 @@
         {
           "id": "homebrew:cai",
           "name": "cai",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "homebrew:cairo",
-          "name": "cairo",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
@@ -24817,13 +24785,6 @@
           "failure_count": 0
         },
         {
-          "id": "homebrew:fontconfig",
-          "name": "fontconfig",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
           "id": "homebrew:fonttools",
           "name": "fonttools",
           "ecosystem": "homebrew",
@@ -25223,13 +25184,6 @@
           "failure_count": 0
         },
         {
-          "id": "homebrew:gettext",
-          "name": "gettext",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
           "id": "homebrew:gf",
           "name": "gf",
           "ecosystem": "homebrew",
@@ -25302,13 +25256,6 @@
         {
           "id": "homebrew:gifify",
           "name": "gifify",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "homebrew:giflib",
-          "name": "giflib",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
@@ -25659,13 +25606,6 @@
         {
           "id": "homebrew:gmime",
           "name": "gmime",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "homebrew:gmp",
-          "name": "gmp",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
@@ -27087,13 +27027,6 @@
         {
           "id": "homebrew:jp",
           "name": "jp",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "homebrew:jpeg-turbo",
-          "name": "jpeg-turbo",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
@@ -30384,13 +30317,6 @@
         {
           "id": "homebrew:pcre",
           "name": "pcre",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "homebrew:pcre2",
-          "name": "pcre2",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
@@ -34927,6 +34853,15 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:openssl@3",
+          "name": "openssl@3",
+          "ecosystem": "homebrew",
+          "priority": 2,
+          "category": "deterministic_insufficient",
+          "failure_count": 3,
+          "next_retry_at": "2026-02-24T06:13:54Z"
+        },
+        {
           "id": "homebrew:watchexec",
           "name": "watchexec",
           "ecosystem": "homebrew",
@@ -34939,6 +34874,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "homebrew:abseil",
+          "name": "abseil",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient",
+          "failure_count": 2,
+          "next_retry_at": "2026-02-22T06:14:22Z"
         },
         {
           "id": "cpan:ack",
@@ -35035,6 +34979,13 @@
           "id": "github:appwrite/sdk-for-cli",
           "name": "appwrite",
           "ecosystem": "github",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "homebrew:apr",
+          "name": "apr",
+          "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
         },
@@ -35259,6 +35210,13 @@
           "id": "github:caddyserver/caddy",
           "name": "caddy",
           "ecosystem": "github",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "homebrew:cairo",
+          "name": "cairo",
+          "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
         },
@@ -35627,6 +35585,13 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:fontconfig",
+          "name": "fontconfig",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
           "id": "rubygems:fpm",
           "name": "fpm",
           "ecosystem": "rubygems",
@@ -35676,8 +35641,22 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:gettext",
+          "name": "gettext",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
           "id": "homebrew:gh",
           "name": "gh",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "homebrew:giflib",
+          "name": "giflib",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
@@ -35735,6 +35714,13 @@
           "id": "github:charmbracelet/glow",
           "name": "glow",
           "ecosystem": "github",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "homebrew:gmp",
+          "name": "gmp",
+          "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
         },
@@ -36001,6 +35987,13 @@
         {
           "id": "homebrew:jpeg",
           "name": "jpeg",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "homebrew:jpeg-turbo",
+          "name": "jpeg-turbo",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
@@ -36450,6 +36443,13 @@
           "id": "github:hashicorp/packer",
           "name": "packer",
           "ecosystem": "github",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "homebrew:pcre2",
+          "name": "pcre2",
+          "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
         },
@@ -37667,6 +37667,21 @@
       "timestamp": "2026-02-21T06:13:30.875620235Z"
     },
     {
+      "id": "batch-2026-02-20T06-08-19Z-zx",
+      "package": "zx",
+      "ecosystem": "batch",
+      "category": "deterministic",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "batch-2026-02-20T06-08-19Z",
+      "timestamp": "2026-02-20T06:08:19Z"
+    },
+    {
       "id": "batch-2026-02-20T06-08-19Z-yarn",
       "package": "yarn",
       "ecosystem": "batch",
@@ -37684,21 +37699,6 @@
     {
       "id": "batch-2026-02-20T06-08-19Z-yaml-language-server",
       "package": "yaml-language-server",
-      "ecosystem": "batch",
-      "category": "deterministic",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "batch-2026-02-20T06-08-19Z",
-      "timestamp": "2026-02-20T06:08:19Z"
-    },
-    {
-      "id": "batch-2026-02-20T06-08-19Z-zx",
-      "package": "zx",
       "ecosystem": "batch",
       "category": "deterministic",
       "subcategory": "install_failed",
@@ -37877,8 +37877,8 @@
       "timestamp": "2026-02-20T04:15:51.459005871Z"
     },
     {
-      "id": "batch-2026-02-20T02-08-13Z-rulesync",
-      "package": "rulesync",
+      "id": "batch-2026-02-20T02-08-13Z-prettier",
+      "package": "prettier",
       "ecosystem": "batch",
       "category": "deterministic",
       "subcategory": "install_failed",
@@ -37907,6 +37907,21 @@
       "timestamp": "2026-02-20T02:08:13Z"
     },
     {
+      "id": "batch-2026-02-20T02-08-13Z-rulesync",
+      "package": "rulesync",
+      "ecosystem": "batch",
+      "category": "deterministic",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "batch-2026-02-20T02-08-13Z",
+      "timestamp": "2026-02-20T02:08:13Z"
+    },
+    {
       "id": "batch-2026-02-20T02-08-13Z-rollup",
       "package": "rollup",
       "ecosystem": "batch",
@@ -37922,38 +37937,23 @@
       "timestamp": "2026-02-20T02:08:13Z"
     },
     {
-      "id": "batch-2026-02-20T02-08-13Z-release-it",
-      "package": "release-it",
-      "ecosystem": "batch",
-      "category": "deterministic",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "batch-2026-02-20T02-08-13Z",
-      "timestamp": "2026-02-20T02:08:13Z"
-    },
-    {
-      "id": "batch-2026-02-20T02-08-13Z-prettier",
-      "package": "prettier",
-      "ecosystem": "batch",
-      "category": "deterministic",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "batch-2026-02-20T02-08-13Z",
-      "timestamp": "2026-02-20T02:08:13Z"
-    },
-    {
       "id": "batch-2026-02-20T02-08-13Z-react-native-cli",
       "package": "react-native-cli",
+      "ecosystem": "batch",
+      "category": "deterministic",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "batch-2026-02-20T02-08-13Z",
+      "timestamp": "2026-02-20T02:08:13Z"
+    },
+    {
+      "id": "batch-2026-02-20T02-08-13Z-release-it",
+      "package": "release-it",
       "ecosystem": "batch",
       "category": "deterministic",
       "subcategory": "install_failed",
@@ -38001,98 +38001,8 @@
       "timestamp": "2026-02-20T01:55:16.033744211Z"
     },
     {
-      "id": "batch-2026-02-20T00-04-55Z-openskills",
-      "package": "openskills",
-      "ecosystem": "batch",
-      "category": "deterministic",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "batch-2026-02-20T00-04-55Z",
-      "timestamp": "2026-02-20T00:04:55Z"
-    },
-    {
-      "id": "batch-2026-02-20T00-04-55Z-node-red",
-      "package": "node-red",
-      "ecosystem": "batch",
-      "category": "deterministic",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "batch-2026-02-20T00-04-55Z",
-      "timestamp": "2026-02-20T00:04:55Z"
-    },
-    {
-      "id": "batch-2026-02-20T00-04-55Z-openapi-diff",
-      "package": "openapi-diff",
-      "ecosystem": "batch",
-      "category": "deterministic",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "batch-2026-02-20T00-04-55Z",
-      "timestamp": "2026-02-20T00:04:55Z"
-    },
-    {
       "id": "batch-2026-02-20T00-04-55Z-n",
       "package": "n",
-      "ecosystem": "batch",
-      "category": "deterministic",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "batch-2026-02-20T00-04-55Z",
-      "timestamp": "2026-02-20T00:04:55Z"
-    },
-    {
-      "id": "batch-2026-02-20T00-04-55Z-nping",
-      "package": "nping",
-      "ecosystem": "batch",
-      "category": "deterministic",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "batch-2026-02-20T00-04-55Z",
-      "timestamp": "2026-02-20T00:04:55Z"
-    },
-    {
-      "id": "batch-2026-02-20T00-04-55Z-needle",
-      "package": "needle",
-      "ecosystem": "batch",
-      "category": "deterministic",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "batch-2026-02-20T00-04-55Z",
-      "timestamp": "2026-02-20T00:04:55Z"
-    },
-    {
-      "id": "batch-2026-02-20T00-04-55Z-oxfmt",
-      "package": "oxfmt",
       "ecosystem": "batch",
       "category": "deterministic",
       "subcategory": "install_failed",
@@ -38122,6 +38032,96 @@
         "linux-rhel-glibc-x86_64",
         "linux-suse-glibc-arm64",
         "linux-suse-glibc-x86_64"
+      ],
+      "batch_id": "batch-2026-02-20T00-04-55Z",
+      "timestamp": "2026-02-20T00:04:55Z"
+    },
+    {
+      "id": "batch-2026-02-20T00-04-55Z-node-red",
+      "package": "node-red",
+      "ecosystem": "batch",
+      "category": "deterministic",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "batch-2026-02-20T00-04-55Z",
+      "timestamp": "2026-02-20T00:04:55Z"
+    },
+    {
+      "id": "batch-2026-02-20T00-04-55Z-openskills",
+      "package": "openskills",
+      "ecosystem": "batch",
+      "category": "deterministic",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "batch-2026-02-20T00-04-55Z",
+      "timestamp": "2026-02-20T00:04:55Z"
+    },
+    {
+      "id": "batch-2026-02-20T00-04-55Z-oxfmt",
+      "package": "oxfmt",
+      "ecosystem": "batch",
+      "category": "deterministic",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "batch-2026-02-20T00-04-55Z",
+      "timestamp": "2026-02-20T00:04:55Z"
+    },
+    {
+      "id": "batch-2026-02-20T00-04-55Z-nping",
+      "package": "nping",
+      "ecosystem": "batch",
+      "category": "deterministic",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "batch-2026-02-20T00-04-55Z",
+      "timestamp": "2026-02-20T00:04:55Z"
+    },
+    {
+      "id": "batch-2026-02-20T00-04-55Z-openapi-diff",
+      "package": "openapi-diff",
+      "ecosystem": "batch",
+      "category": "deterministic",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "batch-2026-02-20T00-04-55Z",
+      "timestamp": "2026-02-20T00:04:55Z"
+    },
+    {
+      "id": "batch-2026-02-20T00-04-55Z-needle",
+      "package": "needle",
+      "ecosystem": "batch",
+      "category": "deterministic",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
       ],
       "batch_id": "batch-2026-02-20T00-04-55Z",
       "timestamp": "2026-02-20T00:04:55Z"
@@ -38344,8 +38344,8 @@
       "timestamp": "2026-02-19T21:31:48.334903227Z"
     },
     {
-      "id": "batch-2026-02-19T20-40-46Z-graphql-cli",
-      "package": "graphql-cli",
+      "id": "batch-2026-02-19T20-40-46Z-gulp-cli",
+      "package": "gulp-cli",
       "ecosystem": "batch",
       "category": "deterministic",
       "subcategory": "install_failed",
@@ -38359,8 +38359,8 @@
       "timestamp": "2026-02-19T20:40:46Z"
     },
     {
-      "id": "batch-2026-02-19T20-40-46Z-gulp-cli",
-      "package": "gulp-cli",
+      "id": "batch-2026-02-19T20-40-46Z-graphql-cli",
+      "package": "graphql-cli",
       "ecosystem": "batch",
       "category": "deterministic",
       "subcategory": "install_failed",
@@ -38452,6 +38452,28 @@
       "timestamp": "2026-02-19T20:31:36.630209654Z"
     },
     {
+      "id": "batch-2026-02-19T19-46-28Z-diff-so-fancy",
+      "package": "diff-so-fancy",
+      "ecosystem": "batch",
+      "category": "deterministic",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64",
+        "linux-arch-glibc-x86_64",
+        "linux-debian-glibc-arm64",
+        "linux-debian-glibc-x86_64",
+        "linux-rhel-glibc-arm64",
+        "linux-rhel-glibc-x86_64",
+        "linux-suse-glibc-arm64",
+        "linux-suse-glibc-x86_64"
+      ],
+      "batch_id": "batch-2026-02-19T19-46-28Z",
+      "timestamp": "2026-02-19T19:46:28Z"
+    },
+    {
       "id": "batch-2026-02-19T19-46-28Z-dprint",
       "package": "dprint",
       "ecosystem": "batch",
@@ -38477,28 +38499,6 @@
       "platforms": [
         "linux-alpine-musl-arm64",
         "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "batch-2026-02-19T19-46-28Z",
-      "timestamp": "2026-02-19T19:46:28Z"
-    },
-    {
-      "id": "batch-2026-02-19T19-46-28Z-diff-so-fancy",
-      "package": "diff-so-fancy",
-      "ecosystem": "batch",
-      "category": "deterministic",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64",
-        "linux-arch-glibc-x86_64",
-        "linux-debian-glibc-arm64",
-        "linux-debian-glibc-x86_64",
-        "linux-rhel-glibc-arm64",
-        "linux-rhel-glibc-x86_64",
-        "linux-suse-glibc-arm64",
-        "linux-suse-glibc-x86_64"
       ],
       "batch_id": "batch-2026-02-19T19-46-28Z",
       "timestamp": "2026-02-19T19:46:28Z"
@@ -38567,68 +38567,8 @@
       "timestamp": "2026-02-19T19:39:39.035308818Z"
     },
     {
-      "id": "batch-2026-02-19T14-31-25Z-corepack",
-      "package": "corepack",
-      "ecosystem": "batch",
-      "category": "deterministic",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "batch-2026-02-19T14-31-25Z",
-      "timestamp": "2026-02-19T14:31:25Z"
-    },
-    {
-      "id": "batch-2026-02-19T14-31-25Z-bpmnlint",
-      "package": "bpmnlint",
-      "ecosystem": "batch",
-      "category": "deterministic",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "batch-2026-02-19T14-31-25Z",
-      "timestamp": "2026-02-19T14:31:25Z"
-    },
-    {
       "id": "batch-2026-02-19T14-31-25Z-contentful-cli",
       "package": "contentful-cli",
-      "ecosystem": "batch",
-      "category": "deterministic",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "batch-2026-02-19T14-31-25Z",
-      "timestamp": "2026-02-19T14:31:25Z"
-    },
-    {
-      "id": "batch-2026-02-19T14-31-25Z-commitlint",
-      "package": "commitlint",
-      "ecosystem": "batch",
-      "category": "deterministic",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "batch-2026-02-19T14-31-25Z",
-      "timestamp": "2026-02-19T14:31:25Z"
-    },
-    {
-      "id": "batch-2026-02-19T14-31-25Z-bumpp",
-      "package": "bumpp",
       "ecosystem": "batch",
       "category": "deterministic",
       "subcategory": "install_failed",
@@ -38657,8 +38597,68 @@
       "timestamp": "2026-02-19T14:31:25Z"
     },
     {
+      "id": "batch-2026-02-19T14-31-25Z-bumpp",
+      "package": "bumpp",
+      "ecosystem": "batch",
+      "category": "deterministic",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "batch-2026-02-19T14-31-25Z",
+      "timestamp": "2026-02-19T14:31:25Z"
+    },
+    {
+      "id": "batch-2026-02-19T14-31-25Z-corepack",
+      "package": "corepack",
+      "ecosystem": "batch",
+      "category": "deterministic",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "batch-2026-02-19T14-31-25Z",
+      "timestamp": "2026-02-19T14:31:25Z"
+    },
+    {
+      "id": "batch-2026-02-19T14-31-25Z-commitlint",
+      "package": "commitlint",
+      "ecosystem": "batch",
+      "category": "deterministic",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "batch-2026-02-19T14-31-25Z",
+      "timestamp": "2026-02-19T14:31:25Z"
+    },
+    {
       "id": "batch-2026-02-19T14-31-25Z-chrome-devtools-mcp",
       "package": "chrome-devtools-mcp",
+      "ecosystem": "batch",
+      "category": "deterministic",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "batch-2026-02-19T14-31-25Z",
+      "timestamp": "2026-02-19T14:31:25Z"
+    },
+    {
+      "id": "batch-2026-02-19T14-31-25Z-bpmnlint",
+      "package": "bpmnlint",
       "ecosystem": "batch",
       "category": "deterministic",
       "subcategory": "install_failed",
@@ -38714,8 +38714,8 @@
       "timestamp": "2026-02-19T08:54:36Z"
     },
     {
-      "id": "batch-2026-02-19T08-54-36Z-azurite",
-      "package": "azurite",
+      "id": "batch-2026-02-19T08-54-36Z-bash-language-server",
+      "package": "bash-language-server",
       "ecosystem": "batch",
       "category": "deterministic",
       "subcategory": "install_failed",
@@ -38744,8 +38744,8 @@
       "timestamp": "2026-02-19T08:54:36Z"
     },
     {
-      "id": "batch-2026-02-19T08-54-36Z-bash-language-server",
-      "package": "bash-language-server",
+      "id": "batch-2026-02-19T08-54-36Z-azurite",
+      "package": "azurite",
       "ecosystem": "batch",
       "category": "deterministic",
       "subcategory": "install_failed",
@@ -38812,8 +38812,8 @@
       "timestamp": "2026-02-19T08:42:59.121683313Z"
     },
     {
-      "id": "batch-2026-02-18T15-51-38Z-actions-up",
-      "package": "actions-up",
+      "id": "batch-2026-02-18T15-51-38Z-addons-linter",
+      "package": "addons-linter",
       "ecosystem": "batch",
       "category": "deterministic",
       "subcategory": "install_failed",
@@ -38822,23 +38822,6 @@
       "platforms": [
         "linux-alpine-musl-arm64",
         "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "batch-2026-02-18T15-51-38Z",
-      "timestamp": "2026-02-18T15:51:38Z"
-    },
-    {
-      "id": "batch-2026-02-18T15-51-38Z-advancecomp",
-      "package": "advancecomp",
-      "ecosystem": "batch",
-      "category": "deterministic",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64",
-        "linux-rhel-glibc-arm64",
-        "linux-rhel-glibc-x86_64"
       ],
       "batch_id": "batch-2026-02-18T15-51-38Z",
       "timestamp": "2026-02-18T15:51:38Z"
@@ -38866,8 +38849,8 @@
       "timestamp": "2026-02-18T15:51:38Z"
     },
     {
-      "id": "batch-2026-02-18T15-51-38Z-addons-linter",
-      "package": "addons-linter",
+      "id": "batch-2026-02-18T15-51-38Z-actions-up",
+      "package": "actions-up",
       "ecosystem": "batch",
       "category": "deterministic",
       "subcategory": "install_failed",
@@ -38876,6 +38859,23 @@
       "platforms": [
         "linux-alpine-musl-arm64",
         "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "batch-2026-02-18T15-51-38Z",
+      "timestamp": "2026-02-18T15:51:38Z"
+    },
+    {
+      "id": "batch-2026-02-18T15-51-38Z-advancecomp",
+      "package": "advancecomp",
+      "ecosystem": "batch",
+      "category": "deterministic",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64",
+        "linux-rhel-glibc-arm64",
+        "linux-rhel-glibc-x86_64"
       ],
       "batch_id": "batch-2026-02-18T15-51-38Z",
       "timestamp": "2026-02-18T15:51:38Z"
