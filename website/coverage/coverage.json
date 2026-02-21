@@ -1,34 +1,34 @@
 {
-  "generated_at": "2026-02-21T06:33:10Z",
-  "total_recipes": 325,
+  "generated_at": "2026-02-21T06:37:04Z",
+  "total_recipes": 330,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 273,
-        "total": 325,
-        "pct": 84
+        "supported": 274,
+        "total": 330,
+        "pct": 83.03030303030303
       },
       "glibc": {
-        "supported": 311,
-        "total": 325,
-        "pct": 95.6923076923077
+        "supported": 300,
+        "total": 330,
+        "pct": 90.9090909090909
       },
       "musl": {
-        "supported": 161,
-        "total": 325,
-        "pct": 49.53846153846154
+        "supported": 165,
+        "total": 330,
+        "pct": 50
       }
     },
     "by_category": {
       "library": {
-        "total": 13,
-        "musl_support": 13,
-        "glibc_support": 13
+        "total": 16,
+        "musl_support": 16,
+        "glibc_support": 16
       },
       "tool": {
-        "total": 312,
-        "musl_support": 148,
-        "glibc_support": 298
+        "total": 314,
+        "musl_support": 149,
+        "glibc_support": 284
       }
     }
   },
@@ -64,10 +64,11 @@
       "type": "tool",
       "platforms": {
         "darwin": true,
-        "glibc": true,
+        "glibc": false,
         "musl": false
       },
       "gaps": [
+        "glibc",
         "musl"
       ],
       "errors": null,
@@ -580,10 +581,11 @@
       "type": "tool",
       "platforms": {
         "darwin": true,
-        "glibc": true,
+        "glibc": false,
         "musl": false
       },
       "gaps": [
+        "glibc",
         "musl"
       ],
       "errors": null,
@@ -844,10 +846,11 @@
       "type": "tool",
       "platforms": {
         "darwin": true,
-        "glibc": true,
+        "glibc": false,
         "musl": false
       },
       "gaps": [
+        "glibc",
         "musl"
       ],
       "errors": null,
@@ -977,6 +980,20 @@
     {
       "name": "cuda",
       "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "cuda-runtime",
+      "type": "library",
       "platforms": {
         "darwin": false,
         "glibc": true,
@@ -1320,10 +1337,11 @@
       "type": "tool",
       "platforms": {
         "darwin": true,
-        "glibc": true,
+        "glibc": false,
         "musl": false
       },
       "gaps": [
+        "glibc",
         "musl"
       ],
       "errors": null,
@@ -1486,10 +1504,11 @@
       "type": "tool",
       "platforms": {
         "darwin": true,
-        "glibc": true,
+        "glibc": false,
         "musl": false
       },
       "gaps": [
+        "glibc",
         "musl"
       ],
       "errors": null,
@@ -1526,10 +1545,11 @@
       "type": "tool",
       "platforms": {
         "darwin": true,
-        "glibc": true,
+        "glibc": false,
         "musl": false
       },
       "gaps": [
+        "glibc",
         "musl"
       ],
       "errors": null,
@@ -1643,10 +1663,11 @@
       "type": "tool",
       "platforms": {
         "darwin": true,
-        "glibc": true,
+        "glibc": false,
         "musl": false
       },
       "gaps": [
+        "glibc",
         "musl"
       ],
       "errors": null,
@@ -1860,10 +1881,11 @@
       "type": "tool",
       "platforms": {
         "darwin": true,
-        "glibc": true,
+        "glibc": false,
         "musl": false
       },
       "gaps": [
+        "glibc",
         "musl"
       ],
       "errors": null,
@@ -2093,10 +2115,11 @@
       "type": "tool",
       "platforms": {
         "darwin": true,
-        "glibc": true,
+        "glibc": false,
         "musl": false
       },
       "gaps": [
+        "glibc",
         "musl"
       ],
       "errors": null,
@@ -2443,10 +2466,11 @@
       "type": "tool",
       "platforms": {
         "darwin": true,
-        "glibc": true,
+        "glibc": false,
         "musl": false
       },
       "gaps": [
+        "glibc",
         "musl"
       ],
       "errors": null,
@@ -2534,6 +2558,20 @@
       },
       "gaps": [
         "musl"
+      ],
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "mesa-vulkan-drivers",
+      "type": "library",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
       ],
       "errors": null,
       "warnings": null
@@ -2649,10 +2687,11 @@
       "type": "tool",
       "platforms": {
         "darwin": true,
-        "glibc": true,
+        "glibc": false,
         "musl": false
       },
       "gaps": [
+        "glibc",
         "musl"
       ],
       "errors": null,
@@ -2866,14 +2905,29 @@
       "warnings": null
     },
     {
+      "name": "nvidia-driver",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "oh-my-posh",
       "type": "tool",
       "platforms": {
         "darwin": true,
-        "glibc": true,
+        "glibc": false,
         "musl": false
       },
       "gaps": [
+        "glibc",
         "musl"
       ],
       "errors": null,
@@ -3681,10 +3735,11 @@
       "type": "tool",
       "platforms": {
         "darwin": true,
-        "glibc": true,
+        "glibc": false,
         "musl": false
       },
       "gaps": [
+        "glibc",
         "musl"
       ],
       "errors": null,
@@ -3723,10 +3778,11 @@
       "type": "tool",
       "platforms": {
         "darwin": true,
-        "glibc": true,
+        "glibc": false,
         "musl": false
       },
       "gaps": [
+        "glibc",
         "musl"
       ],
       "errors": null,
@@ -3761,10 +3817,11 @@
       "type": "tool",
       "platforms": {
         "darwin": true,
-        "glibc": true,
+        "glibc": false,
         "musl": false
       },
       "gaps": [
+        "glibc",
         "musl"
       ],
       "errors": null,
@@ -3888,6 +3945,20 @@
     },
     {
       "name": "tsuku-dltest",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": false
+      },
+      "gaps": [
+        "musl"
+      ],
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "tsuku-llm",
       "type": "tool",
       "platforms": {
         "darwin": true,
@@ -4049,6 +4120,20 @@
       "warnings": null
     },
     {
+      "name": "vulkan-loader",
+      "type": "library",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "watch",
       "type": "tool",
       "platforms": {
@@ -4123,10 +4208,11 @@
       "type": "tool",
       "platforms": {
         "darwin": true,
-        "glibc": true,
+        "glibc": false,
         "musl": false
       },
       "gaps": [
+        "glibc",
         "musl"
       ],
       "errors": null,
@@ -4599,6 +4685,11 @@
       "recipe": "spatialite",
       "issue": "https://github.com/tsukumogami/tsuku/issues/1662",
       "reason": "Transient network error - 502 Bad Gateway downloading dependencies"
+    },
+    {
+      "recipe": "tsuku-llm",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1769",
+      "reason": "No published release artifacts yet (tsukumogami/tsuku-llm repo not created)"
     }
   ]
 }
