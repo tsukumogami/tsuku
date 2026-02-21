@@ -1,5 +1,5 @@
 ---
-status: Accepted
+status: Planned
 problem: |
   Recipe-triggered CI workflows spawn one GitHub Actions job per changed recipe.
   PR #1770 produced 153 per-recipe jobs, each paying ~30-45 seconds of cold-start
@@ -25,7 +25,44 @@ rationale: |
 
 ## Status
 
-Accepted
+Planned
+
+## Implementation Issues
+
+### Milestone: [recipe-ci-batching](https://github.com/tsukumogami/tsuku/milestone/91)
+
+| Issue | Dependencies | Tier |
+|-------|--------------|------|
+| [#1814: ci(test-recipes): batch Linux per-recipe jobs in test-changed-recipes](https://github.com/tsukumogami/tsuku/issues/1814) | None | testable |
+| _Creates `.github/ci-batch-config.json` and converts the `test-linux` job from per-recipe to per-batch matrix. Establishes the inner-loop pattern (TSUKU_HOME isolation, download cache sharing, failure accumulation) that the next issue reuses._ | | |
+| [#1815: ci(golden-recipes): batch per-recipe jobs in validate-golden-recipes](https://github.com/tsukumogami/tsuku/issues/1815) | [#1814](https://github.com/tsukumogami/tsuku/issues/1814) | testable |
+| _Applies the same batching pattern to `validate-golden-recipes.yml`, handling its different matrix shape (`recipe`/`category` vs `tool`/`path`) and updating the cache key strategy for batched jobs._ | | |
+| [#1816: docs(ci): document batch size configuration and tuning](https://github.com/tsukumogami/tsuku/issues/1816) | [#1814](https://github.com/tsukumogami/tsuku/issues/1814), [#1815](https://github.com/tsukumogami/tsuku/issues/1815) | simple |
+| _Documents the config file format, `workflow_dispatch` override, and tuning guidance. Notes the follow-up work for `validate-golden-execution.yml` per-recipe jobs._ | | |
+
+### Dependency Graph
+
+```mermaid
+graph LR
+    I1814["#1814: Batch test-changed-recipes"]
+    I1815["#1815: Batch validate-golden-recipes"]
+    I1816["#1816: Document batch config"]
+
+    I1814 --> I1815
+    I1814 --> I1816
+    I1815 --> I1816
+
+    classDef done fill:#c8e6c9
+    classDef ready fill:#bbdefb
+    classDef blocked fill:#fff9c4
+    classDef needsDesign fill:#e1bee7
+    classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
+
+    class I1814 ready
+    class I1815,I1816 blocked
+```
+
+**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design
 
 ## Context and Problem Statement
 
