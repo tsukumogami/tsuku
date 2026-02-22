@@ -484,6 +484,16 @@ func (a *GemExecAction) executeLockDataMode(ctx *ExecutionContext, params map[st
 	// Create self-contained wrapper scripts at install root for executables.
 	// Wrappers set GEM_HOME/GEM_PATH/PATH so gems work with tsuku's managed ruby,
 	// matching the approach used by gem_install's direct path.
+	//
+	// Bundler installs gems into a versioned subdirectory (ruby/<ver>/), so
+	// GEM_HOME must point there rather than the install root. The gem home
+	// is the parent of the bundler bin directory.
+	gemHomeDir := filepath.Dir(binDir)
+	gemHomeRel, err := filepath.Rel(ctx.InstallDir, gemHomeDir)
+	if err != nil {
+		return fmt.Errorf("failed to compute relative gem home path: %w", err)
+	}
+
 	rootBinDir := filepath.Join(ctx.InstallDir, "bin")
 	if err := os.MkdirAll(rootBinDir, 0755); err != nil {
 		return fmt.Errorf("failed to create bin directory: %w", err)
@@ -491,7 +501,7 @@ func (a *GemExecAction) executeLockDataMode(ctx *ExecutionContext, params map[st
 
 	for _, exe := range executables {
 		srcScript := filepath.Join(binDir, exe)
-		if err := createGemWrapper(srcScript, rootBinDir, exe, rubyBinDir); err != nil {
+		if err := createGemWrapper(srcScript, rootBinDir, exe, rubyBinDir, gemHomeRel); err != nil {
 			return fmt.Errorf("failed to create wrapper for %s: %w", exe, err)
 		}
 	}

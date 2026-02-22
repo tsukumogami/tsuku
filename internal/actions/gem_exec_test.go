@@ -1159,6 +1159,11 @@ DEPENDENCIES
 		if !strings.Contains(wrapperStr, "GEM_HOME=") {
 			t.Errorf("wrapper for %s should set GEM_HOME", exe)
 		}
+		// GEM_HOME must include a subdirectory (bundler's versioned gem path),
+		// not bare $INSTALL_DIR which was the pre-fix broken behavior
+		if strings.Contains(wrapperStr, `GEM_HOME="$INSTALL_DIR"`) {
+			t.Errorf("wrapper for %s sets GEM_HOME to bare INSTALL_DIR; should include bundler's versioned subdirectory", exe)
+		}
 		if !strings.Contains(wrapperStr, "GEM_PATH=") {
 			t.Errorf("wrapper for %s should set GEM_PATH", exe)
 		}

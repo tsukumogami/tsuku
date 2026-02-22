@@ -201,7 +201,7 @@ func (a *GemInstallAction) Execute(ctx *ExecutionContext, params map[string]inte
 			return fmt.Errorf("expected executable %s not found at %s", exe, exePath)
 		}
 
-		if err := createGemWrapper(exePath, binDir, exe, gemDir); err != nil {
+		if err := createGemWrapper(exePath, binDir, exe, gemDir, "."); err != nil {
 			return fmt.Errorf("failed to create wrapper for %s: %w", exe, err)
 		}
 	}

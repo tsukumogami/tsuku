@@ -8,7 +8,7 @@ import (
 
 // gemWrapperTemplate is the bash wrapper script template for gem executables.
 // It sets GEM_HOME/GEM_PATH for isolation and adds Ruby to PATH.
-// Arguments: executable name, ruby bin dir, executable name (for .gem suffix).
+// Arguments: executable name, gem home relative path, ruby bin dir, executable name (for .gem suffix).
 const gemWrapperTemplate = `#!/bin/bash
 # tsuku wrapper for %s (sets GEM_HOME/GEM_PATH for isolated gem)
 SCRIPT_PATH="${BASH_SOURCE[0]}"
@@ -20,8 +20,8 @@ while [ -L "$SCRIPT_PATH" ]; do
 done
 SCRIPT_DIR="$(cd -P "$(dirname "$SCRIPT_PATH")" && pwd)"
 INSTALL_DIR="$(dirname "$SCRIPT_DIR")"
-export GEM_HOME="$INSTALL_DIR"
-export GEM_PATH="$INSTALL_DIR"
+export GEM_HOME="$INSTALL_DIR/%s"
+export GEM_PATH="$GEM_HOME"
 # Add Ruby to PATH and explicitly call ruby (don't rely on shebang)
 export PATH="%s:$PATH"
 exec ruby "$SCRIPT_DIR/%s.gem" "$@"
@@ -31,10 +31,14 @@ exec ruby "$SCRIPT_DIR/%s.gem" "$@"
 // It copies the original script to <dstDir>/<exeName>.gem and creates a wrapper
 // at <dstDir>/<exeName> that sets GEM_HOME/GEM_PATH/PATH before calling the original.
 //
+// gemHomeRel is the relative path from the install directory to the GEM_HOME.
+// For gem_install direct: "." (gems at install root)
+// For gem_exec bundler: "ruby/<ver>" (gems in versioned subdirectory)
+//
 // When srcScript is in dstDir, the original is renamed in place. When it's in a
 // different directory (e.g., bundler's deep ruby/<ver>/bin/ path), the content is
 // copied across directories.
-func createGemWrapper(srcScript, dstDir, exeName, rubyBinDir string) error {
+func createGemWrapper(srcScript, dstDir, exeName, rubyBinDir, gemHomeRel string) error {
 	gemPath := filepath.Join(dstDir, exeName+".gem")
 	wrapperPath := filepath.Join(dstDir, exeName)
 
@@ -60,7 +64,7 @@ func createGemWrapper(srcScript, dstDir, exeName, rubyBinDir string) error {
 	}
 
 	// Write wrapper script
-	wrapperContent := fmt.Sprintf(gemWrapperTemplate, exeName, rubyBinDir, exeName)
+	wrapperContent := fmt.Sprintf(gemWrapperTemplate, exeName, gemHomeRel, rubyBinDir, exeName)
 	if err := os.WriteFile(wrapperPath, []byte(wrapperContent), 0755); err != nil {
 		// Restore original on failure
 		if sameDir {
