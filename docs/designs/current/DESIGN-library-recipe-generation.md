@@ -1,5 +1,5 @@
 ---
-status: Planned
+status: Current
 problem: |
   The deterministic recipe generator fails on library-only Homebrew bottles
   because it only scans bin/ for executables. Packages like bdw-gc and
@@ -27,7 +27,7 @@ rationale: |
 
 ## Status
 
-Planned
+Current
 
 ## Implementation Issues
 
