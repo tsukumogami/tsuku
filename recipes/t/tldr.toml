@@ -1,0 +1,31 @@
+[metadata]
+  name = "tldr"
+  description = "TLDR will run your tests, but only for 1.8 seconds."
+  homepage = "https://github.com/tendersearls/tldr"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "rubygems"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "gem_install"
+  executables = ["tldr"]
+  gem = "tldr"
+
+[verify]
+  command = "tldr --version"
+  pattern = ""

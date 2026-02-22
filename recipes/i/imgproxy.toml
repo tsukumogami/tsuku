@@ -1,0 +1,31 @@
+[metadata]
+  name = "imgproxy"
+  description = "A gem that easily generates imgproxy URLs for your images"
+  homepage = "https://github.com/imgproxy/imgproxy.rb"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "rubygems"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "gem_install"
+  executables = ["imgproxy"]
+  gem = "imgproxy"
+
+[verify]
+  command = "imgproxy --version"
+  pattern = ""

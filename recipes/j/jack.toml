@@ -1,0 +1,31 @@
+[metadata]
+  name = "jack"
+  description = "Real time audio and midi with JACK."
+  homepage = "https://github.com/RustAudio/rust-jack"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "crates_io"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "cargo_install"
+  crate = "jack"
+  executables = ["jack"]
+
+[verify]
+  command = "jack --version"
+  pattern = ""

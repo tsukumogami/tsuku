@@ -1,0 +1,31 @@
+[metadata]
+  name = "neofetch"
+  description = "neofetch"
+  homepage = "https://github.com/ahaoboy/neofetch"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "crates_io"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "cargo_install"
+  crate = "neofetch"
+  executables = ["neofetch"]
+
+[verify]
+  command = "neofetch --version"
+  pattern = ""

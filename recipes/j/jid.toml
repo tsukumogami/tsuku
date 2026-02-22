@@ -1,0 +1,31 @@
+[metadata]
+  name = "jid"
+  description = "A crate which provides a Jid struct for Jabber IDs."
+  homepage = "https://gitlab.com/xmpp-rs/xmpp-rs"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "crates_io"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "cargo_install"
+  crate = "jid"
+  executables = ["jid"]
+
+[verify]
+  command = "jid --version"
+  pattern = ""

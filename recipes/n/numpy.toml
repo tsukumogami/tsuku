@@ -1,0 +1,31 @@
+[metadata]
+  name = "numpy"
+  description = "PyO3-based Rust bindings of the NumPy C-API"
+  homepage = "https://github.com/PyO3/rust-numpy"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "crates_io"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "cargo_install"
+  crate = "numpy"
+  executables = ["numpy"]
+
+[verify]
+  command = "numpy --version"
+  pattern = ""

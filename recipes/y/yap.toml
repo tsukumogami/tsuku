@@ -1,0 +1,31 @@
+[metadata]
+  name = "yap"
+  description = "Yet Another Parser library. A lightweight, dependency free, parser combinator inspired set of utility methods to help with parsing strings and slices."
+  homepage = "https://github.com/jsdw/yap"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "crates_io"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "cargo_install"
+  crate = "yap"
+  executables = ["yap"]
+
+[verify]
+  command = "yap --version"
+  pattern = ""

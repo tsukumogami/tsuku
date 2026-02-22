@@ -1,0 +1,31 @@
+[metadata]
+  name = "chamber"
+  description = "Chamber lets you source your Settings from an arbitrary number of YAML files and provides a simple mechanism for overriding settings from the ENV, which is friendly to how Heroku addons work."
+  homepage = "https://github.com/thekompanee/chamber"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "rubygems"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "gem_install"
+  executables = ["chamber"]
+  gem = "chamber"
+
+[verify]
+  command = "chamber --version"
+  pattern = ""

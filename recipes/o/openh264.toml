@@ -1,0 +1,31 @@
+[metadata]
+  name = "openh264"
+  description = "Idiomatic bindings for OpenH264."
+  homepage = "https://github.com/ralfbiedert/openh264-rs"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "crates_io"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "cargo_install"
+  crate = "openh264"
+  executables = ["openh264"]
+
+[verify]
+  command = "openh264 --version"
+  pattern = ""
