@@ -58,53 +58,6 @@ Ref #1825
 | ~~[#1851: docs: update stale references after queue-maintain migration](https://github.com/tsukumogami/tsuku/issues/1851)~~ | ~~[#1848](https://github.com/tsukumogami/tsuku/issues/1848), [#1849](https://github.com/tsukumogami/tsuku/issues/1849)~~ | ~~simple~~ |
 | ~~_Update the format mismatch references in `DESIGN-registry-scale-strategy.md`, fix the stale `isValidDependencyName` comment in `orchestrator.go`, and verify the legacy per-ecosystem queue has no remaining consumers._~~ | | |
 
-### Dependency Graph
-
-```mermaid
-graph TD
-    subgraph Phase1["Phase 1: Shared Loading"]
-        I1845["#1845: Extract shared failure loading"]
-    end
-
-    subgraph Phase2["Phase 2: Requeue Logic"]
-        I1846["#1846: Implement requeue package"]
-    end
-
-    subgraph Phase3["Phase 3: CLI Consolidation"]
-        I1847["#1847: Consolidate queue-maintain"]
-    end
-
-    subgraph Phase4["Phase 4: Workflow Integration"]
-        I1848["#1848: update-queue-status workflow"]
-        I1849["#1849: batch-generate workflow"]
-    end
-
-    subgraph Phase5["Phase 5: Migration and Cleanup"]
-        I1850["#1850: One-time migration"]
-        I1851["#1851: Update stale references"]
-    end
-
-    I1845 --> I1846
-    I1846 --> I1847
-    I1847 --> I1848
-    I1847 --> I1849
-    I1848 --> I1850
-    I1849 --> I1850
-    I1848 --> I1851
-    I1849 --> I1851
-
-    classDef done fill:#c8e6c9
-    classDef ready fill:#bbdefb
-    classDef blocked fill:#fff9c4
-    classDef needsDesign fill:#e1bee7
-    classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
-
-    class I1845 done
-    class I1846,I1847,I1848,I1849,I1850,I1851 done
-```
-
-**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design
-
 ## Context and Problem Statement
 
 The batch pipeline marks packages as "blocked" when their dependencies don't have recipes yet. These blocked entries sit in the unified priority queue until `scripts/requeue-unblocked.sh` runs to check whether the missing recipes have since appeared. But that script only executes during scheduled batch generation runs (roughly hourly), so there's a latency gap: after a PR adds the missing recipe, affected packages stay blocked until the next batch cycle.
