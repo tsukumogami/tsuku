@@ -127,13 +127,13 @@ Estimated embedded recipes: 15-20 (language toolchains + build tools + their dep
 
 Tsuku uses four complementary workflows that trigger under different conditions:
 
-**Functional testing (`test-changed-recipes.yml`):**
+**Functional testing (`test-recipe-changes.yml`):**
 - Triggers when: Recipe files change (`internal/recipe/recipes/**/*.toml`)
 - Tests: Only the changed recipes (not all recipes)
 - Actions: Installs recipes on Linux (per-recipe parallel) and macOS (aggregated)
 - Filters: Skips library recipes, system dependencies, and execution-excluded recipes
 
-**Plan validation (`validate-golden-recipes.yml`):**
+**Plan validation (`validate-recipe-golden-files.yml`):**
 - Triggers when: Recipe files change
 - Tests: Only the changed recipes
 - Actions: Regenerates plans with `--pin-from` and compares to golden files
@@ -693,19 +693,19 @@ testdata/golden/plans/
 **Current workflows:**
 | Workflow | Trigger | Scope |
 |----------|---------|-------|
-| `test-changed-recipes.yml` | Recipe files change | Changed recipes only |
-| `validate-golden-recipes.yml` | Recipe files change | Changed recipes only |
+| `test-recipe-changes.yml` | Recipe files change | Changed recipes only |
+| `validate-recipe-golden-files.yml` | Recipe files change | Changed recipes only |
 | `validate-golden-code.yml` | 35 plan-critical code files change | ALL recipes |
 | `validate-golden-execution.yml` | Golden files change | Changed golden files |
 
 **Changes needed:**
 
-1. **test-changed-recipes.yml** - Update path triggers:
+1. **test-recipe-changes.yml** - Update path triggers:
    - Currently: `internal/recipe/recipes/**/*.toml`
    - Add: `recipes/**/*.toml` (registry recipes)
    - Behavior unchanged: tests changed recipes on their PRs
 
-2. **validate-golden-recipes.yml** - Update path triggers:
+2. **validate-recipe-golden-files.yml** - Update path triggers:
    - Currently: `internal/recipe/recipes/**/*.toml`
    - Add: `recipes/**/*.toml`
    - Behavior unchanged: validates changed recipes have golden files
@@ -820,9 +820,9 @@ testdata/golden/plans/
 **Goal:** Adjust workflow triggers and scope for the split structure.
 
 **Steps:**
-1. **test-changed-recipes.yml**: Add `recipes/**/*.toml` to path triggers (alongside existing `internal/recipe/recipes/**/*.toml`)
+1. **test-recipe-changes.yml**: Add `recipes/**/*.toml` to path triggers (alongside existing `internal/recipe/recipes/**/*.toml`)
 
-2. **validate-golden-recipes.yml**: Add `recipes/**/*.toml` to path triggers. Update script to detect recipe category from path and look in appropriate golden file directory.
+2. **validate-recipe-golden-files.yml**: Add `recipes/**/*.toml` to path triggers. Update script to detect recipe category from path and look in appropriate golden file directory.
 
 3. **validate-golden-code.yml**: Change scope from all golden files to `testdata/golden/plans/embedded/**` only. This is the key optimization - code changes no longer validate 150+ registry recipes.
 

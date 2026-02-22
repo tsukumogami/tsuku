@@ -179,7 +179,7 @@ Each workflow reads its batch size from this file during the detection step. If 
 
 ### Manual Override via workflow_dispatch
 
-Both `test-changed-recipes.yml` and `validate-golden-recipes.yml` accept a `batch_size_override` input when triggered manually:
+Both `test-recipe-changes.yml` and `validate-recipe-golden-files.yml` accept a `batch_size_override` input when triggered manually:
 
 1. Go to Actions and select the workflow
 2. Click "Run workflow"
