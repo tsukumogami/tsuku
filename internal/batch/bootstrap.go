@@ -13,6 +13,10 @@ import (
 )
 
 // BootstrapConfig holds paths and options for the bootstrap migration.
+// TODO: priority-queue-homebrew.json has no remaining active consumers.
+// bootstrap-queue and reconcile-queue.sh are one-time migration tools that
+// have already run. The legacy per-ecosystem queue file is a candidate for
+// deletion along with this bootstrap code.
 type BootstrapConfig struct {
 	RecipesDir   string // Path to the recipes/ directory
 	CuratedPath  string // Path to data/disambiguations/curated.jsonl

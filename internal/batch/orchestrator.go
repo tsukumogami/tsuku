@@ -540,8 +540,8 @@ func extractBlockedByFromOutput(output []byte) []string {
 }
 
 // isValidDependencyName rejects names containing path traversal or injection
-// characters. Downstream consumers like requeue-unblocked.sh use these names
-// to construct file paths, so we reject /, \, .., <, and >.
+// characters. These names appear in failure JSONL and queue entries, so we
+// reject /, \, .., <, and > as a general safety measure.
 func isValidDependencyName(name string) bool {
 	if strings.Contains(name, "/") || strings.Contains(name, "\\") ||
 		strings.Contains(name, "..") || strings.Contains(name, "<") ||
