@@ -1,5 +1,5 @@
 ---
-status: Accepted
+status: Planned
 problem: |
   Container image versions for Linux families are defined independently in Go
   source, CI workflow files, and test scripts. These have already drifted:
@@ -29,7 +29,63 @@ rationale: |
 
 ## Status
 
-Accepted
+Planned
+
+## Implementation Issues
+
+### Milestone: [Sandbox Image Unification](https://github.com/tsukumogami/tsuku/milestone/100)
+
+| Issue | Dependencies | Tier |
+|-------|--------------|------|
+| [#1901: refactor(sandbox): create containerimages package and centralized config](https://github.com/tsukumogami/tsuku/issues/1901) | None | testable |
+| _Creates `container-images.json` at the repo root and a new `internal/containerimages/` Go package that embeds it via `go:embed`. Replaces the hardcoded `familyToBaseImage` map and `DefaultSandboxImage` constant, fixing the alpine and suse drift in the process._ | | |
+| [#1902: ci: migrate workflow container images to centralized config](https://github.com/tsukumogami/tsuku/issues/1902) | [#1901](https://github.com/tsukumogami/tsuku/issues/1901) | testable |
+| _With the JSON file from #1901 in place, updates six CI workflows and one test script to read image references via `jq` instead of hardcoding them. Handles three consumption patterns: bash arrays, matrix blocks, and inline docker run commands._ | | |
+| [#1903: ci: add Renovate config and drift-check CI job](https://github.com/tsukumogami/tsuku/issues/1903) | [#1901](https://github.com/tsukumogami/tsuku/issues/1901), [#1902](https://github.com/tsukumogami/tsuku/issues/1902) | testable |
+| _Adds a `renovate.json` with a regex custom manager for automated image version bumps and a CI drift-check job that catches both stale embedded copies and hardcoded image regressions. This is the safety net that keeps the centralization from #1901 and #1902 intact over time._ | | |
+| [#1904: chore: add container-images.json to CODEOWNERS](https://github.com/tsukumogami/tsuku/issues/1904) | [#1901](https://github.com/tsukumogami/tsuku/issues/1901) | simple |
+| _Protects the centralized config file with the same review requirements as workflow files, mitigating the supply chain risk of a single edit redirecting all container consumers at once._ | | |
+| [#1905: docs(sandbox): design sandbox CI integration gaps](https://github.com/tsukumogami/tsuku/issues/1905) | None | simple |
+| _Independent design exploration for the three critical gaps (no post-install verification, no env passthrough, no structured results) that prevent replacing CI docker calls with `--sandbox`. This is future work that builds on the unification foundation._ | | |
+
+### Dependency Graph
+
+```mermaid
+graph LR
+    subgraph Phase1["Phase 1: Go Package"]
+        I1901["#1901: Create containerimages package"]
+    end
+
+    subgraph Phase2["Phase 2: CI Migration"]
+        I1902["#1902: Migrate workflow images"]
+    end
+
+    subgraph Phase3["Phase 3: Safety Net"]
+        I1903["#1903: Renovate + drift-check"]
+        I1904["#1904: CODEOWNERS"]
+    end
+
+    subgraph Future["Future Work"]
+        I1905["#1905: Design sandbox CI gaps"]
+    end
+
+    I1901 --> I1902
+    I1901 --> I1903
+    I1901 --> I1904
+    I1902 --> I1903
+
+    classDef done fill:#c8e6c9
+    classDef ready fill:#bbdefb
+    classDef blocked fill:#fff9c4
+    classDef needsDesign fill:#e1bee7
+    classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
+
+    class I1901 ready
+    class I1902,I1903,I1904 blocked
+    class I1905 needsDesign
+```
+
+**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design
 
 ## Context and Problem Statement
 
