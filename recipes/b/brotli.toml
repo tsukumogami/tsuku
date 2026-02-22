@@ -4,6 +4,7 @@ description = "Generic-purpose lossless compression algorithm"
 homepage = "https://github.com/google/brotli"
 type = "library"
 dependencies = []
+# No [metadata.satisfies] needed -- Homebrew formula name matches tsuku canonical name
 
 [[steps]]
 action = "homebrew"

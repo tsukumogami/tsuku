@@ -4,6 +4,9 @@ description = "C++ Common Libraries"
 homepage = "https://abseil.io"
 type = "library"
 
+[metadata.satisfies]
+homebrew = ["abseil-cpp"]
+
 # glibc Linux: Homebrew bottle
 [[steps]]
 action = "homebrew"

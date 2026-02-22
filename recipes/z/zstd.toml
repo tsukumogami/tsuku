@@ -4,6 +4,7 @@ description = "Zstandard - Fast real-time compression algorithm"
 homepage = "https://facebook.github.io/zstd/"
 type = "library"
 dependencies = []
+# No [metadata.satisfies] needed -- Homebrew formula name matches tsuku canonical name
 
 [[steps]]
 action = "homebrew"

@@ -37,6 +37,7 @@ homepage = "https://developer.nvidia.com/cuda-toolkit"
 type = "library"
 supported_os = ["linux"]
 dependencies = ["nvidia-driver"]
+# No [metadata.satisfies] -- CUDA runtime is from NVIDIA, not a Homebrew formula
 
 [version]
 source = "manual"

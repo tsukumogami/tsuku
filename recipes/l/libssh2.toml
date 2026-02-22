@@ -4,6 +4,7 @@ description = "C library for SSH2 client-side protocol"
 homepage = "https://libssh2.org/"
 type = "library"
 dependencies = ["openssl"]
+# No [metadata.satisfies] needed -- Homebrew formula name matches tsuku canonical name
 
 [[steps]]
 action = "homebrew"

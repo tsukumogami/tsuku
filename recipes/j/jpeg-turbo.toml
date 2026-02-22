@@ -4,6 +4,9 @@ description = "JPEG image codec that aids compression and decompression"
 homepage = "https://www.libjpeg-turbo.org/"
 type = "library"
 
+[metadata.satisfies]
+homebrew = ["libjpeg-turbo"]
+
 # glibc Linux: Homebrew bottle
 [[steps]]
 action = "homebrew"

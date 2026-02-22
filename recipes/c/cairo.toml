@@ -3,6 +3,7 @@ name = "cairo"
 description = "Vector graphics library with cross-device output support"
 homepage = "https://cairographics.org/"
 type = "library"
+# No [metadata.satisfies] needed -- Homebrew formula name matches tsuku canonical name
 
 # glibc Linux: Homebrew bottle
 [[steps]]
