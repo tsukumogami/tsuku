@@ -97,8 +97,13 @@ func TestExtractSubcategory_regexPatterns(t *testing.T) {
 			want:    "verify_pattern_mismatch",
 		},
 		{
-			name:    "verify keyword",
+			name:    "failed to verify",
 			message: "failed to verify installation output",
+			want:    "verify_pattern_mismatch",
+		},
+		{
+			name:    "verification failed",
+			message: "verification failed: checksum does not match",
 			want:    "verify_pattern_mismatch",
 		},
 		{
@@ -140,6 +145,11 @@ func TestExtractSubcategory_regexPatterns(t *testing.T) {
 			name:    "deadline",
 			message: "context deadline exceeded",
 			want:    "timeout",
+		},
+		{
+			name:    "recipe not found with verify suggestion",
+			message: "Error: registry: recipe berkeley-db@5 not found in registry\n\nSuggestion: Verify the recipe name is correct.",
+			want:    "",
 		},
 		{
 			name:    "no match",
