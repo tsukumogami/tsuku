@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Accepted
 problem: |
   The CargoBuilder generates `<executable> --version` as the verify command
   for all cargo crates. This fails for cargo subcommands (crates named
@@ -24,7 +24,7 @@ rationale: |
 
 ## Status
 
-**Proposed**
+**Accepted**
 
 ## Context and Problem Statement
 
