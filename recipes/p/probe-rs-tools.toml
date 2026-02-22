@@ -24,8 +24,8 @@
 [[steps]]
   action = "cargo_install"
   crate = "probe-rs-tools"
-  executables = ["probe-rs-tools"]
+  executables = ["cargo-embed", "cargo-flash", "probe-rs"]
 
 [verify]
-  command = "probe-rs-tools --version"
+  command = "probe-rs --version"
   pattern = ""

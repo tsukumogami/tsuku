@@ -27,5 +27,5 @@
   executables = ["cargo-udeps"]
 
 [verify]
-  command = "cargo-udeps --version"
+  command = "cargo udeps --version"
   pattern = ""

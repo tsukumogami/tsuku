@@ -27,5 +27,5 @@
   executables = ["keyring"]
 
 [verify]
-  command = "keyring --version"
+  command = "keyring --help"
   pattern = ""

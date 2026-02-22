@@ -27,5 +27,5 @@
   executables = ["cargo-outdated"]
 
 [verify]
-  command = "cargo-outdated --version"
+  command = "cargo outdated --version"
   pattern = ""

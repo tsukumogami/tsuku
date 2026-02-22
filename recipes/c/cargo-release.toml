@@ -27,5 +27,5 @@
   executables = ["cargo-release"]
 
 [verify]
-  command = "cargo-release --version"
+  command = "cargo release --version"
   pattern = ""
