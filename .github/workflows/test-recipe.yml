@@ -127,6 +127,7 @@ jobs:
       - name: Test recipes in Linux x86_64 containers
         env:
           RECIPES: ${{ needs.build.outputs.recipes }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Five Linux x86_64 families
           IMAGES=("debian:bookworm-slim" "fedora:41" "archlinux:base" "opensuse/tumbleweed" "alpine:3.21")
@@ -150,6 +151,7 @@ jobs:
               echo "=== Testing $recipe_name on $family (x86_64) ==="
 
               docker run --rm \
+                -e GITHUB_TOKEN \
                 -v "$PWD:/workspace" \
                 -w /workspace \
                 "$image" \
@@ -227,6 +229,7 @@ jobs:
       - name: Test recipes in Linux arm64 containers
         env:
           RECIPES: ${{ needs.build.outputs.recipes }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Four Linux arm64 families (no arch -- no arm64 image available)
           IMAGES=("debian:bookworm-slim" "fedora:41" "opensuse/tumbleweed" "alpine:3.21")
@@ -250,6 +253,7 @@ jobs:
               echo "=== Testing $recipe_name on $family (arm64) ==="
 
               docker run --rm \
+                -e GITHUB_TOKEN \
                 -v "$PWD:/workspace" \
                 -w /workspace \
                 "$image" \
@@ -329,6 +333,7 @@ jobs:
       - name: Test recipes on macOS arm64
         env:
           RECIPES: ${{ needs.build.outputs.recipes }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TOTAL=0
           PASSED=0
@@ -402,6 +407,7 @@ jobs:
       - name: Test recipes on macOS x86_64
         env:
           RECIPES: ${{ needs.build.outputs.recipes }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TOTAL=0
           PASSED=0
