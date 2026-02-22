@@ -51,8 +51,8 @@ Planned
 | ~~_Add `[metadata.satisfies]` entries to ~19 existing library recipes that lack ecosystem name aliases, enabling the pipeline to resolve names correctly._~~ | | |
 | ~~[#1866: feat(batch): run discovery to identify missing library dependencies](https://github.com/tsukumogami/tsuku/issues/1866)~~ | ~~None~~ | ~~simple~~ |
 | ~~_Run the batch orchestrator against pending entries and produce a ranked list of missing library dependencies ordered by block count._~~ | | |
-| [#1867: feat(recipes): create library recipes for priority blockers](https://github.com/tsukumogami/tsuku/issues/1867) | [#1864](https://github.com/tsukumogami/tsuku/issues/1864), [#1865](https://github.com/tsukumogami/tsuku/issues/1865), [#1866](https://github.com/tsukumogami/tsuku/issues/1866) | critical |
-| _Create library recipes for the 14+ priority blockers using standard tooling with manual fixes documented in a friction log. Each merge auto-requeues blocked packages._ | | |
+| ~~[#1867: feat(recipes): create library recipes for priority blockers](https://github.com/tsukumogami/tsuku/issues/1867)~~ | ~~[#1864](https://github.com/tsukumogami/tsuku/issues/1864), [#1865](https://github.com/tsukumogami/tsuku/issues/1865), [#1866](https://github.com/tsukumogami/tsuku/issues/1866)~~ | ~~critical~~ |
+| ~~_Create library recipes for the 14+ priority blockers using standard tooling with manual fixes documented in a friction log. Each merge auto-requeues blocked packages._~~ | | |
 
 ### Dependency Graph
 
@@ -77,7 +77,7 @@ graph TD
     class I1864 done
     class I1865 done
     class I1866 done
-    class I1867 blocked
+    class I1867 done
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
