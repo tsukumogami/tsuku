@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/tsukumogami/tsuku/internal/containerimages"
 	"github.com/tsukumogami/tsuku/internal/executor"
 	"github.com/tsukumogami/tsuku/internal/log"
 	"github.com/tsukumogami/tsuku/internal/platform"
@@ -55,7 +56,7 @@ func TestBuildSandboxScript_OfflineRequirements(t *testing.T) {
 	}
 	reqs := &SandboxRequirements{
 		RequiresNetwork: false,
-		Image:           DefaultSandboxImage,
+		Image:           containerimages.DefaultImage(),
 		Resources:       DefaultLimits(),
 	}
 

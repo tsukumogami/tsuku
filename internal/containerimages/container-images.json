@@ -1,0 +1,7 @@
+{
+  "debian": "debian:bookworm-slim",
+  "rhel": "fedora:41",
+  "arch": "archlinux:base",
+  "alpine": "alpine:3.21",
+  "suse": "opensuse/tumbleweed"
+}

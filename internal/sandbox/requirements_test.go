@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/tsukumogami/tsuku/internal/containerimages"
 	"github.com/tsukumogami/tsuku/internal/executor"
 )
 
@@ -53,8 +54,8 @@ func TestComputeSandboxRequirements_NilPlan(t *testing.T) {
 	if reqs.RequiresNetwork {
 		t.Error("nil plan should not require network")
 	}
-	if reqs.Image != DefaultSandboxImage {
-		t.Errorf("nil plan Image = %q, want %q", reqs.Image, DefaultSandboxImage)
+	if reqs.Image != containerimages.DefaultImage() {
+		t.Errorf("nil plan Image = %q, want %q", reqs.Image, containerimages.DefaultImage())
 	}
 }
 
@@ -70,8 +71,8 @@ func TestComputeSandboxRequirements_EmptyPlan(t *testing.T) {
 	if reqs.RequiresNetwork {
 		t.Error("empty plan should not require network")
 	}
-	if reqs.Image != DefaultSandboxImage {
-		t.Errorf("empty plan Image = %q, want %q", reqs.Image, DefaultSandboxImage)
+	if reqs.Image != containerimages.DefaultImage() {
+		t.Errorf("empty plan Image = %q, want %q", reqs.Image, containerimages.DefaultImage())
 	}
 	if reqs.Resources.Memory != "2g" {
 		t.Errorf("empty plan Resources.Memory = %q, want %q", reqs.Resources.Memory, "2g")
@@ -95,8 +96,8 @@ func TestComputeSandboxRequirements_OfflinePlan(t *testing.T) {
 	if reqs.RequiresNetwork {
 		t.Error("offline plan should not require network")
 	}
-	if reqs.Image != DefaultSandboxImage {
-		t.Errorf("offline plan Image = %q, want %q", reqs.Image, DefaultSandboxImage)
+	if reqs.Image != containerimages.DefaultImage() {
+		t.Errorf("offline plan Image = %q, want %q", reqs.Image, containerimages.DefaultImage())
 	}
 	if reqs.Resources.Memory != "2g" {
 		t.Errorf("offline plan Resources.Memory = %q, want %q", reqs.Resources.Memory, "2g")
@@ -217,8 +218,8 @@ func TestComputeSandboxRequirements_UnknownAction(t *testing.T) {
 	if reqs.RequiresNetwork {
 		t.Error("unknown action should not require network (fail closed)")
 	}
-	if reqs.Image != DefaultSandboxImage {
-		t.Errorf("unknown action Image = %q, want %q", reqs.Image, DefaultSandboxImage)
+	if reqs.Image != containerimages.DefaultImage() {
+		t.Errorf("unknown action Image = %q, want %q", reqs.Image, containerimages.DefaultImage())
 	}
 }
 
@@ -321,13 +322,13 @@ func TestComputeSandboxRequirements_TargetFamily(t *testing.T) {
 		targetFamily string
 		wantImage    string
 	}{
-		{"empty defaults to debian", "", DefaultSandboxImage},
+		{"empty defaults to debian", "", containerimages.DefaultImage()},
 		{"debian", "debian", "debian:bookworm-slim"},
-		{"alpine", "alpine", "alpine:3.19"},
+		{"alpine", "alpine", "alpine:3.21"},
 		{"rhel", "rhel", "fedora:41"},
 		{"arch", "arch", "archlinux:base"},
-		{"suse", "suse", "opensuse/leap:15"},
-		{"unknown falls back to default", "unknown", DefaultSandboxImage},
+		{"suse", "suse", "opensuse/tumbleweed"},
+		{"unknown falls back to default", "unknown", containerimages.DefaultImage()},
 	}
 
 	for _, tc := range testCases {
@@ -361,8 +362,8 @@ func TestComputeSandboxRequirements_TargetFamilyWithBuildActions(t *testing.T) {
 		wantImage    string
 	}{
 		{"empty defaults to ubuntu", "", SourceBuildSandboxImage},
-		{"alpine uses alpine image", "alpine", "alpine:3.19"},
-		{"suse uses suse image", "suse", "opensuse/leap:15"},
+		{"alpine uses alpine image", "alpine", "alpine:3.21"},
+		{"suse uses suse image", "suse", "opensuse/tumbleweed"},
 		{"rhel uses fedora image", "rhel", "fedora:41"},
 	}
 
@@ -397,9 +398,6 @@ func TestComputeSandboxRequirements_TargetFamilyWithBuildActions(t *testing.T) {
 func TestConstants(t *testing.T) {
 	t.Parallel()
 
-	if DefaultSandboxImage != "debian:bookworm-slim" {
-		t.Errorf("DefaultSandboxImage = %q, want %q", DefaultSandboxImage, "debian:bookworm-slim")
-	}
 	if SourceBuildSandboxImage != "ubuntu:22.04" {
 		t.Errorf("SourceBuildSandboxImage = %q, want %q", SourceBuildSandboxImage, "ubuntu:22.04")
 	}

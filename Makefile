@@ -4,6 +4,7 @@
 # CGO_ENABLED=0 produces a static binary that works in all Linux containers
 # (including Alpine/musl). CI and .goreleaser.yaml already use this setting.
 build:
+	go generate ./internal/containerimages/...
 	CGO_ENABLED=0 go build -ldflags "-X main.defaultHomeOverride=.tsuku-dev" -o tsuku ./cmd/tsuku
 
 test:
