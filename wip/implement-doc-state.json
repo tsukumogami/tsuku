@@ -3,13 +3,13 @@
   "design_doc": "docs/designs/DESIGN-structured-error-subcategories.md",
   "branch": "docs/structured-error-subcategories",
   "pr_number": 1854,
-  "integrity_hash": "sha256:6f3758840aa21905f152b28bacc09272493442143190e4979cd8b86922a1fff9",
+  "integrity_hash": "sha256:b6e4586e7ec12dbb5e6456aa508c716e0cbd5138e739f6ec7194b210d03eb959",
   "issues": [
     {
       "number": 1856,
       "title": "feat(cli): add subcategory to install error JSON output",
-      "status": "pushed",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "ci_fix_attempts": 0,
       "issue_type": "code",
       "dependencies": [],
@@ -77,16 +77,58 @@
     {
       "number": 1857,
       "title": "feat(batch): normalize pipeline categories and add subcategory passthrough",
-      "status": "pending",
+      "status": "scrutinized",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [
         1856
       ],
-      "commits": [],
-      "agent_type": "",
-      "summary": null,
+      "commits": [
+        "4a236dcf042efd5a0c2106c923304cde0b65f4fe"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          "internal/batch/orchestrator.go",
+          "internal/batch/orchestrator_test.go",
+          "internal/batch/results.go",
+          "data/schemas/failure-record.schema.json"
+        ],
+        "tests_added": 4,
+        "key_decisions": "parseInstallJSON() now returns three values (category, subcategory, blockedBy). The CLI category field is completely ignored for pipeline categories.",
+        "requirements_map": [
+          {
+            "ac": "categoryFromExitCode canonical taxonomy",
+            "status": "implemented"
+          },
+          {
+            "ac": "parseInstallJSON uses categoryFromExitCode not CLI category",
+            "status": "implemented"
+          },
+          {
+            "ac": "subcategory extracted from CLI JSON",
+            "status": "implemented"
+          },
+          {
+            "ac": "FailureRecord has Subcategory field",
+            "status": "implemented"
+          },
+          {
+            "ac": "generate() fallback uses network_error",
+            "status": "implemented"
+          },
+          {
+            "ac": "schema updated with canonical enum and subcategory",
+            "status": "implemented"
+          },
+          {
+            "ac": "all tests updated and passing",
+            "status": "implemented"
+          }
+        ]
+      },
       "testable_scenarios": [
         "scenario-5",
         "scenario-6",

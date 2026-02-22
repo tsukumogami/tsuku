@@ -8,11 +8,11 @@ Total scenarios: 14
 - [x] scenario-2: classifyInstallError returns subcategory for DNS, TLS, and connection errors
 - [x] scenario-3: installError JSON includes subcategory when non-empty
 - [x] scenario-4: handleInstallError populates subcategory in JSON output
-- [ ] scenario-5: orchestrator categoryFromExitCode returns canonical taxonomy
-- [ ] scenario-6: parseInstallJSON derives category from exit code, not CLI string
-- [ ] scenario-7: parseInstallJSON returns empty subcategory when absent from CLI JSON
-- [ ] scenario-8: FailureRecord includes subcategory in JSONL output
-- [ ] scenario-9: failure-record schema accepts canonical categories and subcategory
+- [x] scenario-5: orchestrator categoryFromExitCode returns canonical taxonomy
+- [x] scenario-6: parseInstallJSON derives category from exit code, not CLI string
+- [x] scenario-7: parseInstallJSON returns empty subcategory when absent from CLI JSON
+- [x] scenario-8: FailureRecord includes subcategory in JSONL output
+- [x] scenario-9: failure-record schema accepts canonical categories and subcategory
 - [ ] scenario-10: CI workflow jq uses canonical category names
 - [ ] scenario-11: dashboard remapCategory translates old category strings
 - [ ] scenario-12: dashboard prefers structured subcategory over heuristic extraction
@@ -68,7 +68,7 @@ Total scenarios: 14
 **Commands**:
 - `go test ./internal/batch/... -run TestCategoryFromExitCode -v`
 **Expected**: Test passes. Exit code 5 returns "network_error" (was "api_error"). Exit code 6 returns "install_failed" (was "validation_failed"). Exit code 7 returns "verify_failed" (was "validation_failed"). Exit code 9 returns "generation_failed" (was "deterministic_insufficient"). Default returns "generation_failed" (was "validation_failed"). Exit codes 3 and 8 are unchanged.
-**Status**: pending
+**Status**: passed
 
 ---
 
@@ -78,7 +78,7 @@ Total scenarios: 14
 **Commands**:
 - `go test ./internal/batch/... -run TestParseInstallJSON -v`
 **Expected**: Test passes. When CLI JSON contains {"category":"network_error", "subcategory":"timeout"} with exit code 5, the returned category is "network_error" from categoryFromExitCode(5), not from the CLI's category string. The CLI category field is ignored for pipeline classification. The subcategory "timeout" is extracted and returned.
-**Status**: pending
+**Status**: passed
 
 ---
 
@@ -88,7 +88,7 @@ Total scenarios: 14
 **Commands**:
 - `go test ./internal/batch/... -run TestParseInstallJSON -v`
 **Expected**: Test passes. When CLI JSON has no subcategory field, parseInstallJSON returns an empty subcategory string alongside the category and blocked-by list.
-**Status**: pending
+**Status**: passed
 
 ---
 
@@ -98,7 +98,7 @@ Total scenarios: 14
 **Commands**:
 - `go test ./internal/batch/... -run TestSaveResults -v`
 **Expected**: Test passes. FailureRecord struct has a Subcategory field with json:"subcategory,omitempty" tag. When subcategory is non-empty, it appears in JSONL output. When empty, it is omitted.
-**Status**: pending
+**Status**: passed
 
 ---
 
@@ -108,7 +108,7 @@ Total scenarios: 14
 **Commands**:
 - `python3 -c "import json; schema=json.load(open('data/schemas/failure-record.schema.json')); cats=schema['properties']['failures']['items']['properties']['category']['enum']; print(cats); assert 'network_error' in cats; assert 'install_failed' in cats; assert 'verify_failed' in cats; assert 'generation_failed' in cats; assert 'api_error' not in cats; assert 'validation_failed' not in cats; print('subcategory' in schema['properties']['failures']['items']['properties']); print('PASS')"`
 **Expected**: The schema's category enum contains the six canonical values (recipe_not_found, network_error, install_failed, verify_failed, missing_dep, generation_failed). Old values (api_error, validation_failed, deterministic_insufficient) are removed. A subcategory property exists as an optional string. Output ends with "PASS".
-**Status**: pending
+**Status**: passed
 
 ---
 
