@@ -2,7 +2,7 @@
   "design_doc": "docs/designs/DESIGN-system-lib-backfill.md",
   "branch": "docs/system-lib-backfill",
   "pr_number": 1863,
-  "integrity_hash": "sha256:874cc9f3a772dc2dc6fd57dd8a3f66200c25f311a372bbf5be4afa05cb358b8c",
+  "integrity_hash": "sha256:e1cf2048ce17143f9a8ab6409114f7753b058833af27062d14a683886912102a",
   "issues": [
     {
       "number": 1864,
@@ -29,8 +29,8 @@
     {
       "number": 1865,
       "title": "fix(recipes): backfill satisfies metadata on existing library recipes",
-      "status": "scrutinized",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "ci_fix_attempts": 0,
       "issue_type": "code",
       "dependencies": [],
@@ -64,6 +64,30 @@
         "tests_added": 0,
         "key_decisions": "17 recipes now have [metadata.satisfies] entries. 3 non-Homebrew recipes have comments. libcurl has comment (curl canonical conflict)."
       },
+      "reviewer_results": {
+        "issue": 1865,
+        "round": 2,
+        "reviewers": [
+          {
+            "focus": "pragmatic",
+            "blocking_count": 0,
+            "advisory_count": 0,
+            "summary": "Round 1 blocking fixed: all same-name recipes now have actual satisfies entries instead of misleading comments."
+          },
+          {
+            "focus": "architect",
+            "blocking_count": 0,
+            "advisory_count": 0,
+            "summary": "No architectural concerns. Data-only changes integrate with existing satisfies infrastructure."
+          },
+          {
+            "focus": "maintainer",
+            "blocking_count": 0,
+            "advisory_count": 0,
+            "summary": "Round 1 blocking fixed: misleading comments replaced with actual satisfies entries."
+          }
+        ]
+      },
       "testable_scenarios": [
         "scenario-1",
         "scenario-2",
@@ -75,10 +99,10 @@
     {
       "number": 1866,
       "title": "feat(batch): run discovery to identify missing library dependencies",
-      "status": "pending",
+      "status": "in_progress",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "task",
       "dependencies": [],
       "commits": [],
       "agent_type": "",
