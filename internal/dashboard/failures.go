@@ -72,7 +72,7 @@ func extractSubcategory(category, message string, exitCode int) string {
 		return "no_bottle"
 	case strings.Contains(msg, "no executables") || strings.Contains(msg, "no binaries"):
 		return "binary_discovery_failed"
-	case strings.Contains(msg, "version pattern") || strings.Contains(msg, "verify"):
+	case strings.Contains(msg, "version pattern") || strings.Contains(msg, "failed to verify") || strings.Contains(msg, "verification"):
 		return "verify_pattern_mismatch"
 	case strings.Contains(msg, "already exists") || strings.Contains(msg, "use --force"):
 		return "recipe_already_exists"
