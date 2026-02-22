@@ -17,10 +17,10 @@ Two-pronged fix: correct the call-site logic in `create.go` (same as PR #1840), 
 - `test/functional/features/create.feature` - Add `@critical` tags to representative scenarios covering the most common create paths
 
 ## Implementation Steps
-- [ ] Fix `runCreate` condition to only block on satisfies-alias matches (not exact name matches)
-- [ ] Add `@critical` tags to representative create.feature scenarios (npm, pypi, discovery, deterministic-only)
-- [ ] Run unit tests to verify the fix
-- [ ] Run functional tests to verify create scenarios pass
+- [x] Fix `runCreate` condition to only block on satisfies-alias matches (not exact name matches)
+- [x] Add `@critical` tags to representative create.feature scenarios (npm, pypi, discovery, deterministic-only)
+- [x] Run unit tests to verify the fix
+- [x] Run functional tests to verify create scenarios pass
 
 ## Testing Strategy
 - Unit tests: Existing `TestCheckExistingRecipe_*` tests already cover the helper function. The fix is at the call site.
