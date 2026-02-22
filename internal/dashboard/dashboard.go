@@ -148,20 +148,22 @@ type FailureRecord struct {
 	Timestamp     string           `json:"timestamp,omitempty"` // Per-recipe format timestamp
 	Failures      []PackageFailure `json:"failures,omitempty"`
 	// Per-recipe format fields
-	Recipe    string   `json:"recipe,omitempty"`
-	Platform  string   `json:"platform,omitempty"`
-	Category  string   `json:"category,omitempty"`
-	ExitCode  int      `json:"exit_code,omitempty"`
-	BlockedBy []string `json:"blocked_by,omitempty"` // Added for missing_dep tracking
+	Recipe      string   `json:"recipe,omitempty"`
+	Platform    string   `json:"platform,omitempty"`
+	Category    string   `json:"category,omitempty"`
+	Subcategory string   `json:"subcategory,omitempty"`
+	ExitCode    int      `json:"exit_code,omitempty"`
+	BlockedBy   []string `json:"blocked_by,omitempty"` // Added for missing_dep tracking
 }
 
 // PackageFailure is a single failure entry in the legacy batch format.
 type PackageFailure struct {
-	PackageID string   `json:"package_id"`
-	Category  string   `json:"category"`
-	BlockedBy []string `json:"blocked_by,omitempty"`
-	Message   string   `json:"message"`
-	Timestamp string   `json:"timestamp"`
+	PackageID   string   `json:"package_id"`
+	Category    string   `json:"category"`
+	Subcategory string   `json:"subcategory,omitempty"`
+	BlockedBy   []string `json:"blocked_by,omitempty"`
+	Message     string   `json:"message"`
+	Timestamp   string   `json:"timestamp"`
 }
 
 // MetricsRecord represents one line in batch-runs.jsonl.
@@ -430,9 +432,10 @@ func loadFailures(path string) (map[string][]string, map[string]int, map[string]
 		// Handle legacy batch format with failures array
 		if len(record.Failures) > 0 {
 			for _, f := range record.Failures {
-				categories[f.Category]++
+				cat := remapCategory(f.Category)
+				categories[cat]++
 				details[f.PackageID] = FailureDetails{
-					Category:  f.Category,
+					Category:  cat,
 					BlockedBy: f.BlockedBy,
 				}
 				for _, dep := range f.BlockedBy {
@@ -443,7 +446,8 @@ func loadFailures(path string) (map[string][]string, map[string]int, map[string]
 
 		// Handle per-recipe format
 		if record.Recipe != "" && record.Category != "" {
-			categories[record.Category]++
+			cat := remapCategory(record.Category)
+			categories[cat]++
 
 			// Track blocked_by for missing_dep failures in per-recipe format
 			if len(record.BlockedBy) > 0 {
@@ -453,7 +457,7 @@ func loadFailures(path string) (map[string][]string, map[string]int, map[string]
 				}
 				pkgID := eco + ":" + record.Recipe
 				details[pkgID] = FailureDetails{
-					Category:  record.Category,
+					Category:  cat,
 					BlockedBy: record.BlockedBy,
 				}
 				for _, dep := range record.BlockedBy {

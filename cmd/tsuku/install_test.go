@@ -217,9 +217,10 @@ func TestInstallCmdUsage(t *testing.T) {
 
 func TestClassifyInstallError(t *testing.T) {
 	tests := []struct {
-		name string
-		err  error
-		want int
+		name            string
+		err             error
+		wantCode        int
+		wantSubcategory string
 	}{
 		{
 			name: "not found registry error",
@@ -228,7 +229,8 @@ func TestClassifyInstallError(t *testing.T) {
 				Recipe:  "nonexistent",
 				Message: "recipe not found",
 			},
-			want: ExitRecipeNotFound,
+			wantCode:        ExitRecipeNotFound,
+			wantSubcategory: "",
 		},
 		{
 			name: "network registry error",
@@ -236,7 +238,8 @@ func TestClassifyInstallError(t *testing.T) {
 				Type:    registry.ErrTypeNetwork,
 				Message: "connection failed",
 			},
-			want: ExitNetwork,
+			wantCode:        ExitNetwork,
+			wantSubcategory: "",
 		},
 		{
 			name: "DNS registry error",
@@ -244,7 +247,8 @@ func TestClassifyInstallError(t *testing.T) {
 				Type:    registry.ErrTypeDNS,
 				Message: "DNS resolution failed",
 			},
-			want: ExitNetwork,
+			wantCode:        ExitNetwork,
+			wantSubcategory: "dns_error",
 		},
 		{
 			name: "timeout registry error",
@@ -252,7 +256,8 @@ func TestClassifyInstallError(t *testing.T) {
 				Type:    registry.ErrTypeTimeout,
 				Message: "request timed out",
 			},
-			want: ExitNetwork,
+			wantCode:        ExitNetwork,
+			wantSubcategory: "timeout",
 		},
 		{
 			name: "connection registry error",
@@ -260,7 +265,8 @@ func TestClassifyInstallError(t *testing.T) {
 				Type:    registry.ErrTypeConnection,
 				Message: "connection refused",
 			},
-			want: ExitNetwork,
+			wantCode:        ExitNetwork,
+			wantSubcategory: "connection_error",
 		},
 		{
 			name: "TLS registry error",
@@ -268,7 +274,8 @@ func TestClassifyInstallError(t *testing.T) {
 				Type:    registry.ErrTypeTLS,
 				Message: "certificate error",
 			},
-			want: ExitNetwork,
+			wantCode:        ExitNetwork,
+			wantSubcategory: "tls_error",
 		},
 		{
 			name: "wrapped not found error",
@@ -277,17 +284,20 @@ func TestClassifyInstallError(t *testing.T) {
 				Recipe:  "missing-tool",
 				Message: "recipe not found",
 			}),
-			want: ExitRecipeNotFound,
+			wantCode:        ExitRecipeNotFound,
+			wantSubcategory: "",
 		},
 		{
-			name: "dependency failure",
-			err:  fmt.Errorf("failed to install dependency 'dav1d': registry: recipe dav1d not found in registry"),
-			want: ExitDependencyFailed,
+			name:            "dependency failure",
+			err:             fmt.Errorf("failed to install dependency 'dav1d': registry: recipe dav1d not found in registry"),
+			wantCode:        ExitDependencyFailed,
+			wantSubcategory: "",
 		},
 		{
-			name: "wrapped dependency failure",
-			err:  fmt.Errorf("install error: %w", fmt.Errorf("failed to install dependency 'libx265': some error")),
-			want: ExitDependencyFailed,
+			name:            "wrapped dependency failure",
+			err:             fmt.Errorf("install error: %w", fmt.Errorf("failed to install dependency 'libx265': some error")),
+			wantCode:        ExitDependencyFailed,
+			wantSubcategory: "",
 		},
 		{
 			name: "dependency failure wrapping RegistryError NotFound",
@@ -296,12 +306,14 @@ func TestClassifyInstallError(t *testing.T) {
 				Recipe:  "bdw-gc",
 				Message: "recipe bdw-gc not found in registry",
 			}),
-			want: ExitDependencyFailed,
+			wantCode:        ExitDependencyFailed,
+			wantSubcategory: "",
 		},
 		{
-			name: "generic install error",
-			err:  fmt.Errorf("extraction failed: bad tarball"),
-			want: ExitInstallFailed,
+			name:            "generic install error",
+			err:             fmt.Errorf("extraction failed: bad tarball"),
+			wantCode:        ExitInstallFailed,
+			wantSubcategory: "",
 		},
 		{
 			name: "parsing registry error falls through to default",
@@ -309,15 +321,19 @@ func TestClassifyInstallError(t *testing.T) {
 				Type:    registry.ErrTypeParsing,
 				Message: "invalid TOML",
 			},
-			want: ExitInstallFailed,
+			wantCode:        ExitInstallFailed,
+			wantSubcategory: "",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := classifyInstallError(tt.err)
-			if got != tt.want {
-				t.Errorf("classifyInstallError() = %d, want %d", got, tt.want)
+			gotCode, gotSubcategory := classifyInstallError(tt.err)
+			if gotCode != tt.wantCode {
+				t.Errorf("classifyInstallError() code = %d, want %d", gotCode, tt.wantCode)
+			}
+			if gotSubcategory != tt.wantSubcategory {
+				t.Errorf("classifyInstallError() subcategory = %q, want %q", gotSubcategory, tt.wantSubcategory)
 			}
 		})
 	}
@@ -391,36 +407,74 @@ func TestExtractMissingRecipes(t *testing.T) {
 }
 
 func TestInstallErrorJSON(t *testing.T) {
-	resp := installError{
-		Status:         "error",
-		Category:       "missing_dep",
-		Message:        "failed to install dependency 'foo'",
-		MissingRecipes: []string{"foo", "bar"},
-		ExitCode:       8,
-	}
-	data, err := json.Marshal(resp)
-	if err != nil {
-		t.Fatalf("json.Marshal failed: %v", err)
-	}
+	t.Run("without subcategory", func(t *testing.T) {
+		resp := installError{
+			Status:         "error",
+			Category:       "missing_dep",
+			Message:        "failed to install dependency 'foo'",
+			MissingRecipes: []string{"foo", "bar"},
+			ExitCode:       8,
+		}
+		data, err := json.Marshal(resp)
+		if err != nil {
+			t.Fatalf("json.Marshal failed: %v", err)
+		}
 
-	var parsed map[string]interface{}
-	if err := json.Unmarshal(data, &parsed); err != nil {
-		t.Fatalf("json.Unmarshal failed: %v", err)
-	}
+		var parsed map[string]interface{}
+		if err := json.Unmarshal(data, &parsed); err != nil {
+			t.Fatalf("json.Unmarshal failed: %v", err)
+		}
 
-	if parsed["status"] != "error" {
-		t.Errorf("status = %v, want %q", parsed["status"], "error")
-	}
-	if parsed["category"] != "missing_dep" {
-		t.Errorf("category = %v, want %q", parsed["category"], "missing_dep")
-	}
-	if parsed["exit_code"].(float64) != 8 {
-		t.Errorf("exit_code = %v, want 8", parsed["exit_code"])
-	}
-	recipes := parsed["missing_recipes"].([]interface{})
-	if len(recipes) != 2 {
-		t.Errorf("missing_recipes length = %d, want 2", len(recipes))
-	}
+		if parsed["status"] != "error" {
+			t.Errorf("status = %v, want %q", parsed["status"], "error")
+		}
+		if parsed["category"] != "missing_dep" {
+			t.Errorf("category = %v, want %q", parsed["category"], "missing_dep")
+		}
+		if _, exists := parsed["subcategory"]; exists {
+			t.Errorf("subcategory should be omitted when empty, got %v", parsed["subcategory"])
+		}
+		if parsed["exit_code"].(float64) != 8 {
+			t.Errorf("exit_code = %v, want 8", parsed["exit_code"])
+		}
+		recipes := parsed["missing_recipes"].([]interface{})
+		if len(recipes) != 2 {
+			t.Errorf("missing_recipes length = %d, want 2", len(recipes))
+		}
+	})
+
+	t.Run("with subcategory", func(t *testing.T) {
+		resp := installError{
+			Status:         "error",
+			Category:       "network_error",
+			Subcategory:    "timeout",
+			Message:        "request timed out",
+			MissingRecipes: []string{},
+			ExitCode:       5,
+		}
+		data, err := json.Marshal(resp)
+		if err != nil {
+			t.Fatalf("json.Marshal failed: %v", err)
+		}
+
+		var parsed map[string]interface{}
+		if err := json.Unmarshal(data, &parsed); err != nil {
+			t.Fatalf("json.Unmarshal failed: %v", err)
+		}
+
+		if parsed["status"] != "error" {
+			t.Errorf("status = %v, want %q", parsed["status"], "error")
+		}
+		if parsed["category"] != "network_error" {
+			t.Errorf("category = %v, want %q", parsed["category"], "network_error")
+		}
+		if parsed["subcategory"] != "timeout" {
+			t.Errorf("subcategory = %v, want %q", parsed["subcategory"], "timeout")
+		}
+		if parsed["exit_code"].(float64) != 5 {
+			t.Errorf("exit_code = %v, want 5", parsed["exit_code"])
+		}
+	})
 }
 
 func TestInstallJSONFlag(t *testing.T) {

@@ -49,6 +49,26 @@ var knownSubcategories = map[string]bool{
 	"rate_limited":    true,
 }
 
+// categoryRemap maps old category strings to the canonical pipeline taxonomy.
+// Categories not in this map pass through unchanged.
+var categoryRemap = map[string]string{
+	"api_error":                  "network_error",
+	"validation_failed":          "install_failed",
+	"deterministic_insufficient": "generation_failed",
+	"deterministic":              "generation_failed",
+	"timeout":                    "network_error",
+	"network":                    "network_error",
+}
+
+// remapCategory translates old category strings to canonical names.
+// Categories already in the canonical taxonomy pass through unchanged.
+func remapCategory(category string) string {
+	if canonical, ok := categoryRemap[category]; ok {
+		return canonical
+	}
+	return category
+}
+
 // extractSubcategory classifies a failure into a subcategory using a 3-level
 // strategy: bracketed tags (highest confidence), regex pattern matching, and
 // exit code fallback (lowest confidence). Returns empty string if no
@@ -131,13 +151,16 @@ func loadFailureDetailRecords(dir string, queue *batch.UnifiedQueue) ([]FailureD
 	// Deduplicate per-recipe records by (package, batch_id)
 	allDetails = deduplicateFailureDetails(allDetails)
 
-	// Extract subcategories
+	// Extract subcategories only for records that don't already have one.
+	// Records with a structured subcategory from JSONL retain that value.
 	for i := range allDetails {
-		allDetails[i].Subcategory = extractSubcategory(
-			allDetails[i].Category,
-			allDetails[i].Message,
-			allDetails[i].ExitCode,
-		)
+		if allDetails[i].Subcategory == "" {
+			allDetails[i].Subcategory = extractSubcategory(
+				allDetails[i].Category,
+				allDetails[i].Message,
+				allDetails[i].ExitCode,
+			)
+		}
 	}
 
 	// Generate IDs
@@ -209,12 +232,13 @@ func loadFailureDetailsFromFile(path string, queue *batch.UnifiedQueue) ([]Failu
 				}
 
 				details = append(details, FailureDetail{
-					Package:   pkg,
-					Ecosystem: pkgEco,
-					Category:  f.Category,
-					Message:   msg,
-					BatchID:   batchID,
-					Timestamp: f.Timestamp,
+					Package:     pkg,
+					Ecosystem:   pkgEco,
+					Category:    remapCategory(f.Category),
+					Subcategory: f.Subcategory,
+					Message:     msg,
+					BatchID:     batchID,
+					Timestamp:   f.Timestamp,
 				})
 			}
 		}
@@ -235,13 +259,14 @@ func loadFailureDetailsFromFile(path string, queue *batch.UnifiedQueue) ([]Failu
 			}
 
 			details = append(details, FailureDetail{
-				Package:   record.Recipe,
-				Ecosystem: eco,
-				Category:  record.Category,
-				ExitCode:  record.ExitCode,
-				Platform:  record.Platform,
-				BatchID:   filenameBatchID,
-				Timestamp: ts,
+				Package:     record.Recipe,
+				Ecosystem:   eco,
+				Category:    remapCategory(record.Category),
+				Subcategory: record.Subcategory,
+				ExitCode:    record.ExitCode,
+				Platform:    record.Platform,
+				BatchID:     filenameBatchID,
+				Timestamp:   ts,
 			})
 		}
 	}
