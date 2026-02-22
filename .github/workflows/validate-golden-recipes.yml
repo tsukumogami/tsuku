@@ -1,11 +1,6 @@
 name: Validate Golden Files (Recipes)
 
 on:
-  push:
-    # no-op: explicit push trigger prevents ghost runs from stale workflow
-    # registration (see #1844). The path filter never matches real files.
-    paths:
-      - '.github/non-existent-path-do-not-create'
   pull_request:
     branches: [main]
     paths:
