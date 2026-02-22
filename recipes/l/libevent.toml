@@ -1,0 +1,65 @@
+[metadata]
+name = "libevent"
+description = "Asynchronous event library"
+homepage = "https://libevent.org/"
+type = "library"
+dependencies = ["openssl"]
+
+[metadata.satisfies]
+homebrew = ["libevent"]
+
+# glibc Linux: Homebrew bottle
+[[steps]]
+action = "homebrew"
+formula = "libevent"
+when = { os = ["linux"], libc = ["glibc"] }
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = [
+    "lib/libevent.so",
+    "lib/libevent.a",
+    "lib/libevent_core.so",
+    "lib/libevent_core.a",
+    "lib/libevent_extra.so",
+    "lib/libevent_extra.a",
+    "lib/libevent_openssl.so",
+    "lib/libevent_openssl.a",
+    "lib/libevent_pthreads.so",
+    "lib/libevent_pthreads.a",
+    "lib/pkgconfig/libevent.pc",
+    "include/event2/event.h",
+]
+when = { os = ["linux"], libc = ["glibc"] }
+
+# musl Linux: Alpine package
+[[steps]]
+action = "apk_install"
+packages = ["libevent-dev"]
+when = { os = ["linux"], libc = ["musl"] }
+
+# macOS: Homebrew
+[[steps]]
+action = "homebrew"
+formula = "libevent"
+when = { os = ["darwin"] }
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = [
+    "lib/libevent.dylib",
+    "lib/libevent.a",
+    "lib/libevent_core.dylib",
+    "lib/libevent_core.a",
+    "lib/libevent_extra.dylib",
+    "lib/libevent_extra.a",
+    "lib/libevent_openssl.dylib",
+    "lib/libevent_openssl.a",
+    "lib/libevent_pthreads.dylib",
+    "lib/libevent_pthreads.a",
+    "lib/pkgconfig/libevent.pc",
+    "include/event2/event.h",
+]
+when = { os = ["darwin"] }

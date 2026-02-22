@@ -1,49 +1,48 @@
 [metadata]
-name = "libgit2"
-description = "C library of Git core methods that is re-entrant and linkable"
-homepage = "https://libgit2.org/"
+name = "ada-url"
+description = "WHATWG-compliant and fast URL parser written in modern C++"
+homepage = "https://github.com/ada-url/ada"
 type = "library"
-dependencies = ["libssh2"]
 
 [metadata.satisfies]
-homebrew = ["libgit2"]
+homebrew = ["ada-url"]
 
 # glibc Linux: Homebrew bottle
 [[steps]]
 action = "homebrew"
-formula = "libgit2"
+formula = "ada-url"
 when = { os = ["linux"], libc = ["glibc"] }
 
 [[steps]]
 action = "install_binaries"
 install_mode = "directory"
 outputs = [
-    "lib/libgit2.so",
-    "lib/libgit2.a",
-    "lib/pkgconfig/libgit2.pc",
-    "include/git2.h",
+    "lib/libada.so",
+    "lib/libada.a",
+    "lib/pkgconfig/ada.pc",
+    "include/ada.h",
 ]
 when = { os = ["linux"], libc = ["glibc"] }
 
 # musl Linux: Alpine package
 [[steps]]
 action = "apk_install"
-packages = ["libgit2-dev"]
+packages = ["ada-url-dev"]
 when = { os = ["linux"], libc = ["musl"] }
 
 # macOS: Homebrew
 [[steps]]
 action = "homebrew"
-formula = "libgit2"
+formula = "ada-url"
 when = { os = ["darwin"] }
 
 [[steps]]
 action = "install_binaries"
 install_mode = "directory"
 outputs = [
-    "lib/libgit2.dylib",
-    "lib/libgit2.a",
-    "lib/pkgconfig/libgit2.pc",
-    "include/git2.h",
+    "lib/libada.dylib",
+    "lib/libada.a",
+    "lib/pkgconfig/ada.pc",
+    "include/ada.h",
 ]
 when = { os = ["darwin"] }

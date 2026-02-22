@@ -1,49 +1,48 @@
 [metadata]
-name = "libgit2"
-description = "C library of Git core methods that is re-entrant and linkable"
-homepage = "https://libgit2.org/"
+name = "oniguruma"
+description = "Regular expressions library"
+homepage = "https://github.com/kkos/oniguruma/"
 type = "library"
-dependencies = ["libssh2"]
 
 [metadata.satisfies]
-homebrew = ["libgit2"]
+homebrew = ["oniguruma"]
 
 # glibc Linux: Homebrew bottle
 [[steps]]
 action = "homebrew"
-formula = "libgit2"
+formula = "oniguruma"
 when = { os = ["linux"], libc = ["glibc"] }
 
 [[steps]]
 action = "install_binaries"
 install_mode = "directory"
 outputs = [
-    "lib/libgit2.so",
-    "lib/libgit2.a",
-    "lib/pkgconfig/libgit2.pc",
-    "include/git2.h",
+    "lib/libonig.so",
+    "lib/libonig.a",
+    "lib/pkgconfig/oniguruma.pc",
+    "include/oniguruma.h",
 ]
 when = { os = ["linux"], libc = ["glibc"] }
 
 # musl Linux: Alpine package
 [[steps]]
 action = "apk_install"
-packages = ["libgit2-dev"]
+packages = ["oniguruma-dev"]
 when = { os = ["linux"], libc = ["musl"] }
 
 # macOS: Homebrew
 [[steps]]
 action = "homebrew"
-formula = "libgit2"
+formula = "oniguruma"
 when = { os = ["darwin"] }
 
 [[steps]]
 action = "install_binaries"
 install_mode = "directory"
 outputs = [
-    "lib/libgit2.dylib",
-    "lib/libgit2.a",
-    "lib/pkgconfig/libgit2.pc",
-    "include/git2.h",
+    "lib/libonig.dylib",
+    "lib/libonig.a",
+    "lib/pkgconfig/oniguruma.pc",
+    "include/oniguruma.h",
 ]
 when = { os = ["darwin"] }

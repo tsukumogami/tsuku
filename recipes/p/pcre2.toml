@@ -2,7 +2,11 @@
 name = "pcre2"
 description = "Perl compatible regular expressions library with a new API"
 homepage = "https://www.pcre.org/"
+type = "library"
 binaries = ["bin/pcre2grep", "bin/pcre2test"]
+
+[metadata.satisfies]
+homebrew = ["pcre2"]
 
 # glibc Linux: Homebrew bottle
 [[steps]]
