@@ -1,5 +1,5 @@
 ---
-status: Accepted
+status: Current
 problem: |
   When gem_install recipes are decomposed into gem_exec for reproducible installs,
   the executeLockDataMode() function creates bare symlinks instead of self-contained
