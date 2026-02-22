@@ -41,8 +41,8 @@ Planned
 | ~~_With bottle contents available, adds `generateLibraryRecipe` producing `type = "library"` recipes with `install_mode = "directory"` and `outputs` key. Wires into `generateDeterministicRecipe` as the fallback when `bin/` is empty but `lib/` has files. Changes `Verify` from value to pointer type so library recipes omit the `[verify]` section._~~ | | |
 | ~~[#1879: feat(homebrew): add multi-platform library recipe generation](https://github.com/tsukumogami/tsuku/issues/1879)~~ | ~~[#1878](https://github.com/tsukumogami/tsuku/issues/1878)~~ | ~~testable~~ |
 | ~~_Implements `scanMultiplePlatforms` to download Linux and macOS bottles from GHCR and scan each independently. Updates `generateLibraryRecipe` to produce platform-conditional step pairs with `when` clauses, matching the pattern in existing recipes like `gmp.toml`._~~ | | |
-| [#1880: fix(recipe): emit metadata type in ToTOML serializer](https://github.com/tsukumogami/tsuku/issues/1880) | None | testable |
-| _Fixes the hand-coded `ToTOML()` serializer to emit `type` in `[metadata]` when set. The primary `WriteRecipe` path already handles this via struct tags, but `ToTOML()` is used by sandbox validation and was missing the field._ | | |
+| ~~[#1880: fix(recipe): emit metadata type in ToTOML serializer](https://github.com/tsukumogami/tsuku/issues/1880)~~ | ~~None~~ | ~~testable~~ |
+| ~~_Fixes the hand-coded `ToTOML()` serializer to emit `type` in `[metadata]` when set. The primary `WriteRecipe` path already handles this via struct tags, but `ToTOML()` is used by sandbox validation and was missing the field._~~ | | |
 | [#1881: feat(dashboard): add library_only failure subcategory](https://github.com/tsukumogami/tsuku/issues/1881) | [#1878](https://github.com/tsukumogami/tsuku/issues/1878) | testable |
 | _Adds `library_only` to the `knownSubcategories` map in the dashboard and tags library detection error messages with `[library_only]` for `extractSubcategory()` parsing. Distinguishes "detected a library but generation failed" from "genuinely unclassifiable bottle."_ | | |
 | [#1882: test(homebrew): validate library recipe generation against pipeline data](https://github.com/tsukumogami/tsuku/issues/1882) | [#1879](https://github.com/tsukumogami/tsuku/issues/1879), [#1881](https://github.com/tsukumogami/tsuku/issues/1881) | testable |
@@ -82,8 +82,8 @@ graph LR
     classDef needsDesign fill:#e1bee7
     classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
 
-    class I1877,I1878,I1879 done
-    class I1880,I1881 ready
+    class I1877,I1878,I1879,I1880 done
+    class I1881 ready
     class I1882 blocked
 ```
 
