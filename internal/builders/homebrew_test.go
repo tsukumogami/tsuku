@@ -1987,37 +1987,37 @@ func TestHomebrewBuilder_getBlobSHAFromManifest(t *testing.T) {
 	}
 }
 
-func TestHomebrewBuilder_extractBottleBinaries(t *testing.T) {
-	b := &HomebrewBuilder{}
-
-	// Create a test tarball in memory
+// createTestBottleTarball builds a gzipped tarball from the given entries and
+// writes it to a temp file. Each entry specifies a tar path, body content, and
+// type flag. Returns the temp file path; the caller should defer os.Remove.
+func createTestBottleTarball(t *testing.T, entries []struct {
+	name     string
+	body     string
+	typeflag byte
+}) string {
+	t.Helper()
 	var buf bytes.Buffer
 	gzw := gzip.NewWriter(&buf)
 	tw := tar.NewWriter(gzw)
 
-	// Add some files mimicking Homebrew bottle structure
-	files := []struct {
-		name string
-		body string
-	}{
-		{"jq/1.7.1/bin/jq", "#!/bin/bash\necho jq"},
-		{"jq/1.7.1/share/man/man1/jq.1", "man page content"},
-		{"jq/1.7.1/lib/libjq.so", "library content"},
-		{"jq/1.7.1/bin/jqp", "#!/bin/bash\necho jqp"},
-	}
-
-	for _, file := range files {
+	for _, e := range entries {
 		hdr := &tar.Header{
-			Name:     file.name,
+			Name:     e.name,
 			Mode:     0755,
-			Size:     int64(len(file.body)),
-			Typeflag: tar.TypeReg,
+			Size:     int64(len(e.body)),
+			Typeflag: e.typeflag,
+		}
+		if e.typeflag == tar.TypeSymlink {
+			hdr.Linkname = e.body
+			hdr.Size = 0
 		}
 		if err := tw.WriteHeader(hdr); err != nil {
 			t.Fatalf("failed to write tar header: %v", err)
 		}
-		if _, err := tw.Write([]byte(file.body)); err != nil {
-			t.Fatalf("failed to write tar content: %v", err)
+		if e.typeflag != tar.TypeSymlink {
+			if _, err := tw.Write([]byte(e.body)); err != nil {
+				t.Fatalf("failed to write tar content: %v", err)
+			}
 		}
 	}
 
@@ -2028,34 +2028,330 @@ func TestHomebrewBuilder_extractBottleBinaries(t *testing.T) {
 		t.Fatalf("failed to close gzip writer: %v", err)
 	}
 
-	// Write to temp file
 	tmpFile, err := os.CreateTemp("", "test-bottle-*.tar.gz")
 	if err != nil {
 		t.Fatalf("failed to create temp file: %v", err)
 	}
-	defer os.Remove(tmpFile.Name())
 
 	if _, err := tmpFile.Write(buf.Bytes()); err != nil {
+		os.Remove(tmpFile.Name())
 		t.Fatalf("failed to write temp file: %v", err)
 	}
 	tmpFile.Close()
+	return tmpFile.Name()
+}
 
-	// Test extraction
-	binaries, err := b.extractBottleBinaries(tmpFile.Name())
-	if err != nil {
-		t.Fatalf("extractBottleBinaries() error = %v", err)
-	}
+func TestHomebrewBuilder_extractBottleContents(t *testing.T) {
+	b := &HomebrewBuilder{}
 
-	// Should find jq and jqp binaries
-	if len(binaries) != 2 {
-		t.Errorf("extractBottleBinaries() got %d binaries, want 2", len(binaries))
-	}
+	t.Run("mixed tarball with binaries, libs, and includes", func(t *testing.T) {
+		path := createTestBottleTarball(t, []struct {
+			name     string
+			body     string
+			typeflag byte
+		}{
+			{"jq/1.7.1/bin/jq", "binary content", tar.TypeReg},
+			{"jq/1.7.1/bin/jqp", "binary content", tar.TypeReg},
+			{"jq/1.7.1/share/man/man1/jq.1", "man page", tar.TypeReg},
+			{"jq/1.7.1/lib/libjq.so", "lib content", tar.TypeReg},
+			{"jq/1.7.1/lib/libjq.a", "lib content", tar.TypeReg},
+			{"jq/1.7.1/lib/pkgconfig/jq.pc", "pkg-config", tar.TypeReg},
+			{"jq/1.7.1/include/jq.h", "header", tar.TypeReg},
+		})
+		defer os.Remove(path)
 
-	expected := map[string]bool{"jq": true, "jqp": true}
-	for _, bin := range binaries {
-		if !expected[bin] {
-			t.Errorf("unexpected binary: %s", bin)
+		contents, err := b.extractBottleContents(path)
+		if err != nil {
+			t.Fatalf("extractBottleContents() error = %v", err)
 		}
+
+		// Binaries
+		expectedBins := map[string]bool{"jq": true, "jqp": true}
+		if len(contents.Binaries) != len(expectedBins) {
+			t.Errorf("Binaries: got %d, want %d: %v", len(contents.Binaries), len(expectedBins), contents.Binaries)
+		}
+		for _, b := range contents.Binaries {
+			if !expectedBins[b] {
+				t.Errorf("unexpected binary: %s", b)
+			}
+		}
+
+		// LibFiles
+		expectedLibs := map[string]bool{
+			"lib/libjq.so":        true,
+			"lib/libjq.a":         true,
+			"lib/pkgconfig/jq.pc": true,
+		}
+		if len(contents.LibFiles) != len(expectedLibs) {
+			t.Errorf("LibFiles: got %d, want %d: %v", len(contents.LibFiles), len(expectedLibs), contents.LibFiles)
+		}
+		for _, l := range contents.LibFiles {
+			if !expectedLibs[l] {
+				t.Errorf("unexpected lib file: %s", l)
+			}
+		}
+
+		// Includes
+		expectedIncludes := map[string]bool{"include/jq.h": true}
+		if len(contents.Includes) != len(expectedIncludes) {
+			t.Errorf("Includes: got %d, want %d: %v", len(contents.Includes), len(expectedIncludes), contents.Includes)
+		}
+		for _, inc := range contents.Includes {
+			if !expectedIncludes[inc] {
+				t.Errorf("unexpected include: %s", inc)
+			}
+		}
+	})
+
+	t.Run("library-only bottle with no binaries", func(t *testing.T) {
+		path := createTestBottleTarball(t, []struct {
+			name     string
+			body     string
+			typeflag byte
+		}{
+			{"bdw-gc/8.2.6/lib/libgc.so", "lib", tar.TypeReg},
+			{"bdw-gc/8.2.6/lib/libgc.so.1.5.0", "lib", tar.TypeReg},
+			{"bdw-gc/8.2.6/lib/libgc.a", "lib", tar.TypeReg},
+			{"bdw-gc/8.2.6/lib/pkgconfig/gc.pc", "pc", tar.TypeReg},
+			{"bdw-gc/8.2.6/include/gc.h", "header", tar.TypeReg},
+			{"bdw-gc/8.2.6/include/gc/gc_config.h", "header", tar.TypeReg},
+		})
+		defer os.Remove(path)
+
+		contents, err := b.extractBottleContents(path)
+		if err != nil {
+			t.Fatalf("extractBottleContents() error = %v", err)
+		}
+
+		if len(contents.Binaries) != 0 {
+			t.Errorf("Binaries: got %d, want 0: %v", len(contents.Binaries), contents.Binaries)
+		}
+
+		expectedLibs := map[string]bool{
+			"lib/libgc.so":        true,
+			"lib/libgc.so.1.5.0":  true,
+			"lib/libgc.a":         true,
+			"lib/pkgconfig/gc.pc": true,
+		}
+		if len(contents.LibFiles) != len(expectedLibs) {
+			t.Errorf("LibFiles: got %d, want %d: %v", len(contents.LibFiles), len(expectedLibs), contents.LibFiles)
+		}
+		for _, l := range contents.LibFiles {
+			if !expectedLibs[l] {
+				t.Errorf("unexpected lib file: %s", l)
+			}
+		}
+
+		expectedIncludes := map[string]bool{
+			"include/gc.h":           true,
+			"include/gc/gc_config.h": true,
+		}
+		if len(contents.Includes) != len(expectedIncludes) {
+			t.Errorf("Includes: got %d, want %d: %v", len(contents.Includes), len(expectedIncludes), contents.Includes)
+		}
+		for _, inc := range contents.Includes {
+			if !expectedIncludes[inc] {
+				t.Errorf("unexpected include: %s", inc)
+			}
+		}
+	})
+
+	t.Run("symlinks included from lib and include", func(t *testing.T) {
+		path := createTestBottleTarball(t, []struct {
+			name     string
+			body     string
+			typeflag byte
+		}{
+			{"foo/1.0/lib/libfoo.so.1", "real lib", tar.TypeReg},
+			{"foo/1.0/lib/libfoo.so", "libfoo.so.1", tar.TypeSymlink},
+			{"foo/1.0/include/foo.h", "header", tar.TypeReg},
+			{"foo/1.0/include/foo_compat.h", "foo.h", tar.TypeSymlink},
+			// Directory entries should be skipped
+			{"foo/1.0/lib/", "", tar.TypeDir},
+			{"foo/1.0/include/", "", tar.TypeDir},
+		})
+		defer os.Remove(path)
+
+		contents, err := b.extractBottleContents(path)
+		if err != nil {
+			t.Fatalf("extractBottleContents() error = %v", err)
+		}
+
+		expectedLibs := map[string]bool{
+			"lib/libfoo.so.1": true,
+			"lib/libfoo.so":   true,
+		}
+		if len(contents.LibFiles) != len(expectedLibs) {
+			t.Errorf("LibFiles: got %d, want %d: %v", len(contents.LibFiles), len(expectedLibs), contents.LibFiles)
+		}
+		for _, l := range contents.LibFiles {
+			if !expectedLibs[l] {
+				t.Errorf("unexpected lib file: %s", l)
+			}
+		}
+
+		expectedIncludes := map[string]bool{
+			"include/foo.h":        true,
+			"include/foo_compat.h": true,
+		}
+		if len(contents.Includes) != len(expectedIncludes) {
+			t.Errorf("Includes: got %d, want %d: %v", len(contents.Includes), len(expectedIncludes), contents.Includes)
+		}
+		for _, inc := range contents.Includes {
+			if !expectedIncludes[inc] {
+				t.Errorf("unexpected include: %s", inc)
+			}
+		}
+	})
+
+	t.Run("non-library files in lib are excluded", func(t *testing.T) {
+		path := createTestBottleTarball(t, []struct {
+			name     string
+			body     string
+			typeflag byte
+		}{
+			{"pkg/1.0/lib/libpkg.so", "lib", tar.TypeReg},
+			{"pkg/1.0/lib/python3.12/site-packages/foo.py", "python", tar.TypeReg},
+			{"pkg/1.0/lib/ruby/gems/bar.rb", "ruby", tar.TypeReg},
+			{"pkg/1.0/lib/notes.txt", "text", tar.TypeReg},
+		})
+		defer os.Remove(path)
+
+		contents, err := b.extractBottleContents(path)
+		if err != nil {
+			t.Fatalf("extractBottleContents() error = %v", err)
+		}
+
+		if len(contents.LibFiles) != 1 {
+			t.Errorf("LibFiles: got %d, want 1: %v", len(contents.LibFiles), contents.LibFiles)
+		}
+		if len(contents.LibFiles) == 1 && contents.LibFiles[0] != "lib/libpkg.so" {
+			t.Errorf("LibFiles[0] = %q, want %q", contents.LibFiles[0], "lib/libpkg.so")
+		}
+	})
+
+	t.Run("empty bottle returns empty contents", func(t *testing.T) {
+		path := createTestBottleTarball(t, []struct {
+			name     string
+			body     string
+			typeflag byte
+		}{
+			{"empty/1.0/share/doc/README", "readme", tar.TypeReg},
+		})
+		defer os.Remove(path)
+
+		contents, err := b.extractBottleContents(path)
+		if err != nil {
+			t.Fatalf("extractBottleContents() error = %v", err)
+		}
+
+		if len(contents.Binaries) != 0 {
+			t.Errorf("Binaries: got %d, want 0", len(contents.Binaries))
+		}
+		if len(contents.LibFiles) != 0 {
+			t.Errorf("LibFiles: got %d, want 0", len(contents.LibFiles))
+		}
+		if len(contents.Includes) != 0 {
+			t.Errorf("Includes: got %d, want 0", len(contents.Includes))
+		}
+	})
+}
+
+func TestIsLibraryFile(t *testing.T) {
+	tests := []struct {
+		name string
+		want bool
+	}{
+		// Library extensions -- should match
+		{"libfoo.so", true},
+		{"libgc.so.1.5.0", true},
+		{"libreadline.so.8.2", true},
+		{"libfoo.so.1", true},
+		{"libfoo.a", true},
+		{"libfoo.dylib", true},
+		{"foo.pc", true},
+
+		// Non-library extensions -- should not match
+		{"foo.py", false},
+		{"bar.rb", false},
+		{"notes.txt", false},
+		{"foo.h", false},
+		{"foo.o", false},
+		{"foo.la", false},
+		{"foo.cmake", false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := isLibraryFile(tt.name); got != tt.want {
+				t.Errorf("isLibraryFile(%q) = %v, want %v", tt.name, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestMatchesVersionedSo(t *testing.T) {
+	tests := []struct {
+		name string
+		want bool
+	}{
+		// Versioned .so -- should match
+		{"libgc.so.1.5.0", true},
+		{"libreadline.so.8.2", true},
+		{"libfoo.so.1", true},
+		{"libbar.so.12.3.4", true},
+
+		// Non-versioned or unrelated -- should not match
+		{"libfoo.so", false},
+		{"libsomething.socket", false},
+		{"config.source", false},
+		{"foo.txt", false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := matchesVersionedSo(tt.name); got != tt.want {
+				t.Errorf("matchesVersionedSo(%q) = %v, want %v", tt.name, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestBottleContents_mixedBottle(t *testing.T) {
+	// Validates scenario-1 from the test plan: a tarball with bin/, lib/, and
+	// include/ entries returns all three fields populated correctly.
+	b := &HomebrewBuilder{}
+
+	path := createTestBottleTarball(t, []struct {
+		name     string
+		body     string
+		typeflag byte
+	}{
+		{"formula/ver/bin/tool", "binary", tar.TypeReg},
+		{"formula/ver/lib/libfoo.so", "lib", tar.TypeReg},
+		{"formula/ver/lib/libfoo.a", "lib", tar.TypeReg},
+		{"formula/ver/lib/pkgconfig/foo.pc", "pc", tar.TypeReg},
+		{"formula/ver/include/foo.h", "header", tar.TypeReg},
+	})
+	defer os.Remove(path)
+
+	contents, err := b.extractBottleContents(path)
+	if err != nil {
+		t.Fatalf("extractBottleContents() error = %v", err)
+	}
+
+	wantBinaries := []string{"tool"}
+	wantLibs := []string{"lib/libfoo.so", "lib/libfoo.a", "lib/pkgconfig/foo.pc"}
+	wantIncludes := []string{"include/foo.h"}
+
+	if len(contents.Binaries) != len(wantBinaries) {
+		t.Errorf("Binaries count: got %d, want %d", len(contents.Binaries), len(wantBinaries))
+	}
+	if len(contents.LibFiles) != len(wantLibs) {
+		t.Errorf("LibFiles count: got %d, want %d", len(contents.LibFiles), len(wantLibs))
+	}
+	if len(contents.Includes) != len(wantIncludes) {
+		t.Errorf("Includes count: got %d, want %d", len(contents.Includes), len(wantIncludes))
 	}
 }
 

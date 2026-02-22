@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"regexp"
 	"runtime"
 	"strings"
 	"time"
@@ -1488,8 +1489,12 @@ func (b *HomebrewBuilder) listBottleBinaries(ctx context.Context, formula, versi
 		return nil, fmt.Errorf("failed to download bottle: %w", err)
 	}
 
-	// Extract and list binaries
-	return b.extractBottleBinaries(tempPath)
+	// Extract bottle contents and return only binaries for backward compatibility
+	contents, err := b.extractBottleContents(tempPath)
+	if err != nil {
+		return nil, err
+	}
+	return contents.Binaries, nil
 }
 
 // getBlobSHAFromManifest extracts the blob SHA for a platform from a manifest.
@@ -1562,8 +1567,51 @@ func (b *HomebrewBuilder) downloadBottleBlob(ctx context.Context, formula, blobS
 	return nil
 }
 
-// extractBottleBinaries extracts a bottle tarball and returns binaries in bin/.
-func (b *HomebrewBuilder) extractBottleBinaries(tarballPath string) ([]string, error) {
+// bottleContents holds the files found in a Homebrew bottle tarball, organized
+// by directory: bin/ for executables, lib/ for shared/static libraries and
+// pkgconfig files, and include/ for header files.
+type bottleContents struct {
+	Binaries []string // Files in bin/ (e.g., ["jq"]) -- bare names without prefix
+	LibFiles []string // Files in lib/ (e.g., ["lib/libgc.so", "lib/pkgconfig/gc.pc"]) -- with lib/ prefix
+	Includes []string // Files in include/ (e.g., ["include/gc.h"]) -- with include/ prefix
+}
+
+// versionedSoPattern matches versioned shared object names like libgc.so.1.5.0.
+// The pattern requires ".so." followed by at least one digit to avoid false
+// positives from paths that happen to contain ".so." as a substring.
+var versionedSoPattern = regexp.MustCompile(`\.so\.\d`)
+
+// matchesVersionedSo returns true if name looks like a versioned shared object
+// (e.g., libgc.so.1.5.0, libreadline.so.8.2).
+func matchesVersionedSo(name string) bool {
+	return versionedSoPattern.MatchString(name)
+}
+
+// isLibraryFile returns true if name has a library file extension: .a, .dylib,
+// .pc, .so, or a versioned .so (e.g., .so.1.2.3).
+func isLibraryFile(name string) bool {
+	switch {
+	case strings.HasSuffix(name, ".a"):
+		return true
+	case strings.HasSuffix(name, ".dylib"):
+		return true
+	case strings.HasSuffix(name, ".pc"):
+		return true
+	case strings.HasSuffix(name, ".so"):
+		return true
+	case matchesVersionedSo(name):
+		return true
+	default:
+		return false
+	}
+}
+
+// extractBottleContents extracts a bottle tarball and returns all files found
+// in bin/, lib/, and include/ directories. Regular files and symlinks are
+// collected; directory entries are skipped. Files in lib/ are filtered by
+// isLibraryFile to exclude non-library files (e.g., .py, .rb). Files in
+// include/ are collected without extension filtering.
+func (b *HomebrewBuilder) extractBottleContents(tarballPath string) (*bottleContents, error) {
 	f, err := os.Open(tarballPath)
 	if err != nil {
 		return nil, err
@@ -1578,7 +1626,7 @@ func (b *HomebrewBuilder) extractBottleBinaries(tarballPath string) ([]string, e
 
 	tr := tar.NewReader(gzr)
 
-	var binaries []string
+	contents := &bottleContents{}
 	for {
 		header, err := tr.Next()
 		if err == io.EOF {
@@ -1588,20 +1636,44 @@ func (b *HomebrewBuilder) extractBottleBinaries(tarballPath string) ([]string, e
 			return nil, fmt.Errorf("failed to read tarball: %w", err)
 		}
 
-		// Homebrew bottles have structure: formula/version/bin/...
-		// We're looking for entries like: jq/1.7.1/bin/jq
+		// Skip directory entries -- only collect regular files and symlinks.
+		if header.Typeflag != tar.TypeReg && header.Typeflag != tar.TypeSymlink {
+			continue
+		}
+
+		// Homebrew bottles have structure: formula/version/{bin,lib,include}/...
 		parts := strings.Split(header.Name, "/")
-		if len(parts) >= 4 && parts[2] == "bin" && header.Typeflag == tar.TypeReg {
-			// Get just the binary name
-			binName := parts[3]
-			// Skip any deeper paths (shouldn't happen in bin/)
-			if len(parts) == 4 && binName != "" {
-				binaries = append(binaries, binName)
+		if len(parts) < 4 {
+			continue
+		}
+
+		dirName := parts[2]
+		switch dirName {
+		case "bin":
+			// Binaries: only direct children (formula/ver/bin/name), stored as bare names.
+			if len(parts) == 4 && parts[3] != "" {
+				contents.Binaries = append(contents.Binaries, parts[3])
+			}
+		case "lib":
+			// Library files: formula/ver/lib/... at any depth (including pkgconfig/).
+			// Reconstruct the relative path with lib/ prefix and filter by extension.
+			relPath := strings.Join(parts[2:], "/")
+			fileName := parts[len(parts)-1]
+			if fileName != "" && isLibraryFile(fileName) {
+				contents.LibFiles = append(contents.LibFiles, relPath)
+			}
+		case "include":
+			// Header files: formula/ver/include/... at any depth.
+			// Reconstruct the relative path with include/ prefix, no extension filter.
+			relPath := strings.Join(parts[2:], "/")
+			lastPart := parts[len(parts)-1]
+			if lastPart != "" {
+				contents.Includes = append(contents.Includes, relPath)
 			}
 		}
 	}
 
-	return binaries, nil
+	return contents, nil
 }
 
 // getCurrentPlatformTag returns the platform tag for the current runtime.
