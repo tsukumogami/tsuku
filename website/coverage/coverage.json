@@ -1,22 +1,22 @@
 {
-  "generated_at": "2026-02-22T20:51:25Z",
-  "total_recipes": 346,
+  "generated_at": "2026-02-22T21:34:00Z",
+  "total_recipes": 347,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 289,
-        "total": 346,
-        "pct": 83.52601156069365
+        "supported": 290,
+        "total": 347,
+        "pct": 83.5734870317003
       },
       "glibc": {
-        "supported": 316,
-        "total": 346,
-        "pct": 91.32947976878613
+        "supported": 317,
+        "total": 347,
+        "pct": 91.35446685878964
       },
       "musl": {
         "supported": 177,
-        "total": 346,
-        "pct": 51.15606936416185
+        "total": 347,
+        "pct": 51.008645533141205
       }
     },
     "by_category": {
@@ -26,9 +26,9 @@
         "glibc_support": 22
       },
       "tool": {
-        "total": 324,
+        "total": 325,
         "musl_support": 155,
-        "glibc_support": 294
+        "glibc_support": 295
       }
     }
   },
@@ -466,6 +466,20 @@
     },
     {
       "name": "azurite",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": false
+      },
+      "gaps": [
+        "musl"
+      ],
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "b3sum",
       "type": "tool",
       "platforms": {
         "darwin": true,
