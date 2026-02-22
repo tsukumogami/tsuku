@@ -7,7 +7,7 @@ on:
       - 'internal/recipe/recipes/**/*.toml'
       - 'recipes/**/*.toml'
       - 'testdata/golden/exclusions.json'
-      - '.github/workflows/validate-golden-recipes.yml'
+      - '.github/workflows/validate-recipe-golden-files.yml'
   workflow_dispatch:
     inputs:
       batch_size_override:
