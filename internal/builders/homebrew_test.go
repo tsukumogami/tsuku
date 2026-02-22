@@ -2590,7 +2590,7 @@ func TestHomebrewSession_classifyDeterministicFailure_libraryOnlyTag(t *testing.
 	}
 
 	result := session.classifyDeterministicFailure(
-		fmt.Errorf("library recipe generation failed: no bottle for any target platform"),
+		fmt.Errorf("library recipe generation failed: %w", fmt.Errorf("no platform contents provided")),
 	)
 
 	if result.Category != FailureCategoryComplexArchive {

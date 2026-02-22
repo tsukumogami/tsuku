@@ -2179,7 +2179,11 @@ func (b *HomebrewBuilder) generateDeterministicRecipe(ctx context.Context, packa
 	if len(contents.LibFiles) > 0 {
 		// Scan multiple platforms (Linux + macOS) for multi-platform recipe
 		platforms := b.scanMultiplePlatforms(ctx, info, contents)
-		return b.generateLibraryRecipe(ctx, packageName, genCtx, platforms)
+		recipe, err := b.generateLibraryRecipe(ctx, packageName, genCtx, platforms)
+		if err != nil {
+			return nil, fmt.Errorf("library recipe generation failed: %w", err)
+		}
+		return recipe, nil
 	}
 
 	// Branch 3: Neither binaries nor library files
