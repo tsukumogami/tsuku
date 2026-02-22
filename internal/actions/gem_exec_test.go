@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -1072,6 +1073,158 @@ DEPENDENCIES
 	}
 	if !containsStr(string(content), "bundler (2.4.0)") {
 		t.Error("Gemfile.lock should contain lock data")
+	}
+}
+
+func TestGemExecAction_LockDataMode_CreatesWrapperScripts(t *testing.T) {
+	a := &GemExecAction{}
+	workDir := t.TempDir()
+
+	// Create mock bundler and ruby in tools directory
+	toolsDir := filepath.Join(workDir, "tools")
+	rubyBinDir := filepath.Join(toolsDir, "ruby-3.2.0", "bin")
+	if err := os.MkdirAll(rubyBinDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// Mock bundler that creates executables in ruby/<ver>/bin/ (standard bundler --path layout)
+	bundlePath := filepath.Join(rubyBinDir, "bundle")
+	mockScript := `#!/bin/sh
+# Create executables in ruby versioned directory (bundler --path layout)
+RUBY_BIN="$GEM_HOME/ruby/3.2.0/bin"
+mkdir -p "$RUBY_BIN"
+echo '#!/usr/bin/env ruby' > "$RUBY_BIN/mytool"
+echo 'puts "hello"' >> "$RUBY_BIN/mytool"
+chmod +x "$RUBY_BIN/mytool"
+echo '#!/usr/bin/env ruby' > "$RUBY_BIN/mytool-helper"
+echo 'puts "helper"' >> "$RUBY_BIN/mytool-helper"
+chmod +x "$RUBY_BIN/mytool-helper"
+exit 0
+`
+	if err := os.WriteFile(bundlePath, []byte(mockScript), 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	ctx := &ExecutionContext{
+		Context:    context.Background(),
+		WorkDir:    workDir,
+		InstallDir: workDir,
+		ToolsDir:   toolsDir,
+		Version:    "1.0.0",
+	}
+
+	lockData := `GEM
+  remote: https://rubygems.org/
+  specs:
+    mytool (1.0.0)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  mytool (= 1.0.0)
+`
+
+	err := a.Execute(ctx, map[string]interface{}{
+		"gem":         "mytool",
+		"lock_data":   lockData,
+		"version":     "1.0.0",
+		"executables": []interface{}{"mytool", "mytool-helper"},
+	})
+	if err != nil {
+		t.Fatalf("Execute() should succeed, got: %v", err)
+	}
+
+	// Verify wrapper scripts were created (not symlinks)
+	for _, exe := range []string{"mytool", "mytool-helper"} {
+		wrapperPath := filepath.Join(workDir, "bin", exe)
+		info, err := os.Lstat(wrapperPath)
+		if err != nil {
+			t.Fatalf("wrapper for %s should exist: %v", exe, err)
+		}
+		if info.Mode()&os.ModeSymlink != 0 {
+			t.Errorf("%s should be a regular file (wrapper script), not a symlink", exe)
+		}
+
+		content, err := os.ReadFile(wrapperPath)
+		if err != nil {
+			t.Fatalf("should read wrapper %s: %v", exe, err)
+		}
+		wrapperStr := string(content)
+
+		// Verify wrapper contains required environment setup
+		if !strings.Contains(wrapperStr, "#!/bin/bash") {
+			t.Errorf("wrapper for %s should start with bash shebang", exe)
+		}
+		if !strings.Contains(wrapperStr, "GEM_HOME=") {
+			t.Errorf("wrapper for %s should set GEM_HOME", exe)
+		}
+		// GEM_HOME must include a subdirectory (bundler's versioned gem path),
+		// not bare $INSTALL_DIR which was the pre-fix broken behavior
+		if strings.Contains(wrapperStr, `GEM_HOME="$INSTALL_DIR"`) {
+			t.Errorf("wrapper for %s sets GEM_HOME to bare INSTALL_DIR; should include bundler's versioned subdirectory", exe)
+		}
+		if !strings.Contains(wrapperStr, "GEM_PATH=") {
+			t.Errorf("wrapper for %s should set GEM_PATH", exe)
+		}
+		if !strings.Contains(wrapperStr, rubyBinDir) {
+			t.Errorf("wrapper for %s should reference ruby bin dir %s", exe, rubyBinDir)
+		}
+		if !strings.Contains(wrapperStr, exe+".gem") {
+			t.Errorf("wrapper for %s should reference %s.gem", exe, exe)
+		}
+
+		// Verify .gem file was created
+		gemPath := filepath.Join(workDir, "bin", exe+".gem")
+		if _, err := os.Stat(gemPath); err != nil {
+			t.Errorf(".gem file for %s should exist at %s: %v", exe, gemPath, err)
+		}
+	}
+}
+
+func TestGemExecAction_LockDataMode_RejectsSystemBundler(t *testing.T) {
+	a := &GemExecAction{}
+	workDir := t.TempDir()
+
+	// Create tools dir but put bundler outside of it (simulating system bundler)
+	toolsDir := filepath.Join(workDir, "tools")
+	if err := os.MkdirAll(toolsDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	systemBinDir := filepath.Join(workDir, "usr", "bin")
+	if err := os.MkdirAll(systemBinDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	// Create mock system bundler
+	systemBundle := filepath.Join(systemBinDir, "bundle")
+	if err := os.WriteFile(systemBundle, []byte("#!/bin/sh\nexit 0\n"), 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// Override PATH so findBundler finds the system bundler
+	origPath := os.Getenv("PATH")
+	os.Setenv("PATH", systemBinDir+":"+origPath)
+	defer os.Setenv("PATH", origPath)
+
+	ctx := &ExecutionContext{
+		Context:    context.Background(),
+		WorkDir:    workDir,
+		InstallDir: workDir,
+		ToolsDir:   toolsDir,
+		Version:    "1.0.0",
+	}
+
+	err := a.Execute(ctx, map[string]interface{}{
+		"gem":         "mytool",
+		"lock_data":   "GEM\n  specs:\n    mytool (1.0.0)\n",
+		"version":     "1.0.0",
+		"executables": []interface{}{"mytool"},
+	})
+	if err == nil {
+		t.Error("Execute() should fail when only system bundler is available")
+	}
+	if err != nil && !strings.Contains(err.Error(), "requires tsuku-managed ruby") {
+		t.Errorf("error should mention tsuku-managed ruby requirement, got: %v", err)
 	}
 }
 
