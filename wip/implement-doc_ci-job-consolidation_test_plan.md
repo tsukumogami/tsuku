@@ -7,19 +7,19 @@ Total scenarios: 14
 ---
 
 ## Scenario 1: sandbox-multifamily matrix removal
-**ID**: scenario-1
+**ID**: [x] scenario-1
 **Testable after**: #1891
 **Category**: infrastructure
 **Commands**:
 - `python3 -c "import yaml; yaml.safe_load(open('.github/workflows/build-essentials.yml'))"`
 - `awk '/test-sandbox-multifamily:/,/^  [a-z]/' .github/workflows/build-essentials.yml | grep -c 'strategy:'`
 **Expected**: The workflow file is valid YAML. The `test-sandbox-multifamily` job block no longer contains a `strategy:` section. Instead, the job(s) for cmake and ninja each iterate over the 5 families (debian, rhel, arch, alpine, suse) sequentially within a single runner. The total sandbox-multifamily job count is at most 2 (one per tool).
-**Status**: pending
+**Status**: passed
 
 ---
 
 ## Scenario 2: sandbox-multifamily container loop structure
-**ID**: scenario-2
+**ID**: [x] scenario-2
 **Testable after**: #1891
 **Category**: infrastructure
 **Commands**:
@@ -27,12 +27,12 @@ Total scenarios: 14
 - `grep -A 100 'test-sandbox-cmake:\|test-sandbox-multifamily:' .github/workflows/build-essentials.yml | grep 'timeout'`
 - `grep -A 100 'test-sandbox-cmake:\|test-sandbox-multifamily:' .github/workflows/build-essentials.yml | grep 'FAILED'`
 **Expected**: The consolidated sandbox job uses `::group::` / `::endgroup::` markers for collapsible per-family output, wraps each iteration in `timeout`, and collects failures in an array so all families execute even if one fails.
-**Status**: pending
+**Status**: passed
 
 ---
 
 ## Scenario 3: sandbox-multifamily CI passes on PR
-**ID**: scenario-3
+**ID**: [x] scenario-3
 **Testable after**: #1891
 **Category**: use-case
 **Environment**: manual (CI)
@@ -41,7 +41,7 @@ Total scenarios: 14
 - In the GHA UI, check that the sandbox-multifamily jobs (1 or 2 total) pass and that each family appears in collapsible `::group::` sections within the job log.
 - Verify the job step summary shows per-family pass/fail results for both cmake and ninja across all 5 families.
 **Expected**: The workflow runs with 2 or fewer sandbox-multifamily jobs instead of 10. All 5 families (debian, rhel, arch, alpine, suse) for both tools show passing results. The total job count for `build-essentials.yml` drops by 8. No existing jobs outside sandbox-multifamily are affected.
-**Status**: pending
+**Status**: passed
 
 ---
 
