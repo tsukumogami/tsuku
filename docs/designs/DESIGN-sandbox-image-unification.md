@@ -37,8 +37,8 @@ Planned
 
 | Issue | Dependencies | Tier |
 |-------|--------------|------|
-| [#1901: refactor(sandbox): create containerimages package and centralized config](https://github.com/tsukumogami/tsuku/issues/1901) | None | testable |
-| _Creates `container-images.json` at the repo root and a new `internal/containerimages/` Go package that embeds it via `go:embed`. Replaces the hardcoded `familyToBaseImage` map and `DefaultSandboxImage` constant, fixing the alpine and suse drift in the process._ | | |
+| ~~[#1901: refactor(sandbox): create containerimages package and centralized config](https://github.com/tsukumogami/tsuku/issues/1901)~~ | ~~None~~ | ~~testable~~ |
+| ~~_Creates `container-images.json` at the repo root and a new `internal/containerimages/` Go package that embeds it via `go:embed`. Replaces the hardcoded `familyToBaseImage` map and `DefaultSandboxImage` constant, fixing the alpine and suse drift in the process._~~ | | |
 | [#1902: ci: migrate workflow container images to centralized config](https://github.com/tsukumogami/tsuku/issues/1902) | [#1901](https://github.com/tsukumogami/tsuku/issues/1901) | testable |
 | _With the JSON file from #1901 in place, updates six CI workflows and one test script to read image references via `jq` instead of hardcoding them. Handles three consumption patterns: bash arrays, matrix blocks, and inline docker run commands._ | | |
 | [#1903: ci: add Renovate config and drift-check CI job](https://github.com/tsukumogami/tsuku/issues/1903) | [#1901](https://github.com/tsukumogami/tsuku/issues/1901), [#1902](https://github.com/tsukumogami/tsuku/issues/1902) | testable |
@@ -80,8 +80,9 @@ graph LR
     classDef needsDesign fill:#e1bee7
     classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
 
-    class I1901 ready
-    class I1902,I1903,I1904 blocked
+    class I1901 done
+    class I1902,I1904 ready
+    class I1903 blocked
     class I1905 needsDesign
 ```
 

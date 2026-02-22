@@ -3,12 +3,12 @@
   "design_doc": "docs/designs/DESIGN-sandbox-image-unification.md",
   "branch": "impl/sandbox-image-unification",
   "pr_number": 1906,
-  "integrity_hash": "sha256:849784522a58d7f7ecedfffb00d59b7d41fe4154266c11f8f69c13d67c9fc514",
+  "integrity_hash": "sha256:fae607e5300b8f56212c80d018e00da43bf542874033dc31aeb7abea5ad431ea",
   "issues": [
     {
       "number": 1901,
       "title": "refactor(sandbox): create containerimages package and centralized config",
-      "status": "scrutinized",
+      "status": "pushed",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
       "issue_type": "code",
@@ -35,6 +35,30 @@
         "tests_added": 7,
         "key_decisions": "The generated container-images.json copy inside internal/containerimages/ is committed to the repo so that go build and go install work without requiring a prior go generate step. The Makefile build target runs go generate before go build to keep it fresh during local development. A Families() export was added for downstream issues."
       },
+      "reviewer_results": [
+        {
+          "issue": 1901,
+          "review_focus": "pragmatic",
+          "blocking_count": 0,
+          "advisory_count": 3,
+          "detail_file": "wip/research/implement-doc_review_pragmatic_issue1901.md"
+        },
+        {
+          "issue": 1901,
+          "review_focus": "architect",
+          "blocking_count": 1,
+          "advisory_count": 1,
+          "detail_file": "wip/research/implement-doc_review_architect_issue1901.md",
+          "resolution": "Fixed: added go generate to .goreleaser.yaml before hooks and Makefile build-test target"
+        },
+        {
+          "issue": 1901,
+          "review_focus": "maintainer",
+          "blocking_count": 0,
+          "advisory_count": 3,
+          "detail_file": "wip/research/implement-doc_review_maintainer_issue1901.md"
+        }
+      ],
       "testable_scenarios": [
         "scenario-1",
         "scenario-2",
