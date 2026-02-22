@@ -531,6 +531,64 @@ c81719634fc5f325b3711e8b9c5444bd0d7b8590b0b9aa2ff8f00ff50a9d60c8  terraform_1.14
 	}
 }
 
+func TestResolveTsukuHome_AbsolutePath(t *testing.T) {
+	t.Setenv("TSUKU_HOME", "/tmp/my-tsuku")
+	got := resolveTsukuHome()
+	if got != "/tmp/my-tsuku" {
+		t.Errorf("resolveTsukuHome() = %q, want /tmp/my-tsuku", got)
+	}
+}
+
+func TestResolveTsukuHome_RelativePath(t *testing.T) {
+	t.Setenv("TSUKU_HOME", "relative/path")
+	got := resolveTsukuHome()
+	if !filepath.IsAbs(got) {
+		t.Errorf("resolveTsukuHome() = %q, want absolute path", got)
+	}
+	if filepath.Base(got) != "path" {
+		t.Errorf("resolveTsukuHome() = %q, want path ending in 'path'", got)
+	}
+}
+
+func TestResolveTsukuHome_Unset(t *testing.T) {
+	t.Setenv("TSUKU_HOME", "")
+	got := resolveTsukuHome()
+	homeDir, _ := os.UserHomeDir()
+	want := filepath.Join(homeDir, ".tsuku")
+	if got != want {
+		t.Errorf("resolveTsukuHome() = %q, want %q", got, want)
+	}
+}
+
+func TestGetToolsDir_AbsoluteTsukuHome(t *testing.T) {
+	t.Setenv("TSUKU_HOME", "/tmp/my-tsuku")
+	got := GetToolsDir()
+	if got != "/tmp/my-tsuku/tools" {
+		t.Errorf("GetToolsDir() = %q, want /tmp/my-tsuku/tools", got)
+	}
+}
+
+func TestGetToolsDir_RelativeTsukuHome(t *testing.T) {
+	t.Setenv("TSUKU_HOME", "relative/path")
+	got := GetToolsDir()
+	if !filepath.IsAbs(got) {
+		t.Errorf("GetToolsDir() = %q, want absolute path", got)
+	}
+	if filepath.Base(got) != "tools" {
+		t.Errorf("GetToolsDir() = %q, want path ending in 'tools'", got)
+	}
+}
+
+func TestGetToolsDir_UnsetTsukuHome(t *testing.T) {
+	t.Setenv("TSUKU_HOME", "")
+	got := GetToolsDir()
+	homeDir, _ := os.UserHomeDir()
+	want := filepath.Join(homeDir, ".tsuku", "tools")
+	if got != want {
+		t.Errorf("GetToolsDir() = %q, want %q", got, want)
+	}
+}
+
 func TestResolveGo_IgnoresGoTools(t *testing.T) {
 	// Create a temporary directory structure to simulate $TSUKU_HOME
 	tmpHome := t.TempDir()

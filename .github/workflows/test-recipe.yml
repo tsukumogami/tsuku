@@ -127,6 +127,7 @@ jobs:
       - name: Test recipes in Linux x86_64 containers
         env:
           RECIPES: ${{ needs.build.outputs.recipes }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Five Linux x86_64 families
           IMAGES=("debian:bookworm-slim" "fedora:41" "archlinux:base" "opensuse/tumbleweed" "alpine:3.21")
@@ -147,19 +148,20 @@ jobs:
               image="${IMAGES[$idx]}"
               TOTAL=$((TOTAL + 1))
 
-              echo "=== Testing $recipe_name on $family (x86_64) ==="
+              echo "::group::$recipe_name on $family (x86_64)"
 
               docker run --rm \
+                -e GITHUB_TOKEN \
                 -v "$PWD:/workspace" \
                 -w /workspace \
                 "$image" \
                 sh -c "
                   case '$family' in
-                    alpine) apk add --no-cache curl bash ca-certificates jq ;;
-                    debian) apt-get update && apt-get install -y --no-install-recommends curl ca-certificates jq ;;
-                    rhel)   dnf install -y --setopt=install_weak_deps=False curl ca-certificates jq ;;
-                    arch)   pacman -Sy --noconfirm curl ca-certificates jq ;;
-                    suse)   zypper -n install curl ca-certificates jq ;;
+                    alpine) apk add --no-cache curl bash ca-certificates jq build-base ;;
+                    debian) apt-get update && apt-get install -y --no-install-recommends curl ca-certificates jq build-essential ;;
+                    rhel)   dnf install -y --setopt=install_weak_deps=False curl ca-certificates jq gcc make ;;
+                    arch)   pacman -Sy --noconfirm curl ca-certificates jq gcc make ;;
+                    suse)   zypper -n install curl ca-certificates jq gcc make ;;
                   esac
                   export TSUKU_HOME='/tmp/tsuku-$recipe_name'
                   mkdir -p \"\$TSUKU_HOME\"
@@ -183,6 +185,8 @@ jobs:
                 RESULTS="$RESULTS| $recipe_name | $family | **FAIL** (exit $EXIT_CODE) |\n"
                 echo "FAIL: $recipe_name on $family (exit $EXIT_CODE)"
               fi
+
+              echo "::endgroup::"
             done
           done
 
@@ -227,6 +231,7 @@ jobs:
       - name: Test recipes in Linux arm64 containers
         env:
           RECIPES: ${{ needs.build.outputs.recipes }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Four Linux arm64 families (no arch -- no arm64 image available)
           IMAGES=("debian:bookworm-slim" "fedora:41" "opensuse/tumbleweed" "alpine:3.21")
@@ -247,18 +252,19 @@ jobs:
               image="${IMAGES[$idx]}"
               TOTAL=$((TOTAL + 1))
 
-              echo "=== Testing $recipe_name on $family (arm64) ==="
+              echo "::group::$recipe_name on $family (arm64)"
 
               docker run --rm \
+                -e GITHUB_TOKEN \
                 -v "$PWD:/workspace" \
                 -w /workspace \
                 "$image" \
                 sh -c "
                   case '$family' in
-                    alpine) apk add --no-cache curl bash ca-certificates jq ;;
-                    debian) apt-get update && apt-get install -y --no-install-recommends curl ca-certificates jq ;;
-                    rhel)   dnf install -y --setopt=install_weak_deps=False curl ca-certificates jq ;;
-                    suse)   zypper -n install curl ca-certificates jq ;;
+                    alpine) apk add --no-cache curl bash ca-certificates jq build-base ;;
+                    debian) apt-get update && apt-get install -y --no-install-recommends curl ca-certificates jq build-essential ;;
+                    rhel)   dnf install -y --setopt=install_weak_deps=False curl ca-certificates jq gcc make ;;
+                    suse)   zypper -n install curl ca-certificates jq gcc make ;;
                   esac
                   export TSUKU_HOME='/tmp/tsuku-$recipe_name'
                   mkdir -p \"\$TSUKU_HOME\"
@@ -282,6 +288,8 @@ jobs:
                 RESULTS="$RESULTS| $recipe_name | $family | **FAIL** (exit $EXIT_CODE) |\n"
                 echo "FAIL: $recipe_name on $family (exit $EXIT_CODE)"
               fi
+
+              echo "::endgroup::"
             done
           done
 
@@ -329,6 +337,7 @@ jobs:
       - name: Test recipes on macOS arm64
         env:
           RECIPES: ${{ needs.build.outputs.recipes }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TOTAL=0
           PASSED=0
@@ -341,7 +350,7 @@ jobs:
             recipe_path=$(echo "$RECIPES" | jq -r ".[$i].path")
             TOTAL=$((TOTAL + 1))
 
-            echo "=== Testing $recipe_name on macOS arm64 ==="
+            echo "::group::$recipe_name on macOS arm64"
 
             export TSUKU_HOME="${{ runner.temp }}/tsuku-$recipe_name"
             mkdir -p "$TSUKU_HOME"
@@ -356,6 +365,8 @@ jobs:
               RESULTS="$RESULTS| $recipe_name | darwin-arm64 | **FAIL** (exit $EXIT_CODE) |\n"
               echo "FAIL: $recipe_name on macOS arm64 (exit $EXIT_CODE)"
             fi
+
+            echo "::endgroup::"
           done
 
           # Write job summary
@@ -402,6 +413,7 @@ jobs:
       - name: Test recipes on macOS x86_64
         env:
           RECIPES: ${{ needs.build.outputs.recipes }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TOTAL=0
           PASSED=0
@@ -414,7 +426,7 @@ jobs:
             recipe_path=$(echo "$RECIPES" | jq -r ".[$i].path")
             TOTAL=$((TOTAL + 1))
 
-            echo "=== Testing $recipe_name on macOS x86_64 ==="
+            echo "::group::$recipe_name on macOS x86_64"
 
             export TSUKU_HOME="${{ runner.temp }}/tsuku-$recipe_name"
             mkdir -p "$TSUKU_HOME"
@@ -429,6 +441,8 @@ jobs:
               RESULTS="$RESULTS| $recipe_name | darwin-x86_64 | **FAIL** (exit $EXIT_CODE) |\n"
               echo "FAIL: $recipe_name on macOS x86_64 (exit $EXIT_CODE)"
             fi
+
+            echo "::endgroup::"
           done
 
           # Write job summary
