@@ -54,33 +54,6 @@ Current
 | ~~[#1867: feat(recipes): create library recipes for priority blockers](https://github.com/tsukumogami/tsuku/issues/1867)~~ | ~~[#1864](https://github.com/tsukumogami/tsuku/issues/1864), [#1865](https://github.com/tsukumogami/tsuku/issues/1865), [#1866](https://github.com/tsukumogami/tsuku/issues/1866)~~ | ~~critical~~ |
 | ~~_Create library recipes for the 14+ priority blockers using standard tooling with manual fixes documented in a friction log. Each merge auto-requeues blocked packages._~~ | | |
 
-### Dependency Graph
-
-```mermaid
-graph TD
-    subgraph M_SystemLibBackfill["system-lib-backfill"]
-        I1864["#1864: Test-recipe workflow"]
-        I1865["#1865: Satisfies backfill"]
-        I1866["#1866: Discovery run"]
-        I1867["#1867: Create library recipes"]
-    end
-
-    I1864 --> I1867
-    I1865 --> I1867
-    I1866 --> I1867
-
-    classDef done fill:#c8e6c9
-    classDef ready fill:#bbdefb
-    classDef blocked fill:#fff9c4
-    classDef needsDesign fill:#e1bee7
-
-    class I1864 done
-    class I1865 done
-    class I1866 done
-    class I1867 done
-```
-
-**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
 
 ## Upstream Design Reference
 
