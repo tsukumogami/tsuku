@@ -1,0 +1,14 @@
+[metadata]
+name = "tctl"
+description = "Command-line tool for the Tradologics trading platform"
+homepage = "https://pypi.org/project/tctl/"
+version_format = "semver"
+supported_libc = ["glibc"]
+
+[[steps]]
+action = "pipx_install"
+package = "tctl"
+executables = ["tctl"]
+
+[verify]
+command = "tctl --version"

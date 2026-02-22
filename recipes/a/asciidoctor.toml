@@ -1,0 +1,14 @@
+[metadata]
+name = "asciidoctor"
+description = "Converter for the AsciiDoc markup language"
+homepage = "https://asciidoctor.org/"
+version_format = "semver"
+
+[[steps]]
+action = "gem_install"
+gem = "asciidoctor"
+executables = ["asciidoctor"]
+
+[verify]
+command = "{install_dir}/.gem/bin/asciidoctor --version"
+pattern = "Asciidoctor {version}"

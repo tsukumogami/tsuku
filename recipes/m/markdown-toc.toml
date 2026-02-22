@@ -1,0 +1,14 @@
+[metadata]
+name = "markdown-toc"
+description = "Generate a table of contents for a markdown file"
+homepage = "https://github.com/jonschlinkert/markdown-toc"
+version_format = "semver"
+supported_libc = ["glibc"]
+
+[[steps]]
+action = "npm_install"
+package = "markdown-toc"
+executables = ["markdown-toc"]
+
+[verify]
+command = "markdown-toc --version"
