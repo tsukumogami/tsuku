@@ -500,7 +500,8 @@ func (s *HomebrewSession) classifyDeterministicFailure(err error) *Deterministic
 		category = FailureCategoryNoBottles
 		message = fmt.Sprintf("formula %s has no bottles available", s.formula)
 
-	case strings.Contains(msg, "no binaries found"):
+	case strings.Contains(msg, "no binaries found") ||
+		strings.Contains(msg, "no binaries or library files found"):
 		category = FailureCategoryComplexArchive
 		message = fmt.Sprintf("formula %s bottle contains no binaries in bin/", s.formula)
 

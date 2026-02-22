@@ -2532,6 +2532,11 @@ func TestHomebrewSession_classifyDeterministicFailure(t *testing.T) {
 			wantCat: FailureCategoryComplexArchive,
 		},
 		{
+			name:    "no binaries or library files",
+			err:     fmt.Errorf("no binaries or library files found in bottle"),
+			wantCat: FailureCategoryComplexArchive,
+		},
+		{
 			name:    "fetch failure",
 			err:     fmt.Errorf("failed to fetch GHCR manifest: timeout"),
 			wantCat: FailureCategoryAPIError,
