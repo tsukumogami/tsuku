@@ -2,7 +2,7 @@
   "design_doc": "docs/designs/DESIGN-system-lib-backfill.md",
   "branch": "docs/system-lib-backfill",
   "pr_number": 1863,
-  "integrity_hash": "sha256:653db7ea5c583576cf5432b910e38b7df6d160b627d152d165c2921b132ce644",
+  "integrity_hash": "sha256:2a0db084aa89982eb24dca1036ba818c21722593f2385180a0c039402087a4ce",
   "issues": [
     {
       "number": 1864,
@@ -37,7 +37,13 @@
       "commits": [],
       "agent_type": "",
       "summary": null,
-      "testable_scenarios": []
+      "testable_scenarios": [
+        "scenario-1",
+        "scenario-2",
+        "scenario-3",
+        "scenario-4",
+        "scenario-5"
+      ]
     },
     {
       "number": 1866,
@@ -50,7 +56,10 @@
       "commits": [],
       "agent_type": "",
       "summary": null,
-      "testable_scenarios": []
+      "testable_scenarios": [
+        "scenario-6",
+        "scenario-7"
+      ]
     },
     {
       "number": 1867,
@@ -67,7 +76,11 @@
       "commits": [],
       "agent_type": "",
       "summary": null,
-      "testable_scenarios": []
+      "testable_scenarios": [
+        "scenario-8",
+        "scenario-9",
+        "scenario-10"
+      ]
     }
   ],
   "skipped_issues": null,
