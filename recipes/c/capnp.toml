@@ -1,0 +1,31 @@
+[metadata]
+  name = "capnp"
+  description = "runtime library for Cap'n Proto data encoding"
+  homepage = "https://github.com/capnproto/capnproto-rust"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "crates_io"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "cargo_install"
+  crate = "capnp"
+  executables = ["capnp"]
+
+[verify]
+  command = "capnp --version"
+  pattern = ""
