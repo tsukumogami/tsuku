@@ -156,9 +156,7 @@ func (b *CargoBuilder) Build(ctx context.Context, req BuildRequest) (*BuildResul
 				},
 			},
 		},
-		Verify: recipe.VerifySection{
-			Command: fmt.Sprintf("%s --version", executables[0]),
-		},
+		Verify: cargoVerifySection(executables[0]),
 	}
 
 	// Use repository as homepage if homepage is empty
@@ -352,6 +350,24 @@ func isValidExecutableName(name string) bool {
 	// Must match: start with alphanumeric or underscore, contain only alphanumeric, underscores, dots, hyphens
 	matched, _ := regexp.MatchString(`^[a-zA-Z0-9_][a-zA-Z0-9._-]*$`, name)
 	return matched
+}
+
+// cargoVerifySection builds the verify section for a cargo crate. Cargo
+// subcommands (executables named cargo-*) must be invoked through cargo
+// itself for --version to work, so we generate "cargo <subcommand> --version"
+// instead of "cargo-<subcommand> --version".
+func cargoVerifySection(executable string) recipe.VerifySection {
+	var command string
+	if strings.HasPrefix(executable, "cargo-") {
+		subcommand := strings.TrimPrefix(executable, "cargo-")
+		command = fmt.Sprintf("cargo %s --version", subcommand)
+	} else {
+		command = fmt.Sprintf("%s --version", executable)
+	}
+	return recipe.VerifySection{
+		Command: command,
+		Pattern: "{version}",
+	}
 }
 
 // Probe checks if a crate exists on crates.io and returns quality metadata.
