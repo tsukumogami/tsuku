@@ -1,0 +1,31 @@
+[metadata]
+  name = "wasm-bindgen"
+  description = "Easy support for interacting between JS and Rust."
+  homepage = "https://wasm-bindgen.github.io/wasm-bindgen"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "crates_io"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "cargo_install"
+  crate = "wasm-bindgen"
+  executables = ["wasm-bindgen"]
+
+[verify]
+  command = "wasm-bindgen --version"
+  pattern = ""

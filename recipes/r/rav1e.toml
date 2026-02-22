@@ -1,0 +1,31 @@
+[metadata]
+  name = "rav1e"
+  description = "The fastest and safest AV1 encoder"
+  homepage = "https://github.com/xiph/rav1e/"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "crates_io"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "cargo_install"
+  crate = "rav1e"
+  executables = ["rav1e", "rav1e-ch"]
+
+[verify]
+  command = "rav1e --version"
+  pattern = ""

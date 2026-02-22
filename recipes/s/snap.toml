@@ -1,0 +1,31 @@
+[metadata]
+  name = "snap"
+  description = "A pure Rust implementation of the Snappy compression algorithm. Includes streaming compression and decompression."
+  homepage = "https://github.com/BurntSushi/rust-snappy"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "crates_io"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "cargo_install"
+  crate = "snap"
+  executables = ["snap"]
+
+[verify]
+  command = "snap --version"
+  pattern = ""

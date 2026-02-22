@@ -1,0 +1,31 @@
+[metadata]
+  name = "limine"
+  description = "Rust crate for parsing the limine boot protocol structures"
+  homepage = "https://github.com/limine-bootloader/limine-rs"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "crates_io"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "cargo_install"
+  crate = "limine"
+  executables = ["limine"]
+
+[verify]
+  command = "limine --version"
+  pattern = ""

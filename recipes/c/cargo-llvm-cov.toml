@@ -1,0 +1,31 @@
+[metadata]
+  name = "cargo-llvm-cov"
+  description = "Cargo subcommand to easily use LLVM source-based code coverage (-C instrument-coverage)."
+  homepage = "https://github.com/taiki-e/cargo-llvm-cov"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "crates_io"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "cargo_install"
+  crate = "cargo-llvm-cov"
+  executables = ["cargo-llvm-cov"]
+
+[verify]
+  command = "cargo-llvm-cov --version"
+  pattern = ""

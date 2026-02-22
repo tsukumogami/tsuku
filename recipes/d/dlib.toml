@@ -1,0 +1,31 @@
+[metadata]
+  name = "dlib"
+  description = "Helper macros for handling manually loading optional system libraries."
+  homepage = "https://github.com/elinorbgr/dlib"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "crates_io"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "cargo_install"
+  crate = "dlib"
+  executables = ["dlib"]
+
+[verify]
+  command = "dlib --version"
+  pattern = ""
