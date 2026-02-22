@@ -1,5 +1,5 @@
 ---
-status: Accepted
+status: Planned
 problem: |
   PR CI runs in the tsuku repo spawn 50-87 GitHub Actions jobs because matrix
   strategies create separate runners for each Linux distribution family and each
@@ -29,7 +29,69 @@ rationale: |
 
 ## Status
 
-**Status:** Accepted
+**Status:** Planned
+
+## Implementation Issues
+
+### Milestone: [CI Job Consolidation](https://github.com/tsukumogami/tsuku/milestone/99)
+
+| Issue | Dependencies | Tier |
+|-------|--------------|------|
+| [#1891: ci(build-essentials): consolidate sandbox-multifamily into container loops](https://github.com/tsukumogami/tsuku/issues/1891) | None | testable |
+| _Replace the 5x2 family/tool matrix with 2 container-loop jobs (one per tool), each iterating through 5 Linux families sequentially. First application of the test-recipe.yml container loop pattern to build-essentials.yml._ | | |
+| [#1892: ci(test): serialize integration-linux tests with GHA groups](https://github.com/tsukumogami/tsuku/issues/1892) | None | testable |
+| _Collapse the 9-job integration-linux matrix into a single serialized job following the integration-macos pattern already in the same file. Reads test entries from test-matrix.json and wraps each in GHA groups._ | | |
+| [#1893: ci(sandbox-tests): serialize sandbox tests with GHA groups](https://github.com/tsukumogami/tsuku/issues/1893) | None | testable |
+| _Same serialization pattern as #1892, applied to sandbox-tests.yml. Replaces 9 matrix jobs that use the same test-matrix.json linux entries with a single aggregated job._ | | |
+| [#1894: ci(integration-tests): consolidate checksum-pinning into container loop](https://github.com/tsukumogami/tsuku/issues/1894) | None | testable |
+| _Replace the 5-family checksum-pinning matrix with a container loop. Passes GITHUB_TOKEN into containers since the test script needs API access for checksum verification._ | | |
+| [#1895: ci(integration-tests): consolidate remaining matrix jobs](https://github.com/tsukumogami/tsuku/issues/1895) | [#1894](https://github.com/tsukumogami/tsuku/issues/1894) | testable |
+| _Consolidates 5 remaining matrix groups in integration-tests.yml: homebrew-linux (4->1), dlopen-glibc (3->1), dlopen-macos (3->1), dlopen-musl (3->1), and library-integrity (2->1). Uses a mix of container loops and GHA group serialization depending on the job's runner type._ | | |
+| [#1896: ci(build-essentials): consolidate homebrew-linux tests](https://github.com/tsukumogami/tsuku/issues/1896) | [#1891](https://github.com/tsukumogami/tsuku/issues/1891) | testable |
+| _Serializes 4 homebrew tool tests into a single job with GHA groups, following the macOS pattern already in build-essentials.yml. Depends on #1891 since both modify the same file._ | | |
+| [#1897: ci: document consolidation patterns and add drift-prevention lint](https://github.com/tsukumogami/tsuku/issues/1897) | [#1891](https://github.com/tsukumogami/tsuku/issues/1891), [#1892](https://github.com/tsukumogami/tsuku/issues/1892), [#1893](https://github.com/tsukumogami/tsuku/issues/1893), [#1894](https://github.com/tsukumogami/tsuku/issues/1894), [#1895](https://github.com/tsukumogami/tsuku/issues/1895), [#1896](https://github.com/tsukumogami/tsuku/issues/1896) | simple |
+| _Documents the container loop and GHA group patterns as the standard for new workflows. Adds a grep-based CI lint check that validates required elements (timeout, exit code capture, failure arrays) to prevent drift._ | | |
+
+### Dependency Graph
+
+```mermaid
+graph TD
+    subgraph Phase1["Phase 1: Highest Impact"]
+        I1891["#1891: consolidate sandbox-multifamily"]
+        I1892["#1892: serialize integration-linux"]
+        I1893["#1893: serialize sandbox tests"]
+        I1894["#1894: consolidate checksum-pinning"]
+    end
+
+    subgraph Phase2["Phase 2: Medium Impact"]
+        I1895["#1895: consolidate remaining matrix"]
+        I1896["#1896: consolidate homebrew-linux"]
+    end
+
+    subgraph Phase3["Phase 3: Documentation"]
+        I1897["#1897: document patterns + lint"]
+    end
+
+    I1894 --> I1895
+    I1891 --> I1896
+    I1891 --> I1897
+    I1892 --> I1897
+    I1893 --> I1897
+    I1894 --> I1897
+    I1895 --> I1897
+    I1896 --> I1897
+
+    classDef done fill:#c8e6c9
+    classDef ready fill:#bbdefb
+    classDef blocked fill:#fff9c4
+    classDef needsDesign fill:#e1bee7
+    classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
+
+    class I1891,I1892,I1893,I1894 ready
+    class I1895,I1896,I1897 blocked
+```
+
+**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design
 
 ## Context and Problem Statement
 
