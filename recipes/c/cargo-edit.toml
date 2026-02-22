@@ -1,18 +1,16 @@
 [metadata]
 name = "cargo-edit"
-description = "Cargo subcommands for editing Cargo.toml"
-homepage = "https://crates.io/crates/cargo-edit"
-version_format = "semver"
+description = "Cargo commands for modifying a `Cargo.toml` file.."
+homepage = "https://github.com/killercup/cargo-edit"
+
+[version]
+source = "crates_io"
 
 [[steps]]
 action = "cargo_install"
 crate = "cargo-edit"
-executables = ["cargo-add", "cargo-rm", "cargo-upgrade"]
+executables = ["cargo-add", "cargo-rm", "cargo-upgrade", "cargo-set-version"]
 
 [verify]
-# cargo-add is a cargo subcommand, doesn't support --version directly
-# verify by checking the help output
-command = "cargo-add --help"
-mode = "output"
-pattern = "Add dependencies to a Cargo.toml"
-reason = "cargo-add is a cargo subcommand without standalone --version flag"
+command = "cargo add --version"
+pattern = "{version}"
