@@ -53,19 +53,19 @@ graph TD
     classDef blocked fill:#ffd33d,color:#000
     classDef needsDesign fill:#6f42c1,color:#fff
 
-    1856["#1856 CLI subcategory output"]
-    1857["#1857 Orchestrator normalization"]
-    1858["#1858 CI workflow alignment"]
-    1859["#1859 Dashboard update"]
+    I1856["#1856 CLI subcategory output"]
+    I1857["#1857 Orchestrator normalization"]
+    I1858["#1858 CI workflow alignment"]
+    I1859["#1859 Dashboard update"]
 
-    1856 --> 1857
-    1857 --> 1858
-    1857 --> 1859
+    I1856 --> I1857
+    I1857 --> I1858
+    I1857 --> I1859
 
-    class 1856 done
-    class 1857 blocked
-    class 1858 blocked
-    class 1859 blocked
+    class I1856 done
+    class I1857 blocked
+    class I1858 blocked
+    class I1859 blocked
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
