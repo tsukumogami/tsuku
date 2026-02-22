@@ -141,7 +141,7 @@ func (b *CargoBuilder) Build(ctx context.Context, req BuildRequest) (*BuildResul
 	r := &recipe.Recipe{
 		Metadata: recipe.MetadataSection{
 			Name:        req.Package,
-			Description: crateInfo.Crate.Description,
+			Description: strings.TrimSpace(crateInfo.Crate.Description),
 			Homepage:    crateInfo.Crate.Homepage,
 		},
 		Version: recipe.VersionSection{
