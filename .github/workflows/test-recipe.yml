@@ -157,11 +157,11 @@ jobs:
                 "$image" \
                 sh -c "
                   case '$family' in
-                    alpine) apk add --no-cache curl bash ca-certificates jq ;;
-                    debian) apt-get update && apt-get install -y --no-install-recommends curl ca-certificates jq ;;
-                    rhel)   dnf install -y --setopt=install_weak_deps=False curl ca-certificates jq ;;
-                    arch)   pacman -Sy --noconfirm curl ca-certificates jq ;;
-                    suse)   zypper -n install curl ca-certificates jq ;;
+                    alpine) apk add --no-cache curl bash ca-certificates jq build-base ;;
+                    debian) apt-get update && apt-get install -y --no-install-recommends curl ca-certificates jq build-essential ;;
+                    rhel)   dnf install -y --setopt=install_weak_deps=False curl ca-certificates jq gcc make ;;
+                    arch)   pacman -Sy --noconfirm curl ca-certificates jq gcc make ;;
+                    suse)   zypper -n install curl ca-certificates jq gcc make ;;
                   esac
                   export TSUKU_HOME='/tmp/tsuku-$recipe_name'
                   mkdir -p \"\$TSUKU_HOME\"
@@ -259,10 +259,10 @@ jobs:
                 "$image" \
                 sh -c "
                   case '$family' in
-                    alpine) apk add --no-cache curl bash ca-certificates jq ;;
-                    debian) apt-get update && apt-get install -y --no-install-recommends curl ca-certificates jq ;;
-                    rhel)   dnf install -y --setopt=install_weak_deps=False curl ca-certificates jq ;;
-                    suse)   zypper -n install curl ca-certificates jq ;;
+                    alpine) apk add --no-cache curl bash ca-certificates jq build-base ;;
+                    debian) apt-get update && apt-get install -y --no-install-recommends curl ca-certificates jq build-essential ;;
+                    rhel)   dnf install -y --setopt=install_weak_deps=False curl ca-certificates jq gcc make ;;
+                    suse)   zypper -n install curl ca-certificates jq gcc make ;;
                   esac
                   export TSUKU_HOME='/tmp/tsuku-$recipe_name'
                   mkdir -p \"\$TSUKU_HOME\"
