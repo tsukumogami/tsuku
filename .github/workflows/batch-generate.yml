@@ -120,9 +120,11 @@ jobs:
             echo "exit_code=${{ steps.batch.outputs.exit_code }}" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Requeue unblocked packages
+      - name: Build and run queue maintenance
         if: steps.check-open-prs.outputs.should_skip != 'true'
-        run: ./scripts/requeue-unblocked.sh
+        run: |
+          go build -o queue-maintain ./cmd/queue-maintain
+          ./queue-maintain
 
       - name: Check for generated recipes
         if: steps.check-open-prs.outputs.should_skip != 'true'
@@ -1002,8 +1004,10 @@ jobs:
             ./scripts/update_breaker.sh "$eco" "$OUTCOME"
           done
 
-      - name: Requeue unblocked packages
-        run: ./scripts/requeue-unblocked.sh
+      - name: Build and run queue maintenance
+        run: |
+          go build -o queue-maintain ./cmd/queue-maintain
+          ./queue-maintain
 
       - name: Collect SLI metrics
         run: |
@@ -1105,31 +1109,13 @@ jobs:
       - name: Create pull request
         if: steps.check-open-prs.outputs.should_skip != 'true' && steps.check.outputs.changes == 'true'
         run: |
-          # Update queue statuses for processed recipes using batch results
-          QUEUE_FILE="data/queues/priority-queue.json"
-          RESULTS_FILE="data/queues/batch-results.json"
-          if [ -f "$RESULTS_FILE" ] && [ -s "$RESULTS_FILE" ]; then
-            # Mark succeeded entries
-            for pkg_id in $(jq -r '.recipes // [] | .[]' "$RESULTS_FILE" 2>/dev/null | while read -r path; do basename "$path" .toml; done); do
-              # Find the matching queue entry by name
-              jq --arg name "$pkg_id" \
-                '(.packages[] | select(.name == $name)).status = "success"' \
-                "$QUEUE_FILE" > tmp.json && mv tmp.json "$QUEUE_FILE"
-            done
-          fi
-          for recipe in $EXCLUDED_RECIPES; do
-            jq --arg name "$recipe" \
-              '(.packages[] | select(.name == $name)).status = "failed"' \
-              "$QUEUE_FILE" > tmp.json && mv tmp.json "$QUEUE_FILE"
-          done
-
           # Sync with latest main to avoid race conditions with other workflows
           git fetch origin main
           git rebase --autostash origin/main
 
           BRANCH="batch/$(date +%Y%m%d-%H%M%S)"
           git checkout -b "$BRANCH"
-          git add recipes/ data/ batch-control.json
+          git add recipes/ data/failures/ data/metrics/ batch-control.json
           git reset HEAD -- data/batch-summary.md 2>/dev/null || true
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
