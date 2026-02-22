@@ -1,8 +1,0 @@
-{
-  "issue": 1851,
-  "reviews": [
-    {"focus": "pragmatic", "blocking_count": 0, "advisory_count": 1, "summary": "Correct scope. Doc updates and TODO comment match the issue. Advisory: TODO for dead code rather than immediate deletion."},
-    {"focus": "architect", "blocking_count": 0, "advisory_count": 0, "summary": "Documentation-only changes. Design doc updates accurate. bootstrap.go TODO verified against codebase."},
-    {"focus": "completeness", "blocking_count": 0, "advisory_count": 0, "summary": "All four ACs fully met. Design doc updated at all 4 locations. orchestrator.go clean. bootstrap.go TODO present."}
-  ]
-}
