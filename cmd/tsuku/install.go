@@ -79,7 +79,7 @@ Test installation in a sandbox container:
 				exitWithCode(ExitUsage)
 			}
 
-			if err := runSandboxInstall(toolName, installPlanPath, installRecipePath); err != nil {
+			if err := runSandboxInstall(toolName, installPlanPath, installRecipePath, installTargetFamily); err != nil {
 				printError(err)
 				exitWithCode(ExitInstallFailed)
 			}

@@ -8,7 +8,6 @@ import (
 
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/executor"
-	"github.com/tsukumogami/tsuku/internal/platform"
 	"github.com/tsukumogami/tsuku/internal/sandbox"
 	"github.com/tsukumogami/tsuku/internal/validate"
 )
@@ -18,7 +17,7 @@ import (
 //  1. Tool from registry: tsuku install <tool> --sandbox
 //  2. Local recipe file: tsuku install --recipe <path> --sandbox
 //  3. External plan: tsuku install --plan <path> --sandbox
-func runSandboxInstall(toolName, planPath, recipePath string) error {
+func runSandboxInstall(toolName, planPath, recipePath, targetFamily string) error {
 	cfg, err := config.DefaultConfig()
 	if err != nil {
 		return fmt.Errorf("failed to load config: %w", err)
@@ -60,7 +59,7 @@ func runSandboxInstall(toolName, planPath, recipePath string) error {
 	}
 
 	// Compute sandbox requirements from plan
-	reqs := sandbox.ComputeSandboxRequirements(plan)
+	reqs := sandbox.ComputeSandboxRequirements(plan, targetFamily)
 
 	// For local recipe files, show confirmation prompt (unless --force or --yes)
 	if recipePath != "" && !installForce {
@@ -90,8 +89,8 @@ func runSandboxInstall(toolName, planPath, recipePath string) error {
 	detector := validate.NewRuntimeDetector()
 	sandboxExec := sandbox.NewExecutor(detector, sandbox.WithDownloadCacheDir(cfg.DownloadCacheDir))
 
-	// Detect current system target (platform + linux_family)
-	target, err := platform.DetectTarget()
+	// Detect target platform, honoring --target-family override
+	target, err := resolveTarget(targetFamily)
 	if err != nil {
 		return fmt.Errorf("failed to detect target platform: %w", err)
 	}

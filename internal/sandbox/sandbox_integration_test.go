@@ -44,7 +44,7 @@ func TestSandboxIntegration(t *testing.T) {
 			Steps: []executor.ResolvedStep{},
 		}
 
-		reqs := sandbox.ComputeSandboxRequirements(plan)
+		reqs := sandbox.ComputeSandboxRequirements(plan, "")
 
 		// Local-only plan shouldn't require network
 		if reqs.RequiresNetwork {
@@ -99,7 +99,7 @@ func TestSandboxIntegration(t *testing.T) {
 			},
 		}
 
-		reqs := sandbox.ComputeSandboxRequirements(plan)
+		reqs := sandbox.ComputeSandboxRequirements(plan, "")
 
 		// npm_install action should require network
 		if !reqs.RequiresNetwork {
@@ -134,7 +134,7 @@ func TestSandboxIntegration(t *testing.T) {
 			},
 		}
 
-		reqs := sandbox.ComputeSandboxRequirements(plan)
+		reqs := sandbox.ComputeSandboxRequirements(plan, "")
 
 		// cargo_build should require network
 		if !reqs.RequiresNetwork {
@@ -179,7 +179,7 @@ func TestSandboxIntegration(t *testing.T) {
 			},
 		}
 
-		reqs := sandbox.ComputeSandboxRequirements(plan)
+		reqs := sandbox.ComputeSandboxRequirements(plan, "")
 
 		// Create debian target
 		debianTarget := platform.NewTarget("linux/amd64", "debian", "glibc", "")
@@ -336,7 +336,7 @@ func TestSandboxRequirementsComputation(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			reqs := sandbox.ComputeSandboxRequirements(tt.plan)
+			reqs := sandbox.ComputeSandboxRequirements(tt.plan, "")
 
 			if reqs.RequiresNetwork != tt.wantNetwork {
 				t.Errorf("RequiresNetwork = %v, want %v", reqs.RequiresNetwork, tt.wantNetwork)

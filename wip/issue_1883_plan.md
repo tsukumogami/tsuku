@@ -29,26 +29,26 @@ None.
 
 ## Implementation Steps
 
-- [ ] 1. Update `ComputeSandboxRequirements` signature in `internal/sandbox/requirements.go` to accept a `targetFamily string` parameter. When `targetFamily` is non-empty, look it up in `familyToBaseImage` (from `container_spec.go`) to set the default `reqs.Image` instead of hardcoding `DefaultSandboxImage`. Similarly, when upgrading to the source build image, use the family-appropriate image (or fall back to `SourceBuildSandboxImage` for debian). This requires exporting or accessing the `familyToBaseImage` map from `container_spec.go` -- since both files are in the same package, it's already accessible.
+- [x] 1. Update `ComputeSandboxRequirements` signature in `internal/sandbox/requirements.go` to accept a `targetFamily string` parameter. When `targetFamily` is non-empty, look it up in `familyToBaseImage` (from `container_spec.go`) to set the default `reqs.Image` instead of hardcoding `DefaultSandboxImage`. Similarly, when upgrading to the source build image, use the family-appropriate image (or fall back to `SourceBuildSandboxImage` for debian). This requires exporting or accessing the `familyToBaseImage` map from `container_spec.go` -- since both files are in the same package, it's already accessible.
 
-- [ ] 2. Update `runSandboxInstall` in `cmd/tsuku/install_sandbox.go`:
+- [x] 2. Update `runSandboxInstall` in `cmd/tsuku/install_sandbox.go`:
   - Change the function signature to accept `targetFamily string` as a parameter.
   - Replace `platform.DetectTarget()` (line 94) with `resolveTarget(targetFamily)` to honor the `--target-family` flag.
   - Pass `targetFamily` to `ComputeSandboxRequirements(plan, targetFamily)`.
 
-- [ ] 3. Update the call site in `cmd/tsuku/install.go` (line 82) to pass `installTargetFamily` to `runSandboxInstall`.
+- [x] 3. Update the call site in `cmd/tsuku/install.go` (line 82) to pass `installTargetFamily` to `runSandboxInstall`.
 
-- [ ] 4. Update all callers of `ComputeSandboxRequirements` to pass the new parameter. The only external caller is in `install_sandbox.go` (already covered in step 2). Verify no other callers exist via grep.
+- [x] 4. Update all callers of `ComputeSandboxRequirements` to pass the new parameter. The only external caller is in `install_sandbox.go` (already covered in step 2). Verify no other callers exist via grep.
 
-- [ ] 5. Update tests in `internal/sandbox/requirements_test.go`:
+- [x] 5. Update tests in `internal/sandbox/requirements_test.go`:
   - Update all existing `ComputeSandboxRequirements` calls to pass `""` as the family (preserving current behavior).
   - Add new test cases: `TestComputeSandboxRequirements_TargetFamily_Alpine`, `TestComputeSandboxRequirements_TargetFamily_Suse`, `TestComputeSandboxRequirements_TargetFamily_Rhel`, `TestComputeSandboxRequirements_TargetFamily_Arch` that verify the correct base image is selected.
   - Add a test case for family + build actions (should use the family image, not `SourceBuildSandboxImage`).
   - Add a test case for empty/unknown family (should fall back to `DefaultSandboxImage`).
 
-- [ ] 6. Update tests in `internal/sandbox/executor_test.go` if any test calls `ComputeSandboxRequirements` (the `TestSandbox_NoRuntime` test uses it on line 342).
+- [x] 6. Update tests in `internal/sandbox/executor_test.go` if any test calls `ComputeSandboxRequirements` (the `TestSandbox_NoRuntime` test uses it on line 342).
 
-- [ ] 7. Run `go vet ./...`, `go test ./...`, and `go build -o tsuku ./cmd/tsuku` to verify the changes compile and pass.
+- [x] 7. Run `go vet ./...`, `go test ./...`, and `go build -o tsuku ./cmd/tsuku` to verify the changes compile and pass.
 
 ## Testing Strategy
 

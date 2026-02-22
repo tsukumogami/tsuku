@@ -268,7 +268,7 @@ func (o *Orchestrator) validate(ctx context.Context, r *recipe.Recipe) (*sandbox
 	}
 
 	// Compute sandbox requirements from plan
-	reqs := sandbox.ComputeSandboxRequirements(plan)
+	reqs := sandbox.ComputeSandboxRequirements(plan, "")
 
 	// Detect current system target (platform + linux_family)
 	target, err := platform.DetectTarget()
