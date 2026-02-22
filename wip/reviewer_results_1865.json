@@ -1,0 +1,24 @@
+{
+  "issue": 1865,
+  "round": 2,
+  "reviewers": [
+    {
+      "focus": "pragmatic",
+      "blocking_count": 0,
+      "advisory_count": 0,
+      "summary": "Round 1 blocking fixed: all same-name recipes now have actual satisfies entries instead of misleading comments."
+    },
+    {
+      "focus": "architect",
+      "blocking_count": 0,
+      "advisory_count": 0,
+      "summary": "No architectural concerns. Data-only changes integrate with existing satisfies infrastructure."
+    },
+    {
+      "focus": "maintainer",
+      "blocking_count": 0,
+      "advisory_count": 0,
+      "summary": "Round 1 blocking fixed: misleading comments replaced with actual satisfies entries."
+    }
+  ]
+}

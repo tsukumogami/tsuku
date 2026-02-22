@@ -2,7 +2,7 @@
   "design_doc": "docs/designs/DESIGN-system-lib-backfill.md",
   "branch": "docs/system-lib-backfill",
   "pr_number": 1863,
-  "integrity_hash": "sha256:2a0db084aa89982eb24dca1036ba818c21722593f2385180a0c039402087a4ce",
+  "integrity_hash": "sha256:874cc9f3a772dc2dc6fd57dd8a3f66200c25f311a372bbf5be4afa05cb358b8c",
   "issues": [
     {
       "number": 1864,
@@ -29,14 +29,41 @@
     {
       "number": 1865,
       "title": "fix(recipes): backfill satisfies metadata on existing library recipes",
-      "status": "pending",
+      "status": "scrutinized",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [],
-      "commits": [],
-      "agent_type": "",
-      "summary": null,
+      "commits": [
+        "4383333a3fb0500e03cc0160f96e7e8fc6fe7f8d",
+        "4383333a",
+        "e7f0cab9"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          "recipes/a/abseil.toml",
+          "recipes/b/brotli.toml",
+          "recipes/c/cairo.toml",
+          "recipes/e/expat.toml",
+          "recipes/g/gettext.toml",
+          "recipes/g/geos.toml",
+          "recipes/g/giflib.toml",
+          "recipes/g/gmp.toml",
+          "recipes/j/jpeg-turbo.toml",
+          "recipes/l/libnghttp3.toml",
+          "recipes/l/libngtcp2.toml",
+          "recipes/l/libpng.toml",
+          "recipes/l/libssh2.toml",
+          "recipes/l/libxml2.toml",
+          "recipes/p/proj.toml",
+          "recipes/r/readline.toml",
+          "recipes/z/zstd.toml"
+        ],
+        "tests_added": 0,
+        "key_decisions": "17 recipes now have [metadata.satisfies] entries. 3 non-Homebrew recipes have comments. libcurl has comment (curl canonical conflict)."
+      },
       "testable_scenarios": [
         "scenario-1",
         "scenario-2",
