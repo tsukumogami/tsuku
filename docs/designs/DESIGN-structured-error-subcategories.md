@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Accepted
 problem: |
   Pipeline failure classification is inconsistent across three producers:
   the CLI's --json output, the orchestrator's categoryFromExitCode(), and
@@ -29,7 +29,7 @@ rationale: |
 
 ## Status
 
-**Proposed**
+**Accepted**
 
 ## Context and Problem Statement
 
