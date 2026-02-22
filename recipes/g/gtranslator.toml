@@ -1,0 +1,35 @@
+[metadata]
+  name = "gtranslator"
+  description = "GNOME gettext PO file editor"
+  homepage = "https://wiki.gnome.org/Design/Apps/Translator"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["cairo", "gettext", "glib", "json-glib", "sqlite"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "gtranslator"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "gtranslator"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/gtranslator"]
+
+[verify]
+  command = "gtranslator --version"
+  pattern = ""

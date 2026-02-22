@@ -1,0 +1,35 @@
+[metadata]
+  name = "libewf"
+  description = "Library for support of the Expert Witness Compression Format"
+  homepage = "https://github.com/libyal/libewf"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = []
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "libewf"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "libewf"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/ewfacquire", "bin/ewfacquirestream", "bin/ewfdebug", "bin/ewfexport", "bin/ewfinfo", "bin/ewfmount", "bin/ewfrecover", "bin/ewfverify"]
+
+[verify]
+  command = "ewfacquire --version"
+  pattern = ""

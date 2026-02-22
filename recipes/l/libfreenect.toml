@@ -1,0 +1,35 @@
+[metadata]
+  name = "libfreenect"
+  description = "Drivers and libraries for the Xbox Kinect device"
+  homepage = "https://openkinect.org/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = []
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "libfreenect"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "libfreenect"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/fakenect", "bin/fakenect-record", "bin/freenect-camtest", "bin/freenect-regtest", "bin/freenect-tiltdemo", "bin/freenect-wavrecord"]
+
+[verify]
+  command = "fakenect --version"
+  pattern = ""

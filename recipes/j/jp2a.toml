@@ -1,0 +1,35 @@
+[metadata]
+  name = "jp2a"
+  description = "Convert JPG images to ASCII"
+  homepage = "https://github.com/Talinx/jp2a"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["jpeg-turbo", "libpng"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "jp2a"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "jp2a"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/jp2a"]
+
+[verify]
+  command = "jp2a --version"
+  pattern = ""

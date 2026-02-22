@@ -1,0 +1,35 @@
+[metadata]
+  name = "libnfc"
+  description = "Low level NFC SDK and Programmers API"
+  homepage = "https://github.com/nfc-tools/libnfc"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["libusb-compat"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "libnfc"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "libnfc"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/nfc-anticol", "bin/nfc-barcode", "bin/nfc-dep-initiator", "bin/nfc-dep-target", "bin/nfc-emulate-forum-tag2", "bin/nfc-emulate-forum-tag4", "bin/nfc-emulate-tag", "bin/nfc-emulate-uid", "bin/nfc-jewel", "bin/nfc-list", "bin/nfc-mfclassic", "bin/nfc-mfsetuid", "bin/nfc-mfultralight", "bin/nfc-poll", "bin/nfc-read-forum-tag3", "bin/nfc-relay", "bin/nfc-relay-picc", "bin/nfc-scan-device", "bin/pn53x-diagnose", "bin/pn53x-sam", "bin/pn53x-tamashell"]
+
+[verify]
+  command = "nfc-anticol --version"
+  pattern = ""

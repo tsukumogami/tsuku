@@ -1,0 +1,35 @@
+[metadata]
+  name = "jruby"
+  description = "Ruby implementation in pure Java"
+  homepage = "https://www.jruby.org/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = []
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "jruby"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "jruby"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/install_doc", "bin/jast", "bin/jbundle", "bin/jbundler", "bin/jerb", "bin/jgem", "bin/jirb", "bin/jirb_swing", "bin/jracc", "bin/jrake", "bin/jrdoc", "bin/jri", "bin/jruby", "bin/jruby.sh", "bin/jrubyc", "bin/lock_jars", "bin/ruby", "bin/syntax_suggest"]
+
+[verify]
+  command = "install_doc --version"
+  pattern = ""

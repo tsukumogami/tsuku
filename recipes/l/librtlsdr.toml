@@ -1,0 +1,35 @@
+[metadata]
+  name = "librtlsdr"
+  description = "Use Realtek DVB-T dongles as a cheap SDR"
+  homepage = "https://osmocom.org/projects/rtl-sdr/wiki"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = []
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "librtlsdr"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "librtlsdr"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/rtl_adsb", "bin/rtl_biast", "bin/rtl_eeprom", "bin/rtl_fm", "bin/rtl_power", "bin/rtl_sdr", "bin/rtl_tcp", "bin/rtl_test"]
+
+[verify]
+  command = "rtl_adsb --version"
+  pattern = ""

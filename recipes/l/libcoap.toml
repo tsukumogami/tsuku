@@ -1,0 +1,35 @@
+[metadata]
+  name = "libcoap"
+  description = "Lightweight application-protocol for resource-constrained devices"
+  homepage = "https://github.com/obgm/libcoap"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = []
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "libcoap"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "libcoap"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/coap-client-openssl", "bin/coap-rd-openssl", "bin/coap-server-openssl"]
+
+[verify]
+  command = "coap-client-openssl --version"
+  pattern = ""

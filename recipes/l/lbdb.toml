@@ -1,0 +1,35 @@
+[metadata]
+  name = "lbdb"
+  description = "Little brother's database for the mutt mail reader"
+  homepage = "https://www.spinnaker.de/lbdb/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = []
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "lbdb"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "lbdb"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/lbdb-fetchaddr", "bin/lbdb_dotlock", "bin/lbdbq", "bin/mutt_ldap_query", "bin/nodelist2lbdb"]
+
+[verify]
+  command = "lbdb-fetchaddr --version"
+  pattern = ""

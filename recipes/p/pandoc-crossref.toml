@@ -1,0 +1,35 @@
+[metadata]
+  name = "pandoc-crossref"
+  description = "Pandoc filter for numbering and cross-referencing"
+  homepage = "https://github.com/lierdakil/pandoc-crossref"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["gmp"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "pandoc-crossref"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "pandoc-crossref"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/pandoc-crossref"]
+
+[verify]
+  command = "pandoc-crossref --version"
+  pattern = ""

@@ -1,0 +1,35 @@
+[metadata]
+  name = "jsonschema2pojo"
+  description = "Generates Java types from JSON Schema (or example JSON)"
+  homepage = "https://www.jsonschema2pojo.org/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = []
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "jsonschema2pojo"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "jsonschema2pojo"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/jsonschema2pojo"]
+
+[verify]
+  command = "jsonschema2pojo --version"
+  pattern = ""

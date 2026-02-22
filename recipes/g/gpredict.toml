@@ -1,0 +1,35 @@
+[metadata]
+  name = "gpredict"
+  description = "Real-time satellite tracking/prediction application"
+  homepage = "https://oz9aec.dk/gpredict/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["cairo", "glib", "gettext"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "gpredict"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "gpredict"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/gpredict"]
+
+[verify]
+  command = "gpredict --version"
+  pattern = ""

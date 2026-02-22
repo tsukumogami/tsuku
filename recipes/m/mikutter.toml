@@ -1,0 +1,35 @@
+[metadata]
+  name = "mikutter"
+  description = "Extensible Twitter client"
+  homepage = "https://mikutter.hachune.net/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["cairo", "fontconfig", "freetype", "glib", "ruby", "gettext"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "mikutter"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "mikutter"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/mikutter"]
+
+[verify]
+  command = "mikutter --version"
+  pattern = ""

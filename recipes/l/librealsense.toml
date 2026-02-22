@@ -1,0 +1,35 @@
+[metadata]
+  name = "librealsense"
+  description = "Intel RealSense D400 series and SR300 capture"
+  homepage = "https://github.com/IntelRealSense/librealsense"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = []
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "librealsense"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "librealsense"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/realsense-viewer", "bin/rs-align", "bin/rs-align-advanced", "bin/rs-align-gl", "bin/rs-benchmark", "bin/rs-callback", "bin/rs-capture", "bin/rs-color", "bin/rs-convert", "bin/rs-data-collect", "bin/rs-depth", "bin/rs-depth-quality", "bin/rs-distance", "bin/rs-embed", "bin/rs-embedded-filters", "bin/rs-enumerate-devices", "bin/rs-eth-config", "bin/rs-fw-logger", "bin/rs-fw-update", "bin/rs-gl", "bin/rs-hdr", "bin/rs-hello-realsense", "bin/rs-infrared", "bin/rs-labeled-pointcloud", "bin/rs-measure", "bin/rs-motion", "bin/rs-multicam", "bin/rs-on-chip-calib", "bin/rs-pointcloud", "bin/rs-post-processing", "bin/rs-record", "bin/rs-record-playback", "bin/rs-rosbag-inspector", "bin/rs-save-to-disk", "bin/rs-sensor-control", "bin/rs-software-device", "bin/rs-terminal"]
+
+[verify]
+  command = "realsense-viewer --version"
+  pattern = ""

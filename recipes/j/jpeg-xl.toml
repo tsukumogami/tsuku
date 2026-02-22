@@ -1,0 +1,35 @@
+[metadata]
+  name = "jpeg-xl"
+  description = "New file format for still image compression"
+  homepage = "https://jpeg.org/jpegxl/index.html"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["brotli", "giflib", "jpeg-turbo", "libpng", "little-cms2"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "jpeg-xl"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "jpeg-xl"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/benchmark_xl", "bin/butteraugli_main", "bin/cjxl", "bin/decode_and_encode", "bin/display_to_hlg", "bin/djxl", "bin/djxl_fuzzer_corpus", "bin/exr_to_pq", "bin/generate_lut_template", "bin/icc_simplify", "bin/jxl_from_tree", "bin/jxlinfo", "bin/local_tone_map", "bin/pq_to_hlg", "bin/render_hlg", "bin/ssimulacra2", "bin/ssimulacra_main", "bin/texture_to_cube", "bin/tone_map", "bin/xyb_range"]
+
+[verify]
+  command = "benchmark_xl --version"
+  pattern = ""

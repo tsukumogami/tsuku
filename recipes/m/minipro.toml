@@ -1,0 +1,35 @@
+[metadata]
+  name = "minipro"
+  description = "Open controller for the MiniPRO TL866xx series of chip programmers"
+  homepage = "https://gitlab.com/DavidGriffith/minipro/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = []
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "minipro"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "minipro"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/dump-alg-minipro.bash", "bin/minipro"]
+
+[verify]
+  command = "dump-alg-minipro.bash --version"
+  pattern = ""

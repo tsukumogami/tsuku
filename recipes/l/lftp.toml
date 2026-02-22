@@ -1,0 +1,35 @@
+[metadata]
+  name = "lftp"
+  description = "Sophisticated file transfer program"
+  homepage = "https://lftp.yar.ru/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["libidn2", "readline", "gettext"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "lftp"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "lftp"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/lftp", "bin/lftpget"]
+
+[verify]
+  command = "lftp --version"
+  pattern = ""

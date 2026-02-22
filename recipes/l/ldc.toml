@@ -1,0 +1,35 @@
+[metadata]
+  name = "ldc"
+  description = "Portable D programming language compiler"
+  homepage = "https://wiki.dlang.org/LDC"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["zstd"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "ldc"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "ldc"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/ldc-build-plugin", "bin/ldc-build-runtime", "bin/ldc-profdata", "bin/ldc-profgen", "bin/ldc-prune-cache", "bin/ldc2", "bin/ldmd2", "bin/timetrace2txt"]
+
+[verify]
+  command = "ldc-build-plugin --version"
+  pattern = ""

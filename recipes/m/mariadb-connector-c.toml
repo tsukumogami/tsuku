@@ -1,0 +1,35 @@
+[metadata]
+  name = "mariadb-connector-c"
+  description = "MariaDB database connector for C applications"
+  homepage = "https://mariadb.org/download/?tab=connector&prod=connector-c"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["zstd"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "mariadb-connector-c"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "mariadb-connector-c"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/mariadb_config"]
+
+[verify]
+  command = "mariadb_config --version"
+  pattern = ""

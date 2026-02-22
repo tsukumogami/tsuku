@@ -1,0 +1,35 @@
+[metadata]
+  name = "kcov"
+  description = "Code coverage tester for compiled programs, Python, and shell scripts"
+  homepage = "https://simonkagstrom.github.io/kcov/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["dwarfutils"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "kcov"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "kcov"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/kcov", "bin/kcov-system-daemon"]
+
+[verify]
+  command = "kcov --version"
+  pattern = ""

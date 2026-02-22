@@ -1,0 +1,35 @@
+[metadata]
+  name = "jhipster"
+  description = "Generate, develop and deploy Spring Boot + Angular/React applications"
+  homepage = "https://www.jhipster.tech/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = []
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "jhipster"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "jhipster"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/jhipster"]
+
+[verify]
+  command = "jhipster --version"
+  pattern = ""
