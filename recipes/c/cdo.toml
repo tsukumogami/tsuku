@@ -1,0 +1,31 @@
+[metadata]
+  name = "cdo"
+  description = "Easy access to the Climate Data operators of MPI (https://code.mpimet.mpg.de/projects/cdo)"
+  homepage = "https://github.com/Try2Code/cdo-bindings"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "rubygems"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "gem_install"
+  executables = ["cdo"]
+  gem = "cdo"
+
+[verify]
+  command = "cdo --version"
+  pattern = ""
