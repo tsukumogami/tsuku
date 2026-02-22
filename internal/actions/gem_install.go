@@ -350,13 +350,7 @@ func (a *GemInstallAction) Decompose(ctx *EvalContext, params map[string]interfa
 // findBundlerForEval finds the bundler executable for eval-time decomposition.
 func findBundlerForEval() string {
 	// Try tsuku's installed Ruby first
-	tsukuHome := os.Getenv("TSUKU_HOME")
-	if tsukuHome == "" {
-		homeDir, err := os.UserHomeDir()
-		if err == nil {
-			tsukuHome = filepath.Join(homeDir, ".tsuku")
-		}
-	}
+	tsukuHome := resolveTsukuHome()
 
 	if tsukuHome != "" {
 		// Look for ruby installation with bundler
@@ -411,11 +405,7 @@ func generateGemfileLock(ctx *EvalContext, bundlerPath, gemName, version, tempDi
 		gemPath, err := exec.LookPath("gem")
 		if err != nil {
 			// Try tsuku's ruby
-			tsukuHome := os.Getenv("TSUKU_HOME")
-			if tsukuHome == "" {
-				homeDir, _ := os.UserHomeDir()
-				tsukuHome = filepath.Join(homeDir, ".tsuku")
-			}
+			tsukuHome := resolveTsukuHome()
 			rubyGemPath := filepath.Join(tsukuHome, "tools", "ruby-*", "bin", "gem")
 			matches, _ := filepath.Glob(rubyGemPath)
 			if len(matches) > 0 {
@@ -427,12 +417,8 @@ func generateGemfileLock(ctx *EvalContext, bundlerPath, gemName, version, tempDi
 
 		// Install bundler to tsuku's eval-deps directory for reuse
 		// This keeps it self-contained but persistent across evaluations
-		tsukuHome := os.Getenv("TSUKU_HOME")
-		if tsukuHome == "" {
-			homeDir, _ := os.UserHomeDir()
-			tsukuHome = filepath.Join(homeDir, ".tsuku")
-		}
-		evalGemHome = filepath.Join(tsukuHome, "eval-deps", "ruby-gems")
+		evalTsukuHome := resolveTsukuHome()
+		evalGemHome = filepath.Join(evalTsukuHome, "eval-deps", "ruby-gems")
 		if err := os.MkdirAll(evalGemHome, 0755); err != nil {
 			return "", fmt.Errorf("failed to create eval gem home: %w", err)
 		}
@@ -513,13 +499,7 @@ func getRubyVersionForGem() string {
 	rubyPath, err := exec.LookPath("ruby")
 	if err != nil {
 		// Try tsuku's ruby
-		tsukuHome := os.Getenv("TSUKU_HOME")
-		if tsukuHome == "" {
-			homeDir, err := os.UserHomeDir()
-			if err == nil {
-				tsukuHome = filepath.Join(homeDir, ".tsuku")
-			}
-		}
+		tsukuHome := resolveTsukuHome()
 		if tsukuHome != "" {
 			patterns := []string{
 				filepath.Join(tsukuHome, "tools", "ruby-*", "bin", "ruby"),

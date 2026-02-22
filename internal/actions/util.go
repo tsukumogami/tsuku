@@ -318,17 +318,33 @@ func GetMapStringString(params map[string]interface{}, key string) (map[string]s
 	}
 }
 
-// GetToolsDir returns the tools directory path, respecting $TSUKU_HOME.
-// Uses $TSUKU_HOME/tools if set, otherwise defaults to ~/.tsuku/tools.
-func GetToolsDir() string {
+// resolveTsukuHome returns the absolute path to the tsuku home directory.
+// Reads $TSUKU_HOME and converts relative paths to absolute. Falls back
+// to ~/.tsuku when unset or empty.
+func resolveTsukuHome() string {
 	if tsukuHome := os.Getenv("TSUKU_HOME"); tsukuHome != "" {
-		return filepath.Join(tsukuHome, "tools")
+		if !filepath.IsAbs(tsukuHome) {
+			if abs, err := filepath.Abs(tsukuHome); err == nil {
+				tsukuHome = abs
+			}
+		}
+		return tsukuHome
 	}
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		return ""
 	}
-	return filepath.Join(homeDir, ".tsuku", "tools")
+	return filepath.Join(homeDir, ".tsuku")
+}
+
+// GetToolsDir returns the tools directory path, respecting $TSUKU_HOME.
+// Uses $TSUKU_HOME/tools if set, otherwise defaults to ~/.tsuku/tools.
+func GetToolsDir() string {
+	tsukuHome := resolveTsukuHome()
+	if tsukuHome == "" {
+		return ""
+	}
+	return filepath.Join(tsukuHome, "tools")
 }
 
 // ResolvePythonStandalone finds the path to tsuku's python-standalone installation

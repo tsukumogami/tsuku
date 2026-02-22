@@ -251,13 +251,7 @@ func (a *CargoInstallAction) Decompose(ctx *EvalContext, params map[string]inter
 // findCargoForEval finds the cargo executable for eval-time decomposition.
 func findCargoForEval() string {
 	// Try tsuku's installed Rust first
-	tsukuHome := os.Getenv("TSUKU_HOME")
-	if tsukuHome == "" {
-		homeDir, err := os.UserHomeDir()
-		if err == nil {
-			tsukuHome = filepath.Join(homeDir, ".tsuku")
-		}
-	}
+	tsukuHome := resolveTsukuHome()
 
 	if tsukuHome != "" {
 		// Look for rust installation with cargo
