@@ -1,0 +1,77 @@
+{
+  "pr_status": "implementing",
+  "design_doc": "docs/designs/DESIGN-sandbox-image-unification.md",
+  "branch": "impl/sandbox-image-unification",
+  "pr_number": null,
+  "integrity_hash": "sha256:adcba3268b04aae38a1fa575b422703844e1b9e5b941f7ba9bb3797f3c160891",
+  "issues": [
+    {
+      "number": 1901,
+      "title": "refactor(sandbox): create containerimages package and centralized config",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": []
+    },
+    {
+      "number": 1902,
+      "title": "ci: migrate workflow container images to centralized config",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [
+        1901
+      ],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": []
+    },
+    {
+      "number": 1903,
+      "title": "ci: add Renovate config and drift-check CI job",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [
+        1901,
+        1902
+      ],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": []
+    },
+    {
+      "number": 1904,
+      "title": "chore: add container-images.json to CODEOWNERS",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [
+        1901
+      ],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": []
+    }
+  ],
+  "skipped_issues": [
+    {
+      "number": 1905,
+      "reason": "needs-design: requires design exploration, not implementation",
+      "label": "",
+      "blocked_by": null
+    }
+  ],
+  "test_plan_file": null
+}
