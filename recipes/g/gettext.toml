@@ -3,7 +3,9 @@ name = "gettext"
 description = "GNU internationalization and localization support"
 homepage = "https://www.gnu.org/software/gettext/"
 type = "library"
-# No [metadata.satisfies] needed -- Homebrew formula name matches tsuku canonical name
+
+[metadata.satisfies]
+homebrew = ["gettext"]
 
 # glibc Linux: Homebrew bottle
 [[steps]]
