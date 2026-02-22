@@ -896,13 +896,7 @@ func (r *Recipe) ExtractBinaries() []string {
 				for _, e := range executablesList {
 					if exeStr, ok := e.(string); ok {
 						binaryName := filepath.Base(exeStr)
-						// gem_install puts executables in .gem/bin/, others use bin/
-						var destPath string
-						if step.Action == "gem_install" {
-							destPath = filepath.Join(".gem", "bin", binaryName)
-						} else {
-							destPath = filepath.Join("bin", binaryName)
-						}
+						destPath := filepath.Join("bin", binaryName)
 						if !seen[binaryName] {
 							binaries = append(binaries, destPath)
 							seen[binaryName] = true

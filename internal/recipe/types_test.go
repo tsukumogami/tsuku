@@ -810,8 +810,8 @@ pattern = "14.2.5"
 }
 
 func TestRecipe_ExtractBinaries_GemInstall(t *testing.T) {
-	// Test that gem_install 'executables' parameter gets ".gem/bin/" prefix
-	// (gem_install puts executables in .gem/bin/, not bin/)
+	// gem_install executables go to bin/ (both direct and decomposed paths
+	// create wrappers at bin/<exe> via createGemWrapper)
 	tomlData := `
 [metadata]
 name = "bundler"
@@ -836,8 +836,7 @@ pattern = "{version}"
 
 	binaries := recipe.ExtractBinaries()
 
-	// gem_install executables should get .gem/bin/ prefix
-	expected := []string{".gem/bin/bundle", ".gem/bin/bundler"}
+	expected := []string{"bin/bundle", "bin/bundler"}
 	if len(binaries) != len(expected) {
 		t.Fatalf("ExtractBinaries() returned %d binaries, want %d", len(binaries), len(expected))
 	}

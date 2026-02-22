@@ -190,9 +190,10 @@ func (a *GemInstallAction) Execute(ctx *ExecutionContext, params map[string]inte
 		fmt.Printf("   gem output:\n%s\n", outputStr)
 	}
 
-	// Verify executables exist and create self-contained wrappers
+	// Verify executables exist and create self-contained wrappers.
 	// The gem-generated wrappers need GEM_HOME/GEM_PATH at runtime,
-	// so we create wrapper scripts that set these before calling the original
+	// so we create wrapper scripts that set these before calling the original.
+	// Uses shared createGemWrapper to stay in sync with the gem_exec path.
 	binDir := filepath.Join(installDir, "bin")
 	for _, exe := range executables {
 		exePath := filepath.Join(binDir, exe)
@@ -200,49 +201,8 @@ func (a *GemInstallAction) Execute(ctx *ExecutionContext, params map[string]inte
 			return fmt.Errorf("expected executable %s not found at %s", exe, exePath)
 		}
 
-		// Read the original gem wrapper
-		originalContent, err := os.ReadFile(exePath)
-		if err != nil {
-			return fmt.Errorf("failed to read gem wrapper %s: %w", exe, err)
-		}
-
-		// Rename original wrapper to .gem suffix
-		gemWrapperPath := exePath + ".gem"
-		if err := os.Rename(exePath, gemWrapperPath); err != nil {
-			return fmt.Errorf("failed to rename gem wrapper: %w", err)
-		}
-
-		// Create new wrapper that sets GEM_HOME/GEM_PATH and adds Ruby to PATH
-		// Uses SCRIPT_DIR to make wrapper relocatable (works after install dir is moved)
-		// gemDir contains the Ruby bin directory (where gem and ruby executables are)
-		wrapperContent := fmt.Sprintf(`#!/bin/bash
-# tsuku wrapper for %s (sets GEM_HOME/GEM_PATH for isolated gem)
-SCRIPT_PATH="${BASH_SOURCE[0]}"
-# Resolve symlinks to get the actual script location
-while [ -L "$SCRIPT_PATH" ]; do
-    SCRIPT_DIR="$(cd -P "$(dirname "$SCRIPT_PATH")" && pwd)"
-    SCRIPT_PATH="$(readlink "$SCRIPT_PATH")"
-    [[ $SCRIPT_PATH != /* ]] && SCRIPT_PATH="$SCRIPT_DIR/$SCRIPT_PATH"
-done
-SCRIPT_DIR="$(cd -P "$(dirname "$SCRIPT_PATH")" && pwd)"
-INSTALL_DIR="$(dirname "$SCRIPT_DIR")"
-export GEM_HOME="$INSTALL_DIR"
-export GEM_PATH="$INSTALL_DIR"
-# Add Ruby to PATH and explicitly call ruby (don't rely on shebang)
-export PATH="%s:$PATH"
-exec ruby "$SCRIPT_DIR/%s.gem" "$@"
-`, exe, gemDir, exe)
-
-		if err := os.WriteFile(exePath, []byte(wrapperContent), 0755); err != nil {
-			// Restore original on failure
-			_ = os.Rename(gemWrapperPath, exePath)
-			return fmt.Errorf("failed to create wrapper script: %w", err)
-		}
-
-		// Log debug info if enabled
-		if os.Getenv("TSUKU_DEBUG") != "" {
-			fmt.Printf("   Created wrapper for %s (original at %s)\n", exe, gemWrapperPath)
-			fmt.Printf("   Original wrapper content:\n%s\n", string(originalContent)[:min(200, len(originalContent))])
+		if err := createGemWrapper(exePath, binDir, exe, gemDir, "."); err != nil {
+			return fmt.Errorf("failed to create wrapper for %s: %w", exe, err)
 		}
 	}
 
