@@ -148,7 +148,7 @@ jobs:
               image="${IMAGES[$idx]}"
               TOTAL=$((TOTAL + 1))
 
-              echo "=== Testing $recipe_name on $family (x86_64) ==="
+              echo "::group::$recipe_name on $family (x86_64)"
 
               docker run --rm \
                 -e GITHUB_TOKEN \
@@ -185,6 +185,8 @@ jobs:
                 RESULTS="$RESULTS| $recipe_name | $family | **FAIL** (exit $EXIT_CODE) |\n"
                 echo "FAIL: $recipe_name on $family (exit $EXIT_CODE)"
               fi
+
+              echo "::endgroup::"
             done
           done
 
@@ -250,7 +252,7 @@ jobs:
               image="${IMAGES[$idx]}"
               TOTAL=$((TOTAL + 1))
 
-              echo "=== Testing $recipe_name on $family (arm64) ==="
+              echo "::group::$recipe_name on $family (arm64)"
 
               docker run --rm \
                 -e GITHUB_TOKEN \
@@ -286,6 +288,8 @@ jobs:
                 RESULTS="$RESULTS| $recipe_name | $family | **FAIL** (exit $EXIT_CODE) |\n"
                 echo "FAIL: $recipe_name on $family (exit $EXIT_CODE)"
               fi
+
+              echo "::endgroup::"
             done
           done
 
@@ -346,7 +350,7 @@ jobs:
             recipe_path=$(echo "$RECIPES" | jq -r ".[$i].path")
             TOTAL=$((TOTAL + 1))
 
-            echo "=== Testing $recipe_name on macOS arm64 ==="
+            echo "::group::$recipe_name on macOS arm64"
 
             export TSUKU_HOME="${{ runner.temp }}/tsuku-$recipe_name"
             mkdir -p "$TSUKU_HOME"
@@ -361,6 +365,8 @@ jobs:
               RESULTS="$RESULTS| $recipe_name | darwin-arm64 | **FAIL** (exit $EXIT_CODE) |\n"
               echo "FAIL: $recipe_name on macOS arm64 (exit $EXIT_CODE)"
             fi
+
+            echo "::endgroup::"
           done
 
           # Write job summary
@@ -420,7 +426,7 @@ jobs:
             recipe_path=$(echo "$RECIPES" | jq -r ".[$i].path")
             TOTAL=$((TOTAL + 1))
 
-            echo "=== Testing $recipe_name on macOS x86_64 ==="
+            echo "::group::$recipe_name on macOS x86_64"
 
             export TSUKU_HOME="${{ runner.temp }}/tsuku-$recipe_name"
             mkdir -p "$TSUKU_HOME"
@@ -435,6 +441,8 @@ jobs:
               RESULTS="$RESULTS| $recipe_name | darwin-x86_64 | **FAIL** (exit $EXIT_CODE) |\n"
               echo "FAIL: $recipe_name on macOS x86_64 (exit $EXIT_CODE)"
             fi
+
+            echo "::endgroup::"
           done
 
           # Write job summary
