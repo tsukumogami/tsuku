@@ -5,11 +5,7 @@
 package reorder
 
 import (
-	"bufio"
-	"encoding/json"
 	"fmt"
-	"os"
-	"path/filepath"
 	"sort"
 
 	"github.com/tsukumogami/tsuku/internal/batch"
@@ -47,25 +43,6 @@ type Move struct {
 	To   int    `json:"to"`   // 0-based position within tier after reorder
 }
 
-// failureRecord represents one line in failures JSONL. Supports both legacy
-// batch format (with failures array) and per-recipe format.
-type failureRecord struct {
-	SchemaVersion int              `json:"schema_version"`
-	Ecosystem     string           `json:"ecosystem,omitempty"`
-	Failures      []packageFailure `json:"failures,omitempty"`
-	// Per-recipe format fields
-	Recipe    string   `json:"recipe,omitempty"`
-	Category  string   `json:"category,omitempty"`
-	BlockedBy []string `json:"blocked_by,omitempty"`
-}
-
-// packageFailure is a single failure entry in the legacy batch format.
-type packageFailure struct {
-	PackageID string   `json:"package_id"`
-	Category  string   `json:"category"`
-	BlockedBy []string `json:"blocked_by,omitempty"`
-}
-
 // Run loads the queue and failure data, computes blocking scores, reorders
 // entries within each tier by descending score, and writes the result.
 func Run(opts Options) (*Result, error) {
@@ -79,7 +56,7 @@ func Run(opts Options) (*Result, error) {
 	}
 
 	// Build blocker map from failure data
-	blockers, err := loadBlockerMap(opts.FailuresDir)
+	blockers, err := blocker.LoadBlockerMap(opts.FailuresDir)
 	if err != nil {
 		// Non-fatal: if no failure data exists, all scores are 0 and
 		// the queue retains its alphabetical ordering within tiers.
@@ -139,72 +116,6 @@ func computeScores(entries []batch.QueueEntry, blockers map[string][]string) map
 	}
 
 	return scores
-}
-
-// loadBlockerMap reads all JSONL files in a directory and builds a map of
-// dependency -> list of blocked package IDs, combining data from both legacy
-// batch format and per-recipe format.
-func loadBlockerMap(dir string) (map[string][]string, error) {
-	pattern := filepath.Join(dir, "*.jsonl")
-	files, err := filepath.Glob(pattern)
-	if err != nil {
-		return nil, fmt.Errorf("glob failures: %w", err)
-	}
-
-	if len(files) == 0 {
-		return nil, fmt.Errorf("no failure files found in %s", dir)
-	}
-
-	blockers := make(map[string][]string)
-	for _, path := range files {
-		if err := loadBlockersFromFile(path, blockers); err != nil {
-			continue // Skip files that can't be read
-		}
-	}
-	return blockers, nil
-}
-
-// loadBlockersFromFile reads a single JSONL file and populates the blocker map.
-func loadBlockersFromFile(path string, blockers map[string][]string) error {
-	file, err := os.Open(path)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := scanner.Bytes()
-		if len(line) == 0 {
-			continue
-		}
-
-		var record failureRecord
-		if err := json.Unmarshal(line, &record); err != nil {
-			continue // Skip malformed lines
-		}
-
-		// Handle legacy batch format with failures array
-		for _, f := range record.Failures {
-			for _, dep := range f.BlockedBy {
-				blockers[dep] = append(blockers[dep], f.PackageID)
-			}
-		}
-
-		// Handle per-recipe format
-		if record.Recipe != "" && len(record.BlockedBy) > 0 {
-			eco := record.Ecosystem
-			if eco == "" {
-				eco = "homebrew"
-			}
-			pkgID := eco + ":" + record.Recipe
-			for _, dep := range record.BlockedBy {
-				blockers[dep] = append(blockers[dep], pkgID)
-			}
-		}
-	}
-
-	return scanner.Err()
 }
 
 // groupByTier returns a map from tier to the ordered list of entry names.
