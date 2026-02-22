@@ -1,5 +1,5 @@
 ---
-status: Planned
+status: Current
 problem: |
   Pipeline failure classification is inconsistent across three producers:
   the CLI's --json output, the orchestrator's categoryFromExitCode(), and
