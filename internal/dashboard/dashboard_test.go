@@ -162,17 +162,17 @@ func TestLoadFailures_legacyFormat(t *testing.T) {
 		t.Errorf("pcre2 blockers: got %d, want 1", len(blockers["pcre2"]))
 	}
 
-	// Check categories from both formats
-	// Legacy batch: 2 missing_dep + 1 validation_failed, cargo batch: 1 missing_dep
-	// Per-recipe: 1 api_error, 1 validation_failed
+	// Check categories from both formats (old names are remapped to canonical)
+	// Legacy batch: 2 missing_dep + 1 validation_failed->install_failed, cargo batch: 1 missing_dep
+	// Per-recipe: 1 api_error->network_error, 1 validation_failed->install_failed
 	if categories["missing_dep"] != 3 {
 		t.Errorf("missing_dep: got %d, want 3", categories["missing_dep"])
 	}
-	if categories["validation_failed"] != 2 {
-		t.Errorf("validation_failed: got %d, want 2", categories["validation_failed"])
+	if categories["install_failed"] != 2 {
+		t.Errorf("install_failed: got %d, want 2", categories["install_failed"])
 	}
-	if categories["api_error"] != 1 {
-		t.Errorf("api_error: got %d, want 1", categories["api_error"])
+	if categories["network_error"] != 1 {
+		t.Errorf("network_error: got %d, want 1", categories["network_error"])
 	}
 
 	// Check details are captured
@@ -203,12 +203,12 @@ func TestLoadFailures_perRecipeFormat(t *testing.T) {
 		t.Errorf("blockers should be empty for per-recipe format without blocked_by: %v", blockers)
 	}
 
-	// Check category counts
-	if categories["api_error"] != 2 {
-		t.Errorf("api_error: got %d, want 2", categories["api_error"])
+	// Check category counts (old names remapped to canonical)
+	if categories["network_error"] != 2 {
+		t.Errorf("network_error: got %d, want 2", categories["network_error"])
 	}
-	if categories["validation_failed"] != 1 {
-		t.Errorf("validation_failed: got %d, want 1", categories["validation_failed"])
+	if categories["install_failed"] != 1 {
+		t.Errorf("install_failed: got %d, want 1", categories["install_failed"])
 	}
 }
 
@@ -251,12 +251,12 @@ func TestLoadFailures_perRecipeWithBlockedBy(t *testing.T) {
 		t.Errorf("ffmpeg blocked_by: got %d, want 2", len(details["homebrew:ffmpeg"].BlockedBy))
 	}
 
-	// Check category counts
+	// Check category counts (deterministic remapped to generation_failed)
 	if categories["missing_dep"] != 2 {
 		t.Errorf("missing_dep: got %d, want 2", categories["missing_dep"])
 	}
-	if categories["deterministic"] != 1 {
-		t.Errorf("deterministic: got %d, want 1", categories["deterministic"])
+	if categories["generation_failed"] != 1 {
+		t.Errorf("generation_failed: got %d, want 1", categories["generation_failed"])
 	}
 }
 
@@ -275,12 +275,12 @@ func TestLoadFailures_malformedLines(t *testing.T) {
 	}
 
 	// Should have processed valid lines only (3 valid per-recipe records)
-	// valid1: success, valid2: api_error, valid3: missing_dep
+	// valid1: success, valid2: api_error->network_error, valid3: missing_dep
 	if categories["success"] != 1 {
 		t.Errorf("success: got %d, want 1", categories["success"])
 	}
-	if categories["api_error"] != 1 {
-		t.Errorf("api_error: got %d, want 1", categories["api_error"])
+	if categories["network_error"] != 1 {
+		t.Errorf("network_error: got %d, want 1", categories["network_error"])
 	}
 	if categories["missing_dep"] != 1 {
 		t.Errorf("missing_dep: got %d, want 1", categories["missing_dep"])

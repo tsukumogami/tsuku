@@ -17,6 +17,7 @@ import (
 // orchestrator needs for failure classification.
 type installResult struct {
 	Category       string   `json:"category"`
+	Subcategory    string   `json:"subcategory"`
 	MissingRecipes []string `json:"missing_recipes"`
 }
 
@@ -349,7 +350,7 @@ func (o *Orchestrator) generate(bin string, pkg QueueEntry, recipePath string) g
 			// in cmd/tsuku/install.go.
 			blockedBy := extractBlockedByFromOutput(output)
 			category := categoryFromExitCode(exitCode)
-			if len(blockedBy) > 0 && category == "validation_failed" {
+			if len(blockedBy) > 0 && category == "install_failed" {
 				category = "missing_dep"
 			}
 			return generateResult{
@@ -369,7 +370,7 @@ func (o *Orchestrator) generate(bin string, pkg QueueEntry, recipePath string) g
 		Err: lastErr,
 		Failure: FailureRecord{
 			PackageID: pkg.Source,
-			Category:  "api_error",
+			Category:  "network_error",
 			Message:   fmt.Sprintf("failed after %d retries: %v", MaxRetries, lastErr),
 			Timestamp: nowFunc(),
 		},
@@ -406,46 +407,47 @@ func (o *Orchestrator) validate(bin string, pkg QueueEntry, recipePath string) g
 		lastErr = fmt.Errorf("tsuku install %s: exit %d: %s", pkg.Source, exitCode, truncateOutput(lastStderr))
 
 		if exitCode != ExitNetwork {
-			category, blockedBy := parseInstallJSON(lastStdout, exitCode)
+			category, subcategory, blockedBy := parseInstallJSON(lastStdout, exitCode)
 			return generateResult{
 				Err: lastErr,
 				Failure: FailureRecord{
-					PackageID: pkg.Source,
-					Category:  category,
-					BlockedBy: blockedBy,
-					Message:   truncateOutput(lastStderr),
-					Timestamp: nowFunc(),
+					PackageID:   pkg.Source,
+					Category:    category,
+					Subcategory: subcategory,
+					BlockedBy:   blockedBy,
+					Message:     truncateOutput(lastStderr),
+					Timestamp:   nowFunc(),
 				},
 			}
 		}
 	}
 
-	category, blockedBy := parseInstallJSON(lastStdout, ExitNetwork)
+	category, subcategory, blockedBy := parseInstallJSON(lastStdout, ExitNetwork)
 	return generateResult{
 		Err: lastErr,
 		Failure: FailureRecord{
-			PackageID: pkg.Source,
-			Category:  category,
-			BlockedBy: blockedBy,
-			Message:   fmt.Sprintf("failed after %d retries: %s", MaxRetries, truncateOutput(lastStderr)),
-			Timestamp: nowFunc(),
+			PackageID:   pkg.Source,
+			Category:    category,
+			Subcategory: subcategory,
+			BlockedBy:   blockedBy,
+			Message:     fmt.Sprintf("failed after %d retries: %s", MaxRetries, truncateOutput(lastStderr)),
+			Timestamp:   nowFunc(),
 		},
 	}
 }
 
-// parseInstallJSON extracts the failure category and missing recipes from the
-// structured JSON output of tsuku install --json. If JSON parsing fails, it
-// falls back to exit-code-based classification.
-func parseInstallJSON(stdout []byte, exitCode int) (category string, blockedBy []string) {
+// parseInstallJSON extracts the failure category, subcategory, and missing
+// recipes from the structured JSON output of tsuku install --json. The
+// pipeline category is always derived from categoryFromExitCode() rather than
+// trusting the CLI's category string, which uses a separate user-facing
+// taxonomy. If JSON parsing fails, subcategory is empty and blockedBy is nil.
+func parseInstallJSON(stdout []byte, exitCode int) (category string, subcategory string, blockedBy []string) {
+	category = categoryFromExitCode(exitCode)
 	var result installResult
 	if err := json.Unmarshal(stdout, &result); err != nil {
-		return categoryFromExitCode(exitCode), nil
+		return category, "", nil
 	}
-	cat := result.Category
-	if cat == "" {
-		cat = categoryFromExitCode(exitCode)
-	}
-	return cat, result.MissingRecipes
+	return category, result.Subcategory, result.MissingRecipes
 }
 
 func generateBatchID() string {
@@ -468,34 +470,40 @@ func exitCodeFrom(err error) int {
 	return 1
 }
 
-// categoryFromExitCode maps a tsuku CLI exit code to a pipeline category string
-// for batch queue classification and the pipeline dashboard. These categories
-// drive retry logic, circuit breaker decisions, and the operator-facing dashboard
-// (e.g., "api_error" triggers retries, "validation_failed" counts toward the
-// circuit breaker threshold).
+// categoryFromExitCode maps a tsuku CLI exit code to a canonical pipeline
+// category string for batch queue classification and the pipeline dashboard.
+// These categories drive retry logic, circuit breaker decisions, and the
+// operator-facing dashboard (e.g., "network_error" triggers retries,
+// "install_failed" counts toward the circuit breaker threshold).
+//
+// Canonical pipeline category taxonomy:
+//   - recipe_not_found (exit 3): source package doesn't exist
+//   - network_error    (exit 5): transient API/download failure
+//   - install_failed   (exit 6): recipe generated but installation fails
+//   - verify_failed    (exit 7): installs but binary doesn't work
+//   - missing_dep      (exit 8): blocked on another recipe
+//   - generation_failed (exit 9, default): recipe generation couldn't produce a result
 //
 // NOTE: A separate categoryFromExitCode() exists in cmd/tsuku/install.go with
-// different category strings. That version maps exit codes to user-facing
-// categories for --json error output (e.g., "network_error" instead of
-// "api_error", "install_failed" instead of "validation_failed"). The two
-// functions intentionally diverge because CLI categories describe end-user
-// install outcomes while these categories drive pipeline operations.
+// user-facing category strings for --json error output. The CLI's categories
+// describe end-user install outcomes while these categories drive pipeline
+// operations.
 func categoryFromExitCode(code int) string {
 	switch code {
 	case 3: // ExitRecipeNotFound (from cmd/tsuku/exitcodes.go)
 		return "recipe_not_found"
 	case 5:
-		return "api_error"
+		return "network_error"
 	case 6:
-		return "validation_failed"
+		return "install_failed"
 	case 7:
-		return "validation_failed"
+		return "verify_failed"
 	case 8:
 		return "missing_dep"
 	case 9:
-		return "deterministic_insufficient"
+		return "generation_failed"
 	default:
-		return "validation_failed"
+		return "generation_failed"
 	}
 }
 

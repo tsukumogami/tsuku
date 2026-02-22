@@ -316,12 +316,12 @@ func TestCategoryFromExitCode(t *testing.T) {
 		want string
 	}{
 		{3, "recipe_not_found"},
-		{5, "api_error"},
-		{6, "validation_failed"},
-		{7, "validation_failed"},
+		{5, "network_error"},
+		{6, "install_failed"},
+		{7, "verify_failed"},
 		{8, "missing_dep"},
-		{9, "deterministic_insufficient"},
-		{1, "validation_failed"},
+		{9, "generation_failed"},
+		{1, "generation_failed"},
 	}
 
 	for _, tt := range tests {
@@ -374,8 +374,8 @@ func TestRun_withFakeBinary(t *testing.T) {
 	if len(result.Failures) != 1 {
 		t.Fatalf("expected 1 failure, got %d", len(result.Failures))
 	}
-	if result.Failures[0].Category != "validation_failed" {
-		t.Errorf("expected category validation_failed, got %s", result.Failures[0].Category)
+	if result.Failures[0].Category != "install_failed" {
+		t.Errorf("expected category install_failed, got %s", result.Failures[0].Category)
 	}
 
 	// Queue entry status should be updated
@@ -608,8 +608,8 @@ esac
 	}
 
 	f := result.Failures[0]
-	if f.Category != "validation_failed" {
-		t.Errorf("expected category validation_failed, got %s", f.Category)
+	if f.Category != "install_failed" {
+		t.Errorf("expected category install_failed, got %s", f.Category)
 	}
 	if len(f.BlockedBy) != 0 {
 		t.Errorf("expected empty BlockedBy, got %v", f.BlockedBy)
@@ -618,54 +618,95 @@ esac
 
 func TestParseInstallJSON(t *testing.T) {
 	tests := []struct {
-		name         string
-		stdout       string
-		exitCode     int
-		wantCategory string
-		wantBlocked  []string
+		name            string
+		stdout          string
+		exitCode        int
+		wantCategory    string
+		wantSubcategory string
+		wantBlocked     []string
 	}{
 		{
-			name:         "valid JSON with missing recipes",
-			stdout:       `{"status":"error","category":"missing_dep","message":"failed","missing_recipes":["dav1d","libfoo"],"exit_code":8}`,
-			exitCode:     8,
-			wantCategory: "missing_dep",
-			wantBlocked:  []string{"dav1d", "libfoo"},
+			name:            "valid JSON with missing recipes",
+			stdout:          `{"status":"error","category":"missing_dep","message":"failed","missing_recipes":["dav1d","libfoo"],"exit_code":8}`,
+			exitCode:        8,
+			wantCategory:    "missing_dep",
+			wantSubcategory: "",
+			wantBlocked:     []string{"dav1d", "libfoo"},
 		},
 		{
-			name:         "valid JSON no missing recipes",
-			stdout:       `{"status":"error","category":"validation_failed","message":"bad tarball","missing_recipes":[],"exit_code":6}`,
-			exitCode:     6,
-			wantCategory: "validation_failed",
-			wantBlocked:  []string{},
+			name:            "valid JSON no missing recipes",
+			stdout:          `{"status":"error","category":"install_failed","message":"bad tarball","missing_recipes":[],"exit_code":6}`,
+			exitCode:        6,
+			wantCategory:    "install_failed",
+			wantSubcategory: "",
+			wantBlocked:     []string{},
 		},
 		{
-			name:         "invalid JSON falls back to exit code",
-			stdout:       "not json at all",
-			exitCode:     8,
-			wantCategory: "missing_dep",
-			wantBlocked:  nil,
+			name:            "invalid JSON falls back to exit code",
+			stdout:          "not json at all",
+			exitCode:        8,
+			wantCategory:    "missing_dep",
+			wantSubcategory: "",
+			wantBlocked:     nil,
 		},
 		{
-			name:         "empty stdout falls back to exit code",
-			stdout:       "",
-			exitCode:     6,
-			wantCategory: "validation_failed",
-			wantBlocked:  nil,
+			name:            "empty stdout falls back to exit code",
+			stdout:          "",
+			exitCode:        6,
+			wantCategory:    "install_failed",
+			wantSubcategory: "",
+			wantBlocked:     nil,
 		},
 		{
-			name:         "JSON with empty category uses exit code",
-			stdout:       `{"status":"error","category":"","missing_recipes":["x"],"exit_code":8}`,
-			exitCode:     8,
-			wantCategory: "missing_dep",
-			wantBlocked:  []string{"x"},
+			name:            "JSON with empty category uses exit code",
+			stdout:          `{"status":"error","category":"","missing_recipes":["x"],"exit_code":8}`,
+			exitCode:        8,
+			wantCategory:    "missing_dep",
+			wantSubcategory: "",
+			wantBlocked:     []string{"x"},
+		},
+		{
+			name:            "category always derived from exit code, not CLI JSON",
+			stdout:          `{"status":"error","category":"network_error","subcategory":"timeout","message":"timed out","missing_recipes":[],"exit_code":5}`,
+			exitCode:        5,
+			wantCategory:    "network_error",
+			wantSubcategory: "timeout",
+			wantBlocked:     []string{},
+		},
+		{
+			name:            "subcategory extracted from CLI JSON",
+			stdout:          `{"status":"error","category":"network_error","subcategory":"dns_error","message":"dns failed","missing_recipes":[],"exit_code":5}`,
+			exitCode:        5,
+			wantCategory:    "network_error",
+			wantSubcategory: "dns_error",
+			wantBlocked:     []string{},
+		},
+		{
+			name:            "subcategory empty when absent in CLI JSON",
+			stdout:          `{"status":"error","category":"install_failed","message":"bad tarball","missing_recipes":[],"exit_code":6}`,
+			exitCode:        6,
+			wantCategory:    "install_failed",
+			wantSubcategory: "",
+			wantBlocked:     []string{},
+		},
+		{
+			name:            "CLI category ignored when it differs from exit code mapping",
+			stdout:          `{"status":"error","category":"network_error","subcategory":"tls_error","message":"tls fail","missing_recipes":[],"exit_code":6}`,
+			exitCode:        6,
+			wantCategory:    "install_failed",
+			wantSubcategory: "tls_error",
+			wantBlocked:     []string{},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			category, blockedBy := parseInstallJSON([]byte(tt.stdout), tt.exitCode)
+			category, subcategory, blockedBy := parseInstallJSON([]byte(tt.stdout), tt.exitCode)
 			if category != tt.wantCategory {
 				t.Errorf("category = %q, want %q", category, tt.wantCategory)
+			}
+			if subcategory != tt.wantSubcategory {
+				t.Errorf("subcategory = %q, want %q", subcategory, tt.wantSubcategory)
 			}
 			if len(blockedBy) != len(tt.wantBlocked) {
 				t.Fatalf("blockedBy = %v, want %v", blockedBy, tt.wantBlocked)
@@ -1129,9 +1170,9 @@ func TestSaveResults_groupsFailuresByEcosystem(t *testing.T) {
 		Failed:       3,
 		Timestamp:    nowFunc(),
 		Failures: []FailureRecord{
-			{PackageID: "homebrew:jq", Category: "validation_failed", Message: "failed", Timestamp: nowFunc()},
-			{PackageID: "cargo:serde", Category: "api_error", Message: "timeout", Timestamp: nowFunc()},
-			{PackageID: "homebrew:fzf", Category: "validation_failed", Message: "failed", Timestamp: nowFunc()},
+			{PackageID: "homebrew:jq", Category: "install_failed", Message: "failed", Timestamp: nowFunc()},
+			{PackageID: "cargo:serde", Category: "network_error", Message: "timeout", Timestamp: nowFunc()},
+			{PackageID: "homebrew:fzf", Category: "install_failed", Message: "failed", Timestamp: nowFunc()},
 		},
 	}
 

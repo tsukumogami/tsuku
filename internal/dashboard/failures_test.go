@@ -770,3 +770,172 @@ func TestLoadFailureDetailRecords_subcategoriesExtracted(t *testing.T) {
 		t.Errorf("node Subcategory: got %q, want %q (no match)", byPkg["node"].Subcategory, "")
 	}
 }
+
+func TestRemapCategory(t *testing.T) {
+	tests := []struct {
+		input string
+		want  string
+	}{
+		{"api_error", "network_error"},
+		{"deterministic", "generation_failed"},
+		{"validation_failed", "install_failed"},
+		{"timeout", "network_error"},
+		{"network", "network_error"},
+		{"deterministic_insufficient", "generation_failed"},
+		// Canonical names pass through unchanged
+		{"missing_dep", "missing_dep"},
+		{"network_error", "network_error"},
+		{"install_failed", "install_failed"},
+		{"generation_failed", "generation_failed"},
+		{"recipe_not_found", "recipe_not_found"},
+		{"verify_failed", "verify_failed"},
+		// Unknown categories pass through unchanged
+		{"something_else", "something_else"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			got := remapCategory(tt.input)
+			if got != tt.want {
+				t.Errorf("remapCategory(%q) = %q, want %q", tt.input, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestLoadFailureDetailRecords_structuredSubcategoryPerRecipe(t *testing.T) {
+	dir := t.TempDir()
+	// Per-recipe record with a structured subcategory from JSONL
+	content := `{"schema_version":1,"recipe":"curl","platform":"linux-x86_64","exit_code":5,"category":"network_error","subcategory":"timeout","timestamp":"2026-02-10T03:00:00Z"}
+`
+	if err := os.WriteFile(filepath.Join(dir, "homebrew-2026-02-10T03-00-00Z.jsonl"), []byte(content), 0644); err != nil {
+		t.Fatalf("write temp file: %v", err)
+	}
+
+	details, err := loadFailureDetailRecords(dir, nil)
+	if err != nil {
+		t.Fatalf("loadFailureDetailRecords: %v", err)
+	}
+
+	if len(details) != 1 {
+		t.Fatalf("got %d details, want 1", len(details))
+	}
+
+	// Structured subcategory should pass through without calling extractSubcategory()
+	if details[0].Subcategory != "timeout" {
+		t.Errorf("Subcategory: got %q, want %q", details[0].Subcategory, "timeout")
+	}
+	if details[0].Category != "network_error" {
+		t.Errorf("Category: got %q, want %q", details[0].Category, "network_error")
+	}
+}
+
+func TestLoadFailureDetailRecords_structuredSubcategoryLegacy(t *testing.T) {
+	dir := t.TempDir()
+	// Legacy batch format with a structured subcategory
+	content := `{"schema_version":1,"ecosystem":"homebrew","environment":"linux-x86_64","updated_at":"2026-02-10T00:00:00Z","failures":[{"package_id":"homebrew:wget","category":"network_error","subcategory":"dns_error","message":"DNS resolution failed for api.github.com","timestamp":"2026-02-10T00:00:01Z"}]}
+`
+	if err := os.WriteFile(filepath.Join(dir, "homebrew.jsonl"), []byte(content), 0644); err != nil {
+		t.Fatalf("write temp file: %v", err)
+	}
+
+	details, err := loadFailureDetailRecords(dir, nil)
+	if err != nil {
+		t.Fatalf("loadFailureDetailRecords: %v", err)
+	}
+
+	if len(details) != 1 {
+		t.Fatalf("got %d details, want 1", len(details))
+	}
+
+	// Structured subcategory should pass through even though message contains no bracket tags
+	if details[0].Subcategory != "dns_error" {
+		t.Errorf("Subcategory: got %q, want %q", details[0].Subcategory, "dns_error")
+	}
+}
+
+func TestLoadFailureDetailRecords_noSubcategoryFallsBackToHeuristic(t *testing.T) {
+	dir := t.TempDir()
+	// Record without subcategory field -- should use heuristic extraction
+	content := `{"schema_version":1,"ecosystem":"homebrew","updated_at":"2026-02-10T00:00:00Z","failures":[{"package_id":"homebrew:terraform","category":"generation_failed","message":"deterministic generation failed: [no_bottles] no prebuilt bottles","timestamp":"2026-02-10T00:00:01Z"}]}
+`
+	if err := os.WriteFile(filepath.Join(dir, "homebrew.jsonl"), []byte(content), 0644); err != nil {
+		t.Fatalf("write temp file: %v", err)
+	}
+
+	details, err := loadFailureDetailRecords(dir, nil)
+	if err != nil {
+		t.Fatalf("loadFailureDetailRecords: %v", err)
+	}
+
+	if len(details) != 1 {
+		t.Fatalf("got %d details, want 1", len(details))
+	}
+
+	// Without structured subcategory, heuristic should extract [no_bottles]
+	if details[0].Subcategory != "no_bottles" {
+		t.Errorf("Subcategory: got %q, want %q", details[0].Subcategory, "no_bottles")
+	}
+}
+
+func TestLoadFailureDetailRecords_mixedOldNewCategories(t *testing.T) {
+	dir := t.TempDir()
+	// Mix of old-format and new-format records in the same file
+	content := `{"schema_version":1,"ecosystem":"homebrew","updated_at":"2026-02-01T00:00:00Z","failures":[{"package_id":"homebrew:pkg1","category":"api_error","message":"API timeout","timestamp":"2026-02-01T00:00:01Z"},{"package_id":"homebrew:pkg2","category":"validation_failed","message":"binary not found","timestamp":"2026-02-01T00:00:02Z"},{"package_id":"homebrew:pkg3","category":"missing_dep","blocked_by":["glib"],"message":"missing glib","timestamp":"2026-02-01T00:00:03Z"}]}
+{"schema_version":1,"recipe":"pkg4","platform":"linux-x86_64","exit_code":9,"category":"deterministic","timestamp":"2026-02-08T02:00:00Z"}
+{"schema_version":1,"recipe":"pkg5","platform":"linux-x86_64","exit_code":5,"category":"network_error","subcategory":"tls_error","timestamp":"2026-02-09T03:00:00Z"}
+{"schema_version":1,"recipe":"pkg6","platform":"linux-x86_64","exit_code":5,"category":"timeout","timestamp":"2026-02-09T04:00:00Z"}
+`
+	if err := os.WriteFile(filepath.Join(dir, "homebrew.jsonl"), []byte(content), 0644); err != nil {
+		t.Fatalf("write temp file: %v", err)
+	}
+
+	details, err := loadFailureDetailRecords(dir, nil)
+	if err != nil {
+		t.Fatalf("loadFailureDetailRecords: %v", err)
+	}
+
+	if len(details) != 6 {
+		t.Fatalf("got %d details, want 6", len(details))
+	}
+
+	byPkg := make(map[string]FailureDetail)
+	for _, d := range details {
+		byPkg[d.Package] = d
+	}
+
+	// Old categories should be remapped to canonical names
+	if byPkg["pkg1"].Category != "network_error" {
+		t.Errorf("pkg1 Category: got %q, want %q (api_error -> network_error)", byPkg["pkg1"].Category, "network_error")
+	}
+	if byPkg["pkg2"].Category != "install_failed" {
+		t.Errorf("pkg2 Category: got %q, want %q (validation_failed -> install_failed)", byPkg["pkg2"].Category, "install_failed")
+	}
+	if byPkg["pkg3"].Category != "missing_dep" {
+		t.Errorf("pkg3 Category: got %q, want %q (no change)", byPkg["pkg3"].Category, "missing_dep")
+	}
+	if byPkg["pkg4"].Category != "generation_failed" {
+		t.Errorf("pkg4 Category: got %q, want %q (deterministic -> generation_failed)", byPkg["pkg4"].Category, "generation_failed")
+	}
+	if byPkg["pkg5"].Category != "network_error" {
+		t.Errorf("pkg5 Category: got %q, want %q (no change)", byPkg["pkg5"].Category, "network_error")
+	}
+	if byPkg["pkg6"].Category != "network_error" {
+		t.Errorf("pkg6 Category: got %q, want %q (timeout -> network_error)", byPkg["pkg6"].Category, "network_error")
+	}
+
+	// pkg5 has structured subcategory, should be preserved
+	if byPkg["pkg5"].Subcategory != "tls_error" {
+		t.Errorf("pkg5 Subcategory: got %q, want %q (structured passthrough)", byPkg["pkg5"].Subcategory, "tls_error")
+	}
+
+	// pkg4 has exit code 9 with no message, should get deterministic_failed via heuristic fallback
+	if byPkg["pkg4"].Subcategory != "deterministic_failed" {
+		t.Errorf("pkg4 Subcategory: got %q, want %q (exit code fallback)", byPkg["pkg4"].Subcategory, "deterministic_failed")
+	}
+
+	// pkg1 has "API timeout" message, should match timeout heuristic
+	if byPkg["pkg1"].Subcategory != "timeout" {
+		t.Errorf("pkg1 Subcategory: got %q, want %q (heuristic)", byPkg["pkg1"].Subcategory, "timeout")
+	}
+}

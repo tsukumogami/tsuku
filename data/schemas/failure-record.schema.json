@@ -35,14 +35,18 @@
           "category": {
             "type": "string",
             "enum": [
+              "recipe_not_found",
+              "network_error",
+              "install_failed",
+              "verify_failed",
               "missing_dep",
-              "no_bottles",
-              "build_from_source",
-              "complex_archive",
-              "api_error",
-              "validation_failed"
+              "generation_failed"
             ],
-            "description": "Failure classification"
+            "description": "Failure classification using canonical pipeline taxonomy"
+          },
+          "subcategory": {
+            "type": "string",
+            "description": "Optional detail within the category (e.g., timeout, dns_error, tls_error)"
           },
           "blocked_by": {
             "type": "array",
