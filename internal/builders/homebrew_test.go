@@ -2539,6 +2539,11 @@ func TestHomebrewSession_classifyDeterministicFailure(t *testing.T) {
 			wantCat: FailureCategoryComplexArchive,
 		},
 		{
+			name:    "library recipe generation failed",
+			err:     fmt.Errorf("library recipe generation failed: no bottle for any target platform"),
+			wantCat: FailureCategoryComplexArchive,
+		},
+		{
 			name:    "fetch failure",
 			err:     fmt.Errorf("failed to fetch GHCR manifest: timeout"),
 			wantCat: FailureCategoryAPIError,
@@ -2576,6 +2581,28 @@ func TestHomebrewSession_classifyDeterministicFailure(t *testing.T) {
 				t.Error("Message should not be empty")
 			}
 		})
+	}
+}
+
+func TestHomebrewSession_classifyDeterministicFailure_libraryOnlyTag(t *testing.T) {
+	session := &HomebrewSession{
+		formula: "bdw-gc",
+	}
+
+	result := session.classifyDeterministicFailure(
+		fmt.Errorf("library recipe generation failed: no bottle for any target platform"),
+	)
+
+	if result.Category != FailureCategoryComplexArchive {
+		t.Errorf("Category = %q, want %q", result.Category, FailureCategoryComplexArchive)
+	}
+
+	if !strings.Contains(result.Message, "[library_only]") {
+		t.Errorf("Message should contain [library_only] tag, got %q", result.Message)
+	}
+
+	if !strings.Contains(result.Message, "bdw-gc") {
+		t.Errorf("Message should contain formula name, got %q", result.Message)
 	}
 }
 
