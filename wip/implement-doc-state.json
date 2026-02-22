@@ -2,21 +2,50 @@
   "pr_status": "implementing",
   "design_doc": "docs/designs/DESIGN-sandbox-image-unification.md",
   "branch": "impl/sandbox-image-unification",
-  "pr_number": null,
-  "integrity_hash": "sha256:adcba3268b04aae38a1fa575b422703844e1b9e5b941f7ba9bb3797f3c160891",
+  "pr_number": 1906,
+  "integrity_hash": "sha256:849784522a58d7f7ecedfffb00d59b7d41fe4154266c11f8f69c13d67c9fc514",
   "issues": [
     {
       "number": 1901,
       "title": "refactor(sandbox): create containerimages package and centralized config",
-      "status": "pending",
+      "status": "scrutinized",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [],
-      "commits": [],
-      "agent_type": "",
-      "summary": null,
-      "testable_scenarios": []
+      "commits": [
+        "169b81038b714b318d1b5c7514922fc0a6cb35b8"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          "container-images.json",
+          "internal/containerimages/containerimages.go",
+          "internal/containerimages/containerimages_test.go",
+          "internal/containerimages/container-images.json",
+          "internal/sandbox/container_spec.go",
+          "internal/sandbox/container_spec_test.go",
+          "internal/sandbox/executor_test.go",
+          "internal/sandbox/requirements.go",
+          "internal/sandbox/requirements_test.go",
+          "internal/sandbox/sandbox_integration_test.go",
+          "Makefile"
+        ],
+        "tests_added": 7,
+        "key_decisions": "The generated container-images.json copy inside internal/containerimages/ is committed to the repo so that go build and go install work without requiring a prior go generate step. The Makefile build target runs go generate before go build to keep it fresh during local development. A Families() export was added for downstream issues."
+      },
+      "testable_scenarios": [
+        "scenario-1",
+        "scenario-2",
+        "scenario-3",
+        "scenario-4",
+        "scenario-5",
+        "scenario-6",
+        "scenario-7",
+        "scenario-8",
+        "scenario-9"
+      ]
     },
     {
       "number": 1902,
@@ -31,7 +60,10 @@
       "commits": [],
       "agent_type": "",
       "summary": null,
-      "testable_scenarios": []
+      "testable_scenarios": [
+        "scenario-10",
+        "scenario-11"
+      ]
     },
     {
       "number": 1903,
@@ -47,7 +79,10 @@
       "commits": [],
       "agent_type": "",
       "summary": null,
-      "testable_scenarios": []
+      "testable_scenarios": [
+        "scenario-12",
+        "scenario-13"
+      ]
     },
     {
       "number": 1904,
@@ -62,7 +97,9 @@
       "commits": [],
       "agent_type": "",
       "summary": null,
-      "testable_scenarios": []
+      "testable_scenarios": [
+        "scenario-14"
+      ]
     }
   ],
   "skipped_issues": [
@@ -73,5 +110,5 @@
       "blocked_by": null
     }
   ],
-  "test_plan_file": null
+  "test_plan_file": "wip/implement-doc_sandbox-image-unification_test_plan.md"
 }
