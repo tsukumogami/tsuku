@@ -1,0 +1,75 @@
+{
+  "design_doc": "docs/designs/DESIGN-system-lib-backfill.md",
+  "branch": "docs/system-lib-backfill",
+  "pr_number": 1863,
+  "integrity_hash": "sha256:653db7ea5c583576cf5432b910e38b7df6d160b627d152d165c2921b132ce644",
+  "issues": [
+    {
+      "number": 1864,
+      "title": "ci(recipes): create test-recipe workflow for cross-platform validation",
+      "status": "completed",
+      "ci_status": "passed",
+      "ci_fix_attempts": 0,
+      "issue_type": "code",
+      "dependencies": [],
+      "commits": [
+        "merged-in-pr-1868"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          ".github/workflows/test-recipe.yml"
+        ],
+        "tests_added": 0,
+        "key_decisions": "Already implemented and merged via PR #1868"
+      },
+      "testable_scenarios": []
+    },
+    {
+      "number": 1865,
+      "title": "fix(recipes): backfill satisfies metadata on existing library recipes",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": []
+    },
+    {
+      "number": 1866,
+      "title": "feat(batch): run discovery to identify missing library dependencies",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": []
+    },
+    {
+      "number": 1867,
+      "title": "feat(recipes): create library recipes for priority blockers",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [
+        1864,
+        1865,
+        1866
+      ],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": []
+    }
+  ],
+  "skipped_issues": null,
+  "test_plan_file": null
+}
