@@ -29,7 +29,7 @@ The batch recipe generation pipeline creates recipes from ecosystem package mana
 
 These recipes claim to support all platforms by default. A recipe's `os_mapping` and `arch_mapping` resolve to platform-specific download URLs at install time, but nobody verifies those URLs point to working binaries on each platform. Homebrew bottles resolve differently per linux family (debian, rhel, arch, suse, alpine), so a recipe that works on debian may fail on fedora due to different bottle availability or shared library dependencies. When a user on macOS, ARM64, or a non-debian distro runs `tsuku install helm`, the recipe may download a binary that doesn't exist, is the wrong architecture, or fails to execute.
 
-Manually-submitted recipe PRs already get multi-platform validation via `test-changed-recipes.yml`, which runs `tsuku install` on Linux (per-recipe matrix) and macOS (aggregated). But batch-generated PRs skip this effective validation because the batch workflow creates the PR after only Linux x86_64 testing. The PR does trigger `test-changed-recipes.yml`, but auto-merge can happen before those checks complete if the merge job doesn't wait for them.
+Manually-submitted recipe PRs already get multi-platform validation via `test-recipe-changes.yml`, which runs `tsuku install` on Linux (per-recipe matrix) and macOS (aggregated). But batch-generated PRs skip this effective validation because the batch workflow creates the PR after only Linux x86_64 testing. The PR does trigger `test-recipe-changes.yml`, but auto-merge can happen before those checks complete if the merge job doesn't wait for them.
 
 The core question is where multi-platform validation should happen: inside the batch workflow (before creating the PR) or via PR CI (after creating the PR, before merge).
 
@@ -44,7 +44,7 @@ The core question is where multi-platform validation should happen: inside the b
 - Sandbox container validation for non-homebrew builders (#1287)
 - Circuit breaker integration (#1255)
 - SLI metrics collection (#1257, consumes platform results but is separate)
-- PR-time golden file diff validation for new registry recipes (separate concern; new recipes can't have diff-based regression detection without a baseline, and execution validation already happens via `test-changed-recipes.yml`)
+- PR-time golden file diff validation for new registry recipes (separate concern; new recipes can't have diff-based regression detection without a baseline, and execution validation already happens via `test-recipe-changes.yml`)
 - Progressive validation (gating macOS jobs on Linux results). All 4 jobs run on the same recipe set in parallel. Progressive filtering can be added later if macOS budget becomes a problem.
 
 ## Decision Drivers
@@ -64,7 +64,7 @@ The core question is where multi-platform validation should happen: inside the b
 
 **Platform constraint fields** (`internal/recipe/platform.go`): Recipes support `supported_os`, `supported_arch`, `supported_libc`, and `unsupported_platforms`. The planner already respects these. Fully implemented.
 
-**test-changed-recipes.yml**: Runs `tsuku install` on Linux (matrix per recipe) and macOS (aggregated) for PRs that change recipe files. Detects Linux-only recipes and skips macOS for them. Has execution-exclusions.json for recipes that can't be tested.
+**test-recipe-changes.yml**: Runs `tsuku install` on Linux (matrix per recipe) and macOS (aggregated) for PRs that change recipe files. Detects Linux-only recipes and skips macOS for them. Has execution-exclusions.json for recipes that can't be tested.
 
 **publish-golden-to-r2.yml**: Generates golden files on 3 platforms post-merge and uploads to R2. Triggered automatically when recipe files change on main.
 
@@ -87,11 +87,11 @@ The answer depends on when platform results are needed. The merge job must write
 
 Add four validation jobs to `batch-generate.yml` that run after generation. The x86_64 Linux job runs 5 family containers (debian, rhel, arch, suse, alpine); the arm64 job runs 4 (arch excluded -- no ARM64 image). Each macOS job validates directly on the runner. All jobs produce JSON artifacts with per-recipe, per-family pass/fail results. The merge job collects all results, writes constraints for partial-coverage recipes, and creates the PR.
 
-This gives 11 target environments using only 4 workflow jobs. All jobs run in parallel on the full recipe set; progressive filtering (gating macOS on Linux results) is deferred until macOS budget pressure warrants it. The main trade-off is maintaining two parallel multi-platform validation systems (batch workflow and `test-changed-recipes.yml`), but they serve different purposes -- batch produces structured results for constraint writing, PR CI validates the final constrained recipes.
+This gives 11 target environments using only 4 workflow jobs. All jobs run in parallel on the full recipe set; progressive filtering (gating macOS on Linux results) is deferred until macOS budget pressure warrants it. The main trade-off is maintaining two parallel multi-platform validation systems (batch workflow and `test-recipe-changes.yml`), but they serve different purposes -- batch produces structured results for constraint writing, PR CI validates the final constrained recipes.
 
 #### Alternatives Considered
 
-**PR CI reuse**: The batch merge job creates a PR with all Linux-passing recipes, and `test-changed-recipes.yml` (which already watches `recipes/**/*.toml`) validates them. Rejected because `test-changed-recipes.yml` doesn't produce structured per-platform results the merge job can consume, a single macOS failure blocks the entire batch PR with no partial-coverage support, and it only tests on `ubuntu-latest` and `macos-latest` (no ARM64, musl, or non-debian family coverage).
+**PR CI reuse**: The batch merge job creates a PR with all Linux-passing recipes, and `test-recipe-changes.yml` (which already watches `recipes/**/*.toml`) validates them. Rejected because `test-recipe-changes.yml` doesn't produce structured per-platform results the merge job can consume, a single macOS failure blocks the entire batch PR with no partial-coverage support, and it only tests on `ubuntu-latest` and `macos-latest` (no ARM64, musl, or non-debian family coverage).
 
 **Tiered validation (plans + URL pre-filter)**: Generate installation plans on a single Linux runner using `tsuku eval`, check that download URLs return HTTP 200, then promote to install validation on a subset of platforms. Rejected because plan generation misses runtime failures (wrong binary format, missing shared libs), and the install subset still requires the same runner infrastructure as the chosen approach. Could be added later as an optimization layer.
 
@@ -115,7 +115,7 @@ The generate job cross-compiles tsuku binaries for all four runner platforms (`l
 
 The merge job runs after all four validation jobs complete (using `if: always()` to handle infrastructure failures). It downloads all result artifacts, builds a per-recipe, per-platform matrix, and categorizes each recipe: all 11 pass (no constraint changes), partial coverage (derive and write constraints), zero passes (exclude), or contains `run_command` (exclude as security gate). For partial-coverage recipes, a shell script `scripts/write-platform-constraints.sh` writes the minimum constraint set to the recipe TOML -- `supported_os = ["linux"]` when all macOS fails, `supported_libc = ["glibc"]` when all musl fails, or `unsupported_platforms` entries for finer-grained failures. The merge job then creates the PR with constrained recipes and appends platform failures to `data/failures/<eco>.jsonl`.
 
-After the batch PR is created, `test-changed-recipes.yml` still triggers as a secondary validation layer. This provides defense-in-depth: the batch workflow catches platform issues and writes constraints, PR CI validates that the constrained recipes install correctly on the platforms they claim. No changes are needed to `test-changed-recipes.yml` for this to work.
+After the batch PR is created, `test-recipe-changes.yml` still triggers as a secondary validation layer. This provides defense-in-depth: the batch workflow catches platform issues and writes constraints, PR CI validates that the constrained recipes install correctly on the platforms they claim. No changes are needed to `test-recipe-changes.yml` for this to work.
 
 ### Rationale
 
@@ -288,7 +288,7 @@ Added the merge job that:
 
 ### Active: Validation Coverage for Batch PRs
 
-After the batch PR is created, `test-changed-recipes.yml` triggers as a secondary validation layer. This provides defense-in-depth: the batch workflow catches platform issues and writes constraints, and PR CI validates that the constrained recipes install correctly on the platforms they claim to support.
+After the batch PR is created, `test-recipe-changes.yml` triggers as a secondary validation layer. This provides defense-in-depth: the batch workflow catches platform issues and writes constraints, and PR CI validates that the constrained recipes install correctly on the platforms they claim to support.
 
 ## Security Considerations
 
@@ -308,7 +308,7 @@ The `run_command` security gate in the merge job prevents recipes with arbitrary
 
 The platform validation jobs don't change the supply chain model. Recipes still download from the same upstream sources (GHCR for Homebrew bottles, GitHub releases, etc.). The validation adds defense: if an upstream binary is malformed or the wrong architecture for a platform, validation catches it before the recipe ships to users.
 
-One risk specific to this design: the platform validation results determine which platforms a recipe claims to support. If a validation runner is compromised, it could report false passes, causing a broken recipe to ship. This is mitigated by the ephemeral runner model and by `test-changed-recipes.yml` running as a secondary check on the PR.
+One risk specific to this design: the platform validation results determine which platforms a recipe claims to support. If a validation runner is compromised, it could report false passes, causing a broken recipe to ship. This is mitigated by the ephemeral runner model and by `test-recipe-changes.yml` running as a secondary check on the PR.
 
 ### Resource Exhaustion
 
@@ -332,10 +332,10 @@ Platform validation doesn't access or transmit user data. It runs in CI on synth
 - Batch workflow wall-clock time increases (platform validation runs in parallel but adds ~10 minutes for macOS)
 - macOS CI budget consumed by validation (~110 minutes per 25-recipe batch across 2 macOS jobs)
 - Linux jobs take longer due to sequential family container testing (5 families per recipe per runner)
-- Two multi-platform validation systems to maintain (`batch-generate.yml` and `test-changed-recipes.yml`)
+- Two multi-platform validation systems to maintain (`batch-generate.yml` and `test-recipe-changes.yml`)
 
 ### Mitigations
 
 - Progressive validation minimizes macOS cost (only recipes that pass Linux get promoted)
-- `test-changed-recipes.yml` on the PR provides defense-in-depth without additional cost (it runs anyway)
+- `test-recipe-changes.yml` on the PR provides defense-in-depth without additional cost (it runs anyway)
 - The two validation systems serve different purposes: batch produces structured per-platform results for constraint writing; PR CI validates the final constrained recipes

@@ -633,7 +633,7 @@ These workflows run automatically on pull requests:
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `validate-golden-recipes.yml` | Recipe file changes | Validates golden files for changed recipes |
+| `validate-recipe-golden-files.yml` | Recipe file changes | Validates golden files for changed recipes |
 | `validate-golden-code.yml` | Plan generation code changes | Validates ALL golden files when core code changes |
 | `validate-golden-execution.yml` | Golden file changes | Executes plans on platform matrix to verify downloads |
 
