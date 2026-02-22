@@ -69,9 +69,9 @@ Planned
 | ~~_Use existing transitive blocker computation to re-order entries within priority tiers, so high-impact packages are generated first._~~ | | |
 | [M54: Multi-Ecosystem](https://github.com/tsukumogami/tsuku/milestone/54) | [M53](https://github.com/tsukumogami/tsuku/milestone/53) | |
 | _All deterministic builders integrated and running. System library backfill remains._ | | |
-| [#1191: design system library backfill strategy](https://github.com/tsukumogami/tsuku/issues/1191) | None | simple |
-| _Strategy for adding common system library recipes (libpng, sqlite, curl, etc.) to unblock dependent tools. No longer blocked on #1190._ | | |
-| _Child design: [DESIGN-system-lib-backfill.md](DESIGN-system-lib-backfill.md)_ | | |
+| ~~[#1191: design system library backfill strategy](https://github.com/tsukumogami/tsuku/issues/1191)~~ | ~~None~~ | ~~simple~~ |
+| ~~_Strategy for adding common system library recipes (libpng, sqlite, curl, etc.) to unblock dependent tools. No longer blocked on #1190._~~ | | |
+| ~~_Child design: [DESIGN-system-lib-backfill.md](current/DESIGN-system-lib-backfill.md)_~~ | | |
 
 ### Dependency Graph
 
@@ -156,7 +156,7 @@ graph TD
     class I1190 done
     class I1277 done
     class I1278 done
-    class I1191 tracksDesign
+    class I1191 done
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
@@ -200,11 +200,10 @@ This section summarizes what shipped, what diverged from the original design, an
 ### What Remains
 
 See the Remaining Work section at the end of this document for the full list. Key items:
-- 1 open issue across 1 milestone
+- All milestones closed, no open issues
 - Script format mismatches (gap-analysis.sh); requeue-unblocked.sh mismatch resolved by queue-maintain migration (#1825)
 - Schema file vs live format divergence
-- System library backfill strategy (#1191)
-- [DESIGN-system-lib-backfill.md](DESIGN-system-lib-backfill.md) accepted (#1191 tracks-design)
+- ~~System library backfill strategy (#1191)~~ Done: [DESIGN-system-lib-backfill.md](current/DESIGN-system-lib-backfill.md) is Current
 
 ## Context and Problem Statement
 
@@ -1075,7 +1074,7 @@ Milestones align with phases. 6 of 8 milestones are closed.
 - **Deterministic Homebrew Builder (M51)**: Phase 1a - CLOSED - Homebrew deterministic mode validated
 - **Batch Pipeline (M52)**: Phase 1b - CLOSED - Batch workflow, SLIs, circuit breaker, 143 Homebrew recipes
 - **Failure Backend (M53)**: Phase 2 - CLOSED - File-based failures operational, D1 migration dropped, top-blockers shipped via dashboard, within-tier reordering shipped
-- **Multi-Ecosystem (M54)**: Phase 3+ - OPEN (1 issue: #1191 system library backfill) - All builders integrated
+- **Multi-Ecosystem (M54)**: Phase 3+ - CLOSED - All builders integrated, system library backfill complete
 
 ## Required Tactical Designs
 
@@ -1102,7 +1101,7 @@ Tactical designs are organized by phase, reflecting the walking skeleton approac
 | Design | Phase | Status | Purpose |
 |--------|-------|--------|---------|
 | ~~DESIGN-batch-failure-analysis.md~~ | ~~2~~ | ~~NOT NEEDED (#1190 closed)~~ | ~~File-based JSONL approach kept; D1 migration dropped~~ |
-| [DESIGN-system-lib-backfill.md](DESIGN-system-lib-backfill.md) | 3+ | Accepted (#1191 tracks-design) | Strategy for adding common library recipes (parallel workstream) |
+| ~~[DESIGN-system-lib-backfill.md](current/DESIGN-system-lib-backfill.md)~~ | ~~3+~~ | ~~Current (#1191 done)~~ | ~~Strategy for adding common library recipes (parallel workstream)~~ |
 
 **On DESIGN-batch-failure-analysis.md**: Dropped. The file-based approach (JSONL in `data/failures/`, dashboard at `website/pipeline/`) is sufficient at current scale. #1190 was closed as not planned. Top-blockers (#1277) shipped via dashboard. Within-tier reordering (#1278) shipped via `cmd/reorder-queue/` using the shared `internal/blocker` package. M53 is fully closed.
 
@@ -1226,24 +1225,24 @@ These are bugs and inconsistencies between scripts, schemas, and live data forma
 | Question | Context | Status |
 |----------|---------|--------|
 | ~~Is D1 migration still needed?~~ | ~~File-based JSONL in `data/failures/` works at 329 recipes. D1 migration was dropped (#1190 closed as not planned). Top-blockers report (#1277) shipped via dashboard. Remaining work (#1278) builds on existing JSONL.~~ | ~~Resolved~~ |
-| System library backfill strategy | ~50 excluded recipes (15% exclusion rate) can't be generated due to missing system deps. Adding ~20 core libraries would unblock hundreds of Homebrew formulas. | Needs DESIGN-system-lib-backfill.md (#1191) |
+| ~~System library backfill strategy~~ | ~~~50 excluded recipes (15% exclusion rate) can't be generated due to missing system deps. Adding ~20 core libraries would unblock hundreds of Homebrew formulas.~~ | ~~Resolved: [DESIGN-system-lib-backfill.md](current/DESIGN-system-lib-backfill.md) Current~~ |
 | What to do about the 50 excluded recipes | These are tools the pipeline can't generate deterministically. Manual creation? Improved heuristics? Accept the gap? | No issue yet |
 | ~~Request-based priority boosting~~ | ~~User install telemetry could feed into queue scoring. Decided not to pursue for now; popularity-based ordering is sufficient.~~ | ~~Deferred~~ |
 
 ### Open Issues
 
-1 issue remains across 1 milestone:
+No open issues remain. All milestones are closed.
 
-| Issue | Milestone | Description |
-|-------|-----------|-------------|
-| [#1191](https://github.com/tsukumogami/tsuku/issues/1191) | M54 (Multi-Ecosystem) | Design system library backfill strategy |
+| Issue | Milestone | Description | Status |
+|-------|-----------|-------------|--------|
+| ~~[#1191](https://github.com/tsukumogami/tsuku/issues/1191)~~ | ~~M54 (Multi-Ecosystem)~~ | ~~Design system library backfill strategy~~ | Done |
 
 ### Documentation Debt
 
 | Item | Action |
 |------|--------|
 | ~~DESIGN-batch-failure-analysis.md~~ | ~~Not needed. #1190 closed as not planned. File-based approach kept.~~ |
-| [DESIGN-system-lib-backfill.md](DESIGN-system-lib-backfill.md) | Accepted. Issue #1191 now tracks-design. |
+| ~~[DESIGN-system-lib-backfill.md](current/DESIGN-system-lib-backfill.md)~~ | ~~Current. Issue #1191 done.~~ |
 
 ### Resolved Questions (from original Open Questions section)
 
