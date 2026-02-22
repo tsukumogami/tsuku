@@ -858,7 +858,7 @@ func previewRecipe(r *recipe.Recipe, result *builders.BuildResult) (bool, error)
 	fmt.Println()
 
 	// Show verification
-	if r.Verify.Command != "" {
+	if r.Verify != nil && r.Verify.Command != "" {
 		fmt.Printf("  Verification: %s\n", r.Verify.Command)
 		fmt.Println()
 	}
