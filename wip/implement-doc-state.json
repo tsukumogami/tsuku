@@ -1,0 +1,87 @@
+{
+  "pr_status": "implementing",
+  "design_doc": "docs/designs/DESIGN-structured-error-subcategories.md",
+  "branch": "docs/structured-error-subcategories",
+  "pr_number": 1854,
+  "integrity_hash": "sha256:658c1d2a160fdae6622b440352404fd8883f26691e1a55b48c1a04d1cfa53f2c",
+  "issues": [
+    {
+      "number": 1856,
+      "title": "feat(cli): add subcategory to install error JSON output",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": [
+        "scenario-1",
+        "scenario-2",
+        "scenario-3",
+        "scenario-4"
+      ]
+    },
+    {
+      "number": 1857,
+      "title": "feat(batch): normalize pipeline categories and add subcategory passthrough",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [
+        1856
+      ],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": [
+        "scenario-5",
+        "scenario-6",
+        "scenario-7",
+        "scenario-8",
+        "scenario-9"
+      ]
+    },
+    {
+      "number": 1858,
+      "title": "fix(ci): align batch workflow category names with canonical taxonomy",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [
+        1857
+      ],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": [
+        "scenario-10"
+      ]
+    },
+    {
+      "number": 1859,
+      "title": "feat(dashboard): read structured subcategories with category remap fallback",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [
+        1857
+      ],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": [
+        "scenario-11",
+        "scenario-12",
+        "scenario-13",
+        "scenario-14"
+      ]
+    }
+  ],
+  "skipped_issues": null,
+  "test_plan_file": "wip/implement-doc_structured-error-subcategories_test_plan.md"
+}
