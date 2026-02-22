@@ -68,7 +68,7 @@ Comparison is handled entirely through shell scripts using hash-based comparison
 
 Five CI workflows enforce golden file correctness:
 
-- `validate-golden-recipes.yml` triggers when recipe TOML files change. It regenerates golden files for changed recipes and fails if they don't match committed files.
+- `validate-recipe-golden-files.yml` triggers when recipe TOML files change. It regenerates golden files for changed recipes and fails if they don't match committed files.
 - `validate-golden-code.yml` triggers when plan generation code changes (`internal/executor/`, `internal/actions/`, etc.). It regenerates all golden files and fails on any mismatch.
 - `validate-golden-execution.yml` triggers when golden files change in a PR. It runs `tsuku install --plan <file> --force` on matching platform runners to prove plans are executable. Runs on ubuntu-latest (linux-amd64) and macos-latest (darwin-arm64). darwin-amd64 requires paid runners and is excluded; linux-arm64 has no available runners.
 - `generate-golden-files.yml` is a workflow_dispatch action that generates golden files on CI runners across platforms and optionally commits them back to the branch.

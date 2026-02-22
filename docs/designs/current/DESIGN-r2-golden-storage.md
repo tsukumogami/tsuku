@@ -156,7 +156,7 @@ Research findings from specialist analysis across infrastructure, CI patterns, s
 
 The codebase has well-designed validation workflows:
 
-1. **validate-golden-recipes.yml**: PR trigger on recipe changes, validates changed recipes only
+1. **validate-recipe-golden-files.yml**: PR trigger on recipe changes, validates changed recipes only
 2. **validate-golden-execution.yml**: PR trigger on golden changes, executes plans to verify installation
 3. **validate-golden-code.yml**: PR trigger on code changes, validates embedded recipes
 4. **nightly-registry-validation.yml**: Daily at 2 AM UTC, full registry validation + sample execution

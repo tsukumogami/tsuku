@@ -23,7 +23,7 @@ Evidence from PR #858 demonstrates the problem:
 
 Four workflows are affected:
 - `validate-golden-execution.yml` - Executes each changed golden file on its target platform
-- `test-changed-recipes.yml` - Tests each changed recipe on Linux and macOS
+- `test-recipe-changes.yml` - Tests each changed recipe on Linux and macOS
 - `test.yml` - Runs integration tests for a fixed set of tools on each platform
 - `build-essentials.yml` - Tests build tooling (Homebrew, configure/make, cmake, meson) on all platforms
 
@@ -55,7 +55,7 @@ All four workflows use matrix strategy with `fail-fast: false`, spawning indepen
 
 **Affected workflows:**
 - `validate-golden-execution.yml` (lines 241-277): Uses dynamic matrix from `detect-changes` job, spawns one job per golden file with `${{ matrix.os }}` runner
-- `test-changed-recipes.yml` (lines 128-169): Uses static matrix with `${{ fromJson(needs.matrix.outputs.recipes) }}`, spawns separate jobs for Linux and macOS
+- `test-recipe-changes.yml` (lines 128-169): Uses static matrix with `${{ fromJson(needs.matrix.outputs.recipes) }}`, spawns separate jobs for Linux and macOS
 - `test.yml` (lines 240-270): Uses matrix from `test-matrix.json`, spawns one job per tool on each platform
 - `build-essentials.yml`: Uses hardcoded platform × tool matrix, spawns ~20 macOS jobs (10 Apple Silicon + 10 Intel)
 
@@ -350,7 +350,7 @@ test-macos:
 
 Update all four affected workflows to aggregate macOS items:
 
-**For `test-changed-recipes.yml`:**
+**For `test-recipe-changes.yml`:**
 - Modify `matrix` job to output `macos_items` array and `has_macos` boolean
 - Replace `test-macos` matrix job with single aggregated job
 - Add iteration loop with `::group::` markers for visibility
