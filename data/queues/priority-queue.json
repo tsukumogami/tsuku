@@ -466,7 +466,7 @@
       "name": "libgit2",
       "source": "homebrew:libgit2",
       "priority": 3,
-      "status": "pending",
+      "status": "success",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 0,
