@@ -10,5 +10,9 @@ crate = "cargo-edit"
 executables = ["cargo-add", "cargo-rm", "cargo-upgrade"]
 
 [verify]
-command = "cargo add --version"
-pattern = "{version}"
+# cargo-add is a cargo subcommand, doesn't support --version directly
+# verify by checking the help output
+command = "cargo-add --help"
+mode = "output"
+pattern = "Add dependencies to a Cargo.toml"
+reason = "cargo-add is a cargo subcommand without standalone --version flag"
