@@ -1,0 +1,35 @@
+[metadata]
+  name = "poppler-qt5"
+  description = "PDF rendering library (based on the xpdf-3.0 code base)"
+  homepage = "https://poppler.freedesktop.org/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["cairo", "fontconfig", "freetype", "glib", "jpeg-turbo", "libpng", "little-cms2", "nspr", "gettext", "libassuan"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "poppler-qt5"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "poppler-qt5"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/pdfattach", "bin/pdfdetach", "bin/pdffonts", "bin/pdfimages", "bin/pdfinfo", "bin/pdfseparate", "bin/pdfsig", "bin/pdftocairo", "bin/pdftohtml", "bin/pdftoppm", "bin/pdftops", "bin/pdftotext", "bin/pdfunite"]
+
+[verify]
+  command = "pdfattach --version"
+  pattern = ""

@@ -1,0 +1,35 @@
+[metadata]
+  name = "percona-server"
+  description = "Drop-in MySQL replacement"
+  homepage = "https://www.percona.com"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["abseil", "libfido2", "zstd"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "percona-server"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "percona-server"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/comp_err", "bin/ibd2sdi", "bin/innochecksum", "bin/ldb", "bin/my_print_defaults", "bin/myisam_ftdump", "bin/myisamchk", "bin/myisamlog", "bin/myisampack", "bin/mysql", "bin/mysql_client_test", "bin/mysql_config", "bin/mysql_config_editor", "bin/mysql_keyring_encryption_test", "bin/mysql_migrate_keyring", "bin/mysql_secure_installation", "bin/mysql_test_event_tracking", "bin/mysql_tzinfo_to_sql", "bin/mysqladmin", "bin/mysqlbinlog", "bin/mysqlcheck", "bin/mysqld", "bin/mysqld_multi", "bin/mysqld_safe", "bin/mysqldump", "bin/mysqldumpslow", "bin/mysqlimport", "bin/mysqlrouter", "bin/mysqlrouter_keyring", "bin/mysqlrouter_passwd", "bin/mysqlrouter_plugin_info", "bin/mysqlshow", "bin/mysqlslap", "bin/mysqltest", "bin/mysqltest_safe_process", "bin/mysqlxtest", "bin/perror", "bin/ps-admin", "bin/ps_mysqld_helper", "bin/sst_dump"]
+
+[verify]
+  command = "comp_err --version"
+  pattern = ""

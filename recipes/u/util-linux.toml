@@ -1,0 +1,35 @@
+[metadata]
+  name = "util-linux"
+  description = "Collection of Linux utilities"
+  homepage = "https://github.com/util-linux/util-linux"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["gettext"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "util-linux"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "util-linux"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/bits", "bin/cal", "bin/chmem", "bin/choom", "bin/chrt", "bin/col", "bin/colcrt", "bin/colrm", "bin/column", "bin/coresched", "bin/dmesg", "bin/eject", "bin/enosys", "bin/exch", "bin/fadvise", "bin/fallocate", "bin/fincore", "bin/findmnt", "bin/flock", "bin/getopt", "bin/hardlink", "bin/hexdump", "bin/ionice", "bin/ipcmk", "bin/ipcrm", "bin/ipcs", "bin/irqtop", "bin/isosize", "bin/last", "bin/lastlog2", "bin/logger", "bin/look", "bin/lsblk", "bin/lsclocks", "bin/lscpu", "bin/lsfd", "bin/lsipc", "bin/lsirq", "bin/lslocks", "bin/lslogins", "bin/lsmem", "bin/lsns", "bin/mcookie", "bin/mesg", "bin/more", "bin/mount", "bin/mountpoint", "bin/namei", "bin/nsenter", "bin/pipesz", "bin/prlimit", "bin/rename", "bin/renice", "bin/rev", "bin/script", "bin/scriptlive", "bin/scriptreplay", "bin/setarch", "bin/setpgid", "bin/setsid", "bin/setterm", "bin/taskset", "bin/uclampset", "bin/ul", "bin/umount", "bin/unshare", "bin/utmpdump", "bin/uuidgen", "bin/uuidparse", "bin/waitpid", "bin/wall", "bin/wdctl", "bin/whereis"]
+
+[verify]
+  command = "bits --version"
+  pattern = ""

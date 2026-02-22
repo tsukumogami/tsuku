@@ -1,0 +1,35 @@
+[metadata]
+  name = "riscv64-elf-gcc"
+  description = "GNU compiler collection for riscv64-elf"
+  homepage = "https://gcc.gnu.org"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["gmp", "riscv64-elf-binutils", "zstd"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "riscv64-elf-gcc"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "riscv64-elf-gcc"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/riscv64-elf-c++", "bin/riscv64-elf-cpp", "bin/riscv64-elf-gcc", "bin/riscv64-elf-gcc-ar", "bin/riscv64-elf-gcc-nm", "bin/riscv64-elf-gcc-ranlib", "bin/riscv64-elf-gcov", "bin/riscv64-elf-gcov-dump", "bin/riscv64-elf-gcov-tool", "bin/riscv64-elf-lto-dump"]
+
+[verify]
+  command = "riscv64-elf-c++ --version"
+  pattern = ""

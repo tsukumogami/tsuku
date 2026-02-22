@@ -1,0 +1,35 @@
+[metadata]
+  name = "python-freethreading"
+  description = "Interpreted, interactive, object-oriented programming language"
+  homepage = "https://www.python.org/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["sqlite", "xz", "zstd"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "python-freethreading"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "python-freethreading"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/idle3.14t", "bin/pip3.14t", "bin/pydoc3.14t", "bin/python3.14t", "bin/python3.14t-config", "bin/wheel3.14t"]
+
+[verify]
+  command = "idle3.14t --version"
+  pattern = ""

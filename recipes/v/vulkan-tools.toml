@@ -1,0 +1,35 @@
+[metadata]
+  name = "vulkan-tools"
+  description = "Vulkan utilities and tools"
+  homepage = "https://github.com/KhronosGroup/Vulkan-Tools"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["vulkan-loader"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "vulkan-tools"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "vulkan-tools"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/vkcube", "bin/vkcubepp", "bin/vulkaninfo"]
+
+[verify]
+  command = "vkcube --version"
+  pattern = ""

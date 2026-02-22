@@ -1,0 +1,35 @@
+[metadata]
+  name = "uuu"
+  description = "Universal Update Utility, mfgtools 3.0. NXP I.MX Chip image deploy tools"
+  homepage = "https://github.com/nxp-imx/mfgtools"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["zstd"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "uuu"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "uuu"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/uuu"]
+
+[verify]
+  command = "uuu --version"
+  pattern = ""

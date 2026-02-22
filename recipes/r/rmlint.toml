@@ -1,0 +1,35 @@
+[metadata]
+  name = "rmlint"
+  description = "Extremely fast tool to remove dupes and other lint from your filesystem"
+  homepage = "https://rmlint.readthedocs.io/en/master/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["glib", "json-glib", "gettext"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "rmlint"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "rmlint"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/rmlint"]
+
+[verify]
+  command = "rmlint --version"
+  pattern = ""

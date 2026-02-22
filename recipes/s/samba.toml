@@ -1,0 +1,35 @@
+[metadata]
+  name = "samba"
+  description = "SMB/CIFS file, print, and login server for UNIX"
+  homepage = "https://www.samba.org/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["gnutls", "libtasn1", "readline", "gettext"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "samba"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "samba"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/cifsdd", "bin/dbwrap_tool", "bin/dumpmscat", "bin/gentest", "bin/ldbadd", "bin/ldbdel", "bin/ldbedit", "bin/ldbmodify", "bin/ldbrename", "bin/ldbsearch", "bin/locktest", "bin/masktest", "bin/mdsearch", "bin/mvxattr", "bin/ndrdump", "bin/net", "bin/nmblookup", "bin/ntlm_auth", "bin/oLschema2ldif", "bin/pdbedit", "bin/profiles", "bin/regdiff", "bin/regpatch", "bin/regshell", "bin/regtree", "bin/rpcclient", "bin/samba-log-parser", "bin/sharesec", "bin/smbcacls", "bin/smbclient", "bin/smbcontrol", "bin/smbcquotas", "bin/smbget", "bin/smbpasswd", "bin/smbspool", "bin/smbstatus", "bin/smbtar", "bin/smbtree", "bin/testparm", "bin/wbinfo", "bin/wspsearch"]
+
+[verify]
+  command = "cifsdd --version"
+  pattern = ""

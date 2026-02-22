@@ -1,0 +1,35 @@
+[metadata]
+  name = "spatialite-gui"
+  description = "GUI tool supporting SpatiaLite"
+  homepage = "https://www.gaia-gis.it/fossil/spatialite_gui/index"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["geos", "librasterlite2", "libxml2", "proj", "sqlite", "xz", "zstd"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "spatialite-gui"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "spatialite-gui"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/spatialite_gui"]
+
+[verify]
+  command = "spatialite_gui --version"
+  pattern = ""

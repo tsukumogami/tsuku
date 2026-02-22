@@ -1,0 +1,35 @@
+[metadata]
+  name = "tsduck"
+  description = "MPEG Transport Stream Toolkit"
+  homepage = "https://tsduck.io/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["librist"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "tsduck"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "tsduck"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/tsanalyze", "bin/tsbitrate", "bin/tscharset", "bin/tscmp", "bin/tsconfig", "bin/tscrc32", "bin/tsdate", "bin/tsdebug", "bin/tsdektec", "bin/tsdump", "bin/tsecmg", "bin/tseit", "bin/tsemmg", "bin/tsfclean", "bin/tsfixcc", "bin/tsflute", "bin/tsftrunc", "bin/tsfuzz", "bin/tsgenecm", "bin/tshides", "bin/tslatencymonitor", "bin/tslsdvb", "bin/tsnip", "bin/tsp", "bin/tspacketize", "bin/tspcap", "bin/tspcontrol", "bin/tspsi", "bin/tsresync", "bin/tsscan", "bin/tssmartcard", "bin/tsstuff", "bin/tsswitch", "bin/tstabcomp", "bin/tstabdump", "bin/tstables", "bin/tsterinfo", "bin/tstestecmg", "bin/tsvatek", "bin/tsversion", "bin/tsxml"]
+
+[verify]
+  command = "tsanalyze --version"
+  pattern = ""

@@ -1,0 +1,35 @@
+[metadata]
+  name = "zeek"
+  description = "Network security monitor"
+  homepage = "https://zeek.org/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["c-ares"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "zeek"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "zeek"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/bifcl", "bin/binpac", "bin/btest", "bin/btest-ask-update", "bin/btest-bg-run", "bin/btest-bg-run-helper", "bin/btest-bg-wait", "bin/btest-diff", "bin/btest-diff-rst", "bin/btest-progress", "bin/btest-rst-cmd", "bin/btest-rst-include", "bin/btest-rst-pipe", "bin/btest-setsid", "bin/capstats", "bin/hilti-config", "bin/hiltic", "bin/paraglob-test", "bin/spicy-build", "bin/spicy-config", "bin/spicy-driver", "bin/spicy-dump", "bin/spicy-precompile-headers", "bin/spicyc", "bin/spicyz", "bin/trace-summary", "bin/zeek", "bin/zeek-archiver", "bin/zeek-client", "bin/zeek-cluster-layout-generator", "bin/zeek-config", "bin/zeek-cut", "bin/zeek-systemd-generator", "bin/zeekctl", "bin/zkg"]
+
+[verify]
+  command = "bifcl --version"
+  pattern = ""

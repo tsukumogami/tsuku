@@ -1,0 +1,35 @@
+[metadata]
+  name = "rakudo-star"
+  description = "Rakudo compiler and commonly used packages"
+  homepage = "https://rakudo.org/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["mimalloc", "readline", "zstd"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "rakudo-star"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "rakudo-star"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/moar", "bin/nqp", "bin/nqp-m", "bin/perl6", "bin/perl6-debug", "bin/perl6-debug-m", "bin/perl6-gdb-m", "bin/perl6-lldb-m", "bin/perl6-m", "bin/perl6-valgrind-m", "bin/rakudo", "bin/rakudo-debug", "bin/rakudo-debug-m", "bin/rakudo-gdb-m", "bin/rakudo-lldb-m", "bin/rakudo-m", "bin/rakudo-valgrind-m"]
+
+[verify]
+  command = "moar --version"
+  pattern = ""

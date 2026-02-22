@@ -1,0 +1,34 @@
+[metadata]
+  name = "cmix"
+  description = "Data compression program with high compression ratio"
+  homepage = "https://www.byronknoll.com/cmix.html"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "cmix"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "cmix"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/cmix"]
+
+[verify]
+  command = "cmix --version"
+  pattern = ""

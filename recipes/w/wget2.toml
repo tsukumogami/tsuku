@@ -1,0 +1,35 @@
+[metadata]
+  name = "wget2"
+  description = "Successor of GNU Wget, a file and recursive website downloader"
+  homepage = "https://gitlab.com/gnuwget/wget2"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["brotli", "gnutls", "libidn2", "libnghttp2", "libpsl", "pcre2", "xz", "zstd", "gettext"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "wget2"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "wget2"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/wget2", "bin/wget2_noinstall"]
+
+[verify]
+  command = "wget2 --version"
+  pattern = ""

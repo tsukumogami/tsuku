@@ -1,0 +1,35 @@
+[metadata]
+  name = "qtdeclarative"
+  description = "QML, Qt Quick and several related modules"
+  homepage = "https://www.qt.io/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["qtbase"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "qtdeclarative"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "qtdeclarative"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/qml", "bin/qmldom", "bin/qmleasing", "bin/qmlformat", "bin/qmllint", "bin/qmlls", "bin/qmlplugindump", "bin/qmlpreview", "bin/qmlprofiler", "bin/qmlscene", "bin/qmltc", "bin/qmltestrunner", "bin/qmltime", "bin/svgtoqml"]
+
+[verify]
+  command = "qml --version"
+  pattern = ""

@@ -1,0 +1,35 @@
+[metadata]
+  name = "qtbase"
+  description = "Cross-platform application and UI framework"
+  homepage = "https://www.qt.io/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["brotli", "freetype", "glib", "jpeg-turbo", "libpng", "pcre2", "zstd"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "qtbase"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "qtbase"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/androiddeployqt", "bin/androidtestrunner", "bin/qdbuscpp2xml", "bin/qdbusxml2cpp", "bin/qmake", "bin/qt-cmake", "bin/qt-cmake-create", "bin/qt-configure-module", "bin/qtpaths"]
+
+[verify]
+  command = "androiddeployqt --version"
+  pattern = ""

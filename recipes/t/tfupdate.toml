@@ -1,0 +1,34 @@
+[metadata]
+  name = "tfupdate"
+  description = "Update version constraints in your Terraform configurations"
+  homepage = "https://github.com/minamijoyo/tfupdate"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "tfupdate"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "tfupdate"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/tfupdate"]
+
+[verify]
+  command = "tfupdate --version"
+  pattern = ""

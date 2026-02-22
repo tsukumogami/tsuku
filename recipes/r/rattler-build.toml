@@ -1,0 +1,35 @@
+[metadata]
+  name = "rattler-build"
+  description = "Universal conda package builder"
+  homepage = "https://rattler.build"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["xz"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "rattler-build"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "rattler-build"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/patch-apply-gen-test-data", "bin/rattler-build"]
+
+[verify]
+  command = "patch-apply-gen-test-data --version"
+  pattern = ""

@@ -1,0 +1,35 @@
+[metadata]
+  name = "vcluster"
+  description = "Creates fully functional virtual k8s cluster inside host k8s cluster's namespace"
+  homepage = "https://www.vcluster.com"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["kubernetes-cli"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "vcluster"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "vcluster"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/vcluster"]
+
+[verify]
+  command = "vcluster --version"
+  pattern = ""

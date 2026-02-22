@@ -1,0 +1,35 @@
+[metadata]
+  name = "libimobiledevice"
+  description = "Library to communicate with iOS devices natively"
+  homepage = "https://www.libimobiledevice.org/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["libplist", "libtasn1", "libusbmuxd"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "libimobiledevice"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "libimobiledevice"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/afcclient", "bin/idevice_id", "bin/idevicebackup", "bin/idevicebackup2", "bin/idevicebtlogger", "bin/idevicecrashreport", "bin/idevicedate", "bin/idevicedebug", "bin/idevicedebugserverproxy", "bin/idevicedevmodectl", "bin/idevicediagnostics", "bin/ideviceenterrecovery", "bin/ideviceimagemounter", "bin/ideviceinfo", "bin/idevicename", "bin/idevicenotificationproxy", "bin/idevicepair", "bin/ideviceprovision", "bin/idevicescreenshot", "bin/idevicesetlocation", "bin/idevicesyslog"]
+
+[verify]
+  command = "afcclient --version"
+  pattern = ""

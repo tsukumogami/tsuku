@@ -1,0 +1,35 @@
+[metadata]
+  name = "rpm2cpio"
+  description = "Tool to convert RPM package to CPIO archive"
+  homepage = "https://svnweb.freebsd.org/ports/head/archivers/rpm2cpio/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["xz"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "rpm2cpio"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "rpm2cpio"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/rpm2cpio"]
+
+[verify]
+  command = "rpm2cpio --version"
+  pattern = ""

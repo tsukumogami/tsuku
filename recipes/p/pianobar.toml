@@ -1,0 +1,35 @@
+[metadata]
+  name = "pianobar"
+  description = "Command-line player for https://pandora.com"
+  homepage = "https://6xq.net/pianobar/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["libgcrypt"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "pianobar"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "pianobar"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/pianobar"]
+
+[verify]
+  command = "pianobar --version"
+  pattern = ""

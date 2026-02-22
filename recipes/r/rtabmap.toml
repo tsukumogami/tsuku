@@ -1,0 +1,35 @@
+[metadata]
+  name = "rtabmap"
+  description = "Visual and LiDAR SLAM library and standalone application"
+  homepage = "https://introlab.github.io/rtabmap"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["librealsense", "pcl", "qtbase", "sqlite", "freetype", "glew", "libfreenect", "libpng"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "rtabmap"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "rtabmap"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/rtabmap", "bin/rtabmap-calibration", "bin/rtabmap-camera", "bin/rtabmap-cleanupLocalGrids", "bin/rtabmap-console", "bin/rtabmap-dataRecorder", "bin/rtabmap-databaseViewer", "bin/rtabmap-detectMoreLoopClosures", "bin/rtabmap-export", "bin/rtabmap-extractObject", "bin/rtabmap-globalBundleAdjustment", "bin/rtabmap-info", "bin/rtabmap-kitti_dataset", "bin/rtabmap-lidar_viewer", "bin/rtabmap-odometryViewer", "bin/rtabmap-recovery", "bin/rtabmap-report", "bin/rtabmap-reprocess", "bin/rtabmap-res_tool-0.3.0", "bin/rtabmap-rgbd_camera", "bin/rtabmap-rgbd_dataset"]
+
+[verify]
+  command = "rtabmap --version"
+  pattern = ""

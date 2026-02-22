@@ -1,0 +1,35 @@
+[metadata]
+  name = "ffmpeg"
+  description = "Play, record, convert, and stream select audio and video codecs"
+  homepage = "https://ffmpeg.org/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["dav1d", "sdl2", "svt-av1", "x265"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "ffmpeg"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "ffmpeg"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/aviocat", "bin/bisect-create", "bin/clean-diff", "bin/compare-cvelists.sh", "bin/crypto_bench", "bin/cws2fws", "bin/dvd2concat", "bin/enc_recon_frame_test", "bin/enum_options", "bin/ffescape", "bin/ffeval", "bin/ffhash", "bin/ffmpeg", "bin/ffplay", "bin/ffprobe", "bin/fourcc2pixfmt", "bin/gen-rc", "bin/general_assembly.pl", "bin/graph2dot", "bin/ismindex", "bin/loudnorm.rb", "bin/make_chlayout_test", "bin/merge-all-source-plugins", "bin/missing_codec_desc", "bin/murge", "bin/normalize.py", "bin/patcheck", "bin/pktdumper", "bin/plotframes", "bin/probetest", "bin/qt-faststart", "bin/scale_slice_test", "bin/seek_print", "bin/sidxindex", "bin/source2c", "bin/target_dec_fate.sh", "bin/trasher", "bin/uncoded_frame", "bin/unwrap-diff", "bin/venc_data_dump", "bin/zmqsend", "bin/zmqshell.py"]
+
+[verify]
+  command = "aviocat --version"
+  pattern = ""

@@ -1,0 +1,35 @@
+[metadata]
+  name = "unpaper"
+  description = "Post-processing for scanned/photocopied books"
+  homepage = "https://www.flameeyes.com/projects/unpaper"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["ffmpeg"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "unpaper"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "unpaper"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/unpaper"]
+
+[verify]
+  command = "unpaper --version"
+  pattern = ""

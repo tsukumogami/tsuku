@@ -1,0 +1,35 @@
+[metadata]
+  name = "visp"
+  description = "Visual Servoing Platform library"
+  homepage = "https://visp.inria.fr/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["gsl", "jpeg-turbo", "libpng", "pcl", "glew", "qtbase"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "visp"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "visp"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/visp-calibrate-camera", "bin/visp-compute-apriltag-poses", "bin/visp-compute-chessboard-poses", "bin/visp-compute-eye-in-hand-calibration", "bin/visp-compute-eye-to-hand-calibration", "bin/visp-config", "bin/visp-read-rs-dataset", "bin/visp-save-rs-dataset"]
+
+[verify]
+  command = "visp-calibrate-camera --version"
+  pattern = ""

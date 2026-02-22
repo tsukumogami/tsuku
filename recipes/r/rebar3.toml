@@ -1,0 +1,34 @@
+[metadata]
+  name = "rebar3"
+  description = "Erlang build tool"
+  homepage = "https://rebar3.org"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "rebar3"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "rebar3"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/rebar3"]
+
+[verify]
+  command = "rebar3 --version"
+  pattern = ""

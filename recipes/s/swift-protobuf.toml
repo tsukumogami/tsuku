@@ -1,0 +1,34 @@
+[metadata]
+  name = "swift-protobuf"
+  description = "Plugin and runtime library for using protobuf with Swift"
+  homepage = "https://github.com/apple/swift-protobuf"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "swift-protobuf"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "swift-protobuf"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/protoc-gen-swift"]
+
+[verify]
+  command = "protoc-gen-swift --version"
+  pattern = ""

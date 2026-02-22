@@ -1,0 +1,35 @@
+[metadata]
+  name = "qttools"
+  description = "Facilitate the design, development, testing and deployment of applications"
+  homepage = "https://www.qt.io/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["qtbase", "qtdeclarative", "zstd"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "qttools"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "qttools"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/assistant", "bin/designer", "bin/lconvert", "bin/linguist", "bin/lrelease", "bin/lupdate", "bin/pixeltool", "bin/qdbus", "bin/qdbusviewer", "bin/qdistancefieldgenerator", "bin/qtdiag", "bin/qtplugininfo"]
+
+[verify]
+  command = "assistant --version"
+  pattern = ""
