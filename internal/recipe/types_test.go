@@ -1756,6 +1756,126 @@ func TestRecipe_ToTOML_HomebrewRecipe(t *testing.T) {
 	}
 }
 
+func TestRecipe_ToTOML_MetadataType(t *testing.T) {
+	t.Run("type emitted when set", func(t *testing.T) {
+		r := Recipe{
+			Metadata: MetadataSection{
+				Name: "libfoo",
+				Type: RecipeTypeLibrary,
+			},
+			Version: VersionSection{
+				Source:  "homebrew",
+				Formula: "libfoo",
+			},
+			Steps: []Step{
+				{
+					Action: "homebrew",
+					Params: map[string]interface{}{
+						"formula": "libfoo",
+					},
+				},
+			},
+			// Library recipe: no verify section
+		}
+
+		data, err := r.ToTOML()
+		if err != nil {
+			t.Fatalf("ToTOML() error = %v", err)
+		}
+
+		tomlStr := string(data)
+
+		if !contains(tomlStr, `type = "library"`) {
+			t.Errorf("ToTOML() should contain type = \"library\" in [metadata], got:\n%s", tomlStr)
+		}
+	})
+
+	t.Run("type omitted when empty", func(t *testing.T) {
+		r := Recipe{
+			Metadata: MetadataSection{
+				Name: "some-tool",
+			},
+			Version: VersionSection{
+				Source: "github_releases",
+			},
+			Steps: []Step{
+				{
+					Action: "github_file",
+					Params: map[string]interface{}{
+						"repo":   "owner/repo",
+						"binary": "tool",
+					},
+				},
+			},
+			Verify: &VerifySection{
+				Command: "tool --version",
+			},
+		}
+
+		data, err := r.ToTOML()
+		if err != nil {
+			t.Fatalf("ToTOML() error = %v", err)
+		}
+
+		tomlStr := string(data)
+
+		if contains(tomlStr, "type =") {
+			t.Errorf("ToTOML() should not contain type field when Type is empty, got:\n%s", tomlStr)
+		}
+	})
+
+	t.Run("type roundtrip preserves value", func(t *testing.T) {
+		original := Recipe{
+			Metadata: MetadataSection{
+				Name:        "libbar",
+				Description: "A library",
+				Type:        RecipeTypeLibrary,
+			},
+			Version: VersionSection{
+				Source:  "homebrew",
+				Formula: "libbar",
+			},
+			Steps: []Step{
+				{
+					Action: "homebrew",
+					Params: map[string]interface{}{
+						"formula": "libbar",
+					},
+				},
+				{
+					Action: "install_binaries",
+					Params: map[string]interface{}{
+						"install_mode": "directory",
+						"outputs":      []interface{}{"lib/libbar.so", "lib/libbar.a", "include/bar.h"},
+					},
+				},
+			},
+			// Library recipe: no verify section
+		}
+
+		data, err := original.ToTOML()
+		if err != nil {
+			t.Fatalf("ToTOML() error = %v", err)
+		}
+
+		var parsed Recipe
+		err = toml.Unmarshal(data, &parsed)
+		if err != nil {
+			t.Fatalf("Unmarshal() error = %v, toml:\n%s", err, string(data))
+		}
+
+		if parsed.Metadata.Type != RecipeTypeLibrary {
+			t.Errorf("Roundtrip: Metadata.Type = %q, want %q", parsed.Metadata.Type, RecipeTypeLibrary)
+		}
+		if parsed.Metadata.Name != "libbar" {
+			t.Errorf("Roundtrip: Metadata.Name = %q, want %q", parsed.Metadata.Name, "libbar")
+		}
+		if parsed.Metadata.Description != "A library" {
+			t.Errorf("Roundtrip: Metadata.Description = %q, want %q", parsed.Metadata.Description, "A library")
+		}
+	})
+}
+
 // Helper function to check if string contains substring
 func contains(s, substr string) bool {
 	return len(s) >= len(substr) && (s == substr || len(substr) == 0 ||

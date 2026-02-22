@@ -63,6 +63,9 @@ func (r *Recipe) ToTOML() ([]byte, error) {
 	if r.Metadata.Homepage != "" {
 		buf.WriteString(fmt.Sprintf("homepage = %q\n", r.Metadata.Homepage))
 	}
+	if r.Metadata.Type != "" {
+		buf.WriteString(fmt.Sprintf("type = %q\n", r.Metadata.Type))
+	}
 	if r.Metadata.VersionFormat != "" {
 		buf.WriteString(fmt.Sprintf("version_format = %q\n", r.Metadata.VersionFormat))
 	}
