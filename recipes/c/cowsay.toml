@@ -17,5 +17,5 @@
   gem = "cowsay"
 
 [verify]
-  command = "cowsay --version"
+  command = "cowsay test"
   pattern = ""
