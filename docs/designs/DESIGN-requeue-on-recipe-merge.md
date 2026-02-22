@@ -47,8 +47,8 @@ Ref #1825
 | ~~_Move `loadBlockerMap()` and `loadBlockersFromFile()` to `internal/blocker/`, making the failure JSONL loading available to both requeue and reorder. Fixes the 64KB scanner buffer limit during extraction._~~ | | |
 | ~~[#1846: feat(requeue): implement requeue package for unblocking queue entries](https://github.com/tsukumogami/tsuku/issues/1846)~~ | ~~[#1845](https://github.com/tsukumogami/tsuku/issues/1845)~~ | ~~testable~~ |
 | ~~_Create `internal/requeue/` with the core logic: build a resolved-names set from "success" entries, check each blocked entry's blockers against it, flip to "pending" when all are resolved. Operates on the in-memory queue without I/O._~~ | | |
-| [#1847: refactor(cli): consolidate reorder-queue into queue-maintain with requeue](https://github.com/tsukumogami/tsuku/issues/1847) | [#1846](https://github.com/tsukumogami/tsuku/issues/1846) | testable |
-| _Rename `cmd/reorder-queue/` to `cmd/queue-maintain/` and wire both requeue and reorder into a single binary. Changes `reorder.Run()` to accept the queue directly for the single-load pattern._ | | |
+| ~~[#1847: refactor(cli): consolidate reorder-queue into queue-maintain with requeue](https://github.com/tsukumogami/tsuku/issues/1847)~~ | ~~[#1846](https://github.com/tsukumogami/tsuku/issues/1846)~~ | ~~testable~~ |
+| ~~_Rename `cmd/reorder-queue/` to `cmd/queue-maintain/` and wire both requeue and reorder into a single binary. Changes `reorder.Run()` to accept the queue directly for the single-load pattern._~~ | | |
 | [#1848: chore(ci): add queue-maintain to update-queue-status workflow](https://github.com/tsukumogami/tsuku/issues/1848) | [#1847](https://github.com/tsukumogami/tsuku/issues/1847) | testable |
 | _Extend `update-queue-status.yml` to build and run queue-maintain after marking merged recipes as "success". Produces a second commit that requeues unblocked packages and reorders the queue._ | | |
 | [#1849: chore(ci): replace requeue-unblocked.sh in batch-generate workflow](https://github.com/tsukumogami/tsuku/issues/1849) | [#1847](https://github.com/tsukumogami/tsuku/issues/1847) | testable |
@@ -100,9 +100,9 @@ graph TD
     classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
 
     class I1845 done
-    class I1846 done
-    class I1847 ready
-    class I1848,I1849,I1850,I1851 blocked
+    class I1846,I1847 done
+    class I1848,I1849 ready
+    class I1850,I1851 blocked
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design
