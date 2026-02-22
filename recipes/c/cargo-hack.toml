@@ -1,6 +1,6 @@
 [metadata]
   name = "cargo-hack"
-  description = "Cargo subcommand to provide various options useful for testing and continuous integration.\n"
+  description = "Cargo subcommand to provide various options useful for testing and continuous integration."
   homepage = "https://github.com/taiki-e/cargo-hack"
   version_format = ""
   requires_sudo = false
