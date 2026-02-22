@@ -1,0 +1,31 @@
+[metadata]
+  name = "bettercap"
+  description = "BetterCap is the state of the art, modular, portable and easily extensible MITM framework featuring ARP, DNS and ICMP spoofing, sslstripping, credentials harvesting and more."
+  homepage = "https://github.com/evilsocket/bettercap"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "rubygems"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "gem_install"
+  executables = ["bettercap"]
+  gem = "bettercap"
+
+[verify]
+  command = "bettercap --version"
+  pattern = ""

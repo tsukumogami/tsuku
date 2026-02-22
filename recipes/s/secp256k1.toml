@@ -1,0 +1,31 @@
+[metadata]
+  name = "secp256k1"
+  description = "Rust wrapper library for Pieter Wuille's `libsecp256k1`. Implements ECDSA and BIP 340 signatures for the SECG elliptic curve group secp256k1 and related utilities."
+  homepage = "https://github.com/rust-bitcoin/rust-secp256k1/"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "crates_io"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "cargo_install"
+  crate = "secp256k1"
+  executables = ["secp256k1"]
+
+[verify]
+  command = "secp256k1 --version"
+  pattern = ""

@@ -1,0 +1,31 @@
+[metadata]
+  name = "boringtun"
+  description = "an implementation of the WireGuard® protocol designed for portability and speed"
+  homepage = "https://github.com/cloudflare/boringtun"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "crates_io"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "cargo_install"
+  crate = "boringtun"
+  executables = ["boringtun"]
+
+[verify]
+  command = "boringtun --version"
+  pattern = ""

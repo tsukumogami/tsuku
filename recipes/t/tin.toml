@@ -1,0 +1,31 @@
+[metadata]
+  name = "tin"
+  description = "An incredibly simple interface to libnotify using Fiddle."
+  homepage = "https://gitorious.org/ruby-tin"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "rubygems"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "gem_install"
+  executables = ["tin"]
+  gem = "tin"
+
+[verify]
+  command = "tin --version"
+  pattern = ""

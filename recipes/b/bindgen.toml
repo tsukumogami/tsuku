@@ -1,0 +1,31 @@
+[metadata]
+  name = "bindgen"
+  description = "Automatically generates Rust FFI bindings to C and C++ libraries."
+  homepage = "https://rust-lang.github.io/rust-bindgen/"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "crates_io"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "cargo_install"
+  crate = "bindgen"
+  executables = ["bindgen"]
+
+[verify]
+  command = "bindgen --version"
+  pattern = ""

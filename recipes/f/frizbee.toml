@@ -1,0 +1,31 @@
+[metadata]
+  name = "frizbee"
+  description = "Fast typo-resistant fuzzy matching via SIMD smith waterman, similar algorithm to FZF/FZY"
+  homepage = "https://github.com/saghen/frizbee"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "crates_io"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "cargo_install"
+  crate = "frizbee"
+  executables = ["frizbee"]
+
+[verify]
+  command = "frizbee --version"
+  pattern = ""
