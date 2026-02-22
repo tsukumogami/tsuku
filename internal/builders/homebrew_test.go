@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/tsukumogami/tsuku/internal/llm"
+	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/telemetry"
 	"github.com/tsukumogami/tsuku/internal/validate"
 )
@@ -2566,6 +2567,326 @@ func TestHomebrewSession_classifyDeterministicFailure(t *testing.T) {
 			}
 			if result.Message == "" {
 				t.Error("Message should not be empty")
+			}
+		})
+	}
+}
+
+func TestHomebrewBuilder_generateLibraryRecipe_SinglePlatform(t *testing.T) {
+	b := &HomebrewBuilder{}
+
+	genCtx := &homebrewGenContext{
+		formula: "bdw-gc",
+		formulaInfo: &homebrewFormulaInfo{
+			Name:         "bdw-gc",
+			Description:  "Garbage collector for C and C++",
+			Homepage:     "https://www.hboehm.info/gc/",
+			Dependencies: []string{"libatomic_ops"},
+		},
+	}
+	genCtx.formulaInfo.Versions.Stable = "8.2.4"
+
+	platforms := []platformContents{
+		{
+			OS:   "linux",
+			Libc: "glibc",
+			Contents: &bottleContents{
+				LibFiles: []string{
+					"lib/libgc.so",
+					"lib/libgc.so.1",
+					"lib/libgc.so.1.5.0",
+					"lib/libgc.a",
+					"lib/pkgconfig/bdw-gc.pc",
+				},
+				Includes: []string{
+					"include/gc.h",
+					"include/gc/gc.h",
+				},
+			},
+		},
+	}
+
+	r, err := b.generateLibraryRecipe(context.Background(), "bdw-gc", genCtx, platforms)
+	if err != nil {
+		t.Fatalf("generateLibraryRecipe() error = %v", err)
+	}
+
+	// Verify metadata
+	if r.Metadata.Name != "bdw-gc" {
+		t.Errorf("Name = %q, want %q", r.Metadata.Name, "bdw-gc")
+	}
+	if r.Metadata.Type != recipe.RecipeTypeLibrary {
+		t.Errorf("Type = %q, want %q", r.Metadata.Type, recipe.RecipeTypeLibrary)
+	}
+	if r.Metadata.Description != "Garbage collector for C and C++" {
+		t.Errorf("Description = %q, want %q", r.Metadata.Description, "Garbage collector for C and C++")
+	}
+	if r.Metadata.Homepage != "https://www.hboehm.info/gc/" {
+		t.Errorf("Homepage = %q, want %q", r.Metadata.Homepage, "https://www.hboehm.info/gc/")
+	}
+
+	// Verify version section
+	if r.Version.Source != "homebrew" {
+		t.Errorf("Version.Source = %q, want %q", r.Version.Source, "homebrew")
+	}
+	if r.Version.Formula != "bdw-gc" {
+		t.Errorf("Version.Formula = %q, want %q", r.Version.Formula, "bdw-gc")
+	}
+
+	// Verify nil Verify (libraries don't have verify sections)
+	if r.Verify != nil {
+		t.Errorf("Verify should be nil for library recipes, got %+v", r.Verify)
+	}
+
+	// Verify runtime dependencies propagated
+	if len(r.Metadata.RuntimeDependencies) != 1 || r.Metadata.RuntimeDependencies[0] != "libatomic_ops" {
+		t.Errorf("RuntimeDependencies = %v, want [libatomic_ops]", r.Metadata.RuntimeDependencies)
+	}
+
+	// Verify steps: single platform should have 2 steps without when clauses
+	if len(r.Steps) != 2 {
+		t.Fatalf("len(Steps) = %d, want 2", len(r.Steps))
+	}
+
+	// Step 0: homebrew action
+	if r.Steps[0].Action != "homebrew" {
+		t.Errorf("Steps[0].Action = %q, want %q", r.Steps[0].Action, "homebrew")
+	}
+	if formula, ok := r.Steps[0].Params["formula"].(string); !ok || formula != "bdw-gc" {
+		t.Errorf("Steps[0].Params[formula] = %v, want %q", r.Steps[0].Params["formula"], "bdw-gc")
+	}
+	if r.Steps[0].When != nil {
+		t.Errorf("Steps[0].When should be nil for single-platform, got %+v", r.Steps[0].When)
+	}
+
+	// Step 1: install_binaries action
+	if r.Steps[1].Action != "install_binaries" {
+		t.Errorf("Steps[1].Action = %q, want %q", r.Steps[1].Action, "install_binaries")
+	}
+
+	// Verify install_mode = "directory"
+	installMode, ok := r.Steps[1].Params["install_mode"].(string)
+	if !ok || installMode != "directory" {
+		t.Errorf("Steps[1].Params[install_mode] = %v, want %q", r.Steps[1].Params["install_mode"], "directory")
+	}
+
+	// Verify outputs key (not binaries)
+	outputs, ok := r.Steps[1].Params["outputs"].([]string)
+	if !ok {
+		t.Fatalf("Steps[1].Params[outputs] is not []string, got %T", r.Steps[1].Params["outputs"])
+	}
+
+	// Outputs should be LibFiles + Includes = 5 + 2 = 7
+	if len(outputs) != 7 {
+		t.Errorf("len(outputs) = %d, want 7", len(outputs))
+	}
+
+	// First entries should be lib files
+	if outputs[0] != "lib/libgc.so" {
+		t.Errorf("outputs[0] = %q, want %q", outputs[0], "lib/libgc.so")
+	}
+
+	// Last entries should be include files
+	if outputs[6] != "include/gc/gc.h" {
+		t.Errorf("outputs[6] = %q, want %q", outputs[6], "include/gc/gc.h")
+	}
+
+	// Verify "binaries" key is NOT used
+	if _, exists := r.Steps[1].Params["binaries"]; exists {
+		t.Error("Steps[1].Params should not have 'binaries' key for library recipes")
+	}
+
+	if r.Steps[1].When != nil {
+		t.Errorf("Steps[1].When should be nil for single-platform, got %+v", r.Steps[1].When)
+	}
+}
+
+func TestHomebrewBuilder_generateLibraryRecipe_MultiPlatform(t *testing.T) {
+	b := &HomebrewBuilder{}
+
+	genCtx := &homebrewGenContext{
+		formula: "tree-sitter",
+		formulaInfo: &homebrewFormulaInfo{
+			Name:        "tree-sitter",
+			Description: "Parser generator tool",
+			Homepage:    "https://tree-sitter.github.io/",
+		},
+	}
+	genCtx.formulaInfo.Versions.Stable = "0.22.6"
+
+	platforms := []platformContents{
+		{
+			OS:   "linux",
+			Libc: "glibc",
+			Contents: &bottleContents{
+				LibFiles: []string{"lib/libtree-sitter.so", "lib/libtree-sitter.a"},
+				Includes: []string{"include/tree_sitter/api.h"},
+			},
+		},
+		{
+			OS:   "darwin",
+			Libc: "",
+			Contents: &bottleContents{
+				LibFiles: []string{"lib/libtree-sitter.dylib", "lib/libtree-sitter.a"},
+				Includes: []string{"include/tree_sitter/api.h"},
+			},
+		},
+	}
+
+	r, err := b.generateLibraryRecipe(context.Background(), "tree-sitter", genCtx, platforms)
+	if err != nil {
+		t.Fatalf("generateLibraryRecipe() error = %v", err)
+	}
+
+	// Multi-platform should have 4 steps (2 per platform)
+	if len(r.Steps) != 4 {
+		t.Fatalf("len(Steps) = %d, want 4", len(r.Steps))
+	}
+
+	// Steps 0-1: Linux platform with when clauses
+	if r.Steps[0].When == nil {
+		t.Fatal("Steps[0].When should not be nil for multi-platform")
+	}
+	if len(r.Steps[0].When.OS) != 1 || r.Steps[0].When.OS[0] != "linux" {
+		t.Errorf("Steps[0].When.OS = %v, want [linux]", r.Steps[0].When.OS)
+	}
+	if len(r.Steps[0].When.Libc) != 1 || r.Steps[0].When.Libc[0] != "glibc" {
+		t.Errorf("Steps[0].When.Libc = %v, want [glibc]", r.Steps[0].When.Libc)
+	}
+
+	// Steps 2-3: macOS platform with when clauses
+	if r.Steps[2].When == nil {
+		t.Fatal("Steps[2].When should not be nil for multi-platform")
+	}
+	if len(r.Steps[2].When.OS) != 1 || r.Steps[2].When.OS[0] != "darwin" {
+		t.Errorf("Steps[2].When.OS = %v, want [darwin]", r.Steps[2].When.OS)
+	}
+	if len(r.Steps[2].When.Libc) != 0 {
+		t.Errorf("Steps[2].When.Libc = %v, want empty (macOS)", r.Steps[2].When.Libc)
+	}
+}
+
+func TestHomebrewBuilder_generateToolRecipe_Regression(t *testing.T) {
+	b := &HomebrewBuilder{}
+
+	genCtx := &homebrewGenContext{
+		formula: "jq",
+		formulaInfo: &homebrewFormulaInfo{
+			Name:         "jq",
+			Description:  "Lightweight and flexible command-line JSON processor",
+			Homepage:     "https://jqlang.github.io/jq/",
+			Dependencies: []string{"oniguruma"},
+		},
+	}
+	genCtx.formulaInfo.Versions.Stable = "1.7.1"
+
+	binaries := []string{"jq"}
+
+	r, err := b.generateToolRecipe("jq", genCtx, binaries)
+	if err != nil {
+		t.Fatalf("generateToolRecipe() error = %v", err)
+	}
+
+	// Should be a tool recipe (no type set)
+	if r.Metadata.Type != "" {
+		t.Errorf("Type = %q, want empty for tool recipes", r.Metadata.Type)
+	}
+
+	// Should have a verify section
+	if r.Verify == nil {
+		t.Fatal("Verify should not be nil for tool recipes")
+	}
+	if r.Verify.Command != "jq --version" {
+		t.Errorf("Verify.Command = %q, want %q", r.Verify.Command, "jq --version")
+	}
+
+	// Should have 2 steps
+	if len(r.Steps) != 2 {
+		t.Fatalf("len(Steps) = %d, want 2", len(r.Steps))
+	}
+	if r.Steps[0].Action != "homebrew" {
+		t.Errorf("Steps[0].Action = %q, want %q", r.Steps[0].Action, "homebrew")
+	}
+	if r.Steps[1].Action != "install_binaries" {
+		t.Errorf("Steps[1].Action = %q, want %q", r.Steps[1].Action, "install_binaries")
+	}
+
+	// Should use "binaries" key (not "outputs") for tool recipes
+	if _, exists := r.Steps[1].Params["binaries"]; !exists {
+		t.Error("Steps[1].Params should have 'binaries' key for tool recipes")
+	}
+	if _, exists := r.Steps[1].Params["outputs"]; exists {
+		t.Error("Steps[1].Params should NOT have 'outputs' key for tool recipes")
+	}
+
+	// Binaries should be prefixed with bin/
+	bins, ok := r.Steps[1].Params["binaries"].([]string)
+	if !ok {
+		t.Fatalf("Steps[1].Params[binaries] is not []string, got %T", r.Steps[1].Params["binaries"])
+	}
+	if len(bins) != 1 || bins[0] != "bin/jq" {
+		t.Errorf("binaries = %v, want [bin/jq]", bins)
+	}
+
+	// Runtime dependencies propagated
+	if len(r.Metadata.RuntimeDependencies) != 1 || r.Metadata.RuntimeDependencies[0] != "oniguruma" {
+		t.Errorf("RuntimeDependencies = %v, want [oniguruma]", r.Metadata.RuntimeDependencies)
+	}
+
+	// Version section
+	if r.Version.Source != "homebrew" {
+		t.Errorf("Version.Source = %q, want %q", r.Version.Source, "homebrew")
+	}
+	if r.Version.Formula != "jq" {
+		t.Errorf("Version.Formula = %q, want %q", r.Version.Formula, "jq")
+	}
+}
+
+func TestHomebrewBuilder_generateDeterministicRecipe_ErrorMessages(t *testing.T) {
+	b := &HomebrewBuilder{
+		httpClient: &http.Client{Timeout: 5 * time.Second},
+	}
+	ctx := context.Background()
+
+	// Test nil formula info
+	genCtx := &homebrewGenContext{
+		formula:     "test",
+		formulaInfo: nil,
+	}
+	_, err := b.generateDeterministicRecipe(ctx, "test", genCtx)
+	if err == nil || !strings.Contains(err.Error(), "formula info not available") {
+		t.Errorf("expected 'formula info not available' error, got: %v", err)
+	}
+
+	// Test empty version
+	genCtx.formulaInfo = &homebrewFormulaInfo{Name: "test"}
+	_, err = b.generateDeterministicRecipe(ctx, "test", genCtx)
+	if err == nil || !strings.Contains(err.Error(), "no stable version") {
+		t.Errorf("expected 'no stable version' error, got: %v", err)
+	}
+}
+
+func TestPlatformTagToOSLibc(t *testing.T) {
+	tests := []struct {
+		tag      string
+		wantOS   string
+		wantLibc string
+	}{
+		{"x86_64_linux", "linux", "glibc"},
+		{"arm64_linux", "linux", "glibc"},
+		{"arm64_sonoma", "darwin", ""},
+		{"sonoma", "darwin", ""},
+		{"ventura", "darwin", ""},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.tag, func(t *testing.T) {
+			gotOS, gotLibc := platformTagToOSLibc(tt.tag)
+			if gotOS != tt.wantOS {
+				t.Errorf("OS = %q, want %q", gotOS, tt.wantOS)
+			}
+			if gotLibc != tt.wantLibc {
+				t.Errorf("Libc = %q, want %q", gotLibc, tt.wantLibc)
 			}
 		})
 	}

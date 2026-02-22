@@ -106,7 +106,7 @@ func NewTestRecipe(name string) *recipe.Recipe {
 				},
 			},
 		},
-		Verify: recipe.VerifySection{
+		Verify: &recipe.VerifySection{
 			Command: "echo 'verified'",
 			Pattern: "verified",
 		},

@@ -86,7 +86,7 @@ func TestExecutor_Validate_NoRuntime(t *testing.T) {
 	executor := NewExecutor(detector, NewPreDownloader(), WithExecutorLogger(logger))
 
 	r := &recipe.Recipe{
-		Verify: recipe.VerifySection{
+		Verify: &recipe.VerifySection{
 			Command: "test --version",
 		},
 	}
@@ -141,7 +141,7 @@ func TestExecutor_Validate_DockerGroupWarning(t *testing.T) {
 	executor := NewExecutor(detector, NewPreDownloader(), WithExecutorLogger(logger), WithTsukuBinary("/mock/tsuku"))
 
 	r := &recipe.Recipe{
-		Verify: recipe.VerifySection{
+		Verify: &recipe.VerifySection{
 			Command: "test --version",
 			Pattern: "1.0.0",
 		},
@@ -191,7 +191,7 @@ func TestExecutor_Validate_Success(t *testing.T) {
 	executor := NewExecutor(detector, NewPreDownloader(), WithTsukuBinary("/mock/tsuku"))
 
 	r := &recipe.Recipe{
-		Verify: recipe.VerifySection{
+		Verify: &recipe.VerifySection{
 			Command: "mytool --version",
 			Pattern: "1.2.3",
 		},
@@ -229,7 +229,7 @@ func TestExecutor_Validate_VerificationFails(t *testing.T) {
 	executor := NewExecutor(detector, NewPreDownloader(), WithTsukuBinary("/mock/tsuku"))
 
 	r := &recipe.Recipe{
-		Verify: recipe.VerifySection{
+		Verify: &recipe.VerifySection{
 			Command: "mytool --version",
 			Pattern: "1.2.3",
 		},
@@ -267,7 +267,7 @@ func TestExecutor_Validate_PatternMismatch(t *testing.T) {
 	executor := NewExecutor(detector, NewPreDownloader(), WithTsukuBinary("/mock/tsuku"))
 
 	r := &recipe.Recipe{
-		Verify: recipe.VerifySection{
+		Verify: &recipe.VerifySection{
 			Command: "mytool --version",
 			Pattern: "1.2.3", // Looking for 1.2.3 but output has 2.0.0
 		},
@@ -302,7 +302,7 @@ func TestExecutor_Validate_ContainerError(t *testing.T) {
 	executor := NewExecutor(detector, NewPreDownloader(), WithTsukuBinary("/mock/tsuku"))
 
 	r := &recipe.Recipe{
-		Verify: recipe.VerifySection{
+		Verify: &recipe.VerifySection{
 			Command: "mytool --version",
 		},
 	}
@@ -340,7 +340,7 @@ func TestExecutor_Validate_CustomExitCode(t *testing.T) {
 
 	exitCode := 2
 	r := &recipe.Recipe{
-		Verify: recipe.VerifySection{
+		Verify: &recipe.VerifySection{
 			Command:  "mytool --check",
 			ExitCode: &exitCode, // Expect exit code 2
 			Pattern:  "expected",
@@ -376,7 +376,7 @@ func TestExecutor_Validate_NoPattern(t *testing.T) {
 	executor := NewExecutor(detector, NewPreDownloader(), WithTsukuBinary("/mock/tsuku"))
 
 	r := &recipe.Recipe{
-		Verify: recipe.VerifySection{
+		Verify: &recipe.VerifySection{
 			Command: "mytool --version",
 			// No pattern - just check exit code
 		},
@@ -411,7 +411,7 @@ func TestExecutor_Validate_MountsAndLabels(t *testing.T) {
 	executor := NewExecutor(detector, NewPreDownloader(), WithTsukuBinary("/mock/tsuku"))
 
 	r := &recipe.Recipe{
-		Verify: recipe.VerifySection{
+		Verify: &recipe.VerifySection{
 			Command: "test",
 		},
 	}

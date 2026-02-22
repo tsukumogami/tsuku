@@ -1676,6 +1676,49 @@ func (b *HomebrewBuilder) extractBottleContents(tarballPath string) (*bottleCont
 	return contents, nil
 }
 
+// platformContents pairs a platform with its scanned bottle contents. Used by
+// generateLibraryRecipe to produce platform-conditional steps.
+type platformContents struct {
+	OS       string          // "linux" or "darwin"
+	Libc     string          // "glibc" or "" (macOS has no libc distinction)
+	Contents *bottleContents // Scanned files from the platform's bottle
+}
+
+// inspectBottleContents downloads a bottle from GHCR and returns its full
+// contents. Unlike listBottleBinaries, this returns all file categories
+// (binaries, library files, and headers) so callers can decide what recipe
+// type to generate.
+func (b *HomebrewBuilder) inspectBottleContents(ctx context.Context, formula, version, platformTag string) (*bottleContents, error) {
+	token, err := b.getGHCRToken(formula)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get GHCR token: %w", err)
+	}
+
+	manifest, err := b.fetchGHCRManifest(ctx, formula, version, token)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch GHCR manifest: %w", err)
+	}
+
+	blobSHA, err := b.getBlobSHAFromManifest(manifest, version, platformTag)
+	if err != nil {
+		return nil, err
+	}
+
+	tempFile, err := os.CreateTemp("", fmt.Sprintf("tsuku-bottle-%s-*.tar.gz", formula))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create temp file: %w", err)
+	}
+	tempPath := tempFile.Name()
+	tempFile.Close()
+	defer os.Remove(tempPath)
+
+	if err := b.downloadBottleBlob(ctx, formula, blobSHA, token, tempPath); err != nil {
+		return nil, fmt.Errorf("failed to download bottle: %w", err)
+	}
+
+	return b.extractBottleContents(tempPath)
+}
+
 // getCurrentPlatformTag returns the platform tag for the current runtime.
 func getCurrentPlatformTag() (string, error) {
 	os := runtime.GOOS
@@ -1692,6 +1735,17 @@ func getCurrentPlatformTag() (string, error) {
 	default:
 		return "", fmt.Errorf("unsupported platform: %s/%s", os, arch)
 	}
+}
+
+// platformTagToOSLibc maps a Homebrew platform tag to OS and libc values for
+// use in recipe when clauses. Tags like "x86_64_linux" and "arm64_linux" map to
+// linux/glibc. Tags like "arm64_sonoma" and "sonoma" map to darwin with no libc.
+func platformTagToOSLibc(tag string) (os string, libc string) {
+	if strings.Contains(tag, "linux") {
+		return "linux", "glibc"
+	}
+	// All non-linux Homebrew tags are macOS (sonoma, ventura, etc.)
+	return "darwin", ""
 }
 
 // buildRepairMessageFromSandbox constructs error feedback from sandbox results.
@@ -1872,7 +1926,7 @@ func (b *HomebrewBuilder) generateRecipe(packageName string, info *homebrewFormu
 			Source:  "homebrew",
 			Formula: info.Name,
 		},
-		Verify: recipe.VerifySection{
+		Verify: &recipe.VerifySection{
 			Command: data.VerifyCommand,
 		},
 	}
@@ -1901,38 +1955,90 @@ func (b *HomebrewBuilder) generateRecipe(packageName string, info *homebrewFormu
 	return r, nil
 }
 
-// generateDeterministicRecipe attempts to generate a recipe without LLM by inspecting the bottle.
-// Returns the recipe and nil error on success, or nil and an error if deterministic generation fails.
-func (b *HomebrewBuilder) generateDeterministicRecipe(ctx context.Context, packageName string, genCtx *homebrewGenContext) (*recipe.Recipe, error) {
+// generateLibraryRecipe produces a type = "library" recipe from scanned bottle
+// contents. For a single-platform input (len(platforms) == 1), the steps have no
+// when clauses. Multi-platform support (when clauses) is added by #1879.
+func (b *HomebrewBuilder) generateLibraryRecipe(
+	ctx context.Context,
+	packageName string,
+	genCtx *homebrewGenContext,
+	platforms []platformContents,
+) (*recipe.Recipe, error) {
+	if len(platforms) == 0 {
+		return nil, fmt.Errorf("no platform contents provided")
+	}
+
 	info := genCtx.formulaInfo
-	if info == nil {
-		return nil, fmt.Errorf("formula info not available")
-	}
-	if info.Versions.Stable == "" {
-		return nil, fmt.Errorf("no stable version for formula")
+
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name:        packageName,
+			Description: info.Description,
+			Homepage:    info.Homepage,
+			Type:        recipe.RecipeTypeLibrary,
+		},
+		Version: recipe.VersionSection{
+			Source:  "homebrew",
+			Formula: info.Name,
+		},
+		// Verify is nil for library recipes -- libraries can't be executed
 	}
 
-	// Get the current platform tag
-	platformTag, err := getCurrentPlatformTag()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get platform tag: %w", err)
+	// Add runtime dependencies from formula info
+	if len(info.Dependencies) > 0 {
+		r.Metadata.RuntimeDependencies = info.Dependencies
 	}
 
-	// Inspect the bottle to get binary names
-	binaries, err := b.listBottleBinaries(ctx, info.Name, info.Versions.Stable, platformTag)
-	if err != nil {
-		return nil, fmt.Errorf("failed to inspect bottle: %w", err)
+	// Build steps for each platform
+	for _, plat := range platforms {
+		// Combine LibFiles and Includes into outputs list
+		outputs := make([]string, 0, len(plat.Contents.LibFiles)+len(plat.Contents.Includes))
+		outputs = append(outputs, plat.Contents.LibFiles...)
+		outputs = append(outputs, plat.Contents.Includes...)
+
+		homebrewStep := recipe.Step{
+			Action: "homebrew",
+			Params: map[string]interface{}{
+				"formula": info.Name,
+			},
+		}
+
+		installStep := recipe.Step{
+			Action: "install_binaries",
+			Params: map[string]interface{}{
+				"install_mode": "directory",
+				"outputs":      outputs,
+			},
+		}
+
+		// For multi-platform (len > 1), add when clauses. For single platform,
+		// omit when clauses to match the simpler recipe format.
+		if len(platforms) > 1 {
+			when := &recipe.WhenClause{
+				OS: []string{plat.OS},
+			}
+			if plat.Libc != "" {
+				when.Libc = []string{plat.Libc}
+			}
+			homebrewStep.When = when
+			installStep.When = when
+		}
+
+		r.Steps = append(r.Steps, homebrewStep, installStep)
 	}
 
-	if len(binaries) == 0 {
-		return nil, fmt.Errorf("no binaries found in bottle")
-	}
+	return r, nil
+}
 
-	// Use the first binary for verification (most common pattern)
+// generateToolRecipe creates a tool recipe from binary inspection results.
+// This is the existing tool recipe path, extracted from generateDeterministicRecipe
+// for clarity after the library recipe path was added.
+func (b *HomebrewBuilder) generateToolRecipe(packageName string, genCtx *homebrewGenContext, binaries []string) (*recipe.Recipe, error) {
+	info := genCtx.formulaInfo
+
 	verifyBinary := binaries[0]
 	verifyCommand := fmt.Sprintf("%s --version", verifyBinary)
 
-	// Build the recipe
 	r := &recipe.Recipe{
 		Metadata: recipe.MetadataSection{
 			Name:        packageName,
@@ -1943,7 +2049,7 @@ func (b *HomebrewBuilder) generateDeterministicRecipe(ctx context.Context, packa
 			Source:  "homebrew",
 			Formula: info.Name,
 		},
-		Verify: recipe.VerifySection{
+		Verify: &recipe.VerifySection{
 			Command: verifyCommand,
 		},
 	}
@@ -1956,7 +2062,6 @@ func (b *HomebrewBuilder) generateDeterministicRecipe(ctx context.Context, packa
 		binPaths[i] = "bin/" + b
 	}
 
-	// Add homebrew action and install_binaries
 	r.Steps = []recipe.Step{
 		{
 			Action: "homebrew",
@@ -1972,10 +2077,58 @@ func (b *HomebrewBuilder) generateDeterministicRecipe(ctx context.Context, packa
 		},
 	}
 
-	// Add runtime dependencies from formula info
 	if len(info.Dependencies) > 0 {
 		r.Metadata.RuntimeDependencies = info.Dependencies
 	}
 
 	return r, nil
+}
+
+// generateDeterministicRecipe attempts to generate a recipe without LLM by inspecting the bottle.
+// Returns the recipe and nil error on success, or nil and an error if deterministic generation fails.
+// For bottles with binaries, it produces a tool recipe. For library-only bottles (lib/ files but
+// no binaries), it produces a library recipe. If neither binaries nor library files are found,
+// it returns an error.
+func (b *HomebrewBuilder) generateDeterministicRecipe(ctx context.Context, packageName string, genCtx *homebrewGenContext) (*recipe.Recipe, error) {
+	info := genCtx.formulaInfo
+	if info == nil {
+		return nil, fmt.Errorf("formula info not available")
+	}
+	if info.Versions.Stable == "" {
+		return nil, fmt.Errorf("no stable version for formula")
+	}
+
+	// Get the current platform tag
+	platformTag, err := getCurrentPlatformTag()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get platform tag: %w", err)
+	}
+
+	// Inspect the bottle to get full contents (binaries, libs, headers)
+	contents, err := b.inspectBottleContents(ctx, info.Name, info.Versions.Stable, platformTag)
+	if err != nil {
+		return nil, fmt.Errorf("failed to inspect bottle: %w", err)
+	}
+
+	// Branch 1: Tool recipe (has binaries)
+	if len(contents.Binaries) > 0 {
+		return b.generateToolRecipe(packageName, genCtx, contents.Binaries)
+	}
+
+	// Branch 2: Library recipe (no binaries, but has lib files)
+	if len(contents.LibFiles) > 0 {
+		// Determine the OS and libc from the platform tag
+		os, libc := platformTagToOSLibc(platformTag)
+		platforms := []platformContents{
+			{
+				OS:       os,
+				Libc:     libc,
+				Contents: contents,
+			},
+		}
+		return b.generateLibraryRecipe(ctx, packageName, genCtx, platforms)
+	}
+
+	// Branch 3: Neither binaries nor library files
+	return nil, fmt.Errorf("no binaries or library files found in bottle")
 }

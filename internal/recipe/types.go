@@ -17,7 +17,7 @@ type Recipe struct {
 	Resources []Resource      `toml:"resources,omitempty"`
 	Patches   []Patch         `toml:"patches,omitempty"`
 	Steps     []Step          `toml:"steps"`
-	Verify    VerifySection   `toml:"verify"`
+	Verify    *VerifySection  `toml:"verify,omitempty"`
 }
 
 // Resource represents an additional download required for source builds.
@@ -132,13 +132,15 @@ func (r *Recipe) ToTOML() ([]byte, error) {
 		buf.WriteString("\n")
 	}
 
-	// Encode verify section
-	buf.WriteString("[verify]\n")
-	if r.Verify.Command != "" {
-		buf.WriteString(fmt.Sprintf("command = %q\n", r.Verify.Command))
-	}
-	if r.Verify.Pattern != "" {
-		buf.WriteString(fmt.Sprintf("pattern = %q\n", r.Verify.Pattern))
+	// Encode verify section (omit entirely for library recipes with nil Verify)
+	if r.Verify != nil {
+		buf.WriteString("[verify]\n")
+		if r.Verify.Command != "" {
+			buf.WriteString(fmt.Sprintf("command = %q\n", r.Verify.Command))
+		}
+		if r.Verify.Pattern != "" {
+			buf.WriteString(fmt.Sprintf("pattern = %q\n", r.Verify.Pattern))
+		}
 	}
 
 	return []byte(buf.String()), nil
@@ -1074,6 +1076,6 @@ func (r *Recipe) IsExternallyManagedFor(target Matchable, actionLookup func(stri
 // This is useful for modifying verification without mutating the original recipe.
 func (r *Recipe) WithVerify(verify VerifySection) *Recipe {
 	copy := *r
-	copy.Verify = verify
+	copy.Verify = &verify
 	return &copy
 }

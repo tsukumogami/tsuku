@@ -31,7 +31,7 @@ func TestRecipeFamilyPolicy_String(t *testing.T) {
 func makeRecipeWithAnalysis(steps []stepWithAnalysis) *Recipe {
 	recipe := &Recipe{
 		Metadata: MetadataSection{Name: "test"},
-		Verify:   VerifySection{Command: "test --version"},
+		Verify:   &VerifySection{Command: "test --version"},
 	}
 	for _, s := range steps {
 		step := Step{
@@ -246,7 +246,7 @@ func TestAnalyzeRecipe_NilAnalysis(t *testing.T) {
 		Steps: []Step{
 			{Action: "download"},
 		},
-		Verify: VerifySection{Command: "test --version"},
+		Verify: &VerifySection{Command: "test --version"},
 	}
 
 	analysis := AnalyzeRecipe(recipe)
@@ -441,7 +441,7 @@ func TestAnalyzeRecipe_EmptyRecipe(t *testing.T) {
 	recipe := &Recipe{
 		Metadata: MetadataSection{Name: "empty"},
 		Steps:    []Step{},
-		Verify:   VerifySection{Command: "test --version"},
+		Verify:   &VerifySection{Command: "test --version"},
 	}
 
 	analysis := AnalyzeRecipe(recipe)
@@ -459,7 +459,7 @@ func TestSupportedPlatforms_EmptyRecipe(t *testing.T) {
 	recipe := &Recipe{
 		Metadata: MetadataSection{Name: "empty"},
 		Steps:    []Step{},
-		Verify:   VerifySection{Command: "test --version"},
+		Verify:   &VerifySection{Command: "test --version"},
 	}
 
 	platforms := SupportedPlatforms(recipe)

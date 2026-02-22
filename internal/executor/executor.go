@@ -246,7 +246,7 @@ func (e *Executor) DryRun(ctx context.Context) error {
 	}
 
 	// Print verification command
-	if e.recipe.Verify.Command != "" {
+	if e.recipe.Verify != nil && e.recipe.Verify.Command != "" {
 		fmt.Printf("  Verification: %s\n", e.recipe.Verify.Command)
 	}
 
@@ -355,14 +355,14 @@ func (e *Executor) ExecutePlan(ctx context.Context, plan *InstallationPlan) erro
 		}
 		// Add verify info if available
 		if plan.Verify != nil && plan.Verify.Command != "" {
-			recipeForContext.Verify = recipe.VerifySection{
+			recipeForContext.Verify = &recipe.VerifySection{
 				Command: plan.Verify.Command,
 				Pattern: plan.Verify.Pattern,
 			}
 		}
-	} else if recipeForContext.Verify.Command == "" && plan.Verify != nil && plan.Verify.Command != "" {
+	} else if (recipeForContext.Verify == nil || recipeForContext.Verify.Command == "") && plan.Verify != nil && plan.Verify.Command != "" {
 		// Recipe exists but has no verify, add from plan
-		recipeForContext.Verify = recipe.VerifySection{
+		recipeForContext.Verify = &recipe.VerifySection{
 			Command: plan.Verify.Command,
 			Pattern: plan.Verify.Pattern,
 		}
@@ -631,7 +631,7 @@ func (e *Executor) installSingleDependency(ctx context.Context, dep *DependencyP
 		},
 	}
 	if dep.Verify != nil {
-		depRecipe.Verify = recipe.VerifySection{
+		depRecipe.Verify = &recipe.VerifySection{
 			Command: dep.Verify.Command,
 			Pattern: dep.Verify.Pattern,
 		}

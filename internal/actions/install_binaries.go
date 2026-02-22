@@ -94,7 +94,10 @@ func (a *InstallBinariesAction) Execute(ctx *ExecutionContext, params map[string
 	// This check also exists in composite actions (github_archive, download_archive),
 	// but we enforce it here to prevent bypass via direct install_binaries usage
 	// Libraries are exempt since they cannot be run directly to verify
-	verifyCmd := strings.TrimSpace(ctx.Recipe.Verify.Command)
+	var verifyCmd string
+	if ctx.Recipe.Verify != nil {
+		verifyCmd = strings.TrimSpace(ctx.Recipe.Verify.Command)
+	}
 	isLibrary := ctx.Recipe.Metadata.Type == "library"
 	if (installMode == "directory" || installMode == "directory_wrapped") && verifyCmd == "" && !isLibrary {
 		return fmt.Errorf("recipes with install_mode='%s' must include a [verify] section with a command to ensure the installation works correctly", installMode)

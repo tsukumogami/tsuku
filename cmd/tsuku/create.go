@@ -1111,7 +1111,7 @@ func formatRecipeTOML(r *recipe.Recipe) (string, error) {
 		Metadata recipe.MetadataSection   `toml:"metadata"`
 		Version  recipe.VersionSection    `toml:"version"`
 		Steps    []map[string]interface{} `toml:"steps"`
-		Verify   recipe.VerifySection     `toml:"verify"`
+		Verify   *recipe.VerifySection    `toml:"verify,omitempty"`
 	}
 
 	steps := make([]map[string]interface{}, len(r.Steps))

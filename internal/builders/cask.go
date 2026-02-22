@@ -161,12 +161,12 @@ func (b *CaskBuilder) Build(ctx context.Context, req BuildRequest) (*BuildResult
 	// Set verify command
 	if len(binaries) > 0 {
 		// Use first binary for verification
-		r.Verify = recipe.VerifySection{
+		r.Verify = &recipe.VerifySection{
 			Command: fmt.Sprintf("%s --version", binaries[0]),
 		}
 	} else if hasApp {
 		// Use app bundle existence for verification
-		r.Verify = recipe.VerifySection{
+		r.Verify = &recipe.VerifySection{
 			Command: fmt.Sprintf("test -d \"$TSUKU_HOME/apps/%s-%s.app\"", req.Package, "{{version}}"),
 		}
 	}

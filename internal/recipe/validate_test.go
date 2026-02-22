@@ -46,7 +46,7 @@ func TestValidateStructural_InvalidType(t *testing.T) {
 			Type: "invalid",
 		},
 		Steps:  []Step{{Action: "download"}},
-		Verify: VerifySection{Command: "test --version"},
+		Verify: &VerifySection{Command: "test --version"},
 	}
 	errs := ValidateStructural(r)
 
@@ -65,7 +65,7 @@ func TestValidateStructural_InvalidType(t *testing.T) {
 func TestValidateStructural_NoSteps(t *testing.T) {
 	r := &Recipe{
 		Metadata: MetadataSection{Name: "test"},
-		Verify:   VerifySection{Command: "test --version"},
+		Verify:   &VerifySection{Command: "test --version"},
 	}
 	errs := ValidateStructural(r)
 
@@ -85,7 +85,7 @@ func TestValidateStructural_StepWithoutAction(t *testing.T) {
 	r := &Recipe{
 		Metadata: MetadataSection{Name: "test"},
 		Steps:    []Step{{Params: map[string]interface{}{"url": "http://example.com"}}},
-		Verify:   VerifySection{Command: "test --version"},
+		Verify:   &VerifySection{Command: "test --version"},
 	}
 	errs := ValidateStructural(r)
 
@@ -142,7 +142,7 @@ func TestValidateStructural_ValidRecipe(t *testing.T) {
 	r := &Recipe{
 		Metadata: MetadataSection{Name: "test-tool"},
 		Steps:    []Step{{Action: "download", Params: map[string]interface{}{"url": "http://example.com"}}},
-		Verify:   VerifySection{Command: "test --version"},
+		Verify:   &VerifySection{Command: "test --version"},
 	}
 	errs := ValidateStructural(r)
 
@@ -155,7 +155,7 @@ func TestValidateStructural_PatchMutualExclusivity(t *testing.T) {
 	r := &Recipe{
 		Metadata: MetadataSection{Name: "test"},
 		Steps:    []Step{{Action: "download"}},
-		Verify:   VerifySection{Command: "test --version"},
+		Verify:   &VerifySection{Command: "test --version"},
 		Patches: []Patch{
 			{URL: "http://example.com/patch", Data: "some data"},
 		},
@@ -217,7 +217,7 @@ func TestValidateFull_CombinesBothLayers(t *testing.T) {
 	// Recipe with structural error (no name) and semantic error (version)
 	r := &Recipe{
 		Steps:  []Step{{Action: "download"}},
-		Verify: VerifySection{Command: "test --version"},
+		Verify: &VerifySection{Command: "test --version"},
 	}
 	result := ValidateFull(r)
 

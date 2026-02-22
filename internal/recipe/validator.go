@@ -481,7 +481,7 @@ func validateVerify(result *ValidationResult, r *Recipe) {
 		return
 	}
 
-	if r.Verify.Command == "" {
+	if r.Verify == nil || r.Verify.Command == "" {
 		result.addError("verify.command", "command is required")
 		return
 	}

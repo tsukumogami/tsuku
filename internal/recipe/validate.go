@@ -47,7 +47,7 @@ func ValidateStructural(r *Recipe) []ValidationError {
 	}
 
 	// Verify command (for non-libraries)
-	if r.Metadata.Type != RecipeTypeLibrary && r.Verify.Command == "" {
+	if r.Metadata.Type != RecipeTypeLibrary && (r.Verify == nil || r.Verify.Command == "") {
 		errors = append(errors, ValidationError{Field: "verify.command", Message: "command is required"})
 	}
 
