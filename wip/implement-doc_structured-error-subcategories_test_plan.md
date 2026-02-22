@@ -4,6 +4,21 @@ Generated from: docs/designs/DESIGN-structured-error-subcategories.md
 Issues covered: 4
 Total scenarios: 14
 
+- [x] scenario-1: classifyInstallError returns subcategory for timeout errors
+- [x] scenario-2: classifyInstallError returns subcategory for DNS, TLS, and connection errors
+- [x] scenario-3: installError JSON includes subcategory when non-empty
+- [x] scenario-4: handleInstallError populates subcategory in JSON output
+- [ ] scenario-5: orchestrator categoryFromExitCode returns canonical taxonomy
+- [ ] scenario-6: parseInstallJSON derives category from exit code, not CLI string
+- [ ] scenario-7: parseInstallJSON returns empty subcategory when absent from CLI JSON
+- [ ] scenario-8: FailureRecord includes subcategory in JSONL output
+- [ ] scenario-9: failure-record schema accepts canonical categories and subcategory
+- [ ] scenario-10: CI workflow jq uses canonical category names
+- [ ] scenario-11: dashboard remapCategory translates old category strings
+- [ ] scenario-12: dashboard prefers structured subcategory over heuristic extraction
+- [ ] scenario-13: end-to-end pipeline produces consistent categories across paths
+- [ ] scenario-14: full test suite passes with all changes
+
 ---
 
 ## Scenario 1: classifyInstallError returns subcategory for timeout errors

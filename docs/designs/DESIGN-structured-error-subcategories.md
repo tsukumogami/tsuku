@@ -37,8 +37,8 @@ rationale: |
 
 | Issue | Dependencies | Tier |
 |-------|--------------|------|
-| [#1856: feat(cli): add subcategory to install error JSON output](https://github.com/tsukumogami/tsuku/issues/1856) | None | testable |
-| _Extend `classifyInstallError()` to return a subcategory string alongside the exit code. Add `Subcategory` field to `installError` JSON struct. Maps typed errors (ErrTypeTimeout, ErrTypeDNS, etc.) to specific subcategory strings._ | | |
+| ~~[#1856: feat(cli): add subcategory to install error JSON output](https://github.com/tsukumogami/tsuku/issues/1856)~~ | ~~None~~ | ~~testable~~ |
+| ~~_Extend `classifyInstallError()` to return a subcategory string alongside the exit code. Add `Subcategory` field to `installError` JSON struct. Maps typed errors (ErrTypeTimeout, ErrTypeDNS, etc.) to specific subcategory strings._~~ | | |
 | [#1857: feat(batch): normalize pipeline categories and add subcategory passthrough](https://github.com/tsukumogami/tsuku/issues/1857) | [#1856](https://github.com/tsukumogami/tsuku/issues/1856) | testable |
 | _Update orchestrator's `categoryFromExitCode()` to canonical taxonomy. Fix `parseInstallJSON()` to derive pipeline categories from exit codes instead of trusting CLI strings. Add `Subcategory` field to `FailureRecord` and JSON schema._ | | |
 | [#1858: fix(ci): align batch workflow category names with canonical taxonomy](https://github.com/tsukumogami/tsuku/issues/1858) | [#1857](https://github.com/tsukumogami/tsuku/issues/1857) | simple |
