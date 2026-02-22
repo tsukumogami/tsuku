@@ -1,5 +1,5 @@
 [metadata]
-  name = "blake3"
+  name = "b3sum"
   description = "the BLAKE3 hash function"
   homepage = "https://github.com/BLAKE3-team/BLAKE3"
   version_format = ""
@@ -23,9 +23,9 @@
 
 [[steps]]
   action = "cargo_install"
-  crate = "blake3"
-  executables = ["blake3"]
+  crate = "b3sum"
+  executables = ["b3sum"]
 
 [verify]
-  command = "blake3 --version"
+  command = "b3sum --version"
   pattern = ""
