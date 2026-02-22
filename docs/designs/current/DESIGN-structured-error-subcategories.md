@@ -29,7 +29,7 @@ rationale: |
 
 ## Status
 
-**Planned**
+**Current**
 
 ## Implementation Issues
 
@@ -46,29 +46,7 @@ rationale: |
 | ~~[#1859: feat(dashboard): read structured subcategories with category remap fallback](https://github.com/tsukumogami/tsuku/issues/1859)~~ | ~~[#1857](https://github.com/tsukumogami/tsuku/issues/1857)~~ | ~~testable~~ |
 | ~~_Add subcategory passthrough to dashboard deserialization structs. Category remap translates old names on load. `extractSubcategory()` becomes conditional -- only called when structured subcategory is absent._~~ | | |
 
-```mermaid
-graph TD
-    classDef done fill:#28a745,color:#fff
-    classDef ready fill:#0366d6,color:#fff
-    classDef blocked fill:#ffd33d,color:#000
-    classDef needsDesign fill:#6f42c1,color:#fff
-
-    I1856["#1856 CLI subcategory output"]
-    I1857["#1857 Orchestrator normalization"]
-    I1858["#1858 CI workflow alignment"]
-    I1859["#1859 Dashboard update"]
-
-    I1856 --> I1857
-    I1857 --> I1858
-    I1857 --> I1859
-
-    class I1856 done
-    class I1857 done
-    class I1858 done
-    class I1859 done
-```
-
-**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
+All issues implemented.
 
 ## Context and Problem Statement
 
