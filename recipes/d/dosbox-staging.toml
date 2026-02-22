@@ -1,0 +1,35 @@
+[metadata]
+  name = "dosbox-staging"
+  description = "Modernized DOSBox soft-fork"
+  homepage = "https://dosbox-staging.github.io/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["fluid-synth", "glib", "libpng", "sdl2"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "dosbox-staging"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "dosbox-staging"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/dosbox-staging"]
+
+[verify]
+  command = "dosbox-staging --version"
+  pattern = ""

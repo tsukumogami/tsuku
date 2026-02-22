@@ -1,0 +1,35 @@
+[metadata]
+  name = "frotz"
+  description = "Infocom-style interactive fiction player"
+  homepage = "https://661.org/proj/if/frotz/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["freetype", "jpeg-turbo", "libpng", "ncurses", "sdl2"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "frotz"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "frotz"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/dfrotz", "bin/frotz", "bin/sfrotz"]
+
+[verify]
+  command = "dfrotz --version"
+  pattern = ""

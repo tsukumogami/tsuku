@@ -1,0 +1,35 @@
+[metadata]
+  name = "clifm"
+  description = "Command-line Interface File Manager"
+  homepage = "https://github.com/leo-arch/clifm"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["readline", "gettext"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "clifm"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "clifm"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/clifm"]
+
+[verify]
+  command = "clifm --version"
+  pattern = ""

@@ -1,0 +1,35 @@
+[metadata]
+  name = "gnuradio"
+  description = "SDK for signal processing blocks to implement software radios"
+  homepage = "https://www.gnuradio.org/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["gmp", "gsl", "jack", "libyaml", "numpy"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "gnuradio"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "gnuradio"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/gnuradio-companion", "bin/gnuradio-config-info", "bin/gr_filter_design", "bin/gr_modtool", "bin/gr_plot", "bin/gr_plot_const", "bin/gr_plot_fft", "bin/gr_plot_iq", "bin/gr_plot_psd", "bin/gr_plot_qt", "bin/gr_read_file_metadata", "bin/grcc", "bin/polar_channel_construction", "bin/uhd_fft", "bin/uhd_rx_cfile", "bin/uhd_rx_nogui", "bin/uhd_siggen", "bin/uhd_siggen_gui"]
+
+[verify]
+  command = "gnuradio-companion --version"
+  pattern = ""

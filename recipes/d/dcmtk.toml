@@ -1,0 +1,35 @@
+[metadata]
+  name = "dcmtk"
+  description = "OFFIS DICOM toolkit command-line utilities"
+  homepage = "https://dicom.offis.de/dcmtk.php.en"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["jpeg-turbo", "libpng"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "dcmtk"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "dcmtk"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/cda2dcm", "bin/dcm2cda", "bin/dcm2img", "bin/dcm2json", "bin/dcm2pdf", "bin/dcm2pnm", "bin/dcm2xml", "bin/dcmcjpeg", "bin/dcmcjpls", "bin/dcmconv", "bin/dcmcrle", "bin/dcmdecap", "bin/dcmdjpeg", "bin/dcmdjpls", "bin/dcmdrle", "bin/dcmdspfn", "bin/dcmdump", "bin/dcmencap", "bin/dcmftest", "bin/dcmgpdir", "bin/dcmicmp", "bin/dcmj2pnm", "bin/dcml2pnm", "bin/dcmmkcrv", "bin/dcmmkdir", "bin/dcmmklut", "bin/dcmodify", "bin/dcmp2pgm", "bin/dcmprscp", "bin/dcmprscu", "bin/dcmpschk", "bin/dcmpsmk", "bin/dcmpsprt", "bin/dcmpsrcv", "bin/dcmpssnd", "bin/dcmqridx", "bin/dcmqrscp", "bin/dcmqrti", "bin/dcmquant", "bin/dcmrecv", "bin/dcmscale", "bin/dcmsend", "bin/dcmsign", "bin/dcod2lum", "bin/dconvlum", "bin/drtdump", "bin/dsr2html", "bin/dsr2xml", "bin/dsrdump", "bin/dump2dcm", "bin/echoscu", "bin/findscu", "bin/getscu", "bin/img2dcm", "bin/json2dcm", "bin/mkcsmapper", "bin/mkesdb", "bin/movescu", "bin/pdf2dcm", "bin/stl2dcm", "bin/storescp", "bin/storescu", "bin/termscu", "bin/wlmscpfs", "bin/xml2dcm", "bin/xml2dsr"]
+
+[verify]
+  command = "cda2dcm --version"
+  pattern = ""

@@ -1,0 +1,35 @@
+[metadata]
+  name = "drogon"
+  description = "Modern C++ web application framework"
+  homepage = "https://drogon.org"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["brotli", "c-ares"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "drogon"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "drogon"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/_drogon_ctl", "bin/async_stream", "bin/benchmark", "bin/client", "bin/cors", "bin/drogon_ctl", "bin/file_upload", "bin/helloworld", "bin/jsonstore", "bin/login_session", "bin/redis_chat", "bin/redis_simple", "bin/websocket_client", "bin/websocket_server"]
+
+[verify]
+  command = "_drogon_ctl --version"
+  pattern = ""

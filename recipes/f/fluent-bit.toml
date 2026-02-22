@@ -1,0 +1,35 @@
+[metadata]
+  name = "fluent-bit"
+  description = "Fast and Lightweight Logs and Metrics processor"
+  homepage = "https://github.com/fluent/fluent-bit"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["libyaml", "luajit"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "fluent-bit"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "fluent-bit"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/fluent-bit"]
+
+[verify]
+  command = "fluent-bit --version"
+  pattern = ""

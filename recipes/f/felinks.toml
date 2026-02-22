@@ -1,0 +1,35 @@
+[metadata]
+  name = "felinks"
+  description = "Text mode browser and Gemini, NNTP, FTP, Gopher, Finger, and BitTorrent client"
+  homepage = "https://github.com/rkd77/elinks"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["brotli", "libidn2", "zstd"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "felinks"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "felinks"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/elinks"]
+
+[verify]
+  command = "elinks --version"
+  pattern = ""

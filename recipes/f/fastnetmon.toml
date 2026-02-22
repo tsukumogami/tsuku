@@ -1,0 +1,35 @@
+[metadata]
+  name = "fastnetmon"
+  description = "DDoS detection tool with sFlow, Netflow, IPFIX and port mirror support"
+  homepage = "https://github.com/pavel-odintsov/fastnetmon/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["abseil", "capnp"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "fastnetmon"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "fastnetmon"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/fastnetmon_api_client", "bin/fastnetmon_client"]
+
+[verify]
+  command = "fastnetmon_api_client --version"
+  pattern = ""

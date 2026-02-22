@@ -1,0 +1,35 @@
+[metadata]
+  name = "desktop-file-utils"
+  description = "Command-line utilities for working with desktop entries"
+  homepage = "https://wiki.freedesktop.org/www/Software/desktop-file-utils/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["glib", "gettext"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "desktop-file-utils"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "desktop-file-utils"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/desktop-file-install", "bin/desktop-file-validate", "bin/update-desktop-database"]
+
+[verify]
+  command = "desktop-file-install --version"
+  pattern = ""

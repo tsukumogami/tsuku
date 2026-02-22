@@ -1,0 +1,35 @@
+[metadata]
+  name = "dynare"
+  description = "Platform for economic models, particularly DSGE and OLG models"
+  homepage = "https://www.dynare.org/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["gsl"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "dynare"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "dynare"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/dynare-preprocessor"]
+
+[verify]
+  command = "dynare-preprocessor --version"
+  pattern = ""

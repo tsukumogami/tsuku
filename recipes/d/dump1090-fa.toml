@@ -1,0 +1,35 @@
+[metadata]
+  name = "dump1090-fa"
+  description = "FlightAware ADS-B Ground Station System for SDRs"
+  homepage = "https://github.com/flightaware/dump1090"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["ncurses"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "dump1090-fa"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "dump1090-fa"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/dump1090", "bin/view1090"]
+
+[verify]
+  command = "dump1090 --version"
+  pattern = ""

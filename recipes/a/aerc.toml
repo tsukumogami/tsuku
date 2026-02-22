@@ -1,0 +1,35 @@
+[metadata]
+  name = "aerc"
+  description = "Email client that runs in your terminal"
+  homepage = "https://aerc-mail.org/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["notmuch"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "aerc"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "aerc"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/aerc", "bin/carddav-query"]
+
+[verify]
+  command = "aerc --version"
+  pattern = ""

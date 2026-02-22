@@ -1,0 +1,35 @@
+[metadata]
+  name = "arm-none-eabi-gcc"
+  description = "GNU compiler collection for arm-none-eabi"
+  homepage = "https://gcc.gnu.org"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["arm-none-eabi-binutils", "gmp", "zstd"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "arm-none-eabi-gcc"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "arm-none-eabi-gcc"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/arm-none-eabi-c++", "bin/arm-none-eabi-cpp", "bin/arm-none-eabi-gcc", "bin/arm-none-eabi-gcc-ar", "bin/arm-none-eabi-gcc-nm", "bin/arm-none-eabi-gcc-ranlib", "bin/arm-none-eabi-gcov", "bin/arm-none-eabi-gcov-dump", "bin/arm-none-eabi-gcov-tool", "bin/arm-none-eabi-lto-dump"]
+
+[verify]
+  command = "arm-none-eabi-c++ --version"
+  pattern = ""

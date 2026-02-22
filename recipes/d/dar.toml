@@ -1,0 +1,35 @@
+[metadata]
+  name = "dar"
+  description = "Backup directory tree and files"
+  homepage = "https://dar.linux.free.fr/doc/index.html"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["xz", "zstd", "gettext"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "dar"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "dar"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/dar", "bin/dar_cp", "bin/dar_manager", "bin/dar_slave", "bin/dar_split", "bin/dar_xform"]
+
+[verify]
+  command = "dar --version"
+  pattern = ""

@@ -1,0 +1,35 @@
+[metadata]
+  name = "djvulibre"
+  description = "DjVu viewer"
+  homepage = "https://djvu.sourceforge.net/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["jpeg-turbo"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "djvulibre"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "djvulibre"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/any2djvu", "bin/bzz", "bin/c44", "bin/cjb2", "bin/cpaldjvu", "bin/csepdjvu", "bin/ddjvu", "bin/djvm", "bin/djvmcvt", "bin/djvudigital", "bin/djvudump", "bin/djvuextract", "bin/djvumake", "bin/djvups", "bin/djvused", "bin/djvuserve", "bin/djvutoxml", "bin/djvutxt", "bin/djvuxmlparser"]
+
+[verify]
+  command = "any2djvu --version"
+  pattern = ""

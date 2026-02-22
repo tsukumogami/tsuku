@@ -1,0 +1,34 @@
+[metadata]
+  name = "afflib"
+  description = "Advanced Forensic Format"
+  homepage = "https://github.com/sshock/AFFLIBv3"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "afflib"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "afflib"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/affcat", "bin/affcompare", "bin/affconvert", "bin/affcopy", "bin/affcrypto", "bin/affdiskprint", "bin/affinfo", "bin/affix", "bin/affrecover", "bin/affsegment", "bin/affsign", "bin/affstats", "bin/affuse", "bin/affverify", "bin/affxml"]
+
+[verify]
+  command = "affcat --version"
+  pattern = ""

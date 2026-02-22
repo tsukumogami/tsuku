@@ -1,0 +1,35 @@
+[metadata]
+  name = "chronograf"
+  description = "Open source monitoring and visualization UI for the TICK stack"
+  homepage = "https://docs.influxdata.com/chronograf/latest/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["influxdb"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "chronograf"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "chronograf"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/chronograf"]
+
+[verify]
+  command = "chronograf --version"
+  pattern = ""

@@ -1,0 +1,35 @@
+[metadata]
+  name = "aarch64-elf-gdb"
+  description = "GNU debugger for aarch64-elf cross development"
+  homepage = "https://www.gnu.org/software/gdb/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["gmp", "ncurses", "readline", "xz", "zstd"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "aarch64-elf-gdb"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "aarch64-elf-gdb"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/aarch64-elf-gdb", "bin/aarch64-elf-gdb-add-index", "bin/aarch64-elf-gstack"]
+
+[verify]
+  command = "aarch64-elf-gdb --version"
+  pattern = ""

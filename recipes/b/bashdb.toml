@@ -1,0 +1,35 @@
+[metadata]
+  name = "bashdb"
+  description = "Bash shell debugger"
+  homepage = "https://bashdb.sourceforge.net/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["bash"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "bashdb"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "bashdb"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/bashdb"]
+
+[verify]
+  command = "bashdb --version"
+  pattern = ""

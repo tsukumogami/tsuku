@@ -1,0 +1,34 @@
+[metadata]
+  name = "azqr"
+  description = "Azure Quick Review"
+  homepage = "https://azure.github.io/azqr/"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "azqr"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "azqr"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/azqr"]
+
+[verify]
+  command = "azqr --version"
+  pattern = ""

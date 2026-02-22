@@ -1,0 +1,35 @@
+[metadata]
+  name = "faircamp"
+  description = "Static site generator for audio producers"
+  homepage = "https://codeberg.org/simonrepp/faircamp"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["glib", "xz", "gettext"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "faircamp"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "faircamp"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/faircamp"]
+
+[verify]
+  command = "faircamp --version"
+  pattern = ""

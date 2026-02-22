@@ -1,0 +1,35 @@
+[metadata]
+  name = "aarch64-elf-gcc"
+  description = "GNU compiler collection for aarch64-elf"
+  homepage = "https://gcc.gnu.org"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["aarch64-elf-binutils", "gmp", "zstd"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "aarch64-elf-gcc"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "aarch64-elf-gcc"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/aarch64-elf-c++", "bin/aarch64-elf-cpp", "bin/aarch64-elf-gcc", "bin/aarch64-elf-gcc-ar", "bin/aarch64-elf-gcc-nm", "bin/aarch64-elf-gcc-ranlib", "bin/aarch64-elf-gcov", "bin/aarch64-elf-gcov-dump", "bin/aarch64-elf-gcov-tool", "bin/aarch64-elf-lto-dump"]
+
+[verify]
+  command = "aarch64-elf-c++ --version"
+  pattern = ""

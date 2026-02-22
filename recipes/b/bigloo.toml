@@ -1,0 +1,35 @@
+[metadata]
+  name = "bigloo"
+  description = "Scheme implementation with object system, C, and Java interfaces"
+  homepage = "https://www-sop.inria.fr/indes/fp/Bigloo/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["bdw-gc", "gmp", "pcre2", "sqlite"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "bigloo"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "bigloo"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/bglafile", "bin/bglafile.sh", "bin/bgldepend", "bin/bgldepend.sh", "bin/bgljas", "bin/bgljas.sh", "bin/bgljfile", "bin/bgljfile.sh", "bin/bglmake", "bin/bglmake.sh", "bin/bglmco", "bin/bglmco.sh", "bin/bglmemrun", "bin/bglpp", "bin/bglpp.sh", "bin/bglprof", "bin/bglprof.sh", "bin/bgltags", "bin/bgltags.sh", "bin/bigloo", "bin/bigloo.sh"]
+
+[verify]
+  command = "bglafile --version"
+  pattern = ""

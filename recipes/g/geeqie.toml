@@ -1,0 +1,35 @@
+[metadata]
+  name = "geeqie"
+  description = "Lightweight Gtk+ based image viewer"
+  homepage = "https://www.geeqie.org/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["cairo", "djvulibre", "exiv2", "ffmpegthumbnailer", "glib", "jpeg-turbo", "gettext"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "geeqie"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "geeqie"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/geeqie"]
+
+[verify]
+  command = "geeqie --version"
+  pattern = ""
