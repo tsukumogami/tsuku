@@ -3736,8 +3736,8 @@
       "name": "b3sum",
       "source": "homebrew:b3sum",
       "priority": 3,
-      "status": "requires_manual",
-      "confidence": "auto",
+      "status": "success",
+      "confidence": "curated",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 0,
       "next_retry_at": null
