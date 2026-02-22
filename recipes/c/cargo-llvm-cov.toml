@@ -28,4 +28,4 @@
 
 [verify]
   command = "cargo llvm-cov --version"
-  pattern = ""
+  pattern = "{version}"

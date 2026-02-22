@@ -28,4 +28,4 @@
 
 [verify]
   command = "diskus --version"
-  pattern = ""
+  pattern = "{version}"

@@ -28,4 +28,4 @@
 
 [verify]
   command = "neofetch --version"
-  pattern = ""
+  pattern = "{version}"

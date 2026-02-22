@@ -28,4 +28,4 @@
 
 [verify]
   command = "zopfli --version"
-  pattern = ""
+  pattern = "{version}"

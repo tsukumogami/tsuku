@@ -27,5 +27,5 @@
   executables = ["cargo-install-update", "cargo-install-update-config"]
 
 [verify]
-  command = "cargo-install-update --version"
-  pattern = ""
+  command = "cargo install-update --version"
+  pattern = "{version}"

@@ -24,8 +24,8 @@
 [[steps]]
   action = "cargo_install"
   crate = "sqlx-cli"
-  executables = ["cargo-sqlx", "sqlx"]
+  executables = ["sqlx-cli"]
 
 [verify]
-  command = "sqlx --version"
-  pattern = ""
+  command = "sqlx-cli --version"
+  pattern = "{version}"

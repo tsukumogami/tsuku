@@ -28,4 +28,4 @@
 
 [verify]
   command = "cargo udeps --version"
-  pattern = ""
+  pattern = "{version}"

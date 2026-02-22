@@ -1,6 +1,6 @@
 [metadata]
   name = "py-spy"
-  description = "Sampling profiler for Python programs "
+  description = "Sampling profiler for Python programs"
   homepage = "https://github.com/benfred/py-spy"
   version_format = ""
   requires_sudo = false
@@ -28,4 +28,4 @@
 
 [verify]
   command = "py-spy --version"
-  pattern = ""
+  pattern = "{version}"

@@ -28,4 +28,4 @@
 
 [verify]
   command = "dotslash --version"
-  pattern = ""
+  pattern = "{version}"

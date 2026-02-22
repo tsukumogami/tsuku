@@ -28,4 +28,4 @@
 
 [verify]
   command = "cargo outdated --version"
-  pattern = ""
+  pattern = "{version}"

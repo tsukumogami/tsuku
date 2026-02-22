@@ -28,4 +28,4 @@
 
 [verify]
   command = "mdbook --version"
-  pattern = ""
+  pattern = "{version}"

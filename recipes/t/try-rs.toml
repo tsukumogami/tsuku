@@ -28,4 +28,4 @@
 
 [verify]
   command = "try-rs --version"
-  pattern = ""
+  pattern = "{version}"

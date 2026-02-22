@@ -27,5 +27,5 @@
   executables = ["cargo-zigbuild"]
 
 [verify]
-  command = "cargo-zigbuild --version"
-  pattern = ""
+  command = "cargo zigbuild --version"
+  pattern = "{version}"

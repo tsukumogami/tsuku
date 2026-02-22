@@ -28,4 +28,4 @@
 
 [verify]
   command = "dotenv-linter --version"
-  pattern = ""
+  pattern = "{version}"

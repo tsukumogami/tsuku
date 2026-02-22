@@ -27,5 +27,5 @@
   executables = ["cargo-sweep"]
 
 [verify]
-  command = "cargo-sweep --version"
-  pattern = ""
+  command = "cargo sweep --version"
+  pattern = "{version}"

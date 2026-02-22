@@ -28,4 +28,4 @@
 
 [verify]
   command = "typstfmt --version"
-  pattern = ""
+  pattern = "{version}"

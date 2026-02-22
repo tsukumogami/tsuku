@@ -28,4 +28,4 @@
 
 [verify]
   command = "maturin --version"
-  pattern = ""
+  pattern = "{version}"

@@ -28,4 +28,4 @@
 
 [verify]
   command = "evtx_dump --version"
-  pattern = ""
+  pattern = "{version}"

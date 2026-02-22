@@ -27,5 +27,5 @@
   executables = ["cargo-geiger"]
 
 [verify]
-  command = "cargo-geiger --version"
-  pattern = ""
+  command = "cargo geiger --version"
+  pattern = "{version}"

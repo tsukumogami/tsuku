@@ -28,4 +28,4 @@
 
 [verify]
   command = "pfetch --version"
-  pattern = ""
+  pattern = "{version}"

@@ -28,4 +28,4 @@
 
 [verify]
   command = "oxipng --version"
-  pattern = ""
+  pattern = "{version}"

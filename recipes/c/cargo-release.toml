@@ -28,4 +28,4 @@
 
 [verify]
   command = "cargo release --version"
-  pattern = ""
+  pattern = "{version}"

@@ -28,4 +28,4 @@
 
 [verify]
   command = "gifski --version"
-  pattern = ""
+  pattern = "{version}"

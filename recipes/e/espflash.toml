@@ -28,4 +28,4 @@
 
 [verify]
   command = "espflash --version"
-  pattern = ""
+  pattern = "{version}"

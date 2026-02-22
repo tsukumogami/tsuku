@@ -28,4 +28,4 @@
 
 [verify]
   command = "resvg --version"
-  pattern = ""
+  pattern = "{version}"

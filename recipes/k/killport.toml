@@ -28,4 +28,4 @@
 
 [verify]
   command = "killport --version"
-  pattern = ""
+  pattern = "{version}"

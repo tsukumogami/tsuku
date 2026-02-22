@@ -28,4 +28,4 @@
 
 [verify]
   command = "komac --version"
-  pattern = ""
+  pattern = "{version}"

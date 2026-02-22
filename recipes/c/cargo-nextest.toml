@@ -27,5 +27,5 @@
   executables = ["cargo-nextest"]
 
 [verify]
-  command = "cargo-nextest --version"
-  pattern = ""
+  command = "cargo nextest --version"
+  pattern = "{version}"

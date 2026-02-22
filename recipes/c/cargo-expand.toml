@@ -27,5 +27,5 @@
   executables = ["cargo-expand"]
 
 [verify]
-  command = "cargo-expand --version"
-  pattern = ""
+  command = "cargo expand --version"
+  pattern = "{version}"
