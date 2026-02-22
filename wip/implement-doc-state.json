@@ -3,7 +3,7 @@
   "design_doc": "docs/designs/DESIGN-structured-error-subcategories.md",
   "branch": "docs/structured-error-subcategories",
   "pr_number": 1854,
-  "integrity_hash": "sha256:b6e4586e7ec12dbb5e6456aa508c716e0cbd5138e739f6ec7194b210d03eb959",
+  "integrity_hash": "sha256:c7368bf25721cb2ed9d1b836bae7791722a5e723a6fe8f00e7a0c88bc5797e00",
   "issues": [
     {
       "number": 1856,
@@ -77,8 +77,8 @@
     {
       "number": 1857,
       "title": "feat(batch): normalize pipeline categories and add subcategory passthrough",
-      "status": "scrutinized",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "ci_fix_attempts": 0,
       "issue_type": "code",
       "dependencies": [
@@ -129,6 +129,29 @@
           }
         ]
       },
+      "reviewer_results": {
+        "issue": 1857,
+        "reviewers": [
+          {
+            "focus": "pragmatic",
+            "blocking_count": 0,
+            "advisory_count": 0,
+            "detail_file": "wip/research/implement-doc_review_pragmatic_issue1857.md"
+          },
+          {
+            "focus": "architect",
+            "blocking_count": 0,
+            "advisory_count": 1,
+            "detail_file": "wip/research/implement-doc_review_architect_issue1857.md"
+          },
+          {
+            "focus": "maintainer",
+            "blocking_count": 0,
+            "advisory_count": 3,
+            "detail_file": "wip/research/implement-doc_review_maintainer_issue1857.md"
+          }
+        ]
+      },
       "testable_scenarios": [
         "scenario-5",
         "scenario-6",
@@ -140,16 +163,39 @@
     {
       "number": 1858,
       "title": "fix(ci): align batch workflow category names with canonical taxonomy",
-      "status": "pending",
+      "status": "scrutinized",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [
         1857
       ],
-      "commits": [],
-      "agent_type": "",
-      "summary": null,
+      "commits": [
+        "5d8a7f046d61e2e237b408a0ccb4cff59a4879ce"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          ".github/workflows/batch-generate.yml"
+        ],
+        "tests_added": 0,
+        "key_decisions": "YAML-only change: updated jq category mapping to use canonical taxonomy names (deterministic-\u003egeneration_failed, network-\u003enetwork_error, timeout-\u003enetwork_error)",
+        "requirements_map": [
+          {
+            "ac": "jq uses canonical category names",
+            "status": "implemented"
+          },
+          {
+            "ac": "exit codes 124/137 map to network_error",
+            "status": "implemented"
+          },
+          {
+            "ac": "old standalone category names removed",
+            "status": "implemented"
+          }
+        ]
+      },
       "testable_scenarios": [
         "scenario-10"
       ]

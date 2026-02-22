@@ -13,7 +13,7 @@ Total scenarios: 14
 - [x] scenario-7: parseInstallJSON returns empty subcategory when absent from CLI JSON
 - [x] scenario-8: FailureRecord includes subcategory in JSONL output
 - [x] scenario-9: failure-record schema accepts canonical categories and subcategory
-- [ ] scenario-10: CI workflow jq uses canonical category names
+- [x] scenario-10: CI workflow jq uses canonical category names
 - [ ] scenario-11: dashboard remapCategory translates old category strings
 - [ ] scenario-12: dashboard prefers structured subcategory over heuristic extraction
 - [ ] scenario-13: end-to-end pipeline produces consistent categories across paths
@@ -122,7 +122,7 @@ Total scenarios: 14
 - `grep -c '"timeout"' .github/workflows/batch-generate.yml`
 - `grep -c '"deterministic"' .github/workflows/batch-generate.yml`
 **Expected**: "network_error" and "generation_failed" each appear at least once. The old standalone category names "network" (as a category value, not as part of "network_error"), "timeout" (as a category value), and "deterministic" (as a standalone category value) no longer appear in category-mapping jq expressions. Exit codes 124 and 137 map to "network_error" instead of "timeout".
-**Status**: pending
+**Status**: passed
 
 ---
 
