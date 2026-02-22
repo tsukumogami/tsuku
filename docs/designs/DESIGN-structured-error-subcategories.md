@@ -1,5 +1,5 @@
 ---
-status: Accepted
+status: Planned
 problem: |
   Pipeline failure classification is inconsistent across three producers:
   the CLI's --json output, the orchestrator's categoryFromExitCode(), and
@@ -29,7 +29,46 @@ rationale: |
 
 ## Status
 
-**Accepted**
+**Planned**
+
+## Implementation Issues
+
+### Milestone: [Structured Error Subcategories](https://github.com/tsukumogami/tsuku/milestone/96)
+
+| Issue | Dependencies | Tier |
+|-------|--------------|------|
+| [#1856: feat(cli): add subcategory to install error JSON output](https://github.com/tsukumogami/tsuku/issues/1856) | None | testable |
+| _Extend `classifyInstallError()` to return a subcategory string alongside the exit code. Add `Subcategory` field to `installError` JSON struct. Maps typed errors (ErrTypeTimeout, ErrTypeDNS, etc.) to specific subcategory strings._ | | |
+| [#1857: feat(batch): normalize pipeline categories and add subcategory passthrough](https://github.com/tsukumogami/tsuku/issues/1857) | [#1856](https://github.com/tsukumogami/tsuku/issues/1856) | testable |
+| _Update orchestrator's `categoryFromExitCode()` to canonical taxonomy. Fix `parseInstallJSON()` to derive pipeline categories from exit codes instead of trusting CLI strings. Add `Subcategory` field to `FailureRecord` and JSON schema._ | | |
+| [#1858: fix(ci): align batch workflow category names with canonical taxonomy](https://github.com/tsukumogami/tsuku/issues/1858) | [#1857](https://github.com/tsukumogami/tsuku/issues/1857) | simple |
+| _Update the inline jq in `batch-generate.yml` to use canonical names: `generation_failed`, `network_error` instead of `deterministic`, `network`, `timeout`._ | | |
+| [#1859: feat(dashboard): read structured subcategories with category remap fallback](https://github.com/tsukumogami/tsuku/issues/1859) | [#1857](https://github.com/tsukumogami/tsuku/issues/1857) | testable |
+| _Add subcategory passthrough to dashboard deserialization structs. Category remap translates old names on load. `extractSubcategory()` becomes conditional -- only called when structured subcategory is absent._ | | |
+
+```mermaid
+graph TD
+    classDef done fill:#28a745,color:#fff
+    classDef ready fill:#0366d6,color:#fff
+    classDef blocked fill:#ffd33d,color:#000
+    classDef needsDesign fill:#6f42c1,color:#fff
+
+    1856["#1856 CLI subcategory output"]
+    1857["#1857 Orchestrator normalization"]
+    1858["#1858 CI workflow alignment"]
+    1859["#1859 Dashboard update"]
+
+    1856 --> 1857
+    1857 --> 1858
+    1857 --> 1859
+
+    class 1856 ready
+    class 1857 blocked
+    class 1858 blocked
+    class 1859 blocked
+```
+
+**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
 
 ## Context and Problem Statement
 
