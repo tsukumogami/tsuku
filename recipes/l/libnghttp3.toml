@@ -4,7 +4,9 @@ description = "HTTP/3 C library"
 homepage = "https://nghttp2.org/nghttp3/"
 type = "library"
 dependencies = []
-# No [metadata.satisfies] needed -- Homebrew formula name matches tsuku canonical name
+
+[metadata.satisfies]
+homebrew = ["libnghttp3"]
 
 [[steps]]
 action = "homebrew"

@@ -3,7 +3,9 @@ name = "geos"
 description = "Geometry Engine - Open Source"
 homepage = "https://libgeos.org/"
 type = "library"
-# No [metadata.satisfies] needed -- Homebrew formula name matches tsuku canonical name
+
+[metadata.satisfies]
+homebrew = ["geos"]
 
 [[steps]]
 action = "homebrew"
