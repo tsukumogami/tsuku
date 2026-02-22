@@ -71,6 +71,7 @@ Planned
 | _All deterministic builders integrated and running. System library backfill remains._ | | |
 | [#1191: design system library backfill strategy](https://github.com/tsukumogami/tsuku/issues/1191) | None | simple |
 | _Strategy for adding common system library recipes (libpng, sqlite, curl, etc.) to unblock dependent tools. No longer blocked on #1190._ | | |
+| _Child design: [DESIGN-system-lib-backfill.md](DESIGN-system-lib-backfill.md)_ | | |
 
 ### Dependency Graph
 
@@ -135,6 +136,7 @@ graph TD
     classDef ready fill:#bbdefb
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
+    classDef tracksDesign fill:#FFE0B2,stroke:#F57C00
 
     class I1186,I1187 done
     class I1200 done
@@ -154,7 +156,7 @@ graph TD
     class I1190 done
     class I1277 done
     class I1278 done
-    class I1191 needsDesign
+    class I1191 tracksDesign
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
@@ -202,7 +204,7 @@ See the Remaining Work section at the end of this document for the full list. Ke
 - Script format mismatches (gap-analysis.sh); requeue-unblocked.sh mismatch resolved by queue-maintain migration (#1825)
 - Schema file vs live format divergence
 - System library backfill strategy (#1191)
-- DESIGN-system-lib-backfill.md never created (#1191)
+- [DESIGN-system-lib-backfill.md](DESIGN-system-lib-backfill.md) accepted (#1191 tracks-design)
 
 ## Context and Problem Statement
 
@@ -1100,7 +1102,7 @@ Tactical designs are organized by phase, reflecting the walking skeleton approac
 | Design | Phase | Status | Purpose |
 |--------|-------|--------|---------|
 | ~~DESIGN-batch-failure-analysis.md~~ | ~~2~~ | ~~NOT NEEDED (#1190 closed)~~ | ~~File-based JSONL approach kept; D1 migration dropped~~ |
-| DESIGN-system-lib-backfill.md | 3+ | NEVER CREATED (#1191 open) | Strategy for adding common library recipes (parallel workstream) |
+| [DESIGN-system-lib-backfill.md](DESIGN-system-lib-backfill.md) | 3+ | Accepted (#1191 tracks-design) | Strategy for adding common library recipes (parallel workstream) |
 
 **On DESIGN-batch-failure-analysis.md**: Dropped. The file-based approach (JSONL in `data/failures/`, dashboard at `website/pipeline/`) is sufficient at current scale. #1190 was closed as not planned. Top-blockers (#1277) shipped via dashboard. Within-tier reordering (#1278) shipped via `cmd/reorder-queue/` using the shared `internal/blocker` package. M53 is fully closed.
 
@@ -1241,7 +1243,7 @@ These are bugs and inconsistencies between scripts, schemas, and live data forma
 | Item | Action |
 |------|--------|
 | ~~DESIGN-batch-failure-analysis.md~~ | ~~Not needed. #1190 closed as not planned. File-based approach kept.~~ |
-| DESIGN-system-lib-backfill.md | Never created. Issue #1191 still open. No longer blocked. |
+| [DESIGN-system-lib-backfill.md](DESIGN-system-lib-backfill.md) | Accepted. Issue #1191 now tracks-design. |
 
 ### Resolved Questions (from original Open Questions section)
 
