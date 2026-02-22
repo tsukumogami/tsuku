@@ -45,8 +45,8 @@ Planned
 
 | Issue | Dependencies | Tier |
 |-------|--------------|------|
-| [#1864: ci(recipes): create test-recipe workflow for cross-platform validation](https://github.com/tsukumogami/tsuku/issues/1864) | None | testable |
-| _New `test-recipe.yml` GHA workflow with `workflow_dispatch` that tests a recipe across the full platform matrix (linux x86_64/arm64, macOS). Blocking prerequisite for all library recipe work._ | | |
+| ~~[#1864: ci(recipes): create test-recipe workflow for cross-platform validation](https://github.com/tsukumogami/tsuku/issues/1864)~~ | ~~None~~ | ~~testable~~ |
+| ~~_New `test-recipe.yml` GHA workflow with `workflow_dispatch` that tests a recipe across the full platform matrix (linux x86_64/arm64, macOS). Blocking prerequisite for all library recipe work._~~ | | |
 | [#1865: fix(recipes): backfill satisfies metadata on existing library recipes](https://github.com/tsukumogami/tsuku/issues/1865) | None | simple |
 | _Add `[metadata.satisfies]` entries to ~19 existing library recipes that lack ecosystem name aliases, enabling the pipeline to resolve names correctly._ | | |
 | [#1866: feat(batch): run discovery to identify missing library dependencies](https://github.com/tsukumogami/tsuku/issues/1866) | None | simple |
@@ -74,7 +74,7 @@ graph TD
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1864 ready
+    class I1864 done
     class I1865 ready
     class I1866 ready
     class I1867 blocked
