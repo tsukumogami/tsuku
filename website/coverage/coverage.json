@@ -1,22 +1,22 @@
 {
-  "generated_at": "2026-02-22T22:51:03Z",
-  "total_recipes": 348,
+  "generated_at": "2026-02-22T23:39:03Z",
+  "total_recipes": 349,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 290,
-        "total": 348,
-        "pct": 83.33333333333334
+        "supported": 291,
+        "total": 349,
+        "pct": 83.3810888252149
       },
       "glibc": {
-        "supported": 318,
-        "total": 348,
-        "pct": 91.37931034482759
+        "supported": 319,
+        "total": 349,
+        "pct": 91.40401146131805
       },
       "musl": {
-        "supported": 178,
-        "total": 348,
-        "pct": 51.14942528735632
+        "supported": 179,
+        "total": 349,
+        "pct": 51.28939828080229
       }
     },
     "by_category": {
@@ -26,9 +26,9 @@
         "glibc_support": 22
       },
       "tool": {
-        "total": 326,
-        "musl_support": 156,
-        "glibc_support": 296
+        "total": 327,
+        "musl_support": 157,
+        "glibc_support": 297
       }
     }
   },
@@ -804,6 +804,18 @@
     },
     {
       "name": "cargo-edit",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "cargo-hack",
       "type": "tool",
       "platforms": {
         "darwin": true,
