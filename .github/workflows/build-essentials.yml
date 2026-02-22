@@ -341,14 +341,9 @@ jobs:
 
   # Test sandbox with multi-family support
   # Validates system dependency extraction and container building across Linux families
-  test-sandbox-multifamily:
-    name: "Sandbox (${{ matrix.family }}): ${{ matrix.tool }}"
+  test-sandbox-cmake:
+    name: "Sandbox multifamily: cmake"
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        family: [debian, rhel, arch, alpine, suse]
-        tool: [cmake, ninja]
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
 
@@ -361,15 +356,64 @@ jobs:
       - name: Build tsuku
         run: CGO_ENABLED=0 go build -o tsuku ./cmd/tsuku
 
-      - name: "Generate plan for ${{ matrix.tool }} (${{ matrix.family }})"
+      - name: Test sandbox across Linux families
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
         run: |
-          ./tsuku eval ${{ matrix.tool }} --os linux --linux-family ${{ matrix.family }} --install-deps > plan.json
+          FAMILIES=(debian rhel arch alpine suse)
+          FAILED=()
+          for family in "${FAMILIES[@]}"; do
+            echo "::group::Sandbox cmake on $family"
+            timeout 300 bash -c '
+              ./tsuku eval cmake --os linux --linux-family '"$family"' --install-deps > plan.json
+              ./tsuku install --plan plan.json --sandbox --force
+            '
+            EXIT_CODE=$?
+            if [ "$EXIT_CODE" != "0" ]; then FAILED+=("$family"); fi
+            echo "::endgroup::"
+          done
+          if [ ${#FAILED[@]} -gt 0 ]; then
+            echo "::error::Failed families: ${FAILED[*]}"
+            exit 1
+          fi
 
-      - name: "Run sandbox test for ${{ matrix.tool }} (${{ matrix.family }})"
-        run: ./tsuku install --plan plan.json --sandbox --force
+  test-sandbox-ninja:
+    name: "Sandbox multifamily: ninja"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+
+      - name: Set up Go
+        uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5  # v6.2.0
+        with:
+          go-version-file: 'go.mod'
+          cache-dependency-path: go.sum
+
+      - name: Build tsuku
+        run: CGO_ENABLED=0 go build -o tsuku ./cmd/tsuku
+
+      - name: Test sandbox across Linux families
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
+        run: |
+          FAMILIES=(debian rhel arch alpine suse)
+          FAILED=()
+          for family in "${FAMILIES[@]}"; do
+            echo "::group::Sandbox ninja on $family"
+            timeout 300 bash -c '
+              ./tsuku eval ninja --os linux --linux-family '"$family"' --install-deps > plan.json
+              ./tsuku install --plan plan.json --sandbox --force
+            '
+            EXIT_CODE=$?
+            if [ "$EXIT_CODE" != "0" ]; then FAILED+=("$family"); fi
+            echo "::endgroup::"
+          done
+          if [ ${#FAILED[@]} -gt 0 ]; then
+            echo "::error::Failed families: ${FAILED[*]}"
+            exit 1
+          fi
 
   # Aggregated macOS Apple Silicon tests (reduces runner queue pressure)
   test-macos-arm64:
