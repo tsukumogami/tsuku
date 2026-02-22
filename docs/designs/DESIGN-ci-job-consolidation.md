@@ -329,9 +329,23 @@ Consolidate the four biggest matrix offenders:
 8. **integration-tests.yml library-dlopen-musl**: Consolidate 3 library tests into 1 serialized job within the existing `golang:1.23-alpine` container runner. Uses GHA group serialization (Decision 2 pattern), not container loop, since the job already runs inside a container via GHA's `container:` directive. Saves 2 jobs.
 9. **integration-tests.yml library-integrity**: Consolidate 2 library tests into 1 serialized job. Saves 1 job.
 
-### Phase 3: Validation and Documentation
+### Validation Strategy
 
-10. Compare before/after job counts for a sample PR.
+Each migration PR must exercise the modified workflow and produce passing results before merge. The validation approach for each PR:
+
+1. **Self-triggering**: All four target workflows trigger on changes to their own workflow file. `test.yml` and `sandbox-tests.yml` have no path filter (trigger on all PRs). `integration-tests.yml` and `build-essentials.yml` include their own file path in their triggers. So changing any target workflow file in a PR will cause that workflow to run with the new configuration.
+
+2. **Result comparison**: Before creating the migration PR, record the test results from a recent passing run of the pre-migration workflow (which tests passed, which families/tools were covered). After the PR's CI runs, compare results: every test that passed before must still pass, and the set of families/tools tested must be identical.
+
+3. **Job count verification**: After the PR's CI completes, count the actual jobs created by the modified workflow. The count should match the "After" column in the Expected Job Counts table. This is a manual check during review.
+
+4. **Step summary inspection**: Verify that the consolidated job's step summary produces structured output (pass/fail per family or per tool) that's equivalent to the information previously visible as separate job statuses.
+
+5. **Failure mode testing**: For at least the first migration PR, intentionally break one family/tool test to confirm that (a) the loop continues to test remaining entries, (b) the failure is visible in the step summary, and (c) the job exits non-zero. Revert before merge.
+
+### Phase 3: Documentation and Drift Prevention
+
+10. Compare before/after job counts for a sample PR that triggers all workflows.
 11. Document the containerization and group patterns as the standard for new workflows.
 12. Add a CI lint check (grep-based) that verifies container loops in workflow files include `timeout`, exit code capture, and failure array patterns. This prevents drift as new workflows are added.
 
