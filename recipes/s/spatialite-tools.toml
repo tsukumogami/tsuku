@@ -1,0 +1,35 @@
+[metadata]
+  name = "spatialite-tools"
+  description = "CLI tools supporting SpatiaLite"
+  homepage = "https://www.gaia-gis.it/fossil/spatialite-tools/index"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["libxml2", "proj", "readline", "sqlite", "geos"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "spatialite-tools"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "spatialite-tools"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/exif_loader", "bin/shp_doctor", "bin/shp_sanitize", "bin/spatialite", "bin/spatialite_convert", "bin/spatialite_dem", "bin/spatialite_dxf", "bin/spatialite_gml", "bin/spatialite_network", "bin/spatialite_osm_filter", "bin/spatialite_osm_map", "bin/spatialite_osm_net", "bin/spatialite_osm_overpass", "bin/spatialite_osm_raw", "bin/spatialite_tool", "bin/spatialite_xml2utf8", "bin/spatialite_xml_collapse", "bin/spatialite_xml_load", "bin/spatialite_xml_print", "bin/spatialite_xml_validator"]
+
+[verify]
+  command = "exif_loader --version"
+  pattern = ""

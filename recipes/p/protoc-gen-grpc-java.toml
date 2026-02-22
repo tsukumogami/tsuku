@@ -1,0 +1,35 @@
+[metadata]
+  name = "protoc-gen-grpc-java"
+  description = "Protoc plugin for gRPC Java"
+  homepage = "https://grpc.io/docs/languages/java/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["abseil"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "protoc-gen-grpc-java"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "protoc-gen-grpc-java"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/protoc-gen-grpc-java"]
+
+[verify]
+  command = "protoc-gen-grpc-java --version"
+  pattern = ""

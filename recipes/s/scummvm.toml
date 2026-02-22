@@ -1,0 +1,35 @@
+[metadata]
+  name = "scummvm"
+  description = "Graphic adventure game interpreter"
+  homepage = "https://www.scummvm.org/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["faad2", "fluid-synth", "freetype", "fribidi", "giflib", "jpeg-turbo", "libopenmpt", "libpng", "sdl2"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "scummvm"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "scummvm"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/scummvm"]
+
+[verify]
+  command = "scummvm --version"
+  pattern = ""

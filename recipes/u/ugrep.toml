@@ -1,0 +1,35 @@
+[metadata]
+  name = "ugrep"
+  description = "Ultra fast grep with query UI, fuzzy search, archive search, and more"
+  homepage = "https://ugrep.com/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["brotli", "pcre2", "xz", "zstd"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "ugrep"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "ugrep"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/ug", "bin/ug+", "bin/ugrep", "bin/ugrep+", "bin/ugrep-indexer"]
+
+[verify]
+  command = "ug --version"
+  pattern = ""

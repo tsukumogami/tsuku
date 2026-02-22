@@ -1,0 +1,35 @@
+[metadata]
+  name = "rtl-433"
+  description = "Program to decode radio transmissions from devices"
+  homepage = "https://github.com/merbanan/rtl_433"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["librtlsdr"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "rtl_433"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "rtl_433"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/rtl_433"]
+
+[verify]
+  command = "rtl_433 --version"
+  pattern = ""

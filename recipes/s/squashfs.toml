@@ -1,0 +1,35 @@
+[metadata]
+  name = "squashfs"
+  description = "Compressed read-only file system for Linux"
+  homepage = "https://github.com/plougher/squashfs-tools"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["xz", "zstd"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "squashfs"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "squashfs"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/mksquashfs", "bin/unsquashfs"]
+
+[verify]
+  command = "mksquashfs --version"
+  pattern = ""

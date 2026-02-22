@@ -1,0 +1,34 @@
+[metadata]
+  name = "richgo"
+  description = "Enrich `go test` outputs with text decorations"
+  homepage = "https://github.com/kyoh86/richgo"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "richgo"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "richgo"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/richgo"]
+
+[verify]
+  command = "richgo --version"
+  pattern = ""

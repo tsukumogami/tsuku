@@ -1,0 +1,35 @@
+[metadata]
+  name = "rizin"
+  description = "UNIX-like reverse engineering framework and command-line toolset"
+  homepage = "https://rizin.re"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["pcre2", "tree-sitter", "xz", "zstd"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "rizin"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "rizin"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/rizin", "bin/rz-asm", "bin/rz-ax", "bin/rz-bin", "bin/rz-diff", "bin/rz-find", "bin/rz-gg", "bin/rz-hash", "bin/rz-run", "bin/rz-sign"]
+
+[verify]
+  command = "rizin --version"
+  pattern = ""

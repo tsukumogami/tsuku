@@ -1,0 +1,35 @@
+[metadata]
+  name = "termscp"
+  description = "Feature rich terminal file transfer and explorer"
+  homepage = "https://termscp.veeso.dev/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["samba"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "termscp"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "termscp"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/termscp"]
+
+[verify]
+  command = "termscp --version"
+  pattern = ""

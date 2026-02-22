@@ -1,0 +1,35 @@
+[metadata]
+  name = "undercutf1"
+  description = "F1 Live Timing TUI for all F1 sessions with variable delay to sync to your TV"
+  homepage = "https://github.com/JustAman62/undercut-f1"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["ffmpeg", "fontconfig"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "undercutf1"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "undercutf1"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/undercutf1"]
+
+[verify]
+  command = "undercutf1 --version"
+  pattern = ""

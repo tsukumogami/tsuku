@@ -1,0 +1,35 @@
+[metadata]
+  name = "sc-im"
+  description = "Spreadsheet program for the terminal, using ncurses"
+  homepage = "https://github.com/andmarti1424/sc-im"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["libxml2", "lua", "ncurses"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "sc-im"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "sc-im"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/sc-im", "bin/scopen"]
+
+[verify]
+  command = "sc-im --version"
+  pattern = ""

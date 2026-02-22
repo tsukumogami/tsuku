@@ -1,0 +1,35 @@
+[metadata]
+  name = "x3270"
+  description = "IBM 3270 terminal emulator for the X Window System and Windows"
+  homepage = "https://x3270.bgp.nu/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["readline"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "x3270"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "x3270"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/b3270", "bin/c3270", "bin/pr3287", "bin/prtodir", "bin/s3270", "bin/tcl3270", "bin/x3270if"]
+
+[verify]
+  command = "b3270 --version"
+  pattern = ""

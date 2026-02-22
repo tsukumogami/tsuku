@@ -1,0 +1,35 @@
+[metadata]
+  name = "sox-ng"
+  description = "Sound eXchange NG"
+  homepage = "https://codeberg.org/sox_ng/sox_ng"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["libpng", "libsndfile"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "sox_ng"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "sox_ng"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/sox_ng"]
+
+[verify]
+  command = "sox_ng --version"
+  pattern = ""
