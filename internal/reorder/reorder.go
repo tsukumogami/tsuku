@@ -5,20 +5,11 @@
 package reorder
 
 import (
-	"fmt"
 	"sort"
 
 	"github.com/tsukumogami/tsuku/internal/batch"
 	"github.com/tsukumogami/tsuku/internal/blocker"
 )
-
-// Options configures the reorder operation.
-type Options struct {
-	QueueFile   string // Path to unified priority-queue.json
-	FailuresDir string // Directory containing failures JSONL files
-	OutputFile  string // Path to write reordered queue (empty = overwrite QueueFile)
-	DryRun      bool   // If true, print changes without writing
-}
 
 // Result summarizes what the reorder operation did.
 type Result struct {
@@ -43,20 +34,17 @@ type Move struct {
 	To   int    `json:"to"`   // 0-based position within tier after reorder
 }
 
-// Run loads the queue and failure data, computes blocking scores, reorders
-// entries within each tier by descending score, and writes the result.
-func Run(opts Options) (*Result, error) {
-	queue, err := batch.LoadUnifiedQueue(opts.QueueFile)
-	if err != nil {
-		return nil, fmt.Errorf("load queue: %w", err)
-	}
-
+// Run reorders entries within each tier by descending blocking impact score.
+// It modifies the queue in place and does not perform any I/O (the caller
+// loads and saves the queue). The failuresDir is used to load blocker data
+// for computing scores.
+func Run(queue *batch.UnifiedQueue, failuresDir string) (*Result, error) {
 	if len(queue.Entries) == 0 {
 		return &Result{ByTier: map[int]int{}, EntriesMoved: map[int][]Move{}}, nil
 	}
 
 	// Build blocker map from failure data
-	blockers, err := blocker.LoadBlockerMap(opts.FailuresDir)
+	blockers, err := blocker.LoadBlockerMap(failuresDir)
 	if err != nil {
 		// Non-fatal: if no failure data exists, all scores are 0 and
 		// the queue retains its alphabetical ordering within tiers.
@@ -85,19 +73,6 @@ func Run(opts Options) (*Result, error) {
 	// Compute result
 	newByTier := groupByTier(queue.Entries)
 	result := buildResult(queue.Entries, scores, origByTier, newByTier)
-
-	if opts.DryRun {
-		return result, nil
-	}
-
-	// Write output
-	outputPath := opts.OutputFile
-	if outputPath == "" {
-		outputPath = opts.QueueFile
-	}
-	if err := batch.SaveUnifiedQueue(outputPath, queue); err != nil {
-		return nil, fmt.Errorf("save queue: %w", err)
-	}
 
 	return result, nil
 }
