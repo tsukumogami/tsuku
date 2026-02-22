@@ -128,11 +128,12 @@ type DisambiguationRecord struct {
 
 // FailureRecord represents a single package generation failure.
 type FailureRecord struct {
-	PackageID string    `json:"package_id"`
-	Category  string    `json:"category"`
-	BlockedBy []string  `json:"blocked_by,omitempty"`
-	Message   string    `json:"message"`
-	Timestamp time.Time `json:"timestamp"`
+	PackageID   string    `json:"package_id"`
+	Category    string    `json:"category"`
+	Subcategory string    `json:"subcategory,omitempty"`
+	BlockedBy   []string  `json:"blocked_by,omitempty"`
+	Message     string    `json:"message"`
+	Timestamp   time.Time `json:"timestamp"`
 }
 
 // FailureFile is the top-level structure for failure JSONL entries, matching
