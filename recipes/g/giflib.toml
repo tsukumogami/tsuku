@@ -3,6 +3,7 @@ name = "giflib"
 description = "Library and utilities for processing GIFs"
 homepage = "https://giflib.sourceforge.net/"
 type = "library"
+# No [metadata.satisfies] needed -- Homebrew formula name matches tsuku canonical name
 
 # glibc Linux: Homebrew bottle
 [[steps]]

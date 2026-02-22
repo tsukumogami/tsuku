@@ -3,6 +3,7 @@ name = "expat"
 description = "XML parser library"
 homepage = "https://libexpat.github.io/"
 type = "library"
+# No [metadata.satisfies] needed -- Homebrew formula name matches tsuku canonical name
 
 [[steps]]
 action = "homebrew"

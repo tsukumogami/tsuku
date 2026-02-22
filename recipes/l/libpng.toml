@@ -4,6 +4,7 @@ description = "Library for manipulating PNG images"
 homepage = "https://libpng.sourceforge.io/"
 type = "library"
 dependencies = ["zlib"]
+# No [metadata.satisfies] needed -- Homebrew formula name matches tsuku canonical name
 
 [[steps]]
 action = "homebrew"

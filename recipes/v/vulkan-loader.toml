@@ -23,6 +23,7 @@ homepage = "https://vulkan.lunarg.com/"
 type = "library"
 supported_os = ["linux"]
 dependencies = ["mesa-vulkan-drivers"]
+# No [metadata.satisfies] -- system package installed via native package managers, not a Homebrew formula
 
 # Debian/Ubuntu
 [[steps]]

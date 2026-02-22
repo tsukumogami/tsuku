@@ -4,6 +4,7 @@ description = "GNU Readline library"
 homepage = "https://tiswww.case.edu/php/chet/readline/rltop.html"
 type = "library"
 dependencies = ["ncurses"]
+# No [metadata.satisfies] needed -- Homebrew formula name matches tsuku canonical name
 
 [[steps]]
 action = "homebrew"
