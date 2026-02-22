@@ -478,18 +478,14 @@ func checkExistingRecipe(l *recipe.Loader, toolName string) (string, bool) {
 func runCreate(cmd *cobra.Command, args []string) {
 	toolName := args[0]
 
-	// Check for existing recipe before any builder work, API calls, or
-	// toolchain checks. The loader covers all tiers (cache, local,
-	// embedded, registry) plus the satisfies fallback, so ecosystem
-	// aliases like "openssl@3" are caught here too.
+	// Check whether a different recipe already covers this tool name via
+	// its satisfies metadata. Only block when the canonical name differs
+	// (e.g., "openssl@3" -> "openssl"). Exact name matches are allowed
+	// so that `tsuku create <tool>` can regenerate an existing recipe.
 	if !createForce {
-		if canonicalName, found := checkExistingRecipe(loader, toolName); found {
-			if canonicalName == toolName {
-				fmt.Fprintf(os.Stderr, "Error: recipe '%s' already exists. Use --force to create anyway.\n", toolName)
-			} else {
-				fmt.Fprintf(os.Stderr, "Error: recipe '%s' already satisfies '%s'. Use --force to create anyway.\n",
-					canonicalName, toolName)
-			}
+		if canonicalName, found := checkExistingRecipe(loader, toolName); found && canonicalName != toolName {
+			fmt.Fprintf(os.Stderr, "Error: recipe '%s' already satisfies '%s'. Use --force to create anyway.\n",
+				canonicalName, toolName)
 			exitWithCode(ExitGeneral)
 		}
 	}
