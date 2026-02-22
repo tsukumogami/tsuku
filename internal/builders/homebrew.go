@@ -1956,9 +1956,64 @@ func (b *HomebrewBuilder) generateRecipe(packageName string, info *homebrewFormu
 	return r, nil
 }
 
+// scanMultiplePlatforms downloads bottles for Linux and macOS from GHCR and
+// scans each independently. The current platform's already-scanned contents are
+// included without re-downloading. Returns a slice ordered Linux-first, then macOS,
+// matching existing multi-platform library recipe conventions.
+func (b *HomebrewBuilder) scanMultiplePlatforms(
+	ctx context.Context,
+	info *homebrewFormulaInfo,
+	currentContents *bottleContents,
+) []platformContents {
+	currentTag, _ := getCurrentPlatformTag()
+	currentOS, currentLibc := platformTagToOSLibc(currentTag)
+
+	// Target platforms: Linux glibc and macOS. Order matters: Linux first.
+	type targetPlatform struct {
+		tag  string
+		os   string
+		libc string
+	}
+	targets := []targetPlatform{
+		{"x86_64_linux", "linux", "glibc"},
+		{"arm64_sonoma", "darwin", ""},
+	}
+
+	var result []platformContents
+
+	for _, target := range targets {
+		// If this target matches the current platform, use already-scanned contents.
+		if target.os == currentOS && target.libc == currentLibc {
+			result = append(result, platformContents{
+				OS:       target.os,
+				Libc:     target.libc,
+				Contents: currentContents,
+			})
+			continue
+		}
+
+		// Download and scan the other platform's bottle.
+		contents, err := b.inspectBottleContents(ctx, info.Name, info.Versions.Stable, target.tag)
+		if err != nil {
+			// Platform bottle not available -- skip with no fatal error.
+			// Callers get a recipe with only the available platform's steps.
+			continue
+		}
+
+		result = append(result, platformContents{
+			OS:       target.os,
+			Libc:     target.libc,
+			Contents: contents,
+		})
+	}
+
+	return result
+}
+
 // generateLibraryRecipe produces a type = "library" recipe from scanned bottle
 // contents. For a single-platform input (len(platforms) == 1), the steps have no
-// when clauses. Multi-platform support (when clauses) is added by #1879.
+// when clauses. For multi-platform inputs, each step pair gets a when clause
+// matching the platform's OS and libc.
 func (b *HomebrewBuilder) generateLibraryRecipe(
 	ctx context.Context,
 	packageName string,
@@ -2118,15 +2173,8 @@ func (b *HomebrewBuilder) generateDeterministicRecipe(ctx context.Context, packa
 
 	// Branch 2: Library recipe (no binaries, but has lib files)
 	if len(contents.LibFiles) > 0 {
-		// Determine the OS and libc from the platform tag
-		os, libc := platformTagToOSLibc(platformTag)
-		platforms := []platformContents{
-			{
-				OS:       os,
-				Libc:     libc,
-				Contents: contents,
-			},
-		}
+		// Scan multiple platforms (Linux + macOS) for multi-platform recipe
+		platforms := b.scanMultiplePlatforms(ctx, info, contents)
 		return b.generateLibraryRecipe(ctx, packageName, genCtx, platforms)
 	}
 

@@ -5,6 +5,8 @@ import (
 	"bytes"
 	"compress/gzip"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -2869,6 +2871,553 @@ func TestHomebrewBuilder_generateDeterministicRecipe_ErrorMessages(t *testing.T)
 	if err == nil || !strings.Contains(err.Error(), "no stable version") {
 		t.Errorf("expected 'no stable version' error, got: %v", err)
 	}
+}
+
+// createBottleTarballBytes creates an in-memory tar.gz archive suitable for use
+// as a mock GHCR bottle blob. Returns the raw bytes.
+func createBottleTarballBytes(t *testing.T, entries []struct {
+	name     string
+	body     string
+	typeflag byte
+}) []byte {
+	t.Helper()
+	var buf bytes.Buffer
+	gzw := gzip.NewWriter(&buf)
+	tw := tar.NewWriter(gzw)
+
+	for _, e := range entries {
+		hdr := &tar.Header{
+			Name:     e.name,
+			Mode:     0755,
+			Size:     int64(len(e.body)),
+			Typeflag: e.typeflag,
+		}
+		if e.typeflag == tar.TypeSymlink {
+			hdr.Linkname = e.body
+			hdr.Size = 0
+		}
+		if err := tw.WriteHeader(hdr); err != nil {
+			t.Fatalf("failed to write tar header: %v", err)
+		}
+		if e.typeflag != tar.TypeSymlink {
+			if _, err := tw.Write([]byte(e.body)); err != nil {
+				t.Fatalf("failed to write tar content: %v", err)
+			}
+		}
+	}
+
+	if err := tw.Close(); err != nil {
+		t.Fatalf("failed to close tar writer: %v", err)
+	}
+	if err := gzw.Close(); err != nil {
+		t.Fatalf("failed to close gzip writer: %v", err)
+	}
+
+	return buf.Bytes()
+}
+
+// computeSHA256 returns the hex-encoded SHA256 of the given data.
+func computeSHA256(data []byte) string {
+	h := sha256.New()
+	h.Write(data)
+	return hex.EncodeToString(h.Sum(nil))
+}
+
+// newMockGHCRBottleServer creates a test server that serves bottle tarballs for
+// scanMultiplePlatforms tests. The platformBlobs map keys are platform tags
+// (e.g., "x86_64_linux"); values are raw tar.gz bytes.
+func newMockGHCRBottleServer(t *testing.T, formula, version string, platformBlobs map[string][]byte) (*httptest.Server, *http.Client) {
+	t.Helper()
+
+	// Pre-compute SHAs for each platform blob
+	platformSHAs := make(map[string]string)
+	for tag, blob := range platformBlobs {
+		platformSHAs[tag] = computeSHA256(blob)
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Token endpoint
+		if strings.HasPrefix(r.URL.Path, "/token") {
+			_, _ = w.Write([]byte(`{"token": "test-token"}`))
+			return
+		}
+
+		// Manifest endpoint
+		if strings.Contains(r.URL.Path, "/manifests/") {
+			var entries []string
+			for tag, sha := range platformSHAs {
+				refName := fmt.Sprintf("%s.%s", version, tag)
+				entries = append(entries, fmt.Sprintf(
+					`{"digest": "sha256:dummy", "annotations": {"org.opencontainers.image.ref.name": %q, "sh.brew.bottle.digest": "sha256:%s"}}`,
+					refName, sha,
+				))
+			}
+			manifest := fmt.Sprintf(`{"manifests": [%s]}`, strings.Join(entries, ","))
+			_, _ = w.Write([]byte(manifest))
+			return
+		}
+
+		// Blob download endpoint: /v2/homebrew/core/{formula}/blobs/sha256:{sha}
+		if strings.Contains(r.URL.Path, "/blobs/sha256:") {
+			parts := strings.SplitAfter(r.URL.Path, "/blobs/sha256:")
+			if len(parts) == 2 {
+				requestedSHA := parts[1]
+				for tag, sha := range platformSHAs {
+					if sha == requestedSHA {
+						w.Header().Set("Content-Type", "application/octet-stream")
+						_, _ = w.Write(platformBlobs[tag])
+						return
+					}
+				}
+			}
+			w.WriteHeader(404)
+			return
+		}
+
+		http.NotFound(w, r)
+	}))
+
+	client := server.Client()
+	client.Transport = &mockGHCRTransport{
+		serverURL: server.URL,
+		base:      client.Transport,
+	}
+
+	return server, client
+}
+
+func TestHomebrewBuilder_scanMultiplePlatforms_BothPlatforms(t *testing.T) {
+	linuxEntries := []struct {
+		name     string
+		body     string
+		typeflag byte
+	}{
+		{"testlib/1.0.0/lib/libtest.so", "lib", tar.TypeReg},
+		{"testlib/1.0.0/lib/libtest.a", "lib", tar.TypeReg},
+		{"testlib/1.0.0/include/test.h", "header", tar.TypeReg},
+	}
+	macEntries := []struct {
+		name     string
+		body     string
+		typeflag byte
+	}{
+		{"testlib/1.0.0/lib/libtest.dylib", "lib", tar.TypeReg},
+		{"testlib/1.0.0/lib/libtest.a", "lib", tar.TypeReg},
+		{"testlib/1.0.0/include/test.h", "header", tar.TypeReg},
+	}
+
+	linuxBlob := createBottleTarballBytes(t, linuxEntries)
+	macBlob := createBottleTarballBytes(t, macEntries)
+
+	server, client := newMockGHCRBottleServer(t, "testlib", "1.0.0", map[string][]byte{
+		"x86_64_linux": linuxBlob,
+		"arm64_sonoma": macBlob,
+	})
+	defer server.Close()
+
+	b := &HomebrewBuilder{httpClient: client}
+	info := &homebrewFormulaInfo{Name: "testlib"}
+	info.Versions.Stable = "1.0.0"
+
+	// Provide current platform's contents (will be used instead of re-downloading)
+	currentTag, _ := getCurrentPlatformTag()
+	currentOS, _ := platformTagToOSLibc(currentTag)
+
+	var currentContents *bottleContents
+	if currentOS == "linux" {
+		currentContents = &bottleContents{
+			LibFiles: []string{"lib/libtest.so", "lib/libtest.a"},
+			Includes: []string{"include/test.h"},
+		}
+	} else {
+		currentContents = &bottleContents{
+			LibFiles: []string{"lib/libtest.dylib", "lib/libtest.a"},
+			Includes: []string{"include/test.h"},
+		}
+	}
+
+	ctx := context.Background()
+	platforms := b.scanMultiplePlatforms(ctx, info, currentContents)
+
+	// Should have 2 platforms
+	if len(platforms) != 2 {
+		t.Fatalf("len(platforms) = %d, want 2", len(platforms))
+	}
+
+	// Linux should be first
+	if platforms[0].OS != "linux" {
+		t.Errorf("platforms[0].OS = %q, want %q", platforms[0].OS, "linux")
+	}
+	if platforms[0].Libc != "glibc" {
+		t.Errorf("platforms[0].Libc = %q, want %q", platforms[0].Libc, "glibc")
+	}
+	if platforms[0].Contents == nil {
+		t.Fatal("platforms[0].Contents should not be nil")
+	}
+
+	// macOS should be second
+	if platforms[1].OS != "darwin" {
+		t.Errorf("platforms[1].OS = %q, want %q", platforms[1].OS, "darwin")
+	}
+	if platforms[1].Libc != "" {
+		t.Errorf("platforms[1].Libc = %q, want empty", platforms[1].Libc)
+	}
+	if platforms[1].Contents == nil {
+		t.Fatal("platforms[1].Contents should not be nil")
+	}
+
+	// Current platform should use the provided contents (identity check)
+	if currentOS == "linux" {
+		if platforms[0].Contents != currentContents {
+			t.Error("Linux platform should reuse the provided currentContents pointer")
+		}
+	} else {
+		if platforms[1].Contents != currentContents {
+			t.Error("macOS platform should reuse the provided currentContents pointer")
+		}
+	}
+}
+
+func TestHomebrewBuilder_scanMultiplePlatforms_OnePlatformMissing(t *testing.T) {
+	// Only Linux bottle available; macOS bottle missing
+	linuxEntries := []struct {
+		name     string
+		body     string
+		typeflag byte
+	}{
+		{"testlib/1.0.0/lib/libtest.so", "lib", tar.TypeReg},
+		{"testlib/1.0.0/include/test.h", "header", tar.TypeReg},
+	}
+	linuxBlob := createBottleTarballBytes(t, linuxEntries)
+
+	server, client := newMockGHCRBottleServer(t, "testlib", "1.0.0", map[string][]byte{
+		"x86_64_linux": linuxBlob,
+		// arm64_sonoma intentionally omitted
+	})
+	defer server.Close()
+
+	b := &HomebrewBuilder{httpClient: client}
+	info := &homebrewFormulaInfo{Name: "testlib"}
+	info.Versions.Stable = "1.0.0"
+
+	currentTag, _ := getCurrentPlatformTag()
+	currentOS, _ := platformTagToOSLibc(currentTag)
+
+	currentContents := &bottleContents{
+		LibFiles: []string{"lib/libtest.so"},
+		Includes: []string{"include/test.h"},
+	}
+
+	ctx := context.Background()
+	platforms := b.scanMultiplePlatforms(ctx, info, currentContents)
+
+	if currentOS == "linux" {
+		// Current platform is Linux, macOS missing. Should get 1 platform.
+		if len(platforms) != 1 {
+			t.Fatalf("len(platforms) = %d, want 1 (macOS missing)", len(platforms))
+		}
+		if platforms[0].OS != "linux" {
+			t.Errorf("platforms[0].OS = %q, want %q", platforms[0].OS, "linux")
+		}
+	} else {
+		// Current platform is macOS but Linux bottle is available.
+		// macOS uses currentContents; Linux downloads from mock.
+		if len(platforms) != 2 {
+			t.Fatalf("len(platforms) = %d, want 2", len(platforms))
+		}
+		if platforms[0].OS != "linux" {
+			t.Errorf("platforms[0].OS = %q, want %q", platforms[0].OS, "linux")
+		}
+		if platforms[1].OS != "darwin" {
+			t.Errorf("platforms[1].OS = %q, want %q", platforms[1].OS, "darwin")
+		}
+	}
+}
+
+func TestHomebrewBuilder_scanMultiplePlatforms_NeitherPlatformAvailable(t *testing.T) {
+	// No bottles available at all (empty blobs map)
+	server, client := newMockGHCRBottleServer(t, "testlib", "1.0.0", map[string][]byte{})
+	defer server.Close()
+
+	b := &HomebrewBuilder{httpClient: client}
+	info := &homebrewFormulaInfo{Name: "testlib"}
+	info.Versions.Stable = "1.0.0"
+
+	currentContents := &bottleContents{
+		LibFiles: []string{"lib/libtest.so"},
+	}
+
+	ctx := context.Background()
+	platforms := b.scanMultiplePlatforms(ctx, info, currentContents)
+
+	// The current platform's contents are only included if its tag matches
+	// one of the two targets. Since neither target has a bottle, the mock
+	// server returns a manifest with no entries. But the current platform
+	// is matched by OS/libc, not by download success, so it's always
+	// included when it matches a target.
+	currentTag, _ := getCurrentPlatformTag()
+	currentOS, _ := platformTagToOSLibc(currentTag)
+
+	foundCurrent := false
+	for _, p := range platforms {
+		if p.OS == currentOS {
+			foundCurrent = true
+		}
+	}
+
+	// The current platform should be included (it uses currentContents,
+	// not a download) -- as long as it matches one of the two targets.
+	isLinux := currentOS == "linux"
+	isDarwin := currentOS == "darwin"
+	if (isLinux || isDarwin) && !foundCurrent {
+		t.Errorf("expected current platform (%s) to be included even when downloads fail", currentOS)
+	}
+
+	// The other platform should NOT be included (download failed)
+	if isLinux && len(platforms) != 1 {
+		t.Errorf("len(platforms) = %d, want 1 (only Linux from currentContents)", len(platforms))
+	}
+	if isDarwin && len(platforms) != 1 {
+		t.Errorf("len(platforms) = %d, want 1 (only macOS from currentContents)", len(platforms))
+	}
+}
+
+func TestHomebrewBuilder_scanMultiplePlatforms_CurrentPlatformReused(t *testing.T) {
+	// Verify the current platform's contents pointer is reused, not re-downloaded.
+	linuxEntries := []struct {
+		name     string
+		body     string
+		typeflag byte
+	}{
+		{"testlib/1.0.0/lib/libtest.so", "lib", tar.TypeReg},
+	}
+	macEntries := []struct {
+		name     string
+		body     string
+		typeflag byte
+	}{
+		{"testlib/1.0.0/lib/libtest.dylib", "lib", tar.TypeReg},
+	}
+
+	linuxBlob := createBottleTarballBytes(t, linuxEntries)
+	macBlob := createBottleTarballBytes(t, macEntries)
+
+	server, client := newMockGHCRBottleServer(t, "testlib", "1.0.0", map[string][]byte{
+		"x86_64_linux": linuxBlob,
+		"arm64_sonoma": macBlob,
+	})
+	defer server.Close()
+
+	b := &HomebrewBuilder{httpClient: client}
+	info := &homebrewFormulaInfo{Name: "testlib"}
+	info.Versions.Stable = "1.0.0"
+
+	// Create a distinctive currentContents to verify identity
+	currentContents := &bottleContents{
+		LibFiles: []string{"lib/MARKER_FILE.so"},
+		Includes: []string{"include/MARKER.h"},
+	}
+
+	ctx := context.Background()
+	platforms := b.scanMultiplePlatforms(ctx, info, currentContents)
+
+	currentTag, _ := getCurrentPlatformTag()
+	currentOS, _ := platformTagToOSLibc(currentTag)
+
+	// Find the platform matching the current OS and verify it uses
+	// the exact same pointer (not a re-downloaded copy)
+	for _, p := range platforms {
+		if p.OS == currentOS {
+			if p.Contents != currentContents {
+				t.Error("current platform should reuse the provided currentContents pointer (identity)")
+			}
+			// Verify it has the marker files (not re-scanned from tarball)
+			if len(p.Contents.LibFiles) != 1 || p.Contents.LibFiles[0] != "lib/MARKER_FILE.so" {
+				t.Errorf("current platform LibFiles = %v, expected marker file", p.Contents.LibFiles)
+			}
+		}
+	}
+}
+
+func TestHomebrewBuilder_generateLibraryRecipe_MultiPlatformStepOrdering(t *testing.T) {
+	b := &HomebrewBuilder{}
+
+	genCtx := &homebrewGenContext{
+		formula: "testlib",
+		formulaInfo: &homebrewFormulaInfo{
+			Name:        "testlib",
+			Description: "A test library",
+			Homepage:    "https://example.com",
+		},
+	}
+	genCtx.formulaInfo.Versions.Stable = "1.0.0"
+
+	platforms := []platformContents{
+		{
+			OS:   "linux",
+			Libc: "glibc",
+			Contents: &bottleContents{
+				LibFiles: []string{"lib/libtest.so", "lib/libtest.a", "lib/pkgconfig/test.pc"},
+				Includes: []string{"include/test.h"},
+			},
+		},
+		{
+			OS:   "darwin",
+			Libc: "",
+			Contents: &bottleContents{
+				LibFiles: []string{"lib/libtest.dylib", "lib/libtest.a", "lib/pkgconfig/test.pc"},
+				Includes: []string{"include/test.h"},
+			},
+		},
+	}
+
+	r, err := b.generateLibraryRecipe(context.Background(), "testlib", genCtx, platforms)
+	if err != nil {
+		t.Fatalf("generateLibraryRecipe() error = %v", err)
+	}
+
+	// 4 steps: 2 per platform
+	if len(r.Steps) != 4 {
+		t.Fatalf("len(Steps) = %d, want 4", len(r.Steps))
+	}
+
+	// Step 0: Linux homebrew
+	if r.Steps[0].Action != "homebrew" {
+		t.Errorf("Steps[0].Action = %q, want %q", r.Steps[0].Action, "homebrew")
+	}
+	if r.Steps[0].When == nil || len(r.Steps[0].When.OS) != 1 || r.Steps[0].When.OS[0] != "linux" {
+		t.Errorf("Steps[0].When.OS = %v, want [linux]", safeWhenOS(r.Steps[0].When))
+	}
+	if r.Steps[0].When == nil || len(r.Steps[0].When.Libc) != 1 || r.Steps[0].When.Libc[0] != "glibc" {
+		t.Errorf("Steps[0].When.Libc = %v, want [glibc]", safeWhenLibc(r.Steps[0].When))
+	}
+
+	// Step 1: Linux install_binaries
+	if r.Steps[1].Action != "install_binaries" {
+		t.Errorf("Steps[1].Action = %q, want %q", r.Steps[1].Action, "install_binaries")
+	}
+	if r.Steps[1].When == nil || r.Steps[1].When.OS[0] != "linux" {
+		t.Errorf("Steps[1].When.OS = %v, want [linux]", safeWhenOS(r.Steps[1].When))
+	}
+	linuxOutputs, ok := r.Steps[1].Params["outputs"].([]string)
+	if !ok {
+		t.Fatalf("Steps[1].Params[outputs] type = %T, want []string", r.Steps[1].Params["outputs"])
+	}
+	// Linux outputs: 3 lib files + 1 include = 4
+	if len(linuxOutputs) != 4 {
+		t.Errorf("Linux outputs count = %d, want 4: %v", len(linuxOutputs), linuxOutputs)
+	}
+	if linuxOutputs[0] != "lib/libtest.so" {
+		t.Errorf("Linux outputs[0] = %q, want %q", linuxOutputs[0], "lib/libtest.so")
+	}
+
+	// Step 2: macOS homebrew
+	if r.Steps[2].Action != "homebrew" {
+		t.Errorf("Steps[2].Action = %q, want %q", r.Steps[2].Action, "homebrew")
+	}
+	if r.Steps[2].When == nil || r.Steps[2].When.OS[0] != "darwin" {
+		t.Errorf("Steps[2].When.OS = %v, want [darwin]", safeWhenOS(r.Steps[2].When))
+	}
+	// macOS: no Libc field
+	if r.Steps[2].When != nil && len(r.Steps[2].When.Libc) != 0 {
+		t.Errorf("Steps[2].When.Libc = %v, want empty for macOS", r.Steps[2].When.Libc)
+	}
+
+	// Step 3: macOS install_binaries
+	if r.Steps[3].Action != "install_binaries" {
+		t.Errorf("Steps[3].Action = %q, want %q", r.Steps[3].Action, "install_binaries")
+	}
+	macOutputs, ok := r.Steps[3].Params["outputs"].([]string)
+	if !ok {
+		t.Fatalf("Steps[3].Params[outputs] type = %T, want []string", r.Steps[3].Params["outputs"])
+	}
+	// macOS outputs: 3 lib files + 1 include = 4
+	if len(macOutputs) != 4 {
+		t.Errorf("macOS outputs count = %d, want 4: %v", len(macOutputs), macOutputs)
+	}
+	if macOutputs[0] != "lib/libtest.dylib" {
+		t.Errorf("macOS outputs[0] = %q, want %q", macOutputs[0], "lib/libtest.dylib")
+	}
+
+	// Verify install_mode = "directory" on both install_binaries steps
+	for _, i := range []int{1, 3} {
+		mode, ok := r.Steps[i].Params["install_mode"].(string)
+		if !ok || mode != "directory" {
+			t.Errorf("Steps[%d].Params[install_mode] = %v, want %q", i, r.Steps[i].Params["install_mode"], "directory")
+		}
+	}
+
+	// Verify homebrew and install_binaries steps share the same when clause
+	for base := 0; base < 4; base += 2 {
+		hw := r.Steps[base].When
+		iw := r.Steps[base+1].When
+		if hw == nil || iw == nil {
+			t.Errorf("Steps[%d] and Steps[%d] should both have when clauses", base, base+1)
+			continue
+		}
+		if hw.OS[0] != iw.OS[0] {
+			t.Errorf("Steps[%d].When.OS = %v, Steps[%d].When.OS = %v (should match)", base, hw.OS, base+1, iw.OS)
+		}
+	}
+}
+
+func TestHomebrewBuilder_generateLibraryRecipe_SinglePlatformFallback(t *testing.T) {
+	// When only one platform is available, the recipe should have 2 steps
+	// without when clauses (simple format).
+	b := &HomebrewBuilder{}
+
+	genCtx := &homebrewGenContext{
+		formula: "onlylinux",
+		formulaInfo: &homebrewFormulaInfo{
+			Name:        "onlylinux",
+			Description: "A Linux-only library",
+			Homepage:    "https://example.com",
+		},
+	}
+	genCtx.formulaInfo.Versions.Stable = "1.0.0"
+
+	platforms := []platformContents{
+		{
+			OS:   "linux",
+			Libc: "glibc",
+			Contents: &bottleContents{
+				LibFiles: []string{"lib/libonly.so"},
+				Includes: []string{"include/only.h"},
+			},
+		},
+	}
+
+	r, err := b.generateLibraryRecipe(context.Background(), "onlylinux", genCtx, platforms)
+	if err != nil {
+		t.Fatalf("generateLibraryRecipe() error = %v", err)
+	}
+
+	// Single platform: 2 steps, no when clauses
+	if len(r.Steps) != 2 {
+		t.Fatalf("len(Steps) = %d, want 2", len(r.Steps))
+	}
+	if r.Steps[0].When != nil {
+		t.Error("Steps[0].When should be nil for single-platform")
+	}
+	if r.Steps[1].When != nil {
+		t.Error("Steps[1].When should be nil for single-platform")
+	}
+}
+
+// safeWhenOS returns the OS slice from a WhenClause, or nil if the clause is nil.
+func safeWhenOS(w *recipe.WhenClause) []string {
+	if w == nil {
+		return nil
+	}
+	return w.OS
+}
+
+// safeWhenLibc returns the Libc slice from a WhenClause, or nil if the clause is nil.
+func safeWhenLibc(w *recipe.WhenClause) []string {
+	if w == nil {
+		return nil
+	}
+	return w.Libc
 }
 
 func TestPlatformTagToOSLibc(t *testing.T) {
