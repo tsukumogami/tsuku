@@ -45,8 +45,8 @@ Planned
 | ~~_Fixes the hand-coded `ToTOML()` serializer to emit `type` in `[metadata]` when set. The primary `WriteRecipe` path already handles this via struct tags, but `ToTOML()` is used by sandbox validation and was missing the field._~~ | | |
 | ~~[#1881: feat(dashboard): add library_only failure subcategory](https://github.com/tsukumogami/tsuku/issues/1881)~~ | ~~[#1878](https://github.com/tsukumogami/tsuku/issues/1878)~~ | ~~testable~~ |
 | ~~_Adds `library_only` to the `knownSubcategories` map in the dashboard and tags library detection error messages with `[library_only]` for `extractSubcategory()` parsing. Distinguishes "detected a library but generation failed" from "genuinely unclassifiable bottle."_~~ | | |
-| [#1882: test(homebrew): validate library recipe generation against pipeline data](https://github.com/tsukumogami/tsuku/issues/1882) | [#1879](https://github.com/tsukumogami/tsuku/issues/1879), [#1881](https://github.com/tsukumogami/tsuku/issues/1881) | testable |
-| _Runs the generator against known library packages (bdw-gc, tree-sitter) from the `complex_archive` queue. Verifies generated recipes match existing library recipe structure and confirms the `library_only` subcategory appears correctly in failure data._ | | |
+| ~~[#1882: test(homebrew): validate library recipe generation against pipeline data](https://github.com/tsukumogami/tsuku/issues/1882)~~ | ~~[#1879](https://github.com/tsukumogami/tsuku/issues/1879), [#1881](https://github.com/tsukumogami/tsuku/issues/1881)~~ | ~~testable~~ |
+| ~~_Runs the generator against known library packages (bdw-gc, tree-sitter) from the `complex_archive` queue. Verifies generated recipes match existing library recipe structure and confirms the `library_only` subcategory appears correctly in failure data._~~ | | |
 
 ### Dependency Graph
 
@@ -82,8 +82,7 @@ graph LR
     classDef needsDesign fill:#e1bee7
     classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
 
-    class I1877,I1878,I1879,I1880,I1881 done
-    class I1882 ready
+    class I1877,I1878,I1879,I1880,I1881,I1882 done
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design
