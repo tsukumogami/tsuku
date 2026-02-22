@@ -199,7 +199,7 @@ This section summarizes what shipped, what diverged from the original design, an
 
 See the Remaining Work section at the end of this document for the full list. Key items:
 - 1 open issue across 1 milestone
-- Script format mismatches (gap-analysis.sh, requeue-unblocked.sh)
+- Script format mismatches (gap-analysis.sh); requeue-unblocked.sh mismatch resolved by queue-maintain migration (#1825)
 - Schema file vs live format divergence
 - System library backfill strategy (#1191)
 - DESIGN-system-lib-backfill.md never created (#1191)
@@ -210,7 +210,7 @@ Tsuku's registry has grown from 155 recipes to 329, driven by an automated batch
 
 The initial question of "how to build the pipeline" has been answered. What remains:
 
-1. **Quality gaps in tooling**: Several scripts have format mismatches with the live data. `gap-analysis.sh` reads `*.json` but failures are now `*.jsonl`. `requeue-unblocked.sh` reads the old `priority-queue-$ECOSYSTEM.json` format instead of the unified `priority-queue.json`. JSON schema files describe the old seed format (`packages[]`) but the live queue uses `entries[]`.
+1. **Quality gaps in tooling**: Some scripts have format mismatches with the live data. `gap-analysis.sh` reads `*.json` but failures are now `*.jsonl`. ~~`requeue-unblocked.sh` reads the old `priority-queue-$ECOSYSTEM.json` format instead of the unified `priority-queue.json`.~~ Resolved: `requeue-unblocked.sh` was replaced by `cmd/queue-maintain/` (#1825), which operates on the unified queue format. JSON schema files describe the old seed format (`packages[]`) but the live queue uses `entries[]`.
 
 2. **System dependencies are still incomplete**: About 50 recipes (15% exclusion rate) can't be generated because they need system libraries tsuku doesn't provide. Adding ~20 core libraries would unblock hundreds of Homebrew formulas.
 
@@ -751,7 +751,7 @@ When a package fails due to missing dependencies, the failure record must track 
 
 This creates a feedback loop: failures identify missing capabilities, capabilities are added, blocked packages automatically retry.
 
-**Implementation note:** The original plan called for Cloudflare-based infrastructure (Worker + D1/R2) to maintain consistency with existing telemetry. In practice, the file-based approach (JSONL in `data/failures/`, scripts for analysis, HTML dashboard at `website/pipeline/`) has handled current needs. The re-queue trigger described above isn't yet operational: `requeue-unblocked.sh` exists but has a format mismatch with the unified queue file.
+**Implementation note:** The original plan called for Cloudflare-based infrastructure (Worker + D1/R2) to maintain consistency with existing telemetry. In practice, the file-based approach (JSONL in `data/failures/`, scripts for analysis, HTML dashboard at `website/pipeline/`) has handled current needs. The re-queue trigger is now operational: `cmd/queue-maintain/` (#1825) replaced `requeue-unblocked.sh`, resolving the format mismatch. It runs in `update-queue-status.yml` after recipe merges and in `batch-generate.yml` during batch processing.
 
 ### Generation Flow
 
@@ -992,13 +992,13 @@ This is a strategic design. Implementation follows a **walking skeleton** approa
 
 ### Phase 4: Automation & Intelligence -- PARTIALLY COMPLETE
 
-**Status**: Auto-merge is implemented and gated on validation pass + `run_command` absence. Checksum drift monitoring exists (`checksum-drift.yaml`). Re-queue script exists but has a format mismatch (`requeue-unblocked.sh` reads old `priority-queue-$ECOSYSTEM.json` instead of unified `priority-queue.json`).
+**Status**: Auto-merge is implemented and gated on validation pass + `run_command` absence. Checksum drift monitoring exists (`checksum-drift.yaml`). Re-queue is operational: `cmd/queue-maintain/` (#1825) replaced `requeue-unblocked.sh` and its format mismatch, operating on the unified `priority-queue.json`.
 
 **Goal**: Auto-merge, re-queue triggers, advanced analysis.
 
 **Components**:
 - **Auto-merge** (DESIGN-batch-recipe-generation.md): For recipes passing all gates -- DONE
-- **Re-queue triggers** (DESIGN-batch-failure-analysis.md): Auto re-queue when deps available -- EXISTS BUT BROKEN (format mismatch)
+- **Re-queue triggers** (DESIGN-batch-failure-analysis.md): Auto re-queue when deps available -- DONE (`cmd/queue-maintain/`, #1825)
 - **Structural vs transient classification**: Don't retry structural failures -- DONE
 - **Post-merge monitoring**: Checksum drift detection -- DONE (`checksum-drift.yaml`)
 - **Request-based priority**: Boost packages users are requesting -- NOT DONE
@@ -1215,7 +1215,7 @@ These are bugs and inconsistencies between scripts, schemas, and live data forma
 | Item | Problem | Fix |
 |------|---------|-----|
 | `gap-analysis.sh` | Reads `*.json` but failures are now `*.jsonl` | Update glob pattern |
-| `requeue-unblocked.sh` | Reads old `priority-queue-$ECOSYSTEM.json` format | Update to read unified `priority-queue.json` |
+| ~~`requeue-unblocked.sh`~~ | ~~Reads old `priority-queue-$ECOSYSTEM.json` format~~ | ~~Resolved: script deleted and replaced by `cmd/queue-maintain/` (#1825)~~ |
 | `batch-operations.yml` process job | Stub with placeholder code | Implement or remove |
 | JSON schema files (`data/schemas/`) | Describe old seed format (`packages[]`) | Update to match live `entries[]` format |
 

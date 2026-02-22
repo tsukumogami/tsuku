@@ -5,24 +5,11 @@
 package reorder
 
 import (
-	"bufio"
-	"encoding/json"
-	"fmt"
-	"os"
-	"path/filepath"
 	"sort"
 
 	"github.com/tsukumogami/tsuku/internal/batch"
 	"github.com/tsukumogami/tsuku/internal/blocker"
 )
-
-// Options configures the reorder operation.
-type Options struct {
-	QueueFile   string // Path to unified priority-queue.json
-	FailuresDir string // Directory containing failures JSONL files
-	OutputFile  string // Path to write reordered queue (empty = overwrite QueueFile)
-	DryRun      bool   // If true, print changes without writing
-}
 
 // Result summarizes what the reorder operation did.
 type Result struct {
@@ -47,39 +34,17 @@ type Move struct {
 	To   int    `json:"to"`   // 0-based position within tier after reorder
 }
 
-// failureRecord represents one line in failures JSONL. Supports both legacy
-// batch format (with failures array) and per-recipe format.
-type failureRecord struct {
-	SchemaVersion int              `json:"schema_version"`
-	Ecosystem     string           `json:"ecosystem,omitempty"`
-	Failures      []packageFailure `json:"failures,omitempty"`
-	// Per-recipe format fields
-	Recipe    string   `json:"recipe,omitempty"`
-	Category  string   `json:"category,omitempty"`
-	BlockedBy []string `json:"blocked_by,omitempty"`
-}
-
-// packageFailure is a single failure entry in the legacy batch format.
-type packageFailure struct {
-	PackageID string   `json:"package_id"`
-	Category  string   `json:"category"`
-	BlockedBy []string `json:"blocked_by,omitempty"`
-}
-
-// Run loads the queue and failure data, computes blocking scores, reorders
-// entries within each tier by descending score, and writes the result.
-func Run(opts Options) (*Result, error) {
-	queue, err := batch.LoadUnifiedQueue(opts.QueueFile)
-	if err != nil {
-		return nil, fmt.Errorf("load queue: %w", err)
-	}
-
+// Run reorders entries within each tier by descending blocking impact score.
+// It modifies the queue in place and does not perform any I/O (the caller
+// loads and saves the queue). The failuresDir is used to load blocker data
+// for computing scores.
+func Run(queue *batch.UnifiedQueue, failuresDir string) (*Result, error) {
 	if len(queue.Entries) == 0 {
 		return &Result{ByTier: map[int]int{}, EntriesMoved: map[int][]Move{}}, nil
 	}
 
 	// Build blocker map from failure data
-	blockers, err := loadBlockerMap(opts.FailuresDir)
+	blockers, err := blocker.LoadBlockerMap(failuresDir)
 	if err != nil {
 		// Non-fatal: if no failure data exists, all scores are 0 and
 		// the queue retains its alphabetical ordering within tiers.
@@ -109,19 +74,6 @@ func Run(opts Options) (*Result, error) {
 	newByTier := groupByTier(queue.Entries)
 	result := buildResult(queue.Entries, scores, origByTier, newByTier)
 
-	if opts.DryRun {
-		return result, nil
-	}
-
-	// Write output
-	outputPath := opts.OutputFile
-	if outputPath == "" {
-		outputPath = opts.QueueFile
-	}
-	if err := batch.SaveUnifiedQueue(outputPath, queue); err != nil {
-		return nil, fmt.Errorf("save queue: %w", err)
-	}
-
 	return result, nil
 }
 
@@ -139,72 +91,6 @@ func computeScores(entries []batch.QueueEntry, blockers map[string][]string) map
 	}
 
 	return scores
-}
-
-// loadBlockerMap reads all JSONL files in a directory and builds a map of
-// dependency -> list of blocked package IDs, combining data from both legacy
-// batch format and per-recipe format.
-func loadBlockerMap(dir string) (map[string][]string, error) {
-	pattern := filepath.Join(dir, "*.jsonl")
-	files, err := filepath.Glob(pattern)
-	if err != nil {
-		return nil, fmt.Errorf("glob failures: %w", err)
-	}
-
-	if len(files) == 0 {
-		return nil, fmt.Errorf("no failure files found in %s", dir)
-	}
-
-	blockers := make(map[string][]string)
-	for _, path := range files {
-		if err := loadBlockersFromFile(path, blockers); err != nil {
-			continue // Skip files that can't be read
-		}
-	}
-	return blockers, nil
-}
-
-// loadBlockersFromFile reads a single JSONL file and populates the blocker map.
-func loadBlockersFromFile(path string, blockers map[string][]string) error {
-	file, err := os.Open(path)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := scanner.Bytes()
-		if len(line) == 0 {
-			continue
-		}
-
-		var record failureRecord
-		if err := json.Unmarshal(line, &record); err != nil {
-			continue // Skip malformed lines
-		}
-
-		// Handle legacy batch format with failures array
-		for _, f := range record.Failures {
-			for _, dep := range f.BlockedBy {
-				blockers[dep] = append(blockers[dep], f.PackageID)
-			}
-		}
-
-		// Handle per-recipe format
-		if record.Recipe != "" && len(record.BlockedBy) > 0 {
-			eco := record.Ecosystem
-			if eco == "" {
-				eco = "homebrew"
-			}
-			pkgID := eco + ":" + record.Recipe
-			for _, dep := range record.BlockedBy {
-				blockers[dep] = append(blockers[dep], pkgID)
-			}
-		}
-	}
-
-	return scanner.Err()
 }
 
 // groupByTier returns a map from tier to the ordered list of entry names.

@@ -1,7 +1,6 @@
 package reorder
 
 import (
-	"encoding/json"
 	"os"
 	"path/filepath"
 	"testing"
@@ -9,44 +8,19 @@ import (
 	"github.com/tsukumogami/tsuku/internal/batch"
 )
 
-// writeQueue is a test helper that writes a UnifiedQueue to a temp file.
-func writeQueue(t *testing.T, dir string, queue *batch.UnifiedQueue) string {
-	t.Helper()
-	path := filepath.Join(dir, "priority-queue.json")
-	data, err := json.MarshalIndent(queue, "", "  ")
-	if err != nil {
-		t.Fatalf("marshal queue: %v", err)
-	}
-	if err := os.WriteFile(path, data, 0644); err != nil {
-		t.Fatalf("write queue: %v", err)
-	}
-	return path
-}
-
 // writeFailures is a test helper that writes JSONL failure data to a temp file.
 func writeFailures(t *testing.T, dir string, filename string, lines []string) {
 	t.Helper()
-	failDir := filepath.Join(dir, "failures")
-	if err := os.MkdirAll(failDir, 0755); err != nil {
+	if err := os.MkdirAll(dir, 0755); err != nil {
 		t.Fatalf("mkdir failures: %v", err)
 	}
 	content := ""
 	for _, line := range lines {
 		content += line + "\n"
 	}
-	if err := os.WriteFile(filepath.Join(failDir, filename), []byte(content), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, filename), []byte(content), 0644); err != nil {
 		t.Fatalf("write failures: %v", err)
 	}
-}
-
-// readQueue is a test helper that reads the queue from a file.
-func readQueue(t *testing.T, path string) *batch.UnifiedQueue {
-	t.Helper()
-	q, err := batch.LoadUnifiedQueue(path)
-	if err != nil {
-		t.Fatalf("load queue: %v", err)
-	}
-	return q
 }
 
 // entryNames returns just the names from a slice of QueueEntry.
@@ -62,6 +36,7 @@ func entryNames(entries []batch.QueueEntry) []string {
 // with lower blocking counts within the same tier.
 func TestReorder_HighBlockingScoreFirst(t *testing.T) {
 	dir := t.TempDir()
+	failDir := filepath.Join(dir, "failures")
 
 	queue := &batch.UnifiedQueue{
 		SchemaVersion: 1,
@@ -71,25 +46,19 @@ func TestReorder_HighBlockingScoreFirst(t *testing.T) {
 			{Name: "zlib", Source: "homebrew:zlib", Priority: 2, Status: "pending", Confidence: "auto"},
 		},
 	}
-	queuePath := writeQueue(t, dir, queue)
 
 	// gmp blocks 3 packages, zlib blocks 1, alpha blocks 0
-	writeFailures(t, dir, "failures.jsonl", []string{
+	writeFailures(t, failDir, "failures.jsonl", []string{
 		`{"schema_version":1,"ecosystem":"homebrew","failures":[{"package_id":"homebrew:ffmpeg","category":"missing_dep","blocked_by":["gmp"],"message":"","timestamp":"2026-01-01T00:00:00Z"},{"package_id":"homebrew:imagemagick","category":"missing_dep","blocked_by":["gmp"],"message":"","timestamp":"2026-01-01T00:00:00Z"},{"package_id":"homebrew:coreutils","category":"missing_dep","blocked_by":["gmp"],"message":"","timestamp":"2026-01-01T00:00:00Z"}]}`,
 		`{"schema_version":1,"ecosystem":"homebrew","failures":[{"package_id":"homebrew:curl","category":"missing_dep","blocked_by":["zlib"],"message":"","timestamp":"2026-01-01T00:00:00Z"}]}`,
 	})
 
-	result, err := Run(Options{
-		QueueFile:   queuePath,
-		FailuresDir: filepath.Join(dir, "failures"),
-		OutputFile:  filepath.Join(dir, "output.json"),
-	})
+	result, err := Run(queue, failDir)
 	if err != nil {
 		t.Fatalf("Run: %v", err)
 	}
 
-	out := readQueue(t, filepath.Join(dir, "output.json"))
-	names := entryNames(out.Entries)
+	names := entryNames(queue.Entries)
 
 	// gmp (score=3) before zlib (score=1) before alpha (score=0)
 	if names[0] != "gmp" {
@@ -111,6 +80,7 @@ func TestReorder_HighBlockingScoreFirst(t *testing.T) {
 // appear before tier 2 entries, regardless of blocking scores.
 func TestReorder_TierBoundariesPreserved(t *testing.T) {
 	dir := t.TempDir()
+	failDir := filepath.Join(dir, "failures")
 
 	queue := &batch.UnifiedQueue{
 		SchemaVersion: 1,
@@ -120,7 +90,6 @@ func TestReorder_TierBoundariesPreserved(t *testing.T) {
 			{Name: "tier3-megablocker", Source: "homebrew:tier3-megablocker", Priority: 3, Status: "pending", Confidence: "auto"},
 		},
 	}
-	queuePath := writeQueue(t, dir, queue)
 
 	// tier3-megablocker blocks 10 packages, tier2-highblocker blocks 5, tier1 blocks 0
 	lines := []string{}
@@ -132,19 +101,14 @@ func TestReorder_TierBoundariesPreserved(t *testing.T) {
 		lines = append(lines, `{"schema_version":1,"ecosystem":"homebrew","recipe":"blocked`+
 			string(rune('a'+i))+`","category":"missing_dep","blocked_by":["tier2-highblocker"]}`)
 	}
-	writeFailures(t, dir, "failures.jsonl", lines)
+	writeFailures(t, failDir, "failures.jsonl", lines)
 
-	_, err := Run(Options{
-		QueueFile:   queuePath,
-		FailuresDir: filepath.Join(dir, "failures"),
-		OutputFile:  filepath.Join(dir, "output.json"),
-	})
+	_, err := Run(queue, failDir)
 	if err != nil {
 		t.Fatalf("Run: %v", err)
 	}
 
-	out := readQueue(t, filepath.Join(dir, "output.json"))
-	names := entryNames(out.Entries)
+	names := entryNames(queue.Entries)
 
 	// Tier 1 must still be first, even though tier 3 has highest blocking score
 	if names[0] != "tier1-noblockers" {
@@ -158,9 +122,9 @@ func TestReorder_TierBoundariesPreserved(t *testing.T) {
 	}
 
 	// Verify priorities are preserved in output
-	for i, entry := range out.Entries {
-		if i > 0 && entry.Priority < out.Entries[i-1].Priority {
-			t.Errorf("tier boundary violated at index %d: priority %d after %d", i, entry.Priority, out.Entries[i-1].Priority)
+	for i, entry := range queue.Entries {
+		if i > 0 && entry.Priority < queue.Entries[i-1].Priority {
+			t.Errorf("tier boundary violated at index %d: priority %d after %d", i, entry.Priority, queue.Entries[i-1].Priority)
 		}
 	}
 }
@@ -169,6 +133,7 @@ func TestReorder_TierBoundariesPreserved(t *testing.T) {
 // (stable tiebreaker).
 func TestReorder_AlphabeticalTiebreaker(t *testing.T) {
 	dir := t.TempDir()
+	failDir := filepath.Join(dir, "failures")
 
 	queue := &batch.UnifiedQueue{
 		SchemaVersion: 1,
@@ -178,26 +143,20 @@ func TestReorder_AlphabeticalTiebreaker(t *testing.T) {
 			{Name: "mango", Source: "homebrew:mango", Priority: 2, Status: "pending", Confidence: "auto"},
 		},
 	}
-	queuePath := writeQueue(t, dir, queue)
 
 	// All block exactly 1 package each
-	writeFailures(t, dir, "failures.jsonl", []string{
+	writeFailures(t, failDir, "failures.jsonl", []string{
 		`{"schema_version":1,"ecosystem":"homebrew","failures":[{"package_id":"homebrew:p1","category":"missing_dep","blocked_by":["zebra"],"message":"","timestamp":"2026-01-01T00:00:00Z"}]}`,
 		`{"schema_version":1,"ecosystem":"homebrew","failures":[{"package_id":"homebrew:p2","category":"missing_dep","blocked_by":["apple"],"message":"","timestamp":"2026-01-01T00:00:00Z"}]}`,
 		`{"schema_version":1,"ecosystem":"homebrew","failures":[{"package_id":"homebrew:p3","category":"missing_dep","blocked_by":["mango"],"message":"","timestamp":"2026-01-01T00:00:00Z"}]}`,
 	})
 
-	_, err := Run(Options{
-		QueueFile:   queuePath,
-		FailuresDir: filepath.Join(dir, "failures"),
-		OutputFile:  filepath.Join(dir, "output.json"),
-	})
+	_, err := Run(queue, failDir)
 	if err != nil {
 		t.Fatalf("Run: %v", err)
 	}
 
-	out := readQueue(t, filepath.Join(dir, "output.json"))
-	names := entryNames(out.Entries)
+	names := entryNames(queue.Entries)
 
 	// All same score, should be alphabetical
 	if names[0] != "apple" || names[1] != "mango" || names[2] != "zebra" {
@@ -210,6 +169,7 @@ func TestReorder_AlphabeticalTiebreaker(t *testing.T) {
 // include the transitive chain.
 func TestReorder_TransitiveBlockingCounts(t *testing.T) {
 	dir := t.TempDir()
+	failDir := filepath.Join(dir, "failures")
 
 	queue := &batch.UnifiedQueue{
 		SchemaVersion: 1,
@@ -218,27 +178,21 @@ func TestReorder_TransitiveBlockingCounts(t *testing.T) {
 			{Name: "zlib", Source: "homebrew:zlib", Priority: 3, Status: "pending", Confidence: "auto"},
 		},
 	}
-	queuePath := writeQueue(t, dir, queue)
 
 	// gmp directly blocks ffmpeg, ffmpeg blocks vlc (transitive chain via gmp)
 	// zlib directly blocks 2 packages (curl, wget) but no transitive chain
-	writeFailures(t, dir, "failures.jsonl", []string{
+	writeFailures(t, failDir, "failures.jsonl", []string{
 		`{"schema_version":1,"ecosystem":"homebrew","failures":[{"package_id":"homebrew:ffmpeg","category":"missing_dep","blocked_by":["gmp"],"message":"","timestamp":"2026-01-01T00:00:00Z"}]}`,
 		`{"schema_version":1,"ecosystem":"homebrew","failures":[{"package_id":"homebrew:vlc","category":"missing_dep","blocked_by":["ffmpeg"],"message":"","timestamp":"2026-01-01T00:00:00Z"}]}`,
 		`{"schema_version":1,"ecosystem":"homebrew","failures":[{"package_id":"homebrew:curl","category":"missing_dep","blocked_by":["zlib"],"message":"","timestamp":"2026-01-01T00:00:00Z"},{"package_id":"homebrew:wget","category":"missing_dep","blocked_by":["zlib"],"message":"","timestamp":"2026-01-01T00:00:00Z"}]}`,
 	})
 
-	result, err := Run(Options{
-		QueueFile:   queuePath,
-		FailuresDir: filepath.Join(dir, "failures"),
-		OutputFile:  filepath.Join(dir, "output.json"),
-	})
+	result, err := Run(queue, failDir)
 	if err != nil {
 		t.Fatalf("Run: %v", err)
 	}
 
-	out := readQueue(t, filepath.Join(dir, "output.json"))
-	names := entryNames(out.Entries)
+	names := entryNames(queue.Entries)
 
 	// gmp: direct=1(ffmpeg) + transitive=1(vlc) = 2
 	// zlib: direct=2(curl,wget) + transitive=0 = 2
@@ -275,7 +229,6 @@ func TestReorder_NoBlockingDataAlphabetical(t *testing.T) {
 			{Name: "alpha", Source: "homebrew:alpha", Priority: 1, Status: "pending", Confidence: "auto"},
 		},
 	}
-	queuePath := writeQueue(t, dir, queue)
 
 	// No failures directory at all
 	emptyDir := filepath.Join(dir, "empty-failures")
@@ -283,17 +236,12 @@ func TestReorder_NoBlockingDataAlphabetical(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	result, err := Run(Options{
-		QueueFile:   queuePath,
-		FailuresDir: emptyDir,
-		OutputFile:  filepath.Join(dir, "output.json"),
-	})
+	result, err := Run(queue, emptyDir)
 	if err != nil {
 		t.Fatalf("Run: %v", err)
 	}
 
-	out := readQueue(t, filepath.Join(dir, "output.json"))
-	names := entryNames(out.Entries)
+	names := entryNames(queue.Entries)
 
 	// All score 0, should be alphabetical
 	expected := []string{"alpha", "bravo", "charlie", "delta"}
@@ -316,12 +264,8 @@ func TestReorder_EmptyQueue(t *testing.T) {
 		SchemaVersion: 1,
 		Entries:       []batch.QueueEntry{},
 	}
-	queuePath := writeQueue(t, dir, queue)
 
-	result, err := Run(Options{
-		QueueFile:   queuePath,
-		FailuresDir: filepath.Join(dir, "nonexistent"),
-	})
+	result, err := Run(queue, filepath.Join(dir, "nonexistent"))
 	if err != nil {
 		t.Fatalf("Run: %v", err)
 	}
@@ -331,10 +275,10 @@ func TestReorder_EmptyQueue(t *testing.T) {
 	}
 }
 
-// Scenario 7: dry-run mode should compute scores and report changes without
-// writing the output file.
-func TestReorder_DryRun(t *testing.T) {
+// Scenario 7: Run should modify the queue in place without writing any files.
+func TestReorder_ModifiesQueueInPlace(t *testing.T) {
 	dir := t.TempDir()
+	failDir := filepath.Join(dir, "failures")
 
 	queue := &batch.UnifiedQueue{
 		SchemaVersion: 1,
@@ -343,38 +287,27 @@ func TestReorder_DryRun(t *testing.T) {
 			{Name: "gmp", Source: "homebrew:gmp", Priority: 2, Status: "pending", Confidence: "auto"},
 		},
 	}
-	queuePath := writeQueue(t, dir, queue)
 
-	writeFailures(t, dir, "failures.jsonl", []string{
+	writeFailures(t, failDir, "failures.jsonl", []string{
 		`{"schema_version":1,"ecosystem":"homebrew","failures":[{"package_id":"homebrew:ffmpeg","category":"missing_dep","blocked_by":["gmp"],"message":"","timestamp":"2026-01-01T00:00:00Z"}]}`,
 	})
 
-	outputPath := filepath.Join(dir, "output.json")
-
-	result, err := Run(Options{
-		QueueFile:   queuePath,
-		FailuresDir: filepath.Join(dir, "failures"),
-		OutputFile:  outputPath,
-		DryRun:      true,
-	})
+	result, err := Run(queue, failDir)
 	if err != nil {
 		t.Fatalf("Run: %v", err)
 	}
 
-	// Result should report that changes would be made
+	// Result should report that changes were made
 	if result.Reordered == 0 {
-		t.Error("expected reorder changes to be reported in dry-run")
+		t.Error("expected reorder changes to be reported")
 	}
 
-	// Output file should NOT exist
-	if _, err := os.Stat(outputPath); !os.IsNotExist(err) {
-		t.Error("output file should not be written in dry-run mode")
+	// Queue should be modified in place: gmp first (has blocking score)
+	if queue.Entries[0].Name != "gmp" {
+		t.Errorf("expected gmp first in modified queue, got %s", queue.Entries[0].Name)
 	}
-
-	// Original queue should be unchanged
-	orig := readQueue(t, queuePath)
-	if orig.Entries[0].Name != "zlib" {
-		t.Errorf("original queue should be unchanged, first entry: %s", orig.Entries[0].Name)
+	if queue.Entries[1].Name != "zlib" {
+		t.Errorf("expected zlib second in modified queue, got %s", queue.Entries[1].Name)
 	}
 }
 
@@ -382,6 +315,7 @@ func TestReorder_DryRun(t *testing.T) {
 // should contribute to blocking scores.
 func TestReorder_MixedFailureFormats(t *testing.T) {
 	dir := t.TempDir()
+	failDir := filepath.Join(dir, "failures")
 
 	queue := &batch.UnifiedQueue{
 		SchemaVersion: 1,
@@ -391,28 +325,22 @@ func TestReorder_MixedFailureFormats(t *testing.T) {
 			{Name: "openssl", Source: "homebrew:openssl", Priority: 2, Status: "pending", Confidence: "auto"},
 		},
 	}
-	queuePath := writeQueue(t, dir, queue)
 
 	// Legacy format: gmp blocks ffmpeg and coreutils
 	// Per-recipe format: openssl blocks curl
-	writeFailures(t, dir, "legacy.jsonl", []string{
+	writeFailures(t, failDir, "legacy.jsonl", []string{
 		`{"schema_version":1,"ecosystem":"homebrew","failures":[{"package_id":"homebrew:ffmpeg","category":"missing_dep","blocked_by":["gmp"],"message":"","timestamp":"2026-01-01T00:00:00Z"},{"package_id":"homebrew:coreutils","category":"missing_dep","blocked_by":["gmp"],"message":"","timestamp":"2026-01-01T00:00:00Z"}]}`,
 	})
-	writeFailures(t, dir, "per-recipe.jsonl", []string{
+	writeFailures(t, failDir, "per-recipe.jsonl", []string{
 		`{"schema_version":1,"ecosystem":"homebrew","recipe":"curl","category":"missing_dep","blocked_by":["openssl"]}`,
 	})
 
-	_, err := Run(Options{
-		QueueFile:   queuePath,
-		FailuresDir: filepath.Join(dir, "failures"),
-		OutputFile:  filepath.Join(dir, "output.json"),
-	})
+	_, err := Run(queue, failDir)
 	if err != nil {
 		t.Fatalf("Run: %v", err)
 	}
 
-	out := readQueue(t, filepath.Join(dir, "output.json"))
-	names := entryNames(out.Entries)
+	names := entryNames(queue.Entries)
 
 	// gmp (score=2) > openssl (score=1) > alpha (score=0)
 	if names[0] != "gmp" {
@@ -430,6 +358,7 @@ func TestReorder_MixedFailureFormats(t *testing.T) {
 // fields on QueueEntry (status, confidence, failure_count, etc.).
 func TestReorder_EntryFieldsPreserved(t *testing.T) {
 	dir := t.TempDir()
+	failDir := filepath.Join(dir, "failures")
 
 	queue := &batch.UnifiedQueue{
 		SchemaVersion: 1,
@@ -438,46 +367,39 @@ func TestReorder_EntryFieldsPreserved(t *testing.T) {
 			{Name: "gmp", Source: "homebrew:gmp", Priority: 2, Status: "pending", Confidence: "auto", FailureCount: 0},
 		},
 	}
-	queuePath := writeQueue(t, dir, queue)
 
-	writeFailures(t, dir, "failures.jsonl", []string{
+	writeFailures(t, failDir, "failures.jsonl", []string{
 		`{"schema_version":1,"ecosystem":"homebrew","failures":[{"package_id":"homebrew:ffmpeg","category":"missing_dep","blocked_by":["gmp"],"message":"","timestamp":"2026-01-01T00:00:00Z"}]}`,
 	})
 
-	_, err := Run(Options{
-		QueueFile:   queuePath,
-		FailuresDir: filepath.Join(dir, "failures"),
-		OutputFile:  filepath.Join(dir, "output.json"),
-	})
+	_, err := Run(queue, failDir)
 	if err != nil {
 		t.Fatalf("Run: %v", err)
 	}
 
-	out := readQueue(t, filepath.Join(dir, "output.json"))
-
 	// gmp should be first (has blocking score)
-	if out.Entries[0].Name != "gmp" {
-		t.Fatalf("expected gmp first, got %s", out.Entries[0].Name)
+	if queue.Entries[0].Name != "gmp" {
+		t.Fatalf("expected gmp first, got %s", queue.Entries[0].Name)
 	}
-	if out.Entries[0].Status != "pending" {
-		t.Errorf("gmp status: got %q, want %q", out.Entries[0].Status, "pending")
+	if queue.Entries[0].Status != "pending" {
+		t.Errorf("gmp status: got %q, want %q", queue.Entries[0].Status, "pending")
 	}
-	if out.Entries[0].Confidence != "auto" {
-		t.Errorf("gmp confidence: got %q, want %q", out.Entries[0].Confidence, "auto")
+	if queue.Entries[0].Confidence != "auto" {
+		t.Errorf("gmp confidence: got %q, want %q", queue.Entries[0].Confidence, "auto")
 	}
 
 	// zlib should be second
-	if out.Entries[1].Name != "zlib" {
-		t.Fatalf("expected zlib second, got %s", out.Entries[1].Name)
+	if queue.Entries[1].Name != "zlib" {
+		t.Fatalf("expected zlib second, got %s", queue.Entries[1].Name)
 	}
-	if out.Entries[1].Status != "blocked" {
-		t.Errorf("zlib status: got %q, want %q", out.Entries[1].Status, "blocked")
+	if queue.Entries[1].Status != "blocked" {
+		t.Errorf("zlib status: got %q, want %q", queue.Entries[1].Status, "blocked")
 	}
-	if out.Entries[1].Confidence != "curated" {
-		t.Errorf("zlib confidence: got %q, want %q", out.Entries[1].Confidence, "curated")
+	if queue.Entries[1].Confidence != "curated" {
+		t.Errorf("zlib confidence: got %q, want %q", queue.Entries[1].Confidence, "curated")
 	}
-	if out.Entries[1].FailureCount != 3 {
-		t.Errorf("zlib failure_count: got %d, want 3", out.Entries[1].FailureCount)
+	if queue.Entries[1].FailureCount != 3 {
+		t.Errorf("zlib failure_count: got %d, want 3", queue.Entries[1].FailureCount)
 	}
 }
 
@@ -485,6 +407,7 @@ func TestReorder_EntryFieldsPreserved(t *testing.T) {
 // independently reordered by blocking score.
 func TestReorder_MultiTierReordering(t *testing.T) {
 	dir := t.TempDir()
+	failDir := filepath.Join(dir, "failures")
 
 	queue := &batch.UnifiedQueue{
 		SchemaVersion: 1,
@@ -500,9 +423,8 @@ func TestReorder_MultiTierReordering(t *testing.T) {
 			{Name: "bzip2", Source: "homebrew:bzip2", Priority: 3, Status: "pending", Confidence: "auto"},
 		},
 	}
-	queuePath := writeQueue(t, dir, queue)
 
-	writeFailures(t, dir, "failures.jsonl", []string{
+	writeFailures(t, failDir, "failures.jsonl", []string{
 		// openssl blocks 2 packages (tier 1)
 		`{"schema_version":1,"ecosystem":"homebrew","failures":[{"package_id":"homebrew:curl","category":"missing_dep","blocked_by":["openssl"],"message":"","timestamp":"2026-01-01T00:00:00Z"},{"package_id":"homebrew:wget","category":"missing_dep","blocked_by":["openssl"],"message":"","timestamp":"2026-01-01T00:00:00Z"}]}`,
 		// gmp blocks 3 packages (tier 2)
@@ -511,17 +433,12 @@ func TestReorder_MultiTierReordering(t *testing.T) {
 		`{"schema_version":1,"ecosystem":"homebrew","failures":[{"package_id":"homebrew:pigz","category":"missing_dep","blocked_by":["bzip2"],"message":"","timestamp":"2026-01-01T00:00:00Z"}]}`,
 	})
 
-	_, err := Run(Options{
-		QueueFile:   queuePath,
-		FailuresDir: filepath.Join(dir, "failures"),
-		OutputFile:  filepath.Join(dir, "output.json"),
-	})
+	_, err := Run(queue, failDir)
 	if err != nil {
 		t.Fatalf("Run: %v", err)
 	}
 
-	out := readQueue(t, filepath.Join(dir, "output.json"))
-	names := entryNames(out.Entries)
+	names := entryNames(queue.Entries)
 
 	// Expected order:
 	// Tier 1: openssl(2), beta(0)
@@ -539,6 +456,7 @@ func TestReorder_MultiTierReordering(t *testing.T) {
 // don't cause infinite loops.
 func TestReorder_CycleDetection(t *testing.T) {
 	dir := t.TempDir()
+	failDir := filepath.Join(dir, "failures")
 
 	queue := &batch.UnifiedQueue{
 		SchemaVersion: 1,
@@ -547,27 +465,21 @@ func TestReorder_CycleDetection(t *testing.T) {
 			{Name: "B", Source: "homebrew:B", Priority: 2, Status: "pending", Confidence: "auto"},
 		},
 	}
-	queuePath := writeQueue(t, dir, queue)
 
 	// A blocks homebrew:B, B blocks homebrew:A -- a cycle
-	writeFailures(t, dir, "failures.jsonl", []string{
+	writeFailures(t, failDir, "failures.jsonl", []string{
 		`{"schema_version":1,"ecosystem":"homebrew","failures":[{"package_id":"homebrew:B","category":"missing_dep","blocked_by":["A"],"message":"","timestamp":"2026-01-01T00:00:00Z"}]}`,
 		`{"schema_version":1,"ecosystem":"homebrew","failures":[{"package_id":"homebrew:A","category":"missing_dep","blocked_by":["B"],"message":"","timestamp":"2026-01-01T00:00:00Z"}]}`,
 	})
 
 	// Should complete without hanging
-	_, err := Run(Options{
-		QueueFile:   queuePath,
-		FailuresDir: filepath.Join(dir, "failures"),
-		OutputFile:  filepath.Join(dir, "output.json"),
-	})
+	_, err := Run(queue, failDir)
 	if err != nil {
 		t.Fatalf("Run: %v", err)
 	}
 
-	out := readQueue(t, filepath.Join(dir, "output.json"))
-	if len(out.Entries) != 2 {
-		t.Errorf("expected 2 entries, got %d", len(out.Entries))
+	if len(queue.Entries) != 2 {
+		t.Errorf("expected 2 entries, got %d", len(queue.Entries))
 	}
 }
 
@@ -600,6 +512,7 @@ func TestComputeScores(t *testing.T) {
 // which entries moved.
 func TestReorder_ResultReportsMovements(t *testing.T) {
 	dir := t.TempDir()
+	failDir := filepath.Join(dir, "failures")
 
 	queue := &batch.UnifiedQueue{
 		SchemaVersion: 1,
@@ -608,17 +521,12 @@ func TestReorder_ResultReportsMovements(t *testing.T) {
 			{Name: "gmp", Source: "homebrew:gmp", Priority: 2, Status: "pending", Confidence: "auto"},
 		},
 	}
-	queuePath := writeQueue(t, dir, queue)
 
-	writeFailures(t, dir, "failures.jsonl", []string{
+	writeFailures(t, failDir, "failures.jsonl", []string{
 		`{"schema_version":1,"ecosystem":"homebrew","failures":[{"package_id":"homebrew:ffmpeg","category":"missing_dep","blocked_by":["gmp"],"message":"","timestamp":"2026-01-01T00:00:00Z"}]}`,
 	})
 
-	result, err := Run(Options{
-		QueueFile:   queuePath,
-		FailuresDir: filepath.Join(dir, "failures"),
-		OutputFile:  filepath.Join(dir, "output.json"),
-	})
+	result, err := Run(queue, failDir)
 	if err != nil {
 		t.Fatalf("Run: %v", err)
 	}

@@ -201,3 +201,44 @@ jobs:
           done
           echo "::error::Push failed after 3 attempts"
           exit 1
+
+      - name: Set up Go
+        if: steps.detect.outputs.has_changes == 'true'
+        uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5  # v6.2.0
+        with:
+          go-version-file: go.mod
+
+      - if: steps.detect.outputs.has_changes == 'true'
+        name: Build queue-maintain
+        run: go build -o queue-maintain ./cmd/queue-maintain
+
+      - if: steps.detect.outputs.has_changes == 'true'
+        name: Run queue maintenance
+        run: ./queue-maintain
+
+      - if: steps.detect.outputs.has_changes == 'true'
+        name: Commit maintenance changes
+        run: |
+          QUEUE_FILE="data/queues/priority-queue.json"
+
+          git add "$QUEUE_FILE"
+          if git diff --cached --quiet; then
+            echo "No maintenance changes"
+            exit 0
+          fi
+
+          git commit -m "chore(batch): requeue unblocked packages and reorder queue"
+
+          for attempt in 1 2 3; do
+            if [ "$attempt" -gt 1 ]; then
+              echo "Push failed (attempt $((attempt-1))/3), retrying..."
+              sleep $((2 ** attempt))
+              git pull --rebase
+            fi
+            if git push; then
+              echo "Push succeeded on attempt $attempt"
+              exit 0
+            fi
+          done
+          echo "::error::Push failed after 3 attempts"
+          exit 1
