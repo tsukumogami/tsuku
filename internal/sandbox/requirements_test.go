@@ -48,7 +48,7 @@ func TestSourceBuildLimits(t *testing.T) {
 func TestComputeSandboxRequirements_NilPlan(t *testing.T) {
 	t.Parallel()
 
-	reqs := ComputeSandboxRequirements(nil)
+	reqs := ComputeSandboxRequirements(nil, "")
 
 	if reqs.RequiresNetwork {
 		t.Error("nil plan should not require network")
@@ -65,7 +65,7 @@ func TestComputeSandboxRequirements_EmptyPlan(t *testing.T) {
 		Steps: []executor.ResolvedStep{},
 	}
 
-	reqs := ComputeSandboxRequirements(plan)
+	reqs := ComputeSandboxRequirements(plan, "")
 
 	if reqs.RequiresNetwork {
 		t.Error("empty plan should not require network")
@@ -90,7 +90,7 @@ func TestComputeSandboxRequirements_OfflinePlan(t *testing.T) {
 		},
 	}
 
-	reqs := ComputeSandboxRequirements(plan)
+	reqs := ComputeSandboxRequirements(plan, "")
 
 	if reqs.RequiresNetwork {
 		t.Error("offline plan should not require network")
@@ -134,7 +134,7 @@ func TestComputeSandboxRequirements_NetworkRequired(t *testing.T) {
 				},
 			}
 
-			reqs := ComputeSandboxRequirements(plan)
+			reqs := ComputeSandboxRequirements(plan, "")
 
 			if !reqs.RequiresNetwork {
 				t.Errorf("plan with %s should require network", tc.action)
@@ -163,7 +163,7 @@ func TestComputeSandboxRequirements_BuildActionsUpgradeResources(t *testing.T) {
 		},
 	}
 
-	reqs := ComputeSandboxRequirements(plan)
+	reqs := ComputeSandboxRequirements(plan, "")
 
 	// configure_make doesn't implement RequiresNetwork as true,
 	// but hasBuildActions should still upgrade resources
@@ -192,7 +192,7 @@ func TestComputeSandboxRequirements_CMakeBuild(t *testing.T) {
 		},
 	}
 
-	reqs := ComputeSandboxRequirements(plan)
+	reqs := ComputeSandboxRequirements(plan, "")
 
 	if reqs.Image != SourceBuildSandboxImage {
 		t.Errorf("cmake_build plan Image = %q, want %q", reqs.Image, SourceBuildSandboxImage)
@@ -212,7 +212,7 @@ func TestComputeSandboxRequirements_UnknownAction(t *testing.T) {
 		},
 	}
 
-	reqs := ComputeSandboxRequirements(plan)
+	reqs := ComputeSandboxRequirements(plan, "")
 
 	if reqs.RequiresNetwork {
 		t.Error("unknown action should not require network (fail closed)")
@@ -235,7 +235,7 @@ func TestComputeSandboxRequirements_MixedPlan(t *testing.T) {
 		},
 	}
 
-	reqs := ComputeSandboxRequirements(plan)
+	reqs := ComputeSandboxRequirements(plan, "")
 
 	// Should require network due to cargo_build
 	if !reqs.RequiresNetwork {
@@ -308,6 +308,87 @@ func TestHasBuildActions(t *testing.T) {
 
 			if got != tc.expected {
 				t.Errorf("hasBuildActions() = %v, want %v", got, tc.expected)
+			}
+		})
+	}
+}
+
+func TestComputeSandboxRequirements_TargetFamily(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name         string
+		targetFamily string
+		wantImage    string
+	}{
+		{"empty defaults to debian", "", DefaultSandboxImage},
+		{"debian", "debian", "debian:bookworm-slim"},
+		{"alpine", "alpine", "alpine:3.19"},
+		{"rhel", "rhel", "fedora:41"},
+		{"arch", "arch", "archlinux:base"},
+		{"suse", "suse", "opensuse/leap:15"},
+		{"unknown falls back to default", "unknown", DefaultSandboxImage},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			plan := &executor.InstallationPlan{
+				Steps: []executor.ResolvedStep{
+					{Action: "download", Params: map[string]interface{}{}},
+					{Action: "extract", Params: map[string]interface{}{}},
+					{Action: "install_binaries", Params: map[string]interface{}{}},
+				},
+			}
+
+			reqs := ComputeSandboxRequirements(plan, tc.targetFamily)
+
+			if reqs.Image != tc.wantImage {
+				t.Errorf("ComputeSandboxRequirements(plan, %q).Image = %q, want %q",
+					tc.targetFamily, reqs.Image, tc.wantImage)
+			}
+		})
+	}
+}
+
+func TestComputeSandboxRequirements_TargetFamilyWithBuildActions(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name         string
+		targetFamily string
+		wantImage    string
+	}{
+		{"empty defaults to ubuntu", "", SourceBuildSandboxImage},
+		{"alpine uses alpine image", "alpine", "alpine:3.19"},
+		{"suse uses suse image", "suse", "opensuse/leap:15"},
+		{"rhel uses fedora image", "rhel", "fedora:41"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			plan := &executor.InstallationPlan{
+				Steps: []executor.ResolvedStep{
+					{Action: "download", Params: map[string]interface{}{}},
+					{Action: "extract", Params: map[string]interface{}{}},
+					{Action: "configure_make", Params: map[string]interface{}{}},
+					{Action: "install_binaries", Params: map[string]interface{}{}},
+				},
+			}
+
+			reqs := ComputeSandboxRequirements(plan, tc.targetFamily)
+
+			if reqs.Image != tc.wantImage {
+				t.Errorf("ComputeSandboxRequirements(plan, %q).Image = %q, want %q",
+					tc.targetFamily, reqs.Image, tc.wantImage)
+			}
+			// Build actions should always upgrade resources regardless of family
+			if reqs.Resources.Memory != "4g" {
+				t.Errorf("build plan with family %q: Resources.Memory = %q, want %q",
+					tc.targetFamily, reqs.Resources.Memory, "4g")
 			}
 		})
 	}
