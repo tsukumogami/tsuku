@@ -1,0 +1,135 @@
+{
+  "pr_status": "implementing",
+  "design_doc": "docs/designs/DESIGN-ci-job-consolidation.md",
+  "branch": "docs/ci-job-consolidation",
+  "pr_number": 1887,
+  "integrity_hash": "sha256:e05eab204c4ea1421d4023883f4318b1d0ac1a1b09e58f21fab288237973db2c",
+  "issues": [
+    {
+      "number": 1891,
+      "title": "ci(build-essentials): consolidate sandbox-multifamily into container loops",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": [
+        "scenario-1",
+        "scenario-2",
+        "scenario-3"
+      ]
+    },
+    {
+      "number": 1892,
+      "title": "ci(test): serialize integration-linux tests with GHA groups",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": [
+        "scenario-4",
+        "scenario-5"
+      ]
+    },
+    {
+      "number": 1893,
+      "title": "ci(sandbox-tests): serialize sandbox tests with GHA groups",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": [
+        "scenario-6",
+        "scenario-7"
+      ]
+    },
+    {
+      "number": 1894,
+      "title": "ci(integration-tests): consolidate checksum-pinning into container loop",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": [
+        "scenario-8",
+        "scenario-9"
+      ]
+    },
+    {
+      "number": 1895,
+      "title": "ci(integration-tests): consolidate remaining matrix jobs",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [
+        1894
+      ],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": [
+        "scenario-10",
+        "scenario-11"
+      ]
+    },
+    {
+      "number": 1896,
+      "title": "ci(build-essentials): consolidate homebrew-linux tests",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [
+        1891
+      ],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": [
+        "scenario-12"
+      ]
+    },
+    {
+      "number": 1897,
+      "title": "ci: document consolidation patterns and add drift-prevention lint",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [
+        1891,
+        1892,
+        1893,
+        1894,
+        1895,
+        1896
+      ],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": [
+        "scenario-13",
+        "scenario-14"
+      ]
+    }
+  ],
+  "skipped_issues": null,
+  "test_plan_file": "wip/implement-doc_ci-job-consolidation_test_plan.md",
+  "doc_plan_file": "wip/implement-doc_ci-job-consolidation_doc_plan.md"
+}
