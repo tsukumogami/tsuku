@@ -212,9 +212,76 @@ func TestCargoBuilder_Build_FallbackToPackageName(t *testing.T) {
 		t.Errorf("executables = %v, want [\"some-tool\"]", executables)
 	}
 
-	// Verify command uses crate name
+	// Verify command uses crate name (non-cargo-subcommand)
 	if result.Recipe.Verify.Command != "some-tool --version" {
 		t.Errorf("Verify.Command = %q, want %q", result.Recipe.Verify.Command, "some-tool --version")
+	}
+	if result.Recipe.Verify.Pattern != "{version}" {
+		t.Errorf("Verify.Pattern = %q, want %q", result.Recipe.Verify.Pattern, "{version}")
+	}
+}
+
+func TestCargoBuilder_Build_CargoSubcommand(t *testing.T) {
+	// Cargo subcommand crate (name starts with "cargo-")
+	crateResponse := `{
+		"crate": {
+			"name": "cargo-hack",
+			"description": "A cargo subcommand for testing each feature flag",
+			"homepage": "",
+			"repository": ""
+		}
+	}`
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/api/v1/crates/cargo-hack" {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte(crateResponse))
+		} else {
+			w.WriteHeader(http.StatusNotFound)
+		}
+	}))
+	defer server.Close()
+
+	builder := NewCargoBuilderWithBaseURL(nil, server.URL)
+	ctx := context.Background()
+
+	result, err := builder.Build(ctx, BuildRequest{Package: "cargo-hack"})
+	if err != nil {
+		t.Fatalf("Build() error = %v", err)
+	}
+
+	// Verify command should use "cargo <subcommand>" invocation
+	if result.Recipe.Verify.Command != "cargo hack --version" {
+		t.Errorf("Verify.Command = %q, want %q", result.Recipe.Verify.Command, "cargo hack --version")
+	}
+	if result.Recipe.Verify.Pattern != "{version}" {
+		t.Errorf("Verify.Pattern = %q, want %q", result.Recipe.Verify.Pattern, "{version}")
+	}
+}
+
+func TestCargoVerifySection(t *testing.T) {
+	tests := []struct {
+		executable  string
+		wantCommand string
+	}{
+		{"ripgrep", "ripgrep --version"},
+		{"rg", "rg --version"},
+		{"cargo-hack", "cargo hack --version"},
+		{"cargo-llvm-cov", "cargo llvm-cov --version"},
+		{"cargo-audit", "cargo audit --version"},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.executable, func(t *testing.T) {
+			vs := cargoVerifySection(tc.executable)
+			if vs.Command != tc.wantCommand {
+				t.Errorf("cargoVerifySection(%q).Command = %q, want %q", tc.executable, vs.Command, tc.wantCommand)
+			}
+			if vs.Pattern != "{version}" {
+				t.Errorf("cargoVerifySection(%q).Pattern = %q, want %q", tc.executable, vs.Pattern, "{version}")
+			}
+		})
 	}
 }
 

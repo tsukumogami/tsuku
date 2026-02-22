@@ -383,6 +383,27 @@ func (o *Orchestrator) attemptVerifySelfRepair(
 		return nil, nil
 	}
 
+	// For cargo subcommands, try "cargo <subcommand> --version" before
+	// general fallbacks. This runs directly rather than through
+	// tryFallbackCommand, which forces help-text matching mode.
+	if strings.HasPrefix(binaryName, "cargo-") {
+		subcommand := strings.TrimPrefix(binaryName, "cargo-")
+		cargoCmd := "cargo " + subcommand + " --version"
+		candidateVerify := recipe.VerifySection{
+			Command: cargoCmd,
+		}
+		candidate := r.WithVerify(candidateVerify)
+		result, err := o.validate(ctx, candidate)
+		if err == nil && !result.Skipped && result.Passed {
+			meta := &VerifyRepairMetadata{
+				OriginalCommand: originalCommand,
+				RepairedCommand: cargoCmd,
+				Method:          "fallback_cargo_subcommand",
+			}
+			return r.WithVerify(candidateVerify), meta
+		}
+	}
+
 	// Define fallback commands in priority order
 	fallbacks := []struct {
 		command string
