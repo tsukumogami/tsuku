@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Accepted
 problem: |
   PR CI runs in the tsuku repo spawn 50-87 GitHub Actions jobs because matrix
   strategies create separate runners for each Linux distribution family and each
@@ -29,7 +29,7 @@ rationale: |
 
 ## Status
 
-**Status:** Proposed
+**Status:** Accepted
 
 ## Context and Problem Statement
 
