@@ -53,8 +53,8 @@ Ref #1825
 | ~~_Extend `update-queue-status.yml` to build and run queue-maintain after marking merged recipes as "success". Produces a second commit that requeues unblocked packages and reorders the queue._~~ | | |
 | ~~[#1849: chore(ci): replace requeue-unblocked.sh in batch-generate workflow](https://github.com/tsukumogami/tsuku/issues/1849)~~ | ~~[#1847](https://github.com/tsukumogami/tsuku/issues/1847)~~ | ~~testable~~ |
 | ~~_Swap the two `requeue-unblocked.sh` calls in `batch-generate.yml` for queue-maintain, remove the dead `.packages[]` queue update code from the PR step, narrow `git add` to exclude `data/queues/`, and delete the script._~~ | | |
-| [#1850: chore(batch): re-queue all blocked entries for satisfies migration](https://github.com/tsukumogami/tsuku/issues/1850) | [#1848](https://github.com/tsukumogami/tsuku/issues/1848), [#1849](https://github.com/tsukumogami/tsuku/issues/1849) | simple |
-| _One-time jq migration that flips all blocked entries to "pending", forcing retries through the satisfies-aware recipe loader to clear stale ecosystem name mismatches._ | | |
+| ~~[#1850: chore(batch): re-queue all blocked entries for satisfies migration](https://github.com/tsukumogami/tsuku/issues/1850)~~ | ~~[#1848](https://github.com/tsukumogami/tsuku/issues/1848), [#1849](https://github.com/tsukumogami/tsuku/issues/1849)~~ | ~~simple~~ |
+| ~~_One-time jq migration that flips all blocked entries to "pending", forcing retries through the satisfies-aware recipe loader to clear stale ecosystem name mismatches._~~ | | |
 | [#1851: docs: update stale references after queue-maintain migration](https://github.com/tsukumogami/tsuku/issues/1851) | [#1848](https://github.com/tsukumogami/tsuku/issues/1848), [#1849](https://github.com/tsukumogami/tsuku/issues/1849) | simple |
 | _Update the format mismatch references in `DESIGN-registry-scale-strategy.md`, fix the stale `isValidDependencyName` comment in `orchestrator.go`, and verify the legacy per-ecosystem queue has no remaining consumers._ | | |
 
@@ -100,8 +100,8 @@ graph TD
     classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
 
     class I1845 done
-    class I1846,I1847,I1848,I1849 done
-    class I1850,I1851 ready
+    class I1846,I1847,I1848,I1849,I1850 done
+    class I1851 ready
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design
