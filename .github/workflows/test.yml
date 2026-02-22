@@ -77,6 +77,8 @@ jobs:
           else
             go test -short ./...
           fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check for test artifacts
         run: |
