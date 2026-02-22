@@ -1,0 +1,35 @@
+[metadata]
+  name = "libgphoto2"
+  description = "Gphoto2 digital camera library"
+  homepage = "https://www.gphoto.org/proj/libgphoto2/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["jpeg-turbo", "libusb-compat", "gettext"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "libgphoto2"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "libgphoto2"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/gphoto2-config", "bin/gphoto2-port-config"]
+
+[verify]
+  command = "gphoto2-config --version"
+  pattern = ""

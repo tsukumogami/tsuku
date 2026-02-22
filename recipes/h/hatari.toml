@@ -1,0 +1,35 @@
+[metadata]
+  name = "hatari"
+  description = "Atari ST/STE/TT/Falcon emulator"
+  homepage = "https://www.hatari-emu.org/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["libpng", "sdl2"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "hatari"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "hatari"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/atari-convert-dir", "bin/atari-hd-image", "bin/gst2ascii", "bin/hatari", "bin/hatari-prg-args", "bin/hatari_profile", "bin/hmsa", "bin/zip2st"]
+
+[verify]
+  command = "atari-convert-dir --version"
+  pattern = ""

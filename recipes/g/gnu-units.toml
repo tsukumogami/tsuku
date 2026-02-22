@@ -1,0 +1,35 @@
+[metadata]
+  name = "gnu-units"
+  description = "GNU unit conversion tool"
+  homepage = "https://www.gnu.org/software/units/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["readline"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "gnu-units"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "gnu-units"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/units"]
+
+[verify]
+  command = "units --version"
+  pattern = ""

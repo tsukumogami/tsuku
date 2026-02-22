@@ -24,6 +24,7 @@ description = "Mesa Vulkan ICD drivers (AMD RADV and Intel ANV)"
 homepage = "https://www.mesa3d.org/"
 type = "library"
 supported_os = ["linux"]
+# No [metadata.satisfies] -- system package installed via native package managers, not a Homebrew formula
 
 # Debian/Ubuntu
 [[steps]]

@@ -1,0 +1,34 @@
+[metadata]
+  name = "cloud-provider-kind"
+  description = "Cloud provider for KIND clusters"
+  homepage = "https://github.com/kubernetes-sigs/cloud-provider-kind"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "cloud-provider-kind"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "cloud-provider-kind"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/cloud-provider-kind"]
+
+[verify]
+  command = "cloud-provider-kind --version"
+  pattern = ""

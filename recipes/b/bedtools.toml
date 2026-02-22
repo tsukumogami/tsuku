@@ -1,0 +1,35 @@
+[metadata]
+  name = "bedtools"
+  description = "Tools for genome arithmetic (set theory on the genome)"
+  homepage = "https://github.com/arq5x/bedtools2"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["xz"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "bedtools"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "bedtools"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/annotateBed", "bin/bamToBed", "bin/bamToFastq", "bin/bed12ToBed6", "bin/bedToBam", "bin/bedToIgv", "bin/bedpeToBam", "bin/bedtools", "bin/closestBed", "bin/clusterBed", "bin/complementBed", "bin/coverageBed", "bin/expandCols", "bin/fastaFromBed", "bin/flankBed", "bin/genomeCoverageBed", "bin/getOverlap", "bin/groupBy", "bin/intersectBed", "bin/linksBed", "bin/mapBed", "bin/maskFastaFromBed", "bin/mergeBed", "bin/multiBamCov", "bin/multiIntersectBed", "bin/nucBed", "bin/pairToBed", "bin/pairToPair", "bin/randomBed", "bin/shiftBed", "bin/shuffleBed", "bin/slopBed", "bin/sortBed", "bin/subtractBed", "bin/tagBam", "bin/unionBedGraphs", "bin/windowBed", "bin/windowMaker"]
+
+[verify]
+  command = "annotateBed --version"
+  pattern = ""

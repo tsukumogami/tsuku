@@ -1,0 +1,35 @@
+[metadata]
+  name = "po4a"
+  description = "Documentation translation maintenance tool"
+  homepage = "https://po4a.org"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["gettext", "perl"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "po4a"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "po4a"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/msguntypot", "bin/po4a", "bin/po4a-display-man", "bin/po4a-display-pod", "bin/po4a-gettextize", "bin/po4a-normalize", "bin/po4a-translate", "bin/po4a-updatepo"]
+
+[verify]
+  command = "msguntypot --version"
+  pattern = ""

@@ -1,0 +1,35 @@
+[metadata]
+  name = "libiscsi"
+  description = "Client library and utilities for iscsi"
+  homepage = "https://github.com/sahlberg/libiscsi"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = []
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "libiscsi"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "libiscsi"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/iscsi-discard", "bin/iscsi-inq", "bin/iscsi-ls", "bin/iscsi-md5sum", "bin/iscsi-perf", "bin/iscsi-pr", "bin/iscsi-readcapacity16", "bin/iscsi-rtpg", "bin/iscsi-swp", "bin/iscsi-test-cu"]
+
+[verify]
+  command = "iscsi-discard --version"
+  pattern = ""

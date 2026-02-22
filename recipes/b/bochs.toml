@@ -1,0 +1,35 @@
+[metadata]
+  name = "bochs"
+  description = "Open source IA-32 (x86) PC emulator written in C++"
+  homepage = "https://bochs.sourceforge.io/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["sdl2"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "bochs"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "bochs"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/bochs", "bin/bximage"]
+
+[verify]
+  command = "bochs --version"
+  pattern = ""

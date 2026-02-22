@@ -1,0 +1,35 @@
+[metadata]
+  name = "msmtp"
+  description = "SMTP client that can be used as an SMTP plugin for Mutt"
+  homepage = "https://marlam.de/msmtp/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["gettext", "gnutls", "libidn2"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "msmtp"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "msmtp"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/msmtp", "bin/msmtpd"]
+
+[verify]
+  command = "msmtp --version"
+  pattern = ""

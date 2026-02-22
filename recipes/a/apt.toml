@@ -1,0 +1,35 @@
+[metadata]
+  name = "apt"
+  description = "Advanced Package Tool"
+  homepage = "https://wiki.debian.org/Apt"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["bzip2", "perl", "xz", "zstd"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "apt"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "apt"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/apt", "bin/apt-cache", "bin/apt-cdrom", "bin/apt-config", "bin/apt-ftparchive", "bin/apt-get", "bin/apt-mark", "bin/apt-sortpkgs"]
+
+[verify]
+  command = "apt --version"
+  pattern = ""

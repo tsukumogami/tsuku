@@ -1,0 +1,31 @@
+[metadata]
+  name = "dug"
+  description = "A simple, configurable gem to organize your GitHub notification emails in ways Gmail can't and in an easier-to-maintain way than large, slow Google Apps Scripts."
+  homepage = "https://github.com/chrisarcand/dug"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "rubygems"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "gem_install"
+  executables = ["dug"]
+  gem = "dug"
+
+[verify]
+  command = "dug --version"
+  pattern = ""

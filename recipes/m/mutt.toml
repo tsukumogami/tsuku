@@ -1,0 +1,35 @@
+[metadata]
+  name = "mutt"
+  description = "Mongrel of mail user agents (part elm, pine, mush, mh, etc.)"
+  homepage = "https://www.mutt.org/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["libgpg-error", "libidn2", "ncurses", "gettext"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "mutt"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "mutt"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/flea", "bin/mutt", "bin/mutt_dotlock", "bin/mutt_pgpring", "bin/muttbug", "bin/pgpewrap", "bin/smime_keys"]
+
+[verify]
+  command = "flea --version"
+  pattern = ""

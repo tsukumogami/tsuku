@@ -1,0 +1,35 @@
+[metadata]
+  name = "open-image-denoise"
+  description = "High-performance denoising library for ray tracing"
+  homepage = "https://openimagedenoise.github.io"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = []
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "open-image-denoise"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "open-image-denoise"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/oidnBenchmark", "bin/oidnDenoise", "bin/oidnTest"]
+
+[verify]
+  command = "oidnBenchmark --version"
+  pattern = ""

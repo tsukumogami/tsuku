@@ -1,0 +1,35 @@
+[metadata]
+  name = "reprepro"
+  description = "Debian package repository manager"
+  homepage = "https://salsa.debian.org/debian/reprepro"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["libgpg-error", "xz", "zstd"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "reprepro"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "reprepro"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/changestool", "bin/reprepro", "bin/rredtool"]
+
+[verify]
+  command = "changestool --version"
+  pattern = ""

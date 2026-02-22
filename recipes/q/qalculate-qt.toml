@@ -1,0 +1,35 @@
+[metadata]
+  name = "qalculate-qt"
+  description = "Multi-purpose desktop calculator"
+  homepage = "https://qalculate.github.io/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["libqalculate", "qtbase", "gmp"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "qalculate-qt"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "qalculate-qt"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/qalculate-qt"]
+
+[verify]
+  command = "qalculate-qt --version"
+  pattern = ""

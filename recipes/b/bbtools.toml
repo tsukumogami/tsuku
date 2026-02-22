@@ -1,0 +1,34 @@
+[metadata]
+  name = "bbtools"
+  description = "Brian Bushnell's tools for manipulating reads"
+  homepage = "https://bbmap.org/"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "bbtools"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "bbtools"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/a_sample_mt.sh", "bin/addadapters.sh", "bin/addssu.sh", "bin/adjusthomopolymers.sh", "bin/alignrandom.sh", "bin/alltoall.sh", "bin/analyzeaccession.sh", "bin/analyzegenes.sh", "bin/analyzesketchresults.sh", "bin/applyvariants.sh", "bin/bamlinestreamer.sh", "bin/bandedaligner.sh", "bin/bandedplusaligner.sh", "bin/bbcms.sh", "bin/bbcountunique.sh", "bin/bbcrisprfinder.sh", "bin/bbduk.sh", "bin/bbdukOld.sh", "bin/bbdukS.sh", "bin/bbest.sh", "bin/bbfakereads.sh", "bin/bbmap.sh", "bin/bbmapskimmer.sh", "bin/bbmask.sh", "bin/bbmerge-auto.sh", "bin/bbmerge.sh", "bin/bbnorm.sh", "bin/bbrealign.sh", "bin/bbrename.sh", "bin/bbsketch.sh", "bin/bbsort.sh", "bin/bbsplit.sh", "bin/bbsplitpairs.sh", "bin/bbstats.sh", "bin/bbversion.sh", "bin/bbwrap.sh", "bin/bloomfilter.sh", "bin/bloomfilterparser.sh", "bin/calcmem.sh", "bin/calctruequality.sh", "bin/callgenes.sh", "bin/callpeaks.sh", "bin/callvariants.sh", "bin/callvariants2.sh", "bin/cat.sh", "bin/cbcl2text.sh", "bin/cg2illumina.sh", "bin/checkstrand.sh", "bin/cladeloader.sh", "bin/cladeserver.sh", "bin/cloudplot.sh", "bin/clumpify.sh", "bin/commonkmers.sh", "bin/comparegff.sh", "bin/comparelabels.sh", "bin/comparesketch.sh", "bin/comparessu.sh", "bin/comparevcf.sh", "bin/consect.sh", "bin/consensus.sh", "bin/copyfile.sh", "bin/countbarcodes.sh", "bin/countbarcodes2.sh", "bin/countduplicates.sh", "bin/countgc.sh", "bin/countsharedlines.sh", "bin/covmaker.sh", "bin/crossblock.sh", "bin/crosscontaminate.sh", "bin/crosscutaligner.sh", "bin/cutgff.sh", "bin/cutprimers.sh", "bin/decontaminate.sh", "bin/dedupe.sh", "bin/dedupe2.sh", "bin/dedupebymapping.sh", "bin/demuxbyname.sh", "bin/demuxserver.sh", "bin/diskbench.sh", "bin/driftingaligner.sh", "bin/driftingplusaligner.sh", "bin/estherfilter.sh", "bin/explodetree.sh", "bin/fastqscan.sh", "bin/fetchproks.sh", "bin/filescan.sh", "bin/filterassemblysummary.sh", "bin/filterbarcodes.sh", "bin/filterbycoverage.sh", "bin/filterbyname.sh", "bin/filterbysequence.sh", "bin/filterbytaxa.sh", "bin/filterbytile.sh", "bin/filterlines.sh", "bin/filtersam.sh", "bin/filtersilva.sh", "bin/filtersubs.sh", "bin/filtervcf.sh", "bin/findrepeats.sh", "bin/fix_script_paths.sh", "bin/fixgaps.sh", "bin/fungalrelease.sh", "bin/fuse.sh", "bin/gbff2gff.sh", "bin/getreads.sh", "bin/gi2ancestors.sh", "bin/gi2taxid.sh", "bin/gitable.sh", "bin/glocalaligner.sh", "bin/gradebins.sh", "bin/grademerge.sh", "bin/gradesam.sh", "bin/icecreamfinder.sh", "bin/icecreamgrader.sh", "bin/icecreammaker.sh", "bin/idmatrix.sh", "bin/idtree.sh", "bin/indelfree.sh", "bin/invertkey.sh", "bin/javasetup.sh", "bin/kapastats.sh", "bin/kcompress.sh", "bin/keepbestcopy.sh", "bin/khist.sh", "bin/kmercountexact.sh", "bin/kmercountmulti.sh", "bin/kmercountshort.sh", "bin/kmercoverage.sh", "bin/kmerfilterset.sh", "bin/kmerlimit.sh", "bin/kmerlimit2.sh", "bin/kmerposition.sh", "bin/kmutate.sh", "bin/lilypad.sh", "bin/loadreads.sh", "bin/loglog.sh", "bin/makechimeras.sh", "bin/makecontaminatedgenomes.sh", "bin/makepolymers.sh", "bin/makequickbinvector.sh", "bin/mapPacBio.sh", "bin/matrixtocolumns.sh", "bin/memdetect.sh", "bin/mergeOTUs.sh", "bin/mergebarcodes.sh", "bin/mergepgm.sh", "bin/mergeribo.sh", "bin/mergesam.sh", "bin/mergesketch.sh", "bin/mergesorted.sh", "bin/microalign.sh", "bin/msa.sh", "bin/mutate.sh", "bin/muxbyname.sh", "bin/netfilter.sh", "bin/novademux.sh", "bin/parallelogram.sh", "bin/partition.sh", "bin/phylip2fasta.sh", "bin/picksubset.sh", "bin/pileup.sh", "bin/pileup2.sh", "bin/plotflowcell.sh", "bin/plotgc.sh", "bin/plothist.sh", "bin/plotreadposition.sh", "bin/polyfilter.sh", "bin/postfilter.sh", "bin/printtime.sh", "bin/processfrag.sh", "bin/processhi-c.sh", "bin/processspeed.sh", "bin/profile.sh", "bin/quabblealigner.sh", "bin/quantumaligner.sh", "bin/quickbin.sh", "bin/quickclade.sh", "bin/randomgenome.sh", "bin/randomreads.sh", "bin/randomreadsmg.sh", "bin/readlength.sh", "bin/reassemble.sh", "bin/reducecolumns.sh", "bin/reducesilva.sh", "bin/reformat.sh", "bin/reformat2.sh", "bin/reformat3.sh", "bin/reformatpb.sh", "bin/removebadbarcodes.sh", "bin/removecatdogmousehuman.sh", "bin/removehuman.sh", "bin/removehuman2.sh", "bin/removemicrobes.sh", "bin/removesmartbell.sh", "bin/rename.sh", "bin/renamebymapping.sh", "bin/renamebysketch.sh", "bin/renameimg.sh", "bin/renameref.sh", "bin/repair.sh", "bin/replaceheaders.sh", "bin/representative.sh", "bin/rqcfilter.sh", "bin/rqcfilter2.sh", "bin/rqcfilter3.sh", "bin/runhmm.sh", "bin/samstreamer.sh", "bin/samtoroc.sh", "bin/scalarintervals.sh", "bin/scalars.sh", "bin/scoresequence.sh", "bin/scrabblealigner.sh", "bin/seal.sh", "bin/sendclade.sh", "bin/sendsketch.sh", "bin/seqtovec.sh", "bin/shred.sh", "bin/shrinkaccession.sh", "bin/shuffle.sh", "bin/shuffle2.sh", "bin/sketch.sh", "bin/sketchblacklist.sh", "bin/sketchblacklist2.sh", "bin/smithwaterman.sh", "bin/sortbyname.sh", "bin/splitbytaxa.sh", "bin/splitnextera.sh", "bin/splitribo.sh", "bin/splitsam.sh", "bin/splitsam4way.sh", "bin/splitsam6way.sh", "bin/stats.sh", "bin/stats3.sh", "bin/statswrapper.sh", "bin/stream.sh", "bin/streamsam.sh", "bin/subsketch.sh", "bin/summarizecontam.sh", "bin/summarizecoverage.sh", "bin/summarizecrossblock.sh", "bin/summarizemerge.sh", "bin/summarizequast.sh", "bin/summarizescafstats.sh", "bin/summarizeseal.sh", "bin/summarizesketch.sh", "bin/synthmda.sh", "bin/tadpipe.sh", "bin/tadpole.sh", "bin/tadwrapper.sh", "bin/tagandmerge.sh", "bin/taxonomy.sh", "bin/taxserver.sh", "bin/taxsize.sh", "bin/taxtree.sh", "bin/testaligners.sh", "bin/testaligners2.sh", "bin/testfilesystem.sh", "bin/testformat.sh", "bin/testformat2.sh", "bin/tetramerfreq.sh", "bin/textfile.sh", "bin/tiledump.sh", "bin/train.sh", "bin/translate6frames.sh", "bin/trimcontigs.sh", "bin/unicode2ascii.sh", "bin/unzip.sh", "bin/vcf2gff.sh", "bin/visualizealignment.sh", "bin/wavefrontaligner.sh", "bin/wavefrontalignerviz.sh", "bin/webcheck.sh", "bin/wobblealigner.sh", "bin/wobbleplusaligner.sh", "bin/xdrophaligner.sh", "bin/zz_rename_package.sh"]
+
+[verify]
+  command = "a_sample_mt.sh --version"
+  pattern = ""

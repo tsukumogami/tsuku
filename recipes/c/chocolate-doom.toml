@@ -1,0 +1,35 @@
+[metadata]
+  name = "chocolate-doom"
+  description = "Accurate source port of Doom"
+  homepage = "https://www.chocolate-doom.org/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["fluid-synth", "libpng", "sdl2"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "chocolate-doom"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "chocolate-doom"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/chocolate-doom", "bin/chocolate-doom-setup", "bin/chocolate-heretic", "bin/chocolate-heretic-setup", "bin/chocolate-hexen", "bin/chocolate-hexen-setup", "bin/chocolate-server", "bin/chocolate-strife", "bin/chocolate-strife-setup"]
+
+[verify]
+  command = "chocolate-doom --version"
+  pattern = ""

@@ -1,0 +1,35 @@
+[metadata]
+  name = "sdcc"
+  description = "ANSI C compiler for Intel 8051, Maxim 80DS390, and Zilog Z80"
+  homepage = "https://sdcc.sourceforge.net/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["readline", "zstd"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "sdcc"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "sdcc"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/as2gbmap", "bin/makebin", "bin/packihx", "bin/s51", "bin/sdar", "bin/sdas390", "bin/sdas6500", "bin/sdas6808", "bin/sdas8051", "bin/sdasf8", "bin/sdasgb", "bin/sdaspdk13", "bin/sdaspdk14", "bin/sdaspdk15", "bin/sdasrab", "bin/sdasstm8", "bin/sdastlcs90", "bin/sdasz80", "bin/sdcc", "bin/sdcdb", "bin/sdcpp", "bin/sdld", "bin/sdld6808", "bin/sdldf8", "bin/sdldgb", "bin/sdldpdk", "bin/sdldstm8", "bin/sdldz80", "bin/sdnm", "bin/sdobjcopy", "bin/sdranlib", "bin/ucsim_51", "bin/ucsim_f8", "bin/ucsim_i8051", "bin/ucsim_m68hc08", "bin/ucsim_mos6502", "bin/ucsim_pdk", "bin/ucsim_rxk", "bin/ucsim_stm8", "bin/ucsim_tlcs", "bin/ucsim_xa", "bin/ucsim_z80"]
+
+[verify]
+  command = "as2gbmap --version"
+  pattern = ""

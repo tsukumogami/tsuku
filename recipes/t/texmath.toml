@@ -1,0 +1,35 @@
+[metadata]
+  name = "texmath"
+  description = "Haskell library for converting LaTeX math to MathML"
+  homepage = "https://johnmacfarlane.net/texmath.html"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["gmp"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "texmath"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "texmath"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/texmath"]
+
+[verify]
+  command = "texmath --version"
+  pattern = ""

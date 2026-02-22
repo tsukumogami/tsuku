@@ -1,0 +1,35 @@
+[metadata]
+  name = "corsixth"
+  description = "Open source clone of Theme Hospital"
+  homepage = "https://github.com/CorsixTH/CorsixTH"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["freetype", "lua", "sdl2"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "corsixth"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "corsixth"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/CorsixTH"]
+
+[verify]
+  command = "CorsixTH --version"
+  pattern = ""

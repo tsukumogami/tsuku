@@ -1,0 +1,34 @@
+[metadata]
+  name = "iam-policy-json-to-terraform"
+  description = "Convert a JSON IAM Policy into terraform"
+  homepage = "https://github.com/flosell/iam-policy-json-to-terraform"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "iam-policy-json-to-terraform"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "iam-policy-json-to-terraform"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/iam-policy-json-to-terraform"]
+
+[verify]
+  command = "iam-policy-json-to-terraform --version"
+  pattern = ""

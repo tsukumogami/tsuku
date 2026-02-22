@@ -1,0 +1,35 @@
+[metadata]
+  name = "tcpreplay"
+  description = "Replay saved tcpdump files at arbitrary speeds"
+  homepage = "https://tcpreplay.appneta.com/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["libdnet"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "tcpreplay"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "tcpreplay"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/tcpbridge", "bin/tcpcapinfo", "bin/tcpliveplay", "bin/tcpprep", "bin/tcpreplay", "bin/tcpreplay-edit", "bin/tcprewrite"]
+
+[verify]
+  command = "tcpbridge --version"
+  pattern = ""

@@ -1,0 +1,34 @@
+[metadata]
+  name = "aspell"
+  description = "Spell checker with better logic than ispell"
+  homepage = "https://aspell.net/"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "aspell"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "aspell"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/aspell", "bin/aspell-import", "bin/precat", "bin/preunzip", "bin/prezip", "bin/prezip-bin", "bin/pspell-config", "bin/run-with-aspell", "bin/word-list-compress"]
+
+[verify]
+  command = "aspell --version"
+  pattern = ""

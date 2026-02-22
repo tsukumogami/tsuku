@@ -1,0 +1,35 @@
+[metadata]
+  name = "imlib2"
+  description = "Image loading and rendering library"
+  homepage = "https://sourceforge.net/projects/enlightenment/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["freetype", "giflib", "jpeg-turbo", "libpng", "xz"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "imlib2"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "imlib2"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/imlib2_bumpmap", "bin/imlib2_colorspace", "bin/imlib2_conv", "bin/imlib2_grab", "bin/imlib2_load", "bin/imlib2_poly", "bin/imlib2_show", "bin/imlib2_test", "bin/imlib2_view"]
+
+[verify]
+  command = "imlib2_bumpmap --version"
+  pattern = ""

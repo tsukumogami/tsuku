@@ -5,6 +5,9 @@ homepage = "https://libssh2.org/"
 type = "library"
 dependencies = ["openssl"]
 
+[metadata.satisfies]
+homebrew = ["libssh2"]
+
 [[steps]]
 action = "homebrew"
 formula = "libssh2"

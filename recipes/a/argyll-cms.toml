@@ -1,0 +1,35 @@
+[metadata]
+  name = "argyll-cms"
+  description = "ICC compatible color management system"
+  homepage = "https://www.argyllcms.com/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["jpeg-turbo", "libpng"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "argyll-cms"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "argyll-cms"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/applycal", "bin/average", "bin/cb2ti3", "bin/cctiff", "bin/ccxxmake", "bin/chartread", "bin/collink", "bin/colprof", "bin/colverify", "bin/cxf2ti3", "bin/dispcal", "bin/dispread", "bin/dispwin", "bin/extracticc", "bin/extractttag", "bin/fakeCMY", "bin/fakeread", "bin/greytiff", "bin/iccdump", "bin/iccgamut", "bin/icclu", "bin/iccvcgt", "bin/illumread", "bin/invprofcheck", "bin/jam", "bin/kodak2ti3", "bin/ls2ti3", "bin/mppcheck", "bin/mpplu", "bin/mppprof", "bin/oeminst", "bin/printcal", "bin/printtarg", "bin/profcheck", "bin/refine", "bin/revfix", "bin/scanin", "bin/spec2cie", "bin/specplot", "bin/splitti3", "bin/spotread", "bin/synthcal", "bin/synthread", "bin/targen", "bin/tiffgamut", "bin/timage", "bin/txt2ti3", "bin/viewgam", "bin/xicclu"]
+
+[verify]
+  command = "applycal --version"
+  pattern = ""

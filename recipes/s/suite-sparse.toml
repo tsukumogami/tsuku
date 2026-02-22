@@ -1,0 +1,35 @@
+[metadata]
+  name = "suite-sparse"
+  description = "Suite of Sparse Matrix Software"
+  homepage = "https://people.engr.tamu.edu/davis/suitesparse.html"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["gmp"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "suite-sparse"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "suite-sparse"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/suitesparse_mongoose"]
+
+[verify]
+  command = "suitesparse_mongoose --version"
+  pattern = ""

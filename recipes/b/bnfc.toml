@@ -1,0 +1,35 @@
+[metadata]
+  name = "bnfc"
+  description = "BNF Converter"
+  homepage = "https://github.com/BNFC/bnfc"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["gmp"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "bnfc"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "bnfc"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/bnfc"]
+
+[verify]
+  command = "bnfc --version"
+  pattern = ""

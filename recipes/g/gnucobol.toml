@@ -1,0 +1,35 @@
+[metadata]
+  name = "gnucobol"
+  description = "COBOL85-202x compiler supporting lots of dialect specific extensions"
+  homepage = "https://gnucobol.sourceforge.io/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["berkeley-db", "gmp"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "gnucobol"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "gnucobol"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/cob-config", "bin/cobc", "bin/cobcrun"]
+
+[verify]
+  command = "cob-config --version"
+  pattern = ""

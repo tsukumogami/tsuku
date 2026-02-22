@@ -1,0 +1,35 @@
+[metadata]
+  name = "ldid"
+  description = "Lets you manipulate the signature block in a Mach-O binary"
+  homepage = "https://cydia.saurik.com/info/ldid/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["libplist"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "ldid"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "ldid"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/ldid"]
+
+[verify]
+  command = "ldid --version"
+  pattern = ""

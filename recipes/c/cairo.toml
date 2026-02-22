@@ -4,6 +4,9 @@ description = "Vector graphics library with cross-device output support"
 homepage = "https://cairographics.org/"
 type = "library"
 
+[metadata.satisfies]
+homebrew = ["cairo"]
+
 # glibc Linux: Homebrew bottle
 [[steps]]
 action = "homebrew"

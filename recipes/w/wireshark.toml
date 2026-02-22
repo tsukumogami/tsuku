@@ -1,0 +1,35 @@
+[metadata]
+  name = "wireshark"
+  description = "Network analyzer and capture tool - without graphical user interface"
+  homepage = "https://www.wireshark.org"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["c-ares", "glib", "gnutls", "libgcrypt", "libnghttp2", "libnghttp3", "lua", "pcre2", "zstd", "libgpg-error"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "wireshark"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "wireshark"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/capinfos", "bin/captype", "bin/dftest", "bin/dumpcap", "bin/editcap", "bin/idl2wrs", "bin/mergecap", "bin/mmdbresolve", "bin/randpkt", "bin/rawshark", "bin/reordercap", "bin/sharkd", "bin/text2pcap", "bin/tshark"]
+
+[verify]
+  command = "capinfos --version"
+  pattern = ""

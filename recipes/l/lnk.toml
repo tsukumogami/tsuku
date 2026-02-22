@@ -1,0 +1,31 @@
+[metadata]
+  name = "lnk"
+  description = "A Rust library to parse and write Windows shortcut files (.lnk)"
+  homepage = "https://github.com/lilopkins/lnk-rs"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "crates_io"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "cargo_install"
+  crate = "lnk"
+  executables = ["lnk2json"]
+
+[verify]
+  command = "lnk2json --version"
+  pattern = ""

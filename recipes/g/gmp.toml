@@ -4,6 +4,9 @@ description = "GNU multiple precision arithmetic library"
 homepage = "https://gmplib.org/"
 type = "library"
 
+[metadata.satisfies]
+homebrew = ["gmp"]
+
 # glibc Linux: Homebrew bottle
 [[steps]]
 action = "homebrew"

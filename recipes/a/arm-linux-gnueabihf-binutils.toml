@@ -1,0 +1,35 @@
+[metadata]
+  name = "arm-linux-gnueabihf-binutils"
+  description = "FSF/GNU binutils for cross-compiling to arm-linux"
+  homepage = "https://www.gnu.org/software/binutils/binutils.html"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["zstd"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "arm-linux-gnueabihf-binutils"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "arm-linux-gnueabihf-binutils"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/arm-linux-gnueabihf-addr2line", "bin/arm-linux-gnueabihf-c++filt", "bin/arm-linux-gnueabihf-elfedit", "bin/arm-linux-gnueabihf-gprof", "bin/arm-linux-gnueabihf-size", "bin/arm-linux-gnueabihf-strings"]
+
+[verify]
+  command = "arm-linux-gnueabihf-addr2line --version"
+  pattern = ""

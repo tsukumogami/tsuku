@@ -1,0 +1,35 @@
+[metadata]
+  name = "xmlto"
+  description = "Convert XML to another format (based on XSL or other tools)"
+  homepage = "https://pagure.io/xmlto/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["gnu-getopt"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "xmlto"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "xmlto"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/xmlif", "bin/xmlto"]
+
+[verify]
+  command = "xmlif --version"
+  pattern = ""

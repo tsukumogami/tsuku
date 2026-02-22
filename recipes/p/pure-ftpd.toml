@@ -1,0 +1,34 @@
+[metadata]
+  name = "pure-ftpd"
+  description = "Secure and efficient FTP server"
+  homepage = "https://www.pureftpd.org/"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "pure-ftpd"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "pure-ftpd"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/pure-pw", "bin/pure-pwconvert", "bin/pure-statsdecode"]
+
+[verify]
+  command = "pure-pw --version"
+  pattern = ""

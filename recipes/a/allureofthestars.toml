@@ -1,0 +1,35 @@
+[metadata]
+  name = "allureofthestars"
+  description = "Near-future Sci-Fi roguelike and tactical squad combat game"
+  homepage = "https://allureofthestars.com/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["gmp", "sdl2"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "allureofthestars"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "allureofthestars"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/Allure"]
+
+[verify]
+  command = "Allure --version"
+  pattern = ""

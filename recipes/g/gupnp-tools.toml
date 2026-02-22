@@ -1,0 +1,35 @@
+[metadata]
+  name = "gupnp-tools"
+  description = "Free replacements of Intel's UPnP tools"
+  homepage = "https://wiki.gnome.org/GUPnP/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["glib", "gupnp", "libxml2", "gettext"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "gupnp-tools"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "gupnp-tools"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/gssdp-discover", "bin/gupnp-av-cp", "bin/gupnp-event-dumper", "bin/gupnp-network-light", "bin/gupnp-universal-cp", "bin/gupnp-upload"]
+
+[verify]
+  command = "gssdp-discover --version"
+  pattern = ""

@@ -1,0 +1,35 @@
+[metadata]
+  name = "libgr"
+  description = "GR framework: a graphics library for visualisation applications"
+  homepage = "https://gr-framework.org/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["cairo", "freetype", "jpeg-turbo", "libpng"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "libgr"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "libgr"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/gksqt", "bin/grplot"]
+
+[verify]
+  command = "gksqt --version"
+  pattern = ""

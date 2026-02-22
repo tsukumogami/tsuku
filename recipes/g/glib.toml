@@ -1,0 +1,65 @@
+[metadata]
+name = "glib"
+description = "Core application library for C"
+homepage = "https://docs.gtk.org/glib/"
+type = "library"
+dependencies = ["pcre2", "gettext"]
+
+[metadata.satisfies]
+homebrew = ["glib"]
+
+# glibc Linux: Homebrew bottle
+[[steps]]
+action = "homebrew"
+formula = "glib"
+when = { os = ["linux"], libc = ["glibc"] }
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = [
+    "lib/libglib-2.0.so",
+    "lib/libglib-2.0.a",
+    "lib/libgobject-2.0.so",
+    "lib/libgobject-2.0.a",
+    "lib/libgio-2.0.so",
+    "lib/libgio-2.0.a",
+    "lib/libgthread-2.0.so",
+    "lib/libgthread-2.0.a",
+    "lib/libgmodule-2.0.so",
+    "lib/libgmodule-2.0.a",
+    "lib/pkgconfig/glib-2.0.pc",
+    "include/glib-2.0/glib.h",
+]
+when = { os = ["linux"], libc = ["glibc"] }
+
+# musl Linux: Alpine package
+[[steps]]
+action = "apk_install"
+packages = ["glib-dev"]
+when = { os = ["linux"], libc = ["musl"] }
+
+# macOS: Homebrew
+[[steps]]
+action = "homebrew"
+formula = "glib"
+when = { os = ["darwin"] }
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = [
+    "lib/libglib-2.0.dylib",
+    "lib/libglib-2.0.a",
+    "lib/libgobject-2.0.dylib",
+    "lib/libgobject-2.0.a",
+    "lib/libgio-2.0.dylib",
+    "lib/libgio-2.0.a",
+    "lib/libgthread-2.0.dylib",
+    "lib/libgthread-2.0.a",
+    "lib/libgmodule-2.0.dylib",
+    "lib/libgmodule-2.0.a",
+    "lib/pkgconfig/glib-2.0.pc",
+    "include/glib-2.0/glib.h",
+]
+when = { os = ["darwin"] }

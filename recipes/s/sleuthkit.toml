@@ -1,0 +1,35 @@
+[metadata]
+  name = "sleuthkit"
+  description = "Forensic toolkit"
+  homepage = "https://www.sleuthkit.org/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["afflib", "libewf", "sqlite"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "sleuthkit"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "sleuthkit"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/blkcalc", "bin/blkcat", "bin/blkls", "bin/blkstat", "bin/fcat", "bin/ffind", "bin/fiwalk", "bin/fls", "bin/fsstat", "bin/hfind", "bin/icat", "bin/ifind", "bin/ils", "bin/img_cat", "bin/img_stat", "bin/istat", "bin/jcat", "bin/jls", "bin/jpeg_extract", "bin/mactime", "bin/mmcat", "bin/mmls", "bin/mmstat", "bin/pstat", "bin/sigfind", "bin/sorter", "bin/srch_strings", "bin/tsk_comparedir", "bin/tsk_gettimes", "bin/tsk_imageinfo", "bin/tsk_loaddb", "bin/tsk_recover", "bin/usnjls"]
+
+[verify]
+  command = "blkcalc --version"
+  pattern = ""

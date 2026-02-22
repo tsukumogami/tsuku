@@ -1,0 +1,35 @@
+[metadata]
+  name = "osm2pgsql"
+  description = "OpenStreetMap data to PostgreSQL converter"
+  homepage = "https://osm2pgsql.org"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["luajit", "proj"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "osm2pgsql"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "osm2pgsql"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/osm2pgsql", "bin/osm2pgsql-replication"]
+
+[verify]
+  command = "osm2pgsql --version"
+  pattern = ""

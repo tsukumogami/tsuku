@@ -4,6 +4,9 @@ description = "Library and utilities for processing GIFs"
 homepage = "https://giflib.sourceforge.net/"
 type = "library"
 
+[metadata.satisfies]
+homebrew = ["giflib"]
+
 # glibc Linux: Homebrew bottle
 [[steps]]
 action = "homebrew"

@@ -1,0 +1,35 @@
+[metadata]
+  name = "kubekey"
+  description = "Installer for Kubernetes and / or KubeSphere, and related cloud-native add-ons"
+  homepage = "https://kubesphere.io"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = []
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "kubekey"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "kubekey"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/kk"]
+
+[verify]
+  command = "kk --version"
+  pattern = ""

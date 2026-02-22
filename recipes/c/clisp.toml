@@ -1,0 +1,35 @@
+[metadata]
+  name = "clisp"
+  description = "GNU CLISP, a Common Lisp implementation"
+  homepage = "https://clisp.sourceforge.io/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["readline"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "clisp"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "clisp"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/clisp", "bin/clisp-link"]
+
+[verify]
+  command = "clisp --version"
+  pattern = ""

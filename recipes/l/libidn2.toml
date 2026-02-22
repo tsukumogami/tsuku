@@ -1,0 +1,49 @@
+[metadata]
+name = "libidn2"
+description = "International domain name library (IDNA2008, Punycode and TR46)"
+homepage = "https://www.gnu.org/software/libidn/#libidn2"
+type = "library"
+dependencies = ["gettext"]
+
+[metadata.satisfies]
+homebrew = ["libidn2"]
+
+# glibc Linux: Homebrew bottle
+[[steps]]
+action = "homebrew"
+formula = "libidn2"
+when = { os = ["linux"], libc = ["glibc"] }
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = [
+    "lib/libidn2.so",
+    "lib/libidn2.a",
+    "lib/pkgconfig/libidn2.pc",
+    "include/idn2.h",
+]
+when = { os = ["linux"], libc = ["glibc"] }
+
+# musl Linux: Alpine package
+[[steps]]
+action = "apk_install"
+packages = ["libidn2-dev"]
+when = { os = ["linux"], libc = ["musl"] }
+
+# macOS: Homebrew
+[[steps]]
+action = "homebrew"
+formula = "libidn2"
+when = { os = ["darwin"] }
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = [
+    "lib/libidn2.dylib",
+    "lib/libidn2.a",
+    "lib/pkgconfig/libidn2.pc",
+    "include/idn2.h",
+]
+when = { os = ["darwin"] }

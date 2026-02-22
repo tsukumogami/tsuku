@@ -1,0 +1,47 @@
+[metadata]
+name = "notmuch"
+description = "Thread-based email index, search, and tagging"
+homepage = "https://notmuchmail.org/"
+type = "library"
+dependencies = ["glib", "gettext"]
+
+[metadata.satisfies]
+homebrew = ["notmuch"]
+
+# glibc Linux: Homebrew bottle
+[[steps]]
+action = "homebrew"
+formula = "notmuch"
+when = { os = ["linux"], libc = ["glibc"] }
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = [
+    "lib/libnotmuch.so",
+    "lib/libnotmuch.a",
+    "include/notmuch.h",
+]
+when = { os = ["linux"], libc = ["glibc"] }
+
+# musl Linux: Alpine package
+[[steps]]
+action = "apk_install"
+packages = ["notmuch-dev"]
+when = { os = ["linux"], libc = ["musl"] }
+
+# macOS: Homebrew
+[[steps]]
+action = "homebrew"
+formula = "notmuch"
+when = { os = ["darwin"] }
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = [
+    "lib/libnotmuch.dylib",
+    "lib/libnotmuch.a",
+    "include/notmuch.h",
+]
+when = { os = ["darwin"] }

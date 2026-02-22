@@ -1,0 +1,35 @@
+[metadata]
+  name = "google-authenticator-libpam"
+  description = "PAM module for two-factor authentication"
+  homepage = "https://github.com/google/google-authenticator-libpam"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["qrencode"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "google-authenticator-libpam"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "google-authenticator-libpam"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/google-authenticator"]
+
+[verify]
+  command = "google-authenticator --version"
+  pattern = ""

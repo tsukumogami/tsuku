@@ -1,0 +1,35 @@
+[metadata]
+  name = "libgeotiff"
+  description = "Library and tools for dealing with GeoTIFF"
+  homepage = "https://github.com/OSGeo/libgeotiff"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["jpeg-turbo", "proj"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "libgeotiff"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "libgeotiff"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/applygeo", "bin/geotifcp", "bin/listgeo"]
+
+[verify]
+  command = "applygeo --version"
+  pattern = ""

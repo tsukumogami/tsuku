@@ -1,0 +1,35 @@
+[metadata]
+  name = "mydumper"
+  description = "MySQL logical backup tool"
+  homepage = "https://github.com/mydumper/mydumper"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["glib", "mariadb-connector-c", "pcre2"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "mydumper"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "mydumper"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/mydumper", "bin/myloader"]
+
+[verify]
+  command = "mydumper --version"
+  pattern = ""

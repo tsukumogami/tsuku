@@ -1,0 +1,35 @@
+[metadata]
+  name = "sdl12-compat"
+  description = "SDL 1.2 compatibility layer that uses SDL 2.0 behind the scenes"
+  homepage = "https://github.com/libsdl-org/sdl12-compat"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["sdl2"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "sdl12-compat"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "sdl12-compat"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/sdl-config"]
+
+[verify]
+  command = "sdl-config --version"
+  pattern = ""

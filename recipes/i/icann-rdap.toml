@@ -1,0 +1,35 @@
+[metadata]
+  name = "icann-rdap"
+  description = "Full-rich client for the Registry Data Access Protocol (RDAP) sponsored by ICANN"
+  homepage = "https://github.com/icann/icann-rdap/wiki"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = []
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "icann-rdap"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "icann-rdap"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/rdap", "bin/rdap-test"]
+
+[verify]
+  command = "rdap --version"
+  pattern = ""
