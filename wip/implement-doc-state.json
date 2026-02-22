@@ -2,7 +2,7 @@
   "design_doc": "docs/designs/DESIGN-system-lib-backfill.md",
   "branch": "docs/system-lib-backfill",
   "pr_number": 1863,
-  "integrity_hash": "sha256:e1cf2048ce17143f9a8ab6409114f7753b058833af27062d14a683886912102a",
+  "integrity_hash": "sha256:91f712626ef3dee03074ac3eaa6542fd374ce1dd5859b60a85f2ea3e1a09033f",
   "issues": [
     {
       "number": 1864,
@@ -99,14 +99,19 @@
     {
       "number": 1866,
       "title": "feat(batch): run discovery to identify missing library dependencies",
-      "status": "in_progress",
+      "status": "completed",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
       "issue_type": "task",
       "dependencies": [],
       "commits": [],
       "agent_type": "",
-      "summary": null,
+      "summary": {
+        "narrative": "",
+        "files_changed": [],
+        "tests_added": 0,
+        "key_decisions": "Analyzed 50 failure JSONL files. Found 15 unique blocking libraries, 5 already resolved after satisfies backfill. 10 need new recipes, ranked by block count in docs/library-backfill-ranked.md."
+      },
       "testable_scenarios": [
         "scenario-6",
         "scenario-7"
