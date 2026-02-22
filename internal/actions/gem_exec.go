@@ -355,6 +355,12 @@ func (a *GemExecAction) executeLockDataMode(ctx *ExecutionContext, params map[st
 			strings.Contains(exe, "..") || exe == "." {
 			return fmt.Errorf("invalid executable name '%s': must not contain path separators", exe)
 		}
+		// Check for control characters and null bytes
+		for _, c := range exe {
+			if c < 32 || c == 127 || c == 0 {
+				return fmt.Errorf("invalid executable name '%s': contains control characters", exe)
+			}
+		}
 		if strings.ContainsAny(exe, "$`|;&<>()[]{}") {
 			return fmt.Errorf("invalid executable name '%s': contains shell metacharacters", exe)
 		}
@@ -377,11 +383,19 @@ func (a *GemExecAction) executeLockDataMode(ctx *ExecutionContext, params map[st
 		}
 	}
 
-	// Find bundler executable
+	// Find bundler executable (must be tsuku-managed for wrapper relocatability)
 	bundlerPath := a.findBundler(ctx)
 	if bundlerPath == "" {
-		return fmt.Errorf("bundler not found: install Ruby with bundler or ensure it's in PATH")
+		return fmt.Errorf("bundler not found: install Ruby with bundler (tsuku install ruby)")
 	}
+
+	// Guard: wrapper scripts need a tsuku-managed ruby path for relocatability.
+	// System bundler (e.g., /usr/bin/bundle) would hardcode a non-relocatable path.
+	rubyBinDir := filepath.Dir(bundlerPath)
+	if ctx.ToolsDir != "" && !strings.HasPrefix(bundlerPath, ctx.ToolsDir) {
+		return fmt.Errorf("gem_exec lock_data mode requires tsuku-managed ruby (found system bundler at %s)", bundlerPath)
+	}
+
 	fmt.Printf("   Using bundler: %s\n", bundlerPath)
 
 	// Write Gemfile
@@ -467,32 +481,23 @@ func (a *GemExecAction) executeLockDataMode(ctx *ExecutionContext, params map[st
 		}
 	}
 
-	// Create symlinks at install root for executables
+	// Create self-contained wrapper scripts at install root for executables.
+	// Wrappers set GEM_HOME/GEM_PATH/PATH so gems work with tsuku's managed ruby,
+	// matching the approach used by gem_install's direct path.
 	rootBinDir := filepath.Join(ctx.InstallDir, "bin")
 	if err := os.MkdirAll(rootBinDir, 0755); err != nil {
 		return fmt.Errorf("failed to create bin directory: %w", err)
 	}
 
 	for _, exe := range executables {
-		srcPath := filepath.Join(binDir, exe)
-		dstPath := filepath.Join(rootBinDir, exe)
-
-		// Remove existing symlink if present
-		os.Remove(dstPath)
-
-		// Create relative symlink
-		relPath, err := filepath.Rel(rootBinDir, srcPath)
-		if err != nil {
-			return fmt.Errorf("failed to compute relative path for %s: %w", exe, err)
-		}
-
-		if err := os.Symlink(relPath, dstPath); err != nil {
-			return fmt.Errorf("failed to create symlink for %s: %w", exe, err)
+		srcScript := filepath.Join(binDir, exe)
+		if err := createGemWrapper(srcScript, rootBinDir, exe, rubyBinDir); err != nil {
+			return fmt.Errorf("failed to create wrapper for %s: %w", exe, err)
 		}
 	}
 
 	fmt.Printf("   Gem installed successfully\n")
-	fmt.Printf("   Verified %d executable(s)\n", len(executables))
+	fmt.Printf("   Created %d self-contained wrapper(s)\n", len(executables))
 
 	return nil
 }
