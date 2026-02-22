@@ -43,8 +43,8 @@ Ref #1825
 
 | Issue | Dependencies | Tier |
 |-------|--------------|------|
-| [#1845: refactor(blocker): extract shared failure loading from reorder package](https://github.com/tsukumogami/tsuku/issues/1845) | None | testable |
-| _Move `loadBlockerMap()` and `loadBlockersFromFile()` to `internal/blocker/`, making the failure JSONL loading available to both requeue and reorder. Fixes the 64KB scanner buffer limit during extraction._ | | |
+| ~~[#1845: refactor(blocker): extract shared failure loading from reorder package](https://github.com/tsukumogami/tsuku/issues/1845)~~ | ~~None~~ | ~~testable~~ |
+| ~~_Move `loadBlockerMap()` and `loadBlockersFromFile()` to `internal/blocker/`, making the failure JSONL loading available to both requeue and reorder. Fixes the 64KB scanner buffer limit during extraction._~~ | | |
 | [#1846: feat(requeue): implement requeue package for unblocking queue entries](https://github.com/tsukumogami/tsuku/issues/1846) | [#1845](https://github.com/tsukumogami/tsuku/issues/1845) | testable |
 | _Create `internal/requeue/` with the core logic: build a resolved-names set from "success" entries, check each blocked entry's blockers against it, flip to "pending" when all are resolved. Operates on the in-memory queue without I/O._ | | |
 | [#1847: refactor(cli): consolidate reorder-queue into queue-maintain with requeue](https://github.com/tsukumogami/tsuku/issues/1847) | [#1846](https://github.com/tsukumogami/tsuku/issues/1846) | testable |
@@ -99,8 +99,9 @@ graph TD
     classDef needsDesign fill:#e1bee7
     classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
 
-    class I1845 ready
-    class I1846,I1847,I1848,I1849,I1850,I1851 blocked
+    class I1845 done
+    class I1846 ready
+    class I1847,I1848,I1849,I1850,I1851 blocked
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design
