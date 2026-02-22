@@ -43,8 +43,8 @@ rationale: |
 | ~~_Update orchestrator's `categoryFromExitCode()` to canonical taxonomy. Fix `parseInstallJSON()` to derive pipeline categories from exit codes instead of trusting CLI strings. Add `Subcategory` field to `FailureRecord` and JSON schema._~~ | | |
 | ~~[#1858: fix(ci): align batch workflow category names with canonical taxonomy](https://github.com/tsukumogami/tsuku/issues/1858)~~ | ~~[#1857](https://github.com/tsukumogami/tsuku/issues/1857)~~ | ~~simple~~ |
 | ~~_Update the inline jq in `batch-generate.yml` to use canonical names: `generation_failed`, `network_error` instead of `deterministic`, `network`, `timeout`._~~ | | |
-| [#1859: feat(dashboard): read structured subcategories with category remap fallback](https://github.com/tsukumogami/tsuku/issues/1859) | [#1857](https://github.com/tsukumogami/tsuku/issues/1857) | testable |
-| _Add subcategory passthrough to dashboard deserialization structs. Category remap translates old names on load. `extractSubcategory()` becomes conditional -- only called when structured subcategory is absent._ | | |
+| ~~[#1859: feat(dashboard): read structured subcategories with category remap fallback](https://github.com/tsukumogami/tsuku/issues/1859)~~ | ~~[#1857](https://github.com/tsukumogami/tsuku/issues/1857)~~ | ~~testable~~ |
+| ~~_Add subcategory passthrough to dashboard deserialization structs. Category remap translates old names on load. `extractSubcategory()` becomes conditional -- only called when structured subcategory is absent._~~ | | |
 
 ```mermaid
 graph TD
@@ -65,7 +65,7 @@ graph TD
     class I1856 done
     class I1857 done
     class I1858 done
-    class I1859 ready
+    class I1859 done
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design

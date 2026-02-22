@@ -3,7 +3,7 @@
   "design_doc": "docs/designs/DESIGN-structured-error-subcategories.md",
   "branch": "docs/structured-error-subcategories",
   "pr_number": 1854,
-  "integrity_hash": "sha256:c7368bf25721cb2ed9d1b836bae7791722a5e723a6fe8f00e7a0c88bc5797e00",
+  "integrity_hash": "sha256:efb45e62d9e0cc39b95bf4aea62e174f0674fb8f7230687b46f76cc8bcaa22de",
   "issues": [
     {
       "number": 1856,
@@ -163,8 +163,8 @@
     {
       "number": 1858,
       "title": "fix(ci): align batch workflow category names with canonical taxonomy",
-      "status": "scrutinized",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "ci_fix_attempts": 0,
       "issue_type": "code",
       "dependencies": [
@@ -196,6 +196,29 @@
           }
         ]
       },
+      "reviewer_results": {
+        "issue": 1858,
+        "reviewers": [
+          {
+            "focus": "pragmatic",
+            "blocking_count": 0,
+            "advisory_count": 0,
+            "detail_file": "wip/research/implement-doc_review_pragmatic_issue1858.md"
+          },
+          {
+            "focus": "architect",
+            "blocking_count": 0,
+            "advisory_count": 0,
+            "detail_file": "wip/research/implement-doc_review_architect_issue1858.md"
+          },
+          {
+            "focus": "maintainer",
+            "blocking_count": 0,
+            "advisory_count": 1,
+            "detail_file": "wip/research/implement-doc_review_maintainer_issue1858.md"
+          }
+        ]
+      },
       "testable_scenarios": [
         "scenario-10"
       ]
@@ -203,16 +226,58 @@
     {
       "number": 1859,
       "title": "feat(dashboard): read structured subcategories with category remap fallback",
-      "status": "pending",
+      "status": "scrutinized",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [
         1857
       ],
-      "commits": [],
-      "agent_type": "",
-      "summary": null,
+      "commits": [
+        "7d2a5fd46f953848e2aa939858c39cc05c4b63da"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          "internal/dashboard/dashboard.go",
+          "internal/dashboard/dashboard_test.go",
+          "internal/dashboard/failures.go",
+          "internal/dashboard/failures_test.go"
+        ],
+        "tests_added": 5,
+        "key_decisions": "Placed remapCategory() in failures.go alongside extractSubcategory(). Applied remap in both loadFailures() and loadFailureDetailsFromFile() for consistency. Conditional extractSubcategory() only called when structured subcategory is absent.",
+        "requirements_map": [
+          {
+            "ac": "remapCategory translates old category strings",
+            "status": "implemented"
+          },
+          {
+            "ac": "Subcategory field added to FailureRecord and PackageFailure",
+            "status": "implemented"
+          },
+          {
+            "ac": "loadFailureDetailsFromFile reads subcategory from both formats",
+            "status": "implemented"
+          },
+          {
+            "ac": "remap applies in both loadFailures and loadFailureDetailsFromFile",
+            "status": "implemented"
+          },
+          {
+            "ac": "extractSubcategory conditional - only called when subcategory empty",
+            "status": "implemented"
+          },
+          {
+            "ac": "structured subcategory preserved without heuristic override",
+            "status": "implemented"
+          },
+          {
+            "ac": "backward compat - records without subcategory get heuristic extraction",
+            "status": "implemented"
+          }
+        ]
+      },
       "testable_scenarios": [
         "scenario-11",
         "scenario-12",

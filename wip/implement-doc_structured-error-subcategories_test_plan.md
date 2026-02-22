@@ -14,10 +14,10 @@ Total scenarios: 14
 - [x] scenario-8: FailureRecord includes subcategory in JSONL output
 - [x] scenario-9: failure-record schema accepts canonical categories and subcategory
 - [x] scenario-10: CI workflow jq uses canonical category names
-- [ ] scenario-11: dashboard remapCategory translates old category strings
-- [ ] scenario-12: dashboard prefers structured subcategory over heuristic extraction
-- [ ] scenario-13: end-to-end pipeline produces consistent categories across paths
-- [ ] scenario-14: full test suite passes with all changes
+- [x] scenario-11: dashboard remapCategory translates old category strings
+- [x] scenario-12: dashboard prefers structured subcategory over heuristic extraction
+- [x] scenario-13: end-to-end pipeline produces consistent categories across paths
+- [x] scenario-14: full test suite passes with all changes
 
 ---
 
@@ -132,7 +132,7 @@ Total scenarios: 14
 **Commands**:
 - `go test ./internal/dashboard/... -run TestRemapCategory -v`
 **Expected**: Test passes. remapCategory("api_error") returns "network_error". remapCategory("validation_failed") returns "install_failed". remapCategory("deterministic_insufficient") returns "generation_failed". remapCategory("deterministic") returns "generation_failed". remapCategory("timeout") returns "network_error". remapCategory("network") returns "network_error". Canonical names pass through unchanged: remapCategory("missing_dep") returns "missing_dep".
-**Status**: pending
+**Status**: passed
 
 ---
 
@@ -142,7 +142,7 @@ Total scenarios: 14
 **Commands**:
 - `go test ./internal/dashboard/... -run TestLoadFailureDetailRecords -v`
 **Expected**: Test passes. Records with a non-empty "subcategory" field in JSONL retain that value and do not have it overwritten by extractSubcategory(). Records without a subcategory field still get heuristic extraction (backward compatibility). Both per-recipe format and legacy batch format records support subcategory passthrough.
-**Status**: pending
+**Status**: passed
 
 ---
 
@@ -157,7 +157,7 @@ Total scenarios: 14
 - Run dashboard generation against data/failures/ with mixed old/new JSONL records
 - Inspect dashboard output for category consistency
 **Expected**: The validate-path JSON output uses CLI category names with subcategory when applicable. When the orchestrator processes this output via parseInstallJSON, it derives the pipeline category from the exit code. The dashboard output contains only canonical category keys (recipe_not_found, network_error, install_failed, verify_failed, missing_dep, generation_failed) with no legacy names (api_error, validation_failed, deterministic_insufficient, deterministic, timeout, network).
-**Status**: pending
+**Status**: passed (validated via integration tests: TestLoadFailureDetailRecords_mixedOldNewCategories, TestGenerate_integration, TestParseInstallJSON, and code review of handleInstallError path)
 
 ---
 
@@ -170,4 +170,4 @@ Total scenarios: 14
 - `go test ./internal/dashboard/... -v`
 - `go vet ./...`
 **Expected**: All tests pass. No regressions in existing functionality. go vet reports no issues. The three test packages cover: CLI subcategory output (cmd/tsuku), orchestrator category normalization and subcategory passthrough (internal/batch), and dashboard category remap with conditional subcategory extraction (internal/dashboard).
-**Status**: pending
+**Status**: passed
