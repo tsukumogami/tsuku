@@ -1,14 +1,31 @@
 [metadata]
-name = "asciidoctor"
-description = "Converter for the AsciiDoc markup language"
-homepage = "https://asciidoctor.org/"
-version_format = "semver"
+  name = "asciidoctor"
+  description = "A fast, open source text processor and publishing toolchain for converting AsciiDoc content to HTML 5, DocBook 5, and other formats."
+  homepage = "https://asciidoctor.org"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "rubygems"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
 
 [[steps]]
-action = "gem_install"
-gem = "asciidoctor"
-executables = ["asciidoctor"]
+  action = "gem_install"
+  executables = ["asciidoctor"]
+  gem = "asciidoctor"
 
 [verify]
-command = "{install_dir}/.gem/bin/asciidoctor --version"
-pattern = "Asciidoctor {version}"
+  command = "asciidoctor --version"
+  pattern = ""

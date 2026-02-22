@@ -1,14 +1,31 @@
 [metadata]
-name = "tctl"
-description = "Command-line tool for the Tradologics trading platform"
-homepage = "https://pypi.org/project/tctl/"
-version_format = "semver"
-supported_libc = ["glibc"]
+  name = "tctl"
+  description = "Tradologics Command-line Utility"
+  homepage = "https://tradologics.com/tctl"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "pypi"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
 
 [[steps]]
-action = "pipx_install"
-package = "tctl"
-executables = ["tctl"]
+  action = "pipx_install"
+  executables = ["tctl"]
+  package = "tctl"
 
 [verify]
-command = "tctl --version"
+  command = "tctl --version"
+  pattern = ""
