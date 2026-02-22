@@ -62,7 +62,7 @@ graph TD
     1857 --> 1858
     1857 --> 1859
 
-    class 1856 ready
+    class 1856 done
     class 1857 blocked
     class 1858 blocked
     class 1859 blocked

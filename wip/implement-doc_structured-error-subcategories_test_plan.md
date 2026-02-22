@@ -12,7 +12,7 @@ Total scenarios: 14
 **Commands**:
 - `go test ./cmd/tsuku/... -run TestClassifyInstallError -v`
 **Expected**: Test passes. classifyInstallError returns (ExitNetwork, "timeout") for ErrTypeTimeout errors. The second return value is the subcategory string.
-**Status**: pending
+**Status**: passed
 
 ---
 
@@ -22,7 +22,7 @@ Total scenarios: 14
 **Commands**:
 - `go test ./cmd/tsuku/... -run TestClassifyInstallError -v`
 **Expected**: Test passes. classifyInstallError returns "dns_error" for ErrTypeDNS, "tls_error" for ErrTypeTLS, and "connection_error" for ErrTypeConnection. ErrTypeNotFound, ErrTypeNetwork (generic), dependency wrappers, and catch-all cases return empty subcategory.
-**Status**: pending
+**Status**: passed
 
 ---
 
@@ -32,7 +32,7 @@ Total scenarios: 14
 **Commands**:
 - `go test ./cmd/tsuku/... -run TestInstallErrorJSON -v`
 **Expected**: Test passes. When Subcategory is set (e.g., "timeout"), the marshaled JSON contains "subcategory":"timeout". When Subcategory is empty, the key is omitted entirely from JSON output (omitempty behavior).
-**Status**: pending
+**Status**: passed
 
 ---
 
@@ -43,7 +43,7 @@ Total scenarios: 14
 - `go build ./cmd/tsuku`
 - `go vet ./cmd/tsuku/...`
 **Expected**: Build succeeds with no errors. go vet passes. The installError struct literal in handleInstallError uses both return values from classifyInstallError (code and subcategory) and sets the Subcategory field.
-**Status**: pending
+**Status**: passed
 
 ---
 

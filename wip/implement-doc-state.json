@@ -3,19 +3,70 @@
   "design_doc": "docs/designs/DESIGN-structured-error-subcategories.md",
   "branch": "docs/structured-error-subcategories",
   "pr_number": 1854,
-  "integrity_hash": "sha256:658c1d2a160fdae6622b440352404fd8883f26691e1a55b48c1a04d1cfa53f2c",
+  "integrity_hash": "sha256:6f3758840aa21905f152b28bacc09272493442143190e4979cd8b86922a1fff9",
   "issues": [
     {
       "number": 1856,
       "title": "feat(cli): add subcategory to install error JSON output",
-      "status": "pending",
+      "status": "pushed",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [],
-      "commits": [],
-      "agent_type": "",
-      "summary": null,
+      "commits": [
+        "52f6b6fa68e38051e0c66f1b3101037a4cd57713"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          "cmd/tsuku/install.go",
+          "cmd/tsuku/install_test.go"
+        ],
+        "tests_added": 3,
+        "key_decisions": "Split the multi-case network error branch into individual cases per error type to return distinct subcategory strings",
+        "requirements_map": [
+          {
+            "ac": "classifyInstallError returns (int, string)",
+            "status": "implemented"
+          },
+          {
+            "ac": "Subcategory field added to installError struct",
+            "status": "implemented"
+          },
+          {
+            "ac": "handleInstallError populates Subcategory",
+            "status": "implemented"
+          },
+          {
+            "ac": "omitempty behavior correct",
+            "status": "implemented"
+          }
+        ]
+      },
+      "reviewer_results": {
+        "issue": 1856,
+        "reviewers": [
+          {
+            "focus": "pragmatic",
+            "blocking_count": 0,
+            "advisory_count": 1,
+            "detail_file": "wip/research/implement-doc_review_pragmatic_issue1856.md"
+          },
+          {
+            "focus": "architect",
+            "blocking_count": 0,
+            "advisory_count": 1,
+            "detail_file": "wip/research/implement-doc_review_architect_issue1856.md"
+          },
+          {
+            "focus": "maintainer",
+            "blocking_count": 0,
+            "advisory_count": 2,
+            "detail_file": "wip/research/implement-doc_review_maintainer_issue1856.md"
+          }
+        ]
+      },
       "testable_scenarios": [
         "scenario-1",
         "scenario-2",
