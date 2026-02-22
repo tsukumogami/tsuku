@@ -1,0 +1,48 @@
+[metadata]
+name = "oniguruma"
+description = "Regular expressions library"
+homepage = "https://github.com/kkos/oniguruma/"
+type = "library"
+
+[metadata.satisfies]
+homebrew = ["oniguruma"]
+
+# glibc Linux: Homebrew bottle
+[[steps]]
+action = "homebrew"
+formula = "oniguruma"
+when = { os = ["linux"], libc = ["glibc"] }
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = [
+    "lib/libonig.so",
+    "lib/libonig.a",
+    "lib/pkgconfig/oniguruma.pc",
+    "include/oniguruma.h",
+]
+when = { os = ["linux"], libc = ["glibc"] }
+
+# musl Linux: Alpine package
+[[steps]]
+action = "apk_install"
+packages = ["oniguruma-dev"]
+when = { os = ["linux"], libc = ["musl"] }
+
+# macOS: Homebrew
+[[steps]]
+action = "homebrew"
+formula = "oniguruma"
+when = { os = ["darwin"] }
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = [
+    "lib/libonig.dylib",
+    "lib/libonig.a",
+    "lib/pkgconfig/oniguruma.pc",
+    "include/oniguruma.h",
+]
+when = { os = ["darwin"] }

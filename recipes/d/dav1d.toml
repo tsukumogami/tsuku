@@ -1,0 +1,48 @@
+[metadata]
+name = "dav1d"
+description = "AV1 decoder targeted to be small and fast"
+homepage = "https://code.videolan.org/videolan/dav1d"
+type = "library"
+
+[metadata.satisfies]
+homebrew = ["dav1d"]
+
+# glibc Linux: Homebrew bottle
+[[steps]]
+action = "homebrew"
+formula = "dav1d"
+when = { os = ["linux"], libc = ["glibc"] }
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = [
+    "lib/libdav1d.so",
+    "lib/libdav1d.a",
+    "lib/pkgconfig/dav1d.pc",
+    "include/dav1d/dav1d.h",
+]
+when = { os = ["linux"], libc = ["glibc"] }
+
+# musl Linux: Alpine package
+[[steps]]
+action = "apk_install"
+packages = ["dav1d-dev"]
+when = { os = ["linux"], libc = ["musl"] }
+
+# macOS: Homebrew
+[[steps]]
+action = "homebrew"
+formula = "dav1d"
+when = { os = ["darwin"] }
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = [
+    "lib/libdav1d.dylib",
+    "lib/libdav1d.a",
+    "lib/pkgconfig/dav1d.pc",
+    "include/dav1d/dav1d.h",
+]
+when = { os = ["darwin"] }

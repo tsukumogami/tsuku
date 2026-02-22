@@ -1,0 +1,49 @@
+[metadata]
+name = "libgit2"
+description = "C library of Git core methods that is re-entrant and linkable"
+homepage = "https://libgit2.org/"
+type = "library"
+dependencies = ["libssh2"]
+
+[metadata.satisfies]
+homebrew = ["libgit2"]
+
+# glibc Linux: Homebrew bottle
+[[steps]]
+action = "homebrew"
+formula = "libgit2"
+when = { os = ["linux"], libc = ["glibc"] }
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = [
+    "lib/libgit2.so",
+    "lib/libgit2.a",
+    "lib/pkgconfig/libgit2.pc",
+    "include/git2.h",
+]
+when = { os = ["linux"], libc = ["glibc"] }
+
+# musl Linux: Alpine package
+[[steps]]
+action = "apk_install"
+packages = ["libgit2-dev"]
+when = { os = ["linux"], libc = ["musl"] }
+
+# macOS: Homebrew
+[[steps]]
+action = "homebrew"
+formula = "libgit2"
+when = { os = ["darwin"] }
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = [
+    "lib/libgit2.dylib",
+    "lib/libgit2.a",
+    "lib/pkgconfig/libgit2.pc",
+    "include/git2.h",
+]
+when = { os = ["darwin"] }

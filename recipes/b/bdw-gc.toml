@@ -1,0 +1,52 @@
+[metadata]
+name = "bdw-gc"
+description = "Boehm-Demers-Weiser garbage collector for C and C++"
+homepage = "https://www.hboehm.info/gc/"
+type = "library"
+
+[metadata.satisfies]
+homebrew = ["bdw-gc"]
+
+# glibc Linux: Homebrew bottle
+[[steps]]
+action = "homebrew"
+formula = "bdw-gc"
+when = { os = ["linux"], libc = ["glibc"] }
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = [
+    "lib/libgc.so",
+    "lib/libgc.a",
+    "lib/libgccpp.so",
+    "lib/libgccpp.a",
+    "lib/pkgconfig/bdw-gc.pc",
+    "include/gc/gc.h",
+]
+when = { os = ["linux"], libc = ["glibc"] }
+
+# musl Linux: Alpine package
+[[steps]]
+action = "apk_install"
+packages = ["gc-dev"]
+when = { os = ["linux"], libc = ["musl"] }
+
+# macOS: Homebrew
+[[steps]]
+action = "homebrew"
+formula = "bdw-gc"
+when = { os = ["darwin"] }
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = [
+    "lib/libgc.dylib",
+    "lib/libgc.a",
+    "lib/libgccpp.dylib",
+    "lib/libgccpp.a",
+    "lib/pkgconfig/bdw-gc.pc",
+    "include/gc/gc.h",
+]
+when = { os = ["darwin"] }

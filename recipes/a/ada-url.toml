@@ -1,0 +1,48 @@
+[metadata]
+name = "ada-url"
+description = "WHATWG-compliant and fast URL parser written in modern C++"
+homepage = "https://github.com/ada-url/ada"
+type = "library"
+
+[metadata.satisfies]
+homebrew = ["ada-url"]
+
+# glibc Linux: Homebrew bottle
+[[steps]]
+action = "homebrew"
+formula = "ada-url"
+when = { os = ["linux"], libc = ["glibc"] }
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = [
+    "lib/libada.so",
+    "lib/libada.a",
+    "lib/pkgconfig/ada.pc",
+    "include/ada.h",
+]
+when = { os = ["linux"], libc = ["glibc"] }
+
+# musl Linux: Alpine package
+[[steps]]
+action = "apk_install"
+packages = ["ada-url-dev"]
+when = { os = ["linux"], libc = ["musl"] }
+
+# macOS: Homebrew
+[[steps]]
+action = "homebrew"
+formula = "ada-url"
+when = { os = ["darwin"] }
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = [
+    "lib/libada.dylib",
+    "lib/libada.a",
+    "lib/pkgconfig/ada.pc",
+    "include/ada.h",
+]
+when = { os = ["darwin"] }
