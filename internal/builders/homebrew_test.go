@@ -3447,6 +3447,478 @@ func safeWhenLibc(w *recipe.WhenClause) []string {
 	return w.Libc
 }
 
+// --- End-to-end pipeline validation tests (scenarios 12, 13, 14) ---
+// These tests exercise the full generateDeterministicRecipe -> WriteRecipe
+// path using mock GHCR servers with realistic bottle contents, validating
+// the generated TOML matches expected library recipe structure.
+
+// TestEndToEnd_LibraryRecipeGeneration_BdwGC validates the full pipeline
+// for bdw-gc, a C garbage collector that ships only library files.
+// Corresponds to scenario-12 in the test plan.
+func TestEndToEnd_LibraryRecipeGeneration_BdwGC(t *testing.T) {
+	// Build realistic Linux bottle entries for bdw-gc
+	linuxEntries := []struct {
+		name     string
+		body     string
+		typeflag byte
+	}{
+		{"bdw-gc/8.2.4/lib/libgc.so", "ELF", tar.TypeSymlink},
+		{"bdw-gc/8.2.4/lib/libgc.so.1", "ELF", tar.TypeSymlink},
+		{"bdw-gc/8.2.4/lib/libgc.so.1.5.0", "ELF binary", tar.TypeReg},
+		{"bdw-gc/8.2.4/lib/libgccpp.so", "ELF", tar.TypeSymlink},
+		{"bdw-gc/8.2.4/lib/libgccpp.so.1", "ELF", tar.TypeSymlink},
+		{"bdw-gc/8.2.4/lib/libgccpp.so.1.5.0", "ELF binary", tar.TypeReg},
+		{"bdw-gc/8.2.4/lib/libgc.a", "archive", tar.TypeReg},
+		{"bdw-gc/8.2.4/lib/libgccpp.a", "archive", tar.TypeReg},
+		{"bdw-gc/8.2.4/lib/pkgconfig/bdw-gc.pc", "pkg-config", tar.TypeReg},
+		{"bdw-gc/8.2.4/include/gc.h", "header", tar.TypeReg},
+		{"bdw-gc/8.2.4/include/gc/gc.h", "header", tar.TypeReg},
+		{"bdw-gc/8.2.4/include/gc/gc_allocator.h", "header", tar.TypeReg},
+	}
+
+	// Build realistic macOS bottle entries for bdw-gc
+	macEntries := []struct {
+		name     string
+		body     string
+		typeflag byte
+	}{
+		{"bdw-gc/8.2.4/lib/libgc.dylib", "Mach-O", tar.TypeSymlink},
+		{"bdw-gc/8.2.4/lib/libgc.1.dylib", "Mach-O binary", tar.TypeReg},
+		{"bdw-gc/8.2.4/lib/libgccpp.dylib", "Mach-O", tar.TypeSymlink},
+		{"bdw-gc/8.2.4/lib/libgccpp.1.dylib", "Mach-O binary", tar.TypeReg},
+		{"bdw-gc/8.2.4/lib/libgc.a", "archive", tar.TypeReg},
+		{"bdw-gc/8.2.4/lib/libgccpp.a", "archive", tar.TypeReg},
+		{"bdw-gc/8.2.4/lib/pkgconfig/bdw-gc.pc", "pkg-config", tar.TypeReg},
+		{"bdw-gc/8.2.4/include/gc.h", "header", tar.TypeReg},
+		{"bdw-gc/8.2.4/include/gc/gc.h", "header", tar.TypeReg},
+		{"bdw-gc/8.2.4/include/gc/gc_allocator.h", "header", tar.TypeReg},
+	}
+
+	linuxBlob := createBottleTarballBytes(t, linuxEntries)
+	macBlob := createBottleTarballBytes(t, macEntries)
+
+	server, client := newMockGHCRBottleServer(t, "bdw-gc", "8.2.4", map[string][]byte{
+		"x86_64_linux": linuxBlob,
+		"arm64_sonoma": macBlob,
+	})
+	defer server.Close()
+
+	b := &HomebrewBuilder{httpClient: client}
+	genCtx := &homebrewGenContext{
+		formula: "bdw-gc",
+		formulaInfo: &homebrewFormulaInfo{
+			Name:         "bdw-gc",
+			Description:  "Garbage collector for C and C++",
+			Homepage:     "https://www.hboehm.info/gc/",
+			Dependencies: []string{"libatomic_ops"},
+		},
+	}
+	genCtx.formulaInfo.Versions.Stable = "8.2.4"
+
+	ctx := context.Background()
+	r, err := b.generateDeterministicRecipe(ctx, "bdw-gc", genCtx)
+	if err != nil {
+		t.Fatalf("generateDeterministicRecipe() error = %v", err)
+	}
+
+	// Validate recipe struct fields
+	if r.Metadata.Type != recipe.RecipeTypeLibrary {
+		t.Errorf("Metadata.Type = %q, want %q", r.Metadata.Type, recipe.RecipeTypeLibrary)
+	}
+	if r.Metadata.Name != "bdw-gc" {
+		t.Errorf("Metadata.Name = %q, want %q", r.Metadata.Name, "bdw-gc")
+	}
+	if r.Verify != nil {
+		t.Errorf("Verify should be nil for library recipes, got %+v", r.Verify)
+	}
+	if r.Version.Source != "homebrew" {
+		t.Errorf("Version.Source = %q, want %q", r.Version.Source, "homebrew")
+	}
+	if len(r.Metadata.RuntimeDependencies) != 1 || r.Metadata.RuntimeDependencies[0] != "libatomic_ops" {
+		t.Errorf("RuntimeDependencies = %v, want [libatomic_ops]", r.Metadata.RuntimeDependencies)
+	}
+
+	// Expect 4 steps (2 per platform) with when clauses
+	if len(r.Steps) != 4 {
+		t.Fatalf("len(Steps) = %d, want 4", len(r.Steps))
+	}
+
+	// Validate step structure: paired homebrew + install_binaries per platform
+	for base := 0; base < 4; base += 2 {
+		if r.Steps[base].Action != "homebrew" {
+			t.Errorf("Steps[%d].Action = %q, want %q", base, r.Steps[base].Action, "homebrew")
+		}
+		if r.Steps[base+1].Action != "install_binaries" {
+			t.Errorf("Steps[%d].Action = %q, want %q", base+1, r.Steps[base+1].Action, "install_binaries")
+		}
+
+		// install_mode = "directory"
+		mode, ok := r.Steps[base+1].Params["install_mode"].(string)
+		if !ok || mode != "directory" {
+			t.Errorf("Steps[%d].Params[install_mode] = %v, want %q", base+1, r.Steps[base+1].Params["install_mode"], "directory")
+		}
+
+		// Uses outputs (not binaries)
+		if _, exists := r.Steps[base+1].Params["binaries"]; exists {
+			t.Errorf("Steps[%d] should not have deprecated 'binaries' key", base+1)
+		}
+		outputs, ok := r.Steps[base+1].Params["outputs"].([]string)
+		if !ok || len(outputs) == 0 {
+			t.Errorf("Steps[%d].Params[outputs] should be non-empty []string", base+1)
+		}
+
+		// When clause present
+		if r.Steps[base].When == nil {
+			t.Errorf("Steps[%d].When should not be nil for multi-platform recipe", base)
+		}
+		if r.Steps[base+1].When == nil {
+			t.Errorf("Steps[%d].When should not be nil for multi-platform recipe", base+1)
+		}
+	}
+
+	// Validate platform ordering and content: Linux first, macOS second
+	if r.Steps[0].When.OS[0] != "linux" {
+		t.Errorf("Steps[0].When.OS = %v, want [linux]", r.Steps[0].When.OS)
+	}
+	if len(r.Steps[0].When.Libc) != 1 || r.Steps[0].When.Libc[0] != "glibc" {
+		t.Errorf("Steps[0].When.Libc = %v, want [glibc]", r.Steps[0].When.Libc)
+	}
+	if r.Steps[2].When.OS[0] != "darwin" {
+		t.Errorf("Steps[2].When.OS = %v, want [darwin]", r.Steps[2].When.OS)
+	}
+	if len(r.Steps[2].When.Libc) != 0 {
+		t.Errorf("Steps[2].When.Libc = %v, want empty for macOS", r.Steps[2].When.Libc)
+	}
+
+	// Validate Linux outputs contain .so and .a files, headers
+	linuxOutputs, _ := r.Steps[1].Params["outputs"].([]string)
+	hasSO, hasA, hasPC, hasHeader := false, false, false, false
+	for _, o := range linuxOutputs {
+		if strings.HasSuffix(o, ".so") || strings.Contains(o, ".so.") {
+			hasSO = true
+		}
+		if strings.HasSuffix(o, ".a") {
+			hasA = true
+		}
+		if strings.HasSuffix(o, ".pc") {
+			hasPC = true
+		}
+		if strings.HasPrefix(o, "include/") {
+			hasHeader = true
+		}
+	}
+	if !hasSO {
+		t.Errorf("Linux outputs missing .so files: %v", linuxOutputs)
+	}
+	if !hasA {
+		t.Errorf("Linux outputs missing .a files: %v", linuxOutputs)
+	}
+	if !hasPC {
+		t.Errorf("Linux outputs missing .pc files: %v", linuxOutputs)
+	}
+	if !hasHeader {
+		t.Errorf("Linux outputs missing include/ headers: %v", linuxOutputs)
+	}
+
+	// Validate macOS outputs contain .dylib and .a files, headers
+	macOutputs, _ := r.Steps[3].Params["outputs"].([]string)
+	hasDylib, hasA, hasPC, hasHeader := false, false, false, false
+	for _, o := range macOutputs {
+		if strings.HasSuffix(o, ".dylib") {
+			hasDylib = true
+		}
+		if strings.HasSuffix(o, ".a") {
+			hasA = true
+		}
+		if strings.HasSuffix(o, ".pc") {
+			hasPC = true
+		}
+		if strings.HasPrefix(o, "include/") {
+			hasHeader = true
+		}
+	}
+	if !hasDylib {
+		t.Errorf("macOS outputs missing .dylib files: %v", macOutputs)
+	}
+	if !hasA {
+		t.Errorf("macOS outputs missing .a files: %v", macOutputs)
+	}
+	if !hasPC {
+		t.Errorf("macOS outputs missing .pc files: %v", macOutputs)
+	}
+	if !hasHeader {
+		t.Errorf("macOS outputs missing include/ headers: %v", macOutputs)
+	}
+
+	// Serialize to TOML and validate the output file structure
+	tmpDir := t.TempDir()
+	tomlPath := tmpDir + "/bdw-gc.toml"
+	if err := recipe.WriteRecipe(r, tomlPath); err != nil {
+		t.Fatalf("WriteRecipe() error = %v", err)
+	}
+
+	tomlBytes, err := os.ReadFile(tomlPath)
+	if err != nil {
+		t.Fatalf("failed to read generated TOML: %v", err)
+	}
+	tomlStr := string(tomlBytes)
+
+	// Validate TOML structure matches existing library recipes like gmp.toml
+	if !strings.Contains(tomlStr, `type = "library"`) {
+		t.Error("generated TOML missing type = \"library\"")
+	}
+	if !strings.Contains(tomlStr, `install_mode = "directory"`) {
+		t.Error("generated TOML missing install_mode = \"directory\"")
+	}
+	if strings.Contains(tomlStr, "binaries =") {
+		t.Error("generated TOML should not contain deprecated 'binaries' key")
+	}
+	if !strings.Contains(tomlStr, "outputs =") {
+		t.Error("generated TOML missing 'outputs' key")
+	}
+	if strings.Contains(tomlStr, "[verify]") {
+		t.Error("generated TOML should not contain [verify] section")
+	}
+	if !strings.Contains(tomlStr, "when") {
+		t.Error("generated TOML missing platform-conditional 'when' clauses")
+	}
+}
+
+// TestEndToEnd_LibraryRecipeGeneration_TreeSitter validates the full pipeline
+// for tree-sitter, a parser generator that ships only library files.
+// Corresponds to scenario-13 in the test plan.
+func TestEndToEnd_LibraryRecipeGeneration_TreeSitter(t *testing.T) {
+	// Build realistic Linux bottle entries for tree-sitter
+	linuxEntries := []struct {
+		name     string
+		body     string
+		typeflag byte
+	}{
+		{"tree-sitter/0.22.6/lib/libtree-sitter.so", "ELF", tar.TypeSymlink},
+		{"tree-sitter/0.22.6/lib/libtree-sitter.so.0", "ELF", tar.TypeSymlink},
+		{"tree-sitter/0.22.6/lib/libtree-sitter.so.0.22.6", "ELF binary", tar.TypeReg},
+		{"tree-sitter/0.22.6/lib/libtree-sitter.a", "archive", tar.TypeReg},
+		{"tree-sitter/0.22.6/lib/pkgconfig/tree-sitter.pc", "pkg-config", tar.TypeReg},
+		{"tree-sitter/0.22.6/include/tree_sitter/api.h", "header", tar.TypeReg},
+		{"tree-sitter/0.22.6/include/tree_sitter/parser.h", "header", tar.TypeReg},
+	}
+
+	// Build realistic macOS bottle entries for tree-sitter
+	macEntries := []struct {
+		name     string
+		body     string
+		typeflag byte
+	}{
+		{"tree-sitter/0.22.6/lib/libtree-sitter.dylib", "Mach-O", tar.TypeSymlink},
+		{"tree-sitter/0.22.6/lib/libtree-sitter.0.dylib", "Mach-O binary", tar.TypeReg},
+		{"tree-sitter/0.22.6/lib/libtree-sitter.a", "archive", tar.TypeReg},
+		{"tree-sitter/0.22.6/lib/pkgconfig/tree-sitter.pc", "pkg-config", tar.TypeReg},
+		{"tree-sitter/0.22.6/include/tree_sitter/api.h", "header", tar.TypeReg},
+		{"tree-sitter/0.22.6/include/tree_sitter/parser.h", "header", tar.TypeReg},
+	}
+
+	linuxBlob := createBottleTarballBytes(t, linuxEntries)
+	macBlob := createBottleTarballBytes(t, macEntries)
+
+	server, client := newMockGHCRBottleServer(t, "tree-sitter", "0.22.6", map[string][]byte{
+		"x86_64_linux": linuxBlob,
+		"arm64_sonoma": macBlob,
+	})
+	defer server.Close()
+
+	b := &HomebrewBuilder{httpClient: client}
+	genCtx := &homebrewGenContext{
+		formula: "tree-sitter",
+		formulaInfo: &homebrewFormulaInfo{
+			Name:        "tree-sitter",
+			Description: "An incremental parsing system for programming tools",
+			Homepage:    "https://tree-sitter.github.io/tree-sitter/",
+		},
+	}
+	genCtx.formulaInfo.Versions.Stable = "0.22.6"
+
+	ctx := context.Background()
+	r, err := b.generateDeterministicRecipe(ctx, "tree-sitter", genCtx)
+	if err != nil {
+		t.Fatalf("generateDeterministicRecipe() error = %v", err)
+	}
+
+	// Validate recipe struct
+	if r.Metadata.Type != recipe.RecipeTypeLibrary {
+		t.Errorf("Metadata.Type = %q, want %q", r.Metadata.Type, recipe.RecipeTypeLibrary)
+	}
+	if r.Metadata.Name != "tree-sitter" {
+		t.Errorf("Metadata.Name = %q, want %q", r.Metadata.Name, "tree-sitter")
+	}
+	if r.Verify != nil {
+		t.Errorf("Verify should be nil for library recipes, got %+v", r.Verify)
+	}
+
+	// 4 steps with when clauses
+	if len(r.Steps) != 4 {
+		t.Fatalf("len(Steps) = %d, want 4", len(r.Steps))
+	}
+
+	// Check all install_binaries steps use outputs and directory mode
+	for i := 1; i < 4; i += 2 {
+		if r.Steps[i].Action != "install_binaries" {
+			t.Errorf("Steps[%d].Action = %q, want %q", i, r.Steps[i].Action, "install_binaries")
+		}
+		mode, ok := r.Steps[i].Params["install_mode"].(string)
+		if !ok || mode != "directory" {
+			t.Errorf("Steps[%d].Params[install_mode] = %v, want %q", i, r.Steps[i].Params["install_mode"], "directory")
+		}
+		if _, exists := r.Steps[i].Params["binaries"]; exists {
+			t.Errorf("Steps[%d] should not have deprecated 'binaries' key", i)
+		}
+		outputs, ok := r.Steps[i].Params["outputs"].([]string)
+		if !ok || len(outputs) == 0 {
+			t.Fatalf("Steps[%d].Params[outputs] should be non-empty []string", i)
+		}
+
+		// Verify tree-sitter-specific files appear
+		foundTreeSitter := false
+		for _, o := range outputs {
+			if strings.Contains(o, "libtree-sitter") {
+				foundTreeSitter = true
+				break
+			}
+		}
+		if !foundTreeSitter {
+			t.Errorf("Steps[%d] outputs missing libtree-sitter files: %v", i, outputs)
+		}
+
+		// Verify headers are included
+		foundHeader := false
+		for _, o := range outputs {
+			if strings.Contains(o, "tree_sitter/api.h") {
+				foundHeader = true
+				break
+			}
+		}
+		if !foundHeader {
+			t.Errorf("Steps[%d] outputs missing tree_sitter headers: %v", i, outputs)
+		}
+	}
+
+	// Serialize and validate TOML
+	tmpDir := t.TempDir()
+	tomlPath := tmpDir + "/tree-sitter.toml"
+	if err := recipe.WriteRecipe(r, tomlPath); err != nil {
+		t.Fatalf("WriteRecipe() error = %v", err)
+	}
+
+	tomlBytes, err := os.ReadFile(tomlPath)
+	if err != nil {
+		t.Fatalf("failed to read generated TOML: %v", err)
+	}
+	tomlStr := string(tomlBytes)
+
+	if !strings.Contains(tomlStr, `type = "library"`) {
+		t.Error("generated TOML missing type = \"library\"")
+	}
+	if !strings.Contains(tomlStr, `install_mode = "directory"`) {
+		t.Error("generated TOML missing install_mode = \"directory\"")
+	}
+	if strings.Contains(tomlStr, "[verify]") {
+		t.Error("generated TOML should not contain [verify] section")
+	}
+	if !strings.Contains(tomlStr, "outputs =") {
+		t.Error("generated TOML missing 'outputs' key")
+	}
+	if !strings.Contains(tomlStr, "libtree-sitter") {
+		t.Error("generated TOML missing tree-sitter library files in outputs")
+	}
+	if !strings.Contains(tomlStr, "tree_sitter/api.h") {
+		t.Error("generated TOML missing tree-sitter header files in outputs")
+	}
+}
+
+// TestEndToEnd_NonLibraryPackage_StillFailsComplexArchive validates that
+// non-library packages (no bin/ and no recognizable lib/ files) still fail
+// with the complex_archive category and are not misclassified as libraries.
+// Corresponds to scenario-14 in the test plan.
+func TestEndToEnd_NonLibraryPackage_StillFailsComplexArchive(t *testing.T) {
+	// Simulate a Python-like package: has files but not in bin/ or lib/ with
+	// library extensions. This represents packages like python@3.12 that have
+	// complex layouts without standard library files.
+	entries := []struct {
+		name     string
+		body     string
+		typeflag byte
+	}{
+		{"python@3.12/3.12.0/libexec/bin/python3", "#!/bin/python", tar.TypeReg},
+		{"python@3.12/3.12.0/lib/python3.12/site-packages/__init__.py", "# init", tar.TypeReg},
+		{"python@3.12/3.12.0/lib/python3.12/os.py", "# os module", tar.TypeReg},
+		{"python@3.12/3.12.0/share/man/man1/python3.1", "man page", tar.TypeReg},
+	}
+
+	blob := createBottleTarballBytes(t, entries)
+
+	// Only need current platform for the initial inspection
+	server, client := newMockGHCRBottleServer(t, "python@3.12", "3.12.0", map[string][]byte{
+		"x86_64_linux": blob,
+		"arm64_sonoma": blob,
+	})
+	defer server.Close()
+
+	b := &HomebrewBuilder{httpClient: client}
+	genCtx := &homebrewGenContext{
+		formula: "python@3.12",
+		formulaInfo: &homebrewFormulaInfo{
+			Name:        "python@3.12",
+			Description: "Interpreted, interactive, object-oriented programming language",
+			Homepage:    "https://www.python.org/",
+		},
+	}
+	genCtx.formulaInfo.Versions.Stable = "3.12.0"
+
+	ctx := context.Background()
+	_, err := b.generateDeterministicRecipe(ctx, "python@3.12", genCtx)
+	if err == nil {
+		t.Fatal("expected error for non-library package, got nil")
+	}
+
+	// Verify the error message matches the expected "no binaries or library files" path
+	if !strings.Contains(err.Error(), "no binaries or library files found in bottle") {
+		t.Errorf("error = %q, want it to contain 'no binaries or library files found in bottle'", err.Error())
+	}
+
+	// Verify classification through classifyDeterministicFailure
+	session := &HomebrewSession{formula: "python@3.12"}
+	classified := session.classifyDeterministicFailure(err)
+
+	if classified.Category != FailureCategoryComplexArchive {
+		t.Errorf("Category = %q, want %q", classified.Category, FailureCategoryComplexArchive)
+	}
+
+	// Must NOT contain [library_only] tag -- this is not a library
+	if strings.Contains(classified.Message, "[library_only]") {
+		t.Error("non-library package should not be tagged with [library_only]")
+	}
+}
+
+// TestEndToEnd_LibraryOnly_SubcategoryOnGenerationFailure validates that
+// when library files are detected but recipe generation fails for other
+// reasons, the failure is tagged with [library_only].
+func TestEndToEnd_LibraryOnly_SubcategoryOnGenerationFailure(t *testing.T) {
+	// The error path: "library recipe generation failed: ..." triggers
+	// the library_only subcategory in classifyDeterministicFailure.
+	err := fmt.Errorf("library recipe generation failed: %w",
+		fmt.Errorf("no bottle for any target platform"))
+
+	session := &HomebrewSession{formula: "some-library"}
+	classified := session.classifyDeterministicFailure(err)
+
+	if classified.Category != FailureCategoryComplexArchive {
+		t.Errorf("Category = %q, want %q", classified.Category, FailureCategoryComplexArchive)
+	}
+
+	if !strings.Contains(classified.Message, "[library_only]") {
+		t.Errorf("Message should contain [library_only] tag, got %q", classified.Message)
+	}
+}
+
 func TestPlatformTagToOSLibc(t *testing.T) {
 	tests := []struct {
 		tag      string
