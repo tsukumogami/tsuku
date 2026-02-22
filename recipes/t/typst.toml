@@ -1,0 +1,31 @@
+[metadata]
+  name = "typst"
+  description = "A new markup-based typesetting system that is powerful and easy to learn."
+  homepage = "https://typst.app"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "crates_io"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "cargo_install"
+  crate = "typst"
+  executables = ["typst"]
+
+[verify]
+  command = "typst --version"
+  pattern = ""

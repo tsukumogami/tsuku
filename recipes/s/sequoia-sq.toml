@@ -1,0 +1,31 @@
+[metadata]
+  name = "sequoia-sq"
+  description = "Command-line frontends for Sequoia"
+  homepage = "https://sequoia-pgp.org/"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "crates_io"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "cargo_install"
+  crate = "sequoia-sq"
+  executables = ["sequoia-sq"]
+
+[verify]
+  command = "sequoia-sq --version"
+  pattern = ""

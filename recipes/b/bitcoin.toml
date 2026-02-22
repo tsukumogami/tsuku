@@ -1,0 +1,31 @@
+[metadata]
+  name = "bitcoin"
+  description = "General purpose library for using and interoperating with Bitcoin."
+  homepage = "https://github.com/rust-bitcoin/rust-bitcoin/"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "crates_io"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "cargo_install"
+  crate = "bitcoin"
+  executables = ["bitcoin"]
+
+[verify]
+  command = "bitcoin --version"
+  pattern = ""

@@ -1,0 +1,31 @@
+[metadata]
+  name = "cargo-outdated"
+  description = "Cargo subcommand for displaying when dependencies are out of date"
+  homepage = "https://github.com/kbknapp/cargo-outdated.git"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "crates_io"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "cargo_install"
+  crate = "cargo-outdated"
+  executables = ["cargo-outdated"]
+
+[verify]
+  command = "cargo-outdated --version"
+  pattern = ""

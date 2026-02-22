@@ -1,0 +1,31 @@
+[metadata]
+  name = "cargo-update"
+  description = "A cargo subcommand for checking and applying updates to installed executables"
+  homepage = "https://github.com/nabijaczleweli/cargo-update"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "crates_io"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "cargo_install"
+  crate = "cargo-update"
+  executables = ["cargo-install-update", "cargo-install-update-config"]
+
+[verify]
+  command = "cargo-install-update --version"
+  pattern = ""

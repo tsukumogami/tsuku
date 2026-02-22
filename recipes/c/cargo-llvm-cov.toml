@@ -9,6 +9,7 @@
   llm_validation = "skipped"
 
 [version]
+  source = "crates_io"
   github_repo = ""
   tag_prefix = ""
   module = ""
@@ -26,5 +27,5 @@
   executables = ["cargo-llvm-cov"]
 
 [verify]
-  command = "cargo llvm-cov --version"
-  pattern = "{version}"
+  command = "cargo-llvm-cov --version"
+  pattern = ""

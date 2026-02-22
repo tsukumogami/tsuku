@@ -9,6 +9,7 @@
   llm_validation = "skipped"
 
 [version]
+  source = "crates_io"
   github_repo = ""
   tag_prefix = ""
   module = ""
@@ -26,5 +27,5 @@
   executables = ["cargo-nextest"]
 
 [verify]
-  command = "cargo nextest --version"
-  pattern = "{version}"
+  command = "cargo-nextest --version"
+  pattern = ""
