@@ -1,0 +1,8 @@
+{
+  "issue": 1849,
+  "reviews": [
+    {"focus": "pragmatic", "blocking_count": 0, "advisory_count": 0, "summary": "Clean removal. No dead code left. Minimal, correct changes."},
+    {"focus": "architect", "blocking_count": 0, "advisory_count": 0, "summary": "Correct layering. Shell script replaced by Go binary. git add scope properly narrowed."},
+    {"focus": "maintainer", "blocking_count": 0, "advisory_count": 1, "summary": "Clear changes. One advisory: orchestrator.go comment update pre-empts #1851 scope."}
+  ]
+}
