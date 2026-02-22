@@ -1,0 +1,453 @@
+# Test Recipe - Cross-platform validation for individual recipes.
+#
+# This workflow tests a specific recipe across all supported platforms.
+# It does NOT skip library recipes -- testing library recipes across
+# platforms is its primary purpose.
+#
+# Platform failures use continue-on-error at the job level so all
+# platforms complete. Failures indicate which `when` filters to add
+# to the recipe, not required fixes before merge.
+#
+# Triggers:
+#   - workflow_dispatch: manually test a recipe by name
+#   - pull_request: auto-detect changed recipes in the PR
+
+name: Test Recipe
+
+on:
+  workflow_dispatch:
+    inputs:
+      recipe:
+        description: "Recipe name (e.g., gmp, libgit2)"
+        required: true
+        type: string
+  pull_request:
+    paths:
+      - "recipes/**/*.toml"
+      - ".github/workflows/test-recipe.yml"
+
+concurrency:
+  group: test-recipe-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  # Build tsuku for all target platforms and detect which recipe to test.
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      recipes: ${{ steps.detect.outputs.recipes }}
+      has_recipes: ${{ steps.detect.outputs.has_recipes }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        with:
+          fetch-depth: 0  # needed for git diff on PRs
+
+      - uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5  # v6.2.0
+        with:
+          go-version-file: go.mod
+
+      - name: Cross-compile tsuku
+        run: |
+          CGO_ENABLED=0 GOOS=linux  GOARCH=amd64 go build -o tsuku-linux-amd64  ./cmd/tsuku
+          CGO_ENABLED=0 GOOS=linux  GOARCH=arm64 go build -o tsuku-linux-arm64  ./cmd/tsuku
+          CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -o tsuku-darwin-arm64 ./cmd/tsuku
+          CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -o tsuku-darwin-amd64 ./cmd/tsuku
+
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
+        with:
+          name: tsuku-binaries
+          path: |
+            tsuku-linux-amd64
+            tsuku-linux-arm64
+            tsuku-darwin-arm64
+            tsuku-darwin-amd64
+          retention-days: 1
+
+      - name: Detect recipe
+        id: detect
+        run: |
+          RECIPES="[]"
+
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            # Manual trigger: resolve recipe name to path
+            NAME="${{ inputs.recipe }}"
+            FIRST="${NAME:0:1}"
+            PATH_CANDIDATE="recipes/$FIRST/$NAME.toml"
+            if [ -f "$PATH_CANDIDATE" ]; then
+              RECIPES=$(jq -n --arg name "$NAME" --arg path "$PATH_CANDIDATE" '[{name: $name, path: $path}]')
+            else
+              echo "::error::Recipe not found: $PATH_CANDIDATE"
+              exit 1
+            fi
+          else
+            # PR trigger: detect changed recipe files
+            CHANGED=$(git diff --name-only --diff-filter=d origin/main...HEAD -- 'recipes/**/*.toml' || true)
+            if [ -z "$CHANGED" ]; then
+              echo "No recipe files changed in this PR."
+              echo "recipes=[]" >> "$GITHUB_OUTPUT"
+              echo "has_recipes=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            # Build JSON array of changed recipes
+            RECIPES="[]"
+            for path in $CHANGED; do
+              name=$(basename "$path" .toml)
+              RECIPES=$(echo "$RECIPES" | jq --arg name "$name" --arg path "$path" '. + [{name: $name, path: $path}]')
+            done
+          fi
+
+          echo "recipes=$(echo "$RECIPES" | jq -c .)" >> "$GITHUB_OUTPUT"
+          COUNT=$(echo "$RECIPES" | jq 'length')
+          if [ "$COUNT" -gt 0 ]; then
+            echo "has_recipes=true" >> "$GITHUB_OUTPUT"
+            echo "Found $COUNT recipe(s) to test:"
+            echo "$RECIPES" | jq -r '.[].name'
+          else
+            echo "has_recipes=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  # Linux x86_64: test in Docker containers for all five families.
+  test-linux-x86_64:
+    needs: build
+    if: needs.build.outputs.has_recipes == 'true'
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131  # v7.0.0
+        with:
+          name: tsuku-binaries
+
+      - name: Make binary executable
+        run: chmod +x tsuku-linux-amd64
+
+      - name: Test recipes in Linux x86_64 containers
+        env:
+          RECIPES: ${{ needs.build.outputs.recipes }}
+        run: |
+          # Five Linux x86_64 families
+          IMAGES=("debian:bookworm-slim" "fedora:41" "archlinux:base" "opensuse/tumbleweed" "alpine:3.21")
+          FAMILIES=("debian" "rhel" "arch" "suse" "alpine")
+
+          TOTAL=0
+          PASSED=0
+          FAILED=0
+          RESULTS=""
+
+          COUNT=$(echo "$RECIPES" | jq 'length')
+          for i in $(seq 0 $((COUNT - 1))); do
+            recipe_name=$(echo "$RECIPES" | jq -r ".[$i].name")
+            recipe_path=$(echo "$RECIPES" | jq -r ".[$i].path")
+
+            for idx in "${!FAMILIES[@]}"; do
+              family="${FAMILIES[$idx]}"
+              image="${IMAGES[$idx]}"
+              TOTAL=$((TOTAL + 1))
+
+              echo "=== Testing $recipe_name on $family (x86_64) ==="
+
+              docker run --rm \
+                -v "$PWD:/workspace" \
+                -w /workspace \
+                "$image" \
+                sh -c "
+                  case '$family' in
+                    alpine) apk add --no-cache curl bash ca-certificates jq ;;
+                    debian) apt-get update && apt-get install -y --no-install-recommends curl ca-certificates jq ;;
+                    rhel)   dnf install -y --setopt=install_weak_deps=False curl ca-certificates jq ;;
+                    arch)   pacman -Sy --noconfirm curl ca-certificates jq ;;
+                    suse)   zypper -n install curl ca-certificates jq ;;
+                  esac
+                  export TSUKU_HOME='/tmp/tsuku-$recipe_name'
+                  mkdir -p \"\$TSUKU_HOME\"
+                  timeout 300 ./tsuku-linux-amd64 install --force --recipe '$recipe_path'
+                  echo \$? > /workspace/.tsuku-exit-code
+                " 2>&1 || true
+
+              if [ -f .tsuku-exit-code ]; then
+                EXIT_CODE=$(cat .tsuku-exit-code)
+                rm -f .tsuku-exit-code
+              else
+                EXIT_CODE=1
+              fi
+
+              if [ "$EXIT_CODE" = "0" ]; then
+                PASSED=$((PASSED + 1))
+                RESULTS="$RESULTS| $recipe_name | $family | pass |\n"
+                echo "PASS: $recipe_name on $family"
+              else
+                FAILED=$((FAILED + 1))
+                RESULTS="$RESULTS| $recipe_name | $family | **FAIL** (exit $EXIT_CODE) |\n"
+                echo "FAIL: $recipe_name on $family (exit $EXIT_CODE)"
+              fi
+            done
+          done
+
+          # Write job summary
+          {
+            echo "### Linux x86_64 Results"
+            echo ""
+            echo "Passed: $PASSED / $TOTAL"
+            echo ""
+            echo "| Recipe | Family | Status |"
+            echo "|--------|--------|--------|"
+            echo -e "$RESULTS"
+            if [ "$FAILED" -gt 0 ]; then
+              echo ""
+              echo "> Platform failures indicate which \`when\` filters to add to the recipe."
+              echo "> They are not required fixes before merge."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$FAILED" -gt 0 ]; then
+            echo "::warning::$FAILED of $TOTAL tests failed on Linux x86_64"
+            exit 1
+          fi
+
+  # Linux arm64: test in Docker containers for four families (no arch arm64 image).
+  test-linux-arm64:
+    needs: build
+    if: needs.build.outputs.has_recipes == 'true'
+    runs-on: ubuntu-24.04-arm
+    continue-on-error: true
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131  # v7.0.0
+        with:
+          name: tsuku-binaries
+
+      - name: Make binary executable
+        run: chmod +x tsuku-linux-arm64
+
+      - name: Test recipes in Linux arm64 containers
+        env:
+          RECIPES: ${{ needs.build.outputs.recipes }}
+        run: |
+          # Four Linux arm64 families (no arch -- no arm64 image available)
+          IMAGES=("debian:bookworm-slim" "fedora:41" "opensuse/tumbleweed" "alpine:3.21")
+          FAMILIES=("debian" "rhel" "suse" "alpine")
+
+          TOTAL=0
+          PASSED=0
+          FAILED=0
+          RESULTS=""
+
+          COUNT=$(echo "$RECIPES" | jq 'length')
+          for i in $(seq 0 $((COUNT - 1))); do
+            recipe_name=$(echo "$RECIPES" | jq -r ".[$i].name")
+            recipe_path=$(echo "$RECIPES" | jq -r ".[$i].path")
+
+            for idx in "${!FAMILIES[@]}"; do
+              family="${FAMILIES[$idx]}"
+              image="${IMAGES[$idx]}"
+              TOTAL=$((TOTAL + 1))
+
+              echo "=== Testing $recipe_name on $family (arm64) ==="
+
+              docker run --rm \
+                -v "$PWD:/workspace" \
+                -w /workspace \
+                "$image" \
+                sh -c "
+                  case '$family' in
+                    alpine) apk add --no-cache curl bash ca-certificates jq ;;
+                    debian) apt-get update && apt-get install -y --no-install-recommends curl ca-certificates jq ;;
+                    rhel)   dnf install -y --setopt=install_weak_deps=False curl ca-certificates jq ;;
+                    suse)   zypper -n install curl ca-certificates jq ;;
+                  esac
+                  export TSUKU_HOME='/tmp/tsuku-$recipe_name'
+                  mkdir -p \"\$TSUKU_HOME\"
+                  timeout 300 ./tsuku-linux-arm64 install --force --recipe '$recipe_path'
+                  echo \$? > /workspace/.tsuku-exit-code
+                " 2>&1 || true
+
+              if [ -f .tsuku-exit-code ]; then
+                EXIT_CODE=$(cat .tsuku-exit-code)
+                rm -f .tsuku-exit-code
+              else
+                EXIT_CODE=1
+              fi
+
+              if [ "$EXIT_CODE" = "0" ]; then
+                PASSED=$((PASSED + 1))
+                RESULTS="$RESULTS| $recipe_name | $family | pass |\n"
+                echo "PASS: $recipe_name on $family"
+              else
+                FAILED=$((FAILED + 1))
+                RESULTS="$RESULTS| $recipe_name | $family | **FAIL** (exit $EXIT_CODE) |\n"
+                echo "FAIL: $recipe_name on $family (exit $EXIT_CODE)"
+              fi
+            done
+          done
+
+          # Write job summary
+          {
+            echo "### Linux arm64 Results"
+            echo ""
+            echo "Passed: $PASSED / $TOTAL"
+            echo ""
+            echo "| Recipe | Family | Status |"
+            echo "|--------|--------|--------|"
+            echo -e "$RESULTS"
+            if [ "$FAILED" -gt 0 ]; then
+              echo ""
+              echo "> Platform failures indicate which \`when\` filters to add to the recipe."
+              echo "> They are not required fixes before merge."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$FAILED" -gt 0 ]; then
+            echo "::warning::$FAILED of $TOTAL tests failed on Linux arm64"
+            exit 1
+          fi
+
+  # macOS arm64: native runner test.
+  test-darwin-arm64:
+    needs: build
+    if: needs.build.outputs.has_recipes == 'true'
+    runs-on: macos-14
+    continue-on-error: true
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131  # v7.0.0
+        with:
+          name: tsuku-binaries
+
+      - name: Make binary executable
+        run: chmod +x tsuku-darwin-arm64
+
+      - name: Install GNU coreutils for gtimeout
+        run: brew install coreutils
+
+      - name: Test recipes on macOS arm64
+        env:
+          RECIPES: ${{ needs.build.outputs.recipes }}
+        run: |
+          TOTAL=0
+          PASSED=0
+          FAILED=0
+          RESULTS=""
+
+          COUNT=$(echo "$RECIPES" | jq 'length')
+          for i in $(seq 0 $((COUNT - 1))); do
+            recipe_name=$(echo "$RECIPES" | jq -r ".[$i].name")
+            recipe_path=$(echo "$RECIPES" | jq -r ".[$i].path")
+            TOTAL=$((TOTAL + 1))
+
+            echo "=== Testing $recipe_name on macOS arm64 ==="
+
+            export TSUKU_HOME="${{ runner.temp }}/tsuku-$recipe_name"
+            mkdir -p "$TSUKU_HOME"
+
+            if gtimeout 300 ./tsuku-darwin-arm64 install --force --recipe "$recipe_path" 2>&1; then
+              PASSED=$((PASSED + 1))
+              RESULTS="$RESULTS| $recipe_name | darwin-arm64 | pass |\n"
+              echo "PASS: $recipe_name on macOS arm64"
+            else
+              EXIT_CODE=$?
+              FAILED=$((FAILED + 1))
+              RESULTS="$RESULTS| $recipe_name | darwin-arm64 | **FAIL** (exit $EXIT_CODE) |\n"
+              echo "FAIL: $recipe_name on macOS arm64 (exit $EXIT_CODE)"
+            fi
+          done
+
+          # Write job summary
+          {
+            echo "### macOS arm64 Results"
+            echo ""
+            echo "Passed: $PASSED / $TOTAL"
+            echo ""
+            echo "| Recipe | Family | Status |"
+            echo "|--------|--------|--------|"
+            echo -e "$RESULTS"
+            if [ "$FAILED" -gt 0 ]; then
+              echo ""
+              echo "> Platform failures indicate which \`when\` filters to add to the recipe."
+              echo "> They are not required fixes before merge."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$FAILED" -gt 0 ]; then
+            echo "::warning::$FAILED of $TOTAL tests failed on macOS arm64"
+            exit 1
+          fi
+
+  # macOS x86_64: native runner test.
+  test-darwin-x86_64:
+    needs: build
+    if: needs.build.outputs.has_recipes == 'true'
+    runs-on: macos-15-intel
+    continue-on-error: true
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131  # v7.0.0
+        with:
+          name: tsuku-binaries
+
+      - name: Make binary executable
+        run: chmod +x tsuku-darwin-amd64
+
+      - name: Install GNU coreutils for gtimeout
+        run: brew install coreutils
+
+      - name: Test recipes on macOS x86_64
+        env:
+          RECIPES: ${{ needs.build.outputs.recipes }}
+        run: |
+          TOTAL=0
+          PASSED=0
+          FAILED=0
+          RESULTS=""
+
+          COUNT=$(echo "$RECIPES" | jq 'length')
+          for i in $(seq 0 $((COUNT - 1))); do
+            recipe_name=$(echo "$RECIPES" | jq -r ".[$i].name")
+            recipe_path=$(echo "$RECIPES" | jq -r ".[$i].path")
+            TOTAL=$((TOTAL + 1))
+
+            echo "=== Testing $recipe_name on macOS x86_64 ==="
+
+            export TSUKU_HOME="${{ runner.temp }}/tsuku-$recipe_name"
+            mkdir -p "$TSUKU_HOME"
+
+            if gtimeout 300 ./tsuku-darwin-amd64 install --force --recipe "$recipe_path" 2>&1; then
+              PASSED=$((PASSED + 1))
+              RESULTS="$RESULTS| $recipe_name | darwin-x86_64 | pass |\n"
+              echo "PASS: $recipe_name on macOS x86_64"
+            else
+              EXIT_CODE=$?
+              FAILED=$((FAILED + 1))
+              RESULTS="$RESULTS| $recipe_name | darwin-x86_64 | **FAIL** (exit $EXIT_CODE) |\n"
+              echo "FAIL: $recipe_name on macOS x86_64 (exit $EXIT_CODE)"
+            fi
+          done
+
+          # Write job summary
+          {
+            echo "### macOS x86_64 Results"
+            echo ""
+            echo "Passed: $PASSED / $TOTAL"
+            echo ""
+            echo "| Recipe | Family | Status |"
+            echo "|--------|--------|--------|"
+            echo -e "$RESULTS"
+            if [ "$FAILED" -gt 0 ]; then
+              echo ""
+              echo "> Platform failures indicate which \`when\` filters to add to the recipe."
+              echo "> They are not required fixes before merge."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$FAILED" -gt 0 ]; then
+            echo "::warning::$FAILED of $TOTAL tests failed on macOS x86_64"
+            exit 1
+          fi
