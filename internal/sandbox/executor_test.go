@@ -339,7 +339,7 @@ func TestSandbox_NoRuntime(t *testing.T) {
 		Tool:    "test",
 		Version: "1.0.0",
 	}
-	reqs := ComputeSandboxRequirements(plan)
+	reqs := ComputeSandboxRequirements(plan, "")
 
 	// Detect current system target
 	target, err := platform.DetectTarget()

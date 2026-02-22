@@ -73,12 +73,22 @@ type SandboxRequirements struct {
 // via the NetworkValidator interface, and aggregates the results.
 //
 // The function selects appropriate container image and resource limits based on:
-//   - Network requirements: any network-requiring action upgrades to ubuntu image
+//   - Target family: selects family-specific base image when targetFamily is set
+//   - Network requirements: any network-requiring action upgrades resources
 //   - Build complexity: build actions (configure_make, cmake_build, etc.) get more resources
-func ComputeSandboxRequirements(plan *executor.InstallationPlan) *SandboxRequirements {
+//
+// When targetFamily is empty, defaults to Debian-based images for backward compatibility.
+func ComputeSandboxRequirements(plan *executor.InstallationPlan, targetFamily string) *SandboxRequirements {
+	defaultImage := DefaultSandboxImage
+	buildImage := SourceBuildSandboxImage
+	if img, ok := familyToBaseImage[targetFamily]; ok {
+		defaultImage = img
+		buildImage = img
+	}
+
 	reqs := &SandboxRequirements{
 		RequiresNetwork: false,
-		Image:           DefaultSandboxImage,
+		Image:           defaultImage,
 		Resources:       DefaultLimits(),
 	}
 
@@ -106,7 +116,7 @@ func ComputeSandboxRequirements(plan *executor.InstallationPlan) *SandboxRequire
 	// Upgrade image and resources for network-requiring (ecosystem) builds
 	// Network-requiring steps typically involve compilation which needs more resources
 	if reqs.RequiresNetwork {
-		reqs.Image = SourceBuildSandboxImage
+		reqs.Image = buildImage
 		reqs.Resources = SourceBuildLimits()
 	}
 
@@ -116,7 +126,7 @@ func ComputeSandboxRequirements(plan *executor.InstallationPlan) *SandboxRequire
 	// the sandbox needs apt-get to install build-essential.
 	if hasBuildActions(plan) {
 		reqs.RequiresNetwork = true
-		reqs.Image = SourceBuildSandboxImage
+		reqs.Image = buildImage
 		reqs.Resources = SourceBuildLimits()
 	}
 
