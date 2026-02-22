@@ -4,7 +4,8 @@ Feature: Create
   Background:
     Given a clean tsuku environment
 
-Scenario: Create recipe to default location
+@critical
+  Scenario: Create recipe to default location
     When I run "tsuku create prettier --from npm --yes --skip-sandbox"
     Then the exit code is 0
     And the output contains "Recipe created:"
@@ -50,7 +51,8 @@ Scenario: Create recipe with --output flag
     Then the exit code is 8
     And the error output contains "requires Cargo"
 
-Scenario: Create recipe from pypi
+@critical
+  Scenario: Create recipe from pypi
     When I run "tsuku create ruff --from pypi --yes --skip-sandbox"
     Then the exit code is 0
     And the output contains "Recipe created:"
@@ -87,6 +89,7 @@ Scenario: Create recipe from cpan
     And the error output contains "requires LLM for recipe generation"
     And the error output contains "Remove --deterministic-only"
 
+  @critical
   Scenario: Deterministic-only with discovery GitHub builder fails with actionable message
     When I run "tsuku create fd --deterministic-only"
     Then the exit code is 9
@@ -99,6 +102,7 @@ Scenario: Create recipe from cpan
     And the error output contains "could not find"
     And the error output contains "--from"
 
+  @critical
   Scenario: Create without --from resolves from discovery registry
     When I run "tsuku create jq --deterministic-only --yes"
     Then the exit code is 0
