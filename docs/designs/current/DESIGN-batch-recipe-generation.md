@@ -638,7 +638,7 @@ Create the Go orchestrator (`cmd/batch-generate`) and GitHub Actions workflow. T
 
 ### Phase 2: Multi-Platform Progressive Validation
 
-Add platform validation jobs for Linux x86_64-passing recipes. Each platform job builds tsuku from source and runs sandbox validation. Platforms are tested in cost order: Linux arm64 and musl (cheap), then macOS (expensive). Platform jobs produce pass/fail result artifacts only — the merge job writes platform constraint fields into recipe TOML. Update `test-changed-recipes.yml` to use `tsuku info --json --metadata-only` for filtering recipes per platform runner, so PR CI skips recipes on platforms they don't support.
+Add platform validation jobs for Linux x86_64-passing recipes. Each platform job builds tsuku from source and runs sandbox validation. Platforms are tested in cost order: Linux arm64 and musl (cheap), then macOS (expensive). Platform jobs produce pass/fail result artifacts only — the merge job writes platform constraint fields into recipe TOML. Update `test-recipe-changes.yml` to use `tsuku info --json --metadata-only` for filtering recipes per platform runner, so PR CI skips recipes on platforms they don't support.
 
 | Platform | Runner | Cost | Skip Flag |
 |----------|--------|------|-----------|

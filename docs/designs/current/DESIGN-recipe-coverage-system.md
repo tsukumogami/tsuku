@@ -3,7 +3,7 @@ status: Current
 problem: |
   M47 delivered platform compatibility infrastructure (libc detection, recipe conditionals, coverage analysis in internal/recipe/coverage.go) but 0 of 13 library recipes were migrated. Coverage analysis code exists and test infrastructure validates recipes on declared platforms, but there's no visibility into which recipes support which platforms. The execution-exclusions.json file tracks blockers but doesn't show the full coverage picture. We can't see the M47 gap (libraries without musl) or identify other coverage gaps across the 265-recipe registry.
 decision: |
-  Build visibility layer on existing infrastructure: (1) Create cmd/coverage-analytics tool that runs existing coverage.AnalyzeRecipeCoverage on all recipes and generates coverage.json, (2) Build static website at tsuku.dev/coverage visualizing coverage matrix, gaps, and blockers, (3) Integrate with existing execution-exclusions.json to show why recipes lack platform support. Includes systematic workflow to migrate 13 M47 library recipes using existing test infrastructure. No new enforcement needed - test-changed-recipes.yml already validates, just needs visibility into results.
+  Build visibility layer on existing infrastructure: (1) Create cmd/coverage-analytics tool that runs existing coverage.AnalyzeRecipeCoverage on all recipes and generates coverage.json, (2) Build static website at tsuku.dev/coverage visualizing coverage matrix, gaps, and blockers, (3) Integrate with existing execution-exclusions.json to show why recipes lack platform support. Includes systematic workflow to migrate 13 M47 library recipes using existing test infrastructure. No new enforcement needed - test-recipe-changes.yml already validates, just needs visibility into results.
 rationale: |
   Building on existing infrastructure (coverage.go, test workflows, exclusions.json) rather than creating new systems. Coverage analysis exists, tests validate, exclusions track - we just need visibility. The comprehensive approach (cmd tool + website + M47 migration) closes immediate gap while providing ongoing visibility. Alternative of adding coverage to pipeline dashboard was rejected because recipe coverage is orthogonal to batch generation pipeline. Reusing website/pipeline pattern (static JSON + HTML) avoids backend infrastructure.
 ---
@@ -57,7 +57,7 @@ This design was implemented through 9 issues across 2 sequential milestones.
 
 **Related Infrastructure:**
 - `internal/recipe/coverage.go` - Existing coverage analysis
-- `.github/workflows/test-changed-recipes.yml` - Tests recipes on declared platforms
+- `.github/workflows/test-recipe-changes.yml` - Tests recipes on declared platforms
 - `testdata/golden/execution-exclusions.json` - Tracks test exclusions with issue URLs
 
 ## Context and Problem Statement
@@ -71,7 +71,7 @@ Tsuku already has comprehensive platform coverage infrastructure:
    - Generates errors for libraries missing musl (unless explicitly constrained via `supported_libc`)
    - Generates warnings for tools depending on libraries without musl
 
-2. **Platform Testing**: `.github/workflows/test-changed-recipes.yml` validates recipes
+2. **Platform Testing**: `.github/workflows/test-recipe-changes.yml` validates recipes
    - Reads `supported_os`, `supported_arch`, `supported_libc` from recipe metadata
    - Tests recipes on Linux and macOS based on declared support
    - Skips library recipes (type = "library") and system dependencies
@@ -191,7 +191,7 @@ Migrate in 3 batches using existing test infrastructure:
 
 Process per batch:
 1. Add musl steps to recipes (apk packages for Alpine)
-2. test-changed-recipes.yml validates on Linux
+2. test-recipe-changes.yml validates on Linux
 3. If Alpine test fails → investigate, potentially add to execution-exclusions.json with reason
 4. Merge when tests pass
 
@@ -216,13 +216,13 @@ Rejected because that's how we got the M47 gap. Existing test infrastructure mus
 
 We're building a visibility layer on existing infrastructure. The `cmd/coverage-analytics` tool runs `coverage.AnalyzeRecipeCoverage()` on all 265 recipes, reads execution-exclusions.json for context, and generates coverage.json. A static website at tsuku.dev/coverage visualizes the data with matrix views, gap lists, and category breakdowns.
 
-The M47 gap gets closed through systematic batch migration: 3 batches of library recipes adding Alpine/musl support via system packages (apk). Each batch tested using existing test-changed-recipes.yml workflow before merge.
+The M47 gap gets closed through systematic batch migration: 3 batches of library recipes adding Alpine/musl support via system packages (apk). Each batch tested using existing test-recipe-changes.yml workflow before merge.
 
 No new enforcement needed - coverage.go already flags gaps, tests already validate. We're just making the analysis results visible and completing the M47 migration work.
 
 ### Rationale
 
-Building on existing infrastructure rather than creating new systems. Coverage analysis exists (coverage.go), tests validate (test-changed-recipes.yml), exclusions track blockers (execution-exclusions.json) - we just need to make results visible.
+Building on existing infrastructure rather than creating new systems. Coverage analysis exists (coverage.go), tests validate (test-recipe-changes.yml), exclusions track blockers (execution-exclusions.json) - we just need to make results visible.
 
 Separate tool + website matches the pipeline dashboard pattern and keeps concerns separated. Recipe coverage is orthogonal to batch generation. Full coverage matrix provides both overview and detail. Batch migration uses existing test infrastructure to validate work.
 
@@ -325,7 +325,7 @@ when = { libc = ["musl"] }
 ```
 
 **Test Workflow Integration** (already works):
-- test-changed-recipes.yml reads `supported_os`, `supported_arch`, `supported_libc`
+- test-recipe-changes.yml reads `supported_os`, `supported_arch`, `supported_libc`
 - Tests recipe on appropriate platforms
 - After M47 migration, libcurl tests on both glibc and musl
 
@@ -444,7 +444,7 @@ when = { libc = ["musl"] }
 ```
 
 3. **Testing** (existing infrastructure):
-   - test-changed-recipes.yml automatically tests on Linux
+   - test-recipe-changes.yml automatically tests on Linux
    - If recipe declares musl support, tests validate on Alpine-compatible environment
    - Failures → either fix recipe or add to execution-exclusions.json with reason
 
@@ -521,5 +521,5 @@ Coverage website shows which recipes support which platforms - public informatio
 
 - [M47 Design: Platform Compatibility Verification](./current/DESIGN-platform-compatibility-verification.md)
 - `internal/recipe/coverage.go` - Existing coverage analysis
-- `.github/workflows/test-changed-recipes.yml` - Recipe testing workflow
+- `.github/workflows/test-recipe-changes.yml` - Recipe testing workflow
 - `testdata/golden/execution-exclusions.json` - Test exclusions
