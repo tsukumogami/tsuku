@@ -1,0 +1,35 @@
+[metadata]
+  name = "gopass"
+  description = "Slightly more awesome Standard Unix Password Manager for Teams"
+  homepage = "https://www.gopass.pw/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = []
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "gopass"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "gopass"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/gopass"]
+
+[verify]
+  command = "gopass --version"
+  pattern = ""

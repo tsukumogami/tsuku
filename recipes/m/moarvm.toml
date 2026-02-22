@@ -1,0 +1,35 @@
+[metadata]
+  name = "moarvm"
+  description = "VM with adaptive optimization and JIT compilation, built for Rakudo"
+  homepage = "https://moarvm.org"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["mimalloc", "zstd"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "moarvm"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "moarvm"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/moar"]
+
+[verify]
+  command = "moar --version"
+  pattern = ""

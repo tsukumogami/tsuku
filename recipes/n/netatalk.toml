@@ -1,0 +1,35 @@
+[metadata]
+  name = "netatalk"
+  description = "File server for Macs, compliant with Apple Filing Protocol (AFP)"
+  homepage = "https://netatalk.io"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["libevent", "libgcrypt", "mariadb-connector-c"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "netatalk"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "netatalk"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/addump", "bin/aecho", "bin/afp_lantest", "bin/afp_logintest", "bin/afp_spectest", "bin/afp_speedtest", "bin/afparg", "bin/afpldaptest", "bin/afppasswd", "bin/afpstats", "bin/asip-status", "bin/dbd", "bin/fce_listen", "bin/getzones", "bin/macusers", "bin/nad", "bin/nbplkup", "bin/nbprgstr", "bin/nbpunrgstr", "bin/pap", "bin/papstatus", "bin/rtmpqry"]
+
+[verify]
+  command = "addump --version"
+  pattern = ""

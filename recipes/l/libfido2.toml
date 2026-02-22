@@ -1,0 +1,35 @@
+[metadata]
+  name = "libfido2"
+  description = "Provides library functionality for FIDO U2F & FIDO 2.0, including USB"
+  homepage = "https://developers.yubico.com/libfido2/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = []
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "libfido2"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "libfido2"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/fido2-assert", "bin/fido2-cred", "bin/fido2-token"]
+
+[verify]
+  command = "fido2-assert --version"
+  pattern = ""

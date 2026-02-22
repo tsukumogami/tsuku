@@ -1,0 +1,35 @@
+[metadata]
+  name = "jpeginfo"
+  description = "Prints information and tests integrity of JPEG/JFIF files"
+  homepage = "https://www.kokkonen.net/tjko/projects.html"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["jpeg-turbo"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "jpeginfo"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "jpeginfo"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/jpeginfo"]
+
+[verify]
+  command = "jpeginfo --version"
+  pattern = ""

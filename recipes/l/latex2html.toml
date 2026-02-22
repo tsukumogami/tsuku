@@ -1,0 +1,35 @@
+[metadata]
+  name = "latex2html"
+  description = "LaTeX-to-HTML translator"
+  homepage = "https://www.latex2html.org"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = []
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "latex2html"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "latex2html"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/latex2html", "bin/pstoimg", "bin/texexpand"]
+
+[verify]
+  command = "latex2html --version"
+  pattern = ""

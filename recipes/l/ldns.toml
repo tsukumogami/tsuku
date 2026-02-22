@@ -1,0 +1,35 @@
+[metadata]
+  name = "ldns"
+  description = "DNS library written in C"
+  homepage = "https://nlnetlabs.nl/projects/ldns/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = []
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "ldns"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "ldns"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/drill", "bin/ldns-chaos", "bin/ldns-compare-zones", "bin/ldns-config", "bin/ldns-dane", "bin/ldns-dpa", "bin/ldns-gen-zone", "bin/ldns-key2ds", "bin/ldns-keyfetcher", "bin/ldns-keygen", "bin/ldns-mx", "bin/ldns-notify", "bin/ldns-nsec3-hash", "bin/ldns-read-zone", "bin/ldns-resolver", "bin/ldns-revoke", "bin/ldns-rrsig", "bin/ldns-signzone", "bin/ldns-test-edns", "bin/ldns-testns", "bin/ldns-update", "bin/ldns-verify-zone", "bin/ldns-version", "bin/ldns-walk", "bin/ldns-zcat", "bin/ldns-zsplit", "bin/ldnsd"]
+
+[verify]
+  command = "drill --version"
+  pattern = ""

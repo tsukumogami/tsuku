@@ -1,0 +1,35 @@
+[metadata]
+  name = "lanraragi"
+  description = "Web application for archival and reading of manga/doujinshi"
+  homepage = "https://github.com/Difegue/LANraragi"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["perl", "redis", "zstd"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "lanraragi"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "lanraragi"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/lanraragi"]
+
+[verify]
+  command = "lanraragi --version"
+  pattern = ""

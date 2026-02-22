@@ -1,0 +1,35 @@
+[metadata]
+  name = "libdap"
+  description = "Framework for scientific data networking"
+  homepage = "https://www.opendap.org/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["libxml2"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "libdap"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "libdap"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/dap-config", "bin/dap-config-pkgconfig", "bin/getdap", "bin/getdap4"]
+
+[verify]
+  command = "dap-config --version"
+  pattern = ""

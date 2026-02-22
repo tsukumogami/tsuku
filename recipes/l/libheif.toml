@@ -1,0 +1,35 @@
+[metadata]
+  name = "libheif"
+  description = "ISO/IEC 23008-12:2017 HEIF file format decoder and encoder"
+  homepage = "https://www.libde265.org/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["jpeg-turbo", "libpng"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "libheif"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "libheif"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/heif-dec", "bin/heif-enc", "bin/heif-info", "bin/heif-thumbnailer"]
+
+[verify]
+  command = "heif-dec --version"
+  pattern = ""

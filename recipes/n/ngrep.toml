@@ -1,0 +1,35 @@
+[metadata]
+  name = "ngrep"
+  description = "Network grep"
+  homepage = "https://github.com/jpr5/ngrep"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["pcre2"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "ngrep"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "ngrep"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/ngrep"]
+
+[verify]
+  command = "ngrep --version"
+  pattern = ""

@@ -1,0 +1,35 @@
+[metadata]
+  name = "hlint"
+  description = "Haskell source code suggestions"
+  homepage = "https://github.com/ndmitchell/hlint"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["gmp"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "hlint"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "hlint"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/hlint"]
+
+[verify]
+  command = "hlint --version"
+  pattern = ""

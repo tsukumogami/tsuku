@@ -1,0 +1,35 @@
+[metadata]
+  name = "nip4"
+  description = "Image processing spreadsheet"
+  homepage = "https://github.com/jcupitt/nip4"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["cairo", "gettext", "glib", "gsl", "libxml2"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "nip4"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "nip4"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/nip4", "bin/snip"]
+
+[verify]
+  command = "nip4 --version"
+  pattern = ""

@@ -1,0 +1,35 @@
+[metadata]
+  name = "gtk-gnutella"
+  description = "Share files in a peer-to-peer (P2P) network"
+  homepage = "https://gtk-gnutella.sourceforge.io"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["glib", "gettext"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "gtk-gnutella"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "gtk-gnutella"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/gtk-gnutella"]
+
+[verify]
+  command = "gtk-gnutella --version"
+  pattern = ""

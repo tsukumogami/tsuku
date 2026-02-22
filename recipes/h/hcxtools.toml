@@ -1,0 +1,35 @@
+[metadata]
+  name = "hcxtools"
+  description = "Utils for conversion of cap/pcap/pcapng WiFi dump files"
+  homepage = "https://github.com/ZerBea/hcxtools"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = []
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "hcxtools"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "hcxtools"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/hcxeiutool", "bin/hcxhash2cap", "bin/hcxhashtool", "bin/hcxpcapngtool", "bin/hcxpmktool", "bin/hcxpottool", "bin/hcxpsktool", "bin/hcxwltool", "bin/whoismac", "bin/wlancap2wpasec"]
+
+[verify]
+  command = "hcxeiutool --version"
+  pattern = ""

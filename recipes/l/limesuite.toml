@@ -1,0 +1,35 @@
+[metadata]
+  name = "limesuite"
+  description = "Device drivers utilities, and interface layers for LimeSDR"
+  homepage = "https://myriadrf.org/projects/software/lime-suite/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = []
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "limesuite"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "limesuite"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/LimeQuickTest", "bin/LimeUtil"]
+
+[verify]
+  command = "LimeQuickTest --version"
+  pattern = ""

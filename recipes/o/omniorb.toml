@@ -1,0 +1,35 @@
+[metadata]
+  name = "omniorb"
+  description = "IOR and naming service utilities for omniORB"
+  homepage = "https://omniorb.sourceforge.io/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["zstd"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "omniorb"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "omniorb"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/catior", "bin/convertior", "bin/genior", "bin/nameclt", "bin/omkdepend", "bin/omniMapper", "bin/omniNames", "bin/omnicpp", "bin/omniidl", "bin/omniidlrun.py"]
+
+[verify]
+  command = "catior --version"
+  pattern = ""

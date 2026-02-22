@@ -1,0 +1,35 @@
+[metadata]
+  name = "pcl"
+  description = "Library for 2D/3D image and point cloud processing"
+  homepage = "https://pointclouds.org/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["glew", "libpng", "freetype"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "pcl"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "pcl"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/pcl_add_gaussian_noise", "bin/pcl_bilateral_upsampling", "bin/pcl_boundary_estimation", "bin/pcl_cloud_composer", "bin/pcl_cluster_extraction", "bin/pcl_compute_cloud_error", "bin/pcl_compute_hausdorff", "bin/pcl_compute_hull", "bin/pcl_concatenate_points_pcd", "bin/pcl_convert_pcd_ascii_binary", "bin/pcl_converter", "bin/pcl_convolve", "bin/pcl_crf_segmentation", "bin/pcl_crop_to_hull", "bin/pcl_demean_cloud", "bin/pcl_dinast_grabber", "bin/pcl_elch", "bin/pcl_extract_feature", "bin/pcl_face_trainer", "bin/pcl_fast_bilateral_filter", "bin/pcl_feature_matching", "bin/pcl_fpfh_estimation", "bin/pcl_fs_face_detector", "bin/pcl_generate", "bin/pcl_gp3_surface", "bin/pcl_grabcut_2d", "bin/pcl_grid_min", "bin/pcl_hdl_grabber", "bin/pcl_hdl_viewer_simple", "bin/pcl_icp", "bin/pcl_icp2d", "bin/pcl_linemod_detection", "bin/pcl_local_max", "bin/pcl_lum", "bin/pcl_manual_registration", "bin/pcl_marching_cubes_reconstruction", "bin/pcl_match_linemod_template", "bin/pcl_mesh2pcd", "bin/pcl_mesh_sampling", "bin/pcl_mls_smoothing", "bin/pcl_morph", "bin/pcl_multiscale_feature_persistence_example", "bin/pcl_ndt2d", "bin/pcl_ndt3d", "bin/pcl_nn_classification_example", "bin/pcl_normal_estimation", "bin/pcl_obj2pcd", "bin/pcl_obj2ply", "bin/pcl_obj2vtk", "bin/pcl_obj_rec_ransac_accepted_hypotheses", "bin/pcl_obj_rec_ransac_hash_table", "bin/pcl_obj_rec_ransac_model_opps", "bin/pcl_obj_rec_ransac_orr_octree", "bin/pcl_obj_rec_ransac_orr_octree_zprojection", "bin/pcl_obj_rec_ransac_result", "bin/pcl_obj_rec_ransac_scene_opps", "bin/pcl_octree_viewer", "bin/pcl_outlier_removal", "bin/pcl_passthrough_filter", "bin/pcl_pcd2ply", "bin/pcl_pcd2png", "bin/pcl_pcd2vtk", "bin/pcl_pcd_change_viewpoint", "bin/pcl_pcd_convert_NaN_nan", "bin/pcl_pcd_image_viewer", "bin/pcl_pcd_introduce_nan", "bin/pcl_pcd_organized_edge_detection", "bin/pcl_pcd_organized_multi_plane_segmentation", "bin/pcl_pcd_select_object_plane", "bin/pcl_pcd_video_player", "bin/pcl_pclzf2pcd", "bin/pcl_plane_projection", "bin/pcl_ply2obj", "bin/pcl_ply2pcd", "bin/pcl_ply2ply", "bin/pcl_ply2raw", "bin/pcl_ply2vtk", "bin/pcl_plyheader", "bin/pcl_png2pcd", "bin/pcl_point_cloud_editor", "bin/pcl_poisson_reconstruction", "bin/pcl_ppf_object_recognition", "bin/pcl_progressive_morphological_filter", "bin/pcl_pyramid_surface_matching", "bin/pcl_radius_filter", "bin/pcl_registration_visualizer", "bin/pcl_sac_segmentation_plane", "bin/pcl_spin_estimation", "bin/pcl_statistical_multiscale_interest_region_extraction_example", "bin/pcl_stereo_ground_segmentation", "bin/pcl_surfel_smoothing_test", "bin/pcl_test_search_speed", "bin/pcl_tiff2pcd", "bin/pcl_timed_trigger_test", "bin/pcl_train_linemod_template", "bin/pcl_train_unary_classifier", "bin/pcl_transform_from_viewpoint", "bin/pcl_transform_point_cloud", "bin/pcl_unary_classifier_segment", "bin/pcl_uniform_sampling", "bin/pcl_vfh_estimation", "bin/pcl_viewer", "bin/pcl_virtual_scanner", "bin/pcl_vlp_viewer", "bin/pcl_voxel_grid", "bin/pcl_voxel_grid_occlusion_estimation", "bin/pcl_vtk2obj", "bin/pcl_vtk2pcd", "bin/pcl_vtk2ply", "bin/pcl_xyz2pcd"]
+
+[verify]
+  command = "pcl_add_gaussian_noise --version"
+  pattern = ""

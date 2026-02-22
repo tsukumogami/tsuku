@@ -1,0 +1,35 @@
+[metadata]
+  name = "neovim-qt"
+  description = "Neovim GUI, in Qt"
+  homepage = "https://github.com/equalsraf/neovim-qt"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = []
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "neovim-qt"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "neovim-qt"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/nvim-qt"]
+
+[verify]
+  command = "nvim-qt --version"
+  pattern = ""

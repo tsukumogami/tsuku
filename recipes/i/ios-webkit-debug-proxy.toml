@@ -1,0 +1,35 @@
+[metadata]
+  name = "ios-webkit-debug-proxy"
+  description = "DevTools proxy for iOS devices"
+  homepage = "https://github.com/google/ios-webkit-debug-proxy"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["libplist", "libusbmuxd"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "ios-webkit-debug-proxy"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "ios-webkit-debug-proxy"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/ios_webkit_debug_proxy"]
+
+[verify]
+  command = "ios_webkit_debug_proxy --version"
+  pattern = ""

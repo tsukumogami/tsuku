@@ -1,0 +1,35 @@
+[metadata]
+  name = "groff"
+  description = "GNU troff text-formatting system"
+  homepage = "https://www.gnu.org/software/groff/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = []
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "groff"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "groff"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/addftinfo", "bin/afmtodit", "bin/chem", "bin/eqn", "bin/eqn2graph", "bin/gdiffmk", "bin/glilypond", "bin/gperl", "bin/gpinyin", "bin/grap2graph", "bin/grn", "bin/grodvi", "bin/groff", "bin/grog", "bin/grolbp", "bin/grolj4", "bin/gropdf", "bin/grops", "bin/grotty", "bin/hpftodit", "bin/indxbib", "bin/lkbib", "bin/lookbib", "bin/mmroff", "bin/neqn", "bin/nroff", "bin/pdfmom", "bin/pdfroff", "bin/pfbtops", "bin/pic", "bin/pic2graph", "bin/post-grohtml", "bin/pre-grohtml", "bin/preconv", "bin/refer", "bin/soelim", "bin/tbl", "bin/tfmtodit", "bin/troff"]
+
+[verify]
+  command = "addftinfo --version"
+  pattern = ""

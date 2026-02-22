@@ -1,0 +1,35 @@
+[metadata]
+  name = "libgrape-lite"
+  description = "C++ library for parallel graph processing"
+  homepage = "https://github.com/alibaba/libgrape-lite"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["open-mpi"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "libgrape-lite"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "libgrape-lite"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/run_app"]
+
+[verify]
+  command = "run_app --version"
+  pattern = ""

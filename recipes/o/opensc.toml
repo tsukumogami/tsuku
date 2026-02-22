@@ -1,0 +1,35 @@
+[metadata]
+  name = "opensc"
+  description = "Tools and libraries for smart cards"
+  homepage = "https://github.com/OpenSC/OpenSC/wiki"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = []
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "opensc"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "opensc"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/cardos-tool", "bin/cryptoflex-tool", "bin/dnie-tool", "bin/dtrust-tool", "bin/egk-tool", "bin/eidenv", "bin/gids-tool", "bin/goid-tool", "bin/iasecc-tool", "bin/netkey-tool", "bin/openpgp-tool", "bin/opensc-asn1", "bin/opensc-explorer", "bin/opensc-notify", "bin/opensc-tool", "bin/piv-tool", "bin/pkcs11-register", "bin/pkcs11-tool", "bin/pkcs15-crypt", "bin/pkcs15-init", "bin/pkcs15-tool", "bin/sc-hsm-tool", "bin/westcos-tool"]
+
+[verify]
+  command = "cardos-tool --version"
+  pattern = ""

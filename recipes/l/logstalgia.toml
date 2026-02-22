@@ -1,0 +1,35 @@
+[metadata]
+  name = "logstalgia"
+  description = "Web server access log visualizer with retro style"
+  homepage = "https://logstalgia.io/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["freetype", "glew", "libpng", "pcre2", "sdl2"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "logstalgia"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "logstalgia"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/logstalgia"]
+
+[verify]
+  command = "logstalgia --version"
+  pattern = ""

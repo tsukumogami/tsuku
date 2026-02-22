@@ -1,0 +1,35 @@
+[metadata]
+  name = "libgcrypt"
+  description = "Cryptographic library based on the code from GnuPG"
+  homepage = "https://gnupg.org/related_software/libgcrypt/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["libgpg-error"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "libgcrypt"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "libgcrypt"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/dumpsexp", "bin/hmac256", "bin/libgcrypt-config", "bin/mpicalc"]
+
+[verify]
+  command = "dumpsexp --version"
+  pattern = ""

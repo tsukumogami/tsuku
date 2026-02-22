@@ -1,0 +1,35 @@
+[metadata]
+  name = "midnight-commander"
+  description = "Terminal-based visual file manager"
+  homepage = "https://www.midnight-commander.org/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["glib", "libssh2", "gettext"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "midnight-commander"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "midnight-commander"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/mc"]
+
+[verify]
+  command = "mc --version"
+  pattern = ""

@@ -1,0 +1,35 @@
+[metadata]
+  name = "min-lang"
+  description = "Small but practical concatenative programming language and shell"
+  homepage = "https://min-lang.org"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["pcre2"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "min-lang"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "min-lang"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/min"]
+
+[verify]
+  command = "min --version"
+  pattern = ""

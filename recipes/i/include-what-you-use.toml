@@ -1,0 +1,35 @@
+[metadata]
+  name = "include-what-you-use"
+  description = "Tool to analyze #includes in C and C++ source files"
+  homepage = "https://include-what-you-use.org/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = []
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "include-what-you-use"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "include-what-you-use"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/fix_includes.py", "bin/include-what-you-use", "bin/iwyu_tool.py"]
+
+[verify]
+  command = "fix_includes.py --version"
+  pattern = ""

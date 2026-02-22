@@ -1,0 +1,35 @@
+[metadata]
+  name = "guile"
+  description = "GNU Ubiquitous Intelligent Language for Extensions"
+  homepage = "https://www.gnu.org/software/guile/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["bdw-gc", "gmp", "pkgconf", "readline"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "guile"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "guile"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/guild", "bin/guile", "bin/guile-config", "bin/guile-snarf"]
+
+[verify]
+  command = "guild --version"
+  pattern = ""

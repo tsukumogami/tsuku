@@ -1,0 +1,35 @@
+[metadata]
+  name = "libpaho-mqtt"
+  description = "Eclipse Paho C client library for MQTT"
+  homepage = "https://eclipse-paho.github.io/paho.mqtt.c/MQTTClient/html/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = []
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "libpaho-mqtt"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "libpaho-mqtt"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/MQTTVersion"]
+
+[verify]
+  command = "MQTTVersion --version"
+  pattern = ""

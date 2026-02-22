@@ -1,0 +1,35 @@
+[metadata]
+  name = "mailutils"
+  description = "Swiss Army knife of email handling"
+  homepage = "https://mailutils.org/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["gdbm", "gnutls", "readline", "gettext"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "mailutils"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "mailutils"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/decodemail", "bin/dotlock", "bin/frm", "bin/from", "bin/mail", "bin/mailutils", "bin/mailutils-config", "bin/messages", "bin/mimeview", "bin/movemail", "bin/popauth", "bin/putmail", "bin/readmsg", "bin/sieve"]
+
+[verify]
+  command = "decodemail --version"
+  pattern = ""

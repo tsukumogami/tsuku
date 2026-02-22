@@ -1,0 +1,35 @@
+[metadata]
+  name = "i386-elf-gdb"
+  description = "GNU debugger for i386-elf cross development"
+  homepage = "https://www.gnu.org/software/gdb/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["gmp", "ncurses", "readline", "xz", "zstd"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "i386-elf-gdb"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "i386-elf-gdb"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/i386-elf-gdb", "bin/i386-elf-gdb-add-index", "bin/i386-elf-gstack"]
+
+[verify]
+  command = "i386-elf-gdb --version"
+  pattern = ""

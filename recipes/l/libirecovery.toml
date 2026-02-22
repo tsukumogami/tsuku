@@ -1,0 +1,35 @@
+[metadata]
+  name = "libirecovery"
+  description = "Library and utility to talk to iBoot/iBSS via USB"
+  homepage = "https://www.libimobiledevice.org/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["libplist"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "libirecovery"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "libirecovery"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/irecovery"]
+
+[verify]
+  command = "irecovery --version"
+  pattern = ""

@@ -1,0 +1,35 @@
+[metadata]
+  name = "hdf5-mpi"
+  description = "File format designed to store large amounts of data"
+  homepage = "https://www.hdfgroup.org/solutions/hdf5/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["open-mpi", "pkgconf"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "hdf5-mpi"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "hdf5-mpi"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/h5c++", "bin/h5cc", "bin/h5clear", "bin/h5copy", "bin/h5debug", "bin/h5delete", "bin/h5diff", "bin/h5dump", "bin/h5fc", "bin/h5format_convert", "bin/h5import", "bin/h5jam", "bin/h5ls", "bin/h5mkgrp", "bin/h5pcc", "bin/h5perf", "bin/h5perf_serial", "bin/h5pfc", "bin/h5repack", "bin/h5repart", "bin/h5stat", "bin/h5unjam", "bin/h5watch", "bin/ph5diff"]
+
+[verify]
+  command = "h5c++ --version"
+  pattern = ""

@@ -1,0 +1,35 @@
+[metadata]
+  name = "libbladerf"
+  description = "USB 3.0 Superspeed Software Defined Radio Source"
+  homepage = "https://nuand.com/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["ncurses"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "libbladerf"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "libbladerf"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/bladeRF-cli", "bin/bladeRF-fsk", "bin/bladeRF-power", "bin/bladeRF-update"]
+
+[verify]
+  command = "bladeRF-cli --version"
+  pattern = ""

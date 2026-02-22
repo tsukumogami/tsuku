@@ -1,0 +1,35 @@
+[metadata]
+  name = "gtk-doc"
+  description = "GTK+ documentation tool"
+  homepage = "https://gitlab.gnome.org/GNOME/gtk-doc"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = []
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "gtk-doc"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "gtk-doc"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/gtkdoc-check", "bin/gtkdoc-depscan", "bin/gtkdoc-fixxref", "bin/gtkdoc-mkdb", "bin/gtkdoc-mkhtml", "bin/gtkdoc-mkhtml2", "bin/gtkdoc-mkman", "bin/gtkdoc-mkpdf", "bin/gtkdoc-rebase", "bin/gtkdoc-scan", "bin/gtkdoc-scangobj", "bin/gtkdocize"]
+
+[verify]
+  command = "gtkdoc-check --version"
+  pattern = ""

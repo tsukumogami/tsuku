@@ -1,0 +1,35 @@
+[metadata]
+  name = "openjph"
+  description = "Open-source implementation of JPEG2000 Part-15 (or JPH or HTJ2K)"
+  homepage = "https://github.com/aous72/OpenJPH"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = []
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "openjph"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "openjph"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/ojph_compress", "bin/ojph_expand"]
+
+[verify]
+  command = "ojph_compress --version"
+  pattern = ""

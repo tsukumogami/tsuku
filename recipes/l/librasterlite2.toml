@@ -1,0 +1,35 @@
+[metadata]
+  name = "librasterlite2"
+  description = "Library to store and retrieve huge raster coverages"
+  homepage = "https://www.gaia-gis.it/fossil/librasterlite2/index"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["cairo", "fontconfig", "freetype", "geos", "giflib", "jpeg-turbo", "libgeotiff", "libpng", "libxml2", "proj", "sqlite", "xz", "zstd"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "librasterlite2"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "librasterlite2"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/rl2sniff", "bin/rl2tool", "bin/wmslite"]
+
+[verify]
+  command = "rl2sniff --version"
+  pattern = ""

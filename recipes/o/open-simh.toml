@@ -1,0 +1,35 @@
+[metadata]
+  name = "open-simh"
+  description = "Multi-system computer simulator"
+  homepage = "https://opensimh.org/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["libpng"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "open-simh"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "open-simh"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/altair", "bin/eclipse", "bin/gri", "bin/h316", "bin/i1401", "bin/i1620", "bin/i7094", "bin/id16", "bin/id32", "bin/lgp", "bin/nova", "bin/pdp1", "bin/pdp10", "bin/pdp11", "bin/pdp15", "bin/pdp4", "bin/pdp7", "bin/pdp8", "bin/pdp9", "bin/sds", "bin/sigma", "bin/uc15", "bin/vax", "bin/vax780"]
+
+[verify]
+  command = "altair --version"
+  pattern = ""

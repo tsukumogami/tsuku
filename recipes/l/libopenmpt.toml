@@ -1,0 +1,35 @@
+[metadata]
+  name = "libopenmpt"
+  description = "Software library to decode tracked music files"
+  homepage = "https://lib.openmpt.org/libopenmpt/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["libsndfile"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "libopenmpt"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "libopenmpt"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/openmpt123"]
+
+[verify]
+  command = "openmpt123 --version"
+  pattern = ""

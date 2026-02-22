@@ -1,0 +1,34 @@
+[metadata]
+  name = "libcdio"
+  description = "Compact Disc Input and Control Library"
+  homepage = "https://savannah.gnu.org/projects/libcdio/"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "libcdio"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "libcdio"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/cd-drive", "bin/cd-info", "bin/cd-read", "bin/iso-info", "bin/iso-read", "bin/mmc-tool"]
+
+[verify]
+  command = "cd-drive --version"
+  pattern = ""

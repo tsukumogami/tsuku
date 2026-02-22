@@ -1,0 +1,35 @@
+[metadata]
+  name = "httpd"
+  description = "Apache HTTP server"
+  homepage = "https://httpd.apache.org/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["apr", "apr-util", "brotli", "libnghttp2", "pcre2"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "httpd"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "httpd"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/ab", "bin/apachectl", "bin/apxs", "bin/checkgid", "bin/dbmmanage", "bin/fcgistarter", "bin/htcacheclean", "bin/htdbm", "bin/htdigest", "bin/htpasswd", "bin/httpd", "bin/httxt2dbm", "bin/logresolve", "bin/rotatelogs", "bin/suexec"]
+
+[verify]
+  command = "ab --version"
+  pattern = ""

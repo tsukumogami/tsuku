@@ -1,0 +1,35 @@
+[metadata]
+  name = "libbluray"
+  description = "Blu-Ray disc playback library for media players like VLC"
+  homepage = "https://www.videolan.org/developers/libbluray.html"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["fontconfig", "freetype"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "libbluray"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "libbluray"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/bd_info", "bin/bd_list_titles", "bin/bd_splice"]
+
+[verify]
+  command = "bd_info --version"
+  pattern = ""

@@ -1,0 +1,35 @@
+[metadata]
+  name = "gwenhywfar"
+  description = "Utility library required by aqbanking and related software"
+  homepage = "https://www.aquamaniac.de/rdm/projects/gwenhywfar"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["gnutls", "libgcrypt", "libgpg-error", "pkgconf", "gettext"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "gwenhywfar"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "gwenhywfar"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/gct-tool", "bin/gsa", "bin/gwbuild", "bin/gwenhywfar-config", "bin/mklistdoc", "bin/typemaker", "bin/typemaker2", "bin/xmlmerge"]
+
+[verify]
+  command = "gct-tool --version"
+  pattern = ""

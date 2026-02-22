@@ -1,0 +1,35 @@
+[metadata]
+  name = "i686-elf-gcc"
+  description = "GNU compiler collection for i686-elf"
+  homepage = "https://gcc.gnu.org"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["gmp", "i686-elf-binutils", "zstd"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "i686-elf-gcc"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "i686-elf-gcc"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/i686-elf-c++", "bin/i686-elf-cpp", "bin/i686-elf-gcc", "bin/i686-elf-gcc-ar", "bin/i686-elf-gcc-nm", "bin/i686-elf-gcc-ranlib", "bin/i686-elf-gcov", "bin/i686-elf-gcov-dump", "bin/i686-elf-gcov-tool", "bin/i686-elf-lto-dump"]
+
+[verify]
+  command = "i686-elf-c++ --version"
+  pattern = ""

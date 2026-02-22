@@ -1,0 +1,35 @@
+[metadata]
+  name = "neomutt"
+  description = "E-mail reader with support for Notmuch, NNTP and much more"
+  homepage = "https://neomutt.org/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["gettext", "libidn2", "lua", "ncurses", "notmuch", "pcre2", "sqlite", "libgpg-error"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "neomutt"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "neomutt"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/neomutt"]
+
+[verify]
+  command = "neomutt --version"
+  pattern = ""

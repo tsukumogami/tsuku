@@ -1,0 +1,35 @@
+[metadata]
+  name = "musikcube"
+  description = "Terminal-based audio engine, library, player and server"
+  homepage = "https://musikcube.com"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["libopenmpt", "ncurses", "gnutls"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "musikcube"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "musikcube"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/musikcube", "bin/musikcubed"]
+
+[verify]
+  command = "musikcube --version"
+  pattern = ""

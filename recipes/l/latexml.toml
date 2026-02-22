@@ -1,0 +1,35 @@
+[metadata]
+  name = "latexml"
+  description = "LaTeX to XML/HTML/MathML Converter"
+  homepage = "https://dlmf.nist.gov/LaTeXML/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["perl"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "latexml"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "latexml"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/latexml", "bin/latexmlc", "bin/latexmlfind", "bin/latexmlmath", "bin/latexmlpost"]
+
+[verify]
+  command = "latexml --version"
+  pattern = ""
