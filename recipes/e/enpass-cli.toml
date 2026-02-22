@@ -1,0 +1,34 @@
+[metadata]
+  name = "enpass-cli"
+  description = "Enpass command-line client"
+  homepage = "https://github.com/hazcod/enpass-cli"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "enpass-cli"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "enpass-cli"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/enpass-cli"]
+
+[verify]
+  command = "enpass-cli --version"
+  pattern = ""

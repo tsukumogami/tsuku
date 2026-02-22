@@ -1,0 +1,35 @@
+[metadata]
+  name = "gnu-indent"
+  description = "C code prettifier"
+  homepage = "https://www.gnu.org/software/indent/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["gettext"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "gnu-indent"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "gnu-indent"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/indent"]
+
+[verify]
+  command = "indent --version"
+  pattern = ""

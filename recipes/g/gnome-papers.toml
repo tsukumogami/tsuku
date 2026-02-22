@@ -1,0 +1,35 @@
+[metadata]
+  name = "gnome-papers"
+  description = "Document viewer for PDF and other document formats aimed at the GNOME desktop"
+  homepage = "https://apps.gnome.org/Papers/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["cairo", "djvulibre", "glib", "gettext"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "gnome-papers"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "gnome-papers"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/papers", "bin/papers-previewer", "bin/papers-thumbnailer"]
+
+[verify]
+  command = "papers --version"
+  pattern = ""

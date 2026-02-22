@@ -1,0 +1,35 @@
+[metadata]
+  name = "arm-none-eabi-gdb"
+  description = "GNU debugger for arm-none-eabi cross development"
+  homepage = "https://www.gnu.org/software/gdb/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["gmp", "ncurses", "readline", "xz", "zstd"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "arm-none-eabi-gdb"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "arm-none-eabi-gdb"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/arm-none-eabi-gdb", "bin/arm-none-eabi-gdb-add-index", "bin/arm-none-eabi-gstack"]
+
+[verify]
+  command = "arm-none-eabi-gdb --version"
+  pattern = ""

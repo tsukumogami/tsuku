@@ -1,0 +1,35 @@
+[metadata]
+  name = "brpc"
+  description = "Better RPC framework"
+  homepage = "https://brpc.apache.org/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["abseil"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "brpc"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "brpc"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/parallel_http", "bin/rpc_press", "bin/rpc_replay", "bin/rpc_view", "bin/trackme_server"]
+
+[verify]
+  command = "parallel_http --version"
+  pattern = ""

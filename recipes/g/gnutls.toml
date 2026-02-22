@@ -1,0 +1,35 @@
+[metadata]
+  name = "gnutls"
+  description = "GNU Transport Layer Security (TLS) Library"
+  homepage = "https://gnutls.org/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["ca-certificates", "gmp", "libidn2", "gettext"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "gnutls"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "gnutls"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/danetool", "bin/gnutls-certtool", "bin/gnutls-cli", "bin/gnutls-cli-debug", "bin/gnutls-serv", "bin/ocsptool", "bin/p11tool", "bin/psktool"]
+
+[verify]
+  command = "danetool --version"
+  pattern = ""

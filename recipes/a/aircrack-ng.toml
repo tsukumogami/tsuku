@@ -1,0 +1,35 @@
+[metadata]
+  name = "aircrack-ng"
+  description = "Next-generation aircrack with lots of new features"
+  homepage = "https://aircrack-ng.org/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["pcre2", "sqlite"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "aircrack-ng"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "aircrack-ng"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/aircrack-ng", "bin/airdecap-ng", "bin/airdecloak-ng", "bin/airolib-ng", "bin/besside-ng-crawler", "bin/buddy-ng", "bin/ivstools", "bin/kstats", "bin/makeivs-ng", "bin/packetforge-ng", "bin/wpaclean"]
+
+[verify]
+  command = "aircrack-ng --version"
+  pattern = ""

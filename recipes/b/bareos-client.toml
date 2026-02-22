@@ -1,0 +1,35 @@
+[metadata]
+  name = "bareos-client"
+  description = "Client for Bareos (Backup Archiving REcovery Open Sourced)"
+  homepage = "https://www.bareos.com/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["readline", "gettext"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "bareos-client"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "bareos-client"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/bconsole"]
+
+[verify]
+  command = "bconsole --version"
+  pattern = ""

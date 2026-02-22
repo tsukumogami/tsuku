@@ -1,0 +1,35 @@
+[metadata]
+  name = "freeradius-server"
+  description = "High-performance and highly configurable RADIUS server"
+  homepage = "https://freeradius.org/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["readline", "sqlite"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "freeradius-server"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "freeradius-server"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/checkrad", "bin/dhcpclient", "bin/map_unit", "bin/rad_counter", "bin/radattr", "bin/radclient", "bin/radcrypt", "bin/raddebug", "bin/radeapclient", "bin/radiusd", "bin/radlast", "bin/radmin", "bin/radsecret", "bin/radsniff", "bin/radsqlrelay", "bin/radtest", "bin/radwho", "bin/radzap", "bin/rc.radiusd", "bin/rlm_ippool_tool", "bin/rlm_sqlippool_tool", "bin/smbencrypt"]
+
+[verify]
+  command = "checkrad --version"
+  pattern = ""

@@ -1,0 +1,35 @@
+[metadata]
+  name = "chrony"
+  description = "Versatile implementation of the Network Time Protocol (NTP)"
+  homepage = "https://chrony-project.org"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["gnutls"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "chrony"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "chrony"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/chronyc"]
+
+[verify]
+  command = "chronyc --version"
+  pattern = ""

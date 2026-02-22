@@ -1,0 +1,35 @@
+[metadata]
+  name = "ffmpegthumbnailer"
+  description = "Create thumbnails for your video files"
+  homepage = "https://github.com/dirkvdb/ffmpegthumbnailer"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["jpeg-turbo", "libpng"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "ffmpegthumbnailer"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "ffmpegthumbnailer"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/ffmpegthumbnailer"]
+
+[verify]
+  command = "ffmpegthumbnailer --version"
+  pattern = ""

@@ -1,0 +1,35 @@
+[metadata]
+  name = "biber"
+  description = "Backend processor for BibLaTeX"
+  homepage = "https://sourceforge.net/projects/biblatex-biber/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["perl"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "biber"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "biber"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/biber"]
+
+[verify]
+  command = "biber --version"
+  pattern = ""

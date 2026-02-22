@@ -1,0 +1,34 @@
+[metadata]
+  name = "docker-ls"
+  description = "Tools for browsing and manipulating docker registries"
+  homepage = "https://github.com/mayflower/docker-ls"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "docker-ls"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "docker-ls"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/docker-ls", "bin/docker-rm"]
+
+[verify]
+  command = "docker-ls --version"
+  pattern = ""

@@ -1,0 +1,34 @@
+[metadata]
+  name = "fetchmail"
+  description = "Client for fetching mail from POP, IMAP, ETRN or ODMR-capable servers"
+  homepage = "https://www.fetchmail.info/"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "fetchmail"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "fetchmail"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/fetchmail", "bin/fetchmailconf"]
+
+[verify]
+  command = "fetchmail --version"
+  pattern = ""

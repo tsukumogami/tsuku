@@ -1,0 +1,35 @@
+[metadata]
+  name = "astrometry-net"
+  description = "Automatic identification of astronomical images"
+  homepage = "https://github.com/dstndstn/astrometry.net"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["cairo", "cfitsio", "gsl", "jpeg-turbo", "libpng", "numpy"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "astrometry-net"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "astrometry-net"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/an-fitstopnm", "bin/an-pnmtofits", "bin/astrometry-engine", "bin/augment-xylist", "bin/build-astrometry-index", "bin/degtohms", "bin/downsample-fits", "bin/fit-wcs", "bin/fits-column-merge", "bin/fits-flip-endian", "bin/fits-guess-scale", "bin/fitsgetext", "bin/get-healpix", "bin/get-wcs", "bin/hmstodeg", "bin/hpsplit", "bin/image2pnm", "bin/image2xy", "bin/imarith", "bin/imstat", "bin/listhead", "bin/liststruc", "bin/merge-columns", "bin/modhead", "bin/new-wcs", "bin/pad-file", "bin/plot-constellations", "bin/plotquad", "bin/plotxy", "bin/query-starkd", "bin/removelines", "bin/solve-field", "bin/startree", "bin/subtable", "bin/tablist", "bin/tabmerge", "bin/tabsort", "bin/text2fits", "bin/uniformize", "bin/votabletofits", "bin/wcs-grab", "bin/wcs-match", "bin/wcs-pv2sip", "bin/wcs-rd2xy", "bin/wcs-resample", "bin/wcs-to-tan", "bin/wcs-xy2rd", "bin/wcsinfo"]
+
+[verify]
+  command = "an-fitstopnm --version"
+  pattern = ""

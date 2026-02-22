@@ -1,0 +1,35 @@
+[metadata]
+  name = "coturn"
+  description = "Free open source implementation of TURN and STUN Server"
+  homepage = "https://github.com/coturn/coturn"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["libevent"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "coturn"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "coturn"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/turnadmin", "bin/turnserver", "bin/turnutils_natdiscovery", "bin/turnutils_oauth", "bin/turnutils_peer", "bin/turnutils_stunclient", "bin/turnutils_uclient"]
+
+[verify]
+  command = "turnadmin --version"
+  pattern = ""

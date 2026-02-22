@@ -1,0 +1,35 @@
+[metadata]
+  name = "feh"
+  description = "X11 image viewer"
+  homepage = "https://feh.finalrewind.org/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["libpng"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "feh"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "feh"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/feh"]
+
+[verify]
+  command = "feh --version"
+  pattern = ""
