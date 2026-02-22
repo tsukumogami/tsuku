@@ -1,6 +1,10 @@
 # yaml-language-server: $schema=https://goreleaser.com/static/schema.json
 version: 2
 
+before:
+  hooks:
+    - go generate ./internal/containerimages/...
+
 builds:
   - id: tsuku
     main: ./cmd/tsuku

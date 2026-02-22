@@ -58,7 +58,8 @@ type SandboxRequirements struct {
 	RequiresNetwork bool
 
 	// Image is the recommended container image based on requirements.
-	// Uses debian:bookworm-slim for binary-only, ubuntu:22.04 for source builds.
+	// Uses the default image from container-images.json for binary-only installs,
+	// or ubuntu:22.04 for source builds.
 	Image string
 
 	// Resources are the recommended resource limits.

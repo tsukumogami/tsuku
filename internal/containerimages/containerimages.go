@@ -11,6 +11,7 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
+	"sort"
 )
 
 //go:generate cp ../../container-images.json container-images.json
@@ -55,5 +56,6 @@ func Families() []string {
 	for f := range images {
 		fams = append(fams, f)
 	}
+	sort.Strings(fams)
 	return fams
 }

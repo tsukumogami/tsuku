@@ -16,6 +16,7 @@ clean:
 
 # Build test binary with isolated home directory
 build-test:
+	go generate ./internal/containerimages/...
 	CGO_ENABLED=0 go build -ldflags "-X main.defaultHomeOverride=.tsuku-test" -o tsuku-test ./cmd/tsuku
 
 # Run functional tests (builds test binary first)
