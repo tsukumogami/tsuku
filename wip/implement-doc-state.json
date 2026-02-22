@@ -2,7 +2,7 @@
   "design_doc": "docs/designs/DESIGN-system-lib-backfill.md",
   "branch": "docs/system-lib-backfill",
   "pr_number": 1863,
-  "integrity_hash": "sha256:91f712626ef3dee03074ac3eaa6542fd374ce1dd5859b60a85f2ea3e1a09033f",
+  "integrity_hash": "sha256:d71e5fba543bbe4695a5c2a452e65da48544d4a42c62c9c7e234b739506b69c2",
   "issues": [
     {
       "number": 1864,
@@ -120,18 +120,38 @@
     {
       "number": 1867,
       "title": "feat(recipes): create library recipes for priority blockers",
-      "status": "pending",
+      "status": "scrutinized",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [
         1864,
         1865,
         1866
       ],
-      "commits": [],
-      "agent_type": "",
-      "summary": null,
+      "commits": [
+        "33185d57"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          "recipes/l/libgit2.toml",
+          "recipes/b/bdw-gc.toml",
+          "recipes/a/ada-url.toml",
+          "recipes/d/dav1d.toml",
+          "recipes/o/oniguruma.toml",
+          "recipes/g/glib.toml",
+          "recipes/t/tree-sitter.toml",
+          "recipes/l/libevent.toml",
+          "recipes/l/libidn2.toml",
+          "recipes/n/notmuch.toml",
+          "recipes/p/pcre2.toml",
+          "docs/friction-log-library-recipes.md"
+        ],
+        "tests_added": 0,
+        "key_decisions": "10 new library recipes following gmp.toml pattern. pcre2 updated with type=library and satisfies. Friction log documents bdw-gc and tree-sitter deterministic failures."
+      },
       "testable_scenarios": [
         "scenario-8",
         "scenario-9",
