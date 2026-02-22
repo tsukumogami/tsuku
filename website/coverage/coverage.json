@@ -1,22 +1,22 @@
 {
-  "generated_at": "2026-02-22T21:34:00Z",
-  "total_recipes": 347,
+  "generated_at": "2026-02-22T22:51:03Z",
+  "total_recipes": 348,
   "summary": {
     "by_platform": {
       "darwin": {
         "supported": 290,
-        "total": 347,
-        "pct": 83.5734870317003
+        "total": 348,
+        "pct": 83.33333333333334
       },
       "glibc": {
-        "supported": 317,
-        "total": 347,
-        "pct": 91.35446685878964
+        "supported": 318,
+        "total": 348,
+        "pct": 91.37931034482759
       },
       "musl": {
-        "supported": 177,
-        "total": 347,
-        "pct": 51.008645533141205
+        "supported": 178,
+        "total": 348,
+        "pct": 51.14942528735632
       }
     },
     "by_category": {
@@ -26,9 +26,9 @@
         "glibc_support": 22
       },
       "tool": {
-        "total": 325,
-        "musl_support": 155,
-        "glibc_support": 295
+        "total": 326,
+        "musl_support": 156,
+        "glibc_support": 296
       }
     }
   },
@@ -2569,6 +2569,20 @@
     },
     {
       "name": "liberica",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "libgit2",
       "type": "tool",
       "platforms": {
         "darwin": false,
