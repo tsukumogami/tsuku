@@ -18,12 +18,13 @@ const spinnerInterval = 100 * time.Millisecond
 // Spinner displays an animated spinner with a message during long operations.
 // In non-TTY environments, it prints the message once without animation.
 type Spinner struct {
-	mu      sync.Mutex
-	output  io.Writer
-	message string
-	done    chan struct{}
-	stopped bool
-	isTTY   bool
+	mu          sync.Mutex
+	output      io.Writer
+	message     string
+	done        chan struct{}
+	animateDone chan struct{}
+	stopped     bool
+	isTTY       bool
 }
 
 // NewSpinner creates a new spinner that writes to the given output.
@@ -33,9 +34,10 @@ func NewSpinner(output io.Writer) *Spinner {
 		output = os.Stderr
 	}
 	return &Spinner{
-		output: output,
-		done:   make(chan struct{}),
-		isTTY:  ShouldShowProgress(),
+		output:      output,
+		done:        make(chan struct{}),
+		animateDone: make(chan struct{}),
+		isTTY:       ShouldShowProgress(),
 	}
 }
 
@@ -49,7 +51,9 @@ func (s *Spinner) Start(message string) {
 	s.mu.Unlock()
 
 	if !s.isTTY {
-		// Non-TTY: print message once, no animation
+		// Non-TTY: print message once, no animation.
+		// Close animateDone so Stop/StopWithMessage won't block.
+		close(s.animateDone)
 		fmt.Fprintf(s.output, "%s\n", message)
 		return
 	}
@@ -75,6 +79,7 @@ func (s *Spinner) Stop() {
 	s.mu.Unlock()
 
 	close(s.done)
+	<-s.animateDone
 
 	if s.isTTY {
 		// Clear the spinner line
@@ -93,6 +98,7 @@ func (s *Spinner) StopWithMessage(message string) {
 	s.mu.Unlock()
 
 	close(s.done)
+	<-s.animateDone
 
 	if s.isTTY {
 		// Clear spinner line and print the final message
@@ -104,6 +110,7 @@ func (s *Spinner) StopWithMessage(message string) {
 
 // animate runs the spinner animation loop.
 func (s *Spinner) animate() {
+	defer close(s.animateDone)
 	frame := 0
 	ticker := time.NewTicker(spinnerInterval)
 	defer ticker.Stop()
