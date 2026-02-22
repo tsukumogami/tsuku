@@ -293,34 +293,44 @@ func runRecipeBasedInstall(recipePath, toolName string) error {
 	return nil
 }
 
-// classifyInstallError maps an install error to the appropriate exit code.
+// classifyInstallError maps an install error to the appropriate exit code and
+// subcategory string. The subcategory provides specific detail for downstream
+// consumers (batch orchestrator, dashboard) without parsing error message text.
 // It checks the dependency wrapper string before using typed error unwrapping,
 // because a dependency failure wrapping a RegistryError should be classified
 // as a dependency error (exit 8), not by the inner error's type (exit 3).
-func classifyInstallError(err error) int {
+func classifyInstallError(err error) (int, string) {
 	// Dependency wrapper check FIRST -- a dependency failure wrapping
 	// a RegistryError should be classified as dependency, not by the
 	// inner error type.
 	if strings.Contains(err.Error(), "failed to install dependency") {
-		return ExitDependencyFailed // 8
+		return ExitDependencyFailed, "" // 8
 	}
 	var regErr *registry.RegistryError
 	if errors.As(err, &regErr) {
 		switch regErr.Type {
 		case registry.ErrTypeNotFound:
-			return ExitRecipeNotFound // 3
-		case registry.ErrTypeNetwork, registry.ErrTypeDNS,
-			registry.ErrTypeTimeout, registry.ErrTypeConnection, registry.ErrTypeTLS:
-			return ExitNetwork // 5
+			return ExitRecipeNotFound, "" // 3
+		case registry.ErrTypeTimeout:
+			return ExitNetwork, "timeout" // 5
+		case registry.ErrTypeDNS:
+			return ExitNetwork, "dns_error" // 5
+		case registry.ErrTypeTLS:
+			return ExitNetwork, "tls_error" // 5
+		case registry.ErrTypeConnection:
+			return ExitNetwork, "connection_error" // 5
+		case registry.ErrTypeNetwork:
+			return ExitNetwork, "" // 5
 		}
 	}
-	return ExitInstallFailed // 6
+	return ExitInstallFailed, "" // 6
 }
 
 // installError is the structured JSON error response emitted by tsuku install --json.
 type installError struct {
 	Status         string   `json:"status"`
 	Category       string   `json:"category"`
+	Subcategory    string   `json:"subcategory,omitempty"`
 	Message        string   `json:"message"`
 	MissingRecipes []string `json:"missing_recipes"`
 	ExitCode       int      `json:"exit_code"`
@@ -355,11 +365,12 @@ func categoryFromExitCode(code int) string {
 // that log or forward this output should treat it with the same care as any log
 // data that may contain system paths.
 func handleInstallError(err error) {
-	code := classifyInstallError(err)
+	code, subcategory := classifyInstallError(err)
 	if installJSON {
 		resp := installError{
 			Status:         "error",
 			Category:       categoryFromExitCode(code),
+			Subcategory:    subcategory,
 			Message:        err.Error(),
 			MissingRecipes: extractMissingRecipes(err),
 			ExitCode:       code,
