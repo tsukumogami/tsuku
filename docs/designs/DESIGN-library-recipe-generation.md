@@ -35,8 +35,8 @@ Planned
 
 | Issue | Dependencies | Tier |
 |-------|--------------|------|
-| [#1877: refactor(homebrew): extract bottle contents into structured type](https://github.com/tsukumogami/tsuku/issues/1877) | None | testable |
-| _Refactors `extractBottleBinaries` into `extractBottleContents`, returning a `bottleContents` struct with `Binaries`, `LibFiles`, and `Includes` fields. Adds `isLibraryFile` filter with `matchesVersionedSo` regex and a backward-compatible `listBottleBinaries` wrapper._ | | |
+| ~~[#1877: refactor(homebrew): extract bottle contents into structured type](https://github.com/tsukumogami/tsuku/issues/1877)~~ | ~~None~~ | ~~testable~~ |
+| ~~_Refactors `extractBottleBinaries` into `extractBottleContents`, returning a `bottleContents` struct with `Binaries`, `LibFiles`, and `Includes` fields. Adds `isLibraryFile` filter with `matchesVersionedSo` regex and a backward-compatible `listBottleBinaries` wrapper._~~ | | |
 | [#1878: feat(homebrew): generate single-platform library recipes](https://github.com/tsukumogami/tsuku/issues/1878) | [#1877](https://github.com/tsukumogami/tsuku/issues/1877) | testable |
 | _With bottle contents available, adds `generateLibraryRecipe` producing `type = "library"` recipes with `install_mode = "directory"` and `outputs` key. Wires into `generateDeterministicRecipe` as the fallback when `bin/` is empty but `lib/` has files. Changes `Verify` from value to pointer type so library recipes omit the `[verify]` section._ | | |
 | [#1879: feat(homebrew): add multi-platform library recipe generation](https://github.com/tsukumogami/tsuku/issues/1879) | [#1878](https://github.com/tsukumogami/tsuku/issues/1878) | testable |
@@ -82,8 +82,9 @@ graph LR
     classDef needsDesign fill:#e1bee7
     classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
 
-    class I1877,I1880 ready
-    class I1878,I1879,I1881,I1882 blocked
+    class I1877 done
+    class I1880,I1878 ready
+    class I1879,I1881,I1882 blocked
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design
