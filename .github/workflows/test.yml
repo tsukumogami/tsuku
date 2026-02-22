@@ -518,16 +518,12 @@ jobs:
           fi
 
   integration-linux:
-    name: "Linux: ${{ matrix.test.tool }}"
+    name: "Linux Integration Tests"
     needs: matrix
     # Run when code files or recipes changed (skip for docs-only changes)
     if: ${{ needs.matrix.outputs.code == 'true' || needs.matrix.outputs.recipes == 'true' }}
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      max-parallel: 4
-      matrix:
-        test: ${{ fromJson(needs.matrix.outputs.linux) }}
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
 
@@ -540,21 +536,51 @@ jobs:
       - name: Build tsuku
         run: CGO_ENABLED=0 go build -o tsuku ./cmd/tsuku
 
-      - name: Setup PATH
-        run: echo "$HOME/.tsuku/bin" >> $GITHUB_PATH
-
-      - name: "Install ${{ matrix.test.tool }}"
+      - name: Run all Linux integration tests
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Point registry to current branch so PR tests can access migrated recipes
           TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
         run: |
-          # Use recipe path if specified (for testdata recipes), otherwise use tool name
-          if [ -n "${{ matrix.test.recipe }}" ]; then
-            ./tsuku install --force --recipe "${{ matrix.test.recipe }}"
-          else
-            ./tsuku install --force "${{ matrix.test.tool }}"
+          FAILED=()
+          TESTS='${{ needs.matrix.outputs.linux }}'
+          CACHE_DIR="${{ runner.temp }}/tsuku-cache/downloads"
+          mkdir -p "$CACHE_DIR"
+
+          # Use while loop with process substitution to handle JSON objects with spaces
+          while IFS= read -r item; do
+            tool=$(echo "$item" | jq -r '.tool')
+            desc=$(echo "$item" | jq -r '.desc')
+            recipe=$(echo "$item" | jq -r '.recipe // empty')
+
+            echo "::group::Testing $tool ($desc)"
+
+            # Fresh TSUKU_HOME per test with shared download cache
+            export TSUKU_HOME="${{ runner.temp }}/tsuku-$tool"
+            mkdir -p "$TSUKU_HOME/cache"
+            ln -s "$CACHE_DIR" "$TSUKU_HOME/cache/downloads"
+            echo "$TSUKU_HOME/bin" >> "$GITHUB_PATH"
+
+            # Use recipe path if specified (for testdata recipes), otherwise use tool name
+            if [ -n "$recipe" ]; then
+              if ! ./tsuku install --force --recipe "$recipe"; then
+                FAILED+=("$tool")
+              fi
+            else
+              if ! ./tsuku install --force "$tool"; then
+                FAILED+=("$tool")
+              fi
+            fi
+            echo "::endgroup::"
+          done < <(echo "$TESTS" | jq -c '.[]')
+
+          # Report failures at end (don't fail fast)
+          if [ ${#FAILED[@]} -gt 0 ]; then
+            echo "::error::Failed tools: ${FAILED[*]}"
+            exit 1
           fi
+
+          echo "All Linux integration tests passed"
 
   # macOS integration tests (aggregated into single job to reduce runner queue pressure)
   integration-macos:
