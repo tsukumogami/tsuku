@@ -915,8 +915,8 @@
                             }).join('');
 
                         return `
-                            <tr>
-                                <td><span class="eco-name">${esc(eco)}</span></td>
+                            <tr class="eco-clickable-row" onclick="location.href='/pipeline/pending.html?ecosystem=${encodeURIComponent(eco)}'">
+                                <td><a href="/pipeline/pending.html?ecosystem=${encodeURIComponent(eco)}"><span class="eco-name">${esc(eco)}</span></a></td>
                                 <td class="eco-count">${esc(ecoTotal)}</td>
                                 ${cells}
                                 <td><div class="mini-progress">${segments}</div></td>
