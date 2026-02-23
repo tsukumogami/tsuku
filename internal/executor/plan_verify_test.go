@@ -1,54 +1,54 @@
-package sandbox
+package executor
 
 import "testing"
 
-func TestCheckVerification_ExitCodeMatch_EmptyPattern(t *testing.T) {
+func TestCheckPlanVerification_ExitCodeMatch_EmptyPattern(t *testing.T) {
 	t.Parallel()
 
-	if !CheckVerification(0, "some output", 0, "") {
+	if !CheckPlanVerification(0, "some output", 0, "") {
 		t.Error("Expected true when exit code matches and pattern is empty")
 	}
 }
 
-func TestCheckVerification_ExitCodeMismatch(t *testing.T) {
+func TestCheckPlanVerification_ExitCodeMismatch(t *testing.T) {
 	t.Parallel()
 
-	if CheckVerification(1, "some output", 0, "") {
+	if CheckPlanVerification(1, "some output", 0, "") {
 		t.Error("Expected false when exit code does not match")
 	}
 }
 
-func TestCheckVerification_PatternMatch(t *testing.T) {
+func TestCheckPlanVerification_PatternMatch(t *testing.T) {
 	t.Parallel()
 
-	if !CheckVerification(0, "ruff 0.4.1", 0, "ruff") {
+	if !CheckPlanVerification(0, "ruff 0.4.1", 0, "ruff") {
 		t.Error("Expected true when exit code matches and pattern found in output")
 	}
 }
 
-func TestCheckVerification_PatternMismatch(t *testing.T) {
+func TestCheckPlanVerification_PatternMismatch(t *testing.T) {
 	t.Parallel()
 
-	if CheckVerification(0, "some other output", 0, "ruff") {
+	if CheckPlanVerification(0, "some other output", 0, "ruff") {
 		t.Error("Expected false when exit code matches but pattern not found")
 	}
 }
 
-func TestCheckVerification_NonDefaultExpectedExitCode(t *testing.T) {
+func TestCheckPlanVerification_NonDefaultExpectedExitCode(t *testing.T) {
 	t.Parallel()
 
 	// Verify command that intentionally exits with code 2
-	if !CheckVerification(2, "expected output", 2, "expected") {
+	if !CheckPlanVerification(2, "expected output", 2, "expected") {
 		t.Error("Expected true when non-default exit code matches and pattern found")
 	}
 
 	// Wrong exit code when expecting non-default
-	if CheckVerification(0, "expected output", 2, "expected") {
+	if CheckPlanVerification(0, "expected output", 2, "expected") {
 		t.Error("Expected false when exit code 0 does not match expected 2")
 	}
 }
 
-func TestCheckVerification_TableDriven(t *testing.T) {
+func TestCheckPlanVerification_TableDriven(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -120,9 +120,9 @@ func TestCheckVerification_TableDriven(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			got := CheckVerification(tt.verifyExitCode, tt.output, tt.expectedExitCode, tt.pattern)
+			got := CheckPlanVerification(tt.verifyExitCode, tt.output, tt.expectedExitCode, tt.pattern)
 			if got != tt.want {
-				t.Errorf("CheckVerification(%d, %q, %d, %q) = %v, want %v",
+				t.Errorf("CheckPlanVerification(%d, %q, %d, %q) = %v, want %v",
 					tt.verifyExitCode, tt.output, tt.expectedExitCode, tt.pattern, got, tt.want)
 			}
 		})

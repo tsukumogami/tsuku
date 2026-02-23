@@ -22,6 +22,12 @@ const TempDirPrefix = "tsuku-sandbox-"
 // ContainerLabelPrefix is the label added to containers for identification.
 const ContainerLabelPrefix = "io.tsuku.sandbox"
 
+// Marker file names written by the sandbox script and read by readVerifyResults.
+const (
+	verifyExitMarker   = ".sandbox-verify-exit"
+	verifyOutputMarker = ".sandbox-verify-output"
+)
+
 // SandboxResult contains the result of a sandbox test.
 type SandboxResult struct {
 	Passed         bool   // Whether the sandbox test succeeded (install AND verify)
@@ -114,9 +120,6 @@ func findTsukuBinary() string {
 // 4. Mount tsuku binary, plan, and cache into container
 // 5. Run container with configured limits
 // 6. Check verification output
-// Sandbox executes a sandbox test for the given installation plan and target.
-// It filters the plan for the target platform and builds a custom container
-// if system dependencies are present, otherwise uses the base image from reqs.
 func (e *Executor) Sandbox(
 	ctx context.Context,
 	plan *executor.InstallationPlan,
@@ -340,7 +343,7 @@ func (e *Executor) Sandbox(
 }
 
 // readVerifyResults reads verification marker files from the workspace and
-// evaluates the verify results using CheckVerification.
+// evaluates the verify results using executor.CheckPlanVerification.
 // Returns (verified, verifyExitCode).
 // If no verify command exists, returns (true, -1).
 func (e *Executor) readVerifyResults(workspaceDir string, plan *executor.InstallationPlan) (bool, int) {
@@ -350,8 +353,8 @@ func (e *Executor) readVerifyResults(workspaceDir string, plan *executor.Install
 	}
 
 	// Read marker files
-	exitPath := filepath.Join(workspaceDir, ".sandbox-verify-exit")
-	outputPath := filepath.Join(workspaceDir, ".sandbox-verify-output")
+	exitPath := filepath.Join(workspaceDir, verifyExitMarker)
+	outputPath := filepath.Join(workspaceDir, verifyOutputMarker)
 
 	exitData, err := os.ReadFile(exitPath)
 	if err != nil {
@@ -378,7 +381,7 @@ func (e *Executor) readVerifyResults(workspaceDir string, plan *executor.Install
 		expectedExitCode = *plan.Verify.ExitCode
 	}
 
-	verified := CheckVerification(verifyExitCode, output, expectedExitCode, plan.Verify.Pattern)
+	verified := executor.CheckPlanVerification(verifyExitCode, output, expectedExitCode, plan.Verify.Pattern)
 	return verified, verifyExitCode
 }
 
@@ -510,8 +513,8 @@ func (e *Executor) buildSandboxScript(
 		sb.WriteString("\n# Run verify command and capture results to marker files\n")
 		sb.WriteString("set +e\n")
 		sb.WriteString("export PATH=\"$TSUKU_HOME/bin:$TSUKU_HOME/tools/current:$PATH\"\n")
-		sb.WriteString(fmt.Sprintf("%s > /workspace/.sandbox-verify-output 2>&1\n", plan.Verify.Command))
-		sb.WriteString("echo $? > /workspace/.sandbox-verify-exit\n")
+		sb.WriteString(fmt.Sprintf("%s > /workspace/%s 2>&1\n", plan.Verify.Command, verifyOutputMarker))
+		sb.WriteString(fmt.Sprintf("echo $? > /workspace/%s\n", verifyExitMarker))
 	}
 
 	return sb.String()

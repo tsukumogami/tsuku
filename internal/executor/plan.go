@@ -24,7 +24,7 @@ const PlanFormatVersion = 5
 // needed to reproduce an installation.
 type InstallationPlan struct {
 	// FormatVersion enables future evolution of the plan format.
-	// Currently 3.
+	// See PlanFormatVersion for the current version.
 	FormatVersion int `json:"format_version"`
 
 	// Metadata
