@@ -39,8 +39,8 @@ rationale: |
 |-------|--------------|------|
 | ~~[#1936: feat(builders): use crates.io `bin_names` for Cargo binary discovery](https://github.com/tsukumogami/tsuku/issues/1936)~~ | None | testable |
 | ~~_Read `bin_names` from the crates.io version API response instead of fetching Cargo.toml from GitHub. Adds version struct fields, rewrites `discoverExecutables()`, removes dead code for repo-based fetching, and caches the API response for the orchestrator validation step._~~ | | |
-| [#1937: fix(builders): handle string-type `bin` field in npm builder](https://github.com/tsukumogami/tsuku/issues/1937) | None | testable |
-| _Fix `parseBinField()` to return the package name when `bin` is a string rather than a map. Strips scope prefixes from scoped packages (`@scope/tool` becomes `tool`) and passes the package name into the parser signature._ | | |
+| ~~[#1937: fix(builders): handle string-type `bin` field in npm builder](https://github.com/tsukumogami/tsuku/issues/1937)~~ | None | testable |
+| ~~_Fix `parseBinField()` to return the package name when `bin` is a string rather than a map. Strips scope prefixes from scoped packages (`@scope/tool` becomes `tool`) and passes the package name into the parser signature._~~ | | |
 | [#1938: feat(builders): add `BinaryNameProvider` and orchestrator validation](https://github.com/tsukumogami/tsuku/issues/1938) | [#1936](https://github.com/tsukumogami/tsuku/issues/1936), [#1937](https://github.com/tsukumogami/tsuku/issues/1937) | testable |
 | _Define the `BinaryNameProvider` interface and add a `validateBinaryNames()` step in the orchestrator between recipe generation and sandbox validation. Implements the interface on Cargo and npm builders using their cached registry data, with telemetry for corrections._ | | |
 | [#1939: feat(builders): add PyPI wheel-based executable discovery](https://github.com/tsukumogami/tsuku/issues/1939) | [#1938](https://github.com/tsukumogami/tsuku/issues/1938) | testable |
@@ -83,8 +83,8 @@ graph LR
     classDef needsDesign fill:#e1bee7
     classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
 
-    class I1936 done
-    class I1937,I1941 ready
+    class I1936,I1937 done
+    class I1941 ready
     class I1938,I1939,I1940 blocked
 ```
 

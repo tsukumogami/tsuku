@@ -1,0 +1,29 @@
+{
+  "issue": 1937,
+  "reviewers": [
+    {
+      "focus": "pragmatic",
+      "blocking_count": 0,
+      "advisory_count": 1,
+      "summary": "No blocking findings. One advisory: unscopedPackageName() could be inlined but is well-named and testable as-is.",
+      "detail_file": "wip/research/implement-doc_review_pragmatic_issue1937.md"
+    },
+    {
+      "focus": "architect",
+      "blocking_count": 0,
+      "advisory_count": 1,
+      "summary": "No blocking findings. One advisory: NpmBuilder doesn't cache pkgInfo for BinaryNameProvider (#1938 will add it).",
+      "detail_file": "wip/research/implement-doc_review_architect_issue1937.md"
+    },
+    {
+      "focus": "maintainer",
+      "blocking_count": 0,
+      "advisory_count": 2,
+      "summary": "No blocking findings. Two advisory: (1) unused string value in type switch could use a clarifying comment, (2) executables[0] access without length guard (cross-builder pattern for #1938).",
+      "detail_file": "wip/research/implement-doc_review_maintainer_issue1937.md"
+    }
+  ],
+  "verdict": "pass",
+  "total_blocking": 0,
+  "total_advisory": 4
+}
