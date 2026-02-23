@@ -53,7 +53,7 @@ if [ ! -f "$CONFIG_FILE" ]; then
   exit 1
 fi
 
-BASE_IMAGE=$(jq -r --arg f "$FAMILY" '.[$f] // empty' "$CONFIG_FILE")
+BASE_IMAGE=$(jq -r --arg f "$FAMILY" '.[$f].image // empty' "$CONFIG_FILE")
 if [ -z "$BASE_IMAGE" ]; then
   echo "ERROR: unknown family '$FAMILY' -- not found in container-images.json"
   echo "Valid families: $(jq -r 'keys | join(", ")' "$CONFIG_FILE")"

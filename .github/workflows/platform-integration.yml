@@ -93,7 +93,7 @@ jobs:
 
       - name: Build in Alpine container
         run: |
-          ALPINE_IMAGE=$(jq -r '.alpine' container-images.json)
+          ALPINE_IMAGE=$(jq -r '.alpine.image' container-images.json)
           docker run --rm -v "$PWD:/workspace" -w /workspace "$ALPINE_IMAGE" sh -c '
             apk add --no-cache rust cargo
             cd cmd/tsuku-dltest
@@ -124,8 +124,8 @@ jobs:
       - name: Build integration matrix
         id: matrix
         run: |
-          DEBIAN=$(jq -r '.debian' container-images.json)
-          RHEL=$(jq -r '.rhel' container-images.json)
+          DEBIAN=$(jq -r '.debian.image' container-images.json)
+          RHEL=$(jq -r '.rhel.image' container-images.json)
           # NOTE: musl/Alpine tests disabled - requires system packages not in base image (see #1570)
           MATRIX=$(jq -n \
             --arg debian "$DEBIAN" \
@@ -293,7 +293,7 @@ jobs:
   #           -e GITHUB_TOKEN="$GITHUB_TOKEN" \
   #           -e TSUKU_REGISTRY_URL="$TSUKU_REGISTRY_URL" \
   #           -w /workspace \
-  #           $(jq -r '.alpine' container-images.json) \
+  #           $(jq -r '.alpine.image' container-images.json) \
   #           sh -c '
   #             set -e
   #
