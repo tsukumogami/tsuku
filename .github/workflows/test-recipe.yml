@@ -24,6 +24,7 @@ on:
   pull_request:
     paths:
       - "recipes/**/*.toml"
+      - "internal/recipe/recipes/**/*.toml"
       - ".github/workflows/test-recipe.yml"
 
 concurrency:
@@ -82,7 +83,7 @@ jobs:
             fi
           else
             # PR trigger: detect changed recipe files
-            CHANGED=$(git diff --name-only --diff-filter=d origin/main...HEAD -- 'recipes/**/*.toml' || true)
+            CHANGED=$(git diff --name-only --diff-filter=d origin/main...HEAD -- 'recipes/**/*.toml' 'internal/recipe/recipes/**/*.toml' || true)
             if [ -z "$CHANGED" ]; then
               echo "No recipe files changed in this PR."
               echo "recipes=[]" >> "$GITHUB_OUTPUT"
