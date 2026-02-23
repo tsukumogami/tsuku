@@ -1,5 +1,5 @@
 ---
-status: Accepted
+status: Current
 problem: |
   The configure_make, cmake_build, and meson_build actions require an executables
   parameter with at least one binary name. This prevents using them for library-only
