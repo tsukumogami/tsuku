@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Accepted
 problem: |
   Recipe builders discover binary names by fetching source files (Cargo.toml,
   pyproject.toml, gemspec) from GitHub repositories. This fails for workspace
