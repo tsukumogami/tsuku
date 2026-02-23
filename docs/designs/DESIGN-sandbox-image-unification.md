@@ -47,6 +47,7 @@ Planned
 | ~~_Protects the centralized config file with the same review requirements as workflow files, mitigating the supply chain risk of a single edit redirecting all container consumers at once._~~ | | |
 | [#1905: docs(sandbox): design sandbox CI integration gaps](https://github.com/tsukumogami/tsuku/issues/1905) | None | simple |
 | _Independent design exploration for the three critical gaps (no post-install verification, no env passthrough, no structured results) that prevent replacing CI docker calls with `--sandbox`. This is future work that builds on the unification foundation._ | | |
+| _Child design: [DESIGN-sandbox-ci-integration.md](DESIGN-sandbox-ci-integration.md)_ | | |
 
 ### Dependency Graph
 
@@ -84,7 +85,7 @@ graph LR
     class I1902 done
     class I1904 done
     class I1903 done
-    class I1905 needsDesign
+    class I1905 tracksDesign
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design
