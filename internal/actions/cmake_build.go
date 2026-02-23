@@ -30,7 +30,7 @@ func (CMakeBuildAction) Dependencies() ActionDeps {
 // Parameters:
 //   - source_dir (required): Directory containing CMakeLists.txt
 //   - cmake_args (optional): Arguments to pass to cmake
-//   - executables (required): List of executable names to verify
+//   - executables (optional): List of executable names to verify
 //   - build_type (optional): CMAKE_BUILD_TYPE (default: Release)
 //
 // The action runs:
@@ -62,11 +62,8 @@ func (a *CMakeBuildAction) Execute(ctx *ExecutionContext, params map[string]inte
 		return fmt.Errorf("CMakeLists.txt not found at %s: %w", cmakeLists, err)
 	}
 
-	// Get executables list (required)
-	executables, ok := GetStringSlice(params, "executables")
-	if !ok || len(executables) == 0 {
-		return fmt.Errorf("cmake_build action requires 'executables' parameter with at least one executable")
-	}
+	// Get executables list (optional for library-only builds)
+	executables, _ := GetStringSlice(params, "executables")
 
 	// Validate executable names to prevent path traversal
 	for _, exe := range executables {

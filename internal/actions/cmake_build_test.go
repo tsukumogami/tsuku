@@ -62,12 +62,12 @@ func TestCMakeBuildAction_Execute_MissingExecutables(t *testing.T) {
 		"source_dir": sourceDir,
 	}
 
+	// executables is optional; the action should not fail due to missing executables.
+	// It will fail later at the cmake step (cmake may not be available or the project
+	// won't configure), but the error must not be about missing executables.
 	err := action.Execute(ctx, params)
-	if err == nil {
-		t.Error("Expected error for missing executables")
-	}
-	if err.Error() != "cmake_build action requires 'executables' parameter with at least one executable" {
-		t.Errorf("Unexpected error: %v", err)
+	if err != nil && strings.Contains(err.Error(), "executables") {
+		t.Errorf("Should not fail due to missing executables, got: %v", err)
 	}
 }
 
