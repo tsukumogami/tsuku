@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-02-22T23:44:09Z",
+  "generated_at": "2026-02-23T03:01:08Z",
   "queue": {
     "total": 5275,
     "by_status": {
       "failed": 110,
-      "pending": 2827,
+      "pending": 2826,
       "requires_manual": 2000,
-      "success": 338
+      "success": 339
     },
     "by_tier": {
       "1": {
@@ -20,9 +20,9 @@
       },
       "3": {
         "failed": 92,
-        "pending": 2827,
+        "pending": 2826,
         "requires_manual": 1977,
-        "success": 334
+        "success": 335
       }
     },
     "packages": {
@@ -2453,13 +2453,6 @@
         {
           "id": "crates.io:cargo-generate",
           "name": "cargo-generate",
-          "ecosystem": "crates.io",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "crates.io:cargo-hack",
-          "name": "cargo-hack",
           "ecosystem": "crates.io",
           "priority": 3,
           "failure_count": 0
@@ -35250,6 +35243,13 @@
           "failure_count": 0
         },
         {
+          "id": "crates.io:cargo-hack",
+          "name": "cargo-hack",
+          "ecosystem": "crates.io",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
           "id": "cargo:cargo-watch",
           "name": "cargo-watch",
           "ecosystem": "cargo",
@@ -37182,13 +37182,94 @@
   },
   "blockers": [],
   "failures": {
-    "generation_failed": 231,
-    "install_failed": 101,
+    "generation_failed": 233,
+    "install_failed": 103,
     "missing_dep": 26,
     "network_error": 7,
-    "recipe_not_found": 51
+    "recipe_not_found": 56
   },
   "failure_details": [
+    {
+      "id": "homebrew-2026-02-23T02-08-32Z-acme.sh",
+      "package": "acme.sh",
+      "ecosystem": "homebrew",
+      "category": "generation_failed",
+      "subcategory": "no_bottles",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for acme.sh from homebrew:acme.sh...\nFetching formula metadata... done (v3.1.2)\nInspecting bottle contents... failed\ndeterministic generation failed: [no_bottles] formula acme.sh has no bottles available",
+      "batch_id": "homebrew-2026-02-23T02-08-32Z",
+      "timestamp": "2026-02-23T02:08:32.357950472Z"
+    },
+    {
+      "id": "homebrew-2026-02-23T02-08-30Z-achannarasappa/tap/ticker",
+      "package": "achannarasappa/tap/ticker",
+      "ecosystem": "homebrew",
+      "category": "recipe_not_found",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: package 'achannarasappa/tap/ticker' not found in homebrew",
+      "batch_id": "homebrew-2026-02-23T02-08-32Z",
+      "timestamp": "2026-02-23T02:08:30.956761467Z"
+    },
+    {
+      "id": "homebrew-2026-02-23T02-08-29Z-abduco",
+      "package": "abduco",
+      "ecosystem": "homebrew",
+      "category": "install_failed",
+      "batch_id": "homebrew-2026-02-23T02-08-32Z",
+      "timestamp": "2026-02-23T02:08:29.837077401Z"
+    },
+    {
+      "id": "homebrew-2026-02-23T02-08-27Z-abcmidi",
+      "package": "abcmidi",
+      "ecosystem": "homebrew",
+      "category": "install_failed",
+      "batch_id": "homebrew-2026-02-23T02-08-32Z",
+      "timestamp": "2026-02-23T02:08:27.525697979Z"
+    },
+    {
+      "id": "homebrew-2026-02-23T02-08-25Z-aarch64-elf-gdb",
+      "package": "aarch64-elf-gdb",
+      "ecosystem": "homebrew",
+      "category": "recipe_not_found",
+      "message": "Error: registry: recipe mpfr not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create mpfr --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi, npm",
+      "batch_id": "homebrew-2026-02-23T02-08-32Z",
+      "timestamp": "2026-02-23T02:08:25.104090611Z"
+    },
+    {
+      "id": "homebrew-2026-02-23T02-08-23Z-aarch64-elf-gcc",
+      "package": "aarch64-elf-gcc",
+      "ecosystem": "homebrew",
+      "category": "recipe_not_found",
+      "message": "Error: registry: recipe isl not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create isl --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi, npm",
+      "batch_id": "homebrew-2026-02-23T02-08-32Z",
+      "timestamp": "2026-02-23T02:08:23.162326849Z"
+    },
+    {
+      "id": "homebrew-2026-02-23T02-08-15Z-a2ps",
+      "package": "a2ps",
+      "ecosystem": "homebrew",
+      "category": "recipe_not_found",
+      "message": "Error: registry: recipe bdw-gc not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create bdw-gc --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi, npm",
+      "batch_id": "homebrew-2026-02-23T02-08-32Z",
+      "timestamp": "2026-02-23T02:08:15.201853337Z"
+    },
+    {
+      "id": "homebrew-2026-02-23T02-08-13Z-tree-sitter@0.25",
+      "package": "tree-sitter@0.25",
+      "ecosystem": "homebrew",
+      "category": "generation_failed",
+      "subcategory": "api_error",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for tree-sitter@0.25 from homebrew:tree-sitter@0.25...\nFetching formula metadata... done (v0.25.10)\nInspecting bottle contents... failed\ndeterministic generation failed: [api_error] failed to fetch bottle data for formula tree-sitter@0.25",
+      "batch_id": "homebrew-2026-02-23T02-08-32Z",
+      "timestamp": "2026-02-23T02:08:13.493877587Z"
+    },
+    {
+      "id": "homebrew-2026-02-23T02-08-12Z-libidn2",
+      "package": "libidn2",
+      "ecosystem": "homebrew",
+      "category": "recipe_not_found",
+      "message": "Error: registry: recipe libunistring not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create libunistring --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi, npm",
+      "batch_id": "homebrew-2026-02-23T02-08-32Z",
+      "timestamp": "2026-02-23T02:08:12.201935974Z"
+    },
     {
       "id": "batch-2026-02-22T22-42-09Z-libgit2",
       "package": "libgit2",
@@ -37307,13 +37388,21 @@
       "timestamp": "2026-02-21T07:27:58Z"
     },
     {
-      "id": "batch-2026-02-21T07-27-58Z-anycable-go",
-      "package": "anycable-go",
+      "id": "batch-2026-02-21T07-27-58Z-apr-util",
+      "package": "apr-util",
       "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "linux-alpine-musl-x86_64",
+      "category": "missing_dep",
+      "exit_code": 8,
+      "platform": "multiple",
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x86_64",
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64",
+        "linux-debian-glibc-arm64",
+        "linux-rhel-glibc-arm64",
+        "linux-suse-glibc-arm64"
+      ],
       "batch_id": "batch-2026-02-21T07-27-58Z",
       "timestamp": "2026-02-21T07:27:58Z"
     },
@@ -37333,21 +37422,13 @@
       "timestamp": "2026-02-21T07:27:58Z"
     },
     {
-      "id": "batch-2026-02-21T07-27-58Z-apr-util",
-      "package": "apr-util",
+      "id": "batch-2026-02-21T07-27-58Z-anycable-go",
+      "package": "anycable-go",
       "ecosystem": "batch",
-      "category": "missing_dep",
-      "exit_code": 8,
-      "platform": "multiple",
-      "platforms": [
-        "darwin-arm64",
-        "darwin-x86_64",
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64",
-        "linux-debian-glibc-arm64",
-        "linux-rhel-glibc-arm64",
-        "linux-suse-glibc-arm64"
-      ],
+      "category": "generation_failed",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "linux-alpine-musl-x86_64",
       "batch_id": "batch-2026-02-21T07-27-58Z",
       "timestamp": "2026-02-21T07:27:58Z"
     },
@@ -38248,8 +38329,8 @@
       "timestamp": "2026-02-21T06:13:30.875620235Z"
     },
     {
-      "id": "batch-2026-02-20T06-08-19Z-zx",
-      "package": "zx",
+      "id": "batch-2026-02-20T06-08-19Z-yarn",
+      "package": "yarn",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -38293,8 +38374,8 @@
       "timestamp": "2026-02-20T06:08:19Z"
     },
     {
-      "id": "batch-2026-02-20T06-08-19Z-yarn",
-      "package": "yarn",
+      "id": "batch-2026-02-20T06-08-19Z-zx",
+      "package": "zx",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -38367,8 +38448,8 @@
       "timestamp": "2026-02-20T04:28:03Z"
     },
     {
-      "id": "batch-2026-02-20T04-28-03Z-pyright",
-      "package": "pyright",
+      "id": "batch-2026-02-20T04-28-03Z-vsce",
+      "package": "vsce",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -38382,8 +38463,8 @@
       "timestamp": "2026-02-20T04:28:03Z"
     },
     {
-      "id": "batch-2026-02-20T04-28-03Z-vsce",
-      "package": "vsce",
+      "id": "batch-2026-02-20T04-28-03Z-pyright",
+      "package": "pyright",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -38458,8 +38539,8 @@
       "timestamp": "2026-02-20T04:15:51.459005871Z"
     },
     {
-      "id": "batch-2026-02-20T02-08-13Z-oxlint",
-      "package": "oxlint",
+      "id": "batch-2026-02-20T02-08-13Z-prettier",
+      "package": "prettier",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -38488,6 +38569,21 @@
       "timestamp": "2026-02-20T02:08:13Z"
     },
     {
+      "id": "batch-2026-02-20T02-08-13Z-oxlint",
+      "package": "oxlint",
+      "ecosystem": "batch",
+      "category": "generation_failed",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "batch-2026-02-20T02-08-13Z",
+      "timestamp": "2026-02-20T02:08:13Z"
+    },
+    {
       "id": "batch-2026-02-20T02-08-13Z-react-native-cli",
       "package": "react-native-cli",
       "ecosystem": "batch",
@@ -38503,8 +38599,8 @@
       "timestamp": "2026-02-20T02:08:13Z"
     },
     {
-      "id": "batch-2026-02-20T02-08-13Z-prettier",
-      "package": "prettier",
+      "id": "batch-2026-02-20T02-08-13Z-release-it",
+      "package": "release-it",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -38520,21 +38616,6 @@
     {
       "id": "batch-2026-02-20T02-08-13Z-rollup",
       "package": "rollup",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "batch-2026-02-20T02-08-13Z",
-      "timestamp": "2026-02-20T02:08:13Z"
-    },
-    {
-      "id": "batch-2026-02-20T02-08-13Z-release-it",
-      "package": "release-it",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -38582,16 +38663,22 @@
       "timestamp": "2026-02-20T01:55:16.033744211Z"
     },
     {
-      "id": "batch-2026-02-20T00-04-55Z-nping",
-      "package": "nping",
+      "id": "batch-2026-02-20T00-04-55Z-n8n-mcp",
+      "package": "n8n-mcp",
       "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
+      "category": "network_error",
+      "exit_code": 124,
       "platform": "multiple",
       "platforms": [
         "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
+        "linux-alpine-musl-x86_64",
+        "linux-arch-glibc-x86_64",
+        "linux-debian-glibc-arm64",
+        "linux-debian-glibc-x86_64",
+        "linux-rhel-glibc-arm64",
+        "linux-rhel-glibc-x86_64",
+        "linux-suse-glibc-arm64",
+        "linux-suse-glibc-x86_64"
       ],
       "batch_id": "batch-2026-02-20T00-04-55Z",
       "timestamp": "2026-02-20T00:04:55Z"
@@ -38627,8 +38714,8 @@
       "timestamp": "2026-02-20T00:04:55Z"
     },
     {
-      "id": "batch-2026-02-20T00-04-55Z-oxfmt",
-      "package": "oxfmt",
+      "id": "batch-2026-02-20T00-04-55Z-node-red",
+      "package": "node-red",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -38642,22 +38729,31 @@
       "timestamp": "2026-02-20T00:04:55Z"
     },
     {
-      "id": "batch-2026-02-20T00-04-55Z-n8n-mcp",
-      "package": "n8n-mcp",
+      "id": "batch-2026-02-20T00-04-55Z-nping",
+      "package": "nping",
       "ecosystem": "batch",
-      "category": "network_error",
-      "exit_code": 124,
+      "category": "generation_failed",
+      "subcategory": "install_failed",
+      "exit_code": 6,
       "platform": "multiple",
       "platforms": [
         "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64",
-        "linux-arch-glibc-x86_64",
-        "linux-debian-glibc-arm64",
-        "linux-debian-glibc-x86_64",
-        "linux-rhel-glibc-arm64",
-        "linux-rhel-glibc-x86_64",
-        "linux-suse-glibc-arm64",
-        "linux-suse-glibc-x86_64"
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "batch-2026-02-20T00-04-55Z",
+      "timestamp": "2026-02-20T00:04:55Z"
+    },
+    {
+      "id": "batch-2026-02-20T00-04-55Z-n",
+      "package": "n",
+      "ecosystem": "batch",
+      "category": "generation_failed",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
       ],
       "batch_id": "batch-2026-02-20T00-04-55Z",
       "timestamp": "2026-02-20T00:04:55Z"
@@ -38678,23 +38774,8 @@
       "timestamp": "2026-02-20T00:04:55Z"
     },
     {
-      "id": "batch-2026-02-20T00-04-55Z-node-red",
-      "package": "node-red",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "batch-2026-02-20T00-04-55Z",
-      "timestamp": "2026-02-20T00:04:55Z"
-    },
-    {
-      "id": "batch-2026-02-20T00-04-55Z-n",
-      "package": "n",
+      "id": "batch-2026-02-20T00-04-55Z-oxfmt",
+      "package": "oxfmt",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -38925,8 +39006,8 @@
       "timestamp": "2026-02-19T21:31:48.334903227Z"
     },
     {
-      "id": "batch-2026-02-19T20-40-46Z-http-server",
-      "package": "http-server",
+      "id": "batch-2026-02-19T20-40-46Z-graphql-cli",
+      "package": "graphql-cli",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -38940,8 +39021,8 @@
       "timestamp": "2026-02-19T20:40:46Z"
     },
     {
-      "id": "batch-2026-02-19T20-40-46Z-graphql-cli",
-      "package": "graphql-cli",
+      "id": "batch-2026-02-19T20-40-46Z-http-server",
+      "package": "http-server",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -39033,21 +39114,6 @@
       "timestamp": "2026-02-19T20:31:36.630209654Z"
     },
     {
-      "id": "batch-2026-02-19T19-46-28Z-dprint",
-      "package": "dprint",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "batch-2026-02-19T19-46-28Z",
-      "timestamp": "2026-02-19T19:46:28Z"
-    },
-    {
       "id": "batch-2026-02-19T19-46-28Z-diff-so-fancy",
       "package": "diff-so-fancy",
       "ecosystem": "batch",
@@ -39065,6 +39131,21 @@
         "linux-rhel-glibc-x86_64",
         "linux-suse-glibc-arm64",
         "linux-suse-glibc-x86_64"
+      ],
+      "batch_id": "batch-2026-02-19T19-46-28Z",
+      "timestamp": "2026-02-19T19:46:28Z"
+    },
+    {
+      "id": "batch-2026-02-19T19-46-28Z-dprint",
+      "package": "dprint",
+      "ecosystem": "batch",
+      "category": "generation_failed",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
       ],
       "batch_id": "batch-2026-02-19T19-46-28Z",
       "timestamp": "2026-02-19T19:46:28Z"
@@ -39148,66 +39229,6 @@
       "timestamp": "2026-02-19T19:39:39.035308818Z"
     },
     {
-      "id": "batch-2026-02-19T14-31-25Z-contentful-cli",
-      "package": "contentful-cli",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "batch-2026-02-19T14-31-25Z",
-      "timestamp": "2026-02-19T14:31:25Z"
-    },
-    {
-      "id": "batch-2026-02-19T14-31-25Z-corepack",
-      "package": "corepack",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "batch-2026-02-19T14-31-25Z",
-      "timestamp": "2026-02-19T14:31:25Z"
-    },
-    {
-      "id": "batch-2026-02-19T14-31-25Z-bpmnlint",
-      "package": "bpmnlint",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "batch-2026-02-19T14-31-25Z",
-      "timestamp": "2026-02-19T14:31:25Z"
-    },
-    {
-      "id": "batch-2026-02-19T14-31-25Z-commitlint",
-      "package": "commitlint",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "batch-2026-02-19T14-31-25Z",
-      "timestamp": "2026-02-19T14:31:25Z"
-    },
-    {
       "id": "batch-2026-02-19T14-31-25Z-cspell",
       "package": "cspell",
       "ecosystem": "batch",
@@ -39223,8 +39244,8 @@
       "timestamp": "2026-02-19T14:31:25Z"
     },
     {
-      "id": "batch-2026-02-19T14-31-25Z-chrome-devtools-mcp",
-      "package": "chrome-devtools-mcp",
+      "id": "batch-2026-02-19T14-31-25Z-contentful-cli",
+      "package": "contentful-cli",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -39236,63 +39257,6 @@
       ],
       "batch_id": "batch-2026-02-19T14-31-25Z",
       "timestamp": "2026-02-19T14:31:25Z"
-    },
-    {
-      "id": "batch-2026-02-19T14-31-25Z-bumpp",
-      "package": "bumpp",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "batch-2026-02-19T14-31-25Z",
-      "timestamp": "2026-02-19T14:31:25Z"
-    },
-    {
-      "id": "npm-2026-02-19T14-15-48Z-countdown",
-      "package": "countdown",
-      "ecosystem": "npm",
-      "category": "install_failed",
-      "message": "Installation failed: step 1 (npm_exec) failed: expected executable countdown not found at /tmp/action-validator-380503872/.install/node_modules/.bin/countdown",
-      "batch_id": "npm-2026-02-19T14-15-55Z",
-      "timestamp": "2026-02-19T14:15:48.350801657Z"
-    },
-    {
-      "id": "npm-2026-02-19T14-15-06Z-chainsaw",
-      "package": "chainsaw",
-      "ecosystem": "npm",
-      "category": "install_failed",
-      "message": "Installation failed: step 1 (npm_exec) failed: expected executable chainsaw not found at /tmp/action-validator-650415521/.install/node_modules/.bin/chainsaw",
-      "batch_id": "npm-2026-02-19T14-15-55Z",
-      "timestamp": "2026-02-19T14:15:06.899890078Z"
-    },
-    {
-      "id": "npm-2026-02-19T14-14-52Z-azion",
-      "package": "azion",
-      "ecosystem": "npm",
-      "category": "install_failed",
-      "message": "tsuku collects anonymous usage statistics to improve the tool.\nNo personal information is collected. See: https://tsuku.dev/telemetry\n\nTo opt out: tsuku config set telemetry false\n         or export TSUKU_NO_TELEMETRY=1\nInstalling eval-time dependencies: [nodejs]\nInstalling nodejs...\nChecking runtime dependencies for nodejs...\n  Resolving runtime dependency 'gcc-libs'...\nExecuting plan: gcc-libs@15.2.0\n   Work directory: /tmp/action-validator-3805304809\n   Total steps: 5 (including 0 from depend",
-      "batch_id": "npm-2026-02-19T14-15-55Z",
-      "timestamp": "2026-02-19T14:14:52.863457288Z"
-    },
-    {
-      "id": "batch-2026-02-19T08-54-36Z-bash-language-server",
-      "package": "bash-language-server",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "batch-2026-02-19T08-54-36Z",
-      "timestamp": "2026-02-19T08:54:36Z"
     }
   ],
   "health": {
@@ -39310,7 +39274,7 @@
       },
       "homebrew": {
         "breaker_state": "closed",
-        "failures": 1,
+        "failures": 0,
         "last_failure": "2026-02-22T23:38:41Z",
         "opens_at": "2026-02-22T16:25:36Z"
       },
@@ -39334,29 +39298,41 @@
       }
     },
     "last_run": {
-      "batch_id": "2026-02-22",
+      "batch_id": "2026-02-23",
       "ecosystems": {
         "homebrew": 10
       },
-      "timestamp": "2026-02-22T23:38:42Z",
-      "succeeded": 0,
-      "failed": 0,
-      "total": 0
-    },
-    "last_successful_run": {
-      "batch_id": "2026-02-22",
-      "ecosystems": {
-        "homebrew": 10
-      },
-      "timestamp": "2026-02-22T22:42:09Z",
+      "timestamp": "2026-02-23T02:26:40Z",
       "succeeded": 1,
       "failed": 0,
       "total": 1,
       "recipes_merged": 1
     },
-    "runs_since_last_success": 1
+    "last_successful_run": {
+      "batch_id": "2026-02-23",
+      "ecosystems": {
+        "homebrew": 10
+      },
+      "timestamp": "2026-02-23T02:26:40Z",
+      "succeeded": 1,
+      "failed": 0,
+      "total": 1,
+      "recipes_merged": 1
+    },
+    "runs_since_last_success": 0
   },
   "runs": [
+    {
+      "batch_id": "2026-02-23T02-26-40Z",
+      "ecosystems": {
+        "homebrew": 10
+      },
+      "total": 1,
+      "merged": 1,
+      "rate": 1,
+      "duration": 8,
+      "timestamp": "2026-02-23T02:26:40Z"
+    },
     {
       "batch_id": "2026-02-22T22-42-09Z",
       "ecosystems": {
@@ -39461,17 +39437,6 @@
       "rate": 1,
       "duration": 8,
       "timestamp": "2026-02-19T21:39:05Z"
-    },
-    {
-      "batch_id": "2026-02-19T20-40-47Z",
-      "ecosystems": {
-        "npm": 10
-      },
-      "total": 3,
-      "merged": 3,
-      "rate": 1,
-      "duration": 10,
-      "timestamp": "2026-02-19T20:40:47Z"
     }
   ],
   "disambiguations": {
@@ -39873,6 +39838,11 @@
     {
       "name": "cargo-edit",
       "source": "cargo:cargo-edit",
+      "validation_status": "valid"
+    },
+    {
+      "name": "cargo-hack",
+      "source": "crates.io:cargo-hack",
       "validation_status": "valid"
     },
     {
