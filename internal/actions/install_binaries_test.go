@@ -163,7 +163,7 @@ func TestInstallDirectoryWithSymlinks(t *testing.T) {
 			Metadata: recipe.MetadataSection{
 				Name: "liberica",
 			},
-			Verify: recipe.VerifySection{
+			Verify: &recipe.VerifySection{
 				Command: "java --version",
 			},
 		},
@@ -320,7 +320,7 @@ func TestInstallBinaries_ModeRouting(t *testing.T) {
 					Metadata: recipe.MetadataSection{
 						Name: "test-tool",
 					},
-					Verify: recipe.VerifySection{
+					Verify: &recipe.VerifySection{
 						Command: "",
 					},
 				},
@@ -436,7 +436,7 @@ func TestInstallBinaries_VerificationEnforcement(t *testing.T) {
 					Metadata: recipe.MetadataSection{
 						Name: "test-tool",
 					},
-					Verify: recipe.VerifySection{
+					Verify: &recipe.VerifySection{
 						Command: "",
 					},
 				},

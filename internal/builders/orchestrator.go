@@ -345,6 +345,9 @@ func (o *Orchestrator) attemptVerifySelfRepair(
 		return nil, nil
 	}
 
+	if r.Verify == nil {
+		return nil, nil
+	}
 	originalCommand := r.Verify.Command
 	toolName := r.Metadata.Name
 

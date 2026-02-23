@@ -818,7 +818,7 @@ func TestValidate(t *testing.T) {
 			recipe: Recipe{
 				Metadata: MetadataSection{Name: "test"},
 				Steps:    []Step{{Action: "download"}},
-				Verify:   VerifySection{Command: "test --version"},
+				Verify:   &VerifySection{Command: "test --version"},
 			},
 			wantErr: false,
 		},
@@ -827,7 +827,7 @@ func TestValidate(t *testing.T) {
 			recipe: Recipe{
 				Metadata: MetadataSection{Name: ""},
 				Steps:    []Step{{Action: "download"}},
-				Verify:   VerifySection{Command: "test --version"},
+				Verify:   &VerifySection{Command: "test --version"},
 			},
 			wantErr: true,
 		},
@@ -836,7 +836,7 @@ func TestValidate(t *testing.T) {
 			recipe: Recipe{
 				Metadata: MetadataSection{Name: "test"},
 				Steps:    []Step{},
-				Verify:   VerifySection{Command: "test --version"},
+				Verify:   &VerifySection{Command: "test --version"},
 			},
 			wantErr: true,
 		},
@@ -845,7 +845,7 @@ func TestValidate(t *testing.T) {
 			recipe: Recipe{
 				Metadata: MetadataSection{Name: "test"},
 				Steps:    []Step{{Action: ""}},
-				Verify:   VerifySection{Command: "test --version"},
+				Verify:   &VerifySection{Command: "test --version"},
 			},
 			wantErr: true,
 		},
@@ -854,7 +854,7 @@ func TestValidate(t *testing.T) {
 			recipe: Recipe{
 				Metadata: MetadataSection{Name: "test"},
 				Steps:    []Step{{Action: "download"}},
-				Verify:   VerifySection{Command: ""},
+				Verify:   &VerifySection{Command: ""},
 			},
 			wantErr: true,
 		},

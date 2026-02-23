@@ -52,6 +52,12 @@ func TestExtractSubcategory_bracketedTag(t *testing.T) {
 			message:  "[install_failed] binary not found",
 			want:     "install_failed",
 		},
+		{
+			name:     "library_only tag",
+			category: "complex_archive",
+			message:  "[library_only] formula bdw-gc detected as library but recipe generation failed",
+			want:     "library_only",
+		},
 	}
 
 	for _, tt := range tests {

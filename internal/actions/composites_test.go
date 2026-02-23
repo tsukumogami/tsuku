@@ -68,7 +68,7 @@ func TestGitHubArchiveAction_VerificationEnforcement(t *testing.T) {
 					Metadata: recipe.MetadataSection{
 						Name: "test-tool",
 					},
-					Verify: recipe.VerifySection{
+					Verify: &recipe.VerifySection{
 						Command: "",
 					},
 				},
@@ -708,7 +708,7 @@ func TestDownloadArchiveAction_VerificationEnforcement(t *testing.T) {
 					Metadata: recipe.MetadataSection{
 						Name: "test-tool",
 					},
-					Verify: recipe.VerifySection{
+					Verify: &recipe.VerifySection{
 						Command: "",
 					},
 				},

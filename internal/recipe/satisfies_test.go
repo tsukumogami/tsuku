@@ -452,7 +452,7 @@ func TestSatisfies_Validation_NoSatisfiesField(t *testing.T) {
 	r := &Recipe{
 		Metadata: MetadataSection{Name: "test"},
 		Steps:    []Step{{Action: "download"}},
-		Verify:   VerifySection{Command: "test --version"},
+		Verify:   &VerifySection{Command: "test --version"},
 	}
 
 	errs := ValidateStructural(r)

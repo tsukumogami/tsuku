@@ -174,7 +174,7 @@ func (b *PyPIBuilder) Build(ctx context.Context, req BuildRequest) (*BuildResult
 				},
 			},
 		},
-		Verify: recipe.VerifySection{
+		Verify: &recipe.VerifySection{
 			Command: fmt.Sprintf("%s --version", executables[0]),
 		},
 	}

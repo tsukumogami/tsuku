@@ -858,7 +858,7 @@ func previewRecipe(r *recipe.Recipe, result *builders.BuildResult) (bool, error)
 	fmt.Println()
 
 	// Show verification
-	if r.Verify.Command != "" {
+	if r.Verify != nil && r.Verify.Command != "" {
 		fmt.Printf("  Verification: %s\n", r.Verify.Command)
 		fmt.Println()
 	}
@@ -1111,7 +1111,7 @@ func formatRecipeTOML(r *recipe.Recipe) (string, error) {
 		Metadata recipe.MetadataSection   `toml:"metadata"`
 		Version  recipe.VersionSection    `toml:"version"`
 		Steps    []map[string]interface{} `toml:"steps"`
-		Verify   recipe.VerifySection     `toml:"verify"`
+		Verify   *recipe.VerifySection    `toml:"verify,omitempty"`
 	}
 
 	steps := make([]map[string]interface{}, len(r.Steps))

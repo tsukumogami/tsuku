@@ -1312,7 +1312,7 @@ func TestRecipe_ToTOML_Basic(t *testing.T) {
 				},
 			},
 		},
-		Verify: VerifySection{
+		Verify: &VerifySection{
 			Command: "tool --version",
 			Pattern: "{version}",
 		},
@@ -1392,7 +1392,7 @@ func TestRecipe_ToTOML_WithStepWhen(t *testing.T) {
 				},
 			},
 		},
-		Verify: VerifySection{
+		Verify: &VerifySection{
 			Command: "tool --version",
 		},
 	}
@@ -1432,7 +1432,7 @@ func TestRecipe_ToTOML_WithNoteAndDescription(t *testing.T) {
 				},
 			},
 		},
-		Verify: VerifySection{
+		Verify: &VerifySection{
 			Command: "tool --version",
 		},
 	}
@@ -1476,7 +1476,7 @@ func TestRecipe_ToTOML_MultipleSteps(t *testing.T) {
 				},
 			},
 		},
-		Verify: VerifySection{
+		Verify: &VerifySection{
 			Command: "tool --version",
 		},
 	}
@@ -1526,7 +1526,7 @@ func TestRecipe_ToTOML_Roundtrip(t *testing.T) {
 				},
 			},
 		},
-		Verify: VerifySection{
+		Verify: &VerifySection{
 			Command: "tool --version",
 			Pattern: "{version}",
 		},
@@ -1574,7 +1574,7 @@ func TestRecipe_ToTOML_EmptyFields(t *testing.T) {
 		},
 		Version: VersionSection{},
 		Steps:   []Step{},
-		Verify: VerifySection{
+		Verify: &VerifySection{
 			Command: "tool --version",
 		},
 	}
@@ -1606,6 +1606,48 @@ func TestRecipe_ToTOML_EmptyFields(t *testing.T) {
 	}
 }
 
+func TestRecipe_ToTOML_NilVerify(t *testing.T) {
+	// Library recipes should omit [verify] entirely
+	r := Recipe{
+		Metadata: MetadataSection{
+			Name: "libfoo",
+			Type: RecipeTypeLibrary,
+		},
+		Version: VersionSection{
+			Source:  "homebrew",
+			Formula: "libfoo",
+		},
+		Steps: []Step{
+			{
+				Action: "homebrew",
+				Params: map[string]interface{}{
+					"formula": "libfoo",
+				},
+			},
+		},
+		// Verify is nil
+	}
+
+	data, err := r.ToTOML()
+	if err != nil {
+		t.Fatalf("ToTOML() error = %v", err)
+	}
+
+	tomlStr := string(data)
+
+	if contains(tomlStr, "[verify]") {
+		t.Errorf("ToTOML() should not contain [verify] section when Verify is nil, got:\n%s", tomlStr)
+	}
+
+	// Should still have other sections
+	if !contains(tomlStr, "[metadata]") {
+		t.Error("ToTOML() missing [metadata] section")
+	}
+	if !contains(tomlStr, "[version]") {
+		t.Error("ToTOML() missing [version] section")
+	}
+}
+
 func TestRecipe_ToTOML_VersionSectionFields(t *testing.T) {
 	// Test that all version section fields are serialized
 	recipe := Recipe{
@@ -1620,7 +1662,7 @@ func TestRecipe_ToTOML_VersionSectionFields(t *testing.T) {
 			Formula:    "test-formula",
 		},
 		Steps: []Step{},
-		Verify: VerifySection{
+		Verify: &VerifySection{
 			Command: "test --version",
 		},
 	}
@@ -1676,7 +1718,7 @@ func TestRecipe_ToTOML_HomebrewRecipe(t *testing.T) {
 				},
 			},
 		},
-		Verify: VerifySection{
+		Verify: &VerifySection{
 			Command: "jq --version",
 		},
 	}
@@ -1712,6 +1754,126 @@ func TestRecipe_ToTOML_HomebrewRecipe(t *testing.T) {
 	if parsed.Version.Formula != "jq" {
 		t.Errorf("Roundtrip: Version.Formula = %q, want %q", parsed.Version.Formula, "jq")
 	}
+}
+
+func TestRecipe_ToTOML_MetadataType(t *testing.T) {
+	t.Run("type emitted when set", func(t *testing.T) {
+		r := Recipe{
+			Metadata: MetadataSection{
+				Name: "libfoo",
+				Type: RecipeTypeLibrary,
+			},
+			Version: VersionSection{
+				Source:  "homebrew",
+				Formula: "libfoo",
+			},
+			Steps: []Step{
+				{
+					Action: "homebrew",
+					Params: map[string]interface{}{
+						"formula": "libfoo",
+					},
+				},
+			},
+			// Library recipe: no verify section
+		}
+
+		data, err := r.ToTOML()
+		if err != nil {
+			t.Fatalf("ToTOML() error = %v", err)
+		}
+
+		tomlStr := string(data)
+
+		if !contains(tomlStr, `type = "library"`) {
+			t.Errorf("ToTOML() should contain type = \"library\" in [metadata], got:\n%s", tomlStr)
+		}
+	})
+
+	t.Run("type omitted when empty", func(t *testing.T) {
+		r := Recipe{
+			Metadata: MetadataSection{
+				Name: "some-tool",
+			},
+			Version: VersionSection{
+				Source: "github_releases",
+			},
+			Steps: []Step{
+				{
+					Action: "github_file",
+					Params: map[string]interface{}{
+						"repo":   "owner/repo",
+						"binary": "tool",
+					},
+				},
+			},
+			Verify: &VerifySection{
+				Command: "tool --version",
+			},
+		}
+
+		data, err := r.ToTOML()
+		if err != nil {
+			t.Fatalf("ToTOML() error = %v", err)
+		}
+
+		tomlStr := string(data)
+
+		if contains(tomlStr, "type =") {
+			t.Errorf("ToTOML() should not contain type field when Type is empty, got:\n%s", tomlStr)
+		}
+	})
+
+	t.Run("type roundtrip preserves value", func(t *testing.T) {
+		original := Recipe{
+			Metadata: MetadataSection{
+				Name:        "libbar",
+				Description: "A library",
+				Type:        RecipeTypeLibrary,
+			},
+			Version: VersionSection{
+				Source:  "homebrew",
+				Formula: "libbar",
+			},
+			Steps: []Step{
+				{
+					Action: "homebrew",
+					Params: map[string]interface{}{
+						"formula": "libbar",
+					},
+				},
+				{
+					Action: "install_binaries",
+					Params: map[string]interface{}{
+						"install_mode": "directory",
+						"outputs":      []interface{}{"lib/libbar.so", "lib/libbar.a", "include/bar.h"},
+					},
+				},
+			},
+			// Library recipe: no verify section
+		}
+
+		data, err := original.ToTOML()
+		if err != nil {
+			t.Fatalf("ToTOML() error = %v", err)
+		}
+
+		var parsed Recipe
+		err = toml.Unmarshal(data, &parsed)
+		if err != nil {
+			t.Fatalf("Unmarshal() error = %v, toml:\n%s", err, string(data))
+		}
+
+		if parsed.Metadata.Type != RecipeTypeLibrary {
+			t.Errorf("Roundtrip: Metadata.Type = %q, want %q", parsed.Metadata.Type, RecipeTypeLibrary)
+		}
+		if parsed.Metadata.Name != "libbar" {
+			t.Errorf("Roundtrip: Metadata.Name = %q, want %q", parsed.Metadata.Name, "libbar")
+		}
+		if parsed.Metadata.Description != "A library" {
+			t.Errorf("Roundtrip: Metadata.Description = %q, want %q", parsed.Metadata.Description, "A library")
+		}
+	})
 }
 
 // Helper function to check if string contains substring
@@ -1869,7 +2031,7 @@ func TestRecipe_ToTOML_WithResources(t *testing.T) {
 		Steps: []Step{
 			{Action: "cmake_build", Params: map[string]interface{}{}},
 		},
-		Verify: VerifySection{Command: "nvim --version"},
+		Verify: &VerifySection{Command: "nvim --version"},
 	}
 
 	data, err := recipe.ToTOML()
@@ -1931,7 +2093,7 @@ func TestRecipe_ToTOML_WithPatches(t *testing.T) {
 		Steps: []Step{
 			{Action: "configure_make", Params: map[string]interface{}{}},
 		},
-		Verify: VerifySection{Command: "curl --version"},
+		Verify: &VerifySection{Command: "curl --version"},
 	}
 
 	data, err := recipe.ToTOML()
@@ -2000,7 +2162,7 @@ func TestRecipe_ToTOML_ResourcesAndPatches_Combined(t *testing.T) {
 		Steps: []Step{
 			{Action: "cmake_build", Params: map[string]interface{}{}},
 		},
-		Verify: VerifySection{Command: "nvim --version"},
+		Verify: &VerifySection{Command: "nvim --version"},
 	}
 
 	data, err := recipe.ToTOML()

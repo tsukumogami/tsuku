@@ -3,6 +3,7 @@ package recipe
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/BurntSushi/toml"
@@ -30,7 +31,7 @@ func TestWriteRecipe_Success(t *testing.T) {
 				},
 			},
 		},
-		Verify: VerifySection{
+		Verify: &VerifySection{
 			Command: "test-tool --version",
 		},
 	}
@@ -76,7 +77,7 @@ func TestWriteRecipe_RoundTrip(t *testing.T) {
 				},
 			},
 		},
-		Verify: VerifySection{
+		Verify: &VerifySection{
 			Command: "rt --version",
 			Pattern: "roundtrip",
 		},
@@ -122,7 +123,7 @@ func TestWriteRecipe_CreatesDirectory(t *testing.T) {
 	recipe := &Recipe{
 		Metadata: MetadataSection{Name: "nested-tool"},
 		Steps:    []Step{{Action: "download"}},
-		Verify:   VerifySection{Command: "nested-tool --version"},
+		Verify:   &VerifySection{Command: "nested-tool --version"},
 	}
 
 	err := WriteRecipe(recipe, nestedPath)
@@ -143,7 +144,7 @@ func TestWriteRecipe_OverwritesExisting(t *testing.T) {
 	initial := &Recipe{
 		Metadata: MetadataSection{Name: "initial-name"},
 		Steps:    []Step{{Action: "download"}},
-		Verify:   VerifySection{Command: "test --version"},
+		Verify:   &VerifySection{Command: "test --version"},
 	}
 	if err := WriteRecipe(initial, path); err != nil {
 		t.Fatalf("Initial WriteRecipe() failed: %v", err)
@@ -153,7 +154,7 @@ func TestWriteRecipe_OverwritesExisting(t *testing.T) {
 	updated := &Recipe{
 		Metadata: MetadataSection{Name: "updated-name"},
 		Steps:    []Step{{Action: "cargo_install"}},
-		Verify:   VerifySection{Command: "updated --version"},
+		Verify:   &VerifySection{Command: "updated --version"},
 	}
 	if err := WriteRecipe(updated, path); err != nil {
 		t.Fatalf("Updated WriteRecipe() failed: %v", err)
@@ -177,7 +178,7 @@ func TestWriteRecipe_AtomicBehavior(t *testing.T) {
 	recipe := &Recipe{
 		Metadata: MetadataSection{Name: "atomic-test"},
 		Steps:    []Step{{Action: "download"}},
-		Verify:   VerifySection{Command: "atomic --version"},
+		Verify:   &VerifySection{Command: "atomic --version"},
 	}
 
 	// Write successfully
@@ -206,7 +207,7 @@ func TestWriteRecipe_InvalidDirectory(t *testing.T) {
 	recipe := &Recipe{
 		Metadata: MetadataSection{Name: "test"},
 		Steps:    []Step{{Action: "download"}},
-		Verify:   VerifySection{Command: "test --version"},
+		Verify:   &VerifySection{Command: "test --version"},
 	}
 
 	err := WriteRecipe(recipe, path)
@@ -241,7 +242,7 @@ func TestWriteRecipe_WithComplexStep(t *testing.T) {
 				},
 			},
 		},
-		Verify: VerifySection{
+		Verify: &VerifySection{
 			Command: "complex --version",
 			Pattern: `v\d+\.\d+\.\d+`,
 		},
@@ -268,5 +269,95 @@ func TestWriteRecipe_WithComplexStep(t *testing.T) {
 	}
 	if step.Description != "Download from GitHub" {
 		t.Errorf("Step description = %q, want %q", step.Description, "Download from GitHub")
+	}
+}
+
+func TestWriteRecipe_NilVerify_OmitsSection(t *testing.T) {
+	tmpDir := t.TempDir()
+	path := filepath.Join(tmpDir, "library.toml")
+
+	r := &Recipe{
+		Metadata: MetadataSection{
+			Name:        "libfoo",
+			Description: "A test library",
+			Type:        RecipeTypeLibrary,
+		},
+		Version: VersionSection{
+			Source:  "homebrew",
+			Formula: "libfoo",
+		},
+		Steps: []Step{
+			{
+				Action: "homebrew",
+				Params: map[string]interface{}{
+					"formula": "libfoo",
+				},
+			},
+			{
+				Action: "install_binaries",
+				Params: map[string]interface{}{
+					"install_mode": "directory",
+					"outputs":      []string{"lib/libfoo.so", "lib/libfoo.a"},
+				},
+			},
+		},
+		// Verify is nil -- library recipes omit the verify section
+	}
+
+	err := WriteRecipe(r, path)
+	if err != nil {
+		t.Fatalf("WriteRecipe() failed: %v", err)
+	}
+
+	// Read the file contents and verify [verify] is absent
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("Failed to read written recipe: %v", err)
+	}
+
+	content := string(data)
+	if strings.Contains(content, "[verify]") {
+		t.Errorf("Written TOML should not contain [verify] section for nil Verify, got:\n%s", content)
+	}
+}
+
+func TestWriteRecipe_NonNilVerify_IncludesSection(t *testing.T) {
+	tmpDir := t.TempDir()
+	path := filepath.Join(tmpDir, "tool.toml")
+
+	r := &Recipe{
+		Metadata: MetadataSection{
+			Name: "test-tool",
+		},
+		Steps: []Step{
+			{
+				Action: "download",
+			},
+		},
+		Verify: &VerifySection{
+			Command: "test-tool --version",
+			Pattern: "v1.0.0",
+		},
+	}
+
+	err := WriteRecipe(r, path)
+	if err != nil {
+		t.Fatalf("WriteRecipe() failed: %v", err)
+	}
+
+	// Read back and verify [verify] is present
+	var loaded Recipe
+	if _, err := toml.DecodeFile(path, &loaded); err != nil {
+		t.Fatalf("Failed to decode: %v", err)
+	}
+
+	if loaded.Verify == nil {
+		t.Fatal("Verify should not be nil after round-trip")
+	}
+	if loaded.Verify.Command != "test-tool --version" {
+		t.Errorf("Verify.Command = %q, want %q", loaded.Verify.Command, "test-tool --version")
+	}
+	if loaded.Verify.Pattern != "v1.0.0" {
+		t.Errorf("Verify.Pattern = %q, want %q", loaded.Verify.Pattern, "v1.0.0")
 	}
 }

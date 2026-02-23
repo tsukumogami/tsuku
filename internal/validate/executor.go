@@ -320,7 +320,7 @@ func (e *Executor) buildPlanInstallScript(r *recipe.Recipe) string {
 	// Run the verify command explicitly to capture its output for pattern matching.
 	// The install command doesn't print verify output, so we need to run it separately.
 	// Binaries are symlinked to $TSUKU_HOME/tools/current (/workspace/tsuku/tools/current).
-	if r.Verify.Command != "" {
+	if r.Verify != nil && r.Verify.Command != "" {
 		sb.WriteString("# Run verify command to capture output for pattern matching\n")
 		sb.WriteString("export PATH=\"/workspace/tsuku/tools/current:$PATH\"\n")
 		sb.WriteString(fmt.Sprintf("%s\n", r.Verify.Command))
@@ -333,7 +333,7 @@ func (e *Executor) buildPlanInstallScript(r *recipe.Recipe) string {
 func (e *Executor) checkVerification(r *recipe.Recipe, result *RunResult) bool {
 	// If exit code is non-zero, verification failed
 	expectedExitCode := 0
-	if r.Verify.ExitCode != nil {
+	if r.Verify != nil && r.Verify.ExitCode != nil {
 		expectedExitCode = *r.Verify.ExitCode
 	}
 	if result.ExitCode != expectedExitCode {
@@ -341,7 +341,7 @@ func (e *Executor) checkVerification(r *recipe.Recipe, result *RunResult) bool {
 	}
 
 	// If no pattern specified, just check exit code
-	if r.Verify.Pattern == "" {
+	if r.Verify == nil || r.Verify.Pattern == "" {
 		return true
 	}
 

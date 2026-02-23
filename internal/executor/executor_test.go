@@ -531,7 +531,7 @@ func TestDryRun(t *testing.T) {
 				},
 			},
 		},
-		Verify: recipe.VerifySection{
+		Verify: &recipe.VerifySection{
 			Command: "tool --version",
 		},
 	}
@@ -827,7 +827,7 @@ func TestDryRun_SuccessfulVersionResolution(t *testing.T) {
 				},
 			},
 		},
-		Verify: recipe.VerifySection{
+		Verify: &recipe.VerifySection{
 			Command: "node --version",
 		},
 	}
@@ -901,7 +901,7 @@ func TestDryRun_WithVerification(t *testing.T) {
 				},
 			},
 		},
-		Verify: recipe.VerifySection{
+		Verify: &recipe.VerifySection{
 			Command: "tool --version",
 			Pattern: "v{version}",
 		},
@@ -914,7 +914,7 @@ func TestDryRun_WithVerification(t *testing.T) {
 	defer exec.Cleanup()
 
 	// Just verify the recipe has verification set
-	if r.Verify.Command == "" {
+	if r.Verify == nil || r.Verify.Command == "" {
 		t.Error("Recipe should have verification command")
 	}
 }
