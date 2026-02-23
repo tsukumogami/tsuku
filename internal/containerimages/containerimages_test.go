@@ -9,11 +9,11 @@ func TestImageForFamily_KnownFamilies(t *testing.T) {
 	t.Parallel()
 
 	expected := map[string]string{
-		"debian": "debian:bookworm-slim",
-		"rhel":   "fedora:41",
-		"arch":   "archlinux:base",
-		"alpine": "alpine:3.21",
-		"suse":   "opensuse/tumbleweed",
+		"debian": "debian:bookworm-slim@sha256:98f4b71de414932439ac6ac690d7060df1f27161073c5036a7553723881bffbe",
+		"rhel":   "fedora:41@sha256:f1a3fab47bcb3c3ddf3135d5ee7ba8b7b25f2e809a47440936212a3a50957f3d",
+		"arch":   "archlinux:base@sha256:e25a13ea0e2a36df12f3593fe4bc1063605cfd2ab46c704f72c9e1c3514138ce",
+		"alpine": "alpine:3.21@sha256:c3f8e73fdb79deaebaa2037150150191b9dcbfba68b4a46d70103204c53f4709",
+		"suse":   "opensuse/leap:15.6@sha256:045fc29f76266cd8176906ab1d63fcd0f505fe1182c06398631effa8f55e10d0",
 	}
 
 	for family, wantImage := range expected {
@@ -54,8 +54,8 @@ func TestDefaultImage(t *testing.T) {
 	t.Parallel()
 
 	got := DefaultImage()
-	if got != "debian:bookworm-slim" {
-		t.Errorf("DefaultImage() = %q, want %q", got, "debian:bookworm-slim")
+	if got != "debian:bookworm-slim@sha256:98f4b71de414932439ac6ac690d7060df1f27161073c5036a7553723881bffbe" {
+		t.Errorf("DefaultImage() = %q, want %q", got, "debian:bookworm-slim@sha256:98f4b71de414932439ac6ac690d7060df1f27161073c5036a7553723881bffbe")
 	}
 }
 

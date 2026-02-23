@@ -80,9 +80,9 @@ CODEOWNERS protection.
 - **Transparent to consumers**: the Go code, CI workflows, and test fixtures
   that read `container-images.json` should need zero code changes. The image
   string is opaque to all consumers.
-- **Rolling releases**: `opensuse/tumbleweed` has no version tag. Whatever
-  format we pick must handle images that only have a digest, not a versioned
-  tag.
+- **Consistent version strategy**: each image should pin to a meaningful
+  version tag where one exists, so Renovate updates carry version context
+  for reviewers.
 - **Cache correctness**: `ContainerImageName()` should produce a different
   hash when image content changes, even if the tag string stays the same.
 
@@ -107,7 +107,7 @@ digest to each value using Docker's native reference format:
   "rhel": "fedora:41@sha256:ef56gh78...",
   "arch": "archlinux:base@sha256:ij90kl12...",
   "alpine": "alpine:3.21@sha256:mn34op56...",
-  "suse": "opensuse/tumbleweed:latest@sha256:qr78st90..."
+  "suse": "opensuse/leap:15.6@sha256:qr78st90..."
 }
 ```
 
@@ -147,48 +147,37 @@ drift-check CI job would need to validate cross-file consistency. All
 this complexity exists to solve a formatting preference, not a functional
 requirement.
 
-### Decision 2: Handling opensuse/tumbleweed
+### Decision 2: Handling the openSUSE Entry
 
 `opensuse/tumbleweed` is a rolling release distribution with no version
 tags. The current config uses the bare image name without any tag, which
 Docker interprets as `:latest`. This creates a problem for both the
 Renovate regex (which expects a `:tag` component to capture as
-`currentValue`) and for digest pinning (which needs a consistent format
-across all entries).
+`currentValue`) and for the version tag strategy (rolling releases
+provide no version context for reviewers).
 
-#### Chosen: Add explicit :latest tag
+Decision 3 (below) resolves this by switching from Tumbleweed to Leap.
+Leap uses standard `MAJOR.MINOR` version tags (`15.6`), so the Renovate
+regex matches uniformly and version bumps are meaningful. This decision
+is kept as a record of the alternatives evaluated for the openSUSE entry
+specifically.
 
-Change the entry from `"opensuse/tumbleweed"` to
-`"opensuse/tumbleweed:latest@sha256:..."`. Docker treats `image` and
-`image:latest` identically, so this is a no-op from the container runtime's
-perspective.
+#### Chosen: Switch to opensuse/leap (see Decision 3)
 
-The explicit tag has two benefits. First, it makes the Renovate regex
-uniform: every entry matches `depName:currentValue@currentDigest`, with
-no special case for tagless images. Second, Renovate's docker datasource
-watches for new digests and opens update PRs when the manifest changes.
-For tumbleweed, this is exactly what we want, since the only meaningful
-update signal is a new digest.
-
-Note: Renovate's built-in Docker manager deprioritizes `latest` tags by
-default, but that doesn't apply here. We use a custom regex manager, not
-the built-in Docker manager, so those defaults don't take effect. The
-custom regex manager treats all matched entries equally regardless of tag
-value.
-
-The change does affect test assertions that currently expect
-`"opensuse/tumbleweed"` without a tag. These tests need to be updated
-to expect the new string, which is a one-time cost already covered by
-updating the JSON values.
+Replace `"opensuse/tumbleweed"` with `"opensuse/leap:15.6@sha256:..."`.
+Leap is openSUSE's stable release with semver-style tags that Renovate
+handles natively, uses the same zypper package manager, and provides
+the same SUSE family coverage for sandbox testing.
 
 #### Alternatives Considered
 
-**Digest-only without tag**: Use `opensuse/tumbleweed@sha256:...` with no
-tag at all. Docker supports this format, but it requires a separate Renovate
-regex pattern because the `:currentValue` capture group would be absent.
-Rejected because maintaining two regex patterns for a single file adds
-unnecessary configuration and makes the Renovate config harder to reason
-about. The `latest` tag conveys the same semantic and keeps one regex.
+**Add explicit :latest tag to Tumbleweed**: Use
+`"opensuse/tumbleweed:latest@sha256:..."`. Docker treats `image` and
+`image:latest` identically. This would make the Renovate regex uniform,
+but reviewers would see digest-only updates with no version context
+for the most volatile image in the list. We use a custom regex manager
+(not the built-in Docker manager), so Renovate's default `latest`
+deprioritization doesn't apply.
 
 **Keep untagged, skip digest pinning for tumbleweed**: Leave it as
 `"opensuse/tumbleweed"` and accept that this one image isn't pinned.
@@ -443,8 +432,8 @@ by `platform-integration.yml`.
 
 ### Step 2: Update container-images.json
 
-Replace each value with the tag@digest form. For opensuse/tumbleweed,
-add the `:latest` tag.
+Replace each value with the tag@digest form. Switch `opensuse/tumbleweed`
+to `opensuse/leap:15.6`.
 
 ### Step 3: Regenerate Embedded Copy
 
