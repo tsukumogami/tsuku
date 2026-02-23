@@ -1,6 +1,10 @@
 package builders
 
 import (
+	"archive/tar"
+	"bufio"
+	"bytes"
+	"compress/gzip"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -21,11 +25,16 @@ const (
 	maxGemspecSize = 1 * 1024 * 1024
 	// gemspecFetchTimeout is the timeout for fetching gemspec from repository
 	gemspecFetchTimeout = 10 * time.Second
+	// maxGemDownloadSize limits .gem artifact download to 50MB
+	maxGemDownloadSize = 50 * 1024 * 1024
+	// maxGemMetadataSize limits the decompressed metadata.gz to 1MB
+	maxGemMetadataSize = 1 * 1024 * 1024
 )
 
 // rubyGemsGemResponse represents the RubyGems API response for a gem
 type rubyGemsGemResponse struct {
 	Name          string `json:"name"`
+	Version       string `json:"version"`
 	Info          string `json:"info"`
 	HomepageURI   string `json:"homepage_uri"`
 	SourceCodeURI string `json:"source_code_uri"`
@@ -44,6 +53,11 @@ var gemNameRegex = regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9_-]*$`)
 type GemBuilder struct {
 	httpClient      *http.Client
 	rubyGemsBaseURL string
+	// cachedGemExecutables stores executables discovered from .gem artifact
+	// metadata.gz so that AuthoritativeBinaryNames() can return them without
+	// re-downloading. Populated during Build() and read by the orchestrator
+	// via the BinaryNameProvider interface (#1940).
+	cachedGemExecutables []string
 }
 
 // NewGemBuilder creates a new GemBuilder with the given HTTP client.
@@ -119,9 +133,15 @@ func (b *GemBuilder) Build(ctx context.Context, req BuildRequest) (*BuildResult,
 		Warnings: []string{},
 	}
 
-	// Try to discover executables from gemspec
-	executables, execWarnings := b.discoverExecutables(ctx, gemInfo)
+	// Discover executables: try artifact first, fall back to gemspec, then gem name
+	executables, execWarnings, fromArtifact := b.discoverExecutables(ctx, gemInfo)
 	result.Warnings = append(result.Warnings, execWarnings...)
+
+	// Cache artifact-discovered executables for BinaryNameProvider (#1940)
+	if fromArtifact {
+		b.cachedGemExecutables = make([]string, len(executables))
+		copy(b.cachedGemExecutables, executables)
+	}
 
 	// Build the recipe
 	r := &recipe.Recipe{
@@ -206,9 +226,192 @@ func (b *GemBuilder) fetchGemInfo(ctx context.Context, gemName string) (*rubyGem
 	return &gemResp, nil
 }
 
-// discoverExecutables attempts to find executable names from gemspec
-// Returns the executables list and any warnings generated during discovery
-func (b *GemBuilder) discoverExecutables(ctx context.Context, gemInfo *rubyGemsGemResponse) ([]string, []string) {
+// discoverExecutables tries artifact-based discovery first, falling back to
+// gemspec-from-GitHub, then gem name. Returns the executables list, any
+// warnings, and whether the result came from artifact discovery (used for
+// BinaryNameProvider caching).
+func (b *GemBuilder) discoverExecutables(ctx context.Context, gemInfo *rubyGemsGemResponse) ([]string, []string, bool) {
+	var warnings []string
+
+	// Try artifact-based discovery first
+	executables, artifactWarnings := b.discoverFromGemArtifact(ctx, gemInfo)
+	warnings = append(warnings, artifactWarnings...)
+	if len(executables) > 0 {
+		return executables, warnings, true
+	}
+
+	// Fall back to gemspec-from-GitHub
+	fallbackExecs, fallbackWarnings := b.discoverFromGemspec(ctx, gemInfo)
+	warnings = append(warnings, fallbackWarnings...)
+	return fallbackExecs, warnings, false
+}
+
+// discoverFromGemArtifact downloads the published .gem file and extracts
+// executable names from the embedded metadata.gz YAML file.
+func (b *GemBuilder) discoverFromGemArtifact(ctx context.Context, gemInfo *rubyGemsGemResponse) ([]string, []string) {
+	var warnings []string
+
+	if gemInfo.Version == "" {
+		warnings = append(warnings, "No version in gem info; trying gemspec fallback")
+		return nil, warnings
+	}
+
+	// Build the .gem download URL
+	gemURL, err := b.buildGemArtifactURL(gemInfo.Name, gemInfo.Version)
+	if err != nil {
+		warnings = append(warnings, fmt.Sprintf("Failed to build gem URL: %v; trying gemspec fallback", err))
+		return nil, warnings
+	}
+
+	// Download the .gem file in-memory
+	data, err := downloadArtifact(ctx, b.httpClient, gemURL, downloadArtifactOptions{
+		MaxSize:              maxGemDownloadSize,
+		ExpectedContentTypes: []string{"application/octet-stream", "application/x-tar", "binary/octet-stream"},
+	})
+	if err != nil {
+		warnings = append(warnings, fmt.Sprintf("Gem download failed: %v; trying gemspec fallback", err))
+		return nil, warnings
+	}
+
+	// Extract metadata.gz from the tar archive
+	metadataGZ, err := extractTarEntry(data, "metadata.gz")
+	if err != nil {
+		warnings = append(warnings, fmt.Sprintf("Failed to extract metadata.gz: %v; trying gemspec fallback", err))
+		return nil, warnings
+	}
+
+	// Decompress gzip
+	metadataYAML, err := decompressGzip(metadataGZ, maxGemMetadataSize)
+	if err != nil {
+		warnings = append(warnings, fmt.Sprintf("Failed to decompress metadata.gz: %v; trying gemspec fallback", err))
+		return nil, warnings
+	}
+
+	// Parse executables from YAML
+	executables := parseGemMetadataExecutables(metadataYAML)
+	if len(executables) == 0 {
+		warnings = append(warnings, "No executables in gem metadata; trying gemspec fallback")
+		return nil, warnings
+	}
+
+	return executables, warnings
+}
+
+// buildGemArtifactURL constructs the .gem download URL from the gem name and version.
+func (b *GemBuilder) buildGemArtifactURL(name, version string) (string, error) {
+	baseURL, err := url.Parse(b.rubyGemsBaseURL)
+	if err != nil {
+		return "", fmt.Errorf("invalid base URL: %w", err)
+	}
+	artifactURL := baseURL.JoinPath("gems", fmt.Sprintf("%s-%s.gem", name, version))
+	return artifactURL.String(), nil
+}
+
+// extractTarEntry reads a tar archive from data and returns the contents of
+// the named entry. Returns an error if the entry is not found.
+func extractTarEntry(data []byte, entryName string) ([]byte, error) {
+	tr := tar.NewReader(bytes.NewReader(data))
+	for {
+		header, err := tr.Next()
+		if err == io.EOF {
+			return nil, fmt.Errorf("entry %q not found in tar archive", entryName)
+		}
+		if err != nil {
+			return nil, fmt.Errorf("failed to read tar: %w", err)
+		}
+		if header.Name == entryName {
+			content, err := io.ReadAll(io.LimitReader(tr, maxGemDownloadSize))
+			if err != nil {
+				return nil, fmt.Errorf("failed to read tar entry %q: %w", entryName, err)
+			}
+			return content, nil
+		}
+	}
+}
+
+// decompressGzip decompresses gzip data with a size limit on the output.
+func decompressGzip(data []byte, maxSize int64) ([]byte, error) {
+	gz, err := gzip.NewReader(bytes.NewReader(data))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create gzip reader: %w", err)
+	}
+	defer gz.Close()
+
+	content, err := io.ReadAll(io.LimitReader(gz, maxSize+1))
+	if err != nil {
+		return nil, fmt.Errorf("failed to decompress gzip: %w", err)
+	}
+	if int64(len(content)) > maxSize {
+		return nil, fmt.Errorf("decompressed metadata exceeds maximum size of %d bytes", maxSize)
+	}
+	return content, nil
+}
+
+// parseGemMetadataExecutables extracts executable names from gem metadata YAML.
+// The metadata uses a simple YAML structure where executables appear as:
+//
+//	executables:
+//	- bundle
+//	- bundler
+//
+// We parse this with a line-based scanner rather than a full YAML parser to
+// avoid adding a dependency for this single use case.
+func parseGemMetadataExecutables(metadata []byte) []string {
+	scanner := bufio.NewScanner(bytes.NewReader(metadata))
+	inExecutables := false
+	var executables []string
+
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		// Detect the executables section
+		if strings.HasPrefix(line, "executables:") {
+			value := strings.TrimSpace(strings.TrimPrefix(line, "executables:"))
+			// Handle inline empty array: "executables: []"
+			if value == "[]" {
+				return nil
+			}
+			// Handle inline single value: "executables: bundler" (uncommon)
+			if value != "" && !strings.HasPrefix(value, "[") {
+				if isValidExecutableName(value) {
+					executables = append(executables, value)
+				}
+				return executables
+			}
+			inExecutables = true
+			continue
+		}
+
+		if !inExecutables {
+			continue
+		}
+
+		// YAML list items start with "- "
+		trimmed := strings.TrimSpace(line)
+		if strings.HasPrefix(trimmed, "- ") {
+			name := strings.TrimSpace(strings.TrimPrefix(trimmed, "- "))
+			if isValidExecutableName(name) {
+				executables = append(executables, name)
+				if len(executables) >= maxExecutablesPerPackage {
+					break
+				}
+			}
+			continue
+		}
+
+		// Any non-list line ends the executables section
+		if trimmed != "" {
+			break
+		}
+	}
+
+	return executables
+}
+
+// discoverFromGemspec is the fallback discovery path that fetches gemspec
+// from GitHub and parses executables from it. Falls back to gem name if
+// no source URL is available or gemspec can't be fetched.
+func (b *GemBuilder) discoverFromGemspec(ctx context.Context, gemInfo *rubyGemsGemResponse) ([]string, []string) {
 	var warnings []string
 
 	// If no source code URL, fall back to gem name
@@ -445,7 +648,7 @@ func (b *GemBuilder) Discover(ctx context.Context, limit int) ([]DiscoveryCandid
 		}
 
 		// Only include gems that have executables (indicates a CLI tool).
-		execs, _ := b.discoverExecutables(ctx, gemInfo)
+		execs, _, _ := b.discoverExecutables(ctx, gemInfo)
 		if len(execs) == 0 {
 			continue
 		}
@@ -572,6 +775,23 @@ func (b *GemBuilder) searchGems(ctx context.Context, query string) ([]gemCandida
 		}
 	}
 	return results, nil
+}
+
+// AuthoritativeBinaryNames returns the executable names discovered from
+// the .gem artifact's metadata.gz. This implements BinaryNameProvider so
+// the orchestrator can cross-check recipe executables against registry
+// metadata.
+//
+// Returns nil if Build() hasn't been called yet (no cached data), or if
+// artifact-based discovery was not successful (the builder fell back to
+// gemspec-from-GitHub or gem name). Only artifact-discovered executables
+// are authoritative because they come from the published package, not
+// from source files.
+func (b *GemBuilder) AuthoritativeBinaryNames() []string {
+	if len(b.cachedGemExecutables) == 0 {
+		return nil
+	}
+	return b.cachedGemExecutables
 }
 
 // Probe checks if a gem exists on RubyGems and returns quality metadata.

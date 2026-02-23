@@ -1,6 +1,9 @@
 package builders
 
 import (
+	"archive/zip"
+	"bufio"
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -22,6 +25,10 @@ const (
 	maxPyProjectSize = 1 * 1024 * 1024
 	// pyprojectFetchTimeout is the timeout for fetching pyproject.toml from repository
 	pyprojectFetchTimeout = 10 * time.Second
+	// maxWheelDownloadSize limits wheel artifact download to 20MB
+	maxWheelDownloadSize = 20 * 1024 * 1024
+	// maxExecutablesPerPackage is the upper bound on executable count per package
+	maxExecutablesPerPackage = 50
 )
 
 // pypiPackageResponse represents the PyPI API response for a package
@@ -34,6 +41,20 @@ type pypiPackageResponse struct {
 		Classifiers []string          `json:"classifiers"`
 	} `json:"info"`
 	Releases map[string]json.RawMessage `json:"releases"`
+	URLs     []pypiURLEntry             `json:"urls"`
+}
+
+// pypiURLEntry represents a single download artifact in the PyPI API response.
+type pypiURLEntry struct {
+	PackageType string      `json:"packagetype"`
+	URL         string      `json:"url"`
+	Filename    string      `json:"filename"`
+	Digests     pypiDigests `json:"digests"`
+}
+
+// pypiDigests holds hash digests for a PyPI artifact.
+type pypiDigests struct {
+	SHA256 string `json:"sha256"`
 }
 
 // pyprojectToml represents the relevant parts of pyproject.toml
@@ -59,6 +80,11 @@ type PyPIBuilder struct {
 	httpClient  *http.Client
 	pypiBaseURL string
 	topPyPIURL  string
+	// cachedWheelExecutables stores executables discovered from wheel artifacts
+	// so that AuthoritativeBinaryNames() can return them without re-downloading.
+	// Populated during Build() and read by the orchestrator via
+	// the BinaryNameProvider interface (#1939).
+	cachedWheelExecutables []string
 }
 
 // NewPyPIBuilder creates a new PyPIBuilder with the given HTTP client.
@@ -136,9 +162,15 @@ func (b *PyPIBuilder) Build(ctx context.Context, req BuildRequest) (*BuildResult
 		Warnings: []string{},
 	}
 
-	// Try to discover executables from pyproject.toml
-	executables, execWarnings := b.discoverExecutables(ctx, pkgInfo)
+	// Discover executables: try wheel first, fall back to pyproject.toml
+	executables, execWarnings, fromWheel := b.discoverExecutables(ctx, pkgInfo)
 	result.Warnings = append(result.Warnings, execWarnings...)
+
+	// Cache wheel-discovered executables for BinaryNameProvider (#1939)
+	if fromWheel {
+		b.cachedWheelExecutables = make([]string, len(executables))
+		copy(b.cachedWheelExecutables, executables)
+	}
 
 	// Determine homepage
 	homepage := pkgInfo.Info.HomePage
@@ -232,9 +264,214 @@ func (b *PyPIBuilder) fetchPackageInfo(ctx context.Context, packageName string) 
 	return &pkgResp, nil
 }
 
-// discoverExecutables attempts to find executable names from pyproject.toml
-// Returns the executables list and any warnings generated during discovery
-func (b *PyPIBuilder) discoverExecutables(ctx context.Context, pkgInfo *pypiPackageResponse) ([]string, []string) {
+// discoverExecutables tries wheel-based discovery first, falling back to
+// pyproject.toml from GitHub. Returns the executables list, any warnings, and
+// whether the result came from wheel discovery (used for BinaryNameProvider caching).
+func (b *PyPIBuilder) discoverExecutables(ctx context.Context, pkgInfo *pypiPackageResponse) ([]string, []string, bool) {
+	var warnings []string
+
+	// Try wheel-based discovery first
+	executables, wheelWarnings := b.discoverFromWheel(ctx, pkgInfo)
+	warnings = append(warnings, wheelWarnings...)
+	if len(executables) > 0 {
+		return executables, warnings, true
+	}
+
+	// Fall back to pyproject.toml from GitHub
+	fallbackExecs, fallbackWarnings := b.discoverFromPyproject(ctx, pkgInfo)
+	warnings = append(warnings, fallbackWarnings...)
+	return fallbackExecs, warnings, false
+}
+
+// discoverFromWheel attempts to download a wheel artifact and extract
+// console_scripts from entry_points.txt inside the .dist-info directory.
+func (b *PyPIBuilder) discoverFromWheel(ctx context.Context, pkgInfo *pypiPackageResponse) ([]string, []string) {
+	var warnings []string
+
+	// Find a suitable wheel from the urls array
+	wheel := b.findBestWheel(pkgInfo.URLs)
+	if wheel == nil {
+		warnings = append(warnings, "No wheel artifact available; trying pyproject.toml fallback")
+		return nil, warnings
+	}
+
+	// Download the wheel in-memory
+	data, err := downloadArtifact(ctx, b.httpClient, wheel.URL, downloadArtifactOptions{
+		MaxSize:              maxWheelDownloadSize,
+		ExpectedSHA256:       wheel.Digests.SHA256,
+		ExpectedContentTypes: []string{"application/zip", "application/octet-stream", "binary/octet-stream"},
+	})
+	if err != nil {
+		warnings = append(warnings, fmt.Sprintf("Wheel download failed: %v; trying pyproject.toml fallback", err))
+		return nil, warnings
+	}
+
+	// Parse the ZIP archive and extract entry_points.txt
+	executables, err := b.extractConsoleScripts(data, pkgInfo.Info.Name)
+	if err != nil {
+		warnings = append(warnings, fmt.Sprintf("Wheel parsing failed: %v; trying pyproject.toml fallback", err))
+		return nil, warnings
+	}
+
+	if len(executables) == 0 {
+		warnings = append(warnings, "No console_scripts in wheel; trying pyproject.toml fallback")
+		return nil, warnings
+	}
+
+	return executables, warnings
+}
+
+// findBestWheel selects the best wheel artifact from the PyPI urls array.
+// It prefers platform-independent wheels (py3-none-any) over platform-specific ones.
+func (b *PyPIBuilder) findBestWheel(urls []pypiURLEntry) *pypiURLEntry {
+	var bestWheel *pypiURLEntry
+	for i := range urls {
+		if urls[i].PackageType != "bdist_wheel" {
+			continue
+		}
+		if bestWheel == nil {
+			bestWheel = &urls[i]
+			continue
+		}
+		// Prefer platform-independent wheel
+		if strings.Contains(urls[i].Filename, "-py3-none-any") ||
+			strings.Contains(urls[i].Filename, "-py2.py3-none-any") {
+			bestWheel = &urls[i]
+		}
+	}
+	return bestWheel
+}
+
+// extractConsoleScripts reads the wheel ZIP and parses entry_points.txt from
+// the .dist-info directory to extract [console_scripts] entries.
+func (b *PyPIBuilder) extractConsoleScripts(wheelData []byte, packageName string) ([]string, error) {
+	reader, err := zip.NewReader(bytes.NewReader(wheelData), int64(len(wheelData)))
+	if err != nil {
+		return nil, fmt.Errorf("invalid wheel ZIP: %w", err)
+	}
+
+	// Look for entry_points.txt in the .dist-info directory.
+	// The normalized package name follows PEP 503: lowercase, hyphens become underscores.
+	normalizedName := normalizePyPIName(packageName)
+	suffix := ".dist-info/entry_points.txt"
+
+	var entryPointsFile *zip.File
+	for _, f := range reader.File {
+		// Match either {normalized_name}-{version}.dist-info/entry_points.txt
+		// or any .dist-info/entry_points.txt that ends with our suffix.
+		if !strings.HasSuffix(f.Name, suffix) {
+			continue
+		}
+		dirName := strings.TrimSuffix(f.Name, "/entry_points.txt")
+		dirBase := dirName
+		if idx := strings.LastIndex(dirName, "/"); idx >= 0 {
+			dirBase = dirName[idx+1:]
+		}
+		// The dist-info directory is named {normalized}-{version}.dist-info
+		// Check that it starts with our normalized package name
+		dirLower := strings.ToLower(dirBase)
+		if strings.HasPrefix(dirLower, normalizedName+"-") ||
+			strings.HasPrefix(dirLower, normalizedName+".") {
+			entryPointsFile = f
+			break
+		}
+		// If we haven't found a specific match yet, keep this as a fallback
+		if entryPointsFile == nil {
+			entryPointsFile = f
+		}
+	}
+
+	if entryPointsFile == nil {
+		return nil, fmt.Errorf("entry_points.txt not found in wheel")
+	}
+
+	rc, err := entryPointsFile.Open()
+	if err != nil {
+		return nil, fmt.Errorf("failed to open entry_points.txt: %w", err)
+	}
+	defer rc.Close()
+
+	return parseConsoleScripts(rc)
+}
+
+// parseConsoleScripts parses an entry_points.txt file and extracts executable
+// names from the [console_scripts] section. Each line in that section has the
+// format: name = module:function [extras]
+func parseConsoleScripts(r io.Reader) ([]string, error) {
+	scanner := bufio.NewScanner(r)
+	inConsoleScripts := false
+	var executables []string
+
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+
+		// Section headers
+		if strings.HasPrefix(line, "[") && strings.HasSuffix(line, "]") {
+			section := strings.ToLower(strings.Trim(line, "[]"))
+			inConsoleScripts = section == "console_scripts"
+			continue
+		}
+
+		if !inConsoleScripts {
+			continue
+		}
+
+		// Skip empty lines and comments
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+
+		// Parse "name = module:function" -- extract just the name
+		parts := strings.SplitN(line, "=", 2)
+		if len(parts) < 2 {
+			continue
+		}
+
+		name := strings.TrimSpace(parts[0])
+		if name == "" {
+			continue
+		}
+
+		if !isValidExecutableName(name) {
+			continue
+		}
+
+		executables = append(executables, name)
+		if len(executables) >= maxExecutablesPerPackage {
+			break
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return nil, fmt.Errorf("failed to parse entry_points.txt: %w", err)
+	}
+
+	return executables, nil
+}
+
+// normalizePyPIName normalizes a PyPI package name per PEP 503:
+// lowercase, runs of hyphens/underscores/periods replaced with a single underscore.
+func normalizePyPIName(name string) string {
+	name = strings.ToLower(name)
+	var result strings.Builder
+	prevSep := false
+	for _, ch := range name {
+		if ch == '-' || ch == '_' || ch == '.' {
+			if !prevSep {
+				result.WriteRune('_')
+				prevSep = true
+			}
+			continue
+		}
+		prevSep = false
+		result.WriteRune(ch)
+	}
+	return result.String()
+}
+
+// discoverFromPyproject is the fallback discovery path that fetches
+// pyproject.toml from GitHub and parses [project.scripts].
+func (b *PyPIBuilder) discoverFromPyproject(ctx context.Context, pkgInfo *pypiPackageResponse) ([]string, []string) {
 	var warnings []string
 
 	// Get source URL from project_urls
@@ -483,6 +720,22 @@ func hasConsoleClassifier(classifiers []string) bool {
 		}
 	}
 	return false
+}
+
+// AuthoritativeBinaryNames returns the executable names discovered from
+// the wheel artifact's entry_points.txt. This implements BinaryNameProvider
+// so the orchestrator can cross-check recipe executables against registry
+// metadata.
+//
+// Returns nil if Build() hasn't been called yet (no cached data), or if
+// wheel-based discovery was not successful (the builder fell back to
+// pyproject.toml). Only wheel-discovered executables are authoritative because
+// they come from the published artifact, not from source files.
+func (b *PyPIBuilder) AuthoritativeBinaryNames() []string {
+	if len(b.cachedWheelExecutables) == 0 {
+		return nil
+	}
+	return b.cachedWheelExecutables
 }
 
 // Probe checks if a package exists on PyPI and returns quality metadata.

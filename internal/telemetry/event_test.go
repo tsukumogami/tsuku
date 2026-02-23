@@ -244,3 +244,46 @@ func TestNewVerifySelfRepairEvent_FallbackHelp(t *testing.T) {
 		t.Errorf("Success = %v, want %v", e.Success, true)
 	}
 }
+
+func TestNewBinaryNameRepairEvent(t *testing.T) {
+	e := NewBinaryNameRepairEvent("sqlx-cli", "crates.io", true)
+
+	if e.Action != "binary_name_repair" {
+		t.Errorf("Action = %q, want %q", e.Action, "binary_name_repair")
+	}
+	if e.ToolName != "sqlx-cli" {
+		t.Errorf("ToolName = %q, want %q", e.ToolName, "sqlx-cli")
+	}
+	if e.Builder != "crates.io" {
+		t.Errorf("Builder = %q, want %q", e.Builder, "crates.io")
+	}
+	if e.Success != true {
+		t.Errorf("Success = %v, want %v", e.Success, true)
+	}
+	if e.OS != runtime.GOOS {
+		t.Errorf("OS = %q, want %q", e.OS, runtime.GOOS)
+	}
+	if e.Arch != runtime.GOARCH {
+		t.Errorf("Arch = %q, want %q", e.Arch, runtime.GOARCH)
+	}
+	if e.TsukuVersion != buildinfo.Version() {
+		t.Errorf("TsukuVersion = %q, want %q", e.TsukuVersion, buildinfo.Version())
+	}
+	if e.SchemaVersion != "1" {
+		t.Errorf("SchemaVersion = %q, want %q", e.SchemaVersion, "1")
+	}
+}
+
+func TestNewBinaryNameRepairEvent_NpmBuilder(t *testing.T) {
+	e := NewBinaryNameRepairEvent("typescript", "npm", true)
+
+	if e.Action != "binary_name_repair" {
+		t.Errorf("Action = %q, want %q", e.Action, "binary_name_repair")
+	}
+	if e.ToolName != "typescript" {
+		t.Errorf("ToolName = %q, want %q", e.ToolName, "typescript")
+	}
+	if e.Builder != "npm" {
+		t.Errorf("Builder = %q, want %q", e.Builder, "npm")
+	}
+}

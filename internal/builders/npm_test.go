@@ -121,6 +121,38 @@ func TestNpmBuilder_Build(t *testing.T) {
 				"dist-tags": {},
 				"versions": {}
 			}`))
+		case "/string-bin-unscoped":
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(`{
+				"name": "string-bin-unscoped",
+				"description": "Package with string bin field",
+				"dist-tags": {"latest": "1.0.0"},
+				"versions": {"1.0.0": {"bin": "./bin/tool.js"}}
+			}`))
+		case "/@scope/string-bin-scoped":
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(`{
+				"name": "@scope/string-bin-scoped",
+				"description": "Scoped package with string bin field",
+				"dist-tags": {"latest": "2.0.0"},
+				"versions": {"2.0.0": {"bin": "./bin/tool.js"}}
+			}`))
+		case "/typescript":
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(`{
+				"name": "typescript",
+				"description": "TypeScript language",
+				"dist-tags": {"latest": "5.0.0"},
+				"versions": {"5.0.0": {"bin": {"tsc": "bin/tsc", "tsserver": "bin/tsserver"}}}
+			}`))
+		case "/@angular/cli":
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(`{
+				"name": "@angular/cli",
+				"description": "Angular CLI",
+				"dist-tags": {"latest": "16.0.0"},
+				"versions": {"16.0.0": {"bin": {"ng": "./bin/ng"}}}
+			}`))
 		default:
 			w.WriteHeader(http.StatusNotFound)
 		}
@@ -227,6 +259,63 @@ func TestNpmBuilder_Build(t *testing.T) {
 			t.Error("Build() should fail for nonexistent package")
 		}
 	})
+
+	t.Run("string bin unscoped package", func(t *testing.T) {
+		result, err := builder.Build(ctx, BuildRequest{Package: "string-bin-unscoped"})
+		if err != nil {
+			t.Fatalf("Build() error = %v", err)
+		}
+		executables := result.Recipe.Steps[0].Params["executables"].([]string)
+		if len(executables) != 1 || executables[0] != "string-bin-unscoped" {
+			t.Errorf("executables = %v, want [\"string-bin-unscoped\"]", executables)
+		}
+		if len(result.Warnings) != 0 {
+			t.Errorf("unexpected warnings: %v", result.Warnings)
+		}
+	})
+
+	t.Run("string bin scoped package", func(t *testing.T) {
+		result, err := builder.Build(ctx, BuildRequest{Package: "@scope/string-bin-scoped"})
+		if err != nil {
+			t.Fatalf("Build() error = %v", err)
+		}
+		executables := result.Recipe.Steps[0].Params["executables"].([]string)
+		if len(executables) != 1 || executables[0] != "string-bin-scoped" {
+			t.Errorf("executables = %v, want [\"string-bin-scoped\"]", executables)
+		}
+		if len(result.Warnings) != 0 {
+			t.Errorf("unexpected warnings: %v", result.Warnings)
+		}
+	})
+
+	t.Run("map bin with multiple executables", func(t *testing.T) {
+		result, err := builder.Build(ctx, BuildRequest{Package: "typescript"})
+		if err != nil {
+			t.Fatalf("Build() error = %v", err)
+		}
+		executables := result.Recipe.Steps[0].Params["executables"].([]string)
+		if len(executables) != 2 {
+			t.Fatalf("expected 2 executables, got %d: %v", len(executables), executables)
+		}
+		names := make(map[string]bool)
+		for _, e := range executables {
+			names[e] = true
+		}
+		if !names["tsc"] || !names["tsserver"] {
+			t.Errorf("executables = %v, want tsc and tsserver", executables)
+		}
+	})
+
+	t.Run("map bin scoped package uses map keys", func(t *testing.T) {
+		result, err := builder.Build(ctx, BuildRequest{Package: "@angular/cli"})
+		if err != nil {
+			t.Fatalf("Build() error = %v", err)
+		}
+		executables := result.Recipe.Steps[0].Params["executables"].([]string)
+		if len(executables) != 1 || executables[0] != "ng" {
+			t.Errorf("executables = %v, want [\"ng\"]", executables)
+		}
+	})
 }
 
 //nolint:dupl // Test structure similar to other builder tests by design
@@ -318,22 +407,75 @@ func TestIsValidNpmPackageNameForBuilder(t *testing.T) {
 
 func TestParseBinField(t *testing.T) {
 	tests := []struct {
-		name string
-		bin  any
-		want int // expected number of executables
+		name        string
+		bin         any
+		packageName string
+		wantNames   []string // nil means expect nil/empty result
 	}{
-		{"nil", nil, 0},
-		{"string", "./bin/tool.js", 0}, // string means package name is the command
-		{"single map", map[string]any{"tool": "./bin/tool.js"}, 1},
-		{"multiple map", map[string]any{"tool1": "./bin/tool1.js", "tool2": "./bin/tool2.js"}, 2},
-		{"invalid type", 123, 0},
+		// Nil bin field
+		{"nil", nil, "anything", nil},
+
+		// String bin, unscoped package
+		{"string unscoped", "./bin/tool.js", "my-tool", []string{"my-tool"}},
+
+		// String bin, scoped package -- scope stripped
+		{"string scoped", "./bin/tool.js", "@scope/tool", []string{"tool"}},
+
+		// Map bin, unscoped package
+		{"single map", map[string]any{"tool": "./bin/tool.js"}, "some-pkg", []string{"tool"}},
+		{"multiple map", map[string]any{"tsc": "bin/tsc", "tsserver": "bin/tsserver"}, "typescript", []string{"tsc", "tsserver"}},
+
+		// Map bin, scoped package (map keys are the authoritative names)
+		{"map scoped", map[string]any{"ng": "./bin/ng"}, "@angular/cli", []string{"ng"}},
+
+		// Invalid type
+		{"invalid type", 123, "anything", nil},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			got := parseBinField(tc.bin)
-			if len(got) != tc.want {
-				t.Errorf("parseBinField() = %v (len %d), want len %d", got, len(got), tc.want)
+			got := parseBinField(tc.bin, tc.packageName)
+			if tc.wantNames == nil {
+				if len(got) != 0 {
+					t.Errorf("parseBinField() = %v, want nil/empty", got)
+				}
+				return
+			}
+			if len(got) != len(tc.wantNames) {
+				t.Fatalf("parseBinField() returned %d names %v, want %d names %v", len(got), got, len(tc.wantNames), tc.wantNames)
+			}
+			// Build a set of expected names for order-independent comparison
+			want := make(map[string]bool, len(tc.wantNames))
+			for _, n := range tc.wantNames {
+				want[n] = true
+			}
+			for _, n := range got {
+				if !want[n] {
+					t.Errorf("parseBinField() returned unexpected name %q; want one of %v", n, tc.wantNames)
+				}
+			}
+		})
+	}
+}
+
+func TestUnscopedPackageName(t *testing.T) {
+	tests := []struct {
+		input string
+		want  string
+	}{
+		{"my-tool", "my-tool"},
+		{"@scope/tool", "tool"},
+		{"@angular/cli", "cli"},
+		{"@types/node", "node"},
+		{"plain", "plain"},
+		{"@a/b", "b"},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.input, func(t *testing.T) {
+			got := unscopedPackageName(tc.input)
+			if got != tc.want {
+				t.Errorf("unscopedPackageName(%q) = %q, want %q", tc.input, got, tc.want)
 			}
 		})
 	}
