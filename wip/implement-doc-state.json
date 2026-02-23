@@ -3,7 +3,7 @@
   "design_doc": "docs/designs/DESIGN-ci-job-consolidation.md",
   "branch": "docs/ci-job-consolidation",
   "pr_number": 1887,
-  "integrity_hash": "sha256:4d32ead67af9e74de5cbb24deac77465851c950208d053ce5b2fc3890b2ef468",
+  "integrity_hash": "sha256:8d6b5bbc136906ba659603af8c2e2e4ed025022e4472ba27ea1e926893bf0ab2",
   "issues": [
     {
       "number": 1891,
@@ -126,16 +126,30 @@
     {
       "number": 1895,
       "title": "ci(integration-tests): consolidate remaining matrix jobs",
-      "status": "pending",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [
         1894
       ],
-      "commits": [],
-      "agent_type": "",
-      "summary": null,
+      "commits": [
+        "9bb9c171",
+        "f274b47e"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          ".github/workflows/integration-tests.yml"
+        ],
+        "tests_added": 0,
+        "key_decisions": "Consolidated 5 matrix groups into serialized loops; fixed Alpine sh vs bash and macOS missing timeout"
+      },
+      "reviewer_results": {
+        "approved": true,
+        "note": "PR #1919 merged -- CI validated all 6 consolidated integration-test jobs"
+      },
       "testable_scenarios": [
         "scenario-10",
         "scenario-11"
@@ -144,16 +158,29 @@
     {
       "number": 1896,
       "title": "ci(build-essentials): consolidate homebrew-linux tests",
-      "status": "pending",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [
         1891
       ],
-      "commits": [],
-      "agent_type": "",
-      "summary": null,
+      "commits": [
+        "1186e0cd"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          ".github/workflows/build-essentials.yml"
+        ],
+        "tests_added": 0,
+        "key_decisions": "Serialized 4 homebrew tools into single job with per-tool TSUKU_HOME isolation and shared download cache"
+      },
+      "reviewer_results": {
+        "approved": true,
+        "note": "PR #1920 merged -- homebrew-linux validated in CI"
+      },
       "testable_scenarios": [
         "scenario-12"
       ]

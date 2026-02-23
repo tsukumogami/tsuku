@@ -132,19 +132,19 @@ Total scenarios: 14
 ---
 
 ## Scenario 10: remaining integration-tests.yml consolidation
-**ID**: scenario-10
+**ID**: [x] scenario-10
 **Testable after**: #1895
 **Category**: infrastructure
 **Commands**:
 - `grep -cE '^\s{2}[a-z][a-z0-9_-]+:\s*$' .github/workflows/integration-tests.yml`
 - `grep -c 'strategy:' .github/workflows/integration-tests.yml`
 **Expected**: The workflow file defines exactly 6 top-level jobs: checksum-pinning (1), homebrew-linux (1), library-integrity (1), library-dlopen-glibc (1), library-dlopen-musl (1), library-dlopen-macos (1). There are zero `strategy:` blocks remaining. Each consolidated job uses `::group::` markers, failure arrays, per-test `$TSUKU_HOME` isolation, and `timeout` wrappers.
-**Status**: pending
+**Status**: passed
 
 ---
 
 ## Scenario 11: remaining integration-tests.yml CI passes all tests
-**ID**: scenario-11
+**ID**: [x] scenario-11
 **Testable after**: #1895
 **Category**: use-case
 **Environment**: manual (CI)
@@ -158,12 +158,12 @@ Total scenarios: 14
   - library-dlopen-musl: 3 libraries (zlib, libyaml, gcc-libs) on alpine
   - library-integrity: 2 libraries (zlib, libyaml) on debian
 **Expected**: All 6 jobs pass. The total job count for `integration-tests.yml` is 6 (down from 20), saving 14 jobs. Specific checks: homebrew-linux passes GITHUB_TOKEN into Docker containers via `-e GITHUB_TOKEN`; library-dlopen-musl still uses GHA `container:` directive with `golang:1.23-alpine` (not Docker run); library-dlopen-glibc and dlopen-macos build Rust only once per job.
-**Status**: pending
+**Status**: passed
 
 ---
 
 ## Scenario 12: homebrew-linux test serialization in build-essentials
-**ID**: scenario-12
+**ID**: [x] scenario-12
 **Testable after**: #1896
 **Category**: use-case
 **Environment**: manual (CI)
@@ -173,7 +173,7 @@ Total scenarios: 14
 - Expand the job log and confirm `::group::` sections for all 4 tools: pkg-config, cmake, gdbm, pngcrush.
 - Confirm that both `verify-tool.sh` and `verify-binary.sh` run for each tool.
 **Expected**: One `test-homebrew-linux` job replaces 4 matrix jobs, saving 3 runner slots. All 4 tools pass installation and verification. Each tool gets a fresh `$TSUKU_HOME` with a shared download cache. The `make` exclusion comment (see #1581) is preserved in the workflow file. All other jobs in `build-essentials.yml` remain unchanged.
-**Status**: pending
+**Status**: passed
 
 ---
 

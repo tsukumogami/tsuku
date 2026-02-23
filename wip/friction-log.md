@@ -121,3 +121,38 @@ ironically demonstrates the queue pressure problem we're fixing.
 All checks on PRs #1910 and #1911 remained "pending" for several minutes while the
 runner pool was busy with other jobs. This is the exact problem described in the
 design doc. Once these PRs merge, future PRs in this repo will see shorter queues.
+
+**Friction: sandbox-tests skipped by path filter gate**
+PR #1910 only changed `sandbox-tests.yml`. The workflow has a `dorny/paths-filter`
+gate (`code-changed`) that skips sandbox tests if no Go code or test scripts changed.
+This means the consolidated workflow was never actually tested -- it passed CI by
+being skipped. Had to touch `test-matrix.json` (trailing newline) to trigger the
+gate. This is a general problem for workflow-only PRs: the path filter designed to
+save CI cost also prevents validating the workflow itself. Worth considering whether
+workflow file changes should always trigger their own jobs.
+
+### Phase 2: Remaining matrix consolidation
+
+**Friction: musl/Alpine container shell defaults to sh**
+The consolidated `library-dlopen-musl` job runs in `golang:1.23-alpine` container.
+GHA defaults to `sh` for container jobs. The loop script uses bash arrays (`FAILED=()`)
+which aren't POSIX-compatible. The original matrix jobs worked because each ran a
+single command, not a bash loop. Fix: add `shell: bash -e {0}` to the step (bash is
+installed in a prior bootstrap step).
+
+**Friction: macOS doesn't have GNU timeout**
+The consolidated `library-dlopen-macos` job used `timeout 300` around each test
+iteration, matching the pattern from Linux jobs. But macOS runners don't have GNU
+coreutils `timeout`. The original matrix jobs didn't use timeout (they relied on the
+job-level `timeout-minutes`). Fix: remove per-iteration timeout on macOS, keep the
+job-level timeout. This is a platform difference that's easy to miss when applying a
+pattern across Linux and macOS jobs.
+
+**Observation: Phase 2 consolidation is more complex than Phase 1**
+Phase 1 jobs (sandbox-multifamily, integration-linux, sandbox-tests, checksum-pinning)
+all followed the same pattern: simple for-loop over families/tools with GHA groups.
+Phase 2 issue #1895 (integration-tests remaining matrix) required 5 different
+sub-consolidations, each with slightly different setup requirements: Rust toolchain
+for dlopen tests, Alpine container for musl, macOS runner for darwin. The "one pattern
+fits all" assumption from the design doc breaks down when jobs have heterogeneous
+prerequisites.
