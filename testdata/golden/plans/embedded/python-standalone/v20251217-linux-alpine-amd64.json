@@ -1,7 +1,7 @@
 {
   "format_version": 4,
-  "tool": "pkg-config",
-  "version": "2.5.1",
+  "tool": "python-standalone",
+  "version": "20251217",
   "platform": {
     "os": "linux",
     "arch": "amd64",
@@ -13,7 +13,7 @@
       "action": "apk_install",
       "params": {
         "packages": [
-          "pkgconf"
+          "python3"
         ]
       },
       "evaluable": false,
@@ -21,7 +21,7 @@
     }
   ],
   "verify": {
-    "command": "pkg-config --version",
-    "pattern": "{version}"
+    "command": "python3 --version",
+    "pattern": "Python 3."
   }
 }

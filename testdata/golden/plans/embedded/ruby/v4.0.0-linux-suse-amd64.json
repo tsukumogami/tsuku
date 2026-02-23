@@ -1,10 +1,11 @@
 {
-  "format_version": 5,
+  "format_version": 4,
   "tool": "ruby",
   "version": "4.0.0",
   "platform": {
     "os": "linux",
-    "arch": "amd64"
+    "arch": "amd64",
+    "linux_family": "suse"
   },
   "deterministic": false,
   "dependencies": [
@@ -135,7 +136,6 @@
         "archive": "ruby-4.0.0-ubuntu-22.04-x64.tar.gz",
         "format": "tar.gz",
         "os_mapping": {
-          "darwin": "darwin",
           "linux": "ubuntu-22.04"
         },
         "strip_dirs": 1
@@ -177,7 +177,7 @@
     }
   ],
   "verify": {
-    "command": "{install_dir}/bin/ruby --version",
+    "command": "ruby --version",
     "pattern": "ruby {version}"
   }
 }

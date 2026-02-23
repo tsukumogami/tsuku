@@ -1,5 +1,5 @@
 {
-  "format_version": 5,
+  "format_version": 4,
   "tool": "openssl",
   "version": "3.6.1",
   "platform": {

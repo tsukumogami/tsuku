@@ -1,5 +1,5 @@
 {
-  "format_version": 5,
+  "format_version": 4,
   "tool": "cmake",
   "version": "4.2.3",
   "platform": {

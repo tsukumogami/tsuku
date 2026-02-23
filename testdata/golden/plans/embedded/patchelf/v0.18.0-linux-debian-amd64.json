@@ -3,23 +3,24 @@
   "tool": "patchelf",
   "version": "0.18.0",
   "platform": {
-    "os": "darwin",
-    "arch": "amd64"
+    "os": "linux",
+    "arch": "amd64",
+    "linux_family": "debian"
   },
   "deterministic": true,
   "steps": [
     {
       "action": "download_file",
       "params": {
-        "checksum": "730a1f960f0965576c25edf1525ac57c14177ff4ee5fa74d731f6892c0f519ef",
+        "checksum": "fe8a76cdde4a5666cccbcdfc328bfb77f5d05b63a52ce103b487166be696ac6b",
         "dest": "patchelf.tar.gz",
-        "url": "https://ghcr.io/v2/homebrew/core/patchelf/blobs/sha256:730a1f960f0965576c25edf1525ac57c14177ff4ee5fa74d731f6892c0f519ef"
+        "url": "https://ghcr.io/v2/homebrew/core/patchelf/blobs/sha256:fe8a76cdde4a5666cccbcdfc328bfb77f5d05b63a52ce103b487166be696ac6b"
       },
       "evaluable": true,
       "deterministic": true,
-      "url": "https://ghcr.io/v2/homebrew/core/patchelf/blobs/sha256:730a1f960f0965576c25edf1525ac57c14177ff4ee5fa74d731f6892c0f519ef",
-      "checksum": "730a1f960f0965576c25edf1525ac57c14177ff4ee5fa74d731f6892c0f519ef",
-      "size": 122324
+      "url": "https://ghcr.io/v2/homebrew/core/patchelf/blobs/sha256:fe8a76cdde4a5666cccbcdfc328bfb77f5d05b63a52ce103b487166be696ac6b",
+      "checksum": "fe8a76cdde4a5666cccbcdfc328bfb77f5d05b63a52ce103b487166be696ac6b",
+      "size": 130124
     },
     {
       "action": "extract",

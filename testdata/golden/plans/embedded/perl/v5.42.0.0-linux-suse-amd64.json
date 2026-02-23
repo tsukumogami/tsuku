@@ -1,10 +1,11 @@
 {
-  "format_version": 5,
+  "format_version": 4,
   "tool": "perl",
   "version": "5.42.0.0",
   "platform": {
     "os": "linux",
-    "arch": "amd64"
+    "arch": "amd64",
+    "linux_family": "suse"
   },
   "deterministic": true,
   "steps": [
@@ -57,6 +58,6 @@
     }
   ],
   "verify": {
-    "command": "{install_dir}/bin/perl -v"
+    "command": "perl -v"
   }
 }

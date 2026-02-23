@@ -1,5 +1,5 @@
 {
-  "format_version": 5,
+  "format_version": 4,
   "tool": "gcc-libs",
   "version": "15.2.0",
   "platform": {

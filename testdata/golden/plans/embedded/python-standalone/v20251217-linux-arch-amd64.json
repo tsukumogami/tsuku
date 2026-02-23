@@ -1,10 +1,11 @@
 {
-  "format_version": 5,
+  "format_version": 4,
   "tool": "python-standalone",
   "version": "20251217",
   "platform": {
     "os": "linux",
-    "arch": "amd64"
+    "arch": "amd64",
+    "linux_family": "arch"
   },
   "deterministic": true,
   "steps": [

@@ -1,0 +1,46 @@
+{
+  "format_version": 4,
+  "tool": "ruby",
+  "version": "4.0.0",
+  "platform": {
+    "os": "linux",
+    "arch": "amd64",
+    "linux_family": "alpine"
+  },
+  "deterministic": false,
+  "dependencies": [
+    {
+      "tool": "libyaml",
+      "version": "0.2.5",
+      "steps": [
+        {
+          "action": "apk_install",
+          "params": {
+            "packages": [
+              "yaml-dev"
+            ]
+          },
+          "evaluable": false,
+          "deterministic": false
+        }
+      ],
+      "recipe_type": "library"
+    }
+  ],
+  "steps": [
+    {
+      "action": "apk_install",
+      "params": {
+        "packages": [
+          "ruby"
+        ]
+      },
+      "evaluable": false,
+      "deterministic": false
+    }
+  ],
+  "verify": {
+    "command": "ruby --version",
+    "pattern": "ruby {version}"
+  }
+}
