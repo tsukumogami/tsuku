@@ -49,8 +49,8 @@ Planned
 | ~~_Adds `DurationMs int64` to `SandboxResult` with timing measurement, and a `--json` CLI flag that serializes the result as a JSON object on stdout. Suppresses human-readable output when set. Uses the `Verified` and `VerifyExitCode` fields from #1942 for the verification-related JSON fields._~~ | | |
 | ~~[#1945: ci(workflows): migrate test-recipe.yml Linux jobs to sandbox](https://github.com/tsukumogami/tsuku/issues/1945)~~ | ~~[#1942](https://github.com/tsukumogami/tsuku/issues/1942), [#1943](https://github.com/tsukumogami/tsuku/issues/1943), [#1944](https://github.com/tsukumogami/tsuku/issues/1944)~~ | ~~testable~~ |
 | ~~_First CI migration (proof-of-concept). Replaces docker run blocks in `test-linux-x86_64` (5 families) and `test-linux-arm64` (4 families) with sandbox calls. Removes per-family package installation, volume mounting, and exit code marker files. Preserves result table in `$GITHUB_STEP_SUMMARY` using JSON output._~~ | | |
-| [#1946: ci(workflows): migrate recipe-validation-core.yml Linux jobs to sandbox](https://github.com/tsukumogami/tsuku/issues/1946) | [#1945](https://github.com/tsukumogami/tsuku/issues/1945) | critical |
-| _Most impactful migration. Replaces docker run blocks in the core all-recipes validation workflow across 9 Linux matrix entries. Preserves retry logic (exit code 5, 3 attempts), JSON result aggregation, auto-constraint generation, and the report job's artifact format._ | | |
+| ~~[#1946: ci(workflows): migrate recipe-validation-core.yml Linux jobs to sandbox](https://github.com/tsukumogami/tsuku/issues/1946)~~ | ~~[#1945](https://github.com/tsukumogami/tsuku/issues/1945)~~ | ~~critical~~ |
+| ~~_Most impactful migration. Replaces docker run blocks in the core all-recipes validation workflow across 9 Linux matrix entries. Preserves retry logic (exit code 5, 3 attempts), JSON result aggregation, auto-constraint generation, and the report job's artifact format._~~ | | |
 | [#1947: ci(workflows): migrate batch-generate.yml and validate-golden-execution.yml to sandbox](https://github.com/tsukumogami/tsuku/issues/1947) | [#1946](https://github.com/tsukumogami/tsuku/issues/1946) | testable |
 | _Completes the CI migration. For batch-generate, replaces validation phase docker calls and preserves exit code 8 / `blocked_by` handling. For validate-golden-execution, converts batched per-family docker calls into per-recipe sandbox invocations. After this, every Linux recipe validation job in CI uses the sandbox._ | | |
 
@@ -87,8 +87,8 @@ graph LR
     class I1943 done
     class I1944 done
     class I1945 done
-    class I1946 ready
-    class I1947 blocked
+    class I1946 done
+    class I1947 ready
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design
