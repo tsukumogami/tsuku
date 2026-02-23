@@ -2,19 +2,76 @@
   "design_doc": "docs/designs/DESIGN-binary-name-discovery.md",
   "branch": "docs/deterministic-recipe-repair",
   "pr_number": 1934,
-  "integrity_hash": "sha256:c06612b6fb586fd59f6d396c245c4119a7588e62e05c0e41a9f9545eac7eb6e0",
+  "integrity_hash": "sha256:461e31071da430c95a83995f09baddec2c4849f3163ab5dca6d2c504946a5a88",
   "issues": [
     {
       "number": 1936,
       "title": "feat(builders): use crates.io `bin_names` for Cargo binary discovery",
-      "status": "pending",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [],
-      "commits": [],
-      "agent_type": "",
-      "summary": null,
+      "commits": [
+        "5c0a71fc7b9ed1f9eb4d0cd767fe0be8286596ca"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          "internal/builders/cargo.go",
+          "internal/builders/cargo_test.go"
+        ],
+        "tests_added": 11,
+        "key_decisions": "Used existing cratesIOCrateResponse struct, extended with named cratesIOVersion struct containing BinNames and Yanked fields. Added cachedCrateInfo field to CargoBuilder for future BinaryNameProvider. Removed old Cargo.toml-based discovery path entirely.",
+        "requirements_map": [
+          {
+            "ac": "bin_names from API",
+            "status": "implemented"
+          },
+          {
+            "ac": "dead code removed",
+            "status": "implemented"
+          },
+          {
+            "ac": "cached API response",
+            "status": "implemented"
+          },
+          {
+            "ac": "11 new unit tests",
+            "status": "implemented"
+          }
+        ]
+      },
+      "reviewer_results": {
+        "issue": 1936,
+        "reviewers": [
+          {
+            "focus": "pragmatic",
+            "blocking_count": 0,
+            "advisory_count": 2,
+            "summary": "No blocking findings. Two advisory: (1) isValidExecutableName recompiles regex on every call -- pre-existing, not introduced by this diff. (2) discoverExecutables retains unused context parameter.",
+            "detail_file": "wip/research/implement-doc_review_pragmatic_issue1936.md"
+          },
+          {
+            "focus": "architect",
+            "blocking_count": 0,
+            "advisory_count": 1,
+            "summary": "No blocking findings. One advisory: isValidExecutableName regex recompilation on every call (pre-existing issue, not introduced by this diff).",
+            "detail_file": "wip/research/implement-doc_review_architect_issue1936.md"
+          },
+          {
+            "focus": "maintainer",
+            "blocking_count": 0,
+            "advisory_count": 3,
+            "summary": "No blocking findings. Three advisory: (1) Build() accesses executables[0] without length check, relying on implicit invariant from discoverExecutables fallback. (2) discoverExecutables retains unused context parameter. (3) Test boilerplate repetition matches existing style.",
+            "detail_file": "wip/research/implement-doc_review_maintainer_issue1936.md"
+          }
+        ],
+        "verdict": "pass",
+        "total_blocking": 0,
+        "total_advisory": 6
+      },
       "testable_scenarios": [
         "scenario-1",
         "scenario-2",
@@ -25,14 +82,95 @@
     {
       "number": 1937,
       "title": "fix(builders): handle string-type `bin` field in npm builder",
-      "status": "pending",
+      "status": "pushed",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [],
-      "commits": [],
-      "agent_type": "",
-      "summary": null,
+      "commits": [
+        "828aaadca79175078598fba1c4bf8d8d6e538ae9"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          "internal/builders/npm.go",
+          "internal/builders/npm_test.go"
+        ],
+        "tests_added": 13,
+        "key_decisions": "Added unscopedPackageName() helper for scope stripping. String-type bin validates through isValidExecutableName(). Used strings.LastIndex for scope split.",
+        "requirements_map": [
+          {
+            "ac": "parseBinField accepts packageName param",
+            "status": "implemented"
+          },
+          {
+            "ac": "string bin returns unscoped name",
+            "status": "implemented"
+          },
+          {
+            "ac": "scoped packages stripped",
+            "status": "implemented"
+          },
+          {
+            "ac": "isValidExecutableName validation",
+            "status": "implemented"
+          },
+          {
+            "ac": "callers updated",
+            "status": "implemented"
+          },
+          {
+            "ac": "existing tests updated",
+            "status": "implemented"
+          },
+          {
+            "ac": "new test cases added",
+            "status": "implemented"
+          },
+          {
+            "ac": "integration tests added",
+            "status": "implemented"
+          },
+          {
+            "ac": "all tests pass",
+            "status": "implemented"
+          },
+          {
+            "ac": "bin formats for BinaryNameProvider",
+            "status": "implemented"
+          }
+        ]
+      },
+      "reviewer_results": {
+        "issue": 1937,
+        "reviewers": [
+          {
+            "focus": "pragmatic",
+            "blocking_count": 0,
+            "advisory_count": 1,
+            "summary": "No blocking findings. One advisory: unscopedPackageName() could be inlined but is well-named and testable as-is.",
+            "detail_file": "wip/research/implement-doc_review_pragmatic_issue1937.md"
+          },
+          {
+            "focus": "architect",
+            "blocking_count": 0,
+            "advisory_count": 1,
+            "summary": "No blocking findings. One advisory: NpmBuilder doesn't cache pkgInfo for BinaryNameProvider (#1938 will add it).",
+            "detail_file": "wip/research/implement-doc_review_architect_issue1937.md"
+          },
+          {
+            "focus": "maintainer",
+            "blocking_count": 0,
+            "advisory_count": 2,
+            "summary": "No blocking findings. Two advisory: (1) unused string value in type switch could use a clarifying comment, (2) executables[0] access without length guard (cross-builder pattern for #1938).",
+            "detail_file": "wip/research/implement-doc_review_maintainer_issue1937.md"
+          }
+        ],
+        "verdict": "pass",
+        "total_blocking": 0,
+        "total_advisory": 4
+      },
       "testable_scenarios": [
         "scenario-5",
         "scenario-6"
