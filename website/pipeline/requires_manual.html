@@ -229,6 +229,7 @@
             return {
                 ecosystem: params.get('ecosystem') || '',
                 priority: params.get('priority') || '',
+                category: params.get('category') || '',
                 search: params.get('search') || ''
             };
         }
@@ -237,6 +238,7 @@
             const params = new URLSearchParams();
             if (filters.ecosystem) params.set('ecosystem', filters.ecosystem);
             if (filters.priority) params.set('priority', filters.priority);
+            if (filters.category) params.set('category', filters.category);
             if (filters.search) params.set('search', filters.search);
             const qs = params.toString();
             const url = window.location.pathname + (qs ? '?' + qs : '');
@@ -255,10 +257,17 @@
             return Array.from(vals).sort();
         }
 
+        function collectCategories(packages) {
+            const vals = new Set();
+            packages.forEach(p => { if (p.category) vals.add(p.category); });
+            return Array.from(vals).sort();
+        }
+
         function applyFilters(packages, filters) {
             return packages.filter(pkg => {
                 if (filters.ecosystem && pkg.ecosystem !== filters.ecosystem) return false;
                 if (filters.priority && String(pkg.priority) !== filters.priority) return false;
+                if (filters.category && (pkg.category || '') !== filters.category) return false;
                 if (filters.search) {
                     const term = filters.search.toLowerCase();
                     if (!pkg.name.toLowerCase().includes(term)) return false;
@@ -270,6 +279,7 @@
         function renderFilters(packages, filters) {
             const ecosystems = collectEcosystems(packages);
             const priorities = collectPriorities(packages);
+            const categories = collectCategories(packages);
 
             function opts(values, selected) {
                 return values.map(v =>
@@ -288,6 +298,12 @@
                     '<select id="filter-priority">' +
                         '<option value="">All</option>' +
                         opts(priorities, filters.priority) +
+                    '</select>' +
+                '</label>' +
+                '<label>Category: ' +
+                    '<select id="filter-category">' +
+                        '<option value="">All</option>' +
+                        opts(categories, filters.category) +
                     '</select>' +
                 '</label>' +
                 '<label>Search: ' +
@@ -333,12 +349,11 @@
             }
 
             var rows = filtered.map(function(pkg) {
-                var fcClass = pkg.failure_count > 0 ? 'failure-count has-failures' : 'failure-count';
                 return '<tr onclick="window.location=\'package.html?id=' + encodeURIComponent(pkg.id) + '\'">' +
                     '<td class="package-name"><a href="package.html?id=' + encodeURIComponent(pkg.id) + '">' + esc(pkg.name) + '</a></td>' +
-                    '<td>' + esc(pkg.ecosystem) + '</td>' +
+                    '<td><a href="?ecosystem=' + encodeURIComponent(pkg.ecosystem) + '" onclick="event.stopPropagation();">' + esc(pkg.ecosystem) + '</a></td>' +
                     '<td><span class="priority-badge priority-' + esc(String(pkg.priority)) + '">P' + esc(String(pkg.priority)) + '</span></td>' +
-                    '<td class="' + fcClass + '">' + esc(String(pkg.failure_count || 0)) + '</td>' +
+                    '<td>' + esc(pkg.category || '-') + '</td>' +
                 '</tr>';
             }).join('');
 
@@ -351,7 +366,7 @@
                                 '<th>Package</th>' +
                                 '<th>Ecosystem</th>' +
                                 '<th>Priority</th>' +
-                                '<th>Failures</th>' +
+                                '<th>Category</th>' +
                             '</tr>' +
                         '</thead>' +
                         '<tbody>' +
@@ -370,9 +385,11 @@
             // Bind filter change handlers
             var ecoSelect = document.getElementById('filter-ecosystem');
             var prioSelect = document.getElementById('filter-priority');
+            var catSelect = document.getElementById('filter-category');
             var searchInput = document.getElementById('filter-search');
             if (ecoSelect) ecoSelect.addEventListener('change', onFilterChange);
             if (prioSelect) prioSelect.addEventListener('change', onFilterChange);
+            if (catSelect) catSelect.addEventListener('change', onFilterChange);
             if (searchInput) searchInput.addEventListener('input', onFilterChange);
 
             // Bind chip clicks
@@ -393,6 +410,7 @@
             var filters = {
                 ecosystem: document.getElementById('filter-ecosystem').value,
                 priority: document.getElementById('filter-priority').value,
+                category: document.getElementById('filter-category').value,
                 search: document.getElementById('filter-search').value
             };
             updateURL(filters);

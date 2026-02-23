@@ -361,8 +361,10 @@
 
             const rows = packages.map(pkg => {
                 const deps = (pkg.blocked_by || []).map(d => {
+                    // Ensure dep has ecosystem:name format for linking
+                    var depId = d.indexOf(':') !== -1 ? d : (pkg.ecosystem + ':' + d);
                     const isActive = d === filter ? ' style="background: var(--accent); color: #000;"' : '';
-                    return '<a href="package.html?id=' + encodeURIComponent(d) + '" class="dep-badge"' + isActive + '>' + esc(d) + '</a>';
+                    return '<a href="package.html?id=' + encodeURIComponent(depId) + '" class="dep-badge"' + isActive + '>' + esc(d) + '</a>';
                 }).join('');
                 return '<tr onclick="window.location=\'package.html?id=' + encodeURIComponent(pkg.id) + '\'">' +
                     '<td class="package-name"><a href="package.html?id=' + encodeURIComponent(pkg.id) + '">' + esc(pkg.name) + '</a></td>' +
@@ -390,7 +392,7 @@
                         '</tbody>' +
                     '</table>' +
                 '</div>' +
-                renderTopBlockers(allPackages);
+                renderTopBlockers(packages);
         }
 
         async function load() {

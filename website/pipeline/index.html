@@ -43,6 +43,58 @@
             gap: 0.75rem;
         }
 
+        .queue-summary {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .queue-summary-stat {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .queue-summary-detail {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .queue-actionable {
+            margin-top: 1rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .queue-action-item {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-decoration: none;
+        }
+
+        .queue-action-item:hover {
+            color: var(--accent);
+        }
+
+        .queue-action-count {
+            font-weight: 600;
+            font-family: "SF Mono", Consolas, monospace;
+            color: var(--text);
+        }
+
+        .queue-action-item:hover .queue-action-count {
+            color: var(--accent);
+        }
+
         .status-row {
             display: flex;
             align-items: center;
@@ -265,6 +317,99 @@
             text-decoration: none;
         }
 
+        .breaker-summary {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 0.75rem;
+        }
+
+        .breaker-summary .count-highlight {
+            font-weight: 600;
+            color: #f85149;
+        }
+
+        .eco-widgets-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            grid-column: 1 / -1;
+        }
+
+        @media (max-width: 800px) {
+            .eco-widgets-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .eco-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        .eco-table th,
+        .eco-table td {
+            text-align: left;
+            padding: 0.4rem 0.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .eco-table th {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        .eco-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .eco-table tbody tr {
+            transition: background 0.15s ease;
+        }
+
+        .eco-table a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .eco-table tbody tr:hover {
+            background: var(--bg);
+        }
+
+        .eco-table .eco-name {
+            font-family: "SF Mono", Consolas, monospace;
+        }
+
+        .eco-table .eco-count {
+            text-align: right;
+            font-family: "SF Mono", Consolas, monospace;
+        }
+
+        .eco-table .recovery-time {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .eco-clickable-row {
+            cursor: pointer;
+        }
+
+        .mini-progress {
+            display: flex;
+            height: 6px;
+            border-radius: 3px;
+            overflow: hidden;
+            background: var(--bg);
+            min-width: 80px;
+        }
+
+        .mini-progress .seg-success { background: #3fb950; }
+        .mini-progress .seg-pending { background: var(--text-muted); }
+        .mini-progress .seg-failed { background: #f85149; }
+        .mini-progress .seg-blocked { background: #d29922; }
+        .mini-progress .seg-requires_manual { background: #bc8cff; }
+
         .health-warning {
             background: #d29922;
             color: #000;
@@ -369,9 +514,107 @@
             margin-left: 0.25rem;
         }
 
+        .run-item-detail {
+            display: flex;
+            flex-direction: column;
+            gap: 0.15rem;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .run-item-detail:last-child {
+            border-bottom: none;
+        }
+
+        .run-item-detail a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .run-item-detail a:hover {
+            background: var(--bg);
+        }
+
+        .run-top-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .run-datetime {
+            font-size: 0.85rem;
+        }
+
+        .run-date {
+            font-weight: 600;
+        }
+
+        .run-time {
+            color: var(--text-muted);
+            margin-left: 0.35rem;
+        }
+
+        .run-stats {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.85rem;
+        }
+
+        .run-duration {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .run-bottom-row {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            flex-wrap: wrap;
+        }
+
+        .run-eco-badge {
+            display: inline-block;
+            padding: 0.1rem 0.4rem;
+            border-radius: 3px;
+            font-size: 0.7rem;
+            background: var(--bg);
+            color: var(--text-muted);
+            font-family: "SF Mono", Consolas, monospace;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .run-eco-badge:hover {
+            border-color: var(--accent);
+            color: var(--text);
+        }
+
+        .failures-table .pkg-link {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .failures-table .pkg-link:hover {
+            text-decoration: underline;
+        }
+
+        .failures-table .timestamp-et {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            display: block;
+        }
+
+        .panel-wide {
+            grid-column: span 2;
+        }
+
         @media (max-width: 600px) {
             .panels {
                 grid-template-columns: 1fr;
+            }
+            .panel-wide {
+                grid-column: span 1;
             }
         }
     </style>
@@ -424,13 +667,25 @@
 
         function formatDate(isoString) {
             const date = new Date(isoString);
-            return date.toLocaleDateString('en-US', {
+            return date.toLocaleString('en-US', {
                 year: 'numeric',
                 month: 'short',
                 day: 'numeric',
                 hour: '2-digit',
                 minute: '2-digit',
+                timeZone: 'America/New_York',
                 timeZoneName: 'short'
+            });
+        }
+
+        function formatDateShort(isoString) {
+            const date = new Date(isoString);
+            return date.toLocaleString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                timeZone: 'America/New_York'
             });
         }
 
@@ -459,53 +714,55 @@
             return days + 'd ago';
         }
 
+        function renderByTier(byTier) {
+            if (!byTier || Object.keys(byTier).length === 0) return '';
+            const tiers = Object.keys(byTier).sort();
+            const statusCols = ['pending', 'failed', 'success', 'requires_manual', 'blocked'];
+            const rows = tiers.map(tier => {
+                const counts = byTier[tier];
+                const total = statusCols.reduce((sum, s) => sum + (counts[s] || 0), 0);
+                const cells = statusCols.map(s => '<td style="text-align: right; font-family: \'SF Mono\', Consolas, monospace; font-size: 0.8rem;">' + (counts[s] || 0) + '</td>').join('');
+                return '<tr><td style="font-weight: 600;">P' + esc(tier) + '</td>' + cells + '<td style="text-align: right; font-family: \'SF Mono\', Consolas, monospace; font-size: 0.8rem;">' + total + '</td></tr>';
+            }).join('');
+            return '<div style="margin-top: 1rem;"><table class="eco-table"><thead><tr><th>Tier</th><th style="text-align: right;">Pend</th><th style="text-align: right;">Fail</th><th style="text-align: right;">OK</th><th style="text-align: right;">Manual</th><th style="text-align: right;">Block</th><th style="text-align: right;">Total</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+        }
+
         function renderDashboard(data) {
             const container = document.getElementById('dashboard-content');
             const total = data.queue.total || 1;
 
-            // Render Pipeline Health panel
+            // Render Pipeline Health panel (pipeline-level only, no per-ecosystem badges)
             let healthPanel = '';
             const health = data.health;
             if (health) {
-                // Circuit breaker badges per ecosystem
-                const ecoEntries = Object.entries(health.ecosystems || {});
-                const ecoBadges = ecoEntries.map(([eco, info]) => {
-                    const state = info.breaker_state || 'unknown';
-                    let badgeClass = 'breaker-closed';
-                    if (state === 'open') badgeClass = 'breaker-open';
-                    else if (state === 'half-open') badgeClass = 'breaker-half-open';
-                    return `<a href="/pipeline/failures.html?ecosystem=${encodeURIComponent(eco)}" class="eco-badge-link">
-                        <span class="breaker-badge ${badgeClass}">${esc(eco)}: ${esc(state)}</span>
-                    </a>`;
-                }).join('');
-
-                // Last run info, with breaker-skip note when applicable
+                // Last run info
                 let lastRunHtml = '<span class="health-value" style="color: var(--text-muted);">N/A</span>';
                 if (health.last_run) {
                     const lr = health.last_run;
-                    let skipNote = '';
-                    // Check if any ecosystems had open breakers during this run
-                    const ecoStates = health.ecosystems || {};
-                    const openEcos = Object.entries(ecoStates)
-                        .filter(([, info]) => info.breaker_state === 'open')
-                        .map(([eco]) => eco);
-                    if (openEcos.length > 0) {
-                        skipNote = `, ${esc(openEcos.join(', '))} skipped (breaker open)`;
+                    const lrText = `${esc(timeAgo(lr.timestamp))} - ${esc(lr.succeeded)}/${esc(lr.total)} succeeded`;
+                    if (lr.total) {
+                        lastRunHtml = `<span class="health-value"><a href="/pipeline/run.html?id=${encodeURIComponent(lr.batch_id)}">${lrText}</a></span>`;
+                    } else {
+                        lastRunHtml = `<span class="health-value">${lrText}</span>`;
                     }
-                    lastRunHtml = `<span class="health-value"><a href="/pipeline/run.html?id=${encodeURIComponent(lr.batch_id)}">${esc(timeAgo(lr.timestamp))} - ${esc(lr.succeeded)}/${esc(lr.total)} succeeded${skipNote}</a></span>`;
                 }
 
                 // Last success info
                 let lastSuccessHtml = '<span class="health-value" style="color: var(--text-muted);">N/A</span>';
                 if (health.last_successful_run) {
                     const ls = health.last_successful_run;
-                    lastSuccessHtml = `<span class="health-value"><a href="/pipeline/run.html?id=${encodeURIComponent(ls.batch_id)}">${esc(timeAgo(ls.timestamp))} - ${esc(ls.recipes_merged || 0)} merged</a></span>`;
+                    const lsText = `${esc(timeAgo(ls.timestamp))} - ${esc(ls.recipes_merged || 0)} merged`;
+                    if (ls.total) {
+                        lastSuccessHtml = `<span class="health-value"><a href="/pipeline/run.html?id=${encodeURIComponent(ls.batch_id)}">${lsText}</a></span>`;
+                    } else {
+                        lastSuccessHtml = `<span class="health-value">${lsText}</span>`;
+                    }
                 }
 
-                // Runs since last success
-                let runsSinceHtml = `<span class="health-value"><a href="/pipeline/runs.html?since_success=true">${esc(health.runs_since_last_success)}</a></span>`;
+                // Runs since last success (no ecosystem context from pipeline level)
+                let runsSinceHtml = `<span class="health-value"><a href="/pipeline/runs.html?since_success=true">${esc(health.runs_since_last_success)} runs</a></span>`;
 
-                // Warning if last run was more than 2 hours ago (computed from timestamp, not stale JSON field)
+                // Warning if last run was more than 2 hours ago
                 let warningHtml = '';
                 if (health.last_run && health.last_run.timestamp) {
                     const hoursSinceRun = Math.floor((Date.now() - new Date(health.last_run.timestamp).getTime()) / 3600000);
@@ -514,10 +771,26 @@
                     }
                 }
 
+                // Breaker summary: count of open/half-open ecosystems
+                let breakerSummaryHtml = '';
+                const ecoEntries = Object.entries(health.ecosystems || {});
+                if (ecoEntries.length > 0) {
+                    const openCount = ecoEntries.filter(([, info]) => info.breaker_state === 'open').length;
+                    const halfOpenCount = ecoEntries.filter(([, info]) => info.breaker_state === 'half-open').length;
+                    const unhealthy = openCount + halfOpenCount;
+                    if (unhealthy > 0) {
+                        const parts = [];
+                        if (openCount > 0) parts.push(`${openCount} open`);
+                        if (halfOpenCount > 0) parts.push(`${halfOpenCount} half-open`);
+                        breakerSummaryHtml = `<div class="breaker-summary"><span class="count-highlight">${unhealthy}</span> of ${ecoEntries.length} breakers unhealthy (${parts.join(', ')})</div>`;
+                    } else {
+                        breakerSummaryHtml = `<div class="breaker-summary">All ${ecoEntries.length} breakers closed</div>`;
+                    }
+                }
+
                 healthPanel = `
-                    <div class="panel">
+                    <div class="panel panel-wide">
                         <h2>Pipeline Health</h2>
-                        ${ecoEntries.length > 0 ? `<div class="eco-badges">${ecoBadges}</div>` : ''}
                         <div class="health-grid">
                             <span class="health-label">Last Run</span>
                             ${lastRunHtml}
@@ -526,27 +799,180 @@
                             <span class="health-label">Runs Since</span>
                             ${runsSinceHtml}
                         </div>
+                        ${breakerSummaryHtml}
                         ${warningHtml}
                     </div>
                 `;
             } else {
                 healthPanel = `
-                    <div class="panel">
+                    <div class="panel panel-wide">
                         <h2>Pipeline Health</h2>
                         <div class="no-data">No health data available</div>
                     </div>
                 `;
             }
 
+            // Render Ecosystem Health widget (circuit breaker details per ecosystem)
+            let ecoHealthPanel = '';
+            if (health && health.ecosystems) {
+                const ecoEntries = Object.entries(health.ecosystems);
+                if (ecoEntries.length > 0) {
+                    const ecoRows = ecoEntries
+                        .sort(([a], [b]) => a.localeCompare(b))
+                        .map(([eco, info]) => {
+                            const state = info.breaker_state || 'unknown';
+                            let badgeClass = 'breaker-closed';
+                            if (state === 'open') badgeClass = 'breaker-open';
+                            else if (state === 'half-open') badgeClass = 'breaker-half-open';
+
+                            const failureCount = info.failures || 0;
+                            const lastFailure = info.last_failure ? timeAgo(info.last_failure) : '-';
+
+                            // Time until recovery for open breakers
+                            let recoveryHtml = '-';
+                            if (state === 'open' && info.opens_at) {
+                                const opensAt = new Date(info.opens_at).getTime();
+                                const now = Date.now();
+                                const diffMs = opensAt - now;
+                                if (diffMs > 0) {
+                                    const mins = Math.ceil(diffMs / 60000);
+                                    if (mins >= 60) {
+                                        const hrs = Math.floor(mins / 60);
+                                        const remainMins = mins % 60;
+                                        recoveryHtml = `<span class="recovery-time">${hrs}h ${remainMins}m</span>`;
+                                    } else {
+                                        recoveryHtml = `<span class="recovery-time">${mins}m</span>`;
+                                    }
+                                } else {
+                                    recoveryHtml = `<span class="recovery-time">due now</span>`;
+                                }
+                            }
+
+                            return `
+                                <tr class="eco-clickable-row" onclick="location.href='/pipeline/failures.html?ecosystem=${encodeURIComponent(eco)}'">
+                                    <td><a href="/pipeline/failures.html?ecosystem=${encodeURIComponent(eco)}"><span class="eco-name">${esc(eco)}</span></a></td>
+                                    <td><span class="breaker-badge ${badgeClass}">${esc(state)}</span></td>
+                                    <td class="eco-count">${esc(failureCount)}</td>
+                                    <td>${esc(lastFailure)}</td>
+                                    <td>${recoveryHtml}</td>
+                                </tr>
+                            `;
+                        }).join('');
+
+                    ecoHealthPanel = `
+                        <div class="panel panel-wide">
+                            <h2>Ecosystem Health</h2>
+                            <table class="eco-table">
+                                <thead>
+                                    <tr>
+                                        <th>Ecosystem</th>
+                                        <th>Breaker</th>
+                                        <th style="text-align: right;">Failures</th>
+                                        <th>Last Failure</th>
+                                        <th>Recovery</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${ecoRows}
+                                </tbody>
+                            </table>
+                        </div>
+                    `;
+                } else {
+                    ecoHealthPanel = `
+                        <div class="panel panel-wide">
+                            <h2>Ecosystem Health</h2>
+                            <div class="no-data">No ecosystem data available</div>
+                        </div>
+                    `;
+                }
+            } else {
+                ecoHealthPanel = `
+                    <div class="panel panel-wide">
+                        <h2>Ecosystem Health</h2>
+                        <div class="no-data">No ecosystem data available</div>
+                    </div>
+                `;
+            }
+
+            // Render Ecosystem Pipeline widget (per-ecosystem queue counts)
+            let ecoPipelinePanel = '';
+            const byEcosystem = data.queue && data.queue.by_ecosystem;
+            if (byEcosystem && Object.keys(byEcosystem).length > 0) {
+                const statusCols = ['pending', 'failed', 'success', 'blocked', 'requires_manual'];
+                const ecoRows = Object.entries(byEcosystem)
+                    .sort(([a], [b]) => a.localeCompare(b))
+                    .map(([eco, counts]) => {
+                        const ecoTotal = counts.total || statusCols.reduce((sum, s) => sum + (counts[s] || 0), 0);
+                        const cells = statusCols.map(s => `<td class="eco-count">${counts[s] || 0}</td>`).join('');
+
+                        // Mini progress bar segments
+                        const barTotal = ecoTotal || 1;
+                        const segments = statusCols
+                            .map(s => {
+                                const pct = ((counts[s] || 0) / barTotal * 100).toFixed(1);
+                                return pct > 0 ? `<div class="seg-${s}" style="width: ${pct}%"></div>` : '';
+                            }).join('');
+
+                        return `
+                            <tr class="eco-clickable-row" onclick="location.href='/pipeline/pending.html?ecosystem=${encodeURIComponent(eco)}'">
+                                <td><a href="/pipeline/pending.html?ecosystem=${encodeURIComponent(eco)}"><span class="eco-name">${esc(eco)}</span></a></td>
+                                <td class="eco-count">${esc(ecoTotal)}</td>
+                                ${cells}
+                                <td><div class="mini-progress">${segments}</div></td>
+                            </tr>
+                        `;
+                    }).join('');
+
+                ecoPipelinePanel = `
+                    <div class="panel panel-wide">
+                        <h2>Ecosystem Pipeline</h2>
+                        <table class="eco-table">
+                            <thead>
+                                <tr>
+                                    <th>Ecosystem</th>
+                                    <th style="text-align: right;">Total</th>
+                                    <th style="text-align: right;">Pend</th>
+                                    <th style="text-align: right;">Fail</th>
+                                    <th style="text-align: right;">OK</th>
+                                    <th style="text-align: right;">Block</th>
+                                    <th style="text-align: right;">Manual</th>
+                                    <th>Progress</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${ecoRows}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            } else {
+                ecoPipelinePanel = `
+                    <div class="panel panel-wide">
+                        <h2>Ecosystem Pipeline</h2>
+                        <div class="no-data">No per-ecosystem data available</div>
+                    </div>
+                `;
+            }
+
             // Calculate status percentages
+            const successCount = data.queue.by_status.success || 0;
+            const successPct = (successCount / total * 100).toFixed(1);
+            const failedCount = data.queue.by_status.failed || 0;
+            const manualCount = data.queue.by_status.requires_manual || 0;
+
             const statusOrder = ['pending', 'success', 'failed', 'requires_manual', 'blocked'];
             const statusDisplayLabel = { requires_manual: 'manual' };
+            const statusPageMap = { failed: 'failures.html?status=failed' };
             const statusBars = statusOrder.map(status => {
                 const count = data.queue.by_status[status] || 0;
                 const pct = (count / total * 100).toFixed(1);
                 const label = statusDisplayLabel[status] || status;
+                const href = statusPageMap[status]
+                    ? '/pipeline/' + statusPageMap[status]
+                    : '/pipeline/' + status + '.html';
                 return `
-                    <a href="/pipeline/${status}.html" class="status-row">
+                    <a href="${href}" class="status-row">
                         <span class="status-label">${label}</span>
                         <div class="status-bar-container">
                             <div class="status-bar ${status}" style="width: ${pct}%"></div>
@@ -610,39 +1036,87 @@
                 }).join('') || '<div class="no-data">No current failures</div>';
 
             // Render recent runs (clickable, link to run.html?id=)
-            function compactEcosystem(run) {
-                // Backward compat: old format has ecosystem string, new has ecosystems object
-                if (run.ecosystems && typeof run.ecosystems === 'object') {
-                    const keys = Object.keys(run.ecosystems);
-                    if (keys.length === 0) return '';
-                    if (keys.length === 1) return keys[0];
-                    return keys.length + ' eco';
-                }
-                return run.ecosystem || '';
-            }
-
             const runItems = (data.runs || []).slice(0, 10).map(run => {
-                const ecoLabel = compactEcosystem(run);
+                // Format timestamp in ET, split into date and time
+                let dateHtml = '';
+                if (run.timestamp) {
+                    const d = new Date(run.timestamp);
+                    const datePart = d.toLocaleDateString('en-US', {
+                        month: 'short', day: 'numeric',
+                        timeZone: 'America/New_York'
+                    });
+                    const timePart = d.toLocaleTimeString('en-US', {
+                        hour: '2-digit', minute: '2-digit',
+                        timeZone: 'America/New_York'
+                    });
+                    dateHtml = `<span class="run-date">${esc(datePart)}</span><span class="run-time">${esc(timePart)} ET</span>`;
+                } else {
+                    dateHtml = `<span class="run-id">${esc(run.batch_id)}</span>`;
+                }
+
+                // Ecosystem badges from run.ecosystems object
+                let ecoBadgesHtml = '';
+                if (run.ecosystems && typeof run.ecosystems === 'object') {
+                    const badges = Object.entries(run.ecosystems)
+                        .sort(([, a], [, b]) => b - a)
+                        .map(([eco, count]) => `<a href="/pipeline/runs.html?ecosystem=${encodeURIComponent(eco)}" class="run-eco-badge" onclick="event.stopPropagation(); event.preventDefault(); location.href=this.href;">${esc(eco)} ${esc(count)}</a>`)
+                        .join('');
+                    ecoBadgesHtml = badges;
+                }
+
+                // Duration
+                let durationHtml = '';
+                if (run.duration != null) {
+                    durationHtml = `<span class="run-duration">${esc(run.duration)}m</span>`;
+                }
+
                 return `
-                <a href="/pipeline/run.html?id=${encodeURIComponent(run.batch_id)}" class="run-item status-row">
-                    <span class="run-id">${esc(run.batch_id)}${ecoLabel ? `<span class="run-ecosystem">${esc(ecoLabel)}</span>` : ''}</span>
-                    <span class="run-rate ${rateClass(run.rate)}">${esc(run.merged)}/${esc(run.total)} (${esc(formatPercent(run.rate))})</span>
-                </a>
+                <div class="run-item-detail">
+                    <a href="/pipeline/run.html?id=${encodeURIComponent(run.batch_id)}">
+                        <div class="run-top-row">
+                            <span class="run-datetime">${dateHtml}</span>
+                            <span class="run-stats">
+                                <span class="run-rate ${rateClass(run.rate)}">${esc(run.merged)}/${esc(run.total)} (${esc(formatPercent(run.rate))})</span>
+                                ${durationHtml}
+                            </span>
+                        </div>
+                        ${ecoBadgesHtml ? `<div class="run-bottom-row">${ecoBadgesHtml}</div>` : ''}
+                    </a>
+                </div>
             `}).join('') || '<div class="no-data">No batch runs recorded yet</div>';
 
             // Render Recent Failures panel
             let recentFailuresPanel = '';
             if (failureDetails.length > 0) {
                 const recentFive = failureDetails.slice(0, 5);
-                const failureRows = recentFive.map(fd => `
+                const failureRows = recentFive.map(fd => {
+                    // Category display: prefer subcategory when available
+                    const categoryDisplay = fd.subcategory
+                        ? esc(fd.subcategory)
+                        : esc(fd.category);
+
+                    // Ecosystem badge
+                    const ecoHtml = fd.ecosystem
+                        ? `<span class="run-eco-badge">${esc(fd.ecosystem)}</span>`
+                        : '';
+
+                    // Package name as clickable link to package.html
+                    const pkgHtml = `<a href="/pipeline/package.html?id=${encodeURIComponent(fd.package)}" class="pkg-link"><span class="pkg-name">${esc(fd.package)}</span></a>`;
+
+                    // Time: relative time-ago plus absolute ET timestamp
+                    const timeAgoStr = timeAgo(fd.timestamp);
+                    const absTime = fd.timestamp ? formatDateShort(fd.timestamp) + ' ET' : '';
+
+                    return `
                     <tr onclick="location.href='/pipeline/failure.html?id=${encodeURIComponent(fd.id)}'">
-                        <td><a href="/pipeline/failure.html?id=${encodeURIComponent(fd.id)}"><span class="pkg-name">${esc(fd.package)}</span></a></td>
-                        <td><a href="/pipeline/failure.html?id=${encodeURIComponent(fd.id)}">${esc(fd.category)}${fd.subcategory ? ' / ' + esc(fd.subcategory) : ''}</a></td>
-                        <td><a href="/pipeline/failure.html?id=${encodeURIComponent(fd.id)}"><span class="time-ago">${esc(timeAgo(fd.timestamp))}</span></a></td>
+                        <td>${pkgHtml}</td>
+                        <td>${ecoHtml}</td>
+                        <td><a href="/pipeline/failure.html?id=${encodeURIComponent(fd.id)}">${categoryDisplay}</a></td>
+                        <td><a href="/pipeline/failure.html?id=${encodeURIComponent(fd.id)}"><span class="time-ago">${esc(timeAgoStr)}</span><span class="timestamp-et">${esc(absTime)}</span></a></td>
                     </tr>
-                `).join('');
+                `}).join('');
                 recentFailuresPanel = `
-                    <div class="panel">
+                    <div class="panel panel-wide">
                         <div class="panel-header">
                             <h2>Recent Failures</h2>
                             <a href="/pipeline/failures.html" class="view-all">View all</a>
@@ -651,6 +1125,7 @@
                             <thead>
                                 <tr>
                                     <th>Package</th>
+                                    <th>Ecosystem</th>
                                     <th>Category</th>
                                     <th>Time</th>
                                 </tr>
@@ -663,7 +1138,7 @@
                 `;
             } else {
                 recentFailuresPanel = `
-                    <div class="panel">
+                    <div class="panel panel-wide">
                         <div class="panel-header">
                             <h2>Recent Failures</h2>
                             <a href="/pipeline/failures.html" class="view-all">View all</a>
@@ -682,27 +1157,27 @@
                 const validCount = curated.filter(c => c.validation_status === 'valid').length;
                 const invalidBadge = invalidCount > 0 ? `<span class="invalid-badge">${invalidCount} invalid</span>` : '';
                 curatedPanel = `
-                    <div class="panel">
+                    <div class="panel panel-wide">
                         <h2><a href="/pipeline/curated.html" style="color: inherit; text-decoration: none;">Curated Overrides</a> ${invalidBadge}</h2>
                         <div class="curated-stats">
-                            <div class="curated-stat">
+                            <a href="/pipeline/curated.html" class="curated-stat" style="text-decoration: none; color: inherit;">
                                 <span class="stat-value">${totalCount}</span>
                                 <span class="stat-label">Total</span>
-                            </div>
-                            <div class="curated-stat">
+                            </a>
+                            <a href="/pipeline/curated.html?status=valid" class="curated-stat" style="text-decoration: none; color: inherit;">
                                 <span class="stat-value stat-valid">${validCount}</span>
                                 <span class="stat-label">Valid</span>
-                            </div>
-                            <div class="curated-stat">
+                            </a>
+                            <a href="/pipeline/curated.html?status=invalid" class="curated-stat" style="text-decoration: none; color: inherit;">
                                 <span class="stat-value ${invalidCount > 0 ? 'stat-invalid' : ''}">${invalidCount}</span>
                                 <span class="stat-label">Invalid</span>
-                            </div>
+                            </a>
                         </div>
                     </div>
                 `;
             } else {
                 curatedPanel = `
-                    <div class="panel">
+                    <div class="panel panel-wide">
                         <h2>Curated Overrides</h2>
                         <div class="no-data">No curated overrides</div>
                     </div>
@@ -724,7 +1199,7 @@
 
                 const reviewItems = (d.need_review || []).slice(0, 5).map(tool => `
                     <div class="blocker-item">
-                        <span class="blocker-name">${esc(tool)}</span>
+                        <a href="/pipeline/disambiguations.html?status=needs_review" class="blocker-name" style="color: var(--accent); text-decoration: none;">${esc(tool)}</a>
                         <span class="blocker-count" style="background: #d29922; color: white;">review</span>
                     </div>
                 `).join('');
@@ -752,21 +1227,42 @@
                 <div class="panels">
                     ${healthPanel}
 
+                    <div class="eco-widgets-row">
+                        ${ecoHealthPanel}
+                        ${ecoPipelinePanel}
+                    </div>
+
                     <div class="panel">
                         <h2>Queue Status (${data.queue.total} packages)</h2>
+                        <div class="queue-summary">
+                            <span class="queue-summary-stat">${successPct}% complete</span>
+                            <span class="queue-summary-detail">${successCount} of ${data.queue.total} packages</span>
+                        </div>
                         <div class="status-bars">
                             ${statusBars}
                         </div>
-                    </div>
-
-                    <div class="panel" id="blockers">
-                        <h2>Top Blockers</h2>
-                        <div class="blocker-list">
-                            ${blockerItems}
+                        ${renderByTier(data.queue.by_tier)}
+                        <div class="queue-actionable">
+                            <a href="/pipeline/failures.html?status=failed" class="queue-action-item">
+                                <span class="queue-action-count">${failedCount}</span> need investigation
+                            </a>
+                            <a href="/pipeline/requires_manual.html" class="queue-action-item">
+                                <span class="queue-action-count">${manualCount}</span> need manual review
+                            </a>
                         </div>
                     </div>
 
                     <div class="panel">
+                        <div class="panel-header">
+                            <h2>Recent Runs</h2>
+                            <a href="/pipeline/runs.html" class="view-all">View all</a>
+                        </div>
+                        <div class="run-list">
+                            ${runItems}
+                        </div>
+                    </div>
+
+                    <div class="panel panel-wide">
                         <div class="panel-header">
                             <h2>Failure Categories</h2>
                             <a href="/pipeline/failures.html" class="view-all">View all</a>
@@ -778,10 +1274,10 @@
 
                     ${recentFailuresPanel}
 
-                    <div class="panel">
-                        <h2>Recent Runs</h2>
-                        <div class="run-list">
-                            ${runItems}
+                    <div class="panel${disambiguationPanel ? '' : ' panel-wide'}" id="blockers">
+                        <h2>Top Blockers</h2>
+                        <div class="blocker-list">
+                            ${blockerItems}
                         </div>
                     </div>
 
@@ -792,7 +1288,7 @@
 
                 <div class="raw-data-links">
                     Raw data:
-                    <a href="https://github.com/tsukumogami/tsuku/blob/main/data/priority-queue.json">queue</a>
+                    <a href="https://github.com/tsukumogami/tsuku/blob/main/data/queues/priority-queue.json">queue</a>
                     <a href="https://github.com/tsukumogami/tsuku/tree/main/data/failures">failures</a>
                     <a href="https://github.com/tsukumogami/tsuku/blob/main/data/metrics/batch-runs.jsonl">metrics</a>
                 </div>

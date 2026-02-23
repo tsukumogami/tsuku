@@ -100,10 +100,11 @@ type DisambiguationStatus struct {
 
 // QueueStatus summarizes queue state.
 type QueueStatus struct {
-	Total    int                      `json:"total"`
-	ByStatus map[string]int           `json:"by_status"`
-	ByTier   map[int]map[string]int   `json:"by_tier"`
-	Packages map[string][]PackageInfo `json:"packages"` // Packages grouped by status
+	Total       int                       `json:"total"`
+	ByStatus    map[string]int            `json:"by_status"`
+	ByTier      map[int]map[string]int    `json:"by_tier"`
+	ByEcosystem map[string]map[string]int `json:"by_ecosystem,omitempty"`
+	Packages    map[string][]PackageInfo  `json:"packages"` // Packages grouped by status
 }
 
 // PackageInfo contains details about a package for display.
@@ -154,6 +155,8 @@ type FailureRecord struct {
 	Subcategory string   `json:"subcategory,omitempty"`
 	ExitCode    int      `json:"exit_code,omitempty"`
 	BlockedBy   []string `json:"blocked_by,omitempty"` // Added for missing_dep tracking
+	Message     string   `json:"message,omitempty"`
+	WorkflowURL string   `json:"workflow_url,omitempty"`
 }
 
 // PackageFailure is a single failure entry in the legacy batch format.
@@ -164,6 +167,7 @@ type PackageFailure struct {
 	BlockedBy   []string `json:"blocked_by,omitempty"`
 	Message     string   `json:"message"`
 	Timestamp   string   `json:"timestamp"`
+	WorkflowURL string   `json:"workflow_url,omitempty"`
 }
 
 // MetricsRecord represents one line in batch-runs.jsonl.
@@ -347,10 +351,11 @@ func Generate(opts Options) error {
 
 func computeQueueStatus(queue *batch.UnifiedQueue, failureDetails map[string]FailureDetails) QueueStatus {
 	status := QueueStatus{
-		Total:    len(queue.Entries),
-		ByStatus: make(map[string]int),
-		ByTier:   make(map[int]map[string]int),
-		Packages: make(map[string][]PackageInfo),
+		Total:       len(queue.Entries),
+		ByStatus:    make(map[string]int),
+		ByTier:      make(map[int]map[string]int),
+		ByEcosystem: make(map[string]map[string]int),
+		Packages:    make(map[string][]PackageInfo),
 	}
 
 	for _, entry := range queue.Entries {
@@ -360,6 +365,15 @@ func computeQueueStatus(queue *batch.UnifiedQueue, failureDetails map[string]Fai
 			status.ByTier[entry.Priority] = make(map[string]int)
 		}
 		status.ByTier[entry.Priority][entry.Status]++
+
+		eco := entry.Ecosystem()
+		if eco != "" {
+			if _, ok := status.ByEcosystem[eco]; !ok {
+				status.ByEcosystem[eco] = make(map[string]int)
+			}
+			status.ByEcosystem[eco][entry.Status]++
+			status.ByEcosystem[eco]["total"]++
+		}
 
 		// Build package info with failure details if available.
 		// ID is constructed as "ecosystem:name" to match failure detail keys.
@@ -897,13 +911,15 @@ func resolveEcosystems(rec MetricsRecord) map[string]int {
 }
 
 // metricsToRunInfo converts a MetricsRecord into a RunInfo.
+// BatchID is derived from the record's timestamp (not the raw batch_id field)
+// to ensure consistent formatting with runs[].batch_id across the dashboard.
 func metricsToRunInfo(rec MetricsRecord) *RunInfo {
 	failed := rec.Total - rec.Merged
 	if failed < 0 {
 		failed = 0
 	}
 	return &RunInfo{
-		BatchID:       rec.BatchID,
+		BatchID:       batchIDFromTimestamp(rec.Timestamp),
 		Ecosystems:    resolveEcosystems(rec),
 		Timestamp:     rec.Timestamp,
 		Succeeded:     rec.Merged,

@@ -296,12 +296,18 @@
                 day: 'numeric',
                 hour: '2-digit',
                 minute: '2-digit',
+                timeZone: 'America/New_York',
                 timeZoneName: 'short'
             });
         }
 
         function formatDuration(seconds) {
             if (!seconds && seconds !== 0) return '-';
+            if (seconds >= 3600) {
+                var h = Math.floor(seconds / 3600);
+                var m = Math.floor((seconds % 3600) / 60);
+                return h + 'h ' + m + 'm';
+            }
             var m = Math.floor(seconds / 60);
             var s = seconds % 60;
             if (m > 0) return m + 'm ' + s + 's';
@@ -352,7 +358,7 @@
             html += '<span class="detail-label">Duration</span>';
             html += '<span class="detail-value">' + esc(formatDuration(run.duration)) + '</span>';
 
-            html += '<span class="detail-label">Succeeded</span>';
+            html += '<span class="detail-label">Merged</span>';
             html += '<span class="detail-value">' + esc(String(run.merged)) + '</span>';
 
             html += '<span class="detail-label">Failed</span>';
@@ -376,7 +382,13 @@
                     '<td class="package-name"><a href="failure.html?id=' + encodeURIComponent(f.id) + '">' + esc(f.package) + '</a></td>' +
                     '<td><span class="category-badge">' + esc(f.category) + '</span></td>' +
                     '<td>' + (f.subcategory ? '<span class="subcategory-badge">' + esc(f.subcategory) + '</span>' : '-') + '</td>' +
-                    '<td>' + (f.platform ? '<span class="platform-tag">' + esc(f.platform) + '</span>' : '-') + '</td>' +
+                    '<td>' + (function() {
+                        if (f.platform === 'multiple' && f.platforms && f.platforms.length > 0) {
+                            return f.platforms.map(function(p) { return '<span class="platform-tag">' + esc(p) + '</span>'; }).join(' ');
+                        }
+                        if (f.platform) { return '<span class="platform-tag">' + esc(f.platform) + '</span>'; }
+                        return '-';
+                    })() + '</td>' +
                     '<td class="timestamp">' + esc(formatDate(f.timestamp)) + '</td>' +
                     '</tr>';
             }).join('');
@@ -399,8 +411,12 @@
             var html = '<div class="actions">';
             html += '<h2>Actions</h2>';
             html += '<div class="action-links">';
-            html += '<a href="https://github.com/tsukumogami/tsuku/actions/workflows/batch-generation.yml" class="action-btn" target="_blank" rel="noopener">Retry batch</a>';
-            html += '<a href="https://github.com/tsukumogami/tsuku/actions" class="action-btn" target="_blank" rel="noopener">View workflow logs</a>';
+            html += '<a href="https://github.com/tsukumogami/tsuku/actions/workflows/batch-generation.yml?query=workflow%3A%22Batch+Generation%22" class="action-btn" target="_blank" rel="noopener">Retry batch</a>';
+            if (run.workflow_url) {
+                html += '<a href="' + esc(run.workflow_url) + '" class="action-btn" target="_blank" rel="noopener">View workflow logs</a>';
+            } else {
+                html += '<a href="https://github.com/tsukumogami/tsuku/actions/workflows/batch-generation.yml" class="action-btn" target="_blank" rel="noopener">View workflow logs</a>';
+            }
             html += '</div></div>';
             return html;
         }
@@ -428,11 +444,8 @@
                 }
 
                 var failureDetails = data.failure_details || [];
-                var runTime = new Date(run.timestamp).getTime();
                 var batchFailures = failureDetails.filter(function(f) {
-                    if (!f.timestamp) return false;
-                    var diff = Math.abs(new Date(f.timestamp).getTime() - runTime);
-                    return diff < 120000; // 120 seconds
+                    return f.batch_id === id;
                 });
 
                 document.title = run.batch_id + ' - Run Detail - tsuku Pipeline';
