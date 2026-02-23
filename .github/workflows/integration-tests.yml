@@ -20,12 +20,9 @@ on:
 
 jobs:
   checksum-pinning:
-    name: "Checksum: ${{ matrix.family }}"
+    name: "Checksum Pinning Tests"
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        family: [debian, rhel, arch, alpine, suse]
+    timeout-minutes: 60
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -36,12 +33,25 @@ jobs:
           go-version-file: 'go.mod'
           cache-dependency-path: go.sum
 
-      - name: Run checksum pinning tests
+      - name: Run checksum pinning tests across families
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Point registry to current branch so PR tests can access migrated recipes
           TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
-        run: ./test/scripts/test-checksum-pinning.sh ${{ matrix.family }}
+        run: |
+          FAMILIES=(debian rhel arch alpine suse)
+          FAILED=()
+          for family in "${FAMILIES[@]}"; do
+            echo "::group::Checksum pinning on $family"
+            if ! timeout 300 ./test/scripts/test-checksum-pinning.sh "$family"; then
+              FAILED+=("$family")
+            fi
+            echo "::endgroup::"
+          done
+          if [ ${#FAILED[@]} -gt 0 ]; then
+            echo "::error::Failed families: ${FAILED[*]}"
+            exit 1
+          fi
+          echo "All checksum pinning tests passed"
 
   homebrew-linux:
     name: "Homebrew: ${{ matrix.family }}"
