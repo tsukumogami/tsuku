@@ -1,29 +1,29 @@
 {
-  "generated_at": "2026-02-22T23:39:03Z",
-  "total_recipes": 349,
+  "generated_at": "2026-02-23T02:52:20Z",
+  "total_recipes": 350,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 291,
-        "total": 349,
-        "pct": 83.3810888252149
+        "supported": 292,
+        "total": 350,
+        "pct": 83.42857142857143
       },
       "glibc": {
-        "supported": 319,
-        "total": 349,
-        "pct": 91.40401146131805
+        "supported": 320,
+        "total": 350,
+        "pct": 91.42857142857143
       },
       "musl": {
-        "supported": 179,
-        "total": 349,
-        "pct": 51.28939828080229
+        "supported": 180,
+        "total": 350,
+        "pct": 51.42857142857142
       }
     },
     "by_category": {
       "library": {
-        "total": 22,
-        "musl_support": 22,
-        "glibc_support": 22
+        "total": 23,
+        "musl_support": 23,
+        "glibc_support": 23
       },
       "tool": {
         "total": 327,
@@ -547,6 +547,20 @@
         "musl"
       ],
       "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "bdw-gc",
+      "type": "library",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": [
+        "library recipe 'bdw-gc' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
+      ],
       "warnings": null
     },
     {
