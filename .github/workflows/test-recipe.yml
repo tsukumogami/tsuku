@@ -32,13 +32,16 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Build tsuku for all target platforms and detect which recipe to test.
+  # Build tsuku for all target platforms, detect changed recipes, and split into batches.
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     outputs:
       recipes: ${{ steps.detect.outputs.recipes }}
       has_recipes: ${{ steps.detect.outputs.has_recipes }}
+      linux_batches: ${{ steps.batch.outputs.linux_batches }}
+      has_linux_batches: ${{ steps.batch.outputs.has_linux_batches }}
+      batch_count: ${{ steps.batch.outputs.batch_count }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
@@ -108,17 +111,61 @@ jobs:
             echo "has_recipes=false" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Split recipes into batches
+        id: batch
+        run: |
+          RECIPES='${{ steps.detect.outputs.recipes }}'
+
+          if [ -z "$RECIPES" ] || [ "$RECIPES" = "[]" ]; then
+            echo "linux_batches=[]" >> "$GITHUB_OUTPUT"
+            echo "has_linux_batches=false" >> "$GITHUB_OUTPUT"
+            echo "batch_count=0" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Read batch size from config or default to 5
+          BATCH_SIZE=5
+          if [ -f .github/ci-batch-config.json ]; then
+            BATCH_SIZE=$(jq -r '.batch_sizes["test-recipe"].linux // 5' .github/ci-batch-config.json)
+          fi
+          echo "Using batch size: $BATCH_SIZE"
+
+          # Split recipes into batches using ceiling division
+          BATCHES=$(echo "$RECIPES" | jq -c --argjson bs "$BATCH_SIZE" '
+            . as $all |
+            [range(0; length; $bs)] |
+            to_entries |
+            map({batch_id: .key, recipes: $all[.value:.value + $bs]})
+          ')
+
+          echo "linux_batches=$BATCHES" >> "$GITHUB_OUTPUT"
+
+          BATCH_COUNT=$(echo "$BATCHES" | jq 'length')
+          echo "batch_count=$BATCH_COUNT" >> "$GITHUB_OUTPUT"
+          if [ "$BATCH_COUNT" -gt 0 ]; then
+            echo "has_linux_batches=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_linux_batches=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          echo "Generated $BATCH_COUNT batch(es) of up to $BATCH_SIZE recipes"
+
   # Linux x86_64: test in sandbox containers for all five families.
-  # Families are tested in parallel per recipe to keep wall-clock time manageable.
-  # Each family gets its own TSUKU_HOME to avoid staging conflicts, but all share
-  # a download cache via symlink so large downloads (e.g., Rust toolchain) are
-  # fetched once and reused across families and recipes.
+  # Recipes are split into batches (one job per batch) and families run in parallel
+  # per recipe. Each family gets its own TSUKU_HOME to avoid staging conflicts, but
+  # all share a download cache via symlink so large downloads (e.g., Rust toolchain)
+  # are fetched once and reused across families and recipes.
   test-linux-x86_64:
+    name: "Linux x86_64 (batch ${{ matrix.batch.batch_id + 1 }}/${{ needs.build.outputs.batch_count }})"
     needs: build
-    if: needs.build.outputs.has_recipes == 'true'
+    if: needs.build.outputs.has_linux_batches == 'true'
     runs-on: ubuntu-latest
     continue-on-error: true
-    timeout-minutes: 60
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        batch: ${{ fromJson(needs.build.outputs.linux_batches) }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
 
@@ -139,13 +186,13 @@ jobs:
 
       - name: Test recipes in Linux x86_64 containers
         env:
-          RECIPES: ${{ needs.build.outputs.recipes }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           FAMILIES=("debian" "rhel" "arch" "suse" "alpine")
           SHARED_CACHE="/tmp/tsuku-shared-downloads"
           mkdir -p "$SHARED_CACHE"
           chmod 700 "$SHARED_CACHE"
+          RECIPES='${{ toJson(matrix.batch.recipes) }}'
 
           TOTAL=0
           PASSED=0
@@ -214,7 +261,7 @@ jobs:
 
           # Write job summary
           {
-            echo "### Linux x86_64 Results"
+            echo "### Linux x86_64 (batch ${{ matrix.batch.batch_id + 1 }}) Results"
             echo ""
             echo "Passed: $PASSED / $TOTAL"
             echo ""
@@ -229,18 +276,23 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
           if [ "$FAILED" -gt 0 ]; then
-            echo "::warning::$FAILED of $TOTAL tests failed on Linux x86_64"
+            echo "::warning::$FAILED of $TOTAL tests failed on Linux x86_64 (batch ${{ matrix.batch.batch_id + 1 }})"
             exit 1
           fi
 
   # Linux arm64: test in sandbox containers for four families (no arch arm64 image).
-  # Same parallel-families approach as x86_64.
+  # Same batched parallel-families approach as x86_64.
   test-linux-arm64:
+    name: "Linux arm64 (batch ${{ matrix.batch.batch_id + 1 }}/${{ needs.build.outputs.batch_count }})"
     needs: build
-    if: needs.build.outputs.has_recipes == 'true'
+    if: needs.build.outputs.has_linux_batches == 'true'
     runs-on: ubuntu-24.04-arm
     continue-on-error: true
-    timeout-minutes: 60
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        batch: ${{ fromJson(needs.build.outputs.linux_batches) }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
 
@@ -261,7 +313,6 @@ jobs:
 
       - name: Test recipes in Linux arm64 containers
         env:
-          RECIPES: ${{ needs.build.outputs.recipes }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Four Linux arm64 families (no arch -- no arm64 image available)
@@ -269,6 +320,7 @@ jobs:
           SHARED_CACHE="/tmp/tsuku-shared-downloads"
           mkdir -p "$SHARED_CACHE"
           chmod 700 "$SHARED_CACHE"
+          RECIPES='${{ toJson(matrix.batch.recipes) }}'
 
           TOTAL=0
           PASSED=0
@@ -337,7 +389,7 @@ jobs:
 
           # Write job summary
           {
-            echo "### Linux arm64 Results"
+            echo "### Linux arm64 (batch ${{ matrix.batch.batch_id + 1 }}) Results"
             echo ""
             echo "Passed: $PASSED / $TOTAL"
             echo ""
@@ -352,14 +404,14 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
           if [ "$FAILED" -gt 0 ]; then
-            echo "::warning::$FAILED of $TOTAL tests failed on Linux arm64"
+            echo "::warning::$FAILED of $TOTAL tests failed on Linux arm64 (batch ${{ matrix.batch.batch_id + 1 }})"
             exit 1
           fi
 
   # macOS arm64: native runner test.
   test-darwin-arm64:
     needs: build
-    if: needs.build.outputs.has_recipes == 'true'
+    if: needs.build.outputs.has_linux_batches == 'true'
     runs-on: macos-14
     continue-on-error: true
     timeout-minutes: 60
@@ -450,7 +502,7 @@ jobs:
   # macOS x86_64: native runner test.
   test-darwin-x86_64:
     needs: build
-    if: needs.build.outputs.has_recipes == 'true'
+    if: needs.build.outputs.has_linux_batches == 'true'
     runs-on: macos-15-intel
     continue-on-error: true
     timeout-minutes: 60

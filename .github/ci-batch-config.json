@@ -3,6 +3,9 @@
     "test-changed-recipes": {
       "linux": 15
     },
+    "test-recipe": {
+      "linux": 5
+    },
     "validate-golden-recipes": {
       "default": 20
     }
