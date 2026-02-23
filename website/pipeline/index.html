@@ -265,6 +265,99 @@
             text-decoration: none;
         }
 
+        .breaker-summary {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 0.75rem;
+        }
+
+        .breaker-summary .count-highlight {
+            font-weight: 600;
+            color: #f85149;
+        }
+
+        .eco-widgets-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            grid-column: 1 / -1;
+        }
+
+        @media (max-width: 800px) {
+            .eco-widgets-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .eco-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        .eco-table th,
+        .eco-table td {
+            text-align: left;
+            padding: 0.4rem 0.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .eco-table th {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        .eco-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .eco-table tbody tr {
+            transition: background 0.15s ease;
+        }
+
+        .eco-table a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .eco-table tbody tr:hover {
+            background: var(--bg);
+        }
+
+        .eco-table .eco-name {
+            font-family: "SF Mono", Consolas, monospace;
+        }
+
+        .eco-table .eco-count {
+            text-align: right;
+            font-family: "SF Mono", Consolas, monospace;
+        }
+
+        .eco-table .recovery-time {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .eco-clickable-row {
+            cursor: pointer;
+        }
+
+        .mini-progress {
+            display: flex;
+            height: 6px;
+            border-radius: 3px;
+            overflow: hidden;
+            background: var(--bg);
+            min-width: 80px;
+        }
+
+        .mini-progress .seg-success { background: #3fb950; }
+        .mini-progress .seg-pending { background: var(--text-muted); }
+        .mini-progress .seg-failed { background: #f85149; }
+        .mini-progress .seg-blocked { background: #d29922; }
+        .mini-progress .seg-requires_manual { background: #bc8cff; }
+
         .health-warning {
             background: #d29922;
             color: #000;
@@ -463,36 +556,15 @@
             const container = document.getElementById('dashboard-content');
             const total = data.queue.total || 1;
 
-            // Render Pipeline Health panel
+            // Render Pipeline Health panel (pipeline-level only, no per-ecosystem badges)
             let healthPanel = '';
             const health = data.health;
             if (health) {
-                // Circuit breaker badges per ecosystem
-                const ecoEntries = Object.entries(health.ecosystems || {});
-                const ecoBadges = ecoEntries.map(([eco, info]) => {
-                    const state = info.breaker_state || 'unknown';
-                    let badgeClass = 'breaker-closed';
-                    if (state === 'open') badgeClass = 'breaker-open';
-                    else if (state === 'half-open') badgeClass = 'breaker-half-open';
-                    return `<a href="/pipeline/failures.html?ecosystem=${encodeURIComponent(eco)}" class="eco-badge-link">
-                        <span class="breaker-badge ${badgeClass}">${esc(eco)}: ${esc(state)}</span>
-                    </a>`;
-                }).join('');
-
-                // Last run info, with breaker-skip note when applicable
+                // Last run info
                 let lastRunHtml = '<span class="health-value" style="color: var(--text-muted);">N/A</span>';
                 if (health.last_run) {
                     const lr = health.last_run;
-                    let skipNote = '';
-                    // Check if any ecosystems had open breakers during this run
-                    const ecoStates = health.ecosystems || {};
-                    const openEcos = Object.entries(ecoStates)
-                        .filter(([, info]) => info.breaker_state === 'open')
-                        .map(([eco]) => eco);
-                    if (openEcos.length > 0) {
-                        skipNote = `, ${esc(openEcos.join(', '))} skipped (breaker open)`;
-                    }
-                    lastRunHtml = `<span class="health-value"><a href="/pipeline/run.html?id=${encodeURIComponent(lr.batch_id)}">${esc(timeAgo(lr.timestamp))} - ${esc(lr.succeeded)}/${esc(lr.total)} succeeded${skipNote}</a></span>`;
+                    lastRunHtml = `<span class="health-value"><a href="/pipeline/run.html?id=${encodeURIComponent(lr.batch_id)}">${esc(timeAgo(lr.timestamp))} - ${esc(lr.succeeded)}/${esc(lr.total)} succeeded</a></span>`;
                 }
 
                 // Last success info
@@ -505,7 +577,7 @@
                 // Runs since last success
                 let runsSinceHtml = `<span class="health-value"><a href="/pipeline/runs.html?since_success=true">${esc(health.runs_since_last_success)}</a></span>`;
 
-                // Warning if last run was more than 2 hours ago (computed from timestamp, not stale JSON field)
+                // Warning if last run was more than 2 hours ago
                 let warningHtml = '';
                 if (health.last_run && health.last_run.timestamp) {
                     const hoursSinceRun = Math.floor((Date.now() - new Date(health.last_run.timestamp).getTime()) / 3600000);
@@ -514,10 +586,26 @@
                     }
                 }
 
+                // Breaker summary: count of open/half-open ecosystems
+                let breakerSummaryHtml = '';
+                const ecoEntries = Object.entries(health.ecosystems || {});
+                if (ecoEntries.length > 0) {
+                    const openCount = ecoEntries.filter(([, info]) => info.breaker_state === 'open').length;
+                    const halfOpenCount = ecoEntries.filter(([, info]) => info.breaker_state === 'half-open').length;
+                    const unhealthy = openCount + halfOpenCount;
+                    if (unhealthy > 0) {
+                        const parts = [];
+                        if (openCount > 0) parts.push(`${openCount} open`);
+                        if (halfOpenCount > 0) parts.push(`${halfOpenCount} half-open`);
+                        breakerSummaryHtml = `<div class="breaker-summary"><span class="count-highlight">${unhealthy}</span> of ${ecoEntries.length} breakers unhealthy (${parts.join(', ')})</div>`;
+                    } else {
+                        breakerSummaryHtml = `<div class="breaker-summary">All ${ecoEntries.length} breakers closed</div>`;
+                    }
+                }
+
                 healthPanel = `
                     <div class="panel">
                         <h2>Pipeline Health</h2>
-                        ${ecoEntries.length > 0 ? `<div class="eco-badges">${ecoBadges}</div>` : ''}
                         <div class="health-grid">
                             <span class="health-label">Last Run</span>
                             ${lastRunHtml}
@@ -526,6 +614,7 @@
                             <span class="health-label">Runs Since</span>
                             ${runsSinceHtml}
                         </div>
+                        ${breakerSummaryHtml}
                         ${warningHtml}
                     </div>
                 `;
@@ -534,6 +623,149 @@
                     <div class="panel">
                         <h2>Pipeline Health</h2>
                         <div class="no-data">No health data available</div>
+                    </div>
+                `;
+            }
+
+            // Render Ecosystem Health widget (circuit breaker details per ecosystem)
+            let ecoHealthPanel = '';
+            if (health && health.ecosystems) {
+                const ecoEntries = Object.entries(health.ecosystems);
+                if (ecoEntries.length > 0) {
+                    const ecoRows = ecoEntries
+                        .sort(([a], [b]) => a.localeCompare(b))
+                        .map(([eco, info]) => {
+                            const state = info.breaker_state || 'unknown';
+                            let badgeClass = 'breaker-closed';
+                            if (state === 'open') badgeClass = 'breaker-open';
+                            else if (state === 'half-open') badgeClass = 'breaker-half-open';
+
+                            const failureCount = info.failures || 0;
+                            const lastFailure = info.last_failure ? timeAgo(info.last_failure) : '-';
+
+                            // Time until recovery for open breakers
+                            let recoveryHtml = '-';
+                            if (state === 'open' && info.opens_at) {
+                                const opensAt = new Date(info.opens_at).getTime();
+                                const now = Date.now();
+                                const diffMs = opensAt - now;
+                                if (diffMs > 0) {
+                                    const mins = Math.ceil(diffMs / 60000);
+                                    if (mins >= 60) {
+                                        const hrs = Math.floor(mins / 60);
+                                        const remainMins = mins % 60;
+                                        recoveryHtml = `<span class="recovery-time">${hrs}h ${remainMins}m</span>`;
+                                    } else {
+                                        recoveryHtml = `<span class="recovery-time">${mins}m</span>`;
+                                    }
+                                } else {
+                                    recoveryHtml = `<span class="recovery-time">due now</span>`;
+                                }
+                            }
+
+                            return `
+                                <tr class="eco-clickable-row" onclick="location.href='/pipeline/failures.html?ecosystem=${encodeURIComponent(eco)}'">
+                                    <td><a href="/pipeline/failures.html?ecosystem=${encodeURIComponent(eco)}"><span class="eco-name">${esc(eco)}</span></a></td>
+                                    <td><span class="breaker-badge ${badgeClass}">${esc(state)}</span></td>
+                                    <td class="eco-count">${esc(failureCount)}</td>
+                                    <td>${esc(lastFailure)}</td>
+                                    <td>${recoveryHtml}</td>
+                                </tr>
+                            `;
+                        }).join('');
+
+                    ecoHealthPanel = `
+                        <div class="panel">
+                            <h2>Ecosystem Health</h2>
+                            <table class="eco-table">
+                                <thead>
+                                    <tr>
+                                        <th>Ecosystem</th>
+                                        <th>Breaker</th>
+                                        <th style="text-align: right;">Failures</th>
+                                        <th>Last Failure</th>
+                                        <th>Recovery</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${ecoRows}
+                                </tbody>
+                            </table>
+                        </div>
+                    `;
+                } else {
+                    ecoHealthPanel = `
+                        <div class="panel">
+                            <h2>Ecosystem Health</h2>
+                            <div class="no-data">No ecosystem data available</div>
+                        </div>
+                    `;
+                }
+            } else {
+                ecoHealthPanel = `
+                    <div class="panel">
+                        <h2>Ecosystem Health</h2>
+                        <div class="no-data">No ecosystem data available</div>
+                    </div>
+                `;
+            }
+
+            // Render Ecosystem Pipeline widget (per-ecosystem queue counts)
+            let ecoPipelinePanel = '';
+            const byEcosystem = data.queue && data.queue.by_ecosystem;
+            if (byEcosystem && Object.keys(byEcosystem).length > 0) {
+                const statusCols = ['pending', 'failed', 'success', 'blocked', 'requires_manual'];
+                const ecoRows = Object.entries(byEcosystem)
+                    .sort(([a], [b]) => a.localeCompare(b))
+                    .map(([eco, counts]) => {
+                        const ecoTotal = counts.total || statusCols.reduce((sum, s) => sum + (counts[s] || 0), 0);
+                        const cells = statusCols.map(s => `<td class="eco-count">${counts[s] || 0}</td>`).join('');
+
+                        // Mini progress bar segments
+                        const barTotal = ecoTotal || 1;
+                        const segments = statusCols
+                            .map(s => {
+                                const pct = ((counts[s] || 0) / barTotal * 100).toFixed(1);
+                                return pct > 0 ? `<div class="seg-${s}" style="width: ${pct}%"></div>` : '';
+                            }).join('');
+
+                        return `
+                            <tr>
+                                <td><span class="eco-name">${esc(eco)}</span></td>
+                                <td class="eco-count">${esc(ecoTotal)}</td>
+                                ${cells}
+                                <td><div class="mini-progress">${segments}</div></td>
+                            </tr>
+                        `;
+                    }).join('');
+
+                ecoPipelinePanel = `
+                    <div class="panel">
+                        <h2>Ecosystem Pipeline</h2>
+                        <table class="eco-table">
+                            <thead>
+                                <tr>
+                                    <th>Ecosystem</th>
+                                    <th style="text-align: right;">Total</th>
+                                    <th style="text-align: right;">Pend</th>
+                                    <th style="text-align: right;">Fail</th>
+                                    <th style="text-align: right;">OK</th>
+                                    <th style="text-align: right;">Block</th>
+                                    <th style="text-align: right;">Manual</th>
+                                    <th>Progress</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${ecoRows}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            } else {
+                ecoPipelinePanel = `
+                    <div class="panel">
+                        <h2>Ecosystem Pipeline</h2>
+                        <div class="no-data">No per-ecosystem data available</div>
                     </div>
                 `;
             }
@@ -751,6 +983,11 @@
 
                 <div class="panels">
                     ${healthPanel}
+
+                    <div class="eco-widgets-row">
+                        ${ecoHealthPanel}
+                        ${ecoPipelinePanel}
+                    </div>
 
                     <div class="panel">
                         <h2>Queue Status (${data.queue.total} packages)</h2>
