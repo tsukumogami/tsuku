@@ -148,6 +148,10 @@ func (o *Orchestrator) Create(
 	req BuildRequest,
 	opts *SessionOptions,
 ) (*OrchestratorResult, error) {
+	// Type-assert to BinaryNameProvider before creating the session,
+	// because the builder reference is not retained after NewSession().
+	binaryNameProvider, _ := builder.(BinaryNameProvider)
+
 	// Create a new session
 	session, err := builder.NewSession(ctx, req, opts)
 	if err != nil {
@@ -159,6 +163,13 @@ func (o *Orchestrator) Create(
 	result, err := session.Generate(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("generation failed: %w", err)
+	}
+
+	// Cross-check recipe binary names against registry metadata.
+	// This runs after generation but before sandbox validation so
+	// mismatches are corrected without wasting a container cycle.
+	if binaryNameProvider != nil {
+		o.validateBinaryNames(binaryNameProvider, result, builder.Name())
 	}
 
 	// If sandbox testing is skipped, return immediately

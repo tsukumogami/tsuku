@@ -297,6 +297,35 @@ func cargoVerifySection(executable string) *recipe.VerifySection {
 	}
 }
 
+// AuthoritativeBinaryNames returns the executable names from the cached
+// crates.io API response. This implements BinaryNameProvider so the
+// orchestrator can cross-check recipe executables against registry metadata.
+//
+// Returns nil if Build() hasn't been called yet (no cached data), or if the
+// API response has no usable bin_names.
+func (b *CargoBuilder) AuthoritativeBinaryNames() []string {
+	if b.cachedCrateInfo == nil {
+		return nil
+	}
+
+	// Use the same logic as discoverExecutables: find the first non-yanked
+	// version and return its bin_names (filtered through validation).
+	for _, v := range b.cachedCrateInfo.Versions {
+		if v.Yanked {
+			continue
+		}
+		var names []string
+		for _, name := range v.BinNames {
+			if isValidExecutableName(name) {
+				names = append(names, name)
+			}
+		}
+		return names
+	}
+
+	return nil
+}
+
 // Probe checks if a crate exists on crates.io and returns quality metadata.
 func (b *CargoBuilder) Probe(ctx context.Context, name string) (*ProbeResult, error) {
 	info, err := b.fetchCrateInfo(ctx, name)

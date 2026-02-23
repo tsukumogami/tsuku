@@ -54,6 +54,11 @@ type NpmBuilder struct {
 	httpClient      *http.Client
 	npmRegistryURL  string
 	npmDownloadsURL string
+	// cachedPackageInfo stores the last fetchPackageInfo response so that
+	// AuthoritativeBinaryNames() can return bin data without re-fetching.
+	// Populated during Build() and read by the orchestrator via
+	// the BinaryNameProvider interface (#1938).
+	cachedPackageInfo *npmPackageResponse
 }
 
 // NewNpmBuilder creates a new NpmBuilder with the given HTTP client.
@@ -125,6 +130,9 @@ func (b *NpmBuilder) Build(ctx context.Context, req BuildRequest) (*BuildResult,
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch package info: %w", err)
 	}
+
+	// Cache the response for BinaryNameProvider (#1938)
+	b.cachedPackageInfo = pkgInfo
 
 	result := &BuildResult{
 		Source:   fmt.Sprintf("npm:%s", req.Package),
@@ -340,6 +348,31 @@ func isValidNpmPackageNameForBuilder(name string) bool {
 	}
 
 	return npmPackageNameRegex.MatchString(name)
+}
+
+// AuthoritativeBinaryNames returns the executable names from the cached
+// npm registry response. This implements BinaryNameProvider so the
+// orchestrator can cross-check recipe executables against registry metadata.
+//
+// Returns nil if Build() hasn't been called yet (no cached data), or if the
+// package has no bin field.
+func (b *NpmBuilder) AuthoritativeBinaryNames() []string {
+	if b.cachedPackageInfo == nil {
+		return nil
+	}
+
+	// Use the same logic as discoverExecutables: get bin from latest version.
+	latestVersion := b.cachedPackageInfo.DistTags.Latest
+	if latestVersion == "" {
+		return nil
+	}
+
+	versionInfo, ok := b.cachedPackageInfo.Versions[latestVersion]
+	if !ok {
+		return nil
+	}
+
+	return parseBinField(versionInfo.Bin, b.cachedPackageInfo.Name)
 }
 
 // Probe checks if a package exists on npm and returns quality metadata.

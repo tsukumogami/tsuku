@@ -309,6 +309,43 @@ func newBaseVerifySelfRepairEvent() VerifySelfRepairEvent {
 	}
 }
 
+// BinaryNameRepairEvent represents a telemetry event for binary name correction.
+// This tracks when the orchestrator's validateBinaryNames() step corrects recipe
+// executables using authoritative registry data from a BinaryNameProvider.
+type BinaryNameRepairEvent struct {
+	Action        string `json:"action"`         // Event type: "binary_name_repair"
+	ToolName      string `json:"tool_name"`      // Name of the tool whose binaries were corrected
+	Builder       string `json:"builder"`        // Builder that provided the authoritative names (e.g., "crates.io", "npm")
+	Success       bool   `json:"success"`        // Whether the correction was applied (always true when emitted)
+	OS            string `json:"os"`             // Operating system
+	Arch          string `json:"arch"`           // CPU architecture
+	TsukuVersion  string `json:"tsuku_version"`  // Version of tsuku CLI
+	SchemaVersion string `json:"schema_version"` // Event schema version
+}
+
+// binaryNameRepairSchemaVersion is the schema version for binary name repair events.
+const binaryNameRepairSchemaVersion = "1"
+
+// newBaseBinaryNameRepairEvent creates a BinaryNameRepairEvent with common fields pre-filled.
+func newBaseBinaryNameRepairEvent() BinaryNameRepairEvent {
+	return BinaryNameRepairEvent{
+		OS:            runtime.GOOS,
+		Arch:          runtime.GOARCH,
+		TsukuVersion:  buildinfo.Version(),
+		SchemaVersion: binaryNameRepairSchemaVersion,
+	}
+}
+
+// NewBinaryNameRepairEvent creates an event for a binary name repair operation.
+func NewBinaryNameRepairEvent(toolName, builder string, success bool) BinaryNameRepairEvent {
+	e := newBaseBinaryNameRepairEvent()
+	e.Action = "binary_name_repair"
+	e.ToolName = toolName
+	e.Builder = builder
+	e.Success = success
+	return e
+}
+
 // NewVerifySelfRepairEvent creates an event for a verification self-repair operation.
 func NewVerifySelfRepairEvent(toolName, method string, success bool) VerifySelfRepairEvent {
 	e := newBaseVerifySelfRepairEvent()
