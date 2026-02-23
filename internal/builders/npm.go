@@ -241,7 +241,7 @@ func (b *NpmBuilder) discoverExecutables(pkgInfo *npmPackageResponse) ([]string,
 	}
 
 	// Parse bin field
-	executables := parseBinField(versionInfo.Bin)
+	executables := parseBinField(versionInfo.Bin, pkgInfo.Name)
 	if len(executables) == 0 {
 		warnings = append(warnings, "No bin field found; using package name as executable")
 		return []string{pkgInfo.Name}, warnings
@@ -250,19 +250,25 @@ func (b *NpmBuilder) discoverExecutables(pkgInfo *npmPackageResponse) ([]string,
 	return executables, warnings
 }
 
-// parseBinField extracts executable names from the bin field
+// parseBinField extracts executable names from the bin field.
 // The bin field can be:
-// - string: the package name is the executable, value is the path
+// - string: the executable name equals the (unscoped) package name
 // - map[string]string: keys are executable names, values are paths
-func parseBinField(bin any) []string {
+//
+// packageName is required so that string-type bin values can derive the
+// executable name. For scoped packages (@scope/tool), the scope prefix
+// is stripped so the executable name is "tool".
+func parseBinField(bin any, packageName string) []string {
 	if bin == nil {
 		return nil
 	}
 
 	switch v := bin.(type) {
 	case string:
-		// Single executable - we can't determine the name from this
-		// Return empty to signal fallback to package name
+		name := unscopedPackageName(packageName)
+		if isValidExecutableName(name) {
+			return []string{name}
+		}
 		return nil
 	case map[string]any:
 		var executables []string
@@ -275,6 +281,15 @@ func parseBinField(bin any) []string {
 	}
 
 	return nil
+}
+
+// unscopedPackageName strips the @scope/ prefix from scoped npm package names.
+// For unscoped names it returns the input unchanged.
+func unscopedPackageName(name string) string {
+	if idx := strings.LastIndex(name, "/"); idx >= 0 && strings.HasPrefix(name, "@") {
+		return name[idx+1:]
+	}
+	return name
 }
 
 // extractRepositoryURL extracts URL from repository field
