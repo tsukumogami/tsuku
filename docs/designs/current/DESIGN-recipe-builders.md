@@ -28,6 +28,8 @@ Each major package ecosystem exposes metadata APIs that contain enough informati
 
 By implementing "builders" that understand these ecosystems, tsuku can generate recipes on-demand for any package in these registries.
 
+Binary name discovery has been improved beyond the initial per-builder approach described here. Builders now use registry-authoritative sources (API fields and published artifacts) instead of fetching source files from GitHub, and a `BinaryNameProvider` interface lets the orchestrator cross-check recipe executables before sandbox validation. See [DESIGN-binary-name-discovery](./DESIGN-binary-name-discovery.md) for details.
+
 ### Why Now
 
 1. **Actions exist**: `cargo_install`, `gem_install`, `pipx_install`, `npm_install` are implemented

@@ -2,7 +2,7 @@
   "design_doc": "docs/designs/DESIGN-binary-name-discovery.md",
   "branch": "docs/deterministic-recipe-repair",
   "pr_number": 1934,
-  "integrity_hash": "sha256:0491b2efed2505958a1de8e0417999f5836ad34357542d2c58b85314145027c5",
+  "integrity_hash": "sha256:dd80e760c1a7047c596ebcfeb6b715158ed3651e56a2c2e7ab9acbbbebdd0fb2",
   "issues": [
     {
       "number": 1936,
@@ -511,8 +511,8 @@
     {
       "number": 1941,
       "title": "feat(builders): improve Go binary discovery via module proxy",
-      "status": "pushed",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "ci_fix_attempts": 0,
       "issue_type": "code",
       "dependencies": [],

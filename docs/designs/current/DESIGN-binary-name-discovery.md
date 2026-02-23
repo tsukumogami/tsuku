@@ -1,5 +1,5 @@
 ---
-status: Planned
+status: Current
 problem: |
   Recipe builders discover binary names by fetching source files (Cargo.toml,
   pyproject.toml, gemspec) from GitHub repositories. This fails for workspace
@@ -29,7 +29,7 @@ rationale: |
 
 ## Status
 
-**Planned**
+**Implemented**
 
 ## Implementation Issues
 
