@@ -74,7 +74,7 @@ jobs:
         run: |
           TOTAL=0
           PASSED=0
-          FAILED_COUNT=0
+          FAILED=()
           RESULTS=""
 
           sandbox_test() {
@@ -101,7 +101,7 @@ jobs:
                 RESULTS="$RESULTS| $name | pass |\n"
                 echo "PASS: $name"
               else
-                FAILED_COUNT=$((FAILED_COUNT + 1))
+                FAILED+=("$name")
                 RESULTS="$RESULTS| $name | **FAIL** (exit $EXIT_CODE) |\n"
                 echo "FAIL: $name (exit $EXIT_CODE)"
               fi
@@ -132,7 +132,7 @@ jobs:
             RESULTS="$RESULTS| tls-cacerts | pass |\n"
             echo "PASS: tls-cacerts"
           else
-            FAILED_COUNT=$((FAILED_COUNT + 1))
+            FAILED+=("tls-cacerts")
             RESULTS="$RESULTS| tls-cacerts | **FAIL** |\n"
             echo "FAIL: tls-cacerts"
           fi
@@ -149,8 +149,8 @@ jobs:
             echo -e "$RESULTS"
           } >> "$GITHUB_STEP_SUMMARY"
 
-          if [ "$FAILED_COUNT" -gt 0 ]; then
-            echo "::error::$FAILED_COUNT of $TOTAL tests failed"
+          if [ ${#FAILED[@]} -gt 0 ]; then
+            echo "::error::Failed: ${FAILED[*]}"
             exit 1
           fi
           echo "All Linux build essentials tests passed"
