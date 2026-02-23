@@ -38,7 +38,7 @@ rationale: |
 | Issue | Dependencies | Tier |
 |-------|--------------|------|
 | ~~[#1936: feat(builders): use crates.io `bin_names` for Cargo binary discovery](https://github.com/tsukumogami/tsuku/issues/1936)~~ | None | testable |
-| _Read `bin_names` from the crates.io version API response instead of fetching Cargo.toml from GitHub. Adds version struct fields, rewrites `discoverExecutables()`, removes dead code for repo-based fetching, and caches the API response for the orchestrator validation step._ | | |
+| ~~_Read `bin_names` from the crates.io version API response instead of fetching Cargo.toml from GitHub. Adds version struct fields, rewrites `discoverExecutables()`, removes dead code for repo-based fetching, and caches the API response for the orchestrator validation step._~~ | | |
 | [#1937: fix(builders): handle string-type `bin` field in npm builder](https://github.com/tsukumogami/tsuku/issues/1937) | None | testable |
 | _Fix `parseBinField()` to return the package name when `bin` is a string rather than a map. Strips scope prefixes from scoped packages (`@scope/tool` becomes `tool`) and passes the package name into the parser signature._ | | |
 | [#1938: feat(builders): add `BinaryNameProvider` and orchestrator validation](https://github.com/tsukumogami/tsuku/issues/1938) | [#1936](https://github.com/tsukumogami/tsuku/issues/1936), [#1937](https://github.com/tsukumogami/tsuku/issues/1937) | testable |
