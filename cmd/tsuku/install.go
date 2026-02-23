@@ -27,6 +27,7 @@ var installRequireEmbedded bool
 var installFrom string
 var installDeterministicOnly bool
 var installSearchProvider string
+var installEnv []string
 
 var installCmd = &cobra.Command{
 	Use:   "install [tool]...",
@@ -225,6 +226,8 @@ func init() {
 	installCmd.Flags().StringVar(&installFrom, "from", "", "Source override: builder:source (e.g., github:cli/cli, homebrew:jq)")
 	installCmd.Flags().BoolVar(&installDeterministicOnly, "deterministic-only", false, "Skip LLM fallback; fail if deterministic generation fails")
 	installCmd.Flags().StringVar(&installSearchProvider, "search-provider", "", "Search provider for LLM discovery: ddg, tavily, or brave")
+	installCmd.Flags().StringArrayVar(&installEnv, "env", nil, "Pass environment variable to sandbox container (KEY=VALUE or KEY)")
+
 }
 
 // isInteractive returns true if stdin is connected to a terminal

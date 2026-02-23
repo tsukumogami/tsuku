@@ -737,3 +737,140 @@ func TestReadVerifyResults_MissingMarkerFiles(t *testing.T) {
 		t.Errorf("Expected exitCode=-1 when marker files are missing, got %d", exitCode)
 	}
 }
+
+// --- ExtraEnv / filterExtraEnv tests ---
+
+func TestFilterExtraEnv_PassesArbitraryVars(t *testing.T) {
+	t.Parallel()
+
+	extra := []string{
+		"GITHUB_TOKEN=ghp_abc123",
+		"MY_VAR=hello",
+	}
+	filtered := filterExtraEnv(extra)
+
+	if len(filtered) != 2 {
+		t.Fatalf("Expected 2 entries, got %d", len(filtered))
+	}
+	if filtered[0] != "GITHUB_TOKEN=ghp_abc123" {
+		t.Errorf("Expected GITHUB_TOKEN entry, got %q", filtered[0])
+	}
+	if filtered[1] != "MY_VAR=hello" {
+		t.Errorf("Expected MY_VAR entry, got %q", filtered[1])
+	}
+}
+
+func TestFilterExtraEnv_DropsProtectedKeys(t *testing.T) {
+	t.Parallel()
+
+	extra := []string{
+		"TSUKU_SANDBOX=0",
+		"TSUKU_HOME=/tmp/bad",
+		"HOME=/tmp/bad",
+		"DEBIAN_FRONTEND=dialog",
+		"PATH=/bad",
+		"GITHUB_TOKEN=keep_this",
+	}
+	filtered := filterExtraEnv(extra)
+
+	if len(filtered) != 1 {
+		t.Fatalf("Expected 1 entry after filtering, got %d: %v", len(filtered), filtered)
+	}
+	if filtered[0] != "GITHUB_TOKEN=keep_this" {
+		t.Errorf("Expected GITHUB_TOKEN entry, got %q", filtered[0])
+	}
+}
+
+func TestFilterExtraEnv_KeyOnlyFormat(t *testing.T) {
+	t.Parallel()
+
+	// KEY-only entries (no '=') should pass through since the caller
+	// (resolveEnvFlags) adds "=value" before the entry reaches
+	// filterExtraEnv. But filterExtraEnv itself should handle KEY-only
+	// gracefully by treating the whole string as the key.
+	extra := []string{
+		"SOME_KEY",
+		"PATH", // protected, should be dropped even as KEY-only
+	}
+	filtered := filterExtraEnv(extra)
+
+	if len(filtered) != 1 {
+		t.Fatalf("Expected 1 entry, got %d: %v", len(filtered), filtered)
+	}
+	if filtered[0] != "SOME_KEY" {
+		t.Errorf("Expected SOME_KEY, got %q", filtered[0])
+	}
+}
+
+func TestFilterExtraEnv_EmptySlice(t *testing.T) {
+	t.Parallel()
+
+	filtered := filterExtraEnv(nil)
+	if filtered != nil {
+		t.Errorf("Expected nil for nil input, got %v", filtered)
+	}
+
+	filtered = filterExtraEnv([]string{})
+	if filtered != nil {
+		t.Errorf("Expected nil for empty input, got %v", filtered)
+	}
+}
+
+func TestFilterExtraEnv_EmptyValue(t *testing.T) {
+	t.Parallel()
+
+	extra := []string{"MY_VAR="}
+	filtered := filterExtraEnv(extra)
+
+	if len(filtered) != 1 {
+		t.Fatalf("Expected 1 entry, got %d", len(filtered))
+	}
+	if filtered[0] != "MY_VAR=" {
+		t.Errorf("Expected MY_VAR=, got %q", filtered[0])
+	}
+}
+
+func TestFilterExtraEnv_ValueContainsEquals(t *testing.T) {
+	t.Parallel()
+
+	// KEY=VALUE=with=more=equals should use first '=' to split
+	extra := []string{"CONFIG=a=b=c"}
+	filtered := filterExtraEnv(extra)
+
+	if len(filtered) != 1 {
+		t.Fatalf("Expected 1 entry, got %d", len(filtered))
+	}
+	if filtered[0] != "CONFIG=a=b=c" {
+		t.Errorf("Expected CONFIG=a=b=c, got %q", filtered[0])
+	}
+}
+
+func TestFilterExtraEnv_AllProtected(t *testing.T) {
+	t.Parallel()
+
+	extra := []string{
+		"TSUKU_SANDBOX=1",
+		"HOME=/bad",
+		"PATH=/bad",
+	}
+	filtered := filterExtraEnv(extra)
+
+	if len(filtered) != 0 {
+		t.Errorf("Expected 0 entries when all are protected, got %d: %v", len(filtered), filtered)
+	}
+}
+
+func TestSandboxRequirements_ExtraEnvField(t *testing.T) {
+	t.Parallel()
+
+	reqs := &SandboxRequirements{
+		ExtraEnv: []string{"GITHUB_TOKEN=abc", "MY_VAR=xyz"},
+	}
+
+	if len(reqs.ExtraEnv) != 2 {
+		t.Fatalf("Expected 2 ExtraEnv entries, got %d", len(reqs.ExtraEnv))
+	}
+	if reqs.ExtraEnv[0] != "GITHUB_TOKEN=abc" {
+		t.Errorf("Expected first entry GITHUB_TOKEN=abc, got %q", reqs.ExtraEnv[0])
+	}
+}

@@ -28,6 +28,17 @@ const (
 	verifyOutputMarker = ".sandbox-verify-output"
 )
 
+// protectedEnvKeys lists environment variable keys that the sandbox hardcodes.
+// User-provided ExtraEnv entries matching these keys are silently dropped to
+// prevent subverting the sandbox environment.
+var protectedEnvKeys = map[string]bool{
+	"TSUKU_SANDBOX":   true,
+	"TSUKU_HOME":      true,
+	"HOME":            true,
+	"DEBIAN_FRONTEND": true,
+	"PATH":            true,
+}
+
 // SandboxResult contains the result of a sandbox test.
 type SandboxResult struct {
 	Passed         bool   // Whether the install succeeded (exit code 0)
@@ -263,20 +274,26 @@ func (e *Executor) Sandbox(
 		ReadOnly: false, // Need to install packages
 	}
 
+	// Build environment: hardcoded sandbox vars first, then filtered user vars
+	env := []string{
+		"TSUKU_SANDBOX=1",
+		"TSUKU_HOME=/workspace/tsuku",
+		"HOME=/workspace",
+		"DEBIAN_FRONTEND=noninteractive",
+		"PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+	}
+	if extra := filterExtraEnv(reqs.ExtraEnv); len(extra) > 0 {
+		env = append(env, extra...)
+	}
+
 	// Build run options
 	opts := validate.RunOptions{
 		Image:   containerImage,
 		Command: []string{"/bin/sh", "/workspace/sandbox.sh"},
 		Network: network,
 		WorkDir: "/workspace",
-		Env: []string{
-			"TSUKU_SANDBOX=1",
-			"TSUKU_HOME=/workspace/tsuku",
-			"HOME=/workspace",
-			"DEBIAN_FRONTEND=noninteractive",
-			"PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin",
-		},
-		Limits: limits,
+		Env:     env,
+		Limits:  limits,
 		Labels: map[string]string{
 			ContainerLabelPrefix: "true",
 		},
@@ -518,4 +535,27 @@ func (e *Executor) buildSandboxScript(
 	}
 
 	return sb.String()
+}
+
+// filterExtraEnv returns the subset of extra env vars that don't collide with
+// the hardcoded sandbox environment variables. Each entry is expected in
+// KEY=VALUE format. Entries whose key matches a protected key are silently
+// dropped. Entries without an '=' separator are treated as KEY-only (the
+// caller resolves these to KEY= before calling this function).
+func filterExtraEnv(extra []string) []string {
+	if len(extra) == 0 {
+		return nil
+	}
+	var filtered []string
+	for _, entry := range extra {
+		key := entry
+		if idx := strings.IndexByte(entry, '='); idx >= 0 {
+			key = entry[:idx]
+		}
+		if protectedEnvKeys[key] {
+			continue
+		}
+		filtered = append(filtered, entry)
+	}
+	return filtered
 }

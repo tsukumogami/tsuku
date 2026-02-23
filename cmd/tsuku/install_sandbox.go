@@ -61,6 +61,11 @@ func runSandboxInstall(toolName, planPath, recipePath, targetFamily string) erro
 	// Compute sandbox requirements from plan
 	reqs := sandbox.ComputeSandboxRequirements(plan, targetFamily)
 
+	// Resolve --env flags: KEY=VALUE is passed as-is, KEY-only reads from host
+	if len(installEnv) > 0 {
+		reqs.ExtraEnv = resolveEnvFlags(installEnv)
+	}
+
 	// For local recipe files, show confirmation prompt (unless --force or --yes)
 	if recipePath != "" && !installForce {
 		if !confirmSandboxExecution(recipePath, reqs) {
@@ -139,6 +144,23 @@ func runSandboxInstall(toolName, planPath, recipePath, targetFamily string) erro
 	}
 
 	return nil
+}
+
+// resolveEnvFlags processes --env flag values. Each entry is either KEY=VALUE
+// (passed through as-is) or KEY (value read from the host environment, matching
+// docker's --env behavior). If a KEY-only entry has no corresponding host
+// variable, it passes KEY= (empty value).
+func resolveEnvFlags(entries []string) []string {
+	resolved := make([]string, 0, len(entries))
+	for _, entry := range entries {
+		if strings.Contains(entry, "=") {
+			resolved = append(resolved, entry)
+		} else {
+			// KEY-only: read value from host environment
+			resolved = append(resolved, entry+"="+os.Getenv(entry))
+		}
+	}
+	return resolved
 }
 
 // confirmSandboxExecution prompts the user to confirm sandbox execution for untrusted recipes.
