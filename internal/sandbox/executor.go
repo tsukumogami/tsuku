@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/tsukumogami/tsuku/internal/executor"
 	"github.com/tsukumogami/tsuku/internal/log"
@@ -49,6 +50,7 @@ type SandboxResult struct {
 	Error          error  // Error if sandbox failed to run
 	Verified       bool   // Whether verify command passed (true if no verify command)
 	VerifyExitCode int    // Verify command's exit code (-1 if no verify command)
+	DurationMs     int64  // Total execution time in milliseconds
 }
 
 // Executor orchestrates container-based sandbox testing.
@@ -137,6 +139,9 @@ func (e *Executor) Sandbox(
 	target platform.Target,
 	reqs *SandboxRequirements,
 ) (*SandboxResult, error) {
+	// Start timing before runtime detection (wall-clock time for the full operation)
+	startTime := time.Now()
+
 	// Detect container runtime
 	runtime, err := e.detector.Detect(ctx)
 	if err != nil {
@@ -144,7 +149,8 @@ func (e *Executor) Sandbox(
 			e.logger.Warn("Container runtime not available. Skipping sandbox test.",
 				"hint", "To enable sandbox testing, install Podman or Docker.")
 			return &SandboxResult{
-				Skipped: true,
+				Skipped:    true,
+				DurationMs: time.Since(startTime).Milliseconds(),
 			}, nil
 		}
 		return nil, fmt.Errorf("failed to detect container runtime: %w", err)
@@ -155,7 +161,8 @@ func (e *Executor) Sandbox(
 		e.logger.Warn("Tsuku binary not found. Skipping sandbox test.",
 			"hint", "Ensure tsuku is installed and in PATH, or build with 'go build -o tsuku ./cmd/tsuku'")
 		return &SandboxResult{
-			Skipped: true,
+			Skipped:    true,
+			DurationMs: time.Since(startTime).Milliseconds(),
 		}, nil
 	}
 
@@ -331,6 +338,7 @@ func (e *Executor) Sandbox(
 			Error:          err,
 			Verified:       false,
 			VerifyExitCode: -1,
+			DurationMs:     time.Since(startTime).Milliseconds(),
 		}, nil
 	}
 
@@ -343,6 +351,7 @@ func (e *Executor) Sandbox(
 			Stderr:         result.Stderr,
 			Verified:       false,
 			VerifyExitCode: -1,
+			DurationMs:     time.Since(startTime).Milliseconds(),
 		}, nil
 	}
 
@@ -356,6 +365,7 @@ func (e *Executor) Sandbox(
 		Stderr:         result.Stderr,
 		Verified:       verified,
 		VerifyExitCode: verifyExitCode,
+		DurationMs:     time.Since(startTime).Milliseconds(),
 	}, nil
 }
 

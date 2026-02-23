@@ -502,6 +502,28 @@ func TestBuildSandboxScript_VerifyWithNonDefaultExitCode(t *testing.T) {
 	}
 }
 
+func TestSandboxResult_DurationMsField(t *testing.T) {
+	t.Parallel()
+
+	result := &SandboxResult{
+		Passed:     true,
+		ExitCode:   0,
+		DurationMs: 4523,
+	}
+	if result.DurationMs != 4523 {
+		t.Errorf("DurationMs = %d, want 4523", result.DurationMs)
+	}
+
+	// Skipped result should also carry duration
+	skipped := &SandboxResult{
+		Skipped:    true,
+		DurationMs: 15,
+	}
+	if skipped.DurationMs != 15 {
+		t.Errorf("Skipped DurationMs = %d, want 15", skipped.DurationMs)
+	}
+}
+
 func TestSandboxResult_VerificationFields(t *testing.T) {
 	t.Parallel()
 

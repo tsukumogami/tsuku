@@ -81,8 +81,7 @@ Test installation in a sandbox container:
 			}
 
 			if err := runSandboxInstall(toolName, installPlanPath, installRecipePath, installTargetFamily); err != nil {
-				printError(err)
-				exitWithCode(ExitInstallFailed)
+				handleInstallError(err)
 			}
 			return
 		}

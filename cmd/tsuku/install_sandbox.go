@@ -12,11 +12,28 @@ import (
 	"github.com/tsukumogami/tsuku/internal/validate"
 )
 
+// sandboxJSONOutput is the structured JSON object emitted by
+// tsuku install --sandbox --json. CI workflows parse this with jq.
+type sandboxJSONOutput struct {
+	Tool            string  `json:"tool"`
+	Passed          bool    `json:"passed"`
+	Verified        bool    `json:"verified"`
+	InstallExitCode int     `json:"install_exit_code"`
+	VerifyExitCode  int     `json:"verify_exit_code"`
+	DurationMs      int64   `json:"duration_ms"`
+	Error           *string `json:"error"` // null on success, string on failure
+}
+
 // runSandboxInstall runs the installation in an isolated sandbox container.
 // It supports three modes:
 //  1. Tool from registry: tsuku install <tool> --sandbox
 //  2. Local recipe file: tsuku install --recipe <path> --sandbox
 //  3. External plan: tsuku install --plan <path> --sandbox
+//
+// When installJSON is set, stdout contains exactly one JSON object and
+// human-readable output is suppressed. Errors during plan generation
+// are returned to the caller so handleInstallError can emit the normal
+// --json error format (preserving missing_recipes for batch workflows).
 func runSandboxInstall(toolName, planPath, recipePath, targetFamily string) error {
 	cfg, err := config.DefaultConfig()
 	if err != nil {
@@ -67,22 +84,25 @@ func runSandboxInstall(toolName, planPath, recipePath, targetFamily string) erro
 	}
 
 	// For local recipe files, show confirmation prompt (unless --force or --yes)
-	if recipePath != "" && !installForce {
+	// Skip the prompt in --json mode since it's non-interactive by design
+	if recipePath != "" && !installForce && !installJSON {
 		if !confirmSandboxExecution(recipePath, reqs) {
 			return fmt.Errorf("sandbox testing canceled")
 		}
 	}
 
-	printInfof("Running sandbox test for %s...\n", toolName)
-	printInfof("  Container image: %s\n", reqs.Image)
-	if reqs.RequiresNetwork {
-		printInfo("  Network access: enabled (ecosystem build)")
-	} else {
-		printInfo("  Network access: disabled (binary installation)")
+	if !installJSON {
+		printInfof("Running sandbox test for %s...\n", toolName)
+		printInfof("  Container image: %s\n", reqs.Image)
+		if reqs.RequiresNetwork {
+			printInfo("  Network access: enabled (ecosystem build)")
+		} else {
+			printInfo("  Network access: disabled (binary installation)")
+		}
+		printInfof("  Resource limits: %s memory, %s CPUs, %v timeout\n",
+			reqs.Resources.Memory, reqs.Resources.CPUs, reqs.Resources.Timeout)
+		printInfo()
 	}
-	printInfof("  Resource limits: %s memory, %s CPUs, %v timeout\n",
-		reqs.Resources.Memory, reqs.Resources.CPUs, reqs.Resources.Timeout)
-	printInfo()
 
 	// Ensure cache directories exist (needed for mounting into container)
 	if err := cfg.EnsureDirectories(); err != nil {
@@ -106,6 +126,83 @@ func runSandboxInstall(toolName, planPath, recipePath, targetFamily string) erro
 		return fmt.Errorf("sandbox execution failed: %w", err)
 	}
 
+	// JSON output mode: emit a single JSON object and return
+	if installJSON {
+		return emitSandboxJSON(toolName, result)
+	}
+
+	// Human-readable output mode (unchanged from before --json was added)
+	return emitSandboxHumanReadable(result)
+}
+
+// emitSandboxJSON writes a single JSON object to stdout for the sandbox result.
+// It handles all result states: passed, failed, skipped, and error.
+// Returns nil on success (including skipped), and a non-nil error when the
+// sandbox test failed or errored (to trigger the appropriate exit code in
+// the caller).
+func emitSandboxJSON(toolName string, result *sandbox.SandboxResult) error {
+	out := buildSandboxJSONOutput(toolName, result)
+	printJSON(out)
+
+	// Determine whether to propagate an error to the caller for exit code handling
+	if result.Skipped {
+		return nil
+	}
+	if result.Error != nil {
+		return fmt.Errorf("sandbox test failed with exit code %d", result.ExitCode)
+	}
+	if !result.Passed {
+		return fmt.Errorf("sandbox test failed with exit code %d", result.ExitCode)
+	}
+	return nil
+}
+
+// buildSandboxJSONOutput constructs the JSON output struct from a sandbox result.
+// This is a pure function with no side effects, making it testable independently
+// of stdout.
+func buildSandboxJSONOutput(toolName string, result *sandbox.SandboxResult) sandboxJSONOutput {
+	out := sandboxJSONOutput{
+		Tool:            toolName,
+		Passed:          result.Passed,
+		Verified:        result.Verified,
+		InstallExitCode: result.ExitCode,
+		VerifyExitCode:  result.VerifyExitCode,
+		DurationMs:      result.DurationMs,
+	}
+
+	// Handle skipped sandbox (no container runtime)
+	if result.Skipped {
+		out.Passed = false
+		out.Verified = false
+		out.InstallExitCode = -1
+		out.VerifyExitCode = -1
+		errMsg := "no container runtime available (install Podman or Docker)"
+		out.Error = &errMsg
+		return out
+	}
+
+	// Handle sandbox execution error (container failed to run)
+	if result.Error != nil {
+		errMsg := result.Error.Error()
+		out.Error = &errMsg
+		return out
+	}
+
+	// Handle failed sandbox test
+	if !result.Passed {
+		errMsg := fmt.Sprintf("sandbox test failed with exit code %d", result.ExitCode)
+		out.Error = &errMsg
+		return out
+	}
+
+	// Passed: error is null
+	out.Error = nil
+	return out
+}
+
+// emitSandboxHumanReadable prints the sandbox result in human-readable format.
+// This is the original output path used when --json is not set.
+func emitSandboxHumanReadable(result *sandbox.SandboxResult) error {
 	// Handle skipped sandbox (no container runtime)
 	if result.Skipped {
 		printInfo("Sandbox testing skipped (no container runtime available)")
