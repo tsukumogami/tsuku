@@ -3,7 +3,7 @@
   "design_doc": "docs/designs/DESIGN-ci-job-consolidation.md",
   "branch": "docs/ci-job-consolidation",
   "pr_number": 1887,
-  "integrity_hash": "sha256:8d6b5bbc136906ba659603af8c2e2e4ed025022e4472ba27ea1e926893bf0ab2",
+  "integrity_hash": "sha256:dd84de67a8f6882b46b02f0e73f1be34e7c6806f44bc98901bc99bf98c3238c3",
   "issues": [
     {
       "number": 1891,
@@ -188,10 +188,10 @@
     {
       "number": 1897,
       "title": "ci: document consolidation patterns and add drift-prevention lint",
-      "status": "pending",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [
         1891,
         1892,
@@ -200,9 +200,27 @@
         1895,
         1896
       ],
-      "commits": [],
-      "agent_type": "",
-      "summary": null,
+      "commits": [
+        "8f63bb27d778329393d03fa322adff2f72dbb4d7"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          "docs/ci-patterns.md",
+          ".github/scripts/checks/ci-patterns-lint.sh",
+          ".github/workflows/lint-workflows.yml",
+          ".github/workflows/check-artifacts.yml",
+          ".github/workflows/test.yml",
+          ".github/workflows/sandbox-tests.yml"
+        ],
+        "tests_added": 0,
+        "key_decisions": "Documented patterns, added lint, split check-artifacts and lint-workflows into standalone workflows, added path filters to test.yml and sandbox-tests.yml"
+      },
+      "reviewer_results": {
+        "approved": true,
+        "note": "PR #1922 merged -- lint and path filters validated in CI"
+      },
       "testable_scenarios": [
         "scenario-13",
         "scenario-14"

@@ -178,18 +178,18 @@ Total scenarios: 14
 ---
 
 ## Scenario 13: drift-prevention lint validates existing workflows
-**ID**: scenario-13
+**ID**: [x] scenario-13
 **Testable after**: #1897
 **Category**: infrastructure
 **Commands**:
 - Run the lint script (e.g., `.github/scripts/checks/ci-patterns-lint.sh` or equivalent) locally against all modified workflow files.
 **Expected**: The lint check passes on all workflow files that contain container loops. Specifically, it verifies that each container loop includes: `timeout` around `docker run` commands, exit code capture (`$?`), and failure array pattern (`FAILED+=` or equivalent). The lint check also passes on workflows using GHA group serialization.
-**Status**: pending
+**Status**: passed
 
 ---
 
 ## Scenario 14: end-to-end job count reduction on a worst-case PR
-**ID**: scenario-14
+**ID**: [x] scenario-14
 **Testable after**: #1897
 **Category**: use-case
 **Environment**: manual (CI)
@@ -198,4 +198,4 @@ Total scenarios: 14
 - Count the total jobs created across `test.yml`, `sandbox-tests.yml`, `integration-tests.yml`, and `build-essentials.yml`.
 - Alternatively, review the documented before/after comparison in the docs created by #1897.
 **Expected**: The worst-case PR job count is approximately 46 (down from ~87), matching the design document's prediction of a ~47% reduction. A typical Go-only PR (triggering `test.yml` and `sandbox-tests.yml`) creates roughly 13 jobs (down from 29). The documented comparison in the CI patterns guide confirms these numbers with actual data from CI runs.
-**Status**: pending
+**Status**: passed

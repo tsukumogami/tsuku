@@ -12,6 +12,36 @@ instead of the standard single-PR `/implement-doc` workflow.
 - Each issue gets its own branch off `main`, its own PR, merged independently
 - Tracking branch holds state file and design doc status updates
 
+## Process
+
+The `/implement-doc` command normally implements all issues from a design doc in a
+single PR. For this design, we adapted it to a multi-PR approach where each issue
+gets its own branch and PR, merged independently into main. The process for each
+issue follows this cycle:
+
+1. **Stash and branch**: Stash uncommitted state file changes on the tracking branch,
+   create a fresh branch off `origin/main` for the issue.
+2. **Implement**: Spawn a coder agent to implement the change. For CI workflow issues,
+   this means editing `.yml` files and test scripts.
+3. **Push and PR**: Push the branch, create a PR with `Fixes #NNNN`.
+4. **Watch CI**: Monitor GitHub Actions checks until all pass. Fix failures on the
+   branch if needed (e.g., Alpine sh vs bash, macOS missing `timeout`).
+5. **User merges**: The user reviews and merges the PR into main.
+6. **Bookkeeping**: Switch back to the tracking branch, stash pop, rebase on main,
+   then update four artifacts:
+   - State file: transition the issue through `implemented -> pushed -> completed`
+   - Design doc: strikethrough the table row, update Mermaid class to `done`
+   - Test plan: tick scenario checkboxes `[x]`
+   - Tracking PR body: add `Fixes #NNNN` line
+7. **Commit and push**: Commit the bookkeeping updates to the tracking branch.
+
+The state machine (`workflow-tool state transition`) validates that all bookkeeping
+artifacts are consistent before allowing the `completed` transition. This catches
+missed updates but also means every artifact must be touched even for trivial changes.
+
+Independent issues can be parallelized: while waiting for CI on one PR, another
+issue's branch can be created and implemented simultaneously.
+
 ## Log
 
 ### Phase 0: Setup
