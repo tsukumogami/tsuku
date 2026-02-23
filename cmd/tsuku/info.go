@@ -181,6 +181,10 @@ Examples:
 				InstallDependencies  []string          `json:"install_dependencies,omitempty"`
 				RuntimeDependencies  []string          `json:"runtime_dependencies,omitempty"`
 			}
+			var verifyCmdStr string
+			if r.Verify != nil {
+				verifyCmdStr = r.Verify.Command
+			}
 			output := infoOutput{
 				Name:                 r.Metadata.Name,
 				Description:          r.Metadata.Description,
@@ -198,7 +202,7 @@ Examples:
 				Status:               status,
 				InstalledVersion:     installedVersion,
 				Location:             location,
-				VerifyCommand:        r.Verify.Command,
+				VerifyCommand:        verifyCmdStr,
 				InstallDependencies:  installDeps,
 				RuntimeDependencies:  runtimeDeps,
 			}

@@ -679,7 +679,7 @@ func validate(r *Recipe) error {
 	}
 
 	// Check verify (libraries don't require verification)
-	if r.Metadata.Type != RecipeTypeLibrary && r.Verify.Command == "" {
+	if r.Metadata.Type != RecipeTypeLibrary && (r.Verify == nil || r.Verify.Command == "") {
 		return fmt.Errorf("verify.command is required")
 	}
 

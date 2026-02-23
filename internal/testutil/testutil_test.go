@@ -67,7 +67,7 @@ func TestNewTestRecipe(t *testing.T) {
 		t.Error("NewTestRecipe() Steps is empty")
 	}
 
-	if r.Verify.Command == "" {
+	if r.Verify == nil || r.Verify.Command == "" {
 		t.Error("NewTestRecipe() Verify.Command is empty")
 	}
 }

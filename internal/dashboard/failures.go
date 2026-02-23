@@ -43,6 +43,7 @@ var knownSubcategories = map[string]bool{
 	"no_bottles":      true,
 	"complex_archive": true,
 	"no_binaries":     true,
+	"library_only":    true,
 	"verify_failed":   true,
 	"install_failed":  true,
 	"timeout":         true,

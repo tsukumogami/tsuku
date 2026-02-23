@@ -133,7 +133,10 @@ func (a *DownloadArchiveAction) Execute(ctx *ExecutionContext, params map[string
 
 	// Enforce verification for directory-based installs
 	// Libraries are exempt since they cannot be run directly to verify
-	verifyCmd := strings.TrimSpace(ctx.Recipe.Verify.Command)
+	var verifyCmd string
+	if ctx.Recipe.Verify != nil {
+		verifyCmd = strings.TrimSpace(ctx.Recipe.Verify.Command)
+	}
 	isLibrary := ctx.Recipe.Metadata.Type == "library"
 	if (installMode == "directory" || installMode == "directory_wrapped") && verifyCmd == "" && !isLibrary {
 		return fmt.Errorf("recipes with install_mode='%s' must include a [verify] section with a command to ensure the installation works correctly", installMode)
@@ -406,7 +409,10 @@ func (a *GitHubArchiveAction) Execute(ctx *ExecutionContext, params map[string]i
 
 	// Enforce verification for directory-based installs
 	// Libraries are exempt since they cannot be run directly to verify
-	verifyCmd := strings.TrimSpace(ctx.Recipe.Verify.Command)
+	var verifyCmd string
+	if ctx.Recipe.Verify != nil {
+		verifyCmd = strings.TrimSpace(ctx.Recipe.Verify.Command)
+	}
 	isLibrary := ctx.Recipe.Metadata.Type == "library"
 	if (installMode == "directory" || installMode == "directory_wrapped") && verifyCmd == "" && !isLibrary {
 		return fmt.Errorf("recipes with install_mode='%s' must include a [verify] section with a command to ensure the installation works correctly", installMode)

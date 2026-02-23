@@ -65,7 +65,7 @@ func TestEvalPlanCacheFlow(t *testing.T) {
 				},
 			},
 		},
-		Verify: recipe.VerifySection{
+		Verify: &recipe.VerifySection{
 			Command: "serve version",
 			Pattern: "{version}",
 		},
@@ -233,7 +233,7 @@ func buildTestValidationScript(r *recipe.Recipe) string {
 	sb.WriteString("tsuku install --plan /workspace/plan.json --force\n\n")
 
 	// Run verify command
-	if r.Verify.Command != "" {
+	if r.Verify != nil && r.Verify.Command != "" {
 		sb.WriteString("# Run verify command\n")
 		sb.WriteString("export PATH=\"/workspace/tsuku/tools/current:$PATH\"\n")
 		sb.WriteString(r.Verify.Command + "\n")

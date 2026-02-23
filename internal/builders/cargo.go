@@ -356,7 +356,7 @@ func isValidExecutableName(name string) bool {
 // subcommands (executables named cargo-*) must be invoked through cargo
 // itself for --version to work, so we generate "cargo <subcommand> --version"
 // instead of "cargo-<subcommand> --version".
-func cargoVerifySection(executable string) recipe.VerifySection {
+func cargoVerifySection(executable string) *recipe.VerifySection {
 	var command string
 	if strings.HasPrefix(executable, "cargo-") {
 		subcommand := strings.TrimPrefix(executable, "cargo-")
@@ -364,7 +364,7 @@ func cargoVerifySection(executable string) recipe.VerifySection {
 	} else {
 		command = fmt.Sprintf("%s --version", executable)
 	}
-	return recipe.VerifySection{
+	return &recipe.VerifySection{
 		Command: command,
 		Pattern: "{version}",
 	}

@@ -443,7 +443,7 @@ func TestFormatRecipeTOML(t *testing.T) {
 				"asset_pattern": "test.tar.gz",
 			},
 		}},
-		Verify: recipe.VerifySection{
+		Verify: &recipe.VerifySection{
 			Command: "test-tool --version",
 			Pattern: "{version}",
 		},

@@ -387,7 +387,7 @@ func TestValidateSourceBuild_NoRuntime(t *testing.T) {
 
 	r := &recipe.Recipe{
 		Metadata: recipe.MetadataSection{Name: "test"},
-		Verify: recipe.VerifySection{
+		Verify: &recipe.VerifySection{
 			Command: "test --version",
 		},
 	}
@@ -429,7 +429,7 @@ func TestValidateSourceBuild_Success(t *testing.T) {
 		Steps: []recipe.Step{
 			{Action: "configure_make"},
 		},
-		Verify: recipe.VerifySection{
+		Verify: &recipe.VerifySection{
 			Command: "test-tool --version",
 			Pattern: "1.0.0",
 		},
@@ -489,7 +489,7 @@ func TestValidateSourceBuild_ContainerError(t *testing.T) {
 		Steps: []recipe.Step{
 			{Action: "configure_make"},
 		},
-		Verify: recipe.VerifySection{
+		Verify: &recipe.VerifySection{
 			Command: "test-tool --version",
 			Pattern: "1.0.0",
 		},

@@ -17,7 +17,7 @@ type recipeForEncoding struct {
 	Resources []Resource               `toml:"resources,omitempty"`
 	Patches   []Patch                  `toml:"patches,omitempty"`
 	Steps     []map[string]interface{} `toml:"steps"`
-	Verify    VerifySection            `toml:"verify"`
+	Verify    *VerifySection           `toml:"verify,omitempty"`
 }
 
 // toEncodable converts a Recipe to the encoding-friendly structure.

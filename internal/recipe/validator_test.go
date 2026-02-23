@@ -1659,7 +1659,7 @@ func TestValidateRecipe_ValidRecipe(t *testing.T) {
 				Params: map[string]interface{}{"url": "https://example.com/file.tar.gz"},
 			},
 		},
-		Verify: VerifySection{
+		Verify: &VerifySection{
 			Command: "test-tool --version",
 		},
 	}
@@ -1688,7 +1688,7 @@ func TestValidateRecipe_InvalidRecipe(t *testing.T) {
 				Params: map[string]interface{}{"url": "https://example.com/file.tar.gz"},
 			},
 		},
-		Verify: VerifySection{
+		Verify: &VerifySection{
 			Command: "test-tool --version",
 		},
 	}

@@ -351,10 +351,10 @@ func (s *GitHubReleaseSession) Generate(ctx context.Context) (*BuildResult, erro
 	// Substitute {version} in verify command and pattern
 	if s.genCtx.tag != "" {
 		version := strings.TrimPrefix(s.genCtx.tag, "v")
-		if r.Verify.Command != "" {
+		if r.Verify != nil && r.Verify.Command != "" {
 			r.Verify.Command = strings.ReplaceAll(r.Verify.Command, "{version}", version)
 		}
-		if r.Verify.Pattern != "" {
+		if r.Verify != nil && r.Verify.Pattern != "" {
 			r.Verify.Pattern = strings.ReplaceAll(r.Verify.Pattern, "{version}", version)
 		}
 	}
@@ -410,10 +410,10 @@ func (s *GitHubReleaseSession) Repair(ctx context.Context, failure *sandbox.Sand
 	// Substitute {version}
 	if s.genCtx.tag != "" {
 		version := strings.TrimPrefix(s.genCtx.tag, "v")
-		if r.Verify.Command != "" {
+		if r.Verify != nil && r.Verify.Command != "" {
 			r.Verify.Command = strings.ReplaceAll(r.Verify.Command, "{version}", version)
 		}
-		if r.Verify.Pattern != "" {
+		if r.Verify != nil && r.Verify.Pattern != "" {
 			r.Verify.Pattern = strings.ReplaceAll(r.Verify.Pattern, "{version}", version)
 		}
 	}
@@ -1002,7 +1002,7 @@ func generateRecipe(packageName, repoPath string, meta *repoMeta, pattern *llm.A
 			Source:     "github_releases",
 			GitHubRepo: repoPath,
 		},
-		Verify: recipe.VerifySection{
+		Verify: &recipe.VerifySection{
 			Command: pattern.VerifyCommand,
 			Pattern: "{version}",
 		},

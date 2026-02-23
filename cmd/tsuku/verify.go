@@ -1042,7 +1042,7 @@ installed before this feature will show "Integrity: SKIPPED".`,
 		}
 
 		// Check if recipe has verification
-		if r.Verify.Command == "" {
+		if r.Verify == nil || r.Verify.Command == "" {
 			fmt.Fprintf(os.Stderr, "Recipe for '%s' does not define verification\n", name)
 			exitWithCode(ExitGeneral)
 		}

@@ -513,7 +513,7 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 	// Verify installation before reporting success
 	// Skip verification for system dependencies (require_system only recipes)
 	if !isSystemDep {
-		if r.Verify.Command != "" {
+		if r.Verify != nil && r.Verify.Command != "" {
 			printInfo()
 			printInfo("Verifying installation...")
 
