@@ -687,14 +687,24 @@
                 let lastRunHtml = '<span class="health-value" style="color: var(--text-muted);">N/A</span>';
                 if (health.last_run) {
                     const lr = health.last_run;
-                    lastRunHtml = `<span class="health-value"><a href="/pipeline/run.html?id=${encodeURIComponent(lr.batch_id)}">${esc(timeAgo(lr.timestamp))} - ${esc(lr.succeeded)}/${esc(lr.total)} succeeded</a></span>`;
+                    const lrText = `${esc(timeAgo(lr.timestamp))} - ${esc(lr.succeeded)}/${esc(lr.total)} succeeded`;
+                    if (lr.total) {
+                        lastRunHtml = `<span class="health-value"><a href="/pipeline/run.html?id=${encodeURIComponent(lr.batch_id)}">${lrText}</a></span>`;
+                    } else {
+                        lastRunHtml = `<span class="health-value">${lrText}</span>`;
+                    }
                 }
 
                 // Last success info
                 let lastSuccessHtml = '<span class="health-value" style="color: var(--text-muted);">N/A</span>';
                 if (health.last_successful_run) {
                     const ls = health.last_successful_run;
-                    lastSuccessHtml = `<span class="health-value"><a href="/pipeline/run.html?id=${encodeURIComponent(ls.batch_id)}">${esc(timeAgo(ls.timestamp))} - ${esc(ls.recipes_merged || 0)} merged</a></span>`;
+                    const lsText = `${esc(timeAgo(ls.timestamp))} - ${esc(ls.recipes_merged || 0)} merged`;
+                    if (ls.total) {
+                        lastSuccessHtml = `<span class="health-value"><a href="/pipeline/run.html?id=${encodeURIComponent(ls.batch_id)}">${lsText}</a></span>`;
+                    } else {
+                        lastSuccessHtml = `<span class="health-value">${lsText}</span>`;
+                    }
                 }
 
                 // Runs since last success (no ecosystem context from pipeline level)
