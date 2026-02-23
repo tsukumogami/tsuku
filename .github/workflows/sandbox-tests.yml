@@ -34,15 +34,12 @@ jobs:
           LINUX=$(jq -c '[.ci.linux[] as $id | {id: $id, tool: .tests[$id].tool, desc: .tests[$id].desc, recipe: .tests[$id].recipe}]' test-matrix.json)
           echo "linux=$LINUX" >> $GITHUB_OUTPUT
 
-  sandbox-tests:
-    name: "Sandbox: ${{ matrix.test.tool }}"
+  sandbox-linux:
+    name: "Linux Sandbox Tests"
     needs: matrix
     if: needs.matrix.outputs.code-changed == 'true'
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        test: ${{ fromJson(needs.matrix.outputs.linux) }}
+    timeout-minutes: 60
     steps:
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
@@ -56,18 +53,44 @@ jobs:
       - name: Build tsuku
         run: CGO_ENABLED=0 go build -o tsuku ./cmd/tsuku
 
-      - name: "Generate plan: ${{ matrix.test.tool }}"
+      - name: Run all sandbox tests
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Point registry to current branch so PR tests can access migrated recipes
           TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
         run: |
-          # Use recipe path if specified (for testdata recipes), otherwise use tool name
-          if [ -n "${{ matrix.test.recipe }}" ]; then
-            ./tsuku eval --recipe "${{ matrix.test.recipe }}" --install-deps > plan.json
-          else
-            ./tsuku eval ${{ matrix.test.tool }} --install-deps > plan.json
+          FAILED=()
+          TESTS='${{ needs.matrix.outputs.linux }}'
+
+          while IFS= read -r item; do
+            tool=$(echo "$item" | jq -r '.tool')
+            desc=$(echo "$item" | jq -r '.desc')
+            recipe=$(echo "$item" | jq -r '.recipe // empty')
+
+            echo "::group::Testing $tool ($desc)"
+
+            # Fresh TSUKU_HOME per test
+            export TSUKU_HOME="${{ runner.temp }}/tsuku-sandbox-$tool"
+            mkdir -p "$TSUKU_HOME"
+
+            # Generate eval plan
+            if [ -n "$recipe" ]; then
+              ./tsuku eval --recipe "$recipe" --install-deps > plan.json
+            else
+              ./tsuku eval "$tool" --install-deps > plan.json
+            fi
+
+            # Run sandbox install
+            if ! ./tsuku install --plan plan.json --sandbox --force; then
+              FAILED+=("$tool")
+            fi
+
+            echo "::endgroup::"
+          done < <(echo "$TESTS" | jq -c '.[]')
+
+          if [ ${#FAILED[@]} -gt 0 ]; then
+            echo "::error::Failed sandbox tests: ${FAILED[*]}"
+            exit 1
           fi
 
-      - name: "Run sandbox: ${{ matrix.test.tool }}"
-        run: ./tsuku install --plan plan.json --sandbox --force
+          echo "All Linux sandbox tests passed"
