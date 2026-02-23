@@ -11,17 +11,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/BurntSushi/toml"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 )
 
 const (
 	// maxCratesIOResponseSize limits response body to prevent memory exhaustion (10MB)
 	maxCratesIOResponseSize = 10 * 1024 * 1024
-	// maxCargoTomlSize limits Cargo.toml to prevent memory exhaustion (1MB)
-	maxCargoTomlSize = 1 * 1024 * 1024
-	// cargoTomlFetchTimeout is the timeout for fetching Cargo.toml from repository
-	cargoTomlFetchTimeout = 10 * time.Second
 )
 
 // cratesIOCrateResponse represents the crates.io API response for a crate
@@ -34,21 +29,13 @@ type cratesIOCrateResponse struct {
 		RecentDownloads int    `json:"recent_downloads"`
 		// exact_match is not used but documented for reference
 	} `json:"crate"`
-	Versions []struct{} `json:"versions"`
+	Versions []cratesIOVersion `json:"versions"`
 }
 
-// cargoTomlBinSection represents a [[bin]] section in Cargo.toml
-type cargoTomlBinSection struct {
-	Name string `toml:"name"`
-	Path string `toml:"path"`
-}
-
-// cargoToml represents the relevant parts of Cargo.toml for executable discovery
-type cargoToml struct {
-	Package struct {
-		Name string `toml:"name"`
-	} `toml:"package"`
-	Bin []cargoTomlBinSection `toml:"bin"`
+// cratesIOVersion represents a single version object from the crates.io API.
+type cratesIOVersion struct {
+	BinNames []string `json:"bin_names"`
+	Yanked   bool     `json:"yanked"`
 }
 
 // Pre-compile regex for crate name validation
@@ -58,6 +45,11 @@ var crateNameRegex = regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9_-]*$`)
 type CargoBuilder struct {
 	httpClient      *http.Client
 	cratesIOBaseURL string
+	// cachedCrateInfo stores the last fetchCrateInfo response so that
+	// AuthoritativeBinaryNames() can return bin_names without re-fetching.
+	// Populated during Build() and read by the orchestrator via
+	// the BinaryNameProvider interface (#1938).
+	cachedCrateInfo *cratesIOCrateResponse
 }
 
 // NewCargoBuilder creates a new CargoBuilder with the given HTTP client.
@@ -128,12 +120,15 @@ func (b *CargoBuilder) Build(ctx context.Context, req BuildRequest) (*BuildResul
 		return nil, fmt.Errorf("failed to fetch crate info: %w", err)
 	}
 
+	// Cache the response for BinaryNameProvider (#1938)
+	b.cachedCrateInfo = crateInfo
+
 	result := &BuildResult{
 		Source:   fmt.Sprintf("crates.io:%s", req.Package),
 		Warnings: []string{},
 	}
 
-	// Try to discover executables from Cargo.toml
+	// Discover executables from the crates.io API bin_names field
 	executables, execWarnings := b.discoverExecutables(ctx, crateInfo)
 	result.Warnings = append(result.Warnings, execWarnings...)
 
@@ -218,116 +213,50 @@ func (b *CargoBuilder) fetchCrateInfo(ctx context.Context, crateName string) (*c
 	return &crateResp, nil
 }
 
-// discoverExecutables attempts to find executable names from Cargo.toml
-// Returns the executables list and any warnings generated during discovery
-func (b *CargoBuilder) discoverExecutables(ctx context.Context, crateInfo *cratesIOCrateResponse) ([]string, []string) {
+// discoverExecutables reads bin_names from the crates.io API response to
+// determine what executables cargo install will produce. It uses the latest
+// non-yanked version's bin_names array, falling back to the crate name when
+// bin_names is empty (library-only crate) or all versions are yanked.
+func (b *CargoBuilder) discoverExecutables(_ context.Context, crateInfo *cratesIOCrateResponse) ([]string, []string) {
 	var warnings []string
 
-	// If no repository URL, fall back to crate name
-	if crateInfo.Crate.Repository == "" {
-		warnings = append(warnings, "No repository URL found; using crate name as executable")
+	// Find bin_names from the latest non-yanked version.
+	// The crates.io API returns versions ordered by publication date (newest first).
+	var binNames []string
+	foundNonYanked := false
+	for _, v := range crateInfo.Versions {
+		if v.Yanked {
+			continue
+		}
+		foundNonYanked = true
+		binNames = v.BinNames
+		break
+	}
+
+	if !foundNonYanked {
+		warnings = append(warnings, "All versions are yanked; using crate name as executable")
 		return []string{crateInfo.Crate.Name}, warnings
 	}
 
-	// Parse repository URL to construct Cargo.toml URL
-	cargoTomlURL := b.buildCargoTomlURL(crateInfo.Crate.Repository)
-	if cargoTomlURL == "" {
-		warnings = append(warnings, fmt.Sprintf("Could not parse repository URL %s; using crate name as executable", crateInfo.Crate.Repository))
-		return []string{crateInfo.Crate.Name}, warnings
-	}
-
-	// Fetch and parse Cargo.toml
-	executables, err := b.fetchCargoTomlExecutables(ctx, cargoTomlURL)
-	if err != nil {
-		warnings = append(warnings, fmt.Sprintf("Could not fetch Cargo.toml: %v; using crate name as executable", err))
-		return []string{crateInfo.Crate.Name}, warnings
+	// Filter bin_names through executable name validation
+	var executables []string
+	for _, name := range binNames {
+		if isValidExecutableName(name) {
+			executables = append(executables, name)
+		} else {
+			warnings = append(warnings, fmt.Sprintf("Skipping invalid executable name from bin_names: %q", name))
+		}
 	}
 
 	if len(executables) == 0 {
-		// No [[bin]] sections found, use crate/package name
+		// bin_names was empty or all entries were invalid; fall back to crate name
+		if len(binNames) == 0 {
+			warnings = append(warnings, "No bin_names in API response; using crate name as executable")
+		}
 		return []string{crateInfo.Crate.Name}, warnings
 	}
 
 	return executables, warnings
-}
-
-// buildCargoTomlURL constructs the raw Cargo.toml URL from a repository URL
-// Currently only supports GitHub repositories
-func (b *CargoBuilder) buildCargoTomlURL(repoURL string) string {
-	// Parse the repository URL
-	parsed, err := url.Parse(repoURL)
-	if err != nil {
-		return ""
-	}
-
-	// Only support GitHub for now
-	if parsed.Host != "github.com" && parsed.Host != "www.github.com" {
-		return ""
-	}
-
-	// Extract owner/repo from path (handle trailing slashes, .git suffix)
-	path := strings.TrimSuffix(parsed.Path, "/")
-	path = strings.TrimSuffix(path, ".git")
-	path = strings.TrimPrefix(path, "/")
-
-	parts := strings.Split(path, "/")
-	if len(parts) < 2 {
-		return ""
-	}
-
-	owner := parts[0]
-	repo := parts[1]
-
-	// Construct raw.githubusercontent.com URL
-	// Try main branch first (most common), then master
-	return fmt.Sprintf("https://raw.githubusercontent.com/%s/%s/HEAD/Cargo.toml", owner, repo)
-}
-
-// fetchCargoTomlExecutables fetches Cargo.toml and extracts executable names
-func (b *CargoBuilder) fetchCargoTomlExecutables(ctx context.Context, cargoTomlURL string) ([]string, error) {
-	// Create context with timeout for Cargo.toml fetch
-	ctx, cancel := context.WithTimeout(ctx, cargoTomlFetchTimeout)
-	defer cancel()
-
-	req, err := http.NewRequestWithContext(ctx, "GET", cargoTomlURL, nil)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create request: %w", err)
-	}
-
-	req.Header.Set("User-Agent", "tsuku/1.0 (https://github.com/tsukumogami/tsuku)")
-
-	resp, err := b.httpClient.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("failed to fetch Cargo.toml: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("failed to fetch Cargo.toml: status %d", resp.StatusCode)
-	}
-
-	// Limit response size
-	limitedReader := io.LimitReader(resp.Body, maxCargoTomlSize)
-	data, err := io.ReadAll(limitedReader)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read Cargo.toml: %w", err)
-	}
-
-	// Parse TOML
-	var cargo cargoToml
-	if err := toml.Unmarshal(data, &cargo); err != nil {
-		return nil, fmt.Errorf("failed to parse Cargo.toml: %w", err)
-	}
-
-	// Extract executable names from [[bin]] sections
-	var executables []string
-	for _, bin := range cargo.Bin {
-		if bin.Name != "" && isValidExecutableName(bin.Name) {
-			executables = append(executables, bin.Name)
-		}
-	}
-
-	return executables, nil
 }
 
 // isValidCrateName validates a crate name
