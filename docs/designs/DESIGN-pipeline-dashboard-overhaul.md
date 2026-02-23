@@ -1,5 +1,5 @@
 ---
-status: Accepted
+status: Planned
 problem: |
   Four of six ecosystem circuit breakers are permanently stuck open because
   half-open probes retry failed entries instead of trying pending ones, and
@@ -27,7 +27,68 @@ rationale: |
 
 ## Status
 
-Accepted
+Planned
+
+## Implementation Issues
+
+### Milestone: [pipeline-dashboard-overhaul](https://github.com/tsukumogami/tsuku/milestone/102)
+
+| Issue | Dependencies | Tier |
+|-------|--------------|------|
+| [#1927: fix(batch): prefer pending entries for half-open circuit breaker probes](https://github.com/tsukumogami/tsuku/issues/1927) | None | testable |
+| _Modify `selectCandidates()` to bypass backoff for half-open probes and prefer pending entries over failed ones. Adds unit tests for the new selection logic including `FilterEcosystem` interaction._ | | |
+| [#1928: feat(dashboard): add per-ecosystem queue breakdown to dashboard data](https://github.com/tsukumogami/tsuku/issues/1928) | None | testable |
+| _Add `ByEcosystem` field to `QueueStatus` in `computeQueueStatus()`, aggregating entry counts per ecosystem per status. This provides the data the Ecosystem Pipeline widget and validation tests need._ | | |
+| [#1929: feat(dashboard): split pipeline health into three focused widgets](https://github.com/tsukumogami/tsuku/issues/1929) | [#1928](https://github.com/tsukumogami/tsuku/issues/1928) | testable |
+| _Restructure `index.html` Pipeline Health into three widgets: Pipeline Health (pipeline-level), Ecosystem Health (circuit breaker details from existing data), and Ecosystem Pipeline (per-ecosystem counts from the new `by_ecosystem` field)._ | | |
+| [#1930: fix(dashboard): improve recent runs and recent failures readability](https://github.com/tsukumogami/tsuku/issues/1930) | [#1929](https://github.com/tsukumogami/tsuku/issues/1929) | testable |
+| _Replace raw batch IDs with ET-formatted timestamps, add ecosystem badges to Recent Runs, add ecosystem column and clickable packages to Recent Failures. All CSS/JS changes in `index.html`._ | | |
+| [#1931: fix(dashboard): normalize batch IDs and populate failure detail fields](https://github.com/tsukumogami/tsuku/issues/1931) | [#1928](https://github.com/tsukumogami/tsuku/issues/1928) | testable |
+| _Fix Go-side data generation: normalize `health.last_run.batch_id` format, strip `batch-` prefix from failure details, and populate `message` and `workflow_url` fields from JSONL source data. Runs parallel to frontend work._ | | |
+| [#1933: fix(dashboard): resolve HTML bugs from QA audit](https://github.com/tsukumogami/tsuku/issues/1933) | [#1930](https://github.com/tsukumogami/tsuku/issues/1930), [#1931](https://github.com/tsukumogami/tsuku/issues/1931) | testable |
+| _Fix all 34 HTML/JS/CSS bugs from #1834-#1838 across 12 pipeline pages: cross-links, status gaps, clickability, action targets, and filter/rendering bugs. Applies after both readability changes and Go data fixes land._ | | |
+| [#1932: test(dashboard): add validation tests for dashboard data and link integrity](https://github.com/tsukumogami/tsuku/issues/1932) | [#1928](https://github.com/tsukumogami/tsuku/issues/1928), [#1933](https://github.com/tsukumogami/tsuku/issues/1933) | testable |
+| _Add Go structural invariant tests for `dashboard.json` (batch ID consistency, ecosystem breakdown correctness, status coverage) and shell-based link integrity checks for the 12 HTML pages. Integrate into `website-ci.yml`._ | | |
+
+### Dependency Graph
+
+```mermaid
+graph TD
+    subgraph Phase1["Phase 1: Backend"]
+        I1927["#1927: Fix circuit breaker probes"]
+        I1928["#1928: Add per-ecosystem breakdown"]
+        I1931["#1931: Normalize batch IDs"]
+    end
+
+    subgraph Phase2["Phase 2: Frontend"]
+        I1929["#1929: Split pipeline health widgets"]
+        I1930["#1930: Improve readability"]
+    end
+
+    subgraph Phase3["Phase 3: Polish"]
+        I1933["#1933: Resolve HTML bugs from QA"]
+        I1932["#1932: Add validation tests"]
+    end
+
+    I1928 --> I1929
+    I1928 --> I1931
+    I1928 --> I1932
+    I1929 --> I1930
+    I1930 --> I1933
+    I1931 --> I1933
+    I1933 --> I1932
+
+    classDef done fill:#c8e6c9
+    classDef ready fill:#bbdefb
+    classDef blocked fill:#fff9c4
+    classDef needsDesign fill:#e1bee7
+    classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
+
+    class I1927,I1928 ready
+    class I1929,I1931,I1930,I1933,I1932 blocked
+```
+
+**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design
 
 ## Context and Problem Statement
 
