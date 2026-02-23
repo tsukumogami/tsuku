@@ -553,9 +553,16 @@
             display: block;
         }
 
+        .panel-wide {
+            grid-column: span 2;
+        }
+
         @media (max-width: 600px) {
             .panels {
                 grid-template-columns: 1fr;
+            }
+            .panel-wide {
+                grid-column: span 1;
             }
         }
     </style>
@@ -1042,7 +1049,7 @@
                     </tr>
                 `}).join('');
                 recentFailuresPanel = `
-                    <div class="panel">
+                    <div class="panel panel-wide">
                         <div class="panel-header">
                             <h2>Recent Failures</h2>
                             <a href="/pipeline/failures.html" class="view-all">View all</a>
@@ -1064,7 +1071,7 @@
                 `;
             } else {
                 recentFailuresPanel = `
-                    <div class="panel">
+                    <div class="panel panel-wide">
                         <div class="panel-header">
                             <h2>Recent Failures</h2>
                             <a href="/pipeline/failures.html" class="view-all">View all</a>
@@ -1173,7 +1180,7 @@
                         </div>
                     </div>
 
-                    <div class="panel">
+                    <div class="panel panel-wide">
                         <div class="panel-header">
                             <h2>Failure Categories</h2>
                             <a href="/pipeline/failures.html" class="view-all">View all</a>
