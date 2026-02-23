@@ -54,13 +54,9 @@ jobs:
           echo "All checksum pinning tests passed"
 
   homebrew-linux:
-    name: "Homebrew: ${{ matrix.family }}"
+    name: "Homebrew Linux Tests"
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        # alpine excluded: pkg-config uses apk_install (not homebrew) on musl
-        family: [debian, rhel, arch, suse]
+    timeout-minutes: 60
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -71,20 +67,31 @@ jobs:
           go-version-file: 'go.mod'
           cache-dependency-path: go.sum
 
-      - name: Run homebrew recipe test
+      - name: Run homebrew recipe tests across families
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
-        run: ./test/scripts/test-homebrew-recipe.sh pkg-config ${{ matrix.family }}
+        run: |
+          # alpine excluded: pkg-config uses apk_install (not homebrew) on musl
+          FAMILIES=(debian rhel arch suse)
+          FAILED=()
+          for family in "${FAMILIES[@]}"; do
+            echo "::group::Homebrew pkg-config on $family"
+            if ! timeout 300 ./test/scripts/test-homebrew-recipe.sh pkg-config "$family"; then
+              FAILED+=("$family")
+            fi
+            echo "::endgroup::"
+          done
+          if [ ${#FAILED[@]} -gt 0 ]; then
+            echo "::error::Failed families: ${FAILED[*]}"
+            exit 1
+          fi
+          echo "All homebrew tests passed"
 
   library-integrity:
-    name: "Library Integrity: ${{ matrix.library }} (${{ matrix.family }})"
+    name: "Library Integrity Tests"
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        library: [zlib, libyaml]
-        family: [debian]
+    timeout-minutes: 60
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -95,20 +102,30 @@ jobs:
           go-version-file: 'go.mod'
           cache-dependency-path: go.sum
 
-      - name: Run library integrity test
+      - name: Run library integrity tests
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
-        run: ./test/scripts/test-library-integrity.sh ${{ matrix.library }} ${{ matrix.family }}
+        run: |
+          LIBRARIES=(zlib libyaml)
+          FAILED=()
+          for lib in "${LIBRARIES[@]}"; do
+            echo "::group::Library integrity: $lib (debian)"
+            if ! timeout 300 ./test/scripts/test-library-integrity.sh "$lib" debian; then
+              FAILED+=("$lib")
+            fi
+            echo "::endgroup::"
+          done
+          if [ ${#FAILED[@]} -gt 0 ]; then
+            echo "::error::Failed libraries: ${FAILED[*]}"
+            exit 1
+          fi
+          echo "All library integrity tests passed"
 
   library-dlopen-glibc:
-    name: "Library dlopen: ${{ matrix.library }} (glibc)"
+    name: "Library dlopen Tests (glibc)"
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        # openssl excluded: system libcrypto.so.3 conflicts with tsuku-installed version (see #1090)
-        library: [zlib, libyaml, gcc-libs]
+    timeout-minutes: 60
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -133,23 +150,35 @@ jobs:
           restore-keys: |
             rust-dltest-${{ runner.os }}-
 
-      - name: Run library dlopen test
+      - name: Run dlopen tests
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
-        run: ./test/scripts/test-library-dlopen.sh ${{ matrix.library }} debian
+        run: |
+          # openssl excluded: system libcrypto.so.3 conflicts with tsuku-installed version (see #1090)
+          LIBRARIES=(zlib libyaml gcc-libs)
+          FAILED=()
+          for lib in "${LIBRARIES[@]}"; do
+            echo "::group::dlopen: $lib (glibc)"
+            if ! timeout 300 ./test/scripts/test-library-dlopen.sh "$lib" debian; then
+              FAILED+=("$lib")
+            fi
+            echo "::endgroup::"
+          done
+          if [ ${#FAILED[@]} -gt 0 ]; then
+            echo "::error::Failed libraries: ${FAILED[*]}"
+            exit 1
+          fi
+          echo "All glibc dlopen tests passed"
 
   # musl/Alpine dlopen tests use recipe-derived package lists.
   # This validates that recipes correctly declare their system dependencies.
   library-dlopen-musl:
-    name: "Library dlopen: ${{ matrix.library }} (musl)"
+    name: "Library dlopen Tests (musl)"
     runs-on: ubuntu-latest
     container:
       image: golang:1.23-alpine
-    strategy:
-      fail-fast: false
-      matrix:
-        library: [zlib, libyaml, gcc-libs]
+    timeout-minutes: 60
     env:
       GOTOOLCHAIN: auto
     steps:
@@ -158,43 +187,43 @@ jobs:
 
       - name: Install bootstrap dependencies
         run: |
-          # Minimal bootstrap: Go is in the container, add tools for Rust build
           apk add --no-cache curl gcc musl-dev bash git
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
 
       - name: Build tsuku
         run: go build -o tsuku ./cmd/tsuku
 
-      - name: Install recipe-declared dependencies
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
-        run: |
-          # Get packages declared in the recipe for Alpine/musl
-          DEPS=$(./tsuku info --deps-only --system --family alpine ${{ matrix.library }})
-          if [ -n "$DEPS" ]; then
-            echo "Installing recipe-declared packages: $DEPS"
-            apk add --no-cache $DEPS
-          else
-            echo "No system packages declared for ${{ matrix.library }} on Alpine"
-          fi
-
-      - name: Run library dlopen test
+      - name: Run dlopen tests
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
         run: |
           source $HOME/.cargo/env
-          ./test/scripts/test-library-dlopen.sh ${{ matrix.library }} alpine
+          LIBRARIES=(zlib libyaml gcc-libs)
+          FAILED=()
+          for lib in "${LIBRARIES[@]}"; do
+            echo "::group::dlopen: $lib (musl)"
+            # Install recipe-declared packages for this library
+            DEPS=$(./tsuku info --deps-only --system --family alpine "$lib")
+            if [ -n "$DEPS" ]; then
+              echo "Installing recipe-declared packages: $DEPS"
+              apk add --no-cache $DEPS
+            fi
+            if ! timeout 300 ./test/scripts/test-library-dlopen.sh "$lib" alpine; then
+              FAILED+=("$lib")
+            fi
+            echo "::endgroup::"
+          done
+          if [ ${#FAILED[@]} -gt 0 ]; then
+            echo "::error::Failed libraries: ${FAILED[*]}"
+            exit 1
+          fi
+          echo "All musl dlopen tests passed"
 
   library-dlopen-macos:
-    name: "Library dlopen: ${{ matrix.library }} (darwin)"
+    name: "Library dlopen Tests (darwin)"
     runs-on: macos-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        # openssl excluded: system libcrypto conflicts with tsuku-installed version (see #1090)
-        library: [zlib, libyaml, gcc-libs]
+    timeout-minutes: 60
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -219,8 +248,23 @@ jobs:
           restore-keys: |
             rust-dltest-${{ runner.os }}-
 
-      - name: Run library dlopen test
+      - name: Run dlopen tests
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
-        run: ./test/scripts/test-library-dlopen.sh ${{ matrix.library }} darwin
+        run: |
+          # openssl excluded: system libcrypto conflicts with tsuku-installed version (see #1090)
+          LIBRARIES=(zlib libyaml gcc-libs)
+          FAILED=()
+          for lib in "${LIBRARIES[@]}"; do
+            echo "::group::dlopen: $lib (darwin)"
+            if ! timeout 300 ./test/scripts/test-library-dlopen.sh "$lib" darwin; then
+              FAILED+=("$lib")
+            fi
+            echo "::endgroup::"
+          done
+          if [ ${#FAILED[@]} -gt 0 ]; then
+            echo "::error::Failed libraries: ${FAILED[*]}"
+            exit 1
+          fi
+          echo "All darwin dlopen tests passed"
