@@ -1,6 +1,8 @@
 package builders
 
 import (
+	"archive/zip"
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -8,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 
@@ -17,6 +20,12 @@ import (
 const (
 	// maxGoProxyResponseSize limits response body to prevent memory exhaustion (1MB)
 	maxGoProxyResponseSize = 1 * 1024 * 1024
+
+	// maxGoModuleZIPSize limits the module source ZIP download to prevent
+	// memory exhaustion during binary discovery. Go module ZIPs can be large
+	// for projects with many source files; 50MB is generous enough for most
+	// CLI tools while preventing unbounded downloads.
+	maxGoModuleZIPSize = 50 * 1024 * 1024
 )
 
 // goProxyLatestResponse represents the proxy.golang.org /@latest response
@@ -106,7 +115,8 @@ func (b *GoBuilder) Build(ctx context.Context, req BuildRequest) (*BuildResult, 
 	}
 
 	// Validate module exists by fetching info from Go proxy
-	if _, err := b.fetchModuleInfo(ctx, req.Package); err != nil {
+	moduleInfo, err := b.fetchModuleInfo(ctx, req.Package)
+	if err != nil {
 		return nil, fmt.Errorf("failed to fetch module info: %w", err)
 	}
 
@@ -115,16 +125,32 @@ func (b *GoBuilder) Build(ctx context.Context, req BuildRequest) (*BuildResult, 
 		Warnings: []string{},
 	}
 
-	// Infer executable name from module path
-	executable, warning := inferGoExecutableName(req.Package)
-	if warning != "" {
-		result.Warnings = append(result.Warnings, warning)
+	// Try proxy-based binary discovery first, fall back to heuristic
+	var executables []string
+	proxyBinaries, proxyErr := b.discoverBinariesFromProxy(ctx, req.Package, moduleInfo.Version)
+	if proxyErr != nil {
+		result.Warnings = append(result.Warnings,
+			fmt.Sprintf("Module proxy binary scan failed, falling back to path heuristic: %v", proxyErr))
 	}
+
+	if len(proxyBinaries) > 0 {
+		executables = proxyBinaries
+	} else {
+		// Fall back to last-segment heuristic
+		executable, warning := inferGoExecutableName(req.Package)
+		if warning != "" {
+			result.Warnings = append(result.Warnings, warning)
+		}
+		executables = []string{executable}
+	}
+
+	// Use first executable as the recipe name
+	recipeName := executables[0]
 
 	// Build the recipe
 	r := &recipe.Recipe{
 		Metadata: recipe.MetadataSection{
-			Name:         executable,
+			Name:         recipeName,
 			Description:  fmt.Sprintf("Go CLI tool from %s", req.Package),
 			Homepage:     fmt.Sprintf("https://pkg.go.dev/%s", req.Package),
 			Dependencies: []string{"go"},
@@ -135,12 +161,12 @@ func (b *GoBuilder) Build(ctx context.Context, req BuildRequest) (*BuildResult, 
 				Action: "go_install",
 				Params: map[string]interface{}{
 					"module":      req.Package,
-					"executables": []string{executable},
+					"executables": executables,
 				},
 			},
 		},
 		Verify: &recipe.VerifySection{
-			Command: fmt.Sprintf("%s --version", executable),
+			Command: fmt.Sprintf("%s --version", recipeName),
 		},
 	}
 
@@ -199,6 +225,100 @@ func (b *GoBuilder) fetchModuleInfo(ctx context.Context, modulePath string) (*go
 	}
 
 	return &moduleResp, nil
+}
+
+// discoverBinariesFromProxy fetches the module source ZIP from the Go module
+// proxy and scans for cmd/ subdirectories containing main.go. Each such
+// directory is a binary target whose name matches the directory name (this is
+// how "go install" resolves targets).
+//
+// Returns the sorted list of discovered binary names, or an error if the ZIP
+// cannot be fetched or parsed. An empty slice (with nil error) means the module
+// has no cmd/ directories -- the caller should fall back to the last-segment
+// heuristic.
+func (b *GoBuilder) discoverBinariesFromProxy(ctx context.Context, modulePath, version string) ([]string, error) {
+	encodedPath := encodeGoModulePath(modulePath)
+
+	baseURL, err := url.Parse(b.goProxyBaseURL)
+	if err != nil {
+		return nil, fmt.Errorf("invalid base URL: %w", err)
+	}
+	zipURL := baseURL.JoinPath(encodedPath, "@v", version+".zip")
+
+	// Not using downloadArtifact because it enforces HTTPS-only connections,
+	// which would break test mocks that use plain HTTP servers.
+	req, err := http.NewRequestWithContext(ctx, "GET", zipURL.String(), nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create ZIP request: %w", err)
+	}
+	req.Header.Set("User-Agent", "tsuku/1.0 (https://github.com/tsukumogami/tsuku)")
+
+	resp, err := b.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("module ZIP download failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("module ZIP download returned status %d", resp.StatusCode)
+	}
+
+	// Read with size limit (add 1 byte to detect truncation)
+	limitedReader := io.LimitReader(resp.Body, maxGoModuleZIPSize+1)
+	data, err := io.ReadAll(limitedReader)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read module ZIP: %w", err)
+	}
+	if int64(len(data)) > maxGoModuleZIPSize {
+		return nil, fmt.Errorf("module ZIP exceeds maximum size of %d bytes", maxGoModuleZIPSize)
+	}
+
+	// Parse the ZIP archive and scan for cmd/*/main.go entries
+	reader, err := zip.NewReader(bytes.NewReader(data), int64(len(data)))
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse module ZIP: %w", err)
+	}
+
+	// The ZIP contains entries prefixed with "{module}@{version}/".
+	// We look for entries matching "{module}@{version}/cmd/*/main.go".
+	prefix := modulePath + "@" + version + "/"
+	cmdPrefix := prefix + "cmd/"
+
+	seen := make(map[string]bool)
+	for _, f := range reader.File {
+		if !strings.HasPrefix(f.Name, cmdPrefix) {
+			continue
+		}
+
+		// Strip the prefix to get the relative path under cmd/
+		rel := strings.TrimPrefix(f.Name, cmdPrefix)
+
+		// We want exactly "subdir/main.go" (one level deep)
+		parts := strings.Split(rel, "/")
+		if len(parts) != 2 || parts[1] != "main.go" {
+			continue
+		}
+
+		name := parts[0]
+		if name == "" || !isValidExecutableName(name) {
+			continue
+		}
+
+		seen[name] = true
+	}
+
+	if len(seen) == 0 {
+		return nil, nil
+	}
+
+	// Return sorted for deterministic output
+	binaries := make([]string, 0, len(seen))
+	for name := range seen {
+		binaries = append(binaries, name)
+	}
+	sort.Strings(binaries)
+
+	return binaries, nil
 }
 
 // encodeGoModulePath encodes a Go module path for use in proxy URLs
