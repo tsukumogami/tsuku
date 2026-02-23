@@ -289,16 +289,36 @@
                 (f.message ? '- **Message**: ' + f.message + '\n' : '') +
                 '- **Timestamp**: ' + f.timestamp + '\n' +
                 (f.workflow_url ? '- **Workflow**: ' + f.workflow_url + '\n' : '') +
-                '\n## Context\n\nDashboard link: failures.html?id=' + f.id + '\n'
+                '\n## Context\n\nDashboard link: failure.html?id=' + f.id + '\n'
             );
             return 'https://github.com/tsukumogami/tsuku/issues/new?title=' + title + '&body=' + body;
         }
 
         function buildRetryURL(f) {
-            return 'https://github.com/tsukumogami/tsuku/actions/workflows/batch-generation.yml';
+            return 'https://github.com/tsukumogami/tsuku/actions/workflows/batch-generation.yml?query=workflow%3A%22Batch+Generation%22';
+        }
+
+        // Resolve the queue entry ID for a failure's package
+        function resolvePackageId(f) {
+            // If we have cached queue data, find the matching entry
+            if (window._queuePackages) {
+                var allStatuses = Object.values(window._queuePackages);
+                for (var s = 0; s < allStatuses.length; s++) {
+                    var list = allStatuses[s];
+                    if (!list) continue;
+                    for (var i = 0; i < list.length; i++) {
+                        if (list[i].name === f.package && list[i].ecosystem === f.ecosystem) {
+                            return list[i].id;
+                        }
+                    }
+                }
+            }
+            // Fallback: construct from ecosystem:package
+            return f.ecosystem + ':' + f.package;
         }
 
         function renderDetail(f) {
+            var pkgId = resolvePackageId(f);
             let html = '<div class="detail-card">';
             html += '<h2>' + esc(f.package) + '</h2>';
             html += '<div class="detail-grid">';
@@ -306,7 +326,7 @@
             // Package
             html += '<span class="detail-label">Package</span>';
             html += '<span class="detail-value package-name"><a href="package.html?id=' +
-                encodeURIComponent(f.ecosystem + ':' + f.package) + '">' + esc(f.package) + '</a></span>';
+                encodeURIComponent(pkgId) + '">' + esc(f.package) + '</a></span>';
 
             // Ecosystem
             html += '<span class="detail-label">Ecosystem</span>';
@@ -389,7 +409,7 @@
             html += '<div class="cross-links">';
             html += '<h2>Related</h2>';
             html += '<div class="cross-link-list">';
-            html += '<a href="package.html?id=' + encodeURIComponent(f.ecosystem + ':' + f.package) +
+            html += '<a href="package.html?id=' + encodeURIComponent(pkgId) +
                 '">View package: ' + esc(f.package) + '</a>';
             if (f.batch_id) {
                 html += '<a href="run.html?id=' + encodeURIComponent(f.batch_id) +
@@ -399,6 +419,7 @@
                 '">All ' + esc(f.category) + ' failures</a>';
             html += '<a href="failures.html?ecosystem=' + encodeURIComponent(f.ecosystem) +
                 '">All ' + esc(f.ecosystem) + ' failures</a>';
+            html += '<a href="https://github.com/tsukumogami/tsuku/tree/main/recipes/' + encodeURIComponent(f.package) + '/" target="_blank" rel="noopener">View recipe source</a>';
             html += '</div></div>';
 
             return html;
@@ -421,6 +442,8 @@
             try {
                 const response = await fetch('/pipeline/dashboard.json');
                 const data = await response.json();
+                // Cache queue packages for resolving package IDs
+                window._queuePackages = data.queue && data.queue.packages ? data.queue.packages : {};
                 const details = data.failure_details || [];
                 const failure = details.find(f => f.id === id);
 

@@ -446,7 +446,7 @@
                 '<table class="package-table">' +
                 '<thead><tr>' +
                 '<th>Batch ID</th>' +
-                '<th>Ecosystem</th>' +
+                '<th>Ecosystems</th>' +
                 '<th>Merged/Total</th>' +
                 '<th>Rate</th>' +
                 '<th>Duration</th>' +
@@ -462,7 +462,7 @@
             var filtered = applyFilters(allRuns, filters);
 
             var content = document.getElementById('content');
-            content.innerHTML = renderSummary(allRuns) + renderFilters(allRuns, filters) + renderTable(filtered);
+            content.innerHTML = renderSummary(filtered) + renderFilters(allRuns, filters) + renderTable(filtered);
 
             // Bind filter change handlers
             document.getElementById('filter-ecosystem').addEventListener('change', onFilterChange);

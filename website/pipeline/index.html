@@ -529,6 +529,13 @@
             background: var(--bg);
             color: var(--text-muted);
             font-family: "SF Mono", Consolas, monospace;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .run-eco-badge:hover {
+            border-color: var(--accent);
+            color: var(--text);
         }
 
         .failures-table .pkg-link {
@@ -648,6 +655,19 @@
             return days + 'd ago';
         }
 
+        function renderByTier(byTier) {
+            if (!byTier || Object.keys(byTier).length === 0) return '';
+            const tiers = Object.keys(byTier).sort();
+            const statusCols = ['pending', 'failed', 'success', 'requires_manual', 'blocked'];
+            const rows = tiers.map(tier => {
+                const counts = byTier[tier];
+                const total = statusCols.reduce((sum, s) => sum + (counts[s] || 0), 0);
+                const cells = statusCols.map(s => '<td style="text-align: right; font-family: \'SF Mono\', Consolas, monospace; font-size: 0.8rem;">' + (counts[s] || 0) + '</td>').join('');
+                return '<tr><td style="font-weight: 600;">P' + esc(tier) + '</td>' + cells + '<td style="text-align: right; font-family: \'SF Mono\', Consolas, monospace; font-size: 0.8rem;">' + total + '</td></tr>';
+            }).join('');
+            return '<div style="margin-top: 1rem;"><table class="eco-table"><thead><tr><th>Tier</th><th style="text-align: right;">Pend</th><th style="text-align: right;">Fail</th><th style="text-align: right;">OK</th><th style="text-align: right;">Manual</th><th style="text-align: right;">Block</th><th style="text-align: right;">Total</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+        }
+
         function renderDashboard(data) {
             const container = document.getElementById('dashboard-content');
             const total = data.queue.total || 1;
@@ -670,8 +690,8 @@
                     lastSuccessHtml = `<span class="health-value"><a href="/pipeline/run.html?id=${encodeURIComponent(ls.batch_id)}">${esc(timeAgo(ls.timestamp))} - ${esc(ls.recipes_merged || 0)} merged</a></span>`;
                 }
 
-                // Runs since last success
-                let runsSinceHtml = `<span class="health-value"><a href="/pipeline/runs.html?since_success=true">${esc(health.runs_since_last_success)}</a></span>`;
+                // Runs since last success (no ecosystem context from pipeline level)
+                let runsSinceHtml = `<span class="health-value"><a href="/pipeline/runs.html?since_success=true">${esc(health.runs_since_last_success)} runs</a></span>`;
 
                 // Warning if last run was more than 2 hours ago
                 let warningHtml = '';
@@ -869,12 +889,16 @@
             // Calculate status percentages
             const statusOrder = ['pending', 'success', 'failed', 'requires_manual', 'blocked'];
             const statusDisplayLabel = { requires_manual: 'manual' };
+            const statusPageMap = { failed: 'failures.html?status=failed' };
             const statusBars = statusOrder.map(status => {
                 const count = data.queue.by_status[status] || 0;
                 const pct = (count / total * 100).toFixed(1);
                 const label = statusDisplayLabel[status] || status;
+                const href = statusPageMap[status]
+                    ? '/pipeline/' + statusPageMap[status]
+                    : '/pipeline/' + status + '.html';
                 return `
-                    <a href="/pipeline/${status}.html" class="status-row">
+                    <a href="${href}" class="status-row">
                         <span class="status-label">${label}</span>
                         <div class="status-bar-container">
                             <div class="status-bar ${status}" style="width: ${pct}%"></div>
@@ -961,7 +985,7 @@
                 if (run.ecosystems && typeof run.ecosystems === 'object') {
                     const badges = Object.entries(run.ecosystems)
                         .sort(([, a], [, b]) => b - a)
-                        .map(([eco, count]) => `<span class="run-eco-badge">${esc(eco)} ${esc(count)}</span>`)
+                        .map(([eco, count]) => `<a href="/pipeline/runs.html?ecosystem=${encodeURIComponent(eco)}" class="run-eco-badge" onclick="event.stopPropagation(); event.preventDefault(); location.href=this.href;">${esc(eco)} ${esc(count)}</a>`)
                         .join('');
                     ecoBadgesHtml = badges;
                 }
@@ -1062,18 +1086,18 @@
                     <div class="panel">
                         <h2><a href="/pipeline/curated.html" style="color: inherit; text-decoration: none;">Curated Overrides</a> ${invalidBadge}</h2>
                         <div class="curated-stats">
-                            <div class="curated-stat">
+                            <a href="/pipeline/curated.html" class="curated-stat" style="text-decoration: none; color: inherit;">
                                 <span class="stat-value">${totalCount}</span>
                                 <span class="stat-label">Total</span>
-                            </div>
-                            <div class="curated-stat">
+                            </a>
+                            <a href="/pipeline/curated.html?status=valid" class="curated-stat" style="text-decoration: none; color: inherit;">
                                 <span class="stat-value stat-valid">${validCount}</span>
                                 <span class="stat-label">Valid</span>
-                            </div>
-                            <div class="curated-stat">
+                            </a>
+                            <a href="/pipeline/curated.html?status=invalid" class="curated-stat" style="text-decoration: none; color: inherit;">
                                 <span class="stat-value ${invalidCount > 0 ? 'stat-invalid' : ''}">${invalidCount}</span>
                                 <span class="stat-label">Invalid</span>
-                            </div>
+                            </a>
                         </div>
                     </div>
                 `;
@@ -1101,7 +1125,7 @@
 
                 const reviewItems = (d.need_review || []).slice(0, 5).map(tool => `
                     <div class="blocker-item">
-                        <span class="blocker-name">${esc(tool)}</span>
+                        <a href="/pipeline/disambiguations.html?status=needs_review" class="blocker-name" style="color: var(--accent); text-decoration: none;">${esc(tool)}</a>
                         <span class="blocker-count" style="background: #d29922; color: white;">review</span>
                     </div>
                 `).join('');
@@ -1139,6 +1163,7 @@
                         <div class="status-bars">
                             ${statusBars}
                         </div>
+                        ${renderByTier(data.queue.by_tier)}
                     </div>
 
                     <div class="panel" id="blockers">
