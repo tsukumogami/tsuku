@@ -236,7 +236,7 @@ jobs:
 
   # Test Linux recipes in batches (each batch builds once and tests multiple recipes)
   test-linux:
-    name: "Linux (batch ${{ matrix.batch.batch_id + 1 }}/${{ needs.matrix.outputs.batch_count }})"
+    name: "Linux (batch ${{ matrix.batch.batch_id }}/${{ needs.matrix.outputs.batch_count }})"
     needs: matrix
     if: ${{ needs.matrix.outputs.has_linux_batches == 'true' }}
     runs-on: ubuntu-latest

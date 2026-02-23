@@ -200,7 +200,7 @@ jobs:
           echo "Generated $BATCH_COUNT batches"
 
   validate-golden:
-    name: "Validate (batch ${{ matrix.batch.batch_id + 1 }}/${{ needs.detect-changes.outputs.batch_count }})"
+    name: "Validate (batch ${{ matrix.batch.batch_id }}/${{ needs.detect-changes.outputs.batch_count }})"
     needs: [detect-changes, r2-health-check]
     if: needs.detect-changes.outputs.has_changes == 'true'
     runs-on: ubuntu-latest
