@@ -300,65 +300,6 @@ func TestAugmentWithInfrastructurePackages_ExistingSysReqs(t *testing.T) {
 	}
 }
 
-func TestInfrastructurePackages_BuildPackages(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		pm       string
-		expected []string
-	}{
-		{"apt", []string{"build-essential"}},
-		{"dnf", []string{"gcc", "gcc-c++", "make"}},
-		{"pacman", []string{"base-devel"}},
-		{"apk", []string{"build-base"}},
-		{"zypper", []string{"gcc", "gcc-c++", "make"}},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.pm, func(t *testing.T) {
-			pkgs := infrastructurePackages(tt.pm, "build")
-			if len(pkgs) != len(tt.expected) {
-				t.Errorf("Expected %d packages, got %d", len(tt.expected), len(pkgs))
-			}
-			for i, p := range tt.expected {
-				if pkgs[i] != p {
-					t.Errorf("Expected %q, got %q", p, pkgs[i])
-				}
-			}
-		})
-	}
-}
-
-func TestInfrastructurePackages_CorePackages(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		pm       string
-		expected []string
-	}{
-		{"zypper", []string{"tar", "gzip"}},
-		{"apt", nil},
-		{"dnf", nil},
-		{"apk", nil},
-		{"pacman", nil},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.pm, func(t *testing.T) {
-			pkgs := infrastructurePackages(tt.pm, "core")
-			if len(pkgs) != len(tt.expected) {
-				t.Errorf("Expected %d packages, got %d: %v", len(tt.expected), len(pkgs), pkgs)
-				return
-			}
-			for i, p := range tt.expected {
-				if pkgs[i] != p {
-					t.Errorf("Expected %q, got %q", p, pkgs[i])
-				}
-			}
-		})
-	}
-}
-
 func TestSandbox_NoRuntime(t *testing.T) {
 	t.Parallel()
 

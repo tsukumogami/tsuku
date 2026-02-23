@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/tsukumogami/tsuku/internal/containerimages"
 	"github.com/tsukumogami/tsuku/internal/executor"
 	"github.com/tsukumogami/tsuku/internal/log"
 	"github.com/tsukumogami/tsuku/internal/platform"
@@ -468,52 +469,20 @@ func augmentWithInfrastructurePackages(
 		sysReqs.Packages = make(map[string][]string)
 	}
 
-	// Add infrastructure packages with family-appropriate names.
+	// Add infrastructure packages from container-images.json config.
 	// Core packages are always added — they cover utilities like tar/gzip that
 	// most base images include but some (e.g., opensuse/leap) do not.
 	var infraPkgs []string
-	infraPkgs = append(infraPkgs, infrastructurePackages(pm, "core")...)
+	infraPkgs = append(infraPkgs, containerimages.InfraPackages(effectiveFamily, "core")...)
 	if needsNetwork {
-		infraPkgs = append(infraPkgs, infrastructurePackages(pm, "network")...)
+		infraPkgs = append(infraPkgs, containerimages.InfraPackages(effectiveFamily, "network")...)
 	}
 	if needsBuild {
-		infraPkgs = append(infraPkgs, infrastructurePackages(pm, "build")...)
+		infraPkgs = append(infraPkgs, containerimages.InfraPackages(effectiveFamily, "build")...)
 	}
 
 	sysReqs.Packages[pm] = append(sysReqs.Packages[pm], infraPkgs...)
 	return sysReqs
-}
-
-// infrastructurePackages returns the package names for infrastructure needs
-// based on the package manager.
-func infrastructurePackages(pm string, category string) []string {
-	switch category {
-	case "core":
-		// Archive utilities needed for extracting downloaded tarballs.
-		// Most base images include tar/gzip, but opensuse/leap does not.
-		switch pm {
-		case "zypper":
-			return []string{"tar", "gzip"}
-		}
-		return nil
-	case "network":
-		// ca-certificates and curl are named the same across most distros
-		return []string{"ca-certificates", "curl"}
-	case "build":
-		switch pm {
-		case "apt":
-			return []string{"build-essential"}
-		case "dnf":
-			return []string{"gcc", "gcc-c++", "make"}
-		case "pacman":
-			return []string{"base-devel"}
-		case "apk":
-			return []string{"build-base"}
-		case "zypper":
-			return []string{"gcc", "gcc-c++", "make"}
-		}
-	}
-	return nil
 }
 
 // buildSandboxScript creates the shell script for sandbox testing.

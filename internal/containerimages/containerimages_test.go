@@ -62,15 +62,25 @@ func TestDefaultImage(t *testing.T) {
 func TestEmbeddedJSON_Valid(t *testing.T) {
 	t.Parallel()
 
-	var parsed map[string]string
+	var parsed map[string]familyConfig
 	if err := json.Unmarshal(rawJSON, &parsed); err != nil {
 		t.Fatalf("embedded container-images.json is not valid JSON: %v", err)
 	}
 
 	requiredFamilies := []string{"debian", "rhel", "arch", "alpine", "suse"}
 	for _, family := range requiredFamilies {
-		if _, ok := parsed[family]; !ok {
+		cfg, ok := parsed[family]
+		if !ok {
 			t.Errorf("embedded JSON missing required family %q", family)
+			continue
+		}
+		if cfg.Image == "" {
+			t.Errorf("family %q has empty image string", family)
+		}
+		for _, cat := range []string{"core", "network", "build"} {
+			if _, ok := cfg.InfraPackages[cat]; !ok {
+				t.Errorf("family %q missing infra_packages.%s", family, cat)
+			}
 		}
 	}
 }
@@ -78,13 +88,13 @@ func TestEmbeddedJSON_Valid(t *testing.T) {
 func TestEmbeddedJSON_AllEntriesNonEmpty(t *testing.T) {
 	t.Parallel()
 
-	var parsed map[string]string
+	var parsed map[string]familyConfig
 	if err := json.Unmarshal(rawJSON, &parsed); err != nil {
 		t.Fatalf("embedded JSON parse error: %v", err)
 	}
 
-	for family, image := range parsed {
-		if image == "" {
+	for family, cfg := range parsed {
+		if cfg.Image == "" {
 			t.Errorf("family %q has empty image string", family)
 		}
 	}
@@ -108,5 +118,77 @@ func TestFamilies(t *testing.T) {
 		if !famSet[r] {
 			t.Errorf("Families() missing %q", r)
 		}
+	}
+}
+
+func TestInfraPackages_KnownCategory(t *testing.T) {
+	t.Parallel()
+
+	pkgs := InfraPackages("suse", "core")
+	expected := []string{"tar", "gzip"}
+	if len(pkgs) != len(expected) {
+		t.Fatalf("InfraPackages(suse, core) = %v, want %v", pkgs, expected)
+	}
+	for i, p := range expected {
+		if pkgs[i] != p {
+			t.Errorf("InfraPackages(suse, core)[%d] = %q, want %q", i, pkgs[i], p)
+		}
+	}
+}
+
+func TestInfraPackages_EmptyCategory(t *testing.T) {
+	t.Parallel()
+
+	// debian core is an empty array in the JSON, should return nil
+	pkgs := InfraPackages("debian", "core")
+	if pkgs != nil {
+		t.Errorf("InfraPackages(debian, core) = %v, want nil", pkgs)
+	}
+}
+
+func TestInfraPackages_UnknownFamily(t *testing.T) {
+	t.Parallel()
+
+	pkgs := InfraPackages("gentoo", "network")
+	if pkgs != nil {
+		t.Errorf("InfraPackages(gentoo, network) = %v, want nil", pkgs)
+	}
+}
+
+func TestInfraPackages_AllFamiliesHaveNetworkPackages(t *testing.T) {
+	t.Parallel()
+
+	for _, family := range Families() {
+		pkgs := InfraPackages(family, "network")
+		if pkgs == nil {
+			t.Errorf("InfraPackages(%q, network) = nil, want non-nil", family)
+			continue
+		}
+		has := make(map[string]bool)
+		for _, p := range pkgs {
+			has[p] = true
+		}
+		for _, required := range []string{"ca-certificates", "curl"} {
+			if !has[required] {
+				t.Errorf("InfraPackages(%q, network) missing %q", family, required)
+			}
+		}
+	}
+}
+
+func TestInfraPackages_ReturnsCopy(t *testing.T) {
+	t.Parallel()
+
+	pkgs := InfraPackages("suse", "core")
+	if len(pkgs) == 0 {
+		t.Skip("no core packages for suse")
+	}
+	// Mutate the returned slice
+	pkgs[0] = "MUTATED"
+
+	// Fetch again — should be unchanged
+	pkgs2 := InfraPackages("suse", "core")
+	if pkgs2[0] == "MUTATED" {
+		t.Error("InfraPackages returned a reference to internal data, not a copy")
 	}
 }
