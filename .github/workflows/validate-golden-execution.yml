@@ -602,9 +602,8 @@ jobs:
 
           echo "All macOS golden files passed"
 
-  # Validate embedded Linux golden files for non-Debian families (via Docker containers)
-  # Uses docker run directly because GitHub Actions container: directive has issues with Alpine
-  # (JavaScript actions don't work in musl-based containers)
+  # Validate embedded Linux golden files for non-Debian families (via sandbox)
+  # Each golden file runs in an isolated sandbox container matching the target family
   validate-linux-containers:
     name: "Linux Containers (${{ matrix.family }})"
     needs: detect-changes
@@ -625,22 +624,15 @@ jobs:
           go-version-file: 'go.mod'
           cache-dependency-path: go.sum
 
-      - name: Build tsuku (static binary for containers)
+      - name: Build tsuku (static binary for sandbox)
         run: CGO_ENABLED=0 go build -o tsuku ./cmd/tsuku
 
-      - name: Execute golden files in container
+      - name: Execute golden files via sandbox
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           FAMILY="${{ matrix.family }}"
           FILES='${{ needs.detect-changes.outputs.container_files }}'
-
-          # Read container image from centralized config
-          CONTAINER_IMAGE=$(jq -r --arg f "$FAMILY" '.[$f] // empty' container-images.json)
-          if [ -z "$CONTAINER_IMAGE" ]; then
-            echo "Unknown family: $FAMILY (not found in container-images.json)"
-            exit 1
-          fi
 
           # Filter and format files for this family (parse JSON outside container)
           # Output format: file|tool|version (one per line)
@@ -651,56 +643,26 @@ jobs:
             exit 0
           fi
 
-          echo "Validating in $CONTAINER_IMAGE:"
+          echo "Validating golden files for $FAMILY:"
           echo "$FILE_LIST" | cut -d'|' -f1
 
-          # Run all golden files for this family in a single container
-          # Pass file list via environment variable to avoid shell escaping issues
-          docker run --rm \
-            -v "$PWD:/workspace" \
-            -e GITHUB_TOKEN="$GITHUB_TOKEN" \
-            -e FILE_LIST="$FILE_LIST" \
-            -e FAMILY="$FAMILY" \
-            -w /workspace \
-            "$CONTAINER_IMAGE" \
-            sh -c '
-              set -e
-              FAILED=""
+          rm -f /tmp/failed_tools
+          echo "$FILE_LIST" | while IFS="|" read -r file tool version; do
+            echo "=== Executing $tool ($version) on $FAMILY ==="
 
-              # Install bash and jq (install-recipe-deps.sh requires both)
-              case "$FAMILY" in
-                alpine) apk add --no-cache bash jq ;;
-                rhel)   dnf install -y bash jq ;;
-                arch)   pacman -Sy --noconfirm bash jq ;;
-                suse)   zypper -n install bash jq ;;
-              esac
+            if ! ./tsuku install --sandbox --force --plan "$file" \
+              --target-family "$FAMILY" \
+              --env GITHUB_TOKEN="$GITHUB_TOKEN"; then
+              echo "$tool ($version)" >> /tmp/failed_tools
+            fi
+          done
 
-              # Install recipe-declared system packages for each unique recipe
-              # Extract unique recipe names from FILE_LIST
-              RECIPES=$(echo "$FILE_LIST" | cut -d"|" -f2 | sort -u)
-              for recipe in $RECIPES; do
-                ./.github/scripts/install-recipe-deps.sh "$FAMILY" "$recipe" ./tsuku
-              done
+          if [ -f /tmp/failed_tools ]; then
+            echo "::error::Failed golden files: $(cat /tmp/failed_tools | tr '\n' ' ')"
+            exit 1
+          fi
 
-              echo "$FILE_LIST" | while IFS="|" read -r file tool version; do
-                echo "=== Executing $tool ($version) ==="
-
-                # Use isolated TSUKU_HOME per tool
-                export TSUKU_HOME="/tmp/tsuku-$tool-$version"
-                mkdir -p "$TSUKU_HOME"
-
-                if ! ./tsuku install --plan "$file" --force; then
-                  echo "$tool" >> /tmp/failed_tools
-                fi
-              done
-
-              if [ -f /tmp/failed_tools ]; then
-                echo "Failed: $(cat /tmp/failed_tools | tr "\n" " ")"
-                exit 1
-              fi
-
-              echo "All golden files passed"
-            '
+          echo "All golden files passed for $FAMILY"
 
   # Execute registry recipes using golden files from R2
   execute-registry-linux:

@@ -224,25 +224,22 @@ jobs:
         run: cp -r artifacts/recipes/* recipes/
 
       - name: Validate on all Linux x86_64 families
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           RESULTS_FILE=$(mktemp)
           NAMES=("debian" "rhel" "arch" "suse" "alpine")
-          IMAGES=()
-          for f in "${NAMES[@]}"; do
-            IMAGES+=("$(jq -r --arg f "$f" '.[$f]' container-images.json)")
-          done
           LIBCS=("glibc" "glibc" "glibc" "glibc" "musl")
 
           # Load execution exclusions
           EXCLUSIONS=$(jq -r '.exclusions[].recipe' testdata/golden/execution-exclusions.json 2>/dev/null || echo "")
 
-          for i in "${!IMAGES[@]}"; do
-            image="${IMAGES[$i]}"
+          for i in "${!NAMES[@]}"; do
             family="${NAMES[$i]}"
             libc="${LIBCS[$i]}"
             platform="linux-${family}-${libc}-x86_64"
 
-            echo "=== Validating on $platform ($image) ==="
+            echo "=== Validating on $platform ==="
 
             for recipe_path in ${{ steps.recipes.outputs.list }}; do
               recipe_name=$(basename "$recipe_path" .toml)
@@ -266,38 +263,31 @@ jobs:
               BLOCKED_BY="[]"
               for attempt in 0 1 2; do
                 ATTEMPTS=$((attempt + 1))
-                # Write tsuku exit code and JSON output to files so Docker doesn't mask them
-                docker run --rm \
-                  -v "$PWD:/workspace" \
-                  -w /workspace \
-                  "$image" \
-                  sh -c "
-                    case '$family' in
-                      alpine) apk add --no-cache curl bash ca-certificates jq ;;
-                      debian) apt-get update && apt-get install -y --no-install-recommends curl ca-certificates jq ;;
-                      rhel) dnf install -y --setopt=install_weak_deps=False curl ca-certificates jq ;;
-                      arch) pacman -Sy --noconfirm curl ca-certificates jq ;;
-                      suse) zypper -n install curl ca-certificates jq ;;
-                    esac
-                    timeout 300 ./tsuku-linux-amd64 install --json --force --recipe '$recipe_path' > /workspace/.tsuku-output.json 2>&1
-                    echo \$? > /workspace/.tsuku-exit-code
-                  " 2>&1 || true
+                RESULT_FILE=".result-${recipe_name}-${family}.json"
 
-                if [ -f .tsuku-exit-code ]; then
-                  EXIT_CODE=$(cat .tsuku-exit-code)
-                  rm -f .tsuku-exit-code
-                else
-                  # Container failed before running tsuku (Docker error)
-                  EXIT_CODE=1
-                fi
+                ./tsuku-linux-amd64 install --sandbox --force --recipe "$recipe_path" \
+                  --target-family "$family" \
+                  --env GITHUB_TOKEN="$GITHUB_TOKEN" \
+                  --json > "$RESULT_FILE" 2>/dev/null || true
 
-                # Extract blocked_by from JSON output if exit code is 8 (missing_dep)
-                if [ -f .tsuku-output.json ]; then
-                  cat .tsuku-output.json  # Show output for logging
-                  if [ "$EXIT_CODE" = "8" ]; then
-                    BLOCKED_BY=$(jq -c '.missing_recipes // []' .tsuku-output.json 2>/dev/null || echo "[]")
+                if [ -f "$RESULT_FILE" ] && jq -e . "$RESULT_FILE" > /dev/null 2>&1; then
+                  cat "$RESULT_FILE"  # Show output for logging
+
+                  # Sandbox JSON has install_exit_code; error JSON has exit_code
+                  if jq -e '.install_exit_code' "$RESULT_FILE" > /dev/null 2>&1; then
+                    EXIT_CODE=$(jq -r '.install_exit_code' "$RESULT_FILE")
+                  elif jq -e '.exit_code' "$RESULT_FILE" > /dev/null 2>&1; then
+                    EXIT_CODE=$(jq -r '.exit_code' "$RESULT_FILE")
+                  else
+                    EXIT_CODE=1
                   fi
-                  rm -f .tsuku-output.json
+
+                  # Extract blocked_by from JSON output if exit code is 8 (missing_dep)
+                  if [ "$EXIT_CODE" = "8" ]; then
+                    BLOCKED_BY=$(jq -c '.missing_recipes // []' "$RESULT_FILE" 2>/dev/null || echo "[]")
+                  fi
+                else
+                  EXIT_CODE=1
                 fi
 
                 if [ "$EXIT_CODE" = "0" ]; then
@@ -385,26 +375,23 @@ jobs:
         run: cp -r artifacts/recipes/* recipes/
 
       - name: Validate on all Linux arm64 families
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           RESULTS_FILE=$(mktemp)
           # arch excluded -- no ARM64 container image
           NAMES=("debian" "rhel" "suse" "alpine")
-          IMAGES=()
-          for f in "${NAMES[@]}"; do
-            IMAGES+=("$(jq -r --arg f "$f" '.[$f]' container-images.json)")
-          done
           LIBCS=("glibc" "glibc" "glibc" "musl")
 
           # Load execution exclusions
           EXCLUSIONS=$(jq -r '.exclusions[].recipe' testdata/golden/execution-exclusions.json 2>/dev/null || echo "")
 
-          for i in "${!IMAGES[@]}"; do
-            image="${IMAGES[$i]}"
+          for i in "${!NAMES[@]}"; do
             family="${NAMES[$i]}"
             libc="${LIBCS[$i]}"
             platform="linux-${family}-${libc}-arm64"
 
-            echo "=== Validating on $platform ($image) ==="
+            echo "=== Validating on $platform ==="
 
             for recipe_path in ${{ steps.recipes.outputs.list }}; do
               recipe_name=$(basename "$recipe_path" .toml)
@@ -428,35 +415,31 @@ jobs:
               BLOCKED_BY="[]"
               for attempt in 0 1 2; do
                 ATTEMPTS=$((attempt + 1))
-                docker run --rm \
-                  -v "$PWD:/workspace" \
-                  -w /workspace \
-                  "$image" \
-                  sh -c "
-                    case '$family' in
-                      alpine) apk add --no-cache curl bash ca-certificates jq ;;
-                      debian) apt-get update && apt-get install -y --no-install-recommends curl ca-certificates jq ;;
-                      rhel) dnf install -y --setopt=install_weak_deps=False curl ca-certificates jq ;;
-                      suse) zypper -n install curl ca-certificates jq ;;
-                    esac
-                    timeout 300 ./tsuku-linux-arm64 install --json --force --recipe '$recipe_path' > /workspace/.tsuku-output.json 2>&1
-                    echo \$? > /workspace/.tsuku-exit-code
-                  " 2>&1 || true
+                RESULT_FILE=".result-${recipe_name}-${family}.json"
 
-                if [ -f .tsuku-exit-code ]; then
-                  EXIT_CODE=$(cat .tsuku-exit-code)
-                  rm -f .tsuku-exit-code
+                ./tsuku-linux-arm64 install --sandbox --force --recipe "$recipe_path" \
+                  --target-family "$family" \
+                  --env GITHUB_TOKEN="$GITHUB_TOKEN" \
+                  --json > "$RESULT_FILE" 2>/dev/null || true
+
+                if [ -f "$RESULT_FILE" ] && jq -e . "$RESULT_FILE" > /dev/null 2>&1; then
+                  cat "$RESULT_FILE"  # Show output for logging
+
+                  # Sandbox JSON has install_exit_code; error JSON has exit_code
+                  if jq -e '.install_exit_code' "$RESULT_FILE" > /dev/null 2>&1; then
+                    EXIT_CODE=$(jq -r '.install_exit_code' "$RESULT_FILE")
+                  elif jq -e '.exit_code' "$RESULT_FILE" > /dev/null 2>&1; then
+                    EXIT_CODE=$(jq -r '.exit_code' "$RESULT_FILE")
+                  else
+                    EXIT_CODE=1
+                  fi
+
+                  # Extract blocked_by from JSON output if exit code is 8 (missing_dep)
+                  if [ "$EXIT_CODE" = "8" ]; then
+                    BLOCKED_BY=$(jq -c '.missing_recipes // []' "$RESULT_FILE" 2>/dev/null || echo "[]")
+                  fi
                 else
                   EXIT_CODE=1
-                fi
-
-                # Extract blocked_by from JSON output if exit code is 8 (missing_dep)
-                if [ -f .tsuku-output.json ]; then
-                  cat .tsuku-output.json  # Show output for logging
-                  if [ "$EXIT_CODE" = "8" ]; then
-                    BLOCKED_BY=$(jq -c '.missing_recipes // []' .tsuku-output.json 2>/dev/null || echo "[]")
-                  fi
-                  rm -f .tsuku-output.json
                 fi
 
                 if [ "$EXIT_CODE" = "0" ]; then
