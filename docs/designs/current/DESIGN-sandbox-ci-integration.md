@@ -1,5 +1,5 @@
 ---
-status: Planned
+status: Current
 spawned_from:
   issue: 1905
   repo: tsukumogami/tsuku
@@ -33,7 +33,7 @@ rationale: |
 
 ## Status
 
-Planned
+Current
 
 ## Implementation Issues
 
@@ -54,44 +54,6 @@ Planned
 | ~~[#1947: ci(workflows): migrate batch-generate.yml and validate-golden-execution.yml to sandbox](https://github.com/tsukumogami/tsuku/issues/1947)~~ | ~~[#1946](https://github.com/tsukumogami/tsuku/issues/1946)~~ | ~~testable~~ |
 | ~~_Completes the CI migration. For batch-generate, replaces validation phase docker calls and preserves exit code 8 / `blocked_by` handling. For validate-golden-execution, converts batched per-family docker calls into per-recipe sandbox invocations. After this, every Linux recipe validation job in CI uses the sandbox._~~ | | |
 
-### Dependency Graph
-
-```mermaid
-graph LR
-    subgraph Phase1["Phase 1: Sandbox Code"]
-        I1942["#1942: Add verification"]
-        I1943["#1943: Add --env flag"]
-        I1944["#1944: Add --json flag"]
-    end
-
-    subgraph Phase2["Phase 2: CI Migration"]
-        I1945["#1945: Migrate test-recipe.yml"]
-        I1946["#1946: Migrate recipe-validation-core"]
-        I1947["#1947: Migrate remaining workflows"]
-    end
-
-    I1942 --> I1944
-    I1942 --> I1945
-    I1943 --> I1945
-    I1944 --> I1945
-    I1945 --> I1946
-    I1946 --> I1947
-
-    classDef done fill:#c8e6c9
-    classDef ready fill:#bbdefb
-    classDef blocked fill:#fff9c4
-    classDef needsDesign fill:#e1bee7
-    classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
-
-    class I1942 done
-    class I1943 done
-    class I1944 done
-    class I1945 done
-    class I1946 done
-    class I1947 done
-```
-
-**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design
 
 ## Upstream Design Reference
 
