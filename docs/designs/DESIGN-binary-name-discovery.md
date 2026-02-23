@@ -264,6 +264,41 @@ The work breaks into five phases, each independently shippable:
 
 The Go builder improvement (scanning `cmd/` directories from the module proxy ZIP) can be done in parallel with any phase after 3, but doesn't implement `BinaryNameProvider` since its discovery remains heuristic.
 
+### Validation Strategy
+
+Each phase needs validation that the improved discovery actually produces correct binary names for real-world packages. Three complementary approaches cover this:
+
+**1. Unit tests with known-mismatch packages**
+
+Add parametrized unit tests to each builder's `*_test.go` using the existing mock HTTP server pattern. Each test provides a mock registry response for a package where the binary name differs from the package name, and asserts the builder produces the correct executables.
+
+Test cases per ecosystem:
+
+| Ecosystem | Package | Package name | Expected binaries |
+|-----------|---------|-------------|-------------------|
+| Cargo | sqlx-cli | sqlx-cli | sqlx, cargo-sqlx |
+| Cargo | probe-rs-tools | probe-rs-tools | probe-rs, cargo-flash, cargo-embed |
+| Cargo | fd-find | fd-find | fd |
+| npm | typescript | typescript | tsc, tsserver |
+| PyPI | black | black | black, blackd |
+| PyPI | httpie | httpie | http, https |
+| RubyGems | bundler | bundler | bundle, bundler |
+| Go | golangci-lint | github.com/.../cmd/golangci-lint | golangci-lint |
+
+These tests are fast (no network calls), run in CI, and serve as regression tests against future changes.
+
+**2. Regression against previously-fixed recipes**
+
+For crates.io specifically, run the builder against the packages that were manually corrected during PR #1869 and compare the output. This validates that the `bin_names` API path produces the same result as the manual fix. The existing cargo builder integration test workflow (`cargo-builder-tests.yml`) provides the infrastructure -- extend it with additional test packages.
+
+**3. Batch retry of failed recipes**
+
+The batch generation pipeline writes failures to `data/failures/batch-*.jsonl`. Filter these logs for binary-name-related failures (exit code 127, "command not found" in sandbox output) and retry the failed packages locally with the improved builder. This discovers cases beyond the known failures and validates the fix against real-world diversity.
+
+For PyPI and RubyGems, this is particularly valuable since we don't have a pre-existing set of known failures to regress against. Running the builder against the current recipe queue with artifact-based discovery reveals whether the improvement catches real mismatches.
+
+Each phase ships when its unit tests pass and at least one regression/retry test confirms the fix works against a real package.
+
 ## Security Considerations
 
 ### Download verification
