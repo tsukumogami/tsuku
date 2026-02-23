@@ -7,7 +7,7 @@ Total scenarios: 14
 ---
 
 ## Scenario 1: container-images.json exists with correct content
-**ID**: scenario-1
+**ID**: scenario-1 [x]
 **Testable after**: #1901
 **Commands**:
 - `test -f container-images.json`
@@ -21,7 +21,7 @@ Total scenarios: 14
 ---
 
 ## Scenario 2: containerimages Go package provides correct API
-**ID**: scenario-2
+**ID**: scenario-2 [x]
 **Testable after**: #1901
 **Commands**:
 - `go doc ./internal/containerimages/`
@@ -31,7 +31,7 @@ Total scenarios: 14
 ---
 
 ## Scenario 3: go generate copies embedded JSON and it matches root
-**ID**: scenario-3
+**ID**: scenario-3 [x]
 **Testable after**: #1901
 **Commands**:
 - `go generate ./internal/containerimages/...`
@@ -42,7 +42,7 @@ Total scenarios: 14
 ---
 
 ## Scenario 4: containerimages unit tests pass
-**ID**: scenario-4
+**ID**: scenario-4 [x]
 **Testable after**: #1901
 **Commands**:
 - `go test -v ./internal/containerimages/...`
@@ -52,7 +52,7 @@ Total scenarios: 14
 ---
 
 ## Scenario 5: familyToBaseImage map removed from container_spec.go
-**ID**: scenario-5
+**ID**: scenario-5 [x]
 **Testable after**: #1901
 **Commands**:
 - `! grep -q 'familyToBaseImage' internal/sandbox/container_spec.go`
@@ -62,7 +62,7 @@ Total scenarios: 14
 ---
 
 ## Scenario 6: DefaultSandboxImage constant removed from requirements.go
-**ID**: scenario-6
+**ID**: scenario-6 [x]
 **Testable after**: #1901
 **Commands**:
 - `! grep -q 'const DefaultSandboxImage' internal/sandbox/requirements.go`
@@ -73,7 +73,7 @@ Total scenarios: 14
 ---
 
 ## Scenario 7: all Go tests pass after refactoring
-**ID**: scenario-7
+**ID**: scenario-7 [x]
 **Testable after**: #1901
 **Commands**:
 - `go test ./...`
@@ -83,7 +83,7 @@ Total scenarios: 14
 ---
 
 ## Scenario 8: go vet passes with no issues
-**ID**: scenario-8
+**ID**: scenario-8 [x]
 **Testable after**: #1901
 **Commands**:
 - `go vet ./...`
@@ -93,7 +93,7 @@ Total scenarios: 14
 ---
 
 ## Scenario 9: Makefile build target runs go generate before go build
-**ID**: scenario-9
+**ID**: scenario-9 [x]
 **Testable after**: #1901
 **Commands**:
 - `grep -A5 '^build:' Makefile`
@@ -103,40 +103,40 @@ Total scenarios: 14
 ---
 
 ## Scenario 10: no hardcoded image strings remain in CI workflow files
-**ID**: scenario-10
+**ID**: scenario-10 [x]
 **Testable after**: #1902
 **Commands**:
 - `grep -rEn '"(debian:bookworm-slim|fedora:(39|41)|archlinux:base|opensuse/(tumbleweed|leap:15)|alpine:3\.(19|21))"' .github/workflows/recipe-validation-core.yml .github/workflows/test-recipe.yml .github/workflows/batch-generate.yml .github/workflows/validate-golden-execution.yml .github/workflows/platform-integration.yml .github/workflows/release.yml test/scripts/test-checksum-pinning.sh; echo "exit:$?"`
 **Expected**: grep returns exit code 1 (no matches). Zero hardcoded container image strings for the five supported families appear in any of the seven target files. All image references now derive from container-images.json via jq.
-**Status**: pending
+**Status**: passed
 
 ---
 
 ## Scenario 11: test-checksum-pinning.sh reads images from config file
-**ID**: scenario-11
+**ID**: scenario-11 [x]
 **Testable after**: #1902
 **Commands**:
 - `grep -q 'jq' test/scripts/test-checksum-pinning.sh`
 - `grep -q 'container-images.json' test/scripts/test-checksum-pinning.sh`
 - `! grep -qE 'fedora:39|alpine:3\.19' test/scripts/test-checksum-pinning.sh`
 **Expected**: The script uses jq to read from container-images.json. The stale fedora:39 and alpine:3.19 references are eliminated. The script validates jq availability early with a clear error if missing.
-**Status**: pending
+**Status**: passed
 
 ---
 
 ## Scenario 12: renovate.json exists with valid config for container-images.json
-**ID**: scenario-12
+**ID**: scenario-12 [x]
 **Testable after**: #1903
 **Commands**:
 - `jq . renovate.json`
 - `jq -e '.customManagers' renovate.json`
 **Expected**: renovate.json is valid JSON. It contains a customManagers array with a regex custom manager that targets container-images.json using the docker datasource to propose automated version bumps.
-**Status**: pending
+**Status**: passed
 
 ---
 
 ## Scenario 13: drift-check CI job detects stale embedded copy
-**ID**: scenario-13
+**ID**: scenario-13 [x]
 **Testable after**: #1903
 **Environment**: manual
 **Commands**:
@@ -144,7 +144,7 @@ Total scenarios: 14
 - `go generate ./internal/containerimages/...`
 - `git diff --exit-code internal/containerimages/container-images.json`
 **Expected**: After deliberately writing an empty JSON to the embedded copy, running go generate restores it. The git diff shows changes (exit code 1), which is what the CI drift-check job would detect and fail on. After restoring: `go generate ./internal/containerimages/... && git diff --exit-code internal/containerimages/container-images.json` exits 0 (no diff) confirming the check passes on clean state.
-**Status**: pending
+**Status**: passed
 
 ---
 

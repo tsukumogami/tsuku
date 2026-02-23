@@ -41,8 +41,8 @@ Planned
 | ~~_Creates `container-images.json` at the repo root and a new `internal/containerimages/` Go package that embeds it via `go:embed`. Replaces the hardcoded `familyToBaseImage` map and `DefaultSandboxImage` constant, fixing the alpine and suse drift in the process._~~ | | |
 | ~~[#1902: ci: migrate workflow container images to centralized config](https://github.com/tsukumogami/tsuku/issues/1902)~~ | ~~[#1901](https://github.com/tsukumogami/tsuku/issues/1901)~~ | ~~testable~~ |
 | ~~_With the JSON file from #1901 in place, updates six CI workflows and one test script to read image references via `jq` instead of hardcoding them. Handles three consumption patterns: bash arrays, matrix blocks, and inline docker run commands._~~ | | |
-| [#1903: ci: add Renovate config and drift-check CI job](https://github.com/tsukumogami/tsuku/issues/1903) | [#1901](https://github.com/tsukumogami/tsuku/issues/1901), [#1902](https://github.com/tsukumogami/tsuku/issues/1902) | testable |
-| _Adds a `renovate.json` with a regex custom manager for automated image version bumps and a CI drift-check job that catches both stale embedded copies and hardcoded image regressions. This is the safety net that keeps the centralization from #1901 and #1902 intact over time._ | | |
+| ~~[#1903: ci: add Renovate config and drift-check CI job](https://github.com/tsukumogami/tsuku/issues/1903)~~ | ~~[#1901](https://github.com/tsukumogami/tsuku/issues/1901), [#1902](https://github.com/tsukumogami/tsuku/issues/1902)~~ | ~~testable~~ |
+| ~~_Adds a `renovate.json` with a regex custom manager for automated image version bumps and a CI drift-check job that catches both stale embedded copies and hardcoded image regressions. This is the safety net that keeps the centralization from #1901 and #1902 intact over time._~~ | | |
 | [#1904: chore: add container-images.json to CODEOWNERS](https://github.com/tsukumogami/tsuku/issues/1904) | [#1901](https://github.com/tsukumogami/tsuku/issues/1901) | simple |
 | _Protects the centralized config file with the same review requirements as workflow files, mitigating the supply chain risk of a single edit redirecting all container consumers at once._ | | |
 | [#1905: docs(sandbox): design sandbox CI integration gaps](https://github.com/tsukumogami/tsuku/issues/1905) | None | simple |
@@ -83,7 +83,7 @@ graph LR
     class I1901 done
     class I1902 done
     class I1904 ready
-    class I1903 ready
+    class I1903 done
     class I1905 needsDesign
 ```
 

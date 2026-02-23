@@ -1,0 +1,23 @@
+[
+  {
+    "issue": 1903,
+    "review_focus": "pragmatic",
+    "blocking_count": 0,
+    "advisory_count": 2,
+    "detail_file": "wip/research/implement-doc_review_pragmatic_issue1903.md"
+  },
+  {
+    "issue": 1903,
+    "review_focus": "architect",
+    "blocking_count": 0,
+    "advisory_count": 2,
+    "detail_file": "wip/research/implement-doc_review_architect_issue1903.md"
+  },
+  {
+    "issue": 1903,
+    "review_focus": "maintainer",
+    "blocking_count": 0,
+    "advisory_count": 5,
+    "detail_file": "wip/research/implement-doc_review_maintainer_issue1903.md"
+  }
+]

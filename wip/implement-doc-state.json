@@ -3,7 +3,7 @@
   "design_doc": "docs/designs/DESIGN-sandbox-image-unification.md",
   "branch": "impl/sandbox-image-unification",
   "pr_number": 1906,
-  "integrity_hash": "sha256:d88ed5e776f5671d115c3eac3b3d620cf37f87c2e266c83493617c186b7c69c8",
+  "integrity_hash": "sha256:597a0f8ec22fd87b89db365df91a0358ac91e4f6d22470e2e0b796962bb4880a",
   "issues": [
     {
       "number": 1901,
@@ -74,8 +74,8 @@
     {
       "number": 1902,
       "title": "ci: migrate workflow container images to centralized config",
-      "status": "pushed",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "ci_fix_attempts": 0,
       "issue_type": "code",
       "dependencies": [
@@ -130,17 +130,27 @@
     {
       "number": 1903,
       "title": "ci: add Renovate config and drift-check CI job",
-      "status": "pending",
+      "status": "scrutinized",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [
         1901,
         1902
       ],
-      "commits": [],
-      "agent_type": "",
-      "summary": null,
+      "commits": [
+        "ec9a3c57f9e51204726fd810ef8597273ae0e84d"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          "renovate.json",
+          ".github/workflows/drift-check.yml"
+        ],
+        "tests_added": 0,
+        "key_decisions": "Hardcoded reference check uses explicit allowlist of exceptions. Excludes _test.go files since they assert expected values. opensuse/tumbleweed has no version tag (rolling release) so Renovate naturally skips it."
+      },
       "testable_scenarios": [
         "scenario-12",
         "scenario-13"
