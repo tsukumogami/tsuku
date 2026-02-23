@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Accepted
 problem: |
   The Build Essentials workflow allocates 7 separate Linux runners for tool
   tests that share identical setup (checkout, Go install, binary build). Each
@@ -29,7 +29,7 @@ rationale: |
 
 ## Status
 
-**Status:** Proposed
+**Status:** Accepted
 
 ## Upstream Design Reference
 
