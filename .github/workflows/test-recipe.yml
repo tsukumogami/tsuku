@@ -1,12 +1,9 @@
-# Test Recipe - Cross-platform validation for individual recipes.
+# Test Recipe - Cross-platform validation for changed recipes.
 #
-# This workflow tests a specific recipe across all supported platforms.
+# This workflow tests changed recipes across all supported platforms
+# using sandbox containers (Linux) and native installs (macOS).
 # It does NOT skip library recipes -- testing library recipes across
 # platforms is its primary purpose.
-#
-# Platform failures use continue-on-error at the job level so all
-# platforms complete. Failures indicate which `when` filters to add
-# to the recipe, not required fixes before merge.
 #
 # Triggers:
 #   - workflow_dispatch: manually test a recipe by name
@@ -135,7 +132,7 @@ jobs:
             . as $all |
             [range(0; length; $bs)] |
             to_entries |
-            map({batch_id: .key, recipes: $all[.value:.value + $bs]})
+            map({batch_id: (.key + 1), recipes: $all[.value:.value + $bs]})
           ')
 
           echo "linux_batches=$BATCHES" >> "$GITHUB_OUTPUT"
@@ -160,7 +157,6 @@ jobs:
     needs: build
     if: needs.build.outputs.has_linux_batches == 'true'
     runs-on: ubuntu-latest
-    continue-on-error: true
     timeout-minutes: 60
     strategy:
       fail-fast: false
@@ -287,7 +283,6 @@ jobs:
     needs: build
     if: needs.build.outputs.has_linux_batches == 'true'
     runs-on: ubuntu-24.04-arm
-    continue-on-error: true
     timeout-minutes: 60
     strategy:
       fail-fast: false
@@ -413,7 +408,6 @@ jobs:
     needs: build
     if: needs.build.outputs.has_linux_batches == 'true'
     runs-on: macos-14
-    continue-on-error: true
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
@@ -504,7 +498,6 @@ jobs:
     needs: build
     if: needs.build.outputs.has_linux_batches == 'true'
     runs-on: macos-15-intel
-    continue-on-error: true
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2

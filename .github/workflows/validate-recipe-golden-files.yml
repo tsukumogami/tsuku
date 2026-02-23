@@ -189,7 +189,7 @@ jobs:
             . as $all |
             [range(0; length; $bs)] |
             to_entries |
-            map({batch_id: .key, recipes: $all[.value:.value + $bs]})
+            map({batch_id: (.key + 1), recipes: $all[.value:.value + $bs]})
           ')
 
           echo "batches=$BATCHES" >> $GITHUB_OUTPUT

@@ -1,10 +1,7 @@
 {
   "batch_sizes": {
-    "test-changed-recipes": {
-      "linux": 15
-    },
     "test-recipe": {
-      "linux": 5
+      "linux": 3
     },
     "validate-golden-recipes": {
       "default": 20
