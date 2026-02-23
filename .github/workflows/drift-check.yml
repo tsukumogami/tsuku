@@ -52,7 +52,7 @@ jobs:
           # Pattern matches container image references for the five families managed
           # by container-images.json. Any non-excluded match means a hardcoded image
           # that should read from the config file instead.
-          PATTERN='(debian:(bookworm|bullseye|buster|sid|stretch)|fedora:[0-9]|archlinux:(base|latest)|alpine:[0-9]|opensuse/(leap|tumbleweed))'
+          PATTERN='(debian:(bookworm|bullseye|buster|sid|stretch)|fedora:[0-9]|archlinux:(base|latest)|alpine:[0-9]|opensuse/leap:[0-9])'
 
           # Known exceptions: each entry is a grep -v pattern applied to the
           # "file:line_number:content" output. Add new exceptions here with a

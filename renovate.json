@@ -5,9 +5,10 @@
       "customType": "regex",
       "managerFilePatterns": ["container-images.json"],
       "matchStrings": [
-        "\"(?<depName>[a-z][a-z0-9./-]+):\\s*(?<currentValue>[a-z0-9][a-z0-9._-]+)\""
+        "\"(?<depName>[a-z][a-z0-9./-]+):(?<currentValue>[a-z0-9][a-z0-9._-]+)(@(?<currentDigest>sha256:[a-f0-9]+))?\""
       ],
-      "datasourceTemplate": "docker"
+      "datasourceTemplate": "docker",
+      "autoReplaceStringTemplate": "\"{{depName}}:{{newValue}}{{#if newDigest}}@{{newDigest}}{{/if}}\""
     }
   ]
 }
