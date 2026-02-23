@@ -162,7 +162,7 @@ Total scenarios: 18
 - `grep -q 'GITHUB_STEP_SUMMARY' .github/workflows/test-recipe.yml`
 - `grep -q 'gtimeout' .github/workflows/test-recipe.yml`
 **Expected**: No `docker run` calls remain. Both Linux jobs use sandbox calls with --target-family, --env GITHUB_TOKEN, and --json. The GITHUB_STEP_SUMMARY result table is preserved. macOS jobs retain `gtimeout` (unchanged). The `container-images.json` lookup and `.tsuku-exit-code` marker file pattern are removed. `continue-on-error: true` remains on Linux jobs.
-**Status**: pending
+**Status**: passed
 
 ---
 

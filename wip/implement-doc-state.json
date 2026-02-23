@@ -3,7 +3,7 @@
   "design_doc": "docs/designs/DESIGN-sandbox-ci-integration.md",
   "branch": "docs/sandbox-ci-integration",
   "pr_number": 1935,
-  "integrity_hash": "sha256:d587993501248fb490288fd46e4f2bd7cab9b6a1948766d12c7d23f620859572",
+  "integrity_hash": "sha256:e1eae40b589ca8565bea284bab2650438e51c37f0633aafd33a4e91feb88fc5d",
   "issues": [
     {
       "number": 1942,
@@ -143,7 +143,7 @@
     {
       "number": 1944,
       "title": "feat(sandbox): add --json flag for structured sandbox output",
-      "status": "pushed",
+      "status": "completed",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
       "issue_type": "code",
@@ -209,18 +209,60 @@
     {
       "number": 1945,
       "title": "ci(workflows): migrate test-recipe.yml Linux jobs to sandbox",
-      "status": "pending",
+      "status": "pushed",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [
         1942,
         1943,
         1944
       ],
-      "commits": [],
-      "agent_type": "",
-      "summary": null,
+      "commits": [
+        "875d207afb412d33b450b84412a0df4ce8a173db"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          ".github/workflows/test-recipe.yml"
+        ],
+        "tests_added": 0,
+        "key_decisions": "Workflow-only change. Simplified iteration from indexed array to direct value iteration since IMAGES parallel array is no longer needed.",
+        "requirements_map": {
+          "total": 12,
+          "implemented": 12,
+          "deferred": 0,
+          "dropped": 0
+        }
+      },
+      "reviewer_results": {
+        "issue": 1945,
+        "round": 1,
+        "reviews": [
+          {
+            "reviewer": "pragmatic",
+            "blocking_count": 0,
+            "advisory_count": 0,
+            "detail_file": "wip/research/implement-doc_review_pragmatic_issue1945.md"
+          },
+          {
+            "reviewer": "architect",
+            "blocking_count": 0,
+            "advisory_count": 0,
+            "detail_file": "wip/research/implement-doc_review_architect_issue1945.md"
+          },
+          {
+            "reviewer": "maintainer",
+            "blocking_count": 0,
+            "advisory_count": 2,
+            "detail_file": "wip/research/implement-doc_review_maintainer_issue1945.md"
+          }
+        ],
+        "total_blocking": 0,
+        "total_advisory": 2,
+        "verdict": "pass"
+      },
       "testable_scenarios": [
         "scenario-14"
       ]
