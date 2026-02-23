@@ -1,11 +1,65 @@
 package builders
 
 import (
+	"archive/zip"
+	"bytes"
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
+
+// buildMockModuleZIP creates an in-memory ZIP archive that mimics a Go module
+// proxy source ZIP. Each entry in files is a path relative to the module root
+// (e.g., "cmd/mytool/main.go"). The ZIP uses the standard Go module proxy
+// layout: "{module}@{version}/{relative_path}".
+func buildMockModuleZIP(t *testing.T, modulePath, version string, files []string) []byte {
+	t.Helper()
+	var buf bytes.Buffer
+	w := zip.NewWriter(&buf)
+
+	prefix := modulePath + "@" + version + "/"
+	for _, f := range files {
+		fw, err := w.Create(prefix + f)
+		if err != nil {
+			t.Fatalf("failed to create ZIP entry %q: %v", f, err)
+		}
+		// Write a minimal Go file placeholder. The builder only checks
+		// file names in the directory listing, not file contents.
+		_, _ = fw.Write([]byte("package main\n"))
+	}
+
+	if err := w.Close(); err != nil {
+		t.Fatalf("failed to close ZIP writer: %v", err)
+	}
+	return buf.Bytes()
+}
+
+// goProxyHandler returns an HTTP handler that serves Go proxy responses.
+// latestJSON is the @latest response body. zipData is the optional module ZIP.
+// modulePath is the original (unencoded) module path; the handler encodes it
+// to match proxy URL conventions.
+func goProxyHandler(encodedPath, version, latestJSON string, zipData []byte) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/" + encodedPath + "/@latest":
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte(latestJSON))
+		case "/" + encodedPath + "/@v/" + version + ".zip":
+			if zipData != nil {
+				w.Header().Set("Content-Type", "application/zip")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(zipData)
+			} else {
+				w.WriteHeader(http.StatusNotFound)
+			}
+		default:
+			w.WriteHeader(http.StatusNotFound)
+		}
+	}
+}
 
 func TestGoBuilder_Name(t *testing.T) {
 	builder := NewGoBuilder(nil)
@@ -93,23 +147,25 @@ func TestGoBuilder_CanBuild_Gone(t *testing.T) {
 }
 
 func TestGoBuilder_Build_SimpleModule(t *testing.T) {
-	response := `{"Version":"v0.40.0","Time":"2024-01-15T10:30:00Z"}`
+	// Module without cmd/ dirs -- proxy scan returns nothing, falls back to heuristic
+	modulePath := "github.com/jesseduffield/lazygit"
+	version := "v0.40.0"
+	latestJSON := `{"Version":"v0.40.0","Time":"2024-01-15T10:30:00Z"}`
 
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/github.com/jesseduffield/lazygit/@latest" {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusOK)
-			_, _ = w.Write([]byte(response))
-		} else {
-			w.WriteHeader(http.StatusNotFound)
-		}
-	}))
+	zipData := buildMockModuleZIP(t, modulePath, version, []string{
+		"main.go",
+		"pkg/config/config.go",
+	})
+
+	server := httptest.NewServer(goProxyHandler(
+		"github.com/jesseduffield/lazygit", version, latestJSON, zipData,
+	))
 	defer server.Close()
 
 	builder := NewGoBuilderWithBaseURL(nil, server.URL)
 	ctx := context.Background()
 
-	result, err := builder.Build(ctx, BuildRequest{Package: "github.com/jesseduffield/lazygit"})
+	result, err := builder.Build(ctx, BuildRequest{Package: modulePath})
 	if err != nil {
 		t.Fatalf("Build() error = %v", err)
 	}
@@ -120,7 +176,7 @@ func TestGoBuilder_Build_SimpleModule(t *testing.T) {
 	}
 
 	// Verify Go-specific recipe structure using helper
-	verifyGoRecipe(t, result, "lazygit", "github.com/jesseduffield/lazygit")
+	verifyGoRecipe(t, result, "lazygit", modulePath)
 }
 
 // verifyGoRecipe is a helper that validates Go builder recipe structure
@@ -169,10 +225,10 @@ func verifyGoRecipe(t *testing.T, result *BuildResult, expectedExe, modulePath s
 		t.Errorf("module param = %v, want %s", r.Steps[0].Params["module"], modulePath)
 	}
 
-	// Verify executables param
+	// Verify executables param contains the expected executable
 	executables, ok := r.Steps[0].Params["executables"].([]string)
-	if !ok || len(executables) != 1 || executables[0] != expectedExe {
-		t.Errorf("executables param = %v, want [%s]", r.Steps[0].Params["executables"], expectedExe)
+	if !ok || len(executables) < 1 || executables[0] != expectedExe {
+		t.Errorf("executables param = %v, want first element to be %s", r.Steps[0].Params["executables"], expectedExe)
 	}
 
 	// Verify command
@@ -187,64 +243,62 @@ func verifyGoRecipe(t *testing.T, result *BuildResult, expectedExe, modulePath s
 		t.Errorf("result.Source = %q, want %q", result.Source, wantSource)
 	}
 
-	// Should not have warnings for standard modules
+	// Should not have warnings when proxy scan found no cmd/ dirs (clean fallback)
 	if len(result.Warnings) != 0 {
 		t.Errorf("expected no warnings, got %v", result.Warnings)
 	}
 }
 
 func TestGoBuilder_Build_CmdSubpath(t *testing.T) {
-	response := `{"Version":"v1.55.0","Time":"2024-01-15T10:30:00Z"}`
+	// Module path includes cmd/ subpath -- proxy scan will 404, falls back to heuristic
+	modulePath := "github.com/golangci/golangci-lint/cmd/golangci-lint"
+	version := "v1.55.0"
+	latestJSON := `{"Version":"v1.55.0","Time":"2024-01-15T10:30:00Z"}`
 
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/github.com/golangci/golangci-lint/cmd/golangci-lint/@latest" {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusOK)
-			_, _ = w.Write([]byte(response))
-		} else {
-			w.WriteHeader(http.StatusNotFound)
-		}
-	}))
+	server := httptest.NewServer(goProxyHandler(
+		"github.com/golangci/golangci-lint/cmd/golangci-lint", version, latestJSON, nil,
+	))
 	defer server.Close()
 
 	builder := NewGoBuilderWithBaseURL(nil, server.URL)
 	ctx := context.Background()
 
-	result, err := builder.Build(ctx, BuildRequest{Package: "github.com/golangci/golangci-lint/cmd/golangci-lint"})
+	result, err := builder.Build(ctx, BuildRequest{Package: modulePath})
 	if err != nil {
 		t.Fatalf("Build() error = %v", err)
 	}
 
-	// Name should be last path segment (golangci-lint)
+	// Name should be last path segment (golangci-lint), via heuristic fallback
 	if result.Recipe.Metadata.Name != "golangci-lint" {
 		t.Errorf("Recipe.Metadata.Name = %q, want %q", result.Recipe.Metadata.Name, "golangci-lint")
 	}
 
 	// Module should be the full path
 	module, ok := result.Recipe.Steps[0].Params["module"].(string)
-	if !ok || module != "github.com/golangci/golangci-lint/cmd/golangci-lint" {
-		t.Errorf("module param = %v, want github.com/golangci/golangci-lint/cmd/golangci-lint", result.Recipe.Steps[0].Params["module"])
+	if !ok || module != modulePath {
+		t.Errorf("module param = %v, want %s", result.Recipe.Steps[0].Params["module"], modulePath)
 	}
 }
 
 func TestGoBuilder_Build_NonGitHubModule(t *testing.T) {
-	response := `{"Version":"v0.6.0","Time":"2024-01-15T10:30:00Z"}`
+	modulePath := "mvdan.cc/gofumpt"
+	version := "v0.6.0"
+	latestJSON := `{"Version":"v0.6.0","Time":"2024-01-15T10:30:00Z"}`
 
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/mvdan.cc/gofumpt/@latest" {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusOK)
-			_, _ = w.Write([]byte(response))
-		} else {
-			w.WriteHeader(http.StatusNotFound)
-		}
-	}))
+	// Serve an empty ZIP (no cmd/ dirs)
+	zipData := buildMockModuleZIP(t, modulePath, version, []string{
+		"gofumpt.go",
+	})
+
+	server := httptest.NewServer(goProxyHandler(
+		"mvdan.cc/gofumpt", version, latestJSON, zipData,
+	))
 	defer server.Close()
 
 	builder := NewGoBuilderWithBaseURL(nil, server.URL)
 	ctx := context.Background()
 
-	result, err := builder.Build(ctx, BuildRequest{Package: "mvdan.cc/gofumpt"})
+	result, err := builder.Build(ctx, BuildRequest{Package: modulePath})
 	if err != nil {
 		t.Fatalf("Build() error = %v", err)
 	}
@@ -297,6 +351,345 @@ func TestGoBuilder_Build_InvalidModule(t *testing.T) {
 		t.Error("Build() should fail for invalid module path")
 	}
 }
+
+// --- Proxy binary discovery tests ---
+
+func TestGoBuilder_DiscoverBinariesFromProxy_SingleCmd(t *testing.T) {
+	// Module with a single cmd/ subdirectory (like golangci-lint root module)
+	modulePath := "github.com/golangci/golangci-lint"
+	version := "v1.55.0"
+	latestJSON := `{"Version":"v1.55.0","Time":"2024-01-15T10:30:00Z"}`
+
+	zipData := buildMockModuleZIP(t, modulePath, version, []string{
+		"go.mod",
+		"main.go",
+		"cmd/golangci-lint/main.go",
+		"pkg/lint/lint.go",
+	})
+
+	server := httptest.NewServer(goProxyHandler(
+		"github.com/golangci/golangci-lint", version, latestJSON, zipData,
+	))
+	defer server.Close()
+
+	builder := NewGoBuilderWithBaseURL(nil, server.URL)
+	ctx := context.Background()
+
+	result, err := builder.Build(ctx, BuildRequest{Package: modulePath})
+	if err != nil {
+		t.Fatalf("Build() error = %v", err)
+	}
+
+	// Should discover golangci-lint from cmd/ directory
+	if result.Recipe.Metadata.Name != "golangci-lint" {
+		t.Errorf("Recipe.Metadata.Name = %q, want %q", result.Recipe.Metadata.Name, "golangci-lint")
+	}
+
+	executables, ok := result.Recipe.Steps[0].Params["executables"].([]string)
+	if !ok {
+		t.Fatal("executables param is not []string")
+	}
+	if len(executables) != 1 || executables[0] != "golangci-lint" {
+		t.Errorf("executables = %v, want [golangci-lint]", executables)
+	}
+
+	// Should have no warnings (proxy scan succeeded)
+	if len(result.Warnings) != 0 {
+		t.Errorf("expected no warnings, got %v", result.Warnings)
+	}
+}
+
+func TestGoBuilder_DiscoverBinariesFromProxy_MultipleCmds(t *testing.T) {
+	// Module with multiple cmd/ subdirectories
+	modulePath := "github.com/owner/multi-tool"
+	version := "v2.0.0"
+	latestJSON := `{"Version":"v2.0.0","Time":"2024-01-15T10:30:00Z"}`
+
+	zipData := buildMockModuleZIP(t, modulePath, version, []string{
+		"go.mod",
+		"cmd/alpha/main.go",
+		"cmd/beta/main.go",
+		"cmd/gamma/main.go",
+		"internal/lib/lib.go",
+	})
+
+	server := httptest.NewServer(goProxyHandler(
+		"github.com/owner/multi-tool", version, latestJSON, zipData,
+	))
+	defer server.Close()
+
+	builder := NewGoBuilderWithBaseURL(nil, server.URL)
+	ctx := context.Background()
+
+	result, err := builder.Build(ctx, BuildRequest{Package: modulePath})
+	if err != nil {
+		t.Fatalf("Build() error = %v", err)
+	}
+
+	executables, ok := result.Recipe.Steps[0].Params["executables"].([]string)
+	if !ok {
+		t.Fatal("executables param is not []string")
+	}
+
+	// Should find all three, sorted alphabetically
+	if len(executables) != 3 {
+		t.Fatalf("len(executables) = %d, want 3", len(executables))
+	}
+	if executables[0] != "alpha" || executables[1] != "beta" || executables[2] != "gamma" {
+		t.Errorf("executables = %v, want [alpha beta gamma]", executables)
+	}
+
+	// Recipe name should be the first (alphabetically) executable
+	if result.Recipe.Metadata.Name != "alpha" {
+		t.Errorf("Recipe.Metadata.Name = %q, want %q", result.Recipe.Metadata.Name, "alpha")
+	}
+}
+
+func TestGoBuilder_DiscoverBinariesFromProxy_NoCmdDirs(t *testing.T) {
+	// Module with no cmd/ directories -- should fall back to heuristic
+	modulePath := "github.com/jesseduffield/lazygit"
+	version := "v0.40.0"
+	latestJSON := `{"Version":"v0.40.0","Time":"2024-01-15T10:30:00Z"}`
+
+	zipData := buildMockModuleZIP(t, modulePath, version, []string{
+		"go.mod",
+		"main.go",
+		"pkg/gui/gui.go",
+	})
+
+	server := httptest.NewServer(goProxyHandler(
+		"github.com/jesseduffield/lazygit", version, latestJSON, zipData,
+	))
+	defer server.Close()
+
+	builder := NewGoBuilderWithBaseURL(nil, server.URL)
+	ctx := context.Background()
+
+	result, err := builder.Build(ctx, BuildRequest{Package: modulePath})
+	if err != nil {
+		t.Fatalf("Build() error = %v", err)
+	}
+
+	// Falls back to heuristic (last segment)
+	if result.Recipe.Metadata.Name != "lazygit" {
+		t.Errorf("Recipe.Metadata.Name = %q, want %q", result.Recipe.Metadata.Name, "lazygit")
+	}
+
+	// No warnings -- proxy scan succeeded but found nothing (clean fallback)
+	if len(result.Warnings) != 0 {
+		t.Errorf("expected no warnings, got %v", result.Warnings)
+	}
+}
+
+func TestGoBuilder_DiscoverBinariesFromProxy_ProxyNon200(t *testing.T) {
+	// Proxy returns non-200 for the ZIP -- should fall back with warning
+	modulePath := "github.com/jesseduffield/lazygit"
+	latestJSON := `{"Version":"v0.40.0","Time":"2024-01-15T10:30:00Z"}`
+
+	server := httptest.NewServer(goProxyHandler(
+		"github.com/jesseduffield/lazygit", "v0.40.0", latestJSON, nil, // nil ZIP = 404
+	))
+	defer server.Close()
+
+	builder := NewGoBuilderWithBaseURL(nil, server.URL)
+	ctx := context.Background()
+
+	result, err := builder.Build(ctx, BuildRequest{Package: modulePath})
+	if err != nil {
+		t.Fatalf("Build() error = %v", err)
+	}
+
+	// Falls back to heuristic
+	if result.Recipe.Metadata.Name != "lazygit" {
+		t.Errorf("Recipe.Metadata.Name = %q, want %q", result.Recipe.Metadata.Name, "lazygit")
+	}
+
+	// Should have a warning about proxy scan failure
+	foundWarning := false
+	for _, w := range result.Warnings {
+		if strings.Contains(w, "falling back to path heuristic") {
+			foundWarning = true
+			break
+		}
+	}
+	if !foundWarning {
+		t.Errorf("expected fallback warning, got warnings: %v", result.Warnings)
+	}
+}
+
+func TestGoBuilder_DiscoverBinariesFromProxy_InvalidNames(t *testing.T) {
+	// Module with cmd/ directories that have invalid executable names
+	modulePath := "github.com/owner/tool"
+	version := "v1.0.0"
+	latestJSON := `{"Version":"v1.0.0","Time":"2024-01-15T10:30:00Z"}`
+
+	zipData := buildMockModuleZIP(t, modulePath, version, []string{
+		"go.mod",
+		"cmd/valid-tool/main.go",
+		"cmd/;injection/main.go",  // invalid: shell metachar
+		"cmd/$badname/main.go",    // invalid: shell metachar
+		"cmd/good_tool_2/main.go", // valid
+	})
+
+	server := httptest.NewServer(goProxyHandler(
+		"github.com/owner/tool", version, latestJSON, zipData,
+	))
+	defer server.Close()
+
+	builder := NewGoBuilderWithBaseURL(nil, server.URL)
+	ctx := context.Background()
+
+	result, err := builder.Build(ctx, BuildRequest{Package: modulePath})
+	if err != nil {
+		t.Fatalf("Build() error = %v", err)
+	}
+
+	executables, ok := result.Recipe.Steps[0].Params["executables"].([]string)
+	if !ok {
+		t.Fatal("executables param is not []string")
+	}
+
+	// Only the two valid names should be present, sorted
+	if len(executables) != 2 {
+		t.Fatalf("len(executables) = %d, want 2; got %v", len(executables), executables)
+	}
+	if executables[0] != "good_tool_2" || executables[1] != "valid-tool" {
+		t.Errorf("executables = %v, want [good_tool_2 valid-tool]", executables)
+	}
+}
+
+func TestGoBuilder_DiscoverBinariesFromProxy_ZIPExceedsSizeLimit(t *testing.T) {
+	// Proxy returns a ZIP that exceeds the size limit
+	modulePath := "github.com/owner/bigmodule"
+	latestJSON := `{"Version":"v1.0.0","Time":"2024-01-15T10:30:00Z"}`
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/github.com/owner/bigmodule/@latest":
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte(latestJSON))
+		case "/github.com/owner/bigmodule/@v/v1.0.0.zip":
+			w.Header().Set("Content-Type", "application/zip")
+			w.WriteHeader(http.StatusOK)
+			// Write more than maxGoModuleZIPSize + 1 bytes.
+			_, _ = w.Write(make([]byte, maxGoModuleZIPSize+2))
+		default:
+			w.WriteHeader(http.StatusNotFound)
+		}
+	}))
+	defer server.Close()
+
+	builder := NewGoBuilderWithBaseURL(nil, server.URL)
+	ctx := context.Background()
+
+	result, err := builder.Build(ctx, BuildRequest{Package: modulePath})
+	if err != nil {
+		t.Fatalf("Build() error = %v", err)
+	}
+
+	// Falls back to heuristic due to oversized ZIP
+	if result.Recipe.Metadata.Name != "bigmodule" {
+		t.Errorf("Recipe.Metadata.Name = %q, want %q", result.Recipe.Metadata.Name, "bigmodule")
+	}
+
+	// Should have a warning about size limit
+	foundWarning := false
+	for _, w := range result.Warnings {
+		if strings.Contains(w, "exceeds maximum size") {
+			foundWarning = true
+			break
+		}
+	}
+	if !foundWarning {
+		t.Errorf("expected size limit warning, got warnings: %v", result.Warnings)
+	}
+}
+
+func TestGoBuilder_DiscoverBinariesFromProxy_NestedCmdIgnored(t *testing.T) {
+	// cmd/ entries deeper than one level should be ignored
+	modulePath := "github.com/owner/tool"
+	version := "v1.0.0"
+	latestJSON := `{"Version":"v1.0.0","Time":"2024-01-15T10:30:00Z"}`
+
+	zipData := buildMockModuleZIP(t, modulePath, version, []string{
+		"go.mod",
+		"cmd/mytool/main.go",             // valid: exactly one level
+		"cmd/nested/sub/main.go",         // ignored: two levels deep
+		"cmd/another/pkg/helper/main.go", // ignored: three levels deep
+	})
+
+	server := httptest.NewServer(goProxyHandler(
+		"github.com/owner/tool", version, latestJSON, zipData,
+	))
+	defer server.Close()
+
+	builder := NewGoBuilderWithBaseURL(nil, server.URL)
+	ctx := context.Background()
+
+	result, err := builder.Build(ctx, BuildRequest{Package: modulePath})
+	if err != nil {
+		t.Fatalf("Build() error = %v", err)
+	}
+
+	executables, ok := result.Recipe.Steps[0].Params["executables"].([]string)
+	if !ok {
+		t.Fatal("executables param is not []string")
+	}
+
+	// Only the direct cmd/ child should be found
+	if len(executables) != 1 || executables[0] != "mytool" {
+		t.Errorf("executables = %v, want [mytool]", executables)
+	}
+}
+
+func TestGoBuilder_DiscoverBinariesFromProxy_CmdWithoutMainGo(t *testing.T) {
+	// cmd/ directories without main.go should be ignored
+	modulePath := "github.com/owner/tool"
+	version := "v1.0.0"
+	latestJSON := `{"Version":"v1.0.0","Time":"2024-01-15T10:30:00Z"}`
+
+	zipData := buildMockModuleZIP(t, modulePath, version, []string{
+		"go.mod",
+		"cmd/real/main.go",       // valid
+		"cmd/lib/helper.go",      // not main.go
+		"cmd/another/another.go", // not main.go
+	})
+
+	server := httptest.NewServer(goProxyHandler(
+		"github.com/owner/tool", version, latestJSON, zipData,
+	))
+	defer server.Close()
+
+	builder := NewGoBuilderWithBaseURL(nil, server.URL)
+	ctx := context.Background()
+
+	result, err := builder.Build(ctx, BuildRequest{Package: modulePath})
+	if err != nil {
+		t.Fatalf("Build() error = %v", err)
+	}
+
+	executables, ok := result.Recipe.Steps[0].Params["executables"].([]string)
+	if !ok {
+		t.Fatal("executables param is not []string")
+	}
+
+	if len(executables) != 1 || executables[0] != "real" {
+		t.Errorf("executables = %v, want [real]", executables)
+	}
+}
+
+func TestGoBuilder_NotBinaryNameProvider(t *testing.T) {
+	// GoBuilder must NOT implement BinaryNameProvider since its discovery
+	// is heuristic-based, not authoritative.
+	builder := NewGoBuilder(nil)
+	_, ok := interface{}(builder).(BinaryNameProvider)
+	if ok {
+		t.Error("GoBuilder should not implement BinaryNameProvider")
+	}
+}
+
+// --- Existing unit tests (unchanged logic) ---
 
 func TestIsValidGoModule(t *testing.T) {
 	tests := []struct {
