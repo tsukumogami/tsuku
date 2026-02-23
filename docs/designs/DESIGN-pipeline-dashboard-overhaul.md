@@ -41,8 +41,8 @@ Planned
 | ~~_Add `ByEcosystem` field to `QueueStatus` in `computeQueueStatus()`, aggregating entry counts per ecosystem per status. This provides the data the Ecosystem Pipeline widget and validation tests need._~~ | | |
 | ~~[#1929: feat(dashboard): split pipeline health into three focused widgets](https://github.com/tsukumogami/tsuku/issues/1929)~~ | [#1928](https://github.com/tsukumogami/tsuku/issues/1928) | testable |
 | ~~_Restructure `index.html` Pipeline Health into three widgets: Pipeline Health (pipeline-level), Ecosystem Health (circuit breaker details from existing data), and Ecosystem Pipeline (per-ecosystem counts from the new `by_ecosystem` field)._~~ | | |
-| [#1930: fix(dashboard): improve recent runs and recent failures readability](https://github.com/tsukumogami/tsuku/issues/1930) | [#1929](https://github.com/tsukumogami/tsuku/issues/1929) | testable |
-| _Replace raw batch IDs with ET-formatted timestamps, add ecosystem badges to Recent Runs, add ecosystem column and clickable packages to Recent Failures. All CSS/JS changes in `index.html`._ | | |
+| ~~[#1930: fix(dashboard): improve recent runs and recent failures readability](https://github.com/tsukumogami/tsuku/issues/1930)~~ | [#1929](https://github.com/tsukumogami/tsuku/issues/1929) | testable |
+| ~~_Replace raw batch IDs with ET-formatted timestamps, add ecosystem badges to Recent Runs, add ecosystem column and clickable packages to Recent Failures. All CSS/JS changes in `index.html`._~~ | | |
 | [#1931: fix(dashboard): normalize batch IDs and populate failure detail fields](https://github.com/tsukumogami/tsuku/issues/1931) | [#1928](https://github.com/tsukumogami/tsuku/issues/1928) | testable |
 | _Fix Go-side data generation: normalize `health.last_run.batch_id` format, strip `batch-` prefix from failure details, and populate `message` and `workflow_url` fields from JSONL source data. Runs parallel to frontend work._ | | |
 | [#1933: fix(dashboard): resolve HTML bugs from QA audit](https://github.com/tsukumogami/tsuku/issues/1933) | [#1930](https://github.com/tsukumogami/tsuku/issues/1930), [#1931](https://github.com/tsukumogami/tsuku/issues/1931) | testable |
@@ -84,8 +84,8 @@ graph TD
     classDef needsDesign fill:#e1bee7
     classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
 
-    class I1927,I1928,I1929 done
-    class I1931,I1930 ready
+    class I1927,I1928,I1929,I1930 done
+    class I1931 ready
     class I1933,I1932 blocked
 ```
 
