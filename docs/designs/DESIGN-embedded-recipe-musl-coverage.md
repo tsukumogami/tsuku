@@ -38,8 +38,8 @@ rationale: |
 
 | Issue | Dependencies | Tier |
 |-------|--------------|------|
-| [#1912: fix(recipes): add musl fallback to rust, python-standalone, and perl embedded recipes](https://github.com/tsukumogami/tsuku/issues/1912) | None | testable |
-| _Adds `apk_install` musl paths and glibc `when` clause guards to the three straightforward embedded recipes. Establishes the pattern that the remaining recipes follow._ | | |
+| ~~[#1912: fix(recipes): add musl fallback to rust, python-standalone, and perl embedded recipes](https://github.com/tsukumogami/tsuku/issues/1912)~~ | ~~None~~ | ~~testable~~ |
+| ~~_Adds `apk_install` musl paths and glibc `when` clause guards to the three straightforward embedded recipes. Establishes the pattern that the remaining recipes follow._~~ | | |
 | [#1913: fix(recipes): add musl fallback to patchelf embedded recipe](https://github.com/tsukumogami/tsuku/issues/1913) | None | testable |
 | _Restructures patchelf from a single unconditional `homebrew` step into three platform paths (glibc, musl, darwin). Patchelf won't be invoked on musl, but must install successfully as a declared dependency._ | | |
 | [#1914: fix(recipes): add musl fallback to nodejs and ruby embedded recipes](https://github.com/tsukumogami/tsuku/issues/1914) | None | testable |
@@ -77,7 +77,8 @@ graph LR
     classDef needsDesign fill:#e1bee7
     classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
 
-    class I1912,I1913,I1914,I1916 ready
+    class I1912 done
+    class I1913,I1914,I1916 ready
     class I1915 blocked
 ```
 
