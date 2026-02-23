@@ -938,17 +938,6 @@
                 }).join('') || '<div class="no-data">No current failures</div>';
 
             // Render recent runs (clickable, link to run.html?id=)
-            function compactEcosystem(run) {
-                // Backward compat: old format has ecosystem string, new has ecosystems object
-                if (run.ecosystems && typeof run.ecosystems === 'object') {
-                    const keys = Object.keys(run.ecosystems);
-                    if (keys.length === 0) return '';
-                    if (keys.length === 1) return keys[0];
-                    return keys.length + ' eco';
-                }
-                return run.ecosystem || '';
-            }
-
             const runItems = (data.runs || []).slice(0, 10).map(run => {
                 // Format timestamp in ET, split into date and time
                 let dateHtml = '';
