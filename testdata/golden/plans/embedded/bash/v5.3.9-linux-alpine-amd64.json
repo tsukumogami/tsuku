@@ -1,0 +1,27 @@
+{
+  "format_version": 5,
+  "tool": "bash",
+  "version": "5.3.9",
+  "platform": {
+    "os": "linux",
+    "arch": "amd64",
+    "linux_family": "alpine"
+  },
+  "deterministic": false,
+  "steps": [
+    {
+      "action": "apk_install",
+      "params": {
+        "packages": [
+          "bash"
+        ]
+      },
+      "evaluable": false,
+      "deterministic": false
+    }
+  ],
+  "verify": {
+    "command": "bash --version",
+    "pattern": "GNU bash, version {version}"
+  }
+}

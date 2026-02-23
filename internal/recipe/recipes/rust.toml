@@ -41,14 +41,10 @@ outputs = ["bin/cargo", "bin/rustc", "bin/rustdoc", "bin/rustfmt", "bin/cargo-cl
 install_mode = "directory"
 when = { os = ["linux"], libc = ["glibc"] }
 
-# Alpine/musl Linux: Install bash (needed by Rust's install.sh) and download musl binaries
+# Alpine/musl Linux: Download musl-linked binaries from static.rust-lang.org
+# Depends on bash because Rust's install.sh requires #!/usr/bin/env bash.
 # TODO(#1948): Switch from linux_family = "alpine" to libc = ["musl"] once the
 # family policy analyzer supports libc-based constraints.
-[[steps]]
-action = "apk_install"
-packages = ["bash"]
-when = { os = ["linux"], linux_family = "alpine" }
-
 [[steps]]
 action = "download"
 url = "https://static.rust-lang.org/dist/rust-{version}-{arch}-{os}.tar.gz"
@@ -70,6 +66,7 @@ when = { os = ["linux"], linux_family = "alpine" }
 action = "run_command"
 command = "./install.sh --prefix={install_dir} --disable-ldconfig"
 description = "Running Rust installer to set up toolchain"
+dependencies = ["bash"]
 when = { os = ["linux"], linux_family = "alpine" }
 
 [[steps]]

@@ -4,8 +4,7 @@
   "version": "1.93.1",
   "platform": {
     "os": "linux",
-    "arch": "amd64",
-    "linux_family": "debian"
+    "arch": "amd64"
   },
   "deterministic": false,
   "steps": [

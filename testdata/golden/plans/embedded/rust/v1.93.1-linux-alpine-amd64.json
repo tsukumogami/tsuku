@@ -4,21 +4,32 @@
   "version": "1.93.1",
   "platform": {
     "os": "linux",
-    "arch": "amd64",
-    "linux_family": "alpine"
+    "arch": "amd64"
   },
   "deterministic": false,
-  "steps": [
+  "dependencies": [
     {
-      "action": "apk_install",
-      "params": {
-        "packages": [
-          "bash"
-        ]
-      },
-      "evaluable": false,
-      "deterministic": false
-    },
+      "tool": "bash",
+      "version": "5.3.9",
+      "steps": [
+        {
+          "action": "apk_install",
+          "params": {
+            "packages": [
+              "bash"
+            ]
+          },
+          "evaluable": false,
+          "deterministic": false
+        }
+      ],
+      "verify": {
+        "command": "bash --version",
+        "pattern": "GNU bash, version {version}"
+      }
+    }
+  ],
+  "steps": [
     {
       "action": "download_file",
       "params": {
