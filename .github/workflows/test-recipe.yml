@@ -156,7 +156,7 @@ jobs:
   # all share a download cache via symlink so large downloads (e.g., Rust toolchain)
   # are fetched once and reused across families and recipes.
   test-linux-x86_64:
-    name: "Linux x86_64 (batch ${{ matrix.batch.batch_id + 1 }}/${{ needs.build.outputs.batch_count }})"
+    name: "Linux x86_64 (batch ${{ matrix.batch.batch_id }}/${{ needs.build.outputs.batch_count }})"
     needs: build
     if: needs.build.outputs.has_linux_batches == 'true'
     runs-on: ubuntu-latest
@@ -261,7 +261,7 @@ jobs:
 
           # Write job summary
           {
-            echo "### Linux x86_64 (batch ${{ matrix.batch.batch_id + 1 }}) Results"
+            echo "### Linux x86_64 (batch ${{ matrix.batch.batch_id }}) Results"
             echo ""
             echo "Passed: $PASSED / $TOTAL"
             echo ""
@@ -276,14 +276,14 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
           if [ "$FAILED" -gt 0 ]; then
-            echo "::warning::$FAILED of $TOTAL tests failed on Linux x86_64 (batch ${{ matrix.batch.batch_id + 1 }})"
+            echo "::warning::$FAILED of $TOTAL tests failed on Linux x86_64 (batch ${{ matrix.batch.batch_id }})"
             exit 1
           fi
 
   # Linux arm64: test in sandbox containers for four families (no arch arm64 image).
   # Same batched parallel-families approach as x86_64.
   test-linux-arm64:
-    name: "Linux arm64 (batch ${{ matrix.batch.batch_id + 1 }}/${{ needs.build.outputs.batch_count }})"
+    name: "Linux arm64 (batch ${{ matrix.batch.batch_id }}/${{ needs.build.outputs.batch_count }})"
     needs: build
     if: needs.build.outputs.has_linux_batches == 'true'
     runs-on: ubuntu-24.04-arm
@@ -389,7 +389,7 @@ jobs:
 
           # Write job summary
           {
-            echo "### Linux arm64 (batch ${{ matrix.batch.batch_id + 1 }}) Results"
+            echo "### Linux arm64 (batch ${{ matrix.batch.batch_id }}) Results"
             echo ""
             echo "Passed: $PASSED / $TOTAL"
             echo ""
@@ -404,7 +404,7 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
           if [ "$FAILED" -gt 0 ]; then
-            echo "::warning::$FAILED of $TOTAL tests failed on Linux arm64 (batch ${{ matrix.batch.batch_id + 1 }})"
+            echo "::warning::$FAILED of $TOTAL tests failed on Linux arm64 (batch ${{ matrix.batch.batch_id }})"
             exit 1
           fi
 
