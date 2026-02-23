@@ -468,8 +468,11 @@ func augmentWithInfrastructurePackages(
 		sysReqs.Packages = make(map[string][]string)
 	}
 
-	// Add infrastructure packages with family-appropriate names
+	// Add infrastructure packages with family-appropriate names.
+	// Core packages are always added — they cover utilities like tar/gzip that
+	// most base images include but some (e.g., opensuse/leap) do not.
 	var infraPkgs []string
+	infraPkgs = append(infraPkgs, infrastructurePackages(pm, "core")...)
 	if needsNetwork {
 		infraPkgs = append(infraPkgs, infrastructurePackages(pm, "network")...)
 	}
@@ -485,6 +488,14 @@ func augmentWithInfrastructurePackages(
 // based on the package manager.
 func infrastructurePackages(pm string, category string) []string {
 	switch category {
+	case "core":
+		// Archive utilities needed for extracting downloaded tarballs.
+		// Most base images include tar/gzip, but opensuse/leap does not.
+		switch pm {
+		case "zypper":
+			return []string{"tar", "gzip"}
+		}
+		return nil
 	case "network":
 		// ca-certificates and curl are named the same across most distros
 		return []string{"ca-certificates", "curl"}
