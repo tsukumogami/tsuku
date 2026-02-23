@@ -41,11 +41,35 @@ outputs = ["bin/cargo", "bin/rustc", "bin/rustdoc", "bin/rustfmt", "bin/cargo-cl
 install_mode = "directory"
 when = { os = ["linux"], libc = ["glibc"] }
 
-# musl Linux: System packages (apk handles transitive deps)
+# Alpine/musl Linux: Download musl-linked binaries from static.rust-lang.org
 [[steps]]
-action = "apk_install"
-packages = ["rust", "cargo"]
-when = { os = ["linux"], libc = ["musl"] }
+action = "download"
+url = "https://static.rust-lang.org/dist/rust-{version}-{arch}-{os}.tar.gz"
+checksum_url = "https://static.rust-lang.org/dist/rust-{version}-{arch}-{os}.tar.gz.sha256"
+os_mapping = { linux = "unknown-linux-musl" }
+arch_mapping = { amd64 = "x86_64", arm64 = "aarch64" }
+when = { os = ["linux"], linux_family = "alpine" }
+
+[[steps]]
+action = "extract"
+archive = "rust-{version}-{arch}-{os}.tar.gz"
+format = "tar.gz"
+strip_dirs = 1
+os_mapping = { linux = "unknown-linux-musl" }
+arch_mapping = { amd64 = "x86_64", arm64 = "aarch64" }
+when = { os = ["linux"], linux_family = "alpine" }
+
+[[steps]]
+action = "run_command"
+command = "./install.sh --prefix={install_dir} --disable-ldconfig"
+description = "Running Rust installer to set up toolchain"
+when = { os = ["linux"], linux_family = "alpine" }
+
+[[steps]]
+action = "install_binaries"
+outputs = ["bin/cargo", "bin/rustc", "bin/rustdoc", "bin/rustfmt", "bin/cargo-clippy", "bin/clippy-driver", "bin/rust-analyzer"]
+install_mode = "directory"
+when = { os = ["linux"], linux_family = "alpine" }
 
 # macOS: Download pre-built binaries from static.rust-lang.org
 [[steps]]

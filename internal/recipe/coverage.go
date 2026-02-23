@@ -65,22 +65,26 @@ func AnalyzeRecipeCoverage(r *Recipe) CoverageReport {
 	}
 
 	// Structural musl coverage check: detect platform-specific download actions
-	// without libc-scoped when clauses and no apk_install fallback.
+	// without libc-scoped when clauses and no musl fallback (apk_install or
+	// musl-scoped download steps).
 	muslDeclared := slices.Contains(report.SupportedLibc, "musl")
 	if !muslDeclared {
-		hasApkInstall := false
+		hasMuslPath := false
 		hasUnguardedGlibcAction := false
 		for _, step := range r.Steps {
 			if step.Action == "apk_install" {
-				hasApkInstall = true
+				hasMuslPath = true
+			}
+			if hasMuslLibcWhenClause(step) {
+				hasMuslPath = true
 			}
 			if isGlibcBoundAction(step.Action) && !hasLibcWhenClause(step) {
 				hasUnguardedGlibcAction = true
 			}
 		}
-		if hasUnguardedGlibcAction && !hasApkInstall {
+		if hasUnguardedGlibcAction && !hasMuslPath {
 			report.Warnings = append(report.Warnings,
-				fmt.Sprintf("recipe '%s' has platform-specific actions without libc when clauses and no apk_install fallback",
+				fmt.Sprintf("recipe '%s' has platform-specific actions without libc when clauses and no musl fallback",
 					r.Metadata.Name))
 		}
 	}
@@ -216,6 +220,21 @@ func isGlibcBoundAction(action string) bool {
 // hasLibcWhenClause returns true when a step's when clause includes a libc filter.
 func hasLibcWhenClause(step Step) bool {
 	return step.When != nil && len(step.When.Libc) > 0
+}
+
+// hasMuslLibcWhenClause returns true when a step's when clause targets musl specifically.
+// This includes explicit libc = ["musl"] or linux_family = "alpine" (the only musl family).
+func hasMuslLibcWhenClause(step Step) bool {
+	if step.When == nil {
+		return false
+	}
+	if slices.Contains(step.When.Libc, "musl") {
+		return true
+	}
+	if step.When.LinuxFamily == "alpine" {
+		return true
+	}
+	return false
 }
 
 // hasLibraryDependencies returns true if the recipe has any library dependencies.

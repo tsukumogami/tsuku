@@ -533,7 +533,7 @@ func TestAnalyzeRecipeCoverage_UnguardedDownloadNoApkInstall(t *testing.T) {
 
 	hasMuslWarning := false
 	for _, w := range report.Warnings {
-		if w == "recipe 'broken-tool' has platform-specific actions without libc when clauses and no apk_install fallback" {
+		if w == "recipe 'broken-tool' has platform-specific actions without libc when clauses and no musl fallback" {
 			hasMuslWarning = true
 			break
 		}
@@ -562,7 +562,7 @@ func TestAnalyzeRecipeCoverage_GuardedDownloadWithApkInstall(t *testing.T) {
 	report := AnalyzeRecipeCoverage(r)
 
 	for _, w := range report.Warnings {
-		if w == "recipe 'good-tool' has platform-specific actions without libc when clauses and no apk_install fallback" {
+		if w == "recipe 'good-tool' has platform-specific actions without libc when clauses and no musl fallback" {
 			t.Errorf("unexpected musl coverage warning for guarded download with apk_install: %v", report.Warnings)
 		}
 	}
@@ -586,7 +586,7 @@ func TestAnalyzeRecipeCoverage_UnguardedDownloadWithSupportedLibc(t *testing.T) 
 	report := AnalyzeRecipeCoverage(r)
 
 	for _, w := range report.Warnings {
-		if w == "recipe 'static-tool' has platform-specific actions without libc when clauses and no apk_install fallback" {
+		if w == "recipe 'static-tool' has platform-specific actions without libc when clauses and no musl fallback" {
 			t.Errorf("unexpected musl coverage warning for recipe with supported_libc: %v", report.Warnings)
 		}
 	}
@@ -608,7 +608,7 @@ func TestAnalyzeRecipeCoverage_UnguardedHomebrewNoApkInstall(t *testing.T) {
 
 	hasMuslWarning := false
 	for _, w := range report.Warnings {
-		if w == "recipe 'brew-only-tool' has platform-specific actions without libc when clauses and no apk_install fallback" {
+		if w == "recipe 'brew-only-tool' has platform-specific actions without libc when clauses and no musl fallback" {
 			hasMuslWarning = true
 			break
 		}
