@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-02-23T03:14:18Z",
+  "generated_at": "2026-02-23T03:42:20Z",
   "total_recipes": 350,
   "summary": {
     "by_platform": {
@@ -45,7 +45,9 @@
         "darwin"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'aarch64-elf-binutils' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "abseil",
@@ -84,7 +86,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'act' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "actionlint",
@@ -96,7 +100,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'actionlint' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "actions-up",
@@ -148,7 +154,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'advancecomp' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "age",
@@ -160,7 +168,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'age' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "agent-browser",
@@ -186,7 +196,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'air' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "alass",
@@ -200,7 +212,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'alass' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "amplify",
@@ -226,7 +240,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'angle-grinder' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "annie",
@@ -238,7 +254,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'annie' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "ansifilter",
@@ -252,7 +270,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'ansifilter' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "anycable-go",
@@ -266,7 +286,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'anycable-go' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "anyquery",
@@ -280,7 +302,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'anyquery' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "appwrite",
@@ -306,7 +330,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'apr' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "apr-util",
@@ -320,7 +346,9 @@
         "darwin"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'apr-util' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "argo-cd",
@@ -346,7 +374,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'asciinema' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "asdf",
@@ -358,7 +388,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'asdf' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "ast-grep",
@@ -372,7 +404,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'ast-grep' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "atlantis",
@@ -384,7 +418,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'atlantis' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "aws-cdk",
@@ -422,7 +458,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'aws-nuke' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "aws-vault",
@@ -436,7 +474,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'aws-vault' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "azcopy",
@@ -450,7 +490,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'azcopy' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "azure-nuke",
@@ -462,7 +504,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'azure-nuke' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "azurite",
@@ -502,7 +546,9 @@
         "darwin"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'bash' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "bash-language-server",
@@ -530,7 +576,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'bazelisk' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "bc",
@@ -545,7 +593,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'bc' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "bdw-gc",
@@ -559,7 +609,9 @@
       "errors": [
         "library recipe 'bdw-gc' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": null
+      "warnings": [
+        "recipe 'bdw-gc' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "biome",
@@ -587,7 +639,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'bison' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "black",
@@ -616,7 +670,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'block-goose-cli' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "bombardier",
@@ -642,7 +698,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'bottom' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "boundary",
@@ -654,7 +712,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'boundary' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "bpmnlint",
@@ -680,7 +740,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'brotli' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "btop",
@@ -694,7 +756,9 @@
         "darwin"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'btop' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "buf",
@@ -709,7 +773,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'buf' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "bumpp",
@@ -737,7 +803,9 @@
         "darwin"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'bun' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "bundler",
@@ -764,7 +832,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'c-ares' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "caddy",
@@ -776,7 +846,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'caddy' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "cairo",
@@ -812,7 +884,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'cargo-deny' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "cargo-edit",
@@ -899,7 +973,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'chibi-scheme' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "chicken",
@@ -914,7 +990,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'chicken' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "chrome-devtools-mcp",
@@ -942,7 +1020,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'clang-format' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "cliproxyapi",
@@ -957,7 +1037,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'cliproxyapi' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "cloc",
@@ -971,7 +1053,9 @@
         "darwin"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'cloc' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "cloud-nuke",
@@ -998,7 +1082,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'cloudflared' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "cobra-cli",
@@ -1024,7 +1110,9 @@
         "darwin"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'cocoapods' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "colima",
@@ -1131,7 +1219,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'ctlptl' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "cuda",
@@ -1159,7 +1249,9 @@
         "darwin"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'cuda-runtime' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "cue",
@@ -1171,7 +1263,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'cue' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "curl",
@@ -1185,7 +1279,9 @@
         "darwin"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'curl' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "curlie",
@@ -1197,7 +1293,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'curlie' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "dasel",
@@ -1285,7 +1383,9 @@
         "darwin"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'docker-buildx' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "docker-compose",
@@ -1311,7 +1411,9 @@
         "darwin"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'docker-credential-helper' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "docker-credential-helper-ecr",
@@ -1325,7 +1427,9 @@
         "darwin"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'docker-credential-helper-ecr' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "doctl",
@@ -1337,7 +1441,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'doctl' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "dos2unix",
@@ -1351,7 +1457,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'dos2unix' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "doxygen",
@@ -1365,7 +1473,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'doxygen' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "dprint",
@@ -1407,7 +1517,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'duckdb' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "duf",
@@ -1419,7 +1531,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'duf' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "dust",
@@ -1433,7 +1547,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'dust' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "eksctl",
@@ -1445,7 +1561,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'eksctl' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "esbuild",
@@ -1474,7 +1592,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'exiftool' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "expat",
@@ -1486,7 +1606,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'expat' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "fabric-ai",
@@ -1501,7 +1623,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'fabric-ai' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "fd",
@@ -1515,7 +1639,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'fd' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "flux",
@@ -1527,7 +1653,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'flux' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "fly",
@@ -1539,7 +1667,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'fly' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "flyctl",
@@ -1551,7 +1681,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'flyctl' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "fnm",
@@ -1563,7 +1695,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'fnm' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "fontconfig",
@@ -1601,7 +1735,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'freetype' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "fresh-editor",
@@ -1615,7 +1751,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'fresh-editor' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "fx",
@@ -1639,7 +1777,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'fzf' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "gdbm",
@@ -1653,7 +1793,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'gdbm' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "geos",
@@ -1665,7 +1807,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'geos' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "gettext",
@@ -1692,7 +1836,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'gh' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "giflib",
@@ -1716,7 +1862,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'git' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "git-flow",
@@ -1730,7 +1878,9 @@
         "darwin"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'git-flow' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "git-lfs",
@@ -1745,7 +1895,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'git-lfs' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "gitleaks",
@@ -1757,7 +1909,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'gitleaks' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "gitleaks-cli",
@@ -1769,7 +1923,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'gitleaks-cli' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "glab",
@@ -1781,7 +1937,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'glab' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "glew",
@@ -1796,7 +1954,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'glew' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "glow",
@@ -1808,7 +1968,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'glow' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "gmp",
@@ -1834,7 +1996,9 @@
         "darwin"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'gnu-sed' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "gnu-tar",
@@ -1848,7 +2012,9 @@
         "darwin"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'gnu-tar' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "go-migrate",
@@ -1860,7 +2026,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'go-migrate' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "go-task",
@@ -1875,7 +2043,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'go-task' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "gobuster",
@@ -1887,7 +2057,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'gobuster' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "gocloc",
@@ -1899,7 +2071,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'gocloc' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "gofumpt",
@@ -1937,7 +2111,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'golang' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "golangci-lint",
@@ -1949,7 +2125,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'golangci-lint' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "gomplate",
@@ -1961,7 +2139,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'gomplate' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "goose",
@@ -2012,7 +2192,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'goreman' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "gosec",
@@ -2024,7 +2206,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'gosec' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "gotop",
@@ -2036,7 +2220,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'gotop' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "graphql-cli",
@@ -2064,7 +2250,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'grex' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "gron",
@@ -2078,7 +2266,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'gron' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "grpcurl",
@@ -2093,7 +2283,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'grpcurl' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "grype",
@@ -2105,7 +2297,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'grype' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "gulp-cli",
@@ -2131,7 +2325,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'gum' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "helix",
@@ -2145,7 +2341,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'helix' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "hello",
@@ -2159,7 +2357,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'hello' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "hello-nix",
@@ -2187,7 +2387,9 @@
         "darwin"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'helm' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "himalaya",
@@ -2201,7 +2403,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'himalaya' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "htop",
@@ -2216,7 +2420,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'htop' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "http-server",
@@ -2259,7 +2465,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'hugo' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "hyperfine",
@@ -2271,7 +2479,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'hyperfine' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "iterm2",
@@ -2300,7 +2510,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'jc' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "jekyll",
@@ -2327,7 +2539,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'jfrog-cli' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "jj",
@@ -2339,7 +2553,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'jj' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "jpeg",
@@ -2354,7 +2570,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'jpeg' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "jpeg-turbo",
@@ -2378,7 +2596,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'jpegoptim' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "jsonnet",
@@ -2390,7 +2610,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'jsonnet' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "just",
@@ -2402,7 +2624,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'just' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "k3d",
@@ -2426,7 +2650,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'k9s' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "kind",
@@ -2450,7 +2676,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'kopia' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "kubectx",
@@ -2462,7 +2690,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'kubectx' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "kubens",
@@ -2474,7 +2704,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'kubens' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "kubernetes-cli",
@@ -2488,7 +2720,9 @@
         "darwin"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'kubernetes-cli' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "kubeseal",
@@ -2500,7 +2734,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'kubeseal' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "kustomize",
@@ -2512,7 +2748,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'kustomize' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "kustomize-cli",
@@ -2524,7 +2762,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'kustomize-cli' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "lazygit",
@@ -2536,7 +2776,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'lazygit' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "lcov",
@@ -2551,7 +2793,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'lcov' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "lerna",
@@ -2577,7 +2821,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'lf' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "libcurl",
@@ -2589,7 +2835,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'libcurl' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "liberica",
@@ -2603,7 +2851,9 @@
         "darwin"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'liberica' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "libgit2",
@@ -2615,7 +2865,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'libgit2' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "libnghttp2",
@@ -2627,7 +2879,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'libnghttp2' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "libnghttp3",
@@ -2639,7 +2893,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'libnghttp3' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "libngtcp2",
@@ -2651,7 +2907,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'libngtcp2' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "libpng",
@@ -2663,7 +2921,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'libpng' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "libssh2",
@@ -2675,7 +2935,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'libssh2' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "libxml2",
@@ -2687,7 +2949,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'libxml2' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "license-eye",
@@ -2702,7 +2966,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'license-eye' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "lima",
@@ -2717,7 +2983,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'lima' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "lsd",
@@ -2729,7 +2997,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'lsd' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "lua",
@@ -2744,7 +3014,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'lua' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "lua-language-server",
@@ -2759,7 +3031,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'lua-language-server' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "luajit",
@@ -2774,7 +3048,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'luajit' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "mbt",
@@ -2814,7 +3090,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'micro' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "migrate",
@@ -2826,7 +3104,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'migrate' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "miller",
@@ -2838,7 +3118,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'miller' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "minikube",
@@ -2866,7 +3148,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'mint' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "mise",
@@ -2880,7 +3164,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'mise' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "mit-scheme",
@@ -2894,7 +3180,9 @@
         "darwin"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'mit-scheme' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "mjml",
@@ -2923,7 +3211,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'mkcert' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "mockgen",
@@ -2949,7 +3239,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'mockolo' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "moreutils",
@@ -2964,7 +3256,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'moreutils' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "mprocs",
@@ -3018,7 +3312,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'nasm' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "ncdu",
@@ -3033,7 +3329,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'ncdu' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "ncurses",
@@ -3116,7 +3414,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'nomad' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "nping",
@@ -3159,7 +3459,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'oh-my-posh' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "openapi-diff",
@@ -3188,7 +3490,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'openshift-cli' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "openskills",
@@ -3214,7 +3518,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'opentofu' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "oxfmt",
@@ -3257,7 +3563,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'p7zip' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "packer",
@@ -3269,7 +3577,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'packer' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "pcre2",
@@ -3281,7 +3591,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'pcre2' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "periphery",
@@ -3295,7 +3607,9 @@
         "darwin"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'periphery' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "perlcritic",
@@ -3348,7 +3662,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'pkgconf' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "pngcrush",
@@ -3360,7 +3676,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'pngcrush' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "podman",
@@ -3375,7 +3693,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'podman' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "poetry",
@@ -3401,7 +3721,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'popeye' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "prek",
@@ -3415,7 +3737,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'prek' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "prettier",
@@ -3443,7 +3767,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'procs' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "proj",
@@ -3455,7 +3781,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'proj' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "pulumi",
@@ -3467,7 +3795,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'pulumi' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "pyright",
@@ -3496,7 +3826,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'qrencode' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "railway",
@@ -3508,7 +3840,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'railway' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "rancher",
@@ -3520,7 +3854,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'rancher' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "rclone",
@@ -3534,7 +3870,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'rclone' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "react-native-cli",
@@ -3560,7 +3898,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'readline' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "release-it",
@@ -3586,7 +3926,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'render' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "rollup",
@@ -3642,7 +3984,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'rust-analyzer' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "rustup",
@@ -3656,7 +4000,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'rustup' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "scaleway-cli",
@@ -3682,7 +4028,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'sccache' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "sd",
@@ -3696,7 +4044,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'sd' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "sdl2",
@@ -3710,7 +4060,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'sdl2' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "serve",
@@ -3749,7 +4101,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'sevenzip' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "shfmt",
@@ -3761,7 +4115,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'shfmt' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "skaffold",
@@ -3787,7 +4143,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'smartmontools' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "solargraph",
@@ -3814,7 +4172,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'sourcekitten' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "sourcery",
@@ -3829,7 +4189,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'sourcery' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "spatialite",
@@ -3843,7 +4205,9 @@
         "darwin"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'spatialite' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "sqlite",
@@ -3858,7 +4222,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'sqlite' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "sshpass",
@@ -3873,7 +4239,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'sshpass' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "staticcheck",
@@ -3897,7 +4265,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'stern' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "supabase",
@@ -3911,7 +4281,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'supabase' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "swift-sh",
@@ -3926,7 +4298,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'swift-sh' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "swiftformat",
@@ -3940,7 +4314,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'swiftformat' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "swiftlint",
@@ -3954,7 +4330,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'swiftlint' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "syft",
@@ -3966,7 +4344,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'syft' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "syncthing",
@@ -3980,7 +4360,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'syncthing' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "tailscale",
@@ -3995,7 +4377,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'tailscale' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "tealdeer",
@@ -4009,7 +4393,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'tealdeer' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "television",
@@ -4023,7 +4409,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'television' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "temporal",
@@ -4038,7 +4426,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'temporal' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "terraform",
@@ -4050,7 +4440,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'terraform' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "terraform-docs",
@@ -4062,7 +4454,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'terraform-docs' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "terragrunt",
@@ -4077,7 +4471,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'terragrunt' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "test-tuples",
@@ -4101,7 +4497,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'tflint' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "tfsec",
@@ -4113,7 +4511,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'tfsec' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "tilt",
@@ -4127,7 +4527,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'tilt' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "tokei",
@@ -4141,7 +4543,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'tokei' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "tree",
@@ -4155,7 +4559,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'tree' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "tree-sitter-cli",
@@ -4169,7 +4575,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'tree-sitter-cli' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "trivy",
@@ -4181,7 +4589,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'trivy' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "trufflehog",
@@ -4193,7 +4603,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'trufflehog' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "tsuku-dltest",
@@ -4261,7 +4673,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'typos-cli' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "unar",
@@ -4276,7 +4690,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'unar' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "uutils-coreutils",
@@ -4291,7 +4707,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'uutils-coreutils' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "uv",
@@ -4305,7 +4723,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'uv' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "vale",
@@ -4319,7 +4739,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'vale' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "vault",
@@ -4331,7 +4753,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'vault' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "velero",
@@ -4343,7 +4767,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'velero' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "vercel",
@@ -4398,7 +4824,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'watch' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "watchexec",
@@ -4412,7 +4840,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'watchexec' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "waypoint",
@@ -4424,7 +4854,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'waypoint' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "websocat",
@@ -4438,7 +4870,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'websocat' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "wimlib",
@@ -4453,7 +4887,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'wimlib' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "witr",
@@ -4468,7 +4904,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'witr' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "wrangler",
@@ -4494,7 +4932,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'xcbeautify' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "xclogparser",
@@ -4509,7 +4949,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'xclogparser' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "xh",
@@ -4523,7 +4965,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'xh' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "xmlstarlet",
@@ -4538,7 +4982,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'xmlstarlet' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "xz",
@@ -4553,7 +4999,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'xz' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "yaml-language-server",
@@ -4595,7 +5043,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'yazi' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "yj",
@@ -4609,7 +5059,9 @@
         "darwin"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'yj' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "yo",
@@ -4635,7 +5087,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'yq' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "zizmor",
@@ -4649,7 +5103,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'zizmor' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "zoxide",
@@ -4663,7 +5119,9 @@
         "musl"
       ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'zoxide' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "zstd",
@@ -4675,7 +5133,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'zstd' has platform-specific actions without libc when clauses and no apk_install fallback"
+      ]
     },
     {
       "name": "zx",
