@@ -124,9 +124,9 @@ func TestGemBuilder_Build_WithGemspec(t *testing.T) {
 		t.Errorf("Recipe.Metadata.Homepage = %q, want %q", result.Recipe.Metadata.Homepage, "https://jekyllrb.com")
 	}
 
-	// Check version source
-	if result.Recipe.Version.Source != "rubygems" {
-		t.Errorf("Recipe.Version.Source = %q, want %q", result.Recipe.Version.Source, "rubygems")
+	// Version source should be empty (inferred from gem_install action)
+	if result.Recipe.Version.Source != "" {
+		t.Errorf("Recipe.Version.Source = %q, want empty (inferred from action)", result.Recipe.Version.Source)
 	}
 
 	// Check steps

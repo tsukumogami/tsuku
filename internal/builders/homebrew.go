@@ -1927,10 +1927,7 @@ func (b *HomebrewBuilder) generateRecipe(packageName string, info *homebrewFormu
 			Description: info.Description,
 			Homepage:    info.Homepage,
 		},
-		Version: recipe.VersionSection{
-			Source:  "homebrew",
-			Formula: info.Name,
-		},
+		Version: recipe.VersionSection{},
 		Verify: &recipe.VerifySection{
 			Command: data.VerifyCommand,
 		},
@@ -2105,10 +2102,7 @@ func (b *HomebrewBuilder) generateToolRecipe(packageName string, genCtx *homebre
 			Description: info.Description,
 			Homepage:    info.Homepage,
 		},
-		Version: recipe.VersionSection{
-			Source:  "homebrew",
-			Formula: info.Name,
-		},
+		Version: recipe.VersionSection{},
 		Verify: &recipe.VerifySection{
 			Command: verifyCommand,
 		},

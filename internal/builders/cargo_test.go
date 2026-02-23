@@ -148,9 +148,9 @@ path = "src/main.rs"
 		t.Errorf("Recipe.Metadata.Description = %q", result.Recipe.Metadata.Description)
 	}
 
-	// Check version source
-	if result.Recipe.Version.Source != "crates_io" {
-		t.Errorf("Recipe.Version.Source = %q, want %q", result.Recipe.Version.Source, "crates_io")
+	// Version source should be empty (inferred from cargo_install action)
+	if result.Recipe.Version.Source != "" {
+		t.Errorf("Recipe.Version.Source = %q, want empty (inferred from action)", result.Recipe.Version.Source)
 	}
 
 	// Check steps

@@ -149,9 +149,7 @@ func (b *NpmBuilder) Build(ctx context.Context, req BuildRequest) (*BuildResult,
 			Description: pkgInfo.Description,
 			Homepage:    homepage,
 		},
-		Version: recipe.VersionSection{
-			Source: "npm",
-		},
+		Version: recipe.VersionSection{},
 		Steps: []recipe.Step{
 			{
 				Action: "npm_install",
