@@ -1,5 +1,5 @@
 ---
-status: Accepted
+status: Planned
 problem: |
   Six embedded recipes (rust, python-standalone, nodejs, ruby, perl,
   patchelf) download glibc-linked binaries unconditionally. On Alpine
@@ -30,7 +30,58 @@ rationale: |
 
 ## Status
 
-**Accepted**
+**Planned**
+
+## Implementation Issues
+
+### Milestone: [embedded-recipe-musl-coverage](https://github.com/tsukumogami/tsuku/milestone/101)
+
+| Issue | Dependencies | Tier |
+|-------|--------------|------|
+| [#1912: fix(recipes): add musl fallback to rust, python-standalone, and perl embedded recipes](https://github.com/tsukumogami/tsuku/issues/1912) | None | testable |
+| _Adds `apk_install` musl paths and glibc `when` clause guards to the three straightforward embedded recipes. Establishes the pattern that the remaining recipes follow._ | | |
+| [#1913: fix(recipes): add musl fallback to patchelf embedded recipe](https://github.com/tsukumogami/tsuku/issues/1913) | None | testable |
+| _Restructures patchelf from a single unconditional `homebrew` step into three platform paths (glibc, musl, darwin). Patchelf won't be invoked on musl, but must install successfully as a declared dependency._ | | |
+| [#1914: fix(recipes): add musl fallback to nodejs and ruby embedded recipes](https://github.com/tsukumogami/tsuku/issues/1914) | None | testable |
+| _The most involved recipe fixes. Both have `link_dependencies` and wrapper scripts that filter on `os = ["linux"]` but need `libc = ["glibc"]` guards to avoid running after `apk_install`._ | | |
+| [#1915: feat(recipe): add structural musl coverage check to AnalyzeRecipeCoverage](https://github.com/tsukumogami/tsuku/issues/1915) | [#1912](https://github.com/tsukumogami/tsuku/issues/1912), [#1913](https://github.com/tsukumogami/tsuku/issues/1913), [#1914](https://github.com/tsukumogami/tsuku/issues/1914) | critical |
+| _Adds the static analysis guard that prevents this class of bug from recurring. Flags embedded recipes using `download`, `github_archive`, or `homebrew` without libc `when` clauses and no `apk_install` fallback. Also adds `supported_libc` metadata to `go.toml` and `zig.toml`._ | | |
+| [#1916: fix(ci): add embedded recipe paths to CI triggers](https://github.com/tsukumogami/tsuku/issues/1916) | None | simple |
+| _Adds `internal/recipe/recipes/**/*.toml` to `test-recipe.yml` trigger paths so embedded recipe changes get PR-time Alpine testing. Removes the outdated commented-out `rust-test-musl` job from `test.yml`._ | | |
+
+### Dependency Graph
+
+```mermaid
+graph LR
+    subgraph Phase1["Phase 1: Recipe Fixes"]
+        I1912["#1912: musl fallback (rust, python, perl)"]
+        I1913["#1913: musl fallback (patchelf)"]
+        I1914["#1914: musl fallback (nodejs, ruby)"]
+    end
+
+    subgraph Phase2["Phase 2: Static Analysis"]
+        I1915["#1915: Structural musl coverage check"]
+    end
+
+    subgraph Phase3["Phase 3: CI"]
+        I1916["#1916: CI trigger paths"]
+    end
+
+    I1912 --> I1915
+    I1913 --> I1915
+    I1914 --> I1915
+
+    classDef done fill:#c8e6c9
+    classDef ready fill:#bbdefb
+    classDef blocked fill:#fff9c4
+    classDef needsDesign fill:#e1bee7
+    classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
+
+    class I1912,I1913,I1914,I1916 ready
+    class I1915 blocked
+```
+
+**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design
 
 ## Context and Problem Statement
 
