@@ -8,17 +8,17 @@ problem: |
   and makes builds non-reproducible across machines and time.
 decision: |
   Add SHA256 digest suffixes to every image reference in container-images.json
-  using Docker's native tag@digest format. Update the Renovate regex to capture
-  and maintain digests automatically. Add an explicit :latest tag to
-  opensuse/tumbleweed so it matches the same regex pattern as all other entries.
+  using Docker's native tag@digest format. Switch openSUSE from Tumbleweed
+  (rolling) to Leap (versioned) so four of five images have meaningful version
+  tags. Update the Renovate regex to capture and maintain digests automatically.
   No Go code changes are needed since the image string is opaque to all consumers.
 rationale: |
   The inline tag@digest format is the standard Docker reference syntax, supported
   natively by FROM directives, docker pull, and podman. Keeping the tag alongside
   the digest preserves human readability and lets Renovate track both version
-  bumps and digest rotations through a single regex pattern. The alternative of
-  splitting into structured JSON would break every consumer and add complexity
-  for no functional gain.
+  bumps and digest rotations through a single regex pattern. Switching openSUSE
+  from Tumbleweed to Leap standardizes the version strategy so that Arch is the
+  only remaining rolling-release image, and it has no versioned alternative.
 ---
 
 # Container Image Digest Pinning
@@ -197,34 +197,122 @@ silently, the reproducibility guarantee is incomplete. Tumbleweed is
 the *most* volatile image in the list (rolling release), making it the
 one that benefits most from pinning.
 
+### Decision 3: Version Tag Strategy
+
+The five images currently use inconsistent version granularity:
+
+| Family | Current Tag | What It Means |
+|--------|-------------|---------------|
+| debian | `bookworm-slim` | Codename (major release series, gets security patches) |
+| rhel | `41` | Major version (13-month lifecycle, gets all updates) |
+| alpine | `3.21` | Minor version (gets patch updates within 3.21.x) |
+| arch | `base` | Variant tag, no version (rolling release) |
+| suse | (none) | Implied `:latest` (rolling release) |
+
+Debian, Fedora, and Alpine pin to a release series and receive only
+compatible updates within that series. Arch and openSUSE Tumbleweed are
+rolling releases with no version tags at all, so any pull could bring
+breaking changes. Digest pinning fixes the content-at-a-point-in-time
+problem, but doesn't address the question of *which* content to pin:
+a stable release series or whatever's newest.
+
+This matters for Renovate. When Renovate bumps `alpine:3.21` to
+`alpine:3.22`, the tag change signals a meaningful version update that
+reviewers can evaluate. When it bumps a tumbleweed digest, there's no
+version context, just a new hash.
+
+#### Chosen: Switch openSUSE from Tumbleweed to Leap
+
+Replace `opensuse/tumbleweed` with `opensuse/leap:15.6`. Leap is
+openSUSE's stable release, with semver-style `MAJOR.MINOR` tags that
+Renovate handles natively. It uses the same zypper package manager and
+provides the same SUSE family coverage for sandbox testing.
+
+Keep Arch Linux on the `base` tag. Arch has no versioned alternative:
+it is rolling by design, and its Docker images only offer date-based
+tags with CI job number suffixes (e.g., `base-20260215.0.490969`) that
+Renovate can't parse without custom regex versioning. The digest pin
+provides the content immutability that a version tag can't.
+
+After this change, every image except Arch has a meaningful version tag.
+Arch is the accepted exception: it's the only major distro family that
+offers no stable release channel.
+
+The resulting tag strategy:
+
+| Family | Tag | Version Signal | Renovate Behavior |
+|--------|-----|---------------|-------------------|
+| debian | `bookworm-slim` | Codename (major) | Digest updates within Bookworm |
+| rhel | `41` | Major version | Tag bump to `42` + digest updates within `41` |
+| alpine | `3.21` | Minor version | Tag bump to `3.22` + digest updates within `3.21` |
+| arch | `base` | None (rolling) | Digest updates only |
+| suse | `15.6` | Minor version | Tag bump to `15.7` or `16.0` + digest updates within `15.6` |
+
+#### Alternatives Considered
+
+**Keep Tumbleweed with date-based tags**: Use
+`opensuse/tumbleweed:20260220` instead of the rolling `latest` tag.
+Rejected because Renovate can't compare YYYYMMDD tags without custom
+regex versioning configuration, and the date tags provide no stability
+guarantee. A date tag says "this was built on February 20th" but not
+"this is compatible with what you had before." Leap's semver tags give
+both signals.
+
+**Pin Arch to date-based tags**: Use `archlinux:base-20260215.0.490969`
+for explicit version tracking. Rejected because these tags include CI
+job numbers that change every build, producing noise in Renovate diffs
+without adding useful version information. The format also requires
+custom regex versioning in Renovate. Since Arch is inherently rolling,
+the digest pin already provides the content stability we need.
+
+**Keep current tags unchanged**: Accept the inconsistency and rely
+solely on digest pinning for all images. Rejected because Tumbleweed's
+volatility makes digest-only updates problematic. With no version tag,
+reviewers can't tell if a digest update brought a routine security patch
+or a major package overhaul. Leap's versioned releases make this
+distinction visible.
+
 ## Decision Outcome
 
-**Chosen: 1A + 2A** (inline tag@digest, explicit :latest for tumbleweed)
+**Chosen: 1A + 2A + 3A** (inline tag@digest, explicit tags, Leap replaces Tumbleweed)
 
 ### Summary
 
 Every image reference in `container-images.json` gets a `@sha256:...`
-digest suffix appended to its existing tag. For `opensuse/tumbleweed`,
-an explicit `:latest` tag is added before the digest. The resulting file
-looks like standard Docker image references that happen to include content
-hashes.
+digest suffix using Docker's native `image:tag@sha256:digest` format.
+openSUSE switches from Tumbleweed (rolling) to Leap (versioned), giving
+four of five images a meaningful version tag. Arch Linux stays on `base`
+since no versioned alternative exists.
+
+The resulting `container-images.json`:
+
+```json
+{
+  "debian": "debian:bookworm-slim@sha256:<digest>",
+  "rhel": "fedora:41@sha256:<digest>",
+  "arch": "archlinux:base@sha256:<digest>",
+  "alpine": "alpine:3.21@sha256:<digest>",
+  "suse": "opensuse/leap:15.6@sha256:<digest>"
+}
+```
 
 The Renovate regex custom manager in `renovate.json` gets two additions:
 an optional `currentDigest` capture group at the end of the match pattern,
-and an `autoReplaceStringTemplate` that reconstructs the full
-`depName:currentValue@currentDigest` string on updates. Renovate's docker
-datasource already knows how to look up digests and detect when they change,
-so these regex updates are all that's needed.
+and an `autoReplaceStringTemplate` that reconstructs the full reference
+on updates. Renovate's docker datasource handles both tag bumps (e.g.,
+`alpine:3.21` to `3.22`) and digest rotations (same tag, new content)
+through a single configuration.
 
 No Go production code changes. `ImageForFamily()` returns the full
-`image:tag@sha256:...` string, which flows unchanged into
-`generateDockerfile()` as a `FROM` argument and into
-`ContainerImageName()` as a hash input. The cache key becomes
-content-aware automatically because the digest is part of the hashed string.
+string as-is, which flows unchanged into `generateDockerfile()` as a
+`FROM` argument and into `ContainerImageName()` as a hash input. The
+cache key becomes content-aware automatically because the digest is
+part of the hashed string.
 
-Tests that assert exact image values need updates to include the digest suffix.
-The drift-check CI workflow needs no changes since its existing exceptions
-already cover the source files.
+Tests that assert exact image values need updates for the new strings.
+The drift-check CI workflow needs its hardcoded-references regex updated
+to match `opensuse/leap` instead of `opensuse/(leap|tumbleweed)`, and
+the `container-images.json` exception already covers the digest suffix.
 
 To get the initial digests, we query the registries using `crane digest`
 and update `container-images.json`. After that, Renovate handles all
@@ -238,10 +326,12 @@ splitting into structured JSON would create work for every consumer
 without adding any capability. The tag stays for readability and Renovate
 version tracking. The digest stays for immutability and cache correctness.
 
-Adding `:latest` to tumbleweed is the minimal change that makes all entries
-follow the same pattern. One regex, one format, no special cases. The
-alternative of maintaining two regex patterns saves zero characters in the
-JSON file while doubling the Renovate configuration.
+Switching from Tumbleweed to Leap standardizes the version strategy: every
+image except Arch now pins to a release series with a semver-compatible tag.
+Renovate can propose both version bumps and digest updates with clear
+version context. Arch remains the exception because no versioned Arch
+release exists, and its date-based tags include CI job numbers that provide
+no useful version signal.
 
 ## Solution Architecture
 
@@ -255,7 +345,7 @@ After pinning, the file contains:
   "rhel": "fedora:41@sha256:<64-char-hex>",
   "arch": "archlinux:base@sha256:<64-char-hex>",
   "alpine": "alpine:3.21@sha256:<64-char-hex>",
-  "suse": "opensuse/tumbleweed:latest@sha256:<64-char-hex>"
+  "suse": "opensuse/leap:15.6@sha256:<64-char-hex>"
 }
 ```
 
@@ -319,17 +409,16 @@ registry update to land without review.
 | `ContainerImageName()` | None. Hash input includes full string, so digest changes invalidate cache. |
 | CI jq consumers | None. `jq -r .alpine` returns the full string. |
 | Test assertions | **Update needed.** Expected values must include `@sha256:...` suffix. |
-| drift-check hardcoded-references | None. Existing exceptions cover source files; tag pattern matches regardless of digest suffix. |
+| drift-check hardcoded-references | **Update needed.** Replace `tumbleweed` with `leap` in `PATTERN` regex. |
 
 ### drift-check Workflow Update
 
-The hardcoded-references job doesn't need changes. Its scan pattern
-matches tag strings like `alpine:[0-9]` and `debian:(bookworm|...)`, and
-the existing exception `'container-images\.json:'` already excludes both
-the source-of-truth file and its embedded copy. The `@sha256:` suffix
-doesn't interfere because the regex matches the tag portion regardless
-of what follows it. If a hardcoded reference elsewhere in the codebase
-included a digest, the tag pattern would still catch it.
+The hardcoded-references `PATTERN` regex needs one update: change
+`opensuse/(leap|tumbleweed)` to reflect the switch from Tumbleweed to
+Leap. The `@sha256:` suffix doesn't need special handling because the
+existing exception `'container-images\.json:'` already excludes the
+source file and its embedded copy, and the tag-matching regex catches
+the tag portion regardless of what follows it.
 
 ## Implementation Approach
 
@@ -340,7 +429,7 @@ go-containerregistry):
 
 ```bash
 for img in "debian:bookworm-slim" "fedora:41" "archlinux:base" \
-           "alpine:3.21" "opensuse/tumbleweed:latest"; do
+           "alpine:3.21" "opensuse/leap:15.6"; do
   digest=$(crane digest "$img")
   echo "$img@$digest"
 done

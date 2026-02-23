@@ -20,6 +20,7 @@ Container images in container-images.json use mutable tags (e.g., `alpine:3.21`)
 ## Options (Phase 3)
 - **Decision 1 (Format)**: Inline tag@digest strings (chosen) vs structured JSON objects vs separate digest file
 - **Decision 2 (Tumbleweed)**: Add explicit :latest tag (chosen) vs digest-only without tag vs skip pinning
+- **Decision 3 (Version Strategy)**: Switch openSUSE to Leap (chosen) vs keep Tumbleweed with date tags vs accept inconsistency
 
 ## Decision (Phase 5)
 
@@ -32,19 +33,19 @@ and makes builds non-reproducible across machines and time.
 
 **Decision:**
 Add SHA256 digest suffixes to every image reference in container-images.json
-using Docker's native tag@digest format. Update the Renovate regex to capture
-and maintain digests automatically. Add an explicit :latest tag to
-opensuse/tumbleweed so it matches the same regex pattern as all other entries.
+using Docker's native tag@digest format. Switch openSUSE from Tumbleweed
+(rolling) to Leap (versioned) so four of five images have meaningful version
+tags. Update the Renovate regex to capture and maintain digests automatically.
 No Go code changes are needed since the image string is opaque to all consumers.
 
 **Rationale:**
 The inline tag@digest format is the standard Docker reference syntax, supported
 natively by FROM directives, docker pull, and podman. Keeping the tag alongside
 the digest preserves human readability and lets Renovate track both version
-bumps and digest rotations through a single regex pattern. The alternative of
-splitting into structured JSON would break every consumer and add complexity
-for no functional gain.
+bumps and digest rotations through a single regex pattern. Switching openSUSE
+from Tumbleweed to Leap standardizes the version strategy so that Arch is the
+only remaining rolling-release image, and it has no versioned alternative.
 
 ## Current Status
-**Phase:** 5 - Decision
+**Phase:** 8 - Final Review
 **Last Updated:** 2026-02-22
