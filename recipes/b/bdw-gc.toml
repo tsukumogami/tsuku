@@ -1,0 +1,50 @@
+[metadata]
+  name = "bdw-gc"
+  description = "Garbage collector for C and C++"
+  homepage = "https://www.hboehm.info/gc/"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "bdw-gc"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "bdw-gc"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libcord.a", "lib/libcord.so", "lib/libcord.so.1", "lib/libcord.so.1.5.1", "lib/libgc.a", "lib/libgc.so", "lib/libgc.so.1", "lib/libgc.so.1.5.6", "lib/libgccpp.a", "lib/libgccpp.so", "lib/libgccpp.so.1", "lib/libgccpp.so.1.5.0", "lib/libgctba.a", "lib/libgctba.so", "lib/libgctba.so.1", "lib/libgctba.so.1.5.0", "lib/pkgconfig/bdw-gc.pc", "include/gc/cord.h", "include/gc/cord_pos.h", "include/gc/ec.h", "include/gc/gc.h", "include/gc/gc_allocator.h", "include/gc/gc_backptr.h", "include/gc/gc_config_macros.h", "include/gc/gc_cpp.h", "include/gc/gc_disclaim.h", "include/gc/gc_gcj.h", "include/gc/gc_inline.h", "include/gc/gc_mark.h", "include/gc/gc_pthread_redirects.h", "include/gc/gc_tiny_fl.h", "include/gc/gc_typed.h", "include/gc/gc_version.h", "include/gc/javaxfc.h", "include/gc/leak_detector.h", "include/gc.h", "include/gc_cpp.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "bdw-gc"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libcord.1.5.1.dylib", "lib/libcord.1.dylib", "lib/libcord.a", "lib/libcord.dylib", "lib/libgc.1.5.6.dylib", "lib/libgc.1.dylib", "lib/libgc.a", "lib/libgc.dylib", "lib/libgccpp.1.5.0.dylib", "lib/libgccpp.1.dylib", "lib/libgccpp.a", "lib/libgccpp.dylib", "lib/libgctba.1.5.0.dylib", "lib/libgctba.1.dylib", "lib/libgctba.a", "lib/libgctba.dylib", "lib/pkgconfig/bdw-gc.pc", "include/gc/cord.h", "include/gc/cord_pos.h", "include/gc/ec.h", "include/gc/gc.h", "include/gc/gc_allocator.h", "include/gc/gc_backptr.h", "include/gc/gc_config_macros.h", "include/gc/gc_cpp.h", "include/gc/gc_disclaim.h", "include/gc/gc_gcj.h", "include/gc/gc_inline.h", "include/gc/gc_mark.h", "include/gc/gc_pthread_redirects.h", "include/gc/gc_tiny_fl.h", "include/gc/gc_typed.h", "include/gc/gc_version.h", "include/gc/javaxfc.h", "include/gc/leak_detector.h", "include/gc.h", "include/gc_cpp.h"]
+  [steps.when]
+    os = ["darwin"]
