@@ -1,5 +1,5 @@
 ---
-status: Accepted
+status: Planned
 spawned_from:
   issue: 1905
   repo: tsukumogami/tsuku
@@ -33,7 +33,61 @@ rationale: |
 
 ## Status
 
-Accepted
+Planned
+
+## Implementation Issues
+
+### Milestone: [Sandbox CI Integration](https://github.com/tsukumogami/tsuku/milestone/104)
+
+| Issue | Dependencies | Tier |
+|-------|--------------|------|
+| [#1942: feat(sandbox): add post-install verification with Go-side pattern matching](https://github.com/tsukumogami/tsuku/issues/1942) | None | testable |
+| _Adds `ExitCode *int` to `PlanVerify` (plan format v5), extracts shared `checkVerification()` into `internal/sandbox/verify.go`, and extends `buildSandboxScript()` to run the recipe's verify command with marker file output. Go reads the marker files after container exit and evaluates results. `SandboxResult.Passed` becomes true only when both install and verification succeed._ | | |
+| [#1943: feat(sandbox): add --env flag for environment variable passthrough](https://github.com/tsukumogami/tsuku/issues/1943) | None | testable |
+| _Adds `ExtraEnv []string` to `SandboxRequirements` and a repeatable `--env KEY=VALUE` CLI flag. The executor filters user-provided keys against hardcoded sandbox vars before appending to `RunOptions.Env`. Supports docker-compatible `--env KEY` form that reads from the host environment._ | | |
+| [#1944: feat(sandbox): add --json flag for structured sandbox output](https://github.com/tsukumogami/tsuku/issues/1944) | [#1942](https://github.com/tsukumogami/tsuku/issues/1942) | testable |
+| _Adds `DurationMs int64` to `SandboxResult` with timing measurement, and a `--json` CLI flag that serializes the result as a JSON object on stdout. Suppresses human-readable output when set. Uses the `Verified` and `VerifyExitCode` fields from #1942 for the verification-related JSON fields._ | | |
+| [#1945: ci(workflows): migrate test-recipe.yml Linux jobs to sandbox](https://github.com/tsukumogami/tsuku/issues/1945) | [#1942](https://github.com/tsukumogami/tsuku/issues/1942), [#1943](https://github.com/tsukumogami/tsuku/issues/1943), [#1944](https://github.com/tsukumogami/tsuku/issues/1944) | testable |
+| _First CI migration (proof-of-concept). Replaces docker run blocks in `test-linux-x86_64` (5 families) and `test-linux-arm64` (4 families) with sandbox calls. Removes per-family package installation, volume mounting, and exit code marker files. Preserves result table in `$GITHUB_STEP_SUMMARY` using JSON output._ | | |
+| [#1946: ci(workflows): migrate recipe-validation-core.yml Linux jobs to sandbox](https://github.com/tsukumogami/tsuku/issues/1946) | [#1945](https://github.com/tsukumogami/tsuku/issues/1945) | critical |
+| _Most impactful migration. Replaces docker run blocks in the core all-recipes validation workflow across 9 Linux matrix entries. Preserves retry logic (exit code 5, 3 attempts), JSON result aggregation, auto-constraint generation, and the report job's artifact format._ | | |
+| [#1947: ci(workflows): migrate batch-generate.yml and validate-golden-execution.yml to sandbox](https://github.com/tsukumogami/tsuku/issues/1947) | [#1946](https://github.com/tsukumogami/tsuku/issues/1946) | testable |
+| _Completes the CI migration. For batch-generate, replaces validation phase docker calls and preserves exit code 8 / `blocked_by` handling. For validate-golden-execution, converts batched per-family docker calls into per-recipe sandbox invocations. After this, every Linux recipe validation job in CI uses the sandbox._ | | |
+
+### Dependency Graph
+
+```mermaid
+graph LR
+    subgraph Phase1["Phase 1: Sandbox Code"]
+        I1942["#1942: Add verification"]
+        I1943["#1943: Add --env flag"]
+        I1944["#1944: Add --json flag"]
+    end
+
+    subgraph Phase2["Phase 2: CI Migration"]
+        I1945["#1945: Migrate test-recipe.yml"]
+        I1946["#1946: Migrate recipe-validation-core"]
+        I1947["#1947: Migrate remaining workflows"]
+    end
+
+    I1942 --> I1944
+    I1942 --> I1945
+    I1943 --> I1945
+    I1944 --> I1945
+    I1945 --> I1946
+    I1946 --> I1947
+
+    classDef done fill:#c8e6c9
+    classDef ready fill:#bbdefb
+    classDef blocked fill:#fff9c4
+    classDef needsDesign fill:#e1bee7
+    classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
+
+    class I1942,I1943 ready
+    class I1944,I1945,I1946,I1947 blocked
+```
+
+**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design
 
 ## Upstream Design Reference
 
