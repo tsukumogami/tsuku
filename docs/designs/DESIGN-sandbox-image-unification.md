@@ -83,7 +83,7 @@ graph LR
     class I1901 done
     class I1902 done
     class I1904 ready
-    class I1903 blocked
+    class I1903 ready
     class I1905 needsDesign
 ```
 
