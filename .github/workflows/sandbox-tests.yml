@@ -3,8 +3,24 @@ name: Sandbox Tests
 on:
   push:
     branches: [main]
+    paths:
+      - '**/*.go'
+      - 'go.mod'
+      - 'go.sum'
+      - 'internal/recipe/recipes/**/*.toml'
+      - 'test-matrix.json'
+      - 'test/scripts/**'
+      - '.github/workflows/sandbox-tests.yml'
   pull_request:
     branches: [main]
+    paths:
+      - '**/*.go'
+      - 'go.mod'
+      - 'go.sum'
+      - 'internal/recipe/recipes/**/*.toml'
+      - 'test-matrix.json'
+      - 'test/scripts/**'
+      - '.github/workflows/sandbox-tests.yml'
 
 jobs:
   matrix:
