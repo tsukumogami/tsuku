@@ -1,22 +1,22 @@
 {
-  "generated_at": "2026-02-23T03:42:20Z",
-  "total_recipes": 350,
+  "generated_at": "2026-02-23T20:32:18Z",
+  "total_recipes": 351,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 293,
-        "total": 350,
-        "pct": 83.71428571428572
+        "supported": 294,
+        "total": 351,
+        "pct": 83.76068376068376
       },
       "glibc": {
-        "supported": 320,
-        "total": 350,
-        "pct": 91.42857142857143
+        "supported": 321,
+        "total": 351,
+        "pct": 91.45299145299145
       },
       "musl": {
-        "supported": 181,
-        "total": 350,
-        "pct": 51.714285714285715
+        "supported": 182,
+        "total": 351,
+        "pct": 51.85185185185185
       }
     },
     "by_category": {
@@ -26,9 +26,9 @@
         "glibc_support": 23
       },
       "tool": {
-        "total": 327,
-        "musl_support": 158,
-        "glibc_support": 297
+        "total": 328,
+        "musl_support": 159,
+        "glibc_support": 298
       }
     }
   },
@@ -2679,6 +2679,18 @@
       "warnings": [
         "recipe 'kopia' has platform-specific actions without libc when clauses and no apk_install fallback"
       ]
+    },
+    {
+      "name": "koto",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
     },
     {
       "name": "kubectx",
