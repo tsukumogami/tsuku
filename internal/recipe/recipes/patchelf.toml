@@ -4,15 +4,34 @@ description = "Utility to modify the dynamic linker and RPATH of ELF executables
 homepage = "https://github.com/NixOS/patchelf"
 binaries = ["bin/patchelf"]
 
+# glibc Linux: Homebrew bottles
 [[steps]]
 action = "homebrew"
 formula = "patchelf"
+when = { os = ["linux"], libc = ["glibc"] }
 
 [[steps]]
 action = "install_binaries"
 outputs = ["bin/patchelf"]
+when = { os = ["linux"], libc = ["glibc"] }
+
+# musl Linux: System packages (apk handles transitive deps)
+[[steps]]
+action = "apk_install"
+packages = ["patchelf"]
+when = { os = ["linux"], libc = ["musl"] }
+
+# macOS: Homebrew
+[[steps]]
+action = "homebrew"
+formula = "patchelf"
+when = { os = ["darwin"] }
+
+[[steps]]
+action = "install_binaries"
+outputs = ["bin/patchelf"]
+when = { os = ["darwin"] }
 
 [verify]
-# Use absolute path to ensure we verify the installed binary, not system patchelf
-command = "{install_dir}/bin/patchelf --version"
+command = "patchelf --version"
 pattern = "patchelf {version}"
