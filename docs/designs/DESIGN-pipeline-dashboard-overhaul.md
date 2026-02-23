@@ -47,8 +47,8 @@ Planned
 | ~~_Fix Go-side data generation: normalize `health.last_run.batch_id` format, strip `batch-` prefix from failure details, and populate `message` and `workflow_url` fields from JSONL source data. Runs parallel to frontend work._~~ | | |
 | ~~[#1933: fix(dashboard): resolve HTML bugs from QA audit](https://github.com/tsukumogami/tsuku/issues/1933)~~ | [#1930](https://github.com/tsukumogami/tsuku/issues/1930), [#1931](https://github.com/tsukumogami/tsuku/issues/1931) | testable |
 | ~~_Fix all 34 HTML/JS/CSS bugs from #1834-#1838 across 12 pipeline pages: cross-links, status gaps, clickability, action targets, and filter/rendering bugs. Applies after both readability changes and Go data fixes land._~~ | | |
-| [#1932: test(dashboard): add validation tests for dashboard data and link integrity](https://github.com/tsukumogami/tsuku/issues/1932) | [#1928](https://github.com/tsukumogami/tsuku/issues/1928), [#1933](https://github.com/tsukumogami/tsuku/issues/1933) | testable |
-| _Add Go structural invariant tests for `dashboard.json` (batch ID consistency, ecosystem breakdown correctness, status coverage) and shell-based link integrity checks for the 12 HTML pages. Integrate into `website-ci.yml`._ | | |
+| ~~[#1932: test(dashboard): add validation tests for dashboard data and link integrity](https://github.com/tsukumogami/tsuku/issues/1932)~~ | [#1928](https://github.com/tsukumogami/tsuku/issues/1928), [#1933](https://github.com/tsukumogami/tsuku/issues/1933) | testable |
+| ~~_Add Go structural invariant tests for `dashboard.json` (batch ID consistency, ecosystem breakdown correctness, status coverage) and shell-based link integrity checks for the 12 HTML pages. Integrate into `website-ci.yml`._~~ | | |
 
 ### Dependency Graph
 
@@ -84,8 +84,7 @@ graph TD
     classDef needsDesign fill:#e1bee7
     classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
 
-    class I1927,I1928,I1929,I1930,I1931,I1933 done
-    class I1932 ready
+    class I1927,I1928,I1929,I1930,I1931,I1932,I1933 done
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design
