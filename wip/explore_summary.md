@@ -27,10 +27,10 @@ Sandbox can't replace direct docker calls in CI because it lacks verification, e
 Tsuku's sandbox can't replace the 12 recipe validation docker calls in CI because it has no post-install verification (just checks exit code 0), no way to pass environment variables like GITHUB_TOKEN into containers, and no machine-readable output format. CI workflows maintain their own container logic with retry, verification, and reporting code that duplicates what sandbox should provide.
 
 **Decision:**
-Close the three gaps with targeted extensions to the sandbox package and CLI. Add verify command execution to the sandbox script using the plan's existing Verify fields, mirroring what the validate package already does. Add an --env flag for explicit environment variable passthrough. Add a --json flag for machine-readable output. Keep retry and batching as CI-layer concerns. Defer binary quality checks (ELF linking, RPATH verification) as a separate future effort.
+Close the three gaps with targeted extensions, then migrate all four affected CI workflows. Add verify command execution using the plan's Verify fields with Go-side pattern matching shared with the validate package. Add --env for explicit env passthrough with key filtering. Add --json for machine-readable output. Then replace docker run blocks in test-recipe.yml, recipe-validation-core.yml, batch-generate.yml, and validate-golden-execution.yml with sandbox calls. Retry and batching stay as workflow-layer concerns consuming sandbox JSON output.
 
 **Rationale:**
-All three gaps have natural extension points in the existing code. The plan already carries verify info that the sandbox ignores. The RunOptions struct accepts arbitrary env vars. The SandboxResult struct contains everything needed for JSON output. By keeping changes to the sandbox package and CLI flags, we avoid API changes that would affect the orchestrator or validate packages. Retry and batching stay in CI because they're workflow concerns, not sandbox concerns.
+All three gaps have natural extension points in existing code. The plan already carries verify info that the sandbox ignores. The RunOptions struct accepts arbitrary env vars. The SandboxResult struct has everything needed for JSON output. Migrating workflows incrementally limits risk while each migration proves the pattern. After migration, all recipe validation uses the same code path locally and in CI.
 
 ## Current Status
 **Phase:** 5 - Decision

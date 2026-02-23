@@ -6,26 +6,27 @@ spawned_from:
   parent_design: docs/designs/DESIGN-sandbox-image-unification.md
 problem: |
   Tsuku's sandbox can't replace the 12 recipe validation docker calls in CI
-  because it has no post-install verification (just checks exit code 0), no way
-  to pass environment variables like GITHUB_TOKEN into containers, and no
-  machine-readable output format. CI workflows maintain their own container
-  logic with retry, verification, and reporting code that duplicates what
-  sandbox should provide.
+  because it lacks post-install verification, environment variable passthrough,
+  and machine-readable output. CI workflows maintain their own container logic
+  (per-family package installation, volume mounting, exit code capture, retry,
+  result aggregation) that duplicates what sandbox should provide.
 decision: |
-  Close the three gaps with targeted extensions to the sandbox package and CLI.
-  Add verify command execution to the sandbox script using the plan's existing
-  Verify fields, with Go-side pattern matching shared with the validate package.
-  Add an --env flag for explicit environment variable passthrough with key
-  filtering to protect hardcoded sandbox vars. Add a --json flag for
-  machine-readable output. Keep retry and batching as CI-layer concerns.
+  Close three sandbox gaps with targeted extensions, then migrate all four
+  affected CI workflows. Add verify command execution using the plan's Verify
+  fields with Go-side pattern matching shared with the validate package. Add
+  --env for explicit env passthrough with key filtering. Add --json for
+  machine-readable output. Then replace docker run blocks in test-recipe.yml,
+  recipe-validation-core.yml, batch-generate.yml, and
+  validate-golden-execution.yml with sandbox calls. Retry and batching stay
+  as workflow-layer concerns consuming sandbox JSON output.
 rationale: |
   All three gaps have natural extension points in existing code. The plan
   already carries verify info that the sandbox ignores. The RunOptions struct
-  accepts arbitrary env vars. The SandboxResult struct contains everything
-  needed for JSON output. By keeping changes to struct fields and CLI flags, we
-  avoid API changes that would affect the orchestrator or validate packages.
-  Verification uses Go-side pattern matching (not shell exit codes) to avoid
-  ambiguity and share logic with the validate package.
+  accepts arbitrary env vars. The SandboxResult struct has everything needed
+  for JSON output. Migrating workflows incrementally (one at a time) limits
+  risk while each migration proves the pattern. After migration, all recipe
+  validation uses the same code path locally and in CI, and direct docker
+  calls in CI are limited to non-recipe purposes.
 ---
 
 # DESIGN: Sandbox CI Integration
@@ -60,15 +61,15 @@ The sandbox image unification work (PR #1886, issues #1901-#1904) unified contai
 - Adding post-install verification to sandbox using the plan's existing `Verify` fields
 - Adding explicit environment variable passthrough via CLI flags
 - Adding machine-readable JSON output for CI consumption
-- Defining the CI migration path once gaps are closed
+- Migrating all Linux recipe validation workflows from direct docker calls to `--sandbox`
 
 **Out of scope:**
 - Binary quality checks (ELF linking, RPATH verification via `verify-binary.sh`). These are useful but separate from the sandbox execution model. They could be added later as a `--verify-binary` flag or a separate `tsuku verify-binary` command.
-- Retry logic. Retries are a CI workflow concern (exponential backoff on exit code 5). The sandbox runs once; the caller decides whether to retry.
-- Multi-recipe batching. CI tests multiple recipes per job for efficiency. Sandbox processes one recipe per invocation. Batching stays in the workflow layer.
-- Timeout customization per recipe. The sandbox already accepts timeout via `ResourceLimits`. The CLI could expose this, but it's a minor enhancement, not a gap.
-- macOS testing (not container-based).
+- macOS CI jobs. macOS tests run on native runners (no containers), so sandbox doesn't apply.
+- Non-recipe-validation docker usage. `platform-integration.yml` runs specialized build and integration tests (dltest, dlopen verification) that go beyond recipe install. These stay as docker calls.
 - The `SourceBuildSandboxImage` constant (tracked by sandbox image unification).
+
+**Done when:** Every Linux recipe validation job in CI uses `tsuku install --sandbox` instead of direct docker run. Retry logic and result aggregation stay in the workflow layer but consume sandbox JSON output instead of raw exit codes.
 
 ## Decision Drivers
 
@@ -177,19 +178,32 @@ export TSUKU_REGISTRY_URL="https://raw.githubusercontent.com/$REPO/$BRANCH"
   --json > result.json
 ```
 
-This eliminates per-family package installation, volume mounting, exit code capture files, and the sandbox script generation that CI currently reimplements. Retry logic and result aggregation stay in the workflow layer where they belong.
+This eliminates per-family package installation, volume mounting, exit code capture files, and the sandbox script generation that CI currently reimplements. Retry logic and result aggregation stay in the workflow layer but consume sandbox JSON output instead of raw exit codes and captured files.
+
+After the sandbox code changes land, four CI workflows migrate their Linux recipe validation jobs from docker calls to sandbox:
+
+| Workflow | What Migrates | What Stays |
+|----------|--------------|------------|
+| `test-recipe.yml` | Linux x86_64 (5 families) and arm64 (4 families) jobs | macOS native jobs |
+| `recipe-validation-core.yml` | Linux x86_64 and arm64 validation matrix | macOS native validation, auto-constraint generation |
+| `batch-generate.yml` | Validation phase Linux jobs | Generation phase (no containers), macOS validation |
+| `validate-golden-execution.yml` | Linux container execution jobs | macOS jobs, registry recipe execution (already native) |
+
+Two workflows already use sandbox: `sandbox-tests.yml` and `test-recipe-changes.yml`. Non-recipe workflows (`platform-integration.yml`, `build-essentials.yml`, etc.) are out of scope because they use containers for specialized builds, not recipe validation.
 
 ### Rationale
 
-All three gaps have clean extension points in existing code. The plan already carries verify info (after adding `ExitCode` to `PlanVerify`). The `RunOptions.Env` slice accepts arbitrary entries. The `SandboxResult` struct contains everything needed for JSON serialization. None of these changes affect the sandbox execution model, the container runtime abstraction, or the validate package.
+All three sandbox gaps have clean extension points in existing code. The plan already carries verify info (after adding `ExitCode` to `PlanVerify`). The `RunOptions.Env` slice accepts arbitrary entries. The `SandboxResult` struct contains everything needed for JSON serialization. None of these changes affect the sandbox execution model, the container runtime abstraction, or the validate package.
 
 Keeping retry and batching out of sandbox is deliberate. Retry policies (which exit codes, how many attempts, what backoff) are workflow decisions, not sandbox decisions. A sandbox invocation is one run of one recipe. The workflow decides whether to retry and how to aggregate results across recipes and platforms. This separation means the sandbox API stays simple while CI workflows keep full control of their retry semantics.
+
+Migrating all four workflows completes the integration. After migration, direct docker calls in CI are limited to non-recipe purposes (specialized builds, infrastructure testing), and all recipe validation goes through the same code path that users run locally with `tsuku install --sandbox`.
 
 ## Solution Architecture
 
 ### Overview
 
-The changes touch four layers: the plan format (add `ExitCode` to `PlanVerify`), the sandbox Go package (execution and verification), the CLI (flags and output), and shared verification logic.
+The changes touch four layers: the plan format (add `ExitCode` to `PlanVerify`), the sandbox Go package (execution and verification), the CLI (flags and output), and CI workflows (migration from docker calls to sandbox).
 
 ```
 CLI (cmd/tsuku/install_sandbox.go)
@@ -316,15 +330,73 @@ Add `--json` flag support.
 - Suppress human-readable output when `--json` is set
 - Add tests: JSON output format, JSON with various result states
 
-### Phase 4: CI Migration Guide
+### Phase 4: Migrate test-recipe.yml
 
-After the code changes land, document the migration path for CI workflows.
+Migrate the simplest recipe validation workflow as a proof-of-concept.
 
-- Write a migration guide showing before/after for each CI pattern
-- Update one workflow as a proof-of-concept (suggest `test-recipe.yml` as it's the simplest)
-- Leave remaining workflow migrations as follow-up issues
+`test-recipe.yml` tests a single recipe across all Linux families. Each Linux job currently does a `docker run` with family-specific package installation, then runs `tsuku install --force --recipe`. The migration replaces each docker call with `tsuku install --sandbox --force --recipe --target-family --env GITHUB_TOKEN --json`, letting the sandbox handle container selection, package installation, and verification.
 
-Phases 1-3 can ship in a single PR since they're all additive and don't affect each other. Phase 4 can be a separate PR to keep the blast radius manageable.
+- Replace docker run blocks in `test-linux-x86_64` job (5 families) with sandbox calls
+- Replace docker run blocks in `test-linux-arm64` job (4 families) with sandbox calls
+- Keep macOS jobs unchanged (native runners, no containers)
+- Preserve the existing result table in `$GITHUB_STEP_SUMMARY`, built from JSON output
+- Preserve `continue-on-error: true` semantics (platform failures don't block merge)
+
+Before:
+```bash
+docker run --rm -e GITHUB_TOKEN -v "$PWD:/workspace" -w /workspace "$image" sh -c "
+  case '$family' in ...package install... esac
+  timeout 300 ./tsuku install --force --recipe '$recipe_path'
+  echo \$? > /workspace/.tsuku-exit-code
+" 2>&1 || true
+```
+
+After:
+```bash
+export TSUKU_REGISTRY_URL="$REGISTRY_URL"  # consumed on host during plan gen
+./tsuku install --sandbox --force --recipe "$recipe_path" \
+  --target-family "$family" \
+  --env GITHUB_TOKEN="$GITHUB_TOKEN" \
+  --json > ".result-$family.json" 2>/dev/null || true
+```
+
+### Phase 5: Migrate recipe-validation-core.yml
+
+Migrate the most impactful workflow: all-recipes cross-platform validation.
+
+`recipe-validation-core.yml` is the reusable workflow that validates every recipe across all platforms with retry logic. Each Linux matrix entry runs a docker call per recipe with up to 3 retries on exit code 5 (network errors). The migration replaces the docker calls but preserves the retry wrapper and JSON result aggregation.
+
+- Replace docker run blocks in `validate-linux-x86_64` matrix (5 families) with sandbox calls
+- Replace docker run blocks in `validate-linux-arm64` matrix (4 families) with sandbox calls
+- Keep macOS validation jobs unchanged
+- Preserve retry logic: wrap sandbox call in the existing retry loop, check `jq .install_exit_code` from JSON for exit code 5
+- Preserve JSON result aggregation: transform sandbox JSON to the existing `{recipe, platform, status, exit_code, attempts}` format
+- Preserve auto-constraint generation (`auto_constrain` input)
+- Keep the `report` job that merges results unchanged (same aggregated JSON format)
+
+### Phase 6: Migrate remaining workflows
+
+Migrate `batch-generate.yml` and `validate-golden-execution.yml`.
+
+**batch-generate.yml** — The validation phase runs docker calls per family to test generated recipes. The migration follows the same pattern as recipe-validation-core. One difference: batch-generate uses exit code 8 (`missing_dep`) to extract `blocked_by` dependencies from JSON output. The sandbox `--json` output must include the same `missing_recipes` field from the existing `--json` install output for this to work.
+
+- Replace docker run blocks in validation phase (x86_64 and arm64) with sandbox calls
+- Preserve exit code 8 / `blocked_by` extraction using `jq` on sandbox JSON output
+- Keep generation phase unchanged (no containers)
+- Keep macOS validation unchanged
+
+**validate-golden-execution.yml** — This workflow validates embedded golden execution files across Linux families. It runs aggregated docker calls per family with multiple recipes batched in a single container. The sandbox processes one recipe at a time, so the migration replaces the batched docker call with a loop of sandbox calls.
+
+- Replace per-family docker run blocks with a loop of sandbox calls
+- One sandbox invocation per recipe-version pair instead of one docker call per family
+- Keep registry recipe execution unchanged (already native)
+- Keep macOS jobs unchanged
+
+### Phasing and Dependencies
+
+Phases 1-3 (sandbox code changes) can ship in a single PR. Phase 4 depends on phases 1-3 landing and should be a separate PR to isolate risk. Phase 5 depends on phase 4 proving the pattern works. Phase 6 depends on phase 5.
+
+The incremental approach lets each workflow migration be reviewed and tested independently. If a migration introduces regressions, only that workflow is affected, and reverting is a single PR.
 
 ## Security Considerations
 
@@ -358,17 +430,19 @@ The `--json` output includes exit codes, timing, and error messages but not env 
 
 ### Positive
 
-- CI recipe validation can migrate from custom docker-run scripts to `tsuku install --sandbox`, eliminating per-family package installation code, volume mounting, and exit code capture hacks
+- All Linux recipe validation in CI uses the same code path as local `tsuku install --sandbox`, eliminating per-family package installation code, volume mounting, and exit code capture hacks across four workflows
 - The sandbox becomes a meaningful validation tool, not just an "install succeeded" check
 - JSON output lets CI build status tables without parsing human-readable text
 - Env passthrough unblocks sandbox use in any context that needs tokens or custom configuration
-- The changes are additive and backward compatible. Existing `--sandbox` callers see no difference unless they opt into `--json` or `--env`
+- The code changes are additive and backward compatible. Existing `--sandbox` callers see no difference unless they opt into `--json` or `--env`
+- CI workflow code gets simpler: each Linux recipe test is one `tsuku install --sandbox` call instead of a docker run block with family-specific setup
 
 ### Negative
 
 - The verify step adds execution time to sandbox runs (running one more command per invocation). For most recipes this is milliseconds (`tool --version`), but some verify commands may be slower.
 - `--env` creates a mechanism for passing secrets into containers. While opt-in, users could accidentally expose tokens in CI logs if they echo the sandbox command. Mitigation: the sandbox doesn't log env values, and `--json` output doesn't include them.
 - Passing `GITHUB_TOKEN` via `--env` into a container with network access lets a malicious recipe's verify command exfiltrate the token. This is the same risk as CI's current `docker run -e GITHUB_TOKEN` pattern, but worth noting since the sandbox didn't previously expose tokens.
+- `validate-golden-execution.yml` currently batches multiple recipes into one docker call per family. Migrating to sandbox means one container invocation per recipe, increasing startup overhead. For N recipes, that's N container starts instead of 1. In practice this is mitigated by sandbox's image caching (the custom image is built once and reused).
 
 ### Mitigations
 
@@ -378,3 +452,4 @@ The `--json` output includes exit codes, timing, and error messages but not env 
 | Secret leakage via --env | Sandbox never logs env values. JSON output excludes them. CI should use `${{ secrets.* }}` which are masked in logs. |
 | Token exfiltration via malicious verify | Same risk as current CI pattern. Mitigated by: recipe review process, GITHUB_TOKEN has minimal read-only scope, network isolation when not needed. |
 | Malicious verify command | Same review process as install steps. The recipe is the trust boundary, not the sandbox. |
+| Golden validation container overhead | Sandbox caches custom images (same hash = no rebuild). The extra container starts are fast when the image already exists. |
