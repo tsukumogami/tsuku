@@ -115,33 +115,33 @@ The validation runs only for deterministic builders (not LLM builders, which hav
 
 The five registries have different levels of API support for binary metadata. The question is whether to implement all at once or incrementally.
 
-#### Chosen: Incremental by registry, starting with crates.io and npm
+#### Chosen: Incremental by registry, all registries in scope
 
-Fix crates.io and npm first because they require no additional network calls -- the binary metadata is already in API responses being fetched. PyPI and RubyGems need artifact downloads, which adds complexity (download size limits, extraction, error handling) that warrants separate implementation work.
+Ship crates.io and npm first because they require no additional network calls -- the binary metadata is already in API responses being fetched. Then add the orchestrator validation layer. Then tackle PyPI and RubyGems, which need artifact downloads and shared infrastructure for in-memory archive reading. Finally, improve the Go heuristic by scanning module source listings for `cmd/` directories.
 
-Go has no reliable source for binary names beyond the import path heuristic. The best option there may be to detect common patterns (e.g., `cmd/` subdirectories) from the repository, but that's speculative and can wait.
+All five registries are in scope for this design. The incremental delivery lets each phase ship independently while building toward full coverage.
 
 #### Alternatives Considered
 
-**All registries at once**: Implement all five in one pass. Rejected because the crates.io and npm fixes are small, targeted changes that can ship immediately. Bundling them with the more complex PyPI and RubyGems work delays the easy wins.
+**All registries at once**: Implement all five in one pass. Rejected because the crates.io and npm fixes are small, targeted changes that can ship immediately. Bundling them with the more complex PyPI and RubyGems work delays the easy wins without reducing total effort.
+
+**Only fix registries with API support**: Skip PyPI and RubyGems since they lack API fields. Rejected because artifact-based discovery is straightforward (download ZIP/tar, extract one file, parse it) and these registries produce the same class of binary name errors as crates.io.
 
 ## Decision Outcome
 
-**Chosen: Registry API lookups + pre-sandbox validation, incremental rollout**
+**Chosen: Registry API lookups + pre-sandbox validation, incremental rollout across all registries**
 
 ### Summary
 
-Replace `discoverExecutables()` in the Cargo builder with a call that reads the `bin_names` field from the crates.io version API response that `fetchCrateInfo()` already returns. This fixes the workspace monorepo problem without any new network calls, because `bin_names` is included in the same response used for version resolution. Similarly, fix the npm builder's `parseBinField()` to handle the string-type `bin` field (single executable pointing to a file path), which currently returns nil and falls back to the package name.
+Replace repository-based binary name discovery with registry-authoritative sources across all five builder ecosystems. For crates.io, read the `bin_names` field from the version API response already being fetched -- this fixes workspace monorepo failures without new network calls. For npm, fix the `parseBinField()` parser to handle string-type `bin` values and scoped package names. For PyPI and RubyGems, download the published artifact (`.whl` or `.gem`) and extract executable metadata from internal files (`entry_points.txt` and `metadata.gz`). For Go, improve the heuristic by scanning the module source listing from the Go module proxy for `cmd/` directories containing `main.go`.
 
-Add a `ValidateBinaryNames()` step in the orchestrator between generation and sandbox validation. This function takes the generated recipe and the builder's registry metadata, extracts the executable list from both, and flags mismatches. When the recipe's executables don't match the registry metadata, the orchestrator corrects them before the sandbox run. This prevents wasted sandbox cycles and catches errors from any builder.
+Add a `ValidateBinaryNames()` step in the orchestrator between generation and sandbox validation. Builders that can provide authoritative binary names implement a `BinaryNameProvider` interface. The orchestrator cross-checks the recipe's executable list against this data and corrects mismatches before the sandbox run. This prevents wasted sandbox cycles and catches errors from any builder, including future ones.
 
-PyPI and RubyGems don't expose binary metadata through their APIs. Fixing those registries requires downloading the published artifact (`.whl` for PyPI, `.gem` for RubyGems) and extracting internal metadata files (`entry_points.txt` and `metadata.gz` respectively). This is straightforward but adds download/extraction logic that should be implemented separately.
-
-The Go builder's import-path heuristic has no equivalent registry metadata to validate against. Improving Go binary name discovery likely requires source-level analysis (looking for `cmd/` directories in the repository), which is a different class of problem.
+The work ships incrementally: crates.io and npm first (no new downloads), then the orchestrator validation layer, then PyPI and RubyGems (artifact downloads with shared infrastructure), and finally the Go heuristic improvement. Each phase is independently shippable.
 
 ### Rationale
 
-The crates.io and npm fixes are small, well-scoped changes that solve the most common failure mode (Cargo workspace monorepos were the source of every binary name error found in PR #1869). The orchestrator validation adds a safety net that catches any builder's mistakes. Doing the easy wins first and deferring artifact downloads keeps the initial scope tight while establishing the pattern for future registry work.
+The incremental approach lets crates.io and npm ship immediately since they require no new downloads -- they fix the most common failure mode (Cargo workspace monorepos were the source of every binary name error found in PR #1869). The orchestrator validation layer adds a safety net that catches any builder's mistakes. PyPI and RubyGems share the same artifact-download pattern, so a common helper reduces duplication. The Go improvement is the weakest of the five (still heuristic-based) but covers the remaining ecosystem.
 
 ## Solution Architecture
 
@@ -175,7 +175,45 @@ type BinaryNameProvider interface {
 }
 ```
 
-Builders that have registry metadata (Cargo, npm, and eventually PyPI, RubyGems) implement this interface. The orchestrator checks if the builder satisfies it and runs validation when available. Builders without metadata (Go, LLM builders) skip this step.
+Builders that have registry metadata (Cargo, npm, PyPI, RubyGems) implement this interface. The orchestrator checks if the builder satisfies it and runs validation when available. Builders without metadata (Go, LLM builders) skip this step.
+
+**5. PyPI builder (`internal/builders/pypi.go`)**
+
+Replace the current `discoverExecutables()` that fetches `pyproject.toml` from GitHub with artifact-based discovery. The PyPI JSON API (`/pypi/{package}/json`) already returns a `urls` array with download links for each distribution. Find the wheel (`.whl`) artifact for the latest version, download it in-memory, and extract the `{package}.dist-info/entry_points.txt` file. Parse the `[console_scripts]` section to get executable names.
+
+Wheels are ZIP archives, so Go's `archive/zip` can read individual entries without extracting the full file. The builder should:
+- Prefer `bdist_wheel` over `sdist` (wheels have normalized metadata)
+- Prefer the platform-independent wheel (`py3-none-any`) when multiple are available
+- Bound the download to a reasonable size limit (most pure-python wheels are under 5MB; set a 20MB cap)
+- Read only the `entry_points.txt` entry from the ZIP, not the full archive
+- Fall back to the current pyproject.toml approach if no wheel is available or the download fails
+
+The current `buildPyprojectURL()` and `fetchPyprojectExecutables()` functions become the fallback path, not the primary one.
+
+**6. RubyGems builder (`internal/builders/gem.go`)**
+
+Replace the current `discoverExecutables()` that fetches gemspec from GitHub with artifact-based discovery. Download the `.gem` file from `https://rubygems.org/gems/{name}-{version}.gem`, which is a tar archive containing `metadata.gz`. Decompress and parse the YAML to extract the `executables` array.
+
+The builder should:
+- Use the version already resolved by `fetchGemInfo()`
+- Bound the download (gems vary widely; set a 50MB cap)
+- Read only `metadata.gz` from the tar stream, skip all other entries
+- Fall back to the current gemspec-from-GitHub approach if the download fails
+- Validate each executable name through `isValidExecutableName()`
+
+The current `buildGemspecURL()` and `fetchGemspecExecutables()` functions become the fallback path.
+
+**7. Go builder (`internal/builders/go.go`)**
+
+The Go module proxy doesn't expose binary names, and there's no published artifact equivalent to wheels or gems that contains executable metadata. The current heuristic (last path segment of the module import path) works for the common case but fails for multi-binary modules and modules where the binary name differs from the directory name.
+
+Improve the heuristic by fetching the module's source listing from the Go module proxy (`/{module}/@v/{version}.zip`) and scanning for `cmd/` subdirectories that contain `main.go` files. Each such directory is a binary target, and the directory name is the executable name. This is how `go install` resolves targets.
+
+The builder should:
+- Try the source listing approach first for modules with `cmd/` paths in their import
+- Fall back to the current last-segment heuristic if the proxy doesn't respond or parsing fails
+- Bound the download (Go module ZIPs can be large; only scan directory entries, don't read file contents)
+- Not implement `BinaryNameProvider` initially since the discovery is still heuristic
 
 ### Data Flow
 
@@ -183,7 +221,7 @@ Builders that have registry metadata (Cargo, npm, and eventually PyPI, RubyGems)
 Builder.Build()
   ├── fetchCrateInfo()          // Already happening
   │     └── bin_names in response  // New: capture this
-  ├── discoverExecutables()     // Changed: read bin_names instead of Cargo.toml
+  ├── discoverExecutables()     // Changed: read registry data instead of repo files
   └── generateRecipe()
         └── recipe with executables
 
@@ -196,34 +234,41 @@ Orchestrator.Generate()
   └── validateInSandbox()       // Existing: sandbox validates installation
 ```
 
-### Future Work: PyPI and RubyGems
+### Artifact Download Infrastructure
 
-PyPI and RubyGems require downloading published artifacts to discover binary names. The pattern is similar for both:
+PyPI and RubyGems both need to download published artifacts and extract specific files from archives. The shared requirements are:
 
-1. Get the artifact URL from the registry API (already available)
-2. Download the artifact (`.whl` is a ZIP, `.gem` is a tarball)
-3. Extract the metadata file (`entry_points.txt` or `metadata.gz`)
-4. Parse executable names from the metadata
+- HTTPS-only downloads with content-type verification
+- Configurable size limits per registry (wheels tend to be smaller than gems)
+- In-memory archive reading (no extraction to disk)
+- Hash verification against registry-provided digests where available (PyPI provides SHA256 in the `digests` field; RubyGems provides SHA256 via the versions API)
+- Timeout matching the existing builder HTTP client configuration
+- All extracted binary names validated through `isValidExecutableName()`
+- Upper bound on executable count per package (sanity check against malformed metadata)
 
-This needs download size limits, timeouts, in-memory archive reading (no extraction to disk), and hash verification against registry-provided digests. All extracted binary names must pass through `isValidExecutableName()` and the executable count per package should be bounded. The `BinaryNameProvider` interface makes it easy to add these later without changing the orchestrator.
+This logic can live in a shared `internal/builders/artifact.go` helper that both PyPI and RubyGems builders call.
 
 ## Implementation Approach
 
-The work breaks into three phases:
+The work breaks into five phases, each independently shippable:
 
-1. **Crates.io + npm fixes**: Change `discoverExecutables()` to use `bin_names`, fix `parseBinField()`. These are isolated builder changes with no new dependencies.
+1. **Crates.io binary names from API**: Add `BinNames` field to `cratesIOCrateResponse`, rewrite `discoverExecutables()` to read it instead of fetching Cargo.toml. Remove `buildCargoTomlURL()`, `fetchCargoTomlExecutables()`, and related structs. Add tests using the crates.io API response format. This alone fixes all known failures from PR #1869.
 
-2. **Orchestrator validation**: Add `BinaryNameProvider` interface and `validateBinaryNames()` step. Depends on phase 1 for the first two implementations of the interface.
+2. **npm `parseBinField()` fix**: Handle string-type `bin` values and scoped package name stripping. Small, isolated change with unit tests.
 
-3. **PyPI + RubyGems artifact discovery**: Download and parse published artifacts. Depends on phase 2 for the integration point but can be developed independently.
+3. **Orchestrator validation**: Add `BinaryNameProvider` interface and `validateBinaryNames()` step. Implement `BinaryNameProvider` on Cargo and npm builders. Add telemetry for corrections. Depends on phases 1-2 for the first implementations of the interface.
 
-Each phase is independently shippable. Phase 1 alone fixes the known failures from PR #1869.
+4. **PyPI wheel-based discovery**: Add artifact download helper (`internal/builders/artifact.go`). Implement wheel download, ZIP entry extraction for `entry_points.txt`, and `[console_scripts]` parsing. Implement `BinaryNameProvider` on PyPI builder. Keep the pyproject.toml-from-GitHub approach as fallback.
+
+5. **RubyGems gem-based discovery**: Reuse the artifact download helper. Implement `.gem` tar reading, `metadata.gz` decompression, and YAML `executables` parsing. Implement `BinaryNameProvider` on RubyGems builder. Keep the gemspec-from-GitHub approach as fallback.
+
+The Go builder improvement (scanning `cmd/` directories from the module proxy ZIP) can be done in parallel with any phase after 3, but doesn't implement `BinaryNameProvider` since its discovery remains heuristic.
 
 ## Security Considerations
 
 ### Download verification
 
-No change for crates.io and npm (no new downloads). PyPI and RubyGems artifact downloads in future work should use HTTPS and verify content types. Artifact sizes should be bounded (existing `maxResponseSize` patterns apply).
+No new downloads for crates.io and npm. PyPI and RubyGems require downloading published artifacts over HTTPS. Content types must be verified (`.whl` is `application/zip`, `.gem` is `application/octet-stream`). Download sizes are bounded per registry (20MB for wheels, 50MB for gems). Where available, verify SHA256 digests against registry-provided hashes (PyPI includes `digests` in the `urls` array; RubyGems provides SHA256 via the versions API). The Go module proxy serves over HTTPS with GOPROXY verification.
 
 ### Execution isolation
 
@@ -243,12 +288,15 @@ No change. Binary name discovery doesn't access or transmit user data.
 
 - Fixes workspace monorepo binary name discovery for Cargo (the most common failure case)
 - Fixes single-executable npm packages that use string-type `bin` field
+- Adds authoritative binary name discovery for PyPI (from wheels) and RubyGems (from gems)
+- Improves Go binary name discovery beyond the single-segment heuristic
 - Adds a safety net that catches any builder's binary name errors before sandbox validation
-- Establishes `BinaryNameProvider` pattern for future registry integrations
+- `BinaryNameProvider` interface makes adding new registries straightforward
 - No new network calls for crates.io and npm (reuses existing API responses)
 
 ### Negative
 
 - Adds a dependency on the `bin_names` field existing in crates.io API responses (field has been present since at least 2016, well-documented in OpenAPI spec)
-- Future PyPI and RubyGems work requires downloading artifacts, adding latency to recipe generation
-- Go builder has no equivalent metadata source and remains heuristic-based
+- PyPI and RubyGems artifact downloads add latency to recipe generation (mitigated by keeping repo-based fallback)
+- Go builder discovery is improved but still heuristic-based (no authoritative metadata source exists)
+- Artifact download infrastructure (`internal/builders/artifact.go`) is new code with its own testing surface
