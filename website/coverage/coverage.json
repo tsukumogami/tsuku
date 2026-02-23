@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-02-23T02:52:20Z",
+  "generated_at": "2026-02-23T03:14:18Z",
   "total_recipes": 350,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 292,
+        "supported": 293,
         "total": 350,
-        "pct": 83.42857142857143
+        "pct": 83.71428571428572
       },
       "glibc": {
         "supported": 320,
@@ -14,9 +14,9 @@
         "pct": 91.42857142857143
       },
       "musl": {
-        "supported": 180,
+        "supported": 181,
         "total": 350,
-        "pct": 51.42857142857142
+        "pct": 51.714285714285715
       }
     },
     "by_category": {
@@ -27,7 +27,7 @@
       },
       "tool": {
         "total": 327,
-        "musl_support": 157,
+        "musl_support": 158,
         "glibc_support": 297
       }
     }
@@ -484,11 +484,9 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": false
+        "musl": true
       },
-      "gaps": [
-        "musl"
-      ],
+      "gaps": null,
       "errors": null,
       "warnings": null
     },
@@ -2611,13 +2609,11 @@
       "name": "libgit2",
       "type": "tool",
       "platforms": {
-        "darwin": false,
+        "darwin": true,
         "glibc": true,
         "musl": true
       },
-      "gaps": [
-        "darwin"
-      ],
+      "gaps": null,
       "errors": null,
       "warnings": null
     },
