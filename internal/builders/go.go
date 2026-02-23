@@ -129,9 +129,7 @@ func (b *GoBuilder) Build(ctx context.Context, req BuildRequest) (*BuildResult, 
 			Homepage:     fmt.Sprintf("https://pkg.go.dev/%s", req.Package),
 			Dependencies: []string{"go"},
 		},
-		Version: recipe.VersionSection{
-			Source: "goproxy",
-		},
+		Version: recipe.VersionSection{},
 		Steps: []recipe.Step{
 			{
 				Action: "go_install",

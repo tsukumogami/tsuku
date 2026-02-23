@@ -141,8 +141,8 @@ func TestNpmBuilder_Build(t *testing.T) {
 		if result.Recipe.Metadata.Name != "prettier" {
 			t.Errorf("Metadata.Name = %q, want %q", result.Recipe.Metadata.Name, "prettier")
 		}
-		if result.Recipe.Version.Source != "npm" {
-			t.Errorf("Version.Source = %q, want %q", result.Recipe.Version.Source, "npm")
+		if result.Recipe.Version.Source != "" {
+			t.Errorf("Version.Source = %q, want empty (inferred from action)", result.Recipe.Version.Source)
 		}
 		if result.Recipe.Steps[0].Action != "npm_install" {
 			t.Errorf("Steps[0].Action = %q, want %q", result.Recipe.Steps[0].Action, "npm_install")

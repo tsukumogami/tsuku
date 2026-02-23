@@ -115,8 +115,8 @@ func TestPyPIBuilder_Build(t *testing.T) {
 		if result.Recipe.Metadata.Name != "ruff" {
 			t.Errorf("Metadata.Name = %q, want %q", result.Recipe.Metadata.Name, "ruff")
 		}
-		if result.Recipe.Version.Source != "pypi" {
-			t.Errorf("Version.Source = %q, want %q", result.Recipe.Version.Source, "pypi")
+		if result.Recipe.Version.Source != "" {
+			t.Errorf("Version.Source = %q, want empty (inferred from action)", result.Recipe.Version.Source)
 		}
 		if result.Recipe.Steps[0].Action != "pipx_install" {
 			t.Errorf("Steps[0].Action = %q, want %q", result.Recipe.Steps[0].Action, "pipx_install")

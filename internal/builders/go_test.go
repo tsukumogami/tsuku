@@ -149,9 +149,9 @@ func verifyGoRecipe(t *testing.T, result *BuildResult, expectedExe, modulePath s
 		t.Errorf("Recipe.Metadata.Dependencies = %v, want [go]", r.Metadata.Dependencies)
 	}
 
-	// Version source should be goproxy
-	if r.Version.Source != "goproxy" {
-		t.Errorf("Recipe.Version.Source = %q, want %q", r.Version.Source, "goproxy")
+	// Version source should be empty (inferred from go_install action)
+	if r.Version.Source != "" {
+		t.Errorf("Recipe.Version.Source = %q, want empty (inferred from action)", r.Version.Source)
 	}
 
 	// Check single step with go_install action
