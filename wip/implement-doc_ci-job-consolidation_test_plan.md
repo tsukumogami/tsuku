@@ -46,7 +46,7 @@ Total scenarios: 14
 ---
 
 ## Scenario 4: integration-linux serialization structure
-**ID**: scenario-4
+**ID**: [x] scenario-4
 **Testable after**: #1892
 **Category**: infrastructure
 **Commands**:
@@ -61,7 +61,7 @@ Total scenarios: 14
 ---
 
 ## Scenario 5: integration-linux CI runs all 9 tests in one job
-**ID**: scenario-5
+**ID**: [x] scenario-5
 **Testable after**: #1892
 **Category**: use-case
 **Environment**: manual (CI)

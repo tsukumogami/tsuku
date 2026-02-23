@@ -39,8 +39,8 @@ rationale: |
 |-------|--------------|------|
 | ~~[#1891: ci(build-essentials): consolidate sandbox-multifamily into container loops](https://github.com/tsukumogami/tsuku/issues/1891)~~ | ~~None~~ | ~~testable~~ |
 | ~~_Replace the 5x2 family/tool matrix with 2 container-loop jobs (one per tool), each iterating through 5 Linux families sequentially. First application of the test-recipe.yml container loop pattern to build-essentials.yml._~~ | | |
-| [#1892: ci(test): serialize integration-linux tests with GHA groups](https://github.com/tsukumogami/tsuku/issues/1892) | None | testable |
-| _Collapse the 9-job integration-linux matrix into a single serialized job following the integration-macos pattern already in the same file. Reads test entries from test-matrix.json and wraps each in GHA groups._ | | |
+| ~~[#1892: ci(test): serialize integration-linux tests with GHA groups](https://github.com/tsukumogami/tsuku/issues/1892)~~ | ~~None~~ | ~~testable~~ |
+| ~~_Collapse the 9-job integration-linux matrix into a single serialized job following the integration-macos pattern already in the same file. Reads test entries from test-matrix.json and wraps each in GHA groups._~~ | | |
 | [#1893: ci(sandbox-tests): serialize sandbox tests with GHA groups](https://github.com/tsukumogami/tsuku/issues/1893) | None | testable |
 | _Same serialization pattern as #1892, applied to sandbox-tests.yml. Replaces 9 matrix jobs that use the same test-matrix.json linux entries with a single aggregated job._ | | |
 | [#1894: ci(integration-tests): consolidate checksum-pinning into container loop](https://github.com/tsukumogami/tsuku/issues/1894) | None | testable |
@@ -87,8 +87,8 @@ graph TD
     classDef needsDesign fill:#e1bee7
     classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
 
-    class I1891 done
-    class I1892,I1893,I1894 ready
+    class I1891,I1892 done
+    class I1893,I1894 ready
     class I1895,I1896 blocked
     class I1897 blocked
 ```

@@ -3,7 +3,7 @@
   "design_doc": "docs/designs/DESIGN-ci-job-consolidation.md",
   "branch": "docs/ci-job-consolidation",
   "pr_number": 1887,
-  "integrity_hash": "sha256:1fd9749ffb1b8db05eebbc778a38e78fe08f160e88770107f14a713e1fc1201e",
+  "integrity_hash": "sha256:2952b18d548929470bb072d6fea3b87e3eae16977a8c748235123f52817a6d8c",
   "issues": [
     {
       "number": 1891,
@@ -38,14 +38,27 @@
     {
       "number": 1892,
       "title": "ci(test): serialize integration-linux tests with GHA groups",
-      "status": "pending",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [],
-      "commits": [],
-      "agent_type": "",
-      "summary": null,
+      "commits": [
+        "6f0aec4d5fe60d56c24a5f4a1c41d44df91d1a84"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          ".github/workflows/test.yml"
+        ],
+        "tests_added": 0,
+        "key_decisions": "Followed integration-macos pattern with jq-based while loop"
+      },
+      "reviewer_results": {
+        "approved": true,
+        "note": "PR #1908 merged -- CI validates workflow changes"
+      },
       "testable_scenarios": [
         "scenario-4",
         "scenario-5"
@@ -54,10 +67,10 @@
     {
       "number": 1893,
       "title": "ci(sandbox-tests): serialize sandbox tests with GHA groups",
-      "status": "pending",
+      "status": "in_progress",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [],
       "commits": [],
       "agent_type": "",
