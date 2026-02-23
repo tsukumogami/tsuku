@@ -462,6 +462,186 @@ func TestTransitiveDepsHavePlatformCoverage(t *testing.T) {
 		visited := make(map[string]bool)
 		checkTransitiveDeps(t, name, r, recipes, visited)
 	}
+
+	// Promote musl coverage warnings to errors for all embedded recipes.
+	// Every embedded recipe must either have libc-scoped when clauses with
+	// an apk_install fallback, or declare supported_libc in metadata.
+	for name, r := range recipes {
+		report := AnalyzeRecipeCoverage(r)
+		for _, w := range report.Warnings {
+			t.Errorf("embedded recipe %s has musl coverage warning: %s", name, w)
+		}
+	}
+}
+
+func TestHasLibcWhenClause(t *testing.T) {
+	tests := []struct {
+		name     string
+		step     Step
+		expected bool
+	}{
+		{
+			name:     "no when clause",
+			step:     Step{Action: "download"},
+			expected: false,
+		},
+		{
+			name:     "when clause without libc",
+			step:     Step{Action: "download", When: &WhenClause{OS: []string{"linux"}}},
+			expected: false,
+		},
+		{
+			name:     "when clause with libc glibc",
+			step:     Step{Action: "download", When: &WhenClause{OS: []string{"linux"}, Libc: []string{"glibc"}}},
+			expected: true,
+		},
+		{
+			name:     "when clause with libc musl",
+			step:     Step{Action: "apk_install", When: &WhenClause{OS: []string{"linux"}, Libc: []string{"musl"}}},
+			expected: true,
+		},
+		{
+			name:     "when clause with both libc values",
+			step:     Step{Action: "download", When: &WhenClause{Libc: []string{"glibc", "musl"}}},
+			expected: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := hasLibcWhenClause(tt.step)
+			if got != tt.expected {
+				t.Errorf("hasLibcWhenClause() = %v, want %v", got, tt.expected)
+			}
+		})
+	}
+}
+
+func TestAnalyzeRecipeCoverage_UnguardedDownloadNoApkInstall(t *testing.T) {
+	// Recipe with unguarded download action and no apk_install should produce a warning
+	r := &Recipe{
+		Metadata: MetadataSection{Name: "broken-tool"},
+		Steps: []Step{
+			{
+				Action: "download",
+				// No when clause - unguarded glibc-bound action
+			},
+		},
+	}
+
+	report := AnalyzeRecipeCoverage(r)
+
+	hasMuslWarning := false
+	for _, w := range report.Warnings {
+		if w == "recipe 'broken-tool' has platform-specific actions without libc when clauses and no apk_install fallback" {
+			hasMuslWarning = true
+			break
+		}
+	}
+	if !hasMuslWarning {
+		t.Errorf("expected musl coverage warning for unguarded download, got warnings: %v", report.Warnings)
+	}
+}
+
+func TestAnalyzeRecipeCoverage_GuardedDownloadWithApkInstall(t *testing.T) {
+	// Recipe with download guarded by libc = ["glibc"] plus apk_install should produce no warning
+	r := &Recipe{
+		Metadata: MetadataSection{Name: "good-tool"},
+		Steps: []Step{
+			{
+				Action: "download",
+				When:   &WhenClause{OS: []string{"linux"}, Libc: []string{"glibc"}},
+			},
+			{
+				Action: "apk_install",
+				When:   &WhenClause{OS: []string{"linux"}, Libc: []string{"musl"}},
+			},
+		},
+	}
+
+	report := AnalyzeRecipeCoverage(r)
+
+	for _, w := range report.Warnings {
+		if w == "recipe 'good-tool' has platform-specific actions without libc when clauses and no apk_install fallback" {
+			t.Errorf("unexpected musl coverage warning for guarded download with apk_install: %v", report.Warnings)
+		}
+	}
+}
+
+func TestAnalyzeRecipeCoverage_UnguardedDownloadWithSupportedLibc(t *testing.T) {
+	// Recipe with unguarded download but supported_libc declaring musl should produce no warning
+	r := &Recipe{
+		Metadata: MetadataSection{
+			Name:          "static-tool",
+			SupportedLibc: []string{"glibc", "musl"},
+		},
+		Steps: []Step{
+			{
+				Action: "download_archive",
+				// No when clause - but recipe declares musl support via metadata
+			},
+		},
+	}
+
+	report := AnalyzeRecipeCoverage(r)
+
+	for _, w := range report.Warnings {
+		if w == "recipe 'static-tool' has platform-specific actions without libc when clauses and no apk_install fallback" {
+			t.Errorf("unexpected musl coverage warning for recipe with supported_libc: %v", report.Warnings)
+		}
+	}
+}
+
+func TestAnalyzeRecipeCoverage_UnguardedHomebrewNoApkInstall(t *testing.T) {
+	// Recipe with homebrew action (no when clause) and no apk_install should produce a warning
+	r := &Recipe{
+		Metadata: MetadataSection{Name: "brew-only-tool"},
+		Steps: []Step{
+			{
+				Action: "homebrew",
+				// No when clause - unguarded glibc-bound action
+			},
+		},
+	}
+
+	report := AnalyzeRecipeCoverage(r)
+
+	hasMuslWarning := false
+	for _, w := range report.Warnings {
+		if w == "recipe 'brew-only-tool' has platform-specific actions without libc when clauses and no apk_install fallback" {
+			hasMuslWarning = true
+			break
+		}
+	}
+	if !hasMuslWarning {
+		t.Errorf("expected musl coverage warning for unguarded homebrew, got warnings: %v", report.Warnings)
+	}
+}
+
+func TestIsGlibcBoundAction(t *testing.T) {
+	tests := []struct {
+		action   string
+		expected bool
+	}{
+		{"download", true},
+		{"download_archive", true},
+		{"github_archive", true},
+		{"homebrew", true},
+		{"apk_install", false},
+		{"extract", false},
+		{"install_binaries", false},
+		{"run_command", false},
+		{"cargo_install", false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.action, func(t *testing.T) {
+			got := isGlibcBoundAction(tt.action)
+			if got != tt.expected {
+				t.Errorf("isGlibcBoundAction(%q) = %v, want %v", tt.action, got, tt.expected)
+			}
+		})
+	}
 }
 
 // checkTransitiveDeps recursively checks that all dependencies have proper platform coverage.

@@ -64,6 +64,27 @@ func AnalyzeRecipeCoverage(r *Recipe) CoverageReport {
 		}
 	}
 
+	// Structural musl coverage check: detect platform-specific download actions
+	// without libc-scoped when clauses and no apk_install fallback.
+	muslDeclared := slices.Contains(report.SupportedLibc, "musl")
+	if !muslDeclared {
+		hasApkInstall := false
+		hasUnguardedGlibcAction := false
+		for _, step := range r.Steps {
+			if step.Action == "apk_install" {
+				hasApkInstall = true
+			}
+			if isGlibcBoundAction(step.Action) && !hasLibcWhenClause(step) {
+				hasUnguardedGlibcAction = true
+			}
+		}
+		if hasUnguardedGlibcAction && !hasApkInstall {
+			report.Warnings = append(report.Warnings,
+				fmt.Sprintf("recipe '%s' has platform-specific actions without libc when clauses and no apk_install fallback",
+					r.Metadata.Name))
+		}
+	}
+
 	return report
 }
 
@@ -175,6 +196,26 @@ func stepMatchesDarwin(w *WhenClause) bool {
 	}
 
 	return true
+}
+
+// glibcBoundActions are actions that typically produce platform-specific binaries
+// linked against glibc. On musl systems these binaries won't execute without
+// a libc-scoped when clause or an apk_install fallback.
+var glibcBoundActions = map[string]bool{
+	"download":         true,
+	"download_archive": true,
+	"github_archive":   true,
+	"homebrew":         true,
+}
+
+// isGlibcBoundAction returns true if the action name is in the glibc-bound set.
+func isGlibcBoundAction(action string) bool {
+	return glibcBoundActions[action]
+}
+
+// hasLibcWhenClause returns true when a step's when clause includes a libc filter.
+func hasLibcWhenClause(step Step) bool {
+	return step.When != nil && len(step.When.Libc) > 0
 }
 
 // hasLibraryDependencies returns true if the recipe has any library dependencies.

@@ -7,16 +7,35 @@ version_format = "semver"
 [version]
 github_repo = "skaji/relocatable-perl"
 
+# glibc Linux: Download relocatable Perl binaries
 [[steps]]
 action = "download_archive"
 url = "https://github.com/skaji/relocatable-perl/releases/download/{version}/perl-{os}-{arch}.tar.xz"
 strip_dirs = 1
 binaries = ["bin/perl", "bin/cpanm"]
 install_mode = "directory"
-os_mapping = { linux = "linux", darwin = "darwin" }
+os_mapping = { linux = "linux" }
 arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
+when = { os = ["linux"], libc = ["glibc"] }
+
+# musl Linux: System packages (apk handles transitive deps)
+[[steps]]
+action = "apk_install"
+packages = ["perl"]
+when = { os = ["linux"], libc = ["musl"] }
+
+# macOS: Download relocatable Perl binaries
+[[steps]]
+action = "download_archive"
+url = "https://github.com/skaji/relocatable-perl/releases/download/{version}/perl-{os}-{arch}.tar.xz"
+strip_dirs = 1
+binaries = ["bin/perl", "bin/cpanm"]
+install_mode = "directory"
+os_mapping = { darwin = "darwin" }
+arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
+when = { os = ["darwin"] }
 
 [verify]
-command = "{install_dir}/bin/perl -v"
+command = "perl -v"
 # No pattern - version format (5.42.0.0) doesn't match perl output (v5.42.0)
 # Just verify the command runs successfully
