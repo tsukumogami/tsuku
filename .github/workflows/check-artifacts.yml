@@ -1,0 +1,26 @@
+name: Check Artifacts
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
+    branches: [main]
+
+jobs:
+  check-artifacts:
+    name: Check Artifacts
+    # Skip on draft PRs (wip/ artifacts are expected during drafts)
+    if: ${{ github.event.pull_request.draft != true }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+      - name: Check for work artifacts
+        run: |
+          failed=0
+          for dir in issue_work wip; do
+            if [ -d "$dir" ] && [ "$(ls -A "$dir" 2>/dev/null)" ]; then
+              echo "::error::$dir/ contains intermediate work artifacts that should not be merged into main. Delete this folder before merging, or convert the PR to a draft while work is in progress."
+              ls -la "$dir/"
+              failed=1
+            fi
+          done
+          exit $failed
