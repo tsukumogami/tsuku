@@ -139,6 +139,151 @@ func TestComputeQueueStatus_empty(t *testing.T) {
 	if len(status.ByStatus) != 0 {
 		t.Errorf("ByStatus should be empty: %v", status.ByStatus)
 	}
+	if len(status.ByEcosystem) != 0 {
+		t.Errorf("ByEcosystem should be empty for empty queue: %v", status.ByEcosystem)
+	}
+}
+
+func TestComputeQueueStatus_byEcosystemMulti(t *testing.T) {
+	queue := &batch.UnifiedQueue{
+		Entries: []batch.QueueEntry{
+			{Name: "jq", Source: "homebrew:jq", Priority: 1, Status: "success", Confidence: "curated"},
+			{Name: "fd", Source: "homebrew:fd", Priority: 1, Status: "pending", Confidence: "auto"},
+			{Name: "bat", Source: "homebrew:bat", Priority: 1, Status: "failed", Confidence: "auto"},
+			{Name: "fzf", Source: "homebrew:fzf", Priority: 2, Status: "pending", Confidence: "auto"},
+			{Name: "ripgrep", Source: "cargo:ripgrep", Priority: 2, Status: "blocked", Confidence: "curated"},
+			{Name: "exa", Source: "homebrew:exa", Priority: 2, Status: "success", Confidence: "auto"},
+			{Name: "tokei", Source: "cargo:tokei", Priority: 2, Status: "pending", Confidence: "auto"},
+			{Name: "node", Source: "npm:node", Priority: 1, Status: "failed", Confidence: "auto"},
+		},
+	}
+
+	status := computeQueueStatus(queue, nil)
+
+	// Verify homebrew ecosystem: 2 success, 2 pending, 1 failed => total 5
+	hw := status.ByEcosystem["homebrew"]
+	if hw == nil {
+		t.Fatal("ByEcosystem[homebrew] should not be nil")
+	}
+	if hw["success"] != 2 {
+		t.Errorf("homebrew success: got %d, want 2", hw["success"])
+	}
+	if hw["pending"] != 2 {
+		t.Errorf("homebrew pending: got %d, want 2", hw["pending"])
+	}
+	if hw["failed"] != 1 {
+		t.Errorf("homebrew failed: got %d, want 1", hw["failed"])
+	}
+	if hw["total"] != 5 {
+		t.Errorf("homebrew total: got %d, want 5", hw["total"])
+	}
+
+	// Verify cargo ecosystem: 1 blocked, 1 pending => total 2
+	cg := status.ByEcosystem["cargo"]
+	if cg == nil {
+		t.Fatal("ByEcosystem[cargo] should not be nil")
+	}
+	if cg["blocked"] != 1 {
+		t.Errorf("cargo blocked: got %d, want 1", cg["blocked"])
+	}
+	if cg["pending"] != 1 {
+		t.Errorf("cargo pending: got %d, want 1", cg["pending"])
+	}
+	if cg["total"] != 2 {
+		t.Errorf("cargo total: got %d, want 2", cg["total"])
+	}
+
+	// Verify npm ecosystem: 1 failed => total 1
+	np := status.ByEcosystem["npm"]
+	if np == nil {
+		t.Fatal("ByEcosystem[npm] should not be nil")
+	}
+	if np["failed"] != 1 {
+		t.Errorf("npm failed: got %d, want 1", np["failed"])
+	}
+	if np["total"] != 1 {
+		t.Errorf("npm total: got %d, want 1", np["total"])
+	}
+
+	// Verify total per ecosystem equals sum of its statuses
+	for eco, counts := range status.ByEcosystem {
+		sum := 0
+		for k, v := range counts {
+			if k != "total" {
+				sum += v
+			}
+		}
+		if counts["total"] != sum {
+			t.Errorf("ByEcosystem[%q] total mismatch: total=%d, sum of statuses=%d", eco, counts["total"], sum)
+		}
+	}
+}
+
+func TestComputeQueueStatus_byEcosystemSingle(t *testing.T) {
+	queue := &batch.UnifiedQueue{
+		Entries: []batch.QueueEntry{
+			{Name: "jq", Source: "homebrew:jq", Priority: 1, Status: "success", Confidence: "curated"},
+			{Name: "fd", Source: "homebrew:fd", Priority: 1, Status: "pending", Confidence: "auto"},
+			{Name: "bat", Source: "homebrew:bat", Priority: 1, Status: "failed", Confidence: "auto"},
+		},
+	}
+
+	status := computeQueueStatus(queue, nil)
+
+	if len(status.ByEcosystem) != 1 {
+		t.Errorf("ByEcosystem should have 1 ecosystem, got %d: %v", len(status.ByEcosystem), status.ByEcosystem)
+	}
+
+	hw := status.ByEcosystem["homebrew"]
+	if hw == nil {
+		t.Fatal("ByEcosystem[homebrew] should not be nil")
+	}
+	if hw["success"] != 1 {
+		t.Errorf("homebrew success: got %d, want 1", hw["success"])
+	}
+	if hw["pending"] != 1 {
+		t.Errorf("homebrew pending: got %d, want 1", hw["pending"])
+	}
+	if hw["failed"] != 1 {
+		t.Errorf("homebrew failed: got %d, want 1", hw["failed"])
+	}
+	if hw["total"] != 3 {
+		t.Errorf("homebrew total: got %d, want 3", hw["total"])
+	}
+}
+
+func TestComputeQueueStatus_byEcosystemTotalEqualsStatusSum(t *testing.T) {
+	// Use all six status values to ensure total accounts for every status.
+	queue := &batch.UnifiedQueue{
+		Entries: []batch.QueueEntry{
+			{Name: "a", Source: "homebrew:a", Priority: 1, Status: "pending", Confidence: "auto"},
+			{Name: "b", Source: "homebrew:b", Priority: 1, Status: "success", Confidence: "auto"},
+			{Name: "c", Source: "homebrew:c", Priority: 1, Status: "failed", Confidence: "auto"},
+			{Name: "d", Source: "homebrew:d", Priority: 1, Status: "blocked", Confidence: "auto"},
+			{Name: "e", Source: "homebrew:e", Priority: 1, Status: "requires_manual", Confidence: "auto"},
+			{Name: "f", Source: "homebrew:f", Priority: 1, Status: "excluded", Confidence: "auto"},
+		},
+	}
+
+	status := computeQueueStatus(queue, nil)
+
+	hw := status.ByEcosystem["homebrew"]
+	if hw == nil {
+		t.Fatal("ByEcosystem[homebrew] should not be nil")
+	}
+
+	sum := 0
+	for k, v := range hw {
+		if k != "total" {
+			sum += v
+		}
+	}
+	if hw["total"] != sum {
+		t.Errorf("total (%d) should equal sum of statuses (%d)", hw["total"], sum)
+	}
+	if hw["total"] != 6 {
+		t.Errorf("total: got %d, want 6", hw["total"])
+	}
 }
 
 func TestLoadFailures_legacyFormat(t *testing.T) {

@@ -100,10 +100,11 @@ type DisambiguationStatus struct {
 
 // QueueStatus summarizes queue state.
 type QueueStatus struct {
-	Total    int                      `json:"total"`
-	ByStatus map[string]int           `json:"by_status"`
-	ByTier   map[int]map[string]int   `json:"by_tier"`
-	Packages map[string][]PackageInfo `json:"packages"` // Packages grouped by status
+	Total       int                       `json:"total"`
+	ByStatus    map[string]int            `json:"by_status"`
+	ByTier      map[int]map[string]int    `json:"by_tier"`
+	ByEcosystem map[string]map[string]int `json:"by_ecosystem,omitempty"`
+	Packages    map[string][]PackageInfo  `json:"packages"` // Packages grouped by status
 }
 
 // PackageInfo contains details about a package for display.
@@ -347,10 +348,11 @@ func Generate(opts Options) error {
 
 func computeQueueStatus(queue *batch.UnifiedQueue, failureDetails map[string]FailureDetails) QueueStatus {
 	status := QueueStatus{
-		Total:    len(queue.Entries),
-		ByStatus: make(map[string]int),
-		ByTier:   make(map[int]map[string]int),
-		Packages: make(map[string][]PackageInfo),
+		Total:       len(queue.Entries),
+		ByStatus:    make(map[string]int),
+		ByTier:      make(map[int]map[string]int),
+		ByEcosystem: make(map[string]map[string]int),
+		Packages:    make(map[string][]PackageInfo),
 	}
 
 	for _, entry := range queue.Entries {
@@ -360,6 +362,15 @@ func computeQueueStatus(queue *batch.UnifiedQueue, failureDetails map[string]Fai
 			status.ByTier[entry.Priority] = make(map[string]int)
 		}
 		status.ByTier[entry.Priority][entry.Status]++
+
+		eco := entry.Ecosystem()
+		if eco != "" {
+			if _, ok := status.ByEcosystem[eco]; !ok {
+				status.ByEcosystem[eco] = make(map[string]int)
+			}
+			status.ByEcosystem[eco][entry.Status]++
+			status.ByEcosystem[eco]["total"]++
+		}
 
 		// Build package info with failure details if available.
 		// ID is constructed as "ecosystem:name" to match failure detail keys.
