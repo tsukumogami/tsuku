@@ -64,7 +64,7 @@
                 }
               ],
               "verify": {
-                "command": "{install_dir}/bin/patchelf --version",
+                "command": "patchelf --version",
                 "pattern": "patchelf {version}"
               }
             }
