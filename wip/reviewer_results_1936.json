@@ -1,0 +1,29 @@
+{
+  "issue": 1936,
+  "reviewers": [
+    {
+      "focus": "pragmatic",
+      "blocking_count": 0,
+      "advisory_count": 2,
+      "summary": "No blocking findings. Two advisory: (1) isValidExecutableName recompiles regex on every call -- pre-existing, not introduced by this diff. (2) discoverExecutables retains unused context parameter.",
+      "detail_file": "wip/research/implement-doc_review_pragmatic_issue1936.md"
+    },
+    {
+      "focus": "architect",
+      "blocking_count": 0,
+      "advisory_count": 1,
+      "summary": "No blocking findings. One advisory: isValidExecutableName regex recompilation on every call (pre-existing issue, not introduced by this diff).",
+      "detail_file": "wip/research/implement-doc_review_architect_issue1936.md"
+    },
+    {
+      "focus": "maintainer",
+      "blocking_count": 0,
+      "advisory_count": 3,
+      "summary": "No blocking findings. Three advisory: (1) Build() accesses executables[0] without length check, relying on implicit invariant from discoverExecutables fallback. (2) discoverExecutables retains unused context parameter. (3) Test boilerplate repetition matches existing style.",
+      "detail_file": "wip/research/implement-doc_review_maintainer_issue1936.md"
+    }
+  ],
+  "verdict": "pass",
+  "total_blocking": 0,
+  "total_advisory": 6
+}

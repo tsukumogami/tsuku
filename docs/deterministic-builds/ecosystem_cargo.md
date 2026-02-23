@@ -565,33 +565,41 @@ func (a *CargoBuildAction) Execute(ctx *ExecutionContext, params CargoBuildParam
 **Eval Phase:**
 ```go
 func EvaluateCargoCrate(crate, version string, platform Platform) (*Plan, error) {
-    // 1. Create temp workspace with minimal Cargo.toml
+    // 1. Fetch crate info from crates.io API (includes bin_names per version)
+    crateInfo := fetchCrateInfo(crate)
+
+    // 2. Get executable names from the API's bin_names field on the latest
+    //    non-yanked version. Falls back to the crate name if bin_names is empty
+    //    (library-only crate) or all versions are yanked.
+    executables := discoverExecutables(crateInfo)
+
+    // 3. Create temp workspace with minimal Cargo.toml
     workspace := createTempWorkspace(crate, version)
     defer cleanup(workspace)
 
-    // 2. Resolve dependencies and generate Cargo.lock
+    // 4. Resolve dependencies and generate Cargo.lock
     exec("cargo", "generate-lockfile", "--manifest-path", workspace)
 
-    // 3. Extract dependency graph
+    // 5. Extract dependency graph
     metadata := exec("cargo", "metadata", "--format-version=1", "--locked")
 
-    // 4. Parse and validate
+    // 6. Parse and validate
     deps := parseMetadata(metadata)
 
-    // 5. Read Cargo.lock content
+    // 7. Read Cargo.lock content
     lockContent := readFile(workspace + "/Cargo.lock")
     lockSHA := sha256(lockContent)
 
-    // 6. Detect Rust toolchain requirement
+    // 8. Detect Rust toolchain requirement
     rustVersion := detectRustVersion(workspace)  // From rust-toolchain.toml or latest
 
-    // 7. Build plan
+    // 9. Build plan
     return &Plan{
         Action: "cargo_build",
         Params: CargoBuildParams{
             Crate:         crate,
             Version:       version,
-            Executables:   detectExecutables(crate, metadata),
+            Executables:   executables,
             CargoLock:     lockContent,
             CargoLockSHA:  lockSHA,
             RustVersion:   rustVersion,
