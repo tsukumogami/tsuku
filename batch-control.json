@@ -13,8 +13,8 @@
       "last_failure": "2026-02-21T06:25:27Z"
     },
     "homebrew": {
-      "state": "open",
-      "failures": 5,
+      "state": "closed",
+      "failures": 0,
       "last_failure": "2026-02-23T09:56:07Z",
       "opens_at": "2026-02-23T10:56:07Z"
     },
