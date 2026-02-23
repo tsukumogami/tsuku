@@ -9,7 +9,6 @@
   llm_validation = "skipped"
 
 [version]
-  source = "crates_io"
   github_repo = ""
   tag_prefix = ""
   module = ""
