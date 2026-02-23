@@ -178,7 +178,7 @@ Total scenarios: 18
 - `grep -q 'validation-results-\*\.json' .github/workflows/recipe-validation-core.yml`
 - `grep -q 'gtimeout' .github/workflows/recipe-validation-core.yml`
 **Expected**: No `docker run` calls remain. Linux validation jobs use --sandbox with --json and --env GITHUB_TOKEN. Retry logic is preserved: the sandbox call is wrapped in a 3-attempt loop, and exit code 5 is extracted via `jq .install_exit_code`. JSON result aggregation into `{recipe, platform, status, exit_code, attempts}` format is preserved. The `report` job and `auto_constrain` input are unchanged. macOS jobs retain `gtimeout` (unchanged). Matrix entries no longer include `install_cmd` or `libc`.
-**Status**: pending
+**Status**: passed
 
 ---
 
