@@ -78,7 +78,7 @@ Total scenarios: 18
 **Commands**:
 - `grep -q 'ExtraEnv.*\[\]string' internal/sandbox/requirements.go`
 **Expected**: `SandboxRequirements` struct has an `ExtraEnv []string` field for passing additional environment variables to the container
-**Status**: pending
+**Status**: passed
 
 ---
 
@@ -88,7 +88,7 @@ Total scenarios: 18
 **Commands**:
 - `go test ./internal/sandbox/... -run 'Env|ExtraEnv|Override' -count=1 -v`
 **Expected**: Unit tests pass covering: arbitrary KEY=VALUE pairs are appended to RunOptions.Env, attempts to override hardcoded keys (TSUKU_SANDBOX, TSUKU_HOME, HOME, DEBIAN_FRONTEND, PATH) are silently dropped, --env KEY form reads from host environment, --env KEY with missing host var passes empty string
-**Status**: pending
+**Status**: passed
 
 ---
 
@@ -99,7 +99,7 @@ Total scenarios: 18
 - `grep -q '"env"' cmd/tsuku/install.go || grep -q '"env"' cmd/tsuku/install_sandbox.go`
 - `go build -o /dev/null ./cmd/tsuku`
 **Expected**: The `--env` flag is registered as a repeatable string slice on the install command. The binary builds successfully. Passing `--env` without `--sandbox` has no effect (no error).
-**Status**: pending
+**Status**: passed
 
 ---
 

@@ -43,8 +43,8 @@ Planned
 |-------|--------------|------|
 | ~~[#1942: feat(sandbox): add post-install verification with Go-side pattern matching](https://github.com/tsukumogami/tsuku/issues/1942)~~ | ~~None~~ | ~~testable~~ |
 | ~~_Adds `ExitCode *int` to `PlanVerify` (plan format v5), extracts shared `checkVerification()` into `internal/sandbox/verify.go`, and extends `buildSandboxScript()` to run the recipe's verify command with marker file output. Go reads the marker files after container exit and evaluates results. `SandboxResult.Passed` becomes true only when both install and verification succeed._~~ | | |
-| [#1943: feat(sandbox): add --env flag for environment variable passthrough](https://github.com/tsukumogami/tsuku/issues/1943) | None | testable |
-| _Adds `ExtraEnv []string` to `SandboxRequirements` and a repeatable `--env KEY=VALUE` CLI flag. The executor filters user-provided keys against hardcoded sandbox vars before appending to `RunOptions.Env`. Supports docker-compatible `--env KEY` form that reads from the host environment._ | | |
+| ~~[#1943: feat(sandbox): add --env flag for environment variable passthrough](https://github.com/tsukumogami/tsuku/issues/1943)~~ | ~~None~~ | ~~testable~~ |
+| ~~_Adds `ExtraEnv []string` to `SandboxRequirements` and a repeatable `--env KEY=VALUE` CLI flag. The executor filters user-provided keys against hardcoded sandbox vars before appending to `RunOptions.Env`. Supports docker-compatible `--env KEY` form that reads from the host environment._~~ | | |
 | [#1944: feat(sandbox): add --json flag for structured sandbox output](https://github.com/tsukumogami/tsuku/issues/1944) | [#1942](https://github.com/tsukumogami/tsuku/issues/1942) | testable |
 | _Adds `DurationMs int64` to `SandboxResult` with timing measurement, and a `--json` CLI flag that serializes the result as a JSON object on stdout. Suppresses human-readable output when set. Uses the `Verified` and `VerifyExitCode` fields from #1942 for the verification-related JSON fields._ | | |
 | [#1945: ci(workflows): migrate test-recipe.yml Linux jobs to sandbox](https://github.com/tsukumogami/tsuku/issues/1945) | [#1942](https://github.com/tsukumogami/tsuku/issues/1942), [#1943](https://github.com/tsukumogami/tsuku/issues/1943), [#1944](https://github.com/tsukumogami/tsuku/issues/1944) | testable |
@@ -85,7 +85,8 @@ graph LR
 
     class I1942 done
     class I1943 ready
-    class I1944,I1945,I1946,I1947 blocked
+    class I1944 ready
+    class I1945,I1946,I1947 blocked
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design
