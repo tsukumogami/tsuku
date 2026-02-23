@@ -3,7 +3,7 @@
   "design_doc": "docs/designs/DESIGN-ci-job-consolidation.md",
   "branch": "docs/ci-job-consolidation",
   "pr_number": 1887,
-  "integrity_hash": "sha256:2952b18d548929470bb072d6fea3b87e3eae16977a8c748235123f52817a6d8c",
+  "integrity_hash": "sha256:4d32ead67af9e74de5cbb24deac77465851c950208d053ce5b2fc3890b2ef468",
   "issues": [
     {
       "number": 1891,
@@ -67,14 +67,28 @@
     {
       "number": 1893,
       "title": "ci(sandbox-tests): serialize sandbox tests with GHA groups",
-      "status": "in_progress",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "ci_fix_attempts": 0,
       "issue_type": "code",
       "dependencies": [],
-      "commits": [],
-      "agent_type": "",
-      "summary": null,
+      "commits": [
+        "a772232a4abe3148312b22aa092c7fede1c18701"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          ".github/workflows/sandbox-tests.yml",
+          "test-matrix.json"
+        ],
+        "tests_added": 0,
+        "key_decisions": "Same jq-based while loop pattern as integration-macos"
+      },
+      "reviewer_results": {
+        "approved": true,
+        "note": "PR #1910 merged -- sandbox tests validated in CI"
+      },
       "testable_scenarios": [
         "scenario-6",
         "scenario-7"
@@ -83,14 +97,27 @@
     {
       "number": 1894,
       "title": "ci(integration-tests): consolidate checksum-pinning into container loop",
-      "status": "pending",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [],
-      "commits": [],
-      "agent_type": "",
-      "summary": null,
+      "commits": [
+        "0ce93b4f7f2a59b1d2a3b7fba543340e5ac2f08f"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          ".github/workflows/integration-tests.yml"
+        ],
+        "tests_added": 0,
+        "key_decisions": "Simple family loop with timeout, same pattern as sandbox-multifamily"
+      },
+      "reviewer_results": {
+        "approved": true,
+        "note": "PR #1911 merged -- checksum-pinning validated in CI"
+      },
       "testable_scenarios": [
         "scenario-8",
         "scenario-9"

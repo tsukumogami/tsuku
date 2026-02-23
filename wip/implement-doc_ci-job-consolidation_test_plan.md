@@ -75,7 +75,7 @@ Total scenarios: 14
 ---
 
 ## Scenario 6: sandbox-tests serialization structure
-**ID**: scenario-6
+**ID**: [x] scenario-6
 **Testable after**: #1893
 **Category**: infrastructure
 **Commands**:
@@ -89,7 +89,7 @@ Total scenarios: 14
 ---
 
 ## Scenario 7: sandbox-tests CI runs all 9 sandbox tests in one job
-**ID**: scenario-7
+**ID**: [x] scenario-7
 **Testable after**: #1893
 **Category**: use-case
 **Environment**: manual (CI)
@@ -103,7 +103,7 @@ Total scenarios: 14
 ---
 
 ## Scenario 8: checksum-pinning container loop structure
-**ID**: scenario-8
+**ID**: [x] scenario-8
 **Testable after**: #1894
 **Category**: infrastructure
 **Commands**:
@@ -117,7 +117,7 @@ Total scenarios: 14
 ---
 
 ## Scenario 9: checksum-pinning CI passes across all 5 families
-**ID**: scenario-9
+**ID**: [x] scenario-9
 **Testable after**: #1894
 **Category**: use-case
 **Environment**: manual (CI)

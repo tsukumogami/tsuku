@@ -92,3 +92,32 @@ The state machine requires a `--reviewer-results-file` for the `implemented -> p
 transition. For multi-PR where the PR is already merged by the time we update state,
 this is pure ceremony -- the review already happened via the PR process. Created a
 stub JSON file to satisfy the requirement.
+
+### Issue #1892: serialize integration-linux
+
+**Implementation was straightforward**
+The integration-macos pattern in the same file provided a near-exact template.
+The coder agent correctly produced the mirrored Linux version. CI passed first try.
+`Linux Integration Tests` completed in 1m31s -- compare to the previous 9 separate
+jobs that would queue for 7-11 minutes each.
+
+**Bookkeeping is becoming routine but still tedious**
+Same 4-artifact update cycle as #1891. The `Fixes #NNNN` line on the tracking PR
+is particularly awkward -- the bookkeeping checker requires it, but this PR isn't
+the one that actually fixed the issue. The individual PR (#1908) had the correct
+`Fixes #1892`. Adding it to the tracking PR too is redundant. Would be nice if the
+state machine had a "multi-PR mode" that checked the implementation PR instead.
+
+### Issues #1893 and #1894: parallel implementation
+
+**Observation: Independent issues can be implemented in parallel**
+While waiting for #1892 CI, I implemented both #1893 (sandbox-tests) and #1894
+(checksum-pinning) on separate branches and opened PRs simultaneously. This is a
+natural advantage of the multi-PR approach -- independent issues don't need to wait
+for each other. However, all three PRs now compete for the same runner pool, which
+ironically demonstrates the queue pressure problem we're fixing.
+
+**Queue wait is visible**
+All checks on PRs #1910 and #1911 remained "pending" for several minutes while the
+runner pool was busy with other jobs. This is the exact problem described in the
+design doc. Once these PRs merge, future PRs in this repo will see shorter queues.
