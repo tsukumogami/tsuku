@@ -1,5 +1,5 @@
 {
-  "format_version": 4,
+  "format_version": 5,
   "tool": "ca-certificates",
   "version": "2025-12-02",
   "platform": {
