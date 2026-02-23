@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Accepted
 problem: |
   Six embedded recipes (rust, python-standalone, nodejs, ruby, perl,
   patchelf) download glibc-linked binaries unconditionally. On Alpine
@@ -30,7 +30,7 @@ rationale: |
 
 ## Status
 
-**Proposed**
+**Accepted**
 
 ## Context and Problem Statement
 
