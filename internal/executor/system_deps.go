@@ -173,18 +173,32 @@ func ExtractSystemRequirementsFromRecipe(r *recipe.Recipe, target platform.Targe
 	return ExtractSystemRequirementsFromSteps(filtered)
 }
 
-// ExtractSystemRequirementsFromPlan extracts system dependencies from an installation plan.
-// The plan is already filtered for the target platform.
+// ExtractSystemRequirementsFromPlan extracts system dependencies from an installation plan,
+// including dependencies. The plan is already filtered for the target platform.
 // Returns nil if no system dependency actions are found.
 func ExtractSystemRequirementsFromPlan(plan *InstallationPlan) *SystemRequirements {
 	if plan == nil {
 		return nil
 	}
 	builder := newSystemRequirementsBuilder()
+	for _, dep := range plan.Dependencies {
+		processDependencySteps(builder, dep)
+	}
 	for _, step := range plan.Steps {
 		builder.processStep(step.Action, step.Params)
 	}
 	return builder.build()
+}
+
+// processDependencySteps recursively extracts system packages from a dependency
+// and its nested dependencies.
+func processDependencySteps(builder *systemRequirementsBuilder, dep DependencyPlan) {
+	for _, nested := range dep.Dependencies {
+		processDependencySteps(builder, nested)
+	}
+	for _, step := range dep.Steps {
+		builder.processStep(step.Action, step.Params)
+	}
 }
 
 // ExtractSystemPackages extracts system package names from a recipe for a target.

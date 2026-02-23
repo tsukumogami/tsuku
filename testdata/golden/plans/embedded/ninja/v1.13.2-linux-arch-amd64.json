@@ -1,5 +1,5 @@
 {
-  "format_version": 4,
+  "format_version": 5,
   "tool": "ninja",
   "version": "1.13.2",
   "platform": {
@@ -68,7 +68,7 @@
                     }
                   ],
                   "verify": {
-                    "command": "{install_dir}/bin/patchelf --version",
+                    "command": "patchelf --version",
                     "pattern": "patchelf {version}"
                   }
                 }

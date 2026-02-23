@@ -1,5 +1,5 @@
 {
-  "format_version": 4,
+  "format_version": 5,
   "tool": "make",
   "version": "4.4.1",
   "platform": {
@@ -56,7 +56,7 @@
         }
       ],
       "verify": {
-        "command": "{install_dir}/bin/patchelf --version",
+        "command": "patchelf --version",
         "pattern": "patchelf {version}"
       }
     }

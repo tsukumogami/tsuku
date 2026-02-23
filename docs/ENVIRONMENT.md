@@ -159,6 +159,31 @@ Override automatic backend detection in the tsuku-llm addon.
 
 This is read directly by the tsuku-llm addon binary. Use this when automatic GPU detection selects the wrong backend (e.g., forcing Vulkan on a system with both CUDA and Vulkan support).
 
+## Sandbox
+
+When you run `tsuku install --sandbox`, the sandbox container gets a fixed set of environment variables that can't be overridden via `--env`:
+
+| Variable | Value | Purpose |
+|----------|-------|---------|
+| `TSUKU_SANDBOX` | `1` | Signals to tsuku that it's running inside a sandbox container |
+| `TSUKU_HOME` | `/home/tsuku/.tsuku` | Isolated tsuku home inside the container |
+| `HOME` | `/home/tsuku` | Container user's home directory |
+| `DEBIAN_FRONTEND` | `noninteractive` | Prevents apt prompts in Debian-based containers |
+| `PATH` | (sandbox-specific) | Includes `$TSUKU_HOME/bin` and standard system paths |
+
+If you pass `--env KEY=VALUE` where `KEY` matches one of these, the value is silently dropped. This protects the container environment from accidental misconfiguration.
+
+`TSUKU_REGISTRY_URL` doesn't need `--env` passthrough because it's consumed on the host during plan generation, not inside the container. Set it in your shell environment before running the sandbox command.
+
+### TSUKU_SANDBOX
+
+Indicates that tsuku is running inside a sandbox container.
+
+- **Default:** (unset outside sandbox)
+- **Set by:** The sandbox runtime (not user-configurable)
+
+This variable is set automatically inside sandbox containers. Recipes or scripts can check for it to detect sandbox mode. Don't set this manually outside of sandbox contexts.
+
 ## Development and Debugging
 
 ### TSUKU_DEBUG
@@ -252,6 +277,7 @@ The environment variable is checked first. If unset, tsuku falls back to `brave_
 | `TSUKU_LLM_IDLE_TIMEOUT` | `5m` | Local LLM addon server idle timeout |
 | `TSUKU_LLM_MODEL` | (unset) | Override addon model selection |
 | `TSUKU_LLM_BACKEND` | (unset) | Override addon backend detection |
+| `TSUKU_SANDBOX` | (unset) | Set inside sandbox containers to indicate sandbox mode |
 | `TSUKU_DEBUG` | (unset) | Enable verbose debug output |
 | `GITHUB_TOKEN` | (unset) | GitHub API token |
 | `ANTHROPIC_API_KEY` | (unset) | Anthropic API key for Claude |

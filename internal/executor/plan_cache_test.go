@@ -102,7 +102,7 @@ func TestValidateCachedPlan(t *testing.T) {
 				Platform:      Platform{OS: "linux", Arch: "amd64"},
 			},
 			key:     validKey,
-			wantErr: "plan format version 1 is outdated (current: 4)",
+			wantErr: "plan format version 1 is outdated (current: 5)",
 		},
 		{
 			name: "platform OS mismatch",

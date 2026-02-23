@@ -7,8 +7,11 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
+	"time"
 
+	"github.com/tsukumogami/tsuku/internal/containerimages"
 	"github.com/tsukumogami/tsuku/internal/executor"
 	"github.com/tsukumogami/tsuku/internal/log"
 	"github.com/tsukumogami/tsuku/internal/platform"
@@ -21,14 +24,34 @@ const TempDirPrefix = "tsuku-sandbox-"
 // ContainerLabelPrefix is the label added to containers for identification.
 const ContainerLabelPrefix = "io.tsuku.sandbox"
 
+// Marker file names written by the sandbox script and read by readVerifyResults.
+const (
+	verifyExitMarker   = ".sandbox-verify-exit"
+	verifyOutputMarker = ".sandbox-verify-output"
+)
+
+// protectedEnvKeys lists environment variable keys that the sandbox hardcodes.
+// User-provided ExtraEnv entries matching these keys are silently dropped to
+// prevent subverting the sandbox environment.
+var protectedEnvKeys = map[string]bool{
+	"TSUKU_SANDBOX":   true,
+	"TSUKU_HOME":      true,
+	"HOME":            true,
+	"DEBIAN_FRONTEND": true,
+	"PATH":            true,
+}
+
 // SandboxResult contains the result of a sandbox test.
 type SandboxResult struct {
-	Passed   bool   // Whether the sandbox test succeeded
-	Skipped  bool   // Whether the test was skipped (no runtime)
-	ExitCode int    // Container exit code
-	Stdout   string // Container stdout
-	Stderr   string // Container stderr
-	Error    error  // Error if sandbox failed to run
+	Passed         bool   // Whether the install succeeded (exit code 0)
+	Skipped        bool   // Whether the test was skipped (no runtime)
+	ExitCode       int    // Container exit code
+	Stdout         string // Container stdout
+	Stderr         string // Container stderr
+	Error          error  // Error if sandbox failed to run
+	Verified       bool   // Whether verify command passed (true if no verify command)
+	VerifyExitCode int    // Verify command's exit code (-1 if no verify command)
+	DurationMs     int64  // Total execution time in milliseconds
 }
 
 // Executor orchestrates container-based sandbox testing.
@@ -111,15 +134,15 @@ func findTsukuBinary() string {
 // 4. Mount tsuku binary, plan, and cache into container
 // 5. Run container with configured limits
 // 6. Check verification output
-// Sandbox executes a sandbox test for the given installation plan and target.
-// It filters the plan for the target platform and builds a custom container
-// if system dependencies are present, otherwise uses the base image from reqs.
 func (e *Executor) Sandbox(
 	ctx context.Context,
 	plan *executor.InstallationPlan,
 	target platform.Target,
 	reqs *SandboxRequirements,
 ) (*SandboxResult, error) {
+	// Start timing before runtime detection (wall-clock time for the full operation)
+	startTime := time.Now()
+
 	// Detect container runtime
 	runtime, err := e.detector.Detect(ctx)
 	if err != nil {
@@ -127,7 +150,8 @@ func (e *Executor) Sandbox(
 			e.logger.Warn("Container runtime not available. Skipping sandbox test.",
 				"hint", "To enable sandbox testing, install Podman or Docker.")
 			return &SandboxResult{
-				Skipped: true,
+				Skipped:    true,
+				DurationMs: time.Since(startTime).Milliseconds(),
 			}, nil
 		}
 		return nil, fmt.Errorf("failed to detect container runtime: %w", err)
@@ -138,7 +162,8 @@ func (e *Executor) Sandbox(
 		e.logger.Warn("Tsuku binary not found. Skipping sandbox test.",
 			"hint", "Ensure tsuku is installed and in PATH, or build with 'go build -o tsuku ./cmd/tsuku'")
 		return &SandboxResult{
-			Skipped: true,
+			Skipped:    true,
+			DurationMs: time.Since(startTime).Milliseconds(),
 		}, nil
 	}
 
@@ -257,20 +282,26 @@ func (e *Executor) Sandbox(
 		ReadOnly: false, // Need to install packages
 	}
 
+	// Build environment: hardcoded sandbox vars first, then filtered user vars
+	env := []string{
+		"TSUKU_SANDBOX=1",
+		"TSUKU_HOME=/workspace/tsuku",
+		"HOME=/workspace",
+		"DEBIAN_FRONTEND=noninteractive",
+		"PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+	}
+	if extra := filterExtraEnv(reqs.ExtraEnv); len(extra) > 0 {
+		env = append(env, extra...)
+	}
+
 	// Build run options
 	opts := validate.RunOptions{
 		Image:   containerImage,
 		Command: []string{"/bin/sh", "/workspace/sandbox.sh"},
 		Network: network,
 		WorkDir: "/workspace",
-		Env: []string{
-			"TSUKU_SANDBOX=1",
-			"TSUKU_HOME=/workspace/tsuku",
-			"HOME=/workspace",
-			"DEBIAN_FRONTEND=noninteractive",
-			"PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin",
-		},
-		Limits: limits,
+		Env:     env,
+		Limits:  limits,
 		Labels: map[string]string{
 			ContainerLabelPrefix: "true",
 		},
@@ -301,23 +332,85 @@ func (e *Executor) Sandbox(
 	result, err := runtime.Run(ctx, opts)
 	if err != nil {
 		return &SandboxResult{
-			Passed:   false,
-			ExitCode: -1,
-			Stdout:   result.Stdout,
-			Stderr:   result.Stderr,
-			Error:    err,
+			Passed:         false,
+			ExitCode:       -1,
+			Stdout:         result.Stdout,
+			Stderr:         result.Stderr,
+			Error:          err,
+			Verified:       false,
+			VerifyExitCode: -1,
+			DurationMs:     time.Since(startTime).Milliseconds(),
 		}, nil
 	}
 
-	// Check if verification passed (exit code 0 for now)
-	passed := result.ExitCode == 0
+	// If install itself failed, don't check verification
+	if result.ExitCode != 0 {
+		return &SandboxResult{
+			Passed:         false,
+			ExitCode:       result.ExitCode,
+			Stdout:         result.Stdout,
+			Stderr:         result.Stderr,
+			Verified:       false,
+			VerifyExitCode: -1,
+			DurationMs:     time.Since(startTime).Milliseconds(),
+		}, nil
+	}
+
+	// Install succeeded. Now check verification results.
+	verified, verifyExitCode := e.readVerifyResults(workspaceDir, plan)
 
 	return &SandboxResult{
-		Passed:   passed,
-		ExitCode: result.ExitCode,
-		Stdout:   result.Stdout,
-		Stderr:   result.Stderr,
+		Passed:         result.ExitCode == 0,
+		ExitCode:       result.ExitCode,
+		Stdout:         result.Stdout,
+		Stderr:         result.Stderr,
+		Verified:       verified,
+		VerifyExitCode: verifyExitCode,
+		DurationMs:     time.Since(startTime).Milliseconds(),
 	}, nil
+}
+
+// readVerifyResults reads verification marker files from the workspace and
+// evaluates the verify results using executor.CheckPlanVerification.
+// Returns (verified, verifyExitCode).
+// If no verify command exists, returns (true, -1).
+func (e *Executor) readVerifyResults(workspaceDir string, plan *executor.InstallationPlan) (bool, int) {
+	// If no verify command, verification is considered passed
+	if plan.Verify == nil || plan.Verify.Command == "" {
+		return true, -1
+	}
+
+	// Read marker files
+	exitPath := filepath.Join(workspaceDir, verifyExitMarker)
+	outputPath := filepath.Join(workspaceDir, verifyOutputMarker)
+
+	exitData, err := os.ReadFile(exitPath)
+	if err != nil {
+		// Marker files don't exist -- something went wrong with the verify step
+		e.logger.Debug("Failed to read verify exit marker", "error", err)
+		return false, -1
+	}
+
+	verifyExitCode, err := strconv.Atoi(strings.TrimSpace(string(exitData)))
+	if err != nil {
+		e.logger.Debug("Failed to parse verify exit code", "error", err)
+		return false, -1
+	}
+
+	output := ""
+	outputData, err := os.ReadFile(outputPath)
+	if err == nil {
+		output = string(outputData)
+	}
+
+	// Determine expected exit code (default 0)
+	expectedExitCode := 0
+	if plan.Verify.ExitCode != nil {
+		expectedExitCode = *plan.Verify.ExitCode
+	}
+
+	verified := executor.CheckPlanVerification(verifyExitCode, output, expectedExitCode, plan.Verify.Pattern)
+	return verified, verifyExitCode
 }
 
 // augmentWithInfrastructurePackages adds packages needed for sandbox execution
@@ -376,41 +469,20 @@ func augmentWithInfrastructurePackages(
 		sysReqs.Packages = make(map[string][]string)
 	}
 
-	// Add infrastructure packages with family-appropriate names
+	// Add infrastructure packages from container-images.json config.
+	// Core packages are always added — they cover utilities like tar/gzip that
+	// most base images include but some (e.g., opensuse/leap) do not.
 	var infraPkgs []string
+	infraPkgs = append(infraPkgs, containerimages.InfraPackages(effectiveFamily, "core")...)
 	if needsNetwork {
-		infraPkgs = append(infraPkgs, infrastructurePackages(pm, "network")...)
+		infraPkgs = append(infraPkgs, containerimages.InfraPackages(effectiveFamily, "network")...)
 	}
 	if needsBuild {
-		infraPkgs = append(infraPkgs, infrastructurePackages(pm, "build")...)
+		infraPkgs = append(infraPkgs, containerimages.InfraPackages(effectiveFamily, "build")...)
 	}
 
 	sysReqs.Packages[pm] = append(sysReqs.Packages[pm], infraPkgs...)
 	return sysReqs
-}
-
-// infrastructurePackages returns the package names for infrastructure needs
-// based on the package manager.
-func infrastructurePackages(pm string, category string) []string {
-	switch category {
-	case "network":
-		// ca-certificates and curl are named the same across most distros
-		return []string{"ca-certificates", "curl"}
-	case "build":
-		switch pm {
-		case "apt":
-			return []string{"build-essential"}
-		case "dnf":
-			return []string{"gcc", "gcc-c++", "make"}
-		case "pacman":
-			return []string{"base-devel"}
-		case "apk":
-			return []string{"build-base"}
-		case "zypper":
-			return []string{"gcc", "gcc-c++", "make"}
-		}
-	}
-	return nil
 }
 
 // buildSandboxScript creates the shell script for sandbox testing.
@@ -443,5 +515,37 @@ func (e *Executor) buildSandboxScript(
 	sb.WriteString("# Run tsuku install with pre-generated plan\n")
 	sb.WriteString("tsuku install --plan /workspace/plan.json --force\n")
 
+	// Append verify block if the plan has a verify command
+	if plan.Verify != nil && plan.Verify.Command != "" {
+		sb.WriteString("\n# Run verify command and capture results to marker files\n")
+		sb.WriteString("set +e\n")
+		sb.WriteString("export PATH=\"$TSUKU_HOME/bin:$TSUKU_HOME/tools/current:$PATH\"\n")
+		sb.WriteString(fmt.Sprintf("%s > /workspace/%s 2>&1\n", plan.Verify.Command, verifyOutputMarker))
+		sb.WriteString(fmt.Sprintf("echo $? > /workspace/%s\n", verifyExitMarker))
+	}
+
 	return sb.String()
+}
+
+// filterExtraEnv returns the subset of extra env vars that don't collide with
+// the hardcoded sandbox environment variables. Each entry is expected in
+// KEY=VALUE format. Entries whose key matches a protected key are silently
+// dropped. Entries without an '=' separator are treated as KEY-only (the
+// caller resolves these to KEY= before calling this function).
+func filterExtraEnv(extra []string) []string {
+	if len(extra) == 0 {
+		return nil
+	}
+	var filtered []string
+	for _, entry := range extra {
+		key := entry
+		if idx := strings.IndexByte(entry, '='); idx >= 0 {
+			key = entry[:idx]
+		}
+		if protectedEnvKeys[key] {
+			continue
+		}
+		filtered = append(filtered, entry)
+	}
+	return filtered
 }
