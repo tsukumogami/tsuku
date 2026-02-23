@@ -12,6 +12,7 @@ runtime_dependencies = ["gcc-libs"]
 [version]
 source = "nodejs_dist"  # Uses custom resolver for nodejs.org/dist
 
+# glibc Linux: Download pre-built Node.js binaries
 [[steps]]
 action = "download_archive"
 url = "https://nodejs.org/dist/{version_tag}/node-{version_tag}-{os}-{arch}.tar.gz"
@@ -19,17 +20,18 @@ checksum_url = "https://nodejs.org/dist/{version_tag}/SHASUMS256.txt"
 strip_dirs = 1
 binaries = ["bin/node", "bin/npm"]
 install_mode = "directory"
-os_mapping = { linux = "linux", darwin = "darwin" }
+os_mapping = { linux = "linux" }
 arch_mapping = { amd64 = "x64", arm64 = "arm64" }
+when = { os = ["linux"], libc = ["glibc"] }
 
-# Link gcc-libs (libstdc++, libgcc_s) on Linux
+# Link gcc-libs (libstdc++, libgcc_s) on glibc Linux
 [[steps]]
 action = "link_dependencies"
 library = "gcc-libs"
 dependencies = ["gcc-libs"]
-when = { os = ["linux"] }
+when = { os = ["linux"], libc = ["glibc"] }
 
-# Create wrapper script to set LD_LIBRARY_PATH on Linux
+# Create wrapper script to set LD_LIBRARY_PATH on glibc Linux
 [[steps]]
 action = "run_command"
 command = '''
@@ -45,12 +47,30 @@ WRAPPER
 chmod +x bin/node
 '''
 description = "Creating wrapper for node to set LD_LIBRARY_PATH"
-when = { os = ["linux"] }
+when = { os = ["linux"], libc = ["glibc"] }
+
+# musl Linux: System packages (apk handles transitive deps)
+[[steps]]
+action = "apk_install"
+packages = ["nodejs", "npm"]
+when = { os = ["linux"], libc = ["musl"] }
+
+# macOS: Download pre-built Node.js binaries
+[[steps]]
+action = "download_archive"
+url = "https://nodejs.org/dist/{version_tag}/node-{version_tag}-{os}-{arch}.tar.gz"
+checksum_url = "https://nodejs.org/dist/{version_tag}/SHASUMS256.txt"
+strip_dirs = 1
+binaries = ["bin/node", "bin/npm"]
+install_mode = "directory"
+os_mapping = { darwin = "darwin" }
+arch_mapping = { amd64 = "x64", arm64 = "arm64" }
+when = { os = ["darwin"] }
 
 [verify]
-command = "{install_dir}/bin/node --version"
+command = "node --version"
 pattern = "{version}"
 
 [[verify.additional]]
-command = "{install_dir}/bin/npm --version"
+command = "npm --version"
 pattern = ""  # Just check npm is available

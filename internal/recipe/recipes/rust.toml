@@ -11,36 +11,72 @@ version_format = "semver"
 [version]
 github_repo = "rust-lang/rust"  # Detect version from GitHub releases
 
-# Step 1: Download the archive
+# glibc Linux: Download pre-built binaries from static.rust-lang.org
 [[steps]]
 action = "download"
 url = "https://static.rust-lang.org/dist/rust-{version}-{arch}-{os}.tar.gz"
 checksum_url = "https://static.rust-lang.org/dist/rust-{version}-{arch}-{os}.tar.gz.sha256"
-os_mapping = { linux = "unknown-linux-gnu", darwin = "apple-darwin" }
+os_mapping = { linux = "unknown-linux-gnu" }
 arch_mapping = { amd64 = "x86_64", arm64 = "aarch64" }
+when = { os = ["linux"], libc = ["glibc"] }
 
-# Step 2: Extract the archive
 [[steps]]
 action = "extract"
 archive = "rust-{version}-{arch}-{os}.tar.gz"
 format = "tar.gz"
 strip_dirs = 1
-os_mapping = { linux = "unknown-linux-gnu", darwin = "apple-darwin" }
+os_mapping = { linux = "unknown-linux-gnu" }
 arch_mapping = { amd64 = "x86_64", arm64 = "aarch64" }
+when = { os = ["linux"], libc = ["glibc"] }
 
-# Step 3: Run the official installer with custom prefix
-# This properly sets up the sysroot with standard library
 [[steps]]
 action = "run_command"
 command = "./install.sh --prefix={install_dir} --disable-ldconfig"
 description = "Running Rust installer to set up toolchain"
+when = { os = ["linux"], libc = ["glibc"] }
 
-# Step 4: Register binaries for symlinking
 [[steps]]
 action = "install_binaries"
 outputs = ["bin/cargo", "bin/rustc", "bin/rustdoc", "bin/rustfmt", "bin/cargo-clippy", "bin/clippy-driver", "bin/rust-analyzer"]
 install_mode = "directory"
+when = { os = ["linux"], libc = ["glibc"] }
+
+# musl Linux: System packages (apk handles transitive deps)
+[[steps]]
+action = "apk_install"
+packages = ["rust", "cargo"]
+when = { os = ["linux"], libc = ["musl"] }
+
+# macOS: Download pre-built binaries from static.rust-lang.org
+[[steps]]
+action = "download"
+url = "https://static.rust-lang.org/dist/rust-{version}-{arch}-{os}.tar.gz"
+checksum_url = "https://static.rust-lang.org/dist/rust-{version}-{arch}-{os}.tar.gz.sha256"
+os_mapping = { darwin = "apple-darwin" }
+arch_mapping = { amd64 = "x86_64", arm64 = "aarch64" }
+when = { os = ["darwin"] }
+
+[[steps]]
+action = "extract"
+archive = "rust-{version}-{arch}-{os}.tar.gz"
+format = "tar.gz"
+strip_dirs = 1
+os_mapping = { darwin = "apple-darwin" }
+arch_mapping = { amd64 = "x86_64", arm64 = "aarch64" }
+when = { os = ["darwin"] }
+
+[[steps]]
+action = "run_command"
+command = "./install.sh --prefix={install_dir} --disable-ldconfig"
+description = "Running Rust installer to set up toolchain"
+when = { os = ["darwin"] }
+
+[[steps]]
+action = "install_binaries"
+outputs = ["bin/cargo", "bin/rustc", "bin/rustdoc", "bin/rustfmt", "bin/cargo-clippy", "bin/clippy-driver", "bin/rust-analyzer"]
+install_mode = "directory"
+when = { os = ["darwin"] }
 
 [verify]
-command = "{install_dir}/bin/cargo --version"
+command = "cargo --version"
 pattern = "cargo {version}"
