@@ -462,6 +462,90 @@
             margin-left: 0.25rem;
         }
 
+        .run-item-detail {
+            display: flex;
+            flex-direction: column;
+            gap: 0.15rem;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .run-item-detail:last-child {
+            border-bottom: none;
+        }
+
+        .run-item-detail a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .run-item-detail a:hover {
+            background: var(--bg);
+        }
+
+        .run-top-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .run-datetime {
+            font-size: 0.85rem;
+        }
+
+        .run-date {
+            font-weight: 600;
+        }
+
+        .run-time {
+            color: var(--text-muted);
+            margin-left: 0.35rem;
+        }
+
+        .run-stats {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.85rem;
+        }
+
+        .run-duration {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .run-bottom-row {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            flex-wrap: wrap;
+        }
+
+        .run-eco-badge {
+            display: inline-block;
+            padding: 0.1rem 0.4rem;
+            border-radius: 3px;
+            font-size: 0.7rem;
+            background: var(--bg);
+            color: var(--text-muted);
+            font-family: "SF Mono", Consolas, monospace;
+        }
+
+        .failures-table .pkg-link {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .failures-table .pkg-link:hover {
+            text-decoration: underline;
+        }
+
+        .failures-table .timestamp-et {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            display: block;
+        }
+
         @media (max-width: 600px) {
             .panels {
                 grid-template-columns: 1fr;
@@ -517,13 +601,25 @@
 
         function formatDate(isoString) {
             const date = new Date(isoString);
-            return date.toLocaleDateString('en-US', {
+            return date.toLocaleString('en-US', {
                 year: 'numeric',
                 month: 'short',
                 day: 'numeric',
                 hour: '2-digit',
                 minute: '2-digit',
+                timeZone: 'America/New_York',
                 timeZoneName: 'short'
+            });
+        }
+
+        function formatDateShort(isoString) {
+            const date = new Date(isoString);
+            return date.toLocaleString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                timeZone: 'America/New_York'
             });
         }
 
@@ -854,25 +950,84 @@
             }
 
             const runItems = (data.runs || []).slice(0, 10).map(run => {
-                const ecoLabel = compactEcosystem(run);
+                // Format timestamp in ET, split into date and time
+                let dateHtml = '';
+                if (run.timestamp) {
+                    const d = new Date(run.timestamp);
+                    const datePart = d.toLocaleDateString('en-US', {
+                        month: 'short', day: 'numeric',
+                        timeZone: 'America/New_York'
+                    });
+                    const timePart = d.toLocaleTimeString('en-US', {
+                        hour: '2-digit', minute: '2-digit',
+                        timeZone: 'America/New_York'
+                    });
+                    dateHtml = `<span class="run-date">${esc(datePart)}</span><span class="run-time">${esc(timePart)} ET</span>`;
+                } else {
+                    dateHtml = `<span class="run-id">${esc(run.batch_id)}</span>`;
+                }
+
+                // Ecosystem badges from run.ecosystems object
+                let ecoBadgesHtml = '';
+                if (run.ecosystems && typeof run.ecosystems === 'object') {
+                    const badges = Object.entries(run.ecosystems)
+                        .sort(([, a], [, b]) => b - a)
+                        .map(([eco, count]) => `<span class="run-eco-badge">${esc(eco)} ${esc(count)}</span>`)
+                        .join('');
+                    ecoBadgesHtml = badges;
+                }
+
+                // Duration
+                let durationHtml = '';
+                if (run.duration != null) {
+                    durationHtml = `<span class="run-duration">${esc(run.duration)}m</span>`;
+                }
+
                 return `
-                <a href="/pipeline/run.html?id=${encodeURIComponent(run.batch_id)}" class="run-item status-row">
-                    <span class="run-id">${esc(run.batch_id)}${ecoLabel ? `<span class="run-ecosystem">${esc(ecoLabel)}</span>` : ''}</span>
-                    <span class="run-rate ${rateClass(run.rate)}">${esc(run.merged)}/${esc(run.total)} (${esc(formatPercent(run.rate))})</span>
-                </a>
+                <div class="run-item-detail">
+                    <a href="/pipeline/run.html?id=${encodeURIComponent(run.batch_id)}">
+                        <div class="run-top-row">
+                            <span class="run-datetime">${dateHtml}</span>
+                            <span class="run-stats">
+                                <span class="run-rate ${rateClass(run.rate)}">${esc(run.merged)}/${esc(run.total)} (${esc(formatPercent(run.rate))})</span>
+                                ${durationHtml}
+                            </span>
+                        </div>
+                        ${ecoBadgesHtml ? `<div class="run-bottom-row">${ecoBadgesHtml}</div>` : ''}
+                    </a>
+                </div>
             `}).join('') || '<div class="no-data">No batch runs recorded yet</div>';
 
             // Render Recent Failures panel
             let recentFailuresPanel = '';
             if (failureDetails.length > 0) {
                 const recentFive = failureDetails.slice(0, 5);
-                const failureRows = recentFive.map(fd => `
+                const failureRows = recentFive.map(fd => {
+                    // Category display: prefer subcategory when available
+                    const categoryDisplay = fd.subcategory
+                        ? esc(fd.subcategory)
+                        : esc(fd.category);
+
+                    // Ecosystem badge
+                    const ecoHtml = fd.ecosystem
+                        ? `<span class="run-eco-badge">${esc(fd.ecosystem)}</span>`
+                        : '';
+
+                    // Package name as clickable link to package.html
+                    const pkgHtml = `<a href="/pipeline/package.html?id=${encodeURIComponent(fd.package)}" class="pkg-link"><span class="pkg-name">${esc(fd.package)}</span></a>`;
+
+                    // Time: relative time-ago plus absolute ET timestamp
+                    const timeAgoStr = timeAgo(fd.timestamp);
+                    const absTime = fd.timestamp ? formatDateShort(fd.timestamp) + ' ET' : '';
+
+                    return `
                     <tr onclick="location.href='/pipeline/failure.html?id=${encodeURIComponent(fd.id)}'">
-                        <td><a href="/pipeline/failure.html?id=${encodeURIComponent(fd.id)}"><span class="pkg-name">${esc(fd.package)}</span></a></td>
-                        <td><a href="/pipeline/failure.html?id=${encodeURIComponent(fd.id)}">${esc(fd.category)}${fd.subcategory ? ' / ' + esc(fd.subcategory) : ''}</a></td>
-                        <td><a href="/pipeline/failure.html?id=${encodeURIComponent(fd.id)}"><span class="time-ago">${esc(timeAgo(fd.timestamp))}</span></a></td>
+                        <td>${pkgHtml}</td>
+                        <td>${ecoHtml}</td>
+                        <td><a href="/pipeline/failure.html?id=${encodeURIComponent(fd.id)}">${categoryDisplay}</a></td>
+                        <td><a href="/pipeline/failure.html?id=${encodeURIComponent(fd.id)}"><span class="time-ago">${esc(timeAgoStr)}</span><span class="timestamp-et">${esc(absTime)}</span></a></td>
                     </tr>
-                `).join('');
+                `}).join('');
                 recentFailuresPanel = `
                     <div class="panel">
                         <div class="panel-header">
@@ -883,6 +1038,7 @@
                             <thead>
                                 <tr>
                                     <th>Package</th>
+                                    <th>Ecosystem</th>
                                     <th>Category</th>
                                     <th>Time</th>
                                 </tr>
@@ -1016,7 +1172,10 @@
                     ${recentFailuresPanel}
 
                     <div class="panel">
-                        <h2>Recent Runs</h2>
+                        <div class="panel-header">
+                            <h2>Recent Runs</h2>
+                            <a href="/pipeline/runs.html" class="view-all">View all</a>
+                        </div>
                         <div class="run-list">
                             ${runItems}
                         </div>
