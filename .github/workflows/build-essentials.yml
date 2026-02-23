@@ -86,7 +86,7 @@ jobs:
 
               ./tsuku install --sandbox --force "$@" \
                 --env GITHUB_TOKEN="$GITHUB_TOKEN" \
-                --json > "$RESULT_FILE" 2>/dev/null || true
+                --json > "$RESULT_FILE" || true
 
               if [ -f "$RESULT_FILE" ] && jq -e . "$RESULT_FILE" > /dev/null 2>&1; then
                 SANDBOX_PASSED=$(jq -r '.passed' "$RESULT_FILE")
