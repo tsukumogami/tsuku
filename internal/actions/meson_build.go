@@ -34,7 +34,7 @@ func (a *MesonBuildAction) Name() string {
 // Parameters:
 //   - source_dir (required): Directory containing meson.build
 //   - meson_args (optional): Arguments to pass to meson setup
-//   - executables (required): List of executable names to verify
+//   - executables (optional): List of executable names to verify
 //   - buildtype (optional): Build type (default: release)
 //   - wrap_mode (optional): Dependency wrapping behavior (default: nofallback)
 //
@@ -67,11 +67,8 @@ func (a *MesonBuildAction) Execute(ctx *ExecutionContext, params map[string]inte
 		return fmt.Errorf("meson.build not found at %s: %w", mesonBuild, err)
 	}
 
-	// Get executables list (required)
-	executables, ok := GetStringSlice(params, "executables")
-	if !ok || len(executables) == 0 {
-		return fmt.Errorf("meson_build action requires 'executables' parameter with at least one executable")
-	}
+	// Get executables list (optional for library-only builds)
+	executables, _ := GetStringSlice(params, "executables")
 
 	// Validate executable names to prevent path traversal
 	for _, exe := range executables {

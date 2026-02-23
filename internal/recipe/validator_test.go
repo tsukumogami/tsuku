@@ -108,9 +108,6 @@ func (m *mockActionValidator) validateParams(result *ActionValidationResult, act
 		if _, ok := getString("source_dir"); !ok {
 			result.Errors = append(result.Errors, "configure_make action requires 'source_dir' parameter")
 		}
-		if _, ok := params["executables"]; !ok {
-			result.Errors = append(result.Errors, "configure_make action requires 'executables' parameter")
-		}
 	case "apply_patch":
 		url, hasURL := getString("url")
 		_, hasData := getString("data")
