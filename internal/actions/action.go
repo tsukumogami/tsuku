@@ -11,27 +11,28 @@ import (
 
 // ExecutionContext provides context for action execution
 type ExecutionContext struct {
-	Context          context.Context   // Context for cancellation, timeouts, and deadlines
-	WorkDir          string            // Temporary work directory
-	InstallDir       string            // Installation directory ($TSUKU_HOME/tools/.install/)
-	ToolInstallDir   string            // Tool-specific directory for directory-based installations ($TSUKU_HOME/tools/{name}-{version}/)
-	ToolsDir         string            // Tools directory ($TSUKU_HOME/tools/) for finding other installed tools
-	LibsDir          string            // Libraries directory ($TSUKU_HOME/libs/) for finding installed libraries
-	AppsDir          string            // Applications directory ($TSUKU_HOME/apps/) for macOS .app bundles
-	CurrentDir       string            // Current symlinks directory ($TSUKU_HOME/tools/current/) for binary symlinks
-	DownloadCacheDir string            // Download cache directory ($TSUKU_HOME/cache/downloads/)
-	KeyCacheDir      string            // PGP key cache directory ($TSUKU_HOME/cache/keys/)
-	Version          string            // Resolved version (e.g., "1.29.3")
-	VersionTag       string            // Original version tag (e.g., "v1.29.3" or "1.29.3")
-	OS               string            // Target OS (runtime.GOOS)
-	Arch             string            // Target architecture (runtime.GOARCH)
-	Recipe           *recipe.Recipe    // Full recipe (for reference)
-	ExecPaths        []string          // Additional bin paths needed for execution (e.g., nodejs bin for npm tools)
-	Resolver         *version.Resolver // Version resolver (for GitHub API access, asset resolution)
-	Logger           log.Logger        // Logger for structured logging (optional, falls back to log.Default())
-	Dependencies     ResolvedDeps      // Resolved dependencies with their versions
-	Env              []string          // Shared environment variables set by setup_build_env, used by build actions
-	AppResult        interface{}       // Result from app_bundle action for state tracking (stores *AppBundleResult)
+	Context                 context.Context   // Context for cancellation, timeouts, and deadlines
+	WorkDir                 string            // Temporary work directory
+	InstallDir              string            // Installation directory ($TSUKU_HOME/tools/.install/)
+	ToolInstallDir          string            // Tool-specific directory for directory-based installations ($TSUKU_HOME/tools/{name}-{version}/)
+	ToolsDir                string            // Tools directory ($TSUKU_HOME/tools/) for finding other installed tools
+	LibsDir                 string            // Libraries directory ($TSUKU_HOME/libs/) for finding installed libraries
+	AppsDir                 string            // Applications directory ($TSUKU_HOME/apps/) for macOS .app bundles
+	CurrentDir              string            // Current symlinks directory ($TSUKU_HOME/tools/current/) for binary symlinks
+	DownloadCacheDir        string            // Download cache directory ($TSUKU_HOME/cache/downloads/)
+	SkipCacheSecurityChecks bool              // Skip symlink/permission checks on cache dir (CI only)
+	KeyCacheDir             string            // PGP key cache directory ($TSUKU_HOME/cache/keys/)
+	Version                 string            // Resolved version (e.g., "1.29.3")
+	VersionTag              string            // Original version tag (e.g., "v1.29.3" or "1.29.3")
+	OS                      string            // Target OS (runtime.GOOS)
+	Arch                    string            // Target architecture (runtime.GOARCH)
+	Recipe                  *recipe.Recipe    // Full recipe (for reference)
+	ExecPaths               []string          // Additional bin paths needed for execution (e.g., nodejs bin for npm tools)
+	Resolver                *version.Resolver // Version resolver (for GitHub API access, asset resolution)
+	Logger                  log.Logger        // Logger for structured logging (optional, falls back to log.Default())
+	Dependencies            ResolvedDeps      // Resolved dependencies with their versions
+	Env                     []string          // Shared environment variables set by setup_build_env, used by build actions
+	AppResult               interface{}       // Result from app_bundle action for state tracking (stores *AppBundleResult)
 }
 
 // Log returns the logger for this context.

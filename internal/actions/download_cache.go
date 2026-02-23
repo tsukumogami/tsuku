@@ -14,7 +14,8 @@ import (
 // DownloadCache provides caching for downloaded files.
 // Cache entries are stored in $TSUKU_HOME/cache/downloads/ with URL hash as filename.
 type DownloadCache struct {
-	cacheDir string
+	cacheDir           string
+	skipSecurityChecks bool
 }
 
 // downloadCacheEntry represents metadata for a cached download
@@ -30,6 +31,14 @@ type downloadCacheEntry struct {
 // The cacheDir should be $TSUKU_HOME/cache/downloads.
 func NewDownloadCache(cacheDir string) *DownloadCache {
 	return &DownloadCache{cacheDir: cacheDir}
+}
+
+// SetSkipSecurityChecks disables symlink and permission checks on the cache directory.
+// This is intended for CI environments where the cache directory is a symlink to a
+// shared volume. Using this in production is unsafe and should only be enabled via
+// --dangerously-suppress-security.
+func (c *DownloadCache) SetSkipSecurityChecks(skip bool) {
+	c.skipSecurityChecks = skip
 }
 
 // cacheKey generates a filesystem-safe cache key from a URL
@@ -51,16 +60,18 @@ func (c *DownloadCache) cachePaths(url string) (filePath, metaPath string) {
 // If checksum is provided, it verifies the cached file matches before returning.
 // Returns (found, error) where found indicates cache hit.
 func (c *DownloadCache) Check(url, destPath, expectedChecksum, checksumAlgo string) (bool, error) {
-	// Security: Check for symlinks in cache path
-	if hasSymlink, err := containsSymlink(c.cacheDir); err != nil {
-		return false, fmt.Errorf("failed to check cache path for symlinks: %w", err)
-	} else if hasSymlink {
-		return false, fmt.Errorf("refusing to read from cache: path contains symlink: %s", c.cacheDir)
-	}
+	if !c.skipSecurityChecks {
+		// Security: Check for symlinks in cache path
+		if hasSymlink, err := containsSymlink(c.cacheDir); err != nil {
+			return false, fmt.Errorf("failed to check cache path for symlinks: %w", err)
+		} else if hasSymlink {
+			return false, fmt.Errorf("refusing to read from cache: path contains symlink: %s", c.cacheDir)
+		}
 
-	// Security: Validate directory permissions
-	if err := validateCacheDirPermissions(c.cacheDir); err != nil {
-		return false, fmt.Errorf("cache directory security check failed: %w", err)
+		// Security: Validate directory permissions
+		if err := validateCacheDirPermissions(c.cacheDir); err != nil {
+			return false, fmt.Errorf("cache directory security check failed: %w", err)
+		}
 	}
 
 	filePath, metaPath := c.cachePaths(url)
@@ -111,16 +122,18 @@ func (c *DownloadCache) Check(url, destPath, expectedChecksum, checksumAlgo stri
 // The file at sourcePath is copied to the cache.
 // checksum is optional and stored for reference.
 func (c *DownloadCache) Save(url, sourcePath, checksum string) error {
-	// Security: Check for symlinks in cache path
-	if hasSymlink, err := containsSymlink(c.cacheDir); err != nil {
-		return fmt.Errorf("failed to check cache path for symlinks: %w", err)
-	} else if hasSymlink {
-		return fmt.Errorf("refusing to write to cache: path contains symlink: %s", c.cacheDir)
-	}
+	if !c.skipSecurityChecks {
+		// Security: Check for symlinks in cache path
+		if hasSymlink, err := containsSymlink(c.cacheDir); err != nil {
+			return fmt.Errorf("failed to check cache path for symlinks: %w", err)
+		} else if hasSymlink {
+			return fmt.Errorf("refusing to write to cache: path contains symlink: %s", c.cacheDir)
+		}
 
-	// Security: Validate existing directory permissions
-	if err := validateCacheDirPermissions(c.cacheDir); err != nil {
-		return fmt.Errorf("cache directory security check failed: %w", err)
+		// Security: Validate existing directory permissions
+		if err := validateCacheDirPermissions(c.cacheDir); err != nil {
+			return fmt.Errorf("cache directory security check failed: %w", err)
+		}
 	}
 
 	// Ensure cache directory exists with secure permissions (0700)

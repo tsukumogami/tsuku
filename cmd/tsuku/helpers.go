@@ -105,6 +105,7 @@ func generateInstallPlan(
 	exec.SetAppsDir(cfg.AppsDir)
 	exec.SetCurrentDir(cfg.CurrentDir)
 	exec.SetDownloadCacheDir(cfg.DownloadCacheDir)
+	exec.SetSkipCacheSecurityChecks(installSkipSecurity)
 	exec.SetKeyCacheDir(cfg.KeyCacheDir)
 
 	// Set up downloader and cache for plan generation
@@ -113,6 +114,7 @@ func generateInstallPlan(
 	predownloader := validate.NewPreDownloader()
 	downloader := validate.NewPreDownloaderAdapter(predownloader)
 	downloadCache := actions.NewDownloadCache(cfg.DownloadCacheDir)
+	downloadCache.SetSkipSecurityChecks(installSkipSecurity)
 
 	// Generate plan with RecipeLoader to enable dependency embedding
 	return exec.GeneratePlan(ctx, executor.PlanConfig{
