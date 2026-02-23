@@ -9,6 +9,12 @@
 # steal secrets, or bypass CI validation.
 /.github/workflows/** @tsukumogami/core-team @tsukumogami/security-team
 
+# Container image config - require approval from both core and security teams
+# Centralized config for all sandbox, CI, and test container images. A single
+# edit redirects every consumer at once, so it needs the same protection as
+# workflow files.
+/container-images.json @tsukumogami/core-team @tsukumogami/security-team
+
 # Scripts - require approval from core team
 # Scripts are called by workflows and could be used to inject malicious behavior.
 /scripts/** @tsukumogami/core-team
