@@ -50,18 +50,9 @@ jobs:
   # Test homebrew action with pkg-config, cmake, gdbm, and pngcrush (Linux only - macOS aggregated below)
   # NOTE: make excluded - binary name differs by platform (gmake on macOS, make on Linux) - see #1581
   test-homebrew-linux:
-    name: "Linux x86_64: ${{ matrix.tool }}"
+    name: "Linux x86_64: homebrew tools"
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        tool:
-          # make excluded - see #1581
-          - pkg-config
-          - cmake
-          - gdbm
-          - pngcrush  # Tests dependency chain: pngcrush -> libpng -> zlib
-
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
 
@@ -74,17 +65,42 @@ jobs:
       - name: Build tsuku
         run: CGO_ENABLED=0 go build -o tsuku ./cmd/tsuku
 
-      - name: "Install ${{ matrix.tool }}"
+      - name: Test all homebrew tools
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
-        run: ./tsuku install --force ${{ matrix.tool }}
+        run: |
+          # make excluded - see #1581
+          # pngcrush tests dependency chain: pngcrush -> libpng -> zlib
+          TOOLS=(pkg-config cmake gdbm pngcrush)
+          CACHE_DIR="${{ runner.temp }}/tsuku-cache/downloads"
+          mkdir -p "$CACHE_DIR"
+          FAILED=()
 
-      - name: "Verify tool functionality"
-        run: ./test/scripts/verify-tool.sh ${{ matrix.tool }}
+          for tool in "${TOOLS[@]}"; do
+            echo "::group::Testing $tool"
 
-      - name: "Verify binary quality"
-        run: ./test/scripts/verify-binary.sh ${{ matrix.tool }}
+            # Fresh TSUKU_HOME per tool with shared download cache
+            export TSUKU_HOME="${{ runner.temp }}/tsuku-$tool"
+            mkdir -p "$TSUKU_HOME/cache"
+            ln -s "$CACHE_DIR" "$TSUKU_HOME/cache/downloads"
+            export PATH="$TSUKU_HOME/bin:$PATH"
+
+            if ! timeout 300 bash -c '
+              ./tsuku install --force "'"$tool"'" && \
+              ./test/scripts/verify-tool.sh "'"$tool"'" && \
+              ./test/scripts/verify-binary.sh "'"$tool"'"
+            '; then
+              FAILED+=("$tool")
+            fi
+            echo "::endgroup::"
+          done
+
+          if [ ${#FAILED[@]} -gt 0 ]; then
+            echo "::error::Failed tools: ${FAILED[*]}"
+            exit 1
+          fi
+          echo "All homebrew tools passed"
 
   # NOTE: gdbm-source test disabled - depends on make which has platform-specific binary name issue - see #1581
   # test-configure-make-linux:
