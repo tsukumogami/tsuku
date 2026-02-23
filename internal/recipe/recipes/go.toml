@@ -3,6 +3,7 @@ name = "go"
 description = "Go programming language toolchain"
 homepage = "https://go.dev/"
 version_format = "semver"
+supported_libc = ["glibc", "musl"]
 
 [version]
 source = "go_toolchain"

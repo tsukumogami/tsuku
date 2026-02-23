@@ -3,6 +3,7 @@ name = "zig"
 description = "General-purpose programming language and toolchain"
 homepage = "https://ziglang.org/"
 version_format = "semver"
+supported_libc = ["glibc", "musl"]
 
 [version]
 github_repo = "ziglang/zig"
