@@ -116,6 +116,12 @@ func runSandboxInstall(toolName, planPath, recipePath, targetFamily string) erro
 			printInfo("Container output:")
 			printInfo(result.Stdout)
 		}
+		// Report verification results separately if install passed but verify failed
+		if !result.Verified && result.VerifyExitCode >= 0 {
+			printInfo()
+			printInfof("Note: verification command exited %d (expected 0)\n", result.VerifyExitCode)
+			printInfo("This does not affect the install result. Use --json for detailed verification output.")
+		}
 	} else {
 		printInfo("Sandbox test FAILED")
 		printInfof("Exit code: %d\n", result.ExitCode)

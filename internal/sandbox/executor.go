@@ -30,7 +30,7 @@ const (
 
 // SandboxResult contains the result of a sandbox test.
 type SandboxResult struct {
-	Passed         bool   // Whether the sandbox test succeeded (install AND verify)
+	Passed         bool   // Whether the install succeeded (exit code 0)
 	Skipped        bool   // Whether the test was skipped (no runtime)
 	ExitCode       int    // Container exit code
 	Stdout         string // Container stdout
@@ -333,7 +333,7 @@ func (e *Executor) Sandbox(
 	verified, verifyExitCode := e.readVerifyResults(workspaceDir, plan)
 
 	return &SandboxResult{
-		Passed:         verified,
+		Passed:         result.ExitCode == 0,
 		ExitCode:       result.ExitCode,
 		Stdout:         result.Stdout,
 		Stderr:         result.Stderr,

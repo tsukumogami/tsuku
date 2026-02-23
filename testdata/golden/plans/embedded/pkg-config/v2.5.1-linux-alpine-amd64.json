@@ -1,5 +1,5 @@
 {
-  "format_version": 4,
+  "format_version": 5,
   "tool": "pkg-config",
   "version": "2.5.1",
   "platform": {
