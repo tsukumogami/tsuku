@@ -70,7 +70,6 @@ executables:
 bindir: exe
 `)
 
-	var serverURL string
 	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case "/api/v1/gems/bundler.json":
@@ -91,8 +90,6 @@ bindir: exe
 		}
 	}))
 	defer server.Close()
-	serverURL = server.URL
-	_ = serverURL
 
 	builder := newGemBuilderWithTLSServer(server)
 	result, err := builder.Build(context.Background(), BuildRequest{Package: "bundler"})
@@ -174,7 +171,6 @@ func TestGemBuilder_Build_NoMetadataGZ_FallsBack(t *testing.T) {
 	// Create a .gem tar with no metadata.gz
 	gemData := makeGemTar("")
 
-	var serverURL string
 	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case "/api/v1/gems/no-metadata.json":
@@ -195,8 +191,6 @@ func TestGemBuilder_Build_NoMetadataGZ_FallsBack(t *testing.T) {
 		}
 	}))
 	defer server.Close()
-	serverURL = server.URL
-	_ = serverURL
 
 	builder := newGemBuilderWithTLSServer(server)
 	result, err := builder.Build(context.Background(), BuildRequest{Package: "no-metadata"})
@@ -241,7 +235,6 @@ executables:
 - name with spaces
 `)
 
-	var serverURL string
 	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case "/api/v1/gems/bad-names.json":
@@ -262,8 +255,6 @@ executables:
 		}
 	}))
 	defer server.Close()
-	serverURL = server.URL
-	_ = serverURL
 
 	builder := newGemBuilderWithTLSServer(server)
 	result, err := builder.Build(context.Background(), BuildRequest{Package: "bad-names"})
@@ -297,7 +288,6 @@ executables:
 - bundler
 `)
 
-	var serverURL string
 	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case "/api/v1/gems/bundler.json":
@@ -318,8 +308,6 @@ executables:
 		}
 	}))
 	defer server.Close()
-	serverURL = server.URL
-	_ = serverURL
 
 	builder := newGemBuilderWithTLSServer(server)
 
@@ -620,7 +608,6 @@ executables:
 - fpm
 `)
 
-	var serverURL string
 	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case "/api/v1/gems/fpm.json":
@@ -641,8 +628,6 @@ executables:
 		}
 	}))
 	defer server.Close()
-	serverURL = server.URL
-	_ = serverURL
 
 	builder := newGemBuilderWithTLSServer(server)
 	result, err := builder.Build(context.Background(), BuildRequest{Package: "fpm"})
