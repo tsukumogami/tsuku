@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/tsukumogami/tsuku/internal/batch"
 )
@@ -2084,5 +2086,229 @@ func TestMetricsToRunInfo_batchIDConsistentWithRuns(t *testing.T) {
 	want := batchIDFromTimestamp(rec.Timestamp)
 	if ri.BatchID != want {
 		t.Errorf("health batch ID %q should match runs batch ID %q", ri.BatchID, want)
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Structural invariant tests for generated dashboard data
+// ---------------------------------------------------------------------------
+
+// generateTestDashboard produces a Dashboard from testdata fixtures,
+// used by the structural invariant tests to validate the full output.
+func generateTestDashboard(t *testing.T) Dashboard {
+	t.Helper()
+	dir := t.TempDir()
+	outputPath := filepath.Join(dir, "dashboard.json")
+
+	opts := Options{
+		QueueFile:          filepath.Join("testdata", "priority-queue.json"),
+		FailuresDir:        "testdata",
+		MetricsDir:         "testdata",
+		ControlFile:        filepath.Join("testdata", "batch-control.json"),
+		DisambiguationsDir: "/nonexistent",
+		OutputFile:         outputPath,
+	}
+
+	if err := Generate(opts); err != nil {
+		t.Fatalf("Generate: %v", err)
+	}
+
+	data, err := os.ReadFile(outputPath)
+	if err != nil {
+		t.Fatalf("read output: %v", err)
+	}
+
+	var dash Dashboard
+	if err := json.Unmarshal(data, &dash); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	return dash
+}
+
+func TestStructuralInvariant_GeneratedAtIsRFC3339(t *testing.T) {
+	dash := generateTestDashboard(t)
+
+	if dash.GeneratedAt == "" {
+		t.Fatal("GeneratedAt must not be empty")
+	}
+	if _, err := time.Parse(time.RFC3339, dash.GeneratedAt); err != nil {
+		t.Errorf("GeneratedAt %q is not valid RFC 3339: %v", dash.GeneratedAt, err)
+	}
+}
+
+func TestStructuralInvariant_BatchIDFormat(t *testing.T) {
+	dash := generateTestDashboard(t)
+
+	// Batch IDs must not contain colons (which are invalid in file paths
+	// and break cross-links). Valid format: 2026-02-19T04-26-06Z
+	batchIDPattern := regexp.MustCompile(`^\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}Z$`)
+
+	for i, run := range dash.Runs {
+		if run.BatchID == "" {
+			t.Errorf("Runs[%d].BatchID is empty", i)
+			continue
+		}
+		if strings.Contains(run.BatchID, ":") {
+			t.Errorf("Runs[%d].BatchID %q contains colons", i, run.BatchID)
+		}
+		if !batchIDPattern.MatchString(run.BatchID) {
+			t.Errorf("Runs[%d].BatchID %q does not match expected format YYYY-MM-DDTHH-MM-SSZ", i, run.BatchID)
+		}
+	}
+
+	// Health batch IDs must use the same format
+	if dash.Health != nil && dash.Health.LastRun != nil {
+		bid := dash.Health.LastRun.BatchID
+		if strings.Contains(bid, ":") {
+			t.Errorf("Health.LastRun.BatchID %q contains colons", bid)
+		}
+		if !batchIDPattern.MatchString(bid) {
+			t.Errorf("Health.LastRun.BatchID %q does not match expected format", bid)
+		}
+	}
+	if dash.Health != nil && dash.Health.LastSuccessfulRun != nil {
+		bid := dash.Health.LastSuccessfulRun.BatchID
+		if strings.Contains(bid, ":") {
+			t.Errorf("Health.LastSuccessfulRun.BatchID %q contains colons", bid)
+		}
+		if !batchIDPattern.MatchString(bid) {
+			t.Errorf("Health.LastSuccessfulRun.BatchID %q does not match expected format", bid)
+		}
+	}
+}
+
+func TestStructuralInvariant_ByStatusKeysHavePackages(t *testing.T) {
+	dash := generateTestDashboard(t)
+
+	// Every status key in by_status must have a corresponding non-empty
+	// entry in packages.
+	for status, count := range dash.Queue.ByStatus {
+		pkgs, ok := dash.Queue.Packages[status]
+		if !ok {
+			t.Errorf("ByStatus has key %q (count=%d) but Packages has no entry for it", status, count)
+			continue
+		}
+		if len(pkgs) == 0 {
+			t.Errorf("ByStatus[%q]=%d but Packages[%q] is empty", status, count, status)
+			continue
+		}
+		if len(pkgs) != count {
+			t.Errorf("ByStatus[%q]=%d but len(Packages[%q])=%d", status, count, status, len(pkgs))
+		}
+	}
+}
+
+func TestStructuralInvariant_PackageIDEcosystemPrefix(t *testing.T) {
+	dash := generateTestDashboard(t)
+
+	// Every package ID in Packages must have an ecosystem prefix (the part
+	// before the first colon), and that prefix must match the package's
+	// Ecosystem field.
+	for status, pkgs := range dash.Queue.Packages {
+		for i, pkg := range pkgs {
+			colonIdx := strings.Index(pkg.ID, ":")
+			if colonIdx == -1 {
+				t.Errorf("Packages[%q][%d].ID %q has no ecosystem prefix (missing colon)", status, i, pkg.ID)
+				continue
+			}
+			prefix := pkg.ID[:colonIdx]
+			if prefix == "" {
+				t.Errorf("Packages[%q][%d].ID %q has empty ecosystem prefix", status, i, pkg.ID)
+				continue
+			}
+			if pkg.Ecosystem != "" && prefix != pkg.Ecosystem {
+				t.Errorf("Packages[%q][%d].ID prefix %q != Ecosystem %q", status, i, prefix, pkg.Ecosystem)
+			}
+		}
+	}
+}
+
+func TestStructuralInvariant_ByEcosystemMatchesPackageEcosystems(t *testing.T) {
+	dash := generateTestDashboard(t)
+
+	// Collect the set of ecosystems found in package IDs.
+	ecosFromPackages := make(map[string]bool)
+	for _, pkgs := range dash.Queue.Packages {
+		for _, pkg := range pkgs {
+			if pkg.Ecosystem != "" {
+				ecosFromPackages[pkg.Ecosystem] = true
+			}
+		}
+	}
+
+	// Every ecosystem in ByEcosystem must appear in the package IDs.
+	for eco := range dash.Queue.ByEcosystem {
+		if !ecosFromPackages[eco] {
+			t.Errorf("ByEcosystem has key %q but no packages have that ecosystem", eco)
+		}
+	}
+
+	// Every ecosystem found in packages must have a ByEcosystem entry.
+	for eco := range ecosFromPackages {
+		if _, ok := dash.Queue.ByEcosystem[eco]; !ok {
+			t.Errorf("packages have ecosystem %q but ByEcosystem has no entry for it", eco)
+		}
+	}
+}
+
+func TestStructuralInvariant_ByEcosystemTotalsCorrect(t *testing.T) {
+	dash := generateTestDashboard(t)
+
+	// For each ecosystem, the "total" must equal the sum of individual
+	// status counts.
+	for eco, counts := range dash.Queue.ByEcosystem {
+		sum := 0
+		for k, v := range counts {
+			if k != "total" {
+				sum += v
+			}
+		}
+		total, hasTotal := counts["total"]
+		if !hasTotal {
+			t.Errorf("ByEcosystem[%q] missing 'total' key", eco)
+			continue
+		}
+		if total != sum {
+			t.Errorf("ByEcosystem[%q] total=%d but sum of statuses=%d", eco, total, sum)
+		}
+	}
+}
+
+func TestStructuralInvariant_HealthEcosystemKeysFormat(t *testing.T) {
+	dash := generateTestDashboard(t)
+
+	if dash.Health == nil {
+		t.Skip("no health data in test dashboard")
+	}
+
+	// Ecosystem keys must be lowercase with no spaces.
+	pattern := regexp.MustCompile(`^[a-z][a-z0-9._-]*$`)
+	for eco := range dash.Health.Ecosystems {
+		if !pattern.MatchString(eco) {
+			t.Errorf("Health.Ecosystems key %q is not lowercase/no-space format", eco)
+		}
+	}
+}
+
+func TestStructuralInvariant_ByEcosystemStatusCoverage(t *testing.T) {
+	// Validate that per-ecosystem status counts are consistent with the
+	// global ByStatus counts. The sum of each status across all ecosystems
+	// must equal the global ByStatus value for that status.
+	dash := generateTestDashboard(t)
+
+	sumByStatus := make(map[string]int)
+	for _, counts := range dash.Queue.ByEcosystem {
+		for k, v := range counts {
+			if k != "total" {
+				sumByStatus[k] += v
+			}
+		}
+	}
+
+	for status, globalCount := range dash.Queue.ByStatus {
+		ecoSum := sumByStatus[status]
+		if ecoSum != globalCount {
+			t.Errorf("ByStatus[%q]=%d but sum across ByEcosystem=%d", status, globalCount, ecoSum)
+		}
 	}
 }
