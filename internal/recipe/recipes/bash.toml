@@ -10,8 +10,6 @@ binaries = ["bin/bash"]
 supported_os = ["linux"]
 
 [version]
-source = "homebrew"
-formula = "bash"
 
 # glibc Linux: Homebrew bottles
 [[steps]]
