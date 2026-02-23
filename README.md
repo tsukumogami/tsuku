@@ -625,7 +625,7 @@ tsuku eval rg | tsuku install --plan - --sandbox
 
 Sandbox testing:
 - Runs installation in an isolated Docker/Podman container
-- Verifies the tool installs and runs correctly
+- Runs the recipe's `[verify]` command after installation and reports pass/fail based on both install and verification results
 - Automatically configures network access based on recipe requirements
 - Useful for testing recipes before submission or production deployment
 
@@ -639,6 +639,51 @@ tsuku install cmake --sandbox --linux-family debian
 
 # Test on Fedora-based container
 tsuku install cmake --sandbox --linux-family rhel
+```
+
+**Environment variable passthrough:** Use `--env` to pass environment variables into the sandbox container. This is useful for tokens and configuration that tools need at install time:
+
+```bash
+# Pass a token with an explicit value
+tsuku install gh --sandbox --env GITHUB_TOKEN=ghp_xxxx
+
+# Read from the host environment (like docker -e)
+tsuku install gh --sandbox --env GITHUB_TOKEN
+```
+
+The sandbox hardcodes `TSUKU_SANDBOX`, `TSUKU_HOME`, `HOME`, `DEBIAN_FRONTEND`, and `PATH` inside the container. These can't be overridden via `--env`. Note that `TSUKU_REGISTRY_URL` is consumed on the host during plan generation, so set it in your shell environment rather than passing it with `--env`.
+
+**Structured output for CI:** Use `--json` for machine-readable results:
+
+```bash
+tsuku install ruff --sandbox --json
+```
+
+```json
+{
+  "tool": "ruff",
+  "passed": true,
+  "verified": true,
+  "install_exit_code": 0,
+  "verify_exit_code": 0,
+  "duration_ms": 4523,
+  "error": null
+}
+```
+
+| Field | Description |
+|-------|-------------|
+| `passed` | Overall result: install succeeded AND verification passed |
+| `verified` | Whether the verify command passed (true when no verify command exists) |
+| `install_exit_code` | Container exit code from the install step |
+| `verify_exit_code` | Exit code from the recipe's verify command (-1 if none) |
+| `duration_ms` | Total execution time in milliseconds |
+| `error` | Error message string, or null on success |
+
+When `--json` is set, human-readable progress output is suppressed. CI workflows can parse results with `jq`:
+
+```bash
+tsuku install ruff --sandbox --json | jq '.passed'
 ```
 
 For technical details, see [DESIGN-install-sandbox.md](docs/DESIGN-install-sandbox.md).
