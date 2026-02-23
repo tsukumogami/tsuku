@@ -149,9 +149,9 @@ Total scenarios: 14
 ---
 
 ## Scenario 14: CODEOWNERS protects container-images.json
-**ID**: scenario-14
+**ID**: scenario-14 [x]
 **Testable after**: #1904
 **Commands**:
 - `grep 'container-images.json' .github/CODEOWNERS`
 **Expected**: Output shows `/container-images.json` with `@tsukumogami/core-team @tsukumogami/security-team` as reviewers, matching the same teams that protect workflow files. A comment explains why the file is protected.
-**Status**: pending
+**Status**: passed

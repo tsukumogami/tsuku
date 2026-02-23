@@ -3,7 +3,7 @@
   "design_doc": "docs/designs/DESIGN-sandbox-image-unification.md",
   "branch": "impl/sandbox-image-unification",
   "pr_number": 1906,
-  "integrity_hash": "sha256:597a0f8ec22fd87b89db365df91a0358ac91e4f6d22470e2e0b796962bb4880a",
+  "integrity_hash": "sha256:30e8cab6d0645ebe65225d16661a66396f441d6ad4f4e46f4dfc708f03b8c23a",
   "issues": [
     {
       "number": 1901,
@@ -130,8 +130,8 @@
     {
       "number": 1903,
       "title": "ci: add Renovate config and drift-check CI job",
-      "status": "scrutinized",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "ci_fix_attempts": 0,
       "issue_type": "code",
       "dependencies": [
@@ -151,6 +151,29 @@
         "tests_added": 0,
         "key_decisions": "Hardcoded reference check uses explicit allowlist of exceptions. Excludes _test.go files since they assert expected values. opensuse/tumbleweed has no version tag (rolling release) so Renovate naturally skips it."
       },
+      "reviewer_results": [
+        {
+          "issue": 1903,
+          "review_focus": "pragmatic",
+          "blocking_count": 0,
+          "advisory_count": 2,
+          "detail_file": "wip/research/implement-doc_review_pragmatic_issue1903.md"
+        },
+        {
+          "issue": 1903,
+          "review_focus": "architect",
+          "blocking_count": 0,
+          "advisory_count": 2,
+          "detail_file": "wip/research/implement-doc_review_architect_issue1903.md"
+        },
+        {
+          "issue": 1903,
+          "review_focus": "maintainer",
+          "blocking_count": 0,
+          "advisory_count": 5,
+          "detail_file": "wip/research/implement-doc_review_maintainer_issue1903.md"
+        }
+      ],
       "testable_scenarios": [
         "scenario-12",
         "scenario-13"
@@ -159,16 +182,25 @@
     {
       "number": 1904,
       "title": "chore: add container-images.json to CODEOWNERS",
-      "status": "pending",
+      "status": "scrutinized",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [
         1901
       ],
-      "commits": [],
-      "agent_type": "",
-      "summary": null,
+      "commits": [
+        "6049eeeee4f04b140ec3958957cbfe17df0d84e7"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          ".github/CODEOWNERS"
+        ],
+        "tests_added": 0,
+        "key_decisions": "Placed container-images.json entry between workflow files and scripts entries. Used core-team and security-team as reviewers matching workflow protection."
+      },
       "testable_scenarios": [
         "scenario-14"
       ]
