@@ -162,9 +162,7 @@ func (b *PyPIBuilder) Build(ctx context.Context, req BuildRequest) (*BuildResult
 			Description: pkgInfo.Info.Summary,
 			Homepage:    homepage,
 		},
-		Version: recipe.VersionSection{
-			Source: "pypi",
-		},
+		Version: recipe.VersionSection{},
 		Steps: []recipe.Step{
 			{
 				Action: "pipx_install",

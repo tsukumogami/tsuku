@@ -144,9 +144,7 @@ func (b *CargoBuilder) Build(ctx context.Context, req BuildRequest) (*BuildResul
 			Description: strings.TrimSpace(crateInfo.Crate.Description),
 			Homepage:    crateInfo.Crate.Homepage,
 		},
-		Version: recipe.VersionSection{
-			Source: "crates_io",
-		},
+		Version: recipe.VersionSection{},
 		Steps: []recipe.Step{
 			{
 				Action: "cargo_install",

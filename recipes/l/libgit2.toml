@@ -7,15 +7,13 @@
   runtime_dependencies = ["libssh2"]
   tier = 0
   type = ""
-  llm_validation = "skipped"
-supported_os = ["linux"]
 
 [version]
-  source = "homebrew"
+  source = ""
   github_repo = ""
   tag_prefix = ""
   module = ""
-  formula = "libgit2"
+  formula = ""
   cask = ""
   tap = ""
   fossil_repo = ""

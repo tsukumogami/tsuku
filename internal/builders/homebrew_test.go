@@ -300,11 +300,12 @@ func TestHomebrewBuilder_generateRecipe(t *testing.T) {
 	if recipe.Metadata.Description != "Search tool like grep and The Silver Searcher" {
 		t.Errorf("Description = %v, want Search tool like grep and The Silver Searcher", recipe.Metadata.Description)
 	}
-	if recipe.Version.Source != "homebrew" {
-		t.Errorf("Version.Source = %v, want homebrew", recipe.Version.Source)
+	// Version source should be empty (inferred from homebrew action)
+	if recipe.Version.Source != "" {
+		t.Errorf("Version.Source = %q, want empty (inferred from action)", recipe.Version.Source)
 	}
-	if recipe.Version.Formula != "ripgrep" {
-		t.Errorf("Version.Formula = %v, want ripgrep", recipe.Version.Formula)
+	if recipe.Version.Formula != "" {
+		t.Errorf("Version.Formula = %q, want empty (inferred from action)", recipe.Version.Formula)
 	}
 	if recipe.Verify.Command != "rg --version" {
 		t.Errorf("Verify.Command = %v, want rg --version", recipe.Verify.Command)
@@ -2867,12 +2868,12 @@ func TestHomebrewBuilder_generateToolRecipe_Regression(t *testing.T) {
 		t.Errorf("RuntimeDependencies = %v, want [oniguruma]", r.Metadata.RuntimeDependencies)
 	}
 
-	// Version section
-	if r.Version.Source != "homebrew" {
-		t.Errorf("Version.Source = %q, want %q", r.Version.Source, "homebrew")
+	// Version source should be empty (inferred from homebrew action)
+	if r.Version.Source != "" {
+		t.Errorf("Version.Source = %q, want empty (inferred from action)", r.Version.Source)
 	}
-	if r.Version.Formula != "jq" {
-		t.Errorf("Version.Formula = %q, want %q", r.Version.Formula, "jq")
+	if r.Version.Formula != "" {
+		t.Errorf("Version.Formula = %q, want empty (inferred from action)", r.Version.Formula)
 	}
 }
 

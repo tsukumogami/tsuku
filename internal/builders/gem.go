@@ -130,9 +130,7 @@ func (b *GemBuilder) Build(ctx context.Context, req BuildRequest) (*BuildResult,
 			Description: gemInfo.Info,
 			Homepage:    gemInfo.HomepageURI,
 		},
-		Version: recipe.VersionSection{
-			Source: "rubygems",
-		},
+		Version: recipe.VersionSection{},
 		Steps: []recipe.Step{
 			{
 				Action: "gem_install",
