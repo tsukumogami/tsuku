@@ -3,7 +3,7 @@
   "design_doc": "docs/designs/DESIGN-sandbox-image-unification.md",
   "branch": "impl/sandbox-image-unification",
   "pr_number": 1906,
-  "integrity_hash": "sha256:2542036f3d8aa4ce6154da90cb0991d7a7a00cffd7be9f5f7649a87db4096d5f",
+  "integrity_hash": "sha256:d88ed5e776f5671d115c3eac3b3d620cf37f87c2e266c83493617c186b7c69c8",
   "issues": [
     {
       "number": 1901,
@@ -74,7 +74,7 @@
     {
       "number": 1902,
       "title": "ci: migrate workflow container images to centralized config",
-      "status": "scrutinized",
+      "status": "pushed",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
       "issue_type": "code",
@@ -99,6 +99,29 @@
         "tests_added": 0,
         "key_decisions": "Three consumption patterns: array-based (jq loop over families), matrix-based (load-images job with fromJson), inline (jq -r lookup). Added sparse-checkout for container-images.json in release.yml. Added jq availability check in test-checksum-pinning.sh."
       },
+      "reviewer_results": [
+        {
+          "issue": 1902,
+          "review_focus": "pragmatic",
+          "blocking_count": 0,
+          "advisory_count": 2,
+          "detail_file": "wip/research/implement-doc_review_pragmatic_issue1902.md"
+        },
+        {
+          "issue": 1902,
+          "review_focus": "architect",
+          "blocking_count": 0,
+          "advisory_count": 1,
+          "detail_file": "wip/research/implement-doc_review_architect_issue1902.md"
+        },
+        {
+          "issue": 1902,
+          "review_focus": "maintainer",
+          "blocking_count": 0,
+          "advisory_count": 2,
+          "detail_file": "wip/research/implement-doc_review_maintainer_issue1902.md"
+        }
+      ],
       "testable_scenarios": [
         "scenario-10",
         "scenario-11"
