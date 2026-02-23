@@ -2,7 +2,7 @@
   "design_doc": "docs/designs/DESIGN-binary-name-discovery.md",
   "branch": "docs/deterministic-recipe-repair",
   "pr_number": 1934,
-  "integrity_hash": "sha256:b4dc8ea5ec81464863edf2d21089ae680b9fb97ecb924d2bb7f842929e309852",
+  "integrity_hash": "sha256:892ab9cd9de2bde34528d29d8d253fdbeb1c9710e20c2008176f2d66f595d873",
   "issues": [
     {
       "number": 1936,
@@ -307,8 +307,8 @@
     {
       "number": 1939,
       "title": "feat(builders): add PyPI wheel-based executable discovery",
-      "status": "pushed",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "ci_fix_attempts": 0,
       "issue_type": "code",
       "dependencies": [
@@ -431,16 +431,78 @@
     {
       "number": 1940,
       "title": "feat(builders): add RubyGems gem-based executable discovery",
-      "status": "pending",
+      "status": "pushed",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [
         1939
       ],
-      "commits": [],
-      "agent_type": "",
-      "summary": null,
+      "commits": [
+        "23116e14c6d62dbf0dfe53a26a7fbd2c8d926e16"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          "internal/builders/gem.go",
+          "internal/builders/gem_artifact_test.go"
+        ],
+        "tests_added": 12,
+        "key_decisions": "Line-based YAML scanner for metadata.gz instead of YAML library dependency. Reused downloadArtifact from #1939. Added Version field to rubyGemsGemResponse.",
+        "requirements_map": [
+          {
+            "ac": "artifact-based discovery first",
+            "status": "implemented"
+          },
+          {
+            "ac": "gem download with artifact helper",
+            "status": "implemented"
+          },
+          {
+            "ac": "tar + gzip + YAML parsing",
+            "status": "implemented"
+          },
+          {
+            "ac": "50MB limit",
+            "status": "implemented"
+          },
+          {
+            "ac": "isValidExecutableName validation",
+            "status": "implemented"
+          },
+          {
+            "ac": "gemspec fallback preserved",
+            "status": "implemented"
+          },
+          {
+            "ac": "BinaryNameProvider on GemBuilder",
+            "status": "implemented"
+          },
+          {
+            "ac": "12 unit tests",
+            "status": "implemented"
+          },
+          {
+            "ac": "all existing tests pass",
+            "status": "implemented"
+          }
+        ]
+      },
+      "reviewer_results": {
+        "issue": 1940,
+        "reviewers": [
+          {
+            "focus": "combined",
+            "blocking_count": 0,
+            "advisory_count": 2,
+            "summary": "Dead serverURL fixed. Advisory: extractTarEntry limit could be tighter, YAML parser doesn't handle quoted strings (safe for machine-generated metadata)."
+          }
+        ],
+        "verdict": "pass",
+        "total_blocking": 0,
+        "total_advisory": 2
+      },
       "testable_scenarios": [
         "scenario-12",
         "scenario-13"

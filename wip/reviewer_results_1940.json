@@ -1,0 +1,9 @@
+{
+  "issue": 1940,
+  "reviewers": [
+    {"focus": "combined", "blocking_count": 0, "advisory_count": 2, "summary": "Dead serverURL fixed. Advisory: extractTarEntry limit could be tighter, YAML parser doesn't handle quoted strings (safe for machine-generated metadata)."}
+  ],
+  "verdict": "pass",
+  "total_blocking": 0,
+  "total_advisory": 2
+}

@@ -45,8 +45,8 @@ rationale: |
 | ~~_Define the `BinaryNameProvider` interface and add a `validateBinaryNames()` step in the orchestrator between recipe generation and sandbox validation. Implements the interface on Cargo and npm builders using their cached registry data, with telemetry for corrections._~~ | | |
 | ~~[#1939: feat(builders): add PyPI wheel-based executable discovery](https://github.com/tsukumogami/tsuku/issues/1939)~~ | [#1938](https://github.com/tsukumogami/tsuku/issues/1938) | testable |
 | ~~_Create the shared artifact download helper at `internal/builders/artifact.go` and use it to download PyPI wheel files, extract `entry_points.txt` from the ZIP, and parse `[console_scripts]` for executable names. The existing pyproject.toml-from-GitHub path becomes a fallback._~~ | | |
-| [#1940: feat(builders): add RubyGems gem-based executable discovery](https://github.com/tsukumogami/tsuku/issues/1940) | [#1939](https://github.com/tsukumogami/tsuku/issues/1939) | testable |
-| _Reuse the artifact download helper to download `.gem` files, extract `metadata.gz` from the tar archive, decompress the YAML, and read the `executables` array. The gemspec-from-GitHub path becomes a fallback._ | | |
+| ~~[#1940: feat(builders): add RubyGems gem-based executable discovery](https://github.com/tsukumogami/tsuku/issues/1940)~~ | [#1939](https://github.com/tsukumogami/tsuku/issues/1939) | testable |
+| ~~_Reuse the artifact download helper to download `.gem` files, extract `metadata.gz` from the tar archive, decompress the YAML, and read the `executables` array. The gemspec-from-GitHub path becomes a fallback._~~ | | |
 | [#1941: feat(builders): improve Go binary discovery via module proxy](https://github.com/tsukumogami/tsuku/issues/1941) | None | testable |
 | _Scan the Go module proxy source listing for `cmd/` directories containing `main.go` to discover binary targets beyond the last-segment heuristic. Does not implement `BinaryNameProvider` since the discovery remains heuristic-based._ | | |
 
@@ -83,8 +83,8 @@ graph LR
     classDef needsDesign fill:#e1bee7
     classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
 
-    class I1936,I1937,I1938,I1939 done
-    class I1940,I1941 ready
+    class I1936,I1937,I1938,I1939,I1940 done
+    class I1941 ready
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design
