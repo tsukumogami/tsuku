@@ -1,0 +1,72 @@
+{
+  "format_version": 4,
+  "tool": "rust",
+  "version": "1.93.1",
+  "platform": {
+    "os": "darwin",
+    "arch": "arm64"
+  },
+  "deterministic": false,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "6bafa3b5367019c576751741295e06717f8f28c9d0e6631dcb9496cd142a386a",
+        "checksum_algo": "sha256",
+        "dest": "rust-1.93.1-aarch64-apple-darwin.tar.gz",
+        "url": "https://static.rust-lang.org/dist/rust-1.93.1-aarch64-apple-darwin.tar.gz"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://static.rust-lang.org/dist/rust-1.93.1-aarch64-apple-darwin.tar.gz",
+      "checksum": "6bafa3b5367019c576751741295e06717f8f28c9d0e6631dcb9496cd142a386a",
+      "size": 389523068
+    },
+    {
+      "action": "extract",
+      "params": {
+        "arch_mapping": {
+          "amd64": "x86_64",
+          "arm64": "aarch64"
+        },
+        "archive": "rust-1.93.1-aarch64-apple-darwin.tar.gz",
+        "format": "tar.gz",
+        "os_mapping": {
+          "darwin": "apple-darwin"
+        },
+        "strip_dirs": 1
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "run_command",
+      "params": {
+        "command": "./install.sh --prefix={install_dir} --disable-ldconfig"
+      },
+      "evaluable": false,
+      "deterministic": false
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "install_mode": "directory",
+        "outputs": [
+          "bin/cargo",
+          "bin/rustc",
+          "bin/rustdoc",
+          "bin/rustfmt",
+          "bin/cargo-clippy",
+          "bin/clippy-driver",
+          "bin/rust-analyzer"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "cargo --version",
+    "pattern": "cargo {version}"
+  }
+}

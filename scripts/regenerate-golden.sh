@@ -269,15 +269,22 @@ for VERSION in $VERSIONS; do
         arch="${rest%%:*}"
         family="${rest#*:}"
 
-        # Build eval command arguments
-        eval_args=(--recipe "$RECIPE_PATH" --os "$os" --arch "$arch" --version "$VERSION_NO_V" --install-deps)
-
         # Determine output filename based on whether family is present
         if [[ -n "$family" ]]; then
-            eval_args+=(--linux-family "$family")
             OUTPUT="$GOLDEN_DIR/${VERSION}-${os}-${family}-${arch}.json"
         else
             OUTPUT="$GOLDEN_DIR/${VERSION}-${os}-${arch}.json"
+        fi
+
+        # Build eval command arguments
+        # Use --pin-from when an existing golden file exists so dependency
+        # versions stay pinned (matches validate-golden.sh behavior).
+        eval_args=(--recipe "$RECIPE_PATH" --os "$os" --arch "$arch" --version "$VERSION_NO_V" --install-deps)
+        if [[ -f "$OUTPUT" ]]; then
+            eval_args+=(--pin-from "$OUTPUT")
+        fi
+        if [[ -n "$family" ]]; then
+            eval_args+=(--linux-family "$family")
         fi
 
         if "$TSUKU" eval "${eval_args[@]}" 2>/dev/null | \
