@@ -30,7 +30,7 @@ rationale: |
 
 ## Status
 
-**Planned**
+**Current**
 
 ## Implementation Issues
 
@@ -49,38 +49,6 @@ rationale: |
 | ~~[#1916: fix(ci): add embedded recipe paths to CI triggers](https://github.com/tsukumogami/tsuku/issues/1916)~~ | ~~None~~ | ~~simple~~ |
 | ~~_Adds `internal/recipe/recipes/**/*.toml` to `test-recipe.yml` trigger paths so embedded recipe changes get PR-time Alpine testing. Removes the outdated commented-out `rust-test-musl` job from `test.yml`._~~ | | |
 
-### Dependency Graph
-
-```mermaid
-graph LR
-    subgraph Phase1["Phase 1: Recipe Fixes"]
-        I1912["#1912: musl fallback (rust, python, perl)"]
-        I1913["#1913: musl fallback (patchelf)"]
-        I1914["#1914: musl fallback (nodejs, ruby)"]
-    end
-
-    subgraph Phase2["Phase 2: Static Analysis"]
-        I1915["#1915: Structural musl coverage check"]
-    end
-
-    subgraph Phase3["Phase 3: CI"]
-        I1916["#1916: CI trigger paths"]
-    end
-
-    I1912 --> I1915
-    I1913 --> I1915
-    I1914 --> I1915
-
-    classDef done fill:#c8e6c9
-    classDef ready fill:#bbdefb
-    classDef blocked fill:#fff9c4
-    classDef needsDesign fill:#e1bee7
-    classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
-
-    class I1912,I1913,I1914,I1915,I1916 done
-```
-
-**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design
 
 ## Context and Problem Statement
 
