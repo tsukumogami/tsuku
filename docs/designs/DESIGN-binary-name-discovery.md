@@ -1,5 +1,5 @@
 ---
-status: Accepted
+status: Planned
 problem: |
   Recipe builders discover binary names by fetching source files (Cargo.toml,
   pyproject.toml, gemspec) from GitHub repositories. This fails for workspace
@@ -29,7 +29,65 @@ rationale: |
 
 ## Status
 
-**Proposed**
+**Planned**
+
+## Implementation Issues
+
+### Milestone: [binary-name-discovery](https://github.com/tsukumogami/tsuku/milestone/103)
+
+| Issue | Dependencies | Tier |
+|-------|--------------|------|
+| [#1936: feat(builders): use crates.io `bin_names` for Cargo binary discovery](https://github.com/tsukumogami/tsuku/issues/1936) | None | testable |
+| _Read `bin_names` from the crates.io version API response instead of fetching Cargo.toml from GitHub. Adds version struct fields, rewrites `discoverExecutables()`, removes dead code for repo-based fetching, and caches the API response for the orchestrator validation step._ | | |
+| [#1937: fix(builders): handle string-type `bin` field in npm builder](https://github.com/tsukumogami/tsuku/issues/1937) | None | testable |
+| _Fix `parseBinField()` to return the package name when `bin` is a string rather than a map. Strips scope prefixes from scoped packages (`@scope/tool` becomes `tool`) and passes the package name into the parser signature._ | | |
+| [#1938: feat(builders): add `BinaryNameProvider` and orchestrator validation](https://github.com/tsukumogami/tsuku/issues/1938) | [#1936](https://github.com/tsukumogami/tsuku/issues/1936), [#1937](https://github.com/tsukumogami/tsuku/issues/1937) | testable |
+| _Define the `BinaryNameProvider` interface and add a `validateBinaryNames()` step in the orchestrator between recipe generation and sandbox validation. Implements the interface on Cargo and npm builders using their cached registry data, with telemetry for corrections._ | | |
+| [#1939: feat(builders): add PyPI wheel-based executable discovery](https://github.com/tsukumogami/tsuku/issues/1939) | [#1938](https://github.com/tsukumogami/tsuku/issues/1938) | testable |
+| _Create the shared artifact download helper at `internal/builders/artifact.go` and use it to download PyPI wheel files, extract `entry_points.txt` from the ZIP, and parse `[console_scripts]` for executable names. The existing pyproject.toml-from-GitHub path becomes a fallback._ | | |
+| [#1940: feat(builders): add RubyGems gem-based executable discovery](https://github.com/tsukumogami/tsuku/issues/1940) | [#1939](https://github.com/tsukumogami/tsuku/issues/1939) | testable |
+| _Reuse the artifact download helper to download `.gem` files, extract `metadata.gz` from the tar archive, decompress the YAML, and read the `executables` array. The gemspec-from-GitHub path becomes a fallback._ | | |
+| [#1941: feat(builders): improve Go binary discovery via module proxy](https://github.com/tsukumogami/tsuku/issues/1941) | None | testable |
+| _Scan the Go module proxy source listing for `cmd/` directories containing `main.go` to discover binary targets beyond the last-segment heuristic. Does not implement `BinaryNameProvider` since the discovery remains heuristic-based._ | | |
+
+### Dependency Graph
+
+```mermaid
+graph LR
+    subgraph Phase1["Phase 1: API-based fixes"]
+        I1936["#1936: Cargo bin_names"]
+        I1937["#1937: npm parseBinField fix"]
+    end
+
+    subgraph Phase2["Phase 2: Orchestrator"]
+        I1938["#1938: BinaryNameProvider + validation"]
+    end
+
+    subgraph Phase3["Phase 3: Artifact discovery"]
+        I1939["#1939: PyPI wheel discovery"]
+        I1940["#1940: RubyGems gem discovery"]
+    end
+
+    subgraph Independent["Independent"]
+        I1941["#1941: Go module proxy scan"]
+    end
+
+    I1936 --> I1938
+    I1937 --> I1938
+    I1938 --> I1939
+    I1939 --> I1940
+
+    classDef done fill:#c8e6c9
+    classDef ready fill:#bbdefb
+    classDef blocked fill:#fff9c4
+    classDef needsDesign fill:#e1bee7
+    classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
+
+    class I1936,I1937,I1941 ready
+    class I1938,I1939,I1940 blocked
+```
+
+**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design
 
 ## Context and Problem Statement
 
