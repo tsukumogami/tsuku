@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/tsukumogami/tsuku/internal/sandbox"
@@ -146,7 +147,7 @@ func TestSandboxJSONOutput_ErrorFieldNullEncoding(t *testing.T) {
 
 	jsonStr := string(data)
 	// The error field should be present as null, not omitted
-	if !contains(jsonStr, `"error":null`) && !contains(jsonStr, `"error": null`) {
+	if !strings.Contains(jsonStr, `"error":null`) && !strings.Contains(jsonStr, `"error": null`) {
 		t.Errorf("Expected JSON to contain error:null, got %s", jsonStr)
 	}
 }
@@ -171,7 +172,7 @@ func TestSandboxJSONOutput_ErrorFieldStringEncoding(t *testing.T) {
 	}
 
 	jsonStr := string(data)
-	if !contains(jsonStr, `"error":"something went wrong"`) && !contains(jsonStr, `"error": "something went wrong"`) {
+	if !strings.Contains(jsonStr, `"error":"something went wrong"`) && !strings.Contains(jsonStr, `"error": "something went wrong"`) {
 		t.Errorf("Expected JSON to contain error string, got %s", jsonStr)
 	}
 }
@@ -231,7 +232,7 @@ func TestEmitSandboxJSON_FailedResult(t *testing.T) {
 	if out.Error == nil {
 		t.Fatal("Error should be non-nil for failed result")
 	}
-	if !contains(*out.Error, "exit code 1") {
+	if !strings.Contains(*out.Error, "exit code 1") {
 		t.Errorf("Error should mention exit code, got %q", *out.Error)
 	}
 }
@@ -261,7 +262,7 @@ func TestEmitSandboxJSON_SkippedResult(t *testing.T) {
 	if out.Error == nil {
 		t.Fatal("Error should be non-nil for skipped result")
 	}
-	if !contains(*out.Error, "no container runtime") {
+	if !strings.Contains(*out.Error, "no container runtime") {
 		t.Errorf("Error should mention missing runtime, got %q", *out.Error)
 	}
 }
@@ -371,19 +372,4 @@ func TestEmitSandboxJSON_AllFieldsRoundTrip(t *testing.T) {
 // strPtr returns a pointer to the given string.
 func strPtr(s string) *string {
 	return &s
-}
-
-// contains checks if substr is in s. Helper to avoid importing strings
-// in a test file that already uses the main package.
-func contains(s, substr string) bool {
-	return len(s) >= len(substr) && searchSubstring(s, substr)
-}
-
-func searchSubstring(s, substr string) bool {
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
-		}
-	}
-	return false
 }

@@ -137,22 +137,18 @@ func runSandboxInstall(toolName, planPath, recipePath, targetFamily string) erro
 
 // emitSandboxJSON writes a single JSON object to stdout for the sandbox result.
 // It handles all result states: passed, failed, skipped, and error.
-// Returns nil on success (including skipped), and a non-nil error when the
-// sandbox test failed or errored (to trigger the appropriate exit code in
-// the caller).
+// The JSON output is the terminal action -- this function never returns an error
+// to the caller, which prevents handleInstallError from emitting a second JSON
+// object. For non-passing states, it calls exitWithCode directly to set the
+// appropriate process exit code.
 func emitSandboxJSON(toolName string, result *sandbox.SandboxResult) error {
 	out := buildSandboxJSONOutput(toolName, result)
 	printJSON(out)
 
-	// Determine whether to propagate an error to the caller for exit code handling
-	if result.Skipped {
-		return nil
-	}
-	if result.Error != nil {
-		return fmt.Errorf("sandbox test failed with exit code %d", result.ExitCode)
-	}
-	if !result.Passed {
-		return fmt.Errorf("sandbox test failed with exit code %d", result.ExitCode)
+	// For failed or errored states, exit directly so the caller doesn't
+	// try to emit a second JSON error via handleInstallError.
+	if result.Error != nil || (!result.Passed && !result.Skipped) {
+		exitWithCode(ExitInstallFailed)
 	}
 	return nil
 }
