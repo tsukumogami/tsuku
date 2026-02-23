@@ -219,9 +219,17 @@ func (o *Orchestrator) SaveResults(result *BatchResult) error {
 // not in a backoff window, and not blocked by circuit breaker state.
 // When Config.FilterEcosystem is set, only entries matching that ecosystem
 // are selected.
+//
+// For half-open ecosystems, probe selection uses special rules:
+//   - Pending entries are preferred over failed entries (better health indicators)
+//   - Backoff (NextRetryAt) is bypassed since the probe tests ecosystem health,
+//     not entry readiness
+//   - Priority filtering is skipped since any entry can serve as a health probe
+//   - If no pending entries exist, the first failed entry is used as a fallback
 func (o *Orchestrator) selectCandidates() []int {
 	var candidates []int
-	halfOpenCounts := make(map[string]int)
+	halfOpenProbed := make(map[string]bool)
+	halfOpenFallback := make(map[string]int) // eco -> first failed entry index
 	now := nowFunc()
 
 	for i, entry := range o.queue.Entries {
@@ -232,28 +240,52 @@ func (o *Orchestrator) selectCandidates() []int {
 		if o.cfg.FilterEcosystem != "" && eco != o.cfg.FilterEcosystem {
 			continue
 		}
-		// Per-entry circuit breaker check.
 		state := o.cfg.BreakerState[eco]
 		if state == "open" {
 			continue
 		}
-		if state == "half-open" && halfOpenCounts[eco] >= 1 {
+		if state == "half-open" {
+			// Already selected a probe for this ecosystem.
+			if halfOpenProbed[eco] {
+				continue
+			}
+			if entry.Status == StatusPending {
+				// First pending entry wins as the probe.
+				candidates = append(candidates, i)
+				halfOpenProbed[eco] = true
+			} else {
+				// Failed entry: save as fallback if not already set.
+				if _, has := halfOpenFallback[eco]; !has {
+					halfOpenFallback[eco] = i
+				}
+			}
 			continue
 		}
+		// Normal selection (closed state).
 		if entry.Priority > o.cfg.MaxTier {
 			continue
 		}
-		// Skip entries in a backoff window
 		if entry.NextRetryAt != nil && entry.NextRetryAt.After(now) {
 			continue
 		}
 		candidates = append(candidates, i)
-		if state == "half-open" {
-			halfOpenCounts[eco]++
-		}
 		if len(candidates) >= o.cfg.BatchSize {
 			break
 		}
+	}
+
+	// Second pass: for half-open ecosystems that had no pending entries,
+	// select the saved fallback (failed entry) with backoff bypassed.
+	for eco, idx := range halfOpenFallback {
+		if !halfOpenProbed[eco] {
+			candidates = append(candidates, idx)
+			halfOpenProbed[eco] = true
+		}
+	}
+
+	// Enforce batch size limit after adding fallback probes.
+	if len(candidates) > o.cfg.BatchSize {
+		candidates = candidates[:o.cfg.BatchSize]
 	}
 
 	return candidates

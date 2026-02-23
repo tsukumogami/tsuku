@@ -336,7 +336,7 @@
                 var fcClass = pkg.failure_count > 0 ? 'failure-count has-failures' : 'failure-count';
                 return '<tr onclick="window.location=\'package.html?id=' + encodeURIComponent(pkg.id) + '\'">' +
                     '<td class="package-name"><a href="package.html?id=' + encodeURIComponent(pkg.id) + '">' + esc(pkg.name) + '</a></td>' +
-                    '<td>' + esc(pkg.ecosystem) + '</td>' +
+                    '<td><a href="?ecosystem=' + encodeURIComponent(pkg.ecosystem) + '" onclick="event.stopPropagation();">' + esc(pkg.ecosystem) + '</a></td>' +
                     '<td><span class="priority-badge priority-' + esc(String(pkg.priority)) + '">P' + esc(String(pkg.priority)) + '</span></td>' +
                     '<td class="' + fcClass + '">' + esc(String(pkg.failure_count || 0)) + '</td>' +
                 '</tr>';
@@ -351,7 +351,7 @@
                                 '<th>Package</th>' +
                                 '<th>Ecosystem</th>' +
                                 '<th>Priority</th>' +
-                                '<th>Failures</th>' +
+                                '<th>Attempts</th>' +
                             '</tr>' +
                         '</thead>' +
                         '<tbody>' +

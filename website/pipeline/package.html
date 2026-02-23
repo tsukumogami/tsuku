@@ -64,6 +64,7 @@
         .status-blocked { background: #d29922; color: #000; }
         .status-failed { background: #f85149; color: #fff; }
         .status-success { background: #3fb950; color: #000; }
+        .status-requires_manual { background: #bc8cff; color: #000; }
         .status-historical { background: var(--border); color: var(--text-muted); }
 
         .priority-badge {
@@ -336,6 +337,7 @@
                 day: 'numeric',
                 hour: '2-digit',
                 minute: '2-digit',
+                timeZone: 'America/New_York',
                 timeZoneName: 'short'
             });
         }
@@ -352,7 +354,7 @@
 
         // Find package across all queue status lists
         function findPackageInQueue(data, pkgId) {
-            var statuses = ['pending', 'blocked', 'failed', 'success'];
+            var statuses = ['pending', 'blocked', 'failed', 'success', 'requires_manual'];
             var packages = data.queue && data.queue.packages ? data.queue.packages : {};
             for (var i = 0; i < statuses.length; i++) {
                 var status = statuses[i];
@@ -399,11 +401,18 @@
             return null;
         }
 
-        function renderStatus(result, failures, blockerInfo) {
+        function renderStatus(result, failures, blockerInfo, urlId) {
             var pkg = result ? result.pkg : null;
             var status = result ? result.status : 'historical';
-            var name = pkg ? pkg.name : '';
-            var ecosystem = pkg ? pkg.ecosystem : '';
+            // Fallback: extract name and ecosystem from URL ID when package not found
+            var urlEcosystem = '';
+            var urlName = urlId || '';
+            if (urlId && urlId.indexOf(':') !== -1) {
+                urlEcosystem = urlId.substring(0, urlId.indexOf(':'));
+                urlName = urlId.substring(urlId.indexOf(':') + 1);
+            }
+            var name = pkg ? pkg.name : urlName;
+            var ecosystem = pkg ? pkg.ecosystem : urlEcosystem;
             var priority = pkg ? pkg.priority : 0;
             var failureCount = pkg ? (pkg.failure_count || 0) : 0;
             var nextRetryAt = pkg ? (pkg.next_retry_at || '') : '';
@@ -458,7 +467,9 @@
                 html += '<span class="detail-label">Blocked By</span>';
                 html += '<span class="detail-value"><div class="dep-list">';
                 pkg.blocked_by.forEach(function(dep) {
-                    html += '<a href="package.html?id=' + encodeURIComponent(dep) +
+                    // Ensure dep has ecosystem:name format for linking
+                    var depId = dep.indexOf(':') !== -1 ? dep : (ecosystem + ':' + dep);
+                    html += '<a href="package.html?id=' + encodeURIComponent(depId) +
                         '" class="dep-badge">' + esc(dep) + '</a>';
                 });
                 html += '</div></span>';
@@ -493,7 +504,7 @@
             // Selected source
             html += '<span class="detail-label">Selected Source</span>';
             html += '<span class="detail-value"><div class="source-list">' +
-                '<span class="source-item source-selected">' + esc(entry.selected) + '</span>' +
+                '<a href="package.html?id=' + encodeURIComponent(entry.selected) + '" class="source-item source-selected" style="text-decoration: none;">' + esc(entry.selected) + '</a>' +
                 '</div></span>';
 
             // Alternative sources
@@ -501,7 +512,7 @@
                 html += '<span class="detail-label">Alternatives</span>';
                 html += '<span class="detail-value"><div class="source-list">';
                 entry.alternatives.forEach(function(alt) {
-                    html += '<span class="source-item source-alt">' + esc(alt) + '</span>';
+                    html += '<a href="package.html?id=' + encodeURIComponent(alt) + '" class="source-item source-alt" style="text-decoration: none; color: var(--text-muted);">' + esc(alt) + '</a>';
                 });
                 html += '</div></span>';
             }
@@ -571,7 +582,7 @@
             html += '<a href="https://github.com/tsukumogami/tsuku/issues/new?title=' +
                 issueTitle + '&body=' + issueBody +
                 '" class="action-btn" target="_blank" rel="noopener">File issue</a>';
-            html += '<a href="https://github.com/tsukumogami/tsuku/actions/workflows/batch.yml' +
+            html += '<a href="https://github.com/tsukumogami/tsuku/actions/workflows/batch-generation.yml?query=workflow%3A%22Batch+Generation%22' +
                 '" class="action-btn" target="_blank" rel="noopener">Retry</a>';
             html += '<a href="https://github.com/tsukumogami/tsuku/edit/main/data/queues/priority-queue.json' +
                 '" class="action-btn" target="_blank" rel="noopener">Exclude</a>';
@@ -630,7 +641,7 @@
 
                 // Render all sections
                 var html = '';
-                html += renderStatus(result, failures, blockerInfo);
+                html += renderStatus(result, failures, blockerInfo, pkgId);
                 html += renderDisambiguation(disambEntry);
                 html += renderAttemptHistory(failures);
                 html += renderActions(result, pkgId);

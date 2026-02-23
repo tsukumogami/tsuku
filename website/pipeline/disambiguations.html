@@ -368,12 +368,14 @@
                 var reasonClass = 'reason-' + esc(d.selection_reason);
                 var highRisk = d.high_risk ? '<span class="high-risk"> (needs review)</span>' : '';
                 var alternatives = d.alternatives && d.alternatives.length > 0
-                    ? d.alternatives.map(a => esc(a)).join(', ')
+                    ? d.alternatives.map(function(a) {
+                        return '<a href="package.html?id=' + encodeURIComponent(a) + '" onclick="event.stopPropagation();" style="color: var(--text-muted);">' + esc(a) + '</a>';
+                    }).join(', ')
                     : '-';
 
                 return '<tr onclick="window.location=\'package.html?id=' + encodeURIComponent(d.selected) + '\'">' +
                     '<td class="tool-name"><a href="package.html?id=' + encodeURIComponent(d.selected) + '">' + esc(d.tool) + '</a></td>' +
-                    '<td class="source">' + esc(d.selected) + '</td>' +
+                    '<td class="source"><a href="package.html?id=' + encodeURIComponent(d.selected) + '" onclick="event.stopPropagation();" style="color: inherit;">' + esc(d.selected) + '</a></td>' +
                     '<td><span class="reason-badge ' + reasonClass + '">' + esc(d.selection_reason) + '</span>' + highRisk + '</td>' +
                     '<td class="alternatives">' + alternatives + '</td>' +
                 '</tr>';

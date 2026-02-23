@@ -257,7 +257,9 @@
                 month: 'short',
                 day: 'numeric',
                 hour: '2-digit',
-                minute: '2-digit'
+                minute: '2-digit',
+                timeZone: 'America/New_York',
+                timeZoneName: 'short'
             });
         }
 
@@ -284,6 +286,7 @@
             const categories = collectValues(failures, 'category');
             const subcategories = collectValues(failures, 'subcategory');
             const ecosystems = collectValues(failures, 'ecosystem');
+            const batchIds = collectValues(failures, 'batch_id');
 
             function opts(values, selected) {
                 return values.map(v =>
@@ -308,6 +311,12 @@
                     <select id="filter-ecosystem">
                         <option value="">All</option>
                         ${opts(ecosystems, filters.ecosystem)}
+                    </select>
+                </label>
+                <label>Batch:
+                    <select id="filter-batch">
+                        <option value="">All</option>
+                        ${opts(batchIds, filters.batch_id)}
                     </select>
                 </label>
             </div>`;
@@ -347,17 +356,19 @@
             const start = (currentPage - 1) * PAGE_SIZE;
             const pageItems = failures.slice(start, start + PAGE_SIZE);
 
-            const rows = pageItems.map(f => `
+            const rows = pageItems.map(f => {
+                const ecoNote = f.ecosystem === 'batch' ? ' title="Cross-ecosystem batch entry"' : '';
+                return `
                 <tr onclick="window.location='failure.html?id=${encodeURIComponent(f.id)}'">
                     <td class="package-name">
                         <a href="failure.html?id=${encodeURIComponent(f.id)}">${esc(f.package)}</a>
                     </td>
-                    <td>${esc(f.ecosystem)}</td>
+                    <td><a href="?ecosystem=${encodeURIComponent(f.ecosystem)}" onclick="event.stopPropagation();"${ecoNote}>${esc(f.ecosystem)}</a></td>
                     <td><span class="category-badge">${esc(f.category)}</span></td>
                     <td>${f.subcategory ? '<span class="subcategory-badge">' + esc(f.subcategory) + '</span>' : '-'}</td>
                     <td class="timestamp">${esc(formatDate(f.timestamp))}</td>
                 </tr>
-            `).join('');
+            `}).join('');
 
             return `
                 <div class="package-list">
@@ -396,6 +407,7 @@
             document.getElementById('filter-category').addEventListener('change', onFilterChange);
             document.getElementById('filter-subcategory').addEventListener('change', onFilterChange);
             document.getElementById('filter-ecosystem').addEventListener('change', onFilterChange);
+            document.getElementById('filter-batch').addEventListener('change', onFilterChange);
         }
 
         function onFilterChange() {
@@ -403,7 +415,7 @@
                 category: document.getElementById('filter-category').value,
                 subcategory: document.getElementById('filter-subcategory').value,
                 ecosystem: document.getElementById('filter-ecosystem').value,
-                batch_id: getParams().batch_id
+                batch_id: document.getElementById('filter-batch').value
             };
             currentPage = 1;
             updateURL(filters);

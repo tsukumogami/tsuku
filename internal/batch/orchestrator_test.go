@@ -288,6 +288,228 @@ func TestSelectCandidates_breakerHalfOpen(t *testing.T) {
 	}
 }
 
+func TestSelectCandidates_halfOpenPrefersPending(t *testing.T) {
+	// When a half-open ecosystem has both pending and failed entries,
+	// the probe should select the pending entry (better health indicator).
+	future := nowFunc().Add(24 * time.Hour)
+	queue := &UnifiedQueue{
+		SchemaVersion: 1,
+		Entries: []QueueEntry{
+			// Failed entries appear first in queue order.
+			{Name: "fail1", Source: "homebrew:fail1", Priority: 1, Status: StatusFailed, Confidence: ConfidenceAuto, FailureCount: 2, NextRetryAt: &future},
+			{Name: "fail2", Source: "homebrew:fail2", Priority: 1, Status: StatusFailed, Confidence: ConfidenceAuto, FailureCount: 1},
+			// Pending entry appears later.
+			{Name: "fresh", Source: "homebrew:fresh", Priority: 1, Status: StatusPending, Confidence: ConfidenceAuto},
+			// Closed ecosystem entries should still be selected normally.
+			{Name: "cargo-pkg", Source: "cargo:cargo-pkg", Priority: 1, Status: StatusPending, Confidence: ConfidenceAuto},
+		},
+	}
+
+	orch := NewOrchestrator(Config{
+		BatchSize: 10,
+		MaxTier:   3,
+		BreakerState: map[string]string{
+			"homebrew": "half-open",
+		},
+	}, queue)
+
+	candidates := orch.selectCandidates()
+
+	// Should get: "fresh" (pending probe for homebrew) + "cargo-pkg" (closed, normal).
+	if len(candidates) != 2 {
+		t.Fatalf("expected 2 candidates, got %d", len(candidates))
+	}
+	names := make([]string, len(candidates))
+	for i, idx := range candidates {
+		names[i] = queue.Entries[idx].Name
+	}
+	if names[0] != "fresh" {
+		t.Errorf("candidate[0] = %q, want fresh (pending preferred over failed)", names[0])
+	}
+	if names[1] != "cargo-pkg" {
+		t.Errorf("candidate[1] = %q, want cargo-pkg", names[1])
+	}
+}
+
+func TestSelectCandidates_halfOpenBypassesBackoff(t *testing.T) {
+	// Half-open probe selection should bypass per-entry backoff.
+	// Even when all entries have future NextRetryAt, a probe should be selected.
+	future := nowFunc().Add(48 * time.Hour)
+	queue := &UnifiedQueue{
+		SchemaVersion: 1,
+		Entries: []QueueEntry{
+			{Name: "pending-backoff", Source: "npm:pending-backoff", Priority: 1, Status: StatusPending, Confidence: ConfidenceAuto, NextRetryAt: &future},
+			{Name: "failed-backoff", Source: "npm:failed-backoff", Priority: 1, Status: StatusFailed, Confidence: ConfidenceAuto, FailureCount: 3, NextRetryAt: &future},
+		},
+	}
+
+	orch := NewOrchestrator(Config{
+		BatchSize: 10,
+		MaxTier:   3,
+		BreakerState: map[string]string{
+			"npm": "half-open",
+		},
+	}, queue)
+
+	candidates := orch.selectCandidates()
+
+	// Pending entry should be selected despite having a future NextRetryAt.
+	if len(candidates) != 1 {
+		t.Fatalf("expected 1 candidate (backoff bypassed for half-open probe), got %d", len(candidates))
+	}
+	if queue.Entries[candidates[0]].Name != "pending-backoff" {
+		t.Errorf("candidate = %q, want pending-backoff", queue.Entries[candidates[0]].Name)
+	}
+}
+
+func TestSelectCandidates_halfOpenFallbackToFailed(t *testing.T) {
+	// When a half-open ecosystem has no pending entries, the probe should
+	// fall back to the first failed entry with backoff bypassed.
+	future := nowFunc().Add(72 * time.Hour)
+	queue := &UnifiedQueue{
+		SchemaVersion: 1,
+		Entries: []QueueEntry{
+			{Name: "fail-a", Source: "pypi:fail-a", Priority: 1, Status: StatusFailed, Confidence: ConfidenceAuto, FailureCount: 3, NextRetryAt: &future},
+			{Name: "fail-b", Source: "pypi:fail-b", Priority: 1, Status: StatusFailed, Confidence: ConfidenceAuto, FailureCount: 2, NextRetryAt: &future},
+			{Name: "success", Source: "pypi:success", Priority: 1, Status: StatusSuccess, Confidence: ConfidenceAuto},
+		},
+	}
+
+	orch := NewOrchestrator(Config{
+		BatchSize: 10,
+		MaxTier:   3,
+		BreakerState: map[string]string{
+			"pypi": "half-open",
+		},
+	}, queue)
+
+	candidates := orch.selectCandidates()
+
+	// Should select fail-a (first failed entry) as fallback probe, bypassing backoff.
+	if len(candidates) != 1 {
+		t.Fatalf("expected 1 candidate (fallback to failed), got %d", len(candidates))
+	}
+	if queue.Entries[candidates[0]].Name != "fail-a" {
+		t.Errorf("candidate = %q, want fail-a (first failed fallback)", queue.Entries[candidates[0]].Name)
+	}
+}
+
+func TestSelectCandidates_halfOpenFilterEcosystem(t *testing.T) {
+	// FilterEcosystem should interact correctly with half-open probe logic:
+	// the filtered ecosystem still gets pending-first treatment.
+	future := nowFunc().Add(24 * time.Hour)
+	queue := &UnifiedQueue{
+		SchemaVersion: 1,
+		Entries: []QueueEntry{
+			{Name: "fail-rb", Source: "rubygems:fail-rb", Priority: 1, Status: StatusFailed, Confidence: ConfidenceAuto, FailureCount: 2, NextRetryAt: &future},
+			{Name: "pending-rb", Source: "rubygems:pending-rb", Priority: 1, Status: StatusPending, Confidence: ConfidenceAuto},
+			{Name: "extra-rb", Source: "rubygems:extra-rb", Priority: 1, Status: StatusPending, Confidence: ConfidenceAuto},
+			// This entry is in a different ecosystem and should be excluded by the filter.
+			{Name: "cargo-pkg", Source: "cargo:cargo-pkg", Priority: 1, Status: StatusPending, Confidence: ConfidenceAuto},
+		},
+	}
+
+	orch := NewOrchestrator(Config{
+		BatchSize:       10,
+		MaxTier:         3,
+		FilterEcosystem: "rubygems",
+		BreakerState: map[string]string{
+			"rubygems": "half-open",
+		},
+	}, queue)
+
+	candidates := orch.selectCandidates()
+
+	// Only rubygems entries are considered, and half-open allows 1 probe.
+	// The pending entry should be preferred over the failed one.
+	if len(candidates) != 1 {
+		t.Fatalf("expected 1 candidate (filtered half-open), got %d", len(candidates))
+	}
+	if queue.Entries[candidates[0]].Name != "pending-rb" {
+		t.Errorf("candidate = %q, want pending-rb (pending preferred with filter)", queue.Entries[candidates[0]].Name)
+	}
+}
+
+func TestSelectCandidates_halfOpenFilterEcosystemFallback(t *testing.T) {
+	// FilterEcosystem + half-open with only failed entries should still
+	// select a fallback probe.
+	future := nowFunc().Add(24 * time.Hour)
+	queue := &UnifiedQueue{
+		SchemaVersion: 1,
+		Entries: []QueueEntry{
+			{Name: "fail1", Source: "rubygems:fail1", Priority: 1, Status: StatusFailed, Confidence: ConfidenceAuto, FailureCount: 3, NextRetryAt: &future},
+			{Name: "fail2", Source: "rubygems:fail2", Priority: 1, Status: StatusFailed, Confidence: ConfidenceAuto, FailureCount: 2, NextRetryAt: &future},
+			{Name: "cargo-pkg", Source: "cargo:cargo-pkg", Priority: 1, Status: StatusPending, Confidence: ConfidenceAuto},
+		},
+	}
+
+	orch := NewOrchestrator(Config{
+		BatchSize:       10,
+		MaxTier:         3,
+		FilterEcosystem: "rubygems",
+		BreakerState: map[string]string{
+			"rubygems": "half-open",
+		},
+	}, queue)
+
+	candidates := orch.selectCandidates()
+
+	// Should fall back to first failed entry (fail1), bypassing backoff.
+	if len(candidates) != 1 {
+		t.Fatalf("expected 1 candidate (filter + fallback), got %d", len(candidates))
+	}
+	if queue.Entries[candidates[0]].Name != "fail1" {
+		t.Errorf("candidate = %q, want fail1 (fallback with filter)", queue.Entries[candidates[0]].Name)
+	}
+}
+
+func TestSelectCandidates_halfOpenMixedWithClosed(t *testing.T) {
+	// Half-open and closed ecosystems should coexist correctly:
+	// half-open gets probe selection, closed gets normal selection.
+	future := nowFunc().Add(24 * time.Hour)
+	queue := &UnifiedQueue{
+		SchemaVersion: 1,
+		Entries: []QueueEntry{
+			{Name: "hb-fail", Source: "homebrew:hb-fail", Priority: 1, Status: StatusFailed, Confidence: ConfidenceAuto, FailureCount: 2, NextRetryAt: &future},
+			{Name: "hb-pending", Source: "homebrew:hb-pending", Priority: 1, Status: StatusPending, Confidence: ConfidenceAuto},
+			{Name: "cargo-a", Source: "cargo:cargo-a", Priority: 1, Status: StatusPending, Confidence: ConfidenceAuto},
+			{Name: "cargo-b", Source: "cargo:cargo-b", Priority: 1, Status: StatusPending, Confidence: ConfidenceAuto},
+			{Name: "hb-extra", Source: "homebrew:hb-extra", Priority: 1, Status: StatusPending, Confidence: ConfidenceAuto},
+			// This entry is in backoff and should be skipped in closed-state selection.
+			{Name: "cargo-backoff", Source: "cargo:cargo-backoff", Priority: 1, Status: StatusFailed, Confidence: ConfidenceAuto, FailureCount: 2, NextRetryAt: &future},
+		},
+	}
+
+	orch := NewOrchestrator(Config{
+		BatchSize: 10,
+		MaxTier:   3,
+		BreakerState: map[string]string{
+			"homebrew": "half-open",
+			// cargo is not in BreakerState, treated as closed.
+		},
+	}, queue)
+
+	candidates := orch.selectCandidates()
+
+	names := make([]string, len(candidates))
+	for i, idx := range candidates {
+		names[i] = queue.Entries[idx].Name
+	}
+
+	// Expected: hb-pending (half-open probe), cargo-a (closed), cargo-b (closed).
+	// NOT: hb-fail (failed, pending preferred), hb-extra (only 1 probe per half-open eco),
+	// cargo-backoff (closed, in backoff window).
+	if len(candidates) != 3 {
+		t.Fatalf("expected 3 candidates, got %d: %v", len(candidates), names)
+	}
+	expected := []string{"hb-pending", "cargo-a", "cargo-b"}
+	for i, want := range expected {
+		if names[i] != want {
+			t.Errorf("candidate[%d] = %q, want %q", i, names[i], want)
+		}
+	}
+}
+
 func TestRecipeOutputPath(t *testing.T) {
 	tests := []struct {
 		name     string

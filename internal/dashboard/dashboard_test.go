@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/tsukumogami/tsuku/internal/batch"
 )
@@ -138,6 +140,151 @@ func TestComputeQueueStatus_empty(t *testing.T) {
 	}
 	if len(status.ByStatus) != 0 {
 		t.Errorf("ByStatus should be empty: %v", status.ByStatus)
+	}
+	if len(status.ByEcosystem) != 0 {
+		t.Errorf("ByEcosystem should be empty for empty queue: %v", status.ByEcosystem)
+	}
+}
+
+func TestComputeQueueStatus_byEcosystemMulti(t *testing.T) {
+	queue := &batch.UnifiedQueue{
+		Entries: []batch.QueueEntry{
+			{Name: "jq", Source: "homebrew:jq", Priority: 1, Status: "success", Confidence: "curated"},
+			{Name: "fd", Source: "homebrew:fd", Priority: 1, Status: "pending", Confidence: "auto"},
+			{Name: "bat", Source: "homebrew:bat", Priority: 1, Status: "failed", Confidence: "auto"},
+			{Name: "fzf", Source: "homebrew:fzf", Priority: 2, Status: "pending", Confidence: "auto"},
+			{Name: "ripgrep", Source: "cargo:ripgrep", Priority: 2, Status: "blocked", Confidence: "curated"},
+			{Name: "exa", Source: "homebrew:exa", Priority: 2, Status: "success", Confidence: "auto"},
+			{Name: "tokei", Source: "cargo:tokei", Priority: 2, Status: "pending", Confidence: "auto"},
+			{Name: "node", Source: "npm:node", Priority: 1, Status: "failed", Confidence: "auto"},
+		},
+	}
+
+	status := computeQueueStatus(queue, nil)
+
+	// Verify homebrew ecosystem: 2 success, 2 pending, 1 failed => total 5
+	hw := status.ByEcosystem["homebrew"]
+	if hw == nil {
+		t.Fatal("ByEcosystem[homebrew] should not be nil")
+	}
+	if hw["success"] != 2 {
+		t.Errorf("homebrew success: got %d, want 2", hw["success"])
+	}
+	if hw["pending"] != 2 {
+		t.Errorf("homebrew pending: got %d, want 2", hw["pending"])
+	}
+	if hw["failed"] != 1 {
+		t.Errorf("homebrew failed: got %d, want 1", hw["failed"])
+	}
+	if hw["total"] != 5 {
+		t.Errorf("homebrew total: got %d, want 5", hw["total"])
+	}
+
+	// Verify cargo ecosystem: 1 blocked, 1 pending => total 2
+	cg := status.ByEcosystem["cargo"]
+	if cg == nil {
+		t.Fatal("ByEcosystem[cargo] should not be nil")
+	}
+	if cg["blocked"] != 1 {
+		t.Errorf("cargo blocked: got %d, want 1", cg["blocked"])
+	}
+	if cg["pending"] != 1 {
+		t.Errorf("cargo pending: got %d, want 1", cg["pending"])
+	}
+	if cg["total"] != 2 {
+		t.Errorf("cargo total: got %d, want 2", cg["total"])
+	}
+
+	// Verify npm ecosystem: 1 failed => total 1
+	np := status.ByEcosystem["npm"]
+	if np == nil {
+		t.Fatal("ByEcosystem[npm] should not be nil")
+	}
+	if np["failed"] != 1 {
+		t.Errorf("npm failed: got %d, want 1", np["failed"])
+	}
+	if np["total"] != 1 {
+		t.Errorf("npm total: got %d, want 1", np["total"])
+	}
+
+	// Verify total per ecosystem equals sum of its statuses
+	for eco, counts := range status.ByEcosystem {
+		sum := 0
+		for k, v := range counts {
+			if k != "total" {
+				sum += v
+			}
+		}
+		if counts["total"] != sum {
+			t.Errorf("ByEcosystem[%q] total mismatch: total=%d, sum of statuses=%d", eco, counts["total"], sum)
+		}
+	}
+}
+
+func TestComputeQueueStatus_byEcosystemSingle(t *testing.T) {
+	queue := &batch.UnifiedQueue{
+		Entries: []batch.QueueEntry{
+			{Name: "jq", Source: "homebrew:jq", Priority: 1, Status: "success", Confidence: "curated"},
+			{Name: "fd", Source: "homebrew:fd", Priority: 1, Status: "pending", Confidence: "auto"},
+			{Name: "bat", Source: "homebrew:bat", Priority: 1, Status: "failed", Confidence: "auto"},
+		},
+	}
+
+	status := computeQueueStatus(queue, nil)
+
+	if len(status.ByEcosystem) != 1 {
+		t.Errorf("ByEcosystem should have 1 ecosystem, got %d: %v", len(status.ByEcosystem), status.ByEcosystem)
+	}
+
+	hw := status.ByEcosystem["homebrew"]
+	if hw == nil {
+		t.Fatal("ByEcosystem[homebrew] should not be nil")
+	}
+	if hw["success"] != 1 {
+		t.Errorf("homebrew success: got %d, want 1", hw["success"])
+	}
+	if hw["pending"] != 1 {
+		t.Errorf("homebrew pending: got %d, want 1", hw["pending"])
+	}
+	if hw["failed"] != 1 {
+		t.Errorf("homebrew failed: got %d, want 1", hw["failed"])
+	}
+	if hw["total"] != 3 {
+		t.Errorf("homebrew total: got %d, want 3", hw["total"])
+	}
+}
+
+func TestComputeQueueStatus_byEcosystemTotalEqualsStatusSum(t *testing.T) {
+	// Use all six status values to ensure total accounts for every status.
+	queue := &batch.UnifiedQueue{
+		Entries: []batch.QueueEntry{
+			{Name: "a", Source: "homebrew:a", Priority: 1, Status: "pending", Confidence: "auto"},
+			{Name: "b", Source: "homebrew:b", Priority: 1, Status: "success", Confidence: "auto"},
+			{Name: "c", Source: "homebrew:c", Priority: 1, Status: "failed", Confidence: "auto"},
+			{Name: "d", Source: "homebrew:d", Priority: 1, Status: "blocked", Confidence: "auto"},
+			{Name: "e", Source: "homebrew:e", Priority: 1, Status: "requires_manual", Confidence: "auto"},
+			{Name: "f", Source: "homebrew:f", Priority: 1, Status: "excluded", Confidence: "auto"},
+		},
+	}
+
+	status := computeQueueStatus(queue, nil)
+
+	hw := status.ByEcosystem["homebrew"]
+	if hw == nil {
+		t.Fatal("ByEcosystem[homebrew] should not be nil")
+	}
+
+	sum := 0
+	for k, v := range hw {
+		if k != "total" {
+			sum += v
+		}
+	}
+	if hw["total"] != sum {
+		t.Errorf("total (%d) should equal sum of statuses (%d)", hw["total"], sum)
+	}
+	if hw["total"] != 6 {
+		t.Errorf("total: got %d, want 6", hw["total"])
 	}
 }
 
@@ -1185,8 +1332,8 @@ func TestLoadHealth_withControlFileAndRecords(t *testing.T) {
 	if health.LastRun == nil {
 		t.Fatal("LastRun should not be nil")
 	}
-	if health.LastRun.BatchID != "2026-02-03-homebrew" {
-		t.Errorf("LastRun.BatchID: got %q, want %q", health.LastRun.BatchID, "2026-02-03-homebrew")
+	if health.LastRun.BatchID != "2026-02-03T12-00-00Z" {
+		t.Errorf("LastRun.BatchID: got %q, want %q", health.LastRun.BatchID, "2026-02-03T12-00-00Z")
 	}
 	if health.LastRun.Total != 12 {
 		t.Errorf("LastRun.Total: got %d, want 12", health.LastRun.Total)
@@ -1196,8 +1343,8 @@ func TestLoadHealth_withControlFileAndRecords(t *testing.T) {
 	if health.LastSuccessfulRun == nil {
 		t.Fatal("LastSuccessfulRun should not be nil")
 	}
-	if health.LastSuccessfulRun.BatchID != "2026-02-03-homebrew" {
-		t.Errorf("LastSuccessfulRun.BatchID: got %q, want %q", health.LastSuccessfulRun.BatchID, "2026-02-03-homebrew")
+	if health.LastSuccessfulRun.BatchID != "2026-02-03T12-00-00Z" {
+		t.Errorf("LastSuccessfulRun.BatchID: got %q, want %q", health.LastSuccessfulRun.BatchID, "2026-02-03T12-00-00Z")
 	}
 
 	// runs_since_last_success should be 0 since the last run is the successful one
@@ -1226,12 +1373,12 @@ func TestLoadHealth_runsSinceLastSuccess(t *testing.T) {
 		t.Fatalf("loadHealth: %v", err)
 	}
 
-	// Last successful run should be run-1
+	// Last successful run should be first record (timestamp-derived batch ID)
 	if health.LastSuccessfulRun == nil {
 		t.Fatal("LastSuccessfulRun should not be nil")
 	}
-	if health.LastSuccessfulRun.BatchID != "run-1" {
-		t.Errorf("LastSuccessfulRun.BatchID: got %q, want %q", health.LastSuccessfulRun.BatchID, "run-1")
+	if health.LastSuccessfulRun.BatchID != "2026-02-01T12-00-00Z" {
+		t.Errorf("LastSuccessfulRun.BatchID: got %q, want %q", health.LastSuccessfulRun.BatchID, "2026-02-01T12-00-00Z")
 	}
 
 	// 3 runs since last success (run-2, run-3, run-4)
@@ -1239,9 +1386,9 @@ func TestLoadHealth_runsSinceLastSuccess(t *testing.T) {
 		t.Errorf("RunsSinceLastSuccess: got %d, want 3", health.RunsSinceLastSuccess)
 	}
 
-	// Last run should be run-4
-	if health.LastRun.BatchID != "run-4" {
-		t.Errorf("LastRun.BatchID: got %q, want %q", health.LastRun.BatchID, "run-4")
+	// Last run should be the most recent (timestamp-derived batch ID)
+	if health.LastRun.BatchID != "2026-02-04T12-00-00Z" {
+		t.Errorf("LastRun.BatchID: got %q, want %q", health.LastRun.BatchID, "2026-02-04T12-00-00Z")
 	}
 }
 
@@ -1296,8 +1443,8 @@ func TestLoadHealth_missingControlFile(t *testing.T) {
 	if health.LastRun == nil {
 		t.Fatal("LastRun should not be nil")
 	}
-	if health.LastRun.BatchID != "run-1" {
-		t.Errorf("LastRun.BatchID: got %q, want %q", health.LastRun.BatchID, "run-1")
+	if health.LastRun.BatchID != "2026-02-01T12-00-00Z" {
+		t.Errorf("LastRun.BatchID: got %q, want %q", health.LastRun.BatchID, "2026-02-01T12-00-00Z")
 	}
 }
 
@@ -1354,9 +1501,9 @@ func TestLoadHealth_runInfoFields(t *testing.T) {
 		t.Fatal("LastRun should not be nil")
 	}
 
-	// Verify RunInfo field mapping
-	if ri.BatchID != "run-1" {
-		t.Errorf("BatchID: got %q, want %q", ri.BatchID, "run-1")
+	// Verify RunInfo field mapping -- BatchID is derived from timestamp, not the raw batch_id
+	if ri.BatchID != "2026-02-01T12-00-00Z" {
+		t.Errorf("BatchID: got %q, want %q", ri.BatchID, "2026-02-01T12-00-00Z")
 	}
 	if ri.Ecosystems["homebrew"] != 10 {
 		t.Errorf("Ecosystems[homebrew]: got %d, want 10", ri.Ecosystems["homebrew"])
@@ -1631,8 +1778,8 @@ func TestGenerate_withHealth(t *testing.T) {
 	if dash.Health.LastRun == nil {
 		t.Fatal("LastRun should not be nil")
 	}
-	if dash.Health.LastRun.BatchID != "2026-02-01-homebrew" {
-		t.Errorf("LastRun.BatchID: got %q, want %q", dash.Health.LastRun.BatchID, "2026-02-01-homebrew")
+	if dash.Health.LastRun.BatchID != "2026-02-01T12-00-00Z" {
+		t.Errorf("LastRun.BatchID: got %q, want %q", dash.Health.LastRun.BatchID, "2026-02-01T12-00-00Z")
 	}
 
 	// All three runs in testdata have merges, so last successful = last run
@@ -1914,5 +2061,254 @@ func TestLoadMetrics_uniqueBatchIDs(t *testing.T) {
 	}
 	if runs[1].BatchID != "2026-02-19T10-15-30Z" {
 		t.Errorf("runs[1].BatchID: got %q, want %q", runs[1].BatchID, "2026-02-19T10-15-30Z")
+	}
+}
+
+func TestMetricsToRunInfo_batchIDConsistentWithRuns(t *testing.T) {
+	// health.last_run.batch_id must use the same timestamp-derived format
+	// as runs[].batch_id, not the raw batch_id from metrics records.
+	rec := MetricsRecord{
+		BatchID:   "2026-02-22",
+		Ecosystem: "homebrew",
+		Total:     10,
+		Merged:    8,
+		Timestamp: "2026-02-22T04:26:06Z",
+	}
+
+	ri := metricsToRunInfo(rec)
+
+	// BatchID should be derived from timestamp, not the raw "2026-02-22"
+	if ri.BatchID != "2026-02-22T04-26-06Z" {
+		t.Errorf("RunInfo.BatchID: got %q, want %q (should match batchIDFromTimestamp)", ri.BatchID, "2026-02-22T04-26-06Z")
+	}
+
+	// Verify it matches the format used in RunSummary.BatchID
+	want := batchIDFromTimestamp(rec.Timestamp)
+	if ri.BatchID != want {
+		t.Errorf("health batch ID %q should match runs batch ID %q", ri.BatchID, want)
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Structural invariant tests for generated dashboard data
+// ---------------------------------------------------------------------------
+
+// generateTestDashboard produces a Dashboard from testdata fixtures,
+// used by the structural invariant tests to validate the full output.
+func generateTestDashboard(t *testing.T) Dashboard {
+	t.Helper()
+	dir := t.TempDir()
+	outputPath := filepath.Join(dir, "dashboard.json")
+
+	opts := Options{
+		QueueFile:          filepath.Join("testdata", "priority-queue.json"),
+		FailuresDir:        "testdata",
+		MetricsDir:         "testdata",
+		ControlFile:        filepath.Join("testdata", "batch-control.json"),
+		DisambiguationsDir: "/nonexistent",
+		OutputFile:         outputPath,
+	}
+
+	if err := Generate(opts); err != nil {
+		t.Fatalf("Generate: %v", err)
+	}
+
+	data, err := os.ReadFile(outputPath)
+	if err != nil {
+		t.Fatalf("read output: %v", err)
+	}
+
+	var dash Dashboard
+	if err := json.Unmarshal(data, &dash); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	return dash
+}
+
+func TestStructuralInvariant_GeneratedAtIsRFC3339(t *testing.T) {
+	dash := generateTestDashboard(t)
+
+	if dash.GeneratedAt == "" {
+		t.Fatal("GeneratedAt must not be empty")
+	}
+	if _, err := time.Parse(time.RFC3339, dash.GeneratedAt); err != nil {
+		t.Errorf("GeneratedAt %q is not valid RFC 3339: %v", dash.GeneratedAt, err)
+	}
+}
+
+func TestStructuralInvariant_BatchIDFormat(t *testing.T) {
+	dash := generateTestDashboard(t)
+
+	// Batch IDs must not contain colons (which are invalid in file paths
+	// and break cross-links). Valid format: 2026-02-19T04-26-06Z
+	batchIDPattern := regexp.MustCompile(`^\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}Z$`)
+
+	for i, run := range dash.Runs {
+		if run.BatchID == "" {
+			t.Errorf("Runs[%d].BatchID is empty", i)
+			continue
+		}
+		if strings.Contains(run.BatchID, ":") {
+			t.Errorf("Runs[%d].BatchID %q contains colons", i, run.BatchID)
+		}
+		if !batchIDPattern.MatchString(run.BatchID) {
+			t.Errorf("Runs[%d].BatchID %q does not match expected format YYYY-MM-DDTHH-MM-SSZ", i, run.BatchID)
+		}
+	}
+
+	// Health batch IDs must use the same format
+	if dash.Health != nil && dash.Health.LastRun != nil {
+		bid := dash.Health.LastRun.BatchID
+		if strings.Contains(bid, ":") {
+			t.Errorf("Health.LastRun.BatchID %q contains colons", bid)
+		}
+		if !batchIDPattern.MatchString(bid) {
+			t.Errorf("Health.LastRun.BatchID %q does not match expected format", bid)
+		}
+	}
+	if dash.Health != nil && dash.Health.LastSuccessfulRun != nil {
+		bid := dash.Health.LastSuccessfulRun.BatchID
+		if strings.Contains(bid, ":") {
+			t.Errorf("Health.LastSuccessfulRun.BatchID %q contains colons", bid)
+		}
+		if !batchIDPattern.MatchString(bid) {
+			t.Errorf("Health.LastSuccessfulRun.BatchID %q does not match expected format", bid)
+		}
+	}
+}
+
+func TestStructuralInvariant_ByStatusKeysHavePackages(t *testing.T) {
+	dash := generateTestDashboard(t)
+
+	// Every status key in by_status must have a corresponding non-empty
+	// entry in packages.
+	for status, count := range dash.Queue.ByStatus {
+		pkgs, ok := dash.Queue.Packages[status]
+		if !ok {
+			t.Errorf("ByStatus has key %q (count=%d) but Packages has no entry for it", status, count)
+			continue
+		}
+		if len(pkgs) == 0 {
+			t.Errorf("ByStatus[%q]=%d but Packages[%q] is empty", status, count, status)
+			continue
+		}
+		if len(pkgs) != count {
+			t.Errorf("ByStatus[%q]=%d but len(Packages[%q])=%d", status, count, status, len(pkgs))
+		}
+	}
+}
+
+func TestStructuralInvariant_PackageIDEcosystemPrefix(t *testing.T) {
+	dash := generateTestDashboard(t)
+
+	// Every package ID in Packages must have an ecosystem prefix (the part
+	// before the first colon), and that prefix must match the package's
+	// Ecosystem field.
+	for status, pkgs := range dash.Queue.Packages {
+		for i, pkg := range pkgs {
+			colonIdx := strings.Index(pkg.ID, ":")
+			if colonIdx == -1 {
+				t.Errorf("Packages[%q][%d].ID %q has no ecosystem prefix (missing colon)", status, i, pkg.ID)
+				continue
+			}
+			prefix := pkg.ID[:colonIdx]
+			if prefix == "" {
+				t.Errorf("Packages[%q][%d].ID %q has empty ecosystem prefix", status, i, pkg.ID)
+				continue
+			}
+			if pkg.Ecosystem != "" && prefix != pkg.Ecosystem {
+				t.Errorf("Packages[%q][%d].ID prefix %q != Ecosystem %q", status, i, prefix, pkg.Ecosystem)
+			}
+		}
+	}
+}
+
+func TestStructuralInvariant_ByEcosystemMatchesPackageEcosystems(t *testing.T) {
+	dash := generateTestDashboard(t)
+
+	// Collect the set of ecosystems found in package IDs.
+	ecosFromPackages := make(map[string]bool)
+	for _, pkgs := range dash.Queue.Packages {
+		for _, pkg := range pkgs {
+			if pkg.Ecosystem != "" {
+				ecosFromPackages[pkg.Ecosystem] = true
+			}
+		}
+	}
+
+	// Every ecosystem in ByEcosystem must appear in the package IDs.
+	for eco := range dash.Queue.ByEcosystem {
+		if !ecosFromPackages[eco] {
+			t.Errorf("ByEcosystem has key %q but no packages have that ecosystem", eco)
+		}
+	}
+
+	// Every ecosystem found in packages must have a ByEcosystem entry.
+	for eco := range ecosFromPackages {
+		if _, ok := dash.Queue.ByEcosystem[eco]; !ok {
+			t.Errorf("packages have ecosystem %q but ByEcosystem has no entry for it", eco)
+		}
+	}
+}
+
+func TestStructuralInvariant_ByEcosystemTotalsCorrect(t *testing.T) {
+	dash := generateTestDashboard(t)
+
+	// For each ecosystem, the "total" must equal the sum of individual
+	// status counts.
+	for eco, counts := range dash.Queue.ByEcosystem {
+		sum := 0
+		for k, v := range counts {
+			if k != "total" {
+				sum += v
+			}
+		}
+		total, hasTotal := counts["total"]
+		if !hasTotal {
+			t.Errorf("ByEcosystem[%q] missing 'total' key", eco)
+			continue
+		}
+		if total != sum {
+			t.Errorf("ByEcosystem[%q] total=%d but sum of statuses=%d", eco, total, sum)
+		}
+	}
+}
+
+func TestStructuralInvariant_HealthEcosystemKeysFormat(t *testing.T) {
+	dash := generateTestDashboard(t)
+
+	if dash.Health == nil {
+		t.Skip("no health data in test dashboard")
+	}
+
+	// Ecosystem keys must be lowercase with no spaces.
+	pattern := regexp.MustCompile(`^[a-z][a-z0-9._-]*$`)
+	for eco := range dash.Health.Ecosystems {
+		if !pattern.MatchString(eco) {
+			t.Errorf("Health.Ecosystems key %q is not lowercase/no-space format", eco)
+		}
+	}
+}
+
+func TestStructuralInvariant_ByEcosystemStatusCoverage(t *testing.T) {
+	// Validate that per-ecosystem status counts are consistent with the
+	// global ByStatus counts. The sum of each status across all ecosystems
+	// must equal the global ByStatus value for that status.
+	dash := generateTestDashboard(t)
+
+	sumByStatus := make(map[string]int)
+	for _, counts := range dash.Queue.ByEcosystem {
+		for k, v := range counts {
+			if k != "total" {
+				sumByStatus[k] += v
+			}
+		}
+	}
+
+	for status, globalCount := range dash.Queue.ByStatus {
+		ecoSum := sumByStatus[status]
+		if ecoSum != globalCount {
+			t.Errorf("ByStatus[%q]=%d but sum across ByEcosystem=%d", status, globalCount, ecoSum)
+		}
 	}
 }

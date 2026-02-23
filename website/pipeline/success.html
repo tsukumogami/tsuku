@@ -259,6 +259,15 @@
         function applyFilters(packages, filters) {
             return packages.filter(pkg => {
                 if (filters.ecosystem && pkg.ecosystem !== filters.ecosystem) return false;
+                // Date filters apply to packages with merged_at or timestamp
+                if (filters.from && pkg.merged_at) {
+                    var pkgDate = pkg.merged_at.substring(0, 10);
+                    if (pkgDate < filters.from) return false;
+                }
+                if (filters.to && pkg.merged_at) {
+                    var pkgDate = pkg.merged_at.substring(0, 10);
+                    if (pkgDate > filters.to) return false;
+                }
                 return true;
             });
         }
@@ -288,13 +297,28 @@
             '</div>';
         }
 
+        function getEcosystems(run) {
+            if (run.ecosystems && typeof run.ecosystems === 'object') {
+                return run.ecosystems;
+            }
+            if (run.ecosystem) {
+                var obj = {};
+                obj[run.ecosystem] = run.total;
+                return obj;
+            }
+            return {};
+        }
+
         function renderTimeline(runs, filters) {
             // Group run successes by date
             var dailyCounts = {};
             runs.forEach(function(run) {
                 if (!run.timestamp) return;
-                // Apply ecosystem filter to runs too
-                if (filters.ecosystem && run.ecosystem !== filters.ecosystem) return;
+                // Apply ecosystem filter to runs using ecosystems object
+                if (filters.ecosystem) {
+                    var eco = getEcosystems(run);
+                    if (!(filters.ecosystem in eco)) return;
+                }
                 var date = run.timestamp.substring(0, 10);
                 if (filters.from && date < filters.from) return;
                 if (filters.to && date > filters.to) return;
@@ -343,7 +367,7 @@
                 var recipeURL = 'https://github.com/tsukumogami/tsuku/tree/main/recipes/' + encodeURIComponent(pkg.name) + '/';
                 return '<tr onclick="window.location=\'package.html?id=' + encodeURIComponent(pkg.id) + '\'">' +
                     '<td class="package-name"><a href="package.html?id=' + encodeURIComponent(pkg.id) + '">' + esc(pkg.name) + '</a></td>' +
-                    '<td>' + esc(pkg.ecosystem) + '</td>' +
+                    '<td><a href="?ecosystem=' + encodeURIComponent(pkg.ecosystem) + '" onclick="event.stopPropagation();">' + esc(pkg.ecosystem) + '</a></td>' +
                     '<td><span class="priority-badge priority-' + esc(String(pkg.priority)) + '">P' + esc(String(pkg.priority)) + '</span></td>' +
                     '<td><a href="' + esc(recipeURL) + '" class="recipe-link" onclick="event.stopPropagation()">View recipe</a></td>' +
                 '</tr>';
