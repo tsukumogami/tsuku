@@ -43,6 +43,58 @@
             gap: 0.75rem;
         }
 
+        .queue-summary {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .queue-summary-stat {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .queue-summary-detail {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .queue-actionable {
+            margin-top: 1rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .queue-action-item {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-decoration: none;
+        }
+
+        .queue-action-item:hover {
+            color: var(--accent);
+        }
+
+        .queue-action-count {
+            font-weight: 600;
+            font-family: "SF Mono", Consolas, monospace;
+            color: var(--text);
+        }
+
+        .queue-action-item:hover .queue-action-count {
+            color: var(--accent);
+        }
+
         .status-row {
             display: flex;
             align-items: center;
@@ -737,7 +789,7 @@
                 }
 
                 healthPanel = `
-                    <div class="panel">
+                    <div class="panel panel-wide">
                         <h2>Pipeline Health</h2>
                         <div class="health-grid">
                             <span class="health-label">Last Run</span>
@@ -753,7 +805,7 @@
                 `;
             } else {
                 healthPanel = `
-                    <div class="panel">
+                    <div class="panel panel-wide">
                         <h2>Pipeline Health</h2>
                         <div class="no-data">No health data available</div>
                     </div>
@@ -904,6 +956,11 @@
             }
 
             // Calculate status percentages
+            const successCount = data.queue.by_status.success || 0;
+            const successPct = (successCount / total * 100).toFixed(1);
+            const failedCount = data.queue.by_status.failed || 0;
+            const manualCount = data.queue.by_status.requires_manual || 0;
+
             const statusOrder = ['pending', 'success', 'failed', 'requires_manual', 'blocked'];
             const statusDisplayLabel = { requires_manual: 'manual' };
             const statusPageMap = { failed: 'failures.html?status=failed' };
@@ -1100,7 +1157,7 @@
                 const validCount = curated.filter(c => c.validation_status === 'valid').length;
                 const invalidBadge = invalidCount > 0 ? `<span class="invalid-badge">${invalidCount} invalid</span>` : '';
                 curatedPanel = `
-                    <div class="panel">
+                    <div class="panel panel-wide">
                         <h2><a href="/pipeline/curated.html" style="color: inherit; text-decoration: none;">Curated Overrides</a> ${invalidBadge}</h2>
                         <div class="curated-stats">
                             <a href="/pipeline/curated.html" class="curated-stat" style="text-decoration: none; color: inherit;">
@@ -1120,7 +1177,7 @@
                 `;
             } else {
                 curatedPanel = `
-                    <div class="panel">
+                    <div class="panel panel-wide">
                         <h2>Curated Overrides</h2>
                         <div class="no-data">No curated overrides</div>
                     </div>
@@ -1177,16 +1234,31 @@
 
                     <div class="panel">
                         <h2>Queue Status (${data.queue.total} packages)</h2>
+                        <div class="queue-summary">
+                            <span class="queue-summary-stat">${successPct}% complete</span>
+                            <span class="queue-summary-detail">${successCount} of ${data.queue.total} packages</span>
+                        </div>
                         <div class="status-bars">
                             ${statusBars}
                         </div>
                         ${renderByTier(data.queue.by_tier)}
+                        <div class="queue-actionable">
+                            <a href="/pipeline/failures.html?status=failed" class="queue-action-item">
+                                <span class="queue-action-count">${failedCount}</span> need investigation
+                            </a>
+                            <a href="/pipeline/requires_manual.html" class="queue-action-item">
+                                <span class="queue-action-count">${manualCount}</span> need manual review
+                            </a>
+                        </div>
                     </div>
 
-                    <div class="panel" id="blockers">
-                        <h2>Top Blockers</h2>
-                        <div class="blocker-list">
-                            ${blockerItems}
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h2>Recent Runs</h2>
+                            <a href="/pipeline/runs.html" class="view-all">View all</a>
+                        </div>
+                        <div class="run-list">
+                            ${runItems}
                         </div>
                     </div>
 
@@ -1202,13 +1274,10 @@
 
                     ${recentFailuresPanel}
 
-                    <div class="panel">
-                        <div class="panel-header">
-                            <h2>Recent Runs</h2>
-                            <a href="/pipeline/runs.html" class="view-all">View all</a>
-                        </div>
-                        <div class="run-list">
-                            ${runItems}
+                    <div class="panel${disambiguationPanel ? '' : ' panel-wide'}" id="blockers">
+                        <h2>Top Blockers</h2>
+                        <div class="blocker-list">
+                            ${blockerItems}
                         </div>
                     </div>
 
