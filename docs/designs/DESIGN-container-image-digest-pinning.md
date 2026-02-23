@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Accepted
 problem: |
   Container images in container-images.json use mutable tags like alpine:3.21
   that can resolve to different content over time. The sandbox cache key
@@ -25,7 +25,7 @@ rationale: |
 
 ## Status
 
-**Status:** Proposed
+**Status:** Accepted
 
 ## Context and Problem Statement
 
