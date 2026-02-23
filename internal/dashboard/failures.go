@@ -283,12 +283,10 @@ func loadFailureDetailsFromFile(path string, queue *batch.UnifiedQueue) ([]Failu
 	return details, scanner.Err()
 }
 
-// FailureRecord.Timestamp field - we need to add it to the existing struct.
-// The per-recipe format includes a "timestamp" field at the record level.
-
 // deduplicateFailureDetails groups per-recipe records by (package, batch_id)
-// into single records with Platform="multiple" and a Platforms list. Legacy
-// records (those with a Message field) are not deduplicated.
+// into single records with Platform="multiple" and a Platforms list. Per-recipe
+// records are identified by having a non-empty Platform field. Legacy batch
+// records (no Platform) are kept as-is since they represent distinct failures.
 func deduplicateFailureDetails(details []FailureDetail) []FailureDetail {
 	type dedupKey struct {
 		Package string
@@ -299,8 +297,8 @@ func deduplicateFailureDetails(details []FailureDetail) []FailureDetail {
 	groups := make(map[dedupKey][]FailureDetail)
 
 	for _, d := range details {
-		// Only deduplicate per-recipe records (those with a Platform but no Message)
-		if d.Platform != "" && d.Message == "" && d.BatchID != "" {
+		// Per-recipe records have a Platform field; group them by (package, batch_id)
+		if d.Platform != "" && d.BatchID != "" {
 			key := dedupKey{Package: d.Package, BatchID: d.BatchID}
 			groups[key] = append(groups[key], d)
 		} else {

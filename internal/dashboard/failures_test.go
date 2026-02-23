@@ -699,6 +699,32 @@ func TestDeduplicateFailureDetails_differentPackages(t *testing.T) {
 	}
 }
 
+func TestDeduplicateFailureDetails_perRecipeWithMessages(t *testing.T) {
+	// Per-recipe records with messages should still be deduplicated by (package, batch_id).
+	// The Platform field identifies per-recipe format; Message presence doesn't prevent dedup.
+	details := []FailureDetail{
+		{Package: "procs", BatchID: "2026-02-08T02-37-10Z", Platform: "linux-x86_64", ExitCode: 6, Message: "binary not found after install", Timestamp: "2026-02-08T02:37:10Z"},
+		{Package: "procs", BatchID: "2026-02-08T02-37-10Z", Platform: "linux-arm64", ExitCode: 6, Message: "binary not found after install", Timestamp: "2026-02-08T02:37:10Z"},
+		{Package: "procs", BatchID: "2026-02-08T02-37-10Z", Platform: "darwin-arm64", ExitCode: 6, Message: "binary not found after install", Timestamp: "2026-02-08T02:37:10Z"},
+	}
+
+	result := deduplicateFailureDetails(details)
+	if len(result) != 1 {
+		t.Fatalf("per-recipe records with messages should be deduplicated: got %d, want 1", len(result))
+	}
+
+	d := result[0]
+	if d.Platform != "multiple" {
+		t.Errorf("Platform: got %q, want %q", d.Platform, "multiple")
+	}
+	if len(d.Platforms) != 3 {
+		t.Errorf("Platforms: got %d, want 3", len(d.Platforms))
+	}
+	if d.Message != "binary not found after install" {
+		t.Errorf("Message: got %q, want %q", d.Message, "binary not found after install")
+	}
+}
+
 func TestDeduplicateFailureDetails_singlePlatform(t *testing.T) {
 	// Single platform record should keep its original Platform field
 	details := []FailureDetail{
