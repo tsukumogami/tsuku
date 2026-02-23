@@ -276,9 +276,9 @@ func TestNpmBuilder_ImplementsBinaryNameProvider(t *testing.T) {
 	var _ BinaryNameProvider = (*NpmBuilder)(nil)
 }
 
-// --- validateBinaryNames tests ---
+// --- correctBinaryNames tests ---
 
-func TestValidateBinaryNames_Match_NoChange(t *testing.T) {
+func TestCorrectBinaryNames_Match_NoChange(t *testing.T) {
 	orch := NewOrchestrator()
 	result := &BuildResult{
 		Recipe: &recipe.Recipe{
@@ -298,11 +298,7 @@ func TestValidateBinaryNames_Match_NoChange(t *testing.T) {
 	}
 
 	provider := &mockBinaryNameProvider{names: []string{"rg"}}
-	meta := orch.validateBinaryNames(provider, result, "crates.io")
-
-	if meta != nil {
-		t.Errorf("validateBinaryNames() returned metadata %+v, want nil (no change needed)", meta)
-	}
+	orch.correctBinaryNames(provider, result, "crates.io")
 
 	// Recipe should be unchanged
 	executables := result.Recipe.Steps[0].Params["executables"].([]string)
@@ -315,7 +311,7 @@ func TestValidateBinaryNames_Match_NoChange(t *testing.T) {
 	}
 }
 
-func TestValidateBinaryNames_Mismatch_Correction(t *testing.T) {
+func TestCorrectBinaryNames_Mismatch_Correction(t *testing.T) {
 	orch := NewOrchestrator()
 	result := &BuildResult{
 		Recipe: &recipe.Recipe{
@@ -335,21 +331,7 @@ func TestValidateBinaryNames_Mismatch_Correction(t *testing.T) {
 	}
 
 	provider := &mockBinaryNameProvider{names: []string{"sqlx", "cargo-sqlx"}}
-	meta := orch.validateBinaryNames(provider, result, "crates.io")
-
-	if meta == nil {
-		t.Fatal("validateBinaryNames() returned nil, want correction metadata")
-	}
-
-	if len(meta.OldNames) != 1 || meta.OldNames[0] != "sqlx-cli" {
-		t.Errorf("meta.OldNames = %v, want [sqlx-cli]", meta.OldNames)
-	}
-	if len(meta.NewNames) != 2 || meta.NewNames[0] != "sqlx" {
-		t.Errorf("meta.NewNames = %v, want [sqlx, cargo-sqlx]", meta.NewNames)
-	}
-	if meta.Builder != "crates.io" {
-		t.Errorf("meta.Builder = %q, want %q", meta.Builder, "crates.io")
-	}
+	orch.correctBinaryNames(provider, result, "crates.io")
 
 	// Recipe executables should be corrected
 	executables := result.Recipe.Steps[0].Params["executables"].([]string)
@@ -368,7 +350,7 @@ func TestValidateBinaryNames_Mismatch_Correction(t *testing.T) {
 	}
 }
 
-func TestValidateBinaryNames_EmptyProvider_Skip(t *testing.T) {
+func TestCorrectBinaryNames_EmptyProvider_Skip(t *testing.T) {
 	orch := NewOrchestrator()
 	result := &BuildResult{
 		Recipe: &recipe.Recipe{
@@ -388,11 +370,7 @@ func TestValidateBinaryNames_EmptyProvider_Skip(t *testing.T) {
 	}
 
 	provider := &mockBinaryNameProvider{names: []string{}}
-	meta := orch.validateBinaryNames(provider, result, "crates.io")
-
-	if meta != nil {
-		t.Errorf("validateBinaryNames() returned metadata %+v, want nil (empty provider)", meta)
-	}
+	orch.correctBinaryNames(provider, result, "crates.io")
 
 	// Recipe should be unchanged
 	executables := result.Recipe.Steps[0].Params["executables"].([]string)
@@ -401,7 +379,7 @@ func TestValidateBinaryNames_EmptyProvider_Skip(t *testing.T) {
 	}
 }
 
-func TestValidateBinaryNames_NilProvider_Skip(t *testing.T) {
+func TestCorrectBinaryNames_NilProvider_Skip(t *testing.T) {
 	orch := NewOrchestrator()
 	result := &BuildResult{
 		Recipe: &recipe.Recipe{
@@ -421,14 +399,10 @@ func TestValidateBinaryNames_NilProvider_Skip(t *testing.T) {
 	}
 
 	provider := &mockBinaryNameProvider{names: nil}
-	meta := orch.validateBinaryNames(provider, result, "crates.io")
-
-	if meta != nil {
-		t.Errorf("validateBinaryNames() returned metadata %+v, want nil (nil names)", meta)
-	}
+	orch.correctBinaryNames(provider, result, "crates.io")
 }
 
-func TestValidateBinaryNames_NoExecutablesParam_Skip(t *testing.T) {
+func TestCorrectBinaryNames_NoExecutablesParam_Skip(t *testing.T) {
 	orch := NewOrchestrator()
 	result := &BuildResult{
 		Recipe: &recipe.Recipe{
@@ -447,14 +421,10 @@ func TestValidateBinaryNames_NoExecutablesParam_Skip(t *testing.T) {
 	}
 
 	provider := &mockBinaryNameProvider{names: []string{"tool"}}
-	meta := orch.validateBinaryNames(provider, result, "crates.io")
-
-	if meta != nil {
-		t.Errorf("validateBinaryNames() returned metadata %+v, want nil (no executables param)", meta)
-	}
+	orch.correctBinaryNames(provider, result, "crates.io")
 }
 
-func TestValidateBinaryNames_SameNamesOrderDiffers_NoChange(t *testing.T) {
+func TestCorrectBinaryNames_SameNamesOrderDiffers_NoChange(t *testing.T) {
 	orch := NewOrchestrator()
 	result := &BuildResult{
 		Recipe: &recipe.Recipe{
@@ -475,14 +445,10 @@ func TestValidateBinaryNames_SameNamesOrderDiffers_NoChange(t *testing.T) {
 
 	// Same names but different order
 	provider := &mockBinaryNameProvider{names: []string{"c", "a", "b"}}
-	meta := orch.validateBinaryNames(provider, result, "crates.io")
-
-	if meta != nil {
-		t.Errorf("validateBinaryNames() returned metadata %+v, want nil (same set)", meta)
-	}
+	orch.correctBinaryNames(provider, result, "crates.io")
 }
 
-func TestValidateBinaryNames_InvalidProviderNames_Skip(t *testing.T) {
+func TestCorrectBinaryNames_InvalidProviderNames_Skip(t *testing.T) {
 	orch := NewOrchestrator()
 	result := &BuildResult{
 		Recipe: &recipe.Recipe{
@@ -503,14 +469,10 @@ func TestValidateBinaryNames_InvalidProviderNames_Skip(t *testing.T) {
 
 	// All provider names are invalid
 	provider := &mockBinaryNameProvider{names: []string{"; rm -rf /", "$(whoami)"}}
-	meta := orch.validateBinaryNames(provider, result, "crates.io")
-
-	if meta != nil {
-		t.Errorf("validateBinaryNames() returned metadata %+v, want nil (all invalid)", meta)
-	}
+	orch.correctBinaryNames(provider, result, "crates.io")
 }
 
-func TestValidateBinaryNames_InterfaceExtractExecutables(t *testing.T) {
+func TestCorrectBinaryNames_InterfaceExtractExecutables(t *testing.T) {
 	orch := NewOrchestrator()
 	// Test with []interface{} type (as TOML deserialization would produce)
 	result := &BuildResult{
@@ -531,14 +493,17 @@ func TestValidateBinaryNames_InterfaceExtractExecutables(t *testing.T) {
 	}
 
 	provider := &mockBinaryNameProvider{names: []string{"new-name"}}
-	meta := orch.validateBinaryNames(provider, result, "npm")
+	orch.correctBinaryNames(provider, result, "npm")
 
-	if meta == nil {
-		t.Fatal("validateBinaryNames() returned nil, want correction metadata")
+	// Recipe executables should be corrected
+	executables := result.Recipe.Steps[0].Params["executables"].([]string)
+	if len(executables) != 1 || executables[0] != "new-name" {
+		t.Errorf("executables = %v, want [new-name]", executables)
 	}
 
-	if meta.OldNames[0] != "old-name" {
-		t.Errorf("meta.OldNames = %v, want [old-name]", meta.OldNames)
+	// Verify command should be updated
+	if result.Recipe.Verify.Command != "new-name --version" {
+		t.Errorf("Verify.Command = %q, want %q", result.Recipe.Verify.Command, "new-name --version")
 	}
 }
 

@@ -355,13 +355,23 @@ func isValidNpmPackageNameForBuilder(name string) bool {
 // orchestrator can cross-check recipe executables against registry metadata.
 //
 // Returns nil if Build() hasn't been called yet (no cached data), or if the
-// package has no bin field.
+// package has no bin field or no latest version tag.
+//
+// This method intentionally differs from discoverExecutables() in its return
+// contract. discoverExecutables() always returns at least one name (falling
+// back to the package name when the bin field is missing or the latest version
+// can't be found), because the recipe needs an executable list to function.
+// AuthoritativeBinaryNames() returns nil when there's no authoritative registry
+// data, so the orchestrator knows to skip correction rather than overwrite the
+// recipe with a fallback guess. Extracting a shared helper would conflate these
+// two behaviors.
 func (b *NpmBuilder) AuthoritativeBinaryNames() []string {
 	if b.cachedPackageInfo == nil {
 		return nil
 	}
 
-	// Use the same logic as discoverExecutables: get bin from latest version.
+	// Get bin from latest version. Unlike discoverExecutables(), no
+	// fallback to package name -- nil signals "no authoritative data."
 	latestVersion := b.cachedPackageInfo.DistTags.Latest
 	if latestVersion == "" {
 		return nil

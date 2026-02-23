@@ -24,36 +24,25 @@ type BinaryNameProvider interface {
 	AuthoritativeBinaryNames() []string
 }
 
-// BinaryNameRepairMetadata tracks when the orchestrator corrected recipe
-// binary names using registry metadata from a BinaryNameProvider.
-type BinaryNameRepairMetadata struct {
-	// OldNames is the executable list from the recipe before correction.
-	OldNames []string
-
-	// NewNames is the corrected executable list from the provider.
-	NewNames []string
-
-	// Builder is the name of the builder that provided the authoritative names.
-	Builder string
-}
-
-// validateBinaryNames compares the recipe's executable list against authoritative
-// binary names from a BinaryNameProvider. If the lists differ, the recipe is
-// corrected in-place and a warning is appended to the BuildResult.
+// correctBinaryNames compares the recipe's executable list against authoritative
+// binary names from a BinaryNameProvider. If the lists differ, it corrects the
+// recipe in-place: overwrites the executables parameter, rewrites the verify
+// command if it references the old first executable, appends a warning to the
+// BuildResult, and sends a telemetry event.
 //
 // The method is a no-op when:
 //   - the builder does not implement BinaryNameProvider
 //   - the provider returns an empty slice (no registry data)
 //   - the recipe has no steps with an "executables" parameter
 //   - the names already match
-func (o *Orchestrator) validateBinaryNames(
+func (o *Orchestrator) correctBinaryNames(
 	provider BinaryNameProvider,
 	result *BuildResult,
 	builderName string,
-) *BinaryNameRepairMetadata {
+) {
 	authoritative := provider.AuthoritativeBinaryNames()
 	if len(authoritative) == 0 {
-		return nil
+		return
 	}
 
 	// Filter through executable name validation
@@ -64,7 +53,7 @@ func (o *Orchestrator) validateBinaryNames(
 		}
 	}
 	if len(validNames) == 0 {
-		return nil
+		return
 	}
 
 	// Find the step with an "executables" parameter
@@ -77,18 +66,18 @@ func (o *Orchestrator) validateBinaryNames(
 		}
 	}
 	if stepIdx < 0 {
-		return nil
+		return
 	}
 
 	// Extract current executables from the recipe
 	currentNames := extractExecutablesFromStep(r.Steps[stepIdx])
 	if len(currentNames) == 0 {
-		return nil
+		return
 	}
 
 	// Compare (order-independent)
 	if executableSetsEqual(currentNames, validNames) {
-		return nil
+		return
 	}
 
 	// Mismatch detected -- correct the recipe
@@ -120,12 +109,6 @@ func (o *Orchestrator) validateBinaryNames(
 			true,
 		)
 		o.telemetryClient.SendBinaryNameRepair(event)
-	}
-
-	return &BinaryNameRepairMetadata{
-		OldNames: oldNames,
-		NewNames: validNames,
-		Builder:  builderName,
 	}
 }
 

@@ -169,7 +169,7 @@ func (o *Orchestrator) Create(
 	// This runs after generation but before sandbox validation so
 	// mismatches are corrected without wasting a container cycle.
 	if binaryNameProvider != nil {
-		o.validateBinaryNames(binaryNameProvider, result, builder.Name())
+		o.correctBinaryNames(binaryNameProvider, result, builder.Name())
 	}
 
 	// If sandbox testing is skipped, return immediately

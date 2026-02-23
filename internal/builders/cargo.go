@@ -303,13 +303,22 @@ func cargoVerifySection(executable string) *recipe.VerifySection {
 //
 // Returns nil if Build() hasn't been called yet (no cached data), or if the
 // API response has no usable bin_names.
+//
+// This method intentionally differs from discoverExecutables() in its return
+// contract. discoverExecutables() always returns at least one name (falling
+// back to the crate name when bin_names is empty), because the recipe needs
+// an executable list to function. AuthoritativeBinaryNames() returns nil when
+// there's no authoritative registry data, so the orchestrator knows to skip
+// correction rather than overwrite the recipe with a fallback guess. Extracting
+// a shared helper would conflate these two behaviors.
 func (b *CargoBuilder) AuthoritativeBinaryNames() []string {
 	if b.cachedCrateInfo == nil {
 		return nil
 	}
 
-	// Use the same logic as discoverExecutables: find the first non-yanked
-	// version and return its bin_names (filtered through validation).
+	// Find the first non-yanked version and return its bin_names
+	// (filtered through validation). Unlike discoverExecutables(), no
+	// fallback to crate name -- nil signals "no authoritative data."
 	for _, v := range b.cachedCrateInfo.Versions {
 		if v.Yanked {
 			continue

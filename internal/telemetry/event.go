@@ -310,7 +310,7 @@ func newBaseVerifySelfRepairEvent() VerifySelfRepairEvent {
 }
 
 // BinaryNameRepairEvent represents a telemetry event for binary name correction.
-// This tracks when the orchestrator's validateBinaryNames() step corrects recipe
+// This tracks when the orchestrator's correctBinaryNames() step corrects recipe
 // executables using authoritative registry data from a BinaryNameProvider.
 type BinaryNameRepairEvent struct {
 	Action        string `json:"action"`         // Event type: "binary_name_repair"
