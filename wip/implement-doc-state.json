@@ -2,7 +2,7 @@
   "design_doc": "docs/designs/DESIGN-binary-name-discovery.md",
   "branch": "docs/deterministic-recipe-repair",
   "pr_number": 1934,
-  "integrity_hash": "sha256:461e31071da430c95a83995f09baddec2c4849f3163ab5dca6d2c504946a5a88",
+  "integrity_hash": "sha256:b075060581ec8c79d15010c6276140b48e727af54d1c5cfd77daf1ae4f56732f",
   "issues": [
     {
       "number": 1936,
@@ -82,8 +82,8 @@
     {
       "number": 1937,
       "title": "fix(builders): handle string-type `bin` field in npm builder",
-      "status": "pushed",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "ci_fix_attempts": 0,
       "issue_type": "code",
       "dependencies": [],
@@ -179,17 +179,124 @@
     {
       "number": 1938,
       "title": "feat(builders): add `BinaryNameProvider` and orchestrator validation",
-      "status": "pending",
+      "status": "pushed",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [
         1936,
         1937
       ],
-      "commits": [],
-      "agent_type": "",
-      "summary": null,
+      "commits": [
+        "0fd9d7f7b3b41c5ce18920f892f8546c0e6f8f0b",
+        "0fd9d7f7b3b41c5ce18920f892f8546c0e6f8f0b",
+        "4bb6e103200691078cb744acc307fed4beae3ffd"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          "internal/builders/binary_names.go",
+          "internal/builders/binary_names_test.go",
+          "internal/builders/cargo.go",
+          "internal/builders/npm.go",
+          "internal/builders/orchestrator.go",
+          "internal/telemetry/client.go",
+          "internal/telemetry/event.go",
+          "internal/telemetry/event_test.go"
+        ],
+        "tests_added": 26,
+        "key_decisions": "Removed BinaryNameRepairMetadata (dead code). Renamed validateBinaryNames to correctBinaryNames. Added explanatory comments on AuthoritativeBinaryNames divergence from discoverExecutables.",
+        "requirements_map": [
+          {
+            "ac": "BinaryNameProvider interface defined",
+            "status": "implemented"
+          },
+          {
+            "ac": "CargoBuilder implements provider",
+            "status": "implemented"
+          },
+          {
+            "ac": "NpmBuilder implements provider",
+            "status": "implemented"
+          },
+          {
+            "ac": "correctBinaryNames on Orchestrator",
+            "status": "implemented"
+          },
+          {
+            "ac": "called between Generate and sandbox",
+            "status": "implemented"
+          },
+          {
+            "ac": "type-assert before NewSession",
+            "status": "implemented"
+          },
+          {
+            "ac": "warning on correction",
+            "status": "implemented"
+          },
+          {
+            "ac": "telemetry event on correction",
+            "status": "implemented"
+          },
+          {
+            "ac": "isValidExecutableName validation",
+            "status": "implemented"
+          },
+          {
+            "ac": "empty slice skips validation",
+            "status": "implemented"
+          },
+          {
+            "ac": "unit tests for correctBinaryNames",
+            "status": "implemented"
+          },
+          {
+            "ac": "unit tests for provider impls",
+            "status": "implemented"
+          },
+          {
+            "ac": "interface definition for #1939",
+            "status": "implemented"
+          },
+          {
+            "ac": "working orchestrator step for #1939",
+            "status": "implemented"
+          }
+        ]
+      },
+      "reviewer_results": {
+        "issue": 1938,
+        "reviewers": [
+          {
+            "focus": "pragmatic",
+            "blocking_count": 0,
+            "advisory_count": 3,
+            "summary": "Initial blocking (dead BinaryNameRepairMetadata) resolved. 3 advisory remain: duplicate Send* pattern, success param always true, AuthoritativeBinaryNames shares logic with discoverExecutables."
+          },
+          {
+            "focus": "architect",
+            "blocking_count": 0,
+            "advisory_count": 2,
+            "summary": "Initial blocking (divergent logic) resolved via comments. 2 advisory: return value asymmetry with VerifyRepairMetadata (now moot since struct removed), Send* boilerplate."
+          },
+          {
+            "focus": "maintainer",
+            "blocking_count": 0,
+            "advisory_count": 2,
+            "summary": "Initial blocking (misleading name) resolved via rename to correctBinaryNames. 2 advisory: temporal contract on cached fields, Send* boilerplate."
+          }
+        ],
+        "verdict": "pass",
+        "total_blocking": 0,
+        "total_advisory": 7,
+        "re_review": {
+          "blocking_count": 0,
+          "advisory_count": 0,
+          "summary": "All three blocking findings verified resolved."
+        }
+      },
       "testable_scenarios": [
         "scenario-7",
         "scenario-8",

@@ -1,0 +1,31 @@
+{
+  "issue": 1938,
+  "reviewers": [
+    {
+      "focus": "pragmatic",
+      "blocking_count": 0,
+      "advisory_count": 3,
+      "summary": "Initial blocking (dead BinaryNameRepairMetadata) resolved. 3 advisory remain: duplicate Send* pattern, success param always true, AuthoritativeBinaryNames shares logic with discoverExecutables."
+    },
+    {
+      "focus": "architect",
+      "blocking_count": 0,
+      "advisory_count": 2,
+      "summary": "Initial blocking (divergent logic) resolved via comments. 2 advisory: return value asymmetry with VerifyRepairMetadata (now moot since struct removed), Send* boilerplate."
+    },
+    {
+      "focus": "maintainer",
+      "blocking_count": 0,
+      "advisory_count": 2,
+      "summary": "Initial blocking (misleading name) resolved via rename to correctBinaryNames. 2 advisory: temporal contract on cached fields, Send* boilerplate."
+    }
+  ],
+  "verdict": "pass",
+  "total_blocking": 0,
+  "total_advisory": 7,
+  "re_review": {
+    "blocking_count": 0,
+    "advisory_count": 0,
+    "summary": "All three blocking findings verified resolved."
+  }
+}
