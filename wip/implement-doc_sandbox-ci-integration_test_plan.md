@@ -191,7 +191,7 @@ Total scenarios: 18
 - `grep -q '\-\-target-family' .github/workflows/batch-generate.yml`
 - `grep -q 'blocked_by\|missing_recipes' .github/workflows/batch-generate.yml`
 **Expected**: No `docker run` calls remain in validation steps. Sandbox calls use --target-family and --env GITHUB_TOKEN. Exit code 8 / blocked_by extraction is preserved (missing_recipes comes from the normal --json error path during plan generation, not sandbox JSON). Retry logic for exit code 5 is preserved. The generate job, macOS validation jobs, and merge job are unchanged.
-**Status**: pending
+**Status**: passed
 
 ---
 
@@ -203,7 +203,7 @@ Total scenarios: 18
 - `grep -q '\-\-sandbox' .github/workflows/validate-golden-execution.yml`
 - `grep -q '\-\-target-family' .github/workflows/validate-golden-execution.yml`
 **Expected**: No `docker run` calls remain in container validation steps. The batched per-family docker call is replaced with a loop of individual sandbox invocations (one per recipe-version pair). The `install-recipe-deps.sh` call is removed. The `validate-linux` (Debian native), `validate-macos`, `execute-registry-linux`, `detect-changes`, and `validate-coverage` jobs are unchanged.
-**Status**: pending
+**Status**: passed
 
 ---
 

@@ -51,8 +51,8 @@ Planned
 | ~~_First CI migration (proof-of-concept). Replaces docker run blocks in `test-linux-x86_64` (5 families) and `test-linux-arm64` (4 families) with sandbox calls. Removes per-family package installation, volume mounting, and exit code marker files. Preserves result table in `$GITHUB_STEP_SUMMARY` using JSON output._~~ | | |
 | ~~[#1946: ci(workflows): migrate recipe-validation-core.yml Linux jobs to sandbox](https://github.com/tsukumogami/tsuku/issues/1946)~~ | ~~[#1945](https://github.com/tsukumogami/tsuku/issues/1945)~~ | ~~critical~~ |
 | ~~_Most impactful migration. Replaces docker run blocks in the core all-recipes validation workflow across 9 Linux matrix entries. Preserves retry logic (exit code 5, 3 attempts), JSON result aggregation, auto-constraint generation, and the report job's artifact format._~~ | | |
-| [#1947: ci(workflows): migrate batch-generate.yml and validate-golden-execution.yml to sandbox](https://github.com/tsukumogami/tsuku/issues/1947) | [#1946](https://github.com/tsukumogami/tsuku/issues/1946) | testable |
-| _Completes the CI migration. For batch-generate, replaces validation phase docker calls and preserves exit code 8 / `blocked_by` handling. For validate-golden-execution, converts batched per-family docker calls into per-recipe sandbox invocations. After this, every Linux recipe validation job in CI uses the sandbox._ | | |
+| ~~[#1947: ci(workflows): migrate batch-generate.yml and validate-golden-execution.yml to sandbox](https://github.com/tsukumogami/tsuku/issues/1947)~~ | ~~[#1946](https://github.com/tsukumogami/tsuku/issues/1946)~~ | ~~testable~~ |
+| ~~_Completes the CI migration. For batch-generate, replaces validation phase docker calls and preserves exit code 8 / `blocked_by` handling. For validate-golden-execution, converts batched per-family docker calls into per-recipe sandbox invocations. After this, every Linux recipe validation job in CI uses the sandbox._~~ | | |
 
 ### Dependency Graph
 
@@ -88,7 +88,7 @@ graph LR
     class I1944 done
     class I1945 done
     class I1946 done
-    class I1947 ready
+    class I1947 done
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design
