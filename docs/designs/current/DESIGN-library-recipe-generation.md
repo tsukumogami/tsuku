@@ -29,64 +29,6 @@ rationale: |
 
 Current
 
-## Implementation Issues
-
-### Milestone: [library-recipe-generation](https://github.com/tsukumogami/tsuku/milestone/98)
-
-| Issue | Dependencies | Tier |
-|-------|--------------|------|
-| ~~[#1877: refactor(homebrew): extract bottle contents into structured type](https://github.com/tsukumogami/tsuku/issues/1877)~~ | ~~None~~ | ~~testable~~ |
-| ~~_Refactors `extractBottleBinaries` into `extractBottleContents`, returning a `bottleContents` struct with `Binaries`, `LibFiles`, and `Includes` fields. Adds `isLibraryFile` filter with `matchesVersionedSo` regex and a backward-compatible `listBottleBinaries` wrapper._~~ | | |
-| ~~[#1878: feat(homebrew): generate single-platform library recipes](https://github.com/tsukumogami/tsuku/issues/1878)~~ | ~~[#1877](https://github.com/tsukumogami/tsuku/issues/1877)~~ | ~~testable~~ |
-| ~~_With bottle contents available, adds `generateLibraryRecipe` producing `type = "library"` recipes with `install_mode = "directory"` and `outputs` key. Wires into `generateDeterministicRecipe` as the fallback when `bin/` is empty but `lib/` has files. Changes `Verify` from value to pointer type so library recipes omit the `[verify]` section._~~ | | |
-| ~~[#1879: feat(homebrew): add multi-platform library recipe generation](https://github.com/tsukumogami/tsuku/issues/1879)~~ | ~~[#1878](https://github.com/tsukumogami/tsuku/issues/1878)~~ | ~~testable~~ |
-| ~~_Implements `scanMultiplePlatforms` to download Linux and macOS bottles from GHCR and scan each independently. Updates `generateLibraryRecipe` to produce platform-conditional step pairs with `when` clauses, matching the pattern in existing recipes like `gmp.toml`._~~ | | |
-| ~~[#1880: fix(recipe): emit metadata type in ToTOML serializer](https://github.com/tsukumogami/tsuku/issues/1880)~~ | ~~None~~ | ~~testable~~ |
-| ~~_Fixes the hand-coded `ToTOML()` serializer to emit `type` in `[metadata]` when set. The primary `WriteRecipe` path already handles this via struct tags, but `ToTOML()` is used by sandbox validation and was missing the field._~~ | | |
-| ~~[#1881: feat(dashboard): add library_only failure subcategory](https://github.com/tsukumogami/tsuku/issues/1881)~~ | ~~[#1878](https://github.com/tsukumogami/tsuku/issues/1878)~~ | ~~testable~~ |
-| ~~_Adds `library_only` to the `knownSubcategories` map in the dashboard and tags library detection error messages with `[library_only]` for `extractSubcategory()` parsing. Distinguishes "detected a library but generation failed" from "genuinely unclassifiable bottle."_~~ | | |
-| ~~[#1882: test(homebrew): validate library recipe generation against pipeline data](https://github.com/tsukumogami/tsuku/issues/1882)~~ | ~~[#1879](https://github.com/tsukumogami/tsuku/issues/1879), [#1881](https://github.com/tsukumogami/tsuku/issues/1881)~~ | ~~testable~~ |
-| ~~_Runs the generator against known library packages (bdw-gc, tree-sitter) from the `complex_archive` queue. Verifies generated recipes match existing library recipe structure and confirms the `library_only` subcategory appears correctly in failure data._~~ | | |
-
-### Dependency Graph
-
-```mermaid
-graph LR
-    subgraph Phase1["Phase 1: Foundation"]
-        I1877["#1877: Extract bottle contents"]
-        I1880["#1880: ToTOML type fix"]
-    end
-
-    subgraph Phase2["Phase 2: Generation"]
-        I1878["#1878: Single-platform library..."]
-    end
-
-    subgraph Phase3["Phase 3: Multi-platform"]
-        I1879["#1879: Multi-platform generation"]
-        I1881["#1881: library_only subcategory"]
-    end
-
-    subgraph Phase4["Phase 4: Validation"]
-        I1882["#1882: Pipeline validation"]
-    end
-
-    I1877 --> I1878
-    I1878 --> I1879
-    I1878 --> I1881
-    I1879 --> I1882
-    I1881 --> I1882
-
-    classDef done fill:#c8e6c9
-    classDef ready fill:#bbdefb
-    classDef blocked fill:#fff9c4
-    classDef needsDesign fill:#e1bee7
-    classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
-
-    class I1877,I1878,I1879,I1880,I1881,I1882 done
-```
-
-**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design
-
 ## Context and Problem Statement
 
 The `tsuku create --from homebrew --deterministic-only` command generates recipes by downloading a Homebrew bottle from GHCR, extracting it, and scanning the tarball for executables in `bin/`. When it finds binaries, it builds a recipe with `install_binaries` pointing to those files. When `bin/` is empty, it returns a `complex_archive` error and gives up.
