@@ -110,7 +110,7 @@ Total scenarios: 18
 - `grep -q 'DurationMs.*int64' internal/sandbox/executor.go`
 - `grep -q 'time\.Now\|time\.Since\|DurationMs' internal/sandbox/executor.go`
 **Expected**: `SandboxResult` has `DurationMs int64` field. The `Sandbox()` method measures wall-clock time from before runtime detection through result evaluation.
-**Status**: pending
+**Status**: passed
 
 ---
 
@@ -121,7 +121,7 @@ Total scenarios: 18
 - `grep -q 'installJSON\|json' cmd/tsuku/install_sandbox.go`
 - `go test ./internal/sandbox/... ./cmd/tsuku/... -count=1 -timeout 60s`
 **Expected**: When `--json` is set with `--sandbox`, stdout contains exactly one JSON object with fields: tool, passed, verified, install_exit_code, verify_exit_code, duration_ms, error. Human-readable output is suppressed. The JSON is valid for passed, failed, skipped (no runtime), and error states. The `error` field is null on success and a string on failure.
-**Status**: pending
+**Status**: passed
 
 ---
 
@@ -133,7 +133,7 @@ Total scenarios: 18
 - `go build -o tsuku-test ./cmd/tsuku`
 - `./tsuku-test install --sandbox --force --recipe recipes/serve.toml --json`
 **Expected**: The JSON output shows `passed: true` and `verified: true`. The sandbox runs the recipe's verify command inside the container, reads marker files, and evaluates the result using Go-side pattern matching. The `duration_ms` field is a positive integer. This validates the full pipeline: plan generation with ExitCode, sandbox script generation with verify block, container execution, marker file reading, CheckVerification evaluation, JSON serialization.
-**Status**: pending
+**Status**: passed
 
 ---
 
@@ -145,7 +145,7 @@ Total scenarios: 18
 - `go build -o tsuku-test ./cmd/tsuku`
 - `TEST_MARKER=hello_from_host ./tsuku-test install --sandbox --force --recipe recipes/serve.toml --env TEST_MARKER="hello_from_host" --json`
 **Expected**: The sandbox container receives the TEST_MARKER environment variable. The install succeeds (the env var doesn't affect the recipe, but confirms the passthrough plumbing works without errors). Attempting `--env PATH=/bad` does not break the container (hardcoded PATH wins).
-**Status**: pending
+**Status**: passed
 
 ---
 

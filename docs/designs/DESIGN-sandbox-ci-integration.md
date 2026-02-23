@@ -45,8 +45,8 @@ Planned
 | ~~_Adds `ExitCode *int` to `PlanVerify` (plan format v5), extracts shared `checkVerification()` into `internal/sandbox/verify.go`, and extends `buildSandboxScript()` to run the recipe's verify command with marker file output. Go reads the marker files after container exit and evaluates results. `SandboxResult.Passed` becomes true only when both install and verification succeed._~~ | | |
 | ~~[#1943: feat(sandbox): add --env flag for environment variable passthrough](https://github.com/tsukumogami/tsuku/issues/1943)~~ | ~~None~~ | ~~testable~~ |
 | ~~_Adds `ExtraEnv []string` to `SandboxRequirements` and a repeatable `--env KEY=VALUE` CLI flag. The executor filters user-provided keys against hardcoded sandbox vars before appending to `RunOptions.Env`. Supports docker-compatible `--env KEY` form that reads from the host environment._~~ | | |
-| [#1944: feat(sandbox): add --json flag for structured sandbox output](https://github.com/tsukumogami/tsuku/issues/1944) | [#1942](https://github.com/tsukumogami/tsuku/issues/1942) | testable |
-| _Adds `DurationMs int64` to `SandboxResult` with timing measurement, and a `--json` CLI flag that serializes the result as a JSON object on stdout. Suppresses human-readable output when set. Uses the `Verified` and `VerifyExitCode` fields from #1942 for the verification-related JSON fields._ | | |
+| ~~[#1944: feat(sandbox): add --json flag for structured sandbox output](https://github.com/tsukumogami/tsuku/issues/1944)~~ | ~~[#1942](https://github.com/tsukumogami/tsuku/issues/1942)~~ | ~~testable~~ |
+| ~~_Adds `DurationMs int64` to `SandboxResult` with timing measurement, and a `--json` CLI flag that serializes the result as a JSON object on stdout. Suppresses human-readable output when set. Uses the `Verified` and `VerifyExitCode` fields from #1942 for the verification-related JSON fields._~~ | | |
 | [#1945: ci(workflows): migrate test-recipe.yml Linux jobs to sandbox](https://github.com/tsukumogami/tsuku/issues/1945) | [#1942](https://github.com/tsukumogami/tsuku/issues/1942), [#1943](https://github.com/tsukumogami/tsuku/issues/1943), [#1944](https://github.com/tsukumogami/tsuku/issues/1944) | testable |
 | _First CI migration (proof-of-concept). Replaces docker run blocks in `test-linux-x86_64` (5 families) and `test-linux-arm64` (4 families) with sandbox calls. Removes per-family package installation, volume mounting, and exit code marker files. Preserves result table in `$GITHUB_STEP_SUMMARY` using JSON output._ | | |
 | [#1946: ci(workflows): migrate recipe-validation-core.yml Linux jobs to sandbox](https://github.com/tsukumogami/tsuku/issues/1946) | [#1945](https://github.com/tsukumogami/tsuku/issues/1945) | critical |
@@ -84,9 +84,10 @@ graph LR
     classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
 
     class I1942 done
-    class I1943 ready
-    class I1944 ready
-    class I1945,I1946,I1947 blocked
+    class I1943 done
+    class I1944 done
+    class I1945 ready
+    class I1946,I1947 blocked
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design

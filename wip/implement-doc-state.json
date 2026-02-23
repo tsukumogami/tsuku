@@ -3,7 +3,7 @@
   "design_doc": "docs/designs/DESIGN-sandbox-ci-integration.md",
   "branch": "docs/sandbox-ci-integration",
   "pr_number": 1935,
-  "integrity_hash": "sha256:4844bc1b78b92065cad5ead4cf96633b2c99e2d0216cf054fa7bd1c0f73925c1",
+  "integrity_hash": "sha256:d587993501248fb490288fd46e4f2bd7cab9b6a1948766d12c7d23f620859572",
   "issues": [
     {
       "number": 1942,
@@ -80,7 +80,7 @@
     {
       "number": 1943,
       "title": "feat(sandbox): add --env flag for environment variable passthrough",
-      "status": "pushed",
+      "status": "completed",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
       "issue_type": "code",
@@ -143,16 +143,62 @@
     {
       "number": 1944,
       "title": "feat(sandbox): add --json flag for structured sandbox output",
-      "status": "pending",
+      "status": "pushed",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [
         1942
       ],
-      "commits": [],
-      "agent_type": "",
-      "summary": null,
+      "commits": [
+        "e0ecb28c607bd3350651a68f719b969b8b17ee3a"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          "cmd/tsuku/install.go",
+          "cmd/tsuku/install_sandbox.go",
+          "cmd/tsuku/install_sandbox_test.go",
+          "internal/sandbox/executor.go",
+          "internal/sandbox/executor_test.go"
+        ],
+        "tests_added": 11,
+        "key_decisions": "Used *string for Error field in JSON to get null on success. Extracted buildSandboxJSONOutput as pure function for testability. Changed sandbox error handling in install.go to use handleInstallError for proper --json error handling including missing_recipes.",
+        "requirements_map": {
+          "total": 9,
+          "implemented": 9,
+          "deferred": 0,
+          "dropped": 0
+        }
+      },
+      "reviewer_results": {
+        "issue": 1944,
+        "round": 2,
+        "reviews": [
+          {
+            "reviewer": "pragmatic",
+            "blocking_count": 0,
+            "advisory_count": 0,
+            "detail_file": "wip/research/implement-doc_re-review_pragmatic_issue1944.md"
+          },
+          {
+            "reviewer": "architect",
+            "blocking_count": 0,
+            "advisory_count": 1,
+            "detail_file": "wip/research/implement-doc_re-review_architect_issue1944.md"
+          },
+          {
+            "reviewer": "maintainer",
+            "blocking_count": 0,
+            "advisory_count": 0,
+            "detail_file": "wip/research/implement-doc_re-review_maintainer_issue1944.md"
+          }
+        ],
+        "total_blocking": 0,
+        "total_advisory": 1,
+        "verdict": "pass"
+      },
       "testable_scenarios": [
         "scenario-10",
         "scenario-11",
