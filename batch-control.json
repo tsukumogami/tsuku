@@ -20,27 +20,27 @@
     },
     "rubygems": {
       "state": "open",
-      "failures": 12,
-      "last_failure": "2026-02-22T16:31:30Z",
-      "opens_at": "2026-02-22T17:31:30Z"
+      "failures": 13,
+      "last_failure": "2026-02-23T10:52:51Z",
+      "opens_at": "2026-02-23T11:52:51Z"
     },
     "crates.io": {
       "state": "open",
-      "failures": 12,
-      "last_failure": "2026-02-22T16:31:30Z",
-      "opens_at": "2026-02-22T17:31:30Z"
+      "failures": 13,
+      "last_failure": "2026-02-23T10:52:51Z",
+      "opens_at": "2026-02-23T11:52:51Z"
     },
     "npm": {
       "state": "open",
-      "failures": 12,
-      "last_failure": "2026-02-22T16:31:30Z",
-      "opens_at": "2026-02-22T17:31:30Z"
+      "failures": 13,
+      "last_failure": "2026-02-23T10:52:51Z",
+      "opens_at": "2026-02-23T11:52:51Z"
     },
     "pypi": {
       "state": "open",
-      "failures": 9,
-      "last_failure": "2026-02-22T16:31:30Z",
-      "opens_at": "2026-02-22T17:31:30Z"
+      "failures": 10,
+      "last_failure": "2026-02-23T10:52:51Z",
+      "opens_at": "2026-02-23T11:52:51Z"
     }
   },
   "budget": {
