@@ -13,7 +13,7 @@ Total scenarios: 18
 - `grep -q 'PlanFormatVersion = 5' internal/executor/plan.go`
 - `grep -q 'ExitCode.*\*int.*json:"exit_code' internal/executor/plan.go`
 **Expected**: `PlanFormatVersion` constant is 5 and `PlanVerify` struct has `ExitCode *int` field with the correct JSON tag
-**Status**: pending
+**Status**: passed
 
 ---
 
@@ -23,7 +23,7 @@ Total scenarios: 18
 **Commands**:
 - `go test ./internal/sandbox/... -run 'CheckVerification' -count=1 -v`
 **Expected**: Unit tests pass covering: exit code match with empty pattern returns true, exit code mismatch returns false, pattern match returns true, pattern mismatch returns false, non-default expected exit code works correctly
-**Status**: pending
+**Status**: passed
 
 ---
 
@@ -34,7 +34,7 @@ Total scenarios: 18
 - `grep -q 'sandbox\.\|CheckVerification\|verify\.Check' internal/validate/executor.go`
 - `go test ./internal/validate/... -count=1 -timeout 60s`
 **Expected**: The validate package references the shared verification function (not a duplicated local implementation), and all existing validate tests pass without behavior changes
-**Status**: pending
+**Status**: passed
 
 ---
 
@@ -44,7 +44,7 @@ Total scenarios: 18
 **Commands**:
 - `go test ./internal/sandbox/... -run 'SandboxScript.*Verify\|Verify.*Script' -count=1 -v`
 **Expected**: When plan has a non-empty Verify.Command, the generated script contains `set +e`, redirects verify output to `/workspace/.sandbox-verify-output`, writes exit code to `/workspace/.sandbox-verify-exit`, and adds `$TSUKU_HOME/bin` and `$TSUKU_HOME/tools/current` to PATH. When plan has no verify command, no verify block is appended.
-**Status**: pending
+**Status**: passed
 
 ---
 
@@ -56,7 +56,7 @@ Total scenarios: 18
 - `grep -q 'VerifyExitCode.*int' internal/sandbox/executor.go`
 - `go test ./internal/sandbox/... -count=1 -timeout 60s`
 **Expected**: `SandboxResult` has `Verified bool` and `VerifyExitCode int` fields. When no verify command exists, `Verified` is true and `VerifyExitCode` is -1. When install fails, `Verified` is false. When verify marker files exist, Go-side `CheckVerification` determines the value.
-**Status**: pending
+**Status**: passed
 
 ---
 
@@ -68,7 +68,7 @@ Total scenarios: 18
 - `grep -q 'ExitCode' internal/executor/plan_cache.go`
 - `go test ./internal/executor/... -count=1 -timeout 120s`
 **Expected**: Plan generator copies `recipe.Verify.ExitCode` into `PlanVerify.ExitCode` at both top-level and dependency plan generation sites. Plan cache hashing includes `ExitCode` so plans with different expected exit codes produce different cache keys. All executor tests pass.
-**Status**: pending
+**Status**: passed
 
 ---
 

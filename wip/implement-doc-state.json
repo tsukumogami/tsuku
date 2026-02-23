@@ -3,19 +3,71 @@
   "design_doc": "docs/designs/DESIGN-sandbox-ci-integration.md",
   "branch": "docs/sandbox-ci-integration",
   "pr_number": 1935,
-  "integrity_hash": "sha256:d74873ebe667e8c2de840cf30bac32e6a85cbfe1db41683e5d6fd3e3606eb72b",
+  "integrity_hash": "sha256:2cecff3cbeb3a8c2962420769112f18356c3cfa53ce8691a14bddcd572d365e9",
   "issues": [
     {
       "number": 1942,
       "title": "feat(sandbox): add post-install verification with Go-side pattern matching",
-      "status": "pending",
+      "status": "pushed",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [],
-      "commits": [],
-      "agent_type": "",
-      "summary": null,
+      "commits": [
+        "651eea1a"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          "internal/executor/plan.go",
+          "internal/executor/plan_verify.go",
+          "internal/executor/plan_cache.go",
+          "internal/executor/plan_cache_test.go",
+          "internal/executor/plan_generator.go",
+          "internal/executor/plan_test.go",
+          "internal/sandbox/executor.go",
+          "internal/sandbox/executor_test.go",
+          "internal/sandbox/verify.go",
+          "internal/sandbox/verify_test.go",
+          "internal/validate/executor.go"
+        ],
+        "tests_added": 17,
+        "key_decisions": "Shared CheckVerification lives in executor.CheckPlanVerification (new file internal/executor/plan_verify.go) to avoid import cycle between sandbox and validate packages. Both sandbox.CheckVerification and validate.checkVerification delegate to it.",
+        "requirements_map": {
+          "total": 31,
+          "implemented": 31,
+          "deferred": 0,
+          "dropped": 0
+        }
+      },
+      "reviewer_results": {
+        "issue": 1942,
+        "round": 2,
+        "reviews": [
+          {
+            "reviewer": "pragmatic",
+            "blocking_count": 0,
+            "advisory_count": 0,
+            "detail_file": "wip/research/implement-doc_re-review_pragmatic_issue1942.md"
+          },
+          {
+            "reviewer": "architect",
+            "blocking_count": 0,
+            "advisory_count": 2,
+            "detail_file": "wip/research/implement-doc_re-review_architect_issue1942.md"
+          },
+          {
+            "reviewer": "maintainer",
+            "blocking_count": 0,
+            "advisory_count": 0,
+            "detail_file": "wip/research/implement-doc_re-review_maintainer_issue1942.md"
+          }
+        ],
+        "total_blocking": 0,
+        "total_advisory": 2,
+        "verdict": "pass"
+      },
       "testable_scenarios": [
         "scenario-1",
         "scenario-2",

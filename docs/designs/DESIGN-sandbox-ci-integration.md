@@ -41,8 +41,8 @@ Planned
 
 | Issue | Dependencies | Tier |
 |-------|--------------|------|
-| [#1942: feat(sandbox): add post-install verification with Go-side pattern matching](https://github.com/tsukumogami/tsuku/issues/1942) | None | testable |
-| _Adds `ExitCode *int` to `PlanVerify` (plan format v5), extracts shared `checkVerification()` into `internal/sandbox/verify.go`, and extends `buildSandboxScript()` to run the recipe's verify command with marker file output. Go reads the marker files after container exit and evaluates results. `SandboxResult.Passed` becomes true only when both install and verification succeed._ | | |
+| ~~[#1942: feat(sandbox): add post-install verification with Go-side pattern matching](https://github.com/tsukumogami/tsuku/issues/1942)~~ | ~~None~~ | ~~testable~~ |
+| ~~_Adds `ExitCode *int` to `PlanVerify` (plan format v5), extracts shared `checkVerification()` into `internal/sandbox/verify.go`, and extends `buildSandboxScript()` to run the recipe's verify command with marker file output. Go reads the marker files after container exit and evaluates results. `SandboxResult.Passed` becomes true only when both install and verification succeed._~~ | | |
 | [#1943: feat(sandbox): add --env flag for environment variable passthrough](https://github.com/tsukumogami/tsuku/issues/1943) | None | testable |
 | _Adds `ExtraEnv []string` to `SandboxRequirements` and a repeatable `--env KEY=VALUE` CLI flag. The executor filters user-provided keys against hardcoded sandbox vars before appending to `RunOptions.Env`. Supports docker-compatible `--env KEY` form that reads from the host environment._ | | |
 | [#1944: feat(sandbox): add --json flag for structured sandbox output](https://github.com/tsukumogami/tsuku/issues/1944) | [#1942](https://github.com/tsukumogami/tsuku/issues/1942) | testable |
@@ -83,7 +83,8 @@ graph LR
     classDef needsDesign fill:#e1bee7
     classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
 
-    class I1942,I1943 ready
+    class I1942 done
+    class I1943 ready
     class I1944,I1945,I1946,I1947 blocked
 ```
 
