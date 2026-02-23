@@ -3,13 +3,13 @@
   "design_doc": "docs/designs/DESIGN-sandbox-image-unification.md",
   "branch": "impl/sandbox-image-unification",
   "pr_number": 1906,
-  "integrity_hash": "sha256:fae607e5300b8f56212c80d018e00da43bf542874033dc31aeb7abea5ad431ea",
+  "integrity_hash": "sha256:2542036f3d8aa4ce6154da90cb0991d7a7a00cffd7be9f5f7649a87db4096d5f",
   "issues": [
     {
       "number": 1901,
       "title": "refactor(sandbox): create containerimages package and centralized config",
-      "status": "pushed",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "ci_fix_attempts": 0,
       "issue_type": "code",
       "dependencies": [],
@@ -74,16 +74,31 @@
     {
       "number": 1902,
       "title": "ci: migrate workflow container images to centralized config",
-      "status": "pending",
+      "status": "scrutinized",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [
         1901
       ],
-      "commits": [],
-      "agent_type": "",
-      "summary": null,
+      "commits": [
+        "8873b66223c4c49c2730eeea4ed08ca890eafb0b"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          ".github/workflows/recipe-validation-core.yml",
+          ".github/workflows/test-recipe.yml",
+          ".github/workflows/batch-generate.yml",
+          ".github/workflows/validate-golden-execution.yml",
+          ".github/workflows/platform-integration.yml",
+          ".github/workflows/release.yml",
+          "test/scripts/test-checksum-pinning.sh"
+        ],
+        "tests_added": 0,
+        "key_decisions": "Three consumption patterns: array-based (jq loop over families), matrix-based (load-images job with fromJson), inline (jq -r lookup). Added sparse-checkout for container-images.json in release.yml. Added jq availability check in test-checksum-pinning.sh."
+      },
       "testable_scenarios": [
         "scenario-10",
         "scenario-11"
