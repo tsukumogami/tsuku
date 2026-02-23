@@ -1,0 +1,98 @@
+{
+  "design_doc": "docs/designs/DESIGN-embedded-recipe-musl-coverage.md",
+  "branch": "docs/embedded-recipe-musl-coverage",
+  "pr_number": 1909,
+  "integrity_hash": "sha256:cba31f795d6a930828127874e06d0d8dfc16e428a2ec29a8185d2273ab97ea20",
+  "issues": [
+    {
+      "number": 1912,
+      "title": "fix(recipes): add musl fallback to rust, python-standalone, and perl embedded recipes",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": [
+        "scenario-1",
+        "scenario-2",
+        "scenario-3",
+        "scenario-4"
+      ]
+    },
+    {
+      "number": 1913,
+      "title": "fix(recipes): add musl fallback to patchelf embedded recipe",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": [
+        "scenario-5",
+        "scenario-6"
+      ]
+    },
+    {
+      "number": 1914,
+      "title": "fix(recipes): add musl fallback to nodejs and ruby embedded recipes",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": [
+        "scenario-7",
+        "scenario-8",
+        "scenario-9",
+        "scenario-10"
+      ]
+    },
+    {
+      "number": 1915,
+      "title": "feat(recipe): add structural musl coverage check to AnalyzeRecipeCoverage",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [
+        1912,
+        1913,
+        1914
+      ],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": [
+        "scenario-11",
+        "scenario-12",
+        "scenario-13"
+      ]
+    },
+    {
+      "number": 1916,
+      "title": "fix(ci): add embedded recipe paths to CI triggers",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": [
+        "scenario-14"
+      ]
+    }
+  ],
+  "skipped_issues": null,
+  "test_plan_file": "wip/implement-doc_embedded-recipe-musl-coverage_test_plan.md"
+}
