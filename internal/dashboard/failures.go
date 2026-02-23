@@ -22,7 +22,7 @@ type FailureDetail struct {
 	Ecosystem   string   `json:"ecosystem"`
 	Category    string   `json:"category"`
 	Subcategory string   `json:"subcategory,omitempty"`
-	Message     string   `json:"message,omitempty"`   // legacy format only, up to 500 chars
+	Message     string   `json:"message,omitempty"`   // up to 500 chars
 	ExitCode    int      `json:"exit_code,omitempty"` // per-recipe format
 	Platform    string   `json:"platform,omitempty"`
 	Platforms   []string `json:"platforms,omitempty"` // for multi-platform dedup
@@ -240,6 +240,7 @@ func loadFailureDetailsFromFile(path string, queue *batch.UnifiedQueue) ([]Failu
 					Message:     msg,
 					BatchID:     batchID,
 					Timestamp:   f.Timestamp,
+					WorkflowURL: f.WorkflowURL,
 				})
 			}
 		}
@@ -259,15 +260,22 @@ func loadFailureDetailsFromFile(path string, queue *batch.UnifiedQueue) ([]Failu
 				ts = record.UpdatedAt
 			}
 
+			msg := record.Message
+			if len(msg) > maxMessageLength {
+				msg = msg[:maxMessageLength]
+			}
+
 			details = append(details, FailureDetail{
 				Package:     record.Recipe,
 				Ecosystem:   eco,
 				Category:    remapCategory(record.Category),
 				Subcategory: record.Subcategory,
+				Message:     msg,
 				ExitCode:    record.ExitCode,
 				Platform:    record.Platform,
 				BatchID:     filenameBatchID,
 				Timestamp:   ts,
+				WorkflowURL: record.WorkflowURL,
 			})
 		}
 	}
@@ -380,6 +388,8 @@ func extractEcosystemFromID(packageID string) string {
 
 // parseFailureFilename extracts ecosystem and batch ID from a failure filename.
 // Filenames follow the pattern "<ecosystem>-<timestamp>.jsonl" or "<ecosystem>.jsonl".
+// The returned batchID is the timestamp portion only (e.g., "2026-02-08T02-33-27Z"),
+// matching the format used in runs[].batch_id for cross-reference consistency.
 func parseFailureFilename(basename string) (ecosystem, batchID string) {
 	// Strip .jsonl extension
 	name := strings.TrimSuffix(basename, ".jsonl")
@@ -398,7 +408,7 @@ func parseFailureFilename(basename string) (ecosystem, batchID string) {
 
 	// Check if the rest starts with a year-like pattern (4 digits)
 	if len(rest) >= 4 && rest[0] >= '0' && rest[0] <= '9' && rest[1] >= '0' && rest[1] <= '9' && rest[2] >= '0' && rest[2] <= '9' && rest[3] >= '0' && rest[3] <= '9' {
-		batchID = ecosystem + "-" + rest
+		batchID = rest
 	}
 
 	return ecosystem, batchID

@@ -1330,8 +1330,8 @@ func TestLoadHealth_withControlFileAndRecords(t *testing.T) {
 	if health.LastRun == nil {
 		t.Fatal("LastRun should not be nil")
 	}
-	if health.LastRun.BatchID != "2026-02-03-homebrew" {
-		t.Errorf("LastRun.BatchID: got %q, want %q", health.LastRun.BatchID, "2026-02-03-homebrew")
+	if health.LastRun.BatchID != "2026-02-03T12-00-00Z" {
+		t.Errorf("LastRun.BatchID: got %q, want %q", health.LastRun.BatchID, "2026-02-03T12-00-00Z")
 	}
 	if health.LastRun.Total != 12 {
 		t.Errorf("LastRun.Total: got %d, want 12", health.LastRun.Total)
@@ -1341,8 +1341,8 @@ func TestLoadHealth_withControlFileAndRecords(t *testing.T) {
 	if health.LastSuccessfulRun == nil {
 		t.Fatal("LastSuccessfulRun should not be nil")
 	}
-	if health.LastSuccessfulRun.BatchID != "2026-02-03-homebrew" {
-		t.Errorf("LastSuccessfulRun.BatchID: got %q, want %q", health.LastSuccessfulRun.BatchID, "2026-02-03-homebrew")
+	if health.LastSuccessfulRun.BatchID != "2026-02-03T12-00-00Z" {
+		t.Errorf("LastSuccessfulRun.BatchID: got %q, want %q", health.LastSuccessfulRun.BatchID, "2026-02-03T12-00-00Z")
 	}
 
 	// runs_since_last_success should be 0 since the last run is the successful one
@@ -1371,12 +1371,12 @@ func TestLoadHealth_runsSinceLastSuccess(t *testing.T) {
 		t.Fatalf("loadHealth: %v", err)
 	}
 
-	// Last successful run should be run-1
+	// Last successful run should be first record (timestamp-derived batch ID)
 	if health.LastSuccessfulRun == nil {
 		t.Fatal("LastSuccessfulRun should not be nil")
 	}
-	if health.LastSuccessfulRun.BatchID != "run-1" {
-		t.Errorf("LastSuccessfulRun.BatchID: got %q, want %q", health.LastSuccessfulRun.BatchID, "run-1")
+	if health.LastSuccessfulRun.BatchID != "2026-02-01T12-00-00Z" {
+		t.Errorf("LastSuccessfulRun.BatchID: got %q, want %q", health.LastSuccessfulRun.BatchID, "2026-02-01T12-00-00Z")
 	}
 
 	// 3 runs since last success (run-2, run-3, run-4)
@@ -1384,9 +1384,9 @@ func TestLoadHealth_runsSinceLastSuccess(t *testing.T) {
 		t.Errorf("RunsSinceLastSuccess: got %d, want 3", health.RunsSinceLastSuccess)
 	}
 
-	// Last run should be run-4
-	if health.LastRun.BatchID != "run-4" {
-		t.Errorf("LastRun.BatchID: got %q, want %q", health.LastRun.BatchID, "run-4")
+	// Last run should be the most recent (timestamp-derived batch ID)
+	if health.LastRun.BatchID != "2026-02-04T12-00-00Z" {
+		t.Errorf("LastRun.BatchID: got %q, want %q", health.LastRun.BatchID, "2026-02-04T12-00-00Z")
 	}
 }
 
@@ -1441,8 +1441,8 @@ func TestLoadHealth_missingControlFile(t *testing.T) {
 	if health.LastRun == nil {
 		t.Fatal("LastRun should not be nil")
 	}
-	if health.LastRun.BatchID != "run-1" {
-		t.Errorf("LastRun.BatchID: got %q, want %q", health.LastRun.BatchID, "run-1")
+	if health.LastRun.BatchID != "2026-02-01T12-00-00Z" {
+		t.Errorf("LastRun.BatchID: got %q, want %q", health.LastRun.BatchID, "2026-02-01T12-00-00Z")
 	}
 }
 
@@ -1499,9 +1499,9 @@ func TestLoadHealth_runInfoFields(t *testing.T) {
 		t.Fatal("LastRun should not be nil")
 	}
 
-	// Verify RunInfo field mapping
-	if ri.BatchID != "run-1" {
-		t.Errorf("BatchID: got %q, want %q", ri.BatchID, "run-1")
+	// Verify RunInfo field mapping -- BatchID is derived from timestamp, not the raw batch_id
+	if ri.BatchID != "2026-02-01T12-00-00Z" {
+		t.Errorf("BatchID: got %q, want %q", ri.BatchID, "2026-02-01T12-00-00Z")
 	}
 	if ri.Ecosystems["homebrew"] != 10 {
 		t.Errorf("Ecosystems[homebrew]: got %d, want 10", ri.Ecosystems["homebrew"])
@@ -1776,8 +1776,8 @@ func TestGenerate_withHealth(t *testing.T) {
 	if dash.Health.LastRun == nil {
 		t.Fatal("LastRun should not be nil")
 	}
-	if dash.Health.LastRun.BatchID != "2026-02-01-homebrew" {
-		t.Errorf("LastRun.BatchID: got %q, want %q", dash.Health.LastRun.BatchID, "2026-02-01-homebrew")
+	if dash.Health.LastRun.BatchID != "2026-02-01T12-00-00Z" {
+		t.Errorf("LastRun.BatchID: got %q, want %q", dash.Health.LastRun.BatchID, "2026-02-01T12-00-00Z")
 	}
 
 	// All three runs in testdata have merges, so last successful = last run
@@ -2059,5 +2059,30 @@ func TestLoadMetrics_uniqueBatchIDs(t *testing.T) {
 	}
 	if runs[1].BatchID != "2026-02-19T10-15-30Z" {
 		t.Errorf("runs[1].BatchID: got %q, want %q", runs[1].BatchID, "2026-02-19T10-15-30Z")
+	}
+}
+
+func TestMetricsToRunInfo_batchIDConsistentWithRuns(t *testing.T) {
+	// health.last_run.batch_id must use the same timestamp-derived format
+	// as runs[].batch_id, not the raw batch_id from metrics records.
+	rec := MetricsRecord{
+		BatchID:   "2026-02-22",
+		Ecosystem: "homebrew",
+		Total:     10,
+		Merged:    8,
+		Timestamp: "2026-02-22T04:26:06Z",
+	}
+
+	ri := metricsToRunInfo(rec)
+
+	// BatchID should be derived from timestamp, not the raw "2026-02-22"
+	if ri.BatchID != "2026-02-22T04-26-06Z" {
+		t.Errorf("RunInfo.BatchID: got %q, want %q (should match batchIDFromTimestamp)", ri.BatchID, "2026-02-22T04-26-06Z")
+	}
+
+	// Verify it matches the format used in RunSummary.BatchID
+	want := batchIDFromTimestamp(rec.Timestamp)
+	if ri.BatchID != want {
+		t.Errorf("health batch ID %q should match runs batch ID %q", ri.BatchID, want)
 	}
 }

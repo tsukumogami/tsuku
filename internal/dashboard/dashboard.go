@@ -155,6 +155,8 @@ type FailureRecord struct {
 	Subcategory string   `json:"subcategory,omitempty"`
 	ExitCode    int      `json:"exit_code,omitempty"`
 	BlockedBy   []string `json:"blocked_by,omitempty"` // Added for missing_dep tracking
+	Message     string   `json:"message,omitempty"`
+	WorkflowURL string   `json:"workflow_url,omitempty"`
 }
 
 // PackageFailure is a single failure entry in the legacy batch format.
@@ -165,6 +167,7 @@ type PackageFailure struct {
 	BlockedBy   []string `json:"blocked_by,omitempty"`
 	Message     string   `json:"message"`
 	Timestamp   string   `json:"timestamp"`
+	WorkflowURL string   `json:"workflow_url,omitempty"`
 }
 
 // MetricsRecord represents one line in batch-runs.jsonl.
@@ -908,13 +911,15 @@ func resolveEcosystems(rec MetricsRecord) map[string]int {
 }
 
 // metricsToRunInfo converts a MetricsRecord into a RunInfo.
+// BatchID is derived from the record's timestamp (not the raw batch_id field)
+// to ensure consistent formatting with runs[].batch_id across the dashboard.
 func metricsToRunInfo(rec MetricsRecord) *RunInfo {
 	failed := rec.Total - rec.Merged
 	if failed < 0 {
 		failed = 0
 	}
 	return &RunInfo{
-		BatchID:       rec.BatchID,
+		BatchID:       batchIDFromTimestamp(rec.Timestamp),
 		Ecosystems:    resolveEcosystems(rec),
 		Timestamp:     rec.Timestamp,
 		Succeeded:     rec.Merged,

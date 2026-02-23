@@ -270,9 +270,9 @@ func TestParseFailureFilename(t *testing.T) {
 		batchID   string
 	}{
 		{"homebrew.jsonl", "homebrew", ""},
-		{"homebrew-2026-02-08T02-33-27Z.jsonl", "homebrew", "homebrew-2026-02-08T02-33-27Z"},
+		{"homebrew-2026-02-08T02-33-27Z.jsonl", "homebrew", "2026-02-08T02-33-27Z"},
 		{"failures.jsonl", "failures", ""},
-		{"npm-2026-01-15T10-00-00Z.jsonl", "npm", "npm-2026-01-15T10-00-00Z"},
+		{"npm-2026-01-15T10-00-00Z.jsonl", "npm", "2026-01-15T10-00-00Z"},
 	}
 
 	for _, tt := range tests {
@@ -413,9 +413,9 @@ func TestLoadFailureDetailRecords_perRecipeFormat(t *testing.T) {
 		if d.Subcategory != "install_failed" {
 			t.Errorf("Subcategory: got %q, want %q", d.Subcategory, "install_failed")
 		}
-		// BatchID should be derived from filename
-		if d.BatchID != "homebrew-2026-02-08T02-37-10Z" {
-			t.Errorf("BatchID: got %q, want %q", d.BatchID, "homebrew-2026-02-08T02-37-10Z")
+		// BatchID should be the timestamp portion from filename, without ecosystem prefix
+		if d.BatchID != "2026-02-08T02-37-10Z" {
+			t.Errorf("BatchID: got %q, want %q", d.BatchID, "2026-02-08T02-37-10Z")
 		}
 	}
 }
@@ -943,5 +943,97 @@ func TestLoadFailureDetailRecords_mixedOldNewCategories(t *testing.T) {
 	// pkg1 has "API timeout" message, should match timeout heuristic
 	if byPkg["pkg1"].Subcategory != "timeout" {
 		t.Errorf("pkg1 Subcategory: got %q, want %q (heuristic)", byPkg["pkg1"].Subcategory, "timeout")
+	}
+}
+
+func TestLoadFailureDetailRecords_perRecipeMessageAndWorkflowURL(t *testing.T) {
+	dir := t.TempDir()
+	content := `{"schema_version":1,"recipe":"curl","platform":"linux-x86_64","exit_code":6,"category":"install_failed","message":"binary not found after install","workflow_url":"https://github.com/tsukumogami/tsuku/actions/runs/12345","timestamp":"2026-02-10T03:00:00Z"}
+`
+	if err := os.WriteFile(filepath.Join(dir, "homebrew-2026-02-10T03-00-00Z.jsonl"), []byte(content), 0644); err != nil {
+		t.Fatalf("write temp file: %v", err)
+	}
+
+	details, err := loadFailureDetailRecords(dir, nil)
+	if err != nil {
+		t.Fatalf("loadFailureDetailRecords: %v", err)
+	}
+
+	if len(details) != 1 {
+		t.Fatalf("got %d details, want 1", len(details))
+	}
+
+	d := details[0]
+	if d.Message != "binary not found after install" {
+		t.Errorf("Message: got %q, want %q", d.Message, "binary not found after install")
+	}
+	if d.WorkflowURL != "https://github.com/tsukumogami/tsuku/actions/runs/12345" {
+		t.Errorf("WorkflowURL: got %q, want %q", d.WorkflowURL, "https://github.com/tsukumogami/tsuku/actions/runs/12345")
+	}
+}
+
+func TestLoadFailureDetailRecords_perRecipeMessageTruncation(t *testing.T) {
+	dir := t.TempDir()
+	longMsg := ""
+	for i := 0; i < 600; i++ {
+		longMsg += "x"
+	}
+	content := `{"schema_version":1,"recipe":"curl","platform":"linux-x86_64","exit_code":6,"category":"install_failed","message":"` + longMsg + `","timestamp":"2026-02-10T03:00:00Z"}
+`
+	if err := os.WriteFile(filepath.Join(dir, "homebrew-2026-02-10T03-00-00Z.jsonl"), []byte(content), 0644); err != nil {
+		t.Fatalf("write temp file: %v", err)
+	}
+
+	details, err := loadFailureDetailRecords(dir, nil)
+	if err != nil {
+		t.Fatalf("loadFailureDetailRecords: %v", err)
+	}
+
+	if len(details) != 1 {
+		t.Fatalf("got %d details, want 1", len(details))
+	}
+
+	if len(details[0].Message) > maxMessageLength {
+		t.Errorf("per-recipe message length %d exceeds max %d", len(details[0].Message), maxMessageLength)
+	}
+	if len(details[0].Message) != maxMessageLength {
+		t.Errorf("per-recipe message should be truncated to %d, got %d", maxMessageLength, len(details[0].Message))
+	}
+}
+
+func TestLoadFailureDetailRecords_legacyWorkflowURL(t *testing.T) {
+	dir := t.TempDir()
+	content := `{"schema_version":1,"ecosystem":"homebrew","environment":"linux-x86_64","updated_at":"2026-02-01T00:00:00Z","failures":[{"package_id":"homebrew:wget","category":"network_error","message":"connection refused","workflow_url":"https://github.com/tsukumogami/tsuku/actions/runs/99999","timestamp":"2026-02-01T00:00:01Z"}]}
+`
+	if err := os.WriteFile(filepath.Join(dir, "homebrew.jsonl"), []byte(content), 0644); err != nil {
+		t.Fatalf("write temp file: %v", err)
+	}
+
+	details, err := loadFailureDetailRecords(dir, nil)
+	if err != nil {
+		t.Fatalf("loadFailureDetailRecords: %v", err)
+	}
+
+	if len(details) != 1 {
+		t.Fatalf("got %d details, want 1", len(details))
+	}
+
+	if details[0].WorkflowURL != "https://github.com/tsukumogami/tsuku/actions/runs/99999" {
+		t.Errorf("WorkflowURL: got %q, want %q", details[0].WorkflowURL, "https://github.com/tsukumogami/tsuku/actions/runs/99999")
+	}
+}
+
+func TestParseFailureFilename_batchIDMatchesRunFormat(t *testing.T) {
+	// Batch IDs from failure filenames should match the format used
+	// by runs[].batch_id (timestamp-only, no ecosystem prefix).
+	_, bid := parseFailureFilename("homebrew-2026-02-22T04-26-06Z.jsonl")
+	if bid != "2026-02-22T04-26-06Z" {
+		t.Errorf("batch ID should be timestamp-only: got %q, want %q", bid, "2026-02-22T04-26-06Z")
+	}
+
+	// Verify this matches what batchIDFromTimestamp produces
+	want := batchIDFromTimestamp("2026-02-22T04:26:06Z")
+	if bid != want {
+		t.Errorf("failure batch ID %q should match runs batch ID %q", bid, want)
 	}
 }
