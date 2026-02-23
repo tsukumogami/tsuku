@@ -95,11 +95,12 @@ func (e *Executor) GeneratePlan(ctx context.Context, cfg PlanConfig) (*Installat
 			}
 		} else {
 			linuxFamily = detectedFamily
+			cfg.LinuxFamily = detectedFamily
 		}
 	}
 
 	// Auto-detect GPU vendor when not provided.
-	// Mutates cfg.GPU (unlike linuxFamily above) so the value propagates
+	// Mutates cfg.GPU so the value propagates
 	// to dependency plans via depCfg without additional plumbing.
 	if cfg.GPU == "" {
 		cfg.GPU = platform.DetectGPU()
@@ -111,11 +112,11 @@ func (e *Executor) GeneratePlan(ctx context.Context, cfg PlanConfig) (*Installat
 	var libc string
 	if targetOS == "linux" {
 		if cfg.LinuxFamily != "" {
-			// LinuxFamily was explicitly provided (e.g., via --linux-family flag)
-			// Infer libc from the family to support cross-platform plan generation
+			// LinuxFamily is known (explicitly provided or auto-detected above).
+			// Infer libc from the family to support cross-platform plan generation.
 			libc = platform.LibcForFamily(cfg.LinuxFamily)
 		} else {
-			// No explicit family - detect libc from the local system
+			// No family known - detect libc from the local system
 			libc = platform.DetectLibc()
 		}
 	}
