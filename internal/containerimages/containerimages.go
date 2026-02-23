@@ -1,6 +1,7 @@
 // Package containerimages provides a centralized mapping of Linux families to
-// container images. The mapping is defined in container-images.json at the repo
-// root and embedded into the binary at build time via go:embed.
+// container images and infrastructure packages. The mapping is defined in
+// container-images.json at the repo root and embedded into the binary at build
+// time via go:embed.
 //
 // A go:generate directive copies the root JSON into this package directory so
 // the embed directive can find it. Run `go generate ./internal/containerimages/...`
@@ -19,15 +20,42 @@ import (
 //go:embed container-images.json
 var rawJSON []byte
 
-// images holds the parsed family-to-image mapping, populated at init time.
+// familyConfig holds the container image and infrastructure packages for a
+// Linux family.
+type familyConfig struct {
+	Image         string              `json:"image"`
+	InfraPackages map[string][]string `json:"infra_packages"`
+}
+
+// configs holds the full parsed configuration, populated at init time.
+var configs map[string]familyConfig
+
+// images holds the family-to-image projection, populated at init time.
+// Kept for backward compatibility with existing callers.
 var images map[string]string
 
 func init() {
-	if err := json.Unmarshal(rawJSON, &images); err != nil {
+	if err := json.Unmarshal(rawJSON, &configs); err != nil {
 		panic(fmt.Sprintf("containerimages: invalid embedded container-images.json: %v", err))
 	}
-	if _, ok := images["debian"]; !ok {
+	if _, ok := configs["debian"]; !ok {
 		panic("containerimages: embedded container-images.json missing required \"debian\" entry")
+	}
+
+	// Validate that every entry has the three required infra_packages categories.
+	required := []string{"core", "network", "build"}
+	for family, cfg := range configs {
+		for _, cat := range required {
+			if _, ok := cfg.InfraPackages[cat]; !ok {
+				panic(fmt.Sprintf("containerimages: family %q missing infra_packages.%s", family, cat))
+			}
+		}
+	}
+
+	// Build the image-only projection for backward compat.
+	images = make(map[string]string, len(configs))
+	for family, cfg := range configs {
+		images[family] = cfg.Image
 	}
 }
 
@@ -58,4 +86,22 @@ func Families() []string {
 	}
 	sort.Strings(fams)
 	return fams
+}
+
+// InfraPackages returns the infrastructure package list for a Linux family and
+// category. Category is one of "core", "network", or "build". Returns nil if
+// the family is unknown or the category has no packages.
+func InfraPackages(family, category string) []string {
+	cfg, ok := configs[family]
+	if !ok {
+		return nil
+	}
+	pkgs := cfg.InfraPackages[category]
+	if len(pkgs) == 0 {
+		return nil
+	}
+	// Return a copy to prevent callers from mutating the embedded data.
+	out := make([]string, len(pkgs))
+	copy(out, pkgs)
+	return out
 }

@@ -1,5 +1,5 @@
 {
-  "format_version": 4,
+  "format_version": 5,
   "tool": "patchelf",
   "version": "0.18.0",
   "platform": {
@@ -51,7 +51,7 @@
     }
   ],
   "verify": {
-    "command": "{install_dir}/bin/patchelf --version",
+    "command": "patchelf --version",
     "pattern": "patchelf {version}"
   }
 }

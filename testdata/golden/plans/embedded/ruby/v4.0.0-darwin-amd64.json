@@ -1,5 +1,5 @@
 {
-  "format_version": 4,
+  "format_version": 5,
   "tool": "ruby",
   "version": "4.0.0",
   "platform": {
@@ -82,8 +82,7 @@
         "archive": "ruby-4.0.0-darwin-x64.tar.gz",
         "format": "tar.gz",
         "os_mapping": {
-          "darwin": "darwin",
-          "linux": "ubuntu-22.04"
+          "darwin": "darwin"
         },
         "strip_dirs": 1
       },
@@ -124,7 +123,7 @@
     }
   ],
   "verify": {
-    "command": "{install_dir}/bin/ruby --version",
+    "command": "ruby --version",
     "pattern": "ruby {version}"
   }
 }

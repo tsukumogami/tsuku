@@ -1,5 +1,5 @@
 {
-  "format_version": 4,
+  "format_version": 5,
   "tool": "openssl",
   "version": "3.6.1",
   "platform": {
@@ -11,7 +11,7 @@
   "dependencies": [
     {
       "tool": "zlib",
-      "version": "1.3.1",
+      "version": "1.3.2",
       "dependencies": [
         {
           "tool": "patchelf",
@@ -60,7 +60,7 @@
             }
           ],
           "verify": {
-            "command": "{install_dir}/bin/patchelf --version",
+            "command": "patchelf --version",
             "pattern": "patchelf {version}"
           }
         }
@@ -69,15 +69,15 @@
         {
           "action": "download_file",
           "params": {
-            "checksum": "38f2469db2ce63b70855a98e5ee27b5b5a92874e52542cbdc0b230bba1e7195f",
+            "checksum": "352c7d94d5b64b31b636b3d0b3252a1a8ca82e1020a5b71c7be829667e278dcf",
             "dest": "zlib.tar.gz",
-            "url": "https://ghcr.io/v2/homebrew/core/zlib/blobs/sha256:38f2469db2ce63b70855a98e5ee27b5b5a92874e52542cbdc0b230bba1e7195f"
+            "url": "https://ghcr.io/v2/homebrew/core/zlib/blobs/sha256:352c7d94d5b64b31b636b3d0b3252a1a8ca82e1020a5b71c7be829667e278dcf"
           },
           "evaluable": true,
           "deterministic": true,
-          "url": "https://ghcr.io/v2/homebrew/core/zlib/blobs/sha256:38f2469db2ce63b70855a98e5ee27b5b5a92874e52542cbdc0b230bba1e7195f",
-          "checksum": "38f2469db2ce63b70855a98e5ee27b5b5a92874e52542cbdc0b230bba1e7195f",
-          "size": 175143
+          "url": "https://ghcr.io/v2/homebrew/core/zlib/blobs/sha256:352c7d94d5b64b31b636b3d0b3252a1a8ca82e1020a5b71c7be829667e278dcf",
+          "checksum": "352c7d94d5b64b31b636b3d0b3252a1a8ca82e1020a5b71c7be829667e278dcf",
+          "size": 183040
         },
         {
           "action": "extract",

@@ -1,0 +1,27 @@
+{
+  "format_version": 5,
+  "tool": "patchelf",
+  "version": "0.18.0",
+  "platform": {
+    "os": "linux",
+    "arch": "amd64",
+    "linux_family": "alpine"
+  },
+  "deterministic": false,
+  "steps": [
+    {
+      "action": "apk_install",
+      "params": {
+        "packages": [
+          "patchelf"
+        ]
+      },
+      "evaluable": false,
+      "deterministic": false
+    }
+  ],
+  "verify": {
+    "command": "patchelf --version",
+    "pattern": "patchelf {version}"
+  }
+}

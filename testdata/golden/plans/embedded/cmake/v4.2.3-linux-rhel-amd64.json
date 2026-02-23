@@ -1,5 +1,5 @@
 {
-  "format_version": 4,
+  "format_version": 5,
   "tool": "cmake",
   "version": "4.2.3",
   "platform": {
@@ -64,7 +64,7 @@
                 }
               ],
               "verify": {
-                "command": "{install_dir}/bin/patchelf --version",
+                "command": "patchelf --version",
                 "pattern": "patchelf {version}"
               }
             }

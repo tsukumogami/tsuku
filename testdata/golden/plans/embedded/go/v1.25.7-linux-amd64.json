@@ -1,5 +1,5 @@
 {
-  "format_version": 4,
+  "format_version": 5,
   "tool": "go",
   "version": "1.25.7",
   "platform": {

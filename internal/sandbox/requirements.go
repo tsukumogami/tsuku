@@ -64,6 +64,13 @@ type SandboxRequirements struct {
 
 	// Resources are the recommended resource limits.
 	Resources ResourceLimits
+
+	// ExtraEnv holds additional environment variables for the container in
+	// KEY=VALUE format. These are appended to RunOptions.Env after the
+	// hardcoded sandbox variables. Keys that collide with hardcoded vars
+	// (TSUKU_SANDBOX, TSUKU_HOME, HOME, DEBIAN_FRONTEND, PATH) are
+	// silently dropped to prevent subverting the sandbox environment.
+	ExtraEnv []string
 }
 
 // ComputeSandboxRequirements derives container requirements from a plan.

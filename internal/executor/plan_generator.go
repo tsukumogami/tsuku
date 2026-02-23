@@ -259,8 +259,9 @@ func (e *Executor) GeneratePlan(ctx context.Context, cfg PlanConfig) (*Installat
 	var verify *PlanVerify
 	if e.recipe.Verify != nil && e.recipe.Verify.Command != "" {
 		verify = &PlanVerify{
-			Command: e.recipe.Verify.Command,
-			Pattern: e.recipe.Verify.Pattern,
+			Command:  e.recipe.Verify.Command,
+			Pattern:  e.recipe.Verify.Pattern,
+			ExitCode: e.recipe.Verify.ExitCode,
 		}
 	}
 
@@ -777,8 +778,9 @@ func generateSingleDependencyPlan(
 	var verify *PlanVerify
 	if depRecipe.Verify != nil && depRecipe.Verify.Command != "" {
 		verify = &PlanVerify{
-			Command: depRecipe.Verify.Command,
-			Pattern: depRecipe.Verify.Pattern,
+			Command:  depRecipe.Verify.Command,
+			Pattern:  depRecipe.Verify.Pattern,
+			ExitCode: depRecipe.Verify.ExitCode,
 		}
 	}
 
