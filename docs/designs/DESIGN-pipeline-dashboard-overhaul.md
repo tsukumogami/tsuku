@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Accepted
 problem: |
   Four of six ecosystem circuit breakers are permanently stuck open because
   half-open probes retry failed entries instead of trying pending ones, and
@@ -27,7 +27,7 @@ rationale: |
 
 ## Status
 
-Proposed
+Accepted
 
 ## Context and Problem Statement
 
