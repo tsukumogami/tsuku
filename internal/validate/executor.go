@@ -330,24 +330,20 @@ func (e *Executor) buildPlanInstallScript(r *recipe.Recipe) string {
 }
 
 // checkVerification checks if the verification output matches expectations.
+// Delegates to executor.CheckPlanVerification for the shared implementation.
 func (e *Executor) checkVerification(r *recipe.Recipe, result *RunResult) bool {
-	// If exit code is non-zero, verification failed
 	expectedExitCode := 0
 	if r.Verify != nil && r.Verify.ExitCode != nil {
 		expectedExitCode = *r.Verify.ExitCode
 	}
-	if result.ExitCode != expectedExitCode {
-		return false
+
+	pattern := ""
+	if r.Verify != nil {
+		pattern = r.Verify.Pattern
 	}
 
-	// If no pattern specified, just check exit code
-	if r.Verify == nil || r.Verify.Pattern == "" {
-		return true
-	}
-
-	// Check if pattern appears in stdout or stderr
 	output := result.Stdout + result.Stderr
-	return strings.Contains(output, r.Verify.Pattern)
+	return planexec.CheckPlanVerification(result.ExitCode, output, expectedExitCode, pattern)
 }
 
 // GetAssetChecksum returns the SHA256 checksum of a downloaded asset.

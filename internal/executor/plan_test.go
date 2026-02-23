@@ -313,8 +313,9 @@ func TestFormatVersionConstant(t *testing.T) {
 	// Version 2 introduced composite action decomposition (issue #440)
 	// Version 3 introduced nested dependency plans (issue #621)
 	// Version 4 removed recipe_hash field (issue #1585)
-	if PlanFormatVersion != 4 {
-		t.Errorf("PlanFormatVersion: got %d, want 4", PlanFormatVersion)
+	// Version 5 added ExitCode to PlanVerify for sandbox verification (issue #1942)
+	if PlanFormatVersion != 5 {
+		t.Errorf("PlanFormatVersion: got %d, want 5", PlanFormatVersion)
 	}
 }
 

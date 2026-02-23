@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/tsukumogami/tsuku/internal/executor"
@@ -23,12 +24,14 @@ const ContainerLabelPrefix = "io.tsuku.sandbox"
 
 // SandboxResult contains the result of a sandbox test.
 type SandboxResult struct {
-	Passed   bool   // Whether the sandbox test succeeded
-	Skipped  bool   // Whether the test was skipped (no runtime)
-	ExitCode int    // Container exit code
-	Stdout   string // Container stdout
-	Stderr   string // Container stderr
-	Error    error  // Error if sandbox failed to run
+	Passed         bool   // Whether the sandbox test succeeded (install AND verify)
+	Skipped        bool   // Whether the test was skipped (no runtime)
+	ExitCode       int    // Container exit code
+	Stdout         string // Container stdout
+	Stderr         string // Container stderr
+	Error          error  // Error if sandbox failed to run
+	Verified       bool   // Whether verify command passed (true if no verify command)
+	VerifyExitCode int    // Verify command's exit code (-1 if no verify command)
 }
 
 // Executor orchestrates container-based sandbox testing.
@@ -301,23 +304,82 @@ func (e *Executor) Sandbox(
 	result, err := runtime.Run(ctx, opts)
 	if err != nil {
 		return &SandboxResult{
-			Passed:   false,
-			ExitCode: -1,
-			Stdout:   result.Stdout,
-			Stderr:   result.Stderr,
-			Error:    err,
+			Passed:         false,
+			ExitCode:       -1,
+			Stdout:         result.Stdout,
+			Stderr:         result.Stderr,
+			Error:          err,
+			Verified:       false,
+			VerifyExitCode: -1,
 		}, nil
 	}
 
-	// Check if verification passed (exit code 0 for now)
-	passed := result.ExitCode == 0
+	// If install itself failed, don't check verification
+	if result.ExitCode != 0 {
+		return &SandboxResult{
+			Passed:         false,
+			ExitCode:       result.ExitCode,
+			Stdout:         result.Stdout,
+			Stderr:         result.Stderr,
+			Verified:       false,
+			VerifyExitCode: -1,
+		}, nil
+	}
+
+	// Install succeeded. Now check verification results.
+	verified, verifyExitCode := e.readVerifyResults(workspaceDir, plan)
 
 	return &SandboxResult{
-		Passed:   passed,
-		ExitCode: result.ExitCode,
-		Stdout:   result.Stdout,
-		Stderr:   result.Stderr,
+		Passed:         verified,
+		ExitCode:       result.ExitCode,
+		Stdout:         result.Stdout,
+		Stderr:         result.Stderr,
+		Verified:       verified,
+		VerifyExitCode: verifyExitCode,
 	}, nil
+}
+
+// readVerifyResults reads verification marker files from the workspace and
+// evaluates the verify results using CheckVerification.
+// Returns (verified, verifyExitCode).
+// If no verify command exists, returns (true, -1).
+func (e *Executor) readVerifyResults(workspaceDir string, plan *executor.InstallationPlan) (bool, int) {
+	// If no verify command, verification is considered passed
+	if plan.Verify == nil || plan.Verify.Command == "" {
+		return true, -1
+	}
+
+	// Read marker files
+	exitPath := filepath.Join(workspaceDir, ".sandbox-verify-exit")
+	outputPath := filepath.Join(workspaceDir, ".sandbox-verify-output")
+
+	exitData, err := os.ReadFile(exitPath)
+	if err != nil {
+		// Marker files don't exist -- something went wrong with the verify step
+		e.logger.Debug("Failed to read verify exit marker", "error", err)
+		return false, -1
+	}
+
+	verifyExitCode, err := strconv.Atoi(strings.TrimSpace(string(exitData)))
+	if err != nil {
+		e.logger.Debug("Failed to parse verify exit code", "error", err)
+		return false, -1
+	}
+
+	output := ""
+	outputData, err := os.ReadFile(outputPath)
+	if err == nil {
+		output = string(outputData)
+	}
+
+	// Determine expected exit code (default 0)
+	expectedExitCode := 0
+	if plan.Verify.ExitCode != nil {
+		expectedExitCode = *plan.Verify.ExitCode
+	}
+
+	verified := CheckVerification(verifyExitCode, output, expectedExitCode, plan.Verify.Pattern)
+	return verified, verifyExitCode
 }
 
 // augmentWithInfrastructurePackages adds packages needed for sandbox execution
@@ -442,6 +504,15 @@ func (e *Executor) buildSandboxScript(
 	// tsuku handles build tool dependencies automatically via ActionDependencies
 	sb.WriteString("# Run tsuku install with pre-generated plan\n")
 	sb.WriteString("tsuku install --plan /workspace/plan.json --force\n")
+
+	// Append verify block if the plan has a verify command
+	if plan.Verify != nil && plan.Verify.Command != "" {
+		sb.WriteString("\n# Run verify command and capture results to marker files\n")
+		sb.WriteString("set +e\n")
+		sb.WriteString("export PATH=\"$TSUKU_HOME/bin:$TSUKU_HOME/tools/current:$PATH\"\n")
+		sb.WriteString(fmt.Sprintf("%s > /workspace/.sandbox-verify-output 2>&1\n", plan.Verify.Command))
+		sb.WriteString("echo $? > /workspace/.sandbox-verify-exit\n")
+	}
 
 	return sb.String()
 }

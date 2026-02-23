@@ -2,6 +2,7 @@ package sandbox
 
 import (
 	"context"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -358,5 +359,381 @@ func TestSandbox_NoRuntime(t *testing.T) {
 	// Should be skipped since we don't have a valid setup
 	if !result.Skipped {
 		t.Log("Note: Runtime was found, test may need container environment")
+	}
+}
+
+func TestBuildSandboxScript_WithVerifyCommand(t *testing.T) {
+	t.Parallel()
+
+	exec := &Executor{}
+	plan := &executor.InstallationPlan{
+		Tool:    "test-tool",
+		Version: "1.0.0",
+		Verify: &executor.PlanVerify{
+			Command: "test-tool --version",
+			Pattern: "1.0.0",
+		},
+	}
+	reqs := &SandboxRequirements{
+		Image:     "debian:bookworm-slim",
+		Resources: DefaultLimits(),
+	}
+
+	script := exec.buildSandboxScript(plan, reqs)
+
+	// Should contain set +e before verify
+	if !strings.Contains(script, "set +e") {
+		t.Error("Script should contain 'set +e' before verify command")
+	}
+
+	// Should redirect output to marker file
+	if !strings.Contains(script, ".sandbox-verify-output") {
+		t.Error("Script should redirect verify output to marker file")
+	}
+
+	// Should write exit code to marker file
+	if !strings.Contains(script, ".sandbox-verify-exit") {
+		t.Error("Script should write verify exit code to marker file")
+	}
+
+	// Should contain the verify command
+	if !strings.Contains(script, "test-tool --version") {
+		t.Error("Script should contain the verify command text")
+	}
+
+	// Should add TSUKU_HOME/bin and TSUKU_HOME/tools/current to PATH
+	if !strings.Contains(script, "$TSUKU_HOME/bin") {
+		t.Error("Script should add $TSUKU_HOME/bin to PATH")
+	}
+	if !strings.Contains(script, "$TSUKU_HOME/tools/current") {
+		t.Error("Script should add $TSUKU_HOME/tools/current to PATH")
+	}
+}
+
+func TestBuildSandboxScript_WithoutVerifyCommand(t *testing.T) {
+	t.Parallel()
+
+	exec := &Executor{}
+	plan := &executor.InstallationPlan{
+		Tool:    "test-tool",
+		Version: "1.0.0",
+		// No Verify field
+	}
+	reqs := &SandboxRequirements{
+		Image:     "debian:bookworm-slim",
+		Resources: DefaultLimits(),
+	}
+
+	script := exec.buildSandboxScript(plan, reqs)
+
+	// Should NOT contain verify-related marker files
+	if strings.Contains(script, ".sandbox-verify-output") {
+		t.Error("Script without verify should not contain verify output marker")
+	}
+	if strings.Contains(script, ".sandbox-verify-exit") {
+		t.Error("Script without verify should not contain verify exit marker")
+	}
+
+	// Should NOT contain set +e (only set -e from the start)
+	if strings.Contains(script, "set +e") {
+		t.Error("Script without verify should not contain 'set +e'")
+	}
+
+	// Should still contain install command
+	if !strings.Contains(script, "tsuku install --plan") {
+		t.Error("Script should still contain install command")
+	}
+}
+
+func TestBuildSandboxScript_EmptyVerifyCommand(t *testing.T) {
+	t.Parallel()
+
+	exec := &Executor{}
+	plan := &executor.InstallationPlan{
+		Tool:    "test-tool",
+		Version: "1.0.0",
+		Verify: &executor.PlanVerify{
+			Command: "", // Empty command
+			Pattern: "1.0.0",
+		},
+	}
+	reqs := &SandboxRequirements{
+		Image:     "debian:bookworm-slim",
+		Resources: DefaultLimits(),
+	}
+
+	script := exec.buildSandboxScript(plan, reqs)
+
+	// Empty command should not produce verify block
+	if strings.Contains(script, ".sandbox-verify-output") {
+		t.Error("Script with empty verify command should not contain verify block")
+	}
+}
+
+func TestBuildSandboxScript_VerifyWithNonDefaultExitCode(t *testing.T) {
+	t.Parallel()
+
+	exitCode := 2
+	exec := &Executor{}
+	plan := &executor.InstallationPlan{
+		Tool:    "test-tool",
+		Version: "1.0.0",
+		Verify: &executor.PlanVerify{
+			Command:  "test-tool check",
+			Pattern:  "ok",
+			ExitCode: &exitCode,
+		},
+	}
+	reqs := &SandboxRequirements{
+		Image:     "debian:bookworm-slim",
+		Resources: DefaultLimits(),
+	}
+
+	script := exec.buildSandboxScript(plan, reqs)
+
+	// The script itself doesn't change for non-default exit codes;
+	// the expected exit code is evaluated in Go, not in the script.
+	// Script should still have the verify block.
+	if !strings.Contains(script, "test-tool check") {
+		t.Error("Script should contain the verify command")
+	}
+	if !strings.Contains(script, ".sandbox-verify-exit") {
+		t.Error("Script should write exit code to marker file")
+	}
+}
+
+func TestSandboxResult_VerificationFields(t *testing.T) {
+	t.Parallel()
+
+	// Test with verification passed
+	result := &SandboxResult{
+		Passed:         true,
+		ExitCode:       0,
+		Verified:       true,
+		VerifyExitCode: 0,
+	}
+	if !result.Verified {
+		t.Error("Verified should be true")
+	}
+	if result.VerifyExitCode != 0 {
+		t.Errorf("VerifyExitCode = %d, want 0", result.VerifyExitCode)
+	}
+
+	// Test with no verify command
+	result2 := &SandboxResult{
+		Passed:         true,
+		ExitCode:       0,
+		Verified:       true,
+		VerifyExitCode: -1,
+	}
+	if !result2.Verified {
+		t.Error("Verified should be true when no verify command")
+	}
+	if result2.VerifyExitCode != -1 {
+		t.Errorf("VerifyExitCode = %d, want -1", result2.VerifyExitCode)
+	}
+}
+
+func TestReadVerifyResults_NoVerifyCommand(t *testing.T) {
+	t.Parallel()
+
+	exec := &Executor{logger: log.NewNoop()}
+	plan := &executor.InstallationPlan{
+		Tool:    "test-tool",
+		Version: "1.0.0",
+		// No Verify field
+	}
+
+	verified, exitCode := exec.readVerifyResults("/nonexistent", plan)
+	if !verified {
+		t.Error("Expected verified=true when no verify command")
+	}
+	if exitCode != -1 {
+		t.Errorf("Expected exitCode=-1 when no verify command, got %d", exitCode)
+	}
+}
+
+func TestReadVerifyResults_EmptyVerifyCommand(t *testing.T) {
+	t.Parallel()
+
+	exec := &Executor{logger: log.NewNoop()}
+	plan := &executor.InstallationPlan{
+		Tool:    "test-tool",
+		Version: "1.0.0",
+		Verify:  &executor.PlanVerify{Command: ""},
+	}
+
+	verified, exitCode := exec.readVerifyResults("/nonexistent", plan)
+	if !verified {
+		t.Error("Expected verified=true when verify command is empty")
+	}
+	if exitCode != -1 {
+		t.Errorf("Expected exitCode=-1 when verify command is empty, got %d", exitCode)
+	}
+}
+
+func TestReadVerifyResults_MarkerFilesExist(t *testing.T) {
+	t.Parallel()
+
+	// Create temp workspace with marker files
+	workspaceDir := t.TempDir()
+
+	// Write exit code marker
+	exitPath := workspaceDir + "/.sandbox-verify-exit"
+	if err := os.WriteFile(exitPath, []byte("0\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Write output marker
+	outputPath := workspaceDir + "/.sandbox-verify-output"
+	if err := os.WriteFile(outputPath, []byte("test-tool v1.0.0\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	exec := &Executor{logger: log.NewNoop()}
+	plan := &executor.InstallationPlan{
+		Tool:    "test-tool",
+		Version: "1.0.0",
+		Verify: &executor.PlanVerify{
+			Command: "test-tool --version",
+			Pattern: "1.0.0",
+		},
+	}
+
+	verified, exitCode := exec.readVerifyResults(workspaceDir, plan)
+	if !verified {
+		t.Error("Expected verified=true when pattern matches")
+	}
+	if exitCode != 0 {
+		t.Errorf("Expected exitCode=0, got %d", exitCode)
+	}
+}
+
+func TestReadVerifyResults_PatternMismatch(t *testing.T) {
+	t.Parallel()
+
+	workspaceDir := t.TempDir()
+
+	exitPath := workspaceDir + "/.sandbox-verify-exit"
+	if err := os.WriteFile(exitPath, []byte("0\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	outputPath := workspaceDir + "/.sandbox-verify-output"
+	if err := os.WriteFile(outputPath, []byte("wrong output\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	exec := &Executor{logger: log.NewNoop()}
+	plan := &executor.InstallationPlan{
+		Tool:    "test-tool",
+		Version: "1.0.0",
+		Verify: &executor.PlanVerify{
+			Command: "test-tool --version",
+			Pattern: "1.0.0",
+		},
+	}
+
+	verified, exitCode := exec.readVerifyResults(workspaceDir, plan)
+	if verified {
+		t.Error("Expected verified=false when pattern does not match")
+	}
+	if exitCode != 0 {
+		t.Errorf("Expected exitCode=0, got %d", exitCode)
+	}
+}
+
+func TestReadVerifyResults_NonZeroExitCode(t *testing.T) {
+	t.Parallel()
+
+	workspaceDir := t.TempDir()
+
+	exitPath := workspaceDir + "/.sandbox-verify-exit"
+	if err := os.WriteFile(exitPath, []byte("1\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	outputPath := workspaceDir + "/.sandbox-verify-output"
+	if err := os.WriteFile(outputPath, []byte("error\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	exec := &Executor{logger: log.NewNoop()}
+	plan := &executor.InstallationPlan{
+		Tool:    "test-tool",
+		Version: "1.0.0",
+		Verify: &executor.PlanVerify{
+			Command: "test-tool --version",
+			Pattern: "",
+		},
+	}
+
+	verified, exitCode := exec.readVerifyResults(workspaceDir, plan)
+	if verified {
+		t.Error("Expected verified=false when exit code is non-zero")
+	}
+	if exitCode != 1 {
+		t.Errorf("Expected exitCode=1, got %d", exitCode)
+	}
+}
+
+func TestReadVerifyResults_NonDefaultExpectedExitCode(t *testing.T) {
+	t.Parallel()
+
+	workspaceDir := t.TempDir()
+
+	exitPath := workspaceDir + "/.sandbox-verify-exit"
+	if err := os.WriteFile(exitPath, []byte("2\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	outputPath := workspaceDir + "/.sandbox-verify-output"
+	if err := os.WriteFile(outputPath, []byte("check passed\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	expectedCode := 2
+	exec := &Executor{logger: log.NewNoop()}
+	plan := &executor.InstallationPlan{
+		Tool:    "test-tool",
+		Version: "1.0.0",
+		Verify: &executor.PlanVerify{
+			Command:  "test-tool check",
+			Pattern:  "check passed",
+			ExitCode: &expectedCode,
+		},
+	}
+
+	verified, exitCode := exec.readVerifyResults(workspaceDir, plan)
+	if !verified {
+		t.Error("Expected verified=true when non-default exit code matches and pattern found")
+	}
+	if exitCode != 2 {
+		t.Errorf("Expected exitCode=2, got %d", exitCode)
+	}
+}
+
+func TestReadVerifyResults_MissingMarkerFiles(t *testing.T) {
+	t.Parallel()
+
+	workspaceDir := t.TempDir()
+	// Don't create any marker files
+
+	exec := &Executor{logger: log.NewNoop()}
+	plan := &executor.InstallationPlan{
+		Tool:    "test-tool",
+		Version: "1.0.0",
+		Verify: &executor.PlanVerify{
+			Command: "test-tool --version",
+			Pattern: "1.0.0",
+		},
+	}
+
+	verified, exitCode := exec.readVerifyResults(workspaceDir, plan)
+	if verified {
+		t.Error("Expected verified=false when marker files are missing")
+	}
+	if exitCode != -1 {
+		t.Errorf("Expected exitCode=-1 when marker files are missing, got %d", exitCode)
 	}
 }

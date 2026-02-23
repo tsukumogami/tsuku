@@ -16,7 +16,8 @@ import (
 //   - Version 2: Composite actions decomposed to primitives (introduced in #440)
 //   - Version 3: Nested dependencies for self-contained plans (introduced in #621)
 //   - Version 4: Removed recipe_hash field (cache uses content-based hashing) (#1585)
-const PlanFormatVersion = 4
+//   - Version 5: Added ExitCode to PlanVerify for sandbox verification (#1942)
+const PlanFormatVersion = 5
 
 // InstallationPlan represents a fully-resolved, deterministic specification
 // for installing a tool. Plans capture the exact URLs, checksums, and steps
@@ -78,8 +79,9 @@ type DependencyPlan struct {
 
 // PlanVerify captures verification information from the recipe.
 type PlanVerify struct {
-	Command string `json:"command,omitempty"`
-	Pattern string `json:"pattern,omitempty"`
+	Command  string `json:"command,omitempty"`
+	Pattern  string `json:"pattern,omitempty"`
+	ExitCode *int   `json:"exit_code,omitempty"` // Expected exit code (default: 0)
 }
 
 // Platform identifies the target operating system and architecture.
@@ -221,7 +223,7 @@ func (e *PlanValidationError) Error() string {
 //   - Unknown actions are rejected
 //   - The composite "download" action is rejected (use download_file primitive)
 //   - download_file actions must have a non-empty Checksum field (security requirement)
-//   - Format version must be supported (version 2 or 3)
+//   - Format version must be supported (version 2 through 5)
 //   - All nested dependencies are validated recursively
 //
 // Note: Non-evaluable actions like npm_install, run_command, etc. are allowed
