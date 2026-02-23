@@ -255,3 +255,121 @@ func TestExtractSystemPackagesFromSteps(t *testing.T) {
 		})
 	}
 }
+
+func TestExtractSystemRequirementsFromPlan(t *testing.T) {
+	tests := []struct {
+		name         string
+		plan         *InstallationPlan
+		wantPackages map[string][]string
+		wantNil      bool
+	}{
+		{
+			name:    "nil plan",
+			plan:    nil,
+			wantNil: true,
+		},
+		{
+			name: "top-level packages only",
+			plan: &InstallationPlan{
+				Steps: []ResolvedStep{
+					{Action: "apk_install", Params: map[string]any{"packages": []any{"ruby"}}},
+				},
+			},
+			wantPackages: map[string][]string{"apk": {"ruby"}},
+		},
+		{
+			name: "dependency packages included",
+			plan: &InstallationPlan{
+				Dependencies: []DependencyPlan{
+					{
+						Tool:    "libyaml",
+						Version: "0.2.5",
+						Steps: []ResolvedStep{
+							{Action: "apk_install", Params: map[string]any{"packages": []any{"yaml-dev"}}},
+						},
+					},
+				},
+				Steps: []ResolvedStep{
+					{Action: "apk_install", Params: map[string]any{"packages": []any{"ruby"}}},
+				},
+			},
+			wantPackages: map[string][]string{"apk": {"yaml-dev", "ruby"}},
+		},
+		{
+			name: "nested dependency packages included",
+			plan: &InstallationPlan{
+				Dependencies: []DependencyPlan{
+					{
+						Tool:    "openssl",
+						Version: "3.0",
+						Dependencies: []DependencyPlan{
+							{
+								Tool:    "zlib",
+								Version: "1.3",
+								Steps: []ResolvedStep{
+									{Action: "apk_install", Params: map[string]any{"packages": []any{"zlib-dev"}}},
+								},
+							},
+						},
+						Steps: []ResolvedStep{
+							{Action: "apk_install", Params: map[string]any{"packages": []any{"openssl-dev"}}},
+						},
+					},
+				},
+				Steps: []ResolvedStep{
+					{Action: "apk_install", Params: map[string]any{"packages": []any{"ruby"}}},
+				},
+			},
+			wantPackages: map[string][]string{"apk": {"zlib-dev", "openssl-dev", "ruby"}},
+		},
+		{
+			name: "no system packages in dependencies",
+			plan: &InstallationPlan{
+				Dependencies: []DependencyPlan{
+					{
+						Tool:    "libyaml",
+						Version: "0.2.5",
+						Steps: []ResolvedStep{
+							{Action: "download", Params: map[string]any{"url": "https://example.com"}},
+						},
+					},
+				},
+				Steps: []ResolvedStep{
+					{Action: "download", Params: map[string]any{"url": "https://example.com"}},
+				},
+			},
+			wantNil: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := ExtractSystemRequirementsFromPlan(tt.plan)
+			if tt.wantNil {
+				if got != nil {
+					t.Errorf("expected nil, got %+v", got)
+				}
+				return
+			}
+			if got == nil {
+				t.Fatal("expected non-nil SystemRequirements")
+			}
+			for mgr, wantPkgs := range tt.wantPackages {
+				gotPkgs, ok := got.Packages[mgr]
+				if !ok {
+					t.Errorf("missing package manager %q in result", mgr)
+					continue
+				}
+				if len(gotPkgs) != len(wantPkgs) {
+					t.Errorf("packages[%s] got %v, want %v", mgr, gotPkgs, wantPkgs)
+					continue
+				}
+				for i, pkg := range gotPkgs {
+					if pkg != wantPkgs[i] {
+						t.Errorf("packages[%s][%d] = %q, want %q", mgr, i, pkg, wantPkgs[i])
+					}
+				}
+			}
+		})
+	}
+}

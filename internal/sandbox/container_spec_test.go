@@ -169,7 +169,7 @@ func TestDeriveContainerSpec_BuildCommands(t *testing.T) {
 			name:     "alpine - apk packages",
 			packages: map[string][]string{"apk": {"bash", "curl"}},
 			wantCommands: []string{
-				"RUN apk update && apk add --no-cache bash curl",
+				"RUN apk add --no-cache bash curl",
 			},
 		},
 		{
