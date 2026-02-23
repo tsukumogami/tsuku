@@ -20,11 +20,19 @@ Operational procedures for the batch recipe generation pipeline. Each section fo
 - Single ecosystem affected: check ecosystem-specific issues first
 - All ecosystems affected: check infrastructure (GitHub Actions, network)
 - During deployment window: likely a deployment issue
-- Circuit breaker already tripped: automatic recovery in progress, monitor
+- Circuit breaker already tripped: automatic recovery in progress (half-open probes prefer pending entries), monitor
 
 ### Investigation Steps
 
-1. Check the pipeline dashboard health panel at `/pipeline/` for a quick overview. It shows circuit breaker state per ecosystem, last run timestamps, runs since last success, and a warning if no batch has run in >2 hours. Each batch run now includes a per-ecosystem breakdown (e.g., "homebrew: 3, cargo: 5") so you can tell at a glance which ecosystems contributed to a given run. If any ecosystem was skipped because its circuit breaker was open, the health panel calls that out directly -- you don't need to query `batch-control.json` to find breaker skips. This is the fastest way to assess the situation before deeper investigation.
+1. Check the pipeline dashboard at `/pipeline/` for a quick overview. Three widgets split the information that used to live in a single health panel:
+
+   - **Pipeline Health** shows last run timestamp, last success, runs since last success, and a staleness warning if no batch has run in >2 hours. It also shows a summary count of open/half-open breakers.
+   - **Ecosystem Health** shows per-ecosystem circuit breaker state (closed/open/half-open), consecutive failure count, last failure timestamp, and time until recovery for open breakers. Clicking an ecosystem links to its filtered failures page.
+   - **Ecosystem Pipeline** shows per-ecosystem queue counts broken out by status (pending, failed, success, blocked, requires_manual) with mini progress bars. This tells you where work is concentrated and which ecosystems are stalled.
+
+   All timestamps display in ET (America/New_York). Recent Runs shows human-readable ET timestamps with ecosystem badges. Recent Failures includes an ecosystem column, clickable package names, and subcategory details.
+
+   This is the fastest way to assess the situation before deeper investigation.
 
 2. Check which ecosystems have failures:
 
@@ -85,7 +93,7 @@ Operational procedures for the batch recipe generation pipeline. Each section fo
 
 ### Resolution
 
-- **Transient failures**: Wait for circuit breaker auto-recovery. The breaker transitions from `open` to `half-open` after its timeout period, then back to `closed` on the next success.
+- **Transient failures**: Wait for circuit breaker auto-recovery. The breaker transitions from `open` to `half-open` after its timeout period. Half-open probes bypass per-entry backoff and prefer pending entries over previously-failed ones, so recovery is more effective when untried entries exist in the queue. On the next probe success the breaker transitions back to `closed`.
 - **Persistent failures**: Disable the affected ecosystem via the control file (see Emergency Stop below) and investigate root cause.
 
 ### Escalation
