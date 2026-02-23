@@ -2,7 +2,7 @@
   "design_doc": "docs/designs/DESIGN-binary-name-discovery.md",
   "branch": "docs/deterministic-recipe-repair",
   "pr_number": 1934,
-  "integrity_hash": "sha256:b075060581ec8c79d15010c6276140b48e727af54d1c5cfd77daf1ae4f56732f",
+  "integrity_hash": "sha256:b4dc8ea5ec81464863edf2d21089ae680b9fb97ecb924d2bb7f842929e309852",
   "issues": [
     {
       "number": 1936,
@@ -179,8 +179,8 @@
     {
       "number": 1938,
       "title": "feat(builders): add `BinaryNameProvider` and orchestrator validation",
-      "status": "pushed",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "ci_fix_attempts": 0,
       "issue_type": "code",
       "dependencies": [
@@ -307,16 +307,121 @@
     {
       "number": 1939,
       "title": "feat(builders): add PyPI wheel-based executable discovery",
-      "status": "pending",
+      "status": "pushed",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [
         1938
       ],
-      "commits": [],
-      "agent_type": "",
-      "summary": null,
+      "commits": [
+        "120fdbceb5438da25b8d84813f584816e045bfad"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          "internal/builders/artifact.go",
+          "internal/builders/artifact_test.go",
+          "internal/builders/pypi.go",
+          "internal/builders/pypi_wheel_test.go"
+        ],
+        "tests_added": 31,
+        "key_decisions": "Used httptest.NewTLSServer for HTTPS-only tests. PEP 503 normalization for dist-info matching. parseConsoleScripts handles comment lines. Separate pypi_wheel_test.go for wheel-specific tests.",
+        "requirements_map": [
+          {
+            "ac": "artifact.go download helper",
+            "status": "implemented"
+          },
+          {
+            "ac": "HTTPS-only",
+            "status": "implemented"
+          },
+          {
+            "ac": "size limit",
+            "status": "implemented"
+          },
+          {
+            "ac": "content-type verification",
+            "status": "implemented"
+          },
+          {
+            "ac": "in-memory download",
+            "status": "implemented"
+          },
+          {
+            "ac": "SHA256 hash verification",
+            "status": "implemented"
+          },
+          {
+            "ac": "wheel discovery first, pyproject fallback",
+            "status": "implemented"
+          },
+          {
+            "ac": "bdist_wheel preference",
+            "status": "implemented"
+          },
+          {
+            "ac": "py3-none-any preference",
+            "status": "implemented"
+          },
+          {
+            "ac": "entry_points.txt parsing",
+            "status": "implemented"
+          },
+          {
+            "ac": "console_scripts extraction",
+            "status": "implemented"
+          },
+          {
+            "ac": "isValidExecutableName validation",
+            "status": "implemented"
+          },
+          {
+            "ac": "50 max executables",
+            "status": "implemented"
+          },
+          {
+            "ac": "fallback preserved",
+            "status": "implemented"
+          },
+          {
+            "ac": "BinaryNameProvider on PyPIBuilder",
+            "status": "implemented"
+          },
+          {
+            "ac": "31 unit tests",
+            "status": "implemented"
+          },
+          {
+            "ac": "artifact helper for #1940",
+            "status": "implemented"
+          }
+        ]
+      },
+      "reviewer_results": {
+        "issue": 1939,
+        "reviewers": [
+          {
+            "focus": "pragmatic",
+            "blocking_count": 0,
+            "advisory_count": 2
+          },
+          {
+            "focus": "architect",
+            "blocking_count": 0,
+            "advisory_count": 1
+          },
+          {
+            "focus": "maintainer",
+            "blocking_count": 0,
+            "advisory_count": 3
+          }
+        ],
+        "verdict": "pass",
+        "total_blocking": 0,
+        "total_advisory": 6
+      },
       "testable_scenarios": [
         "scenario-9",
         "scenario-10",
