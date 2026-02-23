@@ -108,7 +108,7 @@ jobs:
             echo "has_recipes=false" >> "$GITHUB_OUTPUT"
           fi
 
-  # Linux x86_64: test in Docker containers for all five families.
+  # Linux x86_64: test in sandbox containers for all five families.
   test-linux-x86_64:
     needs: build
     if: needs.build.outputs.has_recipes == 'true'
@@ -130,12 +130,7 @@ jobs:
           RECIPES: ${{ needs.build.outputs.recipes }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Five Linux x86_64 families (images from container-images.json)
           FAMILIES=("debian" "rhel" "arch" "suse" "alpine")
-          IMAGES=()
-          for f in "${FAMILIES[@]}"; do
-            IMAGES+=("$(jq -r --arg f "$f" '.[$f]' container-images.json)")
-          done
 
           TOTAL=0
           PASSED=0
@@ -147,40 +142,27 @@ jobs:
             recipe_name=$(echo "$RECIPES" | jq -r ".[$i].name")
             recipe_path=$(echo "$RECIPES" | jq -r ".[$i].path")
 
-            for idx in "${!FAMILIES[@]}"; do
-              family="${FAMILIES[$idx]}"
-              image="${IMAGES[$idx]}"
+            for family in "${FAMILIES[@]}"; do
               TOTAL=$((TOTAL + 1))
 
               echo "::group::$recipe_name on $family (x86_64)"
 
-              docker run --rm \
-                -e GITHUB_TOKEN \
-                -v "$PWD:/workspace" \
-                -w /workspace \
-                "$image" \
-                sh -c "
-                  case '$family' in
-                    alpine) apk add --no-cache curl bash ca-certificates jq build-base ;;
-                    debian) apt-get update && apt-get install -y --no-install-recommends curl ca-certificates jq build-essential ;;
-                    rhel)   dnf install -y --setopt=install_weak_deps=False curl ca-certificates jq gcc make ;;
-                    arch)   pacman -Sy --noconfirm curl ca-certificates jq gcc make ;;
-                    suse)   zypper -n install curl ca-certificates jq gcc make ;;
-                  esac
-                  export TSUKU_HOME='/tmp/tsuku-$recipe_name'
-                  mkdir -p \"\$TSUKU_HOME\"
-                  timeout 300 ./tsuku-linux-amd64 install --force --recipe '$recipe_path'
-                  echo \$? > /workspace/.tsuku-exit-code
-                " 2>&1 || true
+              RESULT_FILE=".result-${recipe_name}-${family}.json"
 
-              if [ -f .tsuku-exit-code ]; then
-                EXIT_CODE=$(cat .tsuku-exit-code)
-                rm -f .tsuku-exit-code
+              ./tsuku-linux-amd64 install --sandbox --force --recipe "$recipe_path" \
+                --target-family "$family" \
+                --env GITHUB_TOKEN="$GITHUB_TOKEN" \
+                --json > "$RESULT_FILE" 2>/dev/null || true
+
+              if [ -f "$RESULT_FILE" ] && jq -e . "$RESULT_FILE" > /dev/null 2>&1; then
+                SANDBOX_PASSED=$(jq -r '.passed' "$RESULT_FILE")
+                EXIT_CODE=$(jq -r '.install_exit_code' "$RESULT_FILE")
               else
+                SANDBOX_PASSED="false"
                 EXIT_CODE=1
               fi
 
-              if [ "$EXIT_CODE" = "0" ]; then
+              if [ "$SANDBOX_PASSED" = "true" ]; then
                 PASSED=$((PASSED + 1))
                 RESULTS="$RESULTS| $recipe_name | $family | pass |\n"
                 echo "PASS: $recipe_name on $family"
@@ -215,7 +197,7 @@ jobs:
             exit 1
           fi
 
-  # Linux arm64: test in Docker containers for four families (no arch arm64 image).
+  # Linux arm64: test in sandbox containers for four families (no arch arm64 image).
   test-linux-arm64:
     needs: build
     if: needs.build.outputs.has_recipes == 'true'
@@ -238,12 +220,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Four Linux arm64 families (no arch -- no arm64 image available)
-          # Images from container-images.json
           FAMILIES=("debian" "rhel" "suse" "alpine")
-          IMAGES=()
-          for f in "${FAMILIES[@]}"; do
-            IMAGES+=("$(jq -r --arg f "$f" '.[$f]' container-images.json)")
-          done
 
           TOTAL=0
           PASSED=0
@@ -255,39 +232,27 @@ jobs:
             recipe_name=$(echo "$RECIPES" | jq -r ".[$i].name")
             recipe_path=$(echo "$RECIPES" | jq -r ".[$i].path")
 
-            for idx in "${!FAMILIES[@]}"; do
-              family="${FAMILIES[$idx]}"
-              image="${IMAGES[$idx]}"
+            for family in "${FAMILIES[@]}"; do
               TOTAL=$((TOTAL + 1))
 
               echo "::group::$recipe_name on $family (arm64)"
 
-              docker run --rm \
-                -e GITHUB_TOKEN \
-                -v "$PWD:/workspace" \
-                -w /workspace \
-                "$image" \
-                sh -c "
-                  case '$family' in
-                    alpine) apk add --no-cache curl bash ca-certificates jq build-base ;;
-                    debian) apt-get update && apt-get install -y --no-install-recommends curl ca-certificates jq build-essential ;;
-                    rhel)   dnf install -y --setopt=install_weak_deps=False curl ca-certificates jq gcc make ;;
-                    suse)   zypper -n install curl ca-certificates jq gcc make ;;
-                  esac
-                  export TSUKU_HOME='/tmp/tsuku-$recipe_name'
-                  mkdir -p \"\$TSUKU_HOME\"
-                  timeout 300 ./tsuku-linux-arm64 install --force --recipe '$recipe_path'
-                  echo \$? > /workspace/.tsuku-exit-code
-                " 2>&1 || true
+              RESULT_FILE=".result-${recipe_name}-${family}.json"
 
-              if [ -f .tsuku-exit-code ]; then
-                EXIT_CODE=$(cat .tsuku-exit-code)
-                rm -f .tsuku-exit-code
+              ./tsuku-linux-arm64 install --sandbox --force --recipe "$recipe_path" \
+                --target-family "$family" \
+                --env GITHUB_TOKEN="$GITHUB_TOKEN" \
+                --json > "$RESULT_FILE" 2>/dev/null || true
+
+              if [ -f "$RESULT_FILE" ] && jq -e . "$RESULT_FILE" > /dev/null 2>&1; then
+                SANDBOX_PASSED=$(jq -r '.passed' "$RESULT_FILE")
+                EXIT_CODE=$(jq -r '.install_exit_code' "$RESULT_FILE")
               else
+                SANDBOX_PASSED="false"
                 EXIT_CODE=1
               fi
 
-              if [ "$EXIT_CODE" = "0" ]; then
+              if [ "$SANDBOX_PASSED" = "true" ]; then
                 PASSED=$((PASSED + 1))
                 RESULTS="$RESULTS| $recipe_name | $family | pass |\n"
                 echo "PASS: $recipe_name on $family"
