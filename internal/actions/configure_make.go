@@ -26,10 +26,6 @@ func (a *ConfigureMakeAction) Preflight(params map[string]interface{}) *Prefligh
 	if _, ok := GetString(params, "source_dir"); !ok {
 		result.AddError("configure_make action requires 'source_dir' parameter")
 	}
-	if _, ok := GetStringSlice(params, "executables"); !ok {
-		result.AddError("configure_make action requires 'executables' parameter")
-	}
-
 	// When skip_configure is true, verify we have make_args to pass to make
 	skipConfigure, _ := GetBool(params, "skip_configure")
 	makeArgs, hasMakeArgs := GetStringSlice(params, "make_args")
@@ -51,7 +47,7 @@ func (ConfigureMakeAction) Dependencies() ActionDeps {
 //   - source_dir (required): Directory containing configure script
 //   - configure_args (optional): Arguments to pass to ./configure
 //   - make_targets (optional): Make targets to run (default: ["", "install"])
-//   - executables (required): List of executable names to verify
+//   - executables (optional): List of executable names to verify
 //   - prefix (optional): Installation prefix (default: install_dir)
 //
 // The action runs:
@@ -89,11 +85,8 @@ func (a *ConfigureMakeAction) Execute(ctx *ExecutionContext, params map[string]i
 		}
 	}
 
-	// Get executables list (required)
-	executables, ok := GetStringSlice(params, "executables")
-	if !ok || len(executables) == 0 {
-		return fmt.Errorf("configure_make action requires 'executables' parameter with at least one executable")
-	}
+	// Get executables list (optional for library-only builds)
+	executables, _ := GetStringSlice(params, "executables")
 
 	// Validate executable names to prevent path traversal
 	for _, exe := range executables {
