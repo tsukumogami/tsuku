@@ -1,0 +1,37 @@
+{
+  "issue": 1941,
+  "reviewers": [
+    {
+      "focus": "combined",
+      "blocking_count": 1,
+      "advisory_count": 2,
+      "findings": [
+        {
+          "severity": "blocking",
+          "file": "internal/builders/go.go",
+          "lines": "248-270",
+          "category": "pragmatic/dead-abstraction",
+          "diagnosis": "discoverBinariesFromProxy duplicates the request+size-limit+read pattern from downloadArtifact (artifact.go:39-102) verbatim -- User-Agent, LimitReader with +1 truncation detection, size check, status check. The context note says downloadArtifact was skipped because it enforces HTTPS-only and would break HTTP test mocks, but that means the shared helper has an undocumented gap that silently forces duplication. Either (a) add an allowHTTP option to downloadArtifactOptions for test use, or (b) add a prominent comment in discoverBinariesFromProxy explaining the deliberate non-use of downloadArtifact and why, so the next developer doesn't merge the two and break tests. Without that comment the duplication is a maintenance trap: two places to update User-Agent, timeout logic, or size constants."
+        },
+        {
+          "severity": "advisory",
+          "file": "internal/builders/go_test.go",
+          "lines": "817",
+          "category": "pragmatic/stale-comment",
+          "diagnosis": "Comment says 'Helper function defined in cargo_test.go but we need it here too.' containsSubstr has exactly one definition (here in go_test.go); cargo_test.go has no such function. repair_loop_test.go already has a corrected note pointing to go_test.go. Delete or fix the comment."
+        },
+        {
+          "severity": "advisory",
+          "file": "internal/builders/go.go",
+          "lines": "70-75",
+          "category": "pragmatic/speculative-export",
+          "diagnosis": "NewGoBuilderWithBaseURL is only called from _test.go files but is exported at the package level. Since this is an internal package the risk is contained, but the doc comment 'for testing' signals it should be unexported. Minor -- acceptable to leave given internal package boundary."
+        }
+      ],
+      "summary": "One blocking issue: discoverBinariesFromProxy duplicates downloadArtifact without a comment explaining the deliberate divergence, creating a silent maintenance trap. Two advisory issues: stale comment attributing containsSubstr to cargo_test.go (it only exists in go_test.go), and a test-only constructor that is exported unnecessarily. Core logic of the ZIP scanning, fallback strategy, size limits, and BinaryNameProvider exclusion is sound."
+    }
+  ],
+  "verdict": "fail",
+  "total_blocking": 1,
+  "total_advisory": 2
+}
