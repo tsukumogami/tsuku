@@ -194,6 +194,7 @@ jobs:
         run: go build -o tsuku ./cmd/tsuku
 
       - name: Run dlopen tests
+        shell: bash -e {0}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
@@ -258,7 +259,7 @@ jobs:
           FAILED=()
           for lib in "${LIBRARIES[@]}"; do
             echo "::group::dlopen: $lib (darwin)"
-            if ! timeout 300 ./test/scripts/test-library-dlopen.sh "$lib" darwin; then
+            if ! ./test/scripts/test-library-dlopen.sh "$lib" darwin; then
               FAILED+=("$lib")
             fi
             echo "::endgroup::"
