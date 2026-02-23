@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/tsukumogami/tsuku/internal/containerimages"
 	"github.com/tsukumogami/tsuku/internal/executor"
 	"github.com/tsukumogami/tsuku/internal/platform"
 	"github.com/tsukumogami/tsuku/internal/sandbox"
@@ -342,7 +343,7 @@ func TestSandboxRequirementsComputation(t *testing.T) {
 				t.Errorf("RequiresNetwork = %v, want %v", reqs.RequiresNetwork, tt.wantNetwork)
 			}
 
-			wantImage := sandbox.DefaultSandboxImage
+			wantImage := containerimages.DefaultImage()
 			if tt.wantSourceImage {
 				wantImage = sandbox.SourceBuildSandboxImage
 			}

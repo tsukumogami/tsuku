@@ -56,14 +56,14 @@ func TestDeriveContainerSpec(t *testing.T) {
 			name:          "alpine family - apk",
 			packages:      map[string][]string{"apk": {"bash", "curl"}},
 			wantFamily:    "alpine",
-			wantBaseImage: "alpine:3.19",
+			wantBaseImage: "alpine:3.21",
 			wantErr:       false,
 		},
 		{
 			name:          "suse family - zypper",
 			packages:      map[string][]string{"zypper": {"vim", "gcc"}},
 			wantFamily:    "suse",
-			wantBaseImage: "opensuse/leap:15",
+			wantBaseImage: "opensuse/tumbleweed",
 			wantErr:       false,
 		},
 		{

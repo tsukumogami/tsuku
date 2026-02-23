@@ -20,6 +20,13 @@ FAMILY="${1:-debian}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
+# Validate jq is available (required for reading container-images.json)
+if ! command -v jq &>/dev/null; then
+  echo "ERROR: jq is required but not found in PATH"
+  echo "Install it with your system package manager (e.g., apt install jq, brew install jq)"
+  exit 1
+fi
+
 echo "=== Testing checksum pinning feature (family: $FAMILY) ==="
 echo ""
 
@@ -39,15 +46,19 @@ echo "Plan generated"
 echo "Building sandbox container with dependencies..."
 ./tsuku install --plan "fzf-checksum-$FAMILY.json" --sandbox --force 2>&1 | grep -oE 'tsuku-sandbox-[a-f0-9]+' | head -1 > /tmp/sandbox-image-$$.txt || true
 
-# Get the base image for the family
-case "$FAMILY" in
-    debian) BASE_IMAGE="debian:bookworm-slim" ;;
-    rhel) BASE_IMAGE="fedora:39" ;;
-    arch) BASE_IMAGE="archlinux:base" ;;
-    alpine) BASE_IMAGE="alpine:3.19" ;;
-    suse) BASE_IMAGE="opensuse/tumbleweed" ;;
-    *) BASE_IMAGE="debian:bookworm-slim" ;;
-esac
+# Get the base image for the family from centralized config
+CONFIG_FILE="$REPO_ROOT/container-images.json"
+if [ ! -f "$CONFIG_FILE" ]; then
+  echo "ERROR: container-images.json not found at $CONFIG_FILE"
+  exit 1
+fi
+
+BASE_IMAGE=$(jq -r --arg f "$FAMILY" '.[$f] // empty' "$CONFIG_FILE")
+if [ -z "$BASE_IMAGE" ]; then
+  echo "ERROR: unknown family '$FAMILY' -- not found in container-images.json"
+  echo "Valid families: $(jq -r 'keys | join(", ")' "$CONFIG_FILE")"
+  exit 1
+fi
 
 # For fzf (github_archive download), we don't need system deps, just run in a minimal container
 # The test verifies checksums work, not dependency provisioning

@@ -226,8 +226,11 @@ jobs:
       - name: Validate on all Linux x86_64 families
         run: |
           RESULTS_FILE=$(mktemp)
-          IMAGES=("debian:bookworm-slim" "fedora:41" "archlinux:base" "opensuse/tumbleweed" "alpine:3.21")
           NAMES=("debian" "rhel" "arch" "suse" "alpine")
+          IMAGES=()
+          for f in "${NAMES[@]}"; do
+            IMAGES+=("$(jq -r --arg f "$f" '.[$f]' container-images.json)")
+          done
           LIBCS=("glibc" "glibc" "glibc" "glibc" "musl")
 
           # Load execution exclusions
@@ -384,9 +387,12 @@ jobs:
       - name: Validate on all Linux arm64 families
         run: |
           RESULTS_FILE=$(mktemp)
-          # archlinux:base excluded -- no ARM64 container image
-          IMAGES=("debian:bookworm-slim" "fedora:41" "opensuse/tumbleweed" "alpine:3.21")
+          # arch excluded -- no ARM64 container image
           NAMES=("debian" "rhel" "suse" "alpine")
+          IMAGES=()
+          for f in "${NAMES[@]}"; do
+            IMAGES+=("$(jq -r --arg f "$f" '.[$f]' container-images.json)")
+          done
           LIBCS=("glibc" "glibc" "glibc" "musl")
 
           # Load execution exclusions

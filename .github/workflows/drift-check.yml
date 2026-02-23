@@ -1,0 +1,161 @@
+name: Container Image Drift Check
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'container-images.json'
+      - 'internal/containerimages/**'
+      - '.github/workflows/**'
+      - '**/*.go'
+      - '**/*.sh'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'container-images.json'
+      - 'internal/containerimages/**'
+      - '.github/workflows/**'
+      - '**/*.go'
+      - '**/*.sh'
+
+jobs:
+  embedded-copy-freshness:
+    name: Embedded Copy Freshness
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+
+      - uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5  # v6.2.0
+        with:
+          go-version-file: go.mod
+
+      - name: Regenerate embedded copy
+        run: go generate ./internal/containerimages/...
+
+      - name: Check for drift
+        run: |
+          if ! git diff --exit-code internal/containerimages/container-images.json; then
+            echo ""
+            echo "::error::The embedded copy of container-images.json is out of sync with the root file."
+            echo "::error::Run 'go generate ./internal/containerimages/...' and commit the result."
+            exit 1
+          fi
+
+  hardcoded-references:
+    name: Hardcoded Image References
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+
+      - name: Check for hardcoded container image references
+        run: |
+          # Pattern matches container image references for the five families managed
+          # by container-images.json. Any non-excluded match means a hardcoded image
+          # that should read from the config file instead.
+          PATTERN='(debian:(bookworm|bullseye|buster|sid|stretch)|fedora:[0-9]|archlinux:(base|latest)|alpine:[0-9]|opensuse/(leap|tumbleweed))'
+
+          # Known exceptions: each entry is a grep -v pattern applied to the
+          # "file:line_number:content" output. Add new exceptions here with a
+          # comment explaining why the hardcoded reference is intentional.
+          EXCEPTIONS=(
+            # Source of truth and its embedded copy
+            'container-images\.json:'
+
+            # Go test files assert expected values from the config
+            '_test\.go:'
+
+            # Go comment lines -- full-line comments and trailing comments
+            ':\s*//'
+            '//.*debian:'
+            '//.*alpine:'
+            '//.*fedora:'
+            '//.*archlinux:'
+            '//.*opensuse/'
+
+            # YAML comment lines (# at any indentation after the line number)
+            ':[0-9]*:\s*#'
+
+            # DefaultValidationImage uses the debian default for binary validation;
+            # not yet migrated to containerimages.DefaultImage() (future cleanup)
+            'internal/validate/executor\.go:.*DefaultValidationImage'
+
+            # Embedded Dockerfile in test script uses debian for glibc zig-cc test;
+            # reads from a heredoc, not easily replaced with jq
+            'scripts/test-zig-cc\.sh:.*FROM debian:'
+
+            # Design docs and documentation reference images descriptively
+            'docs/'
+
+            # Work-in-progress research artifacts
+            'wip/'
+          )
+
+          # Build a combined grep -vE pattern from the exceptions
+          EXCLUDE_PATTERN=""
+          for exc in "${EXCEPTIONS[@]}"; do
+            # Strip leading whitespace and skip comments
+            exc=$(echo "$exc" | sed 's/^\s*//')
+            case "$exc" in '#'*|'') continue;; esac
+            if [ -z "$EXCLUDE_PATTERN" ]; then
+              EXCLUDE_PATTERN="$exc"
+            else
+              EXCLUDE_PATTERN="$EXCLUDE_PATTERN|$exc"
+            fi
+          done
+
+          found=0
+          violations=""
+
+          # Search workflow files
+          while IFS= read -r file; do
+            matches=$(grep -nE "$PATTERN" "$file" 2>/dev/null | sed "s|^|$file:|" || true)
+            [ -z "$matches" ] && continue
+            filtered=$(echo "$matches" | grep -vE "$EXCLUDE_PATTERN" || true)
+            if [ -n "$filtered" ]; then
+              violations="$violations"$'\n'"$filtered"
+              found=1
+            fi
+          done < <(find .github/workflows -name '*.yml' -type f 2>/dev/null)
+
+          # Search Go source files
+          while IFS= read -r file; do
+            matches=$(grep -nE "$PATTERN" "$file" 2>/dev/null | sed "s|^|$file:|" || true)
+            [ -z "$matches" ] && continue
+            filtered=$(echo "$matches" | grep -vE "$EXCLUDE_PATTERN" || true)
+            if [ -n "$filtered" ]; then
+              violations="$violations"$'\n'"$filtered"
+              found=1
+            fi
+          done < <(find . -name '*.go' -type f \
+            -not -path './vendor/*')
+
+          # Search shell scripts
+          while IFS= read -r file; do
+            matches=$(grep -nE "$PATTERN" "$file" 2>/dev/null | sed "s|^|$file:|" || true)
+            [ -z "$matches" ] && continue
+            filtered=$(echo "$matches" | grep -vE "$EXCLUDE_PATTERN" || true)
+            if [ -n "$filtered" ]; then
+              violations="$violations"$'\n'"$filtered"
+              found=1
+            fi
+          done < <(find . -name '*.sh' -type f \
+            -not -path './vendor/*')
+
+          if [ "$found" -eq 1 ]; then
+            echo "Hardcoded container image references found:"
+            echo "$violations" | sort | while IFS= read -r line; do
+              [ -z "$line" ] && continue
+              echo "  $line"
+              # Extract file path for GitHub annotation
+              file=$(echo "$line" | cut -d: -f1)
+              lineno=$(echo "$line" | cut -d: -f2)
+              echo "::error file=$file,line=$lineno::Hardcoded container image reference. Use container-images.json instead."
+            done
+            echo ""
+            echo "These references should read from container-images.json."
+            echo "If a reference is intentional, add an exception to"
+            echo ".github/workflows/drift-check.yml with a comment explaining why."
+            exit 1
+          fi
+
+          echo "No hardcoded container image references found."

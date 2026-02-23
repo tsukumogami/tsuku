@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+
+	"github.com/tsukumogami/tsuku/internal/containerimages"
 )
 
 // ContainerSpec defines a container specification for building test environments.
@@ -29,24 +31,8 @@ var pmToFamily = map[string]string{
 	"zypper": "suse",
 }
 
-// Linux family to base container image mapping.
-// Base images are selected for:
-// - Small size (slim/minimal variants where available)
-// - Stability (current stable releases, not rolling)
-// - Official maintenance (from distribution maintainers)
-//
-// debian: bookworm-slim is Debian 12 (current stable)
-// rhel: fedora:41 provides dnf and modern tooling
-// arch: archlinux:base is the minimal Arch base
-// alpine: alpine:3.19 is current stable
-// suse: opensuse/leap:15 provides zypper (Leap 15 is current stable)
-var familyToBaseImage = map[string]string{
-	"debian": "debian:bookworm-slim",
-	"rhel":   "fedora:41",
-	"arch":   "archlinux:base",
-	"alpine": "alpine:3.19",
-	"suse":   "opensuse/leap:15",
-}
+// Family-to-image mapping is defined in container-images.json at the repo root
+// and accessed via the containerimages package. See internal/containerimages/.
 
 // hasPPARepository returns true if any repository is a PPA (Ubuntu-specific).
 func hasPPARepository(repositories []RepositoryConfig) bool {
@@ -124,7 +110,7 @@ func DeriveContainerSpec(reqs *SystemRequirements) (*ContainerSpec, error) {
 	}
 
 	// Select base image for the family
-	baseImage, ok := familyToBaseImage[family]
+	baseImage, ok := containerimages.ImageForFamily(family)
 	if !ok {
 		return nil, fmt.Errorf("no base image configured for linux_family %q", family)
 	}
