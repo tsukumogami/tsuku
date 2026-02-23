@@ -635,14 +635,12 @@ jobs:
           FAMILY="${{ matrix.family }}"
           FILES='${{ needs.detect-changes.outputs.container_files }}'
 
-          # Map family to container image
-          case "$FAMILY" in
-            alpine) CONTAINER_IMAGE="alpine:3.21" ;;
-            rhel)   CONTAINER_IMAGE="fedora:41" ;;
-            arch)   CONTAINER_IMAGE="archlinux:base" ;;
-            suse)   CONTAINER_IMAGE="opensuse/tumbleweed" ;;
-            *)      echo "Unknown family: $FAMILY"; exit 1 ;;
-          esac
+          # Read container image from centralized config
+          CONTAINER_IMAGE=$(jq -r --arg f "$FAMILY" '.[$f] // empty' container-images.json)
+          if [ -z "$CONTAINER_IMAGE" ]; then
+            echo "Unknown family: $FAMILY (not found in container-images.json)"
+            exit 1
+          fi
 
           # Filter and format files for this family (parse JSON outside container)
           # Output format: file|tool|version (one per line)

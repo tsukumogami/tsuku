@@ -122,7 +122,7 @@ jobs:
           gh release upload "${GITHUB_REF_NAME}" "${{ matrix.artifact }}" --clobber
 
   # Build musl variants of tsuku-dltest (re-enabled by M47 platform compatibility work)
-  # NOTE: Alpine version must match platform-integration.yml build-dltest-musl job
+  # Alpine image read from container-images.json (shared with platform-integration.yml)
   build-rust-musl:
     name: "Build Rust (${{ matrix.platform }}-musl)"
     needs: [release]
@@ -143,6 +143,7 @@ jobs:
         with:
           sparse-checkout: |
             cmd/tsuku-dltest
+            container-images.json
 
       - name: Inject version
         run: |
@@ -152,7 +153,8 @@ jobs:
 
       - name: Build in Alpine container
         run: |
-          docker run --rm -v "$PWD:/workspace" -w /workspace alpine:3.21 sh -c '
+          ALPINE_IMAGE=$(jq -r '.alpine' container-images.json)
+          docker run --rm -v "$PWD:/workspace" -w /workspace "$ALPINE_IMAGE" sh -c '
             apk add --no-cache rust cargo
             cd cmd/tsuku-dltest
             cargo build --release
