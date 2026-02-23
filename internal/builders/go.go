@@ -245,6 +245,8 @@ func (b *GoBuilder) discoverBinariesFromProxy(ctx context.Context, modulePath, v
 	}
 	zipURL := baseURL.JoinPath(encodedPath, "@v", version+".zip")
 
+	// Not using downloadArtifact because it enforces HTTPS-only connections,
+	// which would break test mocks that use plain HTTP servers.
 	req, err := http.NewRequestWithContext(ctx, "GET", zipURL.String(), nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create ZIP request: %w", err)

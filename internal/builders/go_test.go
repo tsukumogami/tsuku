@@ -814,7 +814,7 @@ func TestGoBuilder_CanBuild_UppercaseModule(t *testing.T) {
 	}
 }
 
-// Helper function defined in cargo_test.go but we need it here too
+// containsSubstr reports whether substr appears anywhere within s.
 func containsSubstr(s, substr string) bool {
 	for i := 0; i <= len(s)-len(substr); i++ {
 		if s[i:i+len(substr)] == substr {
