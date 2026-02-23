@@ -7,12 +7,9 @@ import (
 	"time"
 
 	"github.com/tsukumogami/tsuku/internal/actions"
+	"github.com/tsukumogami/tsuku/internal/containerimages"
 	"github.com/tsukumogami/tsuku/internal/executor"
 )
-
-// DefaultSandboxImage is the container image for simple binary installations.
-// Uses Debian because the tsuku binary is dynamically linked against glibc.
-const DefaultSandboxImage = "debian:bookworm-slim"
 
 // SourceBuildSandboxImage is the container image for source builds and
 // ecosystem packages. Uses Ubuntu for better package availability.
@@ -61,7 +58,8 @@ type SandboxRequirements struct {
 	RequiresNetwork bool
 
 	// Image is the recommended container image based on requirements.
-	// Uses debian:bookworm-slim for binary-only, ubuntu:22.04 for source builds.
+	// Uses the default image from container-images.json for binary-only installs,
+	// or ubuntu:22.04 for source builds.
 	Image string
 
 	// Resources are the recommended resource limits.
@@ -79,9 +77,9 @@ type SandboxRequirements struct {
 //
 // When targetFamily is empty, defaults to Debian-based images for backward compatibility.
 func ComputeSandboxRequirements(plan *executor.InstallationPlan, targetFamily string) *SandboxRequirements {
-	defaultImage := DefaultSandboxImage
+	defaultImage := containerimages.DefaultImage()
 	buildImage := SourceBuildSandboxImage
-	if img, ok := familyToBaseImage[targetFamily]; ok {
+	if img, ok := containerimages.ImageForFamily(targetFamily); ok {
 		defaultImage = img
 		buildImage = img
 	}

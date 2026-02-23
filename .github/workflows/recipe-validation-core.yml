@@ -112,23 +112,18 @@ jobs:
       matrix:
         include:
           - family: debian
-            image: debian:bookworm-slim
             libc: glibc
             install_cmd: "apt-get update && apt-get install -y --no-install-recommends curl ca-certificates"
           - family: rhel
-            image: fedora:41
             libc: glibc
             install_cmd: "dnf install -y --setopt=install_weak_deps=False curl ca-certificates"
           - family: arch
-            image: archlinux:base
             libc: glibc
             install_cmd: "pacman -Sy --noconfirm curl ca-certificates"
           - family: suse
-            image: opensuse/tumbleweed
             libc: glibc
             install_cmd: "zypper -n install curl ca-certificates"
           - family: alpine
-            image: alpine:3.21
             libc: musl
             install_cmd: "apk add --no-cache curl bash ca-certificates"
     steps:
@@ -143,15 +138,20 @@ jobs:
       - name: Make binary executable
         run: chmod +x tsuku-linux-amd64
 
+      - name: Load container image
+        id: image
+        run: echo "ref=$(jq -r '.${{ matrix.family }}' container-images.json)" >> "$GITHUB_OUTPUT"
+
       - name: Validate recipes on ${{ matrix.family }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CONTAINER_IMAGE: ${{ steps.image.outputs.ref }}
         run: |
           RESULTS="[]"
           RECIPES="${{ needs.prepare.outputs.recipes }}"
           PLATFORM="linux-${{ matrix.family }}-${{ matrix.libc }}-x86_64"
 
-          echo "=== Validating on $PLATFORM (${{ matrix.image }}) ==="
+          echo "=== Validating on $PLATFORM ($CONTAINER_IMAGE) ==="
 
           for recipe_path in $RECIPES; do
             recipe_name=$(basename "$recipe_path" .toml)
@@ -167,7 +167,7 @@ jobs:
                 -v "$PWD:/workspace" \
                 -w /workspace \
                 -e GITHUB_TOKEN="$GITHUB_TOKEN" \
-                "${{ matrix.image }}" \
+                "$CONTAINER_IMAGE" \
                 sh -c "
                   ${{ matrix.install_cmd }}
                   timeout 300 ./tsuku-linux-amd64 install --force --recipe '$recipe_path'
@@ -220,19 +220,15 @@ jobs:
       matrix:
         include:
           - family: debian
-            image: debian:bookworm-slim
             libc: glibc
             install_cmd: "apt-get update && apt-get install -y --no-install-recommends curl ca-certificates"
           - family: rhel
-            image: fedora:41
             libc: glibc
             install_cmd: "dnf install -y --setopt=install_weak_deps=False curl ca-certificates"
           - family: suse
-            image: opensuse/tumbleweed
             libc: glibc
             install_cmd: "zypper -n install curl ca-certificates"
           - family: alpine
-            image: alpine:3.21
             libc: musl
             install_cmd: "apk add --no-cache curl bash ca-certificates"
     steps:
@@ -247,15 +243,20 @@ jobs:
       - name: Make binary executable
         run: chmod +x tsuku-linux-arm64
 
+      - name: Load container image
+        id: image
+        run: echo "ref=$(jq -r '.${{ matrix.family }}' container-images.json)" >> "$GITHUB_OUTPUT"
+
       - name: Validate recipes on ${{ matrix.family }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CONTAINER_IMAGE: ${{ steps.image.outputs.ref }}
         run: |
           RESULTS="[]"
           RECIPES="${{ needs.prepare.outputs.recipes }}"
           PLATFORM="linux-${{ matrix.family }}-${{ matrix.libc }}-arm64"
 
-          echo "=== Validating on $PLATFORM (${{ matrix.image }}) ==="
+          echo "=== Validating on $PLATFORM ($CONTAINER_IMAGE) ==="
 
           for recipe_path in $RECIPES; do
             recipe_name=$(basename "$recipe_path" .toml)
@@ -271,7 +272,7 @@ jobs:
                 -v "$PWD:/workspace" \
                 -w /workspace \
                 -e GITHUB_TOKEN="$GITHUB_TOKEN" \
-                "${{ matrix.image }}" \
+                "$CONTAINER_IMAGE" \
                 sh -c "
                   ${{ matrix.install_cmd }}
                   timeout 300 ./tsuku-linux-arm64 install --force --recipe '$recipe_path'

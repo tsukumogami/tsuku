@@ -129,9 +129,12 @@ jobs:
           RECIPES: ${{ needs.build.outputs.recipes }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Five Linux x86_64 families
-          IMAGES=("debian:bookworm-slim" "fedora:41" "archlinux:base" "opensuse/tumbleweed" "alpine:3.21")
+          # Five Linux x86_64 families (images from container-images.json)
           FAMILIES=("debian" "rhel" "arch" "suse" "alpine")
+          IMAGES=()
+          for f in "${FAMILIES[@]}"; do
+            IMAGES+=("$(jq -r --arg f "$f" '.[$f]' container-images.json)")
+          done
 
           TOTAL=0
           PASSED=0
@@ -234,8 +237,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Four Linux arm64 families (no arch -- no arm64 image available)
-          IMAGES=("debian:bookworm-slim" "fedora:41" "opensuse/tumbleweed" "alpine:3.21")
+          # Images from container-images.json
           FAMILIES=("debian" "rhel" "suse" "alpine")
+          IMAGES=()
+          for f in "${FAMILIES[@]}"; do
+            IMAGES+=("$(jq -r --arg f "$f" '.[$f]' container-images.json)")
+          done
 
           TOTAL=0
           PASSED=0
