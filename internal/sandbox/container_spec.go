@@ -310,13 +310,13 @@ func generateAlpineCommands(packages []string, repositories []RepositoryConfig) 
 	// Alpine doesn't commonly use third-party repositories in containers
 	// If needed, repository support can be added later
 
-	// Install packages
+	// Install packages (apk update refreshes the package index first)
 	if len(packages) > 0 {
 		sorted := make([]string, len(packages))
 		copy(sorted, packages)
 		sort.Strings(sorted)
 		pkgList := strings.Join(sorted, " ")
-		commands = append(commands, fmt.Sprintf("RUN apk add --no-cache %s", pkgList))
+		commands = append(commands, fmt.Sprintf("RUN apk update && apk add --no-cache %s", pkgList))
 	}
 
 	return commands
