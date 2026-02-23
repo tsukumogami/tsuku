@@ -1,0 +1,120 @@
+{
+  "design_doc": "docs/designs/DESIGN-binary-name-discovery.md",
+  "branch": "docs/deterministic-recipe-repair",
+  "pr_number": 1934,
+  "integrity_hash": "sha256:c06612b6fb586fd59f6d396c245c4119a7588e62e05c0e41a9f9545eac7eb6e0",
+  "issues": [
+    {
+      "number": 1936,
+      "title": "feat(builders): use crates.io `bin_names` for Cargo binary discovery",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": [
+        "scenario-1",
+        "scenario-2",
+        "scenario-3",
+        "scenario-4"
+      ]
+    },
+    {
+      "number": 1937,
+      "title": "fix(builders): handle string-type `bin` field in npm builder",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": [
+        "scenario-5",
+        "scenario-6"
+      ]
+    },
+    {
+      "number": 1938,
+      "title": "feat(builders): add `BinaryNameProvider` and orchestrator validation",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [
+        1936,
+        1937
+      ],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": [
+        "scenario-7",
+        "scenario-8",
+        "scenario-17",
+        "scenario-18"
+      ]
+    },
+    {
+      "number": 1939,
+      "title": "feat(builders): add PyPI wheel-based executable discovery",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [
+        1938
+      ],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": [
+        "scenario-9",
+        "scenario-10",
+        "scenario-11"
+      ]
+    },
+    {
+      "number": 1940,
+      "title": "feat(builders): add RubyGems gem-based executable discovery",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [
+        1939
+      ],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": [
+        "scenario-12",
+        "scenario-13"
+      ]
+    },
+    {
+      "number": 1941,
+      "title": "feat(builders): improve Go binary discovery via module proxy",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": [
+        "scenario-14",
+        "scenario-15",
+        "scenario-16"
+      ]
+    }
+  ],
+  "skipped_issues": null,
+  "test_plan_file": "wip/implement-doc_binary-name-discovery_test_plan.md",
+  "doc_plan_file": "wip/implement-doc_binary-name-discovery_doc_plan.md"
+}
