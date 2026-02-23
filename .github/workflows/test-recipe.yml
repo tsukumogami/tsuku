@@ -161,7 +161,7 @@ jobs:
     if: needs.build.outputs.has_linux_batches == 'true'
     runs-on: ubuntu-latest
     continue-on-error: true
-    timeout-minutes: 30
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
@@ -288,7 +288,7 @@ jobs:
     if: needs.build.outputs.has_linux_batches == 'true'
     runs-on: ubuntu-24.04-arm
     continue-on-error: true
-    timeout-minutes: 30
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
