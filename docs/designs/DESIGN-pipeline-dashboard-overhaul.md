@@ -35,8 +35,8 @@ Planned
 
 | Issue | Dependencies | Tier |
 |-------|--------------|------|
-| [#1927: fix(batch): prefer pending entries for half-open circuit breaker probes](https://github.com/tsukumogami/tsuku/issues/1927) | None | testable |
-| _Modify `selectCandidates()` to bypass backoff for half-open probes and prefer pending entries over failed ones. Adds unit tests for the new selection logic including `FilterEcosystem` interaction._ | | |
+| ~~[#1927: fix(batch): prefer pending entries for half-open circuit breaker probes](https://github.com/tsukumogami/tsuku/issues/1927)~~ | None | testable |
+| ~~_Modify `selectCandidates()` to bypass backoff for half-open probes and prefer pending entries over failed ones. Adds unit tests for the new selection logic including `FilterEcosystem` interaction._~~ | | |
 | [#1928: feat(dashboard): add per-ecosystem queue breakdown to dashboard data](https://github.com/tsukumogami/tsuku/issues/1928) | None | testable |
 | _Add `ByEcosystem` field to `QueueStatus` in `computeQueueStatus()`, aggregating entry counts per ecosystem per status. This provides the data the Ecosystem Pipeline widget and validation tests need._ | | |
 | [#1929: feat(dashboard): split pipeline health into three focused widgets](https://github.com/tsukumogami/tsuku/issues/1929) | [#1928](https://github.com/tsukumogami/tsuku/issues/1928) | testable |
@@ -84,7 +84,8 @@ graph TD
     classDef needsDesign fill:#e1bee7
     classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
 
-    class I1927,I1928 ready
+    class I1927 done
+    class I1928 ready
     class I1929,I1931,I1930,I1933,I1932 blocked
 ```
 
