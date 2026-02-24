@@ -254,10 +254,9 @@ jobs:
               echo "::endgroup::"
             done
 
-            # Clean up installed tools to free disk for the next recipe
-            for family in "${FAMILIES[@]}"; do
-              rm -rf "/tmp/tsuku-${recipe_name}-${family}"
-            done
+            # Clean up installed tools to free disk for the next recipe.
+            # Sandbox containers run as root, so files are root-owned.
+            sudo rm -rf /tmp/tsuku-${recipe_name}-* 2>/dev/null || true
           done
 
           # Write job summary
@@ -269,15 +268,10 @@ jobs:
             echo "| Recipe | Family | Status |"
             echo "|--------|--------|--------|"
             echo -e "$RESULTS"
-            if [ "$FAILED" -gt 0 ]; then
-              echo ""
-              echo "> Platform failures indicate which \`when\` filters to add to the recipe."
-              echo "> They are not required fixes before merge."
-            fi
           } >> "$GITHUB_STEP_SUMMARY"
 
           if [ "$FAILED" -gt 0 ]; then
-            echo "::warning::$FAILED of $TOTAL tests failed on Linux x86_64 (batch ${{ matrix.batch.batch_id }})"
+            echo "::error::$FAILED of $TOTAL tests failed (Linux x86_64 batch ${{ matrix.batch.batch_id }})"
             exit 1
           fi
 
@@ -386,10 +380,9 @@ jobs:
               echo "::endgroup::"
             done
 
-            # Clean up installed tools to free disk for the next recipe
-            for family in "${FAMILIES[@]}"; do
-              rm -rf "/tmp/tsuku-${recipe_name}-${family}"
-            done
+            # Clean up installed tools to free disk for the next recipe.
+            # Sandbox containers run as root, so files are root-owned.
+            sudo rm -rf /tmp/tsuku-${recipe_name}-* 2>/dev/null || true
           done
 
           # Write job summary
@@ -401,15 +394,10 @@ jobs:
             echo "| Recipe | Family | Status |"
             echo "|--------|--------|--------|"
             echo -e "$RESULTS"
-            if [ "$FAILED" -gt 0 ]; then
-              echo ""
-              echo "> Platform failures indicate which \`when\` filters to add to the recipe."
-              echo "> They are not required fixes before merge."
-            fi
           } >> "$GITHUB_STEP_SUMMARY"
 
           if [ "$FAILED" -gt 0 ]; then
-            echo "::warning::$FAILED of $TOTAL tests failed on Linux arm64 (batch ${{ matrix.batch.batch_id }})"
+            echo "::error::$FAILED of $TOTAL tests failed (Linux arm64 batch ${{ matrix.batch.batch_id }})"
             exit 1
           fi
 

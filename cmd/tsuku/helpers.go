@@ -68,6 +68,7 @@ func printError(err error) {
 //   - version: Version constraint (empty string means latest)
 //   - recipePath: Path to local recipe file (empty string means load from registry)
 //   - cfg: Configuration with paths for tools, download cache, and key cache
+//   - linuxFamily: Target Linux family override (empty means auto-detect from host)
 //
 // Returns an InstallationPlan with dependencies embedded (if RecipeLoader is available).
 func generateInstallPlan(
@@ -76,6 +77,7 @@ func generateInstallPlan(
 	version string,
 	recipePath string,
 	cfg *config.Config,
+	linuxFamily string,
 ) (*executor.InstallationPlan, error) {
 	var r *recipe.Recipe
 	var err error
@@ -120,6 +122,7 @@ func generateInstallPlan(
 	return exec.GeneratePlan(ctx, executor.PlanConfig{
 		OS:                 runtime.GOOS,
 		Arch:               runtime.GOARCH,
+		LinuxFamily:        linuxFamily,
 		RecipeSource:       recipeSource,
 		Downloader:         downloader,
 		DownloadCache:      downloadCache,
