@@ -9,13 +9,13 @@
   "circuit_breaker": {
     "github": {
       "state": "closed",
-      "failures": 2,
-      "last_failure": "2026-02-24T07:08:15Z"
+      "failures": 3,
+      "last_failure": "2026-02-24T08:47:01Z"
     },
     "homebrew": {
       "state": "closed",
-      "failures": 3,
-      "last_failure": "2026-02-24T07:08:15Z",
+      "failures": 4,
+      "last_failure": "2026-02-24T08:47:01Z",
       "opens_at": "2026-02-24T00:48:22Z"
     },
     "rubygems": {
