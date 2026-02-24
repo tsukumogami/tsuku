@@ -59,7 +59,7 @@ func runSandboxInstall(toolName, planPath, recipePath, targetFamily string) erro
 
 	case recipePath != "":
 		// Generate plan from local recipe file
-		plan, err = generateInstallPlan(globalCtx, "", "", recipePath, cfg)
+		plan, err = generateInstallPlan(globalCtx, "", "", recipePath, cfg, targetFamily)
 		if err != nil {
 			return fmt.Errorf("failed to generate plan: %w", err)
 		}
@@ -69,7 +69,7 @@ func runSandboxInstall(toolName, planPath, recipePath, targetFamily string) erro
 
 	default:
 		// Generate plan from recipe in registry
-		plan, err = generateInstallPlan(globalCtx, toolName, "", "", cfg)
+		plan, err = generateInstallPlan(globalCtx, toolName, "", "", cfg, targetFamily)
 		if err != nil {
 			return fmt.Errorf("failed to generate plan: %w", err)
 		}

@@ -148,7 +148,7 @@ func (a *CargoBuildAction) Execute(ctx *ExecutionContext, params map[string]inte
 	fmt.Printf("   Using cargo: %s\n", cargoPath)
 
 	// Set up deterministic environment with isolated CARGO_HOME
-	env := buildDeterministicCargoEnv(cargoPath, ctx.WorkDir)
+	env := buildDeterministicCargoEnv(cargoPath, ctx.WorkDir, ctx.ExecPaths)
 
 	// Validate Rust version if specified
 	if rustVersion != "" {
@@ -348,7 +348,7 @@ func (a *CargoBuildAction) executeLockDataMode(ctx *ExecutionContext, params map
 	// Validate Rust version if specified
 	if rustVersion != "" {
 		// Build temporary environment for version check
-		tempEnv := buildDeterministicCargoEnv(cargoPath, ctx.WorkDir)
+		tempEnv := buildDeterministicCargoEnv(cargoPath, ctx.WorkDir, ctx.ExecPaths)
 		if err := validateRustVersion(ctx, cargoPath, rustVersion, tempEnv); err != nil {
 			fmt.Printf("   Warning: Rust version validation failed: %v\n", err)
 		}
@@ -423,7 +423,7 @@ func (a *CargoBuildAction) executeLockDataMode(ctx *ExecutionContext, params map
 	}
 
 	// Build deterministic environment
-	env := buildDeterministicCargoEnv(cargoPath, tempDir)
+	env := buildDeterministicCargoEnv(cargoPath, tempDir, ctx.ExecPaths)
 
 	// Pre-fetch dependencies to populate CARGO_HOME
 	fmt.Printf("   Pre-fetching dependencies...\n")
@@ -496,33 +496,32 @@ func (a *CargoBuildAction) executeLockDataMode(ctx *ExecutionContext, params map
 
 // buildDeterministicCargoEnv creates an environment with deterministic build settings.
 // workDir is used to create an isolated CARGO_HOME for reproducible builds.
-func buildDeterministicCargoEnv(cargoPath, workDir string) []string {
+// execPaths are additional bin directories from installed dependencies (e.g., perl for openssl-sys).
+func buildDeterministicCargoEnv(cargoPath, workDir string, execPaths []string) []string {
 	cargoDir := filepath.Dir(cargoPath)
 	env := os.Environ()
 
 	// Filter existing variables that might affect determinism
+	var existingPath string
 	filteredEnv := make([]string, 0, len(env))
 	for _, e := range env {
-		// Keep most variables but filter some that could cause non-determinism
-		if !strings.HasPrefix(e, "CARGO_INCREMENTAL=") &&
+		if strings.HasPrefix(e, "PATH=") {
+			existingPath = strings.TrimPrefix(e, "PATH=")
+		} else if !strings.HasPrefix(e, "CARGO_INCREMENTAL=") &&
 			!strings.HasPrefix(e, "SOURCE_DATE_EPOCH=") &&
 			!strings.HasPrefix(e, "CARGO_HOME=") {
 			filteredEnv = append(filteredEnv, e)
 		}
 	}
 
-	// Add cargo's bin directory to PATH
-	pathUpdated := false
-	for i, e := range filteredEnv {
-		if strings.HasPrefix(e, "PATH=") {
-			filteredEnv[i] = fmt.Sprintf("PATH=%s:%s", cargoDir, e[5:])
-			pathUpdated = true
-			break
-		}
+	// Build PATH: cargo bin + ExecPaths (dependency binaries) + existing PATH
+	// ExecPaths includes directories like perl, zig, etc. needed by build scripts
+	pathParts := []string{cargoDir}
+	pathParts = append(pathParts, execPaths...)
+	if existingPath != "" {
+		pathParts = append(pathParts, existingPath)
 	}
-	if !pathUpdated {
-		filteredEnv = append(filteredEnv, fmt.Sprintf("PATH=%s:%s", cargoDir, os.Getenv("PATH")))
-	}
+	filteredEnv = append(filteredEnv, "PATH="+strings.Join(pathParts, ":"))
 
 	// Set isolated CARGO_HOME to prevent cross-contamination between builds
 	cargoHome := filepath.Join(workDir, ".cargo-home")

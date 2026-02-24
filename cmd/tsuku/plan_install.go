@@ -58,6 +58,7 @@ func runPlanBasedInstall(planPath, toolName string) error {
 
 	// Set download cache directory for checksum verification
 	exec.SetDownloadCacheDir(cfg.DownloadCacheDir)
+	exec.SetSkipCacheSecurityChecks(installSkipSecurity)
 
 	// Set key cache directory for PGP signature verification
 	exec.SetKeyCacheDir(cfg.KeyCacheDir)

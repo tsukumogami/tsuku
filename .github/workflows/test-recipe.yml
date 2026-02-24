@@ -1,12 +1,9 @@
-# Test Recipe - Cross-platform validation for individual recipes.
+# Test Recipe - Cross-platform validation for changed recipes.
 #
-# This workflow tests a specific recipe across all supported platforms.
+# This workflow tests changed recipes across all supported platforms
+# using sandbox containers (Linux) and native installs (macOS).
 # It does NOT skip library recipes -- testing library recipes across
 # platforms is its primary purpose.
-#
-# Platform failures use continue-on-error at the job level so all
-# platforms complete. Failures indicate which `when` filters to add
-# to the recipe, not required fixes before merge.
 #
 # Triggers:
 #   - workflow_dispatch: manually test a recipe by name
@@ -32,13 +29,16 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Build tsuku for all target platforms and detect which recipe to test.
+  # Build tsuku for all target platforms, detect changed recipes, and split into batches.
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     outputs:
       recipes: ${{ steps.detect.outputs.recipes }}
       has_recipes: ${{ steps.detect.outputs.has_recipes }}
+      linux_batches: ${{ steps.batch.outputs.linux_batches }}
+      has_linux_batches: ${{ steps.batch.outputs.has_linux_batches }}
+      batch_count: ${{ steps.batch.outputs.batch_count }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
@@ -108,13 +108,60 @@ jobs:
             echo "has_recipes=false" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Split recipes into batches
+        id: batch
+        run: |
+          RECIPES='${{ steps.detect.outputs.recipes }}'
+
+          if [ -z "$RECIPES" ] || [ "$RECIPES" = "[]" ]; then
+            echo "linux_batches=[]" >> "$GITHUB_OUTPUT"
+            echo "has_linux_batches=false" >> "$GITHUB_OUTPUT"
+            echo "batch_count=0" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Read batch size from config or default to 5
+          BATCH_SIZE=5
+          if [ -f .github/ci-batch-config.json ]; then
+            BATCH_SIZE=$(jq -r '.batch_sizes["test-recipe"].linux // 5' .github/ci-batch-config.json)
+          fi
+          echo "Using batch size: $BATCH_SIZE"
+
+          # Split recipes into batches using ceiling division
+          BATCHES=$(echo "$RECIPES" | jq -c --argjson bs "$BATCH_SIZE" '
+            . as $all |
+            [range(0; length; $bs)] |
+            to_entries |
+            map({batch_id: (.key + 1), recipes: $all[.value:.value + $bs]})
+          ')
+
+          echo "linux_batches=$BATCHES" >> "$GITHUB_OUTPUT"
+
+          BATCH_COUNT=$(echo "$BATCHES" | jq 'length')
+          echo "batch_count=$BATCH_COUNT" >> "$GITHUB_OUTPUT"
+          if [ "$BATCH_COUNT" -gt 0 ]; then
+            echo "has_linux_batches=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_linux_batches=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          echo "Generated $BATCH_COUNT batch(es) of up to $BATCH_SIZE recipes"
+
   # Linux x86_64: test in sandbox containers for all five families.
+  # Recipes are split into batches (one job per batch) and families run in parallel
+  # per recipe. Each family gets its own TSUKU_HOME to avoid staging conflicts, but
+  # all share a download cache via symlink so large downloads (e.g., Rust toolchain)
+  # are fetched once and reused across families and recipes.
   test-linux-x86_64:
+    name: "Linux x86_64 (batch ${{ matrix.batch.batch_id }}/${{ needs.build.outputs.batch_count }})"
     needs: build
-    if: needs.build.outputs.has_recipes == 'true'
+    if: needs.build.outputs.has_linux_batches == 'true'
     runs-on: ubuntu-latest
-    continue-on-error: true
-    timeout-minutes: 30
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        batch: ${{ fromJson(needs.build.outputs.linux_batches) }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
 
@@ -125,12 +172,23 @@ jobs:
       - name: Make binary executable
         run: chmod +x tsuku-linux-amd64
 
+      - name: Restore download cache
+        uses: actions/cache@b7e8d49f17405cc70c1c120101943203c98d3a4b  # v5.0.3
+        with:
+          path: /tmp/tsuku-shared-downloads
+          key: test-recipe-downloads-linux-amd64-${{ hashFiles('recipes/**/*.toml', 'internal/recipe/recipes/**/*.toml') }}
+          restore-keys: |
+            test-recipe-downloads-linux-amd64-
+
       - name: Test recipes in Linux x86_64 containers
         env:
-          RECIPES: ${{ needs.build.outputs.recipes }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           FAMILIES=("debian" "rhel" "arch" "suse" "alpine")
+          SHARED_CACHE="/tmp/tsuku-shared-downloads"
+          mkdir -p "$SHARED_CACHE"
+          chmod 700 "$SHARED_CACHE"
+          RECIPES='${{ toJson(matrix.batch.recipes) }}'
 
           TOTAL=0
           PASSED=0
@@ -142,17 +200,38 @@ jobs:
             recipe_name=$(echo "$RECIPES" | jq -r ".[$i].name")
             recipe_path=$(echo "$RECIPES" | jq -r ".[$i].path")
 
+            PIDS=()
             for family in "${FAMILIES[@]}"; do
               TOTAL=$((TOTAL + 1))
+              RESULT_FILE=".result-${recipe_name}-${family}.json"
+              LOG_FILE=".log-${recipe_name}-${family}.txt"
 
-              echo "::group::$recipe_name on $family (x86_64)"
+              (
+                FAMILY_HOME="/tmp/tsuku-${recipe_name}-${family}"
+                mkdir -p "$FAMILY_HOME/cache"
+                ln -sf "$SHARED_CACHE" "$FAMILY_HOME/cache/downloads"
 
+                TSUKU_HOME="$FAMILY_HOME" TSUKU_TELEMETRY=0 \
+                  ./tsuku-linux-amd64 install --sandbox --force \
+                    --dangerously-suppress-security \
+                    --recipe "$recipe_path" \
+                    --target-family "$family" \
+                    --env GITHUB_TOKEN="$GITHUB_TOKEN" \
+                    --json > "$RESULT_FILE" 2>"$LOG_FILE" || true
+              ) &
+              PIDS+=($!)
+            done
+
+            # Wait for all families of this recipe to complete
+            for pid in "${PIDS[@]}"; do
+              wait "$pid" || true
+            done
+
+            # Collect results
+            for family in "${FAMILIES[@]}"; do
               RESULT_FILE=".result-${recipe_name}-${family}.json"
 
-              ./tsuku-linux-amd64 install --sandbox --force --recipe "$recipe_path" \
-                --target-family "$family" \
-                --env GITHUB_TOKEN="$GITHUB_TOKEN" \
-                --json > "$RESULT_FILE" 2>/dev/null || true
+              echo "::group::$recipe_name on $family (x86_64)"
 
               if [ -f "$RESULT_FILE" ] && jq -e . "$RESULT_FILE" > /dev/null 2>&1; then
                 SANDBOX_PASSED=$(jq -r '.passed' "$RESULT_FILE")
@@ -174,36 +253,40 @@ jobs:
 
               echo "::endgroup::"
             done
+
+            # Clean up installed tools to free disk for the next recipe.
+            # Sandbox containers run as root, so files are root-owned.
+            sudo rm -rf /tmp/tsuku-${recipe_name}-* 2>/dev/null || true
           done
 
           # Write job summary
           {
-            echo "### Linux x86_64 Results"
+            echo "### Linux x86_64 (batch ${{ matrix.batch.batch_id }}) Results"
             echo ""
             echo "Passed: $PASSED / $TOTAL"
             echo ""
             echo "| Recipe | Family | Status |"
             echo "|--------|--------|--------|"
             echo -e "$RESULTS"
-            if [ "$FAILED" -gt 0 ]; then
-              echo ""
-              echo "> Platform failures indicate which \`when\` filters to add to the recipe."
-              echo "> They are not required fixes before merge."
-            fi
           } >> "$GITHUB_STEP_SUMMARY"
 
           if [ "$FAILED" -gt 0 ]; then
-            echo "::warning::$FAILED of $TOTAL tests failed on Linux x86_64"
+            echo "::error::$FAILED of $TOTAL tests failed (Linux x86_64 batch ${{ matrix.batch.batch_id }})"
             exit 1
           fi
 
   # Linux arm64: test in sandbox containers for four families (no arch arm64 image).
+  # Same batched parallel-families approach as x86_64.
   test-linux-arm64:
+    name: "Linux arm64 (batch ${{ matrix.batch.batch_id }}/${{ needs.build.outputs.batch_count }})"
     needs: build
-    if: needs.build.outputs.has_recipes == 'true'
+    if: needs.build.outputs.has_linux_batches == 'true'
     runs-on: ubuntu-24.04-arm
-    continue-on-error: true
-    timeout-minutes: 30
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        batch: ${{ fromJson(needs.build.outputs.linux_batches) }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
 
@@ -214,13 +297,24 @@ jobs:
       - name: Make binary executable
         run: chmod +x tsuku-linux-arm64
 
+      - name: Restore download cache
+        uses: actions/cache@b7e8d49f17405cc70c1c120101943203c98d3a4b  # v5.0.3
+        with:
+          path: /tmp/tsuku-shared-downloads
+          key: test-recipe-downloads-linux-arm64-${{ hashFiles('recipes/**/*.toml', 'internal/recipe/recipes/**/*.toml') }}
+          restore-keys: |
+            test-recipe-downloads-linux-arm64-
+
       - name: Test recipes in Linux arm64 containers
         env:
-          RECIPES: ${{ needs.build.outputs.recipes }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Four Linux arm64 families (no arch -- no arm64 image available)
           FAMILIES=("debian" "rhel" "suse" "alpine")
+          SHARED_CACHE="/tmp/tsuku-shared-downloads"
+          mkdir -p "$SHARED_CACHE"
+          chmod 700 "$SHARED_CACHE"
+          RECIPES='${{ toJson(matrix.batch.recipes) }}'
 
           TOTAL=0
           PASSED=0
@@ -232,17 +326,38 @@ jobs:
             recipe_name=$(echo "$RECIPES" | jq -r ".[$i].name")
             recipe_path=$(echo "$RECIPES" | jq -r ".[$i].path")
 
+            PIDS=()
             for family in "${FAMILIES[@]}"; do
               TOTAL=$((TOTAL + 1))
+              RESULT_FILE=".result-${recipe_name}-${family}.json"
+              LOG_FILE=".log-${recipe_name}-${family}.txt"
 
-              echo "::group::$recipe_name on $family (arm64)"
+              (
+                FAMILY_HOME="/tmp/tsuku-${recipe_name}-${family}"
+                mkdir -p "$FAMILY_HOME/cache"
+                ln -sf "$SHARED_CACHE" "$FAMILY_HOME/cache/downloads"
 
+                TSUKU_HOME="$FAMILY_HOME" TSUKU_TELEMETRY=0 \
+                  ./tsuku-linux-arm64 install --sandbox --force \
+                    --dangerously-suppress-security \
+                    --recipe "$recipe_path" \
+                    --target-family "$family" \
+                    --env GITHUB_TOKEN="$GITHUB_TOKEN" \
+                    --json > "$RESULT_FILE" 2>"$LOG_FILE" || true
+              ) &
+              PIDS+=($!)
+            done
+
+            # Wait for all families of this recipe to complete
+            for pid in "${PIDS[@]}"; do
+              wait "$pid" || true
+            done
+
+            # Collect results
+            for family in "${FAMILIES[@]}"; do
               RESULT_FILE=".result-${recipe_name}-${family}.json"
 
-              ./tsuku-linux-arm64 install --sandbox --force --recipe "$recipe_path" \
-                --target-family "$family" \
-                --env GITHUB_TOKEN="$GITHUB_TOKEN" \
-                --json > "$RESULT_FILE" 2>/dev/null || true
+              echo "::group::$recipe_name on $family (arm64)"
 
               if [ -f "$RESULT_FILE" ] && jq -e . "$RESULT_FILE" > /dev/null 2>&1; then
                 SANDBOX_PASSED=$(jq -r '.passed' "$RESULT_FILE")
@@ -264,36 +379,34 @@ jobs:
 
               echo "::endgroup::"
             done
+
+            # Clean up installed tools to free disk for the next recipe.
+            # Sandbox containers run as root, so files are root-owned.
+            sudo rm -rf /tmp/tsuku-${recipe_name}-* 2>/dev/null || true
           done
 
           # Write job summary
           {
-            echo "### Linux arm64 Results"
+            echo "### Linux arm64 (batch ${{ matrix.batch.batch_id }}) Results"
             echo ""
             echo "Passed: $PASSED / $TOTAL"
             echo ""
             echo "| Recipe | Family | Status |"
             echo "|--------|--------|--------|"
             echo -e "$RESULTS"
-            if [ "$FAILED" -gt 0 ]; then
-              echo ""
-              echo "> Platform failures indicate which \`when\` filters to add to the recipe."
-              echo "> They are not required fixes before merge."
-            fi
           } >> "$GITHUB_STEP_SUMMARY"
 
           if [ "$FAILED" -gt 0 ]; then
-            echo "::warning::$FAILED of $TOTAL tests failed on Linux arm64"
+            echo "::error::$FAILED of $TOTAL tests failed (Linux arm64 batch ${{ matrix.batch.batch_id }})"
             exit 1
           fi
 
   # macOS arm64: native runner test.
   test-darwin-arm64:
     needs: build
-    if: needs.build.outputs.has_recipes == 'true'
+    if: needs.build.outputs.has_linux_batches == 'true'
     runs-on: macos-14
-    continue-on-error: true
-    timeout-minutes: 30
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
 
@@ -307,11 +420,23 @@ jobs:
       - name: Install GNU coreutils for gtimeout
         run: brew install coreutils
 
+      - name: Restore download cache
+        uses: actions/cache@b7e8d49f17405cc70c1c120101943203c98d3a4b  # v5.0.3
+        with:
+          path: /tmp/tsuku-shared-downloads
+          key: test-recipe-downloads-darwin-arm64-${{ hashFiles('recipes/**/*.toml', 'internal/recipe/recipes/**/*.toml') }}
+          restore-keys: |
+            test-recipe-downloads-darwin-arm64-
+
       - name: Test recipes on macOS arm64
         env:
           RECIPES: ${{ needs.build.outputs.recipes }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          SHARED_CACHE="/tmp/tsuku-shared-downloads"
+          mkdir -p "$SHARED_CACHE"
+          chmod 700 "$SHARED_CACHE"
+
           TOTAL=0
           PASSED=0
           FAILED=0
@@ -326,9 +451,12 @@ jobs:
             echo "::group::$recipe_name on macOS arm64"
 
             export TSUKU_HOME="${{ runner.temp }}/tsuku-$recipe_name"
-            mkdir -p "$TSUKU_HOME"
+            mkdir -p "$TSUKU_HOME/cache"
+            ln -sf "$SHARED_CACHE" "$TSUKU_HOME/cache/downloads"
 
-            if gtimeout 300 ./tsuku-darwin-arm64 install --force --recipe "$recipe_path" 2>&1; then
+            if gtimeout 300 ./tsuku-darwin-arm64 install --force \
+                --dangerously-suppress-security \
+                --recipe "$recipe_path" 2>&1; then
               PASSED=$((PASSED + 1))
               RESULTS="$RESULTS| $recipe_name | darwin-arm64 | pass |\n"
               echo "PASS: $recipe_name on macOS arm64"
@@ -366,10 +494,9 @@ jobs:
   # macOS x86_64: native runner test.
   test-darwin-x86_64:
     needs: build
-    if: needs.build.outputs.has_recipes == 'true'
+    if: needs.build.outputs.has_linux_batches == 'true'
     runs-on: macos-15-intel
-    continue-on-error: true
-    timeout-minutes: 30
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
 
@@ -383,11 +510,23 @@ jobs:
       - name: Install GNU coreutils for gtimeout
         run: brew install coreutils
 
+      - name: Restore download cache
+        uses: actions/cache@b7e8d49f17405cc70c1c120101943203c98d3a4b  # v5.0.3
+        with:
+          path: /tmp/tsuku-shared-downloads
+          key: test-recipe-downloads-darwin-amd64-${{ hashFiles('recipes/**/*.toml', 'internal/recipe/recipes/**/*.toml') }}
+          restore-keys: |
+            test-recipe-downloads-darwin-amd64-
+
       - name: Test recipes on macOS x86_64
         env:
           RECIPES: ${{ needs.build.outputs.recipes }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          SHARED_CACHE="/tmp/tsuku-shared-downloads"
+          mkdir -p "$SHARED_CACHE"
+          chmod 700 "$SHARED_CACHE"
+
           TOTAL=0
           PASSED=0
           FAILED=0
@@ -402,9 +541,12 @@ jobs:
             echo "::group::$recipe_name on macOS x86_64"
 
             export TSUKU_HOME="${{ runner.temp }}/tsuku-$recipe_name"
-            mkdir -p "$TSUKU_HOME"
+            mkdir -p "$TSUKU_HOME/cache"
+            ln -sf "$SHARED_CACHE" "$TSUKU_HOME/cache/downloads"
 
-            if gtimeout 300 ./tsuku-darwin-amd64 install --force --recipe "$recipe_path" 2>&1; then
+            if gtimeout 300 ./tsuku-darwin-amd64 install --force \
+                --dangerously-suppress-security \
+                --recipe "$recipe_path" 2>&1; then
               PASSED=$((PASSED + 1))
               RESULTS="$RESULTS| $recipe_name | darwin-x86_64 | pass |\n"
               echo "PASS: $recipe_name on macOS x86_64"

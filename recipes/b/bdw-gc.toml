@@ -9,11 +9,9 @@
   llm_validation = "skipped"
 
 [version]
-  source = "homebrew"
   github_repo = ""
   tag_prefix = ""
   module = ""
-  formula = "bdw-gc"
   cask = ""
   tap = ""
   fossil_repo = ""

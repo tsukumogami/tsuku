@@ -1,0 +1,94 @@
+{
+  "format_version": 5,
+  "tool": "rust",
+  "version": "1.93.1",
+  "platform": {
+    "os": "linux",
+    "arch": "amd64"
+  },
+  "deterministic": false,
+  "dependencies": [
+    {
+      "tool": "bash",
+      "version": "5.3.9",
+      "steps": [
+        {
+          "action": "apk_install",
+          "params": {
+            "packages": [
+              "bash"
+            ]
+          },
+          "evaluable": false,
+          "deterministic": false
+        }
+      ],
+      "verify": {
+        "command": "bash --version",
+        "pattern": "GNU bash, version {version}"
+      }
+    }
+  ],
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "5a6c766ce05ad7229aadbb365bad2c9c809c9e378706f123c156821fe6ab2711",
+        "checksum_algo": "sha256",
+        "dest": "rust-1.93.1-x86_64-unknown-linux-musl.tar.gz",
+        "url": "https://static.rust-lang.org/dist/rust-1.93.1-x86_64-unknown-linux-musl.tar.gz"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://static.rust-lang.org/dist/rust-1.93.1-x86_64-unknown-linux-musl.tar.gz",
+      "checksum": "5a6c766ce05ad7229aadbb365bad2c9c809c9e378706f123c156821fe6ab2711",
+      "size": 549816929
+    },
+    {
+      "action": "extract",
+      "params": {
+        "arch_mapping": {
+          "amd64": "x86_64",
+          "arm64": "aarch64"
+        },
+        "archive": "rust-1.93.1-x86_64-unknown-linux-musl.tar.gz",
+        "format": "tar.gz",
+        "os_mapping": {
+          "linux": "unknown-linux-musl"
+        },
+        "strip_dirs": 1
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "run_command",
+      "params": {
+        "command": "./install.sh --prefix={install_dir} --disable-ldconfig"
+      },
+      "evaluable": false,
+      "deterministic": false
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "install_mode": "directory",
+        "outputs": [
+          "bin/cargo",
+          "bin/rustc",
+          "bin/rustdoc",
+          "bin/rustfmt",
+          "bin/cargo-clippy",
+          "bin/clippy-driver",
+          "bin/rust-analyzer"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "cargo --version",
+    "pattern": "cargo {version}"
+  }
+}

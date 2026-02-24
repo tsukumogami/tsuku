@@ -434,31 +434,159 @@ Running `tsuku validate --strict` will warn if a `[version]` section duplicates 
 
 ### Testing Recipes
 
-Before submitting a recipe, test it both locally and in a sandbox container:
+Local testing catches most recipe issues without waiting for CI. Always test recipes before submitting a PR.
+
+**Prerequisites:** Docker (or Podman), Go toolchain, and optionally jq for JSON parsing.
+
+#### Single recipe test
+
+The `--sandbox` flag runs the install inside an isolated Docker container:
 
 ```bash
 # Build tsuku
 go build -o tsuku ./cmd/tsuku
 
-# Test local installation
-./tsuku install <tool-name>
-
-# Test in isolated container (requires Docker or Podman)
+# Test in default container (Debian)
 ./tsuku install <tool-name> --sandbox
+
+# Test against a specific Linux family
+./tsuku install --sandbox --recipe recipes/d/diskus.toml --target-family alpine
 ```
 
-The `--sandbox` flag runs the installation in an isolated container to verify:
-- The recipe works in a clean environment
-- Dependencies are correctly declared
-- Verification commands work as expected
+Supported families: `debian`, `rhel`, `arch`, `suse`, `alpine`. Alpine uses musl libc instead of glibc, so pre-built glibc binaries won't work there.
 
-If Docker/Podman is unavailable (e.g., in some CI environments), you can skip sandbox testing:
+#### JSON output
+
+Add `--json` for structured output (human-readable logs go to stderr):
 
 ```bash
-tsuku create <tool> --from <source> --skip-sandbox
+./tsuku install --sandbox --recipe recipes/d/diskus.toml --json 2>/dev/null
 ```
 
-**Note:** Always test with sandbox when possible, as it catches environment-specific issues.
+Returns `{"tool":"diskus","passed":true,"verified":false,"install_exit_code":0,...}`.
+
+#### Testing all changed recipes across families
+
+Before pushing a PR that touches recipes, test every changed recipe across all 5 Linux families. This avoids wasting CI cycles on preventable failures.
+
+Find changed recipes:
+
+```bash
+git diff --name-only --diff-filter=d origin/main...HEAD -- 'recipes/**/*.toml'
+```
+
+Test them all (runs 5 families in parallel per recipe, cleans up between recipes to manage disk space):
+
+```bash
+#!/bin/bash
+set -uo pipefail
+
+BINARY="./tsuku"
+FAMILIES=("debian" "rhel" "arch" "suse" "alpine")
+WORK_DIR="/tmp/tsuku-recipe-test"
+SHARED_CACHE="$WORK_DIR/shared-downloads"
+RESULTS_DIR="$WORK_DIR/results"
+
+rm -rf "$WORK_DIR"
+mkdir -p "$SHARED_CACHE" "$RESULTS_DIR"
+chmod 700 "$SHARED_CACHE"
+
+# Detect changed recipes that still exist on disk
+mapfile -t RECIPE_PATHS < <(
+  git diff --name-only --diff-filter=d origin/main...HEAD -- 'recipes/**/*.toml' |
+  while read f; do [ -f "$f" ] && echo "$f"; done
+)
+
+if [ ${#RECIPE_PATHS[@]} -eq 0 ]; then
+  echo "No changed recipes found."
+  exit 0
+fi
+
+TOTAL=0; PASSED=0; FAILED=0; FAILED_LIST=""
+
+echo "Testing ${#RECIPE_PATHS[@]} recipes across ${#FAMILIES[@]} families..."
+
+for path in "${RECIPE_PATHS[@]}"; do
+  name=$(basename "$path" .toml)
+  echo "=== $name ==="
+
+  PIDS=()
+  for family in "${FAMILIES[@]}"; do
+    TOTAL=$((TOTAL + 1))
+    RESULT_FILE="$RESULTS_DIR/${name}-${family}.json"
+    LOG_FILE="$RESULTS_DIR/${name}-${family}.log"
+    FAMILY_HOME="$WORK_DIR/homes/tsuku-${name}-${family}"
+    mkdir -p "$FAMILY_HOME/cache"
+    ln -sf "$SHARED_CACHE" "$FAMILY_HOME/cache/downloads"
+
+    TSUKU_HOME="$FAMILY_HOME" TSUKU_TELEMETRY=0 \
+      "$BINARY" install --sandbox --force \
+        --dangerously-suppress-security \
+        --recipe "$path" \
+        --target-family "$family" \
+        --json > "$RESULT_FILE" 2>"$LOG_FILE" &
+    PIDS+=($!)
+  done
+
+  for pid in "${PIDS[@]}"; do wait "$pid" || true; done
+
+  for family in "${FAMILIES[@]}"; do
+    RESULT_FILE="$RESULTS_DIR/${name}-${family}.json"
+    if [ -f "$RESULT_FILE" ] && [ -s "$RESULT_FILE" ] && jq -e . "$RESULT_FILE" > /dev/null 2>&1; then
+      SANDBOX_PASSED=$(jq -r '.passed' "$RESULT_FILE")
+      EXIT_CODE=$(jq -r '.install_exit_code' "$RESULT_FILE")
+    else
+      SANDBOX_PASSED="false"; EXIT_CODE=1
+    fi
+    if [ "$SANDBOX_PASSED" = "true" ]; then
+      PASSED=$((PASSED + 1)); printf "  %-8s PASS\n" "$family"
+    else
+      FAILED=$((FAILED + 1))
+      FAILED_LIST="$FAILED_LIST\n  $name on $family (exit $EXIT_CODE)"
+      printf "  %-8s FAIL (exit %s)\n" "$family" "$EXIT_CODE"
+    fi
+  done
+  echo ""
+
+  # Clean up tool installs between recipes to save disk space.
+  # Sandbox containers run as root, so sudo is needed.
+  sudo rm -rf "$WORK_DIR/homes" /tmp/tsuku-sandbox-* 2>/dev/null
+done
+
+echo "Results: $PASSED passed, $FAILED failed out of $TOTAL"
+[ "$FAILED" -gt 0 ] && echo -e "\nFailed:$FAILED_LIST"
+```
+
+Key details:
+- **Shared download cache**: Downloads are shared across families via symlink. The `--dangerously-suppress-security` flag allows this.
+- **Per-recipe cleanup**: Tool installs (especially Rust at ~1.5 GB per family) are cleaned between recipes to avoid filling the disk.
+- **Parallel families**: All 5 families run simultaneously per recipe.
+
+#### Interpreting results
+
+- **Alpine failures are common** for pre-built glibc binaries. Add a `when` clause to exclude Alpine if the tool doesn't provide a musl build.
+- **Exit code 6**: The sandbox container failed (image pull, resource limits, or dependency installation error).
+- **Exit code 8**: Installation succeeded but verification failed. Check the verification command in the recipe.
+- **Empty result files**: The tsuku process crashed. Check the corresponding log file.
+
+Inspect individual failures:
+
+```bash
+cat /tmp/tsuku-recipe-test/results/diskus-alpine.log    # Installation output
+cat /tmp/tsuku-recipe-test/results/diskus-alpine.json    # Structured result
+```
+
+#### Performance notes
+
+- Cargo/build recipes compile from source and take 5-15 minutes each. Pre-built binary recipes finish in under a minute.
+- Docker images are cached after the first run. Subsequent runs skip the image build.
+- Running 5 parallel Cargo builds will saturate your CPU. For build-from-source recipes, consider testing families sequentially.
+
+#### What CI tests additionally
+
+- **arm64**: Both x86_64 and arm64 runners. Local testing covers your native architecture only.
+- **macOS**: arm64 and x86_64 macOS. Sandbox testing on macOS uses lima VMs.
+- **Golden files**: CI validates installation plans match expected golden files. Run `./scripts/validate-golden.sh <recipe>` locally if you change recipe structure.
 
 ### Submitting Recipes
 

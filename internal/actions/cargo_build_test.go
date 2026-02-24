@@ -99,7 +99,7 @@ func TestBuildDeterministicCargoEnv(t *testing.T) {
 	cargoPath := filepath.Join(tmpDir, "cargo")
 	workDir := t.TempDir()
 
-	env := buildDeterministicCargoEnv(cargoPath, workDir)
+	env := buildDeterministicCargoEnv(cargoPath, workDir, nil)
 
 	// Check that deterministic variables are set
 	var hasCargoIncremental, hasSourceDateEpoch, hasRustflags bool
@@ -146,7 +146,7 @@ func TestBuildDeterministicCargoEnv_PathIncludesCargoDir(t *testing.T) {
 	cargoPath := filepath.Join(tmpDir, "cargo")
 	workDir := t.TempDir()
 
-	env := buildDeterministicCargoEnv(cargoPath, workDir)
+	env := buildDeterministicCargoEnv(cargoPath, workDir, nil)
 
 	// Check that PATH includes the cargo directory
 	var pathValue string
@@ -168,7 +168,7 @@ func TestBuildDeterministicCargoEnv_IsolatedCargoHome(t *testing.T) {
 	cargoPath := filepath.Join(tmpDir, "cargo")
 	workDir := t.TempDir()
 
-	env := buildDeterministicCargoEnv(cargoPath, workDir)
+	env := buildDeterministicCargoEnv(cargoPath, workDir, nil)
 
 	// Check that CARGO_HOME is set to isolated directory
 	var cargoHomeValue string

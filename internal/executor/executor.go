@@ -20,20 +20,21 @@ import (
 
 // Executor executes action-based recipes
 type Executor struct {
-	workDir          string
-	installDir       string
-	downloadCacheDir string // Download cache directory
-	keyCacheDir      string // PGP key cache directory
-	recipe           *recipe.Recipe
-	ctx              *actions.ExecutionContext
-	version          string               // Resolved version
-	reqVersion       string               // Requested version (optional)
-	execPaths        []string             // Additional bin paths for execution (e.g., nodejs for npm tools)
-	toolsDir         string               // Tools directory (~/.tsuku/tools/) for finding other installed tools
-	libsDir          string               // Libraries directory (~/.tsuku/libs/) for finding installed libraries
-	appsDir          string               // Applications directory (~/.tsuku/apps/) for macOS .app bundles
-	currentDir       string               // Current symlinks directory (~/.tsuku/tools/current/) for binary symlinks
-	resolvedDeps     actions.ResolvedDeps // Pre-resolved dependencies (from state manager)
+	workDir                 string
+	installDir              string
+	downloadCacheDir        string // Download cache directory
+	keyCacheDir             string // PGP key cache directory
+	skipCacheSecurityChecks bool   // Skip symlink/permission checks on cache dir
+	recipe                  *recipe.Recipe
+	ctx                     *actions.ExecutionContext
+	version                 string               // Resolved version
+	reqVersion              string               // Requested version (optional)
+	execPaths               []string             // Additional bin paths for execution (e.g., nodejs for npm tools)
+	toolsDir                string               // Tools directory (~/.tsuku/tools/) for finding other installed tools
+	libsDir                 string               // Libraries directory (~/.tsuku/libs/) for finding installed libraries
+	appsDir                 string               // Applications directory (~/.tsuku/apps/) for macOS .app bundles
+	currentDir              string               // Current symlinks directory (~/.tsuku/tools/current/) for binary symlinks
+	resolvedDeps            actions.ResolvedDeps // Pre-resolved dependencies (from state manager)
 }
 
 // New creates a new executor
@@ -75,6 +76,11 @@ func (e *Executor) SetDownloadCacheDir(dir string) {
 // SetKeyCacheDir sets the PGP key cache directory
 func (e *Executor) SetKeyCacheDir(dir string) {
 	e.keyCacheDir = dir
+}
+
+// SetSkipCacheSecurityChecks disables symlink/permission checks on the cache directory.
+func (e *Executor) SetSkipCacheSecurityChecks(skip bool) {
+	e.skipCacheSecurityChecks = skip
 }
 
 // resolveVersionWith attempts to resolve the latest version for the recipe using the given resolver
@@ -379,24 +385,25 @@ func (e *Executor) ExecutePlan(ctx context.Context, plan *InstallationPlan) erro
 
 	// Create execution context from plan
 	execCtx := &actions.ExecutionContext{
-		Context:          ctx,
-		WorkDir:          e.workDir,
-		InstallDir:       e.installDir,
-		ToolInstallDir:   "",
-		ToolsDir:         e.toolsDir,
-		LibsDir:          e.libsDir,
-		AppsDir:          e.appsDir,
-		CurrentDir:       e.currentDir,
-		DownloadCacheDir: e.downloadCacheDir,
-		KeyCacheDir:      e.keyCacheDir,
-		Version:          plan.Version,
-		VersionTag:       plan.Version, // Plan doesn't track tag separately
-		OS:               plan.Platform.OS,
-		Arch:             plan.Platform.Arch,
-		Recipe:           recipeForContext,
-		ExecPaths:        e.execPaths,
-		Logger:           log.Default(),
-		Dependencies:     resolvedDeps,
+		Context:                 ctx,
+		WorkDir:                 e.workDir,
+		InstallDir:              e.installDir,
+		ToolInstallDir:          "",
+		ToolsDir:                e.toolsDir,
+		LibsDir:                 e.libsDir,
+		AppsDir:                 e.appsDir,
+		CurrentDir:              e.currentDir,
+		DownloadCacheDir:        e.downloadCacheDir,
+		SkipCacheSecurityChecks: e.skipCacheSecurityChecks,
+		KeyCacheDir:             e.keyCacheDir,
+		Version:                 plan.Version,
+		VersionTag:              plan.Version, // Plan doesn't track tag separately
+		OS:                      plan.Platform.OS,
+		Arch:                    plan.Platform.Arch,
+		Recipe:                  recipeForContext,
+		ExecPaths:               e.execPaths,
+		Logger:                  log.Default(),
+		Dependencies:            resolvedDeps,
 	}
 	e.ctx = execCtx
 
@@ -644,24 +651,25 @@ func (e *Executor) installSingleDependency(ctx context.Context, dep *DependencyP
 
 	// Create execution context for this dependency
 	execCtx := &actions.ExecutionContext{
-		Context:          ctx,
-		WorkDir:          depWorkDir,
-		InstallDir:       depInstallDir,
-		ToolInstallDir:   "",
-		ToolsDir:         e.toolsDir,
-		LibsDir:          e.libsDir,
-		AppsDir:          e.appsDir,
-		CurrentDir:       e.currentDir,
-		DownloadCacheDir: e.downloadCacheDir,
-		KeyCacheDir:      e.keyCacheDir,
-		Version:          dep.Version,
-		VersionTag:       dep.Version,
-		OS:               platform.OS,
-		Arch:             platform.Arch,
-		Recipe:           depRecipe,
-		ExecPaths:        e.execPaths,
-		Logger:           log.Default(),
-		Dependencies:     depResolvedDeps,
+		Context:                 ctx,
+		WorkDir:                 depWorkDir,
+		InstallDir:              depInstallDir,
+		ToolInstallDir:          "",
+		ToolsDir:                e.toolsDir,
+		LibsDir:                 e.libsDir,
+		AppsDir:                 e.appsDir,
+		CurrentDir:              e.currentDir,
+		DownloadCacheDir:        e.downloadCacheDir,
+		SkipCacheSecurityChecks: e.skipCacheSecurityChecks,
+		KeyCacheDir:             e.keyCacheDir,
+		Version:                 dep.Version,
+		VersionTag:              dep.Version,
+		OS:                      platform.OS,
+		Arch:                    platform.Arch,
+		Recipe:                  depRecipe,
+		ExecPaths:               e.execPaths,
+		Logger:                  log.Default(),
+		Dependencies:            depResolvedDeps,
 	}
 
 	// Validate all steps before execution (fail fast)

@@ -67,6 +67,7 @@ func installLibrary(libName, reqVersion, parent string, mgr *install.Manager, te
 	exec.SetAppsDir(cfg.AppsDir)
 	exec.SetCurrentDir(cfg.CurrentDir)
 	exec.SetDownloadCacheDir(cfg.DownloadCacheDir)
+	exec.SetSkipCacheSecurityChecks(installSkipSecurity)
 	exec.SetKeyCacheDir(cfg.KeyCacheDir)
 
 	// Look up resolved dependency versions for variable expansion
@@ -103,6 +104,7 @@ func installLibrary(libName, reqVersion, parent string, mgr *install.Manager, te
 	var downloader actions.Downloader
 	if cfg.DownloadCacheDir != "" {
 		downloadCache = actions.NewDownloadCache(cfg.DownloadCacheDir)
+		downloadCache.SetSkipSecurityChecks(installSkipSecurity)
 		predownloader := validate.NewPreDownloader()
 		downloader = validate.NewPreDownloaderAdapter(predownloader)
 	}
