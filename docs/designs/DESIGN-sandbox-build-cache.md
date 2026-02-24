@@ -1,30 +1,26 @@
 ---
 status: Proposed
 problem: |
-  When testing cargo_build recipes across 5 Linux families, each family
-  independently installs the same Rust toolchain and fetches the same cargo
-  registry content. This redundant work adds 15-25 minutes per recipe test,
-  frequently pushing CI jobs past the 60-minute timeout. The existing download
-  and container image caches don't help because ecosystem toolchain installation
-  happens at runtime in ephemeral containers that are destroyed after each run.
+  When testing recipes across Linux families, each family independently installs
+  the same ecosystem toolchains (Rust, Node.js, etc.) inside ephemeral containers
+  that are destroyed after each run. There's no mechanism to carry forward this
+  work. The plan already contains a structured dependency tree with resolved
+  versions, but nothing maps this tree to reusable container image layers.
 decision: |
-  Introduce "foundation images" as a second level of container image caching.
-  Foundation images extend the existing package images by pre-installing
-  ecosystem toolchains at /opt/ecosystem/, outside the workspace mount that
-  would shadow them. The sandbox script bridges pre-installed toolchains into
-  the workspace via symlinks. Foundation images are built using the existing
-  runtime.Build() infrastructure with generated Dockerfiles that run tsuku
-  inside a RUN command. Separately, cargo registry content is shared across
-  families via a read-write volume mount.
+  Map plan dependency layers to Docker image layers. Each InstallTime dependency
+  in the plan becomes a separate RUN command in a generated Dockerfile, installed
+  in canonical order. Docker's native layer caching handles cross-recipe reuse
+  automatically: two recipes that both need Rust 1.82.0 share the same cached
+  layer. Dependencies are installed at /opt/ecosystem/ to avoid workspace mount
+  shadowing, with symlinks bridging them into the workspace at runtime.
 rationale: |
-  Foundation images extend the proven container image cache pattern (deterministic
-  hash, build-once-reuse-many) to a second level without introducing new
-  mechanisms. Building via generated Dockerfiles reuses existing infrastructure,
-  produces reproducible images, and keeps tsuku as the single installation
-  authority. The symlink bridge solves workspace mount shadowing without modifying
-  the mount strategy. We chose not to share compiled artifacts across families
-  because different libc environments require independent compilation for
-  correctness.
+  Docker already solves the "don't redo identical work" problem through layer
+  caching. Rather than building a custom cache management system, we generate
+  Dockerfiles where each plan dependency is a separate RUN command and let
+  Docker/Podman handle reuse. Canonical ordering of dependencies maximizes
+  the shared prefix between recipes. Using tsuku itself inside RUN commands
+  keeps it as the single installation authority. This works dynamically on
+  developer machines -- no pre-built images or registry infrastructure needed.
 ---
 
 # DESIGN: Sandbox Build Cache
@@ -35,342 +31,447 @@ Proposed
 
 ## Context and Problem Statement
 
-Tsuku's sandbox system tests recipes inside isolated containers, one per Linux family. When a recipe uses `cargo_build`, each family container independently:
+Tsuku's sandbox runs recipe installations inside isolated containers, one per Linux family. When a recipe uses `cargo_build`, each family container independently:
 
 1. Installs the Rust toolchain (~2-3 minutes)
-2. Runs `cargo fetch` to populate the cargo registry with crate metadata and source tarballs (~1-2 minutes)
-3. Compiles the entire dependency tree from scratch (~10-40 minutes for heavy crates)
+2. Runs `cargo fetch` to populate the cargo registry (~1-2 minutes)
+3. Compiles the entire dependency tree (~10-40 minutes for heavy crates)
 
-For a single recipe tested across 5 families (debian, rhel, arch, suse, alpine), that's 5 independent Rust installations and 5 independent compilations of the same dependency tree. On CI runners with limited CPU, heavy crates like komac, cargo-nextest, or probe-rs-tools frequently hit the 60-minute job timeout even though a single-family build completes in 15-20 minutes.
+For 5 families, that's 5 independent Rust installations and 5 compilations. On CI, heavy crates frequently hit the 60-minute job timeout.
 
-The current caching in the sandbox has two levels:
+The sandbox currently caches at two levels:
 
-- **Download cache**: Source tarballs and archives are fetched once and shared across families via a read-only volume mount at `/workspace/tsuku/cache/downloads`. This works well for avoiding redundant downloads.
-- **Container image cache**: Images are keyed by a deterministic hash of (base image + system packages + repositories). The image `tsuku/sandbox-cache:debian-{hash}` is built once and reused. This avoids re-running `apt-get install` every time.
+- **Download cache**: Artifacts fetched once, shared across families via read-only volume mount
+- **Container image cache**: Images keyed by hash of (base image + system packages), built once per unique package set
 
-But neither level helps with what happens _inside_ the running container. The Rust toolchain installation, cargo registry population, and dependency compilation all happen at runtime in an ephemeral workspace that's destroyed when the container exits. There's no mechanism to carry forward the ecosystem setup from one sandbox run to the next.
+Neither level helps with what happens at runtime. The Rust toolchain, cargo registry, and compilation all happen inside ephemeral containers. There's no mechanism to reuse ecosystem setup across sandbox runs.
 
-The same pattern applies to other ecosystem build actions. An `npm_install` recipe installs Node.js on every family before running `npm install`. A future `pip_build` action would install Python on every family before running `pip install`. The problem generalizes beyond Rust.
+### How the sandbox works
+
+The sandbox is always invoked with a pre-resolved plan. Even when a user runs `tsuku install --sandbox cargo-nextest` without providing a plan, tsuku generates the plan on the host first (resolving versions, downloading artifacts, computing checksums), then passes the resolved plan into the container. The container runs `tsuku install --plan plan.json --force` -- it never calls version providers or resolves anything.
+
+The plan has a tree structure. `InstallationPlan.Dependencies` contains `DependencyPlan` entries, each with its own `Steps` and potentially nested `Dependencies`. For a cargo_build recipe, the plan typically looks like:
+
+```
+InstallationPlan (cargo-nextest v0.24.5)
+  Dependencies:
+    [0] DependencyPlan (rust v1.82.0)
+         Steps: [download, extract, install_binaries, ...]
+  Steps: [cargo_build ...]
+```
+
+This tree structure maps naturally to Docker image layers. Each dependency in the tree is work that could be cached and reused by other recipes that need the same dependency at the same version.
+
+### Dependency categories
+
+Tsuku has three dependency categories (`ActionDeps` in `actions/action.go`):
+
+- **EvalTime**: Needed during plan generation (host-side, for `Decompose()`). Not relevant to container caching.
+- **InstallTime**: Needed during execution. These become `DependencyPlan` entries in the plan tree. This is what should be cached as Docker layers.
+- **Runtime**: Tracked but not installed by tsuku during installation. Not relevant here.
 
 ### Scope
 
 **In scope:**
-- Caching ecosystem toolchain installations across sandbox runs for the same family
-- Sharing platform-independent cargo registry content across families
-- Integration with the existing container image cache in `container_spec.go`
-- Working with both Docker and Podman runtimes
+- Mapping InstallTime dependencies from the plan to Docker image layers
+- Cross-recipe layer sharing via Docker's native caching
+- Dynamic operation on developer machines (no pre-built images or registry)
+- Working with both Docker and Podman
 
 **Out of scope:**
-- Sharing compiled artifacts (.rlib files) across families (different libc, different system libraries)
-- Cross-architecture caching (x86_64 vs arm64 produce different toolchains)
-- Persistent caching across CI runs (GitHub Actions cache integration is a separate concern)
-- Changes to how `cargo_build.go` handles CARGO_HOME isolation within a single build
+- Sharing compiled artifacts (.rlib files) across families
+- Cross-architecture caching (x86_64 vs arm64)
+- Changes to how `cargo_build.go` handles CARGO_HOME isolation
 
 ## Decision Drivers
 
-- **Don't redo identical work**: If two sandbox runs need the same Rust version on the same family, the toolchain should be installed once
-- **Preserve family isolation**: Final binaries must be compiled independently per family. Sharing compiled artifacts between different libc environments breaks correctness guarantees
-- **Maintain determinism**: `SOURCE_DATE_EPOCH=0` and `CARGO_INCREMENTAL=0` must remain in effect. Any caching must not interfere with these flags
-- **Follow existing patterns**: The download cache (read-only mount) and container image cache (hash-based naming) are proven patterns. New caching should feel similar
-- **Runtime compatibility**: Must work with Docker and Podman. Both support image layer caching and volume mounts. Avoid BuildKit-specific features that Podman doesn't support
-- **Incremental delivery**: The solution should be decomposable into independently useful pieces, not an all-or-nothing change
+- **Map plan structure to cache structure**: The plan already describes what needs to be installed and in what order. The caching mechanism should mirror this structure
+- **Docker-native**: Use Docker/Podman's layer caching rather than building a parallel cache system
+- **Dynamic, user-machine operation**: A developer running `tsuku install --sandbox` should benefit from cached layers from previous runs without any setup
+- **Cross-recipe reuse**: If recipe A and recipe B both need Rust 1.82.0, the Rust layer should be shared automatically
+- **Preserve family isolation**: Each family builds independently. No sharing of compiled artifacts between different libc environments
+- **CI adapts to the format**: Design the caching for local usage; CI workflows restructure to take advantage of it
 
 ## Research Findings
 
-### How Ecosystem Dependencies Flow Through the Sandbox
-
-When the sandbox executor runs a plan for a cargo_build recipe, the plan's action dependencies include "rust" (declared in `cargo_build.go:18`). The plan generator resolves this to concrete installation steps for the Rust toolchain. The sandbox script then runs `tsuku install --plan plan.json --force`, which executes all steps sequentially: first the Rust installation, then the cargo build.
-
-The container image built by `DeriveContainerSpec()` contains only system packages (curl, ca-certificates, build-essential, etc.). The Rust toolchain is installed at _runtime_ inside the ephemeral workspace. This is why the toolchain installation repeats on every run.
-
 ### Workspace Mount Shadowing
 
-The sandbox mounts a fresh host temporary directory at `/workspace` (`executor.go:309-313`). This mount shadows anything the Docker image contains at that path. Since `TSUKU_HOME=/workspace/tsuku`, any toolchain pre-installed into the image at that path would be invisible to the running container.
+The sandbox mounts a fresh host directory at `/workspace` (`executor.go:309-313`). Since `TSUKU_HOME=/workspace/tsuku`, anything the Docker image contains at that path is hidden. Dependencies cached in the image must be installed outside `/workspace` (e.g., `/opt/ecosystem/`) and bridged into the workspace via symlinks at runtime.
 
-This means we can't simply add Rust installation to the Dockerfile's RUN commands and expect it to persist. The workspace mount will shadow it. Any toolchain caching must either:
-- Install to a path _outside_ `/workspace` (e.g., `/opt/ecosystem/`)
-- Populate the workspace _after_ the mount is applied (e.g., copy or bind-mount)
+### Docker Layer Caching Mechanics
 
-### Docker and Podman Layer Caching
+Each `RUN` command in a Dockerfile creates a layer. Docker caches a layer when (parent layer + command text) haven't changed. Layers are position-sensitive: layer N is cached only if layers 0..N-1 are identical to a previous build. This means dependency ordering matters -- recipes must install dependencies in the same canonical order to maximize shared prefixes.
 
-Both Docker and Podman cache image layers by content hash. Each `RUN` command in a Dockerfile creates a layer. If the command and all parent layers haven't changed, the layer is reused from cache. This is automatic and doesn't require special configuration.
+Both Docker and Podman support this layer caching natively. No BuildKit-specific features are needed.
 
-`docker commit` snapshots a running container's filesystem as a new image layer. This works with both Docker and Podman and produces a reusable image. The approach is simpler than Dockerfile-based builds for capturing runtime state (like a toolchain installed by tsuku).
+### Plan Dependencies Are Self-Contained
 
-BuildKit-specific features like `RUN --mount=type=cache` provide persistent cache mounts between builds, but Podman's support for this is inconsistent across versions. The sandbox needs to work with both runtimes, so BuildKit-specific features should be avoided or used only as optimization.
+Each `DependencyPlan` in the plan tree contains fully resolved `Steps` with concrete URLs, versions, and checksums. A DependencyPlan can be converted to a standalone `InstallationPlan` and passed to `tsuku install --plan`. This means each dependency can be installed independently via a Dockerfile `RUN` command that receives its plan as input.
 
-### Cargo Registry Is Platform-Independent
+### Canonical Ordering Enables Layer Sharing
 
-`CARGO_HOME/registry/cache/` and `registry/src/` contain crate tarballs and extracted source. This content is identical regardless of which Linux family it was downloaded on. `cargo fetch` on debian downloads the exact same crate files as on alpine.
+If we always install dependencies in the same order across all recipes, Docker's layer caching maximizes reuse. Two recipes with different dependency sets but a common prefix share all layers up to where they diverge.
 
-The cargo build action creates an isolated `CARGO_HOME` per build (`cargo_build.go:527`), then runs `cargo fetch --locked` to populate the registry. Sharing the registry content across families would eliminate redundant downloads. The pattern matches the existing download cache: mount a shared directory read-only, let each build use it.
+Consider three recipes:
+- Recipe A needs: `[rust@1.82.0]`
+- Recipe B needs: `[nodejs@22, rust@1.82.0]`
+- Recipe C needs: `[openssl@3.0, rust@1.82.0]`
 
-However, sharing compiled dependencies (the `target/` directory) is unsafe across families. glibc and musl produce different binaries, and even between glibc families, differences in system library versions can affect compilation of crates with native dependencies (C bindings, sys crates).
+With alphabetical ordering: nodejs < openssl < rust. So:
+- Recipe A's layers: `[..., nodejs@22]` -- wait, A doesn't need nodejs
 
-### Existing Container Image Caching
+Actually, only the dependencies each recipe declares appear in its Dockerfile. The key insight: recipes with identical dependency lists share all layers. Recipes that share a prefix of the sorted dependency list share those prefix layers.
 
-`ContainerImageName()` in `container_spec.go:368` generates deterministic image names from a hash of (base image + packages + repositories). The executor checks if this image exists and builds it only if needed. This pattern can be extended to a second level of caching.
-
-The current naming scheme: `tsuku/sandbox-cache:{family}-{hash16}`
-
-A foundation image could follow: `tsuku/sandbox-foundation:{family}-{deps_hash16}`
-
-### CI Workflow Patterns
-
-The `test-recipe.yml` workflow already runs families in parallel per recipe and shares a download cache via symlink. Adding foundation image caching would slot into the existing flow: build foundation images once (potentially in a setup step), then reference them when running per-family sandbox tests.
+For the most common case (single dependency like "rust"), all cargo_build recipes share the same Rust layer.
 
 ## Considered Options
 
-### Decision 1: How Should Ecosystem Toolchains Be Cached?
+### Decision 1: How Should Plan Dependencies Map to Docker Layers?
 
-The Rust toolchain takes 2-3 minutes to install per family. For 5 families, that's 10-15 minutes of redundant work per recipe test. We need a way to install the toolchain once per family and reuse it across recipe runs that need the same ecosystem.
+The plan's `Dependencies` tree contains the work that repeats across recipes. We need to decide how to convert this tree into cacheable Docker image layers.
 
-The challenge is the workspace mount shadowing described above: anything installed to `/workspace/tsuku/` in the Docker image is hidden by the ephemeral host mount. The caching mechanism must work around this.
+#### Chosen: One RUN command per dependency in canonical order
 
-#### Chosen: Foundation images with external toolchain path
+Flatten the plan's dependency tree (DFS: install transitive deps before their dependents), sort the result canonically, and generate a Dockerfile where each dependency is a separate `RUN` command. Docker's layer caching handles reuse automatically.
 
-Build a second level of cached Docker images ("foundation images") that contain ecosystem toolchains installed outside the workspace mount point. The foundation image extends the existing package image by adding the toolchain at `/opt/ecosystem/`.
+Generated Dockerfile for a recipe that needs Rust 1.82.0 (which itself depends on nothing):
 
-The sandbox executor:
-1. Analyzes the plan to identify ecosystem dependencies and their versions from `plan.Dependencies`
-2. Computes a foundation image name: `tsuku/sandbox-foundation:{family}-{hash}` where hash includes package image hash + ecosystem deps
-3. If the foundation image doesn't exist, builds it using the existing `runtime.Build()` method with a generated Dockerfile that COPYs tsuku into the image and runs `RUN TSUKU_HOME=/opt/ecosystem tsuku install <dep> --force`
-4. Runs the recipe's sandbox from the foundation image instead of the package image
-5. The sandbox script bridges the ecosystem deps into the workspace by symlinking `/opt/ecosystem/tools/*` into `/workspace/tsuku/tools/` and `/opt/ecosystem/bin/*` into `/workspace/tsuku/bin/`. This ensures the plan executor finds the pre-installed toolchain at `$TSUKU_HOME/tools/` and skips reinstallation
+```dockerfile
+FROM tsuku/sandbox-cache:debian-{pkg_hash}
+COPY tsuku /usr/local/bin/tsuku
+COPY plans/dep-00-rust.json /tmp/plans/
+ENV TSUKU_HOME=/opt/ecosystem
+ENV PATH=/opt/ecosystem/bin:$PATH
+RUN tsuku install --plan /tmp/plans/dep-00-rust.json --force
+RUN rm -rf /usr/local/bin/tsuku /tmp/plans
+```
 
-The Dockerfile approach reuses the existing `runtime.Build()` infrastructure (no new interface methods), produces reproducible images (rebuildable from the same Dockerfile), and keeps tsuku as the single source of truth for installation logic. The symlink bridge solves the workspace mount shadowing problem: the tools exist in the image at `/opt/ecosystem/` and appear at the expected `$TSUKU_HOME/tools/` path via symlinks created after the mount is applied.
+For a recipe that needs Rust and OpenSSL:
 
-#### Alternatives Considered
+```dockerfile
+FROM tsuku/sandbox-cache:debian-{pkg_hash}
+COPY tsuku /usr/local/bin/tsuku
+COPY plans/dep-00-openssl.json /tmp/plans/
+COPY plans/dep-01-rust.json /tmp/plans/
+ENV TSUKU_HOME=/opt/ecosystem
+ENV PATH=/opt/ecosystem/bin:$PATH
+RUN tsuku install --plan /tmp/plans/dep-00-openssl.json --force
+RUN tsuku install --plan /tmp/plans/dep-01-rust.json --force
+RUN rm -rf /usr/local/bin/tsuku /tmp/plans
+```
 
-**Ecosystem installation via raw shell commands in Dockerfile**: Add ecosystem-specific RUN commands to the generated Dockerfile (e.g., `RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`). Rejected because this duplicates installation logic that tsuku already handles, creating a second code path that must be kept in sync. The chosen approach runs tsuku itself inside the RUN command, keeping it as the single source of truth.
+Docker caches each layer based on (parent + command + COPY content). If the rust plan JSON is identical between recipes (same version, same URLs, same checksums), the COPY and RUN layers are cached. Recipes with the same dependency prefix share those layers.
 
-**BuildKit cache mounts**: Use `RUN --mount=type=cache,target=/opt/ecosystem` in the generated Dockerfile to persist the toolchain across builds. Rejected because BuildKit cache mounts have inconsistent Podman support, are scoped to a single BuildKit instance (breaking CI), and their contents aren't included in `--cache-from`/`--cache-to` exports. The sandbox must work equally well with Docker and Podman.
-
-**Volume-mounted toolchain from host**: Mount a host directory containing a pre-installed toolchain into containers as a read-only volume at `/opt/ecosystem/`, similar to the download cache pattern. This would work since the container path can match the installation path. Rejected because it requires pre-installing the toolchain on the host outside of the sandbox workflow, adds host state that must be managed separately from the container lifecycle, and doesn't travel with the image (a foundation image can be saved/loaded between hosts, while a volume mount requires the host directory to exist). For CI, maintaining host-level toolchain directories across ephemeral runners adds operational complexity that image-based caching avoids.
-
-### Decision 2: How Should Cargo Registry Content Be Shared?
-
-The cargo registry (`CARGO_HOME/registry/`) is populated by `cargo fetch` with crate metadata and source tarballs. This content is platform-independent but currently downloaded independently per family per build. We need to decide whether and how to share it.
-
-#### Chosen: Shared cargo registry cache as a read-write volume
-
-Mount a host directory at a well-known location inside the container. The first family's `cargo fetch` populates it, and subsequent families read from it. Unlike the download cache (read-only), this needs to be read-write so cargo can add index metadata and extracted sources.
-
-The cargo registry cache lives at `$TSUKU_HOME/cache/cargo-registry/` on the host and is mounted into the container. The `buildDeterministicCargoEnv()` function in `cargo_build.go` would set `CARGO_HOME` to point at this shared location's parent, or more precisely, create the isolated `.cargo-home` with a symlink from `registry/` to the shared mount.
-
-#### Alternatives Considered
-
-**Don't share registry content**: Let each family run its own `cargo fetch`. Rejected because the registry download takes 1-2 minutes per family and the content is identical. For 5 families that's 5-10 minutes of redundant network I/O per recipe. The download cache already proves that sharing read-only data across families works reliably.
-
-**Share the entire CARGO_HOME**: Instead of just the registry, share the full `CARGO_HOME` including compiled artifacts. Rejected because the `target/` build cache is platform-specific (different libc produce different artifacts), and sharing it could cause subtle build failures or incorrect linking. Only the registry content is safe to share.
-
-### Decision 3: Scope of Foundation Image Support
-
-Foundation images solve the ecosystem caching problem. But should this be specific to Rust/cargo, or should it handle any ecosystem toolchain?
-
-#### Chosen: General foundation image mechanism, cargo_build as first consumer
-
-The foundation image system should be ecosystem-agnostic. It works by:
-1. Extracting `ActionDependencies.InstallTime` from the plan's actions
-2. Building a foundation image that has those dependencies pre-installed
-3. Running the rest of the plan from that foundation image
-
-The mechanism doesn't need to know anything about Rust specifically. Any action that declares install-time dependencies (cargo_build declares "rust", npm_install could declare "nodejs") benefits automatically. Cargo_build is the first and most impactful consumer, but the architecture doesn't need cargo-specific code.
+The tsuku binary and plan files are copied into the build context and cleaned up in the final layer. Each `RUN` command installs one dependency to `$TSUKU_HOME=/opt/ecosystem`, where it persists across layers. Subsequent RUN commands see tools installed by previous layers.
 
 #### Alternatives Considered
 
-**Cargo-specific caching**: Add Rust-specific caching logic to `cargo_build.go` that pre-installs Rust before the sandbox run. Rejected because the problem isn't specific to Rust. Any ecosystem toolchain installation repeats across families. A general mechanism handles current and future ecosystem actions without per-ecosystem code.
+**Single foundation image with all deps**: Install all dependencies in one `RUN` command, producing a single foundation image per unique dependency set. Rejected because this prevents layer sharing between recipes with partially overlapping dependency sets. Recipe A needing `[rust]` and recipe B needing `[openssl, rust]` would produce two separate images with no shared layers.
+
+**Docker commit after runtime installation**: Run the plan's dependencies inside a container, then `docker commit` to snapshot the state. Rejected because `runtime.Run()` passes `--rm` (containers are cleaned up automatically), requiring a new container lifecycle. The Dockerfile approach reuses existing `runtime.Build()` infrastructure. Commit-based images are also not reproducible from a Dockerfile.
+
+**BuildKit cache mounts**: Use `RUN --mount=type=cache` for persistent directories across builds. Rejected because Podman support is inconsistent, cache mounts are scoped to a single BuildKit instance (not shared across CI runners), and their contents aren't included in `--cache-from`/`--cache-to` exports.
+
+### Decision 2: How Should Dependencies Be Ordered?
+
+Docker layer caching is position-sensitive. Layer N is cached only if layers 0..N-1 match. The order in which we install dependencies determines which recipes share layers.
+
+#### Chosen: Alphabetical by dependency name
+
+Sort dependencies alphabetically by tool name. This is deterministic, easy to understand, and produces consistent ordering regardless of which recipe triggered the build.
+
+Within the flattened dependency tree, transitive dependencies sort independently. If rust depends on llvm, the flattened list might be `[llvm, rust]` (alphabetical). This is stable because it doesn't depend on tree structure.
+
+For the most common case (single ecosystem dep like "rust"), all cargo_build recipes produce identical Dockerfiles and share all layers.
+
+#### Alternatives Considered
+
+**Frequency-based ordering**: Sort by how frequently each dependency appears across all recipes (most common first). Rejected because it requires global knowledge of all recipes and changes as the recipe registry grows. Alphabetical is stateless and deterministic.
+
+**Tree-structure ordering**: Preserve the plan's dependency tree order (DFS). Rejected because different recipes might resolve the same dependencies in different tree positions, producing different Dockerfiles for the same logical content.
+
+### Decision 3: How Should the Workspace Bridge Work?
+
+Dependencies are installed at `/opt/ecosystem/` inside the Docker image, but the plan executor expects them at `$TSUKU_HOME/tools/` which is under the mounted workspace. We need a bridge.
+
+#### Chosen: Symlink bridge in sandbox script
+
+The sandbox script creates symlinks before executing the plan:
+
+```sh
+# Bridge pre-installed ecosystem deps into workspace
+if [ -d /opt/ecosystem/tools ]; then
+  for tool_dir in /opt/ecosystem/tools/*/; do
+    tool_name=$(basename "$tool_dir")
+    ln -sf "$tool_dir" "/workspace/tsuku/tools/$tool_name"
+  done
+  for bin in /opt/ecosystem/bin/*; do
+    [ -f "$bin" ] && ln -sf "$bin" "/workspace/tsuku/bin/$(basename "$bin")"
+  done
+fi
+```
+
+The plan executor finds tools at `$TSUKU_HOME/tools/rust-1.82.0/` (via symlink) and skips reinstallation. `ResolveCargo()` and similar functions find binaries via PATH (which includes `/opt/ecosystem/bin/`) or by scanning `$TSUKU_HOME/tools/*/bin/`.
+
+#### Alternatives Considered
+
+**Modify plan executor to check /opt/ecosystem/**: Add a fallback path to the dependency installation logic. Rejected because it couples the executor to the sandbox's filesystem layout. The symlink bridge is transparent to the executor.
+
+**Bind-mount individual tool directories**: Instead of symlinking, mount each `/opt/ecosystem/tools/<name>` at `/workspace/tsuku/tools/<name>`. Rejected because it requires knowing which tools exist at container creation time (before the script runs) and adds mount complexity for each dependency.
 
 ## Decision Outcome
 
-**Chosen: Foundation images + shared cargo registry**
+**Chosen: Per-dependency Docker layers with canonical ordering**
 
 ### Summary
 
-The sandbox gets a second level of container image caching called "foundation images." These sit between the existing package images (base OS + system packages) and the ephemeral per-recipe sandbox execution. A foundation image contains ecosystem toolchains (like Rust) pre-installed at `/opt/ecosystem/`, outside the workspace mount point that would otherwise shadow them.
+Each InstallTime dependency in the plan becomes a separate `RUN` command in a generated Dockerfile. The Dockerfile starts from the existing package image and installs dependencies one at a time, sorted alphabetically, with `TSUKU_HOME=/opt/ecosystem`. Docker's native layer caching handles cross-recipe reuse: two recipes that both need Rust 1.82.0 on debian share the exact same Rust layer because the COPY content (plan JSON) and RUN command are identical.
 
-When the sandbox executor prepares a plan for execution, it reads `plan.Dependencies` to identify what ecosystem toolchains the plan needs and their resolved versions. It computes a deterministic hash from the package image plus the sorted dependency list, forming a foundation image name like `tsuku/sandbox-foundation:debian-rust1820-{hash16}`. If that image exists, the sandbox starts from it directly. If not, the executor builds it using `runtime.Build()` with a generated Dockerfile. The Dockerfile copies the tsuku binary into the image and runs `RUN TSUKU_HOME=/opt/ecosystem tsuku install <dep> --force` for each dependency. This reuses the existing image build infrastructure and produces reproducible images.
+The dependency plans are extracted from the parent plan's `Dependencies` tree, flattened via DFS traversal, deduplicated, and sorted alphabetically. Each is converted to a standalone `InstallationPlan` JSON and copied into the Docker build context. The tsuku binary is also copied in and removed after installation.
 
-The sandbox script bridges the pre-installed toolchain into the workspace by symlinking `/opt/ecosystem/tools/*` into `/workspace/tsuku/tools/` and `/opt/ecosystem/bin/*` into `/workspace/tsuku/bin/`. These symlinks are created after the workspace mount is applied, so they point from the mounted workspace into the image's filesystem. When tsuku processes the plan's dependency installation steps, it finds the toolchain at `$TSUKU_HOME/tools/rust-1.82.0/` via the symlink and skips reinstallation. The actual build work (cargo fetch, cargo build) runs normally from the pre-installed toolchain.
+At sandbox runtime, the script creates symlinks from `/opt/ecosystem/tools/*` into `/workspace/tsuku/tools/` before executing the recipe's plan. The plan executor discovers pre-installed dependencies via these symlinks and skips their installation steps.
 
-Separately, `CARGO_HOME/registry/` content is shared across families via a read-write volume mount. The first family's `cargo fetch` populates the shared cache, and subsequent families find the crate metadata and source tarballs already present. This eliminates redundant network I/O for registry content that's identical across families.
+This approach is fully dynamic. On a developer's machine, the first `tsuku install --sandbox cargo-nextest` builds the Rust layer (~2-3 minutes). Every subsequent cargo_build sandbox run that needs the same Rust version finds the layer cached and starts instantly. No pre-built images, no registry, no external infrastructure. CI benefits the same way: within a job that tests multiple recipes, all recipes after the first share cached dependency layers.
 
-Neither caching level shares compiled artifacts between families. Each family still compiles its own dependency tree independently, preserving the isolation guarantees that different libc environments require.
+The speedup targets toolchain installation and registry fetching (saving ~15-25 minutes across 5 families per recipe). Compilation time (10-40 min per family) remains unaddressed -- each family still compiles independently. For the heaviest crates, compilation remains the dominant cost.
 
 ### Rationale
 
-Foundation images follow the same pattern as the existing package image cache: compute a deterministic hash, check if the image exists, build only if missing. This makes the second cache level feel like a natural extension rather than a new concept. Building foundation images via `runtime.Build()` with a generated Dockerfile reuses existing infrastructure and produces reproducible images. Running tsuku inside the Dockerfile's RUN command keeps tsuku as the single source of truth for installation logic without duplicating it.
+Docker already solves the "don't redo identical work" problem through layer caching. Instead of building a parallel caching system, we generate Dockerfiles that expose the plan's dependency structure as Docker layers. This is a thin mapping layer, not a new caching system.
 
-Installing to `/opt/ecosystem/` with symlink bridging into the workspace solves the mount shadowing problem cleanly. The symlinks are cheap to create, and because they're created after the workspace mount, they correctly point from the mounted workspace into the image's pre-installed content. This works identically on Docker and Podman.
+Canonical ordering ensures that recipes with different dependency sets still share layers for their common dependencies. Alphabetical sorting is simple, deterministic, and doesn't require global knowledge.
 
-The cargo registry cache is a simpler version of the download cache pattern. Since registry content is platform-independent, sharing it across families is safe and eliminates the most wasteful duplication (the same crates downloaded 5 times).
+Using `tsuku install --plan` inside the RUN commands keeps tsuku as the single authority for how tools are installed. The plan JSON is the cache key: same plan content produces the same Docker layer, and Docker handles invalidation when the plan changes (new version, different checksums).
 
 ## Solution Architecture
 
 ### Overview
 
-The architecture adds two caching layers to the existing sandbox execution pipeline:
-
 ```
-container-images.json
+Plan Generation (host)
     |
     v
-Package Image (tsuku/sandbox-cache:debian-{hash})
-    |  -- cached by hash of (base image + packages)
+Extract Dependencies from plan.Dependencies
+    |
     v
-Foundation Image (tsuku/sandbox-foundation:debian-{hash})
-    |  -- cached by hash of (package image + ecosystem deps)
+Flatten + Sort + Generate Standalone Plans
+    |
     v
-Sandbox Execution
-    |  -- cargo registry shared via volume mount
+Generate Dockerfile (one RUN per dep)
+    |
+    v
+docker build (layer caching handles reuse)
+    |
+    v
+Foundation Image (all deps pre-installed at /opt/ecosystem/)
+    |
+    v
+Sandbox Execution (symlink bridge + recipe plan)
+    |
     v
 Recipe Build Output
 ```
 
-### Components
+### Dependency Extraction and Flattening
 
-**Plan analysis** (`internal/sandbox/foundation.go`, new file): Reads `plan.Dependencies` to extract ecosystem dependencies and their resolved versions. The plan structure already contains `Tool` and `Version` fields for each dependency, so no action registry lookup is needed. Returns a sorted list of (dependency, version) pairs as input to the foundation image hash.
+The plan's `Dependencies` field is a tree of `DependencyPlan` entries. The extraction process:
 
-**Foundation image builder** (`internal/sandbox/foundation.go`): Builds foundation images when they don't exist in the local image cache. The build process:
-1. Creates a temporary build context directory containing the tsuku binary
-2. Generates a Dockerfile: `FROM <package_image>`, `COPY tsuku /usr/local/bin/tsuku`, `RUN TSUKU_HOME=/opt/ecosystem tsuku install <dep> --force && rm /usr/local/bin/tsuku`
-3. Calls `runtime.Build()` with the generated Dockerfile and build context
-4. Returns the foundation image name
+1. **DFS traversal**: Walk the tree depth-first, collecting all dependencies with their resolved steps
+2. **Deduplication**: If the same tool appears multiple times (shared transitive dep), keep the first occurrence
+3. **Sort**: Alphabetically by tool name
+4. **Convert**: Each `DependencyPlan` becomes a standalone `InstallationPlan` JSON (with Steps but no nested Dependencies, since transitive deps are handled by earlier layers)
 
-The `RUN` command installs the toolchain to `/opt/ecosystem/` and cleans up the tsuku binary (it's not needed in the foundation image). Adding a cleanup step in the same `RUN` command keeps the layer size minimal.
+### Dockerfile Generation
 
-**Foundation image naming** (`internal/sandbox/foundation.go`): Generates deterministic names following the existing `ContainerImageName()` pattern. Hash input: package image name + sorted list of dependency-version pairs. Format: `tsuku/sandbox-foundation:{family}-{hash16}`.
+The generated Dockerfile for a debian recipe needing Rust:
 
-**Updated sandbox executor** (`internal/sandbox/executor.go`): After building/finding the package image, checks for ecosystem dependencies. If present, builds/finds the foundation image and uses it as the container image for the sandbox run. If no ecosystem dependencies, behavior is unchanged.
+```dockerfile
+FROM tsuku/sandbox-cache:debian-{pkg_hash}
+COPY tsuku /usr/local/bin/tsuku
+COPY plans/ /tmp/plans/
+ENV TSUKU_HOME=/opt/ecosystem
+ENV PATH=/opt/ecosystem/bin:$PATH
+RUN tsuku install --plan /tmp/plans/dep-00-rust.json --force
+RUN rm -rf /usr/local/bin/tsuku /tmp/plans
+```
 
-**Updated sandbox script** (`internal/sandbox/executor.go:buildSandboxScript`): When running from a foundation image, adds a bridge step before the plan execution. The bridge creates symlinks from `/opt/ecosystem/tools/*` into `/workspace/tsuku/tools/` and from `/opt/ecosystem/bin/*` into `/workspace/tsuku/bin/`. It also prepends `/opt/ecosystem/bin` to PATH as a fallback for any tools that ecosystem resolvers (like `ResolveCargo()`) look up via PATH. The plan's dependency installation steps then find the pre-installed toolchain at `$TSUKU_HOME/tools/` via the symlinks and skip reinstallation.
+The build context directory contains:
+```
+context/
+  Dockerfile
+  tsuku              (binary, from host)
+  plans/
+    dep-00-rust.json (standalone plan for rust)
+```
 
-**Cargo registry cache** (`internal/actions/cargo_build.go`): If a cargo registry cache directory exists at `$TSUKU_HOME/cache/cargo-registry/`, `buildDeterministicCargoEnv()` creates a symlink from `CARGO_HOME/registry` to the shared location. Otherwise, falls back to the current behavior (isolated per-build registry).
+### Image Naming
 
-**Cargo registry mount** (`internal/sandbox/executor.go`): Adds an optional volume mount for the cargo registry cache, similar to the download cache mount. Mounted at `/workspace/tsuku/cache/cargo-registry/` with read-write access.
+Foundation images are tagged for quick existence checks:
+
+```
+tsuku/sandbox-foundation:{family}-{hash16}
+```
+
+The hash is computed from the generated Dockerfile content (which encodes the full dependency chain). If the Dockerfile is identical, the image tag is identical. This serves as a fast lookup before running `docker build`.
+
+### Sandbox Script Bridge
+
+When ecosystem dependencies exist, the sandbox script adds a bridge step:
+
+```sh
+#!/bin/sh
+set -e
+
+# Bridge pre-installed ecosystem deps into workspace
+if [ -d /opt/ecosystem/tools ]; then
+  for tool_dir in /opt/ecosystem/tools/*/; do
+    tool_name=$(basename "$tool_dir")
+    ln -sf "$tool_dir" "/workspace/tsuku/tools/$tool_name"
+  done
+  for bin in /opt/ecosystem/bin/*; do
+    [ -f "$bin" ] && ln -sf "$bin" "/workspace/tsuku/bin/$(basename "$bin")"
+  done
+fi
+
+# Setup TSUKU_HOME
+mkdir -p /workspace/tsuku/recipes
+mkdir -p /workspace/tsuku/bin
+mkdir -p /workspace/tsuku/tools
+
+export PATH=/workspace/tsuku/bin:/opt/ecosystem/bin:$PATH
+
+# Run recipe plan (deps already installed via image layers)
+tsuku install --plan /workspace/plan.json --force
+```
 
 ### Key Interfaces
 
 ```go
 // foundation.go
 
-// EcosystemDep represents an ecosystem toolchain dependency.
-type EcosystemDep struct {
-    Name    string // e.g., "rust"
-    Version string // e.g., "1.82.0"
+// FlatDep represents a flattened dependency with its standalone plan.
+type FlatDep struct {
+    Tool    string                      // e.g., "rust"
+    Version string                      // e.g., "1.82.0"
+    Plan    *executor.InstallationPlan  // standalone plan (steps only, no nested deps)
 }
 
-// ExtractEcosystemDeps analyzes a plan and returns its ecosystem dependencies.
-func ExtractEcosystemDeps(plan *executor.InstallationPlan) []EcosystemDep
+// FlattenDependencies extracts and flattens the dependency tree from a plan.
+// Returns dependencies in canonical (alphabetical) order.
+func FlattenDependencies(plan *executor.InstallationPlan) []FlatDep
 
-// FoundationImageName generates a deterministic name for a foundation image.
-func FoundationImageName(packageImage string, deps []EcosystemDep) string
+// GenerateFoundationDockerfile creates a Dockerfile for the dependency chain.
+func GenerateFoundationDockerfile(packageImage string, deps []FlatDep) string
 
-// BuildFoundationImage builds a foundation image with ecosystem deps pre-installed.
-// Returns the image name.
+// FoundationImageName returns the image tag based on Dockerfile content hash.
+func FoundationImageName(family string, dockerfile string) string
+
+// BuildFoundationImage builds the foundation image if it doesn't exist.
+// Creates a temp build context with the tsuku binary and dependency plans,
+// then calls runtime.Build().
 func (e *Executor) BuildFoundationImage(
     ctx context.Context,
     runtime validate.Runtime,
     packageImage string,
-    deps []EcosystemDep,
+    family string,
+    deps []FlatDep,
 ) (string, error)
 ```
 
 ### Data Flow
 
-1. Plan generation produces a plan with actions and resolved dependencies
-2. Sandbox executor calls `ExtractEcosystemDeps(plan)` to read ecosystem deps from `plan.Dependencies`
-3. If deps exist, `FoundationImageName(packageImage, deps)` computes the cache key
-4. `runtime.ImageExists()` checks for a cached foundation image
-5. If missing, `BuildFoundationImage()` creates it via `runtime.Build()` with a generated Dockerfile
-6. Sandbox runs from the foundation image; the sandbox script symlinks `/opt/ecosystem/tools/*` into `/workspace/tsuku/tools/`
-7. Plan execution finds toolchain at `$TSUKU_HOME/tools/` and skips already-installed dependencies
-8. `cargo_build` uses shared registry cache if available; `ResolveCargo()` finds cargo via PATH fallback
+1. Plan generation on host resolves all versions and produces `InstallationPlan`
+2. `FlattenDependencies(plan)` extracts the dependency tree into a sorted flat list
+3. If no deps, proceed with current behavior (no foundation image)
+4. `GenerateFoundationDockerfile()` creates the Dockerfile with per-dep RUN commands
+5. `FoundationImageName()` hashes the Dockerfile to produce the image tag
+6. `runtime.ImageExists()` checks if the image is cached
+7. If not cached, `BuildFoundationImage()` creates build context and calls `runtime.Build()`
+8. Docker layer caching means only new/changed dependencies are actually built
+9. Sandbox runs from the foundation image; symlink bridge connects deps to workspace
+10. Plan executor finds deps at `$TSUKU_HOME/tools/` via symlinks, skips reinstallation
 
 ## Implementation Approach
 
-### Phase 1: Foundation Image Infrastructure
+### Phase 1: Per-Dependency Foundation Images
 
-Build the core foundation image mechanism without cargo-specific changes.
+Core mechanism: plan dependencies become Docker image layers.
 
-- Create `internal/sandbox/foundation.go` with `ExtractEcosystemDeps`, `FoundationImageName`, `BuildFoundationImage`
-- Update `Executor.Sandbox()` to check for ecosystem deps and build/use foundation images
-- Update `buildSandboxScript()` to add the symlink bridge step when ecosystem deps exist (symlinks from `/opt/ecosystem/tools/*` to `/workspace/tsuku/tools/`, plus PATH prepend)
-- Extend `runtime.Build()` to accept a build context directory (currently uses `.` as context; needs to support a temp dir containing the tsuku binary)
-- Add unit tests for plan analysis and image naming
-- Add integration test that builds a foundation image and verifies toolchain presence via symlink bridge
+- Create `internal/sandbox/foundation.go` with `FlattenDependencies`, `GenerateFoundationDockerfile`, `FoundationImageName`, `BuildFoundationImage`
+- `FlattenDependencies` does DFS traversal of `plan.Dependencies`, deduplicates, sorts alphabetically, converts each to standalone `InstallationPlan` JSON
+- `GenerateFoundationDockerfile` produces the Dockerfile with COPY + ENV + per-dep RUN + cleanup
+- Extend `runtime.Build()` to accept a build context directory (currently uses `.` as context)
+- Update `Executor.Sandbox()` to build/use foundation images when plan has dependencies
+- Update `buildSandboxScript()` to add the symlink bridge step
+- Unit tests for dependency flattening, Dockerfile generation, image naming
+- Integration test: build foundation image for a recipe with Rust dep, verify cargo is available via symlink
 
 ### Phase 2: Cargo Registry Cache
 
 Share cargo registry content across families within a single host.
 
 - Add `WithCargoRegistryCacheDir()` option to `Executor`
-- Mount cargo registry cache directory into containers at `/workspace/tsuku/cache/cargo-registry/`
-- Update `buildDeterministicCargoEnv()` to use shared registry when available
-- Update `test-recipe.yml` to create and share a cargo registry cache directory across families
-- Add test for registry sharing correctness
+- Mount cargo registry cache at `/workspace/tsuku/cache/cargo-registry/` (read-write)
+- Update `buildDeterministicCargoEnv()` to symlink `CARGO_HOME/registry` to shared mount when available
+- Test registry sharing across families
 
-### Phase 3: CI Integration
+### Phase 3: CI Adaptation
 
-Wire foundation images into the CI workflow.
+Restructure CI workflows to maximize layer cache reuse.
 
-- Update `test-recipe.yml` to build foundation images in a setup step before per-family testing
-- Add cleanup logic to prune stale foundation images (images whose ecosystem version is outdated)
-- Document the caching behavior for contributors
+- Within a batch job, dependency layers are automatically shared across recipes (same Docker daemon, same layer cache)
+- Add `docker save`/`docker load` or registry push for cross-job sharing if needed
+- Prune stale foundation images when ecosystem versions change
 
-Phase 1 delivers the largest speedup (eliminating redundant toolchain installation). Phase 2 adds incremental improvement (eliminating redundant cargo fetch). Phase 3 makes it work in CI. Each phase is independently useful.
+Phase 1 is the core value. Phase 2 adds incremental improvement. Phase 3 is operational.
 
 ## Security Considerations
 
 ### Download Verification
 
-Foundation images contain toolchains installed by tsuku, which applies the same download verification as non-sandbox installations. When building a foundation image, tsuku downloads the Rust toolchain using the same checksums and verification logic as a normal `tsuku install rust`. The foundation image captures the verified, installed state. No additional download verification is needed because the same verification code path runs during foundation image construction.
-
-The cargo registry cache contains crate source fetched by cargo with `--locked`, which verifies against `Cargo.lock` checksums. Sharing the registry doesn't bypass this verification because cargo checks checksums when reading from the registry, not just when downloading.
+Foundation images contain toolchains installed by tsuku via `tsuku install --plan`. The plan includes checksums computed during host-side plan generation. The same verification logic runs inside the Dockerfile's RUN command as in any normal tsuku installation. Docker layers cache the verified result.
 
 ### Execution Isolation
 
-Foundation images run in the same container isolation as current sandbox images. The container's security boundary (network restrictions, resource limits, read-only mounts) is unchanged. The toolchain at `/opt/ecosystem/` is baked into the image, not mounted from the host, so it can't be modified at runtime.
+Foundation images run in the same container isolation as current sandbox images. The security boundary (network restrictions, resource limits, read-only mounts) is unchanged. Toolchains at `/opt/ecosystem/` are baked into the image, not mounted from the host.
 
-The cargo registry mount is read-write, which is a weaker guarantee than the download cache (read-only). A malicious cargo build in one family could theoretically modify the shared registry to affect subsequent families. Mitigation: the registry mount is shared only across families for the _same recipe_ within a single sandbox invocation. Cross-recipe isolation is maintained because each recipe gets a fresh TSUKU_HOME with a fresh registry symlink.
+The cargo registry mount (Phase 2) is read-write, a weaker guarantee than the read-only download cache. Mitigation: scoped to a single recipe's multi-family run, and cargo verifies checksums on read.
 
 ### Supply Chain Risks
 
-Foundation images are built locally from the same source images used by the package cache. They don't introduce new external dependencies. The `runtime.Build()` operation runs a generated Dockerfile that installs ecosystem deps using tsuku itself. The tsuku binary is copied into the build context temporarily and removed in the same RUN layer.
+Foundation images are built locally using `runtime.Build()` with generated Dockerfiles. They don't introduce new external dependencies. The tsuku binary is copied into the build context temporarily and removed in the final layer.
 
-The cargo registry cache creates a new sharing surface: crate content fetched by one family is used by others. Since cargo verifies checksums from `Cargo.lock` when reading registry content, a tampered registry entry would fail cargo's own verification. The risk is that a compromised crate in the _first_ family's fetch would propagate to other families, but this is the same risk as not sharing (the same `Cargo.lock` produces the same fetches regardless of order).
-
-Foundation image names use deterministic hashing, so an attacker who can modify the hash inputs (ecosystem dep versions) could cause a different image to be used. This requires modifying the plan, which means compromising tsuku's plan generation.
+The plan JSON files copied into the build context contain URLs and checksums. These are generated by the host-side plan generation, which is the same code path used for non-sandbox installations. A compromised plan could cause tsuku to install a malicious toolchain, but this risk is identical to the current non-cached sandbox flow.
 
 ### User Data Exposure
 
-Not applicable. Foundation images contain only ecosystem toolchains (compiler binaries, standard libraries). The cargo registry cache contains open-source crate source code downloaded from crates.io. No user-specific data is stored in either cache.
+Not applicable. Foundation images contain ecosystem toolchains (compiler binaries, standard libraries). No user-specific data is stored.
 
 ## Consequences
 
 ### Positive
 
-- Ecosystem toolchain installation (Rust, Node.js, etc.) happens once per family instead of once per recipe per family, saving 2-3 minutes per eliminated installation
-- Cargo registry content is fetched once instead of 5 times per recipe, saving 1-2 minutes per recipe test
-- The pattern generalizes to any ecosystem build action that declares install-time dependencies
-- Foundation images follow the existing cache pattern, so the mental model for developers stays consistent
-- No changes to determinism guarantees: `SOURCE_DATE_EPOCH=0` and `CARGO_INCREMENTAL=0` remain in effect for the actual build
+- Toolchain installation happens once per family per version, cached as Docker layers. Subsequent recipes that need the same toolchain start instantly
+- Cross-recipe sharing is automatic via Docker's layer caching -- no explicit cache management
+- Works dynamically on developer machines with no setup beyond having Docker/Podman
+- The plan structure (which already contains the dependency tree) drives the caching -- no parallel bookkeeping
+- Generalizes to any ecosystem: npm_install with Node.js, gem_install with Ruby, etc.
+- CI benefits from the same mechanism without a CI-specific caching format
 
 ### Negative
 
-- Foundation images consume disk space. Each ecosystem + family combination produces an image that includes the full toolchain (~500MB for Rust). With 5 families, that's ~2.5GB per ecosystem version. Mitigation: stale images are pruned when the ecosystem version changes, and `docker system prune` handles cleanup.
-- Extending `runtime.Build()` to accept a build context directory is a non-trivial change to the runtime interface. The current implementation uses `.` as the build context. Mitigation: the change is backward-compatible (default to `.` when no context directory is specified), and foundation images are the only consumer of this feature initially.
-- Two-phase execution adds complexity to the sandbox executor. There are now three possible image levels (base, package, foundation) instead of two. Mitigation: foundation images are opt-in (only used when ecosystem deps exist), so simple recipes that don't need build toolchains see no change.
-- The cargo registry mount is read-write, which is a weaker isolation guarantee than the read-only download cache mount. Mitigation: the mount is scoped to a single recipe's multi-family run, not shared across recipes.
-- The speedup addresses toolchain installation (~10-15 min across 5 families) and registry fetching (~5-10 min), but compilation time (10-40 min per family) remains unaddressed. For the heaviest crates, compilation is still the dominant cost. This design reduces total CI time significantly but doesn't eliminate the timeout risk for the most expensive builds.
+- Foundation images consume disk space (~500MB per ecosystem per family). With 5 families and 2 ecosystems, that's ~5GB. Mitigation: stale images pruned when versions change; `docker system prune` for manual cleanup
+- Extending `runtime.Build()` for custom build contexts is a non-trivial change. Mitigation: backward-compatible, only foundation images use it initially
+- Three image levels (base, package, foundation) increase sandbox executor complexity. Mitigation: foundation images are opt-in; recipes without InstallTime deps see no change
+- Compilation time (10-40 min per family) remains unaddressed. The savings target toolchain installation and setup, not the build itself
+- Layer ordering is position-sensitive: changing the sort order invalidates all cached layers. Mitigation: alphabetical sort is stable and unlikely to change
 
 ### Mitigations
 
 | Risk | Mitigation |
 |------|------------|
-| Disk usage from foundation images | Prune images when ecosystem version changes; defer to `docker system prune` for manual cleanup |
-| Foundation image loss | Automatic rebuild on demand via `runtime.Build()`; only costs time |
-| Executor complexity | Foundation images are opt-in; no-op when no ecosystem deps exist |
-| Cargo registry write access | Scoped to single recipe run; cargo verifies checksums on read |
-| Partial cargo fetch failure | Cargo handles incomplete registries by fetching missing entries; subsequent families retry failed downloads |
-| Runtime compatibility | Uses `runtime.Build()` (Dockerfile-based), supported by both Docker and Podman; avoids BuildKit-specific features |
+| Disk usage | Prune stale images; `docker system prune` |
+| Foundation image loss | Rebuilt on demand; only costs time |
+| Sort order change | Alphabetical is stable; no planned changes |
+| Executor complexity | Opt-in; no-op without InstallTime deps |
+| Runtime compatibility | Uses Dockerfile-based builds; no BuildKit features |
