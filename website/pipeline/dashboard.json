@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-02-24T14:21:10Z",
+  "generated_at": "2026-02-24T14:47:36Z",
   "queue": {
     "total": 5275,
     "by_status": {
       "failed": 110,
-      "pending": 2825,
+      "pending": 2805,
       "requires_manual": 2000,
-      "success": 340
+      "success": 360
     },
     "by_tier": {
       "1": {
@@ -20,9 +20,9 @@
       },
       "3": {
         "failed": 92,
-        "pending": 2825,
+        "pending": 2805,
         "requires_manual": 1977,
-        "success": 336
+        "success": 356
       }
     },
     "by_ecosystem": {
@@ -36,8 +36,8 @@
       },
       "crates.io": {
         "failed": 2,
-        "pending": 101,
-        "success": 2,
+        "pending": 81,
+        "success": 22,
         "total": 105
       },
       "github": {
@@ -2474,13 +2474,6 @@
           "failure_count": 0
         },
         {
-          "id": "crates.io:cargo-expand",
-          "name": "cargo-expand",
-          "ecosystem": "crates.io",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
           "id": "homebrew:cargo-flamegraph",
           "name": "cargo-flamegraph",
           "ecosystem": "homebrew",
@@ -2516,36 +2509,8 @@
           "failure_count": 0
         },
         {
-          "id": "crates.io:cargo-llvm-cov",
-          "name": "cargo-llvm-cov",
-          "ecosystem": "crates.io",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "crates.io:cargo-nextest",
-          "name": "cargo-nextest",
-          "ecosystem": "crates.io",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
           "id": "crates.io:cargo-outdated",
           "name": "cargo-outdated",
-          "ecosystem": "crates.io",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "crates.io:cargo-release",
-          "name": "cargo-release",
-          "ecosystem": "crates.io",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "crates.io:cargo-sweep",
-          "name": "cargo-sweep",
           "ecosystem": "crates.io",
           "priority": 3,
           "failure_count": 0
@@ -4301,13 +4266,6 @@
           "failure_count": 0
         },
         {
-          "id": "crates.io:diskus",
-          "name": "diskus",
-          "ecosystem": "crates.io",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
           "id": "homebrew:displayplacer",
           "name": "displayplacer",
           "ecosystem": "homebrew",
@@ -4588,13 +4546,6 @@
           "failure_count": 0
         },
         {
-          "id": "crates.io:dotenv-linter",
-          "name": "dotenv-linter",
-          "ecosystem": "crates.io",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
           "id": "homebrew:dotenvx/brew/dotenvx",
           "name": "dotenvx/brew/dotenvx",
           "ecosystem": "homebrew",
@@ -4619,13 +4570,6 @@
           "id": "homebrew:dotnet@9",
           "name": "dotnet@9",
           "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "crates.io:dotslash",
-          "name": "dotslash",
-          "ecosystem": "crates.io",
           "priority": 3,
           "failure_count": 0
         },
@@ -5127,13 +5071,6 @@
           "failure_count": 0
         },
         {
-          "id": "crates.io:espflash",
-          "name": "espflash",
-          "ecosystem": "crates.io",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
           "id": "homebrew:espressif/eim/eim",
           "name": "espressif/eim/eim",
           "ecosystem": "homebrew",
@@ -5179,13 +5116,6 @@
           "id": "homebrew:evil-helix",
           "name": "evil-helix",
           "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "crates.io:evtx",
-          "name": "evtx",
-          "ecosystem": "crates.io",
           "priority": 3,
           "failure_count": 0
         },
@@ -6194,13 +6124,6 @@
           "id": "homebrew:gibo",
           "name": "gibo",
           "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "crates.io:gifski",
-          "name": "gifski",
-          "ecosystem": "crates.io",
           "priority": 3,
           "failure_count": 0
         },
@@ -8900,13 +8823,6 @@
           "failure_count": 0
         },
         {
-          "id": "crates.io:killport",
-          "name": "killport",
-          "ecosystem": "crates.io",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
           "id": "homebrew:kilo-org/tap/kilo",
           "name": "kilo-org/tap/kilo",
           "ecosystem": "homebrew",
@@ -9001,13 +8917,6 @@
           "id": "homebrew:koekeishiya/formulae/yabai",
           "name": "koekeishiya/formulae/yabai",
           "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "crates.io:komac",
-          "name": "komac",
-          "ecosystem": "crates.io",
           "priority": 3,
           "failure_count": 0
         },
@@ -11337,13 +11246,6 @@
           "failure_count": 0
         },
         {
-          "id": "crates.io:maturin",
-          "name": "maturin",
-          "ecosystem": "crates.io",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
           "id": "homebrew:max-sixty/worktrunk/wt",
           "name": "max-sixty/worktrunk/wt",
           "ecosystem": "homebrew",
@@ -11438,13 +11340,6 @@
           "id": "homebrew:md5sha1sum",
           "name": "md5sha1sum",
           "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "crates.io:mdbook",
-          "name": "mdbook",
-          "ecosystem": "crates.io",
           "priority": 3,
           "failure_count": 0
         },
@@ -13857,13 +13752,6 @@
           "failure_count": 0
         },
         {
-          "id": "crates.io:oxipng",
-          "name": "oxipng",
-          "ecosystem": "crates.io",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
           "id": "homebrew:p11-kit",
           "name": "p11-kit",
           "ecosystem": "homebrew",
@@ -14196,13 +14084,6 @@
           "id": "homebrew:petsc-complex",
           "name": "petsc-complex",
           "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "crates.io:pfetch",
-          "name": "pfetch",
-          "ecosystem": "crates.io",
           "priority": 3,
           "failure_count": 0
         },
@@ -14830,13 +14711,6 @@
           "failure_count": 0
         },
         {
-          "id": "crates.io:probe-rs-tools",
-          "name": "probe-rs-tools",
-          "ecosystem": "crates.io",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
           "id": "homebrew:probe-rs/probe-rs/probe-rs",
           "name": "probe-rs/probe-rs/probe-rs",
           "ecosystem": "homebrew",
@@ -15064,13 +14938,6 @@
           "id": "homebrew:px4/px4/px4-dev",
           "name": "px4/px4/px4-dev",
           "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "crates.io:py-spy",
-          "name": "py-spy",
-          "ecosystem": "crates.io",
           "priority": 3,
           "failure_count": 0
         },
@@ -19027,13 +18894,6 @@
           "id": "homebrew:trufflesecurity/trufflehog/trufflehog",
           "name": "trufflesecurity/trufflehog/trufflehog",
           "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "crates.io:try-rs",
-          "name": "try-rs",
-          "ecosystem": "crates.io",
           "priority": 3,
           "failure_count": 0
         },
@@ -35295,8 +35155,43 @@
           "failure_count": 0
         },
         {
+          "id": "crates.io:cargo-expand",
+          "name": "cargo-expand",
+          "ecosystem": "crates.io",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
           "id": "crates.io:cargo-hack",
           "name": "cargo-hack",
+          "ecosystem": "crates.io",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "crates.io:cargo-llvm-cov",
+          "name": "cargo-llvm-cov",
+          "ecosystem": "crates.io",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "crates.io:cargo-nextest",
+          "name": "cargo-nextest",
+          "ecosystem": "crates.io",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "crates.io:cargo-release",
+          "name": "cargo-release",
+          "ecosystem": "crates.io",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "crates.io:cargo-sweep",
+          "name": "cargo-sweep",
           "ecosystem": "crates.io",
           "priority": 3,
           "failure_count": 0
@@ -35491,6 +35386,13 @@
           "failure_count": 0
         },
         {
+          "id": "crates.io:diskus",
+          "name": "diskus",
+          "ecosystem": "crates.io",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
           "id": "go:github.com/go-delve/delve/cmd/dlv",
           "name": "dlv",
           "ecosystem": "go",
@@ -35536,6 +35438,20 @@
           "id": "homebrew:dos2unix",
           "name": "dos2unix",
           "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "crates.io:dotenv-linter",
+          "name": "dotenv-linter",
+          "ecosystem": "crates.io",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "crates.io:dotslash",
+          "name": "dotslash",
+          "ecosystem": "crates.io",
           "priority": 3,
           "failure_count": 0
         },
@@ -35592,6 +35508,20 @@
           "id": "npm:esbuild",
           "name": "esbuild",
           "ecosystem": "npm",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "crates.io:espflash",
+          "name": "espflash",
+          "ecosystem": "crates.io",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "crates.io:evtx",
+          "name": "evtx",
+          "ecosystem": "crates.io",
           "priority": 3,
           "failure_count": 0
         },
@@ -35725,6 +35655,13 @@
           "id": "homebrew:giflib",
           "name": "giflib",
           "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "crates.io:gifski",
+          "name": "gifski",
+          "ecosystem": "crates.io",
           "priority": 3,
           "failure_count": 0
         },
@@ -36101,9 +36038,23 @@
           "failure_count": 0
         },
         {
+          "id": "crates.io:killport",
+          "name": "killport",
+          "ecosystem": "crates.io",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
           "id": "github:kubernetes-sigs/kind",
           "name": "kind",
           "ecosystem": "github",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "crates.io:komac",
+          "name": "komac",
+          "ecosystem": "crates.io",
           "priority": 3,
           "failure_count": 0
         },
@@ -36290,9 +36241,23 @@
           "failure_count": 0
         },
         {
+          "id": "crates.io:maturin",
+          "name": "maturin",
+          "ecosystem": "crates.io",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
           "id": "npm:mbt",
           "name": "mbt",
           "ecosystem": "npm",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "crates.io:mdbook",
+          "name": "mdbook",
+          "ecosystem": "crates.io",
           "priority": 3,
           "failure_count": 0
         },
@@ -36500,6 +36465,13 @@
           "failure_count": 0
         },
         {
+          "id": "crates.io:oxipng",
+          "name": "oxipng",
+          "ecosystem": "crates.io",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
           "id": "npm:oxlint",
           "name": "oxlint",
           "ecosystem": "npm",
@@ -36545,6 +36517,13 @@
           "id": "cpan:Perl-Tidy",
           "name": "perltidy",
           "ecosystem": "cpan",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "crates.io:pfetch",
+          "name": "pfetch",
+          "ecosystem": "crates.io",
           "priority": 3,
           "failure_count": 0
         },
@@ -36598,6 +36577,13 @@
           "failure_count": 0
         },
         {
+          "id": "crates.io:probe-rs-tools",
+          "name": "probe-rs-tools",
+          "ecosystem": "crates.io",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
           "id": "homebrew:procs",
           "name": "procs",
           "ecosystem": "homebrew",
@@ -36615,6 +36601,13 @@
           "id": "github:pulumi/pulumi",
           "name": "pulumi",
           "ecosystem": "github",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "crates.io:py-spy",
+          "name": "py-spy",
+          "ecosystem": "crates.io",
           "priority": 3,
           "failure_count": 0
         },
@@ -36987,6 +36980,13 @@
           "id": "github:trufflesecurity/trufflehog",
           "name": "trufflehog",
           "ecosystem": "github",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "crates.io:try-rs",
+          "name": "try-rs",
+          "ecosystem": "crates.io",
           "priority": 3,
           "failure_count": 0
         },
@@ -37425,8 +37425,8 @@
       "timestamp": "2026-02-22T22:25:32.975745377Z"
     },
     {
-      "id": "batch-2026-02-21T07-27-58Z-ansifilter",
-      "package": "ansifilter",
+      "id": "batch-2026-02-21T07-27-58Z-anyquery",
+      "package": "anyquery",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -37440,19 +37440,8 @@
       "timestamp": "2026-02-21T07:27:58Z"
     },
     {
-      "id": "batch-2026-02-21T07-27-58Z-anycable-go",
-      "package": "anycable-go",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "linux-alpine-musl-x86_64",
-      "batch_id": "2026-02-21T07-27-58Z",
-      "timestamp": "2026-02-21T07:27:58Z"
-    },
-    {
-      "id": "batch-2026-02-21T07-27-58Z-anyquery",
-      "package": "anyquery",
+      "id": "batch-2026-02-21T07-27-58Z-angle-grinder",
+      "package": "angle-grinder",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -37485,8 +37474,8 @@
       "timestamp": "2026-02-21T07:27:58Z"
     },
     {
-      "id": "batch-2026-02-21T07-27-58Z-angle-grinder",
-      "package": "angle-grinder",
+      "id": "batch-2026-02-21T07-27-58Z-ansifilter",
+      "package": "ansifilter",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -37496,6 +37485,17 @@
         "linux-alpine-musl-arm64",
         "linux-alpine-musl-x86_64"
       ],
+      "batch_id": "2026-02-21T07-27-58Z",
+      "timestamp": "2026-02-21T07:27:58Z"
+    },
+    {
+      "id": "batch-2026-02-21T07-27-58Z-anycable-go",
+      "package": "anycable-go",
+      "ecosystem": "batch",
+      "category": "generation_failed",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "linux-alpine-musl-x86_64",
       "batch_id": "2026-02-21T07-27-58Z",
       "timestamp": "2026-02-21T07:27:58Z"
     },
@@ -38381,8 +38381,8 @@
       "timestamp": "2026-02-21T06:13:30.875620235Z"
     },
     {
-      "id": "batch-2026-02-20T06-08-19Z-yo",
-      "package": "yo",
+      "id": "batch-2026-02-20T06-08-19Z-yarn",
+      "package": "yarn",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -38426,8 +38426,8 @@
       "timestamp": "2026-02-20T06:08:19Z"
     },
     {
-      "id": "batch-2026-02-20T06-08-19Z-yarn",
-      "package": "yarn",
+      "id": "batch-2026-02-20T06-08-19Z-yo",
+      "package": "yo",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -38485,8 +38485,8 @@
       "timestamp": "2026-02-20T05:54:15.893000665Z"
     },
     {
-      "id": "batch-2026-02-20T04-28-03Z-pyright",
-      "package": "pyright",
+      "id": "batch-2026-02-20T04-28-03Z-typescript-language-server",
+      "package": "typescript-language-server",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -38500,8 +38500,8 @@
       "timestamp": "2026-02-20T04:28:03Z"
     },
     {
-      "id": "batch-2026-02-20T04-28-03Z-typescript-language-server",
-      "package": "typescript-language-server",
+      "id": "batch-2026-02-20T04-28-03Z-pyright",
+      "package": "pyright",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -38591,53 +38591,8 @@
       "timestamp": "2026-02-20T04:15:51.459005871Z"
     },
     {
-      "id": "batch-2026-02-20T02-08-13Z-rollup",
-      "package": "rollup",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "2026-02-20T02-08-13Z",
-      "timestamp": "2026-02-20T02:08:13Z"
-    },
-    {
-      "id": "batch-2026-02-20T02-08-13Z-oxlint",
-      "package": "oxlint",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "2026-02-20T02-08-13Z",
-      "timestamp": "2026-02-20T02:08:13Z"
-    },
-    {
       "id": "batch-2026-02-20T02-08-13Z-rulesync",
       "package": "rulesync",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "2026-02-20T02-08-13Z",
-      "timestamp": "2026-02-20T02:08:13Z"
-    },
-    {
-      "id": "batch-2026-02-20T02-08-13Z-react-native-cli",
-      "package": "react-native-cli",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -38666,8 +38621,53 @@
       "timestamp": "2026-02-20T02:08:13Z"
     },
     {
+      "id": "batch-2026-02-20T02-08-13Z-oxlint",
+      "package": "oxlint",
+      "ecosystem": "batch",
+      "category": "generation_failed",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "2026-02-20T02-08-13Z",
+      "timestamp": "2026-02-20T02:08:13Z"
+    },
+    {
+      "id": "batch-2026-02-20T02-08-13Z-react-native-cli",
+      "package": "react-native-cli",
+      "ecosystem": "batch",
+      "category": "generation_failed",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "2026-02-20T02-08-13Z",
+      "timestamp": "2026-02-20T02:08:13Z"
+    },
+    {
       "id": "batch-2026-02-20T02-08-13Z-prettier",
       "package": "prettier",
+      "ecosystem": "batch",
+      "category": "generation_failed",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "2026-02-20T02-08-13Z",
+      "timestamp": "2026-02-20T02:08:13Z"
+    },
+    {
+      "id": "batch-2026-02-20T02-08-13Z-rollup",
+      "package": "rollup",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -38715,38 +38715,8 @@
       "timestamp": "2026-02-20T01:55:16.033744211Z"
     },
     {
-      "id": "batch-2026-02-20T00-04-55Z-oxfmt",
-      "package": "oxfmt",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "2026-02-20T00-04-55Z",
-      "timestamp": "2026-02-20T00:04:55Z"
-    },
-    {
       "id": "batch-2026-02-20T00-04-55Z-openskills",
       "package": "openskills",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "2026-02-20T00-04-55Z",
-      "timestamp": "2026-02-20T00:04:55Z"
-    },
-    {
-      "id": "batch-2026-02-20T00-04-55Z-nping",
-      "package": "nping",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -38770,6 +38740,27 @@
       "platforms": [
         "linux-alpine-musl-arm64",
         "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "2026-02-20T00-04-55Z",
+      "timestamp": "2026-02-20T00:04:55Z"
+    },
+    {
+      "id": "batch-2026-02-20T00-04-55Z-n8n-mcp",
+      "package": "n8n-mcp",
+      "ecosystem": "batch",
+      "category": "network_error",
+      "exit_code": 124,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64",
+        "linux-arch-glibc-x86_64",
+        "linux-debian-glibc-arm64",
+        "linux-debian-glibc-x86_64",
+        "linux-rhel-glibc-arm64",
+        "linux-rhel-glibc-x86_64",
+        "linux-suse-glibc-arm64",
+        "linux-suse-glibc-x86_64"
       ],
       "batch_id": "2026-02-20T00-04-55Z",
       "timestamp": "2026-02-20T00:04:55Z"
@@ -38805,29 +38796,38 @@
       "timestamp": "2026-02-20T00:04:55Z"
     },
     {
-      "id": "batch-2026-02-20T00-04-55Z-n8n-mcp",
-      "package": "n8n-mcp",
+      "id": "batch-2026-02-20T00-04-55Z-node-red",
+      "package": "node-red",
       "ecosystem": "batch",
-      "category": "network_error",
-      "exit_code": 124,
+      "category": "generation_failed",
+      "subcategory": "install_failed",
+      "exit_code": 6,
       "platform": "multiple",
       "platforms": [
         "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64",
-        "linux-arch-glibc-x86_64",
-        "linux-debian-glibc-arm64",
-        "linux-debian-glibc-x86_64",
-        "linux-rhel-glibc-arm64",
-        "linux-rhel-glibc-x86_64",
-        "linux-suse-glibc-arm64",
-        "linux-suse-glibc-x86_64"
+        "linux-alpine-musl-x86_64"
       ],
       "batch_id": "2026-02-20T00-04-55Z",
       "timestamp": "2026-02-20T00:04:55Z"
     },
     {
-      "id": "batch-2026-02-20T00-04-55Z-node-red",
-      "package": "node-red",
+      "id": "batch-2026-02-20T00-04-55Z-nping",
+      "package": "nping",
+      "ecosystem": "batch",
+      "category": "generation_failed",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "2026-02-20T00-04-55Z",
+      "timestamp": "2026-02-20T00:04:55Z"
+    },
+    {
+      "id": "batch-2026-02-20T00-04-55Z-oxfmt",
+      "package": "oxfmt",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -38859,8 +38859,8 @@
       "timestamp": "2026-02-19T23:29:47.627618545Z"
     },
     {
-      "id": "batch-2026-02-19T22-35-45Z-mprocs",
-      "package": "mprocs",
+      "id": "batch-2026-02-19T22-35-45Z-mjml",
+      "package": "mjml",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -38874,8 +38874,8 @@
       "timestamp": "2026-02-19T22:35:45Z"
     },
     {
-      "id": "batch-2026-02-19T22-35-45Z-mjml",
-      "package": "mjml",
+      "id": "batch-2026-02-19T22-35-45Z-mprocs",
+      "package": "mprocs",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -39058,6 +39058,21 @@
       "timestamp": "2026-02-19T21:31:48.334903227Z"
     },
     {
+      "id": "batch-2026-02-19T20-40-46Z-http-server",
+      "package": "http-server",
+      "ecosystem": "batch",
+      "category": "generation_failed",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "2026-02-19T20-40-46Z",
+      "timestamp": "2026-02-19T20:40:46Z"
+    },
+    {
       "id": "batch-2026-02-19T20-40-46Z-gulp-cli",
       "package": "gulp-cli",
       "ecosystem": "batch",
@@ -39075,21 +39090,6 @@
     {
       "id": "batch-2026-02-19T20-40-46Z-graphql-cli",
       "package": "graphql-cli",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "2026-02-19T20-40-46Z",
-      "timestamp": "2026-02-19T20:40:46Z"
-    },
-    {
-      "id": "batch-2026-02-19T20-40-46Z-http-server",
-      "package": "http-server",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -39281,8 +39281,8 @@
       "timestamp": "2026-02-19T19:39:39.035308818Z"
     },
     {
-      "id": "batch-2026-02-19T14-31-25Z-contentful-cli",
-      "package": "contentful-cli",
+      "id": "batch-2026-02-19T14-31-25Z-cspell",
+      "package": "cspell",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -39296,8 +39296,8 @@
       "timestamp": "2026-02-19T14:31:25Z"
     },
     {
-      "id": "batch-2026-02-19T14-31-25Z-cspell",
-      "package": "cspell",
+      "id": "batch-2026-02-19T14-31-25Z-bpmnlint",
+      "package": "bpmnlint",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -39893,8 +39893,33 @@
       "validation_status": "valid"
     },
     {
+      "name": "cargo-expand",
+      "source": "crates.io:cargo-expand",
+      "validation_status": "valid"
+    },
+    {
       "name": "cargo-hack",
       "source": "crates.io:cargo-hack",
+      "validation_status": "valid"
+    },
+    {
+      "name": "cargo-llvm-cov",
+      "source": "crates.io:cargo-llvm-cov",
+      "validation_status": "valid"
+    },
+    {
+      "name": "cargo-nextest",
+      "source": "crates.io:cargo-nextest",
+      "validation_status": "valid"
+    },
+    {
+      "name": "cargo-release",
+      "source": "crates.io:cargo-release",
+      "validation_status": "valid"
+    },
+    {
+      "name": "cargo-sweep",
+      "source": "crates.io:cargo-sweep",
       "validation_status": "valid"
     },
     {
@@ -39998,6 +40023,11 @@
       "validation_status": "valid"
     },
     {
+      "name": "diskus",
+      "source": "crates.io:diskus",
+      "validation_status": "valid"
+    },
+    {
       "name": "dlv",
       "source": "go:github.com/go-delve/delve/cmd/dlv",
       "validation_status": "valid"
@@ -40033,6 +40063,16 @@
       "validation_status": "valid"
     },
     {
+      "name": "dotenv-linter",
+      "source": "crates.io:dotenv-linter",
+      "validation_status": "valid"
+    },
+    {
+      "name": "dotslash",
+      "source": "crates.io:dotslash",
+      "validation_status": "valid"
+    },
+    {
       "name": "doxygen",
       "source": "homebrew:doxygen",
       "validation_status": "valid"
@@ -40060,6 +40100,16 @@
     {
       "name": "eksctl",
       "source": "github:eksctl-io/eksctl",
+      "validation_status": "valid"
+    },
+    {
+      "name": "espflash",
+      "source": "crates.io:espflash",
+      "validation_status": "valid"
+    },
+    {
+      "name": "evtx",
+      "source": "crates.io:evtx",
       "validation_status": "valid"
     },
     {
@@ -40140,6 +40190,11 @@
     {
       "name": "gh",
       "source": "homebrew:gh",
+      "validation_status": "valid"
+    },
+    {
+      "name": "gifski",
+      "source": "crates.io:gifski",
       "validation_status": "valid"
     },
     {
@@ -40383,8 +40438,18 @@
       "validation_status": "valid"
     },
     {
+      "name": "killport",
+      "source": "crates.io:killport",
+      "validation_status": "valid"
+    },
+    {
       "name": "kind",
       "source": "github:kubernetes-sigs/kind",
+      "validation_status": "valid"
+    },
+    {
+      "name": "komac",
+      "source": "crates.io:komac",
       "validation_status": "valid"
     },
     {
@@ -40508,6 +40573,16 @@
       "validation_status": "valid"
     },
     {
+      "name": "maturin",
+      "source": "crates.io:maturin",
+      "validation_status": "valid"
+    },
+    {
+      "name": "mdbook",
+      "source": "crates.io:mdbook",
+      "validation_status": "valid"
+    },
+    {
       "name": "micro",
       "source": "homebrew:micro",
       "validation_status": "valid"
@@ -40603,6 +40678,11 @@
       "validation_status": "valid"
     },
     {
+      "name": "oxipng",
+      "source": "crates.io:oxipng",
+      "validation_status": "valid"
+    },
+    {
       "name": "p7zip",
       "source": "homebrew:p7zip",
       "validation_status": "valid"
@@ -40625,6 +40705,11 @@
     {
       "name": "perltidy",
       "source": "cpan:Perl-Tidy",
+      "validation_status": "valid"
+    },
+    {
+      "name": "pfetch",
+      "source": "crates.io:pfetch",
       "validation_status": "valid"
     },
     {
@@ -40658,6 +40743,11 @@
       "validation_status": "valid"
     },
     {
+      "name": "probe-rs-tools",
+      "source": "crates.io:probe-rs-tools",
+      "validation_status": "valid"
+    },
+    {
       "name": "procs",
       "source": "homebrew:procs",
       "validation_status": "valid"
@@ -40670,6 +40760,11 @@
     {
       "name": "pulumi",
       "source": "github:pulumi/pulumi",
+      "validation_status": "valid"
+    },
+    {
+      "name": "py-spy",
+      "source": "crates.io:py-spy",
       "validation_status": "valid"
     },
     {
@@ -40905,6 +41000,11 @@
     {
       "name": "trufflehog",
       "source": "github:trufflesecurity/trufflehog",
+      "validation_status": "valid"
+    },
+    {
+      "name": "try-rs",
+      "source": "crates.io:try-rs",
       "validation_status": "valid"
     },
     {
