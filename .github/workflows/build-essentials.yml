@@ -90,7 +90,12 @@ jobs:
 
               if [ -f "$RESULT_FILE" ] && jq -e . "$RESULT_FILE" > /dev/null 2>&1; then
                 SANDBOX_PASSED=$(jq -r '.passed' "$RESULT_FILE")
-                EXIT_CODE=$(jq -r '.install_exit_code' "$RESULT_FILE")
+                # Sandbox JSON uses install_exit_code; error JSON uses exit_code
+                if jq -e '.install_exit_code' "$RESULT_FILE" > /dev/null 2>&1; then
+                  EXIT_CODE=$(jq -r '.install_exit_code' "$RESULT_FILE")
+                else
+                  EXIT_CODE=$(jq -r '.exit_code // 1' "$RESULT_FILE")
+                fi
               else
                 SANDBOX_PASSED="false"
                 EXIT_CODE=1
@@ -104,6 +109,13 @@ jobs:
                 FAILED+=("$name")
                 RESULTS="$RESULTS| $name | **FAIL** (exit $EXIT_CODE) |\n"
                 echo "FAIL: $name (exit $EXIT_CODE)"
+                # Print error details and full JSON for debugging
+                if [ -f "$RESULT_FILE" ]; then
+                  ERROR_MSG=$(jq -r '.error // .message // "unknown"' "$RESULT_FILE")
+                  echo "Error: $ERROR_MSG"
+                  echo "Full result:"
+                  jq . "$RESULT_FILE"
+                fi
               fi
               echo "::endgroup::"
           }
