@@ -253,6 +253,11 @@ jobs:
 
               echo "::endgroup::"
             done
+
+            # Clean up installed tools to free disk for the next recipe
+            for family in "${FAMILIES[@]}"; do
+              rm -rf "/tmp/tsuku-${recipe_name}-${family}"
+            done
           done
 
           # Write job summary
@@ -379,6 +384,11 @@ jobs:
               fi
 
               echo "::endgroup::"
+            done
+
+            # Clean up installed tools to free disk for the next recipe
+            for family in "${FAMILIES[@]}"; do
+              rm -rf "/tmp/tsuku-${recipe_name}-${family}"
             done
           done
 
