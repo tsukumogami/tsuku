@@ -341,6 +341,7 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 
 	// Set download cache directory
 	exec.SetDownloadCacheDir(cfg.DownloadCacheDir)
+	exec.SetSkipCacheSecurityChecks(installSkipSecurity)
 
 	// Set key cache directory for PGP signature verification
 	exec.SetKeyCacheDir(cfg.KeyCacheDir)

@@ -84,6 +84,7 @@ func (a *DownloadFileAction) Execute(ctx *ExecutionContext, params map[string]in
 	var cache *DownloadCache
 	if ctx.DownloadCacheDir != "" {
 		cache = NewDownloadCache(ctx.DownloadCacheDir)
+		cache.SetSkipSecurityChecks(ctx.SkipCacheSecurityChecks)
 		logger.Debug("checking download cache", "cacheDir", ctx.DownloadCacheDir)
 		found, err := cache.Check(url, destPath, checksum, checksumAlgo)
 		if err != nil {

@@ -28,6 +28,7 @@ var installFrom string
 var installDeterministicOnly bool
 var installSearchProvider string
 var installEnv []string
+var installSkipSecurity bool
 
 var installCmd = &cobra.Command{
 	Use:   "install [tool]...",
@@ -226,7 +227,8 @@ func init() {
 	installCmd.Flags().BoolVar(&installDeterministicOnly, "deterministic-only", false, "Skip LLM fallback; fail if deterministic generation fails")
 	installCmd.Flags().StringVar(&installSearchProvider, "search-provider", "", "Search provider for LLM discovery: ddg, tavily, or brave")
 	installCmd.Flags().StringArrayVar(&installEnv, "env", nil, "Pass environment variable to sandbox container (KEY=VALUE or KEY)")
-
+	installCmd.Flags().BoolVar(&installSkipSecurity, "dangerously-suppress-security", false, "Skip cache directory security checks (symlink/permissions). CI only.")
+	_ = installCmd.Flags().MarkHidden("dangerously-suppress-security")
 }
 
 // isInteractive returns true if stdin is connected to a terminal

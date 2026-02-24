@@ -268,6 +268,7 @@ func (a *DownloadAction) Execute(ctx *ExecutionContext, params map[string]interf
 	var cache *DownloadCache
 	if ctx.DownloadCacheDir != "" {
 		cache = NewDownloadCache(ctx.DownloadCacheDir)
+		cache.SetSkipSecurityChecks(ctx.SkipCacheSecurityChecks)
 		logger.Debug("checking download cache", "cacheDir", ctx.DownloadCacheDir)
 		// download action does not support inline checksum, pass empty string
 		found, err := cache.Check(url, destPath, "", checksumAlgo)
