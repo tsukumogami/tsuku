@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-02-25T20:36:27Z",
+  "generated_at": "2026-02-25T21:39:06Z",
   "queue": {
     "total": 5275,
     "by_status": {
@@ -37425,8 +37425,8 @@
       "timestamp": "2026-02-22T22:25:32.975745377Z"
     },
     {
-      "id": "batch-2026-02-21T07-27-58Z-anyquery",
-      "package": "anyquery",
+      "id": "batch-2026-02-21T07-27-58Z-ansifilter",
+      "package": "ansifilter",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -37440,13 +37440,17 @@
       "timestamp": "2026-02-21T07:27:58Z"
     },
     {
-      "id": "batch-2026-02-21T07-27-58Z-anycable-go",
-      "package": "anycable-go",
+      "id": "batch-2026-02-21T07-27-58Z-anyquery",
+      "package": "anyquery",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
       "exit_code": 6,
-      "platform": "linux-alpine-musl-x86_64",
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
       "batch_id": "2026-02-21T07-27-58Z",
       "timestamp": "2026-02-21T07:27:58Z"
     },
@@ -37470,8 +37474,8 @@
       "timestamp": "2026-02-21T07:27:58Z"
     },
     {
-      "id": "batch-2026-02-21T07-27-58Z-ansifilter",
-      "package": "ansifilter",
+      "id": "batch-2026-02-21T07-27-58Z-angle-grinder",
+      "package": "angle-grinder",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -37485,17 +37489,13 @@
       "timestamp": "2026-02-21T07:27:58Z"
     },
     {
-      "id": "batch-2026-02-21T07-27-58Z-angle-grinder",
-      "package": "angle-grinder",
+      "id": "batch-2026-02-21T07-27-58Z-anycable-go",
+      "package": "anycable-go",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
       "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
+      "platform": "linux-alpine-musl-x86_64",
       "batch_id": "2026-02-21T07-27-58Z",
       "timestamp": "2026-02-21T07:27:58Z"
     },
@@ -38381,23 +38381,8 @@
       "timestamp": "2026-02-21T06:13:30.875620235Z"
     },
     {
-      "id": "batch-2026-02-20T06-08-19Z-yo",
-      "package": "yo",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "2026-02-20T06-08-19Z",
-      "timestamp": "2026-02-20T06:08:19Z"
-    },
-    {
-      "id": "batch-2026-02-20T06-08-19Z-yarn",
-      "package": "yarn",
+      "id": "batch-2026-02-20T06-08-19Z-zx",
+      "package": "zx",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -38426,8 +38411,23 @@
       "timestamp": "2026-02-20T06:08:19Z"
     },
     {
-      "id": "batch-2026-02-20T06-08-19Z-zx",
-      "package": "zx",
+      "id": "batch-2026-02-20T06-08-19Z-yo",
+      "package": "yo",
+      "ecosystem": "batch",
+      "category": "generation_failed",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "2026-02-20T06-08-19Z",
+      "timestamp": "2026-02-20T06:08:19Z"
+    },
+    {
+      "id": "batch-2026-02-20T06-08-19Z-yarn",
+      "package": "yarn",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -38485,8 +38485,8 @@
       "timestamp": "2026-02-20T05:54:15.893000665Z"
     },
     {
-      "id": "batch-2026-02-20T04-28-03Z-pyright",
-      "package": "pyright",
+      "id": "batch-2026-02-20T04-28-03Z-vsce",
+      "package": "vsce",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -38500,8 +38500,8 @@
       "timestamp": "2026-02-20T04:28:03Z"
     },
     {
-      "id": "batch-2026-02-20T04-28-03Z-vsce",
-      "package": "vsce",
+      "id": "batch-2026-02-20T04-28-03Z-pyright",
+      "package": "pyright",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -38591,6 +38591,21 @@
       "timestamp": "2026-02-20T04:15:51.459005871Z"
     },
     {
+      "id": "batch-2026-02-20T02-08-13Z-prettier",
+      "package": "prettier",
+      "ecosystem": "batch",
+      "category": "generation_failed",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "2026-02-20T02-08-13Z",
+      "timestamp": "2026-02-20T02:08:13Z"
+    },
+    {
       "id": "batch-2026-02-20T02-08-13Z-rulesync",
       "package": "rulesync",
       "ecosystem": "batch",
@@ -38621,8 +38636,8 @@
       "timestamp": "2026-02-20T02:08:13Z"
     },
     {
-      "id": "batch-2026-02-20T02-08-13Z-react-native-cli",
-      "package": "react-native-cli",
+      "id": "batch-2026-02-20T02-08-13Z-rollup",
+      "package": "rollup",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -38651,23 +38666,8 @@
       "timestamp": "2026-02-20T02:08:13Z"
     },
     {
-      "id": "batch-2026-02-20T02-08-13Z-prettier",
-      "package": "prettier",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "2026-02-20T02-08-13Z",
-      "timestamp": "2026-02-20T02:08:13Z"
-    },
-    {
-      "id": "batch-2026-02-20T02-08-13Z-rollup",
-      "package": "rollup",
+      "id": "batch-2026-02-20T02-08-13Z-react-native-cli",
+      "package": "react-native-cli",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -38715,8 +38715,68 @@
       "timestamp": "2026-02-20T01:55:16.033744211Z"
     },
     {
+      "id": "batch-2026-02-20T00-04-55Z-openskills",
+      "package": "openskills",
+      "ecosystem": "batch",
+      "category": "generation_failed",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "2026-02-20T00-04-55Z",
+      "timestamp": "2026-02-20T00:04:55Z"
+    },
+    {
       "id": "batch-2026-02-20T00-04-55Z-needle",
       "package": "needle",
+      "ecosystem": "batch",
+      "category": "generation_failed",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "2026-02-20T00-04-55Z",
+      "timestamp": "2026-02-20T00:04:55Z"
+    },
+    {
+      "id": "batch-2026-02-20T00-04-55Z-nping",
+      "package": "nping",
+      "ecosystem": "batch",
+      "category": "generation_failed",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "2026-02-20T00-04-55Z",
+      "timestamp": "2026-02-20T00:04:55Z"
+    },
+    {
+      "id": "batch-2026-02-20T00-04-55Z-oxfmt",
+      "package": "oxfmt",
+      "ecosystem": "batch",
+      "category": "generation_failed",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "2026-02-20T00-04-55Z",
+      "timestamp": "2026-02-20T00:04:55Z"
+    },
+    {
+      "id": "batch-2026-02-20T00-04-55Z-openapi-diff",
+      "package": "openapi-diff",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -38751,51 +38811,6 @@
       "timestamp": "2026-02-20T00:04:55Z"
     },
     {
-      "id": "batch-2026-02-20T00-04-55Z-node-red",
-      "package": "node-red",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "2026-02-20T00-04-55Z",
-      "timestamp": "2026-02-20T00:04:55Z"
-    },
-    {
-      "id": "batch-2026-02-20T00-04-55Z-nping",
-      "package": "nping",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "2026-02-20T00-04-55Z",
-      "timestamp": "2026-02-20T00:04:55Z"
-    },
-    {
-      "id": "batch-2026-02-20T00-04-55Z-openskills",
-      "package": "openskills",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "2026-02-20T00-04-55Z",
-      "timestamp": "2026-02-20T00:04:55Z"
-    },
-    {
       "id": "batch-2026-02-20T00-04-55Z-n",
       "package": "n",
       "ecosystem": "batch",
@@ -38811,23 +38826,8 @@
       "timestamp": "2026-02-20T00:04:55Z"
     },
     {
-      "id": "batch-2026-02-20T00-04-55Z-openapi-diff",
-      "package": "openapi-diff",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "2026-02-20T00-04-55Z",
-      "timestamp": "2026-02-20T00:04:55Z"
-    },
-    {
-      "id": "batch-2026-02-20T00-04-55Z-oxfmt",
-      "package": "oxfmt",
+      "id": "batch-2026-02-20T00-04-55Z-node-red",
+      "package": "node-red",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -39058,8 +39058,8 @@
       "timestamp": "2026-02-19T21:31:48.334903227Z"
     },
     {
-      "id": "batch-2026-02-19T20-40-46Z-graphql-cli",
-      "package": "graphql-cli",
+      "id": "batch-2026-02-19T20-40-46Z-http-server",
+      "package": "http-server",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -39073,8 +39073,8 @@
       "timestamp": "2026-02-19T20:40:46Z"
     },
     {
-      "id": "batch-2026-02-19T20-40-46Z-http-server",
-      "package": "http-server",
+      "id": "batch-2026-02-19T20-40-46Z-graphql-cli",
+      "package": "graphql-cli",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -39188,8 +39188,8 @@
       "timestamp": "2026-02-19T19:46:28Z"
     },
     {
-      "id": "batch-2026-02-19T19-46-28Z-esbuild",
-      "package": "esbuild",
+      "id": "batch-2026-02-19T19-46-28Z-dprint",
+      "package": "dprint",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -39203,8 +39203,8 @@
       "timestamp": "2026-02-19T19:46:28Z"
     },
     {
-      "id": "batch-2026-02-19T19-46-28Z-dprint",
-      "package": "dprint",
+      "id": "batch-2026-02-19T19-46-28Z-esbuild",
+      "package": "esbuild",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -39281,8 +39281,8 @@
       "timestamp": "2026-02-19T19:39:39.035308818Z"
     },
     {
-      "id": "batch-2026-02-19T14-31-25Z-cspell",
-      "package": "cspell",
+      "id": "batch-2026-02-19T14-31-25Z-corepack",
+      "package": "corepack",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -39296,8 +39296,8 @@
       "timestamp": "2026-02-19T14:31:25Z"
     },
     {
-      "id": "batch-2026-02-19T14-31-25Z-corepack",
-      "package": "corepack",
+      "id": "batch-2026-02-19T14-31-25Z-bpmnlint",
+      "package": "bpmnlint",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -39315,15 +39315,15 @@
     "ecosystems": {
       "crates.io": {
         "breaker_state": "open",
-        "failures": 19,
-        "last_failure": "2026-02-25T13:05:25Z",
-        "opens_at": "2026-02-25T14:05:25Z"
+        "failures": 20,
+        "last_failure": "2026-02-25T21:38:38Z",
+        "opens_at": "2026-02-25T22:38:38Z"
       },
       "github": {
         "breaker_state": "open",
-        "failures": 8,
-        "last_failure": "2026-02-25T13:05:25Z",
-        "opens_at": "2026-02-25T14:05:25Z"
+        "failures": 9,
+        "last_failure": "2026-02-25T21:38:38Z",
+        "opens_at": "2026-02-25T22:38:38Z"
       },
       "homebrew": {
         "breaker_state": "open",
@@ -39333,29 +39333,33 @@
       },
       "npm": {
         "breaker_state": "open",
-        "failures": 19,
-        "last_failure": "2026-02-25T13:05:25Z",
-        "opens_at": "2026-02-25T14:05:25Z"
+        "failures": 20,
+        "last_failure": "2026-02-25T21:38:38Z",
+        "opens_at": "2026-02-25T22:38:38Z"
       },
       "pypi": {
         "breaker_state": "open",
-        "failures": 16,
-        "last_failure": "2026-02-25T13:05:25Z",
-        "opens_at": "2026-02-25T14:05:25Z"
+        "failures": 17,
+        "last_failure": "2026-02-25T21:38:38Z",
+        "opens_at": "2026-02-25T22:38:38Z"
       },
       "rubygems": {
         "breaker_state": "open",
-        "failures": 19,
-        "last_failure": "2026-02-25T13:05:25Z",
-        "opens_at": "2026-02-25T14:05:25Z"
+        "failures": 20,
+        "last_failure": "2026-02-25T21:38:38Z",
+        "opens_at": "2026-02-25T22:38:38Z"
       }
     },
     "last_run": {
-      "batch_id": "2026-02-25T20-36-06Z",
+      "batch_id": "2026-02-25T21-38-40Z",
       "ecosystems": {
-        "homebrew": 10
+        "crates.io": 1,
+        "github": 1,
+        "npm": 1,
+        "pypi": 1,
+        "rubygems": 1
       },
-      "timestamp": "2026-02-25T20:36:06Z",
+      "timestamp": "2026-02-25T21:38:40Z",
       "succeeded": 0,
       "failed": 0,
       "total": 0
@@ -39371,7 +39375,7 @@
       "total": 1,
       "recipes_merged": 1
     },
-    "runs_since_last_success": 50
+    "runs_since_last_success": 51
   },
   "runs": [
     {
