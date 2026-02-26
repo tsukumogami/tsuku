@@ -14,10 +14,10 @@
       "opens_at": "2026-02-26T09:49:29Z"
     },
     "homebrew": {
-      "state": "closed",
-      "failures": 4,
-      "last_failure": "2026-02-26T13:03:24Z",
-      "opens_at": "2026-02-26T08:04:46Z"
+      "state": "open",
+      "failures": 5,
+      "last_failure": "2026-02-26T14:20:49Z",
+      "opens_at": "2026-02-26T15:20:49Z"
     },
     "rubygems": {
       "state": "open",
