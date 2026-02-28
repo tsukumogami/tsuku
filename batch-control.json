@@ -15,8 +15,8 @@
     },
     "homebrew": {
       "state": "closed",
-      "failures": 0,
-      "last_failure": "2026-02-28T17:21:35Z",
+      "failures": 1,
+      "last_failure": "2026-02-28T19:22:34Z",
       "opens_at": "2026-02-28T18:21:35Z"
     },
     "rubygems": {
