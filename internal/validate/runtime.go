@@ -37,6 +37,12 @@ type Runtime interface {
 	// The imageName is the tag to use for the built image.
 	Build(ctx context.Context, imageName, baseImage string, buildCommands []string) error
 
+	// BuildFromDockerfile builds an image from a Dockerfile in the given context
+	// directory. The contextDir must contain a Dockerfile and any files referenced
+	// by COPY instructions. Unlike Build(), this does not pipe a Dockerfile via
+	// stdin -- the runtime discovers Dockerfile in contextDir by default.
+	BuildFromDockerfile(ctx context.Context, imageName string, contextDir string) error
+
 	// ImageExists checks if a container image exists.
 	ImageExists(ctx context.Context, name string) (bool, error)
 }
@@ -360,6 +366,16 @@ func (r *podmanRuntime) Build(ctx context.Context, imageName, baseImage string, 
 	return nil
 }
 
+func (r *podmanRuntime) BuildFromDockerfile(ctx context.Context, imageName string, contextDir string) error {
+	cmd := exec.CommandContext(ctx, r.path, "build", "-t", imageName, contextDir)
+	var stderr strings.Builder
+	cmd.Stderr = &stderr
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("podman build failed: %w: %s", err, stderr.String())
+	}
+	return nil
+}
+
 func (r *podmanRuntime) ImageExists(ctx context.Context, name string) (bool, error) {
 	cmd := exec.CommandContext(ctx, r.path, "image", "exists", name)
 	err := cmd.Run()
@@ -497,6 +513,16 @@ func (r *dockerRuntime) Build(ctx context.Context, imageName, baseImage string, 
 		return fmt.Errorf("docker build failed: %w: %s", err, stderr.String())
 	}
 
+	return nil
+}
+
+func (r *dockerRuntime) BuildFromDockerfile(ctx context.Context, imageName string, contextDir string) error {
+	cmd := exec.CommandContext(ctx, r.path, "build", "-t", imageName, contextDir)
+	var stderr strings.Builder
+	cmd.Stderr = &stderr
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("docker build failed: %w: %s", err, stderr.String())
+	}
 	return nil
 }
 
