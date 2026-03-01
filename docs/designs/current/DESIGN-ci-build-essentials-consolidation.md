@@ -29,7 +29,7 @@ rationale: |
 
 ## Status
 
-**Status:** Accepted
+**Status:** Current
 
 ## Upstream Design Reference
 
