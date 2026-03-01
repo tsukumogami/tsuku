@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-01T12:58:15Z",
+  "generated_at": "2026-03-01T21:18:37Z",
   "total_recipes": 370,
   "summary": {
     "by_platform": {
@@ -9,26 +9,26 @@
         "pct": 84.5945945945946
       },
       "glibc": {
-        "supported": 340,
+        "supported": 339,
         "total": 370,
-        "pct": 91.8918918918919
+        "pct": 91.62162162162161
       },
       "musl": {
-        "supported": 201,
+        "supported": 197,
         "total": 370,
-        "pct": 54.32432432432432
+        "pct": 53.24324324324324
       }
     },
     "by_category": {
       "library": {
-        "total": 24,
-        "musl_support": 24,
-        "glibc_support": 24
+        "total": 26,
+        "musl_support": 25,
+        "glibc_support": 25
       },
       "tool": {
-        "total": 346,
-        "musl_support": 177,
-        "glibc_support": 316
+        "total": 344,
+        "musl_support": 172,
+        "glibc_support": 314
       }
     }
   },
@@ -588,12 +588,8 @@
         "musl": true
       },
       "gaps": null,
-      "errors": [
-        "library recipe 'bdw-gc' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
-      ],
-      "warnings": [
-        "recipe 'bdw-gc' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "errors": null,
+      "warnings": null
     },
     {
       "name": "biome",
@@ -928,7 +924,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'cargo-nextest' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
     },
     {
       "name": "cargo-release",
@@ -940,7 +938,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'cargo-release' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
     },
     {
       "name": "cargo-sweep",
@@ -1651,9 +1651,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -2786,11 +2788,15 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'komac' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
     },
     {
       "name": "kopia",
@@ -3011,7 +3017,7 @@
     },
     {
       "name": "libgit2",
-      "type": "tool",
+      "type": "library",
       "platforms": {
         "darwin": true,
         "glibc": true,
@@ -3019,9 +3025,7 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": [
-        "recipe 'libgit2' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "libnghttp2",
@@ -3216,7 +3220,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'maturin' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
     },
     {
       "name": "mbt",
@@ -3773,7 +3779,7 @@
     },
     {
       "name": "pcre2",
-      "type": "tool",
+      "type": "library",
       "platforms": {
         "darwin": true,
         "glibc": true,
@@ -3961,11 +3967,15 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'probe-rs-tools' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
     },
     {
       "name": "procs",
@@ -4117,10 +4127,13 @@
       "type": "library",
       "platforms": {
         "darwin": true,
-        "glibc": true,
-        "musl": true
+        "glibc": false,
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "glibc",
+        "musl"
+      ],
       "errors": null,
       "warnings": [
         "recipe 'readline' has platform-specific actions without libc when clauses and no musl fallback"
