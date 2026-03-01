@@ -43,6 +43,7 @@ configure_args = [
     "--without-nghttp3",
     "--without-ngtcp2",
     "--without-libssh2",
+    "--without-libidn2",
     "--without-zstd",
     "--disable-silent-rules",
     "--enable-shared",
