@@ -8,7 +8,7 @@
   action = "github_archive"
   repo = "crate-ci/cargo-release"
   asset_pattern = "cargo-release-v{version}-{arch}-{os}.tar.gz"
-  strip_dirs = 1
+  strip_dirs = 0
   binaries = ["cargo-release"]
   os_mapping = { linux = "unknown-linux-musl", darwin = "apple-darwin" }
   arch_mapping = { amd64 = "x86_64", arm64 = "aarch64" }
