@@ -196,14 +196,8 @@ jobs:
 
           REGISTRY_RECIPES="$REGISTRY_RECIPES]"
 
-          # GitHub Actions matrix limit is 256 items
-          RECIPE_COUNT=$(echo "$REGISTRY_RECIPES" | jq 'length')
           if [ "$REGISTRY_RECIPES" = '[]' ]; then
             echo "has_registry_changes=false" >> $GITHUB_OUTPUT
-          elif [ "$RECIPE_COUNT" -gt 256 ]; then
-            echo "::warning::$RECIPE_COUNT registry recipes changed (exceeds matrix limit of 256), skipping execution validation. Nightly workflow will validate."
-            echo "has_registry_changes=false" >> $GITHUB_OUTPUT
-            REGISTRY_RECIPES='[]'
           else
             echo "has_registry_changes=true" >> $GITHUB_OUTPUT
           fi
