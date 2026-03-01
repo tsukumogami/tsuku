@@ -93,7 +93,8 @@ func WithDownloadCacheDir(path string) ExecutorOption {
 
 // WithCargoRegistryCacheDir sets a shared cargo registry cache directory.
 // When set, this directory is mounted read-write into the container at
-// /workspace/cargo-registry-cache. The sandbox script symlinks
+// /workspace/cargo-registry-cache. The cargo_build action reads the
+// TSUKU_CARGO_REGISTRY_CACHE env var and creates the symlink from
 // $CARGO_HOME/registry to this mount, so cargo fetch results are shared
 // across Linux families within a single recipe run.
 func WithCargoRegistryCacheDir(path string) ExecutorOption {
@@ -384,8 +385,8 @@ func (e *Executor) Sandbox(
 	}
 
 	// Mount shared cargo registry cache if configured.
-	// The sandbox script symlinks $CARGO_HOME/registry to this mount
-	// so cargo fetch results are shared across family containers.
+	// The cargo_build action reads TSUKU_CARGO_REGISTRY_CACHE and creates
+	// the symlink from $CARGO_HOME/registry to this mount.
 	if e.cargoRegistryCacheDir != "" {
 		opts.Mounts = append(opts.Mounts, validate.Mount{
 			Source:   e.cargoRegistryCacheDir,
