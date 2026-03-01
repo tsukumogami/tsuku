@@ -27,6 +27,24 @@ Split 1983 changed files into 18 PRs.
 | 17 | 100 | Homebrew recipes (batch 14) |
 | 18 | 31 | Homebrew recipes (batch 15) |
 
+## Known Issues from PR 1
+
+The following recipes were reverted to their main versions in PR 1
+because their changes caused CI failures. They need to be addressed
+in later PRs:
+
+- **spatialite**: Adding `runtime_dependencies = ["geos", "libxml2", "proj", "sqlite"]`
+  caused sandbox test failures. All four deps exist on main, so the
+  issue is in dependency resolution during sandbox testing, not missing
+  recipes. Needs investigation before re-adding.
+- **git**: Adding `runtime_dependencies = ["gettext", "pcre2"]` caused
+  sandbox exit code 8 (dependency resolution failure). Both deps exist
+  on main. Same sandbox resolution issue as spatialite.
+- **vulkan-loader, mesa-vulkan-drivers, cuda-runtime**: Comment-only
+  changes pulled these into the test matrix. mesa-vulkan-drivers has a
+  pre-existing bug on Alpine arm64 (installs `mesa-vulkan-intel` which
+  doesn't exist on aarch64). Reverted to avoid testing unchanged recipes.
+
 ## Bundling Constraint
 
 Each dependency node (recipe depended upon by others) is bundled with
