@@ -577,10 +577,11 @@ func (e *Executor) buildSandboxScript(
 	sb.WriteString("  mkdir -p /workspace/tsuku/recipes /workspace/tsuku/bin /workspace/tsuku/tools\n")
 	sb.WriteString("fi\n\n")
 
-	// Add $TSUKU_HOME/bin to PATH so dependency binaries are available
-	// This is needed when plans include dependency steps (e.g., nodejs for npm_exec)
-	sb.WriteString("# Add TSUKU_HOME/bin to PATH for dependency binaries\n")
-	sb.WriteString("export PATH=/workspace/tsuku/bin:$PATH\n\n")
+	// Add tools/current and bin to PATH so pre-installed tool binaries are available.
+	// tools/current contains symlinks created by install_binaries (e.g., patchelf,
+	// cmake). bin is legacy but kept for compatibility.
+	sb.WriteString("# Add TSUKU_HOME paths for dependency binaries\n")
+	sb.WriteString("export PATH=/workspace/tsuku/tools/current:/workspace/tsuku/bin:$PATH\n\n")
 
 	// NOTE: Cargo registry cache sharing is handled via the
 	// TSUKU_CARGO_REGISTRY_CACHE environment variable, which is set in the
