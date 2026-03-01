@@ -146,26 +146,64 @@ jobs:
             exit 0
           fi
 
-          # Read batch sizes from config or use defaults
-          LINUX_BATCH_SIZE=5
+          # Read batch sizes from config or use defaults.
+          # Linux config can be:
+          #   - a number: uniform batch size for all recipes
+          #   - an object: per-ecosystem sizes, where each value is either
+          #     a number (fixed size) or {"max": N, "min_batches": M} for
+          #     dynamic sizing: batch_size = min(max, ceil(count/min_batches))
+          LINUX_BATCH_CONFIG='5'
           DARWIN_BATCH_SIZE=20
           if [ -f .github/ci-batch-config.json ]; then
-            LINUX_BATCH_SIZE=$(jq -r '.batch_sizes["test-recipe"].linux // 5' .github/ci-batch-config.json)
+            LINUX_BATCH_CONFIG=$(jq -c '.batch_sizes["test-recipe"].linux // 5' .github/ci-batch-config.json)
             DARWIN_BATCH_SIZE=$(jq -r '.batch_sizes["test-recipe"].darwin // 20' .github/ci-batch-config.json)
           fi
-          echo "Using Linux batch size: $LINUX_BATCH_SIZE"
-          echo "Using Darwin batch size: $DARWIN_BATCH_SIZE"
+          echo "Linux batch config: $LINUX_BATCH_CONFIG"
+          echo "Darwin batch size: $DARWIN_BATCH_SIZE"
 
           # Sort by ecosystem so same-ecosystem recipes land in the same batch,
           # enabling foundation image reuse within each batch job.
           RECIPES=$(echo "$RECIPES" | jq -c 'sort_by(.ecosystem)')
 
-          # Split recipes into Linux batches
-          LINUX_BATCHES=$(echo "$RECIPES" | jq -c --argjson bs "$LINUX_BATCH_SIZE" '
-            . as $all |
-            [range(0; length; $bs)] |
-            to_entries |
-            map({batch_id: (.key + 1), recipes: $all[.value:.value + $bs]})
+          # Helper: resolve a per-ecosystem config entry to a concrete batch
+          # size given the group length. Accepts a number or an object with
+          # "max" and "min_batches" fields.
+          #   resolve_bs(entry; n) -> number
+          def resolve_bs(entry; n):
+            if (entry | type) == "number" then entry
+            elif (entry | type) == "object" then
+              [entry.max, ((n + entry.min_batches - 1) / entry.min_batches | floor)] | min
+            else 5
+            end;
+
+          # Split recipes into Linux batches.
+          LINUX_BATCHES=$(echo "$RECIPES" | jq -c --argjson cfg "$LINUX_BATCH_CONFIG" '
+            # resolve_bs: given a config entry and group size, return batch size
+            def resolve_bs(entry; n):
+              if (entry | type) == "number" then entry
+              elif (entry | type) == "object" and entry.max then
+                [entry.max, ((n + entry.min_batches - 1) / entry.min_batches | floor)] | min
+              else 5
+              end;
+
+            if ($cfg | type) == "number" then
+              . as $all |
+              [range(0; length; $cfg)] |
+              to_entries |
+              map({batch_id: (.key + 1), recipes: $all[.value:.value + $cfg]})
+            else
+              group_by(.ecosystem) |
+              map(
+                . as $grp |
+                (.[0].ecosystem) as $eco |
+                resolve_bs(($cfg[$eco] // $cfg["default"]) // 5; $grp | length) as $bs |
+                [range(0; ($grp | length); $bs)] |
+                map($grp[.:.+$bs])
+              ) |
+              add |
+              to_entries |
+              map({batch_id: (.key + 1), recipes: .value})
+            end
           ')
 
           echo "linux_batches=$LINUX_BATCHES" >> "$GITHUB_OUTPUT"
@@ -178,7 +216,7 @@ jobs:
             echo "has_linux_batches=false" >> "$GITHUB_OUTPUT"
           fi
 
-          echo "Generated $LINUX_BATCH_COUNT Linux batch(es) of up to $LINUX_BATCH_SIZE recipes"
+          echo "Generated $LINUX_BATCH_COUNT Linux batch(es)"
 
           # Split recipes into Darwin batches (larger batch size since macOS runners are more expensive)
           DARWIN_BATCHES=$(echo "$RECIPES" | jq -c --argjson bs "$DARWIN_BATCH_SIZE" '
@@ -268,6 +306,7 @@ jobs:
               continue
             fi
 
+            RECIPE_START=$(date +%s)
             PIDS=()
             for family in "${FAMILIES[@]}"; do
               TOTAL=$((TOTAL + 1))
@@ -295,6 +334,7 @@ jobs:
             for pid in "${PIDS[@]}"; do
               wait "$pid" || true
             done
+            RECIPE_ELAPSED=$(( $(date +%s) - RECIPE_START ))
 
             # Collect results
             for family in "${FAMILIES[@]}"; do
@@ -312,12 +352,12 @@ jobs:
 
               if [ "$SANDBOX_PASSED" = "true" ]; then
                 PASSED=$((PASSED + 1))
-                RESULTS="$RESULTS| $recipe_name | $family | pass |\n"
-                echo "PASS: $recipe_name on $family"
+                RESULTS="$RESULTS| $recipe_name | $family | pass | ${RECIPE_ELAPSED}s |\n"
+                echo "PASS: $recipe_name on $family (${RECIPE_ELAPSED}s)"
               else
                 FAILED=$((FAILED + 1))
-                RESULTS="$RESULTS| $recipe_name | $family | **FAIL** (exit $EXIT_CODE) |\n"
-                echo "FAIL: $recipe_name on $family (exit $EXIT_CODE)"
+                RESULTS="$RESULTS| $recipe_name | $family | **FAIL** (exit $EXIT_CODE) | ${RECIPE_ELAPSED}s |\n"
+                echo "FAIL: $recipe_name on $family (exit $EXIT_CODE, ${RECIPE_ELAPSED}s)"
               fi
 
               echo "::endgroup::"
@@ -334,8 +374,8 @@ jobs:
             echo ""
             echo "Passed: $PASSED / $TOTAL"
             echo ""
-            echo "| Recipe | Family | Status |"
-            echo "|--------|--------|--------|"
+            echo "| Recipe | Family | Status | Duration |"
+            echo "|--------|--------|--------|----------|"
             echo -e "$RESULTS"
           } >> "$GITHUB_STEP_SUMMARY"
 
@@ -408,6 +448,7 @@ jobs:
               continue
             fi
 
+            RECIPE_START=$(date +%s)
             PIDS=()
             for family in "${FAMILIES[@]}"; do
               TOTAL=$((TOTAL + 1))
@@ -435,6 +476,7 @@ jobs:
             for pid in "${PIDS[@]}"; do
               wait "$pid" || true
             done
+            RECIPE_ELAPSED=$(( $(date +%s) - RECIPE_START ))
 
             # Collect results
             for family in "${FAMILIES[@]}"; do
@@ -452,12 +494,12 @@ jobs:
 
               if [ "$SANDBOX_PASSED" = "true" ]; then
                 PASSED=$((PASSED + 1))
-                RESULTS="$RESULTS| $recipe_name | $family | pass |\n"
-                echo "PASS: $recipe_name on $family"
+                RESULTS="$RESULTS| $recipe_name | $family | pass | ${RECIPE_ELAPSED}s |\n"
+                echo "PASS: $recipe_name on $family (${RECIPE_ELAPSED}s)"
               else
                 FAILED=$((FAILED + 1))
-                RESULTS="$RESULTS| $recipe_name | $family | **FAIL** (exit $EXIT_CODE) |\n"
-                echo "FAIL: $recipe_name on $family (exit $EXIT_CODE)"
+                RESULTS="$RESULTS| $recipe_name | $family | **FAIL** (exit $EXIT_CODE) | ${RECIPE_ELAPSED}s |\n"
+                echo "FAIL: $recipe_name on $family (exit $EXIT_CODE, ${RECIPE_ELAPSED}s)"
               fi
 
               echo "::endgroup::"
@@ -474,8 +516,8 @@ jobs:
             echo ""
             echo "Passed: $PASSED / $TOTAL"
             echo ""
-            echo "| Recipe | Family | Status |"
-            echo "|--------|--------|--------|"
+            echo "| Recipe | Family | Status | Duration |"
+            echo "|--------|--------|--------|----------|"
             echo -e "$RESULTS"
           } >> "$GITHUB_STEP_SUMMARY"
 
@@ -551,6 +593,7 @@ jobs:
             fi
 
             TOTAL=$((TOTAL + 1))
+            RECIPE_START=$(date +%s)
 
             echo "::group::$recipe_name on macOS arm64"
 
@@ -561,14 +604,16 @@ jobs:
             if gtimeout 600 ./tsuku-darwin-arm64 install --force \
                 --dangerously-suppress-security \
                 --recipe "$recipe_path" 2>&1; then
+              RECIPE_ELAPSED=$(( $(date +%s) - RECIPE_START ))
               PASSED=$((PASSED + 1))
-              RESULTS="$RESULTS| $recipe_name | darwin-arm64 | pass |\n"
-              echo "PASS: $recipe_name on macOS arm64"
+              RESULTS="$RESULTS| $recipe_name | darwin-arm64 | pass | ${RECIPE_ELAPSED}s |\n"
+              echo "PASS: $recipe_name on macOS arm64 (${RECIPE_ELAPSED}s)"
             else
               EXIT_CODE=$?
+              RECIPE_ELAPSED=$(( $(date +%s) - RECIPE_START ))
               FAILED=$((FAILED + 1))
-              RESULTS="$RESULTS| $recipe_name | darwin-arm64 | **FAIL** (exit $EXIT_CODE) |\n"
-              echo "FAIL: $recipe_name on macOS arm64 (exit $EXIT_CODE)"
+              RESULTS="$RESULTS| $recipe_name | darwin-arm64 | **FAIL** (exit $EXIT_CODE) | ${RECIPE_ELAPSED}s |\n"
+              echo "FAIL: $recipe_name on macOS arm64 (exit $EXIT_CODE, ${RECIPE_ELAPSED}s)"
             fi
 
             echo "::endgroup::"
@@ -583,8 +628,8 @@ jobs:
             echo ""
             echo "Passed: $PASSED / $TOTAL"
             echo ""
-            echo "| Recipe | Family | Status |"
-            echo "|--------|--------|--------|"
+            echo "| Recipe | Family | Status | Duration |"
+            echo "|--------|--------|--------|----------|"
             echo -e "$RESULTS"
             if [ "$FAILED" -gt 0 ]; then
               echo ""
@@ -664,6 +709,7 @@ jobs:
             fi
 
             TOTAL=$((TOTAL + 1))
+            RECIPE_START=$(date +%s)
 
             echo "::group::$recipe_name on macOS x86_64"
 
@@ -674,14 +720,16 @@ jobs:
             if gtimeout 600 ./tsuku-darwin-amd64 install --force \
                 --dangerously-suppress-security \
                 --recipe "$recipe_path" 2>&1; then
+              RECIPE_ELAPSED=$(( $(date +%s) - RECIPE_START ))
               PASSED=$((PASSED + 1))
-              RESULTS="$RESULTS| $recipe_name | darwin-x86_64 | pass |\n"
-              echo "PASS: $recipe_name on macOS x86_64"
+              RESULTS="$RESULTS| $recipe_name | darwin-x86_64 | pass | ${RECIPE_ELAPSED}s |\n"
+              echo "PASS: $recipe_name on macOS x86_64 (${RECIPE_ELAPSED}s)"
             else
               EXIT_CODE=$?
+              RECIPE_ELAPSED=$(( $(date +%s) - RECIPE_START ))
               FAILED=$((FAILED + 1))
-              RESULTS="$RESULTS| $recipe_name | darwin-x86_64 | **FAIL** (exit $EXIT_CODE) |\n"
-              echo "FAIL: $recipe_name on macOS x86_64 (exit $EXIT_CODE)"
+              RESULTS="$RESULTS| $recipe_name | darwin-x86_64 | **FAIL** (exit $EXIT_CODE) | ${RECIPE_ELAPSED}s |\n"
+              echo "FAIL: $recipe_name on macOS x86_64 (exit $EXIT_CODE, ${RECIPE_ELAPSED}s)"
             fi
 
             echo "::endgroup::"
@@ -696,8 +744,8 @@ jobs:
             echo ""
             echo "Passed: $PASSED / $TOTAL"
             echo ""
-            echo "| Recipe | Family | Status |"
-            echo "|--------|--------|--------|"
+            echo "| Recipe | Family | Status | Duration |"
+            echo "|--------|--------|--------|----------|"
             echo -e "$RESULTS"
             if [ "$FAILED" -gt 0 ]; then
               echo ""
