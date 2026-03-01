@@ -119,3 +119,31 @@ dependencies = ["readline"]
 
 Only use `runtime_dependencies` for deps that are needed at runtime
 but NOT at build time.
+
+## Rule 5: Clean up after local test runs
+
+Local sandbox tests install tools into `TSUKU_HOME` directories and
+may pull container images. These accumulate fast and can fill the disk.
+
+After each local test run (or batch of runs):
+
+1. Remove the per-family test directories:
+   ```bash
+   rm -rf /tmp/tsuku-debian-* /tmp/tsuku-rhel-* /tmp/tsuku-alpine-* /tmp/tsuku-suse-*
+   ```
+
+2. Remove the repo-local `.tsuku-test` directory if it exists:
+   ```bash
+   rm -rf .tsuku-test
+   ```
+
+3. Prune unused Docker images/containers from sandbox runs:
+   ```bash
+   docker system prune -f 2>/dev/null || true
+   ```
+
+Agents running local tests MUST clean up their `TSUKU_HOME` directory
+after each recipe install (pass or fail), not just at the end. The
+pattern is: create temp dir, install, check result, delete temp dir,
+move to next recipe. This prevents a full test run from accumulating
+gigabytes of installed tools.
