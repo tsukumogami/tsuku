@@ -11,7 +11,7 @@
     "libpng",
     "libslirp",
     "sdl2",
-    "sdl2_net",
+    "sdl2-net",
     "speexdsp",
   ]
   tier = 0

@@ -1,10 +1,9 @@
 [metadata]
-  name = "sdl2_net"
-  description = "Small sample cross-platform networking library"
-  homepage = "https://github.com/libsdl-org/SDL_net"
+  name = "console-bridge"
+  description = "Robot Operating System-independent package for logging"
+  homepage = "https://wiki.ros.org/console_bridge/"
   version_format = ""
   requires_sudo = false
-  runtime_dependencies = ["sdl2"]
   tier = 0
   type = "library"
   llm_validation = "skipped"
@@ -14,7 +13,7 @@
   github_repo = ""
   tag_prefix = ""
   module = ""
-  formula = "sdl2_net"
+  formula = "console_bridge"
   cask = ""
   tap = ""
   fossil_repo = ""
@@ -24,7 +23,7 @@
 
 [[steps]]
   action = "homebrew"
-  formula = "sdl2_net"
+  formula = "console_bridge"
   [steps.when]
     libc = ["glibc"]
     os = ["linux"]
@@ -32,20 +31,20 @@
 [[steps]]
   action = "install_binaries"
   install_mode = "directory"
-  outputs = ["lib/libSDL2_net-2.0.so.0", "lib/libSDL2_net-2.0.so.0.200.0", "lib/libSDL2_net.a", "lib/libSDL2_net.so", "lib/pkgconfig/SDL2_net.pc", "include/SDL2/SDL_net.h"]
+  outputs = ["lib/libconsole_bridge.so", "lib/libconsole_bridge.so.1.0", "lib/pkgconfig/console_bridge.pc", "include/console_bridge/console.h", "include/console_bridge/console_bridge_export.h"]
   [steps.when]
     libc = ["glibc"]
     os = ["linux"]
 
 [[steps]]
   action = "homebrew"
-  formula = "sdl2_net"
+  formula = "console_bridge"
   [steps.when]
     os = ["darwin"]
 
 [[steps]]
   action = "install_binaries"
   install_mode = "directory"
-  outputs = ["lib/libSDL2_net-2.0.0.dylib", "lib/libSDL2_net.a", "lib/libSDL2_net.dylib", "lib/pkgconfig/SDL2_net.pc", "include/SDL2/SDL_net.h"]
+  outputs = ["lib/libconsole_bridge.1.0.dylib", "lib/libconsole_bridge.dylib", "lib/pkgconfig/console_bridge.pc", "include/console_bridge/console.h", "include/console_bridge/console_bridge_export.h"]
   [steps.when]
     os = ["darwin"]

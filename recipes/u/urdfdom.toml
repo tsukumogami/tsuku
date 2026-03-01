@@ -7,7 +7,7 @@
   tier = 0
   type = ""
   llm_validation = "skipped"
-  runtime_dependencies = ["console_bridge", "tinyxml2"]
+  runtime_dependencies = ["console-bridge", "tinyxml2"]
 
 [version]
   source = "homebrew"

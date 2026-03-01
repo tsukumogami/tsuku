@@ -9,7 +9,7 @@
     "libpng",
     "libsamplerate",
     "sdl2",
-    "sdl2_net",
+    "sdl2-net",
   ]
   tier = 0
   type = ""
