@@ -4,7 +4,12 @@
   homepage = "https://vgmstream.org"
   version_format = ""
   requires_sudo = false
-  runtime_dependencies = ["ffmpeg", "speex"]
+  runtime_dependencies = [
+    "ffmpeg",
+    "libogg",
+    "mpg123",
+    "speex",
+  ]
   tier = 0
   type = ""
   llm_validation = "skipped"

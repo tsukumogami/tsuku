@@ -4,7 +4,40 @@
   homepage = "https://ffmpeg.org/"
   version_format = ""
   requires_sudo = false
-  runtime_dependencies = ["dav1d", "fontconfig", "freetype", "gnutls", "rav1e", "sdl2", "snappy", "xz"]
+  runtime_dependencies = [
+    "aom",
+    "aribb24",
+    "dav1d",
+    "fontconfig",
+    "freetype",
+    "frei0r",
+    "gnutls",
+    "jpeg-xl",
+    "lame",
+    "libbluray",
+    "libogg",
+    "librist",
+    "libsamplerate",
+    "libssh",
+    "libvidstab",
+    "libvmaf",
+    "libvpx",
+    "llama.cpp",
+    "opencore-amr",
+    "opus",
+    "rav1e",
+    "sdl2",
+    "snappy",
+    "speex",
+    "srt",
+    "svt-av1",
+    "whisper-cpp",
+    "x264",
+    "x265",
+    "xvid",
+    "xz",
+    "zimg",
+  ]
   tier = 0
   type = ""
   llm_validation = "skipped"

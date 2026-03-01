@@ -4,7 +4,7 @@
   homepage = "https://www.nongnu.org/oath-toolkit/"
   version_format = ""
   requires_sudo = false
-  runtime_dependencies = ["libxml2", "libxmlsec1"]
+  runtime_dependencies = ["libxml2", "libxmlsec1", "openssl"]
   tier = 0
   type = ""
   llm_validation = "skipped"

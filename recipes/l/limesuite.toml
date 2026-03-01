@@ -4,7 +4,7 @@
   homepage = "https://myriadrf.org/projects/software/lime-suite/"
   version_format = ""
   requires_sudo = false
-  runtime_dependencies = []
+  runtime_dependencies = ["fltk", "libusb"]
   tier = 0
   type = ""
   llm_validation = "skipped"

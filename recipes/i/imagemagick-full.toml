@@ -4,7 +4,25 @@
   homepage = "https://imagemagick.org/index.php"
   version_format = ""
   requires_sudo = false
-  runtime_dependencies = ["cairo", "fontconfig", "freetype", "glib", "jpeg-turbo", "jpeg-xl", "libheif", "libpng", "little-cms2", "xz", "gettext"]
+  runtime_dependencies = [
+    "cairo",
+    "fontconfig",
+    "freetype",
+    "gettext",
+    "glib",
+    "imath",
+    "jpeg-turbo",
+    "jpeg-xl",
+    "libheif",
+    "liblqr",
+    "libomp",
+    "libpng",
+    "libtiff",
+    "libultrahdr",
+    "libzip",
+    "little-cms2",
+    "xz",
+  ]
   tier = 0
   type = ""
   llm_validation = "skipped"

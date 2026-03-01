@@ -4,7 +4,23 @@
   homepage = "https://www.synfig.org/"
   version_format = ""
   requires_sudo = false
-  runtime_dependencies = ["cairo", "ffmpeg", "fontconfig", "freetype", "fribidi", "gettext", "glib", "libpng", "mlt", "little-cms2"]
+  runtime_dependencies = [
+    "cairo",
+    "ffmpeg",
+    "fontconfig",
+    "freetype",
+    "fribidi",
+    "gettext",
+    "glib",
+    "imath",
+    "liblqr",
+    "libmng",
+    "libomp",
+    "libpng",
+    "libzip",
+    "little-cms2",
+    "mlt",
+  ]
   tier = 0
   type = ""
   llm_validation = "skipped"

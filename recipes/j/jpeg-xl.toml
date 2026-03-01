@@ -4,7 +4,15 @@
   homepage = "https://jpeg.org/jpegxl/index.html"
   version_format = ""
   requires_sudo = false
-  runtime_dependencies = ["brotli", "giflib", "jpeg-turbo", "libpng", "little-cms2"]
+  runtime_dependencies = [
+    "brotli",
+    "giflib",
+    "highway",
+    "imath",
+    "jpeg-turbo",
+    "libpng",
+    "little-cms2",
+  ]
   tier = 0
   type = ""
   llm_validation = "skipped"

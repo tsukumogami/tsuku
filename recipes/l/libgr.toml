@@ -4,7 +4,18 @@
   homepage = "https://gr-framework.org/"
   version_format = ""
   requires_sudo = false
-  runtime_dependencies = ["cairo", "freetype", "jpeg-turbo", "libpng"]
+  runtime_dependencies = [
+    "cairo",
+    "ffmpeg",
+    "freetype",
+    "glfw",
+    "jpeg-turbo",
+    "libpng",
+    "libtiff",
+    "pixman",
+    "qhull",
+    "qtbase",
+  ]
   tier = 0
   type = ""
   llm_validation = "skipped"

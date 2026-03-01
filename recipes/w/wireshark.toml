@@ -4,7 +4,22 @@
   homepage = "https://www.wireshark.org"
   version_format = ""
   requires_sudo = false
-  runtime_dependencies = ["c-ares", "glib", "gnutls", "libgcrypt", "libnghttp2", "libnghttp3", "lua", "pcre2", "zstd", "libgpg-error"]
+  runtime_dependencies = [
+    "c-ares",
+    "glib",
+    "gnutls",
+    "libgcrypt",
+    "libgpg-error",
+    "libmaxminddb",
+    "libnghttp2",
+    "libnghttp3",
+    "libssh",
+    "lua",
+    "lz4",
+    "pcre2",
+    "speexdsp",
+    "zstd",
+  ]
   tier = 0
   type = ""
   llm_validation = "skipped"

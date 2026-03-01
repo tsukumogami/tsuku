@@ -4,7 +4,12 @@
   homepage = "https://tsl0922.github.io/ttyd/"
   version_format = ""
   requires_sudo = false
-  runtime_dependencies = ["libevent"]
+  runtime_dependencies = [
+    "json-c",
+    "libevent",
+    "libuv",
+    "openssl",
+  ]
   tier = 0
   type = ""
   llm_validation = "skipped"

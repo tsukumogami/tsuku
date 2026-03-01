@@ -7,6 +7,13 @@
   tier = 0
   type = ""
   llm_validation = "skipped"
+  runtime_dependencies = [
+    "gcc-libs",
+    "hdf5-mpi",
+    "libomp",
+    "metis",
+    "open-mpi",
+  ]
 
 [version]
   source = "homebrew"

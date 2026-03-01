@@ -4,7 +4,13 @@
   homepage = "https://ppsspp.org/"
   version_format = ""
   requires_sudo = false
-  runtime_dependencies = ["sdl2", "snappy", "zstd"]
+  runtime_dependencies = [
+    "libzip",
+    "miniupnpc",
+    "sdl2",
+    "snappy",
+    "zstd",
+  ]
   tier = 0
   type = ""
   llm_validation = "skipped"

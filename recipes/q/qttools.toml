@@ -4,7 +4,12 @@
   homepage = "https://www.qt.io/"
   version_format = ""
   requires_sudo = false
-  runtime_dependencies = ["qtbase", "qtdeclarative", "zstd"]
+  runtime_dependencies = [
+    "gumbo-parser",
+    "qtbase",
+    "qtdeclarative",
+    "zstd",
+  ]
   tier = 0
   type = ""
   llm_validation = "skipped"

@@ -4,7 +4,7 @@
   homepage = "https://hackage.haskell.org/package/hopenpgp-tools"
   version_format = ""
   requires_sudo = false
-  runtime_dependencies = ["gmp"]
+  runtime_dependencies = ["gmp", "nettle"]
   tier = 0
   type = ""
   llm_validation = "skipped"

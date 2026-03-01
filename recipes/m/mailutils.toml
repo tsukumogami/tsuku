@@ -4,7 +4,14 @@
   homepage = "https://mailutils.org/"
   version_format = ""
   requires_sudo = false
-  runtime_dependencies = ["gdbm", "gnutls", "readline", "gettext"]
+  runtime_dependencies = [
+    "gdbm",
+    "gettext",
+    "gnutls",
+    "gsasl",
+    "libunistring",
+    "readline",
+  ]
   tier = 0
   type = ""
   llm_validation = "skipped"

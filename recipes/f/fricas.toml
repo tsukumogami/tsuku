@@ -4,7 +4,12 @@
   homepage = "https://fricas.github.io"
   version_format = ""
   requires_sudo = false
-  runtime_dependencies = ["gmp", "zstd"]
+  runtime_dependencies = [
+    "gmp",
+    "libxpm",
+    "sbcl",
+    "zstd",
+  ]
   tier = 0
   type = ""
   llm_validation = "skipped"

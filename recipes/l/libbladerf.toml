@@ -4,7 +4,7 @@
   homepage = "https://nuand.com/"
   version_format = ""
   requires_sudo = false
-  runtime_dependencies = ["ncurses"]
+  runtime_dependencies = ["libusb", "ncurses"]
   tier = 0
   type = ""
   llm_validation = "skipped"

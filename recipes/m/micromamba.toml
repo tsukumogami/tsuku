@@ -4,7 +4,16 @@
   homepage = "https://github.com/mamba-org/mamba"
   version_format = ""
   requires_sudo = false
-  runtime_dependencies = ["xz", "zstd"]
+  runtime_dependencies = [
+    "fmt",
+    "lz4",
+    "openssl",
+    "reproc",
+    "simdjson",
+    "xz",
+    "yaml-cpp",
+    "zstd",
+  ]
   tier = 0
   type = ""
   llm_validation = "skipped"

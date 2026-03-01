@@ -4,7 +4,13 @@
   homepage = "https://chapel-lang.org/"
   version_format = ""
   requires_sudo = false
-  runtime_dependencies = ["cmake", "gmp", "pkgconf"]
+  runtime_dependencies = [
+    "cmake",
+    "gmp",
+    "hwloc",
+    "jemalloc",
+    "pkgconf",
+  ]
   tier = 0
   type = ""
   llm_validation = "skipped"

@@ -4,7 +4,23 @@
   homepage = "https://www.syslog-ng.com"
   version_format = ""
   requires_sudo = false
-  runtime_dependencies = ["abseil", "glib", "libpaho-mqtt", "mongo-c-driver", "pcre2", "rabbitmq-c", "gettext"]
+  runtime_dependencies = [
+    "abseil",
+    "gettext",
+    "glib",
+    "hiredis",
+    "ivykis",
+    "json-c",
+    "libmaxminddb",
+    "libnet",
+    "libpaho-mqtt",
+    "mongo-c-driver",
+    "net-snmp",
+    "openssl",
+    "pcre2",
+    "protobuf",
+    "rabbitmq-c",
+  ]
   tier = 0
   type = ""
   llm_validation = "skipped"

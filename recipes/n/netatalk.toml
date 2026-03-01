@@ -4,7 +4,15 @@
   homepage = "https://netatalk.io"
   version_format = ""
   requires_sudo = false
-  runtime_dependencies = ["libevent", "libgcrypt", "mariadb-connector-c"]
+  runtime_dependencies = [
+    "bstring",
+    "cracklib",
+    "iniparser",
+    "libevent",
+    "libgcrypt",
+    "mariadb-connector-c",
+    "openldap",
+  ]
   tier = 0
   type = ""
   llm_validation = "skipped"

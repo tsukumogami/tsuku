@@ -4,7 +4,19 @@
   homepage = "https://github.com/fwupd/fwupd"
   version_format = ""
   requires_sudo = false
-  runtime_dependencies = ["glib", "gnutls", "readline", "sqlite", "xz", "gettext"]
+  runtime_dependencies = [
+    "gettext",
+    "glib",
+    "gnutls",
+    "json-glib",
+    "libcbor",
+    "libusb",
+    "libxmlb",
+    "protobuf-c",
+    "readline",
+    "sqlite",
+    "xz",
+  ]
   tier = 0
   type = ""
   llm_validation = "skipped"

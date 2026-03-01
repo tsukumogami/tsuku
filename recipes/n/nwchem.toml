@@ -4,7 +4,14 @@
   homepage = "https://nwchemgit.github.io"
   version_format = ""
   requires_sudo = false
-  runtime_dependencies = ["libxc", "open-mpi", "pkgconf"]
+  runtime_dependencies = [
+    "gcc-libs",
+    "hwloc",
+    "libomp",
+    "libxc",
+    "open-mpi",
+    "pkgconf",
+  ]
   tier = 0
   type = ""
   llm_validation = "skipped"

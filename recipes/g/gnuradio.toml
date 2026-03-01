@@ -4,7 +4,17 @@
   homepage = "https://www.gnuradio.org/"
   version_format = ""
   requires_sudo = false
-  runtime_dependencies = ["gmp", "gsl", "jack", "libyaml", "numpy"]
+  runtime_dependencies = [
+    "fmt",
+    "gmp",
+    "gsl",
+    "jack",
+    "libsndfile",
+    "libyaml",
+    "numpy",
+    "portaudio",
+    "rpds-py",
+  ]
   tier = 0
   type = ""
   llm_validation = "skipped"

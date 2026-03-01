@@ -7,6 +7,15 @@
   tier = 0
   type = ""
   llm_validation = "skipped"
+  runtime_dependencies = [
+    "qtbase",
+    "qtconnectivity",
+    "qtdeclarative",
+    "qtscxml",
+    "qtsvg",
+    "qttools",
+    "qtwebchannel",
+  ]
 
 [version]
   source = "homebrew"

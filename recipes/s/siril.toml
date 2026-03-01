@@ -4,7 +4,28 @@
   homepage = "https://www.siril.org"
   version_format = ""
   requires_sudo = false
-  runtime_dependencies = ["cairo", "cfitsio", "exiv2", "glib", "gsl", "jpeg-turbo", "jpeg-xl", "json-glib", "libgit2", "libheif", "libpng", "little-cms2", "gettext"]
+  runtime_dependencies = [
+    "cairo",
+    "cfitsio",
+    "exiv2",
+    "ffmpeg",
+    "ffms2",
+    "gettext",
+    "glib",
+    "gsl",
+    "healpix",
+    "jpeg-turbo",
+    "jpeg-xl",
+    "json-glib",
+    "libgit2",
+    "libheif",
+    "libomp",
+    "libpng",
+    "libtiff",
+    "little-cms2",
+    "wcslib",
+    "yyjson",
+  ]
   tier = 0
   type = ""
   llm_validation = "skipped"

@@ -4,7 +4,22 @@
   homepage = "https://introlab.github.io/rtabmap"
   version_format = ""
   requires_sudo = false
-  runtime_dependencies = ["librealsense", "pcl", "qtbase", "sqlite", "freetype", "glew", "libfreenect", "libpng"]
+  runtime_dependencies = [
+    "freetype",
+    "glew",
+    "libfreenect",
+    "libomp",
+    "libpcap",
+    "libpng",
+    "librealsense",
+    "lz4",
+    "octomap",
+    "pcl",
+    "qhull",
+    "qtbase",
+    "qtsvg",
+    "sqlite",
+  ]
   tier = 0
   type = ""
   llm_validation = "skipped"

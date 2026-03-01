@@ -4,7 +4,19 @@
   homepage = "https://mapserver.org/"
   version_format = ""
   requires_sudo = false
-  runtime_dependencies = ["cairo", "freetype", "geos", "giflib", "jpeg-turbo", "libpng", "libxml2", "pcre2", "proj"]
+  runtime_dependencies = [
+    "cairo",
+    "fcgi",
+    "freetype",
+    "geos",
+    "giflib",
+    "jpeg-turbo",
+    "libpng",
+    "libxml2",
+    "pcre2",
+    "proj",
+    "protobuf-c",
+  ]
   tier = 0
   type = ""
   llm_validation = "skipped"

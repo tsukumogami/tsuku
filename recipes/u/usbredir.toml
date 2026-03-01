@@ -4,7 +4,7 @@
   homepage = "https://www.spice-space.org"
   version_format = ""
   requires_sudo = false
-  runtime_dependencies = ["glib"]
+  runtime_dependencies = ["glib", "libusb"]
   tier = 0
   type = ""
   llm_validation = "skipped"

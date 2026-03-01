@@ -4,7 +4,20 @@
   homepage = "https://poppler.freedesktop.org/"
   version_format = ""
   requires_sudo = false
-  runtime_dependencies = ["cairo", "fontconfig", "freetype", "glib", "jpeg-turbo", "libpng", "little-cms2", "nspr", "gettext", "libassuan"]
+  runtime_dependencies = [
+    "cairo",
+    "fontconfig",
+    "freetype",
+    "gettext",
+    "glib",
+    "jpeg-turbo",
+    "libassuan",
+    "libpng",
+    "libtiff",
+    "little-cms2",
+    "nspr",
+    "nss",
+  ]
   tier = 0
   type = ""
   llm_validation = "skipped"

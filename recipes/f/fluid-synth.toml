@@ -4,7 +4,13 @@
   homepage = "https://www.fluidsynth.org"
   version_format = ""
   requires_sudo = false
-  runtime_dependencies = ["glib", "readline", "gettext"]
+  runtime_dependencies = [
+    "gettext",
+    "glib",
+    "libsndfile",
+    "portaudio",
+    "readline",
+  ]
   tier = 0
   type = ""
   llm_validation = "skipped"

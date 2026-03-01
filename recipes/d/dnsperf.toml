@@ -4,7 +4,12 @@
   homepage = "https://www.dns-oarc.net/tools/dnsperf"
   version_format = ""
   requires_sudo = false
-  runtime_dependencies = ["libnghttp2"]
+  runtime_dependencies = [
+    "concurrencykit",
+    "ldns",
+    "libnghttp2",
+    "openssl",
+  ]
   tier = 0
   type = ""
   llm_validation = "skipped"

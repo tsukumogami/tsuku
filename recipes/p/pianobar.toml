@@ -4,7 +4,7 @@
   homepage = "https://6xq.net/pianobar/"
   version_format = ""
   requires_sudo = false
-  runtime_dependencies = ["libgcrypt"]
+  runtime_dependencies = ["ffmpeg", "json-c", "libgcrypt"]
   tier = 0
   type = ""
   llm_validation = "skipped"

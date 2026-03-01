@@ -4,7 +4,14 @@
   homepage = "https://github.com/jcupitt/nip4"
   version_format = ""
   requires_sudo = false
-  runtime_dependencies = ["cairo", "gettext", "glib", "gsl", "libxml2"]
+  runtime_dependencies = [
+    "cairo",
+    "gettext",
+    "glib",
+    "graphene",
+    "gsl",
+    "libxml2",
+  ]
   tier = 0
   type = ""
   llm_validation = "skipped"

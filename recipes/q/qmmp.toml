@@ -4,7 +4,29 @@
   homepage = "https://qmmp.ylsoftware.com/"
   version_format = ""
   requires_sudo = false
-  runtime_dependencies = ["faad2", "jack", "libcdio", "libsndfile", "qtbase", "gettext", "glib"]
+  runtime_dependencies = [
+    "faad2",
+    "ffmpeg",
+    "game-music-emu",
+    "gettext",
+    "glib",
+    "jack",
+    "libcdio",
+    "libcdio-paranoia",
+    "libogg",
+    "libsamplerate",
+    "libsndfile",
+    "libxmp",
+    "mad",
+    "mpg123",
+    "mplayer",
+    "opus",
+    "projectm",
+    "qtbase",
+    "qtmultimedia",
+    "wavpack",
+    "wildmidi",
+  ]
   tier = 0
   type = ""
   llm_validation = "skipped"

@@ -4,7 +4,14 @@
   homepage = "https://www.gnu.org/software/gnuastro/"
   version_format = ""
   requires_sudo = false
-  runtime_dependencies = ["cfitsio", "gsl", "jpeg-turbo", "libgit2"]
+  runtime_dependencies = [
+    "cfitsio",
+    "gsl",
+    "jpeg-turbo",
+    "libgit2",
+    "libtiff",
+    "wcslib",
+  ]
   tier = 0
   type = ""
   llm_validation = "skipped"

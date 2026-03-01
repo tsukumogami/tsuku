@@ -4,7 +4,12 @@
   homepage = "https://irssi.org/"
   version_format = ""
   requires_sudo = false
-  runtime_dependencies = ["glib", "perl", "gettext"]
+  runtime_dependencies = [
+    "gettext",
+    "glib",
+    "openssl",
+    "perl",
+  ]
   tier = 0
   type = ""
   llm_validation = "skipped"

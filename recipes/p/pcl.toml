@@ -4,7 +4,18 @@
   homepage = "https://pointclouds.org/"
   version_format = ""
   requires_sudo = false
-  runtime_dependencies = ["glew", "libpng", "freetype"]
+  runtime_dependencies = [
+    "cjson",
+    "freetype",
+    "glew",
+    "libomp",
+    "libpcap",
+    "libpng",
+    "libusb",
+    "lz4",
+    "qhull",
+    "qtbase",
+  ]
   tier = 0
   type = ""
   llm_validation = "skipped"

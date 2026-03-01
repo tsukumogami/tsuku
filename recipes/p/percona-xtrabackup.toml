@@ -4,7 +4,15 @@
   homepage = "https://www.percona.com/software/mysql-database/percona-xtrabackup"
   version_format = ""
   requires_sudo = false
-  runtime_dependencies = ["libgcrypt", "zstd"]
+  runtime_dependencies = [
+    "libev",
+    "libgcrypt",
+    "lz4",
+    "openssl",
+    "protobuf",
+    "zlib-ng-compat",
+    "zstd",
+  ]
   tier = 0
   type = ""
   llm_validation = "skipped"

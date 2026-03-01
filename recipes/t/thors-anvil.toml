@@ -4,7 +4,12 @@
   homepage = "https://github.com/Loki-Astari/ThorsAnvil"
   version_format = ""
   requires_sudo = false
-  runtime_dependencies = ["libevent", "libyaml", "snappy"]
+  runtime_dependencies = [
+    "libevent",
+    "libyaml",
+    "openssl",
+    "snappy",
+  ]
   tier = 0
   type = ""
   llm_validation = "skipped"
