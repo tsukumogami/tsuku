@@ -1,5 +1,5 @@
 ---
-status: Accepted
+status: Current
 problem: |
   The Build Essentials workflow allocates 7 separate Linux runners for tool
   tests that share identical setup (checkout, Go install, binary build). Each
