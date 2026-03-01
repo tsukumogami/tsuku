@@ -20,8 +20,8 @@ rationale: |
   tsuku binary, same dependency plan). The first recipe builds the foundation
   image; subsequent recipes find it cached. Targeted mounts avoid the workspace
   shadowing problem -- the container's $TSUKU_HOME lives on its own filesystem
-  where Docker layers persist naturally. CI restructuring to batch by ecosystem
-  is what turns the caching mechanism into actual time savings.
+  where Docker layers persist naturally. Sorting recipes by ecosystem before
+  batching is what turns the caching mechanism into actual time savings.
 ---
 
 # DESIGN: Sandbox Build Cache
@@ -75,7 +75,7 @@ Tsuku has three dependency categories (`ActionDeps` in `actions/action.go`):
 
 **In scope:**
 - Mapping InstallTime dependencies from the plan to Docker image layers
-- Ecosystem-based recipe grouping in CI so foundation images are reused within batch jobs
+- Ecosystem-based recipe sorting in CI so foundation images are reused within batch jobs
 - Dynamic operation on developer machines (no pre-built images or registry)
 - Working with both Docker and Podman
 
@@ -87,7 +87,7 @@ Tsuku has three dependency categories (`ActionDeps` in `actions/action.go`):
 
 ## Decision Drivers
 
-- **Ecosystem grouping**: Recipes that share the same ecosystem (rust, nodejs) should be batched together so the ecosystem is installed once per batch, not once per recipe
+- **Ecosystem sorting**: Recipes that share the same ecosystem (rust, nodejs) should be adjacent in batches so the ecosystem is installed once per batch, not once per recipe
 - **Docker-native**: Use Docker/Podman's layer caching rather than building a parallel cache system
 - **Map plan structure to cache structure**: The plan already describes what needs to be installed. The caching mechanism should use this structure directly
 - **Preserve family isolation**: Each family builds independently. No sharing of compiled artifacts between different libc environments
@@ -119,7 +119,7 @@ The current recipe registry has ~27 cargo_build/cargo_install recipes and ~52 np
 
 Since the tsuku binary is constant within a CI job and all same-ecosystem recipes produce identical plan JSON for their shared dependency, the COPY and RUN layers in the Dockerfile match exactly. Docker's layer caching means the foundation image is built once and reused by all subsequent recipes in the batch.
 
-On GitHub Actions, the Docker layer cache is ephemeral per job. Foundation images are only shared between recipes within the same job, not across jobs. The CI restructuring (Phase 2) accounts for this by grouping recipes by ecosystem within each batch job.
+On GitHub Actions, the Docker layer cache is ephemeral per job. Foundation images are only shared between recipes within the same job, not across jobs. Phase 2 accounts for this by sorting recipes by ecosystem before batching, so same-ecosystem recipes land in the same job naturally.
 
 ## Considered Options
 
@@ -248,7 +248,7 @@ Docker already solves the "don't redo identical work" problem through layer cach
 
 Targeted mounts make this work cleanly. The broad workspace mount was originally a convenience -- one mount to pass everything in and out. But it created a conflict: the mount shadows the image's filesystem, forcing pre-installed tools into a separate path with a bridge mechanism. By mounting only the specific files the host needs to exchange, the container's `$TSUKU_HOME` lives on its own filesystem where Docker layers can persist content naturally. The executor doesn't need to know about caching at all.
 
-The CI workflow restructuring ensures recipes are grouped by ecosystem so foundation images are reused within each batch job. Since the tsuku binary and dependency plans are identical for same-ecosystem recipes, the Dockerfiles match exactly and Docker's layer cache handles the rest.
+Sorting recipes by ecosystem before batching ensures same-ecosystem recipes land in the same batch job. Since the tsuku binary and dependency plans are identical for same-ecosystem recipes, the Dockerfiles match exactly and Docker's layer cache handles the rest.
 
 ## Solution Architecture
 
@@ -454,37 +454,41 @@ Two coupled changes: switch to targeted mounts and build foundation images from 
 - Unit tests for dependency flattening, Dockerfile generation, image naming
 - Integration test: build foundation image for a recipe with Rust dep, verify that the sandbox run skips Rust installation
 
-### Phase 2: CI Ecosystem Batching
+### Phase 2: CI Ecosystem Sort
 
-Restructure `test-recipe.yml` so recipes are grouped by ecosystem within each batch job.
+Sort recipes by ecosystem before batching so same-ecosystem recipes land in the same batch naturally.
 
-**Current flow**: The build step detects changed recipes, splits them into batches of N (default 5) regardless of what ecosystem they belong to. Each batch job runs recipes sequentially with families in parallel.
+**Current flow** (after PR #1863): The build step detects changed recipes and splits them into batches by count -- 3 per batch for Linux (5 families in parallel per recipe), 20 per batch for macOS (no containers). Each Linux batch job runs recipes sequentially with families in parallel. Batches are formed without regard to what ecosystem each recipe belongs to.
 
-**New flow**: The build step classifies each changed recipe by ecosystem, then batches within each ecosystem group:
+**Key constraint**: On GitHub Actions, the Docker layer cache is local to the runner and ephemeral per job. Matrix jobs don't share Docker daemons. Foundation images are only reused between recipes within the same batch job. Within a batch, recipes run sequentially (the outer loop waits for all families before starting the next recipe), so there's no build race condition -- recipe 2 always finds recipe 1's foundation images fully built.
 
-1. **Classify**: For each changed recipe, determine the ecosystem by inspecting the TOML for action types:
+**New flow**: Classify each recipe by ecosystem, sort by ecosystem, then apply the existing count-based batching. No structural change to the matrix shape or test step.
+
+1. **Classify**: For each changed recipe, extract the primary ecosystem from the TOML's action types:
    - `cargo_build` or `cargo_install` → rust
    - `npm_install` or `npm_exec` → nodejs
-   - `go_build` → go
+   - `go_build` or `go_install` → go
    - `pipx_install` → python
    - `gem_install` → ruby
    - everything else → none (download-only, no ecosystem dep)
 
-2. **Group and batch**: Group recipes by ecosystem, then split each group into batches of N. Example with 8 changed recipes:
-   - Batch 1: cargo_build recipes 1-5 (rust ecosystem)
-   - Batch 2: cargo_build recipes 6-8 (rust ecosystem)
-   - Batch 3: npm_install recipes 1-3 (nodejs ecosystem)
-   - Batch 4: github_archive recipes 1-2 (no ecosystem)
+   Classification uses a simple grep on the TOML file for the first `action = "..."` line. No deep TOML parsing needed.
 
-3. **Run**: Each batch job runs as today (recipes sequential, families parallel). The first recipe in a batch builds the foundation image per family (~2-3 min one-time cost). All subsequent recipes in the batch find it cached and skip the ecosystem installation entirely.
+2. **Sort and batch**: Sort recipes by ecosystem, then apply the existing `range(0; length; batch_size)` split. Same-ecosystem recipes cluster into the same batches naturally. Recipes at ecosystem boundaries may share a batch with a different ecosystem -- this is fine, each just builds its own foundation image with no wasted work.
+
+   Example with 8 changed recipes (batch size 3):
+   - After sort: [cargo-audit, b3sum, mdbook, serve, prettier, esbuild, fzf, just]
+   - Batch 1: cargo-audit, b3sum, mdbook (all rust -- foundation image built once, reused twice)
+   - Batch 2: serve, prettier, esbuild (all nodejs -- foundation image built once, reused twice)
+   - Batch 3: fzf, just (no ecosystem -- no foundation image needed)
+
+3. **Run**: Unchanged. The test step runs recipes sequentially with families in parallel. Foundation image caching happens inside tsuku's `Executor.Sandbox()`.
 
 Specific changes to `test-recipe.yml`:
-- Add an ecosystem classification step after recipe detection
-- Change the batching logic from `split by count` to `group by ecosystem, then split by count`
-- The batch matrix output changes from `[{batch_id, recipes}]` to `[{batch_id, ecosystem, recipes}]`
-- The test step itself is unchanged -- foundation image caching happens inside tsuku's `Executor.Sandbox()`
-
-Recipes with no ecosystem dependencies (download-only tools like caddy, bat, ripgrep) can be batched together or separately. They don't build foundation images, so grouping doesn't affect them.
+- Add an `.ecosystem` field to each recipe entry during detection (grep the TOML for action types)
+- Add `sort_by(.ecosystem)` before the existing jq batching logic
+- No change to batch sizes, matrix output shape, or test steps
+- macOS jobs are unaffected (no containers, no foundation images)
 
 ### Phase 3: Cargo Registry Cache
 
@@ -495,7 +499,7 @@ Share cargo registry content across families within a single host.
 - Update `buildDeterministicCargoEnv()` to symlink `CARGO_HOME/registry` to shared mount when available
 - Test registry sharing across families
 
-Phase 1 is the core mechanism. Phase 2 is what makes it useful in CI. Phase 3 adds incremental improvement for cargo-specific recipes.
+Phase 1 is the core mechanism. Phase 2 is a small CI change (sort + classify) that turns the mechanism into actual time savings. Phase 3 adds incremental improvement for cargo-specific recipes.
 
 ## Security Considerations
 
