@@ -14,7 +14,9 @@ Total scenarios: 16
 - `go build ./...`
 - `go test ./internal/validate/... -count=1`
 **Expected**: Build succeeds with no errors. All existing validate tests pass, confirming the new `BuildFromDockerfile` method is implemented on `dockerRuntime`, `podmanRuntime`, and `mockRuntime` without breaking existing `Build()` usage.
-**Status**: pending
+**Status**: passed
+
+**Validation Output**: See wip/research/implement-doc_validation_issue1958.md
 
 ---
 
@@ -25,7 +27,9 @@ Total scenarios: 16
 **Commands**:
 - `go test ./internal/validate/... -run TestBuildFromDockerfile -v -count=1`
 **Expected**: Unit tests confirm that `BuildFromDockerfile` runs `docker build -t <name> <contextDir>` (or `podman build -t <name> <contextDir>`) without `-f -` or stdin piping. The mock runtime records the correct arguments.
-**Status**: pending
+**Status**: passed
+
+**Validation Output**: See wip/research/implement-doc_validation_issue1958.md - Implementation verified: both podman and docker runtimes pass contextDir as argument without stdin piping.
 
 ---
 
@@ -36,7 +40,7 @@ Total scenarios: 16
 **Commands**:
 - `go test ./internal/sandbox/ -run TestFlattenDependencies_Empty -v -count=1`
 **Expected**: Returns `[]FlatDep{}` (non-nil empty slice). No panic on nil or empty `Dependencies`.
-**Status**: pending
+**Status**: passed
 
 ---
 
@@ -47,7 +51,7 @@ Total scenarios: 16
 **Commands**:
 - `go test ./internal/sandbox/ -run 'TestFlattenDependencies_(LeavesFirst|AlphabeticalSiblings|Deduplication|PreservesSubtree|StripsTimestamp)' -v -count=1`
 **Expected**: Leaves appear before parents. Siblings at the same depth are sorted alphabetically. Duplicate tools (same tool+version via different dependency paths) are deduplicated to first occurrence. Each converted plan retains its nested dependency subtree. `GeneratedAt` is zeroed in all output plans.
-**Status**: pending
+**Status**: passed
 
 ---
 
@@ -58,7 +62,7 @@ Total scenarios: 16
 **Commands**:
 - `go test ./internal/sandbox/ -run 'TestGenerateFoundationDockerfile' -v -count=1`
 **Expected**: Dockerfile starts with `FROM <packageImage>`, includes `COPY tsuku /usr/local/bin/tsuku`, sets `TSUKU_HOME` and `PATH` env vars, has interleaved COPY+RUN pairs per dependency (e.g., `COPY plans/dep-00-rust.json /tmp/plans/dep-00-rust.json` then `RUN tsuku install --plan /tmp/plans/dep-00-rust.json --force`), ends with `RUN rm -rf /usr/local/bin/tsuku /tmp/plans`. Same inputs always produce identical output.
-**Status**: pending
+**Status**: passed
 
 ---
 
@@ -69,7 +73,7 @@ Total scenarios: 16
 **Commands**:
 - `go test ./internal/sandbox/ -run 'TestFoundationImageName' -v -count=1`
 **Expected**: Output matches pattern `tsuku/sandbox-foundation:{family}-{16 hex chars}`. Same family + same Dockerfile always produces the same tag. Different Dockerfiles produce different tags.
-**Status**: pending
+**Status**: passed
 
 ---
 
