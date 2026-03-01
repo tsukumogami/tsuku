@@ -70,11 +70,11 @@ Scenario: Create recipe from cpan
     And the file "recipes/ack.toml" exists
 
   Scenario: Create recipe from homebrew
-    When I run "tsuku create jq --from homebrew:jq --yes --deterministic-only"
+    When I run "tsuku create tree --from homebrew:tree --yes --deterministic-only"
     Then the exit code is 0
     And the output contains "Recipe created:"
     And the error output does not contain "was NOT tested in a sandbox"
-    And the file "recipes/jq.toml" exists
+    And the file "recipes/tree.toml" exists
 
 @macos
   Scenario: Create recipe from cask
@@ -104,8 +104,8 @@ Scenario: Create recipe from cpan
 
   @critical
   Scenario: Create without --from resolves from discovery registry
-    When I run "tsuku create jq --deterministic-only --yes"
+    When I run "tsuku create tree --deterministic-only --yes"
     Then the exit code is 0
     And the error output contains "Discovered:"
     And the output contains "Recipe created:"
-    And the file "recipes/jq.toml" exists
+    And the file "recipes/tree.toml" exists

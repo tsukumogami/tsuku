@@ -459,6 +459,25 @@ func normalizeEcosystem(name string) string {
 	}
 }
 
+// loaderRegistryChecker adapts a recipe.Loader to the builders.RegistryChecker
+// interface. HasRecipe checks both direct recipe lookup and satisfies aliases
+// (e.g., "openssl@3" resolves to the "openssl" recipe).
+type loaderRegistryChecker struct {
+	loader *recipe.Loader
+}
+
+func (c *loaderRegistryChecker) HasRecipe(name string) bool {
+	if c.loader == nil {
+		return false
+	}
+	_, err := c.loader.GetWithContext(context.Background(), name, recipe.LoaderOptions{})
+	if err == nil {
+		return true
+	}
+	_, found := c.loader.LookupSatisfies(name)
+	return found
+}
+
 // checkExistingRecipe checks whether an existing recipe already covers the
 // requested tool name. It uses the recipe loader (including the satisfies
 // fallback) so that ecosystem aliases like "openssl@3" resolve to their
@@ -504,7 +523,9 @@ func runCreate(cmd *cobra.Command, args []string) {
 	builderRegistry.Register(builders.NewGoBuilder(nil))
 	builderRegistry.Register(builders.NewCPANBuilder(nil))
 	builderRegistry.Register(builders.NewGitHubReleaseBuilder())
-	builderRegistry.Register(builders.NewHomebrewBuilder())
+	builderRegistry.Register(builders.NewHomebrewBuilder(
+		builders.WithRegistryChecker(&loaderRegistryChecker{loader: loader}),
+	))
 	builderRegistry.Register(builders.NewCaskBuilder(nil))
 
 	var builderName, sourceArg string
@@ -708,11 +729,14 @@ func runCreate(cmd *cobra.Command, args []string) {
 	// Generate recipe using orchestrator (handles sandbox validation and repair)
 	orchResult, err := orchestrator.Create(ctx, builder, buildReq, sessionOpts)
 	if err != nil {
-		// Handle DeterministicFailedError (--deterministic-only mode)
+		// Handle DeterministicFailedError
 		var detErr *builders.DeterministicFailedError
 		if errors.As(err, &detErr) {
 			fmt.Fprintf(os.Stderr, "deterministic generation failed: [%s] %s\n",
 				detErr.Category, detErr.Message)
+			if detErr.Category == builders.FailureCategoryMissingDep {
+				exitWithCode(ExitDependencyFailed)
+			}
 			exitWithCode(ExitDeterministicFailed)
 		}
 
@@ -1041,7 +1065,9 @@ func runDiscoveryWithOptions(toolName string, searchProviderName string) (*disco
 		builders.NewGoBuilder(nil),
 		builders.NewCPANBuilder(nil),
 		builders.NewCaskBuilder(nil),
-		builders.NewHomebrewBuilder(),
+		builders.NewHomebrewBuilder(
+			builders.WithRegistryChecker(&loaderRegistryChecker{loader: loader}),
+		),
 	} {
 		if p, ok := b.(builders.EcosystemProber); ok {
 			probers = append(probers, p)
