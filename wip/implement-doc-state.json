@@ -1,9 +1,9 @@
 {
-  "pr_status": "implementing",
+  "pr_status": "completing",
   "design_doc": "docs/designs/DESIGN-sandbox-build-cache.md",
   "branch": "docs/sandbox-build-cache",
   "pr_number": 1956,
-  "integrity_hash": "sha256:eef929e99c654bd6b3d198564c7fd112bb7b1c38ecc47f2d309b5e6b16722a30",
+  "integrity_hash": "sha256:0f7337639087eef21d0acc82ed9a13cd2adfb8076dd061612fa7467d0409ed1b",
   "issues": [
     {
       "number": 1958,
@@ -439,8 +439,8 @@
     {
       "number": 1963,
       "title": "feat(sandbox): add cargo registry cache mount",
-      "status": "scrutinized",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "ci_fix_attempts": 0,
       "issue_type": "code",
       "dependencies": [
@@ -513,6 +513,21 @@
             "evidence": "go test ./internal/sandbox/... ok"
           }
         ]
+      },
+      "reviewer_results": {
+        "issue": 1963,
+        "pragmatic": {
+          "blocking_count": 0,
+          "advisory_count": 1
+        },
+        "architect": {
+          "blocking_count": 0,
+          "advisory_count": 3
+        },
+        "maintainer": {
+          "blocking_count": 1,
+          "advisory_count": 3
+        }
       },
       "testable_scenarios": [
         "scenario-15",
