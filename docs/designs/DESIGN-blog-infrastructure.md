@@ -1,5 +1,5 @@
 ---
-status: Accepted
+status: Planned
 problem: |
   tsuku.dev needs a blog section but has no build system. The site is pure
   static HTML with a custom dark theme deployed directly to Cloudflare Pages.
@@ -31,7 +31,56 @@ rationale: |
 
 ## Status
 
-Accepted
+Planned
+
+## Implementation Issues
+
+### Milestone: [Blog Infrastructure for tsuku.dev](https://github.com/tsukumogami/tsuku/milestone/106)
+
+| Issue | Dependencies | Tier |
+|-------|--------------|------|
+| [#1974: Add Hugo project structure and templates](https://github.com/tsukumogami/tsuku/issues/1974) | None | testable |
+| _Creates the Hugo project at `blog/` with `hugo.toml`, three layout templates (`baseof.html`, `single.html`, `list.html`), blog-specific CSS, OG default image, and gitignore entry. This is the foundation that all other blog work builds on._ | | |
+| [#1975: Add hello world validation post](https://github.com/tsukumogami/tsuku/issues/1975) | [#1974](https://github.com/tsukumogami/tsuku/issues/1974) | testable |
+| _Adds the section index and first blog post with frontmatter that exercises CSS styles (headings, code blocks, inline code). Validates that Hugo rendering, template blocks, and OpenGraph tags work end-to-end._ | | |
+| [#1976: Integrate Hugo build into CI pipeline](https://github.com/tsukumogami/tsuku/issues/1976) | [#1974](https://github.com/tsukumogami/tsuku/issues/1974), [#1975](https://github.com/tsukumogami/tsuku/issues/1975) | testable |
+| _Updates `deploy-website.yml` with Hugo install (checksum-verified `.deb`), blog build step, and `blog/**` path triggers. After this, pushing a markdown file to `blog/content/posts/` automatically builds and deploys the blog alongside the existing site._ | | |
+| [#1977: Add blog link to site navigation](https://github.com/tsukumogami/tsuku/issues/1977) | [#1974](https://github.com/tsukumogami/tsuku/issues/1974) | simple |
+| _Adds "Blog" links to the nav and footer of user-facing pages (`index.html`, `recipes/`, `telemetry/`, `404.html`) so visitors can discover the blog from any page on tsuku.dev._ | | |
+
+### Dependency Graph
+
+```mermaid
+graph TD
+    subgraph Phase1["Phase 1: Foundation"]
+        I1974["#1974: Add Hugo project structure"]
+    end
+
+    subgraph Phase2["Phase 2: Content and Integration"]
+        I1975["#1975: Add hello world post"]
+        I1977["#1977: Add blog link to nav"]
+    end
+
+    subgraph Phase3["Phase 3: Pipeline"]
+        I1976["#1976: Integrate Hugo into CI"]
+    end
+
+    I1974 --> I1975
+    I1974 --> I1976
+    I1974 --> I1977
+    I1975 --> I1976
+
+    classDef done fill:#c8e6c9
+    classDef ready fill:#bbdefb
+    classDef blocked fill:#fff9c4
+    classDef needsDesign fill:#e1bee7
+    classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
+
+    class I1974 ready
+    class I1975,I1976,I1977 blocked
+```
+
+**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design
 
 ## Upstream Design Reference
 
