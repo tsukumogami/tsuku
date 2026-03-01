@@ -1,5 +1,5 @@
 ---
-status: Planned
+status: Current
 problem: |
   When testing recipes across Linux families, each family independently installs
   the same ecosystem toolchains (Rust, Node.js, etc.) inside ephemeral containers
@@ -28,7 +28,7 @@ rationale: |
 
 ## Status
 
-Planned
+Current
 
 ## Implementation Issues
 
