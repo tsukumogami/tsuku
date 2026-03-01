@@ -7,6 +7,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -519,8 +520,14 @@ func (s *HomebrewSession) generateDeterministic(ctx context.Context) (*BuildResu
 }
 
 // classifyDeterministicFailure maps an internal error to a DeterministicFailedError
-// with a category matching failure-record.schema.json.
+// with a category matching failure-record.schema.json. If the error is already a
+// DeterministicFailedError (e.g., from validateDependencies), it is returned as-is.
 func (s *HomebrewSession) classifyDeterministicFailure(err error) *DeterministicFailedError {
+	var existing *DeterministicFailedError
+	if errors.As(err, &existing) {
+		return existing
+	}
+
 	msg := err.Error()
 
 	var category DeterministicFailureCategory
