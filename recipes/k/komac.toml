@@ -7,9 +7,9 @@
   tier = 0
   type = ""
   llm_validation = "skipped"
+  extra_dependencies = ["perl"]  # openssl-sys needs perl to build vendored OpenSSL
 
 [version]
-  source = "crates_io"
   github_repo = ""
   tag_prefix = ""
   module = ""
@@ -28,4 +28,4 @@
 
 [verify]
   command = "komac --version"
-  pattern = ""
+  pattern = "{version}"
