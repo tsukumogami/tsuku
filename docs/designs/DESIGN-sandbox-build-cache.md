@@ -10,17 +10,20 @@ decision: |
   Map plan dependency layers to Docker image layers. Each InstallTime dependency
   in the plan becomes a separate RUN command in a generated Dockerfile, installed
   in canonical order. Docker's native layer caching handles cross-recipe reuse
-  automatically: two recipes that both need Rust 1.82.0 share the same cached
-  layer. Dependencies are installed at /opt/ecosystem/ to avoid workspace mount
-  shadowing, with symlinks bridging them into the workspace at runtime.
+  automatically. The sandbox mount strategy changes from a single broad workspace
+  mount to targeted mounts for specific files (plan, script, cache, output),
+  so pre-installed dependencies in the container image live at the standard
+  $TSUKU_HOME path and are found by the executor's existing skip logic.
 rationale: |
   Docker already solves the "don't redo identical work" problem through layer
   caching. Rather than building a custom cache management system, we generate
   Dockerfiles where each plan dependency is a separate RUN command and let
-  Docker/Podman handle reuse. Canonical ordering of dependencies maximizes
-  the shared prefix between recipes. Using tsuku itself inside RUN commands
-  keeps it as the single installation authority. This works dynamically on
-  developer machines -- no pre-built images or registry infrastructure needed.
+  Docker/Podman handle reuse. Targeted mounts avoid the workspace shadowing
+  problem entirely -- the container's filesystem at $TSUKU_HOME is preserved,
+  so pre-installed tools are discovered natively without symlink bridges or
+  alternate install paths. Canonical ordering maximizes shared prefixes between
+  recipes. Using tsuku itself inside RUN commands keeps it as the single
+  installation authority.
 ---
 
 # DESIGN: Sandbox Build Cache
@@ -94,9 +97,11 @@ Tsuku has three dependency categories (`ActionDeps` in `actions/action.go`):
 
 ## Research Findings
 
-### Workspace Mount Shadowing
+### Current Workspace Mount Strategy
 
-The sandbox mounts a fresh host directory at `/workspace` (`executor.go:309-313`). Since `TSUKU_HOME=/workspace/tsuku`, anything the Docker image contains at that path is hidden. Dependencies cached in the image must be installed outside `/workspace` (e.g., `/opt/ecosystem/`) and bridged into the workspace via symlinks at runtime.
+The sandbox creates a temp directory on the host and mounts it at `/workspace` (`executor.go:309-313`). This single mount serves multiple purposes: passing `plan.json` and `sandbox.sh` into the container, providing a writable `TSUKU_HOME` at `/workspace/tsuku`, and receiving verification marker files back. The download cache is mounted separately at `/workspace/tsuku/cache/downloads` (read-only).
+
+Because the mount covers all of `/workspace`, anything the Docker image contains at that path is hidden. This means pre-installed tools at `$TSUKU_HOME/tools/` would be shadowed. However, the host only needs a few specific files back from the container (two small verification markers). The installed tools themselves are never read by the host -- the sandbox is a validation mechanism, not an artifact producer. This means the broad mount is unnecessary.
 
 ### Docker Layer Caching Mechanics
 
@@ -140,8 +145,8 @@ Generated Dockerfile for a recipe that needs Rust 1.82.0 (which itself depends o
 FROM tsuku/sandbox-cache:debian-{pkg_hash}
 COPY tsuku /usr/local/bin/tsuku
 COPY plans/dep-00-rust.json /tmp/plans/
-ENV TSUKU_HOME=/opt/ecosystem
-ENV PATH=/opt/ecosystem/bin:$PATH
+ENV TSUKU_HOME=/workspace/tsuku
+ENV PATH=/workspace/tsuku/bin:$PATH
 RUN tsuku install --plan /tmp/plans/dep-00-rust.json --force
 RUN rm -rf /usr/local/bin/tsuku /tmp/plans
 ```
@@ -153,8 +158,8 @@ FROM tsuku/sandbox-cache:debian-{pkg_hash}
 COPY tsuku /usr/local/bin/tsuku
 COPY plans/dep-00-openssl.json /tmp/plans/
 COPY plans/dep-01-rust.json /tmp/plans/
-ENV TSUKU_HOME=/opt/ecosystem
-ENV PATH=/opt/ecosystem/bin:$PATH
+ENV TSUKU_HOME=/workspace/tsuku
+ENV PATH=/workspace/tsuku/bin:$PATH
 RUN tsuku install --plan /tmp/plans/dep-00-openssl.json --force
 RUN tsuku install --plan /tmp/plans/dep-01-rust.json --force
 RUN rm -rf /usr/local/bin/tsuku /tmp/plans
@@ -162,7 +167,7 @@ RUN rm -rf /usr/local/bin/tsuku /tmp/plans
 
 Docker caches each layer based on (parent + command + COPY content). If the rust plan JSON is identical between recipes (same version, same URLs, same checksums), the COPY and RUN layers are cached. Recipes with the same dependency prefix share those layers.
 
-The tsuku binary and plan files are copied into the build context and cleaned up in the final layer. Each `RUN` command installs one dependency to `$TSUKU_HOME=/opt/ecosystem`, where it persists across layers. Subsequent RUN commands see tools installed by previous layers.
+The tsuku binary and plan files are copied into the build context and cleaned up in the final layer. Each `RUN` command installs one dependency to `$TSUKU_HOME=/workspace/tsuku`, where it persists across layers. Subsequent RUN commands see tools installed by previous layers. This path choice is explained in Decision 3.
 
 #### Alternatives Considered
 
@@ -190,58 +195,66 @@ For the most common case (single ecosystem dep like "rust"), all cargo_build rec
 
 **Tree-structure ordering**: Preserve the plan's dependency tree order (DFS). Rejected because different recipes might resolve the same dependencies in different tree positions, producing different Dockerfiles for the same logical content.
 
-### Decision 3: How Should the Workspace Bridge Work?
+### Decision 3: How Should the Container Exchange Files with the Host?
 
-Dependencies are installed at `/opt/ecosystem/` inside the Docker image, but the plan executor expects them at `$TSUKU_HOME/tools/` which is under the mounted workspace. We need a bridge.
+The sandbox needs to pass files into the container (plan JSON, entrypoint script) and get results back (verification markers). It also provides a download cache. The current implementation mounts a single host directory at `/workspace`, which covers all of these but also shadows the entire `/workspace` path in the container image. This matters for caching: any toolchain pre-installed in the image at `$TSUKU_HOME=/workspace/tsuku` is hidden by the mount.
 
-#### Chosen: Symlink bridge in sandbox script
+The core question is whether to keep the broad mount (and work around the shadowing) or switch to targeted mounts (and let the container's filesystem serve as `$TSUKU_HOME`).
 
-The sandbox script creates symlinks before executing the plan:
+#### Chosen: Targeted mounts
 
-```sh
-# Bridge pre-installed ecosystem deps into workspace
-if [ -d /opt/ecosystem/tools ]; then
-  for tool_dir in /opt/ecosystem/tools/*/; do
-    tool_name=$(basename "$tool_dir")
-    ln -sf "$tool_dir" "/workspace/tsuku/tools/$tool_name"
-  done
-  for bin in /opt/ecosystem/bin/*; do
-    [ -f "$bin" ] && ln -sf "$bin" "/workspace/tsuku/bin/$(basename "$bin")"
-  done
-fi
-```
+Replace the single `/workspace` mount with individual mounts for each file the host needs to exchange:
 
-The plan executor finds tools at `$TSUKU_HOME/tools/rust-1.82.0/` (via symlink) and skips reinstallation. `ResolveCargo()` and similar functions find binaries via PATH (which includes `/opt/ecosystem/bin/`) or by scanning `$TSUKU_HOME/tools/*/bin/`.
+| Host file | Container path | Mode |
+|-----------|---------------|------|
+| `plan.json` | `/workspace/plan.json` | read-only |
+| `sandbox.sh` | `/workspace/sandbox.sh` | read-only |
+| download cache dir | `/workspace/tsuku/cache/downloads` | read-only |
+| output dir | `/workspace/output` | read-write |
+
+The container's own filesystem at `/workspace/tsuku/` is not mounted over. The foundation image installs tools to `TSUKU_HOME=/workspace/tsuku` during `docker build`, and those files persist into the sandbox run. The plan executor's existing skip logic (`os.Stat` on `$TSUKU_HOME/tools/{name}-{version}/`) finds pre-installed tools natively -- no symlinks, no alternate paths.
+
+The output directory mount is a new convention. The sandbox script writes verification markers to `/workspace/output/` instead of `/workspace/`. The host reads them from the corresponding host directory after the container exits.
+
+The download cache remains read-only, matching the current behavior. Plan generation on the host pre-fetches all artifacts. The container reads from the cache but doesn't write to it.
+
+This approach requires changing `Executor.Sandbox()` to construct multiple mounts instead of one, and updating `buildSandboxScript()` to write markers to `/workspace/output/`. The `readVerifyResults()` method reads from the new host-side output directory.
+
+Targeted mounts apply unconditionally, regardless of whether a foundation image exists. When a recipe has no InstallTime dependencies, the sandbox still uses targeted mounts -- the container's `$TSUKU_HOME` is simply empty and the script creates the directory structure with `mkdir -p`. One mount strategy for all cases avoids conditional code paths.
 
 #### Alternatives Considered
 
-**Modify plan executor to check /opt/ecosystem/**: Add a fallback path to the dependency installation logic. Rejected because it couples the executor to the sandbox's filesystem layout. The symlink bridge is transparent to the executor.
+**Full workspace mount with symlink bridge**: Keep the current single mount at `/workspace`. Install dependencies at `/opt/ecosystem/` during `docker build` to avoid shadowing. At sandbox runtime, create symlinks from `/workspace/tsuku/tools/*` to `/opt/ecosystem/tools/*` before running the plan. Rejected because it introduces a second `TSUKU_HOME`-like directory structure, requires a symlink bridge step in every sandbox run, and adds complexity to the sandbox script. The bridge must also handle `state.json` consistency (each Docker layer writes to `/opt/ecosystem/state.json`, which is separate from the workspace's `state.json`).
 
-**Bind-mount individual tool directories**: Instead of symlinking, mount each `/opt/ecosystem/tools/<name>` at `/workspace/tsuku/tools/<name>`. Rejected because it requires knowing which tools exist at container creation time (before the script runs) and adds mount complexity for each dependency.
+**Full workspace mount with executor modification**: Keep the current single mount, install deps at `/opt/ecosystem/`, and modify the plan executor to check both `$TSUKU_HOME/tools/` and `/opt/ecosystem/tools/` when looking for pre-installed dependencies. Rejected because it couples the executor (a general-purpose component) to the sandbox's container filesystem layout. The executor shouldn't know about `/opt/ecosystem/`.
+
+**Volume-mounted toolchain from host**: Install the toolchain to a host directory and mount it into the container at the same path. Rejected because it requires maintaining a host-side toolchain installation per family, and the host filesystem becomes the cache instead of the Docker image store. Cleanup semantics change (host files survive `docker system prune`), and concurrent access from parallel family runs needs coordination.
+
+**Overlay mount on $TSUKU_HOME**: Use Docker/Podman `--mount type=overlay` to overlay a host tmpdir on the image's `/workspace/tsuku`, allowing both the image's pre-installed tools and runtime writes to coexist. Rejected because overlay mounts require kernel overlay filesystem support, have restrictions in rootless Podman configurations, and are not uniformly available across the Docker/Podman versions tsuku targets. Targeted file-level mounts work with any container runtime.
 
 ## Decision Outcome
 
-**Chosen: Per-dependency Docker layers with canonical ordering**
+**Chosen: Per-dependency Docker layers with targeted mounts**
 
 ### Summary
 
-Each InstallTime dependency in the plan becomes a separate `RUN` command in a generated Dockerfile. The Dockerfile starts from the existing package image and installs dependencies one at a time, sorted alphabetically, with `TSUKU_HOME=/opt/ecosystem`. Docker's native layer caching handles cross-recipe reuse: two recipes that both need Rust 1.82.0 on debian share the exact same Rust layer because the COPY content (plan JSON) and RUN command are identical.
+Each InstallTime dependency in the plan becomes a separate `RUN` command in a generated Dockerfile, sorted alphabetically. The Dockerfile installs dependencies to `TSUKU_HOME=/workspace/tsuku` -- the same path the sandbox uses at runtime. Docker's native layer caching handles cross-recipe reuse: two recipes that both need Rust 1.82.0 on debian share the exact same Rust layer.
 
-The dependency plans are extracted from the parent plan's `Dependencies` tree, flattened via DFS traversal, deduplicated, and sorted alphabetically. Each is converted to a standalone `InstallationPlan` JSON and copied into the Docker build context. The tsuku binary is also copied in and removed after installation.
+The sandbox mount strategy changes from a single broad `/workspace` mount to targeted mounts for specific files. The host mounts `plan.json` (read-only), `sandbox.sh` (read-only), the download cache (read-write), and a small output directory for verification markers (read-write). The container's filesystem at `/workspace/tsuku/` is not mounted over, so tools pre-installed by Docker layers are visible to the plan executor. The executor's existing skip logic (`os.Stat` on `$TSUKU_HOME/tools/{name}-{version}/`) finds them natively.
 
-At sandbox runtime, the script creates symlinks from `/opt/ecosystem/tools/*` into `/workspace/tsuku/tools/` before executing the recipe's plan. The plan executor discovers pre-installed dependencies via these symlinks and skips their installation steps.
+This eliminates the need for alternate install paths, symlink bridges, or executor modifications. The foundation image and the sandbox run share the same `TSUKU_HOME` path and the same skip mechanism. The only changes to the sandbox are: (1) how mounts are constructed and (2) where verification markers are written.
 
-This approach is fully dynamic. On a developer's machine, the first `tsuku install --sandbox cargo-nextest` builds the Rust layer (~2-3 minutes). Every subsequent cargo_build sandbox run that needs the same Rust version finds the layer cached and starts instantly. No pre-built images, no registry, no external infrastructure. CI benefits the same way: within a job that tests multiple recipes, all recipes after the first share cached dependency layers.
+The approach is fully dynamic. On a developer's machine, the first `tsuku install --sandbox cargo-nextest` builds the Rust layer (~2-3 minutes). Every subsequent cargo_build sandbox run that needs the same Rust version finds the layer cached and starts instantly. No pre-built images, no registry, no external infrastructure.
 
-The speedup targets toolchain installation and registry fetching (saving ~15-25 minutes across 5 families per recipe). Compilation time (10-40 min per family) remains unaddressed -- each family still compiles independently. For the heaviest crates, compilation remains the dominant cost.
+The speedup targets toolchain installation and registry fetching (saving ~15-25 minutes across 5 families per recipe). Compilation time (10-40 min per family) remains unaddressed -- each family still compiles independently.
 
 ### Rationale
 
-Docker already solves the "don't redo identical work" problem through layer caching. Instead of building a parallel caching system, we generate Dockerfiles that expose the plan's dependency structure as Docker layers. This is a thin mapping layer, not a new caching system.
+Docker already solves the "don't redo identical work" problem through layer caching. Instead of building a parallel caching system, we generate Dockerfiles that expose the plan's dependency structure as Docker layers.
 
-Canonical ordering ensures that recipes with different dependency sets still share layers for their common dependencies. Alphabetical sorting is simple, deterministic, and doesn't require global knowledge.
+Targeted mounts make this work cleanly. The broad workspace mount was originally a convenience -- one mount to pass everything in and out. But it created a conflict: the mount shadows the image's filesystem, forcing pre-installed tools into a separate path with a bridge mechanism. By mounting only the specific files the host needs to exchange, the container's `$TSUKU_HOME` lives on its own filesystem where Docker layers can persist content naturally. The executor doesn't need to know about caching at all.
 
-Using `tsuku install --plan` inside the RUN commands keeps tsuku as the single authority for how tools are installed. The plan JSON is the cache key: same plan content produces the same Docker layer, and Docker handles invalidation when the plan changes (new version, different checksums).
+Canonical ordering ensures that recipes with different dependency sets share layers for their common prefix. Using `tsuku install --plan` inside RUN commands keeps tsuku as the single installation authority. The plan JSON content is the effective cache key: Docker invalidates a layer when the plan changes.
 
 ## Solution Architecture
 
@@ -257,16 +270,16 @@ Extract Dependencies from plan.Dependencies
 Flatten + Sort + Generate Standalone Plans
     |
     v
-Generate Dockerfile (one RUN per dep)
+Generate Dockerfile (one RUN per dep, TSUKU_HOME=/workspace/tsuku)
     |
     v
 docker build (layer caching handles reuse)
     |
     v
-Foundation Image (all deps pre-installed at /opt/ecosystem/)
+Foundation Image (deps pre-installed at /workspace/tsuku/)
     |
     v
-Sandbox Execution (symlink bridge + recipe plan)
+Sandbox Execution (targeted mounts + recipe plan)
     |
     v
 Recipe Build Output
@@ -280,6 +293,7 @@ The plan's `Dependencies` field is a tree of `DependencyPlan` entries. The extra
 2. **Deduplication**: If the same tool appears multiple times (shared transitive dep), keep the first occurrence
 3. **Sort**: Alphabetically by tool name
 4. **Convert**: Each `DependencyPlan` becomes a standalone `InstallationPlan` JSON (with Steps but no nested Dependencies, since transitive deps are handled by earlier layers)
+5. **Normalize**: Strip non-deterministic fields (`generated_at` timestamps) from the standalone plan JSON. Docker caches layers based on COPY content, so the plan JSON must be identical across runs for the same logical dependency. If timestamps differ, Docker rebuilds the layer unnecessarily
 
 ### Dockerfile Generation
 
@@ -289,8 +303,8 @@ The generated Dockerfile for a debian recipe needing Rust:
 FROM tsuku/sandbox-cache:debian-{pkg_hash}
 COPY tsuku /usr/local/bin/tsuku
 COPY plans/ /tmp/plans/
-ENV TSUKU_HOME=/opt/ecosystem
-ENV PATH=/opt/ecosystem/bin:$PATH
+ENV TSUKU_HOME=/workspace/tsuku
+ENV PATH=/workspace/tsuku/bin:$PATH
 RUN tsuku install --plan /tmp/plans/dep-00-rust.json --force
 RUN rm -rf /usr/local/bin/tsuku /tmp/plans
 ```
@@ -304,6 +318,14 @@ context/
     dep-00-rust.json (standalone plan for rust)
 ```
 
+Note: `TSUKU_HOME=/workspace/tsuku` matches the path the sandbox uses at runtime. Because the sandbox uses targeted mounts (not a broad mount at `/workspace`), the container's filesystem at this path is preserved from the Docker image layers.
+
+### state.json Consistency
+
+Each `RUN tsuku install --plan` in the Dockerfile writes dependency entries to `$TSUKU_HOME/state.json`. Since Docker layers are sequential, each layer reads the cumulative state from prior layers and appends its entry. The final foundation image contains a `state.json` with entries for all pre-installed dependencies.
+
+At sandbox runtime, the recipe's `tsuku install --plan plan.json --force` reads this `state.json`, finds the dependency entries, and extends it with the recipe's own entry. The sandbox script must not initialize an empty `state.json` or create the `$TSUKU_HOME` directory structure with `mkdir -p` when a foundation image is present -- doing so would clobber the image's accumulated state. The script should only create the directory structure when `$TSUKU_HOME/tools` doesn't already exist.
+
 ### Image Naming
 
 Foundation images are tagged for quick existence checks:
@@ -314,40 +336,57 @@ tsuku/sandbox-foundation:{family}-{hash16}
 
 The hash is computed from the generated Dockerfile content (which encodes the full dependency chain). If the Dockerfile is identical, the image tag is identical. This serves as a fast lookup before running `docker build`.
 
-### Sandbox Script Bridge
+### Targeted Mount Structure
 
-When ecosystem dependencies exist, the sandbox script adds a bridge step:
+The sandbox constructs these mounts instead of the current single workspace mount:
+
+```go
+Mounts: []validate.Mount{
+    {Source: planPath,   Target: "/workspace/plan.json",                ReadOnly: true},
+    {Source: scriptPath, Target: "/workspace/sandbox.sh",               ReadOnly: true},
+    {Source: cacheDir,   Target: "/workspace/tsuku/cache/downloads",    ReadOnly: true},
+    {Source: outputDir,  Target: "/workspace/output",                   ReadOnly: false},
+},
+```
+
+The container's `/workspace/tsuku/tools/`, `/workspace/tsuku/bin/`, and `/workspace/tsuku/state.json` come from the Docker image layers. They're not mounted over.
+
+### Sandbox Script Changes
+
+The sandbox script changes are minimal. The `mkdir -p` setup lines become unnecessary (the foundation image already created the directory structure). Verification markers write to `/workspace/output/` instead of `/workspace/`:
 
 ```sh
 #!/bin/sh
 set -e
 
-# Bridge pre-installed ecosystem deps into workspace
-if [ -d /opt/ecosystem/tools ]; then
-  for tool_dir in /opt/ecosystem/tools/*/; do
-    tool_name=$(basename "$tool_dir")
-    ln -sf "$tool_dir" "/workspace/tsuku/tools/$tool_name"
-  done
-  for bin in /opt/ecosystem/bin/*; do
-    [ -f "$bin" ] && ln -sf "$bin" "/workspace/tsuku/bin/$(basename "$bin")"
-  done
-fi
+# Add TSUKU_HOME/bin to PATH for dependency binaries
+export PATH=/workspace/tsuku/bin:$PATH
 
-# Setup TSUKU_HOME
-mkdir -p /workspace/tsuku/recipes
-mkdir -p /workspace/tsuku/bin
-mkdir -p /workspace/tsuku/tools
-
-export PATH=/workspace/tsuku/bin:/opt/ecosystem/bin:$PATH
-
-# Run recipe plan (deps already installed via image layers)
+# Run tsuku install with pre-generated plan
 tsuku install --plan /workspace/plan.json --force
+
+# Run verify command and capture results
+set +e
+export PATH="$TSUKU_HOME/bin:$TSUKU_HOME/tools/current:$PATH"
+<verify_command> > /workspace/output/verify.output 2>&1
+echo $? > /workspace/output/verify.exit
 ```
+
+When there's no foundation image (recipe has no InstallTime deps), the container's `/workspace/tsuku/` is empty. The script creates the directory structure conditionally:
+
+```sh
+# Create TSUKU_HOME structure if not provided by foundation image
+if [ ! -d /workspace/tsuku/tools ]; then
+  mkdir -p /workspace/tsuku/recipes /workspace/tsuku/bin /workspace/tsuku/tools
+fi
+```
+
+This handles both cases with one code path -- targeted mounts are always used, and directory initialization is the only conditional.
 
 ### Key Interfaces
 
 ```go
-// foundation.go
+// foundation.go (internal/sandbox/)
 
 // FlatDep represents a flattened dependency with its standalone plan.
 type FlatDep struct {
@@ -358,6 +397,7 @@ type FlatDep struct {
 
 // FlattenDependencies extracts and flattens the dependency tree from a plan.
 // Returns dependencies in canonical (alphabetical) order.
+// Strips non-deterministic fields (generated_at) from plans.
 func FlattenDependencies(plan *executor.InstallationPlan) []FlatDep
 
 // GenerateFoundationDockerfile creates a Dockerfile for the dependency chain.
@@ -368,7 +408,7 @@ func FoundationImageName(family string, dockerfile string) string
 
 // BuildFoundationImage builds the foundation image if it doesn't exist.
 // Creates a temp build context with the tsuku binary and dependency plans,
-// then calls runtime.Build().
+// then calls runtime.BuildFromDockerfile().
 func (e *Executor) BuildFoundationImage(
     ctx context.Context,
     runtime validate.Runtime,
@@ -378,40 +418,50 @@ func (e *Executor) BuildFoundationImage(
 ) (string, error)
 ```
 
+```go
+// runtime.go (internal/validate/) -- additive interface extension
+
+// BuildFromDockerfile builds an image from a Dockerfile in the given context
+// directory. The contextDir must contain a Dockerfile and any files referenced
+// by COPY instructions. Existing Build() method is unchanged.
+BuildFromDockerfile(ctx context.Context, imageName string, contextDir string) error
+```
+
 ### Data Flow
 
 1. Plan generation on host resolves all versions and produces `InstallationPlan`
 2. `FlattenDependencies(plan)` extracts the dependency tree into a sorted flat list
-3. If no deps, proceed with current behavior (no foundation image)
+3. If no deps, skip foundation image build (use package image directly with targeted mounts)
 4. `GenerateFoundationDockerfile()` creates the Dockerfile with per-dep RUN commands
 5. `FoundationImageName()` hashes the Dockerfile to produce the image tag
 6. `runtime.ImageExists()` checks if the image is cached
 7. If not cached, `BuildFoundationImage()` creates build context and calls `runtime.Build()`
 8. Docker layer caching means only new/changed dependencies are actually built
-9. Sandbox runs from the foundation image; symlink bridge connects deps to workspace
-10. Plan executor finds deps at `$TSUKU_HOME/tools/` via symlinks, skips reinstallation
+9. Sandbox constructs targeted mounts (plan, script, cache, output) instead of broad workspace mount
+10. Plan executor finds deps at `$TSUKU_HOME/tools/` in the container filesystem, skips reinstallation
 
 ## Implementation Approach
 
-### Phase 1: Per-Dependency Foundation Images
+### Phase 1: Targeted Mounts and Foundation Images
 
-Core mechanism: plan dependencies become Docker image layers.
+Two coupled changes: switch to targeted mounts and build foundation images from plan dependencies.
 
 - Create `internal/sandbox/foundation.go` with `FlattenDependencies`, `GenerateFoundationDockerfile`, `FoundationImageName`, `BuildFoundationImage`
 - `FlattenDependencies` does DFS traversal of `plan.Dependencies`, deduplicates, sorts alphabetically, converts each to standalone `InstallationPlan` JSON
-- `GenerateFoundationDockerfile` produces the Dockerfile with COPY + ENV + per-dep RUN + cleanup
-- Extend `runtime.Build()` to accept a build context directory (currently uses `.` as context)
-- Update `Executor.Sandbox()` to build/use foundation images when plan has dependencies
-- Update `buildSandboxScript()` to add the symlink bridge step
+- `GenerateFoundationDockerfile` produces the Dockerfile with COPY + ENV + per-dep RUN + cleanup. Foundation image builds use default Docker network access (required for downloading toolchains during RUN commands)
+- Add `BuildFromDockerfile(ctx, imageName, contextDir string) error` to the `Runtime` interface (additive -- existing `Build()` unchanged). Foundation images provide a temp directory containing the Dockerfile, tsuku binary, and plan files as the build context
+- Refactor `Executor.Sandbox()` mount construction: use targeted mounts unconditionally (with or without foundation image). When plan has dependencies, build and use foundation image; when plan has no dependencies, use the base package image with targeted mounts
+- Update `buildSandboxScript()`: write verification markers to `/workspace/output/` instead of `/workspace/`; emit `mkdir -p` for TSUKU_HOME structure only when `/workspace/tsuku/tools` doesn't already exist (i.e., no foundation image)
+- Update `readVerifyResults()` to read from the output directory mount
 - Unit tests for dependency flattening, Dockerfile generation, image naming
-- Integration test: build foundation image for a recipe with Rust dep, verify cargo is available via symlink
+- Integration test: build foundation image for a recipe with Rust dep, verify that the sandbox run skips Rust installation
 
 ### Phase 2: Cargo Registry Cache
 
 Share cargo registry content across families within a single host.
 
 - Add `WithCargoRegistryCacheDir()` option to `Executor`
-- Mount cargo registry cache at `/workspace/tsuku/cache/cargo-registry/` (read-write)
+- Mount cargo registry cache directory into the container (read-write)
 - Update `buildDeterministicCargoEnv()` to symlink `CARGO_HOME/registry` to shared mount when available
 - Test registry sharing across families
 
@@ -433,9 +483,11 @@ Foundation images contain toolchains installed by tsuku via `tsuku install --pla
 
 ### Execution Isolation
 
-Foundation images run in the same container isolation as current sandbox images. The security boundary (network restrictions, resource limits, read-only mounts) is unchanged. Toolchains at `/opt/ecosystem/` are baked into the image, not mounted from the host.
+Foundation images run in the same container isolation as current sandbox images. The security boundary (network restrictions, resource limits) is unchanged. Toolchains are baked into the image at `$TSUKU_HOME`, not mounted from the host.
 
-The cargo registry mount (Phase 2) is read-write, a weaker guarantee than the read-only download cache. Mitigation: scoped to a single recipe's multi-family run, and cargo verifies checksums on read.
+The targeted mount approach reduces the writable surface compared to the current broad mount. The plan, script, and download cache are all mounted read-only (matching the current cache behavior). The only writable mount is the output directory -- a small, dedicated surface for verification markers only. This is a stricter posture than the current broad read-write `/workspace` mount.
+
+The cargo registry mount (Phase 2) is read-write. Mitigation: scoped to a single recipe's multi-family run, and cargo verifies checksums on read.
 
 ### Supply Chain Risks
 
@@ -445,7 +497,7 @@ The plan JSON files copied into the build context contain URLs and checksums. Th
 
 ### User Data Exposure
 
-Not applicable. Foundation images contain ecosystem toolchains (compiler binaries, standard libraries). No user-specific data is stored.
+Not applicable. Foundation images contain ecosystem toolchains (compiler binaries, standard libraries). No user-specific data is stored. Environment variables set via `ExtraEnv` in `SandboxRequirements` are applied at sandbox runtime, not during foundation image construction, so credentials don't leak into cached layers.
 
 ## Consequences
 
@@ -457,12 +509,15 @@ Not applicable. Foundation images contain ecosystem toolchains (compiler binarie
 - The plan structure (which already contains the dependency tree) drives the caching -- no parallel bookkeeping
 - Generalizes to any ecosystem: npm_install with Node.js, gem_install with Ruby, etc.
 - CI benefits from the same mechanism without a CI-specific caching format
+- Targeted mounts reduce the writable surface area compared to the current broad workspace mount
+- No symlink bridges or alternate install paths -- the executor's existing skip logic works natively
 
 ### Negative
 
 - Foundation images consume disk space (~500MB per ecosystem per family). With 5 families and 2 ecosystems, that's ~5GB. Mitigation: stale images pruned when versions change; `docker system prune` for manual cleanup
-- Extending `runtime.Build()` for custom build contexts is a non-trivial change. Mitigation: backward-compatible, only foundation images use it initially
+- Adding `BuildFromDockerfile()` to the `Runtime` interface requires implementation in both `podmanRuntime` and `dockerRuntime`. Mitigation: additive method, existing `Build()` unchanged
 - Three image levels (base, package, foundation) increase sandbox executor complexity. Mitigation: foundation images are opt-in; recipes without InstallTime deps see no change
+- Targeted mounts require refactoring the existing workspace mount code. The mount strategy applies unconditionally, so all sandbox runs change (not just those with foundation images)
 - Compilation time (10-40 min per family) remains unaddressed. The savings target toolchain installation and setup, not the build itself
 - Layer ordering is position-sensitive: changing the sort order invalidates all cached layers. Mitigation: alphabetical sort is stable and unlikely to change
 
@@ -475,3 +530,4 @@ Not applicable. Foundation images contain ecosystem toolchains (compiler binarie
 | Sort order change | Alphabetical is stable; no planned changes |
 | Executor complexity | Opt-in; no-op without InstallTime deps |
 | Runtime compatibility | Uses Dockerfile-based builds; no BuildKit features |
+| Mount refactor risk | Unconditional targeted mounts; single code path for all sandbox runs |

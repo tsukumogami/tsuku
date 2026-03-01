@@ -2,239 +2,187 @@
 
 ## Review Summary
 
-The design proposes two caching mechanisms for the sandbox system: (1) foundation images that pre-install ecosystem toolchains into Docker images at `/opt/ecosystem/`, and (2) a shared cargo registry cache mounted as a read-write volume across families. The review evaluates problem specificity, alternative coverage, rejection rationale, unstated assumptions, and strawman risk.
+The design proposes mapping plan dependencies to Docker image layers for caching, using targeted file mounts instead of the current broad workspace mount. Three decisions are presented: per-dependency Docker layers, alphabetical ordering, and targeted mounts.
+
+The problem statement is well-grounded in the current code. The alternatives analysis is mostly fair. There are no blocking structural issues. There is one consistency concern that should be documented explicitly (state.json flow under targeted mounts), one interface change that needs a strategy decision, and several minor items.
 
 ---
 
-## 1. Problem Statement Specificity
+## 1. Problem Statement Assessment
 
-**Verdict: Sufficient, with one gap.**
+The problem statement is specific and grounded. It correctly identifies:
 
-The problem statement quantifies the waste well: 5 independent Rust installations and 5 independent compilations per recipe. The distinction between download cache (already solved), container image cache (already solved), and runtime ecosystem work (the gap) is clearly drawn.
+- The current two-level cache structure (download cache + container image cache) at `executor.go:242-249` and `executor.go:194-226`
+- That neither level caches runtime ecosystem work (toolchain installation, registry population, compilation)
+- The plan tree structure and how `DependencyPlan` entries map to cacheable units
+- The dependency category taxonomy (EvalTime, InstallTime, Runtime) and why only InstallTime matters
 
-The gap: the problem statement says "heavy crates like komac, cargo-nextest, or probe-rs-tools frequently hit the 60-minute job timeout," but the design's two proposed caches address only ~15-25 minutes of the ~60-minute cost (toolchain install + cargo fetch). The actual compilation of the dependency tree -- "10-40 minutes for heavy crates" -- is explicitly out of scope. The document should state this limitation more prominently in the summary. A reader could misunderstand the 60-minute timeout mention as implying the design solves the timeout problem. It reduces the window but doesn't eliminate it for the heaviest crates.
+The scope section draws clean boundaries. "Out of scope" items (cross-arch caching, shared .rlib files) are genuine non-goals, not deferred problems that would undermine the design.
 
-**Recommendation:** Add a sentence to the Decision Outcome summary clarifying that foundation images + registry cache reduce per-recipe overhead by approximately 15-25 minutes total across 5 families, but compilation time remains unaddressed and is the dominant cost for heavy crates.
+One improvement: the problem statement mentions "5 families" and "60-minute job timeout" without qualifying that these are CI-specific constraints. The design driver "Dynamic, user-machine operation" suggests the primary target is developer machines, but the problem statement is framed around CI pain. This doesn't affect the technical design, but it could lead to priority confusion during implementation. The Consequences section (line 491) does clarify the savings target toolchain installation, not compilation.
 
 ---
 
 ## 2. Missing Alternatives
 
-### 2a. Volume-mount with path fixup (partial consideration)
+### Decision 1 (layer mapping): No missing alternatives
 
-The "Volume-mounted toolchain from host" alternative was rejected because "the toolchain installation path includes hardcoded references to its location (rustup sets RUSTUP_HOME and CARGO_HOME)." This is accurate for rustup specifically, but the design could have considered installing the toolchain to `/opt/ecosystem/` on the host and mounting that path into containers at the same path. The mount target matches the installation path, so there's no relocation problem.
+The three options considered (per-dep layers, single foundation image, docker commit) cover the reasonable design space. BuildKit cache mounts are correctly rejected for Podman compatibility reasons.
 
-This would produce the same result as the `docker commit` approach but without the commit step, and the cached toolchain would survive `docker system prune`. The tradeoff is that the host filesystem becomes the cache instead of the Docker image store, which changes cleanup semantics.
+### Decision 2 (ordering): No missing alternatives
 
-**Impact:** Not blocking. The `docker commit` approach is a reasonable choice. But the volume-mount alternative was rejected for a reason that only applies when host and container paths differ, and the design already chose `/opt/ecosystem/` as a fixed path. The rejection rationale should acknowledge this distinction.
+Alphabetical is the right choice. Frequency-based ordering is correctly rejected for requiring global state.
 
-### 2b. Multi-stage Dockerfile with COPY --from
+### Decision 3 (mount strategy): One missing alternative
 
-Not considered. Instead of `docker commit`, the foundation image could be built with a multi-stage Dockerfile:
-```dockerfile
-FROM package-image AS builder
-RUN tsuku install rust --force
-FROM package-image
-COPY --from=builder /opt/ecosystem /opt/ecosystem
-```
+**Overlay mount.** Docker and Podman both support `--mount type=overlay` (distinct from the storage driver), where a host directory is overlaid on top of the container's filesystem at a specific path. This would allow the container's `$TSUKU_HOME` from image layers to serve as the lower layer, with a host tmpdir as the upper layer receiving writes. The host reads the upper layer after the container exits.
 
-This produces a Dockerfile-reproducible image (addresses the negative consequence about non-reproducibility), and works with both Docker and Podman. It requires the tsuku binary to be available inside the build context, which the sandbox already handles (it mounts the binary). The tradeoff is a more complex Dockerfile template.
-
-**Impact:** Advisory. `docker commit` is simpler and the non-reproducibility consequence is already mitigated (automatic rebuild). But this alternative deserves mention in the rejection list since the reproducibility concern is noted as a negative consequence.
-
-### 2c. Compilation caching via sccache/shared target directory
-
-The design explicitly excludes sharing compiled artifacts across families (correctly, due to libc differences). But it doesn't consider sharing compiled artifacts across runs of the *same family*. A per-family compilation cache (e.g., mounting `target/` or using sccache with a per-family key) would address the 10-40 minute compilation cost that the current design leaves untouched.
-
-**Impact:** Out of scope for this design (the scope section explicitly excludes it), but should be mentioned as a future direction since the problem statement highlights compilation time as the dominant cost.
+This avoids the file-level mount granularity issues while preserving image layer visibility. However, it has real drawbacks: overlay mounts require specific kernel support (overlayfs), Podman's rootless mode has restrictions on overlay semantics, and the upper/lower layer merge semantics are more complex than targeted mounts. The design's chosen approach (targeted mounts) is likely still preferable, but the overlay option should be explicitly rejected with rationale rather than absent.
 
 ---
 
-## 3. Rejection Rationale Evaluation
+## 3. Rejection Rationale Assessment
 
-### 3a. "Dockerfile RUN commands for ecosystem installation" -- Fair
+### "Single foundation image with all deps" (Decision 1) -- Fair
 
-The rejection reasoning is sound: duplicating installation logic between Dockerfile RUN commands and tsuku's own install path creates divergence risk. The design correctly identifies that tsuku should be the single source of truth.
+The claim that recipes with partially overlapping dependency sets get no sharing is correct. Docker layers are position-sensitive, so `[rust]` and `[openssl, rust]` as single-RUN images share nothing.
 
-### 3b. "BuildKit cache mounts" -- Fair
+### "Docker commit after runtime installation" (Decision 1) -- Fair
 
-The Podman compatibility argument is valid. BuildKit cache mounts have inconsistent cross-runtime support. The rejection is well-grounded.
+The current code passes `--rm` via `runtime.Run()` (containers are cleaned up). Changing the container lifecycle is a real cost. The Dockerfile approach is also reproducible, which commit-based images are not.
 
-### 3c. "Volume-mounted toolchain from host" -- Partially unfair
+### "BuildKit cache mounts" (Decision 1) -- Fair
 
-As noted in 2a, the rejection cites path relocation issues, but the design already chose `/opt/ecosystem/` as a fixed path. If the host installs to `/opt/ecosystem/` and the container mounts at `/opt/ecosystem/`, there's no relocation. The rejection conflates "mounting a toolchain installed at one path into a container at a different path" with volume mounts in general. The real tradeoff is host filesystem management vs Docker image store management, not path incompatibility.
+Podman's BuildKit compatibility is inconsistent, and `--mount=type=cache` doesn't survive `--cache-from`/`--cache-to` export. The rationale is specific and verifiable.
 
-### 3d. "Don't share registry content" -- Fair
+### "Full workspace mount with symlink bridge" (Decision 3) -- Fair
 
-Straightforward cost/benefit analysis. 5-10 minutes of redundant network I/O for identical content is wasteful.
+Introducing `/opt/ecosystem/` as a second `$TSUKU_HOME`-like path would create a parallel pattern. Every sandbox script would need a bridge step, and state.json consistency between the two paths is an explicit problem the alternative identifies but doesn't solve.
 
-### 3e. "Share the entire CARGO_HOME" -- Fair
+### "Full workspace mount with executor modification" (Decision 3) -- Fair
 
-Correctly identifies that compiled artifacts are platform-specific. The registry-only sharing is the right boundary.
+Coupling the executor to `/opt/ecosystem/` violates dependency direction: the executor is a general-purpose component in `internal/executor/`, and the sandbox layout is a sandbox-specific concern in `internal/sandbox/`. The executor shouldn't import sandbox knowledge.
 
-### 3f. "Cargo-specific caching" -- Fair
+### "Volume-mounted toolchain from host" (Decision 3) -- Fair
 
-The generalization argument is strong: `ActionDeps.InstallTime` already declares ecosystem dependencies uniformly across all actions. Building the mechanism around this existing interface is the natural extension.
+Host-side toolchain management is a parallel cache system, which contradicts the "Docker-native" decision driver. The cleanup semantics argument is valid (host files survive `docker system prune`).
 
 ---
 
-## 4. Unstated Assumptions
+## 4. Unstated Assumptions and Edge Cases
 
-### 4a. "The plan finds the pre-installed toolchain and skips its installation step"
+### 4a. state.json consistency under targeted mounts
 
-This is the most critical assumption in the design and it's underspecified. The design says: "The sandbox script prepends `/opt/ecosystem/bin` to PATH so the plan finds the pre-installed toolchain and skips its installation step."
+This is the design's most important undocumented data flow.
 
-Looking at the actual executor code (`executor.go:590-616`), the skip logic is:
-```go
-// Skip if already installed (deduplication)
-if _, err := os.Stat(finalDir); err == nil {
-    fmt.Printf("\nSkipping dependency: %s@%s (already installed)\n", dep.Tool, dep.Version)
-```
+When a foundation image is built via `RUN tsuku install --plan /tmp/plans/dep-00-rust.json --force`, the `runPlanBasedInstall` function at `/home/dangazineu/dev/workspace/tsuku/tsuku-5/public/tsuku/cmd/tsuku/plan_install.go:95-111` writes to state.json via `mgr.InstallWithOptions()` and `mgr.GetState().UpdateTool()`. This means the foundation image's `/workspace/tsuku/state.json` will contain entries for the pre-installed dependencies (e.g., rust@1.82.0).
 
-This checks for `$TSUKU_HOME/tools/{name}-{version}/` -- which is `/workspace/tsuku/tools/rust-1.82.0/` inside the container. But the foundation image installs Rust at `/opt/ecosystem/`, not at `/workspace/tsuku/tools/rust-1.82.0/`. The `/workspace` mount shadows the workspace, and the skip check looks at the workspace path.
+When the sandbox then runs `tsuku install --plan /workspace/plan.json --force` for the main recipe, that command also writes to state.json (same code path). The executor calls `installSingleDependency()` at `/home/dangazineu/dev/workspace/tsuku/tsuku-5/public/tsuku/internal/executor/executor.go:590-726`, which checks `os.Stat(finalDir)` at line 604 to skip already-installed deps. **The directory check works correctly** -- tools at `$TSUKU_HOME/tools/rust-1.82.0/` from the image layer will be found because the targeted mounts don't shadow that path.
 
-So the skip mechanism **will not fire** as currently implemented. The executor will attempt to re-install Rust even though it's already at `/opt/ecosystem/bin`. The design needs one of:
+After the plan executor finishes, `runPlanBasedInstall` calls `mgr.InstallWithOptions(effectiveToolName, plan.Version, exec.WorkDir(), installOpts)` to install the main tool. This reads state.json (via `StateManager.Load()`), adds the new tool entry, and writes it back. **This should work** because the dependency entries from the image's state.json persist through Load/Save.
 
-1. A check in `installSingleDependency` that also looks in `/opt/ecosystem/`
-2. The foundation image builder creates a marker at `/opt/ecosystem/tools/rust-1.82.0/` and the executor is taught to check that path
-3. The sandbox script creates symlinks from `/workspace/tsuku/tools/rust-1.82.0/` to `/opt/ecosystem/tools/rust-1.82.0/` before running the plan
+However, there's a fragile coupling: the sandbox script currently runs `mkdir -p /workspace/tsuku/recipes`, `mkdir -p /workspace/tsuku/bin`, `mkdir -p /workspace/tsuku/tools` (see `/home/dangazineu/dev/workspace/tsuku/tsuku-5/public/tsuku/internal/sandbox/executor.go:503-506`). These create directories but don't touch state.json, so they're safe. But the design says these `mkdir -p` lines "become unnecessary" with foundation images and should be conditional based on whether `/workspace/tsuku/tools` exists. If a future change to the sandbox script initializes an empty state.json (e.g., a defensive `echo '{}' > state.json`), it would clobber the image's state.
 
-This is a correctness gap, not a design preference issue. Without addressing it, the foundation image provides Rust on PATH but the plan will still attempt its own Rust installation as a dependency step.
+**Recommendation (Advisory):** Document the state.json flow explicitly: (a) each `RUN tsuku install --plan` in the Dockerfile writes to state.json, (b) the final image's state.json contains all dependency entries, (c) the sandbox script must not reinitialize state.json, and (d) the main `tsuku install --plan` reads and extends the existing state.json. This prevents future maintainers from inadvertently breaking the flow.
 
-**Impact: Blocking.** The design should specify the exact mechanism by which the executor skips dependency installation when the toolchain exists at `/opt/ecosystem/` rather than `$TSUKU_HOME/tools/`.
+### 4b. Build() interface change strategy
 
-### 4b. Foundation image builds need network access
-
-Building the foundation image requires starting a container from the package image and running `tsuku install rust --force`. This requires network access (to download the Rust toolchain). The design doesn't address how the foundation image build container gets network access, resource limits, or timeout configuration. These details matter because the foundation build is itself a container execution.
-
-The design should specify whether `BuildFoundationImage` uses the same `runtime.Run()` path (without `--rm`, since it needs to commit) or a different code path.
-
-**Impact: Advisory.** Implementation detail, but the design should acknowledge that `docker commit` requires running a container without `--rm`, which is different from the current `runtime.Run()` contract (which always passes `--rm`). This will require either a new runtime method or modifications to `RunOptions`.
-
-### 4c. TSUKU_HOME in foundation image build
-
-The design says the foundation image builder runs `tsuku install <dep> --force` with `TSUKU_HOME=/opt/ecosystem`. This means tsuku will create `/opt/ecosystem/bin/`, `/opt/ecosystem/tools/`, etc. The sandbox script later prepends `/opt/ecosystem/bin` to PATH.
-
-But the main plan execution uses `TSUKU_HOME=/workspace/tsuku`. If a dependency like Rust installs to `/opt/ecosystem/tools/rust-1.82.0/bin/cargo`, and cargo_build's `ResolveCargo()` searches `$TSUKU_HOME/tools/*/bin/cargo` (which is `/workspace/tsuku/tools/*/bin/cargo`), it won't find the pre-installed cargo. The PATH prepend would make `cargo` findable via PATH, but `ResolveCargo()` in `util.go` does an explicit glob search in `$TSUKU_HOME/tools/`:
+The design says "Extend `runtime.Build()` to accept a build context directory" and calls this "non-trivial." The current interface at `/home/dangazineu/dev/workspace/tsuku/tsuku-5/public/tsuku/internal/validate/runtime.go:36-38`:
 
 ```go
-func ResolveCargo() string {
+Build(ctx context.Context, imageName, baseImage string, buildCommands []string) error
 ```
 
-This function needs to be checked to confirm it falls back to PATH lookup when the glob finds nothing.
+Both `podmanRuntime.Build()` (line 345) and `dockerRuntime.Build()` (line 485) currently pass `"."` as the build context. The foundation image approach needs a custom build context directory containing the tsuku binary and plan JSON files, and a pre-generated Dockerfile rather than the output of `generateDockerfile()`.
 
-**Impact: Advisory.** Likely works because `ResolveCargo()` falls back to `"cargo"` which resolves via PATH. But the design should confirm this for each ecosystem tool resolver, not just assume it.
+This is an interface change to `validate.Runtime`, which has mock implementations in tests (`validate/executor_test.go:36`). Three options:
 
-### 4d. Concurrent foundation image builds
+1. Change the `Build()` signature (breaking all implementations including mocks)
+2. Add a new method (e.g., `BuildFromDockerfile(ctx, imageName, dockerfile, contextDir)`) to the interface
+3. Have the foundation builder call docker/podman directly, bypassing the Runtime interface
 
-The CI workflow runs 5 families in parallel for each recipe. If all 5 need a foundation image and none exists, all 5 will try to build their respective foundation images concurrently. This is fine (they're building different images: one per family). But if two recipes need the same foundation image for the same family, the second one might attempt to build while the first is still building.
+Option 2 is cleanest architecturally (additive, doesn't break existing callers). Option 3 would bypass the dispatch pattern. The design should specify which approach.
 
-The existing `ContainerImageName` + `ImageExists` pattern has no locking. This is fine for the existing package image cache (built during `DeriveContainerSpec`, which runs once per recipe-family pair). But foundation images are more expensive to build (2-3 minutes), so the race window is wider.
+**Recommendation (Advisory):** Specify the interface extension strategy. Option 2 (additive new method) avoids breaking existing code and maintains the Runtime abstraction.
 
-**Impact: Advisory.** The current CI workflow runs families in parallel *within* a recipe but recipes sequentially within a batch. So the same foundation image won't be built concurrently by the same job. But the design should document this assumption.
+### 4c. Download cache mount mode change
 
-### 4e. `docker commit` captures the full filesystem diff
+The current code mounts the download cache as **read-only** (`executor.go:317`: `ReadOnly: true`). The design specifies the download cache as **read-write** ("The download cache mount is read-write because the container may need to download additional artifacts during installation that weren't pre-fetched during host-side plan generation").
 
-`docker commit` captures all filesystem changes in the running container. This includes not just `/opt/ecosystem/` but also any temp files, package manager caches, or log files created during the `tsuku install rust` process inside the container. The resulting image could be larger than necessary.
+This reverses the current security posture. A compromised container could poison the shared cache for subsequent runs. The Security Considerations section discusses cargo registry mounts (Phase 2) but doesn't mention this change for the download cache.
 
-The design doesn't mention cleanup steps before committing. A `rm -rf /tmp/* /var/cache/*` before commit would reduce image size.
+**Recommendation (Advisory):** Either keep the download cache read-only (the plan should have all artifacts pre-fetched, so additional downloads shouldn't be needed), or document the security trade-off.
 
-**Impact: Advisory.** Disk space consequence is already acknowledged in the design, but the image size could be larger than the ~500MB estimate if cleanup isn't done.
+### 4d. No-deps fallback could be eliminated
+
+The design proposes that when a recipe has no InstallTime dependencies, the sandbox falls back to the current single workspace mount. This creates two code paths in `Executor.Sandbox()`:
+
+1. Foundation image + targeted mounts (when deps exist)
+2. Current broad workspace mount (when no deps)
+
+The sandbox script generation and result reading are also conditional (markers written to `/workspace/output/` vs `/workspace/`).
+
+The targeted mount approach could work unconditionally even without a foundation image. Without a foundation image, `/workspace/tsuku/tools/` would be empty in the container, and the sandbox script would create the directory structure. Verification markers would always go to `/workspace/output/`. This would eliminate the conditional path entirely.
+
+**Recommendation (Advisory):** Consider using targeted mounts unconditionally to avoid conditional complexity. The no-deps case is simple enough that both paths work, but maintaining one path is always preferable to maintaining two.
+
+### 4e. Docker file-level bind mount behavior
+
+The design proposes mounting individual files (plan.json, sandbox.sh). Docker file-level bind mounts have a known behavior: if the container process replaces the file via write-to-temp-then-rename (atomic write), the mount binding breaks. This doesn't apply here because both files are mounted read-only. For the output and download cache, the design correctly uses directory mounts. No issue.
+
+The download cache mount at `/workspace/tsuku/cache/downloads` is a directory mount nested inside the image's `$TSUKU_HOME` path (`/workspace/tsuku/`). Docker handles nested directory mounts correctly (the mount overlays that specific path while the rest of the parent directory comes from the image). This is well-supported behavior, but worth a one-line note in the design.
 
 ---
 
 ## 5. Strawman Analysis
 
-**No option is a strawman.** Each rejected alternative addresses a real aspect of the problem:
+None of the alternatives appear designed to fail. Each has a genuine use case:
 
-- Dockerfile RUN commands: legitimate approach, just creates divergence
+- Single foundation image: legitimate approach, just reduces sharing
+- Docker commit: simpler lifecycle, just not reproducible
 - BuildKit cache mounts: would be ideal if Podman support were consistent
-- Volume-mounted toolchain: would work with path alignment (rejection is slightly unfair but the option is real)
-- Cargo-specific caching: would work, just doesn't generalize
+- Symlink bridge: how some CI systems handle Docker caching
+- Executor modification: would work, just couples wrong packages
 
-The chosen approach is the strongest option given the constraints (Docker+Podman, no relocation, follows existing patterns).
-
----
-
-## 6. Specific Technical Analysis
-
-### 6a. Workspace mount shadowing and `/opt/ecosystem/`
-
-The analysis of mount shadowing is correct. The `/workspace` mount at `executor.go:308-313` will shadow anything the Docker image contains at that path. Installing to `/opt/ecosystem/` cleanly avoids this.
-
-However, the design should note that `/opt/ecosystem/` is a new convention that introduces a second TSUKU_HOME-like directory structure. The foundation image builder uses `TSUKU_HOME=/opt/ecosystem`, creating `/opt/ecosystem/bin/`, `/opt/ecosystem/tools/`, etc. This is effectively a second tsuku installation inside the same container. The design should state this explicitly and specify that the sandbox script must handle the PATH merge correctly (foundation `/opt/ecosystem/bin` comes first, then workspace `/workspace/tsuku/bin`).
-
-### 6b. `docker commit` vs alternatives
-
-`docker commit` is the right choice for this use case. The alternatives (multi-stage Dockerfile, Dockerfile RUN with tsuku) all require encoding tsuku's installation logic into a Dockerfile, which the design correctly wants to avoid. `docker commit` captures the result of running tsuku inside a container, which preserves the single-source-of-truth property.
-
-The main cost is non-reproducibility: `docker commit` images can't be rebuilt from a Dockerfile alone. The design's mitigation (automatic rebuild on demand) is sufficient.
-
-### 6c. Cargo registry sharing safety
-
-The read-write registry mount is the design's weakest isolation guarantee. The security section correctly identifies that a malicious cargo build could modify the shared registry. The mitigation (scoped to a single recipe's multi-family run + cargo checksums on read) is adequate for the threat model.
-
-One concern not addressed: if the first family's `cargo fetch` fails partway through, subsequent families will see a partially populated registry. Cargo should handle this gracefully (it fetches missing entries), but the design should state this explicitly.
-
-The design says `buildDeterministicCargoEnv()` would "create the isolated `.cargo-home` with a symlink from `registry/` to the shared mount." This is a clean approach that preserves the isolated CARGO_HOME pattern while sharing only the registry directory. The symlink approach is correct.
-
-### 6d. General vs cargo-specific scope
-
-The generalization decision is well-justified. `ActionDeps.InstallTime` already provides a uniform declaration across all ecosystem actions:
-
-- `cargo_build`: `InstallTime: ["rust"]`
-- `go_build`: `InstallTime: ["go"]`
-- `npm_install`: `InstallTime: ["nodejs"]`
-- `cmake_build`: `InstallTime: ["cmake", "make", "zig", "pkg-config"]`
-
-The `ExtractEcosystemDeps()` function can read these from the plan's dependency tree, compute a hash, and build a foundation image -- all without knowing anything about Rust or Go specifically. The cargo registry cache is correctly treated as a separate, cargo-specific optimization (Phase 2).
+The chosen approach is the strongest option given the constraints.
 
 ---
 
-## 7. Architectural Fit Assessment
+## 6. Structural Fit Assessment
 
-### Follows existing patterns
+### Positive: Reuses existing patterns
 
-The design extends the existing two-level cache (base image + package image) to three levels (+ foundation image). The naming convention (`tsuku/sandbox-foundation:{family}-{hash16}`) follows `tsuku/sandbox-cache:{family}-{hash16}`. The hash-based caching pattern is preserved. This is the right structural approach.
+- Uses `tsuku install --plan` inside RUN commands, keeping tsuku as the single installation authority. No bypass of the action dispatch system.
+- The executor's existing skip logic (`os.Stat` on `$TSUKU_HOME/tools/{name}-{version}/`) works without modification because targeted mounts don't shadow that path. No parallel skip mechanism needed.
+- Foundation images extend the existing container image hierarchy (base -> package -> foundation) rather than introducing a parallel build system.
+- The naming convention (`tsuku/sandbox-foundation:{family}-{hash16}`) follows the existing `tsuku/sandbox-cache:{family}-{hash16}`.
 
-### Runtime interface extension
+### Concern: Runtime interface change
 
-Adding `runtime.Commit()` to the `validate.Runtime` interface is a clean extension. Both Docker and Podman support `docker commit` / `podman commit`. However, the design should specify whether `Commit` is added to the `Runtime` interface directly (requiring implementation in both `podmanRuntime` and `dockerRuntime`) or as a separate interface that `BuildFoundationImage` type-asserts against. Given that both runtimes support commit, adding it directly to the interface is simpler.
+As noted in 4b, extending `Build()` touches the `validate.Runtime` interface. This needs to be done additively (new method, not signature change) to avoid breaking existing implementations.
 
-The current `runtime.Run()` always passes `--rm`. Foundation image building needs a container that persists long enough to be committed. The design needs a `RunOptions` flag like `KeepContainer bool` or a separate `RunAndCommit` method on the runtime. This is not addressed in the design.
+### Positive: No state contract violations
 
-### New file placement
+No new fields are added to the state struct. The existing state.json structure is sufficient. The design reuses `install.Plan` for storage and `executor.InstallationPlan` for execution.
 
-`internal/sandbox/foundation.go` is the right location. The foundation image logic is sandbox-specific and belongs in the sandbox package. Putting `ExtractEcosystemDeps`, `FoundationImageName`, and `BuildFoundationImage` together in one file follows the existing pattern where `container_spec.go` contains `DeriveContainerSpec`, `ContainerImageName`, and the build logic.
+### Positive: Package dependency direction is correct
 
-### No dependency direction violations
+The foundation image logic lives in `internal/sandbox/`, which already depends on `internal/executor/` and `internal/validate/`. No new upward dependencies are introduced.
 
-The proposed `foundation.go` imports from `internal/executor` (for `InstallationPlan`) and `internal/validate` (for `Runtime`). Both are lower-level than `sandbox`. No circular dependencies introduced.
+### Positive: Targeted mounts are strictly better
 
----
-
-## 8. Findings Summary
-
-| # | Finding | Level |
-|---|---------|-------|
-| 1 | Dependency skip mechanism doesn't work: executor checks `$TSUKU_HOME/tools/` which is shadowed by workspace mount; pre-installed toolchain at `/opt/ecosystem/` won't be found by the skip check | Blocking |
-| 2 | Volume-mount alternative rejected for reason that doesn't apply when host and container paths match | Advisory |
-| 3 | Missing: how `runtime.Run()` (which passes `--rm`) works with `docker commit` (which needs the container to persist) | Advisory |
-| 4 | Problem statement mentions 60-minute timeout but proposed solution addresses only ~15-25 minutes of the cost; compilation time is dominant and unaddressed | Advisory |
-| 5 | `docker commit` captures full filesystem diff including temp files; no cleanup step specified | Advisory |
-| 6 | Partial cargo fetch by first family could leave incomplete registry for subsequent families | Advisory |
-| 7 | `ResolveCargo()` and similar ecosystem resolvers need to be verified to fall back to PATH when TSUKU_HOME glob finds nothing | Advisory |
+The broad workspace mount was a convenience that became an obstacle. Targeted mounts are a refinement, not a parallel pattern. The writable surface area decreases. The only question is whether to keep the broad mount as a fallback (see 4d).
 
 ---
 
-## 9. Recommendations
+## 7. Findings Summary
 
-1. **Specify the dependency skip mechanism.** The design must describe how the executor knows to skip installing Rust when it's at `/opt/ecosystem/` instead of `$TSUKU_HOME/tools/rust-1.82.0/`. Options: (a) modify `installSingleDependency` to check both paths, (b) have the sandbox script create symlinks, or (c) have the foundation image builder create the expected directory structure. This is the single blocking finding.
+| # | Finding | Severity |
+|---|---------|----------|
+| 1 | state.json consistency under targeted mounts is not discussed; the flow where image layers contain dep entries and the sandbox run extends them needs explicit documentation | Advisory |
+| 2 | `Build()` interface change strategy (additive new method vs signature change) is unspecified; affects the Runtime interface contract | Advisory |
+| 3 | Download cache mode changes from read-only to read-write without security discussion | Advisory |
+| 4 | No-deps fallback creates conditional complexity that could be eliminated by using targeted mounts unconditionally | Advisory |
+| 5 | Missing alternative: overlay mounts should be explicitly rejected with rationale | Advisory |
 
-2. **Revise the volume-mount rejection.** Acknowledge that host-to-container mounting at the same path avoids relocation issues. The real tradeoff is cache location (Docker image store vs host filesystem), not path incompatibility.
-
-3. **Specify the container lifecycle for `docker commit`.** Current `runtime.Run()` uses `--rm`. Foundation image building needs a different lifecycle. Describe whether this is a new runtime method, a flag on `RunOptions`, or direct CLI invocation.
-
-4. **Add a cleanup step before `docker commit`.** Remove temp files and package caches to reduce foundation image size.
-
-5. **Clarify the speedup estimate in the summary.** The design's title problem is the 60-minute timeout, but the solution addresses only the toolchain+registry portion. State the expected savings clearly so implementers and reviewers calibrate expectations.
+No blocking issues. The design fits the existing architecture: it extends the container image hierarchy rather than replacing it, reuses the plan executor's skip logic without modification, keeps tsuku as the installation authority inside containers, and respects package dependency direction. The targeted mount approach cleanly solves the workspace shadowing problem without introducing parallel patterns.
