@@ -3,7 +3,7 @@
   "design_doc": "docs/designs/DESIGN-sandbox-build-cache.md",
   "branch": "docs/sandbox-build-cache",
   "pr_number": 1956,
-  "integrity_hash": "sha256:f567bf4f795f1887d2440b176dab17a77e992d742221fb88679b6167476a9666",
+  "integrity_hash": "sha256:f6e0f7aad1c5b2d2ee50a91a259bd1747c120cc2f79615fb19277ca85349af95",
   "issues": [
     {
       "number": 1958,
@@ -196,8 +196,8 @@
     {
       "number": 1960,
       "title": "refactor(sandbox): switch to targeted mounts",
-      "status": "scrutinized",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "ci_fix_attempts": 0,
       "issue_type": "code",
       "dependencies": [],
@@ -246,6 +246,21 @@
           }
         ]
       },
+      "reviewer_results": {
+        "issue": 1960,
+        "pragmatic": {
+          "blocking_count": 0,
+          "advisory_count": 0
+        },
+        "architect": {
+          "blocking_count": 0,
+          "advisory_count": 1
+        },
+        "maintainer": {
+          "blocking_count": 0,
+          "advisory_count": 1
+        }
+      },
       "testable_scenarios": [
         "scenario-7",
         "scenario-8",
@@ -255,18 +270,72 @@
     {
       "number": 1961,
       "title": "feat(sandbox): build and use foundation images in sandbox runs",
-      "status": "pending",
+      "status": "scrutinized",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [
         1958,
         1959,
         1960
       ],
-      "commits": [],
-      "agent_type": "",
-      "summary": null,
+      "commits": [
+        "b9438916",
+        "0907d66b",
+        "346afbb6",
+        "8d1e134b"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          "internal/sandbox/foundation.go",
+          "internal/sandbox/foundation_test.go",
+          "internal/sandbox/executor.go",
+          "internal/sandbox/executor_test.go",
+          "internal/validate/runtime.go",
+          "docs/GUIDE-system-dependencies.md"
+        ],
+        "tests_added": 12,
+        "key_decisions": "Added NewRuntimeDetectorFrom() for mock injection; BuildFoundationImage creates temp context dir; Sandbox() wires deps check; Added 3 skip-mechanism tests; Fixed Platform propagation through FlattenDependencies; Updated GUIDE-system-dependencies.md",
+        "requirements_map": [
+          {
+            "ac": "BuildFoundationImage implemented",
+            "status": "implemented",
+            "evidence": "foundation.go:BuildFoundationImage() lines 141-213"
+          },
+          {
+            "ac": "Sandbox calls FlattenDependencies+BuildFoundationImage",
+            "status": "implemented",
+            "evidence": "executor.go:235-242, TestSandbox_WithDeps_BuildsFoundation, TestSandbox_WithDeps_FoundationImageUsedAsContainerBase"
+          },
+          {
+            "ac": "No deps uses package image",
+            "status": "implemented",
+            "evidence": "executor.go:235-242, TestSandbox_NoDep_SkipsFoundation, TestSandbox_NoDep_UsesPackageImageNotFoundation"
+          },
+          {
+            "ac": "ImageExists checked first",
+            "status": "implemented",
+            "evidence": "foundation.go:153-162, TestBuildFoundationImage_Cached, TestSandbox_WithDeps_CachedFoundationSkipsBuild"
+          },
+          {
+            "ac": "Build context correct",
+            "status": "implemented",
+            "evidence": "foundation.go:165-199, TestBuildFoundationImage_BuildContextContents"
+          },
+          {
+            "ac": "Foundation image as container base (skip mechanism)",
+            "status": "implemented",
+            "evidence": "TestSandbox_WithDeps_FoundationImageUsedAsContainerBase verifies Run() receives foundation image and targeted mounts dont shadow /workspace/tsuku"
+          },
+          {
+            "ac": "Full Docker integration test",
+            "status": "deviated",
+            "evidence": "Deferred to QA Scenario 13 (requires Docker). Unit tests verify architectural preconditions for skip behavior."
+          }
+        ]
+      },
       "testable_scenarios": [
         "scenario-10",
         "scenario-11",
