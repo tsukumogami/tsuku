@@ -32,3 +32,4 @@
 [verify]
   command = "aws-rotate-key --version"
   pattern = ""
+  exit_code = 1

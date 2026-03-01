@@ -30,5 +30,5 @@
   binaries = ["bin/azd"]
 
 [verify]
-  command = "azd --version"
+  command = "azd version"
   pattern = ""

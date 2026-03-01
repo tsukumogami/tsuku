@@ -212,6 +212,9 @@ jobs:
       - name: Test recipes in Linux x86_64 containers
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Point registry at checked-out repo so dependency recipes from this
+          # PR branch are found (they don't exist in the remote registry yet).
+          TSUKU_REGISTRY_URL: ${{ github.workspace }}
         run: |
           FAMILIES=("debian" "rhel" "arch" "suse" "alpine")
           SHARED_CACHE="/tmp/tsuku-shared-downloads"
@@ -246,6 +249,7 @@ jobs:
                     --recipe "$recipe_path" \
                     --target-family "$family" \
                     --env GITHUB_TOKEN="$GITHUB_TOKEN" \
+                    --env TSUKU_REGISTRY_URL="$TSUKU_REGISTRY_URL" \
                     --json > "$RESULT_FILE" 2>"$LOG_FILE" || true
               ) &
               PIDS+=($!)
@@ -337,6 +341,7 @@ jobs:
       - name: Test recipes in Linux arm64 containers
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TSUKU_REGISTRY_URL: ${{ github.workspace }}
         run: |
           # Four Linux arm64 families (no arch -- no arm64 image available)
           FAMILIES=("debian" "rhel" "suse" "alpine")
@@ -372,6 +377,7 @@ jobs:
                     --recipe "$recipe_path" \
                     --target-family "$family" \
                     --env GITHUB_TOKEN="$GITHUB_TOKEN" \
+                    --env TSUKU_REGISTRY_URL="$TSUKU_REGISTRY_URL" \
                     --json > "$RESULT_FILE" 2>"$LOG_FILE" || true
               ) &
               PIDS+=($!)
@@ -467,6 +473,7 @@ jobs:
       - name: Test recipes on macOS arm64
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TSUKU_REGISTRY_URL: ${{ github.workspace }}
         run: |
           SHARED_CACHE="/tmp/tsuku-shared-downloads"
           mkdir -p "$SHARED_CACHE"
@@ -566,6 +573,7 @@ jobs:
       - name: Test recipes on macOS x86_64
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TSUKU_REGISTRY_URL: ${{ github.workspace }}
         run: |
           SHARED_CACHE="/tmp/tsuku-shared-downloads"
           mkdir -p "$SHARED_CACHE"
