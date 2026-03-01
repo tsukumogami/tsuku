@@ -10,6 +10,7 @@
   extra_dependencies = ["perl"]  # openssl-sys needs perl to build vendored OpenSSL
 
 [version]
+  source = "crates_io"
   github_repo = ""
   tag_prefix = ""
   module = ""
