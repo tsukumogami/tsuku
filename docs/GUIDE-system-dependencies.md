@@ -209,6 +209,24 @@ This is useful for:
 - CI/CD pipelines that test on multiple platforms
 - Recipe authors testing cross-platform compatibility
 
+### Ecosystem Toolchain Caching
+
+When a recipe has InstallTime dependencies (like Rust for `cargo_build` or Node.js for `npm_install`), the sandbox pre-installs those toolchains as Docker image layers before running the recipe. These layers are cached by your container runtime.
+
+On the first sandbox run that needs Rust 1.82.0 on debian, tsuku builds a "foundation image" containing the installed toolchain. Every subsequent sandbox run that needs the same Rust version on debian reuses that image instantly. You don't need to configure anything -- tsuku detects the dependencies from the recipe's plan and handles image generation automatically.
+
+```bash
+# First run: builds a foundation image with Rust (~2-3 minutes)
+tsuku install cargo-nextest --sandbox
+
+# Second run: finds cached foundation image, skips Rust installation
+tsuku install b3sum --sandbox
+```
+
+This caching complements the system dependency image caching described above. System packages (apt, dnf, etc.) are cached in one image layer, and ecosystem toolchains (Rust, Node.js, Go, etc.) are cached on top of that. If neither the system packages nor the toolchain version changed, the sandbox starts with everything already installed.
+
+Foundation images are stored locally by Docker or Podman. They're rebuilt automatically when a dependency version changes, and you can reclaim space with `docker system prune` if needed.
+
 ## Troubleshooting
 
 ### "Invalid target-family" Error
