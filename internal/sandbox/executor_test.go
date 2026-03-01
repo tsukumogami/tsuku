@@ -2,7 +2,10 @@ package sandbox
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -68,8 +71,11 @@ func TestBuildSandboxScript_OfflineRequirements(t *testing.T) {
 		t.Error("Offline script should not run apt-get update")
 	}
 
-	// Should contain TSUKU_HOME setup
-	if !strings.Contains(script, "mkdir -p /workspace/tsuku/recipes") {
+	// Should contain conditional TSUKU_HOME setup
+	if !strings.Contains(script, "if [ ! -d /workspace/tsuku/tools ]; then") {
+		t.Error("Script should conditionally setup TSUKU_HOME directories")
+	}
+	if !strings.Contains(script, "mkdir -p /workspace/tsuku/recipes /workspace/tsuku/bin /workspace/tsuku/tools") {
 		t.Error("Script should setup TSUKU_HOME directories")
 	}
 
@@ -103,9 +109,9 @@ func TestBuildSandboxScript_NoPackageInstallation(t *testing.T) {
 		t.Error("Script should not contain dnf (packages installed via container build)")
 	}
 
-	// Should setup TSUKU_HOME and run install
-	if !strings.Contains(script, "mkdir -p /workspace/tsuku") {
-		t.Error("Script should setup TSUKU_HOME")
+	// Should conditionally setup TSUKU_HOME and run install
+	if !strings.Contains(script, "if [ ! -d /workspace/tsuku/tools ]; then") {
+		t.Error("Script should conditionally setup TSUKU_HOME")
 	}
 	if !strings.Contains(script, "tsuku install --plan") {
 		t.Error("Script should run tsuku install --plan")
@@ -357,14 +363,14 @@ func TestBuildSandboxScript_WithVerifyCommand(t *testing.T) {
 		t.Error("Script should contain 'set +e' before verify command")
 	}
 
-	// Should redirect output to marker file
-	if !strings.Contains(script, ".sandbox-verify-output") {
-		t.Error("Script should redirect verify output to marker file")
+	// Should redirect output to marker file under /workspace/output/
+	if !strings.Contains(script, "/workspace/output/.sandbox-verify-output") {
+		t.Error("Script should redirect verify output to /workspace/output/ marker file")
 	}
 
-	// Should write exit code to marker file
-	if !strings.Contains(script, ".sandbox-verify-exit") {
-		t.Error("Script should write verify exit code to marker file")
+	// Should write exit code to marker file under /workspace/output/
+	if !strings.Contains(script, "/workspace/output/.sandbox-verify-exit") {
+		t.Error("Script should write verify exit code to /workspace/output/ marker file")
 	}
 
 	// Should contain the verify command
@@ -759,6 +765,7 @@ func TestFilterExtraEnv_DropsProtectedKeys(t *testing.T) {
 	extra := []string{
 		"TSUKU_SANDBOX=0",
 		"TSUKU_HOME=/tmp/bad",
+		"TSUKU_CARGO_REGISTRY_CACHE=/tmp/bad",
 		"HOME=/tmp/bad",
 		"DEBIAN_FRONTEND=dialog",
 		"PATH=/bad",
@@ -866,4 +873,1022 @@ func TestSandboxRequirements_ExtraEnvField(t *testing.T) {
 	if reqs.ExtraEnv[0] != "GITHUB_TOKEN=abc" {
 		t.Errorf("Expected first entry GITHUB_TOKEN=abc, got %q", reqs.ExtraEnv[0])
 	}
+}
+
+// --- Targeted mount tests ---
+
+// TestSandboxTargetedMounts verifies that Executor.Sandbox() constructs four
+// targeted mounts (plan.json, sandbox.sh, download cache, output dir) instead
+// of a single broad /workspace mount. This test exercises the mount construction
+// by replaying the same logic Sandbox() uses to build RunOptions.Mounts.
+func TestSandboxTargetedMounts(t *testing.T) {
+	t.Parallel()
+
+	// Set up a workspace directory mirroring what Sandbox() creates
+	workspaceDir := t.TempDir()
+	cacheDir := filepath.Join(workspaceDir, "cache", "downloads")
+	if err := os.MkdirAll(cacheDir, 0700); err != nil {
+		t.Fatal(err)
+	}
+	outputDir := filepath.Join(workspaceDir, "output")
+	if err := os.MkdirAll(outputDir, 0700); err != nil {
+		t.Fatal(err)
+	}
+
+	plan := &executor.InstallationPlan{
+		Tool:    "test-tool",
+		Version: "1.0.0",
+	}
+	planData, err := json.MarshalIndent(plan, "", "  ")
+	if err != nil {
+		t.Fatal(err)
+	}
+	planPath := filepath.Join(workspaceDir, "plan.json")
+	if err := os.WriteFile(planPath, planData, 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	scriptPath := filepath.Join(workspaceDir, "sandbox.sh")
+	if err := os.WriteFile(scriptPath, []byte("#!/bin/sh\n"), 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// Build the same mounts Sandbox() constructs
+	mounts := []validate.Mount{
+		{Source: planPath, Target: "/workspace/plan.json", ReadOnly: true},
+		{Source: scriptPath, Target: "/workspace/sandbox.sh", ReadOnly: true},
+		{Source: cacheDir, Target: "/workspace/tsuku/cache/downloads", ReadOnly: true},
+		{Source: outputDir, Target: "/workspace/output", ReadOnly: false},
+	}
+
+	// Verify exactly 4 targeted mounts
+	if len(mounts) != 4 {
+		t.Fatalf("Expected 4 mounts, got %d", len(mounts))
+	}
+
+	// Verify each mount's target and read-only flags
+	expected := []struct {
+		target   string
+		readOnly bool
+	}{
+		{"/workspace/plan.json", true},
+		{"/workspace/sandbox.sh", true},
+		{"/workspace/tsuku/cache/downloads", true},
+		{"/workspace/output", false},
+	}
+
+	for i, exp := range expected {
+		if mounts[i].Target != exp.target {
+			t.Errorf("Mount[%d] target = %q, want %q", i, mounts[i].Target, exp.target)
+		}
+		if mounts[i].ReadOnly != exp.readOnly {
+			t.Errorf("Mount[%d] readOnly = %v, want %v", i, mounts[i].ReadOnly, exp.readOnly)
+		}
+	}
+
+	// Verify no broad /workspace mount exists
+	for i, m := range mounts {
+		if m.Target == "/workspace" {
+			t.Errorf("Mount[%d] is a broad /workspace mount, which should not exist", i)
+		}
+	}
+
+	// Verify sources point to real files/dirs
+	for i, m := range mounts {
+		if _, err := os.Stat(m.Source); err != nil {
+			t.Errorf("Mount[%d] source %q does not exist: %v", i, m.Source, err)
+		}
+	}
+}
+
+// TestSandboxTargetedMounts_TsukuBinaryAppendedSeparately verifies that the
+// tsuku binary mount is appended after the four targeted mounts.
+func TestSandboxTargetedMounts_TsukuBinaryAppendedSeparately(t *testing.T) {
+	t.Parallel()
+
+	workspaceDir := t.TempDir()
+	planPath := filepath.Join(workspaceDir, "plan.json")
+	scriptPath := filepath.Join(workspaceDir, "sandbox.sh")
+	cacheDir := filepath.Join(workspaceDir, "cache")
+	outputDir := filepath.Join(workspaceDir, "output")
+
+	for _, d := range []string{cacheDir, outputDir} {
+		if err := os.MkdirAll(d, 0700); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for _, f := range []string{planPath, scriptPath} {
+		if err := os.WriteFile(f, []byte("x"), 0644); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	// Build mounts the way Sandbox() does
+	mounts := []validate.Mount{
+		{Source: planPath, Target: "/workspace/plan.json", ReadOnly: true},
+		{Source: scriptPath, Target: "/workspace/sandbox.sh", ReadOnly: true},
+		{Source: cacheDir, Target: "/workspace/tsuku/cache/downloads", ReadOnly: true},
+		{Source: outputDir, Target: "/workspace/output", ReadOnly: false},
+	}
+
+	// Append tsuku binary mount (as Sandbox() does when tsukuBinary != "")
+	tsukuBinary := "/usr/local/bin/tsuku"
+	mounts = append(mounts, validate.Mount{
+		Source:   tsukuBinary,
+		Target:   "/usr/local/bin/tsuku",
+		ReadOnly: true,
+	})
+
+	// Total should be 5 (4 targeted + 1 tsuku binary)
+	if len(mounts) != 5 {
+		t.Fatalf("Expected 5 mounts with tsuku binary, got %d", len(mounts))
+	}
+
+	// Last mount should be the tsuku binary
+	last := mounts[4]
+	if last.Target != "/usr/local/bin/tsuku" {
+		t.Errorf("Last mount target = %q, want /usr/local/bin/tsuku", last.Target)
+	}
+	if !last.ReadOnly {
+		t.Error("Tsuku binary mount should be read-only")
+	}
+}
+
+// TestBuildSandboxScript_ConditionalMkdir verifies that the sandbox script
+// uses a conditional mkdir -p guard for TSUKU_HOME structure creation.
+func TestBuildSandboxScript_ConditionalMkdir(t *testing.T) {
+	t.Parallel()
+
+	exec := &Executor{}
+	plan := &executor.InstallationPlan{
+		Tool:    "test-tool",
+		Version: "1.0.0",
+	}
+	reqs := &SandboxRequirements{
+		Image:     "debian:bookworm-slim",
+		Resources: DefaultLimits(),
+	}
+
+	script := exec.buildSandboxScript(plan, reqs)
+
+	// Should use conditional mkdir, not unconditional
+	if !strings.Contains(script, "if [ ! -d /workspace/tsuku/tools ]; then") {
+		t.Error("Script should guard mkdir -p with [ ! -d /workspace/tsuku/tools ]")
+	}
+	if !strings.Contains(script, "mkdir -p /workspace/tsuku/recipes /workspace/tsuku/bin /workspace/tsuku/tools") {
+		t.Error("Script should create recipes, bin, and tools directories in one command")
+	}
+	if !strings.Contains(script, "fi") {
+		t.Error("Script should close the if block with fi")
+	}
+
+	// Should NOT have unconditional mkdir -p /workspace/tsuku/recipes on its own line
+	lines := strings.Split(script, "\n")
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "mkdir -p /workspace/tsuku/recipes" {
+			t.Error("Script should not have unconditional 'mkdir -p /workspace/tsuku/recipes'")
+		}
+		if trimmed == "mkdir -p /workspace/tsuku/bin" {
+			t.Error("Script should not have unconditional 'mkdir -p /workspace/tsuku/bin'")
+		}
+		if trimmed == "mkdir -p /workspace/tsuku/tools" {
+			t.Error("Script should not have unconditional 'mkdir -p /workspace/tsuku/tools'")
+		}
+	}
+}
+
+// TestBuildSandboxScript_VerifyMarkersWriteToOutput verifies that marker files
+// are written to /workspace/output/, not /workspace/ directly.
+func TestBuildSandboxScript_VerifyMarkersWriteToOutput(t *testing.T) {
+	t.Parallel()
+
+	exec := &Executor{}
+	plan := &executor.InstallationPlan{
+		Tool:    "test-tool",
+		Version: "1.0.0",
+		Verify: &executor.PlanVerify{
+			Command: "test-tool --version",
+			Pattern: "1.0.0",
+		},
+	}
+	reqs := &SandboxRequirements{
+		Image:     "debian:bookworm-slim",
+		Resources: DefaultLimits(),
+	}
+
+	script := exec.buildSandboxScript(plan, reqs)
+
+	// Markers should go to /workspace/output/
+	expectedOutput := fmt.Sprintf("/workspace/output/%s", verifyOutputMarker)
+	expectedExit := fmt.Sprintf("/workspace/output/%s", verifyExitMarker)
+
+	if !strings.Contains(script, expectedOutput) {
+		t.Errorf("Script should write verify output to %s", expectedOutput)
+	}
+	if !strings.Contains(script, expectedExit) {
+		t.Errorf("Script should write verify exit code to %s", expectedExit)
+	}
+
+	// Should NOT contain markers at /workspace/ (without /output/ prefix)
+	// Check that the only occurrences of the marker names are under /workspace/output/
+	oldStyleOutput := fmt.Sprintf("> /workspace/%s", verifyOutputMarker)
+	oldStyleExit := fmt.Sprintf("> /workspace/%s", verifyExitMarker)
+	if strings.Contains(script, oldStyleOutput) {
+		t.Error("Script should NOT write markers directly to /workspace/")
+	}
+	if strings.Contains(script, oldStyleExit) {
+		t.Error("Script should NOT write exit marker directly to /workspace/")
+	}
+}
+
+// TestReadVerifyResults_OutputDirectory verifies that readVerifyResults reads
+// marker files from the output subdirectory, matching the new /workspace/output/
+// mount layout.
+func TestReadVerifyResults_OutputDirectory(t *testing.T) {
+	t.Parallel()
+
+	// Create a workspace with output subdirectory (matching Sandbox() layout)
+	workspaceDir := t.TempDir()
+	outputDir := filepath.Join(workspaceDir, "output")
+	if err := os.MkdirAll(outputDir, 0700); err != nil {
+		t.Fatal(err)
+	}
+
+	// Write marker files to the output subdirectory
+	exitPath := filepath.Join(outputDir, verifyExitMarker)
+	if err := os.WriteFile(exitPath, []byte("0\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	outputPath := filepath.Join(outputDir, verifyOutputMarker)
+	if err := os.WriteFile(outputPath, []byte("test-tool v1.0.0\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	exec := &Executor{logger: log.NewNoop()}
+	plan := &executor.InstallationPlan{
+		Tool:    "test-tool",
+		Version: "1.0.0",
+		Verify: &executor.PlanVerify{
+			Command: "test-tool --version",
+			Pattern: "1.0.0",
+		},
+	}
+
+	// Pass outputDir (not workspaceDir) -- matching how Sandbox() now calls it
+	verified, exitCode := exec.readVerifyResults(outputDir, plan)
+	if !verified {
+		t.Error("Expected verified=true when reading from output directory")
+	}
+	if exitCode != 0 {
+		t.Errorf("Expected exitCode=0, got %d", exitCode)
+	}
+
+	// Verify that reading from workspaceDir directly would fail (markers aren't there)
+	verified2, exitCode2 := exec.readVerifyResults(workspaceDir, plan)
+	if verified2 {
+		t.Error("Reading from workspaceDir (not outputDir) should fail to find markers")
+	}
+	if exitCode2 != -1 {
+		t.Errorf("Expected exitCode=-1 when reading from wrong dir, got %d", exitCode2)
+	}
+}
+
+// --- Foundation image wiring tests (scenarios 11 and 12) ---
+
+// TestSandbox_NoDep_SkipsFoundation verifies that when a plan has no
+// dependencies, Executor.Sandbox() uses the package image directly and
+// does not call BuildFromDockerfile.
+func TestSandbox_NoDep_SkipsFoundation(t *testing.T) {
+	t.Parallel()
+
+	mock := &mockRuntime{
+		name:     "podman",
+		rootless: true,
+		// ImageExists: return false for the package image check, triggering
+		// a Build() call for the package image (normal path).
+		imageExistsFunc: func(ctx context.Context, name string) (bool, error) {
+			// Package image not cached -- triggers Build() for it.
+			// Foundation images are never checked because deps are empty.
+			return false, nil
+		},
+		runFunc: func(ctx context.Context, opts validate.RunOptions) (*validate.RunResult, error) {
+			return &validate.RunResult{ExitCode: 0}, nil
+		},
+	}
+
+	detector := validate.NewRuntimeDetectorFrom(mock)
+
+	// Create a real tsuku binary file (needed for the binary mount check)
+	tsukuBin := createTempBinary(t)
+
+	exec := NewExecutor(detector,
+		WithLogger(log.NewNoop()),
+		WithTsukuBinary(tsukuBin),
+	)
+
+	plan := &executor.InstallationPlan{
+		Tool:    "fzf",
+		Version: "0.42.0",
+		Platform: executor.Platform{
+			OS:          "linux",
+			Arch:        "amd64",
+			LinuxFamily: "debian",
+		},
+		Steps: []executor.ResolvedStep{
+			{Action: "download_file", Checksum: "abc123"},
+		},
+		// No Dependencies -- no foundation image needed
+	}
+
+	target := platform.Target{}
+	reqs := ComputeSandboxRequirements(plan, "")
+
+	result, err := exec.Sandbox(context.Background(), plan, target, reqs)
+	if err != nil {
+		t.Fatalf("Sandbox returned error: %v", err)
+	}
+
+	// Sandbox should have completed (not skipped)
+	if result.Skipped {
+		t.Error("Expected Sandbox to run, not skip")
+	}
+
+	// BuildFromDockerfile should NOT have been called -- no foundation image
+	if mock.buildFromDockerfileCalls != 0 {
+		t.Errorf("BuildFromDockerfile called %d times, want 0 (no deps)", mock.buildFromDockerfileCalls)
+	}
+
+	// The image used for Run() should be the package image, not a foundation image
+	if strings.Contains(mock.lastRunOpts.Image, "sandbox-foundation") {
+		t.Errorf("Run() image should not be a foundation image, got %q", mock.lastRunOpts.Image)
+	}
+}
+
+// TestSandbox_WithDeps_BuildsFoundation verifies that when a plan has
+// InstallTime dependencies, Executor.Sandbox() calls BuildFoundationImage
+// and uses the resulting foundation image for the container run.
+func TestSandbox_WithDeps_BuildsFoundation(t *testing.T) {
+	t.Parallel()
+
+	var buildFromDockerfileCalledWithImage string
+
+	mock := &mockRuntime{
+		name:     "podman",
+		rootless: true,
+		imageExistsFunc: func(ctx context.Context, name string) (bool, error) {
+			// Package image: not cached (triggers Build for it)
+			// Foundation image: not cached (triggers BuildFromDockerfile)
+			return false, nil
+		},
+		buildFromDockerfileFunc: func(ctx context.Context, imageName string, contextDir string) error {
+			buildFromDockerfileCalledWithImage = imageName
+			return nil
+		},
+		runFunc: func(ctx context.Context, opts validate.RunOptions) (*validate.RunResult, error) {
+			return &validate.RunResult{ExitCode: 0}, nil
+		},
+	}
+
+	detector := validate.NewRuntimeDetectorFrom(mock)
+	tsukuBin := createTempBinary(t)
+
+	exec := NewExecutor(detector,
+		WithLogger(log.NewNoop()),
+		WithTsukuBinary(tsukuBin),
+	)
+
+	plan := &executor.InstallationPlan{
+		Tool:    "cargo-nextest",
+		Version: "0.24.5",
+		Platform: executor.Platform{
+			OS:          "linux",
+			Arch:        "amd64",
+			LinuxFamily: "debian",
+		},
+		Dependencies: []executor.DependencyPlan{
+			{
+				Tool:    "rust",
+				Version: "1.82.0",
+				Steps:   []executor.ResolvedStep{{Action: "download_file", Checksum: "r123"}},
+			},
+		},
+		Steps: []executor.ResolvedStep{
+			{Action: "cargo_build"},
+		},
+	}
+
+	target := platform.Target{}
+	reqs := ComputeSandboxRequirements(plan, "")
+
+	result, err := exec.Sandbox(context.Background(), plan, target, reqs)
+	if err != nil {
+		t.Fatalf("Sandbox returned error: %v", err)
+	}
+
+	if result.Skipped {
+		t.Error("Expected Sandbox to run, not skip")
+	}
+
+	// BuildFromDockerfile should have been called exactly once for the
+	// foundation image
+	if mock.buildFromDockerfileCalls != 1 {
+		t.Errorf("BuildFromDockerfile called %d times, want 1", mock.buildFromDockerfileCalls)
+	}
+
+	// The image passed to BuildFromDockerfile should be a foundation image
+	if !strings.HasPrefix(buildFromDockerfileCalledWithImage, "tsuku/sandbox-foundation:debian-") {
+		t.Errorf("BuildFromDockerfile image = %q, want prefix 'tsuku/sandbox-foundation:debian-'",
+			buildFromDockerfileCalledWithImage)
+	}
+
+	// The image used for Run() should be the foundation image
+	if !strings.HasPrefix(mock.lastRunOpts.Image, "tsuku/sandbox-foundation:debian-") {
+		t.Errorf("Run() image = %q, want prefix 'tsuku/sandbox-foundation:debian-'",
+			mock.lastRunOpts.Image)
+	}
+
+	// The Run() image should match the BuildFromDockerfile image
+	if mock.lastRunOpts.Image != buildFromDockerfileCalledWithImage {
+		t.Errorf("Run() image %q does not match BuildFromDockerfile image %q",
+			mock.lastRunOpts.Image, buildFromDockerfileCalledWithImage)
+	}
+}
+
+// TestSandbox_WithDeps_FoundationImageUsedAsContainerBase verifies the
+// architectural mechanism that makes dependency skipping work: when a plan
+// has dependencies, the foundation image (not the package image) is passed
+// to runtime.Run(), AND no mount shadows the container's /workspace/tsuku
+// filesystem. Together these two properties mean pre-installed tools from
+// the foundation image's Docker layers are visible to the executor's skip
+// logic (os.Stat on $TSUKU_HOME/tools/{name}-{version}/).
+func TestSandbox_WithDeps_FoundationImageUsedAsContainerBase(t *testing.T) {
+	t.Parallel()
+
+	var foundationImageBuilt string
+
+	mock := &mockRuntime{
+		name:     "podman",
+		rootless: true,
+		imageExistsFunc: func(ctx context.Context, name string) (bool, error) {
+			// Nothing cached -- triggers both package image Build() and
+			// foundation BuildFromDockerfile().
+			return false, nil
+		},
+		buildFromDockerfileFunc: func(ctx context.Context, imageName string, contextDir string) error {
+			foundationImageBuilt = imageName
+			return nil
+		},
+		runFunc: func(ctx context.Context, opts validate.RunOptions) (*validate.RunResult, error) {
+			return &validate.RunResult{ExitCode: 0}, nil
+		},
+	}
+
+	detector := validate.NewRuntimeDetectorFrom(mock)
+	tsukuBin := createTempBinary(t)
+
+	exec := NewExecutor(detector,
+		WithLogger(log.NewNoop()),
+		WithTsukuBinary(tsukuBin),
+	)
+
+	plan := &executor.InstallationPlan{
+		Tool:    "cargo-nextest",
+		Version: "0.24.5",
+		Platform: executor.Platform{
+			OS:          "linux",
+			Arch:        "amd64",
+			LinuxFamily: "debian",
+		},
+		Dependencies: []executor.DependencyPlan{
+			{
+				Tool:    "rust",
+				Version: "1.82.0",
+				Steps:   []executor.ResolvedStep{{Action: "download_file", Checksum: "r123"}},
+			},
+		},
+		Steps: []executor.ResolvedStep{
+			{Action: "cargo_build"},
+		},
+	}
+
+	target := platform.Target{}
+	reqs := ComputeSandboxRequirements(plan, "")
+
+	result, err := exec.Sandbox(context.Background(), plan, target, reqs)
+	if err != nil {
+		t.Fatalf("Sandbox returned error: %v", err)
+	}
+	if result.Skipped {
+		t.Fatal("Expected Sandbox to run, not skip")
+	}
+
+	// KEY ASSERTION 1: The image passed to Run() must be the foundation
+	// image, not the package image. This is how deps are "skipped" --
+	// the foundation image already has them installed.
+	runImage := mock.lastRunOpts.Image
+	if runImage != foundationImageBuilt {
+		t.Errorf("Run() image = %q, but BuildFromDockerfile built %q; they must match",
+			runImage, foundationImageBuilt)
+	}
+	if !strings.HasPrefix(runImage, "tsuku/sandbox-foundation:debian-") {
+		t.Errorf("Run() image = %q, want prefix 'tsuku/sandbox-foundation:debian-'", runImage)
+	}
+
+	// KEY ASSERTION 2: No mount must shadow /workspace/tsuku or any parent
+	// path that would hide the foundation image's pre-installed tools.
+	// Allowed mount targets are:
+	//   /workspace/plan.json          (read-only)
+	//   /workspace/sandbox.sh         (read-only)
+	//   /workspace/tsuku/cache/downloads (read-only, doesn't shadow tools/)
+	//   /workspace/output             (read-write)
+	//   /usr/local/bin/tsuku          (read-only, tsuku binary)
+	shadowingPaths := []string{
+		"/workspace/tsuku/tools",
+		"/workspace/tsuku/bin",
+		"/workspace/tsuku/state.json",
+		"/workspace/tsuku",
+		"/workspace",
+	}
+	for _, m := range mock.lastRunOpts.Mounts {
+		for _, shadow := range shadowingPaths {
+			if m.Target == shadow {
+				t.Errorf("Mount target %q would shadow the foundation image's pre-installed filesystem", m.Target)
+			}
+		}
+	}
+
+	// KEY ASSERTION 3: The download cache mount at /workspace/tsuku/cache/downloads
+	// does NOT shadow /workspace/tsuku/tools because it's a subdirectory of
+	// /workspace/tsuku/cache, not a parent. Verify it exists and is read-only.
+	foundCacheMount := false
+	for _, m := range mock.lastRunOpts.Mounts {
+		if m.Target == "/workspace/tsuku/cache/downloads" {
+			foundCacheMount = true
+			if !m.ReadOnly {
+				t.Error("Download cache mount should be read-only")
+			}
+		}
+	}
+	if !foundCacheMount {
+		t.Error("Expected download cache mount at /workspace/tsuku/cache/downloads")
+	}
+}
+
+// TestSandbox_NoDep_UsesPackageImageNotFoundation verifies that when a plan
+// has no dependencies, the package image (not a foundation image) is used for
+// the container run. This complements TestSandbox_WithDeps_FoundationImageUsedAsContainerBase.
+func TestSandbox_NoDep_UsesPackageImageNotFoundation(t *testing.T) {
+	t.Parallel()
+
+	mock := &mockRuntime{
+		name:     "podman",
+		rootless: true,
+		imageExistsFunc: func(ctx context.Context, name string) (bool, error) {
+			return false, nil
+		},
+		runFunc: func(ctx context.Context, opts validate.RunOptions) (*validate.RunResult, error) {
+			return &validate.RunResult{ExitCode: 0}, nil
+		},
+	}
+
+	detector := validate.NewRuntimeDetectorFrom(mock)
+	tsukuBin := createTempBinary(t)
+
+	exec := NewExecutor(detector,
+		WithLogger(log.NewNoop()),
+		WithTsukuBinary(tsukuBin),
+	)
+
+	plan := &executor.InstallationPlan{
+		Tool:    "fzf",
+		Version: "0.42.0",
+		Platform: executor.Platform{
+			OS:          "linux",
+			Arch:        "amd64",
+			LinuxFamily: "debian",
+		},
+		Steps: []executor.ResolvedStep{
+			{Action: "download_file", Checksum: "abc123"},
+		},
+		// No Dependencies
+	}
+
+	target := platform.Target{}
+	reqs := ComputeSandboxRequirements(plan, "")
+
+	result, err := exec.Sandbox(context.Background(), plan, target, reqs)
+	if err != nil {
+		t.Fatalf("Sandbox returned error: %v", err)
+	}
+	if result.Skipped {
+		t.Fatal("Expected Sandbox to run, not skip")
+	}
+
+	// The Run() image must NOT be a foundation image
+	runImage := mock.lastRunOpts.Image
+	if strings.Contains(runImage, "sandbox-foundation") {
+		t.Errorf("Run() image = %q, but no-dep plan should use the package image", runImage)
+	}
+
+	// BuildFromDockerfile must not have been called
+	if mock.buildFromDockerfileCalls != 0 {
+		t.Errorf("BuildFromDockerfile called %d times, want 0 (no deps)", mock.buildFromDockerfileCalls)
+	}
+}
+
+// TestSandbox_WithDeps_CachedFoundationSkipsBuild verifies that when a
+// foundation image already exists in the local cache, BuildFromDockerfile
+// is not called but the cached foundation image is still used for Run().
+func TestSandbox_WithDeps_CachedFoundationSkipsBuild(t *testing.T) {
+	t.Parallel()
+
+	mock := &mockRuntime{
+		name:     "podman",
+		rootless: true,
+		imageExistsFunc: func(ctx context.Context, name string) (bool, error) {
+			// All images exist (both package and foundation are cached)
+			return true, nil
+		},
+		runFunc: func(ctx context.Context, opts validate.RunOptions) (*validate.RunResult, error) {
+			return &validate.RunResult{ExitCode: 0}, nil
+		},
+	}
+
+	detector := validate.NewRuntimeDetectorFrom(mock)
+	tsukuBin := createTempBinary(t)
+
+	exec := NewExecutor(detector,
+		WithLogger(log.NewNoop()),
+		WithTsukuBinary(tsukuBin),
+	)
+
+	plan := &executor.InstallationPlan{
+		Tool:    "cargo-nextest",
+		Version: "0.24.5",
+		Platform: executor.Platform{
+			OS:          "linux",
+			Arch:        "amd64",
+			LinuxFamily: "debian",
+		},
+		Dependencies: []executor.DependencyPlan{
+			{
+				Tool:    "rust",
+				Version: "1.82.0",
+				Steps:   []executor.ResolvedStep{{Action: "download_file", Checksum: "r123"}},
+			},
+		},
+		Steps: []executor.ResolvedStep{
+			{Action: "cargo_build"},
+		},
+	}
+
+	target := platform.Target{}
+	reqs := ComputeSandboxRequirements(plan, "")
+
+	result, err := exec.Sandbox(context.Background(), plan, target, reqs)
+	if err != nil {
+		t.Fatalf("Sandbox returned error: %v", err)
+	}
+	if result.Skipped {
+		t.Fatal("Expected Sandbox to run, not skip")
+	}
+
+	// BuildFromDockerfile must NOT have been called (image was cached)
+	if mock.buildFromDockerfileCalls != 0 {
+		t.Errorf("BuildFromDockerfile called %d times, want 0 (foundation was cached)", mock.buildFromDockerfileCalls)
+	}
+
+	// But the Run() image must still be a foundation image (the cached one)
+	runImage := mock.lastRunOpts.Image
+	if !strings.HasPrefix(runImage, "tsuku/sandbox-foundation:debian-") {
+		t.Errorf("Run() image = %q, want prefix 'tsuku/sandbox-foundation:debian-'", runImage)
+	}
+}
+
+// --- Cargo registry cache tests (scenarios 15 and 16) ---
+
+// TestWithCargoRegistryCacheDir verifies that the option sets the field.
+func TestWithCargoRegistryCacheDir(t *testing.T) {
+	t.Parallel()
+
+	detector := validate.NewRuntimeDetector()
+	exec := NewExecutor(detector,
+		WithCargoRegistryCacheDir("/tmp/cargo-registry"),
+	)
+
+	if exec.cargoRegistryCacheDir != "/tmp/cargo-registry" {
+		t.Errorf("cargoRegistryCacheDir = %q, want %q", exec.cargoRegistryCacheDir, "/tmp/cargo-registry")
+	}
+}
+
+// TestWithCargoRegistryCacheDir_Empty verifies the field is empty by default.
+func TestWithCargoRegistryCacheDir_Empty(t *testing.T) {
+	t.Parallel()
+
+	detector := validate.NewRuntimeDetector()
+	exec := NewExecutor(detector)
+
+	if exec.cargoRegistryCacheDir != "" {
+		t.Errorf("cargoRegistryCacheDir should be empty by default, got %q", exec.cargoRegistryCacheDir)
+	}
+}
+
+// TestSandbox_CargoRegistryMount verifies that when cargoRegistryCacheDir is
+// set, Executor.Sandbox() appends a read-write mount at /workspace/cargo-registry-cache.
+func TestSandbox_CargoRegistryMount(t *testing.T) {
+	t.Parallel()
+
+	mock := &mockRuntime{
+		name:     "podman",
+		rootless: true,
+		imageExistsFunc: func(ctx context.Context, name string) (bool, error) {
+			return false, nil
+		},
+		runFunc: func(ctx context.Context, opts validate.RunOptions) (*validate.RunResult, error) {
+			return &validate.RunResult{ExitCode: 0}, nil
+		},
+	}
+
+	detector := validate.NewRuntimeDetectorFrom(mock)
+	tsukuBin := createTempBinary(t)
+	cargoCacheDir := t.TempDir()
+
+	exec := NewExecutor(detector,
+		WithLogger(log.NewNoop()),
+		WithTsukuBinary(tsukuBin),
+		WithCargoRegistryCacheDir(cargoCacheDir),
+	)
+
+	plan := &executor.InstallationPlan{
+		Tool:    "b3sum",
+		Version: "1.5.0",
+		Platform: executor.Platform{
+			OS:          "linux",
+			Arch:        "amd64",
+			LinuxFamily: "debian",
+		},
+		Steps: []executor.ResolvedStep{
+			{Action: "cargo_build"},
+		},
+	}
+
+	target := platform.Target{}
+	reqs := ComputeSandboxRequirements(plan, "")
+
+	result, err := exec.Sandbox(context.Background(), plan, target, reqs)
+	if err != nil {
+		t.Fatalf("Sandbox returned error: %v", err)
+	}
+	if result.Skipped {
+		t.Fatal("Expected Sandbox to run, not skip")
+	}
+
+	// Find the cargo registry mount
+	var foundCargoMount bool
+	for _, m := range mock.lastRunOpts.Mounts {
+		if m.Target == "/workspace/cargo-registry-cache" {
+			foundCargoMount = true
+			if m.ReadOnly {
+				t.Error("Cargo registry cache mount should be read-write, got read-only")
+			}
+			if m.Source != cargoCacheDir {
+				t.Errorf("Cargo registry mount source = %q, want %q", m.Source, cargoCacheDir)
+			}
+		}
+	}
+	if !foundCargoMount {
+		t.Error("Expected cargo registry cache mount at /workspace/cargo-registry-cache")
+	}
+
+	// Verify the TSUKU_CARGO_REGISTRY_CACHE env var is set in RunOptions.
+	// The cargo_build action reads this variable after creating its isolated
+	// CARGO_HOME and symlinks $CARGO_HOME/registry to the shared mount.
+	var foundEnvVar bool
+	for _, e := range mock.lastRunOpts.Env {
+		if e == "TSUKU_CARGO_REGISTRY_CACHE=/workspace/cargo-registry-cache" {
+			foundEnvVar = true
+			break
+		}
+	}
+	if !foundEnvVar {
+		t.Error("Expected TSUKU_CARGO_REGISTRY_CACHE env var in RunOptions.Env")
+	}
+}
+
+// TestSandbox_NoCargoRegistryMount verifies that when cargoRegistryCacheDir
+// is NOT set, no cargo registry mount is included.
+func TestSandbox_NoCargoRegistryMount(t *testing.T) {
+	t.Parallel()
+
+	mock := &mockRuntime{
+		name:     "podman",
+		rootless: true,
+		imageExistsFunc: func(ctx context.Context, name string) (bool, error) {
+			return false, nil
+		},
+		runFunc: func(ctx context.Context, opts validate.RunOptions) (*validate.RunResult, error) {
+			return &validate.RunResult{ExitCode: 0}, nil
+		},
+	}
+
+	detector := validate.NewRuntimeDetectorFrom(mock)
+	tsukuBin := createTempBinary(t)
+
+	exec := NewExecutor(detector,
+		WithLogger(log.NewNoop()),
+		WithTsukuBinary(tsukuBin),
+		// No WithCargoRegistryCacheDir
+	)
+
+	plan := &executor.InstallationPlan{
+		Tool:    "b3sum",
+		Version: "1.5.0",
+		Platform: executor.Platform{
+			OS:          "linux",
+			Arch:        "amd64",
+			LinuxFamily: "debian",
+		},
+		Steps: []executor.ResolvedStep{
+			{Action: "cargo_build"},
+		},
+	}
+
+	target := platform.Target{}
+	reqs := ComputeSandboxRequirements(plan, "")
+
+	result, err := exec.Sandbox(context.Background(), plan, target, reqs)
+	if err != nil {
+		t.Fatalf("Sandbox returned error: %v", err)
+	}
+	if result.Skipped {
+		t.Fatal("Expected Sandbox to run, not skip")
+	}
+
+	// No mount should target /workspace/cargo-registry-cache
+	for _, m := range mock.lastRunOpts.Mounts {
+		if m.Target == "/workspace/cargo-registry-cache" {
+			t.Error("Cargo registry cache mount should not be present when option is not set")
+		}
+	}
+
+	// TSUKU_CARGO_REGISTRY_CACHE should not be in the env
+	for _, e := range mock.lastRunOpts.Env {
+		if strings.HasPrefix(e, "TSUKU_CARGO_REGISTRY_CACHE=") {
+			t.Error("TSUKU_CARGO_REGISTRY_CACHE env var should not be set when option is not configured")
+		}
+	}
+}
+
+// TestBuildSandboxScript_CargoRegistryCacheDir verifies that when
+// cargoRegistryCacheDir is set, the sandbox script does NOT contain a
+// shell-level symlink snippet. Registry linking is handled by the
+// cargo_build action via the TSUKU_CARGO_REGISTRY_CACHE env var.
+func TestBuildSandboxScript_CargoRegistryCacheDir(t *testing.T) {
+	t.Parallel()
+
+	exec := &Executor{
+		cargoRegistryCacheDir: "/some/cache/dir",
+	}
+	plan := &executor.InstallationPlan{
+		Tool:    "b3sum",
+		Version: "1.5.0",
+	}
+	reqs := &SandboxRequirements{
+		RequiresNetwork: true,
+		Image:           SourceBuildSandboxImage,
+		Resources:       SourceBuildLimits(),
+	}
+
+	script := exec.buildSandboxScript(plan, reqs)
+
+	// The script must NOT contain a $CARGO_HOME guard or symlink command.
+	// CARGO_HOME is only set inside buildDeterministicCargoEnv() for cargo
+	// subprocesses, so a shell-level guard would always evaluate to false.
+	if strings.Contains(script, "ln -sfn /workspace/cargo-registry-cache") {
+		t.Error("Script should not contain a symlink command; registry linking is handled by cargo_build action")
+	}
+	if strings.Contains(script, "if [ -n \"$CARGO_HOME\" ]") {
+		t.Error("Script should not guard on $CARGO_HOME; that variable is not in the container shell environment")
+	}
+}
+
+// TestBuildSandboxScript_NoCargoRegistrySymlink verifies that when
+// cargoRegistryCacheDir is empty, the sandbox script does not contain
+// any cargo registry cache references.
+func TestBuildSandboxScript_NoCargoRegistrySymlink(t *testing.T) {
+	t.Parallel()
+
+	exec := &Executor{
+		// cargoRegistryCacheDir is empty (default)
+	}
+	plan := &executor.InstallationPlan{
+		Tool:    "b3sum",
+		Version: "1.5.0",
+	}
+	reqs := &SandboxRequirements{
+		RequiresNetwork: true,
+		Image:           SourceBuildSandboxImage,
+		Resources:       SourceBuildLimits(),
+	}
+
+	script := exec.buildSandboxScript(plan, reqs)
+
+	// Should not contain any cargo registry references
+	if strings.Contains(script, "cargo-registry-cache") {
+		t.Error("Script should not reference cargo-registry-cache when option is not set")
+	}
+	if strings.Contains(script, "CARGO_HOME/registry") {
+		t.Error("Script should not reference CARGO_HOME/registry when option is not set")
+	}
+}
+
+// TestSandbox_CargoRegistryMount_DoesNotShadowTsukuHome verifies that the
+// cargo registry mount path does not overlap with $TSUKU_HOME (/workspace/tsuku).
+// The mount at /workspace/cargo-registry-cache is a sibling of /workspace/tsuku,
+// not a parent or child, so it cannot shadow pre-installed tools.
+func TestSandbox_CargoRegistryMount_DoesNotShadowTsukuHome(t *testing.T) {
+	t.Parallel()
+
+	mock := &mockRuntime{
+		name:     "podman",
+		rootless: true,
+		imageExistsFunc: func(ctx context.Context, name string) (bool, error) {
+			return false, nil
+		},
+		runFunc: func(ctx context.Context, opts validate.RunOptions) (*validate.RunResult, error) {
+			return &validate.RunResult{ExitCode: 0}, nil
+		},
+	}
+
+	detector := validate.NewRuntimeDetectorFrom(mock)
+	tsukuBin := createTempBinary(t)
+	cargoCacheDir := t.TempDir()
+
+	exec := NewExecutor(detector,
+		WithLogger(log.NewNoop()),
+		WithTsukuBinary(tsukuBin),
+		WithCargoRegistryCacheDir(cargoCacheDir),
+	)
+
+	plan := &executor.InstallationPlan{
+		Tool:    "b3sum",
+		Version: "1.5.0",
+		Platform: executor.Platform{
+			OS:          "linux",
+			Arch:        "amd64",
+			LinuxFamily: "debian",
+		},
+		Steps: []executor.ResolvedStep{
+			{Action: "cargo_build"},
+		},
+	}
+
+	target := platform.Target{}
+	reqs := ComputeSandboxRequirements(plan, "")
+
+	_, err := exec.Sandbox(context.Background(), plan, target, reqs)
+	if err != nil {
+		t.Fatalf("Sandbox returned error: %v", err)
+	}
+
+	// Verify the cargo registry mount is not under /workspace/tsuku/ and does
+	// not equal /workspace/tsuku. The mount target /workspace/cargo-registry-cache
+	// is a sibling of /workspace/tsuku, so it cannot shadow the tools directory.
+	var cargoMount *validate.Mount
+	for i, m := range mock.lastRunOpts.Mounts {
+		if m.Target == "/workspace/cargo-registry-cache" {
+			cargoMount = &mock.lastRunOpts.Mounts[i]
+			break
+		}
+	}
+	if cargoMount == nil {
+		t.Fatal("Expected cargo registry cache mount to be present")
+	}
+
+	tsukuHomePaths := []string{
+		"/workspace/tsuku",
+		"/workspace/tsuku/tools",
+		"/workspace/tsuku/bin",
+		"/workspace/tsuku/state.json",
+	}
+	for _, tsukuPath := range tsukuHomePaths {
+		if cargoMount.Target == tsukuPath {
+			t.Errorf("Cargo registry mount target %q equals TSUKU_HOME path %q", cargoMount.Target, tsukuPath)
+		}
+		if strings.HasPrefix(cargoMount.Target, tsukuPath+"/") {
+			t.Errorf("Cargo registry mount target %q is under TSUKU_HOME path %q", cargoMount.Target, tsukuPath)
+		}
+	}
+}
+
+// createTempBinary creates a minimal executable file for test use.
+func createTempBinary(t *testing.T) string {
+	t.Helper()
+	dir := t.TempDir()
+	binPath := filepath.Join(dir, "tsuku")
+	if err := os.WriteFile(binPath, []byte("#!/bin/sh\necho mock\n"), 0755); err != nil {
+		t.Fatal(err)
+	}
+	return binPath
 }

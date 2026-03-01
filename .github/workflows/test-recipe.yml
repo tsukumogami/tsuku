@@ -76,7 +76,17 @@ jobs:
             FIRST="${NAME:0:1}"
             PATH_CANDIDATE="recipes/$FIRST/$NAME.toml"
             if [ -f "$PATH_CANDIDATE" ]; then
-              RECIPES=$(jq -n --arg name "$NAME" --arg path "$PATH_CANDIDATE" '[{name: $name, path: $path}]')
+              # Classify ecosystem from first action = "..." line in the TOML
+              ECOSYSTEM="none"
+              FIRST_ACTION=$(grep -m1 'action\s*=\s*"' "$PATH_CANDIDATE" | sed 's/.*action\s*=\s*"\([^"]*\)".*/\1/' || true)
+              case "$FIRST_ACTION" in
+              cargo_build|cargo_install) ECOSYSTEM="rust" ;;
+              npm_install|npm_exec)      ECOSYSTEM="nodejs" ;;
+              go_build|go_install)       ECOSYSTEM="go" ;;
+              pipx_install)              ECOSYSTEM="python" ;;
+              gem_install)               ECOSYSTEM="ruby" ;;
+              esac
+              RECIPES=$(jq -n --arg name "$NAME" --arg path "$PATH_CANDIDATE" --arg eco "$ECOSYSTEM" '[{name: $name, path: $path, ecosystem: $eco}]')
             else
               echo "::error::Recipe not found: $PATH_CANDIDATE"
               exit 1
@@ -94,7 +104,17 @@ jobs:
             RECIPES="[]"
             for path in $CHANGED; do
               name=$(basename "$path" .toml)
-              RECIPES=$(echo "$RECIPES" | jq --arg name "$name" --arg path "$path" '. + [{name: $name, path: $path}]')
+              # Classify ecosystem from first action = "..." line in the TOML
+              ECOSYSTEM="none"
+              FIRST_ACTION=$(grep -m1 'action\s*=\s*"' "$path" | sed 's/.*action\s*=\s*"\([^"]*\)".*/\1/' || true)
+              case "$FIRST_ACTION" in
+              cargo_build|cargo_install) ECOSYSTEM="rust" ;;
+              npm_install|npm_exec)      ECOSYSTEM="nodejs" ;;
+              go_build|go_install)       ECOSYSTEM="go" ;;
+              pipx_install)              ECOSYSTEM="python" ;;
+              gem_install)               ECOSYSTEM="ruby" ;;
+              esac
+              RECIPES=$(echo "$RECIPES" | jq --arg name "$name" --arg path "$path" --arg eco "$ECOSYSTEM" '. + [{name: $name, path: $path, ecosystem: $eco}]')
             done
           fi
 
@@ -126,6 +146,10 @@ jobs:
             BATCH_SIZE=$(jq -r '.batch_sizes["test-recipe"].linux // 5' .github/ci-batch-config.json)
           fi
           echo "Using batch size: $BATCH_SIZE"
+
+          # Sort by ecosystem so same-ecosystem recipes land in the same batch,
+          # enabling foundation image reuse within each batch job.
+          RECIPES=$(echo "$RECIPES" | jq -c 'sort_by(.ecosystem)')
 
           # Split recipes into batches using ceiling division
           BATCHES=$(echo "$RECIPES" | jq -c --argjson bs "$BATCH_SIZE" '

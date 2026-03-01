@@ -150,6 +150,12 @@ func (a *CargoBuildAction) Execute(ctx *ExecutionContext, params map[string]inte
 	// Set up deterministic environment with isolated CARGO_HOME
 	env := buildDeterministicCargoEnv(cargoPath, ctx.WorkDir, ctx.ExecPaths)
 
+	// Link shared cargo registry cache into CARGO_HOME when running inside
+	// a sandbox container with the mount configured.
+	if err := linkCargoRegistryCache(env); err != nil {
+		return err
+	}
+
 	// Validate Rust version if specified
 	if rustVersion != "" {
 		if err := validateRustVersion(ctx, cargoPath, rustVersion, env); err != nil {
@@ -425,6 +431,12 @@ func (a *CargoBuildAction) executeLockDataMode(ctx *ExecutionContext, params map
 	// Build deterministic environment
 	env := buildDeterministicCargoEnv(cargoPath, tempDir, ctx.ExecPaths)
 
+	// Link shared cargo registry cache into CARGO_HOME when running inside
+	// a sandbox container with the mount configured.
+	if err := linkCargoRegistryCache(env); err != nil {
+		return err
+	}
+
 	// Pre-fetch dependencies to populate CARGO_HOME
 	fmt.Printf("   Pre-fetching dependencies...\n")
 	fetchArgs := []string{"fetch", "--locked", "--manifest-path", cargoTomlPath}
@@ -550,6 +562,47 @@ func buildDeterministicCargoEnv(cargoPath, workDir string, execPaths []string) [
 	}
 
 	return filteredEnv
+}
+
+// linkCargoRegistryCache checks the environment for TSUKU_CARGO_REGISTRY_CACHE
+// and, if present, symlinks $CARGO_HOME/registry to the shared cache path.
+// This allows cargo fetch results to be shared across sandbox family containers
+// while keeping the rest of CARGO_HOME (config, compiled artifacts) isolated.
+//
+// The env slice must already contain CARGO_HOME (set by buildDeterministicCargoEnv).
+// If TSUKU_CARGO_REGISTRY_CACHE is not set or CARGO_HOME is missing, this is a no-op.
+func linkCargoRegistryCache(env []string) error {
+	var cargoHome, registryCache string
+	for _, e := range env {
+		if strings.HasPrefix(e, "CARGO_HOME=") {
+			cargoHome = strings.TrimPrefix(e, "CARGO_HOME=")
+		}
+		if strings.HasPrefix(e, "TSUKU_CARGO_REGISTRY_CACHE=") {
+			registryCache = strings.TrimPrefix(e, "TSUKU_CARGO_REGISTRY_CACHE=")
+		}
+	}
+	if cargoHome == "" || registryCache == "" {
+		return nil
+	}
+
+	// Verify the cache directory exists (it's a container mount)
+	if _, err := os.Stat(registryCache); err != nil {
+		return nil // Mount not present; skip silently
+	}
+
+	// Create CARGO_HOME so the symlink target directory exists
+	if err := os.MkdirAll(cargoHome, 0755); err != nil {
+		return fmt.Errorf("failed to create CARGO_HOME %s: %w", cargoHome, err)
+	}
+
+	registryPath := filepath.Join(cargoHome, "registry")
+	// Remove any existing registry directory or symlink before creating ours
+	_ = os.Remove(registryPath)
+	if err := os.Symlink(registryCache, registryPath); err != nil {
+		return fmt.Errorf("failed to symlink cargo registry cache: %w", err)
+	}
+
+	return nil
 }
 
 // isValidTargetTriple validates Rust target triples

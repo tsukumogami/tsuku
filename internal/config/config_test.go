@@ -43,18 +43,19 @@ func TestEnsureDirectories(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	cfg := &Config{
-		HomeDir:          filepath.Join(tmpDir, "tsuku"),
-		ToolsDir:         filepath.Join(tmpDir, "tsuku", "tools"),
-		CurrentDir:       filepath.Join(tmpDir, "tsuku", "tools", "current"),
-		RecipesDir:       filepath.Join(tmpDir, "tsuku", "recipes"),
-		RegistryDir:      filepath.Join(tmpDir, "tsuku", "registry"),
-		LibsDir:          filepath.Join(tmpDir, "tsuku", "libs"),
-		AppsDir:          filepath.Join(tmpDir, "tsuku", "apps"),
-		CacheDir:         filepath.Join(tmpDir, "tsuku", "cache"),
-		VersionCacheDir:  filepath.Join(tmpDir, "tsuku", "cache", "versions"),
-		DownloadCacheDir: filepath.Join(tmpDir, "tsuku", "cache", "downloads"),
-		KeyCacheDir:      filepath.Join(tmpDir, "tsuku", "cache", "keys"),
-		TapCacheDir:      filepath.Join(tmpDir, "tsuku", "cache", "taps"),
+		HomeDir:               filepath.Join(tmpDir, "tsuku"),
+		ToolsDir:              filepath.Join(tmpDir, "tsuku", "tools"),
+		CurrentDir:            filepath.Join(tmpDir, "tsuku", "tools", "current"),
+		RecipesDir:            filepath.Join(tmpDir, "tsuku", "recipes"),
+		RegistryDir:           filepath.Join(tmpDir, "tsuku", "registry"),
+		LibsDir:               filepath.Join(tmpDir, "tsuku", "libs"),
+		AppsDir:               filepath.Join(tmpDir, "tsuku", "apps"),
+		CacheDir:              filepath.Join(tmpDir, "tsuku", "cache"),
+		VersionCacheDir:       filepath.Join(tmpDir, "tsuku", "cache", "versions"),
+		DownloadCacheDir:      filepath.Join(tmpDir, "tsuku", "cache", "downloads"),
+		CargoRegistryCacheDir: filepath.Join(tmpDir, "tsuku", "cache", "cargo-registry"),
+		KeyCacheDir:           filepath.Join(tmpDir, "tsuku", "cache", "keys"),
+		TapCacheDir:           filepath.Join(tmpDir, "tsuku", "cache", "taps"),
 	}
 
 	err := cfg.EnsureDirectories()
@@ -63,7 +64,7 @@ func TestEnsureDirectories(t *testing.T) {
 	}
 
 	// Verify all directories exist
-	dirs := []string{cfg.HomeDir, cfg.ToolsDir, cfg.CurrentDir, cfg.RecipesDir, cfg.RegistryDir, cfg.LibsDir, cfg.AppsDir, cfg.CacheDir, cfg.VersionCacheDir, cfg.DownloadCacheDir, cfg.KeyCacheDir, cfg.TapCacheDir}
+	dirs := []string{cfg.HomeDir, cfg.ToolsDir, cfg.CurrentDir, cfg.RecipesDir, cfg.RegistryDir, cfg.LibsDir, cfg.AppsDir, cfg.CacheDir, cfg.VersionCacheDir, cfg.DownloadCacheDir, cfg.CargoRegistryCacheDir, cfg.KeyCacheDir, cfg.TapCacheDir}
 	for _, dir := range dirs {
 		info, err := os.Stat(dir)
 		if err != nil {

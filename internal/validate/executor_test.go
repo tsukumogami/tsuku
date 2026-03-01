@@ -11,11 +11,12 @@ import (
 
 // mockRuntime is a mock Runtime for testing.
 type mockRuntime struct {
-	name            string
-	rootless        bool
-	runFunc         func(ctx context.Context, opts RunOptions) (*RunResult, error)
-	buildFunc       func(ctx context.Context, imageName, baseImage string, buildCommands []string) error
-	imageExistsFunc func(ctx context.Context, name string) (bool, error)
+	name                    string
+	rootless                bool
+	runFunc                 func(ctx context.Context, opts RunOptions) (*RunResult, error)
+	buildFunc               func(ctx context.Context, imageName, baseImage string, buildCommands []string) error
+	buildFromDockerfileFunc func(ctx context.Context, imageName string, contextDir string) error
+	imageExistsFunc         func(ctx context.Context, name string) (bool, error)
 }
 
 func (m *mockRuntime) Name() string {
@@ -36,6 +37,13 @@ func (m *mockRuntime) Run(ctx context.Context, opts RunOptions) (*RunResult, err
 func (m *mockRuntime) Build(ctx context.Context, imageName, baseImage string, buildCommands []string) error {
 	if m.buildFunc != nil {
 		return m.buildFunc(ctx, imageName, baseImage, buildCommands)
+	}
+	return nil
+}
+
+func (m *mockRuntime) BuildFromDockerfile(ctx context.Context, imageName string, contextDir string) error {
+	if m.buildFromDockerfileFunc != nil {
+		return m.buildFromDockerfileFunc(ctx, imageName, contextDir)
 	}
 	return nil
 }
