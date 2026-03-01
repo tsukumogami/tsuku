@@ -1565,6 +1565,308 @@ func TestSandbox_WithDeps_CachedFoundationSkipsBuild(t *testing.T) {
 	}
 }
 
+// --- Cargo registry cache tests (scenarios 15 and 16) ---
+
+// TestWithCargoRegistryCacheDir verifies that the option sets the field.
+func TestWithCargoRegistryCacheDir(t *testing.T) {
+	t.Parallel()
+
+	detector := validate.NewRuntimeDetector()
+	exec := NewExecutor(detector,
+		WithCargoRegistryCacheDir("/tmp/cargo-registry"),
+	)
+
+	if exec.cargoRegistryCacheDir != "/tmp/cargo-registry" {
+		t.Errorf("cargoRegistryCacheDir = %q, want %q", exec.cargoRegistryCacheDir, "/tmp/cargo-registry")
+	}
+}
+
+// TestWithCargoRegistryCacheDir_Empty verifies the field is empty by default.
+func TestWithCargoRegistryCacheDir_Empty(t *testing.T) {
+	t.Parallel()
+
+	detector := validate.NewRuntimeDetector()
+	exec := NewExecutor(detector)
+
+	if exec.cargoRegistryCacheDir != "" {
+		t.Errorf("cargoRegistryCacheDir should be empty by default, got %q", exec.cargoRegistryCacheDir)
+	}
+}
+
+// TestSandbox_CargoRegistryMount verifies that when cargoRegistryCacheDir is
+// set, Executor.Sandbox() appends a read-write mount at /workspace/cargo-registry-cache.
+func TestSandbox_CargoRegistryMount(t *testing.T) {
+	t.Parallel()
+
+	mock := &mockRuntime{
+		name:     "podman",
+		rootless: true,
+		imageExistsFunc: func(ctx context.Context, name string) (bool, error) {
+			return false, nil
+		},
+		runFunc: func(ctx context.Context, opts validate.RunOptions) (*validate.RunResult, error) {
+			return &validate.RunResult{ExitCode: 0}, nil
+		},
+	}
+
+	detector := validate.NewRuntimeDetectorFrom(mock)
+	tsukuBin := createTempBinary(t)
+	cargoCacheDir := t.TempDir()
+
+	exec := NewExecutor(detector,
+		WithLogger(log.NewNoop()),
+		WithTsukuBinary(tsukuBin),
+		WithCargoRegistryCacheDir(cargoCacheDir),
+	)
+
+	plan := &executor.InstallationPlan{
+		Tool:    "b3sum",
+		Version: "1.5.0",
+		Platform: executor.Platform{
+			OS:          "linux",
+			Arch:        "amd64",
+			LinuxFamily: "debian",
+		},
+		Steps: []executor.ResolvedStep{
+			{Action: "cargo_build"},
+		},
+	}
+
+	target := platform.Target{}
+	reqs := ComputeSandboxRequirements(plan, "")
+
+	result, err := exec.Sandbox(context.Background(), plan, target, reqs)
+	if err != nil {
+		t.Fatalf("Sandbox returned error: %v", err)
+	}
+	if result.Skipped {
+		t.Fatal("Expected Sandbox to run, not skip")
+	}
+
+	// Find the cargo registry mount
+	var foundCargoMount bool
+	for _, m := range mock.lastRunOpts.Mounts {
+		if m.Target == "/workspace/cargo-registry-cache" {
+			foundCargoMount = true
+			if m.ReadOnly {
+				t.Error("Cargo registry cache mount should be read-write, got read-only")
+			}
+			if m.Source != cargoCacheDir {
+				t.Errorf("Cargo registry mount source = %q, want %q", m.Source, cargoCacheDir)
+			}
+		}
+	}
+	if !foundCargoMount {
+		t.Error("Expected cargo registry cache mount at /workspace/cargo-registry-cache")
+	}
+}
+
+// TestSandbox_NoCargoRegistryMount verifies that when cargoRegistryCacheDir
+// is NOT set, no cargo registry mount is included.
+func TestSandbox_NoCargoRegistryMount(t *testing.T) {
+	t.Parallel()
+
+	mock := &mockRuntime{
+		name:     "podman",
+		rootless: true,
+		imageExistsFunc: func(ctx context.Context, name string) (bool, error) {
+			return false, nil
+		},
+		runFunc: func(ctx context.Context, opts validate.RunOptions) (*validate.RunResult, error) {
+			return &validate.RunResult{ExitCode: 0}, nil
+		},
+	}
+
+	detector := validate.NewRuntimeDetectorFrom(mock)
+	tsukuBin := createTempBinary(t)
+
+	exec := NewExecutor(detector,
+		WithLogger(log.NewNoop()),
+		WithTsukuBinary(tsukuBin),
+		// No WithCargoRegistryCacheDir
+	)
+
+	plan := &executor.InstallationPlan{
+		Tool:    "b3sum",
+		Version: "1.5.0",
+		Platform: executor.Platform{
+			OS:          "linux",
+			Arch:        "amd64",
+			LinuxFamily: "debian",
+		},
+		Steps: []executor.ResolvedStep{
+			{Action: "cargo_build"},
+		},
+	}
+
+	target := platform.Target{}
+	reqs := ComputeSandboxRequirements(plan, "")
+
+	result, err := exec.Sandbox(context.Background(), plan, target, reqs)
+	if err != nil {
+		t.Fatalf("Sandbox returned error: %v", err)
+	}
+	if result.Skipped {
+		t.Fatal("Expected Sandbox to run, not skip")
+	}
+
+	// No mount should target /workspace/cargo-registry-cache
+	for _, m := range mock.lastRunOpts.Mounts {
+		if m.Target == "/workspace/cargo-registry-cache" {
+			t.Error("Cargo registry cache mount should not be present when option is not set")
+		}
+	}
+}
+
+// TestBuildSandboxScript_CargoRegistrySymlink verifies that when
+// cargoRegistryCacheDir is set, the sandbox script includes the
+// registry symlink snippet before the tsuku install invocation.
+func TestBuildSandboxScript_CargoRegistrySymlink(t *testing.T) {
+	t.Parallel()
+
+	exec := &Executor{
+		cargoRegistryCacheDir: "/some/cache/dir",
+	}
+	plan := &executor.InstallationPlan{
+		Tool:    "b3sum",
+		Version: "1.5.0",
+	}
+	reqs := &SandboxRequirements{
+		RequiresNetwork: true,
+		Image:           SourceBuildSandboxImage,
+		Resources:       SourceBuildLimits(),
+	}
+
+	script := exec.buildSandboxScript(plan, reqs)
+
+	// Should contain the CARGO_HOME guard and symlink
+	if !strings.Contains(script, "if [ -n \"$CARGO_HOME\" ]; then") {
+		t.Error("Script should guard cargo registry symlink with CARGO_HOME check")
+	}
+	if !strings.Contains(script, "mkdir -p \"$CARGO_HOME\"") {
+		t.Error("Script should create CARGO_HOME directory")
+	}
+	if !strings.Contains(script, "ln -sfn /workspace/cargo-registry-cache \"$CARGO_HOME/registry\"") {
+		t.Error("Script should symlink registry to shared cache mount")
+	}
+
+	// The symlink should appear BEFORE the tsuku install command
+	symlinkIdx := strings.Index(script, "ln -sfn /workspace/cargo-registry-cache")
+	installIdx := strings.Index(script, "tsuku install --plan")
+	if symlinkIdx >= installIdx {
+		t.Error("Cargo registry symlink must appear before tsuku install invocation")
+	}
+}
+
+// TestBuildSandboxScript_NoCargoRegistrySymlink verifies that when
+// cargoRegistryCacheDir is empty, the sandbox script does not contain
+// any cargo registry cache references.
+func TestBuildSandboxScript_NoCargoRegistrySymlink(t *testing.T) {
+	t.Parallel()
+
+	exec := &Executor{
+		// cargoRegistryCacheDir is empty (default)
+	}
+	plan := &executor.InstallationPlan{
+		Tool:    "b3sum",
+		Version: "1.5.0",
+	}
+	reqs := &SandboxRequirements{
+		RequiresNetwork: true,
+		Image:           SourceBuildSandboxImage,
+		Resources:       SourceBuildLimits(),
+	}
+
+	script := exec.buildSandboxScript(plan, reqs)
+
+	// Should not contain any cargo registry references
+	if strings.Contains(script, "cargo-registry-cache") {
+		t.Error("Script should not reference cargo-registry-cache when option is not set")
+	}
+	if strings.Contains(script, "CARGO_HOME/registry") {
+		t.Error("Script should not reference CARGO_HOME/registry when option is not set")
+	}
+}
+
+// TestSandbox_CargoRegistryMount_DoesNotShadowTsukuHome verifies that the
+// cargo registry mount path does not overlap with $TSUKU_HOME (/workspace/tsuku).
+// The mount at /workspace/cargo-registry-cache is a sibling of /workspace/tsuku,
+// not a parent or child, so it cannot shadow pre-installed tools.
+func TestSandbox_CargoRegistryMount_DoesNotShadowTsukuHome(t *testing.T) {
+	t.Parallel()
+
+	mock := &mockRuntime{
+		name:     "podman",
+		rootless: true,
+		imageExistsFunc: func(ctx context.Context, name string) (bool, error) {
+			return false, nil
+		},
+		runFunc: func(ctx context.Context, opts validate.RunOptions) (*validate.RunResult, error) {
+			return &validate.RunResult{ExitCode: 0}, nil
+		},
+	}
+
+	detector := validate.NewRuntimeDetectorFrom(mock)
+	tsukuBin := createTempBinary(t)
+	cargoCacheDir := t.TempDir()
+
+	exec := NewExecutor(detector,
+		WithLogger(log.NewNoop()),
+		WithTsukuBinary(tsukuBin),
+		WithCargoRegistryCacheDir(cargoCacheDir),
+	)
+
+	plan := &executor.InstallationPlan{
+		Tool:    "b3sum",
+		Version: "1.5.0",
+		Platform: executor.Platform{
+			OS:          "linux",
+			Arch:        "amd64",
+			LinuxFamily: "debian",
+		},
+		Steps: []executor.ResolvedStep{
+			{Action: "cargo_build"},
+		},
+	}
+
+	target := platform.Target{}
+	reqs := ComputeSandboxRequirements(plan, "")
+
+	_, err := exec.Sandbox(context.Background(), plan, target, reqs)
+	if err != nil {
+		t.Fatalf("Sandbox returned error: %v", err)
+	}
+
+	// Verify the cargo registry mount is not under /workspace/tsuku/ and does
+	// not equal /workspace/tsuku. The mount target /workspace/cargo-registry-cache
+	// is a sibling of /workspace/tsuku, so it cannot shadow the tools directory.
+	var cargoMount *validate.Mount
+	for i, m := range mock.lastRunOpts.Mounts {
+		if m.Target == "/workspace/cargo-registry-cache" {
+			cargoMount = &mock.lastRunOpts.Mounts[i]
+			break
+		}
+	}
+	if cargoMount == nil {
+		t.Fatal("Expected cargo registry cache mount to be present")
+	}
+
+	tsukuHomePaths := []string{
+		"/workspace/tsuku",
+		"/workspace/tsuku/tools",
+		"/workspace/tsuku/bin",
+		"/workspace/tsuku/state.json",
+	}
+	for _, tsukuPath := range tsukuHomePaths {
+		if cargoMount.Target == tsukuPath {
+			t.Errorf("Cargo registry mount target %q equals TSUKU_HOME path %q", cargoMount.Target, tsukuPath)
+		}
+		if strings.HasPrefix(cargoMount.Target, tsukuPath+"/") {
+			t.Errorf("Cargo registry mount target %q is under TSUKU_HOME path %q", cargoMount.Target, tsukuPath)
+		}
+	}
+}
+
 // createTempBinary creates a minimal executable file for test use.
 func createTempBinary(t *testing.T) string {
 	t.Helper()

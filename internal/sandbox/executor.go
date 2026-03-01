@@ -58,10 +58,11 @@ type SandboxResult struct {
 // It uses SandboxRequirements to configure containers appropriately
 // for different types of installations (binary, source build, ecosystem).
 type Executor struct {
-	detector         *validate.RuntimeDetector
-	logger           log.Logger
-	tsukuBinary      string // Path to tsuku binary for container execution
-	downloadCacheDir string // External download cache directory to mount
+	detector              *validate.RuntimeDetector
+	logger                log.Logger
+	tsukuBinary           string // Path to tsuku binary for container execution
+	downloadCacheDir      string // External download cache directory to mount
+	cargoRegistryCacheDir string // Shared cargo registry cache directory to mount
 }
 
 // ExecutorOption configures an Executor.
@@ -86,6 +87,17 @@ func WithTsukuBinary(path string) ExecutorOption {
 func WithDownloadCacheDir(path string) ExecutorOption {
 	return func(e *Executor) {
 		e.downloadCacheDir = path
+	}
+}
+
+// WithCargoRegistryCacheDir sets a shared cargo registry cache directory.
+// When set, this directory is mounted read-write into the container at
+// /workspace/cargo-registry-cache. The sandbox script symlinks
+// $CARGO_HOME/registry to this mount, so cargo fetch results are shared
+// across Linux families within a single recipe run.
+func WithCargoRegistryCacheDir(path string) ExecutorOption {
+	return func(e *Executor) {
+		e.cargoRegistryCacheDir = path
 	}
 }
 
@@ -363,6 +375,17 @@ func (e *Executor) Sandbox(
 		})
 	}
 
+	// Mount shared cargo registry cache if configured.
+	// The sandbox script symlinks $CARGO_HOME/registry to this mount
+	// so cargo fetch results are shared across family containers.
+	if e.cargoRegistryCacheDir != "" {
+		opts.Mounts = append(opts.Mounts, validate.Mount{
+			Source:   e.cargoRegistryCacheDir,
+			Target:   "/workspace/cargo-registry-cache",
+			ReadOnly: false,
+		})
+	}
+
 	// Run the container
 	result, err := runtime.Run(ctx, opts)
 	if err != nil {
@@ -549,6 +572,18 @@ func (e *Executor) buildSandboxScript(
 	// This is needed when plans include dependency steps (e.g., nodejs for npm_exec)
 	sb.WriteString("# Add TSUKU_HOME/bin to PATH for dependency binaries\n")
 	sb.WriteString("export PATH=/workspace/tsuku/bin:$PATH\n\n")
+
+	// Symlink cargo registry to shared cache mount when configured.
+	// This shares downloaded crate index and .crate tarballs across family
+	// containers. CARGO_HOME isolation is preserved for config and compiled
+	// artifacts; only the registry subdirectory is shared.
+	if e.cargoRegistryCacheDir != "" {
+		sb.WriteString("# Share cargo registry cache across families\n")
+		sb.WriteString("if [ -n \"$CARGO_HOME\" ]; then\n")
+		sb.WriteString("  mkdir -p \"$CARGO_HOME\"\n")
+		sb.WriteString("  ln -sfn /workspace/cargo-registry-cache \"$CARGO_HOME/registry\"\n")
+		sb.WriteString("fi\n\n")
+	}
 
 	// Run tsuku install with pre-generated plan
 	// tsuku handles build tool dependencies automatically via ActionDependencies
