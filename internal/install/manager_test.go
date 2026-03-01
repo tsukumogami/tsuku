@@ -832,6 +832,21 @@ func TestInstallWithOptions_NoBinariesFallback(t *testing.T) {
 	if _, err := os.Lstat(symlinkPath); err != nil {
 		t.Errorf("symlink should exist at %s: %v", symlinkPath, err)
 	}
+
+	// Verify symlink target includes bin/ prefix
+	target, err := os.Readlink(symlinkPath)
+	if err != nil {
+		t.Fatalf("failed to read symlink: %v", err)
+	}
+	expectedTarget := filepath.Join(cfg.ToolDir("fallbacktool", "1.0.0"), "bin", "fallbacktool")
+	if target != expectedTarget {
+		t.Errorf("symlink target = %s, want %s", target, expectedTarget)
+	}
+
+	// Verify symlink actually resolves (not dangling)
+	if _, err := os.Stat(symlinkPath); err != nil {
+		t.Errorf("symlink should resolve to an existing file: %v", err)
+	}
 }
 
 func TestInstallWithOptions_NoBinariesWithRuntimeDeps(t *testing.T) {
@@ -1150,14 +1165,14 @@ func TestActivate_FallbackToBinaryName(t *testing.T) {
 		t.Fatalf("failed to set up state: %v", err)
 	}
 
-	// Create tool directories - binary uses tool name as path
+	// Create tool directories with binary under bin/ (standard layout)
 	for _, v := range []string{"1.0.0", "2.0.0"} {
 		toolDir := cfg.ToolDir("legacytool", v)
-		if err := os.MkdirAll(toolDir, 0755); err != nil {
-			t.Fatalf("failed to create tool dir: %v", err)
+		binDir := filepath.Join(toolDir, "bin")
+		if err := os.MkdirAll(binDir, 0755); err != nil {
+			t.Fatalf("failed to create bin dir: %v", err)
 		}
-		// Binary is at root level (tool name as binary path)
-		binaryPath := filepath.Join(toolDir, "legacytool")
+		binaryPath := filepath.Join(binDir, "legacytool")
 		if err := os.WriteFile(binaryPath, []byte("#!/bin/sh\necho "+v), 0755); err != nil {
 			t.Fatalf("failed to create binary: %v", err)
 		}
@@ -1169,14 +1184,20 @@ func TestActivate_FallbackToBinaryName(t *testing.T) {
 		t.Fatalf("Activate() error = %v", err)
 	}
 
-	// Verify symlink was created with tool name
+	// Verify symlink points to bin/<name> under the correct version
 	symlinkPath := cfg.CurrentSymlink("legacytool")
 	target, err := os.Readlink(symlinkPath)
 	if err != nil {
 		t.Fatalf("failed to read symlink: %v", err)
 	}
-	if !strings.Contains(target, "2.0.0") {
-		t.Errorf("symlink target = %s, want to contain 2.0.0", target)
+	expectedTarget := filepath.Join(cfg.ToolDir("legacytool", "2.0.0"), "bin", "legacytool")
+	if target != expectedTarget {
+		t.Errorf("symlink target = %s, want %s", target, expectedTarget)
+	}
+
+	// Verify symlink actually resolves (not dangling)
+	if _, err := os.Stat(symlinkPath); err != nil {
+		t.Errorf("symlink should resolve to an existing file: %v", err)
 	}
 }
 
