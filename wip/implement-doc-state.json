@@ -1,0 +1,119 @@
+{
+  "pr_status": "implementing",
+  "design_doc": "docs/designs/DESIGN-sandbox-build-cache.md",
+  "branch": "docs/sandbox-build-cache",
+  "pr_number": 1956,
+  "integrity_hash": "sha256:0a342a0ce3e62fdb5c6ed37e8533c4a7904263bd07c736787bdb5e904272b604",
+  "issues": [
+    {
+      "number": 1958,
+      "title": "feat(validate): add BuildFromDockerfile to Runtime interface",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": [
+        "scenario-1",
+        "scenario-2"
+      ]
+    },
+    {
+      "number": 1959,
+      "title": "feat(sandbox): implement foundation image generation",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": [
+        "scenario-3",
+        "scenario-4",
+        "scenario-5",
+        "scenario-6"
+      ]
+    },
+    {
+      "number": 1960,
+      "title": "refactor(sandbox): switch to targeted mounts",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": [
+        "scenario-7",
+        "scenario-8",
+        "scenario-9"
+      ]
+    },
+    {
+      "number": 1961,
+      "title": "feat(sandbox): build and use foundation images in sandbox runs",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [
+        1958,
+        1959,
+        1960
+      ],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": [
+        "scenario-10",
+        "scenario-11",
+        "scenario-12",
+        "scenario-13"
+      ]
+    },
+    {
+      "number": 1962,
+      "title": "ci(recipes): sort recipes by ecosystem before batching",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [
+        1961
+      ],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": [
+        "scenario-14"
+      ]
+    },
+    {
+      "number": 1963,
+      "title": "feat(sandbox): add cargo registry cache mount",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [
+        1960
+      ],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": [
+        "scenario-15",
+        "scenario-16"
+      ]
+    }
+  ],
+  "skipped_issues": null,
+  "test_plan_file": null
+}
