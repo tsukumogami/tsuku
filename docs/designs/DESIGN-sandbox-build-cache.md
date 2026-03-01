@@ -136,9 +136,9 @@ Generated Dockerfile for a recipe that needs Rust 1.82.0 (which itself depends o
 ```dockerfile
 FROM tsuku/sandbox-cache:debian-{pkg_hash}
 COPY tsuku /usr/local/bin/tsuku
-COPY plans/dep-00-rust.json /tmp/plans/
 ENV TSUKU_HOME=/workspace/tsuku
 ENV PATH=/workspace/tsuku/bin:$PATH
+COPY plans/dep-00-rust.json /tmp/plans/dep-00-rust.json
 RUN tsuku install --plan /tmp/plans/dep-00-rust.json --force
 RUN rm -rf /usr/local/bin/tsuku /tmp/plans
 ```
@@ -148,18 +148,18 @@ For a recipe that needs Rust and OpenSSL:
 ```dockerfile
 FROM tsuku/sandbox-cache:debian-{pkg_hash}
 COPY tsuku /usr/local/bin/tsuku
-COPY plans/dep-00-openssl.json /tmp/plans/
-COPY plans/dep-01-rust.json /tmp/plans/
 ENV TSUKU_HOME=/workspace/tsuku
 ENV PATH=/workspace/tsuku/bin:$PATH
+COPY plans/dep-00-openssl.json /tmp/plans/dep-00-openssl.json
 RUN tsuku install --plan /tmp/plans/dep-00-openssl.json --force
+COPY plans/dep-01-rust.json /tmp/plans/dep-01-rust.json
 RUN tsuku install --plan /tmp/plans/dep-01-rust.json --force
 RUN rm -rf /usr/local/bin/tsuku /tmp/plans
 ```
 
-Docker caches each layer based on (parent + command + COPY content). If the rust plan JSON is identical between recipes (same version, same URLs, same checksums), the COPY and RUN layers are cached. Recipes with the same dependency prefix share those layers.
+Each COPY + RUN pair is interleaved so that Docker's layer cache works per-dependency. COPY creates a layer keyed on the file's content checksum; RUN creates a layer keyed on the command text plus its parent layer. If the rust plan JSON is identical between recipes (same version, same URLs, same checksums), the rust COPY + RUN pair is cached and shared. A recipe with `[openssl, rust]` shares the openssl COPY + RUN prefix with any other recipe that starts with the same openssl dependency, even if subsequent dependencies differ.
 
-The tsuku binary and plan files are copied into the build context and cleaned up in the final layer. Each `RUN` command runs `tsuku install --plan` with a complete plan file (including that dependency's own nested deps). The executor's skip logic (`os.Stat` on `$TSUKU_HOME/tools/{name}-{version}/`) automatically skips transitive deps already installed by previous layers, so each layer only does the work that's actually new. This path choice is explained in Decision 3.
+Each `RUN` command runs `tsuku install --plan` with a complete plan file (including that dependency's own nested deps). The executor's skip logic (`os.Stat` on `$TSUKU_HOME/tools/{name}-{version}/`) automatically skips transitive deps already installed by previous layers, so each layer only does the work that's actually new. This path choice is explained in Decision 3.
 
 #### Alternatives Considered
 
@@ -296,12 +296,14 @@ The generated Dockerfile for a debian recipe needing Rust:
 ```dockerfile
 FROM tsuku/sandbox-cache:debian-{pkg_hash}
 COPY tsuku /usr/local/bin/tsuku
-COPY plans/ /tmp/plans/
 ENV TSUKU_HOME=/workspace/tsuku
 ENV PATH=/workspace/tsuku/bin:$PATH
+COPY plans/dep-00-rust.json /tmp/plans/dep-00-rust.json
 RUN tsuku install --plan /tmp/plans/dep-00-rust.json --force
 RUN rm -rf /usr/local/bin/tsuku /tmp/plans
 ```
+
+Each dependency gets an interleaved COPY + RUN pair. The COPY layer is keyed on the individual file's content, not the entire `plans/` directory, so adding or removing other dependencies doesn't invalidate earlier COPY + RUN pairs.
 
 The build context directory contains:
 ```
@@ -444,7 +446,7 @@ Two coupled changes: switch to targeted mounts and build foundation images from 
 
 - Create `internal/sandbox/foundation.go` with `FlattenDependencies`, `GenerateFoundationDockerfile`, `FoundationImageName`, `BuildFoundationImage`
 - `FlattenDependencies` does DFS traversal of `plan.Dependencies` (leaves first, alphabetical tiebreaking), deduplicates, converts each to a complete `InstallationPlan` JSON preserving its dependency subtree. Runtime deduplication via the executor's skip logic handles overlap between layers
-- `GenerateFoundationDockerfile` produces the Dockerfile with COPY + ENV + per-dep RUN + cleanup. Foundation image builds use default Docker network access (required for downloading toolchains during RUN commands)
+- `GenerateFoundationDockerfile` produces the Dockerfile with interleaved COPY + RUN pairs per dependency (not bulk `COPY plans/`), so Docker's layer cache works per-dependency. Foundation image builds use default Docker network access (required for downloading toolchains during RUN commands)
 - Add `BuildFromDockerfile(ctx, imageName, contextDir string) error` to the `Runtime` interface (additive -- existing `Build()` unchanged). Foundation images provide a temp directory containing the Dockerfile, tsuku binary, and plan files as the build context
 - Refactor `Executor.Sandbox()` mount construction: use targeted mounts unconditionally (with or without foundation image). When plan has dependencies, build and use foundation image; when plan has no dependencies, use the base package image with targeted mounts
 - Update `buildSandboxScript()`: write verification markers to `/workspace/output/` instead of `/workspace/`; emit `mkdir -p` for TSUKU_HOME structure only when `/workspace/tsuku/tools` doesn't already exist (i.e., no foundation image)
