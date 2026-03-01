@@ -8,6 +8,7 @@ name = "libcurl-source"
 description = "Multi-protocol file transfer library (source build for testing)"
 homepage = "https://curl.se/libcurl/"
 type = "library"
+supported_os = ["linux"]
 dependencies = ["openssl", "zlib"]
 
 [version]
