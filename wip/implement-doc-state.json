@@ -3,19 +3,61 @@
   "design_doc": "docs/designs/DESIGN-sandbox-build-cache.md",
   "branch": "docs/sandbox-build-cache",
   "pr_number": 1956,
-  "integrity_hash": "sha256:0a342a0ce3e62fdb5c6ed37e8533c4a7904263bd07c736787bdb5e904272b604",
+  "integrity_hash": "sha256:47f96425b52df21fa89fb33eed6387e6ab746e5d0ea7a42189e1e53cfda34da3",
   "issues": [
     {
       "number": 1958,
       "title": "feat(validate): add BuildFromDockerfile to Runtime interface",
-      "status": "pending",
+      "status": "scrutinized",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [],
-      "commits": [],
-      "agent_type": "",
-      "summary": null,
+      "commits": [
+        "e47341cf"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          "internal/validate/runtime.go",
+          "internal/validate/executor_test.go"
+        ],
+        "tests_added": 0,
+        "key_decisions": "No new tests - BuildFromDockerfile is straightforward command construction identical to Build(); mock enables downstream #1961 testing",
+        "requirements_map": [
+          {
+            "ac": "Runtime interface declares BuildFromDockerfile",
+            "status": "implemented",
+            "evidence": "runtime.go:40-44"
+          },
+          {
+            "ac": "dockerRuntime implements BuildFromDockerfile",
+            "status": "implemented",
+            "evidence": "runtime.go:516-525"
+          },
+          {
+            "ac": "podmanRuntime implements BuildFromDockerfile",
+            "status": "implemented",
+            "evidence": "runtime.go:366-375"
+          },
+          {
+            "ac": "mockRuntime adds buildFromDockerfileFunc field",
+            "status": "implemented",
+            "evidence": "executor_test.go:18,44-49"
+          },
+          {
+            "ac": "go build ./... passes",
+            "status": "implemented",
+            "evidence": "build succeeded"
+          },
+          {
+            "ac": "go test ./... passes",
+            "status": "implemented",
+            "evidence": "all tests pass"
+          }
+        ]
+      },
       "testable_scenarios": [
         "scenario-1",
         "scenario-2"
