@@ -408,6 +408,63 @@ func TestGetMostRecentVersion(t *testing.T) {
 	}
 }
 
+// TestRemoveVersion_EmptyBinariesFallback tests that removing the active version
+// with empty Binaries creates correct symlinks for the new active version.
+func TestRemoveVersion_EmptyBinariesFallback(t *testing.T) {
+	cfg, cleanup := testutil.NewTestConfig(t)
+	defer cleanup()
+
+	mgr := New(cfg)
+
+	// Set up state with empty binaries (legacy format)
+	v1Time := time.Now().Add(-1 * time.Hour)
+	v2Time := time.Now()
+	err := mgr.state.UpdateTool("legacytool", func(ts *ToolState) {
+		ts.ActiveVersion = "2.0.0"
+		ts.Versions = map[string]VersionState{
+			"1.0.0": {Binaries: nil, InstalledAt: v1Time},
+			"2.0.0": {Binaries: nil, InstalledAt: v2Time},
+		}
+	})
+	if err != nil {
+		t.Fatalf("failed to set up state: %v", err)
+	}
+
+	// Create tool directories with binaries under bin/
+	for _, v := range []string{"1.0.0", "2.0.0"} {
+		toolDir := cfg.ToolDir("legacytool", v)
+		binDir := filepath.Join(toolDir, "bin")
+		if err := os.MkdirAll(binDir, 0755); err != nil {
+			t.Fatalf("failed to create bin dir: %v", err)
+		}
+		if err := os.WriteFile(filepath.Join(binDir, "legacytool"), []byte("#!/bin/sh\necho "+v), 0755); err != nil {
+			t.Fatalf("failed to create binary: %v", err)
+		}
+	}
+
+	// Remove active version (2.0.0) - should switch to 1.0.0
+	err = mgr.RemoveVersion("legacytool", "2.0.0")
+	if err != nil {
+		t.Fatalf("RemoveVersion() error = %v", err)
+	}
+
+	// Verify symlink points to bin/<name> under 1.0.0
+	symlinkPath := cfg.CurrentSymlink("legacytool")
+	target, err := os.Readlink(symlinkPath)
+	if err != nil {
+		t.Fatalf("failed to read symlink: %v", err)
+	}
+	expectedTarget := filepath.Join(cfg.ToolDir("legacytool", "1.0.0"), "bin", "legacytool")
+	if target != expectedTarget {
+		t.Errorf("symlink target = %s, want %s", target, expectedTarget)
+	}
+
+	// Verify symlink resolves (not dangling)
+	if _, err := os.Stat(symlinkPath); err != nil {
+		t.Errorf("symlink should resolve to an existing file: %v", err)
+	}
+}
+
 // TestRemoveVersion_MultipleBinaries tests removing a tool with multiple binaries.
 func TestRemoveVersion_MultipleBinaries(t *testing.T) {
 	cfg, cleanup := testutil.NewTestConfig(t)
