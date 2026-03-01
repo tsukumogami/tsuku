@@ -121,7 +121,7 @@ func (m *Manager) RemoveVersion(name, version string) error {
 		}
 		binaries := toolState.Versions[newActiveVersion].Binaries
 		if len(binaries) == 0 {
-			binaries = []string{name}
+			binaries = []string{filepath.Join("bin", name)}
 		}
 		if err := m.createSymlinksForBinaries(name, newActiveVersion, binaries); err != nil {
 			return fmt.Errorf("failed to update symlinks: %w", err)

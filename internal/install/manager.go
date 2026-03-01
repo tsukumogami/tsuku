@@ -254,8 +254,8 @@ func (m *Manager) Activate(name, version string) error {
 	// Create symlinks for all binaries
 	binaries := versionState.Binaries
 	if len(binaries) == 0 {
-		// Fallback: use tool name as binary (legacy behavior)
-		binaries = []string{name}
+		// Fallback: use bin/<name> as binary path (legacy behavior)
+		binaries = []string{filepath.Join("bin", name)}
 	}
 
 	if err := m.createSymlinksForBinaries(name, version, binaries); err != nil {
@@ -290,9 +290,9 @@ func (m *Manager) versionNotInstalledError(name, requested string, state *ToolSt
 }
 
 // createSymlink creates or updates the symlink in current/ to point to the latest version
-// This assumes the binary name matches the tool name (legacy behavior)
+// This assumes the binary name matches the tool name and lives in bin/ (legacy behavior)
 func (m *Manager) createSymlink(name, version string) error {
-	return m.createBinarySymlink(name, version, name)
+	return m.createBinarySymlink(name, version, filepath.Join("bin", name))
 }
 
 // createBinarySymlink creates a symlink for a specific binary atomically.
