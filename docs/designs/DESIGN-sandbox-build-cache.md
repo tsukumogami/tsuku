@@ -109,7 +109,7 @@ Both Docker and Podman support this layer caching natively. No BuildKit-specific
 
 ### Plan Dependencies Are Self-Contained
 
-Each `DependencyPlan` in the plan tree contains fully resolved `Steps` with concrete URLs, versions, and checksums. A DependencyPlan can be converted to a standalone `InstallationPlan` and passed to `tsuku install --plan`. This means each dependency can be installed independently via a Dockerfile `RUN` command that receives its plan as input.
+Each `DependencyPlan` in the plan tree contains fully resolved `Steps` with concrete URLs, versions, and checksums, plus its own nested `Dependencies`. A DependencyPlan can be converted to a standalone `InstallationPlan` (preserving its dependency subtree) and passed to `tsuku install --plan`. Each plan file is complete and valid on its own -- tsuku will install the dependency and all of its transitive deps. The executor's skip logic (`os.Stat` on `$TSUKU_HOME/tools/{name}-{version}/`) means dependencies already installed by previous Docker layers are skipped automatically, so earlier layers handle the deduplication without any plan modification.
 
 ### Ecosystem Grouping Enables Layer Reuse
 
@@ -127,9 +127,9 @@ On GitHub Actions, the Docker layer cache is ephemeral per job. Foundation image
 
 The plan's `Dependencies` tree contains the work that repeats across recipes. We need to decide how to convert this tree into cacheable Docker image layers.
 
-#### Chosen: One RUN command per dependency in canonical order
+#### Chosen: One RUN command per dependency in topological order
 
-Flatten the plan's dependency tree (DFS: install transitive deps before their dependents), sort the result canonically, and generate a Dockerfile where each dependency is a separate `RUN` command. Docker's layer caching handles reuse automatically.
+Flatten the plan's dependency tree via DFS (leaves first, so transitive deps are installed before their dependents) and generate a Dockerfile where each dependency is a separate `RUN` command. Each dependency's plan file is complete -- it includes its own nested dependencies intact. The executor's existing skip logic (`os.Stat` on the tool directory) means transitive deps already installed by earlier layers are skipped automatically. Correctness doesn't depend on ordering; even if the order were wrong, tsuku would install the missing dep rather than fail. But topological order maximizes layer reuse by ensuring shared transitive deps appear as early as possible.
 
 Generated Dockerfile for a recipe that needs Rust 1.82.0 (which itself depends on nothing):
 
@@ -159,7 +159,7 @@ RUN rm -rf /usr/local/bin/tsuku /tmp/plans
 
 Docker caches each layer based on (parent + command + COPY content). If the rust plan JSON is identical between recipes (same version, same URLs, same checksums), the COPY and RUN layers are cached. Recipes with the same dependency prefix share those layers.
 
-The tsuku binary and plan files are copied into the build context and cleaned up in the final layer. Each `RUN` command installs one dependency to `$TSUKU_HOME=/workspace/tsuku`, where it persists across layers. Subsequent RUN commands see tools installed by previous layers. This path choice is explained in Decision 3.
+The tsuku binary and plan files are copied into the build context and cleaned up in the final layer. Each `RUN` command runs `tsuku install --plan` with a complete plan file (including that dependency's own nested deps). The executor's skip logic (`os.Stat` on `$TSUKU_HOME/tools/{name}-{version}/`) automatically skips transitive deps already installed by previous layers, so each layer only does the work that's actually new. This path choice is explained in Decision 3.
 
 #### Alternatives Considered
 
@@ -173,19 +173,19 @@ The tsuku binary and plan files are copied into the build context and cleaned up
 
 Docker layer caching is position-sensitive. Layer N is cached only if layers 0..N-1 match. The order in which we install dependencies determines which recipes share layers.
 
-#### Chosen: Alphabetical by dependency name
+#### Chosen: Topological order (DFS, leaves first)
 
-Sort dependencies alphabetically by tool name. This is deterministic, easy to understand, and produces consistent ordering regardless of which recipe triggered the build.
+Walk the dependency tree depth-first, emitting leaves before their parents. This guarantees transitive deps are installed before the tools that need them, and maximizes layer prefix sharing between recipes with overlapping dependency subtrees.
 
-Within the flattened dependency tree, transitive dependencies sort independently. If rust depends on llvm, the flattened list might be `[llvm, rust]` (alphabetical). This is stable because it doesn't depend on tree structure.
+Within a single depth level, sort siblings alphabetically for determinism. If rust depends on llvm, the order is `[llvm, rust]` -- llvm first because it's a leaf, not because of alphabetical order (though both happen to agree here). If two deps are independent (no parent-child relationship), alphabetical tiebreaking ensures consistent ordering.
 
-For the most common case (single ecosystem dep like "rust"), all cargo_build recipes produce identical Dockerfiles and share all layers.
+For the most common case (single ecosystem dep like "rust"), all cargo_build recipes produce identical Dockerfiles and share all layers. Correctness doesn't depend on ordering -- tsuku's skip logic handles any order -- but topological order means earlier layers are never wasted.
 
 #### Alternatives Considered
 
-**Frequency-based ordering**: Sort by how frequently each dependency appears across all recipes (most common first). Rejected because it requires global knowledge of all recipes and changes as the recipe registry grows. Alphabetical is stateless and deterministic.
+**Alphabetical ordering**: Sort dependencies alphabetically by name. Simpler to reason about, but doesn't respect the dependency graph. If dependency A needs dependency Z, alphabetical order installs A first -- A's steps could fail if they need Z on PATH. While tsuku's skip logic means correctness is recoverable (A's complete plan includes Z, so tsuku would install Z inline), this defeats the purpose of separate layers by hiding transitive deps inside a parent's RUN command rather than giving them their own cached layer.
 
-**Tree-structure ordering**: Preserve the plan's dependency tree order (DFS). Rejected because different recipes might resolve the same dependencies in different tree positions, producing different Dockerfiles for the same logical content.
+**Frequency-based ordering**: Sort by how frequently each dependency appears across all recipes (most common first). Rejected because it requires global knowledge of all recipes and changes as the recipe registry grows.
 
 ### Decision 3: How Should the Container Exchange Files with the Host?
 
@@ -283,11 +283,11 @@ Recipe Build Output
 
 The plan's `Dependencies` field is a tree of `DependencyPlan` entries. The extraction process:
 
-1. **DFS traversal**: Walk the tree depth-first, collecting all dependencies with their resolved steps
+1. **DFS traversal**: Walk the tree depth-first (leaves first), collecting all dependencies
 2. **Deduplication**: If the same tool appears multiple times (shared transitive dep), keep the first occurrence
-3. **Sort**: Alphabetically by tool name
-4. **Convert**: Each `DependencyPlan` becomes a standalone `InstallationPlan` JSON (with Steps but no nested Dependencies, since transitive deps are handled by earlier layers)
-5. **Normalize**: Strip non-deterministic fields (`generated_at` timestamps) from the standalone plan JSON. Docker caches layers based on COPY content, so the plan JSON must be identical across runs for the same logical dependency. If timestamps differ, Docker rebuilds the layer unnecessarily
+3. **Sibling sort**: Within the same depth level, sort siblings alphabetically for determinism
+4. **Convert**: Each `DependencyPlan` becomes a standalone `InstallationPlan` JSON, preserving its nested `Dependencies` subtree intact. Each plan file is complete and valid -- tsuku can install it independently. The executor's skip logic deduplicates at runtime by checking whether each tool directory already exists from a previous layer
+5. **Normalize**: Strip non-deterministic fields (`generated_at` timestamps) from the plan JSON. Docker caches layers based on COPY content, so the plan JSON must be identical across runs for the same logical dependency. If timestamps differ, Docker rebuilds the layer unnecessarily
 
 ### Dockerfile Generation
 
@@ -309,7 +309,7 @@ context/
   Dockerfile
   tsuku              (binary, from host)
   plans/
-    dep-00-rust.json (standalone plan for rust)
+    dep-00-rust.json (complete plan for rust, including its own deps)
 ```
 
 Note: `TSUKU_HOME=/workspace/tsuku` matches the path the sandbox uses at runtime. Because the sandbox uses targeted mounts (not a broad mount at `/workspace`), the container's filesystem at this path is preserved from the Docker image layers.
@@ -382,15 +382,17 @@ This handles both cases with one code path -- targeted mounts are always used, a
 ```go
 // foundation.go (internal/sandbox/)
 
-// FlatDep represents a flattened dependency with its standalone plan.
+// FlatDep represents a flattened dependency with its complete plan.
 type FlatDep struct {
     Tool    string                      // e.g., "rust"
     Version string                      // e.g., "1.82.0"
-    Plan    *executor.InstallationPlan  // standalone plan (steps only, no nested deps)
+    Plan    *executor.InstallationPlan  // complete plan (preserves nested deps)
 }
 
 // FlattenDependencies extracts and flattens the dependency tree from a plan.
-// Returns dependencies in canonical (alphabetical) order.
+// Returns dependencies in topological order (leaves first, alphabetical
+// tiebreaking within siblings). Each plan preserves its dependency subtree
+// intact -- deduplication happens at runtime via the executor's skip logic.
 // Strips non-deterministic fields (generated_at) from plans.
 func FlattenDependencies(plan *executor.InstallationPlan) []FlatDep
 
@@ -424,7 +426,7 @@ BuildFromDockerfile(ctx context.Context, imageName string, contextDir string) er
 ### Data Flow
 
 1. Plan generation on host resolves all versions and produces `InstallationPlan`
-2. `FlattenDependencies(plan)` extracts the dependency tree into a sorted flat list
+2. `FlattenDependencies(plan)` extracts the dependency tree into a topologically ordered flat list (each entry preserves its own dependency subtree)
 3. If no deps, skip foundation image build (use package image directly with targeted mounts)
 4. `GenerateFoundationDockerfile()` creates the Dockerfile with per-dep RUN commands
 5. `FoundationImageName()` hashes the Dockerfile to produce the image tag
@@ -441,7 +443,7 @@ BuildFromDockerfile(ctx context.Context, imageName string, contextDir string) er
 Two coupled changes: switch to targeted mounts and build foundation images from plan dependencies.
 
 - Create `internal/sandbox/foundation.go` with `FlattenDependencies`, `GenerateFoundationDockerfile`, `FoundationImageName`, `BuildFoundationImage`
-- `FlattenDependencies` does DFS traversal of `plan.Dependencies`, deduplicates, sorts alphabetically, converts each to standalone `InstallationPlan` JSON
+- `FlattenDependencies` does DFS traversal of `plan.Dependencies` (leaves first, alphabetical tiebreaking), deduplicates, converts each to a complete `InstallationPlan` JSON preserving its dependency subtree. Runtime deduplication via the executor's skip logic handles overlap between layers
 - `GenerateFoundationDockerfile` produces the Dockerfile with COPY + ENV + per-dep RUN + cleanup. Foundation image builds use default Docker network access (required for downloading toolchains during RUN commands)
 - Add `BuildFromDockerfile(ctx, imageName, contextDir string) error` to the `Runtime` interface (additive -- existing `Build()` unchanged). Foundation images provide a temp directory containing the Dockerfile, tsuku binary, and plan files as the build context
 - Refactor `Executor.Sandbox()` mount construction: use targeted mounts unconditionally (with or without foundation image). When plan has dependencies, build and use foundation image; when plan has no dependencies, use the base package image with targeted mounts
