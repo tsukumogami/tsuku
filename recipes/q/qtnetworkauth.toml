@@ -1,0 +1,51 @@
+[metadata]
+  name = "qtnetworkauth"
+  description = "Provides support for OAuth-based authorization to online services"
+  homepage = "https://www.qt.io/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["qtbase"]
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "qtnetworkauth"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "qtnetworkauth"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libQt6NetworkAuth.so", "lib/libQt6NetworkAuth.so.6", "lib/libQt6NetworkAuth.so.6.10.2", "lib/pkgconfig/Qt6NetworkAuth.pc", "include/QtNetworkAuth/6.10.2/QtNetworkAuth/private/qabstractoauth2_p.h", "include/QtNetworkAuth/6.10.2/QtNetworkAuth/private/qabstractoauth_p.h", "include/QtNetworkAuth/6.10.2/QtNetworkAuth/private/qabstractoauthreplyhandler_p.h", "include/QtNetworkAuth/6.10.2/QtNetworkAuth/private/qoauth1_p.h", "include/QtNetworkAuth/6.10.2/QtNetworkAuth/private/qoauth1signature_p.h", "include/QtNetworkAuth/6.10.2/QtNetworkAuth/private/qoauth2authorizationcodeflow_p.h", "include/QtNetworkAuth/6.10.2/QtNetworkAuth/private/qoauth2deviceauthorizationflow_p.h", "include/QtNetworkAuth/6.10.2/QtNetworkAuth/private/qoauthhttpserverreplyhandler_p.h", "include/QtNetworkAuth/6.10.2/QtNetworkAuth/private/qoauthoobreplyhandler_p.h", "include/QtNetworkAuth/6.10.2/QtNetworkAuth/private/qtnetworkauth-config_p.h", "include/QtNetworkAuth/QAbstractOAuth", "include/QtNetworkAuth/QAbstractOAuth2", "include/QtNetworkAuth/QAbstractOAuthReplyHandler", "include/QtNetworkAuth/QOAuth1", "include/QtNetworkAuth/QOAuth1Signature", "include/QtNetworkAuth/QOAuth2AuthorizationCodeFlow", "include/QtNetworkAuth/QOAuth2DeviceAuthorizationFlow", "include/QtNetworkAuth/QOAuthHttpServerReplyHandler", "include/QtNetworkAuth/QOAuthOobReplyHandler", "include/QtNetworkAuth/QOAuthUriSchemeReplyHandler", "include/QtNetworkAuth/QtNetworkAuth", "include/QtNetworkAuth/QtNetworkAuthDepends", "include/QtNetworkAuth/QtNetworkAuthVersion", "include/QtNetworkAuth/qabstractoauth.h", "include/QtNetworkAuth/qabstractoauth2.h", "include/QtNetworkAuth/qabstractoauthreplyhandler.h", "include/QtNetworkAuth/qoauth1.h", "include/QtNetworkAuth/qoauth1signature.h", "include/QtNetworkAuth/qoauth2authorizationcodeflow.h", "include/QtNetworkAuth/qoauth2deviceauthorizationflow.h", "include/QtNetworkAuth/qoauthglobal.h", "include/QtNetworkAuth/qoauthhttpserverreplyhandler.h", "include/QtNetworkAuth/qoauthoobreplyhandler.h", "include/QtNetworkAuth/qoauthurischemereplyhandler.h", "include/QtNetworkAuth/qtnetworkauth-config.h", "include/QtNetworkAuth/qtnetworkauthversion.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "qtnetworkauth"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/pkgconfig/Qt6NetworkAuth.pc"]
+  [steps.when]
+    os = ["darwin"]

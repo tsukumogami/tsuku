@@ -1,0 +1,50 @@
+[metadata]
+  name = "mpdecimal"
+  description = "Library for decimal floating point arithmetic"
+  homepage = "https://www.bytereef.org/mpdecimal/"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "mpdecimal"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "mpdecimal"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libmpdec++.a", "lib/libmpdec++.so", "lib/libmpdec++.so.4", "lib/libmpdec++.so.4.0.1", "lib/libmpdec.a", "lib/libmpdec.so", "lib/libmpdec.so.4", "lib/libmpdec.so.4.0.1", "lib/pkgconfig/libmpdec++.pc", "lib/pkgconfig/libmpdec.pc", "include/decimal.hh", "include/mpdecimal.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "mpdecimal"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libmpdec++.4.0.1.dylib", "lib/libmpdec++.4.dylib", "lib/libmpdec++.a", "lib/libmpdec++.dylib", "lib/libmpdec.4.0.1.dylib", "lib/libmpdec.4.dylib", "lib/libmpdec.a", "lib/libmpdec.dylib", "lib/pkgconfig/libmpdec++.pc", "lib/pkgconfig/libmpdec.pc", "include/decimal.hh", "include/mpdecimal.h"]
+  [steps.when]
+    os = ["darwin"]

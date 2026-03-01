@@ -1,0 +1,50 @@
+[metadata]
+  name = "concurrencykit"
+  description = "Aid design and implementation of concurrent systems"
+  homepage = "https://github.com/concurrencykit/ck"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "concurrencykit"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "concurrencykit"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libck.a", "lib/libck.so", "lib/libck.so.0", "lib/libck.so.0.7.2", "lib/pkgconfig/ck.pc", "include/ck_array.h", "include/ck_backoff.h", "include/ck_barrier.h", "include/ck_bitmap.h", "include/ck_brlock.h", "include/ck_bytelock.h", "include/ck_cc.h", "include/ck_cohort.h", "include/ck_ec.h", "include/ck_elide.h", "include/ck_epoch.h", "include/ck_fifo.h", "include/ck_hp.h", "include/ck_hp_fifo.h", "include/ck_hp_stack.h", "include/ck_hs.h", "include/ck_ht.h", "include/ck_limits.h", "include/ck_malloc.h", "include/ck_md.h", "include/ck_pflock.h", "include/ck_pr.h", "include/ck_queue.h", "include/ck_rhs.h", "include/ck_ring.h", "include/ck_rwcohort.h", "include/ck_rwlock.h", "include/ck_sequence.h", "include/ck_spinlock.h", "include/ck_stack.h", "include/ck_stdbool.h", "include/ck_stddef.h", "include/ck_stdint.h", "include/ck_stdlib.h", "include/ck_string.h", "include/ck_swlock.h", "include/ck_tflock.h", "include/gcc/aarch64/ck_f_pr.h", "include/gcc/aarch64/ck_pr.h", "include/gcc/aarch64/ck_pr_llsc.h", "include/gcc/aarch64/ck_pr_lse.h", "include/gcc/arm/ck_f_pr.h", "include/gcc/arm/ck_pr.h", "include/gcc/ck_cc.h", "include/gcc/ck_f_pr.h", "include/gcc/ck_pr.h", "include/gcc/ppc/ck_f_pr.h", "include/gcc/ppc/ck_pr.h", "include/gcc/ppc64/ck_f_pr.h", "include/gcc/ppc64/ck_pr.h", "include/gcc/riscv64/ck_f_pr.h", "include/gcc/riscv64/ck_pr.h", "include/gcc/s390x/ck_f_pr.h", "include/gcc/s390x/ck_pr.h", "include/gcc/sparcv9/ck_f_pr.h", "include/gcc/sparcv9/ck_pr.h", "include/gcc/x86/ck_f_pr.h", "include/gcc/x86/ck_pr.h", "include/gcc/x86_64/ck_f_pr.h", "include/gcc/x86_64/ck_pr.h", "include/gcc/x86_64/ck_pr_rtm.h", "include/spinlock/anderson.h", "include/spinlock/cas.h", "include/spinlock/clh.h", "include/spinlock/dec.h", "include/spinlock/fas.h", "include/spinlock/hclh.h", "include/spinlock/mcs.h", "include/spinlock/ticket.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "concurrencykit"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libck.0.7.2.dylib", "lib/libck.0.dylib", "lib/libck.a", "lib/libck.dylib", "lib/pkgconfig/ck.pc", "include/ck_array.h", "include/ck_backoff.h", "include/ck_barrier.h", "include/ck_bitmap.h", "include/ck_brlock.h", "include/ck_bytelock.h", "include/ck_cc.h", "include/ck_cohort.h", "include/ck_ec.h", "include/ck_elide.h", "include/ck_epoch.h", "include/ck_fifo.h", "include/ck_hp.h", "include/ck_hp_fifo.h", "include/ck_hp_stack.h", "include/ck_hs.h", "include/ck_ht.h", "include/ck_limits.h", "include/ck_malloc.h", "include/ck_md.h", "include/ck_pflock.h", "include/ck_pr.h", "include/ck_queue.h", "include/ck_rhs.h", "include/ck_ring.h", "include/ck_rwcohort.h", "include/ck_rwlock.h", "include/ck_sequence.h", "include/ck_spinlock.h", "include/ck_stack.h", "include/ck_stdbool.h", "include/ck_stddef.h", "include/ck_stdint.h", "include/ck_stdlib.h", "include/ck_string.h", "include/ck_swlock.h", "include/ck_tflock.h", "include/gcc/aarch64/ck_f_pr.h", "include/gcc/aarch64/ck_pr.h", "include/gcc/aarch64/ck_pr_llsc.h", "include/gcc/aarch64/ck_pr_lse.h", "include/gcc/arm/ck_f_pr.h", "include/gcc/arm/ck_pr.h", "include/gcc/ck_cc.h", "include/gcc/ck_f_pr.h", "include/gcc/ck_pr.h", "include/gcc/ppc/ck_f_pr.h", "include/gcc/ppc/ck_pr.h", "include/gcc/ppc64/ck_f_pr.h", "include/gcc/ppc64/ck_pr.h", "include/gcc/riscv64/ck_f_pr.h", "include/gcc/riscv64/ck_pr.h", "include/gcc/s390x/ck_f_pr.h", "include/gcc/s390x/ck_pr.h", "include/gcc/sparcv9/ck_f_pr.h", "include/gcc/sparcv9/ck_pr.h", "include/gcc/x86/ck_f_pr.h", "include/gcc/x86/ck_pr.h", "include/gcc/x86_64/ck_f_pr.h", "include/gcc/x86_64/ck_pr.h", "include/gcc/x86_64/ck_pr_rtm.h", "include/spinlock/anderson.h", "include/spinlock/cas.h", "include/spinlock/clh.h", "include/spinlock/dec.h", "include/spinlock/fas.h", "include/spinlock/hclh.h", "include/spinlock/mcs.h", "include/spinlock/ticket.h"]
+  [steps.when]
+    os = ["darwin"]

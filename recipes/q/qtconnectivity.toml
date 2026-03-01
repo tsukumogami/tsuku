@@ -1,0 +1,51 @@
+[metadata]
+  name = "qtconnectivity"
+  description = "Provides access to Bluetooth hardware"
+  homepage = "https://www.qt.io/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["qtbase"]
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "qtconnectivity"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "qtconnectivity"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libQt6Bluetooth.so", "lib/libQt6Bluetooth.so.6", "lib/libQt6Bluetooth.so.6.10.2", "lib/libQt6Nfc.so", "lib/libQt6Nfc.so.6", "lib/libQt6Nfc.so.6.10.2", "lib/pkgconfig/Qt6Bluetooth.pc", "lib/pkgconfig/Qt6Nfc.pc", "include/QtBluetooth/6.10.2/QtBluetooth/private/adapter1_bluez5_p.h", "include/QtBluetooth/6.10.2/QtBluetooth/private/battery1_p.h", "include/QtBluetooth/6.10.2/QtBluetooth/private/bluetoothmanagement_p.h", "include/QtBluetooth/6.10.2/QtBluetooth/private/bluez5_helper_p.h", "include/QtBluetooth/6.10.2/QtBluetooth/private/bluez_data_p.h", "include/QtBluetooth/6.10.2/QtBluetooth/private/bluezperipheralapplication_p.h", "include/QtBluetooth/6.10.2/QtBluetooth/private/bluezperipheralconnectionmanager_p.h", "include/QtBluetooth/6.10.2/QtBluetooth/private/bluezperipheralobjects_p.h", "include/QtBluetooth/6.10.2/QtBluetooth/private/device1_bluez5_p.h", "include/QtBluetooth/6.10.2/QtBluetooth/private/gattchar1_p.h", "include/QtBluetooth/6.10.2/QtBluetooth/private/gattcharacteristic1adaptor_p.h", "include/QtBluetooth/6.10.2/QtBluetooth/private/gattdesc1_p.h", "include/QtBluetooth/6.10.2/QtBluetooth/private/gattdescriptor1adaptor_p.h", "include/QtBluetooth/6.10.2/QtBluetooth/private/gattmanager1_p.h", "include/QtBluetooth/6.10.2/QtBluetooth/private/gattservice1_p.h", "include/QtBluetooth/6.10.2/QtBluetooth/private/gattservice1adaptor_p.h", "include/QtBluetooth/6.10.2/QtBluetooth/private/hcimanager_p.h", "include/QtBluetooth/6.10.2/QtBluetooth/private/leadvertisement1adaptor_p.h", "include/QtBluetooth/6.10.2/QtBluetooth/private/leadvertisingmanager1_p.h", "include/QtBluetooth/6.10.2/QtBluetooth/private/lecmaccalculator_p.h", "include/QtBluetooth/6.10.2/QtBluetooth/private/objectmanager_p.h", "include/QtBluetooth/6.10.2/QtBluetooth/private/objectmanageradaptor_p.h", "include/QtBluetooth/6.10.2/QtBluetooth/private/profile1_p.h", "include/QtBluetooth/6.10.2/QtBluetooth/private/profile1context_p.h", "include/QtBluetooth/6.10.2/QtBluetooth/private/profilemanager1_p.h", "include/QtBluetooth/6.10.2/QtBluetooth/private/properties_p.h", "include/QtBluetooth/6.10.2/QtBluetooth/private/propertiesadaptor_p.h", "include/QtBluetooth/6.10.2/QtBluetooth/private/qbluetoothdevicediscoveryagent_p.h", "include/QtBluetooth/6.10.2/QtBluetooth/private/qbluetoothdeviceinfo_p.h", "include/QtBluetooth/6.10.2/QtBluetooth/private/qbluetoothhostinfo_p.h", "include/QtBluetooth/6.10.2/QtBluetooth/private/qbluetoothlocaldevice_p.h", "include/QtBluetooth/6.10.2/QtBluetooth/private/qbluetoothserver_p.h", "include/QtBluetooth/6.10.2/QtBluetooth/private/qbluetoothservicediscoveryagent_p.h", "include/QtBluetooth/6.10.2/QtBluetooth/private/qbluetoothserviceinfo_p.h", "include/QtBluetooth/6.10.2/QtBluetooth/private/qbluetoothsocket_bluez_p.h", "include/QtBluetooth/6.10.2/QtBluetooth/private/qbluetoothsocket_bluezdbus_p.h", "include/QtBluetooth/6.10.2/QtBluetooth/private/qbluetoothsocketbase_p.h", "include/QtBluetooth/6.10.2/QtBluetooth/private/qleadvertiser_bluez_p.h", "include/QtBluetooth/6.10.2/QtBluetooth/private/qleadvertiser_bluezdbus_p.h", "include/QtBluetooth/6.10.2/QtBluetooth/private/qlowenergycontroller_bluez_p.h", "include/QtBluetooth/6.10.2/QtBluetooth/private/qlowenergycontroller_bluezdbus_p.h", "include/QtBluetooth/6.10.2/QtBluetooth/private/qlowenergycontrollerbase_p.h", "include/QtBluetooth/6.10.2/QtBluetooth/private/qlowenergyserviceprivate_p.h", "include/QtBluetooth/6.10.2/QtBluetooth/private/qprivatelinearbuffer_p.h", "include/QtBluetooth/6.10.2/QtBluetooth/private/qtbluetooth-config_p.h", "include/QtBluetooth/6.10.2/QtBluetooth/private/qtbluetoothglobal_p.h", "include/QtBluetooth/6.10.2/QtBluetooth/private/remotedevicemanager_p.h", "include/QtBluetooth/6.10.2/QtBluetooth/private/servicemap_p.h", "include/QtBluetooth/QBluetoothAddress", "include/QtBluetooth/QBluetoothDeviceDiscoveryAgent", "include/QtBluetooth/QBluetoothDeviceInfo", "include/QtBluetooth/QBluetoothHostInfo", "include/QtBluetooth/QBluetoothLocalDevice", "include/QtBluetooth/QBluetoothServer", "include/QtBluetooth/QBluetoothServiceDiscoveryAgent", "include/QtBluetooth/QBluetoothServiceInfo", "include/QtBluetooth/QBluetoothSocket", "include/QtBluetooth/QBluetoothUuid", "include/QtBluetooth/QLowEnergyAdvertisingData", "include/QtBluetooth/QLowEnergyAdvertisingParameters", "include/QtBluetooth/QLowEnergyCharacteristic", "include/QtBluetooth/QLowEnergyCharacteristicData", "include/QtBluetooth/QLowEnergyConnectionParameters", "include/QtBluetooth/QLowEnergyController", "include/QtBluetooth/QLowEnergyDescriptor", "include/QtBluetooth/QLowEnergyDescriptorData", "include/QtBluetooth/QLowEnergyHandle", "include/QtBluetooth/QLowEnergyService", "include/QtBluetooth/QLowEnergyServiceData", "include/QtBluetooth/QtBluetooth", "include/QtBluetooth/QtBluetoothDepends", "include/QtBluetooth/QtBluetoothVersion", "include/QtBluetooth/qbluetooth.h", "include/QtBluetooth/qbluetoothaddress.h", "include/QtBluetooth/qbluetoothdevicediscoveryagent.h", "include/QtBluetooth/qbluetoothdeviceinfo.h", "include/QtBluetooth/qbluetoothhostinfo.h", "include/QtBluetooth/qbluetoothlocaldevice.h", "include/QtBluetooth/qbluetoothserver.h", "include/QtBluetooth/qbluetoothservicediscoveryagent.h", "include/QtBluetooth/qbluetoothserviceinfo.h", "include/QtBluetooth/qbluetoothsocket.h", "include/QtBluetooth/qbluetoothuuid.h", "include/QtBluetooth/qlowenergyadvertisingdata.h", "include/QtBluetooth/qlowenergyadvertisingparameters.h", "include/QtBluetooth/qlowenergycharacteristic.h", "include/QtBluetooth/qlowenergycharacteristicdata.h", "include/QtBluetooth/qlowenergyconnectionparameters.h", "include/QtBluetooth/qlowenergycontroller.h", "include/QtBluetooth/qlowenergydescriptor.h", "include/QtBluetooth/qlowenergydescriptordata.h", "include/QtBluetooth/qlowenergyservice.h", "include/QtBluetooth/qlowenergyservicedata.h", "include/QtBluetooth/qtbluetooth-config.h", "include/QtBluetooth/qtbluetoothexports.h", "include/QtBluetooth/qtbluetoothglobal.h", "include/QtBluetooth/qtbluetoothversion.h", "include/QtConnectivity/6.10.2/QtConnectivity/private/qtconnectivity-config_p.h", "include/QtConnectivity/QtConnectivity", "include/QtConnectivity/QtConnectivityDepends", "include/QtConnectivity/QtConnectivityVersion", "include/QtConnectivity/qtconnectivity-config.h", "include/QtConnectivity/qtconnectivityversion.h", "include/QtNfc/6.10.2/QtNfc/private/qapduutils_p.h", "include/QtNfc/6.10.2/QtNfc/private/qndefaccessfsm_p.h", "include/QtNfc/6.10.2/QtNfc/private/qndefnfcsmartposterrecord_p.h", "include/QtNfc/6.10.2/QtNfc/private/qndefrecord_p.h", "include/QtNfc/6.10.2/QtNfc/private/qnearfieldmanager_p.h", "include/QtNfc/6.10.2/QtNfc/private/qnearfieldmanager_pcsc_p.h", "include/QtNfc/6.10.2/QtNfc/private/qnearfieldtarget_p.h", "include/QtNfc/6.10.2/QtNfc/private/qnearfieldtarget_pcsc_p.h", "include/QtNfc/6.10.2/QtNfc/private/qnfctagtype4ndeffsm_p.h", "include/QtNfc/6.10.2/QtNfc/private/qpcsc_p.h", "include/QtNfc/6.10.2/QtNfc/private/qpcsccard_p.h", "include/QtNfc/6.10.2/QtNfc/private/qpcscmanager_p.h", "include/QtNfc/6.10.2/QtNfc/private/qpcscslot_p.h", "include/QtNfc/6.10.2/QtNfc/private/qtnfc-config_p.h", "include/QtNfc/6.10.2/QtNfc/private/qtnfcglobal_p.h", "include/QtNfc/QNdefFilter", "include/QtNfc/QNdefMessage", "include/QtNfc/QNdefNfcIconRecord", "include/QtNfc/QNdefNfcSmartPosterRecord", "include/QtNfc/QNdefNfcTextRecord", "include/QtNfc/QNdefNfcUriRecord", "include/QtNfc/QNdefRecord", "include/QtNfc/QNearFieldManager", "include/QtNfc/QNearFieldTarget", "include/QtNfc/QtNfc", "include/QtNfc/QtNfcDepends", "include/QtNfc/QtNfcVersion", "include/QtNfc/qndeffilter.h", "include/QtNfc/qndefmessage.h", "include/QtNfc/qndefnfcsmartposterrecord.h", "include/QtNfc/qndefnfctextrecord.h", "include/QtNfc/qndefnfcurirecord.h", "include/QtNfc/qndefrecord.h", "include/QtNfc/qnearfieldmanager.h", "include/QtNfc/qnearfieldtarget.h", "include/QtNfc/qtnfc-config.h", "include/QtNfc/qtnfcexports.h", "include/QtNfc/qtnfcglobal.h", "include/QtNfc/qtnfcversion.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "qtconnectivity"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/pkgconfig/Qt6Bluetooth.pc", "lib/pkgconfig/Qt6Nfc.pc", "include/QtConnectivity/6.10.2/QtConnectivity/private/qtconnectivity-config_p.h", "include/QtConnectivity/QtConnectivity", "include/QtConnectivity/QtConnectivityDepends", "include/QtConnectivity/QtConnectivityVersion", "include/QtConnectivity/qtconnectivity-config.h", "include/QtConnectivity/qtconnectivityversion.h"]
+  [steps.when]
+    os = ["darwin"]

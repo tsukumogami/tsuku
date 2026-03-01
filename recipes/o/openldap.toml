@@ -1,0 +1,35 @@
+[metadata]
+  name = "openldap"
+  description = "Open source suite of directory software"
+  homepage = "https://www.openldap.org/software/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["openssl"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = ""
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "openldap"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/ldapadd", "bin/ldapcompare", "bin/ldapdelete", "bin/ldapexop", "bin/ldapmodify", "bin/ldapmodrdn", "bin/ldappasswd", "bin/ldapsearch", "bin/ldapurl", "bin/ldapvc", "bin/ldapwhoami"]
+
+[verify]
+  command = "ldapadd --version"
+  pattern = ""

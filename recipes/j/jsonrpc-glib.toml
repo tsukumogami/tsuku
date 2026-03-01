@@ -1,0 +1,51 @@
+[metadata]
+  name = "jsonrpc-glib"
+  description = "GNOME library to communicate with JSON-RPC based peers"
+  homepage = "https://gitlab.gnome.org/GNOME/jsonrpc-glib"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["glib", "json-glib", "gettext"]
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "jsonrpc-glib"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "jsonrpc-glib"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libjsonrpc-glib-1.0.so", "lib/libjsonrpc-glib-1.0.so.1", "lib/libjsonrpc-glib-1.0.so.1.4400.2", "lib/pkgconfig/jsonrpc-glib-1.0.pc", "include/jsonrpc-glib-1.0/jsonrpc-client.h", "include/jsonrpc-glib-1.0/jsonrpc-glib.h", "include/jsonrpc-glib-1.0/jsonrpc-input-stream-private.h", "include/jsonrpc-glib-1.0/jsonrpc-input-stream.h", "include/jsonrpc-glib-1.0/jsonrpc-message.h", "include/jsonrpc-glib-1.0/jsonrpc-output-stream.h", "include/jsonrpc-glib-1.0/jsonrpc-server.h", "include/jsonrpc-glib-1.0/jsonrpc-version-macros.h", "include/jsonrpc-glib-1.0/jsonrpc-version.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "jsonrpc-glib"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libjsonrpc-glib-1.0.1.dylib", "lib/libjsonrpc-glib-1.0.dylib", "lib/pkgconfig/jsonrpc-glib-1.0.pc", "include/jsonrpc-glib-1.0/jsonrpc-client.h", "include/jsonrpc-glib-1.0/jsonrpc-glib.h", "include/jsonrpc-glib-1.0/jsonrpc-input-stream-private.h", "include/jsonrpc-glib-1.0/jsonrpc-input-stream.h", "include/jsonrpc-glib-1.0/jsonrpc-message.h", "include/jsonrpc-glib-1.0/jsonrpc-output-stream.h", "include/jsonrpc-glib-1.0/jsonrpc-server.h", "include/jsonrpc-glib-1.0/jsonrpc-version-macros.h", "include/jsonrpc-glib-1.0/jsonrpc-version.h"]
+  [steps.when]
+    os = ["darwin"]

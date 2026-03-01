@@ -1,0 +1,50 @@
+[metadata]
+  name = "glfw"
+  description = "Multi-platform library for OpenGL applications"
+  homepage = "https://www.glfw.org/"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "glfw"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "glfw"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libglfw.so", "lib/libglfw.so.3", "lib/libglfw.so.3.4", "lib/pkgconfig/glfw3.pc", "include/GLFW/glfw3.h", "include/GLFW/glfw3native.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "glfw"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libglfw.3.4.dylib", "lib/libglfw.3.dylib", "lib/libglfw.dylib", "lib/pkgconfig/glfw3.pc", "include/GLFW/glfw3.h", "include/GLFW/glfw3native.h"]
+  [steps.when]
+    os = ["darwin"]

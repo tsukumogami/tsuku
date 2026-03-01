@@ -1,0 +1,50 @@
+[metadata]
+  name = "jsoncpp"
+  description = "Library for interacting with JSON"
+  homepage = "https://github.com/open-source-parsers/jsoncpp"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "jsoncpp"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "jsoncpp"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libjsoncpp.so", "lib/libjsoncpp.so.26", "lib/pkgconfig/jsoncpp.pc", "include/json/allocator.h", "include/json/assertions.h", "include/json/config.h", "include/json/forwards.h", "include/json/json.h", "include/json/json_features.h", "include/json/reader.h", "include/json/value.h", "include/json/version.h", "include/json/writer.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "jsoncpp"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libjsoncpp.26.dylib", "lib/libjsoncpp.dylib", "lib/pkgconfig/jsoncpp.pc", "include/json/allocator.h", "include/json/assertions.h", "include/json/config.h", "include/json/forwards.h", "include/json/json.h", "include/json/json_features.h", "include/json/reader.h", "include/json/value.h", "include/json/version.h", "include/json/writer.h"]
+  [steps.when]
+    os = ["darwin"]

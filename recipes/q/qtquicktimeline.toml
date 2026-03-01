@@ -1,0 +1,51 @@
+[metadata]
+  name = "qtquicktimeline"
+  description = "Enables keyframe-based animations and parameterization"
+  homepage = "https://www.qt.io/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["qtbase", "qtdeclarative"]
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "qtquicktimeline"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "qtquicktimeline"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libQt6QuickTimeline.so", "lib/libQt6QuickTimeline.so.6", "lib/libQt6QuickTimeline.so.6.10.2", "lib/libQt6QuickTimelineBlendTrees.so", "lib/libQt6QuickTimelineBlendTrees.so.6", "lib/libQt6QuickTimelineBlendTrees.so.6.10.2", "lib/pkgconfig/Qt6QuickTimeline.pc", "lib/pkgconfig/Qt6QuickTimelineBlendTrees.pc", "include/QtQuickTimeline/6.10.2/QtQuickTimeline/private/qquickkeyframe_p.h", "include/QtQuickTimeline/6.10.2/QtQuickTimeline/private/qquickkeyframedatautils_p.h", "include/QtQuickTimeline/6.10.2/QtQuickTimeline/private/qquicktimeline_p.h", "include/QtQuickTimeline/6.10.2/QtQuickTimeline/private/qquicktimelineanimation_p.h", "include/QtQuickTimeline/6.10.2/QtQuickTimeline/private/qtquicktimelineglobal_p.h", "include/QtQuickTimeline/QtQuickTimeline", "include/QtQuickTimeline/QtQuickTimelineDepends", "include/QtQuickTimeline/QtQuickTimelineVersion", "include/QtQuickTimeline/qtquicktimelineexports.h", "include/QtQuickTimeline/qtquicktimelineglobal.h", "include/QtQuickTimeline/qtquicktimelineversion.h", "include/QtQuickTimelineBlendTrees/6.10.2/QtQuickTimelineBlendTrees/private/qblendanimationnode_p.h", "include/QtQuickTimelineBlendTrees/6.10.2/QtQuickTimelineBlendTrees/private/qblendtreenode_p.h", "include/QtQuickTimelineBlendTrees/6.10.2/QtQuickTimelineBlendTrees/private/qtimelineanimationnode_p.h", "include/QtQuickTimelineBlendTrees/6.10.2/QtQuickTimelineBlendTrees/private/qtquicktimelineblendtreesglobal_p.h", "include/QtQuickTimelineBlendTrees/QtQuickTimelineBlendTrees", "include/QtQuickTimelineBlendTrees/QtQuickTimelineBlendTreesDepends", "include/QtQuickTimelineBlendTrees/QtQuickTimelineBlendTreesVersion", "include/QtQuickTimelineBlendTrees/qtquicktimelineblendtreesexports.h", "include/QtQuickTimelineBlendTrees/qtquicktimelineblendtreesglobal.h", "include/QtQuickTimelineBlendTrees/qtquicktimelineblendtreesversion.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "qtquicktimeline"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/pkgconfig/Qt6QuickTimeline.pc", "lib/pkgconfig/Qt6QuickTimelineBlendTrees.pc"]
+  [steps.when]
+    os = ["darwin"]

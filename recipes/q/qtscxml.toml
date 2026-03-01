@@ -1,0 +1,51 @@
+[metadata]
+  name = "qtscxml"
+  description = "Provides functionality to create state machines from SCXML files"
+  homepage = "https://www.qt.io/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["qtbase", "qtdeclarative"]
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "qtscxml"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "qtscxml"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libQt6Scxml.so", "lib/libQt6Scxml.so.6", "lib/libQt6Scxml.so.6.10.2", "lib/libQt6ScxmlQml.so", "lib/libQt6ScxmlQml.so.6", "lib/libQt6ScxmlQml.so.6.10.2", "lib/libQt6StateMachine.so", "lib/libQt6StateMachine.so.6", "lib/libQt6StateMachine.so.6.10.2", "lib/libQt6StateMachineQml.so", "lib/libQt6StateMachineQml.so.6", "lib/libQt6StateMachineQml.so.6.10.2", "lib/pkgconfig/Qt6Scxml.pc", "lib/pkgconfig/Qt6ScxmlQml.pc", "lib/pkgconfig/Qt6StateMachine.pc", "lib/pkgconfig/Qt6StateMachineQml.pc", "include/QtScxml/6.10.2/QtScxml/private/qscxmlcompiler_p.h", "include/QtScxml/6.10.2/QtScxml/private/qscxmlcppdatamodel_p.h", "include/QtScxml/6.10.2/QtScxml/private/qscxmldatamodel_p.h", "include/QtScxml/6.10.2/QtScxml/private/qscxmldatamodelplugin_p.h", "include/QtScxml/6.10.2/QtScxml/private/qscxmlevent_p.h", "include/QtScxml/6.10.2/QtScxml/private/qscxmlexecutablecontent_p.h", "include/QtScxml/6.10.2/QtScxml/private/qscxmlglobals_p.h", "include/QtScxml/6.10.2/QtScxml/private/qscxmlinvokableservice_p.h", "include/QtScxml/6.10.2/QtScxml/private/qscxmlstatemachine_p.h", "include/QtScxml/6.10.2/QtScxml/private/qscxmlstatemachineinfo_p.h", "include/QtScxml/6.10.2/QtScxml/private/qscxmltabledata_p.h", "include/QtScxml/QScxmlCompiler", "include/QtScxml/QScxmlCppDataModel", "include/QtScxml/QScxmlDataModel", "include/QtScxml/QScxmlDynamicScxmlServiceFactory", "include/QtScxml/QScxmlError", "include/QtScxml/QScxmlEvent", "include/QtScxml/QScxmlInvokableService", "include/QtScxml/QScxmlInvokableServiceFactory", "include/QtScxml/QScxmlNullDataModel", "include/QtScxml/QScxmlStateMachine", "include/QtScxml/QScxmlStaticScxmlServiceFactory", "include/QtScxml/QScxmlTableData", "include/QtScxml/QtScxml", "include/QtScxml/QtScxmlDepends", "include/QtScxml/QtScxmlVersion", "include/QtScxml/qscxmlcompiler.h", "include/QtScxml/qscxmlcppdatamodel.h", "include/QtScxml/qscxmldatamodel.h", "include/QtScxml/qscxmlerror.h", "include/QtScxml/qscxmlevent.h", "include/QtScxml/qscxmlexecutablecontent.h", "include/QtScxml/qscxmlglobals.h", "include/QtScxml/qscxmlinvokableservice.h", "include/QtScxml/qscxmlnulldatamodel.h", "include/QtScxml/qscxmlstatemachine.h", "include/QtScxml/qscxmltabledata.h", "include/QtScxml/qtscxmlexports.h", "include/QtScxml/qtscxmlversion.h", "include/QtScxmlGlobal/6.10.2/QtScxmlGlobal/private/qtscxmlglobal-config_p.h", "include/QtScxmlGlobal/QtScxmlGlobal", "include/QtScxmlGlobal/QtScxmlGlobalDepends", "include/QtScxmlGlobal/QtScxmlGlobalVersion", "include/QtScxmlGlobal/qtscxmlglobal-config.h", "include/QtScxmlGlobal/qtscxmlglobalversion.h", "include/QtScxmlQml/6.10.2/QtScxmlQml/private/eventconnection_p.h", "include/QtScxmlQml/6.10.2/QtScxmlQml/private/invokedservices_p.h", "include/QtScxmlQml/6.10.2/QtScxmlQml/private/qscxmlqmlglobals_p.h", "include/QtScxmlQml/6.10.2/QtScxmlQml/private/statemachineextended_p.h", "include/QtScxmlQml/6.10.2/QtScxmlQml/private/statemachineloader_p.h", "include/QtScxmlQml/QtScxmlQml", "include/QtScxmlQml/QtScxmlQmlDepends", "include/QtScxmlQml/QtScxmlQmlVersion", "include/QtScxmlQml/qtscxmlqmlexports.h", "include/QtScxmlQml/qtscxmlqmlversion.h", "include/QtStateMachine/6.10.2/QtStateMachine/private/qabstractstate_p.h", "include/QtStateMachine/6.10.2/QtStateMachine/private/qabstracttransition_p.h", "include/QtStateMachine/6.10.2/QtStateMachine/private/qbasickeyeventtransition_p.h", "include/QtStateMachine/6.10.2/QtStateMachine/private/qbasicmouseeventtransition_p.h", "include/QtStateMachine/6.10.2/QtStateMachine/private/qeventtransition_p.h", "include/QtStateMachine/6.10.2/QtStateMachine/private/qfinalstate_p.h", "include/QtStateMachine/6.10.2/QtStateMachine/private/qhistorystate_p.h", "include/QtStateMachine/6.10.2/QtStateMachine/private/qsignaleventgenerator_p.h", "include/QtStateMachine/6.10.2/QtStateMachine/private/qsignaltransition_p.h", "include/QtStateMachine/6.10.2/QtStateMachine/private/qstate_p.h", "include/QtStateMachine/6.10.2/QtStateMachine/private/qstatemachine_p.h", "include/QtStateMachine/6.10.2/QtStateMachine/private/qstatemachineglobal_p.h", "include/QtStateMachine/QAbstractState", "include/QtStateMachine/QAbstractTransition", "include/QtStateMachine/QEventTransition", "include/QtStateMachine/QFinalState", "include/QtStateMachine/QHistoryState", "include/QtStateMachine/QKeyEventTransition", "include/QtStateMachine/QMouseEventTransition", "include/QtStateMachine/QSignalTransition", "include/QtStateMachine/QState", "include/QtStateMachine/QStateMachine", "include/QtStateMachine/QtStateMachine", "include/QtStateMachine/QtStateMachineDepends", "include/QtStateMachine/QtStateMachineVersion", "include/QtStateMachine/qabstractstate.h", "include/QtStateMachine/qabstracttransition.h", "include/QtStateMachine/qeventtransition.h", "include/QtStateMachine/qfinalstate.h", "include/QtStateMachine/qhistorystate.h", "include/QtStateMachine/qkeyeventtransition.h", "include/QtStateMachine/qmouseeventtransition.h", "include/QtStateMachine/qsignaltransition.h", "include/QtStateMachine/qstate.h", "include/QtStateMachine/qstatemachine.h", "include/QtStateMachine/qstatemachineglobal.h", "include/QtStateMachine/qtstatemachineexports.h", "include/QtStateMachine/qtstatemachineversion.h", "include/QtStateMachineQml/6.10.2/QtStateMachineQml/private/childrenprivate_p.h", "include/QtStateMachineQml/6.10.2/QtStateMachineQml/private/finalstate_p.h", "include/QtStateMachineQml/6.10.2/QtStateMachineQml/private/qstatemachineqmlglobals_p.h", "include/QtStateMachineQml/6.10.2/QtStateMachineQml/private/signaltransition_p.h", "include/QtStateMachineQml/6.10.2/QtStateMachineQml/private/state_p.h", "include/QtStateMachineQml/6.10.2/QtStateMachineQml/private/statemachine_p.h", "include/QtStateMachineQml/6.10.2/QtStateMachineQml/private/statemachineforeign_p.h", "include/QtStateMachineQml/6.10.2/QtStateMachineQml/private/timeouttransition_p.h", "include/QtStateMachineQml/QtStateMachineQml", "include/QtStateMachineQml/QtStateMachineQmlDepends", "include/QtStateMachineQml/QtStateMachineQmlVersion", "include/QtStateMachineQml/qtstatemachineqmlexports.h", "include/QtStateMachineQml/qtstatemachineqmlversion.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "qtscxml"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/pkgconfig/Qt6Scxml.pc", "lib/pkgconfig/Qt6ScxmlQml.pc", "lib/pkgconfig/Qt6StateMachine.pc", "lib/pkgconfig/Qt6StateMachineQml.pc", "include/QtScxmlGlobal/6.10.2/QtScxmlGlobal/private/qtscxmlglobal-config_p.h", "include/QtScxmlGlobal/QtScxmlGlobal", "include/QtScxmlGlobal/QtScxmlGlobalDepends", "include/QtScxmlGlobal/QtScxmlGlobalVersion", "include/QtScxmlGlobal/qtscxmlglobal-config.h", "include/QtScxmlGlobal/qtscxmlglobalversion.h"]
+  [steps.when]
+    os = ["darwin"]

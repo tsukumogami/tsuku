@@ -1,0 +1,51 @@
+[metadata]
+  name = "libsidplayfp"
+  description = "Library to play Commodore 64 music"
+  homepage = "https://github.com/libsidplayfp/libsidplayfp"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["libgcrypt"]
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "libsidplayfp"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "libsidplayfp"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libsidplayfp.a", "lib/libsidplayfp.so", "lib/libsidplayfp.so.6", "lib/libsidplayfp.so.6.7.45", "lib/libstilview.a", "lib/libstilview.so", "lib/libstilview.so.0", "lib/libstilview.so.0.0.7", "lib/pkgconfig/libsidplayfp.pc", "lib/pkgconfig/libstilview.pc", "include/sidplayfp/SidConfig.h", "include/sidplayfp/SidDatabase.h", "include/sidplayfp/SidInfo.h", "include/sidplayfp/SidTune.h", "include/sidplayfp/SidTuneInfo.h", "include/sidplayfp/builders/resid.h", "include/sidplayfp/builders/residfp.h", "include/sidplayfp/sidbuilder.h", "include/sidplayfp/siddefs.h", "include/sidplayfp/sidplayfp.h", "include/sidplayfp/sidversion.h", "include/stilview/stil.h", "include/stilview/stildefs.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "libsidplayfp"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libsidplayfp.6.dylib", "lib/libsidplayfp.a", "lib/libsidplayfp.dylib", "lib/libstilview.0.dylib", "lib/libstilview.a", "lib/libstilview.dylib", "lib/pkgconfig/libsidplayfp.pc", "lib/pkgconfig/libstilview.pc", "include/sidplayfp/SidConfig.h", "include/sidplayfp/SidDatabase.h", "include/sidplayfp/SidInfo.h", "include/sidplayfp/SidTune.h", "include/sidplayfp/SidTuneInfo.h", "include/sidplayfp/builders/resid.h", "include/sidplayfp/builders/residfp.h", "include/sidplayfp/sidbuilder.h", "include/sidplayfp/siddefs.h", "include/sidplayfp/sidplayfp.h", "include/sidplayfp/sidversion.h", "include/stilview/stil.h", "include/stilview/stildefs.h"]
+  [steps.when]
+    os = ["darwin"]

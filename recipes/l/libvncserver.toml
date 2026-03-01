@@ -1,0 +1,51 @@
+[metadata]
+  name = "libvncserver"
+  description = "VNC server and client libraries"
+  homepage = "https://libvnc.github.io"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["jpeg-turbo", "libgcrypt", "libpng", "openssl"]
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "libvncserver"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "libvncserver"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libvncclient.so", "lib/libvncclient.so.0.9.15", "lib/libvncclient.so.1", "lib/libvncserver.so", "lib/libvncserver.so.0.9.15", "lib/libvncserver.so.1", "lib/pkgconfig/libvncclient.pc", "lib/pkgconfig/libvncserver.pc", "include/rfb/keysym.h", "include/rfb/rfb.h", "include/rfb/rfbclient.h", "include/rfb/rfbconfig.h", "include/rfb/rfbproto.h", "include/rfb/rfbregion.h", "include/rfb/threading.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "libvncserver"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libvncclient.0.9.15.dylib", "lib/libvncclient.1.dylib", "lib/libvncclient.dylib", "lib/libvncserver.0.9.15.dylib", "lib/libvncserver.1.dylib", "lib/libvncserver.dylib", "lib/pkgconfig/libvncclient.pc", "lib/pkgconfig/libvncserver.pc", "include/rfb/keysym.h", "include/rfb/rfb.h", "include/rfb/rfbclient.h", "include/rfb/rfbconfig.h", "include/rfb/rfbproto.h", "include/rfb/rfbregion.h", "include/rfb/threading.h"]
+  [steps.when]
+    os = ["darwin"]

@@ -1,0 +1,50 @@
+[metadata]
+  name = "opencore-amr"
+  description = "Audio codecs extracted from Android open source project"
+  homepage = "https://opencore-amr.sourceforge.net/"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "opencore-amr"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "opencore-amr"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libopencore-amrnb.a", "lib/libopencore-amrnb.so", "lib/libopencore-amrnb.so.0", "lib/libopencore-amrnb.so.0.0.5", "lib/libopencore-amrwb.a", "lib/libopencore-amrwb.so", "lib/libopencore-amrwb.so.0", "lib/libopencore-amrwb.so.0.0.5", "lib/pkgconfig/opencore-amrnb.pc", "lib/pkgconfig/opencore-amrwb.pc", "include/opencore-amrnb/interf_dec.h", "include/opencore-amrnb/interf_enc.h", "include/opencore-amrwb/dec_if.h", "include/opencore-amrwb/if_rom.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "opencore-amr"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libopencore-amrnb.0.dylib", "lib/libopencore-amrnb.a", "lib/libopencore-amrnb.dylib", "lib/libopencore-amrwb.0.dylib", "lib/libopencore-amrwb.a", "lib/libopencore-amrwb.dylib", "lib/pkgconfig/opencore-amrnb.pc", "lib/pkgconfig/opencore-amrwb.pc", "include/opencore-amrnb/interf_dec.h", "include/opencore-amrnb/interf_enc.h", "include/opencore-amrwb/dec_if.h", "include/opencore-amrwb/if_rom.h"]
+  [steps.when]
+    os = ["darwin"]

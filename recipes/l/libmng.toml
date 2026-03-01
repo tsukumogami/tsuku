@@ -1,0 +1,32 @@
+[metadata]
+  name = "libmng"
+  description = "MNG/JNG reference library"
+  homepage = "https://sourceforge.net/projects/libmng/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["jpeg-turbo", "little-cms2"]
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "libmng"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "libmng"
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libmng.a", "lib/libmng.so", "lib/libmng.so.2", "lib/libmng.so.2.0.2", "lib/pkgconfig/libmng.pc", "include/libmng.h", "include/libmng_conf.h", "include/libmng_types.h"]

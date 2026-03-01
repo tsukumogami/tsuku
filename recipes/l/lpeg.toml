@@ -1,0 +1,31 @@
+[metadata]
+  name = "lpeg"
+  description = "Parsing Expression Grammars For Lua"
+  homepage = "https://www.inf.puc-rio.br/~roberto/lpeg/"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "lpeg"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "lpeg"
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/lua/5.1/lpeg.so", "lib/lua/5.4/lpeg.so"]

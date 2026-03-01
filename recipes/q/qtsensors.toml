@@ -1,0 +1,51 @@
+[metadata]
+  name = "qtsensors"
+  description = "Provides access to sensors via QML and C++ interfaces"
+  homepage = "https://www.qt.io/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["qtbase", "qtdeclarative"]
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "qtsensors"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "qtsensors"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libQt6Sensors.so", "lib/libQt6Sensors.so.6", "lib/libQt6Sensors.so.6.10.2", "lib/libQt6SensorsQuick.so", "lib/libQt6SensorsQuick.so.6", "lib/libQt6SensorsQuick.so.6.10.2", "lib/pkgconfig/Qt6Sensors.pc", "lib/pkgconfig/Qt6SensorsQuick.pc", "include/QtSensors/6.10.2/QtSensors/private/qaccelerometer_p.h", "include/QtSensors/6.10.2/QtSensors/private/qambientlightsensor_p.h", "include/QtSensors/6.10.2/QtSensors/private/qambienttemperaturesensor_p.h", "include/QtSensors/6.10.2/QtSensors/private/qcompass_p.h", "include/QtSensors/6.10.2/QtSensors/private/qgyroscope_p.h", "include/QtSensors/6.10.2/QtSensors/private/qhumiditysensor_p.h", "include/QtSensors/6.10.2/QtSensors/private/qirproximitysensor_p.h", "include/QtSensors/6.10.2/QtSensors/private/qlidsensor_p.h", "include/QtSensors/6.10.2/QtSensors/private/qlightsensor_p.h", "include/QtSensors/6.10.2/QtSensors/private/qmagnetometer_p.h", "include/QtSensors/6.10.2/QtSensors/private/qorientationsensor_p.h", "include/QtSensors/6.10.2/QtSensors/private/qpressuresensor_p.h", "include/QtSensors/6.10.2/QtSensors/private/qproximitysensor_p.h", "include/QtSensors/6.10.2/QtSensors/private/qrotationsensor_p.h", "include/QtSensors/6.10.2/QtSensors/private/qsensor_p.h", "include/QtSensors/6.10.2/QtSensors/private/qtapsensor_p.h", "include/QtSensors/6.10.2/QtSensors/private/qtiltsensor_p.h", "include/QtSensors/6.10.2/QtSensors/private/qtsensors-config_p.h", "include/QtSensors/6.10.2/QtSensors/private/sensorlog_p.h", "include/QtSensors/QAccelerometer", "include/QtSensors/QAccelerometerFilter", "include/QtSensors/QAccelerometerReading", "include/QtSensors/QAmbientLightFilter", "include/QtSensors/QAmbientLightReading", "include/QtSensors/QAmbientLightSensor", "include/QtSensors/QAmbientTemperatureFilter", "include/QtSensors/QAmbientTemperatureReading", "include/QtSensors/QAmbientTemperatureSensor", "include/QtSensors/QCompass", "include/QtSensors/QCompassFilter", "include/QtSensors/QCompassReading", "include/QtSensors/QGyroscope", "include/QtSensors/QGyroscopeFilter", "include/QtSensors/QGyroscopeReading", "include/QtSensors/QHumidityFilter", "include/QtSensors/QHumidityReading", "include/QtSensors/QHumiditySensor", "include/QtSensors/QIRProximityFilter", "include/QtSensors/QIRProximityReading", "include/QtSensors/QIRProximitySensor", "include/QtSensors/QLidFilter", "include/QtSensors/QLidReading", "include/QtSensors/QLidSensor", "include/QtSensors/QLightFilter", "include/QtSensors/QLightReading", "include/QtSensors/QLightSensor", "include/QtSensors/QMagnetometer", "include/QtSensors/QMagnetometerFilter", "include/QtSensors/QMagnetometerReading", "include/QtSensors/QOrientationFilter", "include/QtSensors/QOrientationReading", "include/QtSensors/QOrientationSensor", "include/QtSensors/QPressureFilter", "include/QtSensors/QPressureReading", "include/QtSensors/QPressureSensor", "include/QtSensors/QProximityFilter", "include/QtSensors/QProximityReading", "include/QtSensors/QProximitySensor", "include/QtSensors/QRotationFilter", "include/QtSensors/QRotationReading", "include/QtSensors/QRotationSensor", "include/QtSensors/QSensor", "include/QtSensors/QSensorBackend", "include/QtSensors/QSensorBackendFactory", "include/QtSensors/QSensorChangesInterface", "include/QtSensors/QSensorFilter", "include/QtSensors/QSensorManager", "include/QtSensors/QSensorPluginInterface", "include/QtSensors/QSensorReading", "include/QtSensors/QTapFilter", "include/QtSensors/QTapReading", "include/QtSensors/QTapSensor", "include/QtSensors/QTiltFilter", "include/QtSensors/QTiltReading", "include/QtSensors/QTiltSensor", "include/QtSensors/QtSensors", "include/QtSensors/QtSensorsDepends", "include/QtSensors/QtSensorsVersion", "include/QtSensors/qaccelerometer.h", "include/QtSensors/qambientlightsensor.h", "include/QtSensors/qambienttemperaturesensor.h", "include/QtSensors/qcompass.h", "include/QtSensors/qgyroscope.h", "include/QtSensors/qhumiditysensor.h", "include/QtSensors/qirproximitysensor.h", "include/QtSensors/qlidsensor.h", "include/QtSensors/qlightsensor.h", "include/QtSensors/qmagnetometer.h", "include/QtSensors/qorientationsensor.h", "include/QtSensors/qpressuresensor.h", "include/QtSensors/qproximitysensor.h", "include/QtSensors/qrotationsensor.h", "include/QtSensors/qsensor.h", "include/QtSensors/qsensorbackend.h", "include/QtSensors/qsensormanager.h", "include/QtSensors/qsensorplugin.h", "include/QtSensors/qsensorsglobal.h", "include/QtSensors/qtapsensor.h", "include/QtSensors/qtiltsensor.h", "include/QtSensors/qtsensors-config.h", "include/QtSensors/qtsensorsexports.h", "include/QtSensors/qtsensorsversion.h", "include/QtSensorsQuick/6.10.2/QtSensorsQuick/private/qmlaccelerometer_p.h", "include/QtSensorsQuick/6.10.2/QtSensorsQuick/private/qmlambientlightsensor_p.h", "include/QtSensorsQuick/6.10.2/QtSensorsQuick/private/qmlambienttemperaturesensor_p.h", "include/QtSensorsQuick/6.10.2/QtSensorsQuick/private/qmlcompass_p.h", "include/QtSensorsQuick/6.10.2/QtSensorsQuick/private/qmlgyroscope_p.h", "include/QtSensorsQuick/6.10.2/QtSensorsQuick/private/qmlhumiditysensor_p.h", "include/QtSensorsQuick/6.10.2/QtSensorsQuick/private/qmlirproximitysensor_p.h", "include/QtSensorsQuick/6.10.2/QtSensorsQuick/private/qmllidsensor_p.h", "include/QtSensorsQuick/6.10.2/QtSensorsQuick/private/qmllightsensor_p.h", "include/QtSensorsQuick/6.10.2/QtSensorsQuick/private/qmlmagnetometer_p.h", "include/QtSensorsQuick/6.10.2/QtSensorsQuick/private/qmlorientationsensor_p.h", "include/QtSensorsQuick/6.10.2/QtSensorsQuick/private/qmlpressuresensor_p.h", "include/QtSensorsQuick/6.10.2/QtSensorsQuick/private/qmlproximitysensor_p.h", "include/QtSensorsQuick/6.10.2/QtSensorsQuick/private/qmlrotationsensor_p.h", "include/QtSensorsQuick/6.10.2/QtSensorsQuick/private/qmlsensor_p.h", "include/QtSensorsQuick/6.10.2/QtSensorsQuick/private/qmlsensorglobal_p.h", "include/QtSensorsQuick/6.10.2/QtSensorsQuick/private/qmlsensorrange_p.h", "include/QtSensorsQuick/6.10.2/QtSensorsQuick/private/qmltapsensor_p.h", "include/QtSensorsQuick/6.10.2/QtSensorsQuick/private/qmltiltsensor_p.h", "include/QtSensorsQuick/6.10.2/QtSensorsQuick/private/qsensorsquickglobal_p.h", "include/QtSensorsQuick/QtSensorsQuick", "include/QtSensorsQuick/QtSensorsQuickDepends", "include/QtSensorsQuick/QtSensorsQuickVersion", "include/QtSensorsQuick/qtsensorsquickexports.h", "include/QtSensorsQuick/qtsensorsquickversion.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "qtsensors"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/pkgconfig/Qt6Sensors.pc", "lib/pkgconfig/Qt6SensorsQuick.pc"]
+  [steps.when]
+    os = ["darwin"]

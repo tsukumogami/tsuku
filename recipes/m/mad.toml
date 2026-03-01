@@ -1,0 +1,50 @@
+[metadata]
+  name = "mad"
+  description = "MPEG audio decoder"
+  homepage = "https://codeberg.org/tenacityteam/libmad"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "mad"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "mad"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libmad.so", "lib/libmad.so.0", "lib/libmad.so.0.16.4", "lib/pkgconfig/mad.pc", "include/mad.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "mad"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libmad.0.16.4.dylib", "lib/libmad.0.dylib", "lib/libmad.dylib", "lib/pkgconfig/mad.pc", "include/mad.h"]
+  [steps.when]
+    os = ["darwin"]

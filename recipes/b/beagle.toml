@@ -1,0 +1,50 @@
+[metadata]
+  name = "beagle"
+  description = "Evaluate the likelihood of sequence evolution on trees"
+  homepage = "https://github.com/beagle-dev/beagle-lib"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "beagle"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "beagle"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libhmsbeagle-cpu-sse.so", "lib/libhmsbeagle-cpu-sse.so.40.0.0", "lib/libhmsbeagle-cpu.so", "lib/libhmsbeagle-cpu.so.40.0.0", "lib/libhmsbeagle-jni.so", "lib/libhmsbeagle.so", "lib/libhmsbeagle.so.1", "lib/pkg-config/hmsbeagle-1.pc", "include/libhmsbeagle-1/libhmsbeagle/beagle.h", "include/libhmsbeagle-1/libhmsbeagle/platform.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "beagle"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libhmsbeagle-cpu-sse.40.so", "lib/libhmsbeagle-cpu-sse.so", "lib/libhmsbeagle-cpu.40.so", "lib/libhmsbeagle-cpu.so", "lib/libhmsbeagle-opencl.40.so", "lib/libhmsbeagle-opencl.so", "lib/libhmsbeagle.1.dylib", "lib/libhmsbeagle.dylib", "lib/pkg-config/hmsbeagle-1.pc", "include/libhmsbeagle-1/libhmsbeagle/beagle.h", "include/libhmsbeagle-1/libhmsbeagle/platform.h"]
+  [steps.when]
+    os = ["darwin"]

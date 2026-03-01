@@ -1,0 +1,50 @@
+[metadata]
+  name = "libwapcaplet"
+  description = "String internment library"
+  homepage = "https://www.netsurf-browser.org/projects/libwapcaplet/"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "libwapcaplet"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "libwapcaplet"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libwapcaplet.a", "lib/libwapcaplet.so", "lib/libwapcaplet.so.0", "lib/libwapcaplet.so.0.4.3", "lib/pkgconfig/libwapcaplet.pc", "include/libwapcaplet/libwapcaplet.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "libwapcaplet"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libwapcaplet.0.4.3.dylib", "lib/libwapcaplet.0.dylib", "lib/libwapcaplet.a", "lib/libwapcaplet.dylib", "lib/pkgconfig/libwapcaplet.pc", "include/libwapcaplet/libwapcaplet.h"]
+  [steps.when]
+    os = ["darwin"]

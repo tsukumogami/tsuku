@@ -1,0 +1,51 @@
+[metadata]
+  name = "qtwebsockets"
+  description = "Provides WebSocket communication compliant with RFC 6455"
+  homepage = "https://www.qt.io/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["qtbase", "qtdeclarative"]
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "qtwebsockets"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "qtwebsockets"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libQt6WebSockets.so", "lib/libQt6WebSockets.so.6", "lib/libQt6WebSockets.so.6.10.2", "lib/pkgconfig/Qt6WebSockets.pc", "include/QtWebSockets/6.10.2/QtWebSockets/private/qdefaultmaskgenerator_p.h", "include/QtWebSockets/6.10.2/QtWebSockets/private/qwebsocket_p.h", "include/QtWebSockets/6.10.2/QtWebSockets/private/qwebsocketcorsauthenticator_p.h", "include/QtWebSockets/6.10.2/QtWebSockets/private/qwebsocketdataprocessor_p.h", "include/QtWebSockets/6.10.2/QtWebSockets/private/qwebsocketframe_p.h", "include/QtWebSockets/6.10.2/QtWebSockets/private/qwebsockethandshakeoptions_p.h", "include/QtWebSockets/6.10.2/QtWebSockets/private/qwebsockethandshakerequest_p.h", "include/QtWebSockets/6.10.2/QtWebSockets/private/qwebsockethandshakeresponse_p.h", "include/QtWebSockets/6.10.2/QtWebSockets/private/qwebsocketprotocol_p.h", "include/QtWebSockets/6.10.2/QtWebSockets/private/qwebsocketserver_p.h", "include/QtWebSockets/QMaskGenerator", "include/QtWebSockets/QWebSocket", "include/QtWebSockets/QWebSocketCorsAuthenticator", "include/QtWebSockets/QWebSocketHandshakeOptions", "include/QtWebSockets/QWebSocketProtocol", "include/QtWebSockets/QWebSocketServer", "include/QtWebSockets/QtWebSockets", "include/QtWebSockets/QtWebSocketsDepends", "include/QtWebSockets/QtWebSocketsVersion", "include/QtWebSockets/qmaskgenerator.h", "include/QtWebSockets/qtwebsocketsexports.h", "include/QtWebSockets/qtwebsocketsversion.h", "include/QtWebSockets/qwebsocket.h", "include/QtWebSockets/qwebsocketcorsauthenticator.h", "include/QtWebSockets/qwebsockethandshakeoptions.h", "include/QtWebSockets/qwebsocketprotocol.h", "include/QtWebSockets/qwebsockets_global.h", "include/QtWebSockets/qwebsocketserver.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "qtwebsockets"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/pkgconfig/Qt6WebSockets.pc"]
+  [steps.when]
+    os = ["darwin"]

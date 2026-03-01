@@ -1,0 +1,35 @@
+[metadata]
+  name = "nettle"
+  description = "Low-level cryptographic library"
+  homepage = "https://www.lysator.liu.se/~nisse/nettle/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["gmp"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = ""
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "nettle"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/nettle-hash", "bin/nettle-lfib-stream", "bin/nettle-pbkdf2", "bin/pkcs1-conv", "bin/sexp-conv"]
+
+[verify]
+  command = "nettle-hash --version"
+  pattern = ""

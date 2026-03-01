@@ -1,0 +1,35 @@
+[metadata]
+  name = "healpix"
+  description = "Hierarchical Equal Area isoLatitude Pixelization of a sphere"
+  homepage = "https://healpix.sourceforge.io"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["cfitsio"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = ""
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "healpix"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/alice3", "bin/alm2map_cxx", "bin/anafast_cxx", "bin/calc_powspec", "bin/compute_weights", "bin/hotspots_cxx", "bin/map2tga", "bin/median_filter_cxx", "bin/mult_alm", "bin/needlet_tool", "bin/rotalm_cxx", "bin/smoothing_cxx", "bin/syn_alm_cxx", "bin/udgrade_cxx", "bin/udgrade_harmonic_cxx"]
+
+[verify]
+  command = "alice3 --version"
+  pattern = ""

@@ -1,0 +1,35 @@
+[metadata]
+  name = "net-snmp"
+  description = "Implements SNMP v1, v2c, and v3, using IPv4 and IPv6"
+  homepage = "https://www.net-snmp.org/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["openssl"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = ""
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "net-snmp"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/agentxtrap", "bin/checkbandwidth", "bin/encode_keychange", "bin/fixproc", "bin/ipf-mod.pl", "bin/mib2c", "bin/mib2c-update", "bin/net-snmp-cert", "bin/net-snmp-config", "bin/net-snmp-create-v3-user", "bin/snmp-bridge-mib", "bin/snmpbulkget", "bin/snmpbulkwalk", "bin/snmpcheck", "bin/snmpconf", "bin/snmpdelta", "bin/snmpdf", "bin/snmpget", "bin/snmpgetnext", "bin/snmpinform", "bin/snmpnetstat", "bin/snmpping", "bin/snmpps", "bin/snmpset", "bin/snmpstatus", "bin/snmptable", "bin/snmptest", "bin/snmptranslate", "bin/snmptrap", "bin/snmpusm", "bin/snmpvacm", "bin/snmpwalk", "bin/tkmib", "bin/traptoemail"]
+
+[verify]
+  command = "agentxtrap --version"
+  pattern = ""

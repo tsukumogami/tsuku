@@ -1,0 +1,51 @@
+[metadata]
+  name = "qtwebchannel"
+  description = "Bridges the gap between Qt applications and HTML/JavaScript"
+  homepage = "https://www.qt.io/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["qtbase", "qtdeclarative"]
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "qtwebchannel"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "qtwebchannel"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libQt6WebChannel.so", "lib/libQt6WebChannel.so.6", "lib/libQt6WebChannel.so.6.10.2", "lib/libQt6WebChannelQuick.so", "lib/libQt6WebChannelQuick.so.6", "lib/libQt6WebChannelQuick.so.6.10.2", "lib/pkgconfig/Qt6WebChannel.pc", "lib/pkgconfig/Qt6WebChannelQuick.pc", "include/QtWebChannel/6.10.2/QtWebChannel/private/qmetaobjectpublisher_p.h", "include/QtWebChannel/6.10.2/QtWebChannel/private/qwebchannel_p.h", "include/QtWebChannel/6.10.2/QtWebChannel/private/signalhandler_p.h", "include/QtWebChannel/QWebChannel", "include/QtWebChannel/QWebChannelAbstractTransport", "include/QtWebChannel/QtWebChannel", "include/QtWebChannel/QtWebChannelDepends", "include/QtWebChannel/QtWebChannelVersion", "include/QtWebChannel/qtwebchannelexports.h", "include/QtWebChannel/qtwebchannelversion.h", "include/QtWebChannel/qwebchannel.h", "include/QtWebChannel/qwebchannelabstracttransport.h", "include/QtWebChannel/qwebchannelglobal.h", "include/QtWebChannelQuick/6.10.2/QtWebChannelQuick/private/qqmlwebchannelattached_p.h", "include/QtWebChannelQuick/QQmlWebChannel", "include/QtWebChannelQuick/QtWebChannelQuick", "include/QtWebChannelQuick/QtWebChannelQuickDepends", "include/QtWebChannelQuick/QtWebChannelQuickVersion", "include/QtWebChannelQuick/qqmlwebchannel.h", "include/QtWebChannelQuick/qtwebchannelquickexports.h", "include/QtWebChannelQuick/qtwebchannelquickversion.h", "include/QtWebChannelQuick/qwebchannelquickglobal.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "qtwebchannel"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/pkgconfig/Qt6WebChannel.pc", "lib/pkgconfig/Qt6WebChannelQuick.pc"]
+  [steps.when]
+    os = ["darwin"]

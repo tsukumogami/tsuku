@@ -1,0 +1,51 @@
+[metadata]
+  name = "libmicrohttpd"
+  description = "Light HTTP/1.1 server library"
+  homepage = "https://www.gnu.org/software/libmicrohttpd/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["gnutls"]
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "libmicrohttpd"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "libmicrohttpd"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libmicrohttpd.a", "lib/libmicrohttpd.so", "lib/libmicrohttpd.so.12", "lib/libmicrohttpd.so.12.62.2", "lib/pkgconfig/libmicrohttpd.pc", "include/microhttpd.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "libmicrohttpd"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libmicrohttpd.12.dylib", "lib/libmicrohttpd.a", "lib/libmicrohttpd.dylib", "lib/pkgconfig/libmicrohttpd.pc", "include/microhttpd.h"]
+  [steps.when]
+    os = ["darwin"]

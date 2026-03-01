@@ -1,0 +1,50 @@
+[metadata]
+  name = "lmfit"
+  description = "C library for Levenberg-Marquardt minimization and least-squares fitting"
+  homepage = "https://jugit.fz-juelich.de/mlz/lmfit"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "lmfit"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "lmfit"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/liblmfit.so", "lib/liblmfit.so.10", "lib/liblmfit.so.10.0.0", "lib/pkgconfig/lmfit.pc", "include/lmcurve.h", "include/lmcurve2.h", "include/lmdecls.h", "include/lmfit.hpp", "include/lmmin.h", "include/lmstruct.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "lmfit"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/liblmfit.10.0.0.dylib", "lib/liblmfit.10.dylib", "lib/liblmfit.dylib", "lib/pkgconfig/lmfit.pc", "include/lmcurve.h", "include/lmcurve2.h", "include/lmdecls.h", "include/lmfit.hpp", "include/lmmin.h", "include/lmstruct.h"]
+  [steps.when]
+    os = ["darwin"]

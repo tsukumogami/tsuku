@@ -1,0 +1,35 @@
+[metadata]
+  name = "coreutils"
+  description = "GNU File, Shell, and Text utilities"
+  homepage = "https://www.gnu.org/software/coreutils/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["gmp"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = ""
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "coreutils"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/b2sum", "bin/base32", "bin/basenc", "bin/dir", "bin/dircolors", "bin/factor", "bin/g[", "bin/gb2sum", "bin/gbase32", "bin/gbase64", "bin/gbasename", "bin/gbasenc", "bin/gcat", "bin/gchgrp", "bin/gchmod", "bin/gchown", "bin/gchroot", "bin/gcksum", "bin/gcomm", "bin/gcp", "bin/gcsplit", "bin/gcut", "bin/gdate", "bin/gdd", "bin/gdf", "bin/gdir", "bin/gdircolors", "bin/gdirname", "bin/gdu", "bin/gecho", "bin/genv", "bin/gexpand", "bin/gexpr", "bin/gfactor", "bin/gfalse", "bin/gfmt", "bin/gfold", "bin/ggroups", "bin/ghead", "bin/ghostid", "bin/gid", "bin/ginstall", "bin/gjoin", "bin/glink", "bin/gln", "bin/glogname", "bin/gls", "bin/gmd5sum", "bin/gmkdir", "bin/gmkfifo", "bin/gmknod", "bin/gmktemp", "bin/gmv", "bin/gnice", "bin/gnl", "bin/gnohup", "bin/gnproc", "bin/gnumfmt", "bin/god", "bin/gpaste", "bin/gpathchk", "bin/gpinky", "bin/gpr", "bin/gprintenv", "bin/gprintf", "bin/gptx", "bin/gpwd", "bin/greadlink", "bin/grealpath", "bin/grm", "bin/grmdir", "bin/gseq", "bin/gsha1sum", "bin/gsha224sum", "bin/gsha256sum", "bin/gsha384sum", "bin/gsha512sum", "bin/gshred", "bin/gshuf", "bin/gsleep", "bin/gsort", "bin/gsplit", "bin/gstat", "bin/gstdbuf", "bin/gstty", "bin/gsum", "bin/gsync", "bin/gtac", "bin/gtail", "bin/gtee", "bin/gtest", "bin/gtimeout", "bin/gtouch", "bin/gtr", "bin/gtrue", "bin/gtruncate", "bin/gtsort", "bin/gtty", "bin/guname", "bin/gunexpand", "bin/guniq", "bin/gunlink", "bin/gusers", "bin/gvdir", "bin/gwc", "bin/gwho", "bin/gwhoami", "bin/gyes", "bin/hostid", "bin/md5sum", "bin/nproc", "bin/numfmt", "bin/pinky", "bin/ptx", "bin/realpath", "bin/sha1sum", "bin/sha224sum", "bin/sha256sum", "bin/sha384sum", "bin/sha512sum", "bin/shred", "bin/shuf", "bin/stdbuf", "bin/tac", "bin/timeout", "bin/truncate", "bin/vdir"]
+
+[verify]
+  command = "b2sum --version"
+  pattern = ""

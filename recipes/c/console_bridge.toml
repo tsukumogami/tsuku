@@ -1,0 +1,50 @@
+[metadata]
+  name = "console_bridge"
+  description = "Robot Operating System-independent package for logging"
+  homepage = "https://wiki.ros.org/console_bridge/"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "console_bridge"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "console_bridge"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libconsole_bridge.so", "lib/libconsole_bridge.so.1.0", "lib/pkgconfig/console_bridge.pc", "include/console_bridge/console.h", "include/console_bridge/console_bridge_export.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "console_bridge"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libconsole_bridge.1.0.dylib", "lib/libconsole_bridge.dylib", "lib/pkgconfig/console_bridge.pc", "include/console_bridge/console.h", "include/console_bridge/console_bridge_export.h"]
+  [steps.when]
+    os = ["darwin"]

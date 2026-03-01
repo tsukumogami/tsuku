@@ -1,0 +1,35 @@
+[metadata]
+  name = "krb5"
+  description = "Network authentication protocol"
+  homepage = "https://web.mit.edu/kerberos/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["openssl"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = ""
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "krb5"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/compile_et", "bin/gss-client", "bin/k5srvutil", "bin/kadmin", "bin/kdestroy", "bin/kinit", "bin/klist", "bin/kpasswd", "bin/krb5-config", "bin/ksu", "bin/kswitch", "bin/ktutil", "bin/kvno", "bin/sclient", "bin/sim_client", "bin/uuclient"]
+
+[verify]
+  command = "compile_et --version"
+  pattern = ""

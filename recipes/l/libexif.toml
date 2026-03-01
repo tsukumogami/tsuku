@@ -1,0 +1,51 @@
+[metadata]
+  name = "libexif"
+  description = "EXIF parsing library"
+  homepage = "https://libexif.github.io/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["gettext"]
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "libexif"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "libexif"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libexif.a", "lib/libexif.so", "lib/libexif.so.12", "lib/libexif.so.12.3.4", "lib/pkgconfig/libexif.pc", "include/libexif/_stdint.h", "include/libexif/exif-byte-order.h", "include/libexif/exif-content.h", "include/libexif/exif-data-type.h", "include/libexif/exif-data.h", "include/libexif/exif-entry.h", "include/libexif/exif-format.h", "include/libexif/exif-ifd.h", "include/libexif/exif-loader.h", "include/libexif/exif-log.h", "include/libexif/exif-mem.h", "include/libexif/exif-mnote-data.h", "include/libexif/exif-tag.h", "include/libexif/exif-utils.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "libexif"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libexif.12.dylib", "lib/libexif.a", "lib/libexif.dylib", "lib/pkgconfig/libexif.pc", "include/libexif/_stdint.h", "include/libexif/exif-byte-order.h", "include/libexif/exif-content.h", "include/libexif/exif-data-type.h", "include/libexif/exif-data.h", "include/libexif/exif-entry.h", "include/libexif/exif-format.h", "include/libexif/exif-ifd.h", "include/libexif/exif-loader.h", "include/libexif/exif-log.h", "include/libexif/exif-mem.h", "include/libexif/exif-mnote-data.h", "include/libexif/exif-tag.h", "include/libexif/exif-utils.h"]
+  [steps.when]
+    os = ["darwin"]

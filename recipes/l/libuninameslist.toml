@@ -1,0 +1,50 @@
+[metadata]
+  name = "libuninameslist"
+  description = "Library of Unicode names and annotation data"
+  homepage = "https://github.com/fontforge/libuninameslist"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "libuninameslist"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "libuninameslist"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libuninameslist.a", "lib/libuninameslist.so", "lib/libuninameslist.so.1", "lib/libuninameslist.so.1.0.16", "lib/pkgconfig/libuninameslist.pc", "include/uninameslist.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "libuninameslist"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libuninameslist.1.dylib", "lib/libuninameslist.a", "lib/libuninameslist.dylib", "lib/pkgconfig/libuninameslist.pc", "include/uninameslist.h"]
+  [steps.when]
+    os = ["darwin"]

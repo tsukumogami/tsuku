@@ -1,0 +1,50 @@
+[metadata]
+  name = "libuv"
+  description = "Multi-platform support library with a focus on asynchronous I/O"
+  homepage = "https://libuv.org/"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "libuv"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "libuv"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libuv.a", "lib/libuv.so", "lib/libuv.so.1", "lib/libuv.so.1.0.0", "lib/pkgconfig/libuv-static.pc", "lib/pkgconfig/libuv.pc", "include/uv/aix.h", "include/uv/bsd.h", "include/uv/darwin.h", "include/uv/errno.h", "include/uv/linux.h", "include/uv/os390.h", "include/uv/posix.h", "include/uv/sunos.h", "include/uv/threadpool.h", "include/uv/tree.h", "include/uv/unix.h", "include/uv/version.h", "include/uv/win.h", "include/uv.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "libuv"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libuv.1.0.0.dylib", "lib/libuv.1.dylib", "lib/libuv.a", "lib/libuv.dylib", "lib/pkgconfig/libuv-static.pc", "lib/pkgconfig/libuv.pc", "include/uv/aix.h", "include/uv/bsd.h", "include/uv/darwin.h", "include/uv/errno.h", "include/uv/linux.h", "include/uv/os390.h", "include/uv/posix.h", "include/uv/sunos.h", "include/uv/threadpool.h", "include/uv/tree.h", "include/uv/unix.h", "include/uv/version.h", "include/uv/win.h", "include/uv.h"]
+  [steps.when]
+    os = ["darwin"]

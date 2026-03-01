@@ -1,0 +1,51 @@
+[metadata]
+  name = "libdc1394"
+  description = "Provides API for IEEE 1394 cameras"
+  homepage = "https://damien.douxchamps.net/ieee1394/libdc1394/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["sdl12-compat"]
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "libdc1394"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "libdc1394"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libdc1394.a", "lib/libdc1394.so", "lib/libdc1394.so.26", "lib/libdc1394.so.26.0.1", "lib/pkgconfig/libdc1394-2.pc", "include/dc1394/camera.h", "include/dc1394/capture.h", "include/dc1394/control.h", "include/dc1394/conversions.h", "include/dc1394/dc1394.h", "include/dc1394/format7.h", "include/dc1394/iso.h", "include/dc1394/log.h", "include/dc1394/register.h", "include/dc1394/types.h", "include/dc1394/utils.h", "include/dc1394/vendor/avt.h", "include/dc1394/vendor/basler.h", "include/dc1394/vendor/basler_sff.h", "include/dc1394/vendor/pixelink.h", "include/dc1394/video.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "libdc1394"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libdc1394.26.dylib", "lib/libdc1394.a", "lib/libdc1394.dylib", "lib/pkgconfig/libdc1394-2.pc", "include/dc1394/camera.h", "include/dc1394/capture.h", "include/dc1394/control.h", "include/dc1394/conversions.h", "include/dc1394/dc1394.h", "include/dc1394/format7.h", "include/dc1394/iso.h", "include/dc1394/log.h", "include/dc1394/macosx.h", "include/dc1394/register.h", "include/dc1394/types.h", "include/dc1394/utils.h", "include/dc1394/vendor/avt.h", "include/dc1394/vendor/basler.h", "include/dc1394/vendor/basler_sff.h", "include/dc1394/vendor/pixelink.h", "include/dc1394/video.h"]
+  [steps.when]
+    os = ["darwin"]

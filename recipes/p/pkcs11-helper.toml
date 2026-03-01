@@ -1,0 +1,51 @@
+[metadata]
+  name = "pkcs11-helper"
+  description = "Library to simplify the interaction with PKCS#11"
+  homepage = "https://github.com/OpenSC/OpenSC/wiki/pkcs11-helper"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["openssl"]
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "pkcs11-helper"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "pkcs11-helper"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libpkcs11-helper.a", "lib/libpkcs11-helper.so", "lib/libpkcs11-helper.so.1", "lib/libpkcs11-helper.so.1.0.0", "lib/pkgconfig/libpkcs11-helper-1.pc", "include/pkcs11-helper-1.0/pkcs11.h", "include/pkcs11-helper-1.0/pkcs11h-certificate.h", "include/pkcs11-helper-1.0/pkcs11h-core.h", "include/pkcs11-helper-1.0/pkcs11h-data.h", "include/pkcs11-helper-1.0/pkcs11h-def.h", "include/pkcs11-helper-1.0/pkcs11h-engines.h", "include/pkcs11-helper-1.0/pkcs11h-openssl.h", "include/pkcs11-helper-1.0/pkcs11h-token.h", "include/pkcs11-helper-1.0/pkcs11h-version.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "pkcs11-helper"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libpkcs11-helper.1.dylib", "lib/libpkcs11-helper.a", "lib/libpkcs11-helper.dylib", "lib/pkgconfig/libpkcs11-helper-1.pc", "include/pkcs11-helper-1.0/pkcs11.h", "include/pkcs11-helper-1.0/pkcs11h-certificate.h", "include/pkcs11-helper-1.0/pkcs11h-core.h", "include/pkcs11-helper-1.0/pkcs11h-data.h", "include/pkcs11-helper-1.0/pkcs11h-def.h", "include/pkcs11-helper-1.0/pkcs11h-engines.h", "include/pkcs11-helper-1.0/pkcs11h-openssl.h", "include/pkcs11-helper-1.0/pkcs11h-token.h", "include/pkcs11-helper-1.0/pkcs11h-version.h"]
+  [steps.when]
+    os = ["darwin"]

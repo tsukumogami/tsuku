@@ -1,0 +1,51 @@
+[metadata]
+  name = "qtremoteobjects"
+  description = "Provides APIs for inter-process communication"
+  homepage = "https://www.qt.io/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["qtbase", "qtdeclarative"]
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "qtremoteobjects"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "qtremoteobjects"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libQt6RemoteObjects.so", "lib/libQt6RemoteObjects.so.6", "lib/libQt6RemoteObjects.so.6.10.2", "lib/libQt6RemoteObjectsQml.so", "lib/libQt6RemoteObjectsQml.so.6", "lib/libQt6RemoteObjectsQml.so.6.10.2", "lib/pkgconfig/Qt6RemoteObjects.pc", "lib/pkgconfig/Qt6RemoteObjectsQml.pc", "lib/pkgconfig/Qt6RepParser.pc", "include/QtRemoteObjects/6.10.2/QtRemoteObjects/private/qconnection_local_backend_p.h", "include/QtRemoteObjects/6.10.2/QtRemoteObjects/private/qconnection_tcpip_backend_p.h", "include/QtRemoteObjects/6.10.2/QtRemoteObjects/private/qconnectionfactories_p.h", "include/QtRemoteObjects/6.10.2/QtRemoteObjects/private/qremoteobjectabstractitemmodeladapter_p.h", "include/QtRemoteObjects/6.10.2/QtRemoteObjects/private/qremoteobjectabstractitemmodelreplica_p.h", "include/QtRemoteObjects/6.10.2/QtRemoteObjects/private/qremoteobjectabstractitemmodeltypes_p.h", "include/QtRemoteObjects/6.10.2/QtRemoteObjects/private/qremoteobjectcontainers_p.h", "include/QtRemoteObjects/6.10.2/QtRemoteObjects/private/qremoteobjectnode_p.h", "include/QtRemoteObjects/6.10.2/QtRemoteObjects/private/qremoteobjectpacket_p.h", "include/QtRemoteObjects/6.10.2/QtRemoteObjects/private/qremoteobjectpendingcall_p.h", "include/QtRemoteObjects/6.10.2/QtRemoteObjects/private/qremoteobjectregistrysource_p.h", "include/QtRemoteObjects/6.10.2/QtRemoteObjects/private/qremoteobjectreplica_p.h", "include/QtRemoteObjects/6.10.2/QtRemoteObjects/private/qremoteobjectrepparser_p.h", "include/QtRemoteObjects/6.10.2/QtRemoteObjects/private/qremoteobjectsource_p.h", "include/QtRemoteObjects/6.10.2/QtRemoteObjects/private/qremoteobjectsourceio_p.h", "include/QtRemoteObjects/6.10.2/QtRemoteObjects/private/qremoteobjectstructs_p.h", "include/QtRemoteObjects/6.10.2/QtRemoteObjects/private/qtremoteobjects-config_p.h", "include/QtRemoteObjects/6.10.2/QtRemoteObjects/private/rep_grammar_p.h", "include/QtRemoteObjects/QAbstractItemModelReplica", "include/QtRemoteObjects/QConnectionAbstractServer", "include/QtRemoteObjects/QIntHash", "include/QtRemoteObjects/QRemoteObjectAbstractPersistedStore", "include/QtRemoteObjects/QRemoteObjectDynamicReplica", "include/QtRemoteObjects/QRemoteObjectHost", "include/QtRemoteObjects/QRemoteObjectHostBase", "include/QtRemoteObjects/QRemoteObjectNode", "include/QtRemoteObjects/QRemoteObjectPendingCall", "include/QtRemoteObjects/QRemoteObjectPendingCallWatcher", "include/QtRemoteObjects/QRemoteObjectPendingReply", "include/QtRemoteObjects/QRemoteObjectRegistry", "include/QtRemoteObjects/QRemoteObjectRegistryHost", "include/QtRemoteObjects/QRemoteObjectReplica", "include/QtRemoteObjects/QRemoteObjectSettingsStore", "include/QtRemoteObjects/QRemoteObjectSourceLocation", "include/QtRemoteObjects/QRemoteObjectSourceLocationInfo", "include/QtRemoteObjects/QRemoteObjectSourceLocations", "include/QtRemoteObjects/QtROClientFactory", "include/QtRemoteObjects/QtROClientIoDevice", "include/QtRemoteObjects/QtROIoDeviceBase", "include/QtRemoteObjects/QtROServerFactory", "include/QtRemoteObjects/QtROServerIoDevice", "include/QtRemoteObjects/QtRemoteObjects", "include/QtRemoteObjects/QtRemoteObjectsDepends", "include/QtRemoteObjects/QtRemoteObjectsVersion", "include/QtRemoteObjects/qconnectionfactories.h", "include/QtRemoteObjects/qremoteobjectabstractitemmodelreplica.h", "include/QtRemoteObjects/qremoteobjectdynamicreplica.h", "include/QtRemoteObjects/qremoteobjectnode.h", "include/QtRemoteObjects/qremoteobjectpendingcall.h", "include/QtRemoteObjects/qremoteobjectregistry.h", "include/QtRemoteObjects/qremoteobjectreplica.h", "include/QtRemoteObjects/qremoteobjectsettingsstore.h", "include/QtRemoteObjects/qremoteobjectsource.h", "include/QtRemoteObjects/qtremoteobjectglobal.h", "include/QtRemoteObjects/qtremoteobjects-config.h", "include/QtRemoteObjects/qtremoteobjectsexports.h", "include/QtRemoteObjects/qtremoteobjectsversion.h", "include/QtRemoteObjects/repparser.h", "include/QtRemoteObjectsQml/6.10.2/QtRemoteObjectsQml/private/qremoteobjectsqml_p.h", "include/QtRemoteObjectsQml/QtRemoteObjectsQml", "include/QtRemoteObjectsQml/QtRemoteObjectsQmlDepends", "include/QtRemoteObjectsQml/QtRemoteObjectsQmlVersion", "include/QtRemoteObjectsQml/qtremoteobjectsqmlversion.h", "include/QtRepParser/QtRepParserDepends", "include/QtRepParser/parser.g", "include/QtRepParser/qregexparser.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "qtremoteobjects"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/pkgconfig/Qt6RemoteObjects.pc", "lib/pkgconfig/Qt6RemoteObjectsQml.pc", "lib/pkgconfig/Qt6RepParser.pc", "include/QtRepParser/QtRepParserDepends", "include/QtRepParser/parser.g", "include/QtRepParser/qregexparser.h"]
+  [steps.when]
+    os = ["darwin"]

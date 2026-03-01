@@ -1,0 +1,51 @@
+[metadata]
+  name = "qtsvg"
+  description = "Classes for displaying the contents of SVG files"
+  homepage = "https://www.qt.io/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["qtbase"]
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "qtsvg"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "qtsvg"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libQt6Svg.so", "lib/libQt6Svg.so.6", "lib/libQt6Svg.so.6.10.2", "lib/libQt6SvgWidgets.so", "lib/libQt6SvgWidgets.so.6", "lib/libQt6SvgWidgets.so.6.10.2", "lib/pkgconfig/Qt6Svg.pc", "lib/pkgconfig/Qt6SvgWidgets.pc", "include/QtSvg/6.10.2/QtSvg/private/qsvgabstractanimation_p.h", "include/QtSvg/6.10.2/QtSvg/private/qsvganimate_p.h", "include/QtSvg/6.10.2/QtSvg/private/qsvganimatedproperty_p.h", "include/QtSvg/6.10.2/QtSvg/private/qsvganimator_p.h", "include/QtSvg/6.10.2/QtSvg/private/qsvgcssanimation_p.h", "include/QtSvg/6.10.2/QtSvg/private/qsvgcsshandler_p.h", "include/QtSvg/6.10.2/QtSvg/private/qsvgcssproperties_p.h", "include/QtSvg/6.10.2/QtSvg/private/qsvgfilter_p.h", "include/QtSvg/6.10.2/QtSvg/private/qsvgfont_p.h", "include/QtSvg/6.10.2/QtSvg/private/qsvggraphics_p.h", "include/QtSvg/6.10.2/QtSvg/private/qsvghandler_p.h", "include/QtSvg/6.10.2/QtSvg/private/qsvghelper_p.h", "include/QtSvg/6.10.2/QtSvg/private/qsvgnode_p.h", "include/QtSvg/6.10.2/QtSvg/private/qsvgstructure_p.h", "include/QtSvg/6.10.2/QtSvg/private/qsvgstyle_p.h", "include/QtSvg/6.10.2/QtSvg/private/qsvgstyleselector_p.h", "include/QtSvg/6.10.2/QtSvg/private/qsvgtinydocument_p.h", "include/QtSvg/6.10.2/QtSvg/private/qsvgutils_p.h", "include/QtSvg/6.10.2/QtSvg/private/qsvgvisitor_p.h", "include/QtSvg/6.10.2/QtSvg/private/qtsvgglobal_p.h", "include/QtSvg/QSvgGenerator", "include/QtSvg/QSvgRenderer", "include/QtSvg/QtSvg", "include/QtSvg/QtSvgDepends", "include/QtSvg/QtSvgVersion", "include/QtSvg/qsvggenerator.h", "include/QtSvg/qsvgrenderer.h", "include/QtSvg/qtsvgexports.h", "include/QtSvg/qtsvgglobal.h", "include/QtSvg/qtsvgversion.h", "include/QtSvgWidgets/QGraphicsSvgItem", "include/QtSvgWidgets/QSvgWidget", "include/QtSvgWidgets/QtSvgWidgets", "include/QtSvgWidgets/QtSvgWidgetsDepends", "include/QtSvgWidgets/QtSvgWidgetsVersion", "include/QtSvgWidgets/qgraphicssvgitem.h", "include/QtSvgWidgets/qsvgwidget.h", "include/QtSvgWidgets/qtsvgwidgetsexports.h", "include/QtSvgWidgets/qtsvgwidgetsglobal.h", "include/QtSvgWidgets/qtsvgwidgetsversion.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "qtsvg"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/pkgconfig/Qt6Svg.pc", "lib/pkgconfig/Qt6SvgWidgets.pc"]
+  [steps.when]
+    os = ["darwin"]

@@ -1,0 +1,35 @@
+[metadata]
+  name = "wcslib"
+  description = "Library and utilities for the FITS World Coordinate System"
+  homepage = "https://www.atnf.csiro.au/computing/software/wcs/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["cfitsio"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = ""
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "wcslib"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/HPXcvt", "bin/fitshdr", "bin/sundazel", "bin/tofits", "bin/wcsware"]
+
+[verify]
+  command = "HPXcvt --version"
+  pattern = ""
