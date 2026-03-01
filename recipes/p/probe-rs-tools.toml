@@ -2,29 +2,17 @@
   name = "probe-rs-tools"
   description = "A collection of on chip debugging tools to communicate with microchips."
   homepage = "https://probe.rs"
-  version_format = ""
-  requires_sudo = false
-  tier = 0
-  type = ""
-  llm_validation = "skipped"
-
-[version]
-  source = "crates_io"
-  github_repo = ""
-  tag_prefix = ""
-  module = ""
-  formula = ""
-  cask = ""
-  tap = ""
-  fossil_repo = ""
-  project_name = ""
-  version_separator = ""
-  timeline_tag = ""
+  version_format = "semver"
+  supported_libc = ["glibc"]
 
 [[steps]]
-  action = "cargo_install"
-  crate = "probe-rs-tools"
-  executables = ["cargo-embed", "cargo-flash", "probe-rs"]
+  action = "github_archive"
+  repo = "probe-rs/probe-rs"
+  asset_pattern = "probe-rs-tools-{arch}-{os}.tar.xz"
+  strip_dirs = 1
+  binaries = ["cargo-embed", "cargo-flash", "probe-rs"]
+  os_mapping = { linux = "unknown-linux-gnu", darwin = "apple-darwin" }
+  arch_mapping = { amd64 = "x86_64", arm64 = "aarch64" }
 
 [verify]
   command = "probe-rs --version"
