@@ -7,9 +7,7 @@ dependencies = ["sqlite", "geos", "proj", "libxml2"]
 supported_os = ["linux"]
 runtime_dependencies = [
   "geos",
-  "librttopo",
   "libxml2",
-  "minizip",
   "proj",
   "sqlite",
 ]
