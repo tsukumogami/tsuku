@@ -1,29 +1,29 @@
 {
-  "generated_at": "2026-02-24T14:47:11Z",
-  "total_recipes": 369,
+  "generated_at": "2026-03-01T12:58:15Z",
+  "total_recipes": 370,
   "summary": {
     "by_platform": {
       "darwin": {
         "supported": 313,
-        "total": 369,
-        "pct": 84.82384823848238
+        "total": 370,
+        "pct": 84.5945945945946
       },
       "glibc": {
-        "supported": 339,
-        "total": 369,
-        "pct": 91.869918699187
+        "supported": 340,
+        "total": 370,
+        "pct": 91.8918918918919
       },
       "musl": {
-        "supported": 200,
-        "total": 369,
-        "pct": 54.20054200542005
+        "supported": 201,
+        "total": 370,
+        "pct": 54.32432432432432
       }
     },
     "by_category": {
       "library": {
-        "total": 23,
-        "musl_support": 23,
-        "glibc_support": 23
+        "total": 24,
+        "musl_support": 24,
+        "glibc_support": 24
       },
       "tool": {
         "total": 346,
@@ -2975,6 +2975,22 @@
       "errors": null,
       "warnings": [
         "recipe 'libcurl' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "libcurl-source",
+      "type": "library",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'libcurl-source' has platform-specific actions without libc when clauses and no musl fallback"
       ]
     },
     {
