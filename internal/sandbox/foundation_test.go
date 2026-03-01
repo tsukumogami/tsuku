@@ -1139,3 +1139,179 @@ func TestBuildFoundationImage_MultipleDeps(t *testing.T) {
 		t.Errorf("Second plan file = %q, want 'dep-01-rust.json'", planFiles[1])
 	}
 }
+
+// --- Platform propagation tests ---
+
+func TestFlattenDependencies_PropagatesPlatform(t *testing.T) {
+	t.Parallel()
+
+	parentPlatform := executor.Platform{
+		OS:          "linux",
+		Arch:        "amd64",
+		LinuxFamily: "debian",
+	}
+
+	plan := &executor.InstallationPlan{
+		Tool:     "cargo-nextest",
+		Version:  "0.24.5",
+		Platform: parentPlatform,
+		Dependencies: []executor.DependencyPlan{
+			{
+				Tool:    "rust",
+				Version: "1.82.0",
+				Steps:   []executor.ResolvedStep{{Action: "download_file", Checksum: "r123"}},
+			},
+		},
+	}
+
+	result := FlattenDependencies(plan)
+
+	if len(result) != 1 {
+		t.Fatalf("Expected 1 dep, got %d", len(result))
+	}
+
+	got := result[0].Plan.Platform
+	if got.OS != parentPlatform.OS {
+		t.Errorf("Platform.OS = %q, want %q", got.OS, parentPlatform.OS)
+	}
+	if got.Arch != parentPlatform.Arch {
+		t.Errorf("Platform.Arch = %q, want %q", got.Arch, parentPlatform.Arch)
+	}
+	if got.LinuxFamily != parentPlatform.LinuxFamily {
+		t.Errorf("Platform.LinuxFamily = %q, want %q", got.LinuxFamily, parentPlatform.LinuxFamily)
+	}
+}
+
+func TestFlattenDependencies_PropagatesPlatformToDeepDeps(t *testing.T) {
+	t.Parallel()
+
+	parentPlatform := executor.Platform{
+		OS:          "linux",
+		Arch:        "arm64",
+		LinuxFamily: "rhel",
+	}
+
+	// Three levels: myapp -> rust -> llvm
+	plan := &executor.InstallationPlan{
+		Tool:     "myapp",
+		Version:  "1.0.0",
+		Platform: parentPlatform,
+		Dependencies: []executor.DependencyPlan{
+			{
+				Tool:    "rust",
+				Version: "1.82.0",
+				Dependencies: []executor.DependencyPlan{
+					{
+						Tool:    "llvm",
+						Version: "17.0.0",
+						Steps:   []executor.ResolvedStep{{Action: "download_file", Checksum: "llvm123"}},
+					},
+				},
+				Steps: []executor.ResolvedStep{{Action: "download_file", Checksum: "rust123"}},
+			},
+		},
+	}
+
+	result := FlattenDependencies(plan)
+
+	if len(result) != 2 {
+		t.Fatalf("Expected 2 deps, got %d", len(result))
+	}
+
+	// Both llvm (leaf) and rust (parent) should have the platform set
+	for _, dep := range result {
+		got := dep.Plan.Platform
+		if got != parentPlatform {
+			t.Errorf("dep %q: Platform = %+v, want %+v", dep.Tool, got, parentPlatform)
+		}
+	}
+}
+
+func TestBuildFoundationImage_PlanFilesContainPlatform(t *testing.T) {
+	t.Parallel()
+
+	// Capture the plan JSON written to the build context and verify it
+	// contains the correct Platform field. This is the exact scenario that
+	// triggered the bug: plan validation inside the Docker build rejected
+	// plans with an empty Platform ("plan is for -, but this system is linux-amd64").
+	planContents := make(map[string]string)
+
+	mock := &mockRuntime{
+		name:     "docker",
+		rootless: true,
+		imageExistsFunc: func(ctx context.Context, name string) (bool, error) {
+			return false, nil
+		},
+		buildFromDockerfileFunc: func(ctx context.Context, imageName string, contextDir string) error {
+			entries, err := os.ReadDir(filepath.Join(contextDir, "plans"))
+			if err != nil {
+				return err
+			}
+			for _, e := range entries {
+				data, err := os.ReadFile(filepath.Join(contextDir, "plans", e.Name()))
+				if err != nil {
+					return err
+				}
+				planContents[e.Name()] = string(data)
+			}
+			return nil
+		},
+	}
+
+	tsukuBin := createTempTsukuBinary(t)
+	exec := &Executor{
+		logger:      log.NewNoop(),
+		tsukuBinary: tsukuBin,
+	}
+
+	// Simulate the full pipeline: FlattenDependencies -> BuildFoundationImage.
+	// The parent plan has a Platform; dependency plans should inherit it.
+	parentPlan := &executor.InstallationPlan{
+		Tool:    "cargo-nextest",
+		Version: "0.24.5",
+		Platform: executor.Platform{
+			OS:          "linux",
+			Arch:        "amd64",
+			LinuxFamily: "debian",
+		},
+		Dependencies: []executor.DependencyPlan{
+			{
+				Tool:    "rust",
+				Version: "1.82.0",
+				Steps:   []executor.ResolvedStep{{Action: "download_file", Checksum: "r123"}},
+			},
+		},
+	}
+
+	deps := FlattenDependencies(parentPlan)
+	_, err := exec.BuildFoundationImage(
+		context.Background(), mock, "tsuku/sandbox-cache:debian-abc", "debian", deps,
+	)
+	if err != nil {
+		t.Fatalf("BuildFoundationImage returned error: %v", err)
+	}
+
+	if len(planContents) != 1 {
+		t.Fatalf("Expected 1 plan file, got %d", len(planContents))
+	}
+
+	planData, ok := planContents["dep-00-rust.json"]
+	if !ok {
+		t.Fatal("Plan file dep-00-rust.json not found in build context")
+	}
+
+	var plan executor.InstallationPlan
+	if err := json.Unmarshal([]byte(planData), &plan); err != nil {
+		t.Fatalf("Plan JSON is invalid: %v", err)
+	}
+
+	if plan.Platform.OS != "linux" {
+		t.Errorf("Plan Platform.OS = %q, want 'linux'", plan.Platform.OS)
+	}
+	if plan.Platform.Arch != "amd64" {
+		t.Errorf("Plan Platform.Arch = %q, want 'amd64'", plan.Platform.Arch)
+	}
+	if plan.Platform.LinuxFamily != "debian" {
+		t.Errorf("Plan Platform.LinuxFamily = %q, want 'debian'", plan.Platform.LinuxFamily)
+	}
+}

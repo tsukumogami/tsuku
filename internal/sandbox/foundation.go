@@ -27,6 +27,8 @@ type FlatDep struct {
 // tiebreaking within siblings). Each plan preserves its dependency subtree
 // intact -- deduplication happens at runtime via the executor's skip logic.
 // Strips non-deterministic fields (GeneratedAt) from plans.
+// The parent plan's Platform is propagated to each dependency plan so that
+// plan validation inside the foundation Docker build succeeds.
 // Returns an empty (non-nil) slice when the plan has no dependencies.
 func FlattenDependencies(plan *executor.InstallationPlan) []FlatDep {
 	if len(plan.Dependencies) == 0 {
@@ -36,7 +38,7 @@ func FlattenDependencies(plan *executor.InstallationPlan) []FlatDep {
 	seen := make(map[string]bool)
 	var result []FlatDep
 
-	flattenDFS(plan.Dependencies, seen, &result)
+	flattenDFS(plan.Dependencies, plan.Platform, seen, &result)
 
 	return result
 }
@@ -44,7 +46,9 @@ func FlattenDependencies(plan *executor.InstallationPlan) []FlatDep {
 // flattenDFS walks the dependency tree depth-first, emitting leaves before
 // parents. Siblings at the same level are sorted alphabetically by tool name.
 // Deduplicates by tool+version key; first occurrence wins.
-func flattenDFS(deps []executor.DependencyPlan, seen map[string]bool, result *[]FlatDep) {
+// The platform parameter is propagated from the parent plan to each generated
+// InstallationPlan so that plan validation succeeds in the build container.
+func flattenDFS(deps []executor.DependencyPlan, platform executor.Platform, seen map[string]bool, result *[]FlatDep) {
 	// Sort siblings alphabetically by tool name
 	sorted := make([]executor.DependencyPlan, len(deps))
 	copy(sorted, deps)
@@ -55,7 +59,7 @@ func flattenDFS(deps []executor.DependencyPlan, seen map[string]bool, result *[]
 	for _, dep := range sorted {
 		// Recurse into children first (leaves before parents)
 		if len(dep.Dependencies) > 0 {
-			flattenDFS(dep.Dependencies, seen, result)
+			flattenDFS(dep.Dependencies, platform, seen, result)
 		}
 
 		// Deduplicate by tool+version
@@ -66,7 +70,7 @@ func flattenDFS(deps []executor.DependencyPlan, seen map[string]bool, result *[]
 		seen[key] = true
 
 		// Convert DependencyPlan to standalone InstallationPlan
-		plan := dependencyToPlan(&dep)
+		plan := dependencyToPlan(&dep, platform)
 
 		*result = append(*result, FlatDep{
 			Tool:    dep.Tool,
@@ -79,7 +83,9 @@ func flattenDFS(deps []executor.DependencyPlan, seen map[string]bool, result *[]
 // dependencyToPlan converts a DependencyPlan to a standalone InstallationPlan.
 // The nested Dependencies subtree is preserved intact. GeneratedAt is zeroed
 // for deterministic output. FormatVersion is set to PlanFormatVersion.
-func dependencyToPlan(dep *executor.DependencyPlan) *executor.InstallationPlan {
+// The platform parameter is set on the resulting plan so that plan validation
+// inside the foundation Docker build accepts the plan for the target system.
+func dependencyToPlan(dep *executor.DependencyPlan, platform executor.Platform) *executor.InstallationPlan {
 	// Convert nested DependencyPlan entries (preserve subtree intact)
 	nestedDeps := make([]executor.DependencyPlan, len(dep.Dependencies))
 	copy(nestedDeps, dep.Dependencies)
@@ -88,6 +94,7 @@ func dependencyToPlan(dep *executor.DependencyPlan) *executor.InstallationPlan {
 		FormatVersion: executor.PlanFormatVersion,
 		Tool:          dep.Tool,
 		Version:       dep.Version,
+		Platform:      platform,
 		GeneratedAt:   time.Time{}, // Zero value -- stripped for determinism
 		Dependencies:  nestedDeps,
 		Steps:         dep.Steps,
