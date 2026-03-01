@@ -44,8 +44,8 @@ Planned
 | ~~_Replaces the single broad `/workspace` mount with four targeted mounts (plan.json, sandbox.sh, download cache, output dir). The container's `$TSUKU_HOME` filesystem is no longer shadowed, which is what makes foundation image caching possible. Updates `buildSandboxScript()` and `readVerifyResults()` to use the new output directory. Applies unconditionally to all sandbox runs._~~ | | |
 | ~~[#1961: feat(sandbox): build and use foundation images in sandbox runs](https://github.com/tsukumogami/tsuku/issues/1961)~~ | ~~[#1958](https://github.com/tsukumogami/tsuku/issues/1958), [#1959](https://github.com/tsukumogami/tsuku/issues/1959), [#1960](https://github.com/tsukumogami/tsuku/issues/1960)~~ | ~~critical~~ |
 | ~~_Wires the three foundation pieces together: calls `FlattenDependencies` on the plan, generates a Dockerfile, builds the foundation image via `BuildFromDockerfile` (or finds it cached via `ImageExists`), and uses it as the base image for the sandbox run. Includes integration test verifying that a sandbox run with a pre-built foundation image skips dependency installation._~~ | | |
-| [#1962: ci(recipes): sort recipes by ecosystem before batching](https://github.com/tsukumogami/tsuku/issues/1962) | [#1961](https://github.com/tsukumogami/tsuku/issues/1961) | testable |
-| _Classifies recipes by ecosystem (cargo_build -> rust, npm_install -> nodejs, etc.) and sorts by ecosystem before applying count-based batching in `test-recipe.yml`. Same-ecosystem recipes land in the same batch job, so foundation images are built once and reused. No change to batch sizes, matrix shape, or test steps._ | | |
+| ~~[#1962: ci(recipes): sort recipes by ecosystem before batching](https://github.com/tsukumogami/tsuku/issues/1962)~~ | ~~[#1961](https://github.com/tsukumogami/tsuku/issues/1961)~~ | ~~testable~~ |
+| ~~_Classifies recipes by ecosystem (cargo_build -> rust, npm_install -> nodejs, etc.) and sorts by ecosystem before applying count-based batching in `test-recipe.yml`. Same-ecosystem recipes land in the same batch job, so foundation images are built once and reused. No change to batch sizes, matrix shape, or test steps._~~ | | |
 | [#1963: feat(sandbox): add cargo registry cache mount](https://github.com/tsukumogami/tsuku/issues/1963) | [#1960](https://github.com/tsukumogami/tsuku/issues/1960) | testable |
 | _Adds `WithCargoRegistryCacheDir()` option to `Executor` following the `WithDownloadCacheDir()` pattern. Mounts a shared cargo registry directory into the container so `cargo fetch` results are shared across Linux families within a single recipe run. The sandbox script injects a symlink from `$CARGO_HOME/registry` to the shared mount._ | | |
 
@@ -80,8 +80,8 @@ graph LR
     classDef needsDesign fill:#e1bee7
     classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
 
-    class I1958,I1959,I1960,I1961 done
-    class I1962,I1963 ready
+    class I1958,I1959,I1960,I1961,I1962 done
+    class I1963 ready
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design

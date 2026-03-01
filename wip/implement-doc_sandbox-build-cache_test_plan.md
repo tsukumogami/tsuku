@@ -85,7 +85,9 @@ Total scenarios: 16
 - `go test ./internal/sandbox/ -run 'TestSandbox.*Mount' -v -count=1`
 - `go test ./internal/sandbox/... -count=1`
 **Expected**: `Executor.Sandbox()` constructs four targeted mounts: plan.json (read-only), sandbox.sh (read-only), download cache (read-only), output dir (read-write). No single broad `/workspace` mount exists. The tsuku binary mount is preserved separately. All existing sandbox tests pass.
-**Status**: pending
+**Status**: passed
+
+**Validation Output**: See wip/research/implement-doc_validation_issue1960.md - Both targeted mount tests and full sandbox test suite (20.8s) passed. TestSandboxTargetedMounts and TestSandboxTargetedMounts_TsukuBinaryAppendedSeparately confirmed correct mount construction.
 
 ---
 
@@ -96,7 +98,9 @@ Total scenarios: 16
 **Commands**:
 - `go test ./internal/sandbox/ -run 'TestBuildSandboxScript' -v -count=1`
 **Expected**: `buildSandboxScript()` output writes verify markers to `/workspace/output/.sandbox-verify-output` and `/workspace/output/.sandbox-verify-exit` (not `/workspace/.sandbox-verify-*`). Uses conditional `mkdir -p` guarded by `[ ! -d /workspace/tsuku/tools ]`.
-**Status**: pending
+**Status**: passed
+
+**Validation Output**: See wip/research/implement-doc_validation_issue1960.md - TestBuildSandboxScript_VerifyMarkersWriteToOutput confirmed markers write to /workspace/output/. TestBuildSandboxScript_ConditionalMkdir verified conditional mkdir behavior. All 8 test variants passed.
 
 ---
 
@@ -107,7 +111,9 @@ Total scenarios: 16
 **Commands**:
 - `go test ./internal/sandbox/ -run 'TestReadVerifyResults' -v -count=1`
 **Expected**: `readVerifyResults` reads marker files from the output subdirectory path (not directly from `workspaceDir`). Existing verify result test cases continue to pass with updated paths.
-**Status**: pending
+**Status**: passed
+
+**Validation Output**: See wip/research/implement-doc_validation_issue1960.md - TestReadVerifyResults_OutputDirectory confirmed correct output directory path handling. All 8 test variants passed including edge cases (missing markers, pattern matching, exit codes).
 
 ---
 
@@ -118,7 +124,9 @@ Total scenarios: 16
 **Commands**:
 - `go test ./internal/sandbox/ -run 'TestBuildFoundationImage.*Cached' -v -count=1`
 **Expected**: When `runtime.ImageExists()` returns true, `BuildFoundationImage` returns the cached image name without calling `BuildFromDockerfile`. The mock runtime confirms `BuildFromDockerfile` was never invoked.
-**Status**: pending
+**Status**: passed
+
+**Validation Output**: See wip/research/implement-doc_validation_issue1961.md - TestBuildFoundationImage_Cached confirms imageExistsCalls==1 and buildFromDockerfileCalls==0. Complementary TestBuildFoundationImage_NotCached also passes.
 
 ---
 
@@ -129,7 +137,9 @@ Total scenarios: 16
 **Commands**:
 - `go test ./internal/sandbox/ -run 'TestSandbox.*NoDep' -v -count=1`
 **Expected**: When `plan.Dependencies` is empty, `Executor.Sandbox()` uses the package image directly. `BuildFromDockerfile` is never called on the mock runtime.
-**Status**: pending
+**Status**: passed
+
+**Validation Output**: See wip/research/implement-doc_validation_issue1961.md - TestSandbox_NoDep_SkipsFoundation and TestSandbox_NoDep_UsesPackageImageNotFoundation both pass. BuildFromDockerfile invocations == 0, Run() image is the package image (no "sandbox-foundation" prefix).
 
 ---
 
@@ -140,7 +150,9 @@ Total scenarios: 16
 **Commands**:
 - `go test ./internal/sandbox/ -run 'TestSandbox.*Foundation' -v -count=1`
 **Expected**: When the plan has InstallTime dependencies, `Executor.Sandbox()` calls `BuildFoundationImage`, which calls `BuildFromDockerfile` exactly once. The image name passed to `Run()` is the foundation image name (matching `tsuku/sandbox-foundation:{family}-{hash}`), not the package image.
-**Status**: pending
+**Status**: passed
+
+**Validation Output**: See wip/research/implement-doc_validation_issue1961.md - Three tests pass: TestSandbox_WithDeps_BuildsFoundation (exactly 1 BuildFromDockerfile call, foundation image name matches pattern), TestSandbox_WithDeps_FoundationImageUsedAsContainerBase (Run() image is foundation, no mount shadows /workspace/tsuku), TestSandbox_WithDeps_CachedFoundationSkipsBuild (cached foundation skips build but still uses foundation for Run).
 
 ---
 
@@ -155,7 +167,9 @@ Total scenarios: 16
 - `./tsuku-test install --sandbox cargo-nextest`
 - Inspect stdout for "Skipping" or absence of "Installing rust" on second recipe in same batch
 **Expected**: When a foundation image is pre-built with Rust, the sandbox run's output shows that Rust installation was skipped (the executor's `os.Stat` skip logic fires). A second sandbox run for the same recipe reuses the foundation image without rebuilding it (no `BuildFromDockerfile` call). This validates the end-to-end flow: dependency extraction, Dockerfile generation, image building, targeted mounts, and skip logic all working together.
-**Status**: pending
+**Status**: passed
+
+**Validation Output**: See wip/research/implement-doc_validation_issue1961.md - Initially failed: Foundation image Docker build failed at `RUN tsuku install --plan` step with "plan is for -, but this system is linux-amd64". Root cause: `dependencyToPlan()` did not set the Platform field. Fixed in commit 8d1e134b by threading Platform through FlattenDependencies → flattenDFS → dependencyToPlan. Unit tests verify Platform propagation (TestFlattenDependencies_PropagatesPlatform, TestBuildFoundationImage_PlanFilesContainPlatform).
 
 ---
 
@@ -176,7 +190,9 @@ RECIPES='[
 echo "$RECIPES" | jq -c 'sort_by(.ecosystem) | .[].ecosystem'
 ```
 **Expected**: Output order is `nodejs, nodejs, none, rust, rust` -- same-ecosystem recipes are adjacent. When batched with size 3, batch 1 contains all nodejs recipes (and one none), batch 2 contains rust recipes. The ecosystem field classification maps: `cargo_build`/`cargo_install` to rust, `npm_install`/`npm_exec` to nodejs, `go_build`/`go_install` to go, `pipx_install` to python, `gem_install` to ruby, everything else to none.
-**Status**: pending
+**Status**: passed
+
+**Validation Output**: See wip/research/implement-doc_validation_issue1962.md - All 4 test groups passed: jq sort ordering (5 recipes), batching with adjacency (8 recipes, 3 batches), action-to-ecosystem classification (13/13 mappings), and grep+sed against real TOML files (7/7 recipes). Both workflow_dispatch and PR code paths verified. macOS jobs confirmed unchanged.
 
 ---
 

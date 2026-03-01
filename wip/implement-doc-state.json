@@ -3,7 +3,7 @@
   "design_doc": "docs/designs/DESIGN-sandbox-build-cache.md",
   "branch": "docs/sandbox-build-cache",
   "pr_number": 1956,
-  "integrity_hash": "sha256:f6e0f7aad1c5b2d2ee50a91a259bd1747c120cc2f79615fb19277ca85349af95",
+  "integrity_hash": "sha256:f3a0925627c2ad811b18fe788e798ad0a898c5fbf42dde9458788463e3c3402b",
   "issues": [
     {
       "number": 1958,
@@ -270,8 +270,8 @@
     {
       "number": 1961,
       "title": "feat(sandbox): build and use foundation images in sandbox runs",
-      "status": "scrutinized",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "ci_fix_attempts": 0,
       "issue_type": "code",
       "dependencies": [
@@ -336,6 +336,21 @@
           }
         ]
       },
+      "reviewer_results": {
+        "issue": 1961,
+        "pragmatic": {
+          "blocking_count": 0,
+          "advisory_count": 2
+        },
+        "architect": {
+          "blocking_count": 0,
+          "advisory_count": 1
+        },
+        "maintainer": {
+          "blocking_count": 0,
+          "advisory_count": 2
+        }
+      },
       "testable_scenarios": [
         "scenario-10",
         "scenario-11",
@@ -346,16 +361,62 @@
     {
       "number": 1962,
       "title": "ci(recipes): sort recipes by ecosystem before batching",
-      "status": "pending",
+      "status": "scrutinized",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [
         1961
       ],
-      "commits": [],
-      "agent_type": "",
-      "summary": null,
+      "commits": [
+        "6242da2d"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          ".github/workflows/test-recipe.yml"
+        ],
+        "tests_added": 0,
+        "key_decisions": "CI workflow YAML change only. Ecosystem classification via grep+case, sort_by(.ecosystem) before batching. No Go code changes.",
+        "requirements_map": [
+          {
+            "ac": "Ecosystem classification in detect step",
+            "status": "implemented",
+            "evidence": "test-recipe.yml:79-88,107-116"
+          },
+          {
+            "ac": "First matching action line",
+            "status": "implemented",
+            "evidence": "grep -m1 pattern"
+          },
+          {
+            "ac": "sort_by(.ecosystem) before batching",
+            "status": "implemented",
+            "evidence": "test-recipe.yml:150-152"
+          },
+          {
+            "ac": "Matrix output shape unchanged",
+            "status": "implemented",
+            "evidence": "batch_id+recipes structure preserved"
+          },
+          {
+            "ac": "Test steps unchanged",
+            "status": "implemented",
+            "evidence": "test-linux-x86_64 and test-linux-arm64 unmodified"
+          },
+          {
+            "ac": "macOS jobs unchanged",
+            "status": "implemented",
+            "evidence": "test-darwin jobs unmodified"
+          },
+          {
+            "ac": "workflow_dispatch path classifies",
+            "status": "implemented",
+            "evidence": "test-recipe.yml:79-89"
+          }
+        ]
+      },
       "testable_scenarios": [
         "scenario-14"
       ]
