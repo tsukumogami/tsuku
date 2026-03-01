@@ -765,6 +765,7 @@ func TestFilterExtraEnv_DropsProtectedKeys(t *testing.T) {
 	extra := []string{
 		"TSUKU_SANDBOX=0",
 		"TSUKU_HOME=/tmp/bad",
+		"TSUKU_CARGO_REGISTRY_CACHE=/tmp/bad",
 		"HOME=/tmp/bad",
 		"DEBIAN_FRONTEND=dialog",
 		"PATH=/bad",
@@ -1659,6 +1660,20 @@ func TestSandbox_CargoRegistryMount(t *testing.T) {
 	if !foundCargoMount {
 		t.Error("Expected cargo registry cache mount at /workspace/cargo-registry-cache")
 	}
+
+	// Verify the TSUKU_CARGO_REGISTRY_CACHE env var is set in RunOptions.
+	// The cargo_build action reads this variable after creating its isolated
+	// CARGO_HOME and symlinks $CARGO_HOME/registry to the shared mount.
+	var foundEnvVar bool
+	for _, e := range mock.lastRunOpts.Env {
+		if e == "TSUKU_CARGO_REGISTRY_CACHE=/workspace/cargo-registry-cache" {
+			foundEnvVar = true
+			break
+		}
+	}
+	if !foundEnvVar {
+		t.Error("Expected TSUKU_CARGO_REGISTRY_CACHE env var in RunOptions.Env")
+	}
 }
 
 // TestSandbox_NoCargoRegistryMount verifies that when cargoRegistryCacheDir
@@ -1716,12 +1731,20 @@ func TestSandbox_NoCargoRegistryMount(t *testing.T) {
 			t.Error("Cargo registry cache mount should not be present when option is not set")
 		}
 	}
+
+	// TSUKU_CARGO_REGISTRY_CACHE should not be in the env
+	for _, e := range mock.lastRunOpts.Env {
+		if strings.HasPrefix(e, "TSUKU_CARGO_REGISTRY_CACHE=") {
+			t.Error("TSUKU_CARGO_REGISTRY_CACHE env var should not be set when option is not configured")
+		}
+	}
 }
 
-// TestBuildSandboxScript_CargoRegistrySymlink verifies that when
-// cargoRegistryCacheDir is set, the sandbox script includes the
-// registry symlink snippet before the tsuku install invocation.
-func TestBuildSandboxScript_CargoRegistrySymlink(t *testing.T) {
+// TestBuildSandboxScript_CargoRegistryCacheDir verifies that when
+// cargoRegistryCacheDir is set, the sandbox script does NOT contain a
+// shell-level symlink snippet. Registry linking is handled by the
+// cargo_build action via the TSUKU_CARGO_REGISTRY_CACHE env var.
+func TestBuildSandboxScript_CargoRegistryCacheDir(t *testing.T) {
 	t.Parallel()
 
 	exec := &Executor{
@@ -1739,22 +1762,14 @@ func TestBuildSandboxScript_CargoRegistrySymlink(t *testing.T) {
 
 	script := exec.buildSandboxScript(plan, reqs)
 
-	// Should contain the CARGO_HOME guard and symlink
-	if !strings.Contains(script, "if [ -n \"$CARGO_HOME\" ]; then") {
-		t.Error("Script should guard cargo registry symlink with CARGO_HOME check")
+	// The script must NOT contain a $CARGO_HOME guard or symlink command.
+	// CARGO_HOME is only set inside buildDeterministicCargoEnv() for cargo
+	// subprocesses, so a shell-level guard would always evaluate to false.
+	if strings.Contains(script, "ln -sfn /workspace/cargo-registry-cache") {
+		t.Error("Script should not contain a symlink command; registry linking is handled by cargo_build action")
 	}
-	if !strings.Contains(script, "mkdir -p \"$CARGO_HOME\"") {
-		t.Error("Script should create CARGO_HOME directory")
-	}
-	if !strings.Contains(script, "ln -sfn /workspace/cargo-registry-cache \"$CARGO_HOME/registry\"") {
-		t.Error("Script should symlink registry to shared cache mount")
-	}
-
-	// The symlink should appear BEFORE the tsuku install command
-	symlinkIdx := strings.Index(script, "ln -sfn /workspace/cargo-registry-cache")
-	installIdx := strings.Index(script, "tsuku install --plan")
-	if symlinkIdx >= installIdx {
-		t.Error("Cargo registry symlink must appear before tsuku install invocation")
+	if strings.Contains(script, "if [ -n \"$CARGO_HOME\" ]") {
+		t.Error("Script should not guard on $CARGO_HOME; that variable is not in the container shell environment")
 	}
 }
 

@@ -702,3 +702,135 @@ func TestCargoBuildAction_Execute_LockedDisabled(t *testing.T) {
 		t.Error("With locked=false, should not check for Cargo.lock")
 	}
 }
+
+// --- linkCargoRegistryCache tests ---
+
+func TestLinkCargoRegistryCache_CreatesSymlink(t *testing.T) {
+	t.Parallel()
+
+	cargoHome := filepath.Join(t.TempDir(), ".cargo-home")
+	registryCache := t.TempDir()
+
+	env := []string{
+		"CARGO_HOME=" + cargoHome,
+		"TSUKU_CARGO_REGISTRY_CACHE=" + registryCache,
+	}
+
+	if err := linkCargoRegistryCache(env); err != nil {
+		t.Fatalf("linkCargoRegistryCache returned error: %v", err)
+	}
+
+	// Verify CARGO_HOME was created
+	if _, err := os.Stat(cargoHome); err != nil {
+		t.Fatalf("CARGO_HOME directory not created: %v", err)
+	}
+
+	// Verify symlink exists and points to the cache directory
+	registryPath := filepath.Join(cargoHome, "registry")
+	target, err := os.Readlink(registryPath)
+	if err != nil {
+		t.Fatalf("Expected symlink at %s: %v", registryPath, err)
+	}
+	if target != registryCache {
+		t.Errorf("Symlink target = %q, want %q", target, registryCache)
+	}
+}
+
+func TestLinkCargoRegistryCache_NoCargoHome(t *testing.T) {
+	t.Parallel()
+
+	registryCache := t.TempDir()
+	env := []string{
+		"TSUKU_CARGO_REGISTRY_CACHE=" + registryCache,
+	}
+
+	// Should be a no-op when CARGO_HOME is missing
+	if err := linkCargoRegistryCache(env); err != nil {
+		t.Fatalf("Expected no error, got: %v", err)
+	}
+}
+
+func TestLinkCargoRegistryCache_NoRegistryCache(t *testing.T) {
+	t.Parallel()
+
+	cargoHome := filepath.Join(t.TempDir(), ".cargo-home")
+	env := []string{
+		"CARGO_HOME=" + cargoHome,
+	}
+
+	// Should be a no-op when TSUKU_CARGO_REGISTRY_CACHE is missing
+	if err := linkCargoRegistryCache(env); err != nil {
+		t.Fatalf("Expected no error, got: %v", err)
+	}
+
+	// CARGO_HOME should NOT be created (nothing to link)
+	if _, err := os.Stat(cargoHome); !os.IsNotExist(err) {
+		t.Error("CARGO_HOME should not be created when there is no registry cache to link")
+	}
+}
+
+func TestLinkCargoRegistryCache_CacheDirDoesNotExist(t *testing.T) {
+	t.Parallel()
+
+	cargoHome := filepath.Join(t.TempDir(), ".cargo-home")
+	env := []string{
+		"CARGO_HOME=" + cargoHome,
+		"TSUKU_CARGO_REGISTRY_CACHE=/nonexistent/path",
+	}
+
+	// Should silently skip when the cache directory doesn't exist (mount not present)
+	if err := linkCargoRegistryCache(env); err != nil {
+		t.Fatalf("Expected no error, got: %v", err)
+	}
+
+	// CARGO_HOME should NOT be created
+	if _, err := os.Stat(cargoHome); !os.IsNotExist(err) {
+		t.Error("CARGO_HOME should not be created when cache dir does not exist")
+	}
+}
+
+func TestLinkCargoRegistryCache_ReplacesExistingRegistry(t *testing.T) {
+	t.Parallel()
+
+	cargoHome := filepath.Join(t.TempDir(), ".cargo-home")
+	registryCache := t.TempDir()
+
+	// Create an existing registry file (not directory) to verify it gets replaced
+	if err := os.MkdirAll(cargoHome, 0755); err != nil {
+		t.Fatal(err)
+	}
+	existingRegistry := filepath.Join(cargoHome, "registry")
+	if err := os.WriteFile(existingRegistry, []byte("old"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	env := []string{
+		"CARGO_HOME=" + cargoHome,
+		"TSUKU_CARGO_REGISTRY_CACHE=" + registryCache,
+	}
+
+	if err := linkCargoRegistryCache(env); err != nil {
+		t.Fatalf("linkCargoRegistryCache returned error: %v", err)
+	}
+
+	// Verify symlink replaced the existing file
+	target, err := os.Readlink(existingRegistry)
+	if err != nil {
+		t.Fatalf("Expected symlink at %s: %v", existingRegistry, err)
+	}
+	if target != registryCache {
+		t.Errorf("Symlink target = %q, want %q", target, registryCache)
+	}
+}
+
+func TestLinkCargoRegistryCache_EmptyEnv(t *testing.T) {
+	t.Parallel()
+
+	// Should be a no-op with empty env
+	if err := linkCargoRegistryCache(nil); err != nil {
+		t.Fatalf("Expected no error with nil env, got: %v", err)
+	}
+	if err := linkCargoRegistryCache([]string{}); err != nil {
+		t.Fatalf("Expected no error with empty env, got: %v", err)
+	}
+}

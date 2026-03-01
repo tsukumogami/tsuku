@@ -34,11 +34,12 @@ const (
 // User-provided ExtraEnv entries matching these keys are silently dropped to
 // prevent subverting the sandbox environment.
 var protectedEnvKeys = map[string]bool{
-	"TSUKU_SANDBOX":   true,
-	"TSUKU_HOME":      true,
-	"HOME":            true,
-	"DEBIAN_FRONTEND": true,
-	"PATH":            true,
+	"TSUKU_SANDBOX":              true,
+	"TSUKU_HOME":                 true,
+	"TSUKU_CARGO_REGISTRY_CACHE": true,
+	"HOME":                       true,
+	"DEBIAN_FRONTEND":            true,
+	"PATH":                       true,
 }
 
 // SandboxResult contains the result of a sandbox test.
@@ -328,6 +329,13 @@ func (e *Executor) Sandbox(
 		env = append(env, extra...)
 	}
 
+	// Signal shared cargo registry cache to the cargo_build action.
+	// The action reads TSUKU_CARGO_REGISTRY_CACHE after creating its
+	// isolated CARGO_HOME and symlinks $CARGO_HOME/registry to this path.
+	if e.cargoRegistryCacheDir != "" {
+		env = append(env, "TSUKU_CARGO_REGISTRY_CACHE=/workspace/cargo-registry-cache")
+	}
+
 	// Build run options with targeted mounts instead of a single broad
 	// /workspace mount. This preserves the container's $TSUKU_HOME filesystem
 	// (e.g., tools pre-installed by a foundation image) while exchanging only
@@ -573,17 +581,14 @@ func (e *Executor) buildSandboxScript(
 	sb.WriteString("# Add TSUKU_HOME/bin to PATH for dependency binaries\n")
 	sb.WriteString("export PATH=/workspace/tsuku/bin:$PATH\n\n")
 
-	// Symlink cargo registry to shared cache mount when configured.
-	// This shares downloaded crate index and .crate tarballs across family
-	// containers. CARGO_HOME isolation is preserved for config and compiled
-	// artifacts; only the registry subdirectory is shared.
-	if e.cargoRegistryCacheDir != "" {
-		sb.WriteString("# Share cargo registry cache across families\n")
-		sb.WriteString("if [ -n \"$CARGO_HOME\" ]; then\n")
-		sb.WriteString("  mkdir -p \"$CARGO_HOME\"\n")
-		sb.WriteString("  ln -sfn /workspace/cargo-registry-cache \"$CARGO_HOME/registry\"\n")
-		sb.WriteString("fi\n\n")
-	}
+	// NOTE: Cargo registry cache sharing is handled via the
+	// TSUKU_CARGO_REGISTRY_CACHE environment variable, which is set in the
+	// container env when cargoRegistryCacheDir is configured. The cargo_build
+	// action reads this variable after creating CARGO_HOME and symlinks
+	// $CARGO_HOME/registry to the shared mount. This works because CARGO_HOME
+	// is only known after buildDeterministicCargoEnv() runs (it creates an
+	// isolated per-build directory), so a shell-level guard on $CARGO_HOME
+	// in this script would never trigger.
 
 	// Run tsuku install with pre-generated plan
 	// tsuku handles build tool dependencies automatically via ActionDependencies
