@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-02-22T08:00:00Z",
+  "updated_at": "2026-03-01T21:20:25Z",
   "entries": [
     {
       "name": "bat",
@@ -183,6 +183,16 @@
       "next_retry_at": null
     },
     {
+      "name": "openssl@3",
+      "source": "homebrew:openssl@3",
+      "priority": 2,
+      "status": "success",
+      "confidence": "auto",
+      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
+      "failure_count": 3,
+      "next_retry_at": "2026-02-24T06:13:54.942523874Z"
+    },
+    {
       "name": "anomalyco/tap/opencode",
       "source": "homebrew:anomalyco/tap/opencode",
       "priority": 2,
@@ -343,16 +353,6 @@
       "next_retry_at": null
     },
     {
-      "name": "openssl@3",
-      "source": "homebrew:openssl@3",
-      "priority": 2,
-      "status": "success",
-      "confidence": "auto",
-      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-02-24T06:13:54.942523874Z"
-    },
-    {
       "name": "pnpm",
       "source": "homebrew:pnpm",
       "priority": 2,
@@ -453,6 +453,146 @@
       "next_retry_at": null
     },
     {
+      "name": "gmp",
+      "source": "homebrew:gmp",
+      "priority": 3,
+      "status": "success",
+      "confidence": "auto",
+      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
+      "failure_count": 0,
+      "next_retry_at": null
+    },
+    {
+      "name": "libgit2",
+      "source": "homebrew:libgit2",
+      "priority": 3,
+      "status": "success",
+      "confidence": "auto",
+      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
+      "failure_count": 0,
+      "next_retry_at": null
+    },
+    {
+      "name": "aarch64-elf-binutils",
+      "source": "homebrew:aarch64-elf-binutils",
+      "priority": 3,
+      "status": "success",
+      "confidence": "auto",
+      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
+      "failure_count": 0,
+      "next_retry_at": null
+    },
+    {
+      "name": "ada-url",
+      "source": "homebrew:ada-url",
+      "priority": 3,
+      "status": "requires_manual",
+      "confidence": "auto",
+      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
+      "failure_count": 0,
+      "next_retry_at": null
+    },
+    {
+      "name": "bdw-gc",
+      "source": "homebrew:bdw-gc",
+      "priority": 3,
+      "status": "success",
+      "confidence": "auto",
+      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
+      "failure_count": 0,
+      "next_retry_at": null
+    },
+    {
+      "name": "dav1d",
+      "source": "homebrew:dav1d",
+      "priority": 3,
+      "status": "requires_manual",
+      "confidence": "auto",
+      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
+      "failure_count": 0,
+      "next_retry_at": null
+    },
+    {
+      "name": "gettext",
+      "source": "homebrew:gettext",
+      "priority": 3,
+      "status": "success",
+      "confidence": "auto",
+      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
+      "failure_count": 0,
+      "next_retry_at": null
+    },
+    {
+      "name": "glib",
+      "source": "homebrew:glib",
+      "priority": 3,
+      "status": "requires_manual",
+      "confidence": "auto",
+      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
+      "failure_count": 0,
+      "next_retry_at": null
+    },
+    {
+      "name": "libevent",
+      "source": "homebrew:libevent",
+      "priority": 3,
+      "status": "requires_manual",
+      "confidence": "auto",
+      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
+      "failure_count": 0,
+      "next_retry_at": null
+    },
+    {
+      "name": "libidn2",
+      "source": "homebrew:libidn2",
+      "priority": 3,
+      "status": "generated",
+      "confidence": "auto",
+      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
+      "failure_count": 0,
+      "next_retry_at": null
+    },
+    {
+      "name": "notmuch",
+      "source": "homebrew:notmuch",
+      "priority": 3,
+      "status": "requires_manual",
+      "confidence": "auto",
+      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
+      "failure_count": 0,
+      "next_retry_at": null
+    },
+    {
+      "name": "oniguruma",
+      "source": "homebrew:oniguruma",
+      "priority": 3,
+      "status": "requires_manual",
+      "confidence": "auto",
+      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
+      "failure_count": 0,
+      "next_retry_at": null
+    },
+    {
+      "name": "pcre2",
+      "source": "homebrew:pcre2",
+      "priority": 3,
+      "status": "success",
+      "confidence": "auto",
+      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
+      "failure_count": 0,
+      "next_retry_at": null
+    },
+    {
+      "name": "tree-sitter@0.25",
+      "source": "homebrew:tree-sitter@0.25",
+      "priority": 3,
+      "status": "failed",
+      "confidence": "auto",
+      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
+      "failure_count": 1,
+      "next_retry_at": null
+    },
+    {
       "name": "0xjacky/tools/nginx-ui",
       "source": "homebrew:0xjacky/tools/nginx-ui",
       "priority": 3,
@@ -541,16 +681,6 @@
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 3,
       "next_retry_at": "2026-02-24T06:14:11.803389241Z"
-    },
-    {
-      "name": "aarch64-elf-binutils",
-      "source": "homebrew:aarch64-elf-binutils",
-      "priority": 3,
-      "status": "success",
-      "confidence": "auto",
-      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
-      "next_retry_at": null
     },
     {
       "name": "aarch64-elf-gcc",
@@ -755,16 +885,6 @@
     {
       "name": "activemq",
       "source": "homebrew:activemq",
-      "priority": 3,
-      "status": "requires_manual",
-      "confidence": "auto",
-      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
-      "next_retry_at": null
-    },
-    {
-      "name": "ada-url",
-      "source": "homebrew:ada-url",
       "priority": 3,
       "status": "requires_manual",
       "confidence": "auto",
@@ -4137,16 +4257,6 @@
       "source": "homebrew:bcrypt",
       "priority": 3,
       "status": "requires_manual",
-      "confidence": "auto",
-      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
-      "next_retry_at": null
-    },
-    {
-      "name": "bdw-gc",
-      "source": "homebrew:bdw-gc",
-      "priority": 3,
-      "status": "success",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 0,
@@ -9745,16 +9855,6 @@
     {
       "name": "dateutils",
       "source": "homebrew:dateutils",
-      "priority": 3,
-      "status": "requires_manual",
-      "confidence": "auto",
-      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
-      "next_retry_at": null
-    },
-    {
-      "name": "dav1d",
-      "source": "homebrew:dav1d",
       "priority": 3,
       "status": "requires_manual",
       "confidence": "auto",
@@ -15653,16 +15753,6 @@
       "next_retry_at": null
     },
     {
-      "name": "gettext",
-      "source": "homebrew:gettext",
-      "priority": 3,
-      "status": "success",
-      "confidence": "auto",
-      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
-      "next_retry_at": null
-    },
-    {
       "name": "gf",
       "source": "homebrew:gf",
       "priority": 3,
@@ -16663,16 +16753,6 @@
       "next_retry_at": null
     },
     {
-      "name": "glib",
-      "source": "homebrew:glib",
-      "priority": 3,
-      "status": "requires_manual",
-      "confidence": "auto",
-      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
-      "next_retry_at": null
-    },
-    {
       "name": "glib-networking",
       "source": "homebrew:glib-networking",
       "priority": 3,
@@ -16827,16 +16907,6 @@
       "source": "homebrew:gmime",
       "priority": 3,
       "status": "requires_manual",
-      "confidence": "auto",
-      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
-      "next_retry_at": null
-    },
-    {
-      "name": "gmp",
-      "source": "homebrew:gmp",
-      "priority": 3,
-      "status": "success",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 0,
@@ -25043,16 +25113,6 @@
       "next_retry_at": null
     },
     {
-      "name": "libevent",
-      "source": "homebrew:libevent",
-      "priority": 3,
-      "status": "requires_manual",
-      "confidence": "auto",
-      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
-      "next_retry_at": null
-    },
-    {
       "name": "libewf",
       "source": "homebrew:libewf",
       "priority": 3,
@@ -25213,16 +25273,6 @@
       "next_retry_at": null
     },
     {
-      "name": "libgit2",
-      "source": "homebrew:libgit2",
-      "priority": 3,
-      "status": "success",
-      "confidence": "auto",
-      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
-      "next_retry_at": null
-    },
-    {
       "name": "libgpg-error",
       "source": "homebrew:libgpg-error",
       "priority": 3,
@@ -25335,16 +25385,6 @@
     {
       "name": "libidn",
       "source": "homebrew:libidn",
-      "priority": 3,
-      "status": "generated",
-      "confidence": "auto",
-      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
-      "next_retry_at": null
-    },
-    {
-      "name": "libidn2",
-      "source": "homebrew:libidn2",
       "priority": 3,
       "status": "generated",
       "confidence": "auto",
@@ -32533,16 +32573,6 @@
       "next_retry_at": null
     },
     {
-      "name": "notmuch",
-      "source": "homebrew:notmuch",
-      "priority": 3,
-      "status": "requires_manual",
-      "confidence": "auto",
-      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
-      "next_retry_at": null
-    },
-    {
       "name": "notmuch-mutt",
       "source": "homebrew:notmuch-mutt",
       "priority": 3,
@@ -33215,16 +33245,6 @@
     {
       "name": "onefetch",
       "source": "homebrew:onefetch",
-      "priority": 3,
-      "status": "requires_manual",
-      "confidence": "auto",
-      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
-      "next_retry_at": null
-    },
-    {
-      "name": "oniguruma",
-      "source": "homebrew:oniguruma",
       "priority": 3,
       "status": "requires_manual",
       "confidence": "auto",
@@ -35547,16 +35567,6 @@
       "source": "homebrew:pcre",
       "priority": 3,
       "status": "requires_manual",
-      "confidence": "auto",
-      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
-      "next_retry_at": null
-    },
-    {
-      "name": "pcre2",
-      "source": "homebrew:pcre2",
-      "priority": 3,
-      "status": "success",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 0,
@@ -47950,16 +47960,6 @@
       "confidence": "curated",
       "disambiguated_at": null,
       "failure_count": 0,
-      "next_retry_at": null
-    },
-    {
-      "name": "tree-sitter@0.25",
-      "source": "homebrew:tree-sitter@0.25",
-      "priority": 3,
-      "status": "failed",
-      "confidence": "auto",
-      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
       "next_retry_at": null
     },
     {
