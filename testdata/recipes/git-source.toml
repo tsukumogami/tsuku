@@ -6,9 +6,10 @@
 name = "git-source"
 description = "Distributed revision control system (source build for testing)"
 homepage = "https://git-scm.com/"
-# Include libcurl's transitive dependencies so linker can resolve symbols
-# libcurl.so has undefined references to nghttp3, ngtcp2, etc. that need LDFLAGS
-dependencies = ["libcurl", "brotli", "libnghttp2", "libnghttp3", "libngtcp2", "libssh2", "openssl", "zlib", "zstd", "expat"]
+# libcurl-source is built from source with --disable-ldap to avoid OPENLDAP
+# symbol version mismatch in Debian sandbox containers.
+# NO_TCLTK skips gitk/git-gui (need msgfmt in container).
+dependencies = ["libcurl-source", "openssl", "zlib", "expat"]
 
 [version]
 source = "homebrew"
@@ -35,9 +36,10 @@ make_args = [
     "RUNTIME_PREFIX=YesPlease",
     "gitexecdir=libexec/git-core",
     "NO_GETTEXT=YesPlease",
+    "NO_TCLTK=YesPlease",
     "NO_CURL=",
-    "CURLDIR={libs_dir}/libcurl-{deps.libcurl.version}",
-    "CURL_LIBCURL=-L{libs_dir}/libcurl-{deps.libcurl.version}/lib -lcurl -L{libs_dir}/libnghttp3-{deps.libnghttp3.version}/lib -lnghttp3 -L{libs_dir}/libngtcp2-{deps.libngtcp2.version}/lib -lngtcp2 -L{libs_dir}/libnghttp2-{deps.libnghttp2.version}/lib -lnghttp2 -L{libs_dir}/libssh2-{deps.libssh2.version}/lib -lssh2 -L{libs_dir}/brotli-{deps.brotli.version}/lib -lbrotlidec -lbrotlicommon -L{libs_dir}/zstd-{deps.zstd.version}/lib -lzstd"
+    "CURLDIR={libs_dir}/libcurl-source-{deps.libcurl-source.version}",
+    "CURL_LIBCURL=-L{libs_dir}/libcurl-source-{deps.libcurl-source.version}/lib -lcurl",
 ]
 
 [[steps]]
