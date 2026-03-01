@@ -4,6 +4,7 @@ description = "Optimizer for PNG files"
 homepage = "https://pmt.sourceforge.io/pngcrush/"
 dependencies = ["libpng"]
 unsupported_platforms = ["linux/arm64"]
+runtime_dependencies = ["libpng"]
 
 [[steps]]
 action = "homebrew"
