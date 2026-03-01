@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Accepted
 problem: |
   The Homebrew builder writes unresolvable dependency names into generated
   recipes without checking whether those dependencies exist in the tsuku
@@ -32,7 +32,7 @@ rationale: |
 
 ## Status
 
-Proposed
+Accepted
 
 ## Context and Problem Statement
 
