@@ -47,12 +47,14 @@ on:
       - 'go.mod'
 
 jobs:
-  # Test homebrew action with pkg-config, cmake, gdbm, and pngcrush (Linux only - macOS aggregated below)
-  # NOTE: make excluded - binary name differs by platform (gmake on macOS, make on Linux) - see #1581
-  test-homebrew-linux:
-    name: "Linux x86_64: homebrew tools"
+  # Consolidated Linux build essentials tests
+  # Each tool runs via tsuku install --sandbox for containerized execution.
+  # TLS test runs host-level (multi-recipe orchestration across ca-certs + curl).
+  # Pattern follows test-recipe.yml: --sandbox --force --json with result parsing.
+  test-linux:
+    name: "Linux x86_64: build essentials"
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
 
@@ -65,226 +67,105 @@ jobs:
       - name: Build tsuku
         run: CGO_ENABLED=0 go build -o tsuku ./cmd/tsuku
 
-      - name: Test all homebrew tools
+      - name: Test tools via sandbox
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
         run: |
-          # make excluded - see #1581
-          # pngcrush tests dependency chain: pngcrush -> libpng -> zlib
-          TOOLS=(pkg-config cmake gdbm pngcrush)
-          CACHE_DIR="${{ runner.temp }}/tsuku-cache/downloads"
-          mkdir -p "$CACHE_DIR"
+          TOTAL=0
+          PASSED=0
           FAILED=()
+          RESULTS=""
 
-          for tool in "${TOOLS[@]}"; do
-            echo "::group::Testing $tool"
+          sandbox_test() {
+              local name="$1"
+              shift
+              TOTAL=$((TOTAL + 1))
+              echo "::group::Sandbox: $name"
+              RESULT_FILE=".result-${name}.json"
 
-            # Fresh TSUKU_HOME per tool with shared download cache
-            export TSUKU_HOME="${{ runner.temp }}/tsuku-$tool"
-            mkdir -p "$TSUKU_HOME/cache"
-            ln -s "$CACHE_DIR" "$TSUKU_HOME/cache/downloads"
-            export PATH="$TSUKU_HOME/bin:$PATH"
+              ./tsuku install --sandbox --force "$@" \
+                --env GITHUB_TOKEN="$GITHUB_TOKEN" \
+                --json > "$RESULT_FILE" || true
 
-            if ! timeout 300 bash -c '
-              ./tsuku install --force "'"$tool"'" && \
-              ./test/scripts/verify-tool.sh "'"$tool"'" && \
-              ./test/scripts/verify-binary.sh "'"$tool"'"
-            '; then
-              FAILED+=("$tool")
-            fi
-            echo "::endgroup::"
+              if [ -f "$RESULT_FILE" ] && jq -e . "$RESULT_FILE" > /dev/null 2>&1; then
+                SANDBOX_PASSED=$(jq -r '.passed' "$RESULT_FILE")
+                # Sandbox JSON uses install_exit_code; error JSON uses exit_code
+                if jq -e '.install_exit_code' "$RESULT_FILE" > /dev/null 2>&1; then
+                  EXIT_CODE=$(jq -r '.install_exit_code' "$RESULT_FILE")
+                else
+                  EXIT_CODE=$(jq -r '.exit_code // 1' "$RESULT_FILE")
+                fi
+              else
+                SANDBOX_PASSED="false"
+                EXIT_CODE=1
+              fi
+
+              if [ "$SANDBOX_PASSED" = "true" ]; then
+                PASSED=$((PASSED + 1))
+                RESULTS="$RESULTS| $name | pass |\n"
+                echo "PASS: $name"
+              else
+                FAILED+=("$name")
+                RESULTS="$RESULTS| $name | **FAIL** (exit $EXIT_CODE) |\n"
+                echo "FAIL: $name (exit $EXIT_CODE)"
+                # Print error details and full JSON for debugging
+                if [ -f "$RESULT_FILE" ]; then
+                  ERROR_MSG=$(jq -r '.error // .message // "unknown"' "$RESULT_FILE")
+                  echo "Error: $ERROR_MSG"
+                  echo "Full result:"
+                  jq . "$RESULT_FILE"
+                fi
+              fi
+              echo "::endgroup::"
+          }
+
+          # Homebrew tools (make excluded - see #1581)
+          # pngcrush tests dependency chain: pngcrush -> libpng -> zlib
+          for tool in pkg-config cmake gdbm pngcrush; do
+            sandbox_test "$tool" "$tool"
           done
 
+          # Source build recipes
+          sandbox_test "libsixel-source" --recipe testdata/recipes/libsixel-source.toml
+          sandbox_test "ninja" ninja
+          sandbox_test "sqlite-source" --recipe testdata/recipes/sqlite-source.toml
+          sandbox_test "git-source" --recipe testdata/recipes/git-source.toml
+
+          # Binary install
+          sandbox_test "zig" zig
+
+          # TLS test (host-level, multi-recipe orchestration)
+          echo "::group::TLS CA certs"
+          TOTAL=$((TOTAL + 1))
+          export TSUKU_HOME="${{ runner.temp }}/tsuku-tls"
+          if timeout 300 ./test/scripts/test-tls-cacerts.sh ./tsuku; then
+            PASSED=$((PASSED + 1))
+            RESULTS="$RESULTS| tls-cacerts | pass |\n"
+            echo "PASS: tls-cacerts"
+          else
+            FAILED+=("tls-cacerts")
+            RESULTS="$RESULTS| tls-cacerts | **FAIL** |\n"
+            echo "FAIL: tls-cacerts"
+          fi
+          echo "::endgroup::"
+
+          # Job summary
+          {
+            echo "### Linux Build Essentials Results"
+            echo ""
+            echo "Passed: $PASSED / $TOTAL"
+            echo ""
+            echo "| Tool | Status |"
+            echo "|------|--------|"
+            echo -e "$RESULTS"
+          } >> "$GITHUB_STEP_SUMMARY"
+
           if [ ${#FAILED[@]} -gt 0 ]; then
-            echo "::error::Failed tools: ${FAILED[*]}"
+            echo "::error::Failed: ${FAILED[*]}"
             exit 1
           fi
-          echo "All homebrew tools passed"
-
-  # NOTE: gdbm-source test disabled - depends on make which has platform-specific binary name issue - see #1581
-  # test-configure-make-linux:
-  #   name: "Linux x86_64: gdbm-source"
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
-  #     - name: Set up Go
-  #       uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5  # v6.2.0
-  #       with:
-  #         go-version-file: 'go.mod'
-  #         cache-dependency-path: go.sum
-  #     - name: Build tsuku
-  #       run: CGO_ENABLED=0 go build -o tsuku ./cmd/tsuku
-  #     - name: Install gdbm-source (tests configure_make)
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #         TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
-  #       run: ./tsuku install --recipe testdata/recipes/gdbm-source.toml --force
-  #     - name: "Verify tool functionality"
-  #       run: ./test/scripts/verify-tool.sh gdbm-source
-
-  # Test meson_build action with libsixel-source (source build) - Linux only
-  test-meson-build-linux:
-    name: "Linux x86_64: libsixel-source"
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
-
-      - name: Set up Go
-        uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5  # v6.2.0
-        with:
-          go-version-file: 'go.mod'
-          cache-dependency-path: go.sum
-
-      - name: Build tsuku
-        run: CGO_ENABLED=0 go build -o tsuku ./cmd/tsuku
-
-      - name: Install libsixel-source (tests meson_build)
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
-        run: ./tsuku install --recipe testdata/recipes/libsixel-source.toml --force
-
-      - name: "Verify tool functionality"
-        run: ./test/scripts/verify-tool.sh libsixel-source
-
-  # Test cmake_build action with ninja (source build) - Linux only
-  test-cmake-build-linux:
-    name: "Linux x86_64: ninja"
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
-
-      - name: Set up Go
-        uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5  # v6.2.0
-        with:
-          go-version-file: 'go.mod'
-          cache-dependency-path: go.sum
-
-      - name: Build tsuku
-        run: CGO_ENABLED=0 go build -o tsuku ./cmd/tsuku
-
-      - name: Install ninja (tests cmake_build)
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
-        run: ./tsuku install --force ninja
-
-      - name: "Verify tool functionality"
-        run: ./test/scripts/verify-tool.sh ninja
-
-  # Test configure_make with library dependencies (sqlite-source -> readline -> ncurses) - Linux only
-  test-sqlite-source-linux:
-    name: "Linux x86_64: sqlite-source"
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
-
-      - name: Set up Go
-        uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5  # v6.2.0
-        with:
-          go-version-file: 'go.mod'
-          cache-dependency-path: go.sum
-
-      - name: Build tsuku
-        run: CGO_ENABLED=0 go build -o tsuku ./cmd/tsuku
-
-      - name: "Install sqlite-source (tests dependency chain: sqlite -> readline -> ncurses)"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
-        run: ./tsuku install --recipe testdata/recipes/sqlite-source.toml --force
-
-      - name: "Verify tool functionality"
-        run: ./test/scripts/verify-tool.sh sqlite-source
-
-  # Test configure_make with complex multi-dependency build - Linux only
-  test-git-source-linux:
-    name: "Linux x86_64: git-source"
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
-
-      - name: Set up Go
-        uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5  # v6.2.0
-        with:
-          go-version-file: 'go.mod'
-          cache-dependency-path: go.sum
-
-      - name: Build tsuku
-        run: CGO_ENABLED=0 go build -o tsuku ./cmd/tsuku
-
-      - name: Install gettext (required for git build)
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y gettext
-
-      - name: "Install git-source (tests multi-dependency chain: git -> curl -> openssl/zlib + expat)"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
-        run: ./tsuku install --recipe testdata/recipes/git-source.toml --force
-
-      - name: "Verify tool functionality"
-        run: ./test/scripts/verify-tool.sh git-source
-
-  # Test TLS CA certificate discovery - validates that tsuku-installed tools
-  # can find and use tsuku-installed CA certs for HTTPS requests
-  test-tls-cacerts-linux:
-    name: "Linux x86_64: tls-cacerts"
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
-
-      - name: Set up Go
-        uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5  # v6.2.0
-        with:
-          go-version-file: 'go.mod'
-          cache-dependency-path: go.sum
-
-      - name: Build tsuku
-        run: CGO_ENABLED=0 go build -o tsuku ./cmd/tsuku
-
-      - name: "Test TLS with tsuku-installed CA certs and curl"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
-        run: ./test/scripts/test-tls-cacerts.sh ./tsuku
-
-  # Test zig installation - Linux only
-  test-zig-linux:
-    name: "Linux x86_64: zig"
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
-
-      - name: Set up Go
-        uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5  # v6.2.0
-        with:
-          go-version-file: 'go.mod'
-          cache-dependency-path: go.sum
-
-      - name: Build tsuku
-        run: CGO_ENABLED=0 go build -o tsuku ./cmd/tsuku
-
-      - name: Install zig
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
-        run: ./tsuku install --force zig
-
-      - name: "Verify tool functionality"
-        run: ./test/scripts/verify-tool.sh zig
-
-      - name: "Verify binary quality"
-        run: ./test/scripts/verify-binary.sh zig
+          echo "All Linux build essentials tests passed"
 
   # Test source build with zig cc in container without system gcc
   # This validates that configure_make falls back to zig when no gcc exists

@@ -369,7 +369,7 @@ func buildAutotoolsEnv(ctx *ExecutionContext) []string {
 			// Special handling for libcurl: set CURL_CONFIG for Git's Makefile
 			// Git's Makefile has a known issue where it assumes curl-config is in PATH
 			// but doesn't always find it. Setting CURL_CONFIG explicitly fixes this.
-			if depName == "libcurl" {
+			if depName == "libcurl" || depName == "libcurl-source" {
 				curlConfigPath := filepath.Join(binDir, "curl-config")
 				if _, err := os.Stat(curlConfigPath); err == nil {
 					curlConfig = curlConfigPath
