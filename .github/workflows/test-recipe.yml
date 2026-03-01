@@ -165,17 +165,6 @@ jobs:
           # enabling foundation image reuse within each batch job.
           RECIPES=$(echo "$RECIPES" | jq -c 'sort_by(.ecosystem)')
 
-          # Helper: resolve a per-ecosystem config entry to a concrete batch
-          # size given the group length. Accepts a number or an object with
-          # "max" and "min_batches" fields.
-          #   resolve_bs(entry; n) -> number
-          def resolve_bs(entry; n):
-            if (entry | type) == "number" then entry
-            elif (entry | type) == "object" then
-              [entry.max, ((n + entry.min_batches - 1) / entry.min_batches | floor)] | min
-            else 5
-            end;
-
           # Split recipes into Linux batches.
           LINUX_BATCHES=$(echo "$RECIPES" | jq -c --argjson cfg "$LINUX_BATCH_CONFIG" '
             # resolve_bs: given a config entry and group size, return batch size
