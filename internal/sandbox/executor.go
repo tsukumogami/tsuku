@@ -34,11 +34,12 @@ const (
 // User-provided ExtraEnv entries matching these keys are silently dropped to
 // prevent subverting the sandbox environment.
 var protectedEnvKeys = map[string]bool{
-	"TSUKU_SANDBOX":   true,
-	"TSUKU_HOME":      true,
-	"HOME":            true,
-	"DEBIAN_FRONTEND": true,
-	"PATH":            true,
+	"TSUKU_SANDBOX":              true,
+	"TSUKU_HOME":                 true,
+	"TSUKU_CARGO_REGISTRY_CACHE": true,
+	"HOME":                       true,
+	"DEBIAN_FRONTEND":            true,
+	"PATH":                       true,
 }
 
 // SandboxResult contains the result of a sandbox test.
@@ -58,10 +59,11 @@ type SandboxResult struct {
 // It uses SandboxRequirements to configure containers appropriately
 // for different types of installations (binary, source build, ecosystem).
 type Executor struct {
-	detector         *validate.RuntimeDetector
-	logger           log.Logger
-	tsukuBinary      string // Path to tsuku binary for container execution
-	downloadCacheDir string // External download cache directory to mount
+	detector              *validate.RuntimeDetector
+	logger                log.Logger
+	tsukuBinary           string // Path to tsuku binary for container execution
+	downloadCacheDir      string // External download cache directory to mount
+	cargoRegistryCacheDir string // Shared cargo registry cache directory to mount
 }
 
 // ExecutorOption configures an Executor.
@@ -86,6 +88,18 @@ func WithTsukuBinary(path string) ExecutorOption {
 func WithDownloadCacheDir(path string) ExecutorOption {
 	return func(e *Executor) {
 		e.downloadCacheDir = path
+	}
+}
+
+// WithCargoRegistryCacheDir sets a shared cargo registry cache directory.
+// When set, this directory is mounted read-write into the container at
+// /workspace/cargo-registry-cache. The cargo_build action reads the
+// TSUKU_CARGO_REGISTRY_CACHE env var and creates the symlink from
+// $CARGO_HOME/registry to this mount, so cargo fetch results are shared
+// across Linux families within a single recipe run.
+func WithCargoRegistryCacheDir(path string) ExecutorOption {
+	return func(e *Executor) {
+		e.cargoRegistryCacheDir = path
 	}
 }
 
@@ -225,6 +239,22 @@ func (e *Executor) Sandbox(
 		containerImage = imageName
 	}
 
+	// Build foundation image if the plan has InstallTime dependencies.
+	// FlattenDependencies extracts the dependency tree into a topologically
+	// ordered flat list. If non-empty, BuildFoundationImage creates a Docker
+	// image with each dependency pre-installed as a cached layer. The
+	// container's $TSUKU_HOME filesystem is preserved via targeted mounts
+	// (not a broad /workspace mount), so pre-installed tools are found by
+	// the executor's skip logic natively.
+	deps := FlattenDependencies(plan)
+	if len(deps) > 0 {
+		foundationImage, err := e.BuildFoundationImage(ctx, runtime, containerImage, effectiveFamily, deps)
+		if err != nil {
+			return nil, fmt.Errorf("failed to build foundation image: %w", err)
+		}
+		containerImage = foundationImage
+	}
+
 	e.logger.Debug("Running sandbox test",
 		"tool", plan.Tool,
 		"runtime", runtime.Name(),
@@ -246,6 +276,12 @@ func (e *Executor) Sandbox(
 		if err := os.MkdirAll(cacheDir, 0700); err != nil {
 			return nil, fmt.Errorf("failed to create cache directory: %w", err)
 		}
+	}
+
+	// Create output directory for verification markers
+	outputDir := filepath.Join(workspaceDir, "output")
+	if err := os.MkdirAll(outputDir, 0700); err != nil {
+		return nil, fmt.Errorf("failed to create output directory: %w", err)
 	}
 
 	// Write plan JSON to workspace
@@ -294,7 +330,17 @@ func (e *Executor) Sandbox(
 		env = append(env, extra...)
 	}
 
-	// Build run options
+	// Signal shared cargo registry cache to the cargo_build action.
+	// The action reads TSUKU_CARGO_REGISTRY_CACHE after creating its
+	// isolated CARGO_HOME and symlinks $CARGO_HOME/registry to this path.
+	if e.cargoRegistryCacheDir != "" {
+		env = append(env, "TSUKU_CARGO_REGISTRY_CACHE=/workspace/cargo-registry-cache")
+	}
+
+	// Build run options with targeted mounts instead of a single broad
+	// /workspace mount. This preserves the container's $TSUKU_HOME filesystem
+	// (e.g., tools pre-installed by a foundation image) while exchanging only
+	// the specific files the host needs to provide or receive.
 	opts := validate.RunOptions{
 		Image:   containerImage,
 		Command: []string{"/bin/sh", "/workspace/sandbox.sh"},
@@ -307,14 +353,24 @@ func (e *Executor) Sandbox(
 		},
 		Mounts: []validate.Mount{
 			{
-				Source:   workspaceDir,
-				Target:   "/workspace",
-				ReadOnly: false,
+				Source:   planPath,
+				Target:   "/workspace/plan.json",
+				ReadOnly: true,
+			},
+			{
+				Source:   scriptPath,
+				Target:   "/workspace/sandbox.sh",
+				ReadOnly: true,
 			},
 			{
 				Source:   cacheDir,
 				Target:   "/workspace/tsuku/cache/downloads",
 				ReadOnly: true,
+			},
+			{
+				Source:   outputDir,
+				Target:   "/workspace/output",
+				ReadOnly: false,
 			},
 		},
 	}
@@ -325,6 +381,17 @@ func (e *Executor) Sandbox(
 			Source:   e.tsukuBinary,
 			Target:   "/usr/local/bin/tsuku",
 			ReadOnly: true,
+		})
+	}
+
+	// Mount shared cargo registry cache if configured.
+	// The cargo_build action reads TSUKU_CARGO_REGISTRY_CACHE and creates
+	// the symlink from $CARGO_HOME/registry to this mount.
+	if e.cargoRegistryCacheDir != "" {
+		opts.Mounts = append(opts.Mounts, validate.Mount{
+			Source:   e.cargoRegistryCacheDir,
+			Target:   "/workspace/cargo-registry-cache",
+			ReadOnly: false,
 		})
 	}
 
@@ -357,7 +424,8 @@ func (e *Executor) Sandbox(
 	}
 
 	// Install succeeded. Now check verification results.
-	verified, verifyExitCode := e.readVerifyResults(workspaceDir, plan)
+	// Markers are written to the output directory mount, not workspaceDir directly.
+	verified, verifyExitCode := e.readVerifyResults(outputDir, plan)
 
 	return &SandboxResult{
 		Passed:         result.ExitCode == 0,
@@ -370,19 +438,20 @@ func (e *Executor) Sandbox(
 	}, nil
 }
 
-// readVerifyResults reads verification marker files from the workspace and
-// evaluates the verify results using executor.CheckPlanVerification.
+// readVerifyResults reads verification marker files from the output directory
+// and evaluates the verify results using executor.CheckPlanVerification.
+// The outputDir corresponds to the host-side path mounted at /workspace/output/.
 // Returns (verified, verifyExitCode).
 // If no verify command exists, returns (true, -1).
-func (e *Executor) readVerifyResults(workspaceDir string, plan *executor.InstallationPlan) (bool, int) {
+func (e *Executor) readVerifyResults(outputDir string, plan *executor.InstallationPlan) (bool, int) {
 	// If no verify command, verification is considered passed
 	if plan.Verify == nil || plan.Verify.Command == "" {
 		return true, -1
 	}
 
-	// Read marker files
-	exitPath := filepath.Join(workspaceDir, verifyExitMarker)
-	outputPath := filepath.Join(workspaceDir, verifyOutputMarker)
+	// Read marker files from the output directory
+	exitPath := filepath.Join(outputDir, verifyExitMarker)
+	outputPath := filepath.Join(outputDir, verifyOutputMarker)
 
 	exitData, err := os.ReadFile(exitPath)
 	if err != nil {
@@ -499,29 +568,43 @@ func (e *Executor) buildSandboxScript(
 	sb.WriteString("#!/bin/sh\n")
 	sb.WriteString("set -e\n\n")
 
-	// Setup TSUKU_HOME directory structure
-	sb.WriteString("# Setup TSUKU_HOME\n")
-	sb.WriteString("mkdir -p /workspace/tsuku/recipes\n")
-	sb.WriteString("mkdir -p /workspace/tsuku/bin\n")
-	sb.WriteString("mkdir -p /workspace/tsuku/tools\n\n")
+	// Create TSUKU_HOME structure if not provided by foundation image.
+	// When a foundation image pre-installs dependencies, the directory
+	// structure (and state.json) already exists on the container's filesystem.
+	// Creating it unconditionally would clobber that state.
+	sb.WriteString("# Create TSUKU_HOME structure if not provided by foundation image\n")
+	sb.WriteString("if [ ! -d /workspace/tsuku/tools ]; then\n")
+	sb.WriteString("  mkdir -p /workspace/tsuku/recipes /workspace/tsuku/bin /workspace/tsuku/tools\n")
+	sb.WriteString("fi\n\n")
 
-	// Add $TSUKU_HOME/bin to PATH so dependency binaries are available
-	// This is needed when plans include dependency steps (e.g., nodejs for npm_exec)
-	sb.WriteString("# Add TSUKU_HOME/bin to PATH for dependency binaries\n")
-	sb.WriteString("export PATH=/workspace/tsuku/bin:$PATH\n\n")
+	// Add tools/current and bin to PATH so pre-installed tool binaries are available.
+	// tools/current contains symlinks created by install_binaries (e.g., patchelf,
+	// cmake). bin is legacy but kept for compatibility.
+	sb.WriteString("# Add TSUKU_HOME paths for dependency binaries\n")
+	sb.WriteString("export PATH=/workspace/tsuku/tools/current:/workspace/tsuku/bin:$PATH\n\n")
+
+	// NOTE: Cargo registry cache sharing is handled via the
+	// TSUKU_CARGO_REGISTRY_CACHE environment variable, which is set in the
+	// container env when cargoRegistryCacheDir is configured. The cargo_build
+	// action reads this variable after creating CARGO_HOME and symlinks
+	// $CARGO_HOME/registry to the shared mount. This works because CARGO_HOME
+	// is only known after buildDeterministicCargoEnv() runs (it creates an
+	// isolated per-build directory), so a shell-level guard on $CARGO_HOME
+	// in this script would never trigger.
 
 	// Run tsuku install with pre-generated plan
 	// tsuku handles build tool dependencies automatically via ActionDependencies
 	sb.WriteString("# Run tsuku install with pre-generated plan\n")
 	sb.WriteString("tsuku install --plan /workspace/plan.json --force\n")
 
-	// Append verify block if the plan has a verify command
+	// Append verify block if the plan has a verify command.
+	// Markers are written to /workspace/output/ which is the only read-write mount.
 	if plan.Verify != nil && plan.Verify.Command != "" {
 		sb.WriteString("\n# Run verify command and capture results to marker files\n")
 		sb.WriteString("set +e\n")
 		sb.WriteString("export PATH=\"$TSUKU_HOME/bin:$TSUKU_HOME/tools/current:$PATH\"\n")
-		sb.WriteString(fmt.Sprintf("%s > /workspace/%s 2>&1\n", plan.Verify.Command, verifyOutputMarker))
-		sb.WriteString(fmt.Sprintf("echo $? > /workspace/%s\n", verifyExitMarker))
+		sb.WriteString(fmt.Sprintf("%s > /workspace/output/%s 2>&1\n", plan.Verify.Command, verifyOutputMarker))
+		sb.WriteString(fmt.Sprintf("echo $? > /workspace/output/%s\n", verifyExitMarker))
 	}
 
 	return sb.String()

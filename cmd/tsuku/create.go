@@ -683,7 +683,9 @@ func runCreate(cmd *cobra.Command, args []string) {
 		}
 		detector := validate.NewRuntimeDetector()
 		sandboxExec = sandbox.NewExecutor(detector,
-			sandbox.WithDownloadCacheDir(cfg.DownloadCacheDir))
+			sandbox.WithDownloadCacheDir(cfg.DownloadCacheDir),
+			sandbox.WithCargoRegistryCacheDir(cfg.CargoRegistryCacheDir),
+		)
 	}
 
 	// Create orchestrator for generate → sandbox → repair cycle
