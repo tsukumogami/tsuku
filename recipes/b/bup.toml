@@ -29,3 +29,6 @@
 [verify]
   command = "bup --version"
   pattern = ""
+  mode = "output"
+  reason = "bup gem reports version unknown and exits non-zero"
+  exit_code = 1

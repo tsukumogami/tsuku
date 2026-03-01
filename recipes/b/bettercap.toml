@@ -29,3 +29,6 @@
 [verify]
   command = "bettercap --version"
   pattern = ""
+  mode = "output"
+  reason = "bettercap requires root privileges to run"
+  exit_code = 1

@@ -30,5 +30,8 @@
   binaries = ["bin/bwa"]
 
 [verify]
-  command = "bwa --version"
+  command = "bwa"
   pattern = ""
+  mode = "output"
+  reason = "bwa prints usage and exits non-zero when called without arguments or with --version"
+  exit_code = 1

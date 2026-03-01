@@ -30,5 +30,5 @@
   binaries = ["bin/ct"]
 
 [verify]
-  command = "ct --version"
+  command = "ct version"
   pattern = ""

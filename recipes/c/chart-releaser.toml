@@ -30,5 +30,5 @@
   binaries = ["bin/cr"]
 
 [verify]
-  command = "cr --version"
+  command = "cr version"
   pattern = ""

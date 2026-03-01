@@ -30,5 +30,5 @@
   binaries = ["bin/chainloop"]
 
 [verify]
-  command = "chainloop --version"
+  command = "chainloop version"
   pattern = ""

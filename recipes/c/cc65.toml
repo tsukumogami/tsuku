@@ -30,5 +30,5 @@
   binaries = ["bin/ar65", "bin/ca65", "bin/cc65", "bin/chrcvt65", "bin/cl65", "bin/co65", "bin/da65", "bin/grc65", "bin/ld65", "bin/od65", "bin/sim65", "bin/sp65"]
 
 [verify]
-  command = "ar65 --version"
+  command = "cc65 --version"
   pattern = ""

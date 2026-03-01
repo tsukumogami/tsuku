@@ -33,3 +33,6 @@
 [verify]
   command = "bam2bed --version"
   pattern = ""
+  mode = "output"
+  reason = "bam2bed --version prints help text and exits non-zero"
+  exit_code = 1

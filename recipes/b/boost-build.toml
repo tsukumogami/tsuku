@@ -32,3 +32,6 @@
 [verify]
   command = "b2 --version"
   pattern = ""
+  mode = "output"
+  reason = "b2 --version exits non-zero despite printing version info"
+  exit_code = 1

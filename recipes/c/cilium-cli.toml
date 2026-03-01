@@ -30,5 +30,5 @@
   binaries = ["bin/cilium"]
 
 [verify]
-  command = "cilium --version"
+  command = "cilium version --client"
   pattern = ""
