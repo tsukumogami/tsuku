@@ -3,6 +3,7 @@ name = "readline"
 description = "GNU Readline library"
 homepage = "https://tiswww.case.edu/php/chet/readline/rltop.html"
 type = "library"
+supported_os = ["darwin"]
 dependencies = ["ncurses"]
 
 [metadata.satisfies]
