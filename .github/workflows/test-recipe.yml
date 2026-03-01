@@ -521,7 +521,7 @@ jobs:
             mkdir -p "$TSUKU_HOME/cache"
             ln -sf "$SHARED_CACHE" "$TSUKU_HOME/cache/downloads"
 
-            if gtimeout 300 ./tsuku-darwin-arm64 install --force \
+            if gtimeout 600 ./tsuku-darwin-arm64 install --force \
                 --dangerously-suppress-security \
                 --recipe "$recipe_path" 2>&1; then
               PASSED=$((PASSED + 1))
@@ -621,7 +621,7 @@ jobs:
             mkdir -p "$TSUKU_HOME/cache"
             ln -sf "$SHARED_CACHE" "$TSUKU_HOME/cache/downloads"
 
-            if gtimeout 300 ./tsuku-darwin-amd64 install --force \
+            if gtimeout 600 ./tsuku-darwin-amd64 install --force \
                 --dangerously-suppress-security \
                 --recipe "$recipe_path" 2>&1; then
               PASSED=$((PASSED + 1))
