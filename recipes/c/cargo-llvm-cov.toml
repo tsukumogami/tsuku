@@ -27,5 +27,5 @@
   executables = ["cargo-llvm-cov"]
 
 [verify]
-  command = "cargo-llvm-cov --version"
+  command = "cargo llvm-cov --version"
   pattern = ""
