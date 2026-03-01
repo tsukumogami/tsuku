@@ -1,13 +1,71 @@
 package sandbox
 
 import (
+	"context"
+	"encoding/json"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/tsukumogami/tsuku/internal/executor"
+	"github.com/tsukumogami/tsuku/internal/log"
+	"github.com/tsukumogami/tsuku/internal/validate"
 )
+
+// mockRuntime is a test double for validate.Runtime used by sandbox tests.
+type mockRuntime struct {
+	name     string
+	rootless bool
+
+	runFunc                 func(ctx context.Context, opts validate.RunOptions) (*validate.RunResult, error)
+	buildFunc               func(ctx context.Context, imageName, baseImage string, buildCommands []string) error
+	buildFromDockerfileFunc func(ctx context.Context, imageName string, contextDir string) error
+	imageExistsFunc         func(ctx context.Context, name string) (bool, error)
+
+	// Call counters for assertions
+	buildFromDockerfileCalls int
+	imageExistsCalls         int
+	runCalls                 int
+	lastRunOpts              validate.RunOptions
+}
+
+func (m *mockRuntime) Name() string     { return m.name }
+func (m *mockRuntime) IsRootless() bool { return m.rootless }
+
+func (m *mockRuntime) Run(ctx context.Context, opts validate.RunOptions) (*validate.RunResult, error) {
+	m.runCalls++
+	m.lastRunOpts = opts
+	if m.runFunc != nil {
+		return m.runFunc(ctx, opts)
+	}
+	return &validate.RunResult{ExitCode: 0}, nil
+}
+
+func (m *mockRuntime) Build(ctx context.Context, imageName, baseImage string, buildCommands []string) error {
+	if m.buildFunc != nil {
+		return m.buildFunc(ctx, imageName, baseImage, buildCommands)
+	}
+	return nil
+}
+
+func (m *mockRuntime) BuildFromDockerfile(ctx context.Context, imageName string, contextDir string) error {
+	m.buildFromDockerfileCalls++
+	if m.buildFromDockerfileFunc != nil {
+		return m.buildFromDockerfileFunc(ctx, imageName, contextDir)
+	}
+	return nil
+}
+
+func (m *mockRuntime) ImageExists(ctx context.Context, name string) (bool, error) {
+	m.imageExistsCalls++
+	if m.imageExistsFunc != nil {
+		return m.imageExistsFunc(ctx, name)
+	}
+	return false, nil
+}
 
 // --- FlattenDependencies tests ---
 
@@ -773,5 +831,311 @@ func TestFoundation_EndToEnd_MultiDep(t *testing.T) {
 	}
 	if !strings.Contains(dockerfile, "dep-02-rust.json") {
 		t.Error("Missing dep-02-rust.json")
+	}
+}
+
+// --- BuildFoundationImage tests ---
+
+// createTempTsukuBinary creates a minimal executable file that can serve as
+// the tsuku binary in the build context. Returns the path.
+func createTempTsukuBinary(t *testing.T) string {
+	t.Helper()
+	dir := t.TempDir()
+	binPath := filepath.Join(dir, "tsuku")
+	if err := os.WriteFile(binPath, []byte("#!/bin/sh\necho mock-tsuku\n"), 0755); err != nil {
+		t.Fatal(err)
+	}
+	return binPath
+}
+
+func TestBuildFoundationImage_Cached(t *testing.T) {
+	t.Parallel()
+
+	mock := &mockRuntime{
+		name:     "docker",
+		rootless: true,
+		imageExistsFunc: func(ctx context.Context, name string) (bool, error) {
+			return true, nil
+		},
+	}
+
+	tsukuBin := createTempTsukuBinary(t)
+	exec := &Executor{
+		logger:      log.NewNoop(),
+		tsukuBinary: tsukuBin,
+	}
+
+	deps := []FlatDep{
+		{
+			Tool:    "rust",
+			Version: "1.82.0",
+			Plan: &executor.InstallationPlan{
+				FormatVersion: executor.PlanFormatVersion,
+				Tool:          "rust",
+				Version:       "1.82.0",
+				Steps:         []executor.ResolvedStep{{Action: "download_file", Checksum: "r123"}},
+			},
+		},
+	}
+
+	imageName, err := exec.BuildFoundationImage(
+		context.Background(), mock, "tsuku/sandbox-cache:debian-abc", "debian", deps,
+	)
+	if err != nil {
+		t.Fatalf("BuildFoundationImage returned error: %v", err)
+	}
+
+	// Should return a valid foundation image name
+	if !strings.HasPrefix(imageName, "tsuku/sandbox-foundation:debian-") {
+		t.Errorf("Expected foundation image name, got %q", imageName)
+	}
+
+	// ImageExists should have been called exactly once
+	if mock.imageExistsCalls != 1 {
+		t.Errorf("ImageExists called %d times, want 1", mock.imageExistsCalls)
+	}
+
+	// BuildFromDockerfile should NOT have been called (image was cached)
+	if mock.buildFromDockerfileCalls != 0 {
+		t.Errorf("BuildFromDockerfile called %d times, want 0 (image was cached)",
+			mock.buildFromDockerfileCalls)
+	}
+}
+
+func TestBuildFoundationImage_NotCached(t *testing.T) {
+	t.Parallel()
+
+	var capturedContextDir string
+	var capturedImageName string
+
+	mock := &mockRuntime{
+		name:     "docker",
+		rootless: true,
+		imageExistsFunc: func(ctx context.Context, name string) (bool, error) {
+			return false, nil
+		},
+		buildFromDockerfileFunc: func(ctx context.Context, imageName string, contextDir string) error {
+			capturedContextDir = contextDir
+			capturedImageName = imageName
+			return nil
+		},
+	}
+
+	tsukuBin := createTempTsukuBinary(t)
+	exec := &Executor{
+		logger:      log.NewNoop(),
+		tsukuBinary: tsukuBin,
+	}
+
+	deps := []FlatDep{
+		{
+			Tool:    "rust",
+			Version: "1.82.0",
+			Plan: &executor.InstallationPlan{
+				FormatVersion: executor.PlanFormatVersion,
+				Tool:          "rust",
+				Version:       "1.82.0",
+				Steps:         []executor.ResolvedStep{{Action: "download_file", Checksum: "r123"}},
+			},
+		},
+	}
+
+	imageName, err := exec.BuildFoundationImage(
+		context.Background(), mock, "tsuku/sandbox-cache:debian-abc", "debian", deps,
+	)
+	if err != nil {
+		t.Fatalf("BuildFoundationImage returned error: %v", err)
+	}
+
+	// Should return a valid foundation image name
+	if !strings.HasPrefix(imageName, "tsuku/sandbox-foundation:debian-") {
+		t.Errorf("Expected foundation image name, got %q", imageName)
+	}
+
+	// ImageExists should have been called exactly once
+	if mock.imageExistsCalls != 1 {
+		t.Errorf("ImageExists called %d times, want 1", mock.imageExistsCalls)
+	}
+
+	// BuildFromDockerfile should have been called exactly once
+	if mock.buildFromDockerfileCalls != 1 {
+		t.Errorf("BuildFromDockerfile called %d times, want 1", mock.buildFromDockerfileCalls)
+	}
+
+	// The image name passed to BuildFromDockerfile should match the returned name
+	if capturedImageName != imageName {
+		t.Errorf("BuildFromDockerfile imageName = %q, returned imageName = %q", capturedImageName, imageName)
+	}
+
+	// Verify the build context directory contained the expected files.
+	// Note: the build context is cleaned up by deferred os.RemoveAll, but
+	// our mock captured the path before cleanup. We verify the structure
+	// by checking what BuildFromDockerfile received at call time.
+	// Since the defer cleanup happens after the method returns, the context
+	// dir is already gone. Instead, verify via captured imageName/contextDir.
+	if capturedContextDir == "" {
+		t.Error("BuildFromDockerfile was not called with a context directory")
+	}
+}
+
+func TestBuildFoundationImage_BuildContextContents(t *testing.T) {
+	t.Parallel()
+
+	// Use a BuildFromDockerfile mock that inspects the context directory
+	// contents before the deferred cleanup runs.
+	var foundDockerfile bool
+	var foundTsuku bool
+	var foundPlan bool
+	var dockerfileContent string
+	var planContent string
+
+	mock := &mockRuntime{
+		name:     "docker",
+		rootless: true,
+		imageExistsFunc: func(ctx context.Context, name string) (bool, error) {
+			return false, nil
+		},
+		buildFromDockerfileFunc: func(ctx context.Context, imageName string, contextDir string) error {
+			// Inspect build context before it's cleaned up
+			if data, err := os.ReadFile(filepath.Join(contextDir, "Dockerfile")); err == nil {
+				foundDockerfile = true
+				dockerfileContent = string(data)
+			}
+			if info, err := os.Stat(filepath.Join(contextDir, "tsuku")); err == nil {
+				foundTsuku = true
+				// Check that the binary is executable
+				if info.Mode()&0111 == 0 {
+					t.Error("tsuku binary should be executable")
+				}
+			}
+			if data, err := os.ReadFile(filepath.Join(contextDir, "plans", "dep-00-rust.json")); err == nil {
+				foundPlan = true
+				planContent = string(data)
+			}
+			return nil
+		},
+	}
+
+	tsukuBin := createTempTsukuBinary(t)
+	exec := &Executor{
+		logger:      log.NewNoop(),
+		tsukuBinary: tsukuBin,
+	}
+
+	deps := []FlatDep{
+		{
+			Tool:    "rust",
+			Version: "1.82.0",
+			Plan: &executor.InstallationPlan{
+				FormatVersion: executor.PlanFormatVersion,
+				Tool:          "rust",
+				Version:       "1.82.0",
+				Steps:         []executor.ResolvedStep{{Action: "download_file", Checksum: "r123"}},
+			},
+		},
+	}
+
+	_, err := exec.BuildFoundationImage(
+		context.Background(), mock, "tsuku/sandbox-cache:debian-abc", "debian", deps,
+	)
+	if err != nil {
+		t.Fatalf("BuildFoundationImage returned error: %v", err)
+	}
+
+	if !foundDockerfile {
+		t.Error("Build context should contain Dockerfile")
+	}
+	if !foundTsuku {
+		t.Error("Build context should contain tsuku binary")
+	}
+	if !foundPlan {
+		t.Error("Build context should contain plans/dep-00-rust.json")
+	}
+
+	// Verify Dockerfile content matches what GenerateFoundationDockerfile produces
+	expectedDockerfile := GenerateFoundationDockerfile("tsuku/sandbox-cache:debian-abc", deps)
+	if dockerfileContent != expectedDockerfile {
+		t.Errorf("Dockerfile content mismatch.\nGot:\n%s\nWant:\n%s", dockerfileContent, expectedDockerfile)
+	}
+
+	// Verify plan JSON is valid and contains the right tool
+	var plan executor.InstallationPlan
+	if err := json.Unmarshal([]byte(planContent), &plan); err != nil {
+		t.Fatalf("Plan JSON is invalid: %v", err)
+	}
+	if plan.Tool != "rust" {
+		t.Errorf("Plan tool = %q, want 'rust'", plan.Tool)
+	}
+	if plan.Version != "1.82.0" {
+		t.Errorf("Plan version = %q, want '1.82.0'", plan.Version)
+	}
+}
+
+func TestBuildFoundationImage_MultipleDeps(t *testing.T) {
+	t.Parallel()
+
+	var planFiles []string
+	mock := &mockRuntime{
+		name:     "podman",
+		rootless: true,
+		imageExistsFunc: func(ctx context.Context, name string) (bool, error) {
+			return false, nil
+		},
+		buildFromDockerfileFunc: func(ctx context.Context, imageName string, contextDir string) error {
+			// List plan files
+			entries, err := os.ReadDir(filepath.Join(contextDir, "plans"))
+			if err != nil {
+				return err
+			}
+			for _, e := range entries {
+				planFiles = append(planFiles, e.Name())
+			}
+			return nil
+		},
+	}
+
+	tsukuBin := createTempTsukuBinary(t)
+	exec := &Executor{
+		logger:      log.NewNoop(),
+		tsukuBinary: tsukuBin,
+	}
+
+	deps := []FlatDep{
+		{
+			Tool:    "openssl",
+			Version: "3.0.0",
+			Plan: &executor.InstallationPlan{
+				FormatVersion: executor.PlanFormatVersion,
+				Tool:          "openssl",
+				Version:       "3.0.0",
+			},
+		},
+		{
+			Tool:    "rust",
+			Version: "1.82.0",
+			Plan: &executor.InstallationPlan{
+				FormatVersion: executor.PlanFormatVersion,
+				Tool:          "rust",
+				Version:       "1.82.0",
+			},
+		},
+	}
+
+	_, err := exec.BuildFoundationImage(
+		context.Background(), mock, "tsuku/sandbox-cache:debian-abc", "debian", deps,
+	)
+	if err != nil {
+		t.Fatalf("BuildFoundationImage returned error: %v", err)
+	}
+
+	// Should have two plan files
+	if len(planFiles) != 2 {
+		t.Fatalf("Expected 2 plan files, got %d: %v", len(planFiles), planFiles)
+	}
+	if planFiles[0] != "dep-00-openssl.json" {
+		t.Errorf("First plan file = %q, want 'dep-00-openssl.json'", planFiles[0])
+	}
+	if planFiles[1] != "dep-01-rust.json" {
+		t.Errorf("Second plan file = %q, want 'dep-01-rust.json'", planFiles[1])
 	}
 }

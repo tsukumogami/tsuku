@@ -1152,3 +1152,175 @@ func TestReadVerifyResults_OutputDirectory(t *testing.T) {
 		t.Errorf("Expected exitCode=-1 when reading from wrong dir, got %d", exitCode2)
 	}
 }
+
+// --- Foundation image wiring tests (scenarios 11 and 12) ---
+
+// TestSandbox_NoDep_SkipsFoundation verifies that when a plan has no
+// dependencies, Executor.Sandbox() uses the package image directly and
+// does not call BuildFromDockerfile.
+func TestSandbox_NoDep_SkipsFoundation(t *testing.T) {
+	t.Parallel()
+
+	mock := &mockRuntime{
+		name:     "podman",
+		rootless: true,
+		// ImageExists: return false for the package image check, triggering
+		// a Build() call for the package image (normal path).
+		imageExistsFunc: func(ctx context.Context, name string) (bool, error) {
+			// Package image not cached -- triggers Build() for it.
+			// Foundation images are never checked because deps are empty.
+			return false, nil
+		},
+		runFunc: func(ctx context.Context, opts validate.RunOptions) (*validate.RunResult, error) {
+			return &validate.RunResult{ExitCode: 0}, nil
+		},
+	}
+
+	detector := validate.NewRuntimeDetectorFrom(mock)
+
+	// Create a real tsuku binary file (needed for the binary mount check)
+	tsukuBin := createTempBinary(t)
+
+	exec := NewExecutor(detector,
+		WithLogger(log.NewNoop()),
+		WithTsukuBinary(tsukuBin),
+	)
+
+	plan := &executor.InstallationPlan{
+		Tool:    "fzf",
+		Version: "0.42.0",
+		Platform: executor.Platform{
+			OS:          "linux",
+			Arch:        "amd64",
+			LinuxFamily: "debian",
+		},
+		Steps: []executor.ResolvedStep{
+			{Action: "download_file", Checksum: "abc123"},
+		},
+		// No Dependencies -- no foundation image needed
+	}
+
+	target := platform.Target{}
+	reqs := ComputeSandboxRequirements(plan, "")
+
+	result, err := exec.Sandbox(context.Background(), plan, target, reqs)
+	if err != nil {
+		t.Fatalf("Sandbox returned error: %v", err)
+	}
+
+	// Sandbox should have completed (not skipped)
+	if result.Skipped {
+		t.Error("Expected Sandbox to run, not skip")
+	}
+
+	// BuildFromDockerfile should NOT have been called -- no foundation image
+	if mock.buildFromDockerfileCalls != 0 {
+		t.Errorf("BuildFromDockerfile called %d times, want 0 (no deps)", mock.buildFromDockerfileCalls)
+	}
+
+	// The image used for Run() should be the package image, not a foundation image
+	if strings.Contains(mock.lastRunOpts.Image, "sandbox-foundation") {
+		t.Errorf("Run() image should not be a foundation image, got %q", mock.lastRunOpts.Image)
+	}
+}
+
+// TestSandbox_WithDeps_BuildsFoundation verifies that when a plan has
+// InstallTime dependencies, Executor.Sandbox() calls BuildFoundationImage
+// and uses the resulting foundation image for the container run.
+func TestSandbox_WithDeps_BuildsFoundation(t *testing.T) {
+	t.Parallel()
+
+	var buildFromDockerfileCalledWithImage string
+
+	mock := &mockRuntime{
+		name:     "podman",
+		rootless: true,
+		imageExistsFunc: func(ctx context.Context, name string) (bool, error) {
+			// Package image: not cached (triggers Build for it)
+			// Foundation image: not cached (triggers BuildFromDockerfile)
+			return false, nil
+		},
+		buildFromDockerfileFunc: func(ctx context.Context, imageName string, contextDir string) error {
+			buildFromDockerfileCalledWithImage = imageName
+			return nil
+		},
+		runFunc: func(ctx context.Context, opts validate.RunOptions) (*validate.RunResult, error) {
+			return &validate.RunResult{ExitCode: 0}, nil
+		},
+	}
+
+	detector := validate.NewRuntimeDetectorFrom(mock)
+	tsukuBin := createTempBinary(t)
+
+	exec := NewExecutor(detector,
+		WithLogger(log.NewNoop()),
+		WithTsukuBinary(tsukuBin),
+	)
+
+	plan := &executor.InstallationPlan{
+		Tool:    "cargo-nextest",
+		Version: "0.24.5",
+		Platform: executor.Platform{
+			OS:          "linux",
+			Arch:        "amd64",
+			LinuxFamily: "debian",
+		},
+		Dependencies: []executor.DependencyPlan{
+			{
+				Tool:    "rust",
+				Version: "1.82.0",
+				Steps:   []executor.ResolvedStep{{Action: "download_file", Checksum: "r123"}},
+			},
+		},
+		Steps: []executor.ResolvedStep{
+			{Action: "cargo_build"},
+		},
+	}
+
+	target := platform.Target{}
+	reqs := ComputeSandboxRequirements(plan, "")
+
+	result, err := exec.Sandbox(context.Background(), plan, target, reqs)
+	if err != nil {
+		t.Fatalf("Sandbox returned error: %v", err)
+	}
+
+	if result.Skipped {
+		t.Error("Expected Sandbox to run, not skip")
+	}
+
+	// BuildFromDockerfile should have been called exactly once for the
+	// foundation image
+	if mock.buildFromDockerfileCalls != 1 {
+		t.Errorf("BuildFromDockerfile called %d times, want 1", mock.buildFromDockerfileCalls)
+	}
+
+	// The image passed to BuildFromDockerfile should be a foundation image
+	if !strings.HasPrefix(buildFromDockerfileCalledWithImage, "tsuku/sandbox-foundation:debian-") {
+		t.Errorf("BuildFromDockerfile image = %q, want prefix 'tsuku/sandbox-foundation:debian-'",
+			buildFromDockerfileCalledWithImage)
+	}
+
+	// The image used for Run() should be the foundation image
+	if !strings.HasPrefix(mock.lastRunOpts.Image, "tsuku/sandbox-foundation:debian-") {
+		t.Errorf("Run() image = %q, want prefix 'tsuku/sandbox-foundation:debian-'",
+			mock.lastRunOpts.Image)
+	}
+
+	// The Run() image should match the BuildFromDockerfile image
+	if mock.lastRunOpts.Image != buildFromDockerfileCalledWithImage {
+		t.Errorf("Run() image %q does not match BuildFromDockerfile image %q",
+			mock.lastRunOpts.Image, buildFromDockerfileCalledWithImage)
+	}
+}
+
+// createTempBinary creates a minimal executable file for test use.
+func createTempBinary(t *testing.T) string {
+	t.Helper()
+	dir := t.TempDir()
+	binPath := filepath.Join(dir, "tsuku")
+	if err := os.WriteFile(binPath, []byte("#!/bin/sh\necho mock\n"), 0755); err != nil {
+		t.Fatal(err)
+	}
+	return binPath
+}

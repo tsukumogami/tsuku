@@ -101,6 +101,19 @@ func NewRuntimeDetector() *RuntimeDetector {
 	}
 }
 
+// NewRuntimeDetectorFrom creates a RuntimeDetector pre-loaded with the given
+// runtime. Detect() will return r immediately without probing the system.
+// Intended for testing from external packages that cannot access unexported
+// fields.
+func NewRuntimeDetectorFrom(r Runtime) *RuntimeDetector {
+	return &RuntimeDetector{
+		detected: r,
+		checked:  true,
+		lookPath: exec.LookPath,
+		cmdRun:   defaultCmdRun,
+	}
+}
+
 // defaultCmdRun executes a command and returns its combined output.
 func defaultCmdRun(ctx context.Context, name string, args ...string) ([]byte, error) {
 	cmd := exec.CommandContext(ctx, name, args...)

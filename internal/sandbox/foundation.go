@@ -1,13 +1,18 @@
 package sandbox
 
 import (
+	"context"
 	"crypto/sha256"
+	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 	"time"
 
 	"github.com/tsukumogami/tsuku/internal/executor"
+	"github.com/tsukumogami/tsuku/internal/validate"
 )
 
 // FlatDep represents a flattened dependency with its complete plan.
@@ -125,4 +130,84 @@ func FoundationImageName(family string, dockerfile string) string {
 	h := sha256.Sum256([]byte(dockerfile))
 	hash16 := fmt.Sprintf("%x", h[:8]) // 8 bytes = 16 hex chars
 	return fmt.Sprintf("tsuku/sandbox-foundation:%s-%s", family, hash16)
+}
+
+// BuildFoundationImage builds a foundation Docker image that pre-installs the
+// given dependencies as cached layers. If the image already exists (checked via
+// runtime.ImageExists), it returns the cached image name immediately without
+// rebuilding. Otherwise it creates a temp build context containing the
+// Dockerfile, the tsuku binary, and one plan JSON file per dependency, then
+// calls runtime.BuildFromDockerfile.
+func (e *Executor) BuildFoundationImage(
+	ctx context.Context,
+	runtime validate.Runtime,
+	packageImage string,
+	family string,
+	deps []FlatDep,
+) (string, error) {
+	// Generate the Dockerfile and derive the image name from its content hash
+	dockerfile := GenerateFoundationDockerfile(packageImage, deps)
+	imageName := FoundationImageName(family, dockerfile)
+
+	// Check if the image already exists in the local cache
+	exists, err := runtime.ImageExists(ctx, imageName)
+	if err != nil {
+		return "", fmt.Errorf("failed to check foundation image existence: %w", err)
+	}
+	if exists {
+		e.logger.Debug("Using cached foundation image",
+			"image", imageName,
+			"family", family)
+		return imageName, nil
+	}
+
+	// Create temp build context directory
+	contextDir, err := os.MkdirTemp("", "tsuku-foundation-")
+	if err != nil {
+		return "", fmt.Errorf("failed to create foundation build context: %w", err)
+	}
+	defer func() { _ = os.RemoveAll(contextDir) }()
+
+	// Write Dockerfile
+	if err := os.WriteFile(filepath.Join(contextDir, "Dockerfile"), []byte(dockerfile), 0644); err != nil {
+		return "", fmt.Errorf("failed to write foundation Dockerfile: %w", err)
+	}
+
+	// Copy tsuku binary into build context
+	tsukuData, err := os.ReadFile(e.tsukuBinary)
+	if err != nil {
+		return "", fmt.Errorf("failed to read tsuku binary %q: %w", e.tsukuBinary, err)
+	}
+	if err := os.WriteFile(filepath.Join(contextDir, "tsuku"), tsukuData, 0755); err != nil {
+		return "", fmt.Errorf("failed to write tsuku binary to build context: %w", err)
+	}
+
+	// Create plans subdirectory and write one JSON file per dependency
+	plansDir := filepath.Join(contextDir, "plans")
+	if err := os.MkdirAll(plansDir, 0755); err != nil {
+		return "", fmt.Errorf("failed to create plans directory: %w", err)
+	}
+
+	for i, dep := range deps {
+		planData, err := json.MarshalIndent(dep.Plan, "", "  ")
+		if err != nil {
+			return "", fmt.Errorf("failed to serialize plan for %s: %w", dep.Tool, err)
+		}
+		filename := fmt.Sprintf("dep-%02d-%s.json", i, dep.Tool)
+		if err := os.WriteFile(filepath.Join(plansDir, filename), planData, 0644); err != nil {
+			return "", fmt.Errorf("failed to write plan file %s: %w", filename, err)
+		}
+	}
+
+	// Build the foundation image
+	e.logger.Debug("Building foundation image",
+		"image", imageName,
+		"family", family,
+		"deps", len(deps))
+
+	if err := runtime.BuildFromDockerfile(ctx, imageName, contextDir); err != nil {
+		return "", fmt.Errorf("failed to build foundation image: %w", err)
+	}
+
+	return imageName, nil
 }

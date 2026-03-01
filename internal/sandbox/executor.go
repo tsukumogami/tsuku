@@ -225,6 +225,22 @@ func (e *Executor) Sandbox(
 		containerImage = imageName
 	}
 
+	// Build foundation image if the plan has InstallTime dependencies.
+	// FlattenDependencies extracts the dependency tree into a topologically
+	// ordered flat list. If non-empty, BuildFoundationImage creates a Docker
+	// image with each dependency pre-installed as a cached layer. The
+	// container's $TSUKU_HOME filesystem is preserved via targeted mounts
+	// (not a broad /workspace mount), so pre-installed tools are found by
+	// the executor's skip logic natively.
+	deps := FlattenDependencies(plan)
+	if len(deps) > 0 {
+		foundationImage, err := e.BuildFoundationImage(ctx, runtime, containerImage, effectiveFamily, deps)
+		if err != nil {
+			return nil, fmt.Errorf("failed to build foundation image: %w", err)
+		}
+		containerImage = foundationImage
+	}
+
 	e.logger.Debug("Running sandbox test",
 		"tool", plan.Tool,
 		"runtime", runtime.Name(),
