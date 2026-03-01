@@ -3,13 +3,13 @@
   "design_doc": "docs/designs/DESIGN-sandbox-build-cache.md",
   "branch": "docs/sandbox-build-cache",
   "pr_number": 1956,
-  "integrity_hash": "sha256:47f96425b52df21fa89fb33eed6387e6ab746e5d0ea7a42189e1e53cfda34da3",
+  "integrity_hash": "sha256:0c4fb3cdc62205a6d95971260b1cabf52635435a66b67f126f153c6a661584a4",
   "issues": [
     {
       "number": 1958,
       "title": "feat(validate): add BuildFromDockerfile to Runtime interface",
-      "status": "scrutinized",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "ci_fix_attempts": 0,
       "issue_type": "code",
       "dependencies": [],
@@ -58,6 +58,21 @@
           }
         ]
       },
+      "reviewer_results": {
+        "issue": 1958,
+        "pragmatic": {
+          "blocking_count": 0,
+          "advisory_count": 0
+        },
+        "architect": {
+          "blocking_count": 0,
+          "advisory_count": 0
+        },
+        "maintainer": {
+          "blocking_count": 0,
+          "advisory_count": 4
+        }
+      },
       "testable_scenarios": [
         "scenario-1",
         "scenario-2"
@@ -66,14 +81,96 @@
     {
       "number": 1959,
       "title": "feat(sandbox): implement foundation image generation",
-      "status": "pending",
+      "status": "scrutinized",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [],
-      "commits": [],
-      "agent_type": "",
-      "summary": null,
+      "commits": [
+        "376572f4"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          "internal/sandbox/foundation.go",
+          "internal/sandbox/foundation_test.go"
+        ],
+        "tests_added": 24,
+        "key_decisions": "DFS with alphabetical sibling sort per design; dedup key is tool+version not just tool; shallow copy of Dependencies slice via copy() since DependencyPlan entries are value types",
+        "requirements_map": [
+          {
+            "ac": "FlattenDependencies empty slice",
+            "status": "implemented",
+            "evidence": "foundation.go:27-29"
+          },
+          {
+            "ac": "DFS leaves first",
+            "status": "implemented",
+            "evidence": "foundation.go:52-54"
+          },
+          {
+            "ac": "Deduplication",
+            "status": "implemented",
+            "evidence": "foundation.go:57-60"
+          },
+          {
+            "ac": "Alphabetical siblings",
+            "status": "implemented",
+            "evidence": "foundation.go:44-48"
+          },
+          {
+            "ac": "Preserves subtree",
+            "status": "implemented",
+            "evidence": "foundation.go:79-80"
+          },
+          {
+            "ac": "Strips timestamp",
+            "status": "implemented",
+            "evidence": "foundation.go:86"
+          },
+          {
+            "ac": "Sets FormatVersion",
+            "status": "implemented",
+            "evidence": "foundation.go:83"
+          },
+          {
+            "ac": "Dockerfile FROM",
+            "status": "implemented",
+            "evidence": "foundation.go:101"
+          },
+          {
+            "ac": "Interleaved COPY+RUN",
+            "status": "implemented",
+            "evidence": "foundation.go:106-110"
+          },
+          {
+            "ac": "Ends with rm",
+            "status": "implemented",
+            "evidence": "foundation.go:112"
+          },
+          {
+            "ac": "Non-empty for no deps",
+            "status": "implemented",
+            "evidence": "foundation.go:98-114"
+          },
+          {
+            "ac": "Image name format",
+            "status": "implemented",
+            "evidence": "foundation.go:124-127"
+          },
+          {
+            "ac": "Deterministic",
+            "status": "implemented",
+            "evidence": "SHA-256 based"
+          },
+          {
+            "ac": "Content sensitive",
+            "status": "implemented",
+            "evidence": "test verified"
+          }
+        ]
+      },
       "testable_scenarios": [
         "scenario-3",
         "scenario-4",
