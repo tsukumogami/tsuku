@@ -49,41 +49,7 @@ Current
 | ~~[#1963: feat(sandbox): add cargo registry cache mount](https://github.com/tsukumogami/tsuku/issues/1963)~~ | ~~[#1960](https://github.com/tsukumogami/tsuku/issues/1960)~~ | ~~testable~~ |
 | ~~_Adds `WithCargoRegistryCacheDir()` option to `Executor` following the `WithDownloadCacheDir()` pattern. Mounts a shared cargo registry directory into the container so `cargo fetch` results are shared across Linux families within a single recipe run. The sandbox script injects a symlink from `$CARGO_HOME/registry` to the shared mount._~~ | | |
 
-### Dependency Graph
-
-```mermaid
-graph LR
-    subgraph Phase1["Phase 1: Foundation Images + Targeted Mounts"]
-        I1958["#1958: Add BuildFromDockerfile"]
-        I1959["#1959: Foundation image generation"]
-        I1960["#1960: Switch to targeted mounts"]
-        I1961["#1961: Build + use foundation images"]
-    end
-
-    subgraph Phase2["Phase 2: CI Ecosystem Sort"]
-        I1962["#1962: Sort recipes by ecosystem"]
-    end
-
-    subgraph Phase3["Phase 3: Cargo Registry Cache"]
-        I1963["#1963: Cargo registry cache mount"]
-    end
-
-    I1958 --> I1961
-    I1959 --> I1961
-    I1960 --> I1961
-    I1961 --> I1962
-    I1960 --> I1963
-
-    classDef done fill:#c8e6c9
-    classDef ready fill:#bbdefb
-    classDef blocked fill:#fff9c4
-    classDef needsDesign fill:#e1bee7
-    classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
-
-    class I1958,I1959,I1960,I1961,I1962,I1963 done
-```
-
-**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design
+Implementation completed inline via PR [#1956](https://github.com/tsukumogami/tsuku/pull/1956).
 
 ## Context and Problem Statement
 
