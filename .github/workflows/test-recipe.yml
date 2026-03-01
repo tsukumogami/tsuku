@@ -256,6 +256,18 @@ jobs:
             recipe_name=$(echo "$RECIPES" | jq -r ".[$i].name")
             recipe_path=$(echo "$RECIPES" | jq -r ".[$i].path")
 
+            # Skip recipes that don't support this platform
+            if grep -q 'supported_os' "$recipe_path"; then
+              if ! grep 'supported_os' "$recipe_path" | grep -q '"linux"'; then
+                echo "SKIP: $recipe_name (supported_os excludes linux)"
+                continue
+              fi
+            fi
+            if grep 'unsupported_platforms' "$recipe_path" | grep -q '"linux/amd64"' 2>/dev/null; then
+              echo "SKIP: $recipe_name (unsupported on linux/amd64)"
+              continue
+            fi
+
             PIDS=()
             for family in "${FAMILIES[@]}"; do
               TOTAL=$((TOTAL + 1))
@@ -383,6 +395,18 @@ jobs:
           for i in $(seq 0 $((COUNT - 1))); do
             recipe_name=$(echo "$RECIPES" | jq -r ".[$i].name")
             recipe_path=$(echo "$RECIPES" | jq -r ".[$i].path")
+
+            # Skip recipes that don't support this platform
+            if grep -q 'supported_os' "$recipe_path"; then
+              if ! grep 'supported_os' "$recipe_path" | grep -q '"linux"'; then
+                echo "SKIP: $recipe_name (supported_os excludes linux)"
+                continue
+              fi
+            fi
+            if grep 'unsupported_platforms' "$recipe_path" | grep -q '"linux/arm64"' 2>/dev/null; then
+              echo "SKIP: $recipe_name (unsupported on linux/arm64)"
+              continue
+            fi
 
             PIDS=()
             for family in "${FAMILIES[@]}"; do
@@ -513,6 +537,19 @@ jobs:
           for i in $(seq 0 $((COUNT - 1))); do
             recipe_name=$(echo "$RECIPES" | jq -r ".[$i].name")
             recipe_path=$(echo "$RECIPES" | jq -r ".[$i].path")
+
+            # Skip recipes that don't support this platform
+            if grep -q 'supported_os' "$recipe_path"; then
+              if ! grep 'supported_os' "$recipe_path" | grep -q '"darwin"'; then
+                echo "SKIP: $recipe_name (supported_os excludes darwin)"
+                continue
+              fi
+            fi
+            if grep 'unsupported_platforms' "$recipe_path" | grep -q '"darwin/arm64"' 2>/dev/null; then
+              echo "SKIP: $recipe_name (unsupported on darwin/arm64)"
+              continue
+            fi
+
             TOTAL=$((TOTAL + 1))
 
             echo "::group::$recipe_name on macOS arm64"
@@ -613,6 +650,19 @@ jobs:
           for i in $(seq 0 $((COUNT - 1))); do
             recipe_name=$(echo "$RECIPES" | jq -r ".[$i].name")
             recipe_path=$(echo "$RECIPES" | jq -r ".[$i].path")
+
+            # Skip recipes that don't support this platform
+            if grep -q 'supported_os' "$recipe_path"; then
+              if ! grep 'supported_os' "$recipe_path" | grep -q '"darwin"'; then
+                echo "SKIP: $recipe_name (supported_os excludes darwin)"
+                continue
+              fi
+            fi
+            if grep 'unsupported_platforms' "$recipe_path" | grep -q '"darwin/amd64"' 2>/dev/null; then
+              echo "SKIP: $recipe_name (unsupported on darwin/amd64)"
+              continue
+            fi
+
             TOTAL=$((TOTAL + 1))
 
             echo "::group::$recipe_name on macOS x86_64"
