@@ -1,0 +1,8 @@
+baseURL = "https://tsuku.dev/blog/"
+languageCode = "en-us"
+title = "tsuku blog"
+disableKinds = ["taxonomy"]
+
+[params]
+  description = "Technical posts about tsuku's design and development"
+  images = ["https://tsuku.dev/assets/og-default.png"]
