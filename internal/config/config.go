@@ -317,19 +317,20 @@ var DefaultHomeOverride string
 
 // Config holds tsuku configuration
 type Config struct {
-	HomeDir          string // $TSUKU_HOME
-	ToolsDir         string // $TSUKU_HOME/tools
-	CurrentDir       string // $TSUKU_HOME/tools/current
-	RecipesDir       string // $TSUKU_HOME/recipes
-	RegistryDir      string // $TSUKU_HOME/registry (cached recipes from remote registry)
-	LibsDir          string // $TSUKU_HOME/libs (shared libraries)
-	AppsDir          string // $TSUKU_HOME/apps (macOS application bundles)
-	CacheDir         string // $TSUKU_HOME/cache
-	VersionCacheDir  string // $TSUKU_HOME/cache/versions
-	DownloadCacheDir string // $TSUKU_HOME/cache/downloads
-	KeyCacheDir      string // $TSUKU_HOME/cache/keys (PGP public keys)
-	TapCacheDir      string // $TSUKU_HOME/cache/taps (Homebrew tap metadata)
-	ConfigFile       string // $TSUKU_HOME/config.toml
+	HomeDir               string // $TSUKU_HOME
+	ToolsDir              string // $TSUKU_HOME/tools
+	CurrentDir            string // $TSUKU_HOME/tools/current
+	RecipesDir            string // $TSUKU_HOME/recipes
+	RegistryDir           string // $TSUKU_HOME/registry (cached recipes from remote registry)
+	LibsDir               string // $TSUKU_HOME/libs (shared libraries)
+	AppsDir               string // $TSUKU_HOME/apps (macOS application bundles)
+	CacheDir              string // $TSUKU_HOME/cache
+	VersionCacheDir       string // $TSUKU_HOME/cache/versions
+	DownloadCacheDir      string // $TSUKU_HOME/cache/downloads
+	CargoRegistryCacheDir string // $TSUKU_HOME/cache/cargo-registry
+	KeyCacheDir           string // $TSUKU_HOME/cache/keys (PGP public keys)
+	TapCacheDir           string // $TSUKU_HOME/cache/taps (Homebrew tap metadata)
+	ConfigFile            string // $TSUKU_HOME/config.toml
 }
 
 // DefaultConfig returns the default configuration
@@ -349,19 +350,20 @@ func DefaultConfig() (*Config, error) {
 	}
 
 	return &Config{
-		HomeDir:          tsukuHome,
-		ToolsDir:         filepath.Join(tsukuHome, "tools"),
-		CurrentDir:       filepath.Join(tsukuHome, "tools", "current"),
-		RecipesDir:       filepath.Join(tsukuHome, "recipes"),
-		RegistryDir:      filepath.Join(tsukuHome, "registry"),
-		LibsDir:          filepath.Join(tsukuHome, "libs"),
-		AppsDir:          filepath.Join(tsukuHome, "apps"),
-		CacheDir:         filepath.Join(tsukuHome, "cache"),
-		VersionCacheDir:  filepath.Join(tsukuHome, "cache", "versions"),
-		DownloadCacheDir: filepath.Join(tsukuHome, "cache", "downloads"),
-		KeyCacheDir:      filepath.Join(tsukuHome, "cache", "keys"),
-		TapCacheDir:      filepath.Join(tsukuHome, "cache", "taps"),
-		ConfigFile:       filepath.Join(tsukuHome, "config.toml"),
+		HomeDir:               tsukuHome,
+		ToolsDir:              filepath.Join(tsukuHome, "tools"),
+		CurrentDir:            filepath.Join(tsukuHome, "tools", "current"),
+		RecipesDir:            filepath.Join(tsukuHome, "recipes"),
+		RegistryDir:           filepath.Join(tsukuHome, "registry"),
+		LibsDir:               filepath.Join(tsukuHome, "libs"),
+		AppsDir:               filepath.Join(tsukuHome, "apps"),
+		CacheDir:              filepath.Join(tsukuHome, "cache"),
+		VersionCacheDir:       filepath.Join(tsukuHome, "cache", "versions"),
+		DownloadCacheDir:      filepath.Join(tsukuHome, "cache", "downloads"),
+		CargoRegistryCacheDir: filepath.Join(tsukuHome, "cache", "cargo-registry"),
+		KeyCacheDir:           filepath.Join(tsukuHome, "cache", "keys"),
+		TapCacheDir:           filepath.Join(tsukuHome, "cache", "taps"),
+		ConfigFile:            filepath.Join(tsukuHome, "config.toml"),
 	}, nil
 }
 
@@ -378,6 +380,7 @@ func (c *Config) EnsureDirectories() error {
 		c.CacheDir,
 		c.VersionCacheDir,
 		c.DownloadCacheDir,
+		c.CargoRegistryCacheDir,
 		c.KeyCacheDir,
 		c.TapCacheDir,
 	}

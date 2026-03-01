@@ -112,7 +112,10 @@ func runSandboxInstall(toolName, planPath, recipePath, targetFamily string) erro
 	// Create sandbox executor with download cache directory
 	// This allows the sandbox to use pre-downloaded files from plan generation
 	detector := validate.NewRuntimeDetector()
-	sandboxExec := sandbox.NewExecutor(detector, sandbox.WithDownloadCacheDir(cfg.DownloadCacheDir))
+	sandboxExec := sandbox.NewExecutor(detector,
+		sandbox.WithDownloadCacheDir(cfg.DownloadCacheDir),
+		sandbox.WithCargoRegistryCacheDir(cfg.CargoRegistryCacheDir),
+	)
 
 	// Detect target platform, honoring --target-family override
 	target, err := resolveTarget(targetFamily)
