@@ -1,30 +1,88 @@
 [metadata]
   name = "cargo-nextest"
-  description = "A next-generation test runner for Rust."
-  homepage = "https://github.com/nextest-rs/nextest"
-  version_format = ""
-  requires_sudo = false
-  tier = 0
-  type = ""
-  llm_validation = "skipped"
+  description = "A next-generation test runner for Rust"
+  homepage = "https://nexte.st"
+  version_format = "semver"
 
 [version]
-  github_repo = ""
-  tag_prefix = ""
-  module = ""
-  formula = ""
-  cask = ""
-  tap = ""
-  fossil_repo = ""
-  project_name = ""
-  version_separator = ""
-  timeline_tag = ""
+  source = "crates_io"
 
+# Hidden cargo_install step: enables CratesIOSourceStrategy to resolve versions
+# from crates.io instead of GitHub tags (nextest-rs/nextest is a monorepo with
+# 200+ tags across multiple crates, which exceeds the GitHub tags API page limit).
+# The when clause ensures this step never executes on any real platform.
 [[steps]]
   action = "cargo_install"
   crate = "cargo-nextest"
   executables = ["cargo-nextest"]
+  [steps.when]
+    linux_family = "_never"
+
+# Linux: download pre-built musl binary from GitHub releases.
+# Uses download action (not github_archive) because crates_io version resolution
+# returns a bare version ("0.9.129") without the "cargo-nextest-" tag prefix that
+# github_archive needs for the release URL path.
+[[steps]]
+  action = "download"
+  url = "https://github.com/nextest-rs/nextest/releases/download/cargo-nextest-{version}/cargo-nextest-{version}-{arch}-{os}.tar.gz"
+  os_mapping = { linux = "unknown-linux-musl" }
+  arch_mapping = { amd64 = "x86_64", arm64 = "aarch64" }
+  [steps.when]
+    os = ["linux"]
+
+[[steps]]
+  action = "extract"
+  archive = "cargo-nextest-{version}-{arch}-{os}.tar.gz"
+  format = "tar.gz"
+  strip_dirs = 0
+  os_mapping = { linux = "unknown-linux-musl" }
+  arch_mapping = { amd64 = "x86_64", arm64 = "aarch64" }
+  [steps.when]
+    os = ["linux"]
+
+[[steps]]
+  action = "chmod"
+  files = ["cargo-nextest"]
+  [steps.when]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["cargo-nextest"]
+  [steps.when]
+    os = ["linux"]
+
+# macOS: download pre-built universal binary from GitHub releases.
+[[steps]]
+  action = "download"
+  url = "https://github.com/nextest-rs/nextest/releases/download/cargo-nextest-{version}/cargo-nextest-{version}-{arch}-{os}.tar.gz"
+  os_mapping = { darwin = "apple-darwin" }
+  arch_mapping = { amd64 = "universal", arm64 = "universal" }
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "extract"
+  archive = "cargo-nextest-{version}-{arch}-{os}.tar.gz"
+  format = "tar.gz"
+  strip_dirs = 0
+  os_mapping = { darwin = "apple-darwin" }
+  arch_mapping = { amd64 = "universal", arm64 = "universal" }
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "chmod"
+  files = ["cargo-nextest"]
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["cargo-nextest"]
+  [steps.when]
+    os = ["darwin"]
 
 [verify]
-  command = "cargo nextest --version"
-  pattern = "{version}"
+  command = "cargo-nextest --version"
+  pattern = "cargo-nextest {version}"
