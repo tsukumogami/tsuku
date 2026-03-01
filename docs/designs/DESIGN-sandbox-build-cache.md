@@ -3,27 +3,25 @@ status: Proposed
 problem: |
   When testing recipes across Linux families, each family independently installs
   the same ecosystem toolchains (Rust, Node.js, etc.) inside ephemeral containers
-  that are destroyed after each run. There's no mechanism to carry forward this
-  work. The plan already contains a structured dependency tree with resolved
-  versions, but nothing maps this tree to reusable container image layers.
+  that are destroyed after each run. CI batches recipes arbitrarily, so even when
+  multiple cargo_build recipes run on the same runner, each one re-installs Rust
+  from scratch. There's no mechanism to carry forward ecosystem setup work between
+  sandbox runs on the same machine.
 decision: |
-  Map plan dependency layers to Docker image layers. Each InstallTime dependency
-  in the plan becomes a separate RUN command in a generated Dockerfile, installed
-  in canonical order. Docker's native layer caching handles cross-recipe reuse
-  automatically. The sandbox mount strategy changes from a single broad workspace
-  mount to targeted mounts for specific files (plan, script, cache, output),
-  so pre-installed dependencies in the container image live at the standard
-  $TSUKU_HOME path and are found by the executor's existing skip logic.
+  Build foundation images that pre-install ecosystem dependencies as Docker
+  layers. Group recipes by ecosystem in CI so all cargo_build recipes share
+  a single foundation image per batch job. The sandbox mount strategy changes
+  from a broad workspace mount to targeted file-level mounts, so the foundation
+  image's pre-installed tools at $TSUKU_HOME are preserved and found by the
+  executor's existing skip logic without symlinks or alternate paths.
 rationale: |
-  Docker already solves the "don't redo identical work" problem through layer
-  caching. Rather than building a custom cache management system, we generate
-  Dockerfiles where each plan dependency is a separate RUN command and let
-  Docker/Podman handle reuse. Targeted mounts avoid the workspace shadowing
-  problem entirely -- the container's filesystem at $TSUKU_HOME is preserved,
-  so pre-installed tools are discovered natively without symlink bridges or
-  alternate install paths. Canonical ordering maximizes shared prefixes between
-  recipes. Using tsuku itself inside RUN commands keeps it as the single
-  installation authority.
+  Docker's layer caching already solves "don't redo identical work." When
+  recipes are grouped by ecosystem, they produce identical Dockerfiles (same
+  tsuku binary, same dependency plan). The first recipe builds the foundation
+  image; subsequent recipes find it cached. Targeted mounts avoid the workspace
+  shadowing problem -- the container's $TSUKU_HOME lives on its own filesystem
+  where Docker layers persist naturally. CI restructuring to batch by ecosystem
+  is what turns the caching mechanism into actual time savings.
 ---
 
 # DESIGN: Sandbox Build Cache
@@ -77,7 +75,7 @@ Tsuku has three dependency categories (`ActionDeps` in `actions/action.go`):
 
 **In scope:**
 - Mapping InstallTime dependencies from the plan to Docker image layers
-- Cross-recipe layer sharing via Docker's native caching
+- Ecosystem-based recipe grouping in CI so foundation images are reused within batch jobs
 - Dynamic operation on developer machines (no pre-built images or registry)
 - Working with both Docker and Podman
 
@@ -85,15 +83,15 @@ Tsuku has three dependency categories (`ActionDeps` in `actions/action.go`):
 - Sharing compiled artifacts (.rlib files) across families
 - Cross-architecture caching (x86_64 vs arm64)
 - Changes to how `cargo_build.go` handles CARGO_HOME isolation
+- Cross-job foundation image sharing (each CI job builds its own; cross-job caching can be added later via `docker save`/`docker load`)
 
 ## Decision Drivers
 
-- **Map plan structure to cache structure**: The plan already describes what needs to be installed and in what order. The caching mechanism should mirror this structure
+- **Ecosystem grouping**: Recipes that share the same ecosystem (rust, nodejs) should be batched together so the ecosystem is installed once per batch, not once per recipe
 - **Docker-native**: Use Docker/Podman's layer caching rather than building a parallel cache system
-- **Dynamic, user-machine operation**: A developer running `tsuku install --sandbox` should benefit from cached layers from previous runs without any setup
-- **Cross-recipe reuse**: If recipe A and recipe B both need Rust 1.82.0, the Rust layer should be shared automatically
+- **Map plan structure to cache structure**: The plan already describes what needs to be installed. The caching mechanism should use this structure directly
 - **Preserve family isolation**: Each family builds independently. No sharing of compiled artifacts between different libc environments
-- **CI adapts to the format**: Design the caching for local usage; CI workflows restructure to take advantage of it
+- **Works on developer machines too**: A developer running `tsuku install --sandbox` benefits from cached layers without any setup
 
 ## Research Findings
 
@@ -113,21 +111,15 @@ Both Docker and Podman support this layer caching natively. No BuildKit-specific
 
 Each `DependencyPlan` in the plan tree contains fully resolved `Steps` with concrete URLs, versions, and checksums. A DependencyPlan can be converted to a standalone `InstallationPlan` and passed to `tsuku install --plan`. This means each dependency can be installed independently via a Dockerfile `RUN` command that receives its plan as input.
 
-### Canonical Ordering Enables Layer Sharing
+### Ecosystem Grouping Enables Layer Reuse
 
-If we always install dependencies in the same order across all recipes, Docker's layer caching maximizes reuse. Two recipes with different dependency sets but a common prefix share all layers up to where they diverge.
+The primary use case is CI, where multiple recipes from the same ecosystem run on the same runner. When recipes are grouped by ecosystem (all cargo_build recipes together, all npm_install recipes together), every recipe in the group produces an identical foundation image. The first recipe builds it; subsequent recipes find it cached via `ImageExists()` and skip the build entirely.
 
-Consider three recipes:
-- Recipe A needs: `[rust@1.82.0]`
-- Recipe B needs: `[nodejs@22, rust@1.82.0]`
-- Recipe C needs: `[openssl@3.0, rust@1.82.0]`
+The current recipe registry has ~27 cargo_build/cargo_install recipes and ~52 npm_install/npm_exec recipes. Within each group, most recipes share the same InstallTime dependency (rust or nodejs). A few have extra dependencies (e.g., cargo-audit needs `[rust, zig]`), which produce a different foundation image hash, but the common case is a single shared dep.
 
-With alphabetical ordering: nodejs < openssl < rust. So:
-- Recipe A's layers: `[..., nodejs@22]` -- wait, A doesn't need nodejs
+Since the tsuku binary is constant within a CI job and all same-ecosystem recipes produce identical plan JSON for their shared dependency, the COPY and RUN layers in the Dockerfile match exactly. Docker's layer caching means the foundation image is built once and reused by all subsequent recipes in the batch.
 
-Actually, only the dependencies each recipe declares appear in its Dockerfile. The key insight: recipes with identical dependency lists share all layers. Recipes that share a prefix of the sorted dependency list share those prefix layers.
-
-For the most common case (single dependency like "rust"), all cargo_build recipes share the same Rust layer.
+On GitHub Actions, the Docker layer cache is ephemeral per job. Foundation images are only shared between recipes within the same job, not across jobs. The CI restructuring (Phase 2) accounts for this by grouping recipes by ecosystem within each batch job.
 
 ## Considered Options
 
@@ -244,9 +236,11 @@ The sandbox mount strategy changes from a single broad `/workspace` mount to tar
 
 This eliminates the need for alternate install paths, symlink bridges, or executor modifications. The foundation image and the sandbox run share the same `TSUKU_HOME` path and the same skip mechanism. The only changes to the sandbox are: (1) how mounts are constructed and (2) where verification markers are written.
 
-The approach is fully dynamic. On a developer's machine, the first `tsuku install --sandbox cargo-nextest` builds the Rust layer (~2-3 minutes). Every subsequent cargo_build sandbox run that needs the same Rust version finds the layer cached and starts instantly. No pre-built images, no registry, no external infrastructure.
+The primary target is CI. When recipes are grouped by ecosystem (all cargo_build recipes in one batch), the first recipe builds the foundation image (~2-3 minutes for Rust) and every subsequent recipe in the batch reuses it instantly. For a batch of 5 cargo_build recipes across 5 families, this saves ~50 minutes of redundant Rust installations (5 recipes x 5 families x 2 min each, minus the one-time 5 x 2 min initial build).
 
-The speedup targets toolchain installation and registry fetching (saving ~15-25 minutes across 5 families per recipe). Compilation time (10-40 min per family) remains unaddressed -- each family still compiles independently.
+Developer machines benefit too. The first `tsuku install --sandbox cargo-nextest` builds the Rust layer. Every subsequent cargo_build sandbox run that needs the same Rust version finds it cached. No pre-built images, no registry, no external infrastructure.
+
+The speedup targets toolchain installation and registry fetching. Compilation time (10-40 min per family) remains unaddressed -- each family still compiles independently.
 
 ### Rationale
 
@@ -254,7 +248,7 @@ Docker already solves the "don't redo identical work" problem through layer cach
 
 Targeted mounts make this work cleanly. The broad workspace mount was originally a convenience -- one mount to pass everything in and out. But it created a conflict: the mount shadows the image's filesystem, forcing pre-installed tools into a separate path with a bridge mechanism. By mounting only the specific files the host needs to exchange, the container's `$TSUKU_HOME` lives on its own filesystem where Docker layers can persist content naturally. The executor doesn't need to know about caching at all.
 
-Canonical ordering ensures that recipes with different dependency sets share layers for their common prefix. Using `tsuku install --plan` inside RUN commands keeps tsuku as the single installation authority. The plan JSON content is the effective cache key: Docker invalidates a layer when the plan changes.
+The CI workflow restructuring ensures recipes are grouped by ecosystem so foundation images are reused within each batch job. Since the tsuku binary and dependency plans are identical for same-ecosystem recipes, the Dockerfiles match exactly and Docker's layer cache handles the rest.
 
 ## Solution Architecture
 
@@ -456,7 +450,39 @@ Two coupled changes: switch to targeted mounts and build foundation images from 
 - Unit tests for dependency flattening, Dockerfile generation, image naming
 - Integration test: build foundation image for a recipe with Rust dep, verify that the sandbox run skips Rust installation
 
-### Phase 2: Cargo Registry Cache
+### Phase 2: CI Ecosystem Batching
+
+Restructure `test-recipe.yml` so recipes are grouped by ecosystem within each batch job.
+
+**Current flow**: The build step detects changed recipes, splits them into batches of N (default 5) regardless of what ecosystem they belong to. Each batch job runs recipes sequentially with families in parallel.
+
+**New flow**: The build step classifies each changed recipe by ecosystem, then batches within each ecosystem group:
+
+1. **Classify**: For each changed recipe, determine the ecosystem by inspecting the TOML for action types:
+   - `cargo_build` or `cargo_install` → rust
+   - `npm_install` or `npm_exec` → nodejs
+   - `go_build` → go
+   - `pipx_install` → python
+   - `gem_install` → ruby
+   - everything else → none (download-only, no ecosystem dep)
+
+2. **Group and batch**: Group recipes by ecosystem, then split each group into batches of N. Example with 8 changed recipes:
+   - Batch 1: cargo_build recipes 1-5 (rust ecosystem)
+   - Batch 2: cargo_build recipes 6-8 (rust ecosystem)
+   - Batch 3: npm_install recipes 1-3 (nodejs ecosystem)
+   - Batch 4: github_archive recipes 1-2 (no ecosystem)
+
+3. **Run**: Each batch job runs as today (recipes sequential, families parallel). The first recipe in a batch builds the foundation image per family (~2-3 min one-time cost). All subsequent recipes in the batch find it cached and skip the ecosystem installation entirely.
+
+Specific changes to `test-recipe.yml`:
+- Add an ecosystem classification step after recipe detection
+- Change the batching logic from `split by count` to `group by ecosystem, then split by count`
+- The batch matrix output changes from `[{batch_id, recipes}]` to `[{batch_id, ecosystem, recipes}]`
+- The test step itself is unchanged -- foundation image caching happens inside tsuku's `Executor.Sandbox()`
+
+Recipes with no ecosystem dependencies (download-only tools like caddy, bat, ripgrep) can be batched together or separately. They don't build foundation images, so grouping doesn't affect them.
+
+### Phase 3: Cargo Registry Cache
 
 Share cargo registry content across families within a single host.
 
@@ -465,15 +491,7 @@ Share cargo registry content across families within a single host.
 - Update `buildDeterministicCargoEnv()` to symlink `CARGO_HOME/registry` to shared mount when available
 - Test registry sharing across families
 
-### Phase 3: CI Adaptation
-
-Restructure CI workflows to maximize layer cache reuse.
-
-- Within a batch job, dependency layers are automatically shared across recipes (same Docker daemon, same layer cache)
-- Add `docker save`/`docker load` or registry push for cross-job sharing if needed
-- Prune stale foundation images when ecosystem versions change
-
-Phase 1 is the core value. Phase 2 adds incremental improvement. Phase 3 is operational.
+Phase 1 is the core mechanism. Phase 2 is what makes it useful in CI. Phase 3 adds incremental improvement for cargo-specific recipes.
 
 ## Security Considerations
 
@@ -508,7 +526,7 @@ Not applicable. Foundation images contain ecosystem toolchains (compiler binarie
 - Works dynamically on developer machines with no setup beyond having Docker/Podman
 - The plan structure (which already contains the dependency tree) drives the caching -- no parallel bookkeeping
 - Generalizes to any ecosystem: npm_install with Node.js, gem_install with Ruby, etc.
-- CI benefits from the same mechanism without a CI-specific caching format
+- CI batches recipes by ecosystem, so foundation images are built once per batch and reused by all subsequent recipes
 - Targeted mounts reduce the writable surface area compared to the current broad workspace mount
 - No symlink bridges or alternate install paths -- the executor's existing skip logic works natively
 

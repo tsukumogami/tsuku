@@ -1,50 +1,48 @@
 # Exploration Summary: Sandbox Build Cache
 
 ## Key Insight
-Map plan dependency layers to Docker image layers. Switch from broad workspace mount to targeted file-level mounts so the container's filesystem preserves pre-installed tools from Docker layers. The executor's existing skip logic works natively.
+Group recipes by ecosystem in CI. Build foundation images from plan dependencies as Docker layers. First recipe in a batch builds the image; subsequent recipes find it cached. Targeted mounts preserve the container's $TSUKU_HOME so pre-installed tools are found natively.
 
 ## Architecture
 1. Host generates plan (versions resolved)
 2. Extract + flatten dependency tree from plan.Dependencies
-3. Generate Dockerfile: one RUN per dep, canonical (alphabetical) order, TSUKU_HOME=/workspace/tsuku
-4. docker build (layer caching reuses matching deps)
-5. Sandbox runs with targeted mounts (plan, script, cache, output) -- not broad /workspace mount
+3. Generate Dockerfile: one RUN per dep, TSUKU_HOME=/workspace/tsuku
+4. docker build (first recipe builds, subsequent recipes find it cached)
+5. Sandbox runs with targeted mounts (plan, script, cache, output)
 
 ## Design Decisions
-- Per-dep Docker layers (not single foundation image) for cross-recipe layer sharing
-- Alphabetical canonical ordering for deterministic layer positioning
-- Targeted mounts replace broad workspace mount -- eliminates shadowing problem entirely
-- No symlink bridge, no /opt/ecosystem/, no alternate install paths
+- Foundation images pre-install ecosystem deps as Docker layers
+- CI batches recipes by ecosystem (rust, nodejs, etc.) so images are reused within batch jobs
+- Targeted mounts replace broad workspace mount -- no shadowing, no symlink bridge
 - tsuku install --plan inside RUN commands (tsuku stays single installation authority)
-- Dynamic user-machine operation first; CI adapts to the format
-- Additive BuildFromDockerfile() on Runtime interface (existing Build() unchanged)
+- Additive BuildFromDockerfile() on Runtime interface
 - Download cache stays read-only; only output dir is writable
-- Targeted mounts applied unconditionally (with or without foundation image)
 
 ## Decision (Phase 5)
 
 **Problem:**
 When testing recipes across Linux families, each family independently installs
-the same ecosystem toolchains inside ephemeral containers that are destroyed
-after each run. There's no mechanism to carry forward this work. The plan
-already contains a structured dependency tree with resolved versions, but
-nothing maps this tree to reusable container image layers.
+the same ecosystem toolchains inside ephemeral containers. CI batches recipes
+arbitrarily, so even when multiple cargo_build recipes run on the same runner,
+each one re-installs Rust from scratch. There's no mechanism to carry forward
+ecosystem setup work between sandbox runs on the same machine.
 
 **Decision:**
-Map plan dependency layers to Docker image layers. Each InstallTime dependency
-in the plan becomes a separate RUN command in a generated Dockerfile, installed
-in canonical order. The sandbox mount strategy changes from a single broad
-workspace mount to targeted mounts for specific files, so pre-installed
-dependencies in the container image live at the standard $TSUKU_HOME path and
-are found by the executor's existing skip logic.
+Build foundation images that pre-install ecosystem dependencies as Docker
+layers. Group recipes by ecosystem in CI so all cargo_build recipes share a
+single foundation image per batch job. The sandbox mount strategy changes from
+a broad workspace mount to targeted file-level mounts, so the foundation
+image's pre-installed tools at $TSUKU_HOME are preserved and found by the
+executor's existing skip logic.
 
 **Rationale:**
-Docker already solves the "don't redo identical work" problem through layer
-caching. Targeted mounts avoid the workspace shadowing problem entirely --
-the container's filesystem at $TSUKU_HOME is preserved, so pre-installed tools
-are discovered natively without symlink bridges or alternate install paths.
-Canonical ordering maximizes shared prefixes between recipes. Using tsuku
-itself inside RUN commands keeps it as the single installation authority.
+Docker's layer caching already solves "don't redo identical work." When
+recipes are grouped by ecosystem, they produce identical Dockerfiles. The
+first recipe builds the foundation image; subsequent recipes find it cached.
+Targeted mounts avoid the workspace shadowing problem -- the container's
+$TSUKU_HOME lives on its own filesystem where Docker layers persist naturally.
+CI restructuring to batch by ecosystem is what turns the caching mechanism
+into actual time savings.
 
 ## Current Status
 **Phase:** Complete (Proposed, awaiting approval)
