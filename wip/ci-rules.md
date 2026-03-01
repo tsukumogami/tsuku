@@ -78,6 +78,16 @@ CI run. Example:
 The goal is to stop wasting CI cycles by resetting runs that are
 mostly complete for fixes that only affect a small fraction of recipes.
 
+## Rule 2b: Commit locally, don't push
+
+While CI is running, commit fixes locally as you make them. Don't push
+until either:
+- CI finishes and you can batch all fixes into one push, or
+- The cumulative fix scope exceeds 30% (Rule 2).
+
+This way every fix is tracked in git history, and whenever a push is
+warranted, all accumulated fixes go together. One push, one CI reset.
+
 ## Rule 3: Never remove real dependencies
 
 If a recipe has `runtime_dependencies` or `extra_dependencies`, those
@@ -86,3 +96,26 @@ cause. Never strip dependencies to make CI pass -- that hides the
 problem and ships broken recipes. If a recipe can't be fixed in the
 current PR, revert the entire recipe to its main version and defer it
 to a later PR.
+
+## Rule 4: Don't duplicate dependencies across fields
+
+If a dependency appears in `dependencies` (build-time), do NOT also
+add it to `runtime_dependencies`. The dependency resolver installs
+build deps first, then tries to install runtime deps. If the same
+package appears in both, the resolver detects a circular dependency
+and errors out (exit code 6).
+
+Bad:
+```toml
+dependencies = ["readline"]
+runtime_dependencies = ["readline"]  # WRONG: causes circular dep error
+```
+
+Good:
+```toml
+dependencies = ["readline"]
+# readline is already installed via build deps, no need to repeat
+```
+
+Only use `runtime_dependencies` for deps that are needed at runtime
+but NOT at build time.
