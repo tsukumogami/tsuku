@@ -3945,3 +3945,142 @@ func TestPlatformTagToOSLibc(t *testing.T) {
 		})
 	}
 }
+
+func TestHomebrewBuilder_validateDependencies_NilRegistry(t *testing.T) {
+	b := &HomebrewBuilder{} // no registry checker
+	deps := []string{"openssl", "zlib"}
+
+	result, err := b.validateDependencies("test-formula", deps)
+	if err != nil {
+		t.Fatalf("validateDependencies() error = %v, want nil for nil registry", err)
+	}
+	if len(result) != 2 || result[0] != "openssl" || result[1] != "zlib" {
+		t.Errorf("validateDependencies() = %v, want %v", result, deps)
+	}
+}
+
+func TestHomebrewBuilder_validateDependencies_AllResolved(t *testing.T) {
+	b := &HomebrewBuilder{
+		registry: &mockRegistryChecker{recipes: map[string]bool{
+			"openssl": true,
+			"zlib":    true,
+		}},
+	}
+	deps := []string{"openssl", "zlib"}
+
+	result, err := b.validateDependencies("test-formula", deps)
+	if err != nil {
+		t.Fatalf("validateDependencies() error = %v, want nil", err)
+	}
+	if len(result) != 2 {
+		t.Errorf("validateDependencies() returned %d deps, want 2", len(result))
+	}
+}
+
+func TestHomebrewBuilder_validateDependencies_MissingDeps(t *testing.T) {
+	b := &HomebrewBuilder{
+		registry: &mockRegistryChecker{recipes: map[string]bool{
+			"openssl": true,
+		}},
+	}
+	deps := []string{"openssl", "zlib", "readline"}
+
+	_, err := b.validateDependencies("test-formula", deps)
+	if err == nil {
+		t.Fatal("validateDependencies() error = nil, want error for missing deps")
+	}
+
+	var detErr *DeterministicFailedError
+	if !errors.As(err, &detErr) {
+		t.Fatalf("error type = %T, want *DeterministicFailedError", err)
+	}
+	if detErr.Category != FailureCategoryMissingDep {
+		t.Errorf("Category = %q, want %q", detErr.Category, FailureCategoryMissingDep)
+	}
+	if detErr.Formula != "test-formula" {
+		t.Errorf("Formula = %q, want %q", detErr.Formula, "test-formula")
+	}
+
+	// Error message must contain each missing dep in the format that
+	// extractBlockedByFromOutput() parses: "recipe X not found in registry"
+	if !strings.Contains(detErr.Message, "recipe zlib not found in registry") {
+		t.Errorf("Message missing zlib: %s", detErr.Message)
+	}
+	if !strings.Contains(detErr.Message, "recipe readline not found in registry") {
+		t.Errorf("Message missing readline: %s", detErr.Message)
+	}
+	// openssl is present, should not appear as missing
+	if strings.Contains(detErr.Message, "recipe openssl not found in registry") {
+		t.Errorf("Message should not contain openssl: %s", detErr.Message)
+	}
+}
+
+func TestHomebrewBuilder_validateDependencies_EmptyDeps(t *testing.T) {
+	b := &HomebrewBuilder{
+		registry: &mockRegistryChecker{recipes: map[string]bool{}},
+	}
+
+	result, err := b.validateDependencies("test-formula", nil)
+	if err != nil {
+		t.Fatalf("validateDependencies() error = %v, want nil for empty deps", err)
+	}
+	if result != nil {
+		t.Errorf("validateDependencies() = %v, want nil", result)
+	}
+}
+
+func TestHomebrewBuilder_generateToolRecipe_MissingDeps(t *testing.T) {
+	b := &HomebrewBuilder{
+		registry: &mockRegistryChecker{recipes: map[string]bool{}},
+	}
+
+	genCtx := &homebrewGenContext{
+		formula: "jq",
+		formulaInfo: &homebrewFormulaInfo{
+			Name:         "jq",
+			Description:  "JSON processor",
+			Homepage:     "https://jqlang.github.io/jq/",
+			Dependencies: []string{"oniguruma"},
+		},
+	}
+	genCtx.formulaInfo.Versions.Stable = "1.7.1"
+
+	_, err := b.generateToolRecipe("jq", genCtx, []string{"jq"})
+	if err == nil {
+		t.Fatal("generateToolRecipe() error = nil, want error for missing dep")
+	}
+
+	var detErr *DeterministicFailedError
+	if !errors.As(err, &detErr) {
+		t.Fatalf("error type = %T, want *DeterministicFailedError", err)
+	}
+	if detErr.Category != FailureCategoryMissingDep {
+		t.Errorf("Category = %q, want %q", detErr.Category, FailureCategoryMissingDep)
+	}
+	if !strings.Contains(detErr.Message, "recipe oniguruma not found in registry") {
+		t.Errorf("Message = %q, want to contain 'recipe oniguruma not found in registry'", detErr.Message)
+	}
+}
+
+func TestHomebrewBuilder_generateToolRecipe_NilRegistry_PassesThrough(t *testing.T) {
+	b := &HomebrewBuilder{} // no registry
+
+	genCtx := &homebrewGenContext{
+		formula: "jq",
+		formulaInfo: &homebrewFormulaInfo{
+			Name:         "jq",
+			Description:  "JSON processor",
+			Homepage:     "https://jqlang.github.io/jq/",
+			Dependencies: []string{"oniguruma"},
+		},
+	}
+	genCtx.formulaInfo.Versions.Stable = "1.7.1"
+
+	r, err := b.generateToolRecipe("jq", genCtx, []string{"jq"})
+	if err != nil {
+		t.Fatalf("generateToolRecipe() error = %v, want nil (nil registry should pass through)", err)
+	}
+	if len(r.Metadata.RuntimeDependencies) != 1 || r.Metadata.RuntimeDependencies[0] != "oniguruma" {
+		t.Errorf("RuntimeDependencies = %v, want [oniguruma]", r.Metadata.RuntimeDependencies)
+	}
+}

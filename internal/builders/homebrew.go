@@ -184,6 +184,38 @@ func WithRegistryChecker(r RegistryChecker) HomebrewBuilderOption {
 	}
 }
 
+// validateDependencies checks each dependency against the registry and returns
+// the validated list. If the registry checker is nil, dependencies pass through
+// unchanged (backward compatibility). When dependencies are missing, returns a
+// DeterministicFailedError with FailureCategoryMissingDep listing all missing
+// names in a format compatible with extractBlockedByFromOutput().
+func (b *HomebrewBuilder) validateDependencies(formula string, deps []string) ([]string, error) {
+	if b.registry == nil {
+		return deps, nil
+	}
+
+	var missing []string
+	for _, dep := range deps {
+		if !b.registry.HasRecipe(dep) {
+			missing = append(missing, dep)
+		}
+	}
+
+	if len(missing) > 0 {
+		var parts []string
+		for _, name := range missing {
+			parts = append(parts, fmt.Sprintf("recipe %s not found in registry", name))
+		}
+		return nil, &DeterministicFailedError{
+			Formula:  formula,
+			Category: FailureCategoryMissingDep,
+			Message:  fmt.Sprintf("missing dependencies: %s", strings.Join(parts, "; ")),
+		}
+	}
+
+	return deps, nil
+}
+
 // NewHomebrewBuilder creates a new HomebrewBuilder.
 // Options can be passed to pre-configure HTTP client, API URL, etc.
 // LLM factory is created during NewSession().
@@ -1949,9 +1981,13 @@ func (b *HomebrewBuilder) generateRecipe(packageName string, info *homebrewFormu
 		},
 	}
 
-	// Add runtime dependencies if present
+	// Add runtime dependencies if present, validating against registry
 	if len(data.Dependencies) > 0 {
-		r.Metadata.RuntimeDependencies = data.Dependencies
+		deps, err := b.validateDependencies(packageName, data.Dependencies)
+		if err != nil {
+			return nil, err
+		}
+		r.Metadata.RuntimeDependencies = deps
 	}
 
 	return r, nil
@@ -2041,9 +2077,13 @@ func (b *HomebrewBuilder) generateLibraryRecipe(
 		// Verify is nil for library recipes -- libraries can't be executed
 	}
 
-	// Add runtime dependencies from formula info
+	// Add runtime dependencies from formula info, validating against registry
 	if len(info.Dependencies) > 0 {
-		r.Metadata.RuntimeDependencies = info.Dependencies
+		deps, err := b.validateDependencies(packageName, info.Dependencies)
+		if err != nil {
+			return nil, err
+		}
+		r.Metadata.RuntimeDependencies = deps
 	}
 
 	// Build steps for each platform
@@ -2132,7 +2172,11 @@ func (b *HomebrewBuilder) generateToolRecipe(packageName string, genCtx *homebre
 	}
 
 	if len(info.Dependencies) > 0 {
-		r.Metadata.RuntimeDependencies = info.Dependencies
+		deps, err := b.validateDependencies(packageName, info.Dependencies)
+		if err != nil {
+			return nil, err
+		}
+		r.Metadata.RuntimeDependencies = deps
 	}
 
 	return r, nil
