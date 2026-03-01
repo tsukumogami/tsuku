@@ -5,6 +5,9 @@ homepage = "https://github.com/google/brotli"
 type = "library"
 dependencies = []
 
+[metadata.satisfies]
+homebrew = ["brotli"]
+
 [[steps]]
 action = "homebrew"
 formula = "brotli"

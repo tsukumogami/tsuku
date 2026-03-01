@@ -1,7 +1,8 @@
 {
   "batch_sizes": {
     "test-recipe": {
-      "linux": 3
+      "linux": {"default": {"max": 20, "min_batches": 5}, "rust": 3},
+      "darwin": 20
     },
     "validate-golden-recipes": {
       "default": 20

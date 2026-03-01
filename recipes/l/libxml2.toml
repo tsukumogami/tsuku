@@ -4,6 +4,9 @@ description = "GNOME XML library"
 homepage = "https://gitlab.gnome.org/GNOME/libxml2"
 type = "library"
 
+[metadata.satisfies]
+homebrew = ["libxml2"]
+
 [[steps]]
 action = "homebrew"
 formula = "libxml2"

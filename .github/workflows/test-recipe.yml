@@ -39,6 +39,9 @@ jobs:
       linux_batches: ${{ steps.batch.outputs.linux_batches }}
       has_linux_batches: ${{ steps.batch.outputs.has_linux_batches }}
       batch_count: ${{ steps.batch.outputs.batch_count }}
+      darwin_batches: ${{ steps.batch.outputs.darwin_batches }}
+      has_darwin_batches: ${{ steps.batch.outputs.has_darwin_batches }}
+      darwin_batch_count: ${{ steps.batch.outputs.darwin_batch_count }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
@@ -137,39 +140,92 @@ jobs:
             echo "linux_batches=[]" >> "$GITHUB_OUTPUT"
             echo "has_linux_batches=false" >> "$GITHUB_OUTPUT"
             echo "batch_count=0" >> "$GITHUB_OUTPUT"
+            echo "darwin_batches=[]" >> "$GITHUB_OUTPUT"
+            echo "has_darwin_batches=false" >> "$GITHUB_OUTPUT"
+            echo "darwin_batch_count=0" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
-          # Read batch size from config or default to 5
-          BATCH_SIZE=5
+          # Read batch sizes from config or use defaults.
+          # Linux config can be:
+          #   - a number: uniform batch size for all recipes
+          #   - an object: per-ecosystem sizes, where each value is either
+          #     a number (fixed size) or {"max": N, "min_batches": M} for
+          #     dynamic sizing: batch_size = min(max, ceil(count/min_batches))
+          LINUX_BATCH_CONFIG='5'
+          DARWIN_BATCH_SIZE=20
           if [ -f .github/ci-batch-config.json ]; then
-            BATCH_SIZE=$(jq -r '.batch_sizes["test-recipe"].linux // 5' .github/ci-batch-config.json)
+            LINUX_BATCH_CONFIG=$(jq -c '.batch_sizes["test-recipe"].linux // 5' .github/ci-batch-config.json)
+            DARWIN_BATCH_SIZE=$(jq -r '.batch_sizes["test-recipe"].darwin // 20' .github/ci-batch-config.json)
           fi
-          echo "Using batch size: $BATCH_SIZE"
+          echo "Linux batch config: $LINUX_BATCH_CONFIG"
+          echo "Darwin batch size: $DARWIN_BATCH_SIZE"
 
           # Sort by ecosystem so same-ecosystem recipes land in the same batch,
           # enabling foundation image reuse within each batch job.
           RECIPES=$(echo "$RECIPES" | jq -c 'sort_by(.ecosystem)')
 
-          # Split recipes into batches using ceiling division
-          BATCHES=$(echo "$RECIPES" | jq -c --argjson bs "$BATCH_SIZE" '
+          # Split recipes into Linux batches.
+          LINUX_BATCHES=$(echo "$RECIPES" | jq -c --argjson cfg "$LINUX_BATCH_CONFIG" '
+            # resolve_bs: given a config entry and group size, return batch size
+            def resolve_bs(entry; n):
+              if (entry | type) == "number" then entry
+              elif (entry | type) == "object" and entry.max then
+                [entry.max, ((n + entry.min_batches - 1) / entry.min_batches | floor)] | min
+              else 5
+              end;
+
+            if ($cfg | type) == "number" then
+              . as $all |
+              [range(0; length; $cfg)] |
+              to_entries |
+              map({batch_id: (.key + 1), recipes: $all[.value:.value + $cfg]})
+            else
+              group_by(.ecosystem) |
+              map(
+                . as $grp |
+                (.[0].ecosystem) as $eco |
+                resolve_bs(($cfg[$eco] // $cfg["default"]) // 5; $grp | length) as $bs |
+                [range(0; ($grp | length); $bs)] |
+                map($grp[.:.+$bs])
+              ) |
+              add |
+              to_entries |
+              map({batch_id: (.key + 1), recipes: .value})
+            end
+          ')
+
+          echo "linux_batches=$LINUX_BATCHES" >> "$GITHUB_OUTPUT"
+
+          LINUX_BATCH_COUNT=$(echo "$LINUX_BATCHES" | jq 'length')
+          echo "batch_count=$LINUX_BATCH_COUNT" >> "$GITHUB_OUTPUT"
+          if [ "$LINUX_BATCH_COUNT" -gt 0 ]; then
+            echo "has_linux_batches=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_linux_batches=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          echo "Generated $LINUX_BATCH_COUNT Linux batch(es)"
+
+          # Split recipes into Darwin batches (larger batch size since macOS runners are more expensive)
+          DARWIN_BATCHES=$(echo "$RECIPES" | jq -c --argjson bs "$DARWIN_BATCH_SIZE" '
             . as $all |
             [range(0; length; $bs)] |
             to_entries |
             map({batch_id: (.key + 1), recipes: $all[.value:.value + $bs]})
           ')
 
-          echo "linux_batches=$BATCHES" >> "$GITHUB_OUTPUT"
+          echo "darwin_batches=$DARWIN_BATCHES" >> "$GITHUB_OUTPUT"
 
-          BATCH_COUNT=$(echo "$BATCHES" | jq 'length')
-          echo "batch_count=$BATCH_COUNT" >> "$GITHUB_OUTPUT"
-          if [ "$BATCH_COUNT" -gt 0 ]; then
-            echo "has_linux_batches=true" >> "$GITHUB_OUTPUT"
+          DARWIN_BATCH_COUNT=$(echo "$DARWIN_BATCHES" | jq 'length')
+          echo "darwin_batch_count=$DARWIN_BATCH_COUNT" >> "$GITHUB_OUTPUT"
+          if [ "$DARWIN_BATCH_COUNT" -gt 0 ]; then
+            echo "has_darwin_batches=true" >> "$GITHUB_OUTPUT"
           else
-            echo "has_linux_batches=false" >> "$GITHUB_OUTPUT"
+            echo "has_darwin_batches=false" >> "$GITHUB_OUTPUT"
           fi
 
-          echo "Generated $BATCH_COUNT batch(es) of up to $BATCH_SIZE recipes"
+          echo "Generated $DARWIN_BATCH_COUNT Darwin batch(es) of up to $DARWIN_BATCH_SIZE recipes"
 
   # Linux x86_64: test in sandbox containers for all five families.
   # Recipes are split into batches (one job per batch) and families run in parallel
@@ -207,6 +263,9 @@ jobs:
       - name: Test recipes in Linux x86_64 containers
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Point registry at checked-out repo so dependency recipes from this
+          # PR branch are found (they don't exist in the remote registry yet).
+          TSUKU_REGISTRY_URL: ${{ github.workspace }}
         run: |
           FAMILIES=("debian" "rhel" "arch" "suse" "alpine")
           SHARED_CACHE="/tmp/tsuku-shared-downloads"
@@ -224,6 +283,19 @@ jobs:
             recipe_name=$(echo "$RECIPES" | jq -r ".[$i].name")
             recipe_path=$(echo "$RECIPES" | jq -r ".[$i].path")
 
+            # Skip recipes that don't support this platform
+            if grep -q 'supported_os' "$recipe_path"; then
+              if ! grep 'supported_os' "$recipe_path" | grep -q '"linux"'; then
+                echo "SKIP: $recipe_name (supported_os excludes linux)"
+                continue
+              fi
+            fi
+            if grep 'unsupported_platforms' "$recipe_path" | grep -q '"linux/amd64"' 2>/dev/null; then
+              echo "SKIP: $recipe_name (unsupported on linux/amd64)"
+              continue
+            fi
+
+            RECIPE_START=$(date +%s)
             PIDS=()
             for family in "${FAMILIES[@]}"; do
               TOTAL=$((TOTAL + 1))
@@ -241,6 +313,7 @@ jobs:
                     --recipe "$recipe_path" \
                     --target-family "$family" \
                     --env GITHUB_TOKEN="$GITHUB_TOKEN" \
+                    --env TSUKU_REGISTRY_URL="$TSUKU_REGISTRY_URL" \
                     --json > "$RESULT_FILE" 2>"$LOG_FILE" || true
               ) &
               PIDS+=($!)
@@ -250,6 +323,7 @@ jobs:
             for pid in "${PIDS[@]}"; do
               wait "$pid" || true
             done
+            RECIPE_ELAPSED=$(( $(date +%s) - RECIPE_START ))
 
             # Collect results
             for family in "${FAMILIES[@]}"; do
@@ -267,12 +341,12 @@ jobs:
 
               if [ "$SANDBOX_PASSED" = "true" ]; then
                 PASSED=$((PASSED + 1))
-                RESULTS="$RESULTS| $recipe_name | $family | pass |\n"
-                echo "PASS: $recipe_name on $family"
+                RESULTS="$RESULTS| $recipe_name | $family | pass | ${RECIPE_ELAPSED}s |\n"
+                echo "PASS: $recipe_name on $family (${RECIPE_ELAPSED}s)"
               else
                 FAILED=$((FAILED + 1))
-                RESULTS="$RESULTS| $recipe_name | $family | **FAIL** (exit $EXIT_CODE) |\n"
-                echo "FAIL: $recipe_name on $family (exit $EXIT_CODE)"
+                RESULTS="$RESULTS| $recipe_name | $family | **FAIL** (exit $EXIT_CODE) | ${RECIPE_ELAPSED}s |\n"
+                echo "FAIL: $recipe_name on $family (exit $EXIT_CODE, ${RECIPE_ELAPSED}s)"
               fi
 
               echo "::endgroup::"
@@ -289,8 +363,8 @@ jobs:
             echo ""
             echo "Passed: $PASSED / $TOTAL"
             echo ""
-            echo "| Recipe | Family | Status |"
-            echo "|--------|--------|--------|"
+            echo "| Recipe | Family | Status | Duration |"
+            echo "|--------|--------|--------|----------|"
             echo -e "$RESULTS"
           } >> "$GITHUB_STEP_SUMMARY"
 
@@ -332,6 +406,7 @@ jobs:
       - name: Test recipes in Linux arm64 containers
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TSUKU_REGISTRY_URL: ${{ github.workspace }}
         run: |
           # Four Linux arm64 families (no arch -- no arm64 image available)
           FAMILIES=("debian" "rhel" "suse" "alpine")
@@ -350,6 +425,19 @@ jobs:
             recipe_name=$(echo "$RECIPES" | jq -r ".[$i].name")
             recipe_path=$(echo "$RECIPES" | jq -r ".[$i].path")
 
+            # Skip recipes that don't support this platform
+            if grep -q 'supported_os' "$recipe_path"; then
+              if ! grep 'supported_os' "$recipe_path" | grep -q '"linux"'; then
+                echo "SKIP: $recipe_name (supported_os excludes linux)"
+                continue
+              fi
+            fi
+            if grep 'unsupported_platforms' "$recipe_path" | grep -q '"linux/arm64"' 2>/dev/null; then
+              echo "SKIP: $recipe_name (unsupported on linux/arm64)"
+              continue
+            fi
+
+            RECIPE_START=$(date +%s)
             PIDS=()
             for family in "${FAMILIES[@]}"; do
               TOTAL=$((TOTAL + 1))
@@ -367,6 +455,7 @@ jobs:
                     --recipe "$recipe_path" \
                     --target-family "$family" \
                     --env GITHUB_TOKEN="$GITHUB_TOKEN" \
+                    --env TSUKU_REGISTRY_URL="$TSUKU_REGISTRY_URL" \
                     --json > "$RESULT_FILE" 2>"$LOG_FILE" || true
               ) &
               PIDS+=($!)
@@ -376,6 +465,7 @@ jobs:
             for pid in "${PIDS[@]}"; do
               wait "$pid" || true
             done
+            RECIPE_ELAPSED=$(( $(date +%s) - RECIPE_START ))
 
             # Collect results
             for family in "${FAMILIES[@]}"; do
@@ -393,12 +483,12 @@ jobs:
 
               if [ "$SANDBOX_PASSED" = "true" ]; then
                 PASSED=$((PASSED + 1))
-                RESULTS="$RESULTS| $recipe_name | $family | pass |\n"
-                echo "PASS: $recipe_name on $family"
+                RESULTS="$RESULTS| $recipe_name | $family | pass | ${RECIPE_ELAPSED}s |\n"
+                echo "PASS: $recipe_name on $family (${RECIPE_ELAPSED}s)"
               else
                 FAILED=$((FAILED + 1))
-                RESULTS="$RESULTS| $recipe_name | $family | **FAIL** (exit $EXIT_CODE) |\n"
-                echo "FAIL: $recipe_name on $family (exit $EXIT_CODE)"
+                RESULTS="$RESULTS| $recipe_name | $family | **FAIL** (exit $EXIT_CODE) | ${RECIPE_ELAPSED}s |\n"
+                echo "FAIL: $recipe_name on $family (exit $EXIT_CODE, ${RECIPE_ELAPSED}s)"
               fi
 
               echo "::endgroup::"
@@ -415,8 +505,8 @@ jobs:
             echo ""
             echo "Passed: $PASSED / $TOTAL"
             echo ""
-            echo "| Recipe | Family | Status |"
-            echo "|--------|--------|--------|"
+            echo "| Recipe | Family | Status | Duration |"
+            echo "|--------|--------|--------|----------|"
             echo -e "$RESULTS"
           } >> "$GITHUB_STEP_SUMMARY"
 
@@ -426,11 +516,18 @@ jobs:
           fi
 
   # macOS arm64: native runner test.
+  # Recipes are split into batches (one job per batch) to stay within the timeout.
+  # macOS batches are larger than Linux since there are no family variants.
   test-darwin-arm64:
+    name: "macOS arm64 (batch ${{ matrix.batch.batch_id }}/${{ needs.build.outputs.darwin_batch_count }})"
     needs: build
-    if: needs.build.outputs.has_linux_batches == 'true'
+    if: needs.build.outputs.has_darwin_batches == 'true'
     runs-on: macos-14
     timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        batch: ${{ fromJson(needs.build.outputs.darwin_batches) }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
 
@@ -454,12 +551,13 @@ jobs:
 
       - name: Test recipes on macOS arm64
         env:
-          RECIPES: ${{ needs.build.outputs.recipes }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TSUKU_REGISTRY_URL: ${{ github.workspace }}
         run: |
           SHARED_CACHE="/tmp/tsuku-shared-downloads"
           mkdir -p "$SHARED_CACHE"
           chmod 700 "$SHARED_CACHE"
+          RECIPES='${{ toJson(matrix.batch.recipes) }}'
 
           TOTAL=0
           PASSED=0
@@ -470,7 +568,21 @@ jobs:
           for i in $(seq 0 $((COUNT - 1))); do
             recipe_name=$(echo "$RECIPES" | jq -r ".[$i].name")
             recipe_path=$(echo "$RECIPES" | jq -r ".[$i].path")
+
+            # Skip recipes that don't support this platform
+            if grep -q 'supported_os' "$recipe_path"; then
+              if ! grep 'supported_os' "$recipe_path" | grep -q '"darwin"'; then
+                echo "SKIP: $recipe_name (supported_os excludes darwin)"
+                continue
+              fi
+            fi
+            if grep 'unsupported_platforms' "$recipe_path" | grep -q '"darwin/arm64"' 2>/dev/null; then
+              echo "SKIP: $recipe_name (unsupported on darwin/arm64)"
+              continue
+            fi
+
             TOTAL=$((TOTAL + 1))
+            RECIPE_START=$(date +%s)
 
             echo "::group::$recipe_name on macOS arm64"
 
@@ -478,30 +590,35 @@ jobs:
             mkdir -p "$TSUKU_HOME/cache"
             ln -sf "$SHARED_CACHE" "$TSUKU_HOME/cache/downloads"
 
-            if gtimeout 300 ./tsuku-darwin-arm64 install --force \
+            if gtimeout 600 ./tsuku-darwin-arm64 install --force \
                 --dangerously-suppress-security \
                 --recipe "$recipe_path" 2>&1; then
+              RECIPE_ELAPSED=$(( $(date +%s) - RECIPE_START ))
               PASSED=$((PASSED + 1))
-              RESULTS="$RESULTS| $recipe_name | darwin-arm64 | pass |\n"
-              echo "PASS: $recipe_name on macOS arm64"
+              RESULTS="$RESULTS| $recipe_name | darwin-arm64 | pass | ${RECIPE_ELAPSED}s |\n"
+              echo "PASS: $recipe_name on macOS arm64 (${RECIPE_ELAPSED}s)"
             else
               EXIT_CODE=$?
+              RECIPE_ELAPSED=$(( $(date +%s) - RECIPE_START ))
               FAILED=$((FAILED + 1))
-              RESULTS="$RESULTS| $recipe_name | darwin-arm64 | **FAIL** (exit $EXIT_CODE) |\n"
-              echo "FAIL: $recipe_name on macOS arm64 (exit $EXIT_CODE)"
+              RESULTS="$RESULTS| $recipe_name | darwin-arm64 | **FAIL** (exit $EXIT_CODE) | ${RECIPE_ELAPSED}s |\n"
+              echo "FAIL: $recipe_name on macOS arm64 (exit $EXIT_CODE, ${RECIPE_ELAPSED}s)"
             fi
 
             echo "::endgroup::"
+
+            # Clean up installed tools to free disk for the next recipe.
+            rm -rf "${{ runner.temp }}/tsuku-${recipe_name}" 2>/dev/null || true
           done
 
           # Write job summary
           {
-            echo "### macOS arm64 Results"
+            echo "### macOS arm64 (batch ${{ matrix.batch.batch_id }}) Results"
             echo ""
             echo "Passed: $PASSED / $TOTAL"
             echo ""
-            echo "| Recipe | Family | Status |"
-            echo "|--------|--------|--------|"
+            echo "| Recipe | Family | Status | Duration |"
+            echo "|--------|--------|--------|----------|"
             echo -e "$RESULTS"
             if [ "$FAILED" -gt 0 ]; then
               echo ""
@@ -511,16 +628,22 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
           if [ "$FAILED" -gt 0 ]; then
-            echo "::warning::$FAILED of $TOTAL tests failed on macOS arm64"
+            echo "::error::$FAILED of $TOTAL tests failed on macOS arm64 (batch ${{ matrix.batch.batch_id }})"
             exit 1
           fi
 
   # macOS x86_64: native runner test.
+  # Same batched approach as macOS arm64.
   test-darwin-x86_64:
+    name: "macOS x86_64 (batch ${{ matrix.batch.batch_id }}/${{ needs.build.outputs.darwin_batch_count }})"
     needs: build
-    if: needs.build.outputs.has_linux_batches == 'true'
+    if: needs.build.outputs.has_darwin_batches == 'true'
     runs-on: macos-15-intel
     timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        batch: ${{ fromJson(needs.build.outputs.darwin_batches) }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
 
@@ -544,12 +667,13 @@ jobs:
 
       - name: Test recipes on macOS x86_64
         env:
-          RECIPES: ${{ needs.build.outputs.recipes }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TSUKU_REGISTRY_URL: ${{ github.workspace }}
         run: |
           SHARED_CACHE="/tmp/tsuku-shared-downloads"
           mkdir -p "$SHARED_CACHE"
           chmod 700 "$SHARED_CACHE"
+          RECIPES='${{ toJson(matrix.batch.recipes) }}'
 
           TOTAL=0
           PASSED=0
@@ -560,7 +684,21 @@ jobs:
           for i in $(seq 0 $((COUNT - 1))); do
             recipe_name=$(echo "$RECIPES" | jq -r ".[$i].name")
             recipe_path=$(echo "$RECIPES" | jq -r ".[$i].path")
+
+            # Skip recipes that don't support this platform
+            if grep -q 'supported_os' "$recipe_path"; then
+              if ! grep 'supported_os' "$recipe_path" | grep -q '"darwin"'; then
+                echo "SKIP: $recipe_name (supported_os excludes darwin)"
+                continue
+              fi
+            fi
+            if grep 'unsupported_platforms' "$recipe_path" | grep -q '"darwin/amd64"' 2>/dev/null; then
+              echo "SKIP: $recipe_name (unsupported on darwin/amd64)"
+              continue
+            fi
+
             TOTAL=$((TOTAL + 1))
+            RECIPE_START=$(date +%s)
 
             echo "::group::$recipe_name on macOS x86_64"
 
@@ -568,30 +706,35 @@ jobs:
             mkdir -p "$TSUKU_HOME/cache"
             ln -sf "$SHARED_CACHE" "$TSUKU_HOME/cache/downloads"
 
-            if gtimeout 300 ./tsuku-darwin-amd64 install --force \
+            if gtimeout 600 ./tsuku-darwin-amd64 install --force \
                 --dangerously-suppress-security \
                 --recipe "$recipe_path" 2>&1; then
+              RECIPE_ELAPSED=$(( $(date +%s) - RECIPE_START ))
               PASSED=$((PASSED + 1))
-              RESULTS="$RESULTS| $recipe_name | darwin-x86_64 | pass |\n"
-              echo "PASS: $recipe_name on macOS x86_64"
+              RESULTS="$RESULTS| $recipe_name | darwin-x86_64 | pass | ${RECIPE_ELAPSED}s |\n"
+              echo "PASS: $recipe_name on macOS x86_64 (${RECIPE_ELAPSED}s)"
             else
               EXIT_CODE=$?
+              RECIPE_ELAPSED=$(( $(date +%s) - RECIPE_START ))
               FAILED=$((FAILED + 1))
-              RESULTS="$RESULTS| $recipe_name | darwin-x86_64 | **FAIL** (exit $EXIT_CODE) |\n"
-              echo "FAIL: $recipe_name on macOS x86_64 (exit $EXIT_CODE)"
+              RESULTS="$RESULTS| $recipe_name | darwin-x86_64 | **FAIL** (exit $EXIT_CODE) | ${RECIPE_ELAPSED}s |\n"
+              echo "FAIL: $recipe_name on macOS x86_64 (exit $EXIT_CODE, ${RECIPE_ELAPSED}s)"
             fi
 
             echo "::endgroup::"
+
+            # Clean up installed tools to free disk for the next recipe.
+            rm -rf "${{ runner.temp }}/tsuku-${recipe_name}" 2>/dev/null || true
           done
 
           # Write job summary
           {
-            echo "### macOS x86_64 Results"
+            echo "### macOS x86_64 (batch ${{ matrix.batch.batch_id }}) Results"
             echo ""
             echo "Passed: $PASSED / $TOTAL"
             echo ""
-            echo "| Recipe | Family | Status |"
-            echo "|--------|--------|--------|"
+            echo "| Recipe | Family | Status | Duration |"
+            echo "|--------|--------|--------|----------|"
             echo -e "$RESULTS"
             if [ "$FAILED" -gt 0 ]; then
               echo ""
@@ -601,6 +744,6 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
           if [ "$FAILED" -gt 0 ]; then
-            echo "::warning::$FAILED of $TOTAL tests failed on macOS x86_64"
+            echo "::error::$FAILED of $TOTAL tests failed on macOS x86_64 (batch ${{ matrix.batch.batch_id }})"
             exit 1
           fi
