@@ -1,0 +1,6 @@
+{
+  "issue": 1963,
+  "pragmatic": {"blocking_count": 0, "advisory_count": 1},
+  "architect": {"blocking_count": 0, "advisory_count": 3},
+  "maintainer": {"blocking_count": 1, "advisory_count": 3}
+}

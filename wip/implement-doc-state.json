@@ -3,7 +3,7 @@
   "design_doc": "docs/designs/DESIGN-sandbox-build-cache.md",
   "branch": "docs/sandbox-build-cache",
   "pr_number": 1956,
-  "integrity_hash": "sha256:f3a0925627c2ad811b18fe788e798ad0a898c5fbf42dde9458788463e3c3402b",
+  "integrity_hash": "sha256:eef929e99c654bd6b3d198564c7fd112bb7b1c38ecc47f2d309b5e6b16722a30",
   "issues": [
     {
       "number": 1958,
@@ -361,8 +361,8 @@
     {
       "number": 1962,
       "title": "ci(recipes): sort recipes by ecosystem before batching",
-      "status": "scrutinized",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "ci_fix_attempts": 0,
       "issue_type": "code",
       "dependencies": [
@@ -417,6 +417,21 @@
           }
         ]
       },
+      "reviewer_results": {
+        "issue": 1962,
+        "pragmatic": {
+          "blocking_count": 0,
+          "advisory_count": 0
+        },
+        "architect": {
+          "blocking_count": 0,
+          "advisory_count": 1
+        },
+        "maintainer": {
+          "blocking_count": 0,
+          "advisory_count": 3
+        }
+      },
       "testable_scenarios": [
         "scenario-14"
       ]
@@ -424,16 +439,81 @@
     {
       "number": 1963,
       "title": "feat(sandbox): add cargo registry cache mount",
-      "status": "pending",
+      "status": "scrutinized",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [
         1960
       ],
-      "commits": [],
-      "agent_type": "",
-      "summary": null,
+      "commits": [
+        "cd50e195",
+        "e9282d95"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          "internal/sandbox/executor.go",
+          "internal/sandbox/executor_test.go",
+          "internal/actions/cargo_build.go",
+          "internal/actions/cargo_build_test.go"
+        ],
+        "tests_added": 19,
+        "key_decisions": "Moved symlink from broken sandbox script to cargo_build action where CARGO_HOME is known; TSUKU_CARGO_REGISTRY_CACHE env var bridges sandbox-\u003eaction; linkCargoRegistryCache() called after buildDeterministicCargoEnv()",
+        "requirements_map": [
+          {
+            "ac": "cargoRegistryCacheDir field",
+            "status": "implemented",
+            "evidence": "executor.go:65"
+          },
+          {
+            "ac": "WithCargoRegistryCacheDir option",
+            "status": "implemented",
+            "evidence": "executor.go:93-102"
+          },
+          {
+            "ac": "Mount appended when set",
+            "status": "implemented",
+            "evidence": "executor.go:378-386"
+          },
+          {
+            "ac": "Symlink via cargo_build action",
+            "status": "deviated",
+            "evidence": "cargo_build.go:564-605 linkCargoRegistryCache(); called in Execute() and executeLockDataMode(). Original sandbox script approach broken because CARGO_HOME not in container shell env."
+          },
+          {
+            "ac": "TSUKU_CARGO_REGISTRY_CACHE env var",
+            "status": "implemented",
+            "evidence": "executor.go:332-336 sets env var; cargo_build.go reads it"
+          },
+          {
+            "ac": "Unit tests: option setter",
+            "status": "implemented",
+            "evidence": "TestWithCargoRegistryCacheDir, TestWithCargoRegistryCacheDir_Empty"
+          },
+          {
+            "ac": "Unit tests: mount + env var",
+            "status": "implemented",
+            "evidence": "TestSandbox_CargoRegistryMount checks mount and TSUKU_CARGO_REGISTRY_CACHE"
+          },
+          {
+            "ac": "Unit tests: linkCargoRegistryCache",
+            "status": "implemented",
+            "evidence": "6 tests in cargo_build_test.go covering success, missing vars, nonexistent dir, replace existing"
+          },
+          {
+            "ac": "Unit tests: script without",
+            "status": "implemented",
+            "evidence": "TestBuildSandboxScript_NoCargoRegistrySymlink"
+          },
+          {
+            "ac": "All tests pass",
+            "status": "implemented",
+            "evidence": "go test ./internal/sandbox/... ok"
+          }
+        ]
+      },
       "testable_scenarios": [
         "scenario-15",
         "scenario-16"
