@@ -3,7 +3,7 @@
   "design_doc": "docs/designs/DESIGN-sandbox-build-cache.md",
   "branch": "docs/sandbox-build-cache",
   "pr_number": 1956,
-  "integrity_hash": "sha256:0c4fb3cdc62205a6d95971260b1cabf52635435a66b67f126f153c6a661584a4",
+  "integrity_hash": "sha256:f567bf4f795f1887d2440b176dab17a77e992d742221fb88679b6167476a9666",
   "issues": [
     {
       "number": 1958,
@@ -81,8 +81,8 @@
     {
       "number": 1959,
       "title": "feat(sandbox): implement foundation image generation",
-      "status": "scrutinized",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "ci_fix_attempts": 0,
       "issue_type": "code",
       "dependencies": [],
@@ -171,6 +171,21 @@
           }
         ]
       },
+      "reviewer_results": {
+        "issue": 1959,
+        "pragmatic": {
+          "blocking_count": 0,
+          "advisory_count": 1
+        },
+        "architect": {
+          "blocking_count": 0,
+          "advisory_count": 0
+        },
+        "maintainer": {
+          "blocking_count": 0,
+          "advisory_count": 3
+        }
+      },
       "testable_scenarios": [
         "scenario-3",
         "scenario-4",
@@ -181,14 +196,56 @@
     {
       "number": 1960,
       "title": "refactor(sandbox): switch to targeted mounts",
-      "status": "pending",
+      "status": "scrutinized",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [],
-      "commits": [],
-      "agent_type": "",
-      "summary": null,
+      "commits": [
+        "a3c6999b"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          "internal/sandbox/executor.go",
+          "internal/sandbox/executor_test.go"
+        ],
+        "tests_added": 5,
+        "key_decisions": "outputDir as sibling of workspaceDir for simple cleanup via existing defer RemoveAll; readVerifyResults param renamed from workspaceDir to outputDir; conditional mkdir matches design doc exactly",
+        "requirements_map": [
+          {
+            "ac": "Four targeted mounts",
+            "status": "implemented",
+            "evidence": "executor.go:317-338"
+          },
+          {
+            "ac": "tsuku binary mount preserved",
+            "status": "implemented",
+            "evidence": "executor.go:342-348"
+          },
+          {
+            "ac": "Markers to /workspace/output/",
+            "status": "implemented",
+            "evidence": "executor.go:548-549"
+          },
+          {
+            "ac": "Conditional mkdir",
+            "status": "implemented",
+            "evidence": "executor.go:527-530"
+          },
+          {
+            "ac": "readVerifyResults reads from outputDir",
+            "status": "implemented",
+            "evidence": "executor.go:380,405-406"
+          },
+          {
+            "ac": "Tests pass",
+            "status": "implemented",
+            "evidence": "80+ tests pass"
+          }
+        ]
+      },
       "testable_scenarios": [
         "scenario-7",
         "scenario-8",

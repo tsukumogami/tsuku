@@ -40,8 +40,8 @@ Planned
 | ~~_Adds `BuildFromDockerfile(ctx, imageName, contextDir)` to the `Runtime` interface with implementations in `dockerRuntime` and `podmanRuntime`. Unlike the existing `Build()` method which pipes Dockerfiles via stdin, this reads from a context directory so COPY instructions can reference local files._~~ | | |
 | ~~[#1959: feat(sandbox): implement foundation image generation](https://github.com/tsukumogami/tsuku/issues/1959)~~ | ~~None~~ | ~~testable~~ |
 | ~~_Creates `internal/sandbox/foundation.go` with pure functions: `FlattenDependencies` (DFS traversal, topological ordering, deduplication), `GenerateFoundationDockerfile` (interleaved COPY+RUN pairs per dependency), and `FoundationImageName` (content-hash based image tags). Each dependency's plan preserves its full subtree -- runtime skip logic handles deduplication._~~ | | |
-| [#1960: refactor(sandbox): switch to targeted mounts](https://github.com/tsukumogami/tsuku/issues/1960) | None | critical |
-| _Replaces the single broad `/workspace` mount with four targeted mounts (plan.json, sandbox.sh, download cache, output dir). The container's `$TSUKU_HOME` filesystem is no longer shadowed, which is what makes foundation image caching possible. Updates `buildSandboxScript()` and `readVerifyResults()` to use the new output directory. Applies unconditionally to all sandbox runs._ | | |
+| ~~[#1960: refactor(sandbox): switch to targeted mounts](https://github.com/tsukumogami/tsuku/issues/1960)~~ | ~~None~~ | ~~critical~~ |
+| ~~_Replaces the single broad `/workspace` mount with four targeted mounts (plan.json, sandbox.sh, download cache, output dir). The container's `$TSUKU_HOME` filesystem is no longer shadowed, which is what makes foundation image caching possible. Updates `buildSandboxScript()` and `readVerifyResults()` to use the new output directory. Applies unconditionally to all sandbox runs._~~ | | |
 | [#1961: feat(sandbox): build and use foundation images in sandbox runs](https://github.com/tsukumogami/tsuku/issues/1961) | [#1958](https://github.com/tsukumogami/tsuku/issues/1958), [#1959](https://github.com/tsukumogami/tsuku/issues/1959), [#1960](https://github.com/tsukumogami/tsuku/issues/1960) | critical |
 | _Wires the three foundation pieces together: calls `FlattenDependencies` on the plan, generates a Dockerfile, builds the foundation image via `BuildFromDockerfile` (or finds it cached via `ImageExists`), and uses it as the base image for the sandbox run. Includes integration test verifying that a sandbox run with a pre-built foundation image skips dependency installation._ | | |
 | [#1962: ci(recipes): sort recipes by ecosystem before batching](https://github.com/tsukumogami/tsuku/issues/1962) | [#1961](https://github.com/tsukumogami/tsuku/issues/1961) | testable |
@@ -80,9 +80,9 @@ graph LR
     classDef needsDesign fill:#e1bee7
     classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
 
-    class I1958,I1959 done
-    class I1960 ready
-    class I1961,I1962,I1963 blocked
+    class I1958,I1959,I1960 done
+    class I1961,I1963 ready
+    class I1962 blocked
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design
