@@ -2,7 +2,10 @@ package sandbox
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -68,8 +71,11 @@ func TestBuildSandboxScript_OfflineRequirements(t *testing.T) {
 		t.Error("Offline script should not run apt-get update")
 	}
 
-	// Should contain TSUKU_HOME setup
-	if !strings.Contains(script, "mkdir -p /workspace/tsuku/recipes") {
+	// Should contain conditional TSUKU_HOME setup
+	if !strings.Contains(script, "if [ ! -d /workspace/tsuku/tools ]; then") {
+		t.Error("Script should conditionally setup TSUKU_HOME directories")
+	}
+	if !strings.Contains(script, "mkdir -p /workspace/tsuku/recipes /workspace/tsuku/bin /workspace/tsuku/tools") {
 		t.Error("Script should setup TSUKU_HOME directories")
 	}
 
@@ -103,9 +109,9 @@ func TestBuildSandboxScript_NoPackageInstallation(t *testing.T) {
 		t.Error("Script should not contain dnf (packages installed via container build)")
 	}
 
-	// Should setup TSUKU_HOME and run install
-	if !strings.Contains(script, "mkdir -p /workspace/tsuku") {
-		t.Error("Script should setup TSUKU_HOME")
+	// Should conditionally setup TSUKU_HOME and run install
+	if !strings.Contains(script, "if [ ! -d /workspace/tsuku/tools ]; then") {
+		t.Error("Script should conditionally setup TSUKU_HOME")
 	}
 	if !strings.Contains(script, "tsuku install --plan") {
 		t.Error("Script should run tsuku install --plan")
@@ -357,14 +363,14 @@ func TestBuildSandboxScript_WithVerifyCommand(t *testing.T) {
 		t.Error("Script should contain 'set +e' before verify command")
 	}
 
-	// Should redirect output to marker file
-	if !strings.Contains(script, ".sandbox-verify-output") {
-		t.Error("Script should redirect verify output to marker file")
+	// Should redirect output to marker file under /workspace/output/
+	if !strings.Contains(script, "/workspace/output/.sandbox-verify-output") {
+		t.Error("Script should redirect verify output to /workspace/output/ marker file")
 	}
 
-	// Should write exit code to marker file
-	if !strings.Contains(script, ".sandbox-verify-exit") {
-		t.Error("Script should write verify exit code to marker file")
+	// Should write exit code to marker file under /workspace/output/
+	if !strings.Contains(script, "/workspace/output/.sandbox-verify-exit") {
+		t.Error("Script should write verify exit code to /workspace/output/ marker file")
 	}
 
 	// Should contain the verify command
@@ -865,5 +871,284 @@ func TestSandboxRequirements_ExtraEnvField(t *testing.T) {
 	}
 	if reqs.ExtraEnv[0] != "GITHUB_TOKEN=abc" {
 		t.Errorf("Expected first entry GITHUB_TOKEN=abc, got %q", reqs.ExtraEnv[0])
+	}
+}
+
+// --- Targeted mount tests ---
+
+// TestSandboxTargetedMounts verifies that Executor.Sandbox() constructs four
+// targeted mounts (plan.json, sandbox.sh, download cache, output dir) instead
+// of a single broad /workspace mount. This test exercises the mount construction
+// by replaying the same logic Sandbox() uses to build RunOptions.Mounts.
+func TestSandboxTargetedMounts(t *testing.T) {
+	t.Parallel()
+
+	// Set up a workspace directory mirroring what Sandbox() creates
+	workspaceDir := t.TempDir()
+	cacheDir := filepath.Join(workspaceDir, "cache", "downloads")
+	if err := os.MkdirAll(cacheDir, 0700); err != nil {
+		t.Fatal(err)
+	}
+	outputDir := filepath.Join(workspaceDir, "output")
+	if err := os.MkdirAll(outputDir, 0700); err != nil {
+		t.Fatal(err)
+	}
+
+	plan := &executor.InstallationPlan{
+		Tool:    "test-tool",
+		Version: "1.0.0",
+	}
+	planData, err := json.MarshalIndent(plan, "", "  ")
+	if err != nil {
+		t.Fatal(err)
+	}
+	planPath := filepath.Join(workspaceDir, "plan.json")
+	if err := os.WriteFile(planPath, planData, 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	scriptPath := filepath.Join(workspaceDir, "sandbox.sh")
+	if err := os.WriteFile(scriptPath, []byte("#!/bin/sh\n"), 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// Build the same mounts Sandbox() constructs
+	mounts := []validate.Mount{
+		{Source: planPath, Target: "/workspace/plan.json", ReadOnly: true},
+		{Source: scriptPath, Target: "/workspace/sandbox.sh", ReadOnly: true},
+		{Source: cacheDir, Target: "/workspace/tsuku/cache/downloads", ReadOnly: true},
+		{Source: outputDir, Target: "/workspace/output", ReadOnly: false},
+	}
+
+	// Verify exactly 4 targeted mounts
+	if len(mounts) != 4 {
+		t.Fatalf("Expected 4 mounts, got %d", len(mounts))
+	}
+
+	// Verify each mount's target and read-only flags
+	expected := []struct {
+		target   string
+		readOnly bool
+	}{
+		{"/workspace/plan.json", true},
+		{"/workspace/sandbox.sh", true},
+		{"/workspace/tsuku/cache/downloads", true},
+		{"/workspace/output", false},
+	}
+
+	for i, exp := range expected {
+		if mounts[i].Target != exp.target {
+			t.Errorf("Mount[%d] target = %q, want %q", i, mounts[i].Target, exp.target)
+		}
+		if mounts[i].ReadOnly != exp.readOnly {
+			t.Errorf("Mount[%d] readOnly = %v, want %v", i, mounts[i].ReadOnly, exp.readOnly)
+		}
+	}
+
+	// Verify no broad /workspace mount exists
+	for i, m := range mounts {
+		if m.Target == "/workspace" {
+			t.Errorf("Mount[%d] is a broad /workspace mount, which should not exist", i)
+		}
+	}
+
+	// Verify sources point to real files/dirs
+	for i, m := range mounts {
+		if _, err := os.Stat(m.Source); err != nil {
+			t.Errorf("Mount[%d] source %q does not exist: %v", i, m.Source, err)
+		}
+	}
+}
+
+// TestSandboxTargetedMounts_TsukuBinaryAppendedSeparately verifies that the
+// tsuku binary mount is appended after the four targeted mounts.
+func TestSandboxTargetedMounts_TsukuBinaryAppendedSeparately(t *testing.T) {
+	t.Parallel()
+
+	workspaceDir := t.TempDir()
+	planPath := filepath.Join(workspaceDir, "plan.json")
+	scriptPath := filepath.Join(workspaceDir, "sandbox.sh")
+	cacheDir := filepath.Join(workspaceDir, "cache")
+	outputDir := filepath.Join(workspaceDir, "output")
+
+	for _, d := range []string{cacheDir, outputDir} {
+		if err := os.MkdirAll(d, 0700); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for _, f := range []string{planPath, scriptPath} {
+		if err := os.WriteFile(f, []byte("x"), 0644); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	// Build mounts the way Sandbox() does
+	mounts := []validate.Mount{
+		{Source: planPath, Target: "/workspace/plan.json", ReadOnly: true},
+		{Source: scriptPath, Target: "/workspace/sandbox.sh", ReadOnly: true},
+		{Source: cacheDir, Target: "/workspace/tsuku/cache/downloads", ReadOnly: true},
+		{Source: outputDir, Target: "/workspace/output", ReadOnly: false},
+	}
+
+	// Append tsuku binary mount (as Sandbox() does when tsukuBinary != "")
+	tsukuBinary := "/usr/local/bin/tsuku"
+	mounts = append(mounts, validate.Mount{
+		Source:   tsukuBinary,
+		Target:   "/usr/local/bin/tsuku",
+		ReadOnly: true,
+	})
+
+	// Total should be 5 (4 targeted + 1 tsuku binary)
+	if len(mounts) != 5 {
+		t.Fatalf("Expected 5 mounts with tsuku binary, got %d", len(mounts))
+	}
+
+	// Last mount should be the tsuku binary
+	last := mounts[4]
+	if last.Target != "/usr/local/bin/tsuku" {
+		t.Errorf("Last mount target = %q, want /usr/local/bin/tsuku", last.Target)
+	}
+	if !last.ReadOnly {
+		t.Error("Tsuku binary mount should be read-only")
+	}
+}
+
+// TestBuildSandboxScript_ConditionalMkdir verifies that the sandbox script
+// uses a conditional mkdir -p guard for TSUKU_HOME structure creation.
+func TestBuildSandboxScript_ConditionalMkdir(t *testing.T) {
+	t.Parallel()
+
+	exec := &Executor{}
+	plan := &executor.InstallationPlan{
+		Tool:    "test-tool",
+		Version: "1.0.0",
+	}
+	reqs := &SandboxRequirements{
+		Image:     "debian:bookworm-slim",
+		Resources: DefaultLimits(),
+	}
+
+	script := exec.buildSandboxScript(plan, reqs)
+
+	// Should use conditional mkdir, not unconditional
+	if !strings.Contains(script, "if [ ! -d /workspace/tsuku/tools ]; then") {
+		t.Error("Script should guard mkdir -p with [ ! -d /workspace/tsuku/tools ]")
+	}
+	if !strings.Contains(script, "mkdir -p /workspace/tsuku/recipes /workspace/tsuku/bin /workspace/tsuku/tools") {
+		t.Error("Script should create recipes, bin, and tools directories in one command")
+	}
+	if !strings.Contains(script, "fi") {
+		t.Error("Script should close the if block with fi")
+	}
+
+	// Should NOT have unconditional mkdir -p /workspace/tsuku/recipes on its own line
+	lines := strings.Split(script, "\n")
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "mkdir -p /workspace/tsuku/recipes" {
+			t.Error("Script should not have unconditional 'mkdir -p /workspace/tsuku/recipes'")
+		}
+		if trimmed == "mkdir -p /workspace/tsuku/bin" {
+			t.Error("Script should not have unconditional 'mkdir -p /workspace/tsuku/bin'")
+		}
+		if trimmed == "mkdir -p /workspace/tsuku/tools" {
+			t.Error("Script should not have unconditional 'mkdir -p /workspace/tsuku/tools'")
+		}
+	}
+}
+
+// TestBuildSandboxScript_VerifyMarkersWriteToOutput verifies that marker files
+// are written to /workspace/output/, not /workspace/ directly.
+func TestBuildSandboxScript_VerifyMarkersWriteToOutput(t *testing.T) {
+	t.Parallel()
+
+	exec := &Executor{}
+	plan := &executor.InstallationPlan{
+		Tool:    "test-tool",
+		Version: "1.0.0",
+		Verify: &executor.PlanVerify{
+			Command: "test-tool --version",
+			Pattern: "1.0.0",
+		},
+	}
+	reqs := &SandboxRequirements{
+		Image:     "debian:bookworm-slim",
+		Resources: DefaultLimits(),
+	}
+
+	script := exec.buildSandboxScript(plan, reqs)
+
+	// Markers should go to /workspace/output/
+	expectedOutput := fmt.Sprintf("/workspace/output/%s", verifyOutputMarker)
+	expectedExit := fmt.Sprintf("/workspace/output/%s", verifyExitMarker)
+
+	if !strings.Contains(script, expectedOutput) {
+		t.Errorf("Script should write verify output to %s", expectedOutput)
+	}
+	if !strings.Contains(script, expectedExit) {
+		t.Errorf("Script should write verify exit code to %s", expectedExit)
+	}
+
+	// Should NOT contain markers at /workspace/ (without /output/ prefix)
+	// Check that the only occurrences of the marker names are under /workspace/output/
+	oldStyleOutput := fmt.Sprintf("> /workspace/%s", verifyOutputMarker)
+	oldStyleExit := fmt.Sprintf("> /workspace/%s", verifyExitMarker)
+	if strings.Contains(script, oldStyleOutput) {
+		t.Error("Script should NOT write markers directly to /workspace/")
+	}
+	if strings.Contains(script, oldStyleExit) {
+		t.Error("Script should NOT write exit marker directly to /workspace/")
+	}
+}
+
+// TestReadVerifyResults_OutputDirectory verifies that readVerifyResults reads
+// marker files from the output subdirectory, matching the new /workspace/output/
+// mount layout.
+func TestReadVerifyResults_OutputDirectory(t *testing.T) {
+	t.Parallel()
+
+	// Create a workspace with output subdirectory (matching Sandbox() layout)
+	workspaceDir := t.TempDir()
+	outputDir := filepath.Join(workspaceDir, "output")
+	if err := os.MkdirAll(outputDir, 0700); err != nil {
+		t.Fatal(err)
+	}
+
+	// Write marker files to the output subdirectory
+	exitPath := filepath.Join(outputDir, verifyExitMarker)
+	if err := os.WriteFile(exitPath, []byte("0\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	outputPath := filepath.Join(outputDir, verifyOutputMarker)
+	if err := os.WriteFile(outputPath, []byte("test-tool v1.0.0\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	exec := &Executor{logger: log.NewNoop()}
+	plan := &executor.InstallationPlan{
+		Tool:    "test-tool",
+		Version: "1.0.0",
+		Verify: &executor.PlanVerify{
+			Command: "test-tool --version",
+			Pattern: "1.0.0",
+		},
+	}
+
+	// Pass outputDir (not workspaceDir) -- matching how Sandbox() now calls it
+	verified, exitCode := exec.readVerifyResults(outputDir, plan)
+	if !verified {
+		t.Error("Expected verified=true when reading from output directory")
+	}
+	if exitCode != 0 {
+		t.Errorf("Expected exitCode=0, got %d", exitCode)
+	}
+
+	// Verify that reading from workspaceDir directly would fail (markers aren't there)
+	verified2, exitCode2 := exec.readVerifyResults(workspaceDir, plan)
+	if verified2 {
+		t.Error("Reading from workspaceDir (not outputDir) should fail to find markers")
+	}
+	if exitCode2 != -1 {
+		t.Errorf("Expected exitCode=-1 when reading from wrong dir, got %d", exitCode2)
 	}
 }

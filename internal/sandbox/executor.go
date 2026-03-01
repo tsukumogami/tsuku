@@ -248,6 +248,12 @@ func (e *Executor) Sandbox(
 		}
 	}
 
+	// Create output directory for verification markers
+	outputDir := filepath.Join(workspaceDir, "output")
+	if err := os.MkdirAll(outputDir, 0700); err != nil {
+		return nil, fmt.Errorf("failed to create output directory: %w", err)
+	}
+
 	// Write plan JSON to workspace
 	planData, err := json.MarshalIndent(plan, "", "  ")
 	if err != nil {
@@ -294,7 +300,10 @@ func (e *Executor) Sandbox(
 		env = append(env, extra...)
 	}
 
-	// Build run options
+	// Build run options with targeted mounts instead of a single broad
+	// /workspace mount. This preserves the container's $TSUKU_HOME filesystem
+	// (e.g., tools pre-installed by a foundation image) while exchanging only
+	// the specific files the host needs to provide or receive.
 	opts := validate.RunOptions{
 		Image:   containerImage,
 		Command: []string{"/bin/sh", "/workspace/sandbox.sh"},
@@ -307,14 +316,24 @@ func (e *Executor) Sandbox(
 		},
 		Mounts: []validate.Mount{
 			{
-				Source:   workspaceDir,
-				Target:   "/workspace",
-				ReadOnly: false,
+				Source:   planPath,
+				Target:   "/workspace/plan.json",
+				ReadOnly: true,
+			},
+			{
+				Source:   scriptPath,
+				Target:   "/workspace/sandbox.sh",
+				ReadOnly: true,
 			},
 			{
 				Source:   cacheDir,
 				Target:   "/workspace/tsuku/cache/downloads",
 				ReadOnly: true,
+			},
+			{
+				Source:   outputDir,
+				Target:   "/workspace/output",
+				ReadOnly: false,
 			},
 		},
 	}
@@ -357,7 +376,8 @@ func (e *Executor) Sandbox(
 	}
 
 	// Install succeeded. Now check verification results.
-	verified, verifyExitCode := e.readVerifyResults(workspaceDir, plan)
+	// Markers are written to the output directory mount, not workspaceDir directly.
+	verified, verifyExitCode := e.readVerifyResults(outputDir, plan)
 
 	return &SandboxResult{
 		Passed:         result.ExitCode == 0,
@@ -370,19 +390,20 @@ func (e *Executor) Sandbox(
 	}, nil
 }
 
-// readVerifyResults reads verification marker files from the workspace and
-// evaluates the verify results using executor.CheckPlanVerification.
+// readVerifyResults reads verification marker files from the output directory
+// and evaluates the verify results using executor.CheckPlanVerification.
+// The outputDir corresponds to the host-side path mounted at /workspace/output/.
 // Returns (verified, verifyExitCode).
 // If no verify command exists, returns (true, -1).
-func (e *Executor) readVerifyResults(workspaceDir string, plan *executor.InstallationPlan) (bool, int) {
+func (e *Executor) readVerifyResults(outputDir string, plan *executor.InstallationPlan) (bool, int) {
 	// If no verify command, verification is considered passed
 	if plan.Verify == nil || plan.Verify.Command == "" {
 		return true, -1
 	}
 
-	// Read marker files
-	exitPath := filepath.Join(workspaceDir, verifyExitMarker)
-	outputPath := filepath.Join(workspaceDir, verifyOutputMarker)
+	// Read marker files from the output directory
+	exitPath := filepath.Join(outputDir, verifyExitMarker)
+	outputPath := filepath.Join(outputDir, verifyOutputMarker)
 
 	exitData, err := os.ReadFile(exitPath)
 	if err != nil {
@@ -499,11 +520,14 @@ func (e *Executor) buildSandboxScript(
 	sb.WriteString("#!/bin/sh\n")
 	sb.WriteString("set -e\n\n")
 
-	// Setup TSUKU_HOME directory structure
-	sb.WriteString("# Setup TSUKU_HOME\n")
-	sb.WriteString("mkdir -p /workspace/tsuku/recipes\n")
-	sb.WriteString("mkdir -p /workspace/tsuku/bin\n")
-	sb.WriteString("mkdir -p /workspace/tsuku/tools\n\n")
+	// Create TSUKU_HOME structure if not provided by foundation image.
+	// When a foundation image pre-installs dependencies, the directory
+	// structure (and state.json) already exists on the container's filesystem.
+	// Creating it unconditionally would clobber that state.
+	sb.WriteString("# Create TSUKU_HOME structure if not provided by foundation image\n")
+	sb.WriteString("if [ ! -d /workspace/tsuku/tools ]; then\n")
+	sb.WriteString("  mkdir -p /workspace/tsuku/recipes /workspace/tsuku/bin /workspace/tsuku/tools\n")
+	sb.WriteString("fi\n\n")
 
 	// Add $TSUKU_HOME/bin to PATH so dependency binaries are available
 	// This is needed when plans include dependency steps (e.g., nodejs for npm_exec)
@@ -515,13 +539,14 @@ func (e *Executor) buildSandboxScript(
 	sb.WriteString("# Run tsuku install with pre-generated plan\n")
 	sb.WriteString("tsuku install --plan /workspace/plan.json --force\n")
 
-	// Append verify block if the plan has a verify command
+	// Append verify block if the plan has a verify command.
+	// Markers are written to /workspace/output/ which is the only read-write mount.
 	if plan.Verify != nil && plan.Verify.Command != "" {
 		sb.WriteString("\n# Run verify command and capture results to marker files\n")
 		sb.WriteString("set +e\n")
 		sb.WriteString("export PATH=\"$TSUKU_HOME/bin:$TSUKU_HOME/tools/current:$PATH\"\n")
-		sb.WriteString(fmt.Sprintf("%s > /workspace/%s 2>&1\n", plan.Verify.Command, verifyOutputMarker))
-		sb.WriteString(fmt.Sprintf("echo $? > /workspace/%s\n", verifyExitMarker))
+		sb.WriteString(fmt.Sprintf("%s > /workspace/output/%s 2>&1\n", plan.Verify.Command, verifyOutputMarker))
+		sb.WriteString(fmt.Sprintf("echo $? > /workspace/output/%s\n", verifyExitMarker))
 	}
 
 	return sb.String()
