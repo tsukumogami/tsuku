@@ -5,12 +5,6 @@ homepage = "https://www.gaia-gis.it/fossil/libspatialite"
 binaries = ["bin/spatialite"]
 dependencies = ["sqlite", "geos", "proj", "libxml2"]
 supported_os = ["linux"]
-runtime_dependencies = [
-  "geos",
-  "libxml2",
-  "proj",
-  "sqlite",
-]
 
 [[steps]]
 action = "homebrew"
