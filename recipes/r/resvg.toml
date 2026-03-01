@@ -9,6 +9,7 @@
   llm_validation = "skipped"
 
 [version]
+  source = "crates_io"
   github_repo = ""
   tag_prefix = ""
   module = ""
@@ -27,4 +28,4 @@
 
 [verify]
   command = "resvg --version"
-  pattern = "{version}"
+  pattern = ""

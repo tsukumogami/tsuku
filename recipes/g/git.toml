@@ -4,6 +4,7 @@ description = "Distributed revision control system"
 homepage = "https://git-scm.com/"
 dependencies = ["curl"]
 binaries = ["bin/git"]
+runtime_dependencies = ["gettext", "pcre2"]
 
 [[steps]]
 action = "homebrew"
