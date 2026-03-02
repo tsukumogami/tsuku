@@ -4,6 +4,8 @@
   homepage = "https://aerc-mail.org/"
   version_format = ""
   requires_sudo = false
+  # macOS: missing runtime_dependencies (needs gmime via notmuch)
+  unsupported_platforms = ["darwin/arm64", "darwin/amd64"]
   runtime_dependencies = ["notmuch"]
   tier = 0
   type = ""

@@ -4,6 +4,8 @@
   homepage = "https://github.com/diamondburned/dissent"
   version_format = ""
   requires_sudo = false
+  # macOS: missing runtime_dependencies (needs libadwaita)
+  unsupported_platforms = ["darwin/arm64", "darwin/amd64"]
   runtime_dependencies = [
     "cairo",
     "gettext",

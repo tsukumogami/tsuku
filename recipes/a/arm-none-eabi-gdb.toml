@@ -4,6 +4,8 @@
   homepage = "https://www.gnu.org/software/gdb/"
   version_format = ""
   requires_sudo = false
+  # macOS: incomplete runtime dependency chain
+  unsupported_platforms = ["darwin/arm64", "darwin/amd64"]
   runtime_dependencies = [
     "gmp",
     "mpfr",

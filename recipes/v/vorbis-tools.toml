@@ -4,6 +4,8 @@
   homepage = "https://github.com/xiph/vorbis-tools"
   version_format = ""
   requires_sudo = false
+  # macOS: missing runtime_dependencies (needs libvorbis)
+  unsupported_platforms = ["darwin/arm64", "darwin/amd64"]
   tier = 0
   type = ""
   llm_validation = "skipped"
