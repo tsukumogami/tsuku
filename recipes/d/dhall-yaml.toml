@@ -1,0 +1,35 @@
+[metadata]
+  name = "dhall-yaml"
+  description = "Convert between Dhall and YAML"
+  homepage = "https://github.com/dhall-lang/dhall-haskell/tree/main/dhall-yaml"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["gmp"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "dhall-yaml"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "dhall-yaml"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/dhall-to-yaml-ng", "bin/yaml-to-dhall"]
+
+[verify]
+  command = "dhall-to-yaml-ng --version"
+  pattern = ""

@@ -1,0 +1,50 @@
+[metadata]
+  name = "gumbo-parser"
+  description = "C99 library for parsing HTML5"
+  homepage = "https://codeberg.org/gumbo-parser/gumbo-parser"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "gumbo-parser"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "gumbo-parser"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libgumbo.a", "lib/libgumbo.so", "lib/libgumbo.so.3", "lib/libgumbo.so.3.0.0", "lib/pkgconfig/gumbo.pc", "include/gumbo.h", "include/tag_enum.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "gumbo-parser"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libgumbo.3.dylib", "lib/libgumbo.a", "lib/libgumbo.dylib", "lib/pkgconfig/gumbo.pc", "include/gumbo.h", "include/tag_enum.h"]
+  [steps.when]
+    os = ["darwin"]

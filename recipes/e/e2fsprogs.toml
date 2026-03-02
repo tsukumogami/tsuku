@@ -1,0 +1,35 @@
+[metadata]
+  name = "e2fsprogs"
+  description = "Utilities for the ext2, ext3, and ext4 file systems"
+  homepage = "https://e2fsprogs.sourceforge.net/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["gettext"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "e2fsprogs"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "e2fsprogs"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/chattr", "bin/compile_et", "bin/lsattr", "bin/mk_cmds"]
+
+[verify]
+  command = "chattr --version"
+  pattern = ""

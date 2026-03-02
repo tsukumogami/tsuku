@@ -1,0 +1,50 @@
+[metadata]
+  name = "double-conversion"
+  description = "Binary-decimal and decimal-binary routines for IEEE doubles"
+  homepage = "https://github.com/google/double-conversion"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "double-conversion"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "double-conversion"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libdouble-conversion.a", "lib/libdouble-conversion.so", "lib/libdouble-conversion.so.3", "lib/libdouble-conversion.so.3.4.0", "lib/pkgconfig/double-conversion.pc", "include/double-conversion/bignum-dtoa.h", "include/double-conversion/bignum.h", "include/double-conversion/cached-powers.h", "include/double-conversion/diy-fp.h", "include/double-conversion/double-conversion.h", "include/double-conversion/double-to-string.h", "include/double-conversion/fast-dtoa.h", "include/double-conversion/fixed-dtoa.h", "include/double-conversion/ieee.h", "include/double-conversion/string-to-double.h", "include/double-conversion/strtod.h", "include/double-conversion/utils.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "double-conversion"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libdouble-conversion.3.4.0.dylib", "lib/libdouble-conversion.3.dylib", "lib/libdouble-conversion.a", "lib/libdouble-conversion.dylib", "lib/pkgconfig/double-conversion.pc", "include/double-conversion/bignum-dtoa.h", "include/double-conversion/bignum.h", "include/double-conversion/cached-powers.h", "include/double-conversion/diy-fp.h", "include/double-conversion/double-conversion.h", "include/double-conversion/double-to-string.h", "include/double-conversion/fast-dtoa.h", "include/double-conversion/fixed-dtoa.h", "include/double-conversion/ieee.h", "include/double-conversion/string-to-double.h", "include/double-conversion/strtod.h", "include/double-conversion/utils.h"]
+  [steps.when]
+    os = ["darwin"]
