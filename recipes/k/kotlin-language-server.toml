@@ -1,0 +1,35 @@
+[metadata]
+  name = "kotlin-language-server"
+  description = "Intelligent Kotlin support for any editor/IDE using the Language Server Protocol"
+  homepage = "https://github.com/fwcd/kotlin-language-server"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = []
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "kotlin-language-server"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "kotlin-language-server"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/kotlin-language-server"]
+
+[verify]
+  command = "kotlin-language-server --version"
+  pattern = ""

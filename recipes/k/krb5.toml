@@ -1,14 +1,13 @@
 [metadata]
-  name = "gitui"
-  description = "Blazing fast terminal-ui for git written in rust"
-  homepage = "https://github.com/gitui-org/gitui"
+  name = "krb5"
+  description = "Network authentication protocol"
+  homepage = "https://web.mit.edu/kerberos/"
   version_format = ""
   requires_sudo = false
   runtime_dependencies = ["openssl"]
   tier = 0
   type = ""
   llm_validation = "skipped"
-supported_os = ["linux"]
 
 [version]
   source = ""
@@ -25,12 +24,12 @@ supported_os = ["linux"]
 
 [[steps]]
   action = "homebrew"
-  formula = "gitui"
+  formula = "krb5"
 
 [[steps]]
   action = "install_binaries"
-  binaries = ["bin/gitui"]
+  binaries = ["bin/compile_et", "bin/gss-client", "bin/k5srvutil", "bin/kadmin", "bin/kdestroy", "bin/kinit", "bin/klist", "bin/kpasswd", "bin/krb5-config", "bin/ksu", "bin/kswitch", "bin/ktutil", "bin/kvno", "bin/sclient", "bin/sim_client", "bin/uuclient"]
 
 [verify]
-  command = "gitui --version"
+  command = "compile_et --version"
   pattern = ""
