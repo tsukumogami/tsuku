@@ -1,0 +1,35 @@
+[metadata]
+  name = "binutils"
+  description = "GNU binary tools for native development"
+  homepage = "https://www.gnu.org/software/binutils/binutils.html"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["zstd"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = ""
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "binutils"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/addr2line", "bin/ar", "bin/as", "bin/c++filt", "bin/coffdump", "bin/dlltool", "bin/dllwrap", "bin/elfedit", "bin/gp-archive", "bin/gp-collect-app", "bin/gp-display-html", "bin/gp-display-src", "bin/gp-display-text", "bin/gprof", "bin/gprofng", "bin/gprofng-archive", "bin/gprofng-collect-app", "bin/gprofng-display-html", "bin/gprofng-display-src", "bin/gprofng-display-text", "bin/gprofng-gmon", "bin/ld", "bin/nm", "bin/objcopy", "bin/objdump", "bin/ranlib", "bin/readelf", "bin/size", "bin/srconv", "bin/strings", "bin/strip", "bin/sysdump", "bin/windmc", "bin/windres"]
+
+[verify]
+  command = "addr2line --version"
+  pattern = ""

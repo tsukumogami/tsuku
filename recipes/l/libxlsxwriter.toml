@@ -1,0 +1,50 @@
+[metadata]
+  name = "libxlsxwriter"
+  description = "C library for creating Excel XLSX files"
+  homepage = "https://libxlsxwriter.github.io/"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "libxlsxwriter"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "libxlsxwriter"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libxlsxwriter.a", "lib/libxlsxwriter.so", "lib/libxlsxwriter.so.11", "lib/pkgconfig/xlsxwriter.pc", "include/xlsxwriter/app.h", "include/xlsxwriter/chart.h", "include/xlsxwriter/chartsheet.h", "include/xlsxwriter/comment.h", "include/xlsxwriter/common.h", "include/xlsxwriter/content_types.h", "include/xlsxwriter/core.h", "include/xlsxwriter/custom.h", "include/xlsxwriter/drawing.h", "include/xlsxwriter/format.h", "include/xlsxwriter/hash_table.h", "include/xlsxwriter/metadata.h", "include/xlsxwriter/packager.h", "include/xlsxwriter/relationships.h", "include/xlsxwriter/rich_value.h", "include/xlsxwriter/rich_value_rel.h", "include/xlsxwriter/rich_value_structure.h", "include/xlsxwriter/rich_value_types.h", "include/xlsxwriter/shared_strings.h", "include/xlsxwriter/styles.h", "include/xlsxwriter/table.h", "include/xlsxwriter/theme.h", "include/xlsxwriter/third_party/emyg_dtoa.h", "include/xlsxwriter/third_party/ioapi.h", "include/xlsxwriter/third_party/md5.h", "include/xlsxwriter/third_party/queue.h", "include/xlsxwriter/third_party/tmpfileplus.h", "include/xlsxwriter/third_party/tree.h", "include/xlsxwriter/third_party/zip.h", "include/xlsxwriter/utility.h", "include/xlsxwriter/vml.h", "include/xlsxwriter/workbook.h", "include/xlsxwriter/worksheet.h", "include/xlsxwriter/xmlwriter.h", "include/xlsxwriter.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "libxlsxwriter"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libxlsxwriter.11.dylib", "lib/libxlsxwriter.a", "lib/libxlsxwriter.dylib", "lib/pkgconfig/xlsxwriter.pc", "include/xlsxwriter/app.h", "include/xlsxwriter/chart.h", "include/xlsxwriter/chartsheet.h", "include/xlsxwriter/comment.h", "include/xlsxwriter/common.h", "include/xlsxwriter/content_types.h", "include/xlsxwriter/core.h", "include/xlsxwriter/custom.h", "include/xlsxwriter/drawing.h", "include/xlsxwriter/format.h", "include/xlsxwriter/hash_table.h", "include/xlsxwriter/metadata.h", "include/xlsxwriter/packager.h", "include/xlsxwriter/relationships.h", "include/xlsxwriter/rich_value.h", "include/xlsxwriter/rich_value_rel.h", "include/xlsxwriter/rich_value_structure.h", "include/xlsxwriter/rich_value_types.h", "include/xlsxwriter/shared_strings.h", "include/xlsxwriter/styles.h", "include/xlsxwriter/table.h", "include/xlsxwriter/theme.h", "include/xlsxwriter/third_party/emyg_dtoa.h", "include/xlsxwriter/third_party/ioapi.h", "include/xlsxwriter/third_party/md5.h", "include/xlsxwriter/third_party/queue.h", "include/xlsxwriter/third_party/tmpfileplus.h", "include/xlsxwriter/third_party/tree.h", "include/xlsxwriter/third_party/zip.h", "include/xlsxwriter/utility.h", "include/xlsxwriter/vml.h", "include/xlsxwriter/workbook.h", "include/xlsxwriter/worksheet.h", "include/xlsxwriter/xmlwriter.h", "include/xlsxwriter.h"]
+  [steps.when]
+    os = ["darwin"]
