@@ -4,6 +4,8 @@
   homepage = "https://www.inf.puc-rio.br/~roberto/lpeg/"
   version_format = ""
   requires_sudo = false
+  # linux/arm64: no homebrew bottles available
+  unsupported_platforms = ["linux/arm64"]
   tier = 0
   type = "library"
   llm_validation = "skipped"
