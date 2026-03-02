@@ -23,9 +23,9 @@
 
 [[steps]]
   action = "cargo_install"
-  crate = "boringtun"
-  executables = ["boringtun"]
+  crate = "boringtun-cli"
+  executables = ["boringtun-cli"]
 
 [verify]
-  command = "boringtun --version"
+  command = "boringtun-cli --version"
   pattern = ""

@@ -23,7 +23,7 @@
 
 [[steps]]
   action = "cargo_install"
-  crate = "bindgen"
+  crate = "bindgen-cli"
   executables = ["bindgen"]
 
 [verify]
