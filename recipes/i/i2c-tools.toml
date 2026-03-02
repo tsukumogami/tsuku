@@ -1,14 +1,12 @@
 [metadata]
-  name = "gitui"
-  description = "Blazing fast terminal-ui for git written in rust"
-  homepage = "https://github.com/gitui-org/gitui"
+  name = "i2c-tools"
+  description = "Heterogeneous set of I2C tools for Linux"
+  homepage = "https://i2c.wiki.kernel.org/index.php/I2C_Tools"
   version_format = ""
   requires_sudo = false
-  runtime_dependencies = ["openssl"]
   tier = 0
   type = ""
   llm_validation = "skipped"
-supported_os = ["linux"]
 
 [version]
   source = ""
@@ -25,12 +23,12 @@ supported_os = ["linux"]
 
 [[steps]]
   action = "homebrew"
-  formula = "gitui"
+  formula = "i2c-tools"
 
 [[steps]]
   action = "install_binaries"
-  binaries = ["bin/gitui"]
+  binaries = ["bin/ddcmon", "bin/decode-dimms", "bin/decode-edid", "bin/decode-vaio"]
 
 [verify]
-  command = "gitui --version"
+  command = "ddcmon --version"
   pattern = ""
