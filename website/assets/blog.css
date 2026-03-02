@@ -1,14 +1,14 @@
 /* Blog post styles */
 .blog-post { max-width: 800px; margin: 0 auto; padding: 2rem; }
 .blog-post h1 { font-size: 2rem; margin-bottom: 0.5rem; }
-.post-meta { color: var(--text-muted); font-size: 0.9rem; }
+.post-meta { color: var(--text-muted); font-size: 0.9rem; margin-top: 0.75rem; }
 .post-meta time { color: inherit; }
 .post-meta .author { color: var(--accent); text-decoration: none; }
 .post-meta .author:hover { text-decoration: underline; }
 .post-content { margin-top: 2rem; line-height: 1.8; }
 .post-content h2 { margin-top: 2rem; margin-bottom: 1rem; }
 .post-content code { font-family: "SF Mono", Consolas, monospace; background: var(--code-bg); padding: 0.15rem 0.4rem; border-radius: 4px; }
-.post-content pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 1.5rem; overflow-x: auto; margin-bottom: 1.5rem; }
+.post-content pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 1.5rem; overflow-x: auto; margin-top: 1.5rem; margin-bottom: 1.5rem; }
 .post-content pre code { background: none; padding: 0; }
 
 /* Blog index styles */
