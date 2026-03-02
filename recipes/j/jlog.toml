@@ -1,0 +1,35 @@
+[metadata]
+  name = "jlog"
+  description = "Pure C message queue with subscribers and publishers for logs"
+  homepage = "https://labs.omniti.com/labs/jlog"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+  unsupported_platforms = ["darwin/arm64", "darwin/amd64"]
+
+[version]
+  source = ""
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "jlog"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/jlog_change_endian", "bin/jlog_sanity_check", "bin/jlogctl", "bin/jlogtail"]
+
+[verify]
+  command = "jlog_change_endian --version"
+  pattern = ""
