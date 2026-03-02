@@ -1,21 +1,20 @@
 [metadata]
-  name = "gitui"
-  description = "Blazing fast terminal-ui for git written in rust"
-  homepage = "https://github.com/gitui-org/gitui"
+  name = "latexml"
+  description = "LaTeX to XML/HTML/MathML Converter"
+  homepage = "https://dlmf.nist.gov/LaTeXML/"
   version_format = ""
   requires_sudo = false
-  runtime_dependencies = ["openssl"]
+  runtime_dependencies = ["perl"]
   tier = 0
   type = ""
   llm_validation = "skipped"
-supported_os = ["linux"]
 
 [version]
-  source = ""
+  source = "homebrew"
   github_repo = ""
   tag_prefix = ""
   module = ""
-  formula = ""
+  formula = "latexml"
   cask = ""
   tap = ""
   fossil_repo = ""
@@ -25,12 +24,12 @@ supported_os = ["linux"]
 
 [[steps]]
   action = "homebrew"
-  formula = "gitui"
+  formula = "latexml"
 
 [[steps]]
   action = "install_binaries"
-  binaries = ["bin/gitui"]
+  binaries = ["bin/latexml", "bin/latexmlc", "bin/latexmlfind", "bin/latexmlmath", "bin/latexmlpost"]
 
 [verify]
-  command = "gitui --version"
+  command = "latexml --version"
   pattern = ""
