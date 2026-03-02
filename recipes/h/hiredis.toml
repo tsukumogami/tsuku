@@ -1,0 +1,51 @@
+[metadata]
+  name = "hiredis"
+  description = "Minimalistic client for Redis"
+  homepage = "https://github.com/redis/hiredis"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["openssl"]
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "hiredis"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "hiredis"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libhiredis.a", "lib/libhiredis.so", "lib/libhiredis.so.1", "lib/libhiredis.so.1.3.0", "lib/libhiredis_ssl.a", "lib/libhiredis_ssl.so", "lib/libhiredis_ssl.so.1", "lib/libhiredis_ssl.so.1.3.0", "lib/pkgconfig/hiredis.pc", "lib/pkgconfig/hiredis_ssl.pc", "include/hiredis/adapters/ae.h", "include/hiredis/adapters/glib.h", "include/hiredis/adapters/ivykis.h", "include/hiredis/adapters/libev.h", "include/hiredis/adapters/libevent.h", "include/hiredis/adapters/libhv.h", "include/hiredis/adapters/libsdevent.h", "include/hiredis/adapters/libuv.h", "include/hiredis/adapters/macosx.h", "include/hiredis/adapters/poll.h", "include/hiredis/adapters/qt.h", "include/hiredis/adapters/redismoduleapi.h", "include/hiredis/alloc.h", "include/hiredis/async.h", "include/hiredis/hiredis.h", "include/hiredis/hiredis_ssl.h", "include/hiredis/read.h", "include/hiredis/sds.h", "include/hiredis/sockcompat.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "hiredis"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libhiredis.1.3.0.dylib", "lib/libhiredis.1.dylib", "lib/libhiredis.a", "lib/libhiredis.dylib", "lib/libhiredis_ssl.1.3.0.dylib", "lib/libhiredis_ssl.1.dylib", "lib/libhiredis_ssl.a", "lib/libhiredis_ssl.dylib", "lib/pkgconfig/hiredis.pc", "lib/pkgconfig/hiredis_ssl.pc", "include/hiredis/adapters/ae.h", "include/hiredis/adapters/glib.h", "include/hiredis/adapters/ivykis.h", "include/hiredis/adapters/libev.h", "include/hiredis/adapters/libevent.h", "include/hiredis/adapters/libhv.h", "include/hiredis/adapters/libsdevent.h", "include/hiredis/adapters/libuv.h", "include/hiredis/adapters/macosx.h", "include/hiredis/adapters/poll.h", "include/hiredis/adapters/qt.h", "include/hiredis/adapters/redismoduleapi.h", "include/hiredis/alloc.h", "include/hiredis/async.h", "include/hiredis/hiredis.h", "include/hiredis/hiredis_ssl.h", "include/hiredis/read.h", "include/hiredis/sds.h", "include/hiredis/sockcompat.h"]
+  [steps.when]
+    os = ["darwin"]

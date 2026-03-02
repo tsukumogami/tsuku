@@ -1,0 +1,52 @@
+[metadata]
+  name = "libsamplerate"
+  description = "Library for sample rate conversion of audio data"
+  homepage = "https://github.com/libsndfile/libsamplerate"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+  # linux/arm64: homebrew bottle install fails on glibc containers
+  unsupported_platforms = ["linux/arm64"]
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "libsamplerate"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "libsamplerate"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libsamplerate.a", "lib/libsamplerate.so", "lib/libsamplerate.so.0", "lib/libsamplerate.so.0.2.2", "lib/pkgconfig/samplerate.pc", "include/samplerate.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "libsamplerate"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libsamplerate.0.2.2.dylib", "lib/libsamplerate.0.dylib", "lib/libsamplerate.a", "lib/libsamplerate.dylib", "lib/pkgconfig/samplerate.pc", "include/samplerate.h"]
+  [steps.when]
+    os = ["darwin"]
