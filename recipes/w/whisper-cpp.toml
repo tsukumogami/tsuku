@@ -1,0 +1,36 @@
+[metadata]
+  name = "whisper-cpp"
+  description = "Port of OpenAI's Whisper model in C/C++"
+  homepage = "https://github.com/ggml-org/whisper.cpp"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["sdl2"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+  unsupported_platforms = ["darwin/arm64", "darwin/amd64"]
+
+[version]
+  source = ""
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "whisper-cpp"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/whisper-bench", "bin/whisper-cli", "bin/whisper-command", "bin/whisper-lsp", "bin/whisper-quantize", "bin/whisper-server", "bin/whisper-stream", "bin/whisper-talk-llama", "bin/whisper-vad-speech-segments"]
+
+[verify]
+  command = "whisper-bench --version"
+  pattern = ""
