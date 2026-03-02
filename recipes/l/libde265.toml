@@ -1,0 +1,35 @@
+[metadata]
+  name = "libde265"
+  description = "Open h.265 video codec implementation"
+  homepage = "https://github.com/strukturag/libde265"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+  unsupported_platforms = ["darwin/arm64", "darwin/amd64"]
+
+[version]
+  source = ""
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "libde265"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/bjoentegaard", "bin/gen-enc-table", "bin/rd-curves", "bin/yuv-distortion"]
+
+[verify]
+  command = "bjoentegaard --version"
+  pattern = ""
