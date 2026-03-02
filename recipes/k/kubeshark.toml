@@ -1,0 +1,35 @@
+[metadata]
+  name = "kubeshark"
+  description = "API Traffic Analyzer providing real-time visibility into Kubernetes network"
+  homepage = "https://kubeshark.com"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+  unsupported_platforms = ["darwin/arm64", "darwin/amd64"]
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "kubeshark"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "kubeshark"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/kubeshark"]
+
+[verify]
+  command = "kubeshark --version"
+  pattern = ""
