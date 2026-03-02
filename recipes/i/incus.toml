@@ -1,0 +1,34 @@
+[metadata]
+  name = "incus"
+  description = "CLI client for interacting with Incus"
+  homepage = "https://linuxcontainers.org/incus"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "incus"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "incus"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/incus"]
+
+[verify]
+  command = "incus --version"
+  pattern = ""
