@@ -1,0 +1,10 @@
+baseURL = "https://tsuku.dev/blog/"
+languageCode = "en-us"
+title = "tsuku blog"
+# Disable taxonomy pages (tags, categories) since the blog doesn't use them.
+# Remove this line if adding tag support later.
+disableKinds = ["taxonomy"]
+
+[params]
+  description = "Technical posts about tsuku's design and development"
+  images = ["https://tsuku.dev/assets/og-default.png"]
