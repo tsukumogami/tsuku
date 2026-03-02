@@ -1,0 +1,35 @@
+[metadata]
+  name = "phpstan"
+  description = "PHP Static Analysis Tool"
+  homepage = "https://github.com/phpstan/phpstan"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+  unsupported_platforms = ["darwin/arm64", "darwin/amd64"]
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "phpstan"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "phpstan"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/phpstan"]
+
+[verify]
+  command = "phpstan --version"
+  pattern = ""
