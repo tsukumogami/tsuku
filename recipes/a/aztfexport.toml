@@ -1,0 +1,34 @@
+[metadata]
+  name = "aztfexport"
+  description = "Bring your existing Azure resources under the management of Terraform"
+  homepage = "https://azure.github.io/aztfexport/"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "aztfexport"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "aztfexport"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/aztfexport"]
+
+[verify]
+  command = "aztfexport --version"
+  pattern = ""
