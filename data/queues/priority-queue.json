@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-02T04:41:31Z",
+  "updated_at": "2026-03-02T05:59:36Z",
   "entries": [
     {
       "name": "bat",
@@ -191,6 +191,16 @@
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 3,
       "next_retry_at": "2026-02-24T06:13:54.942523874Z"
+    },
+    {
+      "name": "python@3.14",
+      "source": "homebrew:python@3.14",
+      "priority": 2,
+      "status": "pending",
+      "confidence": "auto",
+      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
+      "failure_count": 3,
+      "next_retry_at": "2026-02-24T06:14:03.397894201Z"
     },
     {
       "name": "anomalyco/tap/opencode",
@@ -413,16 +423,6 @@
       "next_retry_at": "2026-02-24T06:14:02.135389508Z"
     },
     {
-      "name": "python@3.14",
-      "source": "homebrew:python@3.14",
-      "priority": 2,
-      "status": "pending",
-      "confidence": "auto",
-      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-02-24T06:14:03.397894201Z"
-    },
-    {
       "name": "ripgrep",
       "source": "homebrew:ripgrep",
       "priority": 2,
@@ -467,6 +467,26 @@
       "source": "homebrew:libgit2",
       "priority": 3,
       "status": "success",
+      "confidence": "auto",
+      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
+      "failure_count": 0,
+      "next_retry_at": null
+    },
+    {
+      "name": "libuv",
+      "source": "homebrew:libuv",
+      "priority": 3,
+      "status": "pending",
+      "confidence": "auto",
+      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
+      "failure_count": 0,
+      "next_retry_at": null
+    },
+    {
+      "name": "utf8proc",
+      "source": "homebrew:utf8proc",
+      "priority": 3,
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 0,
@@ -533,6 +553,26 @@
       "next_retry_at": null
     },
     {
+      "name": "hdrhistogram_c",
+      "source": "homebrew:hdrhistogram_c",
+      "priority": 3,
+      "status": "pending",
+      "confidence": "auto",
+      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
+      "failure_count": 0,
+      "next_retry_at": null
+    },
+    {
+      "name": "icu4c@78",
+      "source": "homebrew:icu4c@78",
+      "priority": 3,
+      "status": "pending",
+      "confidence": "auto",
+      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
+      "failure_count": 1,
+      "next_retry_at": null
+    },
+    {
       "name": "libevent",
       "source": "homebrew:libevent",
       "priority": 3,
@@ -547,6 +587,56 @@
       "source": "homebrew:libidn2",
       "priority": 3,
       "status": "success",
+      "confidence": "auto",
+      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
+      "failure_count": 0,
+      "next_retry_at": null
+    },
+    {
+      "name": "libsodium",
+      "source": "homebrew:libsodium",
+      "priority": 3,
+      "status": "pending",
+      "confidence": "auto",
+      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
+      "failure_count": 0,
+      "next_retry_at": null
+    },
+    {
+      "name": "libunistring",
+      "source": "homebrew:libunistring",
+      "priority": 3,
+      "status": "pending",
+      "confidence": "auto",
+      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
+      "failure_count": 1,
+      "next_retry_at": null
+    },
+    {
+      "name": "llhttp",
+      "source": "homebrew:llhttp",
+      "priority": 3,
+      "status": "pending",
+      "confidence": "auto",
+      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
+      "failure_count": 0,
+      "next_retry_at": null
+    },
+    {
+      "name": "lpeg",
+      "source": "homebrew:lpeg",
+      "priority": 3,
+      "status": "pending",
+      "confidence": "auto",
+      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
+      "failure_count": 1,
+      "next_retry_at": null
+    },
+    {
+      "name": "luv",
+      "source": "homebrew:luv",
+      "priority": 3,
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 0,
@@ -583,8 +673,28 @@
       "next_retry_at": null
     },
     {
+      "name": "simdjson",
+      "source": "homebrew:simdjson",
+      "priority": 3,
+      "status": "pending",
+      "confidence": "auto",
+      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
+      "failure_count": 0,
+      "next_retry_at": null
+    },
+    {
       "name": "tree-sitter@0.25",
       "source": "homebrew:tree-sitter@0.25",
+      "priority": 3,
+      "status": "pending",
+      "confidence": "auto",
+      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
+      "failure_count": 1,
+      "next_retry_at": null
+    },
+    {
+      "name": "uvwasi",
+      "source": "homebrew:uvwasi",
       "priority": 3,
       "status": "pending",
       "confidence": "auto",
@@ -19553,16 +19663,6 @@
       "next_retry_at": null
     },
     {
-      "name": "hdrhistogram_c",
-      "source": "homebrew:hdrhistogram_c",
-      "priority": 3,
-      "status": "pending",
-      "confidence": "auto",
-      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
-      "next_retry_at": null
-    },
-    {
       "name": "headscale-cli",
       "source": "homebrew:headscale-cli",
       "priority": 3,
@@ -20745,16 +20845,6 @@
     {
       "name": "icu4c@77",
       "source": "homebrew:icu4c@77",
-      "priority": 3,
-      "status": "pending",
-      "confidence": "auto",
-      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": null
-    },
-    {
-      "name": "icu4c@78",
-      "source": "homebrew:icu4c@78",
       "priority": 3,
       "status": "pending",
       "confidence": "auto",
@@ -26343,16 +26433,6 @@
       "next_retry_at": null
     },
     {
-      "name": "libsodium",
-      "source": "homebrew:libsodium",
-      "priority": 3,
-      "status": "pending",
-      "confidence": "auto",
-      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
-      "next_retry_at": null
-    },
-    {
       "name": "libsoup",
       "source": "homebrew:libsoup",
       "priority": 3,
@@ -26543,16 +26623,6 @@
       "next_retry_at": null
     },
     {
-      "name": "libunistring",
-      "source": "homebrew:libunistring",
-      "priority": 3,
-      "status": "pending",
-      "confidence": "auto",
-      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": null
-    },
-    {
       "name": "libupnp",
       "source": "homebrew:libupnp",
       "priority": 3,
@@ -26585,16 +26655,6 @@
     {
       "name": "libusbmuxd",
       "source": "homebrew:libusbmuxd",
-      "priority": 3,
-      "status": "pending",
-      "confidence": "auto",
-      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
-      "next_retry_at": null
-    },
-    {
-      "name": "libuv",
-      "source": "homebrew:libuv",
       "priority": 3,
       "status": "pending",
       "confidence": "auto",
@@ -27413,16 +27473,6 @@
       "next_retry_at": null
     },
     {
-      "name": "llhttp",
-      "source": "homebrew:llhttp",
-      "priority": 3,
-      "status": "pending",
-      "confidence": "auto",
-      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
-      "next_retry_at": null
-    },
-    {
       "name": "llm",
       "source": "homebrew:llm",
       "priority": 3,
@@ -27793,16 +27843,6 @@
       "next_retry_at": null
     },
     {
-      "name": "lpeg",
-      "source": "homebrew:lpeg",
-      "priority": 3,
-      "status": "pending",
-      "confidence": "auto",
-      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": null
-    },
-    {
       "name": "lrzsz",
       "source": "homebrew:lrzsz",
       "priority": 3,
@@ -28010,16 +28050,6 @@
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 1,
-      "next_retry_at": null
-    },
-    {
-      "name": "luv",
-      "source": "homebrew:luv",
-      "priority": 3,
-      "status": "pending",
-      "confidence": "auto",
-      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
       "next_retry_at": null
     },
     {
@@ -43633,16 +43663,6 @@
       "next_retry_at": null
     },
     {
-      "name": "simdjson",
-      "source": "homebrew:simdjson",
-      "priority": 3,
-      "status": "pending",
-      "confidence": "auto",
-      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
-      "next_retry_at": null
-    },
-    {
       "name": "simdutf",
       "source": "homebrew:simdutf",
       "priority": 3,
@@ -49473,16 +49493,6 @@
       "next_retry_at": null
     },
     {
-      "name": "utf8proc",
-      "source": "homebrew:utf8proc",
-      "priority": 3,
-      "status": "pending",
-      "confidence": "auto",
-      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
-      "next_retry_at": null
-    },
-    {
       "name": "utftex",
       "source": "homebrew:utftex",
       "priority": 3,
@@ -49570,16 +49580,6 @@
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 0,
-      "next_retry_at": null
-    },
-    {
-      "name": "uvwasi",
-      "source": "homebrew:uvwasi",
-      "priority": 3,
-      "status": "pending",
-      "confidence": "auto",
-      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
       "next_retry_at": null
     },
     {
