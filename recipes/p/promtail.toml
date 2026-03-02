@@ -1,21 +1,19 @@
 [metadata]
-  name = "gitui"
-  description = "Blazing fast terminal-ui for git written in rust"
-  homepage = "https://github.com/gitui-org/gitui"
+  name = "promtail"
+  description = "Log agent for Loki"
+  homepage = "https://grafana.com/loki"
   version_format = ""
   requires_sudo = false
-  runtime_dependencies = ["openssl"]
   tier = 0
   type = ""
   llm_validation = "skipped"
-supported_os = ["linux"]
 
 [version]
-  source = ""
+  source = "homebrew"
   github_repo = ""
   tag_prefix = ""
   module = ""
-  formula = ""
+  formula = "promtail"
   cask = ""
   tap = ""
   fossil_repo = ""
@@ -25,12 +23,12 @@ supported_os = ["linux"]
 
 [[steps]]
   action = "homebrew"
-  formula = "gitui"
+  formula = "promtail"
 
 [[steps]]
   action = "install_binaries"
-  binaries = ["bin/gitui"]
+  binaries = ["bin/promtail"]
 
 [verify]
-  command = "gitui --version"
+  command = "promtail --version"
   pattern = ""
