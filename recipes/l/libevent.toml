@@ -4,6 +4,9 @@ description = "Asynchronous event library"
 homepage = "https://libevent.org/"
 type = "library"
 dependencies = ["openssl"]
+# macOS: blocked by rpath issue (https://github.com/tsukumogami/tsuku/issues/1965)
+# linux/arm64: homebrew bottle install fails on glibc arm64 containers
+unsupported_platforms = ["darwin/arm64", "darwin/amd64", "linux/arm64"]
 
 [metadata.satisfies]
 homebrew = ["libevent"]
