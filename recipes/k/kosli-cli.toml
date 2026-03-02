@@ -1,0 +1,35 @@
+[metadata]
+  name = "kosli-cli"
+  description = "CLI for managing Kosli"
+  homepage = "https://docs.kosli.com/client_reference/"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+  unsupported_platforms = ["darwin/arm64", "darwin/amd64"]
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "kosli-cli"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "kosli-cli"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/kosli"]
+
+[verify]
+  command = "kosli --version"
+  pattern = ""
