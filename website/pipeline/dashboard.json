@@ -1,11 +1,11 @@
 {
-  "generated_at": "2026-03-02T11:53:33Z",
+  "generated_at": "2026-03-02T12:11:28Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "excluded": 4,
-      "pending": 4817,
-      "success": 484
+      "pending": 4797,
+      "success": 504
     },
     "by_tier": {
       "1": {
@@ -13,13 +13,13 @@
         "success": 4
       },
       "2": {
-        "pending": 24,
-        "success": 3
+        "pending": 23,
+        "success": 4
       },
       "3": {
         "excluded": 4,
-        "pending": 4779,
-        "success": 477
+        "pending": 4760,
+        "success": 496
       }
     },
     "by_ecosystem": {
@@ -47,8 +47,8 @@
         "total": 8
       },
       "homebrew": {
-        "pending": 4619,
-        "success": 264,
+        "pending": 4599,
+        "success": 284,
         "total": 4883
       },
       "manual": {
@@ -353,13 +353,6 @@
           "category": "generation_failed",
           "failure_count": 3,
           "next_retry_at": "2026-02-24T06:13:56Z"
-        },
-        {
-          "id": "homebrew:protobuf",
-          "name": "protobuf",
-          "ecosystem": "homebrew",
-          "priority": 2,
-          "failure_count": 0
         },
         {
           "id": "homebrew:pyenv",
@@ -3635,30 +3628,9 @@
           "failure_count": 1
         },
         {
-          "id": "homebrew:cabextract",
-          "name": "cabextract",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
           "id": "crates.io:cadence",
           "name": "cadence",
           "ecosystem": "crates.io",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "homebrew:cadence-workflow",
-          "name": "cadence-workflow",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "homebrew:cagent",
-          "name": "cagent",
-          "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
         },
@@ -3672,13 +3644,6 @@
         {
           "id": "homebrew:calc",
           "name": "calc",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "homebrew:calicoctl",
-          "name": "calicoctl",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
@@ -3712,13 +3677,6 @@
           "failure_count": 0
         },
         {
-          "id": "homebrew:carapace",
-          "name": "carapace",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
           "id": "homebrew:cargo-binstall",
           "name": "cargo-binstall",
           "ecosystem": "homebrew",
@@ -3742,13 +3700,6 @@
         {
           "id": "homebrew:cargo-crev",
           "name": "cargo-crev",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "homebrew:cargo-flamegraph",
-          "name": "cargo-flamegraph",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
@@ -20903,13 +20854,6 @@
           "failure_count": 0
         },
         {
-          "id": "homebrew:nudoku",
-          "name": "nudoku",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
           "id": "homebrew:nuget",
           "name": "nuget",
           "ecosystem": "homebrew",
@@ -21491,13 +21435,6 @@
           "failure_count": 0
         },
         {
-          "id": "homebrew:openfpgaloader",
-          "name": "openfpgaloader",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
           "id": "homebrew:openfst",
           "name": "openfst",
           "ecosystem": "homebrew",
@@ -21806,13 +21743,6 @@
           "failure_count": 0
         },
         {
-          "id": "homebrew:ormolu",
-          "name": "ormolu",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
           "id": "homebrew:orocos-kdl",
           "name": "orocos-kdl",
           "ecosystem": "homebrew",
@@ -21857,13 +21787,6 @@
         {
           "id": "homebrew:osm2pgrouting",
           "name": "osm2pgrouting",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "homebrew:osm2pgsql",
-          "name": "osm2pgsql",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
@@ -22555,13 +22478,6 @@
           "failure_count": 0
         },
         {
-          "id": "homebrew:pandoc",
-          "name": "pandoc",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
           "id": "homebrew:pandoc-crossref",
           "name": "pandoc-crossref",
           "ecosystem": "homebrew",
@@ -22723,13 +22639,6 @@
           "failure_count": 1
         },
         {
-          "id": "homebrew:payload-dumper-go",
-          "name": "payload-dumper-go",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
           "id": "homebrew:pbzip2",
           "name": "pbzip2",
           "ecosystem": "homebrew",
@@ -22809,13 +22718,6 @@
         {
           "id": "homebrew:pdf2image",
           "name": "pdf2image",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "homebrew:pdf2svg",
-          "name": "pdf2svg",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
@@ -23374,13 +23276,6 @@
           "failure_count": 0
         },
         {
-          "id": "homebrew:pioneers",
-          "name": "pioneers",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
           "id": "homebrew:pip-audit",
           "name": "pip-audit",
           "ecosystem": "homebrew",
@@ -23467,13 +23362,6 @@
         {
           "id": "homebrew:pixlet",
           "name": "pixlet",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "homebrew:pixz",
-          "name": "pixz",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
@@ -23999,13 +23887,6 @@
           "failure_count": 0
         },
         {
-          "id": "homebrew:pqiv",
-          "name": "pqiv",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
           "id": "homebrew:pre-commit",
           "name": "pre-commit",
           "ecosystem": "homebrew",
@@ -24149,13 +24030,6 @@
           "id": "rubygems:progress",
           "name": "progress",
           "ecosystem": "rubygems",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "homebrew:projectm",
-          "name": "projectm",
-          "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
         },
@@ -25480,13 +25354,6 @@
           "failure_count": 1
         },
         {
-          "id": "homebrew:radare2",
-          "name": "radare2",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
           "id": "crates.io:radicle",
           "name": "radicle",
           "ecosystem": "crates.io",
@@ -26059,13 +25926,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "homebrew:rgbds",
-          "name": "rgbds",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
         },
         {
           "id": "homebrew:rhash",
@@ -34079,6 +33939,13 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:protobuf",
+          "name": "protobuf",
+          "ecosystem": "homebrew",
+          "priority": 2,
+          "failure_count": 0
+        },
+        {
           "id": "homebrew:watchexec",
           "name": "watchexec",
           "ecosystem": "homebrew",
@@ -34569,9 +34436,30 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:cabextract",
+          "name": "cabextract",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
           "id": "github:caddyserver/caddy",
           "name": "caddy",
           "ecosystem": "github",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "homebrew:cadence-workflow",
+          "name": "cadence-workflow",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "homebrew:cagent",
+          "name": "cagent",
+          "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
         },
@@ -34590,8 +34478,22 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:calicoctl",
+          "name": "calicoctl",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
           "id": "homebrew:capstone",
           "name": "capstone",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "homebrew:carapace",
+          "name": "carapace",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
@@ -34621,6 +34523,13 @@
           "id": "crates.io:cargo-expand",
           "name": "cargo-expand",
           "ecosystem": "crates.io",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "homebrew:cargo-flamegraph",
+          "name": "cargo-flamegraph",
+          "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
         },
@@ -36433,6 +36342,13 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:nudoku",
+          "name": "nudoku",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
           "id": "manual:nvidia-driver",
           "name": "nvidia-driver",
           "ecosystem": "manual",
@@ -36468,6 +36384,13 @@
           "failure_count": 1
         },
         {
+          "id": "homebrew:openfpgaloader",
+          "name": "openfpgaloader",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
           "id": "homebrew:openshift-cli",
           "name": "openshift-cli",
           "ecosystem": "homebrew",
@@ -36499,6 +36422,20 @@
         {
           "id": "homebrew:opus",
           "name": "opus",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "homebrew:ormolu",
+          "name": "ormolu",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "homebrew:osm2pgsql",
+          "name": "osm2pgsql",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
@@ -36539,6 +36476,13 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:pandoc",
+          "name": "pandoc",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
           "id": "homebrew:par2",
           "name": "par2",
           "ecosystem": "homebrew",
@@ -36553,8 +36497,22 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:payload-dumper-go",
+          "name": "payload-dumper-go",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
           "id": "homebrew:pcre2",
           "name": "pcre2",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "homebrew:pdf2svg",
+          "name": "pdf2svg",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
@@ -36595,6 +36553,13 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:pioneers",
+          "name": "pioneers",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
           "id": "manual:pipx",
           "name": "pipx",
           "ecosystem": "manual",
@@ -36604,6 +36569,13 @@
         {
           "id": "homebrew:pixman",
           "name": "pixman",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "homebrew:pixz",
+          "name": "pixz",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
@@ -36658,6 +36630,13 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:pqiv",
+          "name": "pqiv",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
           "id": "homebrew:prek",
           "name": "prek",
           "ecosystem": "homebrew",
@@ -36688,6 +36667,13 @@
         {
           "id": "homebrew:proj",
           "name": "proj",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "homebrew:projectm",
+          "name": "projectm",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
@@ -36724,6 +36710,13 @@
         {
           "id": "homebrew:qrencode",
           "name": "qrencode",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "homebrew:radare2",
+          "name": "radare2",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
@@ -36781,6 +36774,13 @@
           "id": "crates.io:resvg",
           "name": "resvg",
           "ecosystem": "crates.io",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "homebrew:rgbds",
+          "name": "rgbds",
+          "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
         },
@@ -37764,51 +37764,6 @@
       "timestamp": "2026-02-22T22:25:32.975745377Z"
     },
     {
-      "id": "batch-2026-02-21T07-27-58Z-ansifilter",
-      "package": "ansifilter",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "2026-02-21T07-27-58Z",
-      "timestamp": "2026-02-21T07:27:58Z"
-    },
-    {
-      "id": "batch-2026-02-21T07-27-58Z-anycable-go",
-      "package": "anycable-go",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "linux-alpine-musl-x86_64",
-      "batch_id": "2026-02-21T07-27-58Z",
-      "timestamp": "2026-02-21T07:27:58Z"
-    },
-    {
-      "id": "batch-2026-02-21T07-27-58Z-apr-util",
-      "package": "apr-util",
-      "ecosystem": "batch",
-      "category": "missing_dep",
-      "exit_code": 8,
-      "platform": "multiple",
-      "platforms": [
-        "darwin-arm64",
-        "darwin-x86_64",
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64",
-        "linux-debian-glibc-arm64",
-        "linux-rhel-glibc-arm64",
-        "linux-suse-glibc-arm64"
-      ],
-      "batch_id": "2026-02-21T07-27-58Z",
-      "timestamp": "2026-02-21T07:27:58Z"
-    },
-    {
       "id": "batch-2026-02-21T07-27-58Z-angle-grinder",
       "package": "angle-grinder",
       "ecosystem": "batch",
@@ -37834,6 +37789,51 @@
       "platforms": [
         "linux-alpine-musl-arm64",
         "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "2026-02-21T07-27-58Z",
+      "timestamp": "2026-02-21T07:27:58Z"
+    },
+    {
+      "id": "batch-2026-02-21T07-27-58Z-anycable-go",
+      "package": "anycable-go",
+      "ecosystem": "batch",
+      "category": "generation_failed",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "linux-alpine-musl-x86_64",
+      "batch_id": "2026-02-21T07-27-58Z",
+      "timestamp": "2026-02-21T07:27:58Z"
+    },
+    {
+      "id": "batch-2026-02-21T07-27-58Z-ansifilter",
+      "package": "ansifilter",
+      "ecosystem": "batch",
+      "category": "generation_failed",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "2026-02-21T07-27-58Z",
+      "timestamp": "2026-02-21T07:27:58Z"
+    },
+    {
+      "id": "batch-2026-02-21T07-27-58Z-apr-util",
+      "package": "apr-util",
+      "ecosystem": "batch",
+      "category": "missing_dep",
+      "exit_code": 8,
+      "platform": "multiple",
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x86_64",
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64",
+        "linux-debian-glibc-arm64",
+        "linux-rhel-glibc-arm64",
+        "linux-suse-glibc-arm64"
       ],
       "batch_id": "2026-02-21T07-27-58Z",
       "timestamp": "2026-02-21T07:27:58Z"
@@ -38735,8 +38735,8 @@
       "timestamp": "2026-02-20T06:08:19Z"
     },
     {
-      "id": "batch-2026-02-20T06-08-19Z-yaml-language-server",
-      "package": "yaml-language-server",
+      "id": "batch-2026-02-20T06-08-19Z-zx",
+      "package": "zx",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -38750,8 +38750,8 @@
       "timestamp": "2026-02-20T06:08:19Z"
     },
     {
-      "id": "batch-2026-02-20T06-08-19Z-zx",
-      "package": "zx",
+      "id": "batch-2026-02-20T06-08-19Z-yaml-language-server",
+      "package": "yaml-language-server",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -38824,8 +38824,8 @@
       "timestamp": "2026-02-20T05:54:15.893000665Z"
     },
     {
-      "id": "batch-2026-02-20T04-28-03Z-vsce",
-      "package": "vsce",
+      "id": "batch-2026-02-20T04-28-03Z-pyright",
+      "package": "pyright",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -38854,8 +38854,8 @@
       "timestamp": "2026-02-20T04:28:03Z"
     },
     {
-      "id": "batch-2026-02-20T04-28-03Z-pyright",
-      "package": "pyright",
+      "id": "batch-2026-02-20T04-28-03Z-vsce",
+      "package": "vsce",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -38945,23 +38945,8 @@
       "timestamp": "2026-02-20T02:08:13Z"
     },
     {
-      "id": "batch-2026-02-20T02-08-13Z-oxlint",
-      "package": "oxlint",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "2026-02-20T02-08-13Z",
-      "timestamp": "2026-02-20T02:08:13Z"
-    },
-    {
-      "id": "batch-2026-02-20T02-08-13Z-rulesync",
-      "package": "rulesync",
+      "id": "batch-2026-02-20T02-08-13Z-release-it",
+      "package": "release-it",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -38990,8 +38975,8 @@
       "timestamp": "2026-02-20T02:08:13Z"
     },
     {
-      "id": "batch-2026-02-20T02-08-13Z-release-it",
-      "package": "release-it",
+      "id": "batch-2026-02-20T02-08-13Z-prettier",
+      "package": "prettier",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -39005,8 +38990,23 @@
       "timestamp": "2026-02-20T02:08:13Z"
     },
     {
-      "id": "batch-2026-02-20T02-08-13Z-prettier",
-      "package": "prettier",
+      "id": "batch-2026-02-20T02-08-13Z-oxlint",
+      "package": "oxlint",
+      "ecosystem": "batch",
+      "category": "generation_failed",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "2026-02-20T02-08-13Z",
+      "timestamp": "2026-02-20T02:08:13Z"
+    },
+    {
+      "id": "batch-2026-02-20T02-08-13Z-rulesync",
+      "package": "rulesync",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -39054,8 +39054,8 @@
       "timestamp": "2026-02-20T01:55:16.033744211Z"
     },
     {
-      "id": "batch-2026-02-20T00-04-55Z-n",
-      "package": "n",
+      "id": "batch-2026-02-20T00-04-55Z-openskills",
+      "package": "openskills",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -39071,21 +39071,6 @@
     {
       "id": "batch-2026-02-20T00-04-55Z-oxfmt",
       "package": "oxfmt",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "2026-02-20T00-04-55Z",
-      "timestamp": "2026-02-20T00:04:55Z"
-    },
-    {
-      "id": "batch-2026-02-20T00-04-55Z-nping",
-      "package": "nping",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -39120,8 +39105,8 @@
       "timestamp": "2026-02-20T00:04:55Z"
     },
     {
-      "id": "batch-2026-02-20T00-04-55Z-openskills",
-      "package": "openskills",
+      "id": "batch-2026-02-20T00-04-55Z-nping",
+      "package": "nping",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -39135,8 +39120,8 @@
       "timestamp": "2026-02-20T00:04:55Z"
     },
     {
-      "id": "batch-2026-02-20T00-04-55Z-openapi-diff",
-      "package": "openapi-diff",
+      "id": "batch-2026-02-20T00-04-55Z-needle",
+      "package": "needle",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -39165,8 +39150,23 @@
       "timestamp": "2026-02-20T00:04:55Z"
     },
     {
-      "id": "batch-2026-02-20T00-04-55Z-needle",
-      "package": "needle",
+      "id": "batch-2026-02-20T00-04-55Z-openapi-diff",
+      "package": "openapi-diff",
+      "ecosystem": "batch",
+      "category": "generation_failed",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "2026-02-20T00-04-55Z",
+      "timestamp": "2026-02-20T00:04:55Z"
+    },
+    {
+      "id": "batch-2026-02-20T00-04-55Z-n",
+      "package": "n",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -39298,8 +39298,8 @@
       "timestamp": "2026-02-19T22:30:26.487032403Z"
     },
     {
-      "id": "batch-2026-02-19T21-39-05Z-lerna",
-      "package": "lerna",
+      "id": "batch-2026-02-19T21-39-05Z-mbt",
+      "package": "mbt",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -39313,8 +39313,8 @@
       "timestamp": "2026-02-19T21:39:05Z"
     },
     {
-      "id": "batch-2026-02-19T21-39-05Z-mbt",
-      "package": "mbt",
+      "id": "batch-2026-02-19T21-39-05Z-lerna",
+      "package": "lerna",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -39397,8 +39397,8 @@
       "timestamp": "2026-02-19T21:31:48.334903227Z"
     },
     {
-      "id": "batch-2026-02-19T20-40-46Z-graphql-cli",
-      "package": "graphql-cli",
+      "id": "batch-2026-02-19T20-40-46Z-http-server",
+      "package": "http-server",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -39412,8 +39412,8 @@
       "timestamp": "2026-02-19T20:40:46Z"
     },
     {
-      "id": "batch-2026-02-19T20-40-46Z-http-server",
-      "package": "http-server",
+      "id": "batch-2026-02-19T20-40-46Z-graphql-cli",
+      "package": "graphql-cli",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
