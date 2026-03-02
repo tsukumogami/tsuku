@@ -1,0 +1,35 @@
+[metadata]
+  name = "libfyaml"
+  description = "Fully feature complete YAML parser and emitter"
+  homepage = "https://github.com/pantoniou/libfyaml"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+  unsupported_platforms = ["darwin/arm64", "darwin/amd64"]
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "libfyaml"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "libfyaml"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/fy-tool"]
+
+[verify]
+  command = "fy-tool --version"
+  pattern = ""
