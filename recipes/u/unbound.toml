@@ -1,0 +1,51 @@
+[metadata]
+  name = "unbound"
+  description = "Validating, recursive, caching DNS resolver"
+  homepage = "https://www.unbound.net"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["libevent", "libnghttp2", "openssl"]
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "unbound"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "unbound"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libunbound.a", "lib/libunbound.so", "lib/libunbound.so.8", "lib/libunbound.so.8.1.34", "lib/pkgconfig/libunbound.pc", "include/unbound-event.h", "include/unbound.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "unbound"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libunbound.8.dylib", "lib/libunbound.a", "lib/libunbound.dylib", "lib/pkgconfig/libunbound.pc", "include/unbound-event.h", "include/unbound.h"]
+  [steps.when]
+    os = ["darwin"]

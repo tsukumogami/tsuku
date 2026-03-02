@@ -1,0 +1,35 @@
+[metadata]
+  name = "uchardet"
+  description = "Encoding detector library"
+  homepage = "https://www.freedesktop.org/wiki/Software/uchardet/"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+  unsupported_platforms = ["darwin/arm64", "darwin/amd64"]
+
+[version]
+  source = ""
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "uchardet"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/uchardet"]
+
+[verify]
+  command = "uchardet --version"
+  pattern = ""

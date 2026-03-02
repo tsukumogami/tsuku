@@ -1,0 +1,35 @@
+[metadata]
+  name = "unixodbc"
+  description = "ODBC 3 connectivity for UNIX"
+  homepage = "https://www.unixodbc.org/"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+  unsupported_platforms = ["darwin/arm64", "darwin/amd64"]
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "unixodbc"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "unixodbc"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/dltest", "bin/isql", "bin/iusql", "bin/odbc_config", "bin/odbcinst", "bin/slencheck"]
+
+[verify]
+  command = "dltest --version"
+  pattern = ""

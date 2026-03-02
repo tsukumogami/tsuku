@@ -1,0 +1,36 @@
+[metadata]
+  name = "usbredir"
+  description = "USB traffic redirection library"
+  homepage = "https://www.spice-space.org"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["glib", "libusb"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+  unsupported_platforms = ["darwin/arm64", "darwin/amd64"]
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "usbredir"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "usbredir"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/usbredirect"]
+
+[verify]
+  command = "usbredirect --version"
+  pattern = ""
