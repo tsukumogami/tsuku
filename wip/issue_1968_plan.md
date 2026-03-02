@@ -42,7 +42,7 @@ None.
 - [x] Update foundation test expectations in `internal/sandbox/foundation_test.go`: `TestGenerateFoundationDockerfile_SingleDep` (remove expected `ENV PATH=/workspace/tsuku/tools/rust-1.82.0/bin:$PATH` line), `TestGenerateFoundationDockerfile_MultipleDeps` (remove assertions for per-dep ENV PATH lines for openssl and rust).
 - [x] Run `go test ./internal/config/ ./internal/install/ ./internal/sandbox/` to verify all tests pass.
 - [x] Run `go vet ./...` to verify no lint issues. (golangci-lint not installed locally; CI will verify.)
-- [ ] Manual verification: Build tsuku and run `tsuku install --sandbox` on a cargo recipe with dependencies (e.g., `cargo-audit` which has `extra_dependencies = ["zig"]`). Confirm the sandbox test passes without per-dep ENV PATH lines.
+- [x] Manual verification: Build tsuku and run `tsuku install --sandbox` on a cargo recipe with dependencies (e.g., `cargo-audit` which has `extra_dependencies = ["zig"]`). Confirm the sandbox test passes without per-dep ENV PATH lines.
 
 ## Testing Strategy
 
