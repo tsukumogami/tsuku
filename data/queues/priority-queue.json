@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-01T21:20:25Z",
+  "updated_at": "2026-03-02T01:01:35Z",
   "entries": [
     {
       "name": "bat",
@@ -7933,6 +7933,16 @@
       "next_retry_at": null
     },
     {
+      "name": "cmake",
+      "source": "homebrew:cmake",
+      "priority": 3,
+      "status": "success",
+      "confidence": "curated",
+      "disambiguated_at": null,
+      "failure_count": 0,
+      "next_retry_at": null
+    },
+    {
       "name": "cmake-docs",
       "source": "homebrew:cmake-docs",
       "priority": 3,
@@ -9303,6 +9313,26 @@
       "next_retry_at": null
     },
     {
+      "name": "cuda",
+      "source": "manual:cuda",
+      "priority": 3,
+      "status": "success",
+      "confidence": "curated",
+      "disambiguated_at": null,
+      "failure_count": 0,
+      "next_retry_at": null
+    },
+    {
+      "name": "cuda-runtime",
+      "source": "manual:cuda-runtime",
+      "priority": 3,
+      "status": "success",
+      "confidence": "curated",
+      "disambiguated_at": null,
+      "failure_count": 0,
+      "next_retry_at": null
+    },
+    {
       "name": "cue",
       "source": "github:cue-lang/cue",
       "priority": 3,
@@ -9349,6 +9379,16 @@
       "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
+      "failure_count": 0,
+      "next_retry_at": null
+    },
+    {
+      "name": "curl",
+      "source": "manual:curl",
+      "priority": 3,
+      "status": "success",
+      "confidence": "curated",
+      "disambiguated_at": null,
       "failure_count": 0,
       "next_retry_at": null
     },
@@ -10950,6 +10990,16 @@
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 1,
+      "next_retry_at": null
+    },
+    {
+      "name": "docker",
+      "source": "manual:docker",
+      "priority": 3,
+      "status": "success",
+      "confidence": "curated",
+      "disambiguated_at": null,
+      "failure_count": 0,
       "next_retry_at": null
     },
     {
@@ -15403,6 +15453,16 @@
       "next_retry_at": null
     },
     {
+      "name": "gcc-libs",
+      "source": "homebrew:gcc",
+      "priority": 3,
+      "status": "success",
+      "confidence": "curated",
+      "disambiguated_at": null,
+      "failure_count": 0,
+      "next_retry_at": null
+    },
+    {
       "name": "gcc@11",
       "source": "homebrew:gcc@11",
       "priority": 3,
@@ -17169,6 +17229,16 @@
       "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
+      "failure_count": 0,
+      "next_retry_at": null
+    },
+    {
+      "name": "go",
+      "source": "manual:go",
+      "priority": 3,
+      "status": "success",
+      "confidence": "curated",
+      "disambiguated_at": null,
       "failure_count": 0,
       "next_retry_at": null
     },
@@ -21593,6 +21663,16 @@
       "next_retry_at": null
     },
     {
+      "name": "iterm2",
+      "source": "manual:iterm2",
+      "priority": 3,
+      "status": "success",
+      "confidence": "curated",
+      "disambiguated_at": null,
+      "failure_count": 0,
+      "next_retry_at": null
+    },
+    {
       "name": "itk",
       "source": "homebrew:itk",
       "priority": 3,
@@ -23623,6 +23703,16 @@
       "next_retry_at": null
     },
     {
+      "name": "koto",
+      "source": "github:tsukumogami/koto",
+      "priority": 3,
+      "status": "success",
+      "confidence": "curated",
+      "disambiguated_at": null,
+      "failure_count": 0,
+      "next_retry_at": null
+    },
+    {
       "name": "kovetskiy/mark/mark",
       "source": "homebrew:kovetskiy/mark/mark",
       "priority": 3,
@@ -24975,6 +25065,16 @@
     {
       "name": "libcurl",
       "source": "homebrew:curl",
+      "priority": 3,
+      "status": "success",
+      "confidence": "curated",
+      "disambiguated_at": null,
+      "failure_count": 0,
+      "next_retry_at": null
+    },
+    {
+      "name": "libcurl-source",
+      "source": "manual:libcurl-source",
       "priority": 3,
       "status": "success",
       "confidence": "curated",
@@ -26923,6 +27023,16 @@
       "next_retry_at": null
     },
     {
+      "name": "libyaml",
+      "source": "homebrew:libyaml",
+      "priority": 3,
+      "status": "success",
+      "confidence": "curated",
+      "disambiguated_at": null,
+      "failure_count": 0,
+      "next_retry_at": null
+    },
+    {
       "name": "libzim",
       "source": "homebrew:libzim",
       "priority": 3,
@@ -28313,6 +28423,16 @@
       "next_retry_at": null
     },
     {
+      "name": "make",
+      "source": "homebrew:make",
+      "priority": 3,
+      "status": "success",
+      "confidence": "curated",
+      "disambiguated_at": null,
+      "failure_count": 0,
+      "next_retry_at": null
+    },
+    {
       "name": "makedepend",
       "source": "homebrew:makedepend",
       "priority": 3,
@@ -29413,12 +29533,32 @@
       "next_retry_at": null
     },
     {
+      "name": "mesa-vulkan-drivers",
+      "source": "manual:mesa-vulkan-drivers",
+      "priority": 3,
+      "status": "success",
+      "confidence": "curated",
+      "disambiguated_at": null,
+      "failure_count": 0,
+      "next_retry_at": null
+    },
+    {
       "name": "mesheryctl",
       "source": "homebrew:mesheryctl",
       "priority": 3,
       "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
+      "failure_count": 0,
+      "next_retry_at": null
+    },
+    {
+      "name": "meson",
+      "source": "manual:meson",
+      "priority": 3,
+      "status": "success",
+      "confidence": "curated",
+      "disambiguated_at": null,
       "failure_count": 0,
       "next_retry_at": null
     },
@@ -31623,6 +31763,16 @@
       "next_retry_at": null
     },
     {
+      "name": "ncurses",
+      "source": "manual:ncurses",
+      "priority": 3,
+      "status": "success",
+      "confidence": "curated",
+      "disambiguated_at": null,
+      "failure_count": 0,
+      "next_retry_at": null
+    },
+    {
       "name": "ncview",
       "source": "homebrew:ncview",
       "priority": 3,
@@ -32213,6 +32363,16 @@
       "next_retry_at": null
     },
     {
+      "name": "ninja",
+      "source": "manual:ninja",
+      "priority": 3,
+      "status": "success",
+      "confidence": "curated",
+      "disambiguated_at": null,
+      "failure_count": 0,
+      "next_retry_at": null
+    },
+    {
       "name": "ninvaders",
       "source": "homebrew:ninvaders",
       "priority": 3,
@@ -32449,6 +32609,16 @@
       "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
+      "failure_count": 0,
+      "next_retry_at": null
+    },
+    {
+      "name": "nodejs",
+      "source": "manual:nodejs",
+      "priority": 3,
+      "status": "success",
+      "confidence": "curated",
+      "disambiguated_at": null,
       "failure_count": 0,
       "next_retry_at": null
     },
@@ -32849,6 +33019,16 @@
       "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
+      "failure_count": 0,
+      "next_retry_at": null
+    },
+    {
+      "name": "nvidia-driver",
+      "source": "manual:nvidia-driver",
+      "priority": 3,
+      "status": "success",
+      "confidence": "curated",
+      "disambiguated_at": null,
       "failure_count": 0,
       "next_retry_at": null
     },
@@ -33889,6 +34069,16 @@
       "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
+      "failure_count": 0,
+      "next_retry_at": null
+    },
+    {
+      "name": "openssl",
+      "source": "homebrew:openssl@3",
+      "priority": 3,
+      "status": "success",
+      "confidence": "curated",
+      "disambiguated_at": null,
       "failure_count": 0,
       "next_retry_at": null
     },
@@ -35453,6 +35643,16 @@
       "next_retry_at": null
     },
     {
+      "name": "patchelf",
+      "source": "github:NixOS/patchelf",
+      "priority": 3,
+      "status": "success",
+      "confidence": "curated",
+      "disambiguated_at": null,
+      "failure_count": 0,
+      "next_retry_at": null
+    },
+    {
       "name": "patchpal",
       "source": "homebrew:patchpal",
       "priority": 3,
@@ -35845,6 +36045,16 @@
     {
       "name": "periphery",
       "source": "homebrew:periphery",
+      "priority": 3,
+      "status": "success",
+      "confidence": "curated",
+      "disambiguated_at": null,
+      "failure_count": 0,
+      "next_retry_at": null
+    },
+    {
+      "name": "perl",
+      "source": "manual:perl",
       "priority": 3,
       "status": "success",
       "confidence": "curated",
@@ -36553,6 +36763,16 @@
       "next_retry_at": null
     },
     {
+      "name": "pipx",
+      "source": "manual:pipx",
+      "priority": 3,
+      "status": "success",
+      "confidence": "curated",
+      "disambiguated_at": null,
+      "failure_count": 0,
+      "next_retry_at": null
+    },
+    {
       "name": "pirj/noclamshell/noclamshell",
       "source": "homebrew:pirj/noclamshell/noclamshell",
       "priority": 3,
@@ -36639,6 +36859,16 @@
       "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
+      "failure_count": 0,
+      "next_retry_at": null
+    },
+    {
+      "name": "pkg-config",
+      "source": "homebrew:pkgconf",
+      "priority": 3,
+      "status": "success",
+      "confidence": "curated",
+      "disambiguated_at": null,
       "failure_count": 0,
       "next_retry_at": null
     },
@@ -38670,6 +38900,16 @@
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 1,
+      "next_retry_at": null
+    },
+    {
+      "name": "python-standalone",
+      "source": "github:indygreg/python-build-standalone",
+      "priority": 3,
+      "status": "success",
+      "confidence": "curated",
+      "disambiguated_at": null,
+      "failure_count": 0,
       "next_retry_at": null
     },
     {
@@ -41143,6 +41383,16 @@
       "next_retry_at": null
     },
     {
+      "name": "ruby",
+      "source": "manual:ruby",
+      "priority": 3,
+      "status": "success",
+      "confidence": "curated",
+      "disambiguated_at": null,
+      "failure_count": 0,
+      "next_retry_at": null
+    },
+    {
       "name": "ruby-build",
       "source": "homebrew:ruby-build",
       "priority": 3,
@@ -41349,6 +41599,16 @@
       "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
+      "failure_count": 0,
+      "next_retry_at": null
+    },
+    {
+      "name": "rust",
+      "source": "manual:rust",
+      "priority": 3,
+      "status": "success",
+      "confidence": "curated",
+      "disambiguated_at": null,
       "failure_count": 0,
       "next_retry_at": null
     },
@@ -46873,6 +47133,16 @@
       "next_retry_at": null
     },
     {
+      "name": "test-tuples",
+      "source": "manual:test-tuples",
+      "priority": 3,
+      "status": "success",
+      "confidence": "curated",
+      "disambiguated_at": null,
+      "failure_count": 0,
+      "next_retry_at": null
+    },
+    {
       "name": "testdisk",
       "source": "homebrew:testdisk",
       "priority": 3,
@@ -48145,6 +48415,16 @@
     {
       "name": "tsuku-dltest",
       "source": "github:tsukumogami/tsuku",
+      "priority": 3,
+      "status": "success",
+      "confidence": "curated",
+      "disambiguated_at": null,
+      "failure_count": 0,
+      "next_retry_at": null
+    },
+    {
+      "name": "tsuku-llm",
+      "source": "github:tsukumogami/tsuku-llm",
       "priority": 3,
       "status": "success",
       "confidence": "curated",
@@ -52413,6 +52693,16 @@
       "next_retry_at": null
     },
     {
+      "name": "zig",
+      "source": "manual:zig",
+      "priority": 3,
+      "status": "success",
+      "confidence": "curated",
+      "disambiguated_at": null,
+      "failure_count": 0,
+      "next_retry_at": null
+    },
+    {
       "name": "zilliztech/tap/milvus-backup",
       "source": "homebrew:zilliztech/tap/milvus-backup",
       "priority": 3,
@@ -52509,6 +52799,16 @@
       "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
+      "failure_count": 0,
+      "next_retry_at": null
+    },
+    {
+      "name": "zlib",
+      "source": "homebrew:zlib",
+      "priority": 3,
+      "status": "success",
+      "confidence": "curated",
+      "disambiguated_at": null,
       "failure_count": 0,
       "next_retry_at": null
     },
@@ -52749,306 +53049,6 @@
       "status": "success",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
-      "next_retry_at": null
-    },
-    {
-      "name": "cmake",
-      "source": "homebrew:cmake",
-      "priority": 3,
-      "status": "success",
-      "confidence": "curated",
-      "disambiguated_at": null,
-      "failure_count": 0,
-      "next_retry_at": null
-    },
-    {
-      "name": "cuda",
-      "source": "manual:cuda",
-      "priority": 3,
-      "status": "success",
-      "confidence": "curated",
-      "disambiguated_at": null,
-      "failure_count": 0,
-      "next_retry_at": null
-    },
-    {
-      "name": "cuda-runtime",
-      "source": "manual:cuda-runtime",
-      "priority": 3,
-      "status": "success",
-      "confidence": "curated",
-      "disambiguated_at": null,
-      "failure_count": 0,
-      "next_retry_at": null
-    },
-    {
-      "name": "curl",
-      "source": "manual:curl",
-      "priority": 3,
-      "status": "success",
-      "confidence": "curated",
-      "disambiguated_at": null,
-      "failure_count": 0,
-      "next_retry_at": null
-    },
-    {
-      "name": "docker",
-      "source": "manual:docker",
-      "priority": 3,
-      "status": "success",
-      "confidence": "curated",
-      "disambiguated_at": null,
-      "failure_count": 0,
-      "next_retry_at": null
-    },
-    {
-      "name": "gcc-libs",
-      "source": "homebrew:gcc",
-      "priority": 3,
-      "status": "success",
-      "confidence": "curated",
-      "disambiguated_at": null,
-      "failure_count": 0,
-      "next_retry_at": null
-    },
-    {
-      "name": "go",
-      "source": "manual:go",
-      "priority": 3,
-      "status": "success",
-      "confidence": "curated",
-      "disambiguated_at": null,
-      "failure_count": 0,
-      "next_retry_at": null
-    },
-    {
-      "name": "iterm2",
-      "source": "manual:iterm2",
-      "priority": 3,
-      "status": "success",
-      "confidence": "curated",
-      "disambiguated_at": null,
-      "failure_count": 0,
-      "next_retry_at": null
-    },
-    {
-      "name": "koto",
-      "source": "github:tsukumogami/koto",
-      "priority": 3,
-      "status": "success",
-      "confidence": "curated",
-      "disambiguated_at": null,
-      "failure_count": 0,
-      "next_retry_at": null
-    },
-    {
-      "name": "libcurl-source",
-      "source": "manual:libcurl-source",
-      "priority": 3,
-      "status": "success",
-      "confidence": "curated",
-      "disambiguated_at": null,
-      "failure_count": 0,
-      "next_retry_at": null
-    },
-    {
-      "name": "libyaml",
-      "source": "homebrew:libyaml",
-      "priority": 3,
-      "status": "success",
-      "confidence": "curated",
-      "disambiguated_at": null,
-      "failure_count": 0,
-      "next_retry_at": null
-    },
-    {
-      "name": "make",
-      "source": "homebrew:make",
-      "priority": 3,
-      "status": "success",
-      "confidence": "curated",
-      "disambiguated_at": null,
-      "failure_count": 0,
-      "next_retry_at": null
-    },
-    {
-      "name": "mesa-vulkan-drivers",
-      "source": "manual:mesa-vulkan-drivers",
-      "priority": 3,
-      "status": "success",
-      "confidence": "curated",
-      "disambiguated_at": null,
-      "failure_count": 0,
-      "next_retry_at": null
-    },
-    {
-      "name": "meson",
-      "source": "manual:meson",
-      "priority": 3,
-      "status": "success",
-      "confidence": "curated",
-      "disambiguated_at": null,
-      "failure_count": 0,
-      "next_retry_at": null
-    },
-    {
-      "name": "ncurses",
-      "source": "manual:ncurses",
-      "priority": 3,
-      "status": "success",
-      "confidence": "curated",
-      "disambiguated_at": null,
-      "failure_count": 0,
-      "next_retry_at": null
-    },
-    {
-      "name": "ninja",
-      "source": "manual:ninja",
-      "priority": 3,
-      "status": "success",
-      "confidence": "curated",
-      "disambiguated_at": null,
-      "failure_count": 0,
-      "next_retry_at": null
-    },
-    {
-      "name": "nodejs",
-      "source": "manual:nodejs",
-      "priority": 3,
-      "status": "success",
-      "confidence": "curated",
-      "disambiguated_at": null,
-      "failure_count": 0,
-      "next_retry_at": null
-    },
-    {
-      "name": "nvidia-driver",
-      "source": "manual:nvidia-driver",
-      "priority": 3,
-      "status": "success",
-      "confidence": "curated",
-      "disambiguated_at": null,
-      "failure_count": 0,
-      "next_retry_at": null
-    },
-    {
-      "name": "openssl",
-      "source": "homebrew:openssl@3",
-      "priority": 3,
-      "status": "success",
-      "confidence": "curated",
-      "disambiguated_at": null,
-      "failure_count": 0,
-      "next_retry_at": null
-    },
-    {
-      "name": "patchelf",
-      "source": "github:NixOS/patchelf",
-      "priority": 3,
-      "status": "success",
-      "confidence": "curated",
-      "disambiguated_at": null,
-      "failure_count": 0,
-      "next_retry_at": null
-    },
-    {
-      "name": "perl",
-      "source": "manual:perl",
-      "priority": 3,
-      "status": "success",
-      "confidence": "curated",
-      "disambiguated_at": null,
-      "failure_count": 0,
-      "next_retry_at": null
-    },
-    {
-      "name": "pipx",
-      "source": "manual:pipx",
-      "priority": 3,
-      "status": "success",
-      "confidence": "curated",
-      "disambiguated_at": null,
-      "failure_count": 0,
-      "next_retry_at": null
-    },
-    {
-      "name": "pkg-config",
-      "source": "homebrew:pkgconf",
-      "priority": 3,
-      "status": "success",
-      "confidence": "curated",
-      "disambiguated_at": null,
-      "failure_count": 0,
-      "next_retry_at": null
-    },
-    {
-      "name": "python-standalone",
-      "source": "github:indygreg/python-build-standalone",
-      "priority": 3,
-      "status": "success",
-      "confidence": "curated",
-      "disambiguated_at": null,
-      "failure_count": 0,
-      "next_retry_at": null
-    },
-    {
-      "name": "ruby",
-      "source": "manual:ruby",
-      "priority": 3,
-      "status": "success",
-      "confidence": "curated",
-      "disambiguated_at": null,
-      "failure_count": 0,
-      "next_retry_at": null
-    },
-    {
-      "name": "rust",
-      "source": "manual:rust",
-      "priority": 3,
-      "status": "success",
-      "confidence": "curated",
-      "disambiguated_at": null,
-      "failure_count": 0,
-      "next_retry_at": null
-    },
-    {
-      "name": "test-tuples",
-      "source": "manual:test-tuples",
-      "priority": 3,
-      "status": "success",
-      "confidence": "curated",
-      "disambiguated_at": null,
-      "failure_count": 0,
-      "next_retry_at": null
-    },
-    {
-      "name": "tsuku-llm",
-      "source": "github:tsukumogami/tsuku-llm",
-      "priority": 3,
-      "status": "success",
-      "confidence": "curated",
-      "disambiguated_at": null,
-      "failure_count": 0,
-      "next_retry_at": null
-    },
-    {
-      "name": "zig",
-      "source": "manual:zig",
-      "priority": 3,
-      "status": "success",
-      "confidence": "curated",
-      "disambiguated_at": null,
-      "failure_count": 0,
-      "next_retry_at": null
-    },
-    {
-      "name": "zlib",
-      "source": "homebrew:zlib",
-      "priority": 3,
-      "status": "success",
-      "confidence": "curated",
-      "disambiguated_at": null,
       "failure_count": 0,
       "next_retry_at": null
     }
