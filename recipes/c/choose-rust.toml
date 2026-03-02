@@ -1,21 +1,19 @@
 [metadata]
-  name = "gitui"
-  description = "Blazing fast terminal-ui for git written in rust"
-  homepage = "https://github.com/gitui-org/gitui"
+  name = "choose-rust"
+  description = "Human-friendly and fast alternative to cut and (sometimes) awk"
+  homepage = "https://github.com/theryangeary/choose"
   version_format = ""
   requires_sudo = false
-  runtime_dependencies = ["openssl"]
   tier = 0
   type = ""
   llm_validation = "skipped"
-supported_os = ["linux"]
 
 [version]
-  source = ""
+  source = "homebrew"
   github_repo = ""
   tag_prefix = ""
   module = ""
-  formula = ""
+  formula = "choose-rust"
   cask = ""
   tap = ""
   fossil_repo = ""
@@ -25,12 +23,12 @@ supported_os = ["linux"]
 
 [[steps]]
   action = "homebrew"
-  formula = "gitui"
+  formula = "choose-rust"
 
 [[steps]]
   action = "install_binaries"
-  binaries = ["bin/gitui"]
+  binaries = ["bin/choose"]
 
 [verify]
-  command = "gitui --version"
+  command = "choose --version"
   pattern = ""
