@@ -84,8 +84,7 @@ graph TD
     classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
 
     class I1974,I1975,I1976 done
-    class I1977 ready
-    class I1978 blocked
+    class I1977,I1978 ready
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design
