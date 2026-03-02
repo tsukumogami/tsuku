@@ -119,12 +119,6 @@ func GenerateFoundationDockerfile(packageImage string, deps []FlatDep) string {
 		filename := fmt.Sprintf("dep-%02d-%s.json", i, dep.Tool)
 		sb.WriteString(fmt.Sprintf("COPY plans/%s /tmp/plans/%s\n", filename, filename))
 		sb.WriteString(fmt.Sprintf("RUN tsuku install --plan /tmp/plans/%s --force\n", filename))
-		// Expose the newly installed tool's bin directory to subsequent RUN
-		// commands. Each dependency runs in its own RUN (for Docker layer
-		// caching), so PATH must be extended via ENV after each install.
-		// This is needed because homebrew_relocate uses exec.LookPath to
-		// find patchelf, and install_binaries creates tools under bin/.
-		sb.WriteString(fmt.Sprintf("ENV PATH=/workspace/tsuku/tools/%s-%s/bin:$PATH\n", dep.Tool, dep.Version))
 	}
 
 	sb.WriteString("RUN rm -rf /usr/local/bin/tsuku /tmp/plans\n")

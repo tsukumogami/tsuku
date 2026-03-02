@@ -549,7 +549,6 @@ func TestGenerateFoundationDockerfile_SingleDep(t *testing.T) {
 		"ENV PATH=/workspace/tsuku/tools/current:/workspace/tsuku/bin:$PATH",
 		"COPY plans/dep-00-rust.json /tmp/plans/dep-00-rust.json",
 		"RUN tsuku install --plan /tmp/plans/dep-00-rust.json --force",
-		"ENV PATH=/workspace/tsuku/tools/rust-1.82.0/bin:$PATH",
 		"RUN rm -rf /usr/local/bin/tsuku /tmp/plans",
 	}
 
@@ -581,15 +580,12 @@ func TestGenerateFoundationDockerfile_MultipleDeps(t *testing.T) {
 
 	dockerfile := GenerateFoundationDockerfile("tsuku/sandbox-cache:debian-abc123", deps)
 
-	// Verify interleaved COPY+RUN+ENV triplets
+	// Verify interleaved COPY+RUN pairs (no per-dep ENV PATH lines)
 	if !strings.Contains(dockerfile, "COPY plans/dep-00-openssl.json /tmp/plans/dep-00-openssl.json\n") {
 		t.Error("Missing COPY for dep-00-openssl.json")
 	}
 	if !strings.Contains(dockerfile, "RUN tsuku install --plan /tmp/plans/dep-00-openssl.json --force\n") {
 		t.Error("Missing RUN for dep-00-openssl.json")
-	}
-	if !strings.Contains(dockerfile, "ENV PATH=/workspace/tsuku/tools/openssl-3.0.0/bin:$PATH\n") {
-		t.Error("Missing ENV PATH for openssl after install")
 	}
 	if !strings.Contains(dockerfile, "COPY plans/dep-01-rust.json /tmp/plans/dep-01-rust.json\n") {
 		t.Error("Missing COPY for dep-01-rust.json")
@@ -597,8 +593,12 @@ func TestGenerateFoundationDockerfile_MultipleDeps(t *testing.T) {
 	if !strings.Contains(dockerfile, "RUN tsuku install --plan /tmp/plans/dep-01-rust.json --force\n") {
 		t.Error("Missing RUN for dep-01-rust.json")
 	}
-	if !strings.Contains(dockerfile, "ENV PATH=/workspace/tsuku/tools/rust-1.82.0/bin:$PATH\n") {
-		t.Error("Missing ENV PATH for rust after install")
+	// Per-dep ENV PATH lines should NOT be present (tools/current in global PATH is sufficient)
+	if strings.Contains(dockerfile, "ENV PATH=/workspace/tsuku/tools/openssl-") {
+		t.Error("Per-dep ENV PATH for openssl should not be present")
+	}
+	if strings.Contains(dockerfile, "ENV PATH=/workspace/tsuku/tools/rust-") {
+		t.Error("Per-dep ENV PATH for rust should not be present")
 	}
 
 	// Verify order: openssl COPY must come before rust COPY

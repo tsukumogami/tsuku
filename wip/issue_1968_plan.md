@@ -34,14 +34,14 @@ None.
 
 ## Implementation Steps
 
-- [ ] Add `EnvFile()` method to `Config` struct in `internal/config/config.go` that returns `filepath.Join(c.HomeDir, "env")`
-- [ ] Add `EnsureEnvFile()` method to `Config` struct that writes the env file content matching `website/install.sh` format: `export PATH="$TSUKU_HOME/bin:$TSUKU_HOME/tools/current:$PATH"`. The method should be idempotent (write if missing or content differs, skip if already correct).
-- [ ] Add unit tests for `EnvFile()` and `EnsureEnvFile()` in `internal/config/config_test.go`: test path correctness, test file creation from scratch, test idempotent re-creation, test content matches expected format.
-- [ ] Call `m.config.EnsureEnvFile()` in `InstallWithOptions` (internal/install/manager.go, line 62) right after the existing `EnsureDirectories()` call. Log a warning but don't fail the install if env file creation fails (the env file is a convenience, not critical to installation).
-- [ ] Remove the per-dep `ENV PATH` line from `GenerateFoundationDockerfile` in `internal/sandbox/foundation.go`. Specifically, remove lines 122-127 (the comment and the `sb.WriteString(fmt.Sprintf("ENV PATH=..."))` inside the `for` loop). The COPY+RUN pair per dependency stays; only the ENV line is removed.
-- [ ] Update foundation test expectations in `internal/sandbox/foundation_test.go`: `TestGenerateFoundationDockerfile_SingleDep` (remove expected `ENV PATH=/workspace/tsuku/tools/rust-1.82.0/bin:$PATH` line), `TestGenerateFoundationDockerfile_MultipleDeps` (remove assertions for per-dep ENV PATH lines for openssl and rust).
-- [ ] Run `go test ./internal/config/ ./internal/install/ ./internal/sandbox/` to verify all tests pass.
-- [ ] Run `go vet ./...` and `golangci-lint run --timeout=5m ./...` to verify no lint issues.
+- [x] Add `EnvFile()` method to `Config` struct in `internal/config/config.go` that returns `filepath.Join(c.HomeDir, "env")`
+- [x] Add `EnsureEnvFile()` method to `Config` struct that writes the env file content matching `website/install.sh` format: `export PATH="$TSUKU_HOME/bin:$TSUKU_HOME/tools/current:$PATH"`. The method should be idempotent (write if missing or content differs, skip if already correct).
+- [x] Add unit tests for `EnvFile()` and `EnsureEnvFile()` in `internal/config/config_test.go`: test path correctness, test file creation from scratch, test idempotent re-creation, test content matches expected format.
+- [x] Call `m.config.EnsureEnvFile()` in `InstallWithOptions` (internal/install/manager.go, line 62) right after the existing `EnsureDirectories()` call. Log a warning but don't fail the install if env file creation fails (the env file is a convenience, not critical to installation).
+- [x] Remove the per-dep `ENV PATH` line from `GenerateFoundationDockerfile` in `internal/sandbox/foundation.go`. Specifically, remove lines 122-127 (the comment and the `sb.WriteString(fmt.Sprintf("ENV PATH=..."))` inside the `for` loop). The COPY+RUN pair per dependency stays; only the ENV line is removed.
+- [x] Update foundation test expectations in `internal/sandbox/foundation_test.go`: `TestGenerateFoundationDockerfile_SingleDep` (remove expected `ENV PATH=/workspace/tsuku/tools/rust-1.82.0/bin:$PATH` line), `TestGenerateFoundationDockerfile_MultipleDeps` (remove assertions for per-dep ENV PATH lines for openssl and rust).
+- [x] Run `go test ./internal/config/ ./internal/install/ ./internal/sandbox/` to verify all tests pass.
+- [x] Run `go vet ./...` to verify no lint issues. (golangci-lint not installed locally; CI will verify.)
 - [ ] Manual verification: Build tsuku and run `tsuku install --sandbox` on a cargo recipe with dependencies (e.g., `cargo-audit` which has `extra_dependencies = ["zig"]`). Confirm the sandbox test passes without per-dep ENV PATH lines.
 
 ## Testing Strategy

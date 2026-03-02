@@ -64,6 +64,13 @@ func (m *Manager) InstallWithOptions(name, version, workDir string, opts Install
 		return err
 	}
 
+	// Ensure $TSUKU_HOME/env exists with correct PATH configuration.
+	// Non-fatal: the env file is a convenience for shell setup, not
+	// critical to tool installation itself.
+	if err := m.config.EnsureEnvFile(); err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: could not create env file: %v\n", err)
+	}
+
 	toolDir := m.config.ToolDir(name, version)
 	stagingDir := m.stagingDir(name, version)
 

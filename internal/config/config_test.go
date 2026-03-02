@@ -3,6 +3,7 @@ package config
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 )
@@ -715,5 +716,98 @@ func TestGetRecipeCacheStaleFallback_InvalidValue(t *testing.T) {
 	fallback := GetRecipeCacheStaleFallback()
 	if !fallback {
 		t.Errorf("GetRecipeCacheStaleFallback() with invalid value = false, want true (default)")
+	}
+}
+
+func TestEnvFile(t *testing.T) {
+	t.Parallel()
+
+	cfg := &Config{HomeDir: "/home/user/.tsuku"}
+	got := cfg.EnvFile()
+	want := "/home/user/.tsuku/env"
+	if got != want {
+		t.Errorf("EnvFile() = %q, want %q", got, want)
+	}
+}
+
+func TestEnsureEnvFile_CreatesFile(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	cfg := &Config{HomeDir: tmpDir}
+
+	if err := cfg.EnsureEnvFile(); err != nil {
+		t.Fatalf("EnsureEnvFile() failed: %v", err)
+	}
+
+	data, err := os.ReadFile(cfg.EnvFile())
+	if err != nil {
+		t.Fatalf("Failed to read env file: %v", err)
+	}
+
+	content := string(data)
+	if content != envFileContent {
+		t.Errorf("Env file content mismatch.\nGot:\n%s\nWant:\n%s", content, envFileContent)
+	}
+}
+
+func TestEnsureEnvFile_Idempotent(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	cfg := &Config{HomeDir: tmpDir}
+
+	// First call creates
+	if err := cfg.EnsureEnvFile(); err != nil {
+		t.Fatalf("First EnsureEnvFile() failed: %v", err)
+	}
+
+	info1, _ := os.Stat(cfg.EnvFile())
+
+	// Second call should be a no-op (file already correct)
+	if err := cfg.EnsureEnvFile(); err != nil {
+		t.Fatalf("Second EnsureEnvFile() failed: %v", err)
+	}
+
+	info2, _ := os.Stat(cfg.EnvFile())
+
+	// ModTime should be unchanged since content didn't change
+	if !info1.ModTime().Equal(info2.ModTime()) {
+		t.Error("EnsureEnvFile() rewrote file when content was already correct")
+	}
+}
+
+func TestEnsureEnvFile_ContentFormat(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	cfg := &Config{HomeDir: tmpDir}
+
+	if err := cfg.EnsureEnvFile(); err != nil {
+		t.Fatalf("EnsureEnvFile() failed: %v", err)
+	}
+
+	data, err := os.ReadFile(cfg.EnvFile())
+	if err != nil {
+		t.Fatalf("Failed to read env file: %v", err)
+	}
+
+	content := string(data)
+
+	// Verify key structural elements
+	if content[0:1] != "#" {
+		t.Error("Env file should start with a comment")
+	}
+	if !strings.Contains(content, "export PATH=") {
+		t.Error("Env file should contain 'export PATH='")
+	}
+	if !strings.Contains(content, "/bin:") {
+		t.Error("Env file should add bin directory to PATH")
+	}
+	if !strings.Contains(content, "/tools/current:") {
+		t.Error("Env file should add tools/current directory to PATH")
+	}
+	if !strings.Contains(content, "TSUKU_HOME") || !strings.Contains(content, ".tsuku") {
+		t.Error("Env file should reference TSUKU_HOME with fallback to ~/.tsuku")
 	}
 }
