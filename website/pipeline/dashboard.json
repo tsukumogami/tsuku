@@ -1,9 +1,10 @@
 {
-  "generated_at": "2026-03-02T01:01:50Z",
+  "generated_at": "2026-03-02T01:03:13Z",
   "queue": {
     "total": 5305,
     "by_status": {
-      "pending": 4907,
+      "excluded": 4,
+      "pending": 4903,
       "success": 398
     },
     "by_tier": {
@@ -15,7 +16,8 @@
         "success": 3
       },
       "3": {
-        "pending": 4865,
+        "excluded": 4,
+        "pending": 4861,
         "success": 395
       }
     },
@@ -29,7 +31,8 @@
         "total": 4
       },
       "crates.io": {
-        "pending": 82,
+        "excluded": 4,
+        "pending": 78,
         "success": 23,
         "total": 105
       },
@@ -72,6 +75,36 @@
       }
     },
     "packages": {
+      "excluded": [
+        {
+          "id": "crates.io:bitcoin",
+          "name": "bitcoin",
+          "ecosystem": "crates.io",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "crates.io:blake3",
+          "name": "blake3",
+          "ecosystem": "crates.io",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "crates.io:boring",
+          "name": "boring",
+          "ecosystem": "crates.io",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "crates.io:bsdiff",
+          "name": "bsdiff",
+          "ecosystem": "crates.io",
+          "priority": 3,
+          "failure_count": 0
+        }
+      ],
       "pending": [
         {
           "id": "github:sharkdp/bat",
@@ -3029,7 +3062,7 @@
           "failure_count": 0
         },
         {
-          "id": "crates.io:bindgen",
+          "id": "crates.io:bindgen-cli",
           "name": "bindgen",
           "ecosystem": "crates.io",
           "priority": 3,
@@ -3062,13 +3095,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "crates.io:bitcoin",
-          "name": "bitcoin",
-          "ecosystem": "crates.io",
-          "priority": 3,
-          "failure_count": 0
         },
         {
           "id": "homebrew:bitrise",
@@ -3118,13 +3144,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "crates.io:blake3",
-          "name": "blake3",
-          "ecosystem": "crates.io",
-          "priority": 3,
-          "failure_count": 0
         },
         {
           "id": "homebrew:blast",
@@ -3295,15 +3314,8 @@
           "failure_count": 0
         },
         {
-          "id": "crates.io:boring",
-          "name": "boring",
-          "ecosystem": "crates.io",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "crates.io:boringtun",
-          "name": "boringtun",
+          "id": "crates.io:boringtun-cli",
+          "name": "boringtun-cli",
           "ecosystem": "crates.io",
           "priority": 3,
           "failure_count": 0
@@ -3473,13 +3485,6 @@
           "id": "homebrew:bsc",
           "name": "bsc",
           "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "crates.io:bsdiff",
-          "name": "bsdiff",
-          "ecosystem": "crates.io",
           "priority": 3,
           "failure_count": 0
         },
@@ -37641,13 +37646,21 @@
       "timestamp": "2026-02-21T07:27:58Z"
     },
     {
-      "id": "batch-2026-02-21T07-27-58Z-anycable-go",
-      "package": "anycable-go",
+      "id": "batch-2026-02-21T07-27-58Z-apr-util",
+      "package": "apr-util",
       "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "linux-alpine-musl-x86_64",
+      "category": "missing_dep",
+      "exit_code": 8,
+      "platform": "multiple",
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x86_64",
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64",
+        "linux-debian-glibc-arm64",
+        "linux-rhel-glibc-arm64",
+        "linux-suse-glibc-arm64"
+      ],
       "batch_id": "2026-02-21T07-27-58Z",
       "timestamp": "2026-02-21T07:27:58Z"
     },
@@ -37667,6 +37680,17 @@
       "timestamp": "2026-02-21T07:27:58Z"
     },
     {
+      "id": "batch-2026-02-21T07-27-58Z-anycable-go",
+      "package": "anycable-go",
+      "ecosystem": "batch",
+      "category": "generation_failed",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "linux-alpine-musl-x86_64",
+      "batch_id": "2026-02-21T07-27-58Z",
+      "timestamp": "2026-02-21T07:27:58Z"
+    },
+    {
       "id": "batch-2026-02-21T07-27-58Z-angle-grinder",
       "package": "angle-grinder",
       "ecosystem": "batch",
@@ -37677,25 +37701,6 @@
       "platforms": [
         "linux-alpine-musl-arm64",
         "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "2026-02-21T07-27-58Z",
-      "timestamp": "2026-02-21T07:27:58Z"
-    },
-    {
-      "id": "batch-2026-02-21T07-27-58Z-apr-util",
-      "package": "apr-util",
-      "ecosystem": "batch",
-      "category": "missing_dep",
-      "exit_code": 8,
-      "platform": "multiple",
-      "platforms": [
-        "darwin-arm64",
-        "darwin-x86_64",
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64",
-        "linux-debian-glibc-arm64",
-        "linux-rhel-glibc-arm64",
-        "linux-suse-glibc-arm64"
       ],
       "batch_id": "2026-02-21T07-27-58Z",
       "timestamp": "2026-02-21T07:27:58Z"
@@ -38582,21 +38587,6 @@
       "timestamp": "2026-02-21T06:13:30.875620235Z"
     },
     {
-      "id": "batch-2026-02-20T06-08-19Z-yarn",
-      "package": "yarn",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "2026-02-20T06-08-19Z",
-      "timestamp": "2026-02-20T06:08:19Z"
-    },
-    {
       "id": "batch-2026-02-20T06-08-19Z-yaml-language-server",
       "package": "yaml-language-server",
       "ecosystem": "batch",
@@ -38629,6 +38619,21 @@
     {
       "id": "batch-2026-02-20T06-08-19Z-yo",
       "package": "yo",
+      "ecosystem": "batch",
+      "category": "generation_failed",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "2026-02-20T06-08-19Z",
+      "timestamp": "2026-02-20T06:08:19Z"
+    },
+    {
+      "id": "batch-2026-02-20T06-08-19Z-yarn",
+      "package": "yarn",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -38686,8 +38691,8 @@
       "timestamp": "2026-02-20T05:54:15.893000665Z"
     },
     {
-      "id": "batch-2026-02-20T04-28-03Z-typescript-language-server",
-      "package": "typescript-language-server",
+      "id": "batch-2026-02-20T04-28-03Z-vsce",
+      "package": "vsce",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -38701,8 +38706,8 @@
       "timestamp": "2026-02-20T04:28:03Z"
     },
     {
-      "id": "batch-2026-02-20T04-28-03Z-vsce",
-      "package": "vsce",
+      "id": "batch-2026-02-20T04-28-03Z-typescript-language-server",
+      "package": "typescript-language-server",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -38792,8 +38797,8 @@
       "timestamp": "2026-02-20T04:15:51.459005871Z"
     },
     {
-      "id": "batch-2026-02-20T02-08-13Z-rollup",
-      "package": "rollup",
+      "id": "batch-2026-02-20T02-08-13Z-react-native-cli",
+      "package": "react-native-cli",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -38837,23 +38842,8 @@
       "timestamp": "2026-02-20T02:08:13Z"
     },
     {
-      "id": "batch-2026-02-20T02-08-13Z-release-it",
-      "package": "release-it",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "2026-02-20T02-08-13Z",
-      "timestamp": "2026-02-20T02:08:13Z"
-    },
-    {
-      "id": "batch-2026-02-20T02-08-13Z-react-native-cli",
-      "package": "react-native-cli",
+      "id": "batch-2026-02-20T02-08-13Z-rollup",
+      "package": "rollup",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -38869,6 +38859,21 @@
     {
       "id": "batch-2026-02-20T02-08-13Z-oxlint",
       "package": "oxlint",
+      "ecosystem": "batch",
+      "category": "generation_failed",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "2026-02-20T02-08-13Z",
+      "timestamp": "2026-02-20T02:08:13Z"
+    },
+    {
+      "id": "batch-2026-02-20T02-08-13Z-release-it",
+      "package": "release-it",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -38916,23 +38921,29 @@
       "timestamp": "2026-02-20T01:55:16.033744211Z"
     },
     {
-      "id": "batch-2026-02-20T00-04-55Z-needle",
-      "package": "needle",
+      "id": "batch-2026-02-20T00-04-55Z-n8n-mcp",
+      "package": "n8n-mcp",
       "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
+      "category": "network_error",
+      "exit_code": 124,
       "platform": "multiple",
       "platforms": [
         "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
+        "linux-alpine-musl-x86_64",
+        "linux-arch-glibc-x86_64",
+        "linux-debian-glibc-arm64",
+        "linux-debian-glibc-x86_64",
+        "linux-rhel-glibc-arm64",
+        "linux-rhel-glibc-x86_64",
+        "linux-suse-glibc-arm64",
+        "linux-suse-glibc-x86_64"
       ],
       "batch_id": "2026-02-20T00-04-55Z",
       "timestamp": "2026-02-20T00:04:55Z"
     },
     {
-      "id": "batch-2026-02-20T00-04-55Z-node-red",
-      "package": "node-red",
+      "id": "batch-2026-02-20T00-04-55Z-openskills",
+      "package": "openskills",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -38991,8 +39002,8 @@
       "timestamp": "2026-02-20T00:04:55Z"
     },
     {
-      "id": "batch-2026-02-20T00-04-55Z-openskills",
-      "package": "openskills",
+      "id": "batch-2026-02-20T00-04-55Z-node-red",
+      "package": "node-red",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -39006,22 +39017,16 @@
       "timestamp": "2026-02-20T00:04:55Z"
     },
     {
-      "id": "batch-2026-02-20T00-04-55Z-n8n-mcp",
-      "package": "n8n-mcp",
+      "id": "batch-2026-02-20T00-04-55Z-needle",
+      "package": "needle",
       "ecosystem": "batch",
-      "category": "network_error",
-      "exit_code": 124,
+      "category": "generation_failed",
+      "subcategory": "install_failed",
+      "exit_code": 6,
       "platform": "multiple",
       "platforms": [
         "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64",
-        "linux-arch-glibc-x86_64",
-        "linux-debian-glibc-arm64",
-        "linux-debian-glibc-x86_64",
-        "linux-rhel-glibc-arm64",
-        "linux-rhel-glibc-x86_64",
-        "linux-suse-glibc-arm64",
-        "linux-suse-glibc-x86_64"
+        "linux-alpine-musl-x86_64"
       ],
       "batch_id": "2026-02-20T00-04-55Z",
       "timestamp": "2026-02-20T00:04:55Z"
@@ -39060,8 +39065,8 @@
       "timestamp": "2026-02-19T23:29:47.627618545Z"
     },
     {
-      "id": "batch-2026-02-19T22-35-45Z-mjml",
-      "package": "mjml",
+      "id": "batch-2026-02-19T22-35-45Z-mprocs",
+      "package": "mprocs",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -39075,8 +39080,8 @@
       "timestamp": "2026-02-19T22:35:45Z"
     },
     {
-      "id": "batch-2026-02-19T22-35-45Z-mprocs",
-      "package": "mprocs",
+      "id": "batch-2026-02-19T22-35-45Z-mjml",
+      "package": "mjml",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -39259,8 +39264,8 @@
       "timestamp": "2026-02-19T21:31:48.334903227Z"
     },
     {
-      "id": "batch-2026-02-19T20-40-46Z-gulp-cli",
-      "package": "gulp-cli",
+      "id": "batch-2026-02-19T20-40-46Z-http-server",
+      "package": "http-server",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -39289,8 +39294,8 @@
       "timestamp": "2026-02-19T20:40:46Z"
     },
     {
-      "id": "batch-2026-02-19T20-40-46Z-http-server",
-      "package": "http-server",
+      "id": "batch-2026-02-19T20-40-46Z-gulp-cli",
+      "package": "gulp-cli",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -39367,6 +39372,28 @@
       "timestamp": "2026-02-19T20:31:36.630209654Z"
     },
     {
+      "id": "batch-2026-02-19T19-46-28Z-diff-so-fancy",
+      "package": "diff-so-fancy",
+      "ecosystem": "batch",
+      "category": "generation_failed",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64",
+        "linux-arch-glibc-x86_64",
+        "linux-debian-glibc-arm64",
+        "linux-debian-glibc-x86_64",
+        "linux-rhel-glibc-arm64",
+        "linux-rhel-glibc-x86_64",
+        "linux-suse-glibc-arm64",
+        "linux-suse-glibc-x86_64"
+      ],
+      "batch_id": "2026-02-19T19-46-28Z",
+      "timestamp": "2026-02-19T19:46:28Z"
+    },
+    {
       "id": "batch-2026-02-19T19-46-28Z-esbuild",
       "package": "esbuild",
       "ecosystem": "batch",
@@ -39392,28 +39419,6 @@
       "platforms": [
         "linux-alpine-musl-arm64",
         "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "2026-02-19T19-46-28Z",
-      "timestamp": "2026-02-19T19:46:28Z"
-    },
-    {
-      "id": "batch-2026-02-19T19-46-28Z-diff-so-fancy",
-      "package": "diff-so-fancy",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64",
-        "linux-arch-glibc-x86_64",
-        "linux-debian-glibc-arm64",
-        "linux-debian-glibc-x86_64",
-        "linux-rhel-glibc-arm64",
-        "linux-rhel-glibc-x86_64",
-        "linux-suse-glibc-arm64",
-        "linux-suse-glibc-x86_64"
       ],
       "batch_id": "2026-02-19T19-46-28Z",
       "timestamp": "2026-02-19T19:46:28Z"
@@ -40178,6 +40183,11 @@
       "validation_status": "valid"
     },
     {
+      "name": "cmake",
+      "source": "homebrew:cmake",
+      "validation_status": "valid"
+    },
+    {
       "name": "cobra-cli",
       "source": "go:github.com/spf13/cobra-cli",
       "validation_status": "valid"
@@ -40203,8 +40213,23 @@
       "validation_status": "valid"
     },
     {
+      "name": "cuda",
+      "source": "manual:cuda",
+      "validation_status": "valid"
+    },
+    {
+      "name": "cuda-runtime",
+      "source": "manual:cuda-runtime",
+      "validation_status": "valid"
+    },
+    {
       "name": "cue",
       "source": "github:cue-lang/cue",
+      "validation_status": "valid"
+    },
+    {
+      "name": "curl",
+      "source": "manual:curl",
       "validation_status": "valid"
     },
     {
@@ -40230,6 +40255,11 @@
     {
       "name": "dlv",
       "source": "go:github.com/go-delve/delve/cmd/dlv",
+      "validation_status": "valid"
+    },
+    {
+      "name": "docker",
+      "source": "manual:docker",
       "validation_status": "valid"
     },
     {
@@ -40378,6 +40408,11 @@
       "validation_status": "valid"
     },
     {
+      "name": "gcc-libs",
+      "source": "homebrew:gcc",
+      "validation_status": "valid"
+    },
+    {
       "name": "gdbm",
       "source": "homebrew:gdbm",
       "validation_status": "valid"
@@ -40445,6 +40480,11 @@
     {
       "name": "gnu-tar",
       "source": "homebrew:gnu-tar",
+      "validation_status": "valid"
+    },
+    {
+      "name": "go",
+      "source": "manual:go",
       "validation_status": "valid"
     },
     {
@@ -40588,6 +40628,11 @@
       "validation_status": "valid"
     },
     {
+      "name": "iterm2",
+      "source": "manual:iterm2",
+      "validation_status": "valid"
+    },
+    {
       "name": "jc",
       "source": "github:kellyjonbrazil/jc",
       "validation_status": "valid"
@@ -40658,6 +40703,11 @@
       "validation_status": "valid"
     },
     {
+      "name": "koto",
+      "source": "github:tsukumogami/koto",
+      "validation_status": "valid"
+    },
+    {
       "name": "kubectx",
       "source": "github:ahmetb/kubectx",
       "validation_status": "valid"
@@ -40708,6 +40758,11 @@
       "validation_status": "valid"
     },
     {
+      "name": "libcurl-source",
+      "source": "manual:libcurl-source",
+      "validation_status": "valid"
+    },
+    {
       "name": "liberica",
       "source": "github:bell-sw/Liberica",
       "validation_status": "valid"
@@ -40743,6 +40798,11 @@
       "validation_status": "valid"
     },
     {
+      "name": "libyaml",
+      "source": "homebrew:libyaml",
+      "validation_status": "valid"
+    },
+    {
       "name": "license-eye",
       "source": "homebrew:license-eye",
       "validation_status": "valid"
@@ -40773,6 +40833,11 @@
       "validation_status": "valid"
     },
     {
+      "name": "make",
+      "source": "homebrew:make",
+      "validation_status": "valid"
+    },
+    {
       "name": "maturin",
       "source": "crates.io:maturin",
       "validation_status": "valid"
@@ -40780,6 +40845,16 @@
     {
       "name": "mdbook",
       "source": "crates.io:mdbook",
+      "validation_status": "valid"
+    },
+    {
+      "name": "mesa-vulkan-drivers",
+      "source": "manual:mesa-vulkan-drivers",
+      "validation_status": "valid"
+    },
+    {
+      "name": "meson",
+      "source": "manual:meson",
       "validation_status": "valid"
     },
     {
@@ -40848,8 +40923,18 @@
       "validation_status": "valid"
     },
     {
+      "name": "ncurses",
+      "source": "manual:ncurses",
+      "validation_status": "valid"
+    },
+    {
       "name": "netlify-cli",
       "source": "npm:netlify-cli",
+      "validation_status": "valid"
+    },
+    {
+      "name": "ninja",
+      "source": "manual:ninja",
       "validation_status": "valid"
     },
     {
@@ -40858,8 +40943,18 @@
       "validation_status": "valid"
     },
     {
+      "name": "nodejs",
+      "source": "manual:nodejs",
+      "validation_status": "valid"
+    },
+    {
       "name": "nomad",
       "source": "github:hashicorp/nomad",
+      "validation_status": "valid"
+    },
+    {
+      "name": "nvidia-driver",
+      "source": "manual:nvidia-driver",
       "validation_status": "valid"
     },
     {
@@ -40870,6 +40965,11 @@
     {
       "name": "openshift-cli",
       "source": "homebrew:openshift-cli",
+      "validation_status": "valid"
+    },
+    {
+      "name": "openssl",
+      "source": "homebrew:openssl@3",
       "validation_status": "valid"
     },
     {
@@ -40893,8 +40993,18 @@
       "validation_status": "valid"
     },
     {
+      "name": "patchelf",
+      "source": "github:NixOS/patchelf",
+      "validation_status": "valid"
+    },
+    {
       "name": "periphery",
       "source": "homebrew:periphery",
+      "validation_status": "valid"
+    },
+    {
+      "name": "perl",
+      "source": "manual:perl",
       "validation_status": "valid"
     },
     {
@@ -40910,6 +41020,16 @@
     {
       "name": "pfetch",
       "source": "crates.io:pfetch",
+      "validation_status": "valid"
+    },
+    {
+      "name": "pipx",
+      "source": "manual:pipx",
+      "validation_status": "valid"
+    },
+    {
+      "name": "pkg-config",
+      "source": "homebrew:pkgconf",
       "validation_status": "valid"
     },
     {
@@ -40968,6 +41088,11 @@
       "validation_status": "valid"
     },
     {
+      "name": "python-standalone",
+      "source": "github:indygreg/python-build-standalone",
+      "validation_status": "valid"
+    },
+    {
       "name": "qrencode",
       "source": "homebrew:qrencode",
       "validation_status": "valid"
@@ -41003,8 +41128,18 @@
       "validation_status": "valid"
     },
     {
+      "name": "ruby",
+      "source": "manual:ruby",
+      "validation_status": "valid"
+    },
+    {
       "name": "ruff",
       "source": "pypi:ruff",
+      "validation_status": "valid"
+    },
+    {
+      "name": "rust",
+      "source": "manual:rust",
       "validation_status": "valid"
     },
     {
@@ -41168,6 +41303,11 @@
       "validation_status": "valid"
     },
     {
+      "name": "test-tuples",
+      "source": "manual:test-tuples",
+      "validation_status": "valid"
+    },
+    {
       "name": "tflint",
       "source": "github:terraform-linters/tflint",
       "validation_status": "valid"
@@ -41215,6 +41355,11 @@
     {
       "name": "tsuku-dltest",
       "source": "github:tsukumogami/tsuku",
+      "validation_status": "valid"
+    },
+    {
+      "name": "tsuku-llm",
+      "source": "github:tsukumogami/tsuku-llm",
       "validation_status": "valid"
     },
     {
@@ -41338,8 +41483,18 @@
       "validation_status": "valid"
     },
     {
+      "name": "zig",
+      "source": "manual:zig",
+      "validation_status": "valid"
+    },
+    {
       "name": "zizmor",
       "source": "homebrew:zizmor",
+      "validation_status": "valid"
+    },
+    {
+      "name": "zlib",
+      "source": "homebrew:zlib",
       "validation_status": "valid"
     },
     {
@@ -41350,156 +41505,6 @@
     {
       "name": "zstd",
       "source": "homebrew:zstd",
-      "validation_status": "valid"
-    },
-    {
-      "name": "cmake",
-      "source": "homebrew:cmake",
-      "validation_status": "valid"
-    },
-    {
-      "name": "cuda",
-      "source": "manual:cuda",
-      "validation_status": "valid"
-    },
-    {
-      "name": "cuda-runtime",
-      "source": "manual:cuda-runtime",
-      "validation_status": "valid"
-    },
-    {
-      "name": "curl",
-      "source": "manual:curl",
-      "validation_status": "valid"
-    },
-    {
-      "name": "docker",
-      "source": "manual:docker",
-      "validation_status": "valid"
-    },
-    {
-      "name": "gcc-libs",
-      "source": "homebrew:gcc",
-      "validation_status": "valid"
-    },
-    {
-      "name": "go",
-      "source": "manual:go",
-      "validation_status": "valid"
-    },
-    {
-      "name": "iterm2",
-      "source": "manual:iterm2",
-      "validation_status": "valid"
-    },
-    {
-      "name": "koto",
-      "source": "github:tsukumogami/koto",
-      "validation_status": "valid"
-    },
-    {
-      "name": "libcurl-source",
-      "source": "manual:libcurl-source",
-      "validation_status": "valid"
-    },
-    {
-      "name": "libyaml",
-      "source": "homebrew:libyaml",
-      "validation_status": "valid"
-    },
-    {
-      "name": "make",
-      "source": "homebrew:make",
-      "validation_status": "valid"
-    },
-    {
-      "name": "mesa-vulkan-drivers",
-      "source": "manual:mesa-vulkan-drivers",
-      "validation_status": "valid"
-    },
-    {
-      "name": "meson",
-      "source": "manual:meson",
-      "validation_status": "valid"
-    },
-    {
-      "name": "ncurses",
-      "source": "manual:ncurses",
-      "validation_status": "valid"
-    },
-    {
-      "name": "ninja",
-      "source": "manual:ninja",
-      "validation_status": "valid"
-    },
-    {
-      "name": "nodejs",
-      "source": "manual:nodejs",
-      "validation_status": "valid"
-    },
-    {
-      "name": "nvidia-driver",
-      "source": "manual:nvidia-driver",
-      "validation_status": "valid"
-    },
-    {
-      "name": "openssl",
-      "source": "homebrew:openssl@3",
-      "validation_status": "valid"
-    },
-    {
-      "name": "patchelf",
-      "source": "github:NixOS/patchelf",
-      "validation_status": "valid"
-    },
-    {
-      "name": "perl",
-      "source": "manual:perl",
-      "validation_status": "valid"
-    },
-    {
-      "name": "pipx",
-      "source": "manual:pipx",
-      "validation_status": "valid"
-    },
-    {
-      "name": "pkg-config",
-      "source": "homebrew:pkgconf",
-      "validation_status": "valid"
-    },
-    {
-      "name": "python-standalone",
-      "source": "github:indygreg/python-build-standalone",
-      "validation_status": "valid"
-    },
-    {
-      "name": "ruby",
-      "source": "manual:ruby",
-      "validation_status": "valid"
-    },
-    {
-      "name": "rust",
-      "source": "manual:rust",
-      "validation_status": "valid"
-    },
-    {
-      "name": "test-tuples",
-      "source": "manual:test-tuples",
-      "validation_status": "valid"
-    },
-    {
-      "name": "tsuku-llm",
-      "source": "github:tsukumogami/tsuku-llm",
-      "validation_status": "valid"
-    },
-    {
-      "name": "zig",
-      "source": "manual:zig",
-      "validation_status": "valid"
-    },
-    {
-      "name": "zlib",
-      "source": "homebrew:zlib",
       "validation_status": "valid"
     }
   ]
