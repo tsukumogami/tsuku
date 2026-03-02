@@ -14,8 +14,8 @@
       "opens_at": "2026-03-02T20:40:14Z"
     },
     "homebrew": {
-      "state": "open",
-      "failures": 5,
+      "state": "closed",
+      "failures": 0,
       "last_failure": "2026-03-02T18:46:21Z",
       "opens_at": "2026-03-02T19:46:21Z"
     },
