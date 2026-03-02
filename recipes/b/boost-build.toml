@@ -1,0 +1,38 @@
+[metadata]
+  name = "boost-build"
+  description = "C++ build system"
+  homepage = "https://www.boost.org/build/"
+  version_format = ""
+  requires_sudo = false
+  unsupported_platforms = ["darwin/arm64", "darwin/amd64"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "boost-build"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "boost-build"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/b2"]
+
+[verify]
+  command = "b2 --version"
+  pattern = ""
+  mode = "output"
+  reason = "b2 --version exits non-zero despite printing version info"
+  exit_code = 1
