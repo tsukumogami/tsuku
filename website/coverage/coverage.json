@@ -1,22 +1,22 @@
 {
-  "generated_at": "2026-03-02T04:44:06Z",
-  "total_recipes": 391,
+  "generated_at": "2026-03-02T05:59:38Z",
+  "total_recipes": 393,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 326,
-        "total": 391,
-        "pct": 83.37595907928389
+        "supported": 327,
+        "total": 393,
+        "pct": 83.20610687022901
       },
       "glibc": {
-        "supported": 360,
-        "total": 391,
-        "pct": 92.07161125319693
+        "supported": 362,
+        "total": 393,
+        "pct": 92.1119592875318
       },
       "musl": {
-        "supported": 219,
-        "total": 391,
-        "pct": 56.01023017902813
+        "supported": 221,
+        "total": 393,
+        "pct": 56.234096692111954
       }
     },
     "by_category": {
@@ -26,9 +26,9 @@
         "glibc_support": 36
       },
       "tool": {
-        "total": 354,
-        "musl_support": 183,
-        "glibc_support": 324
+        "total": 356,
+        "musl_support": 185,
+        "glibc_support": 326
       }
     }
   },
@@ -2151,6 +2151,22 @@
       "errors": null,
       "warnings": [
         "recipe 'gitleaks-cli' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "gitui",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'gitui' has platform-specific actions without libc when clauses and no musl fallback"
       ]
     },
     {
@@ -4650,6 +4666,20 @@
       "errors": null,
       "warnings": [
         "recipe 'sevenzip' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "shellcheck",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": [
+        "recipe 'shellcheck' has platform-specific actions without libc when clauses and no musl fallback"
       ]
     },
     {
