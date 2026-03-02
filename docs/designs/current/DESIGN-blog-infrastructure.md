@@ -1,5 +1,5 @@
 ---
-status: Planned
+status: Current
 problem: |
   tsuku.dev needs a blog section but has no build system. The site is pure
   static HTML with a custom dark theme deployed directly to Cloudflare Pages.
@@ -31,7 +31,7 @@ rationale: |
 
 ## Status
 
-Planned
+Current
 
 ## Implementation Issues
 
