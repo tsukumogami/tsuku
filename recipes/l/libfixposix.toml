@@ -1,0 +1,50 @@
+[metadata]
+  name = "libfixposix"
+  description = "Thin wrapper over POSIX syscalls"
+  homepage = "https://github.com/sionescu/libfixposix"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "libfixposix"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "libfixposix"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libfixposix.so", "lib/libfixposix.so.4", "lib/libfixposix.so.4.0.1", "lib/pkgconfig/libfixposix.pc", "include/lfp/aux.h", "include/lfp/buildinfo.h", "include/lfp/dirent.h", "include/lfp/errno.h", "include/lfp/fcntl.h", "include/lfp/ioctl.h", "include/lfp/mman.h", "include/lfp/resource.h", "include/lfp/select.h", "include/lfp/sendfile.h", "include/lfp/signal.h", "include/lfp/socket.h", "include/lfp/spawn.h", "include/lfp/stat.h", "include/lfp/stdlib.h", "include/lfp/strerror.h", "include/lfp/string.h", "include/lfp/syslog.h", "include/lfp/time.h", "include/lfp/unistd.h", "include/lfp/wait.h", "include/lfp.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "libfixposix"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libfixposix.4.dylib", "lib/libfixposix.dylib", "lib/pkgconfig/libfixposix.pc", "include/lfp/aux.h", "include/lfp/buildinfo.h", "include/lfp/dirent.h", "include/lfp/errno.h", "include/lfp/fcntl.h", "include/lfp/ioctl.h", "include/lfp/mman.h", "include/lfp/resource.h", "include/lfp/select.h", "include/lfp/sendfile.h", "include/lfp/signal.h", "include/lfp/socket.h", "include/lfp/spawn.h", "include/lfp/stat.h", "include/lfp/stdlib.h", "include/lfp/strerror.h", "include/lfp/string.h", "include/lfp/syslog.h", "include/lfp/time.h", "include/lfp/unistd.h", "include/lfp/wait.h", "include/lfp.h"]
+  [steps.when]
+    os = ["darwin"]

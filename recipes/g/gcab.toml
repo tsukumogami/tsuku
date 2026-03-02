@@ -1,0 +1,37 @@
+[metadata]
+  name = "gcab"
+  description = "Windows installer (.MSI) tool"
+  homepage = "https://wiki.gnome.org/msitools"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["glib", "gettext"]
+  # macOS: dyld fails to load self-library libgcab-1.0.0.dylib
+  unsupported_platforms = ["darwin/arm64", "darwin/amd64"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = ""
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "gcab"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/gcab"]
+
+[verify]
+  command = "gcab --version"
+  pattern = ""

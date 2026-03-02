@@ -1,0 +1,50 @@
+[metadata]
+  name = "libffcall"
+  description = "GNU Foreign Function Interface library"
+  homepage = "https://www.gnu.org/software/libffcall/"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "libffcall"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "libffcall"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libavcall.a", "lib/libavcall.so", "lib/libavcall.so.1", "lib/libavcall.so.1.1.1", "lib/libcallback.a", "lib/libcallback.so", "lib/libcallback.so.1", "lib/libcallback.so.1.0.5", "lib/libffcall.a", "lib/libffcall.so", "lib/libffcall.so.0", "lib/libffcall.so.0.1.1", "lib/libtrampoline.a", "lib/libtrampoline.so", "lib/libtrampoline.so.1", "lib/libtrampoline.so.1.0.4", "lib/libvacall.a", "include/avcall.h", "include/callback.h", "include/ffcall-abi.h", "include/ffcall-version.h", "include/trampoline.h", "include/vacall.h", "include/vacall_r.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "libffcall"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libavcall.1.dylib", "lib/libavcall.a", "lib/libavcall.dylib", "lib/libcallback.1.dylib", "lib/libcallback.a", "lib/libcallback.dylib", "lib/libffcall.0.dylib", "lib/libffcall.a", "lib/libffcall.dylib", "lib/libtrampoline.1.dylib", "lib/libtrampoline.a", "lib/libtrampoline.dylib", "lib/libvacall.a", "include/avcall.h", "include/callback.h", "include/ffcall-abi.h", "include/ffcall-version.h", "include/trampoline.h", "include/vacall.h", "include/vacall_r.h"]
+  [steps.when]
+    os = ["darwin"]
