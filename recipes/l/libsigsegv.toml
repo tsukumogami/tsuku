@@ -1,0 +1,50 @@
+[metadata]
+  name = "libsigsegv"
+  description = "Library for handling page faults in user mode"
+  homepage = "https://www.gnu.org/software/libsigsegv/"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "libsigsegv"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "libsigsegv"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libsigsegv.a", "lib/libsigsegv.so", "lib/libsigsegv.so.2", "lib/libsigsegv.so.2.0.8", "include/sigsegv.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "libsigsegv"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libsigsegv.2.dylib", "lib/libsigsegv.a", "lib/libsigsegv.dylib", "include/sigsegv.h"]
+  [steps.when]
+    os = ["darwin"]

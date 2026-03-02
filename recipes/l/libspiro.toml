@@ -1,0 +1,50 @@
+[metadata]
+  name = "libspiro"
+  description = "Library to simplify the drawing of curves"
+  homepage = "https://github.com/fontforge/libspiro"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "libspiro"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "libspiro"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libspiro.a", "lib/libspiro.so", "lib/libspiro.so.1", "lib/libspiro.so.1.0.5", "lib/pkgconfig/libspiro.pc", "include/bezctx.h", "include/spiro.h", "include/spiroentrypoints.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "libspiro"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libspiro.1.dylib", "lib/libspiro.a", "lib/libspiro.dylib", "lib/pkgconfig/libspiro.pc", "include/bezctx.h", "include/spiro.h", "include/spiroentrypoints.h"]
+  [steps.when]
+    os = ["darwin"]
