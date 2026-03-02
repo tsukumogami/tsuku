@@ -1,0 +1,35 @@
+[metadata]
+  name = "python-tabulate"
+  description = "Pretty-print tabular data in Python"
+  homepage = "https://github.com/astanin/python-tabulate"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+  unsupported_platforms = ["darwin/arm64", "darwin/amd64", "linux/arm64"]
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "python-tabulate"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "python-tabulate"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/tabulate"]
+
+[verify]
+  command = "tabulate --version"
+  pattern = ""
