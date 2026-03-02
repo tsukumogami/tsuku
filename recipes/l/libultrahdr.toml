@@ -1,0 +1,35 @@
+[metadata]
+  name = "libultrahdr"
+  description = "Reference codec for the Ultra HDR format"
+  homepage = "https://developer.android.com/media/platform/hdr-image-format"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["jpeg-turbo"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = ""
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "libultrahdr"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/ultrahdr_app"]
+
+[verify]
+  command = "ultrahdr_app --version"
+  pattern = ""
