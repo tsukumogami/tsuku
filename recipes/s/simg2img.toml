@@ -1,0 +1,35 @@
+[metadata]
+  name = "simg2img"
+  description = "Tool to convert Android sparse images to raw images and back"
+  homepage = "https://github.com/anestisb/android-simg2img"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+  unsupported_platforms = ["darwin/arm64", "darwin/amd64"]
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "simg2img"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "simg2img"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/append2simg", "bin/img2simg", "bin/simg2img", "bin/simg2simg"]
+
+[verify]
+  command = "append2simg --version"
+  pattern = ""
