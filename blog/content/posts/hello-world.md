@@ -2,6 +2,8 @@
 title: "Hello, World"
 date: 2026-03-01
 description: "The tsuku blog is live. Here's what we'll be writing about."
+author: "Daniel Gazineu"
+author_github: "dangazineu"
 ---
 
 Welcome to the tsuku blog. This is where we'll write about tsuku's design
