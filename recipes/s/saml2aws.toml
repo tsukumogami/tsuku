@@ -1,21 +1,19 @@
 [metadata]
-  name = "gitui"
-  description = "Blazing fast terminal-ui for git written in rust"
-  homepage = "https://github.com/gitui-org/gitui"
+  name = "saml2aws"
+  description = "Login and retrieve AWS temporary credentials using a SAML IDP"
+  homepage = "https://github.com/Versent/saml2aws"
   version_format = ""
   requires_sudo = false
-  runtime_dependencies = ["openssl"]
   tier = 0
   type = ""
   llm_validation = "skipped"
-supported_os = ["linux"]
 
 [version]
-  source = ""
+  source = "homebrew"
   github_repo = ""
   tag_prefix = ""
   module = ""
-  formula = ""
+  formula = "saml2aws"
   cask = ""
   tap = ""
   fossil_repo = ""
@@ -25,12 +23,12 @@ supported_os = ["linux"]
 
 [[steps]]
   action = "homebrew"
-  formula = "gitui"
+  formula = "saml2aws"
 
 [[steps]]
   action = "install_binaries"
-  binaries = ["bin/gitui"]
+  binaries = ["bin/saml2aws"]
 
 [verify]
-  command = "gitui --version"
+  command = "saml2aws --version"
   pattern = ""
