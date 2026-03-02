@@ -1,0 +1,35 @@
+[metadata]
+  name = "gnirehtet"
+  description = "Reverse tethering tool for Android"
+  homepage = "https://github.com/Genymobile/gnirehtet"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+  unsupported_platforms = ["darwin/arm64", "darwin/amd64"]
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "gnirehtet"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "gnirehtet"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/gnirehtet"]
+
+[verify]
+  command = "gnirehtet --version"
+  pattern = ""
