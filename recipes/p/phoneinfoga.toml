@@ -1,0 +1,35 @@
+[metadata]
+  name = "phoneinfoga"
+  description = "Information gathering framework for phone numbers"
+  homepage = "https://sundowndev.github.io/phoneinfoga/"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+  unsupported_platforms = ["darwin/arm64", "darwin/amd64", "linux/arm64"]
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "phoneinfoga"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "phoneinfoga"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/phoneinfoga"]
+
+[verify]
+  command = "phoneinfoga --version"
+  pattern = ""
