@@ -1,0 +1,50 @@
+[metadata]
+  name = "imath"
+  description = "Library of 2D and 3D vector, matrix, and math operations"
+  homepage = "https://imath.readthedocs.io/en/latest/"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "imath"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "imath"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libImath-3_2.so", "lib/libImath-3_2.so.30", "lib/libImath-3_2.so.30.3.2.2", "lib/libImath.so", "lib/pkgconfig/Imath.pc", "include/Imath/ImathBox.h", "include/Imath/ImathBoxAlgo.h", "include/Imath/ImathColor.h", "include/Imath/ImathColorAlgo.h", "include/Imath/ImathConfig.h", "include/Imath/ImathEuler.h", "include/Imath/ImathExport.h", "include/Imath/ImathForward.h", "include/Imath/ImathFrame.h", "include/Imath/ImathFrustum.h", "include/Imath/ImathFrustumTest.h", "include/Imath/ImathFun.h", "include/Imath/ImathGL.h", "include/Imath/ImathGLU.h", "include/Imath/ImathInt64.h", "include/Imath/ImathInterval.h", "include/Imath/ImathLine.h", "include/Imath/ImathLineAlgo.h", "include/Imath/ImathMath.h", "include/Imath/ImathMatrix.h", "include/Imath/ImathMatrixAlgo.h", "include/Imath/ImathNamespace.h", "include/Imath/ImathPlane.h", "include/Imath/ImathPlatform.h", "include/Imath/ImathQuat.h", "include/Imath/ImathRandom.h", "include/Imath/ImathRoots.h", "include/Imath/ImathShear.h", "include/Imath/ImathSphere.h", "include/Imath/ImathTypeTraits.h", "include/Imath/ImathVec.h", "include/Imath/ImathVecAlgo.h", "include/Imath/half.h", "include/Imath/halfFunction.h", "include/Imath/halfLimits.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "imath"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libImath-3_2.30.3.2.2.dylib", "lib/libImath-3_2.30.dylib", "lib/libImath-3_2.dylib", "lib/libImath.dylib", "lib/pkgconfig/Imath.pc", "include/Imath/ImathBox.h", "include/Imath/ImathBoxAlgo.h", "include/Imath/ImathColor.h", "include/Imath/ImathColorAlgo.h", "include/Imath/ImathConfig.h", "include/Imath/ImathEuler.h", "include/Imath/ImathExport.h", "include/Imath/ImathForward.h", "include/Imath/ImathFrame.h", "include/Imath/ImathFrustum.h", "include/Imath/ImathFrustumTest.h", "include/Imath/ImathFun.h", "include/Imath/ImathGL.h", "include/Imath/ImathGLU.h", "include/Imath/ImathInt64.h", "include/Imath/ImathInterval.h", "include/Imath/ImathLine.h", "include/Imath/ImathLineAlgo.h", "include/Imath/ImathMath.h", "include/Imath/ImathMatrix.h", "include/Imath/ImathMatrixAlgo.h", "include/Imath/ImathNamespace.h", "include/Imath/ImathPlane.h", "include/Imath/ImathPlatform.h", "include/Imath/ImathQuat.h", "include/Imath/ImathRandom.h", "include/Imath/ImathRoots.h", "include/Imath/ImathShear.h", "include/Imath/ImathSphere.h", "include/Imath/ImathTypeTraits.h", "include/Imath/ImathVec.h", "include/Imath/ImathVecAlgo.h", "include/Imath/half.h", "include/Imath/halfFunction.h", "include/Imath/halfLimits.h"]
+  [steps.when]
+    os = ["darwin"]
