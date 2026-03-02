@@ -1,0 +1,48 @@
+[metadata]
+name = "tree-sitter"
+description = "Parser generator tool and incremental parsing library"
+homepage = "https://tree-sitter.github.io/tree-sitter/"
+type = "library"
+
+[metadata.satisfies]
+homebrew = ["tree-sitter", "tree-sitter@0.25"]
+
+# glibc Linux: Homebrew bottle
+[[steps]]
+action = "homebrew"
+formula = "tree-sitter"
+when = { os = ["linux"], libc = ["glibc"] }
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = [
+    "lib/libtree-sitter.so",
+    "lib/libtree-sitter.a",
+    "lib/pkgconfig/tree-sitter.pc",
+    "include/tree_sitter/api.h",
+]
+when = { os = ["linux"], libc = ["glibc"] }
+
+# musl Linux: Alpine package
+[[steps]]
+action = "apk_install"
+packages = ["tree-sitter-dev"]
+when = { os = ["linux"], libc = ["musl"] }
+
+# macOS: Homebrew
+[[steps]]
+action = "homebrew"
+formula = "tree-sitter"
+when = { os = ["darwin"] }
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = [
+    "lib/libtree-sitter.dylib",
+    "lib/libtree-sitter.a",
+    "lib/pkgconfig/tree-sitter.pc",
+    "include/tree_sitter/api.h",
+]
+when = { os = ["darwin"] }

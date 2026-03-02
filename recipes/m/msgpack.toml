@@ -1,0 +1,50 @@
+[metadata]
+  name = "msgpack"
+  description = "Library for a binary-based efficient data interchange format"
+  homepage = "https://msgpack.org/"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "msgpack"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "msgpack"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libmsgpack-c.a", "lib/libmsgpack-c.so", "lib/libmsgpack-c.so.2", "lib/libmsgpack-c.so.2.0.0", "lib/libmsgpackc.so", "lib/libmsgpackc.so.2", "lib/libmsgpackc.so.2.0.0", "lib/pkgconfig/msgpack-c.pc", "include/msgpack/fbuffer.h", "include/msgpack/gcc_atomic.h", "include/msgpack/object.h", "include/msgpack/pack.h", "include/msgpack/pack_define.h", "include/msgpack/pack_template.h", "include/msgpack/sbuffer.h", "include/msgpack/sysdep.h", "include/msgpack/timestamp.h", "include/msgpack/unpack.h", "include/msgpack/unpack_define.h", "include/msgpack/unpack_template.h", "include/msgpack/util.h", "include/msgpack/version.h", "include/msgpack/version_master.h", "include/msgpack/vrefbuffer.h", "include/msgpack/zbuffer.h", "include/msgpack/zone.h", "include/msgpack.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "msgpack"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libmsgpack-c.2.0.0.dylib", "lib/libmsgpack-c.2.dylib", "lib/libmsgpack-c.a", "lib/libmsgpack-c.dylib", "lib/libmsgpackc.2.0.0.dylib", "lib/libmsgpackc.2.dylib", "lib/libmsgpackc.dylib", "lib/pkgconfig/msgpack-c.pc", "include/msgpack/fbuffer.h", "include/msgpack/gcc_atomic.h", "include/msgpack/object.h", "include/msgpack/pack.h", "include/msgpack/pack_define.h", "include/msgpack/pack_template.h", "include/msgpack/sbuffer.h", "include/msgpack/sysdep.h", "include/msgpack/timestamp.h", "include/msgpack/unpack.h", "include/msgpack/unpack_define.h", "include/msgpack/unpack_template.h", "include/msgpack/util.h", "include/msgpack/version.h", "include/msgpack/version_master.h", "include/msgpack/vrefbuffer.h", "include/msgpack/zbuffer.h", "include/msgpack/zone.h", "include/msgpack.h"]
+  [steps.when]
+    os = ["darwin"]

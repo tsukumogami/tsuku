@@ -1,0 +1,35 @@
+[metadata]
+  name = "hledger"
+  description = "Easy plain text accounting with command-line, terminal and web UIs"
+  homepage = "https://hledger.org/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["gmp"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "hledger"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "hledger"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/hledger", "bin/hledger-ui", "bin/hledger-web"]
+
+[verify]
+  command = "hledger --version"
+  pattern = ""
