@@ -1,0 +1,35 @@
+[metadata]
+  name = "a52dec"
+  description = "Library for decoding ATSC A/52 streams (AKA 'AC-3')"
+  homepage = "https://git.adelielinux.org/community/a52dec/"
+  version_format = ""
+  requires_sudo = false
+  unsupported_platforms = ["darwin/arm64", "darwin/amd64"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = ""
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "a52dec"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/a52dec", "bin/extract_a52"]
+
+[verify]
+  command = "a52dec --version"
+  pattern = ""
