@@ -1,0 +1,35 @@
+[metadata]
+  name = "mtools"
+  description = "Tools for manipulating MSDOS files"
+  homepage = "https://www.gnu.org/software/mtools/"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+  unsupported_platforms = ["darwin/arm64", "darwin/amd64"]
+
+[version]
+  source = ""
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "mtools"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/amuFormat.sh", "bin/lz", "bin/mattrib", "bin/mbadblocks", "bin/mcat", "bin/mcd", "bin/mcheck", "bin/mcomp", "bin/mcopy", "bin/mdel", "bin/mdeltree", "bin/mdir", "bin/mdoctorfat", "bin/mdu", "bin/mformat", "bin/minfo", "bin/mkmanifest", "bin/mlabel", "bin/mmd", "bin/mmount", "bin/mmove", "bin/mpartition", "bin/mrd", "bin/mren", "bin/mshortname", "bin/mshowfat", "bin/mtools", "bin/mtoolstest", "bin/mtype", "bin/mxtar", "bin/mzip", "bin/tgz", "bin/uz"]
+
+[verify]
+  command = "amuFormat.sh --version"
+  pattern = ""
