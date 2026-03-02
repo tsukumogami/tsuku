@@ -1,0 +1,35 @@
+[metadata]
+  name = "sqlc"
+  description = "Generate type safe Go from SQL"
+  homepage = "https://sqlc.dev/"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+  unsupported_platforms = ["darwin/arm64", "darwin/amd64"]
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "sqlc"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "sqlc"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/sqlc"]
+
+[verify]
+  command = "sqlc --version"
+  pattern = ""
