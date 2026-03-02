@@ -1,0 +1,50 @@
+[metadata]
+  name = "cjson"
+  description = "Ultralightweight JSON parser in ANSI C"
+  homepage = "https://github.com/DaveGamble/cJSON"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "cjson"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "cjson"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libcjson.a", "lib/libcjson.so", "lib/libcjson.so.1", "lib/libcjson.so.1.7.19", "lib/libcjson_utils.a", "lib/libcjson_utils.so", "lib/libcjson_utils.so.1", "lib/libcjson_utils.so.1.7.19", "lib/pkgconfig/libcjson.pc", "lib/pkgconfig/libcjson_utils.pc", "include/cjson/cJSON.h", "include/cjson/cJSON_Utils.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "cjson"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libcjson.1.7.19.dylib", "lib/libcjson.1.dylib", "lib/libcjson.a", "lib/libcjson.dylib", "lib/libcjson_utils.1.7.19.dylib", "lib/libcjson_utils.1.dylib", "lib/libcjson_utils.a", "lib/libcjson_utils.dylib", "lib/pkgconfig/libcjson.pc", "lib/pkgconfig/libcjson_utils.pc", "include/cjson/cJSON.h", "include/cjson/cJSON_Utils.h"]
+  [steps.when]
+    os = ["darwin"]

@@ -1,0 +1,35 @@
+[metadata]
+  name = "arm-none-eabi-binutils"
+  description = "GNU Binutils for arm-none-eabi cross development"
+  homepage = "https://www.gnu.org/software/binutils/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["zstd"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "arm-none-eabi-binutils"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "arm-none-eabi-binutils"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/arm-none-eabi-addr2line", "bin/arm-none-eabi-c++filt", "bin/arm-none-eabi-elfedit", "bin/arm-none-eabi-gprof", "bin/arm-none-eabi-size", "bin/arm-none-eabi-strings"]
+
+[verify]
+  command = "arm-none-eabi-addr2line --version"
+  pattern = ""

@@ -1,0 +1,50 @@
+[metadata]
+  name = "inih"
+  description = "Simple .INI file parser in C"
+  homepage = "https://github.com/benhoyt/inih"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "inih"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "inih"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libINIReader.so", "lib/libINIReader.so.0", "lib/libinih.so", "lib/libinih.so.0", "lib/pkgconfig/INIReader.pc", "lib/pkgconfig/inih.pc", "include/INIReader.h", "include/ini.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "inih"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libINIReader.0.dylib", "lib/libINIReader.dylib", "lib/libinih.0.dylib", "lib/libinih.dylib", "lib/pkgconfig/INIReader.pc", "lib/pkgconfig/inih.pc", "include/INIReader.h", "include/ini.h"]
+  [steps.when]
+    os = ["darwin"]

@@ -1,0 +1,50 @@
+[metadata]
+  name = "game-music-emu"
+  description = "Videogame music file emulator collection"
+  homepage = "https://github.com/libgme/game-music-emu"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "game-music-emu"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "game-music-emu"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libgme.a", "lib/libgme.so", "lib/libgme.so.0", "lib/libgme.so.0.6.4", "lib/pkgconfig/libgme.pc", "include/gme/gme.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "game-music-emu"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libgme.0.6.4.dylib", "lib/libgme.0.dylib", "lib/libgme.a", "lib/libgme.dylib", "lib/pkgconfig/libgme.pc", "include/gme/gme.h"]
+  [steps.when]
+    os = ["darwin"]
