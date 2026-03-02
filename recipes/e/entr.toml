@@ -1,0 +1,35 @@
+[metadata]
+  name = "entr"
+  description = "Run arbitrary commands when files change"
+  homepage = "https://eradman.com/entrproject/"
+  version_format = ""
+  requires_sudo = false
+  unsupported_platforms = ["darwin/arm64", "darwin/amd64"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "entr"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "entr"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/entr"]
+
+[verify]
+  command = "entr --version"
+  pattern = ""
