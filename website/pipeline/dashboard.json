@@ -1,16 +1,16 @@
 {
-  "generated_at": "2026-03-02T11:35:36Z",
+  "generated_at": "2026-03-02T11:47:57Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "excluded": 4,
-      "pending": 4892,
-      "success": 409
+      "pending": 4865,
+      "success": 436
     },
     "by_tier": {
       "1": {
-        "pending": 15,
-        "success": 3
+        "pending": 14,
+        "success": 4
       },
       "2": {
         "pending": 24,
@@ -18,8 +18,8 @@
       },
       "3": {
         "excluded": 4,
-        "pending": 4853,
-        "success": 403
+        "pending": 4827,
+        "success": 429
       }
     },
     "by_ecosystem": {
@@ -38,8 +38,8 @@
         "total": 105
       },
       "github": {
-        "pending": 9,
-        "success": 102,
+        "pending": 8,
+        "success": 103,
         "total": 111
       },
       "go": {
@@ -47,8 +47,8 @@
         "total": 8
       },
       "homebrew": {
-        "pending": 4693,
-        "success": 190,
+        "pending": 4667,
+        "success": 216,
         "total": 4883
       },
       "manual": {
@@ -142,15 +142,6 @@
           "category": "generation_failed",
           "failure_count": 3,
           "next_retry_at": "2026-02-24T06:13:36Z"
-        },
-        {
-          "id": "github:jqlang/jq",
-          "name": "jq",
-          "ecosystem": "github",
-          "priority": 1,
-          "category": "generation_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-02-24T06:13:38Z"
         },
         {
           "id": "github:ko-build/ko",
@@ -2875,13 +2866,6 @@
           "failure_count": 0
         },
         {
-          "id": "homebrew:bedops",
-          "name": "bedops",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
           "id": "homebrew:bedtools",
           "name": "bedtools",
           "ecosystem": "homebrew",
@@ -4116,13 +4100,6 @@
         {
           "id": "homebrew:cdogs-sdl",
           "name": "cdogs-sdl",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "homebrew:cdrdao",
-          "name": "cdrdao",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
@@ -6374,13 +6351,6 @@
           "failure_count": 0
         },
         {
-          "id": "homebrew:dav1d",
-          "name": "dav1d",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
           "id": "homebrew:daveshanley/vacuum/vacuum",
           "name": "daveshanley/vacuum/vacuum",
           "ecosystem": "homebrew",
@@ -6495,13 +6465,6 @@
         {
           "id": "homebrew:ddgr",
           "name": "ddgr",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "homebrew:ddns-go",
-          "name": "ddns-go",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
@@ -6712,13 +6675,6 @@
         {
           "id": "homebrew:dhall-json",
           "name": "dhall-json",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "homebrew:dhall-lsp-server",
-          "name": "dhall-lsp-server",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
@@ -7120,13 +7076,6 @@
         {
           "id": "homebrew:docker-ls",
           "name": "docker-ls",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "homebrew:docker-machine",
-          "name": "docker-machine",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
@@ -9322,13 +9271,6 @@
           "failure_count": 0
         },
         {
-          "id": "homebrew:fmt",
-          "name": "fmt",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
           "id": "homebrew:fn",
           "name": "fn",
           "ecosystem": "homebrew",
@@ -10458,13 +10400,6 @@
         {
           "id": "homebrew:git-delete-merged-branches",
           "name": "git-delete-merged-branches",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "homebrew:git-delta",
-          "name": "git-delta",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
@@ -12222,13 +12157,6 @@
           "failure_count": 0
         },
         {
-          "id": "homebrew:gwyddion",
-          "name": "gwyddion",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
           "id": "homebrew:gyb",
           "name": "gyb",
           "ecosystem": "homebrew",
@@ -12793,13 +12721,6 @@
         {
           "id": "homebrew:hindent",
           "name": "hindent",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "homebrew:hiredis",
-          "name": "hiredis",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
@@ -13939,13 +13860,6 @@
           "failure_count": 0
         },
         {
-          "id": "homebrew:isl",
-          "name": "isl",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 1
-        },
-        {
           "id": "homebrew:iso-codes",
           "name": "iso-codes",
           "ecosystem": "homebrew",
@@ -14105,13 +14019,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "homebrew:jansson",
-          "name": "jansson",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
         },
         {
           "id": "homebrew:jaq",
@@ -14595,13 +14502,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "homebrew:json-c",
-          "name": "json-c",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 1
         },
         {
           "id": "homebrew:json-glib",
@@ -15733,13 +15633,6 @@
           "failure_count": 1
         },
         {
-          "id": "homebrew:lame",
-          "name": "lame",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
           "id": "homebrew:lammps",
           "name": "lammps",
           "ecosystem": "homebrew",
@@ -16836,13 +16729,6 @@
           "failure_count": 0
         },
         {
-          "id": "homebrew:libpsl",
-          "name": "libpsl",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
           "id": "homebrew:libpst",
           "name": "libpst",
           "ecosystem": "homebrew",
@@ -16950,13 +16836,6 @@
         {
           "id": "homebrew:librtlsdr",
           "name": "librtlsdr",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "homebrew:libsamplerate",
-          "name": "libsamplerate",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
@@ -17165,13 +17044,6 @@
           "failure_count": 1
         },
         {
-          "id": "homebrew:libunistring",
-          "name": "libunistring",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 1
-        },
-        {
           "id": "homebrew:libupnp",
           "name": "libupnp",
           "ecosystem": "homebrew",
@@ -17188,13 +17060,6 @@
         {
           "id": "homebrew:libusbmuxd",
           "name": "libusbmuxd",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "homebrew:libuv",
-          "name": "libuv",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
@@ -18327,13 +18192,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "homebrew:mad",
-          "name": "mad",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
         },
         {
           "id": "homebrew:maelvls/amc/auto-multiple-choice",
@@ -19527,13 +19385,6 @@
         {
           "id": "homebrew:minizinc",
           "name": "minizinc",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "homebrew:minizip",
-          "name": "minizip",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
@@ -20857,13 +20708,6 @@
           "failure_count": 0
         },
         {
-          "id": "homebrew:newsboat",
-          "name": "newsboat",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
           "id": "homebrew:newt",
           "name": "newt",
           "ecosystem": "homebrew",
@@ -21683,13 +21527,6 @@
           "failure_count": 0
         },
         {
-          "id": "homebrew:oniguruma",
-          "name": "oniguruma",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
           "id": "homebrew:onlykey-agent",
           "name": "onlykey-agent",
           "ecosystem": "homebrew",
@@ -22196,13 +22033,6 @@
         {
           "id": "homebrew:optipng",
           "name": "optipng",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "homebrew:opus",
-          "name": "opus",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
@@ -23930,13 +23760,6 @@
           "failure_count": 0
         },
         {
-          "id": "homebrew:pixman",
-          "name": "pixman",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
           "id": "homebrew:pixz",
           "name": "pixz",
           "ecosystem": "homebrew",
@@ -24431,13 +24254,6 @@
         {
           "id": "homebrew:powerline-go",
           "name": "powerline-go",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "homebrew:powerman",
-          "name": "powerman",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
@@ -33879,13 +33695,6 @@
           "failure_count": 0
         },
         {
-          "id": "homebrew:xorg-server",
-          "name": "xorg-server",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
           "id": "homebrew:xorgproto",
           "name": "xorgproto",
           "ecosystem": "homebrew",
@@ -34576,6 +34385,15 @@
           "failure_count": 0
         },
         {
+          "id": "github:jqlang/jq",
+          "name": "jq",
+          "ecosystem": "github",
+          "priority": 1,
+          "category": "generation_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-02-24T06:13:38Z"
+        },
+        {
           "id": "homebrew:shellcheck",
           "name": "shellcheck",
           "ecosystem": "homebrew",
@@ -34912,6 +34730,13 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:bedops",
+          "name": "bedops",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
           "id": "github:biomejs/biome",
           "name": "biome",
           "ecosystem": "github",
@@ -35122,6 +34947,13 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:cdrdao",
+          "name": "cdrdao",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
           "id": "github:cloudflare/cfssl",
           "name": "cfssl",
           "ecosystem": "github",
@@ -35290,6 +35122,20 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:dav1d",
+          "name": "dav1d",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "homebrew:ddns-go",
+          "name": "ddns-go",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
           "id": "homebrew:desktop-file-utils",
           "name": "desktop-file-utils",
           "ecosystem": "homebrew",
@@ -35306,6 +35152,13 @@
         {
           "id": "homebrew:dfu-util",
           "name": "dfu-util",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "homebrew:dhall-lsp-server",
+          "name": "dhall-lsp-server",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
@@ -35376,6 +35229,13 @@
         {
           "id": "homebrew:docker-credential-helper-ecr",
           "name": "docker-credential-helper-ecr",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "homebrew:docker-machine",
+          "name": "docker-machine",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
@@ -35528,6 +35388,13 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:fmt",
+          "name": "fmt",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
           "id": "github:Schniz/fnm",
           "name": "fnm",
           "ecosystem": "github",
@@ -35628,6 +35495,13 @@
         {
           "id": "homebrew:git",
           "name": "git",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "homebrew:git-delta",
+          "name": "git-delta",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
@@ -35865,6 +35739,13 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:gwyddion",
+          "name": "gwyddion",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
           "id": "github:helix-editor/helix",
           "name": "helix",
           "ecosystem": "github",
@@ -35895,6 +35776,13 @@
         {
           "id": "homebrew:himalaya",
           "name": "himalaya",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "homebrew:hiredis",
+          "name": "hiredis",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
@@ -35935,9 +35823,23 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:isl",
+          "name": "isl",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 1
+        },
+        {
           "id": "manual:iterm2",
           "name": "iterm2",
           "ecosystem": "manual",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "homebrew:jansson",
+          "name": "jansson",
+          "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
         },
@@ -35989,6 +35891,13 @@
           "ecosystem": "github",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "homebrew:json-c",
+          "name": "json-c",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 1
         },
         {
           "id": "github:google/go-jsonnet",
@@ -36092,6 +36001,13 @@
           "id": "github:kubernetes-sigs/kustomize",
           "name": "kustomize-cli",
           "ecosystem": "github",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "homebrew:lame",
+          "name": "lame",
+          "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
         },
@@ -36209,6 +36125,20 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:libpsl",
+          "name": "libpsl",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "homebrew:libsamplerate",
+          "name": "libsamplerate",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
           "id": "homebrew:libssh2",
           "name": "libssh2",
           "ecosystem": "homebrew",
@@ -36216,8 +36146,22 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:libunistring",
+          "name": "libunistring",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 1
+        },
+        {
           "id": "homebrew:libusb",
           "name": "libusb",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "homebrew:libuv",
+          "name": "libuv",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
@@ -36274,6 +36218,13 @@
         {
           "id": "homebrew:luajit",
           "name": "luajit",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "homebrew:mad",
+          "name": "mad",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
@@ -36345,6 +36296,13 @@
           "id": "github:kubernetes/minikube",
           "name": "minikube",
           "ecosystem": "github",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "homebrew:minizip",
+          "name": "minizip",
+          "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
         },
@@ -36468,6 +36426,13 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:newsboat",
+          "name": "newsboat",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
           "id": "manual:ninja",
           "name": "ninja",
           "ecosystem": "manual",
@@ -36538,6 +36503,13 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:oniguruma",
+          "name": "oniguruma",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
           "id": "npm:openapi-diff",
           "name": "openapi-diff",
           "ecosystem": "npm",
@@ -36569,6 +36541,13 @@
         {
           "id": "homebrew:opentofu",
           "name": "opentofu",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "homebrew:opus",
+          "name": "opus",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
@@ -36672,6 +36651,13 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:pixman",
+          "name": "pixman",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
           "id": "homebrew:pkgconf",
           "name": "pkg-config",
           "ecosystem": "homebrew",
@@ -36710,6 +36696,13 @@
           "id": "github:derailed/popeye",
           "name": "popeye",
           "ecosystem": "github",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "homebrew:powerman",
+          "name": "powerman",
+          "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
         },
@@ -37345,6 +37338,13 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:xorg-server",
+          "name": "xorg-server",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
           "id": "homebrew:xz",
           "name": "xz",
           "ecosystem": "homebrew",
@@ -37764,6 +37764,32 @@
       "timestamp": "2026-02-22T22:25:32.975745377Z"
     },
     {
+      "id": "batch-2026-02-21T07-27-58Z-angle-grinder",
+      "package": "angle-grinder",
+      "ecosystem": "batch",
+      "category": "generation_failed",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "2026-02-21T07-27-58Z",
+      "timestamp": "2026-02-21T07:27:58Z"
+    },
+    {
+      "id": "batch-2026-02-21T07-27-58Z-anycable-go",
+      "package": "anycable-go",
+      "ecosystem": "batch",
+      "category": "generation_failed",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "linux-alpine-musl-x86_64",
+      "batch_id": "2026-02-21T07-27-58Z",
+      "timestamp": "2026-02-21T07:27:58Z"
+    },
+    {
       "id": "batch-2026-02-21T07-27-58Z-apr-util",
       "package": "apr-util",
       "ecosystem": "batch",
@@ -37798,34 +37824,8 @@
       "timestamp": "2026-02-21T07:27:58Z"
     },
     {
-      "id": "batch-2026-02-21T07-27-58Z-anycable-go",
-      "package": "anycable-go",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "linux-alpine-musl-x86_64",
-      "batch_id": "2026-02-21T07-27-58Z",
-      "timestamp": "2026-02-21T07:27:58Z"
-    },
-    {
       "id": "batch-2026-02-21T07-27-58Z-anyquery",
       "package": "anyquery",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "2026-02-21T07-27-58Z",
-      "timestamp": "2026-02-21T07:27:58Z"
-    },
-    {
-      "id": "batch-2026-02-21T07-27-58Z-angle-grinder",
-      "package": "angle-grinder",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -38720,36 +38720,6 @@
       "timestamp": "2026-02-21T06:13:30.875620235Z"
     },
     {
-      "id": "batch-2026-02-20T06-08-19Z-yo",
-      "package": "yo",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "2026-02-20T06-08-19Z",
-      "timestamp": "2026-02-20T06:08:19Z"
-    },
-    {
-      "id": "batch-2026-02-20T06-08-19Z-yarn",
-      "package": "yarn",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "2026-02-20T06-08-19Z",
-      "timestamp": "2026-02-20T06:08:19Z"
-    },
-    {
       "id": "batch-2026-02-20T06-08-19Z-zx",
       "package": "zx",
       "ecosystem": "batch",
@@ -38765,8 +38735,38 @@
       "timestamp": "2026-02-20T06:08:19Z"
     },
     {
+      "id": "batch-2026-02-20T06-08-19Z-yo",
+      "package": "yo",
+      "ecosystem": "batch",
+      "category": "generation_failed",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "2026-02-20T06-08-19Z",
+      "timestamp": "2026-02-20T06:08:19Z"
+    },
+    {
       "id": "batch-2026-02-20T06-08-19Z-yaml-language-server",
       "package": "yaml-language-server",
+      "ecosystem": "batch",
+      "category": "generation_failed",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "2026-02-20T06-08-19Z",
+      "timestamp": "2026-02-20T06:08:19Z"
+    },
+    {
+      "id": "batch-2026-02-20T06-08-19Z-yarn",
+      "package": "yarn",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -38839,8 +38839,8 @@
       "timestamp": "2026-02-20T04:28:03Z"
     },
     {
-      "id": "batch-2026-02-20T04-28-03Z-vsce",
-      "package": "vsce",
+      "id": "batch-2026-02-20T04-28-03Z-typescript-language-server",
+      "package": "typescript-language-server",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -38854,8 +38854,8 @@
       "timestamp": "2026-02-20T04:28:03Z"
     },
     {
-      "id": "batch-2026-02-20T04-28-03Z-typescript-language-server",
-      "package": "typescript-language-server",
+      "id": "batch-2026-02-20T04-28-03Z-vsce",
+      "package": "vsce",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -38930,8 +38930,8 @@
       "timestamp": "2026-02-20T04:15:51.459005871Z"
     },
     {
-      "id": "batch-2026-02-20T02-08-13Z-react-native-cli",
-      "package": "react-native-cli",
+      "id": "batch-2026-02-20T02-08-13Z-rollup",
+      "package": "rollup",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -38945,8 +38945,23 @@
       "timestamp": "2026-02-20T02:08:13Z"
     },
     {
-      "id": "batch-2026-02-20T02-08-13Z-rollup",
-      "package": "rollup",
+      "id": "batch-2026-02-20T02-08-13Z-release-it",
+      "package": "release-it",
+      "ecosystem": "batch",
+      "category": "generation_failed",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "2026-02-20T02-08-13Z",
+      "timestamp": "2026-02-20T02:08:13Z"
+    },
+    {
+      "id": "batch-2026-02-20T02-08-13Z-react-native-cli",
+      "package": "react-native-cli",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -38975,21 +38990,6 @@
       "timestamp": "2026-02-20T02:08:13Z"
     },
     {
-      "id": "batch-2026-02-20T02-08-13Z-oxlint",
-      "package": "oxlint",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "2026-02-20T02-08-13Z",
-      "timestamp": "2026-02-20T02:08:13Z"
-    },
-    {
       "id": "batch-2026-02-20T02-08-13Z-prettier",
       "package": "prettier",
       "ecosystem": "batch",
@@ -39005,8 +39005,8 @@
       "timestamp": "2026-02-20T02:08:13Z"
     },
     {
-      "id": "batch-2026-02-20T02-08-13Z-release-it",
-      "package": "release-it",
+      "id": "batch-2026-02-20T02-08-13Z-oxlint",
+      "package": "oxlint",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -39054,23 +39054,8 @@
       "timestamp": "2026-02-20T01:55:16.033744211Z"
     },
     {
-      "id": "batch-2026-02-20T00-04-55Z-oxfmt",
-      "package": "oxfmt",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "2026-02-20T00-04-55Z",
-      "timestamp": "2026-02-20T00:04:55Z"
-    },
-    {
-      "id": "batch-2026-02-20T00-04-55Z-n",
-      "package": "n",
+      "id": "batch-2026-02-20T00-04-55Z-openapi-diff",
+      "package": "openapi-diff",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -39105,36 +39090,6 @@
       "timestamp": "2026-02-20T00:04:55Z"
     },
     {
-      "id": "batch-2026-02-20T00-04-55Z-node-red",
-      "package": "node-red",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "2026-02-20T00-04-55Z",
-      "timestamp": "2026-02-20T00:04:55Z"
-    },
-    {
-      "id": "batch-2026-02-20T00-04-55Z-nping",
-      "package": "nping",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "2026-02-20T00-04-55Z",
-      "timestamp": "2026-02-20T00:04:55Z"
-    },
-    {
       "id": "batch-2026-02-20T00-04-55Z-openskills",
       "package": "openskills",
       "ecosystem": "batch",
@@ -39150,8 +39105,38 @@
       "timestamp": "2026-02-20T00:04:55Z"
     },
     {
-      "id": "batch-2026-02-20T00-04-55Z-openapi-diff",
-      "package": "openapi-diff",
+      "id": "batch-2026-02-20T00-04-55Z-oxfmt",
+      "package": "oxfmt",
+      "ecosystem": "batch",
+      "category": "generation_failed",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "2026-02-20T00-04-55Z",
+      "timestamp": "2026-02-20T00:04:55Z"
+    },
+    {
+      "id": "batch-2026-02-20T00-04-55Z-node-red",
+      "package": "node-red",
+      "ecosystem": "batch",
+      "category": "generation_failed",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "2026-02-20T00-04-55Z",
+      "timestamp": "2026-02-20T00:04:55Z"
+    },
+    {
+      "id": "batch-2026-02-20T00-04-55Z-n",
+      "package": "n",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -39167,6 +39152,21 @@
     {
       "id": "batch-2026-02-20T00-04-55Z-needle",
       "package": "needle",
+      "ecosystem": "batch",
+      "category": "generation_failed",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "2026-02-20T00-04-55Z",
+      "timestamp": "2026-02-20T00:04:55Z"
+    },
+    {
+      "id": "batch-2026-02-20T00-04-55Z-nping",
+      "package": "nping",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -39198,8 +39198,8 @@
       "timestamp": "2026-02-19T23:29:47.627618545Z"
     },
     {
-      "id": "batch-2026-02-19T22-35-45Z-mprocs",
-      "package": "mprocs",
+      "id": "batch-2026-02-19T22-35-45Z-mjml",
+      "package": "mjml",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -39213,8 +39213,8 @@
       "timestamp": "2026-02-19T22:35:45Z"
     },
     {
-      "id": "batch-2026-02-19T22-35-45Z-mjml",
-      "package": "mjml",
+      "id": "batch-2026-02-19T22-35-45Z-mprocs",
+      "package": "mprocs",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -39298,8 +39298,8 @@
       "timestamp": "2026-02-19T22:30:26.487032403Z"
     },
     {
-      "id": "batch-2026-02-19T21-39-05Z-lerna",
-      "package": "lerna",
+      "id": "batch-2026-02-19T21-39-05Z-mbt",
+      "package": "mbt",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -39313,8 +39313,8 @@
       "timestamp": "2026-02-19T21:39:05Z"
     },
     {
-      "id": "batch-2026-02-19T21-39-05Z-mbt",
-      "package": "mbt",
+      "id": "batch-2026-02-19T21-39-05Z-lerna",
+      "package": "lerna",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -39397,8 +39397,8 @@
       "timestamp": "2026-02-19T21:31:48.334903227Z"
     },
     {
-      "id": "batch-2026-02-19T20-40-46Z-http-server",
-      "package": "http-server",
+      "id": "batch-2026-02-19T20-40-46Z-gulp-cli",
+      "package": "gulp-cli",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -39412,8 +39412,8 @@
       "timestamp": "2026-02-19T20:40:46Z"
     },
     {
-      "id": "batch-2026-02-19T20-40-46Z-gulp-cli",
-      "package": "gulp-cli",
+      "id": "batch-2026-02-19T20-40-46Z-http-server",
+      "package": "http-server",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
