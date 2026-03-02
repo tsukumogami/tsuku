@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-02T01:45:28Z",
+  "generated_at": "2026-03-02T02:26:51Z",
   "total_recipes": 390,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 322,
+        "supported": 325,
         "total": 390,
-        "pct": 82.56410256410255
+        "pct": 83.33333333333334
       },
       "glibc": {
         "supported": 359,
@@ -14,21 +14,21 @@
         "pct": 92.05128205128204
       },
       "musl": {
-        "supported": 217,
+        "supported": 218,
         "total": 390,
-        "pct": 55.64102564102564
+        "pct": 55.8974358974359
       }
     },
     "by_category": {
       "library": {
-        "total": 36,
-        "musl_support": 35,
-        "glibc_support": 35
+        "total": 37,
+        "musl_support": 36,
+        "glibc_support": 36
       },
       "tool": {
-        "total": 354,
+        "total": 353,
         "musl_support": 182,
-        "glibc_support": 324
+        "glibc_support": 323
       }
     }
   },
@@ -1393,13 +1393,11 @@
       "name": "desktop-file-utils",
       "type": "tool",
       "platforms": {
-        "darwin": false,
+        "darwin": true,
         "glibc": true,
         "musl": true
       },
-      "gaps": [
-        "darwin"
-      ],
+      "gaps": null,
       "errors": null,
       "warnings": [
         "recipe 'desktop-file-utils' has platform-specific actions without libc when clauses and no musl fallback"
@@ -1421,13 +1419,11 @@
       "name": "dfu-util",
       "type": "tool",
       "platforms": {
-        "darwin": false,
+        "darwin": true,
         "glibc": true,
         "musl": true
       },
-      "gaps": [
-        "darwin"
-      ],
+      "gaps": null,
       "errors": null,
       "warnings": [
         "recipe 'dfu-util' has platform-specific actions without libc when clauses and no musl fallback"
@@ -1913,16 +1909,16 @@
     },
     {
       "name": "freetype",
-      "type": "tool",
+      "type": "library",
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": false
+        "musl": true
       },
-      "gaps": [
-        "musl"
+      "gaps": null,
+      "errors": [
+        "library recipe 'freetype' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "errors": null,
       "warnings": [
         "recipe 'freetype' has platform-specific actions without libc when clauses and no musl fallback"
       ]
@@ -4055,13 +4051,11 @@
       "name": "par2",
       "type": "tool",
       "platforms": {
-        "darwin": false,
+        "darwin": true,
         "glibc": true,
         "musl": true
       },
-      "gaps": [
-        "darwin"
-      ],
+      "gaps": null,
       "errors": null,
       "warnings": [
         "recipe 'par2' has platform-specific actions without libc when clauses and no musl fallback"
