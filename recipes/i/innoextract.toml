@@ -5,8 +5,8 @@
   version_format = ""
   requires_sudo = false
   runtime_dependencies = ["xz"]
-  # macOS: xz dep dyld fails to load liblzma.5.dylib
-  unsupported_platforms = ["darwin/arm64", "darwin/amd64"]
+  # macOS: xz dep dyld failure; linux/arm64: no bottles
+  unsupported_platforms = ["darwin/arm64", "darwin/amd64", "linux/arm64"]
   tier = 0
   type = ""
   llm_validation = "skipped"
