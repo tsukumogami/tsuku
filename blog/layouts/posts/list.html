@@ -1,0 +1,14 @@
+{{/* Section list template: renders /blog/posts/
+     Uses .Pages because this template's context is the posts section itself. */}}
+{{ define "main" }}
+<section class="blog-index">
+    <h1>Blog</h1>
+    {{ range .Pages }}
+    <article class="blog-entry">
+        <h2><a href="{{ .RelPermalink }}">{{ .Title }}</a></h2>
+        <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "January 2, 2006" }}</time>
+        <p>{{ .Description | default .Summary }}</p>
+    </article>
+    {{ end }}
+</section>
+{{ end }}
