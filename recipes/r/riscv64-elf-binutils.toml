@@ -1,0 +1,35 @@
+[metadata]
+  name = "riscv64-elf-binutils"
+  description = "GNU Binutils for riscv64-elf cross development"
+  homepage = "https://www.gnu.org/software/binutils/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["zstd"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "riscv64-elf-binutils"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "riscv64-elf-binutils"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/riscv64-elf-addr2line", "bin/riscv64-elf-ar", "bin/riscv64-elf-as", "bin/riscv64-elf-c++filt", "bin/riscv64-elf-elfedit", "bin/riscv64-elf-gprof", "bin/riscv64-elf-ld", "bin/riscv64-elf-nm", "bin/riscv64-elf-objcopy", "bin/riscv64-elf-objdump", "bin/riscv64-elf-ranlib", "bin/riscv64-elf-readelf", "bin/riscv64-elf-size", "bin/riscv64-elf-strings", "bin/riscv64-elf-strip"]
+
+[verify]
+  command = "riscv64-elf-addr2line --version"
+  pattern = ""
