@@ -1,0 +1,35 @@
+[metadata]
+  name = "cdxgen"
+  description = "Creates CycloneDX Software Bill-of-Materials (SBOM) for projects"
+  homepage = "https://github.com/CycloneDX/cdxgen"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["ruby", "sourcekitten", "sqlite", "trivy"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "cdxgen"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "cdxgen"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/cbom", "bin/cdx-verify", "bin/cdxgen", "bin/cdxgen-secure", "bin/cdxi", "bin/evinse", "bin/obom", "bin/saasbom"]
+
+[verify]
+  command = "cbom --version"
+  pattern = ""
