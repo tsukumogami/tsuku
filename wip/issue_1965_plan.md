@@ -34,21 +34,21 @@ None.
 
 ## Implementation Steps
 
-- [ ] 1. **Add runtime_dependencies to fontconfig recipe**: Add `runtime_dependencies = ["freetype", "gettext"]` to fontconfig's `[metadata]` section. These are needed at runtime since fontconfig's binaries dynamically link against `libintl.dylib` (gettext) and `libfreetype.dylib` (freetype).
+- [x] 1. **Add runtime_dependencies to fontconfig recipe**: Added `runtime_dependencies = ["freetype", "gettext"]` to fontconfig's `[metadata]` section.
 
-- [ ] 2. **Extend wrapper script to set library paths**: Modify `generateWrapperScript` in `internal/install/manager.go` to accept an additional `libPathAdditions []string` parameter. When non-empty, emit `DYLD_LIBRARY_PATH` (on darwin) or `LD_LIBRARY_PATH` (on linux) before the `exec` line. The library paths should be `$TSUKU_HOME/libs/<dep>-<version>/lib` for each runtime dependency that is a library type.
+- [x] 2. **Convert freetype recipe to library type**: Changed freetype from tool type to `type = "library"` with `install_mode = "directory"` so shared libraries install to `$TSUKU_HOME/libs/`. Added `runtime_dependencies = ["libpng"]`.
 
-- [ ] 3. **Compute library paths in createBinaryWrapper**: In `createBinaryWrapper`, look up each runtime dependency and check if it's a library (installed under `$TSUKU_HOME/libs/`). For each library dep, add `$TSUKU_HOME/libs/<name>-<version>/lib` to the `libPathAdditions` list. Pass this to `generateWrapperScript`.
+- [x] 3. **Extend wrapper script to set library paths**: Modified `generateWrapperScript` in `internal/install/manager.go` to accept `libPathAdditions []string` parameter. Emits `DYLD_LIBRARY_PATH` (darwin) or `LD_LIBRARY_PATH` (linux) with export before `exec`.
 
-- [ ] 4. **Add LibsDir to Manager or pass through InstallOptions**: The manager needs to know `LibsDir` to compute library dependency paths. Either add `LibsDir` to the `Manager` (from config) or add `LibraryDependencies map[string]string` to `InstallOptions` as a separate field from `RuntimeDependencies`.
+- [x] 4. **Compute library paths in createBinaryWrapper**: Separated tool PATH additions from library path additions. Added `collectLibraryPaths()` method that scans all `$TSUKU_HOME/libs/*/lib/` directories to cover transitive dependencies.
 
-- [ ] 5. **Extend homebrew_relocate to add dependency RPATHs on tool binaries**: In `homebrew_relocate.go`, after the existing `fixMachoRpath` call for each tool binary, check if the execution context has install-time dependencies that resolve to library paths under `$TSUKU_HOME/libs/`. For each, call `install_name_tool -add_rpath <dep_lib_path>` on the binary. This is the RPATH defense-in-depth layer.
+- [x] 5. **Fix resolveRuntimeDeps for libraries**: Fixed `resolveRuntimeDeps` in `cmd/tsuku/install_deps.go` to check library state (`GetInstalledLibraryVersion`) before tool state (`GetToolState`), since library dependencies install to `$TSUKU_HOME/libs/` not `$TSUKU_HOME/tools/`.
 
-- [ ] 6. **Add unit tests for wrapper library paths**: Test that `generateWrapperScript` correctly emits `DYLD_LIBRARY_PATH` when library paths are provided, and doesn't emit it when the list is empty.
+- [x] 6. **Add unit tests for wrapper library paths**: Added tests for `DYLD_LIBRARY_PATH`/`LD_LIBRARY_PATH` emission, combined PATH + lib path, empty lib path, library-only dependency, and mixed dependency scenarios.
 
-- [ ] 7. **Add unit tests for RPATH addition**: Test the dependency RPATH logic in `homebrew_relocate` (can be unit tested with mocked contexts since the actual `install_name_tool` call is already tested separately).
+- [ ] ~7. **Extend homebrew_relocate for RPATH defense-in-depth**: Deferred — the wrapper approach proved fully sufficient in manual testing. RPATH modification on macOS is fragile with signed/notarized binaries.~
 
-- [ ] 8. **Clean up debug printf statements in homebrew_relocate.go**: Remove or gate the numerous `fmt.Printf("   Debug: ...")` statements behind a proper logging mechanism.
+- [ ] ~8. **Clean up debug printf statements**: Out of scope for this bug fix.~
 
 ## Testing Strategy
 
@@ -80,12 +80,12 @@ None.
 
 ## Success Criteria
 
-- [ ] `tsuku install fontconfig` on macOS completes successfully
-- [ ] `fc-list --version` works without `dyld: Library not loaded` errors
-- [ ] Wrapper script for fontconfig binaries includes `DYLD_LIBRARY_PATH` with gettext and freetype lib paths
-- [ ] Existing tests pass (no regressions from baseline)
-- [ ] New unit tests cover wrapper library path generation
-- [ ] Other recipes with `runtime_dependencies` pointing to libraries (e.g., par2 -> libomp, qrencode -> libpng) would also benefit from this fix
+- [x] `tsuku install fontconfig` on macOS completes successfully
+- [x] `fc-list --version` works without `dyld: Library not loaded` errors
+- [x] Wrapper script for fontconfig binaries includes `DYLD_LIBRARY_PATH` with gettext and freetype lib paths
+- [x] Existing tests pass (no regressions from baseline)
+- [x] New unit tests cover wrapper library path generation
+- [x] Other recipes with `runtime_dependencies` pointing to libraries (e.g., par2 -> libomp, qrencode -> libpng) would also benefit from this fix
 
 ## Open Questions
 
