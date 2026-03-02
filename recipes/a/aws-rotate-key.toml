@@ -1,0 +1,36 @@
+[metadata]
+  name = "aws-rotate-key"
+  description = "Easily rotate your AWS access key"
+  homepage = "https://github.com/stefansundin/aws-rotate-key"
+  version_format = ""
+  requires_sudo = false
+  unsupported_platforms = ["darwin/arm64", "darwin/amd64", "linux/arm64"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "aws-rotate-key"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "aws-rotate-key"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/aws-rotate-key"]
+
+[verify]
+  command = "aws-rotate-key --version"
+  pattern = ""
+  exit_code = 1
