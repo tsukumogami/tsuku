@@ -1,0 +1,50 @@
+[metadata]
+  name = "sfsexp"
+  description = "Small Fast S-Expression Library"
+  homepage = "https://github.com/mjsottile/sfsexp"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "sfsexp"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "sfsexp"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libsexp.a", "lib/libsexp.so", "lib/libsexp.so.1", "lib/libsexp.so.1.0.0", "lib/pkgconfig/sfsexp.pc", "include/sfsexp/cstring.h", "include/sfsexp/faststack.h", "include/sfsexp/sexp.h", "include/sfsexp/sexp_errors.h", "include/sfsexp/sexp_memory.h", "include/sfsexp/sexp_ops.h", "include/sfsexp/sexp_vis.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "sfsexp"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libsexp.1.dylib", "lib/libsexp.a", "lib/libsexp.dylib", "lib/pkgconfig/sfsexp.pc", "include/sfsexp/cstring.h", "include/sfsexp/faststack.h", "include/sfsexp/sexp.h", "include/sfsexp/sexp_errors.h", "include/sfsexp/sexp_memory.h", "include/sfsexp/sexp_ops.h", "include/sfsexp/sexp_vis.h"]
+  [steps.when]
+    os = ["darwin"]

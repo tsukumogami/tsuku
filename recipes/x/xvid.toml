@@ -1,0 +1,50 @@
+[metadata]
+  name = "xvid"
+  description = "High-performance, high-quality MPEG-4 video library"
+  homepage = "https://labs.xvid.com/"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "xvid"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "xvid"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libxvidcore.a", "lib/libxvidcore.so", "lib/libxvidcore.so.4", "lib/libxvidcore.so.4.3", "include/xvid.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "xvid"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libxvidcore.4.dylib", "lib/libxvidcore.a", "include/xvid.h"]
+  [steps.when]
+    os = ["darwin"]
