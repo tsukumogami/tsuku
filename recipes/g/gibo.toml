@@ -1,0 +1,35 @@
+[metadata]
+  name = "gibo"
+  description = "Access GitHub's .gitignore boilerplates"
+  homepage = "https://github.com/simonwhitaker/gibo"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+  unsupported_platforms = ["darwin/arm64", "darwin/amd64"]
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "gibo"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "gibo"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/gibo"]
+
+[verify]
+  command = "gibo --version"
+  pattern = ""
