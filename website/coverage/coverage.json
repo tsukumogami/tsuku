@@ -1,38 +1,54 @@
 {
-  "generated_at": "2026-03-02T11:49:41Z",
-  "total_recipes": 538,
+  "generated_at": "2026-03-02T11:53:21Z",
+  "total_recipes": 670,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 425,
-        "total": 538,
-        "pct": 78.99628252788105
+        "supported": 481,
+        "total": 670,
+        "pct": 71.7910447761194
       },
       "glibc": {
-        "supported": 507,
-        "total": 538,
-        "pct": 94.23791821561338
+        "supported": 639,
+        "total": 670,
+        "pct": 95.3731343283582
       },
       "musl": {
-        "supported": 366,
-        "total": 538,
-        "pct": 68.02973977695167
+        "supported": 498,
+        "total": 670,
+        "pct": 74.32835820895522
       }
     },
     "by_category": {
       "library": {
-        "total": 110,
-        "musl_support": 109,
-        "glibc_support": 109
+        "total": 137,
+        "musl_support": 136,
+        "glibc_support": 136
       },
       "tool": {
-        "total": 428,
-        "musl_support": 257,
-        "glibc_support": 398
+        "total": 533,
+        "musl_support": 362,
+        "glibc_support": 503
       }
     }
   },
   "recipes": [
+    {
+      "name": "a52dec",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'a52dec' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
     {
       "name": "aarch64-elf-binutils",
       "type": "tool",
@@ -207,6 +223,22 @@
       ]
     },
     {
+      "name": "afflib",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'afflib' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
       "name": "age",
       "type": "tool",
       "platforms": {
@@ -249,6 +281,22 @@
       ]
     },
     {
+      "name": "aircrack-ng",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'aircrack-ng' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
       "name": "alass",
       "type": "tool",
       "platforms": {
@@ -262,6 +310,36 @@
       "errors": null,
       "warnings": [
         "recipe 'alass' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "alda",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'alda' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "ali",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": [
+        "recipe 'ali' has platform-specific actions without libc when clauses and no musl fallback"
       ]
     },
     {
@@ -371,6 +449,36 @@
       ]
     },
     {
+      "name": "aoe",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": [
+        "recipe 'aoe' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "apache-polaris",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'apache-polaris' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
       "name": "appwrite",
       "type": "tool",
       "platforms": {
@@ -423,6 +531,38 @@
       "gaps": null,
       "errors": null,
       "warnings": null
+    },
+    {
+      "name": "argocd-autopilot",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'argocd-autopilot' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "argocd-vault-plugin",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'argocd-vault-plugin' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
     },
     {
       "name": "argtable3",
@@ -501,6 +641,34 @@
       ]
     },
     {
+      "name": "arp-scan-rs",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": [
+        "recipe 'arp-scan-rs' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "asc",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": [
+        "recipe 'asc' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
       "name": "asciinema",
       "type": "tool",
       "platforms": {
@@ -528,6 +696,52 @@
       "errors": null,
       "warnings": [
         "recipe 'asdf' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "asnmap",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": [
+        "recipe 'asnmap' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "aspell",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'aspell' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "assimp",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'assimp' has platform-specific actions without libc when clauses and no musl fallback"
       ]
     },
     {
@@ -575,6 +789,68 @@
       ]
     },
     {
+      "name": "atlas",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'atlas' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "atomicparsley",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": [
+        "recipe 'atomicparsley' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "auditbeat",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'auditbeat' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "autobrr",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'autobrr' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
       "name": "avro-cpp",
       "type": "tool",
       "platforms": {
@@ -615,6 +891,22 @@
       "warnings": null
     },
     {
+      "name": "aws-lc",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'aws-lc' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
       "name": "aws-nuke",
       "type": "tool",
       "platforms": {
@@ -626,6 +918,22 @@
       "errors": null,
       "warnings": [
         "recipe 'aws-nuke' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "aws-rotate-key",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'aws-rotate-key' has platform-specific actions without libc when clauses and no musl fallback"
       ]
     },
     {
@@ -3313,6 +3621,20 @@
       ]
     },
     {
+      "name": "gnu-typist",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": [
+        "recipe 'gnu-typist' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
       "name": "gnu-units",
       "type": "tool",
       "platforms": {
@@ -3456,6 +3778,22 @@
       ]
     },
     {
+      "name": "google-authenticator-libpam",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'google-authenticator-libpam' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
       "name": "goose",
       "type": "tool",
       "platforms": {
@@ -3537,6 +3875,54 @@
       ]
     },
     {
+      "name": "gource",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'gource' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "gplugin",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'gplugin' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "gpredict",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'gpredict' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
       "name": "gptfdisk",
       "type": "tool",
       "platforms": {
@@ -3583,6 +3969,22 @@
       "warnings": null
     },
     {
+      "name": "grep",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'grep' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
       "name": "grex",
       "type": "tool",
       "platforms": {
@@ -3596,6 +3998,22 @@
       "errors": null,
       "warnings": [
         "recipe 'grex' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "gromacs",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'gromacs' has platform-specific actions without libc when clauses and no musl fallback"
       ]
     },
     {
@@ -3646,6 +4064,38 @@
       ]
     },
     {
+      "name": "gsmartcontrol",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'gsmartcontrol' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "gucharmap",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'gucharmap' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
       "name": "gulp-cli",
       "type": "tool",
       "platforms": {
@@ -3690,6 +4140,22 @@
       ]
     },
     {
+      "name": "gupnp",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'gupnp' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
       "name": "gupnp-av",
       "type": "library",
       "platforms": {
@@ -3719,6 +4185,52 @@
       "errors": null,
       "warnings": [
         "recipe 'gwyddion' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "haskell-language-server",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'haskell-language-server' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "haskell-stack",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": [
+        "recipe 'haskell-stack' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "hatari",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'hatari' has platform-specific actions without libc when clauses and no musl fallback"
       ]
     },
     {
@@ -3784,6 +4296,22 @@
       ]
     },
     {
+      "name": "helmfile",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'helmfile' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
       "name": "highway",
       "type": "library",
       "platforms": {
@@ -3829,6 +4357,50 @@
       ],
       "warnings": [
         "recipe 'hiredis' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "hledger",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": [
+        "recipe 'hledger' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "hlint",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": [
+        "recipe 'hlint' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "homebank",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'homebank' has platform-specific actions without libc when clauses and no musl fallback"
       ]
     },
     {
@@ -3924,6 +4496,52 @@
       ]
     },
     {
+      "name": "i686-elf-binutils",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": [
+        "recipe 'i686-elf-binutils' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "i686-elf-grub",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'i686-elf-grub' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "icoutils",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'icoutils' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
       "name": "iir1",
       "type": "library",
       "platforms": {
@@ -3956,6 +4574,20 @@
       ]
     },
     {
+      "name": "inetutils",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": [
+        "recipe 'inetutils' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
       "name": "inih",
       "type": "library",
       "platforms": {
@@ -3985,6 +4617,22 @@
       ],
       "warnings": [
         "recipe 'iniparser' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "innoextract",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'innoextract' has platform-specific actions without libc when clauses and no musl fallback"
       ]
     },
     {
@@ -4124,6 +4772,20 @@
       ]
     },
     {
+      "name": "jjui",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": [
+        "recipe 'jjui' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
       "name": "jp2a",
       "type": "tool",
       "platforms": {
@@ -4167,6 +4829,20 @@
       "gaps": null,
       "errors": null,
       "warnings": null
+    },
+    {
+      "name": "jpeginfo",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": [
+        "recipe 'jpeginfo' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
     },
     {
       "name": "jpegoptim",
@@ -4228,6 +4904,22 @@
       ],
       "warnings": [
         "recipe 'json-c' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "json-glib",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'json-glib' has platform-specific actions without libc when clauses and no musl fallback"
       ]
     },
     {
@@ -4325,6 +5017,22 @@
       "warnings": null
     },
     {
+      "name": "klavaro",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'klavaro' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
       "name": "komac",
       "type": "tool",
       "platforms": {
@@ -4352,6 +5060,22 @@
       "errors": null,
       "warnings": [
         "recipe 'kopia' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "kops",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'kops' has platform-specific actions without libc when clauses and no musl fallback"
       ]
     },
     {
@@ -4498,6 +5222,36 @@
       ]
     },
     {
+      "name": "ldc",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'ldc' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "lensfun",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": [
+        "recipe 'lensfun' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
       "name": "lerna",
       "type": "tool",
       "platforms": {
@@ -4555,6 +5309,38 @@
       ],
       "warnings": [
         "recipe 'libb2' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "libbladerf",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'libbladerf' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "libbluray",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'libbluray' has platform-specific actions without libc when clauses and no musl fallback"
       ]
     },
     {
@@ -4633,6 +5419,22 @@
       "errors": null,
       "warnings": [
         "recipe 'libcurl-source' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "libdazzle",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'libdazzle' has platform-specific actions without libc when clauses and no musl fallback"
       ]
     },
     {
@@ -4778,6 +5580,22 @@
       ]
     },
     {
+      "name": "libfreenect",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'libfreenect' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
       "name": "libgee",
       "type": "library",
       "platforms": {
@@ -4822,6 +5640,38 @@
       ]
     },
     {
+      "name": "libgpg-error",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'libgpg-error' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "libgsf",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'libgsf' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
       "name": "libid3tag",
       "type": "library",
       "platforms": {
@@ -4848,6 +5698,22 @@
       "gaps": null,
       "errors": null,
       "warnings": null
+    },
+    {
+      "name": "libiptcdata",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'libiptcdata' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
     },
     {
       "name": "libiscsi",
@@ -4914,6 +5780,38 @@
       ]
     },
     {
+      "name": "libmodbus",
+      "type": "library",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": [
+        "library recipe 'libmodbus' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
+      ],
+      "warnings": [
+        "recipe 'libmodbus' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "libmpdclient",
+      "type": "library",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": [
+        "library recipe 'libmpdclient' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
+      ],
+      "warnings": [
+        "recipe 'libmpdclient' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
       "name": "libnghttp2",
       "type": "library",
       "platforms": {
@@ -4939,6 +5837,22 @@
       "errors": null,
       "warnings": [
         "recipe 'libnghttp3' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "libngspice",
+      "type": "library",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": [
+        "library recipe 'libngspice' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
+      ],
+      "warnings": [
+        "recipe 'libngspice' has platform-specific actions without libc when clauses and no musl fallback"
       ]
     },
     {
@@ -4988,6 +5902,38 @@
       ]
     },
     {
+      "name": "libpg-query",
+      "type": "library",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": [
+        "library recipe 'libpg-query' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
+      ],
+      "warnings": [
+        "recipe 'libpg-query' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "libpipeline",
+      "type": "library",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": [
+        "library recipe 'libpipeline' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
+      ],
+      "warnings": [
+        "recipe 'libpipeline' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
       "name": "libpng",
       "type": "library",
       "platforms": {
@@ -5015,6 +5961,22 @@
       "errors": null,
       "warnings": [
         "recipe 'libpsl' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "libptytty",
+      "type": "library",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": [
+        "library recipe 'libptytty' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
+      ],
+      "warnings": [
+        "recipe 'libptytty' has platform-specific actions without libc when clauses and no musl fallback"
       ]
     },
     {
@@ -5050,6 +6012,22 @@
       ]
     },
     {
+      "name": "librtlsdr",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'librtlsdr' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
       "name": "librttopo",
       "type": "library",
       "platforms": {
@@ -5079,6 +6057,38 @@
       ],
       "warnings": [
         "recipe 'libsamplerate' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "libsigsegv",
+      "type": "library",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": [
+        "library recipe 'libsigsegv' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
+      ],
+      "warnings": [
+        "recipe 'libsigsegv' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "libsixel",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'libsixel' has platform-specific actions without libc when clauses and no musl fallback"
       ]
     },
     {
@@ -5114,6 +6124,22 @@
       ]
     },
     {
+      "name": "libspiro",
+      "type": "library",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": [
+        "library recipe 'libspiro' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
+      ],
+      "warnings": [
+        "recipe 'libspiro' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
       "name": "libssh2",
       "type": "library",
       "platforms": {
@@ -5125,6 +6151,22 @@
       "errors": null,
       "warnings": [
         "recipe 'libssh2' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "libtiff",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'libtiff' has platform-specific actions without libc when clauses and no musl fallback"
       ]
     },
     {
@@ -5141,6 +6183,54 @@
       ],
       "warnings": [
         "recipe 'libtommath' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "libudfread",
+      "type": "library",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": [
+        "library recipe 'libudfread' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
+      ],
+      "warnings": [
+        "recipe 'libudfread' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "libultrahdr",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'libultrahdr' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "libuninameslist",
+      "type": "library",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": [
+        "library recipe 'libuninameslist' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
+      ],
+      "warnings": [
+        "recipe 'libuninameslist' has platform-specific actions without libc when clauses and no musl fallback"
       ]
     },
     {
@@ -5173,6 +6263,20 @@
       ],
       "warnings": [
         "recipe 'libusb' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "libusb-compat",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": [
+        "recipe 'libusb-compat' has platform-specific actions without libc when clauses and no musl fallback"
       ]
     },
     {
@@ -5224,6 +6328,52 @@
       ]
     },
     {
+      "name": "libwapcaplet",
+      "type": "library",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": [
+        "library recipe 'libwapcaplet' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
+      ],
+      "warnings": [
+        "recipe 'libwapcaplet' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "libwmf",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": [
+        "recipe 'libwmf' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "libxcrypt",
+      "type": "library",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": [
+        "library recipe 'libxcrypt' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
+      ],
+      "warnings": [
+        "recipe 'libxcrypt' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
       "name": "libxlsxwriter",
       "type": "library",
       "platforms": {
@@ -5254,6 +6404,22 @@
       ]
     },
     {
+      "name": "libxmlb",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'libxmlb' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
       "name": "libxmp",
       "type": "library",
       "platforms": {
@@ -5267,6 +6433,38 @@
       ],
       "warnings": [
         "recipe 'libxmp' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "libxpm",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'libxpm' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "libzip",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'libzip' has platform-specific actions without libc when clauses and no musl fallback"
       ]
     },
     {
@@ -5301,6 +6499,70 @@
       "errors": null,
       "warnings": [
         "recipe 'lima' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "lld",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'lld' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "lmfit",
+      "type": "library",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": [
+        "library recipe 'lmfit' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
+      ],
+      "warnings": [
+        "recipe 'lmfit' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "logstalgia",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'logstalgia' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "lpeg",
+      "type": "library",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'lpeg' has platform-specific actions without libc when clauses and no musl fallback"
       ]
     },
     {
@@ -5385,6 +6647,22 @@
       ]
     },
     {
+      "name": "lzlib",
+      "type": "library",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": [
+        "library recipe 'lzlib' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
+      ],
+      "warnings": [
+        "recipe 'lzlib' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
       "name": "lzo",
       "type": "library",
       "platforms": {
@@ -5428,6 +6706,22 @@
       "errors": null,
       "warnings": [
         "recipe 'maturin' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "mbpoll",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'mbpoll' has platform-specific actions without libc when clauses and no musl fallback"
       ]
     },
     {
@@ -5622,6 +6916,36 @@
       ]
     },
     {
+      "name": "mmseqs2",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'mmseqs2' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "mmv",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": [
+        "recipe 'mmv' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
       "name": "mockgen",
       "type": "tool",
       "platforms": {
@@ -5667,6 +6991,22 @@
       ]
     },
     {
+      "name": "mpdecimal",
+      "type": "library",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": [
+        "library recipe 'mpdecimal' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
+      ],
+      "warnings": [
+        "recipe 'mpdecimal' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
       "name": "mpfr",
       "type": "library",
       "platforms": {
@@ -5695,6 +7035,38 @@
       ],
       "errors": null,
       "warnings": null
+    },
+    {
+      "name": "msgpack",
+      "type": "library",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": [
+        "library recipe 'msgpack' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
+      ],
+      "warnings": [
+        "recipe 'msgpack' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "multitail",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'multitail' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
     },
     {
       "name": "n",
@@ -5756,6 +7128,22 @@
       ]
     },
     {
+      "name": "ncmpcpp",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'ncmpcpp' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
       "name": "ncurses",
       "type": "tool",
       "platforms": {
@@ -5797,6 +7185,22 @@
       "warnings": null
     },
     {
+      "name": "nettle",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'nettle' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
       "name": "newsboat",
       "type": "tool",
       "platforms": {
@@ -5813,6 +7217,22 @@
       ]
     },
     {
+      "name": "ngspice",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'ngspice' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
       "name": "nix-portable",
       "type": "tool",
       "platforms": {
@@ -5825,6 +7245,20 @@
       ],
       "errors": null,
       "warnings": null
+    },
+    {
+      "name": "nixfmt",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": [
+        "recipe 'nixfmt' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
     },
     {
       "name": "node-red",
@@ -5899,6 +7333,22 @@
       "warnings": null
     },
     {
+      "name": "nudoku",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'nudoku' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
       "name": "nvidia-driver",
       "type": "tool",
       "platforms": {
@@ -5970,6 +7420,38 @@
       "warnings": null
     },
     {
+      "name": "opencore-amr",
+      "type": "library",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": [
+        "library recipe 'opencore-amr' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
+      ],
+      "warnings": [
+        "recipe 'opencore-amr' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "openfpgaloader",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'openfpgaloader' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
       "name": "openshift-cli",
       "type": "tool",
       "platforms": {
@@ -6028,6 +7510,36 @@
       ],
       "warnings": [
         "recipe 'opus' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "ormolu",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": [
+        "recipe 'ormolu' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "osm2pgsql",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'osm2pgsql' has platform-specific actions without libc when clauses and no musl fallback"
       ]
     },
     {
@@ -6102,6 +7614,20 @@
       ]
     },
     {
+      "name": "pandoc",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": [
+        "recipe 'pandoc' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
       "name": "par2",
       "type": "tool",
       "platforms": {
@@ -6116,6 +7642,22 @@
       ]
     },
     {
+      "name": "payload-dumper-go",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'payload-dumper-go' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
       "name": "pcre2",
       "type": "library",
       "platforms": {
@@ -6126,6 +7668,22 @@
       "gaps": null,
       "errors": null,
       "warnings": null
+    },
+    {
+      "name": "pdf2svg",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'pdf2svg' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
     },
     {
       "name": "pdsh",
@@ -6194,6 +7752,22 @@
       "warnings": null
     },
     {
+      "name": "pioneers",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'pioneers' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
       "name": "pipx",
       "type": "tool",
       "platforms": {
@@ -6221,6 +7795,22 @@
       ],
       "warnings": [
         "recipe 'pixman' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "pixz",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'pixz' has platform-specific actions without libc when clauses and no musl fallback"
       ]
     },
     {
@@ -6332,6 +7922,20 @@
       ]
     },
     {
+      "name": "postgres-language-server",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": [
+        "recipe 'postgres-language-server' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
       "name": "powerman",
       "type": "tool",
       "platforms": {
@@ -6343,6 +7947,22 @@
       "errors": null,
       "warnings": [
         "recipe 'powerman' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "pqiv",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'pqiv' has platform-specific actions without libc when clauses and no musl fallback"
       ]
     },
     {
@@ -6422,6 +8042,38 @@
       ]
     },
     {
+      "name": "projectm",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'projectm' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "protobuf",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'protobuf' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
       "name": "pulumi",
       "type": "tool",
       "platforms": {
@@ -6476,6 +8128,22 @@
       "errors": null,
       "warnings": [
         "recipe 'qrencode' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "radare2",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'radare2' has platform-specific actions without libc when clauses and no musl fallback"
       ]
     },
     {
@@ -6554,6 +8222,22 @@
       ]
     },
     {
+      "name": "readosm",
+      "type": "library",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": [
+        "library recipe 'readosm' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
+      ],
+      "warnings": [
+        "recipe 'readosm' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
       "name": "release-it",
       "type": "tool",
       "platforms": {
@@ -6582,6 +8266,22 @@
       ]
     },
     {
+      "name": "reproc",
+      "type": "library",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": [
+        "library recipe 'reproc' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
+      ],
+      "warnings": [
+        "recipe 'reproc' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
       "name": "resvg",
       "type": "tool",
       "platforms": {
@@ -6592,6 +8292,34 @@
       "gaps": null,
       "errors": null,
       "warnings": null
+    },
+    {
+      "name": "rgbds",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": [
+        "recipe 'rgbds' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "riscv64-elf-binutils",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": [
+        "recipe 'riscv64-elf-binutils' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
     },
     {
       "name": "riscv64-elf-gdb",
@@ -6610,6 +8338,20 @@
       ]
     },
     {
+      "name": "rlwrap",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": [
+        "recipe 'rlwrap' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
       "name": "rollup",
       "type": "tool",
       "platforms": {
@@ -6622,6 +8364,38 @@
       ],
       "errors": null,
       "warnings": null
+    },
+    {
+      "name": "rpds-py",
+      "type": "library",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": [
+        "library recipe 'rpds-py' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
+      ],
+      "warnings": [
+        "recipe 'rpds-py' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "rpm2cpio",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'rpm2cpio' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
     },
     {
       "name": "ruff",
@@ -6684,6 +8458,54 @@
       ]
     },
     {
+      "name": "rxvt-unicode",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'rxvt-unicode' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "s-lang",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 's-lang' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "sbcl",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'sbcl' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
       "name": "scaleway-cli",
       "type": "tool",
       "platforms": {
@@ -6728,6 +8550,34 @@
       ]
     },
     {
+      "name": "sdcv",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": [
+        "recipe 'sdcv' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "sdl12-compat",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": [
+        "recipe 'sdl12-compat' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
       "name": "sdl2",
       "type": "tool",
       "platforms": {
@@ -6757,6 +8607,22 @@
       ],
       "warnings": [
         "recipe 'sdl2-net' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "sdl3",
+      "type": "library",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": [
+        "library recipe 'sdl3' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
+      ],
+      "warnings": [
+        "recipe 'sdl3' has platform-specific actions without libc when clauses and no musl fallback"
       ]
     },
     {
@@ -6801,6 +8667,38 @@
       ]
     },
     {
+      "name": "sfsexp",
+      "type": "library",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": [
+        "library recipe 'sfsexp' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
+      ],
+      "warnings": [
+        "recipe 'sfsexp' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "shared-mime-info",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'shared-mime-info' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
       "name": "shellcheck",
       "type": "tool",
       "platforms": {
@@ -6829,6 +8727,38 @@
       ]
     },
     {
+      "name": "sigrok-cli",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'sigrok-cli' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "simdjson",
+      "type": "library",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": [
+        "library recipe 'simdjson' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
+      ],
+      "warnings": [
+        "recipe 'simdjson' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
       "name": "skaffold",
       "type": "tool",
       "platforms": {
@@ -6839,6 +8769,20 @@
       "gaps": null,
       "errors": null,
       "warnings": null
+    },
+    {
+      "name": "skylighting",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": [
+        "recipe 'skylighting' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
     },
     {
       "name": "smartmontools",
@@ -6854,6 +8798,20 @@
       "errors": null,
       "warnings": [
         "recipe 'smartmontools' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "smlfmt",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": [
+        "recipe 'smlfmt' has platform-specific actions without libc when clauses and no musl fallback"
       ]
     },
     {
@@ -6904,6 +8862,22 @@
       "errors": null,
       "warnings": [
         "recipe 'spatialite' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "speex",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'speex' has platform-specific actions without libc when clauses and no musl fallback"
       ]
     },
     {
@@ -6980,6 +8954,36 @@
       "errors": null,
       "warnings": [
         "recipe 'stern' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "stlink",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'stlink' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "stylish-haskell",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": [
+        "recipe 'stylish-haskell' has platform-specific actions without libc when clauses and no musl fallback"
       ]
     },
     {
@@ -7307,6 +9311,18 @@
       "warnings": [
         "recipe 'tree' has platform-specific actions without libc when clauses and no musl fallback"
       ]
+    },
+    {
+      "name": "tree-sitter",
+      "type": "library",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
     },
     {
       "name": "tree-sitter-cli",
@@ -7792,6 +9808,22 @@
       ]
     },
     {
+      "name": "xvid",
+      "type": "library",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": [
+        "library recipe 'xvid' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
+      ],
+      "warnings": [
+        "recipe 'xvid' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
       "name": "xz",
       "type": "tool",
       "platforms": {
@@ -7926,6 +9958,22 @@
       ],
       "warnings": [
         "recipe 'yyjson' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "zimg",
+      "type": "library",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": [
+        "library recipe 'zimg' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
+      ],
+      "warnings": [
+        "recipe 'zimg' has platform-specific actions without libc when clauses and no musl fallback"
       ]
     },
     {
