@@ -1,0 +1,50 @@
+[metadata]
+  name = "iniparser"
+  description = "Library for parsing ini files"
+  homepage = "https://gitlab.com/iniparser/iniparser"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "iniparser"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "iniparser"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libiniparser.a", "lib/libiniparser.so", "lib/libiniparser.so.4", "lib/libiniparser.so.4.2.6", "lib/pkgconfig/iniparser.pc", "include/iniparser/dictionary.h", "include/iniparser/iniparser.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "iniparser"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libiniparser.4.2.6.dylib", "lib/libiniparser.4.dylib", "lib/libiniparser.a", "lib/libiniparser.dylib", "lib/pkgconfig/iniparser.pc", "include/iniparser/dictionary.h", "include/iniparser/iniparser.h"]
+  [steps.when]
+    os = ["darwin"]

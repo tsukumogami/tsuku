@@ -1,0 +1,50 @@
+[metadata]
+  name = "libaec"
+  description = "Adaptive Entropy Coding implementing Golomb-Rice algorithm"
+  homepage = "https://gitlab.dkrz.de/k202009/libaec"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "libaec"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "libaec"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libaec.a", "lib/libaec.so", "lib/libaec.so.0", "lib/libaec.so.0.1.6", "lib/libsz.a", "lib/libsz.so", "lib/libsz.so.2", "lib/libsz.so.2.0.1", "include/libaec.h", "include/szlib.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "libaec"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libaec.0.1.6.dylib", "lib/libaec.0.dylib", "lib/libaec.a", "lib/libaec.dylib", "lib/libsz.2.0.1.dylib", "lib/libsz.2.dylib", "lib/libsz.a", "lib/libsz.dylib", "include/libaec.h", "include/szlib.h"]
+  [steps.when]
+    os = ["darwin"]

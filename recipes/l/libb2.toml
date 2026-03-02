@@ -1,0 +1,50 @@
+[metadata]
+  name = "libb2"
+  description = "Secure hashing function"
+  homepage = "https://blake2.net/"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "libb2"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "libb2"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libb2.a", "lib/libb2.so", "lib/libb2.so.1", "lib/libb2.so.1.0.4", "lib/pkgconfig/libb2.pc", "include/blake2.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "libb2"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libb2.1.dylib", "lib/libb2.a", "lib/libb2.dylib", "lib/pkgconfig/libb2.pc", "include/blake2.h"]
+  [steps.when]
+    os = ["darwin"]

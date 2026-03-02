@@ -1,0 +1,50 @@
+[metadata]
+  name = "ivykis"
+  description = "Async I/O-assisting library"
+  homepage = "https://sourceforge.net/projects/libivykis/"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "ivykis"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "ivykis"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libivykis.a", "lib/libivykis.so", "lib/libivykis.so.0", "lib/libivykis.so.0.6.2", "lib/pkgconfig/ivykis.pc", "include/iv.h", "include/iv_avl.h", "include/iv_event.h", "include/iv_event_raw.h", "include/iv_fd_pump.h", "include/iv_inotify.h", "include/iv_list.h", "include/iv_popen.h", "include/iv_signal.h", "include/iv_thread.h", "include/iv_tls.h", "include/iv_wait.h", "include/iv_work.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "ivykis"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libivykis.0.dylib", "lib/libivykis.a", "lib/libivykis.dylib", "lib/pkgconfig/ivykis.pc", "include/iv.h", "include/iv_avl.h", "include/iv_event.h", "include/iv_event_raw.h", "include/iv_fd_pump.h", "include/iv_list.h", "include/iv_popen.h", "include/iv_signal.h", "include/iv_thread.h", "include/iv_tls.h", "include/iv_wait.h", "include/iv_work.h"]
+  [steps.when]
+    os = ["darwin"]

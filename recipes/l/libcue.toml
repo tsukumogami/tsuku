@@ -1,0 +1,50 @@
+[metadata]
+  name = "libcue"
+  description = "Cue sheet parser library for C"
+  homepage = "https://github.com/lipnitsk/libcue"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "libcue"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "libcue"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libcue.so", "lib/libcue.so.2", "lib/libcue.so.2.3.0", "lib/pkgconfig/libcue.pc", "include/libcue/libcue.h", "include/libcue.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "libcue"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libcue.2.3.0.dylib", "lib/libcue.2.dylib", "lib/libcue.dylib", "lib/pkgconfig/libcue.pc", "include/libcue/libcue.h", "include/libcue.h"]
+  [steps.when]
+    os = ["darwin"]
