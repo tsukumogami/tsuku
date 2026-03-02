@@ -418,3 +418,33 @@ func (c *Config) LibDir(name, version string) string {
 func (c *Config) AppDir(name, version string) string {
 	return filepath.Join(c.AppsDir, fmt.Sprintf("%s-%s.app", name, version))
 }
+
+// EnvFile returns the path to the env file ($TSUKU_HOME/env).
+// This file is sourced by shell configurations to add tsuku directories to PATH.
+func (c *Config) EnvFile() string {
+	return filepath.Join(c.HomeDir, "env")
+}
+
+// envFileContent is the canonical content for $TSUKU_HOME/env.
+// Keep in sync with website/install.sh (lines 115-119).
+const envFileContent = `# tsuku shell configuration
+# Add tsuku directories to PATH
+export PATH="${TSUKU_HOME:-$HOME/.tsuku}/bin:${TSUKU_HOME:-$HOME/.tsuku}/tools/current:$PATH"
+`
+
+// EnsureEnvFile creates or updates $TSUKU_HOME/env with the standard PATH
+// configuration. The file is idempotent: if it already exists with the correct
+// content, it is not rewritten.
+func (c *Config) EnsureEnvFile() error {
+	path := c.EnvFile()
+
+	existing, err := os.ReadFile(path)
+	if err == nil && string(existing) == envFileContent {
+		return nil // Already correct
+	}
+
+	if err := os.WriteFile(path, []byte(envFileContent), 0644); err != nil {
+		return fmt.Errorf("failed to write env file %s: %w", path, err)
+	}
+	return nil
+}
