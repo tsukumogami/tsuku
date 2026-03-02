@@ -12,8 +12,6 @@
     "xz",
     "zstd",
   ]
-  # macOS: blocked by rpath issue (https://github.com/tsukumogami/tsuku/issues/1965)
-  unsupported_platforms = ["darwin/arm64", "darwin/amd64"]
   tier = 0
   type = ""
   llm_validation = "skipped"
