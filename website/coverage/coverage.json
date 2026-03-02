@@ -1,22 +1,22 @@
 {
-  "generated_at": "2026-03-02T12:42:42Z",
-  "total_recipes": 1376,
+  "generated_at": "2026-03-02T14:08:01Z",
+  "total_recipes": 1377,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 818,
-        "total": 1376,
-        "pct": 59.44767441860465
+        "supported": 819,
+        "total": 1377,
+        "pct": 59.47712418300654
       },
       "glibc": {
-        "supported": 1345,
-        "total": 1376,
-        "pct": 97.74709302325581
+        "supported": 1346,
+        "total": 1377,
+        "pct": 97.74872912127815
       },
       "musl": {
-        "supported": 1204,
-        "total": 1376,
-        "pct": 87.5
+        "supported": 1205,
+        "total": 1377,
+        "pct": 87.50907770515613
       }
     },
     "by_category": {
@@ -26,9 +26,9 @@
         "glibc_support": 142
       },
       "tool": {
-        "total": 1233,
-        "musl_support": 1062,
-        "glibc_support": 1203
+        "total": 1234,
+        "musl_support": 1063,
+        "glibc_support": 1204
       }
     }
   },
@@ -19901,6 +19901,20 @@
       "errors": null,
       "warnings": [
         "recipe 'wgcf' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "wget",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": [
+        "recipe 'wget' has platform-specific actions without libc when clauses and no musl fallback"
       ]
     },
     {
