@@ -2597,6 +2597,81 @@ func TestMergeWhenClause_MultiOSLeavesEmpty(t *testing.T) {
 	}
 }
 
+func TestMergeWhenClause_SingleLibc(t *testing.T) {
+	when := &WhenClause{Libc: []string{"musl"}}
+	result, err := MergeWhenClause(nil, when)
+	if err != nil {
+		t.Fatalf("MergeWhenClause(nil, libc=musl) error = %v", err)
+	}
+	if result.Libc != "musl" {
+		t.Errorf("MergeWhenClause().Libc = %q, want %q", result.Libc, "musl")
+	}
+}
+
+func TestMergeWhenClause_MultiLibcLeavesEmpty(t *testing.T) {
+	when := &WhenClause{Libc: []string{"glibc", "musl"}}
+	result, err := MergeWhenClause(nil, when)
+	if err != nil {
+		t.Fatalf("MergeWhenClause(nil, libc=[glibc,musl]) error = %v", err)
+	}
+	if result.Libc != "" {
+		t.Errorf("MergeWhenClause().Libc = %q, want empty (multi-libc)", result.Libc)
+	}
+}
+
+func TestMergeWhenClause_LibcConflict(t *testing.T) {
+	implicit := &Constraint{Libc: "glibc"}
+	when := &WhenClause{Libc: []string{"musl"}}
+	_, err := MergeWhenClause(implicit, when)
+	if err == nil {
+		t.Fatal("expected libc conflict error, got nil")
+	}
+}
+
+func TestMergeWhenClause_LibcRedundant(t *testing.T) {
+	implicit := &Constraint{Libc: "musl"}
+	when := &WhenClause{Libc: []string{"musl"}}
+	result, err := MergeWhenClause(implicit, when)
+	if err != nil {
+		t.Fatalf("MergeWhenClause(musl, libc=musl) error = %v", err)
+	}
+	if result.Libc != "musl" {
+		t.Errorf("MergeWhenClause().Libc = %q, want %q", result.Libc, "musl")
+	}
+}
+
+func TestConstraint_Clone_IncludesLibc(t *testing.T) {
+	c := &Constraint{
+		OS:   "linux",
+		Libc: "musl",
+	}
+	result := c.Clone()
+	if result.Libc != "musl" {
+		t.Errorf("Clone().Libc = %q, want %q", result.Libc, "musl")
+	}
+}
+
+func TestConstraint_Validate_LibcOnNonLinux(t *testing.T) {
+	c := &Constraint{OS: "darwin", Libc: "glibc"}
+	if err := c.Validate(); err == nil {
+		t.Error("expected validation error for libc on darwin, got nil")
+	}
+}
+
+func TestConstraint_Validate_LibcOnLinux(t *testing.T) {
+	c := &Constraint{OS: "linux", Libc: "musl"}
+	if err := c.Validate(); err != nil {
+		t.Errorf("unexpected validation error: %v", err)
+	}
+}
+
+func TestConstraint_Validate_LibcNoOS(t *testing.T) {
+	c := &Constraint{Libc: "glibc"}
+	if err := c.Validate(); err != nil {
+		t.Errorf("unexpected validation error: %v", err)
+	}
+}
+
 // Mock action for testing IsExternallyManagedFor
 type mockExternalAction struct{}
 

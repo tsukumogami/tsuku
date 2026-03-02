@@ -568,6 +568,172 @@ func TestSupportedPlatforms_UnsupportedPlatforms(t *testing.T) {
 	}
 }
 
+func TestAnalyzeRecipe_LibcMuslOnly(t *testing.T) {
+	// Recipe with only musl-constrained steps -> FamilySpecific with alpine
+	recipe := makeRecipeWithAnalysis([]stepWithAnalysis{
+		{
+			action:   "download",
+			analysis: &StepAnalysis{Constraint: &Constraint{OS: "linux", Libc: "musl"}},
+		},
+	})
+
+	analysis := AnalyzeRecipe(recipe)
+
+	if analysis.Policy != FamilySpecific {
+		t.Errorf("expected FamilySpecific, got %s", analysis.Policy)
+	}
+	if !analysis.FamiliesUsed["alpine"] {
+		t.Error("expected alpine in FamiliesUsed")
+	}
+	if len(analysis.FamiliesUsed) != 1 {
+		t.Errorf("expected 1 family, got %d: %v", len(analysis.FamiliesUsed), analysis.FamiliesUsed)
+	}
+}
+
+func TestAnalyzeRecipe_LibcGlibcOnly(t *testing.T) {
+	// Recipe with only glibc-constrained steps -> FamilySpecific with debian/rhel/arch/suse
+	recipe := makeRecipeWithAnalysis([]stepWithAnalysis{
+		{
+			action:   "download",
+			analysis: &StepAnalysis{Constraint: &Constraint{OS: "linux", Libc: "glibc"}},
+		},
+	})
+
+	analysis := AnalyzeRecipe(recipe)
+
+	if analysis.Policy != FamilySpecific {
+		t.Errorf("expected FamilySpecific, got %s", analysis.Policy)
+	}
+	for _, f := range []string{"debian", "rhel", "arch", "suse"} {
+		if !analysis.FamiliesUsed[f] {
+			t.Errorf("expected %s in FamiliesUsed", f)
+		}
+	}
+	if analysis.FamiliesUsed["alpine"] {
+		t.Error("alpine should not be in FamiliesUsed for glibc-only")
+	}
+	if len(analysis.FamiliesUsed) != 4 {
+		t.Errorf("expected 4 families, got %d: %v", len(analysis.FamiliesUsed), analysis.FamiliesUsed)
+	}
+}
+
+func TestAnalyzeRecipe_LibcBothSplit(t *testing.T) {
+	// Recipe with separate glibc and musl steps -> FamilySpecific with all 5 families
+	recipe := makeRecipeWithAnalysis([]stepWithAnalysis{
+		{
+			action:   "download",
+			analysis: &StepAnalysis{Constraint: &Constraint{OS: "linux", Libc: "glibc"}},
+		},
+		{
+			action:   "download",
+			analysis: &StepAnalysis{Constraint: &Constraint{OS: "linux", Libc: "musl"}},
+		},
+	})
+
+	analysis := AnalyzeRecipe(recipe)
+
+	if analysis.Policy != FamilySpecific {
+		t.Errorf("expected FamilySpecific, got %s", analysis.Policy)
+	}
+	for _, f := range AllLinuxFamilies {
+		if !analysis.FamiliesUsed[f] {
+			t.Errorf("expected %s in FamiliesUsed", f)
+		}
+	}
+	if len(analysis.FamiliesUsed) != len(AllLinuxFamilies) {
+		t.Errorf("expected %d families, got %d", len(AllLinuxFamilies), len(analysis.FamiliesUsed))
+	}
+}
+
+func TestAnalyzeRecipe_LibcMixedWithUnconstrained(t *testing.T) {
+	// Recipe with libc-constrained + unconstrained steps -> FamilyMixed
+	recipe := makeRecipeWithAnalysis([]stepWithAnalysis{
+		{
+			action:   "download",
+			analysis: &StepAnalysis{Constraint: &Constraint{OS: "linux", Libc: "musl"}},
+		},
+		{
+			action:   "download",
+			analysis: &StepAnalysis{Constraint: nil, FamilyVarying: false},
+		},
+	})
+
+	analysis := AnalyzeRecipe(recipe)
+
+	if analysis.Policy != FamilyMixed {
+		t.Errorf("expected FamilyMixed, got %s", analysis.Policy)
+	}
+	if !analysis.FamiliesUsed["alpine"] {
+		t.Error("expected alpine in FamiliesUsed")
+	}
+}
+
+func TestSupportedPlatforms_LibcMuslOnly(t *testing.T) {
+	// Only musl steps -> only alpine platforms
+	recipe := makeRecipeWithAnalysis([]stepWithAnalysis{
+		{
+			action:   "download",
+			analysis: &StepAnalysis{Constraint: &Constraint{OS: "linux", Libc: "musl"}},
+		},
+	})
+
+	platforms := SupportedPlatforms(recipe)
+
+	// Should have only alpine/amd64 + alpine/arm64 = 2
+	if len(platforms) != 2 {
+		t.Errorf("expected 2 platforms, got %d: %v", len(platforms), platforms)
+	}
+	for _, p := range platforms {
+		if p.OS != "linux" {
+			t.Errorf("expected linux, got %s", p.OS)
+		}
+		if p.LinuxFamily != "alpine" {
+			t.Errorf("expected LinuxFamily=alpine, got %s", p.LinuxFamily)
+		}
+	}
+}
+
+func TestAnalyzeRecipe_LibcWithLinuxFamilyPreference(t *testing.T) {
+	// Step with both LinuxFamily and Libc set -- LinuxFamily takes precedence
+	recipe := makeRecipeWithAnalysis([]stepWithAnalysis{
+		{
+			action:   "download",
+			analysis: &StepAnalysis{Constraint: &Constraint{OS: "linux", LinuxFamily: "alpine", Libc: "musl"}},
+		},
+	})
+
+	analysis := AnalyzeRecipe(recipe)
+
+	// LinuxFamily branch runs first, so FamilySpecific with only alpine
+	if analysis.Policy != FamilySpecific {
+		t.Errorf("expected FamilySpecific, got %s", analysis.Policy)
+	}
+	if !analysis.FamiliesUsed["alpine"] {
+		t.Error("expected alpine in FamiliesUsed")
+	}
+	if len(analysis.FamiliesUsed) != 1 {
+		t.Errorf("expected 1 family, got %d", len(analysis.FamiliesUsed))
+	}
+}
+
+func TestFamiliesForLibc(t *testing.T) {
+	musl := FamiliesForLibc("musl")
+	if len(musl) != 1 || musl[0] != "alpine" {
+		t.Errorf("FamiliesForLibc(musl) = %v, want [alpine]", musl)
+	}
+
+	glibc := FamiliesForLibc("glibc")
+	expected := map[string]bool{"debian": true, "rhel": true, "arch": true, "suse": true}
+	if len(glibc) != len(expected) {
+		t.Errorf("FamiliesForLibc(glibc) has %d families, want %d", len(glibc), len(expected))
+	}
+	for _, f := range glibc {
+		if !expected[f] {
+			t.Errorf("unexpected family %q in FamiliesForLibc(glibc)", f)
+		}
+	}
+}
+
 func TestSupportedPlatforms_FamilyVaryingWithSupportedOSLinux(t *testing.T) {
 	// Recipe with family-varying steps but linux-only metadata
 	recipe := makeRecipeWithAnalysis([]stepWithAnalysis{
