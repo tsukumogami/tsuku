@@ -1,0 +1,35 @@
+[metadata]
+  name = "libwmf"
+  description = "Library for converting WMF (Window Metafile Format) files"
+  homepage = "https://github.com/caolanm/libwmf"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["freetype", "jpeg-turbo", "libpng"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "libwmf"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "libwmf"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/libwmf-config", "bin/libwmf-fontmap", "bin/wmf2eps", "bin/wmf2fig", "bin/wmf2gd", "bin/wmf2svg"]
+
+[verify]
+  command = "libwmf-config --version"
+  pattern = ""

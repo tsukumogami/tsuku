@@ -1,0 +1,36 @@
+[metadata]
+  name = "libzip"
+  description = "C library for reading, creating, and modifying zip archives"
+  homepage = "https://libzip.org/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["xz", "zstd"]
+  unsupported_platforms = ["darwin/arm64", "darwin/amd64"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = ""
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "libzip"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/zipcmp", "bin/zipmerge", "bin/ziptool"]
+
+[verify]
+  command = "zipcmp --version"
+  pattern = ""
