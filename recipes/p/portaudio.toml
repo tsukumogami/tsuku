@@ -7,6 +7,8 @@
   tier = 0
   type = "library"
   llm_validation = "skipped"
+  # linux/arm64: homebrew bottle install fails on glibc containers
+  unsupported_platforms = ["linux/arm64"]
 
 [version]
   source = "homebrew"
