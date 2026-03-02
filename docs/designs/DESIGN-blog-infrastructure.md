@@ -39,8 +39,8 @@ Planned
 
 | Issue | Dependencies | Tier |
 |-------|--------------|------|
-| [#1974: Add Hugo project structure and templates](https://github.com/tsukumogami/tsuku/issues/1974) | None | testable |
-| _Creates the Hugo project at `blog/` with `hugo.toml`, three layout templates (`baseof.html`, `single.html`, `list.html`), blog-specific CSS, OG default image, and gitignore entry. This is the foundation that all other blog work builds on._ | | |
+| ~~[#1974: Add Hugo project structure and templates](https://github.com/tsukumogami/tsuku/issues/1974)~~ | ~~None~~ | ~~testable~~ |
+| ~~_Creates the Hugo project at `blog/` with `hugo.toml`, three layout templates (`baseof.html`, `single.html`, `list.html`), blog-specific CSS, OG default image, and gitignore entry. This is the foundation that all other blog work builds on._~~ | | |
 | [#1975: Add hello world validation post](https://github.com/tsukumogami/tsuku/issues/1975) | [#1974](https://github.com/tsukumogami/tsuku/issues/1974) | testable |
 | _Adds the section index and first blog post with frontmatter that exercises CSS styles (headings, code blocks, inline code). Validates that Hugo rendering, template blocks, and OpenGraph tags work end-to-end._ | | |
 | [#1976: Integrate Hugo build into CI pipeline](https://github.com/tsukumogami/tsuku/issues/1976) | [#1974](https://github.com/tsukumogami/tsuku/issues/1974), [#1975](https://github.com/tsukumogami/tsuku/issues/1975) | testable |
@@ -83,8 +83,9 @@ graph TD
     classDef needsDesign fill:#e1bee7
     classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
 
-    class I1974 ready
-    class I1975,I1976,I1977,I1978 blocked
+    class I1974 done
+    class I1975,I1977 ready
+    class I1976,I1978 blocked
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design
