@@ -4,6 +4,7 @@
   homepage = "https://github.com/sshock/AFFLIBv3"
   version_format = ""
   requires_sudo = false
+  unsupported_platforms = ["darwin/arm64", "darwin/amd64"]
   tier = 0
   type = ""
   llm_validation = "skipped"
