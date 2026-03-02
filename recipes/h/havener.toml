@@ -1,0 +1,35 @@
+[metadata]
+  name = "havener"
+  description = "Swiss army knife for Kubernetes tasks"
+  homepage = "https://github.com/homeport/havener"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+  unsupported_platforms = ["darwin/arm64", "darwin/amd64"]
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "havener"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "havener"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/havener"]
+
+[verify]
+  command = "havener --version"
+  pattern = ""
