@@ -1,0 +1,34 @@
+[metadata]
+  name = "chkrootkit"
+  description = "Rootkit detector"
+  homepage = "https://www.chkrootkit.org/"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "chkrootkit"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "chkrootkit"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/check_wtmpx", "bin/chkdirs", "bin/chklastlog", "bin/chkproc", "bin/chkrootkit", "bin/chkutmp", "bin/chkwtmp", "bin/ifpromisc", "bin/strings-static"]
+
+[verify]
+  command = "check_wtmpx --version"
+  pattern = ""
