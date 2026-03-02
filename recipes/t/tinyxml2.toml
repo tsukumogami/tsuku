@@ -1,0 +1,50 @@
+[metadata]
+  name = "tinyxml2"
+  description = "Improved tinyxml (in memory efficiency and size)"
+  homepage = "https://leethomason.github.io/tinyxml2/"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "tinyxml2"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "tinyxml2"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libtinyxml2.so", "lib/libtinyxml2.so.11", "lib/libtinyxml2.so.11.0.0", "lib/pkgconfig/tinyxml2.pc", "include/tinyxml2.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "tinyxml2"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libtinyxml2.11.0.0.dylib", "lib/libtinyxml2.11.dylib", "lib/libtinyxml2.dylib", "lib/pkgconfig/tinyxml2.pc", "include/tinyxml2.h"]
+  [steps.when]
+    os = ["darwin"]

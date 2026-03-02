@@ -1,0 +1,37 @@
+[metadata]
+  name = "cln"
+  description = "Class Library for Numbers"
+  homepage = "https://www.ginac.de/CLN/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["gmp"]
+  # macOS: dyld fails to load self-library libcln.6.dylib
+  unsupported_platforms = ["darwin/arm64", "darwin/amd64"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = ""
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "cln"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/pi"]
+
+[verify]
+  command = "pi --version"
+  pattern = ""
