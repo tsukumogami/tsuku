@@ -1,0 +1,35 @@
+[metadata]
+  name = "stm32flash"
+  description = "Open source flash program for STM32 using the ST serial bootloader"
+  homepage = "https://sourceforge.net/projects/stm32flash/"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+  unsupported_platforms = ["darwin/arm64", "darwin/amd64"]
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "stm32flash"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "stm32flash"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/stm32flash"]
+
+[verify]
+  command = "stm32flash --version"
+  pattern = ""
