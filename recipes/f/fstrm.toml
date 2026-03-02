@@ -1,0 +1,37 @@
+[metadata]
+  name = "fstrm"
+  description = "Frame Streams implementation in C"
+  homepage = "https://github.com/farsightsec/fstrm"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["libevent"]
+  # macOS: blocked by rpath issue (https://github.com/tsukumogami/tsuku/issues/1965)
+  unsupported_platforms = ["darwin/arm64", "darwin/amd64"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = ""
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "fstrm"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/fstrm_capture", "bin/fstrm_dump", "bin/fstrm_replay"]
+
+[verify]
+  command = "fstrm_capture --version"
+  pattern = ""
