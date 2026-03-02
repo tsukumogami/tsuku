@@ -27,11 +27,11 @@ None.
 
 ## Implementation Steps
 
-- [ ] **Step 1: Change `buildDeterministicCargoEnv` signature** -- Change from `(cargoPath, workDir string, execPaths []string)` to `(cargoPath, workDir string, ctx *ExecutionContext)`. Inside the function, read `ctx.ExecPaths` where `execPaths` was used before. Guard against nil ctx: if ctx is nil, skip dependency discovery (keeps the function safe for the rust-version-check call site which passes a minimal context).
+- [x] **Step 1: Change `buildDeterministicCargoEnv` signature** -- Change from `(cargoPath, workDir string, execPaths []string)` to `(cargoPath, workDir string, ctx *ExecutionContext)`. Inside the function, read `ctx.ExecPaths` where `execPaths` was used before. Guard against nil ctx: if ctx is nil, skip dependency discovery (keeps the function safe for the rust-version-check call site which passes a minimal context).
 
-- [ ] **Step 2: Add dependency path discovery** -- After the existing env setup (C compiler, etc.), iterate `ctx.Dependencies.InstallTime`. For each dep, resolve the directory using the same libs-then-tools fallback as `buildAutotoolsEnv`. Probe for `lib/pkgconfig`, `include/`, `lib/`, and `bin/` subdirectories. Collect paths into `pkgConfigPaths`, `includePaths`, `libraryPaths`, and `depBinPaths` slices.
+- [x] **Step 2: Add dependency path discovery** -- After the existing env setup (C compiler, etc.), iterate `ctx.Dependencies.InstallTime`. For each dep, resolve the directory using the same libs-then-tools fallback as `buildAutotoolsEnv`. Probe for `lib/pkgconfig`, `include/`, `lib/`, and `bin/` subdirectories. Collect paths into `pkgConfigPaths`, `includePaths`, `libraryPaths`, and `depBinPaths` slices.
 
-- [ ] **Step 3: Set environment variables from discovered paths** -- After the discovery loop, set:
+- [x] **Step 3: Set environment variables from discovered paths** -- After the discovery loop, set:
   - `PKG_CONFIG_PATH` from `pkgConfigPaths` (colon-separated)
   - `C_INCLUDE_PATH` from `includePaths` (colon-separated)
   - `LIBRARY_PATH` from `libraryPaths` (colon-separated)
@@ -39,20 +39,20 @@ None.
 
   Filter out any existing `PKG_CONFIG_PATH`, `C_INCLUDE_PATH`, and `LIBRARY_PATH` from the inherited environment to avoid stale values.
 
-- [ ] **Step 4: Update call sites** -- Update the 3 call sites in `cargo_build.go`:
+- [x] **Step 4: Update call sites** -- Update the 3 call sites in `cargo_build.go`:
   1. Line 151 (source_dir mode): `buildDeterministicCargoEnv(cargoPath, ctx.WorkDir, ctx)`
   2. Line 357 (rust version check in lock_data mode): `buildDeterministicCargoEnv(cargoPath, ctx.WorkDir, ctx)`
   3. Line 432 (lock_data build mode): `buildDeterministicCargoEnv(cargoPath, tempDir, ctx)`
 
-- [ ] **Step 5: Update existing tests** -- Change all `buildDeterministicCargoEnv(cargoPath, workDir, nil)` calls to pass either `nil` (if the function handles nil ctx gracefully) or a minimal `*ExecutionContext`. Verify existing assertions still pass.
+- [x] **Step 5: Update existing tests** -- Change all `buildDeterministicCargoEnv(cargoPath, workDir, nil)` calls to pass either `nil` (if the function handles nil ctx gracefully) or a minimal `*ExecutionContext`. Verify existing assertions still pass.
 
-- [ ] **Step 6: Add test for dependency env vars** -- Add `TestBuildDeterministicCargoEnv_WithDependencies` that creates mock dependency directories with `lib/pkgconfig`, `include/`, and `lib/` subdirectories, then verifies `PKG_CONFIG_PATH`, `C_INCLUDE_PATH`, and `LIBRARY_PATH` are set correctly. Mirror the pattern from `TestBuildAutotoolsEnv_WithDependencies`.
+- [x] **Step 6: Add test for dependency env vars** -- Add `TestBuildDeterministicCargoEnv_WithDependencies` that creates mock dependency directories with `lib/pkgconfig`, `include/`, and `lib/` subdirectories, then verifies `PKG_CONFIG_PATH`, `C_INCLUDE_PATH`, and `LIBRARY_PATH` are set correctly. Mirror the pattern from `TestBuildAutotoolsEnv_WithDependencies`.
 
-- [ ] **Step 7: Add test for no dependencies** -- Add `TestBuildDeterministicCargoEnv_NoDependencies` that verifies `PKG_CONFIG_PATH`, `C_INCLUDE_PATH`, and `LIBRARY_PATH` are NOT set when there are no install-time dependencies.
+- [x] **Step 7: Add test for no dependencies** -- Add `TestBuildDeterministicCargoEnv_NoDependencies` that verifies `PKG_CONFIG_PATH`, `C_INCLUDE_PATH`, and `LIBRARY_PATH` are NOT set when there are no install-time dependencies.
 
-- [ ] **Step 8: Add test for libs vs tools directory fallback** -- Add a test that creates a dependency in `LibsDir` and verifies it's found there (not in `ToolsDir`). Then test a dependency only in `ToolsDir` to verify the fallback.
+- [x] **Step 8: Add test for libs vs tools directory fallback** -- Add a test that creates a dependency in `LibsDir` and verifies it's found there (not in `ToolsDir`). Then test a dependency only in `ToolsDir` to verify the fallback.
 
-- [ ] **Step 9: Run tests and lint** -- Run `go test ./internal/actions/...`, `go vet ./...`, and `go build ./cmd/tsuku` to verify everything passes.
+- [x] **Step 9: Run tests and lint** -- Run `go test ./internal/actions/...`, `go vet ./...`, and `go build ./cmd/tsuku` to verify everything passes.
 
 ## Testing Strategy
 

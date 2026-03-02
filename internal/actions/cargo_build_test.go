@@ -823,6 +823,262 @@ func TestLinkCargoRegistryCache_ReplacesExistingRegistry(t *testing.T) {
 	}
 }
 
+func TestBuildDeterministicCargoEnv_WithDependencies(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	cargoPath := filepath.Join(tmpDir, "cargo")
+	workDir := t.TempDir()
+	libsDir := t.TempDir()
+	toolsDir := t.TempDir()
+
+	// Create a library dependency with lib/pkgconfig, include, and lib directories
+	opensslDir := filepath.Join(libsDir, "openssl-3.6.1")
+	for _, sub := range []string{"lib/pkgconfig", "include", "bin"} {
+		if err := os.MkdirAll(filepath.Join(opensslDir, sub), 0755); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	// Create a tool dependency with only a bin directory
+	pkgConfigDir := filepath.Join(toolsDir, "pkg-config-0.29.2")
+	if err := os.MkdirAll(filepath.Join(pkgConfigDir, "bin"), 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	ctx := &ExecutionContext{
+		Context:  context.Background(),
+		WorkDir:  workDir,
+		LibsDir:  libsDir,
+		ToolsDir: toolsDir,
+		Dependencies: ResolvedDeps{
+			InstallTime: map[string]string{
+				"openssl":    "3.6.1",
+				"pkg-config": "0.29.2",
+			},
+		},
+	}
+
+	env := buildDeterministicCargoEnv(cargoPath, workDir, ctx)
+
+	var pkgConfigPath, cIncludePath, libraryPath, pathValue string
+	for _, e := range env {
+		if strings.HasPrefix(e, "PKG_CONFIG_PATH=") {
+			pkgConfigPath = strings.TrimPrefix(e, "PKG_CONFIG_PATH=")
+		} else if strings.HasPrefix(e, "C_INCLUDE_PATH=") {
+			cIncludePath = strings.TrimPrefix(e, "C_INCLUDE_PATH=")
+		} else if strings.HasPrefix(e, "LIBRARY_PATH=") {
+			libraryPath = strings.TrimPrefix(e, "LIBRARY_PATH=")
+		} else if strings.HasPrefix(e, "PATH=") {
+			pathValue = strings.TrimPrefix(e, "PATH=")
+		}
+	}
+
+	// PKG_CONFIG_PATH should include openssl's pkgconfig dir
+	expectedPkgConfig := filepath.Join(opensslDir, "lib", "pkgconfig")
+	if pkgConfigPath == "" {
+		t.Error("PKG_CONFIG_PATH not set")
+	} else if !strings.Contains(pkgConfigPath, expectedPkgConfig) {
+		t.Errorf("PKG_CONFIG_PATH = %q, want to contain %q", pkgConfigPath, expectedPkgConfig)
+	}
+
+	// C_INCLUDE_PATH should include openssl's include dir
+	expectedInclude := filepath.Join(opensslDir, "include")
+	if cIncludePath == "" {
+		t.Error("C_INCLUDE_PATH not set")
+	} else if !strings.Contains(cIncludePath, expectedInclude) {
+		t.Errorf("C_INCLUDE_PATH = %q, want to contain %q", cIncludePath, expectedInclude)
+	}
+
+	// LIBRARY_PATH should include openssl's lib dir
+	expectedLib := filepath.Join(opensslDir, "lib")
+	if libraryPath == "" {
+		t.Error("LIBRARY_PATH not set")
+	} else if !strings.Contains(libraryPath, expectedLib) {
+		t.Errorf("LIBRARY_PATH = %q, want to contain %q", libraryPath, expectedLib)
+	}
+
+	// PATH should include both openssl/bin and pkg-config/bin
+	opensslBin := filepath.Join(opensslDir, "bin")
+	pkgConfigBin := filepath.Join(pkgConfigDir, "bin")
+	if !strings.Contains(pathValue, opensslBin) {
+		t.Errorf("PATH should contain openssl bin dir %q, got %q", opensslBin, pathValue)
+	}
+	if !strings.Contains(pathValue, pkgConfigBin) {
+		t.Errorf("PATH should contain pkg-config bin dir %q, got %q", pkgConfigBin, pathValue)
+	}
+}
+
+func TestBuildDeterministicCargoEnv_NoDependencies(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	cargoPath := filepath.Join(tmpDir, "cargo")
+	workDir := t.TempDir()
+
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: workDir,
+		Dependencies: ResolvedDeps{
+			InstallTime: map[string]string{},
+		},
+	}
+
+	env := buildDeterministicCargoEnv(cargoPath, workDir, ctx)
+
+	for _, e := range env {
+		if strings.HasPrefix(e, "PKG_CONFIG_PATH=") {
+			t.Error("PKG_CONFIG_PATH should not be set with no dependencies")
+		}
+		if strings.HasPrefix(e, "C_INCLUDE_PATH=") {
+			t.Error("C_INCLUDE_PATH should not be set with no dependencies")
+		}
+		if strings.HasPrefix(e, "LIBRARY_PATH=") {
+			t.Error("LIBRARY_PATH should not be set with no dependencies")
+		}
+	}
+}
+
+func TestBuildDeterministicCargoEnv_LibsDirPreferredOverToolsDir(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	cargoPath := filepath.Join(tmpDir, "cargo")
+	workDir := t.TempDir()
+	libsDir := t.TempDir()
+	toolsDir := t.TempDir()
+
+	// Create the same dependency in both libs and tools directories
+	libsDep := filepath.Join(libsDir, "zlib-1.3")
+	toolsDep := filepath.Join(toolsDir, "zlib-1.3")
+	for _, dir := range []string{libsDep, toolsDep} {
+		if err := os.MkdirAll(filepath.Join(dir, "lib", "pkgconfig"), 0755); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	ctx := &ExecutionContext{
+		Context:  context.Background(),
+		WorkDir:  workDir,
+		LibsDir:  libsDir,
+		ToolsDir: toolsDir,
+		Dependencies: ResolvedDeps{
+			InstallTime: map[string]string{"zlib": "1.3"},
+		},
+	}
+
+	env := buildDeterministicCargoEnv(cargoPath, workDir, ctx)
+
+	var pkgConfigPath string
+	for _, e := range env {
+		if strings.HasPrefix(e, "PKG_CONFIG_PATH=") {
+			pkgConfigPath = strings.TrimPrefix(e, "PKG_CONFIG_PATH=")
+		}
+	}
+
+	// Should use libs directory, not tools directory
+	expectedPkgConfig := filepath.Join(libsDep, "lib", "pkgconfig")
+	unexpectedPkgConfig := filepath.Join(toolsDep, "lib", "pkgconfig")
+
+	if !strings.Contains(pkgConfigPath, expectedPkgConfig) {
+		t.Errorf("PKG_CONFIG_PATH should use libs dir, got %q", pkgConfigPath)
+	}
+	if strings.Contains(pkgConfigPath, unexpectedPkgConfig) {
+		t.Errorf("PKG_CONFIG_PATH should not use tools dir when libs dir exists, got %q", pkgConfigPath)
+	}
+}
+
+func TestBuildDeterministicCargoEnv_FallsBackToToolsDir(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	cargoPath := filepath.Join(tmpDir, "cargo")
+	workDir := t.TempDir()
+	libsDir := t.TempDir()
+	toolsDir := t.TempDir()
+
+	// Only create the dependency in tools directory (not libs)
+	toolsDep := filepath.Join(toolsDir, "perl-5.38")
+	if err := os.MkdirAll(filepath.Join(toolsDep, "bin"), 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	ctx := &ExecutionContext{
+		Context:  context.Background(),
+		WorkDir:  workDir,
+		LibsDir:  libsDir,
+		ToolsDir: toolsDir,
+		Dependencies: ResolvedDeps{
+			InstallTime: map[string]string{"perl": "5.38"},
+		},
+	}
+
+	env := buildDeterministicCargoEnv(cargoPath, workDir, ctx)
+
+	var pathValue string
+	for _, e := range env {
+		if strings.HasPrefix(e, "PATH=") {
+			pathValue = strings.TrimPrefix(e, "PATH=")
+		}
+	}
+
+	// Should find bin/ from tools directory
+	expectedBin := filepath.Join(toolsDep, "bin")
+	if !strings.Contains(pathValue, expectedBin) {
+		t.Errorf("PATH should contain tools dep bin dir %q, got %q", expectedBin, pathValue)
+	}
+}
+
+func TestBuildDeterministicCargoEnv_MissingSubdirectories(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	cargoPath := filepath.Join(tmpDir, "cargo")
+	workDir := t.TempDir()
+	libsDir := t.TempDir()
+
+	// Create a library dependency with only a lib directory (no pkgconfig, no include, no bin)
+	depDir := filepath.Join(libsDir, "zstd-1.5.6")
+	if err := os.MkdirAll(filepath.Join(depDir, "lib"), 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	ctx := &ExecutionContext{
+		Context:  context.Background(),
+		WorkDir:  workDir,
+		LibsDir:  libsDir,
+		ToolsDir: t.TempDir(),
+		Dependencies: ResolvedDeps{
+			InstallTime: map[string]string{"zstd": "1.5.6"},
+		},
+	}
+
+	env := buildDeterministicCargoEnv(cargoPath, workDir, ctx)
+
+	var pkgConfigPath, cIncludePath, libraryPath string
+	for _, e := range env {
+		if strings.HasPrefix(e, "PKG_CONFIG_PATH=") {
+			pkgConfigPath = strings.TrimPrefix(e, "PKG_CONFIG_PATH=")
+		} else if strings.HasPrefix(e, "C_INCLUDE_PATH=") {
+			cIncludePath = strings.TrimPrefix(e, "C_INCLUDE_PATH=")
+		} else if strings.HasPrefix(e, "LIBRARY_PATH=") {
+			libraryPath = strings.TrimPrefix(e, "LIBRARY_PATH=")
+		}
+	}
+
+	// Only LIBRARY_PATH should be set (lib/ exists but not lib/pkgconfig or include/)
+	if pkgConfigPath != "" {
+		t.Errorf("PKG_CONFIG_PATH should not be set when lib/pkgconfig doesn't exist, got %q", pkgConfigPath)
+	}
+	if cIncludePath != "" {
+		t.Errorf("C_INCLUDE_PATH should not be set when include/ doesn't exist, got %q", cIncludePath)
+	}
+	expectedLib := filepath.Join(depDir, "lib")
+	if !strings.Contains(libraryPath, expectedLib) {
+		t.Errorf("LIBRARY_PATH should contain %q, got %q", expectedLib, libraryPath)
+	}
+}
+
 func TestLinkCargoRegistryCache_EmptyEnv(t *testing.T) {
 	t.Parallel()
 
