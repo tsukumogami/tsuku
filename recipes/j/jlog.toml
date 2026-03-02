@@ -1,14 +1,12 @@
 [metadata]
-  name = "gitui"
-  description = "Blazing fast terminal-ui for git written in rust"
-  homepage = "https://github.com/gitui-org/gitui"
+  name = "jlog"
+  description = "Pure C message queue with subscribers and publishers for logs"
+  homepage = "https://labs.omniti.com/labs/jlog"
   version_format = ""
   requires_sudo = false
-  runtime_dependencies = ["openssl"]
   tier = 0
   type = ""
   llm_validation = "skipped"
-supported_os = ["linux"]
 
 [version]
   source = ""
@@ -25,12 +23,12 @@ supported_os = ["linux"]
 
 [[steps]]
   action = "homebrew"
-  formula = "gitui"
+  formula = "jlog"
 
 [[steps]]
   action = "install_binaries"
-  binaries = ["bin/gitui"]
+  binaries = ["bin/jlog_change_endian", "bin/jlog_sanity_check", "bin/jlogctl", "bin/jlogtail"]
 
 [verify]
-  command = "gitui --version"
+  command = "jlog_change_endian --version"
   pattern = ""
