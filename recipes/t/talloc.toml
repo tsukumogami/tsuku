@@ -1,0 +1,50 @@
+[metadata]
+  name = "talloc"
+  description = "Hierarchical, reference-counted memory pool with destructors"
+  homepage = "https://talloc.samba.org/"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "talloc"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "talloc"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libtalloc.so", "lib/libtalloc.so.2", "lib/libtalloc.so.2.4.4", "lib/pkgconfig/talloc.pc", "include/talloc.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "talloc"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libtalloc.2.4.4.dylib", "lib/libtalloc.2.dylib", "lib/libtalloc.dylib", "lib/pkgconfig/talloc.pc", "include/talloc.h"]
+  [steps.when]
+    os = ["darwin"]

@@ -1,0 +1,37 @@
+[metadata]
+  name = "cracklib"
+  description = "LibCrack password checking library"
+  homepage = "https://github.com/cracklib/cracklib"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["gettext"]
+  # macOS: dyld fails to load self-library libcrack.2.dylib
+  unsupported_platforms = ["darwin/arm64", "darwin/amd64"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = ""
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "cracklib"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/cracklib-check", "bin/cracklib-format", "bin/cracklib-packer", "bin/cracklib-unpacker", "bin/cracklib-update", "bin/create-cracklib-dict"]
+
+[verify]
+  command = "cracklib-check --version"
+  pattern = ""
