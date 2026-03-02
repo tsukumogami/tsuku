@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"runtime"
 	"sort"
 	"strings"
 	"time"
@@ -371,7 +372,7 @@ func (m *Manager) createBinaryWrapper(toolName, version, binaryPath string, runt
 		return fmt.Errorf("invalid target path: %w", err)
 	}
 
-	// Build PATH additions from runtime deps in deterministic order
+	// Build PATH and library path additions from runtime deps in deterministic order
 	// Sort by dependency name to ensure reproducible wrapper content
 	depNames := make([]string, 0, len(runtimeDeps))
 	for depName := range runtimeDeps {
@@ -382,18 +383,29 @@ func (m *Manager) createBinaryWrapper(toolName, version, binaryPath string, runt
 	var pathAdditions []string
 	for _, depName := range depNames {
 		depVersion := runtimeDeps[depName]
-		depBinDir := m.config.ToolBinDir(depName, depVersion)
 
-		// Validate each PATH addition
+		// Skip library deps for PATH (they don't have user-facing binaries)
+		libDir := m.config.LibDir(depName, depVersion)
+		if info, err := os.Stat(libDir); err == nil && info.IsDir() {
+			continue
+		}
+
+		// It's a tool dependency — add its bin dir to PATH
+		depBinDir := m.config.ToolBinDir(depName, depVersion)
 		if err := validateShellSafePath(depBinDir); err != nil {
 			return fmt.Errorf("invalid dependency path for %s: %w", depName, err)
 		}
-
 		pathAdditions = append(pathAdditions, depBinDir)
 	}
 
+	// Collect library paths for DYLD_LIBRARY_PATH/LD_LIBRARY_PATH.
+	// Include all installed library lib/ directories to cover transitive
+	// dependencies (e.g., fontconfig -> freetype -> libpng). The dynamic
+	// linker needs all shared libraries in the chain to be discoverable.
+	libPathAdditions := m.collectLibraryPaths()
+
 	// Generate wrapper script content
-	content := generateWrapperScript(targetPath, pathAdditions)
+	content := generateWrapperScript(targetPath, pathAdditions, libPathAdditions)
 
 	// Use atomic write: write to temp file then rename
 	// This prevents TOCTOU race conditions and ensures atomicity
@@ -413,6 +425,32 @@ func (m *Manager) createBinaryWrapper(toolName, version, binaryPath string, runt
 	return nil
 }
 
+// collectLibraryPaths scans $TSUKU_HOME/libs/ for installed libraries and returns
+// their lib/ subdirectory paths. This covers both direct and transitive library
+// dependencies, since the dynamic linker needs all shared libraries in the chain.
+func (m *Manager) collectLibraryPaths() []string {
+	libsDir := m.config.LibsDir
+	entries, err := os.ReadDir(libsDir)
+	if err != nil {
+		return nil
+	}
+
+	var paths []string
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			continue
+		}
+		libLibDir := filepath.Join(libsDir, entry.Name(), "lib")
+		if info, err := os.Stat(libLibDir); err == nil && info.IsDir() {
+			if validateShellSafePath(libLibDir) == nil {
+				paths = append(paths, libLibDir)
+			}
+		}
+	}
+	sort.Strings(paths) // Deterministic order
+	return paths
+}
+
 // validateShellSafePath checks that a path doesn't contain characters that could
 // cause shell injection or break the wrapper script.
 func validateShellSafePath(path string) error {
@@ -427,8 +465,9 @@ func validateShellSafePath(path string) error {
 }
 
 // generateWrapperScript creates the content of a wrapper script.
-// The script prepends dependency paths to PATH and exec's the target binary.
-func generateWrapperScript(targetPath string, pathAdditions []string) string {
+// The script prepends dependency paths to PATH, sets library paths for dynamic
+// linking, and exec's the target binary.
+func generateWrapperScript(targetPath string, pathAdditions []string, libPathAdditions []string) string {
 	var sb strings.Builder
 	sb.WriteString("#!/bin/sh\n")
 
@@ -442,6 +481,20 @@ func generateWrapperScript(targetPath string, pathAdditions []string) string {
 			sb.WriteString(p)
 		}
 		sb.WriteString(":$PATH\"\n")
+	}
+
+	// Add library path for dynamic linker (macOS uses DYLD_LIBRARY_PATH, Linux uses LD_LIBRARY_PATH)
+	if len(libPathAdditions) > 0 {
+		libPaths := strings.Join(libPathAdditions, ":")
+		if runtime.GOOS == "darwin" {
+			sb.WriteString("DYLD_LIBRARY_PATH=\"")
+			sb.WriteString(libPaths)
+			sb.WriteString(":$DYLD_LIBRARY_PATH\"\nexport DYLD_LIBRARY_PATH\n")
+		} else {
+			sb.WriteString("LD_LIBRARY_PATH=\"")
+			sb.WriteString(libPaths)
+			sb.WriteString(":$LD_LIBRARY_PATH\"\nexport LD_LIBRARY_PATH\n")
+		}
 	}
 
 	sb.WriteString("exec \"")

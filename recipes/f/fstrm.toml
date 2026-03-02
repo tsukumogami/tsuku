@@ -5,7 +5,7 @@
   version_format = ""
   requires_sudo = false
   runtime_dependencies = ["libevent"]
-  # macOS: blocked by rpath issue (https://github.com/tsukumogami/tsuku/issues/1965)
+  # macOS: libevent bottle unavailable for arm64_sonoma
   unsupported_platforms = ["darwin/arm64", "darwin/amd64"]
   tier = 0
   type = ""

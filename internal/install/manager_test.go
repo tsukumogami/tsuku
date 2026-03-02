@@ -3,6 +3,7 @@ package install
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -11,7 +12,7 @@ import (
 )
 
 func TestGenerateWrapperScript_NoPathAdditions(t *testing.T) {
-	content := generateWrapperScript("/home/user/.tsuku/tools/mytool-1.0.0/bin/mytool", nil)
+	content := generateWrapperScript("/home/user/.tsuku/tools/mytool-1.0.0/bin/mytool", nil, nil)
 
 	// Should have shebang
 	if !strings.HasPrefix(content, "#!/bin/sh\n") {
@@ -31,7 +32,7 @@ func TestGenerateWrapperScript_NoPathAdditions(t *testing.T) {
 
 func TestGenerateWrapperScript_SinglePathAddition(t *testing.T) {
 	pathAdditions := []string{"/home/user/.tsuku/tools/nodejs-20.10.0/bin"}
-	content := generateWrapperScript("/home/user/.tsuku/tools/turbo-1.10.0/bin/turbo", pathAdditions)
+	content := generateWrapperScript("/home/user/.tsuku/tools/turbo-1.10.0/bin/turbo", pathAdditions, nil)
 
 	// Should have shebang
 	if !strings.HasPrefix(content, "#!/bin/sh\n") {
@@ -55,7 +56,7 @@ func TestGenerateWrapperScript_MultiplePathAdditions(t *testing.T) {
 		"/home/user/.tsuku/tools/nodejs-20.10.0/bin",
 		"/home/user/.tsuku/tools/python-3.11.0/bin",
 	}
-	content := generateWrapperScript("/home/user/.tsuku/tools/sometool-1.0.0/bin/sometool", pathAdditions)
+	content := generateWrapperScript("/home/user/.tsuku/tools/sometool-1.0.0/bin/sometool", pathAdditions, nil)
 
 	// Should have shebang
 	if !strings.HasPrefix(content, "#!/bin/sh\n") {
@@ -85,7 +86,7 @@ func TestGenerateWrapperScript_MultiplePathAdditions(t *testing.T) {
 
 func TestGenerateWrapperScript_CorrectLineOrder(t *testing.T) {
 	pathAdditions := []string{"/home/user/.tsuku/tools/nodejs-20.10.0/bin"}
-	content := generateWrapperScript("/home/user/.tsuku/tools/turbo-1.10.0/bin/turbo", pathAdditions)
+	content := generateWrapperScript("/home/user/.tsuku/tools/turbo-1.10.0/bin/turbo", pathAdditions, nil)
 
 	lines := strings.Split(content, "\n")
 
@@ -107,7 +108,7 @@ func TestGenerateWrapperScript_CorrectLineOrder(t *testing.T) {
 
 func TestGenerateWrapperScript_AbsolutePaths(t *testing.T) {
 	pathAdditions := []string{"/absolute/path/to/dep/bin"}
-	content := generateWrapperScript("/absolute/path/to/tool/bin/tool", pathAdditions)
+	content := generateWrapperScript("/absolute/path/to/tool/bin/tool", pathAdditions, nil)
 
 	// Verify absolute paths are used (no $HOME or relative paths)
 	if strings.Contains(content, "$HOME") {
@@ -128,13 +129,234 @@ func TestGenerateWrapperScript_AbsolutePaths(t *testing.T) {
 
 func TestGenerateWrapperScript_NoEmptyPathEntries(t *testing.T) {
 	// Empty path additions should not create empty PATH entries like "::$PATH"
-	content := generateWrapperScript("/path/to/tool", []string{})
+	content := generateWrapperScript("/path/to/tool", []string{}, nil)
 
 	if strings.Contains(content, "::") {
 		t.Errorf("wrapper should not have empty path entries (::), got: %s", content)
 	}
 	if strings.Contains(content, "PATH=\":") {
 		t.Errorf("wrapper should not start PATH with colon, got: %s", content)
+	}
+}
+
+func TestGenerateWrapperScript_WithLibPathAdditions(t *testing.T) {
+	libPaths := []string{"/home/user/.tsuku/libs/gettext-0.22.5/lib"}
+	content := generateWrapperScript("/home/user/.tsuku/tools/fontconfig-2.15.0/bin/fc-list", nil, libPaths)
+
+	// Should have shebang
+	if !strings.HasPrefix(content, "#!/bin/sh\n") {
+		t.Errorf("wrapper should start with shebang, got: %s", content)
+	}
+
+	// Should NOT have standalone PATH= line (no path additions)
+	// Check specifically for "PATH=" at start of line, not DYLD_LIBRARY_PATH
+	if strings.Contains(content, "\nPATH=") {
+		t.Errorf("wrapper should not have PATH= line, got: %s", content)
+	}
+
+	// Should have library path variable (platform-specific)
+	if runtime.GOOS == "darwin" {
+		if !strings.Contains(content, "DYLD_LIBRARY_PATH=") {
+			t.Errorf("wrapper should have DYLD_LIBRARY_PATH on darwin, got: %s", content)
+		}
+		if !strings.Contains(content, "export DYLD_LIBRARY_PATH") {
+			t.Errorf("wrapper should export DYLD_LIBRARY_PATH, got: %s", content)
+		}
+	} else {
+		if !strings.Contains(content, "LD_LIBRARY_PATH=") {
+			t.Errorf("wrapper should have LD_LIBRARY_PATH on linux, got: %s", content)
+		}
+		if !strings.Contains(content, "export LD_LIBRARY_PATH") {
+			t.Errorf("wrapper should export LD_LIBRARY_PATH, got: %s", content)
+		}
+	}
+
+	if !strings.Contains(content, "/home/user/.tsuku/libs/gettext-0.22.5/lib") {
+		t.Errorf("wrapper should contain library path, got: %s", content)
+	}
+
+	// Should have exec
+	if !strings.Contains(content, `exec "/home/user/.tsuku/tools/fontconfig-2.15.0/bin/fc-list" "$@"`) {
+		t.Errorf("wrapper should have exec line, got: %s", content)
+	}
+}
+
+func TestGenerateWrapperScript_BothPathAndLibPath(t *testing.T) {
+	pathAdditions := []string{"/home/user/.tsuku/tools/nodejs-20.10.0/bin"}
+	libPaths := []string{
+		"/home/user/.tsuku/libs/gettext-0.22.5/lib",
+		"/home/user/.tsuku/libs/freetype-2.13.3/lib",
+	}
+	content := generateWrapperScript("/home/user/.tsuku/tools/fontconfig-2.15.0/bin/fc-list", pathAdditions, libPaths)
+
+	// Should have PATH line
+	if !strings.Contains(content, "PATH=") {
+		t.Errorf("wrapper should have PATH= line, got: %s", content)
+	}
+
+	// Should have library path
+	if runtime.GOOS == "darwin" {
+		if !strings.Contains(content, "DYLD_LIBRARY_PATH=") {
+			t.Errorf("wrapper should have DYLD_LIBRARY_PATH, got: %s", content)
+		}
+	} else {
+		if !strings.Contains(content, "LD_LIBRARY_PATH=") {
+			t.Errorf("wrapper should have LD_LIBRARY_PATH, got: %s", content)
+		}
+	}
+
+	// Both lib paths should be present
+	if !strings.Contains(content, "gettext-0.22.5/lib") {
+		t.Errorf("wrapper should contain gettext lib path, got: %s", content)
+	}
+	if !strings.Contains(content, "freetype-2.13.3/lib") {
+		t.Errorf("wrapper should contain freetype lib path, got: %s", content)
+	}
+
+	// Should have exec
+	if !strings.Contains(content, "exec ") {
+		t.Errorf("wrapper should have exec line, got: %s", content)
+	}
+}
+
+func TestGenerateWrapperScript_NoLibPathWhenEmpty(t *testing.T) {
+	content := generateWrapperScript("/path/to/tool", nil, nil)
+
+	if runtime.GOOS == "darwin" {
+		if strings.Contains(content, "DYLD_LIBRARY_PATH") {
+			t.Errorf("wrapper should not have DYLD_LIBRARY_PATH when no lib paths, got: %s", content)
+		}
+	} else {
+		if strings.Contains(content, "LD_LIBRARY_PATH") {
+			t.Errorf("wrapper should not have LD_LIBRARY_PATH when no lib paths, got: %s", content)
+		}
+	}
+}
+
+func TestCreateBinaryWrapper_LibraryDependency(t *testing.T) {
+	cfg, cleanup := testutil.NewTestConfig(t)
+	defer cleanup()
+
+	mgr := New(cfg)
+
+	// Create tool directory structure
+	toolDir := cfg.ToolDir("fontconfig", "2.15.0")
+	binDir := filepath.Join(toolDir, "bin")
+	if err := os.MkdirAll(binDir, 0755); err != nil {
+		t.Fatalf("failed to create bin dir: %v", err)
+	}
+
+	// Create a fake library directory (simulating gettext installed as a library)
+	libDir := cfg.LibDir("gettext", "0.22.5")
+	libLibDir := filepath.Join(libDir, "lib")
+	if err := os.MkdirAll(libLibDir, 0755); err != nil {
+		t.Fatalf("failed to create lib dir: %v", err)
+	}
+
+	// Runtime deps map includes gettext (which is a library)
+	runtimeDeps := map[string]string{"gettext": "0.22.5"}
+
+	err := mgr.createBinaryWrapper("fontconfig", "2.15.0", "bin/fc-list", runtimeDeps)
+	if err != nil {
+		t.Fatalf("createBinaryWrapper() error = %v", err)
+	}
+
+	// Read the wrapper content
+	wrapperPath := cfg.CurrentSymlink("fc-list")
+	content, err := os.ReadFile(wrapperPath)
+	if err != nil {
+		t.Fatalf("failed to read wrapper: %v", err)
+	}
+
+	// Should NOT have standalone PATH addition (gettext is a library, not a tool)
+	// Check specifically for "PATH=" at start of line, not DYLD_LIBRARY_PATH
+	if strings.Contains(string(content), "\nPATH=") {
+		t.Errorf("wrapper should not have PATH for library deps, got: %s", content)
+	}
+
+	// Should have library path (collectLibraryPaths scans all libs/)
+	if runtime.GOOS == "darwin" {
+		if !strings.Contains(string(content), "DYLD_LIBRARY_PATH=") {
+			t.Errorf("wrapper should have DYLD_LIBRARY_PATH for library dep, got: %s", content)
+		}
+	} else {
+		if !strings.Contains(string(content), "LD_LIBRARY_PATH=") {
+			t.Errorf("wrapper should have LD_LIBRARY_PATH for library dep, got: %s", content)
+		}
+	}
+
+	if !strings.Contains(string(content), "gettext-0.22.5/lib") {
+		t.Errorf("wrapper should contain gettext lib path, got: %s", content)
+	}
+}
+
+func TestCreateBinaryWrapper_MixedDependencies(t *testing.T) {
+	cfg, cleanup := testutil.NewTestConfig(t)
+	defer cleanup()
+
+	mgr := New(cfg)
+
+	// Create tool directory structure
+	toolDir := cfg.ToolDir("mytool", "1.0.0")
+	binDir := filepath.Join(toolDir, "bin")
+	if err := os.MkdirAll(binDir, 0755); err != nil {
+		t.Fatalf("failed to create bin dir: %v", err)
+	}
+
+	// Create a library dependency (gettext in libs/)
+	libDir := cfg.LibDir("gettext", "0.22.5")
+	libLibDir := filepath.Join(libDir, "lib")
+	if err := os.MkdirAll(libLibDir, 0755); err != nil {
+		t.Fatalf("failed to create lib dir: %v", err)
+	}
+
+	// Create a tool dependency (nodejs in tools/)
+	nodejsToolDir := cfg.ToolDir("nodejs", "20.10.0")
+	nodejsBinDir := filepath.Join(nodejsToolDir, "bin")
+	if err := os.MkdirAll(nodejsBinDir, 0755); err != nil {
+		t.Fatalf("failed to create nodejs bin dir: %v", err)
+	}
+
+	// Runtime deps: one library, one tool
+	runtimeDeps := map[string]string{
+		"gettext": "0.22.5",
+		"nodejs":  "20.10.0",
+	}
+
+	err := mgr.createBinaryWrapper("mytool", "1.0.0", "bin/mytool", runtimeDeps)
+	if err != nil {
+		t.Fatalf("createBinaryWrapper() error = %v", err)
+	}
+
+	// Read the wrapper content
+	wrapperPath := cfg.CurrentSymlink("mytool")
+	content, err := os.ReadFile(wrapperPath)
+	if err != nil {
+		t.Fatalf("failed to read wrapper: %v", err)
+	}
+
+	contentStr := string(content)
+
+	// Should have PATH for nodejs (tool dep)
+	if !strings.Contains(contentStr, "PATH=") {
+		t.Errorf("wrapper should have PATH for tool dep, got: %s", contentStr)
+	}
+	if !strings.Contains(contentStr, "nodejs-20.10.0/bin") {
+		t.Errorf("wrapper should contain nodejs bin path, got: %s", contentStr)
+	}
+
+	// Should have library path for gettext (library dep)
+	if runtime.GOOS == "darwin" {
+		if !strings.Contains(contentStr, "DYLD_LIBRARY_PATH=") {
+			t.Errorf("wrapper should have DYLD_LIBRARY_PATH, got: %s", contentStr)
+		}
+	} else {
+		if !strings.Contains(contentStr, "LD_LIBRARY_PATH=") {
+			t.Errorf("wrapper should have LD_LIBRARY_PATH, got: %s", contentStr)
+		}
+	}
+	if !strings.Contains(contentStr, "gettext-0.22.5/lib") {
+		t.Errorf("wrapper should contain gettext lib path, got: %s", contentStr)
 	}
 }
 
