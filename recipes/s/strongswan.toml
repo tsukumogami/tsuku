@@ -1,21 +1,20 @@
 [metadata]
-  name = "gitui"
-  description = "Blazing fast terminal-ui for git written in rust"
-  homepage = "https://github.com/gitui-org/gitui"
+  name = "strongswan"
+  description = "VPN based on IPsec"
+  homepage = "https://www.strongswan.org"
   version_format = ""
   requires_sudo = false
-  runtime_dependencies = ["openssl"]
   tier = 0
   type = ""
   llm_validation = "skipped"
-supported_os = ["linux"]
+  runtime_dependencies = ["openssl"]
 
 [version]
-  source = ""
+  source = "homebrew"
   github_repo = ""
   tag_prefix = ""
   module = ""
-  formula = ""
+  formula = "strongswan"
   cask = ""
   tap = ""
   fossil_repo = ""
@@ -25,12 +24,12 @@ supported_os = ["linux"]
 
 [[steps]]
   action = "homebrew"
-  formula = "gitui"
+  formula = "strongswan"
 
 [[steps]]
   action = "install_binaries"
-  binaries = ["bin/gitui"]
+  binaries = ["bin/charon-cmd", "bin/ipsec", "bin/pki", "bin/swanctl"]
 
 [verify]
-  command = "gitui --version"
+  command = "charon-cmd --version"
   pattern = ""
