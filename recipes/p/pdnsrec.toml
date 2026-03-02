@@ -1,0 +1,36 @@
+[metadata]
+  name = "pdnsrec"
+  description = "Non-authoritative/recursing DNS server"
+  homepage = "https://www.powerdns.com/powerdns-recursor"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["lua", "openssl"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+  unsupported_platforms = ["darwin/arm64", "darwin/amd64"]
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "pdnsrec"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "pdnsrec"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/rec_control"]
+
+[verify]
+  command = "rec_control --version"
+  pattern = ""
