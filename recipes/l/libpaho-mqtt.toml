@@ -1,21 +1,20 @@
 [metadata]
-  name = "gitui"
-  description = "Blazing fast terminal-ui for git written in rust"
-  homepage = "https://github.com/gitui-org/gitui"
+  name = "libpaho-mqtt"
+  description = "Eclipse Paho C client library for MQTT"
+  homepage = "https://eclipse-paho.github.io/paho.mqtt.c/MQTTClient/html/"
   version_format = ""
   requires_sudo = false
   runtime_dependencies = ["openssl"]
   tier = 0
   type = ""
   llm_validation = "skipped"
-supported_os = ["linux"]
 
 [version]
-  source = ""
+  source = "homebrew"
   github_repo = ""
   tag_prefix = ""
   module = ""
-  formula = ""
+  formula = "libpaho-mqtt"
   cask = ""
   tap = ""
   fossil_repo = ""
@@ -25,12 +24,12 @@ supported_os = ["linux"]
 
 [[steps]]
   action = "homebrew"
-  formula = "gitui"
+  formula = "libpaho-mqtt"
 
 [[steps]]
   action = "install_binaries"
-  binaries = ["bin/gitui"]
+  binaries = ["bin/MQTTVersion"]
 
 [verify]
-  command = "gitui --version"
+  command = "MQTTVersion --version"
   pattern = ""
