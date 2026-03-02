@@ -1,0 +1,50 @@
+[metadata]
+  name = "fmt"
+  description = "Open-source formatting library for C++"
+  homepage = "https://fmt.dev/"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "fmt"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "fmt"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libfmt.a", "lib/libfmt.so", "lib/libfmt.so.12", "lib/libfmt.so.12.1.0", "lib/pkgconfig/fmt.pc", "include/fmt/args.h", "include/fmt/base.h", "include/fmt/chrono.h", "include/fmt/color.h", "include/fmt/compile.h", "include/fmt/core.h", "include/fmt/format-inl.h", "include/fmt/format.h", "include/fmt/os.h", "include/fmt/ostream.h", "include/fmt/printf.h", "include/fmt/ranges.h", "include/fmt/std.h", "include/fmt/xchar.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "fmt"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libfmt.12.1.0.dylib", "lib/libfmt.12.dylib", "lib/libfmt.a", "lib/libfmt.dylib", "lib/pkgconfig/fmt.pc", "include/fmt/args.h", "include/fmt/base.h", "include/fmt/chrono.h", "include/fmt/color.h", "include/fmt/compile.h", "include/fmt/core.h", "include/fmt/format-inl.h", "include/fmt/format.h", "include/fmt/os.h", "include/fmt/ostream.h", "include/fmt/printf.h", "include/fmt/ranges.h", "include/fmt/std.h", "include/fmt/xchar.h"]
+  [steps.when]
+    os = ["darwin"]

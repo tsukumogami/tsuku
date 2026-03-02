@@ -1,0 +1,50 @@
+[metadata]
+  name = "json-c"
+  description = "JSON parser for C"
+  homepage = "https://github.com/json-c/json-c/wiki"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "json-c"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "json-c"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libjson-c.a", "lib/libjson-c.so", "lib/libjson-c.so.5", "lib/libjson-c.so.5.4.0", "lib/pkgconfig/json-c.pc", "include/json-c/arraylist.h", "include/json-c/debug.h", "include/json-c/json.h", "include/json-c/json_c_version.h", "include/json-c/json_config.h", "include/json-c/json_inttypes.h", "include/json-c/json_object.h", "include/json-c/json_object_iterator.h", "include/json-c/json_patch.h", "include/json-c/json_pointer.h", "include/json-c/json_tokener.h", "include/json-c/json_types.h", "include/json-c/json_util.h", "include/json-c/json_visit.h", "include/json-c/linkhash.h", "include/json-c/printbuf.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "json-c"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libjson-c.5.4.0.dylib", "lib/libjson-c.5.dylib", "lib/libjson-c.a", "lib/libjson-c.dylib", "lib/pkgconfig/json-c.pc", "include/json-c/arraylist.h", "include/json-c/debug.h", "include/json-c/json.h", "include/json-c/json_c_version.h", "include/json-c/json_config.h", "include/json-c/json_inttypes.h", "include/json-c/json_object.h", "include/json-c/json_object_iterator.h", "include/json-c/json_patch.h", "include/json-c/json_pointer.h", "include/json-c/json_tokener.h", "include/json-c/json_types.h", "include/json-c/json_util.h", "include/json-c/json_visit.h", "include/json-c/linkhash.h", "include/json-c/printbuf.h"]
+  [steps.when]
+    os = ["darwin"]
