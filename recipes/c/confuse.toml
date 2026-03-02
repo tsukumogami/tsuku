@@ -1,0 +1,50 @@
+[metadata]
+  name = "confuse"
+  description = "Configuration file parser library written in C"
+  homepage = "https://github.com/libconfuse/libconfuse"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "confuse"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "confuse"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libconfuse.a", "lib/libconfuse.so", "lib/libconfuse.so.2", "lib/libconfuse.so.2.1.0", "lib/pkgconfig/libconfuse.pc", "include/confuse.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "confuse"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libconfuse.2.dylib", "lib/libconfuse.a", "lib/libconfuse.dylib", "lib/pkgconfig/libconfuse.pc", "include/confuse.h"]
+  [steps.when]
+    os = ["darwin"]

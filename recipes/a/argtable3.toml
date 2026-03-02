@@ -1,0 +1,50 @@
+[metadata]
+  name = "argtable3"
+  description = "ANSI C library for parsing GNU-style command-line options"
+  homepage = "https://www.argtable.org"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "argtable3"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "argtable3"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libargtable3.so", "lib/libargtable3.so.0", "lib/libargtable3.so.0.0.0", "lib/pkgconfig/argtable3.pc", "include/argtable3.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "argtable3"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libargtable3.0.0.0.dylib", "lib/libargtable3.0.dylib", "lib/libargtable3.dylib", "lib/pkgconfig/argtable3.pc", "include/argtable3.h"]
+  [steps.when]
+    os = ["darwin"]
