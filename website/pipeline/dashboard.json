@@ -1,11 +1,11 @@
 {
-  "generated_at": "2026-03-02T11:49:51Z",
+  "generated_at": "2026-03-02T11:53:33Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "excluded": 4,
-      "pending": 4840,
-      "success": 461
+      "pending": 4817,
+      "success": 484
     },
     "by_tier": {
       "1": {
@@ -18,8 +18,8 @@
       },
       "3": {
         "excluded": 4,
-        "pending": 4802,
-        "success": 454
+        "pending": 4779,
+        "success": 477
       }
     },
     "by_ecosystem": {
@@ -47,8 +47,8 @@
         "total": 8
       },
       "homebrew": {
-        "pending": 4642,
-        "success": 241,
+        "pending": 4619,
+        "success": 264,
         "total": 4883
       },
       "manual": {
@@ -11974,13 +11974,6 @@
           "failure_count": 1
         },
         {
-          "id": "homebrew:gucharmap",
-          "name": "gucharmap",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
           "id": "homebrew:guepard-corp/guepard/guepard",
           "name": "guepard-corp/guepard/guepard",
           "ecosystem": "homebrew",
@@ -12011,13 +12004,6 @@
         {
           "id": "homebrew:gup",
           "name": "gup",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "homebrew:gupnp",
-          "name": "gupnp",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
@@ -12289,20 +12275,6 @@
           "failure_count": 0
         },
         {
-          "id": "homebrew:haskell-language-server",
-          "name": "haskell-language-server",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "homebrew:haskell-stack",
-          "name": "haskell-stack",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
           "id": "npm:hasura-cli",
           "name": "hasura-cli",
           "ecosystem": "npm",
@@ -12310,13 +12282,6 @@
           "category": "install_failed",
           "failure_count": 2,
           "next_retry_at": "2026-02-20T21:31:53Z"
-        },
-        {
-          "id": "homebrew:hatari",
-          "name": "hatari",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
         },
         {
           "id": "homebrew:hatch",
@@ -12471,13 +12436,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "homebrew:helmfile",
-          "name": "helmfile",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
         },
         {
           "id": "homebrew:helmify",
@@ -12655,20 +12613,6 @@
           "failure_count": 0
         },
         {
-          "id": "homebrew:hledger",
-          "name": "hledger",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "homebrew:hlint",
-          "name": "hlint",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
           "id": "homebrew:hmmer",
           "name": "hmmer",
           "ecosystem": "homebrew",
@@ -12678,13 +12622,6 @@
         {
           "id": "homebrew:homeassistant-cli",
           "name": "homeassistant-cli",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "homebrew:homebank",
-          "name": "homebank",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
@@ -13033,22 +12970,8 @@
           "failure_count": 0
         },
         {
-          "id": "homebrew:i686-elf-binutils",
-          "name": "i686-elf-binutils",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
           "id": "homebrew:i686-elf-gcc",
           "name": "i686-elf-gcc",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "homebrew:i686-elf-grub",
-          "name": "i686-elf-grub",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
@@ -13140,13 +13063,6 @@
         {
           "id": "homebrew:iconsur",
           "name": "iconsur",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "homebrew:icoutils",
-          "name": "icoutils",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
@@ -13397,13 +13313,6 @@
           "failure_count": 0
         },
         {
-          "id": "homebrew:inetutils",
-          "name": "inetutils",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
           "id": "homebrew:infisical",
           "name": "infisical",
           "ecosystem": "homebrew",
@@ -13469,13 +13378,6 @@
         {
           "id": "homebrew:iniparser",
           "name": "iniparser",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "homebrew:innoextract",
-          "name": "innoextract",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
@@ -19713,13 +19615,6 @@
           "failure_count": 0
         },
         {
-          "id": "homebrew:mpdecimal",
-          "name": "mpdecimal",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 1
-        },
-        {
           "id": "homebrew:mpg123",
           "name": "mpg123",
           "ecosystem": "homebrew",
@@ -19806,13 +19701,6 @@
         {
           "id": "homebrew:msedit",
           "name": "msedit",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "homebrew:msgpack",
-          "name": "msgpack",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
@@ -21552,13 +21440,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "homebrew:opencore-amr",
-          "name": "opencore-amr",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 1
         },
         {
           "id": "homebrew:opencsg",
@@ -26488,13 +26369,6 @@
           "failure_count": 0
         },
         {
-          "id": "homebrew:rpds-py",
-          "name": "rpds-py",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
           "id": "homebrew:rpm",
           "name": "rpm",
           "ecosystem": "homebrew",
@@ -27328,13 +27202,6 @@
           "failure_count": 0
         },
         {
-          "id": "homebrew:sdl3",
-          "name": "sdl3",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
           "id": "homebrew:sdl3_image",
           "name": "sdl3_image",
           "ecosystem": "homebrew",
@@ -28081,13 +27948,6 @@
         {
           "id": "homebrew:silicon",
           "name": "silicon",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "homebrew:simdjson",
-          "name": "simdjson",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
@@ -31091,13 +30951,6 @@
           "failure_count": 0
         },
         {
-          "id": "homebrew:tree-sitter",
-          "name": "tree-sitter",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
           "id": "homebrew:tree-sitter@0.25",
           "name": "tree-sitter@0.25",
           "ecosystem": "homebrew",
@@ -33603,13 +33456,6 @@
           "failure_count": 0
         },
         {
-          "id": "homebrew:xvid",
-          "name": "xvid",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 1
-        },
-        {
           "id": "homebrew:xwmx/taps/nb",
           "name": "xwmx/taps/nb",
           "ecosystem": "homebrew",
@@ -34000,13 +33846,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "homebrew:zimg",
-          "name": "zimg",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
         },
         {
           "id": "homebrew:zinit",
@@ -35662,6 +35501,13 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:gucharmap",
+          "name": "gucharmap",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
           "id": "npm:gulp-cli",
           "name": "gulp-cli",
           "ecosystem": "npm",
@@ -35676,8 +35522,36 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:gupnp",
+          "name": "gupnp",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
           "id": "homebrew:gwyddion",
           "name": "gwyddion",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "homebrew:haskell-language-server",
+          "name": "haskell-language-server",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "homebrew:haskell-stack",
+          "name": "haskell-stack",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "homebrew:hatari",
+          "name": "hatari",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
@@ -35711,6 +35585,13 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:helmfile",
+          "name": "helmfile",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
           "id": "homebrew:himalaya",
           "name": "himalaya",
           "ecosystem": "homebrew",
@@ -35720,6 +35601,27 @@
         {
           "id": "homebrew:hiredis",
           "name": "hiredis",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "homebrew:hledger",
+          "name": "hledger",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "homebrew:hlint",
+          "name": "hlint",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "homebrew:homebank",
+          "name": "homebank",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
@@ -35760,8 +35662,43 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:i686-elf-binutils",
+          "name": "i686-elf-binutils",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "homebrew:i686-elf-grub",
+          "name": "i686-elf-grub",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "homebrew:icoutils",
+          "name": "icoutils",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "homebrew:inetutils",
+          "name": "inetutils",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
           "id": "homebrew:inih",
           "name": "inih",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "homebrew:innoextract",
+          "name": "innoextract",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
@@ -36356,6 +36293,13 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:mpdecimal",
+          "name": "mpdecimal",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 1
+        },
+        {
           "id": "homebrew:mpfr",
           "name": "mpfr",
           "ecosystem": "homebrew",
@@ -36366,6 +36310,13 @@
           "id": "npm:mprocs",
           "name": "mprocs",
           "ecosystem": "npm",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "homebrew:msgpack",
+          "name": "msgpack",
+          "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
         },
@@ -36508,6 +36459,13 @@
           "ecosystem": "npm",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "homebrew:opencore-amr",
+          "name": "opencore-amr",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 1
         },
         {
           "id": "homebrew:openshift-cli",
@@ -36834,6 +36792,13 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:rpds-py",
+          "name": "rpds-py",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
           "id": "manual:ruby",
           "name": "ruby",
           "ecosystem": "manual",
@@ -36904,6 +36869,13 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:sdl3",
+          "name": "sdl3",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
           "id": "npm:serve",
           "name": "serve",
           "ecosystem": "npm",
@@ -36927,6 +36899,13 @@
         {
           "id": "homebrew:shfmt",
           "name": "shfmt",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "homebrew:simdjson",
+          "name": "simdjson",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
@@ -37130,6 +37109,13 @@
         {
           "id": "homebrew:tree",
           "name": "tree",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "homebrew:tree-sitter",
+          "name": "tree-sitter",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
@@ -37345,6 +37331,13 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:xvid",
+          "name": "xvid",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 1
+        },
+        {
           "id": "homebrew:xz",
           "name": "xz",
           "ecosystem": "homebrew",
@@ -37398,6 +37391,13 @@
           "id": "manual:zig",
           "name": "zig",
           "ecosystem": "manual",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "homebrew:zimg",
+          "name": "zimg",
+          "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
         },
@@ -37764,23 +37764,8 @@
       "timestamp": "2026-02-22T22:25:32.975745377Z"
     },
     {
-      "id": "batch-2026-02-21T07-27-58Z-anyquery",
-      "package": "anyquery",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "2026-02-21T07-27-58Z",
-      "timestamp": "2026-02-21T07:27:58Z"
-    },
-    {
-      "id": "batch-2026-02-21T07-27-58Z-angle-grinder",
-      "package": "angle-grinder",
+      "id": "batch-2026-02-21T07-27-58Z-ansifilter",
+      "package": "ansifilter",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -37824,8 +37809,23 @@
       "timestamp": "2026-02-21T07:27:58Z"
     },
     {
-      "id": "batch-2026-02-21T07-27-58Z-ansifilter",
-      "package": "ansifilter",
+      "id": "batch-2026-02-21T07-27-58Z-angle-grinder",
+      "package": "angle-grinder",
+      "ecosystem": "batch",
+      "category": "generation_failed",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "2026-02-21T07-27-58Z",
+      "timestamp": "2026-02-21T07:27:58Z"
+    },
+    {
+      "id": "batch-2026-02-21T07-27-58Z-anyquery",
+      "package": "anyquery",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -38720,21 +38720,6 @@
       "timestamp": "2026-02-21T06:13:30.875620235Z"
     },
     {
-      "id": "batch-2026-02-20T06-08-19Z-yarn",
-      "package": "yarn",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "2026-02-20T06-08-19Z",
-      "timestamp": "2026-02-20T06:08:19Z"
-    },
-    {
       "id": "batch-2026-02-20T06-08-19Z-yo",
       "package": "yo",
       "ecosystem": "batch",
@@ -38767,6 +38752,21 @@
     {
       "id": "batch-2026-02-20T06-08-19Z-zx",
       "package": "zx",
+      "ecosystem": "batch",
+      "category": "generation_failed",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "2026-02-20T06-08-19Z",
+      "timestamp": "2026-02-20T06:08:19Z"
+    },
+    {
+      "id": "batch-2026-02-20T06-08-19Z-yarn",
+      "package": "yarn",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -38824,8 +38824,8 @@
       "timestamp": "2026-02-20T05:54:15.893000665Z"
     },
     {
-      "id": "batch-2026-02-20T04-28-03Z-typescript-language-server",
-      "package": "typescript-language-server",
+      "id": "batch-2026-02-20T04-28-03Z-vsce",
+      "package": "vsce",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -38839,8 +38839,8 @@
       "timestamp": "2026-02-20T04:28:03Z"
     },
     {
-      "id": "batch-2026-02-20T04-28-03Z-vsce",
-      "package": "vsce",
+      "id": "batch-2026-02-20T04-28-03Z-typescript-language-server",
+      "package": "typescript-language-server",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -38930,38 +38930,8 @@
       "timestamp": "2026-02-20T04:15:51.459005871Z"
     },
     {
-      "id": "batch-2026-02-20T02-08-13Z-react-native-cli",
-      "package": "react-native-cli",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "2026-02-20T02-08-13Z",
-      "timestamp": "2026-02-20T02:08:13Z"
-    },
-    {
-      "id": "batch-2026-02-20T02-08-13Z-rulesync",
-      "package": "rulesync",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "2026-02-20T02-08-13Z",
-      "timestamp": "2026-02-20T02:08:13Z"
-    },
-    {
-      "id": "batch-2026-02-20T02-08-13Z-prettier",
-      "package": "prettier",
+      "id": "batch-2026-02-20T02-08-13Z-rollup",
+      "package": "rollup",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -38990,6 +38960,36 @@
       "timestamp": "2026-02-20T02:08:13Z"
     },
     {
+      "id": "batch-2026-02-20T02-08-13Z-rulesync",
+      "package": "rulesync",
+      "ecosystem": "batch",
+      "category": "generation_failed",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "2026-02-20T02-08-13Z",
+      "timestamp": "2026-02-20T02:08:13Z"
+    },
+    {
+      "id": "batch-2026-02-20T02-08-13Z-react-native-cli",
+      "package": "react-native-cli",
+      "ecosystem": "batch",
+      "category": "generation_failed",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "2026-02-20T02-08-13Z",
+      "timestamp": "2026-02-20T02:08:13Z"
+    },
+    {
       "id": "batch-2026-02-20T02-08-13Z-release-it",
       "package": "release-it",
       "ecosystem": "batch",
@@ -39005,8 +39005,8 @@
       "timestamp": "2026-02-20T02:08:13Z"
     },
     {
-      "id": "batch-2026-02-20T02-08-13Z-rollup",
-      "package": "rollup",
+      "id": "batch-2026-02-20T02-08-13Z-prettier",
+      "package": "prettier",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -39054,38 +39054,8 @@
       "timestamp": "2026-02-20T01:55:16.033744211Z"
     },
     {
-      "id": "batch-2026-02-20T00-04-55Z-openapi-diff",
-      "package": "openapi-diff",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "2026-02-20T00-04-55Z",
-      "timestamp": "2026-02-20T00:04:55Z"
-    },
-    {
-      "id": "batch-2026-02-20T00-04-55Z-node-red",
-      "package": "node-red",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "2026-02-20T00-04-55Z",
-      "timestamp": "2026-02-20T00:04:55Z"
-    },
-    {
-      "id": "batch-2026-02-20T00-04-55Z-nping",
-      "package": "nping",
+      "id": "batch-2026-02-20T00-04-55Z-n",
+      "package": "n",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -39114,38 +39084,8 @@
       "timestamp": "2026-02-20T00:04:55Z"
     },
     {
-      "id": "batch-2026-02-20T00-04-55Z-needle",
-      "package": "needle",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "2026-02-20T00-04-55Z",
-      "timestamp": "2026-02-20T00:04:55Z"
-    },
-    {
-      "id": "batch-2026-02-20T00-04-55Z-openskills",
-      "package": "openskills",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "2026-02-20T00-04-55Z",
-      "timestamp": "2026-02-20T00:04:55Z"
-    },
-    {
-      "id": "batch-2026-02-20T00-04-55Z-n",
-      "package": "n",
+      "id": "batch-2026-02-20T00-04-55Z-nping",
+      "package": "nping",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -39180,6 +39120,66 @@
       "timestamp": "2026-02-20T00:04:55Z"
     },
     {
+      "id": "batch-2026-02-20T00-04-55Z-openskills",
+      "package": "openskills",
+      "ecosystem": "batch",
+      "category": "generation_failed",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "2026-02-20T00-04-55Z",
+      "timestamp": "2026-02-20T00:04:55Z"
+    },
+    {
+      "id": "batch-2026-02-20T00-04-55Z-openapi-diff",
+      "package": "openapi-diff",
+      "ecosystem": "batch",
+      "category": "generation_failed",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "2026-02-20T00-04-55Z",
+      "timestamp": "2026-02-20T00:04:55Z"
+    },
+    {
+      "id": "batch-2026-02-20T00-04-55Z-node-red",
+      "package": "node-red",
+      "ecosystem": "batch",
+      "category": "generation_failed",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "2026-02-20T00-04-55Z",
+      "timestamp": "2026-02-20T00:04:55Z"
+    },
+    {
+      "id": "batch-2026-02-20T00-04-55Z-needle",
+      "package": "needle",
+      "ecosystem": "batch",
+      "category": "generation_failed",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "2026-02-20T00-04-55Z",
+      "timestamp": "2026-02-20T00:04:55Z"
+    },
+    {
       "id": "npm-2026-02-19T23-29-53Z-mongoose",
       "package": "mongoose",
       "ecosystem": "npm",
@@ -39198,8 +39198,8 @@
       "timestamp": "2026-02-19T23:29:47.627618545Z"
     },
     {
-      "id": "batch-2026-02-19T22-35-45Z-mprocs",
-      "package": "mprocs",
+      "id": "batch-2026-02-19T22-35-45Z-mjml",
+      "package": "mjml",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -39213,8 +39213,8 @@
       "timestamp": "2026-02-19T22:35:45Z"
     },
     {
-      "id": "batch-2026-02-19T22-35-45Z-mjml",
-      "package": "mjml",
+      "id": "batch-2026-02-19T22-35-45Z-mprocs",
+      "package": "mprocs",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -39298,8 +39298,8 @@
       "timestamp": "2026-02-19T22:30:26.487032403Z"
     },
     {
-      "id": "batch-2026-02-19T21-39-05Z-mbt",
-      "package": "mbt",
+      "id": "batch-2026-02-19T21-39-05Z-lerna",
+      "package": "lerna",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -39313,8 +39313,8 @@
       "timestamp": "2026-02-19T21:39:05Z"
     },
     {
-      "id": "batch-2026-02-19T21-39-05Z-lerna",
-      "package": "lerna",
+      "id": "batch-2026-02-19T21-39-05Z-mbt",
+      "package": "mbt",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -39397,8 +39397,8 @@
       "timestamp": "2026-02-19T21:31:48.334903227Z"
     },
     {
-      "id": "batch-2026-02-19T20-40-46Z-http-server",
-      "package": "http-server",
+      "id": "batch-2026-02-19T20-40-46Z-graphql-cli",
+      "package": "graphql-cli",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -39412,8 +39412,8 @@
       "timestamp": "2026-02-19T20:40:46Z"
     },
     {
-      "id": "batch-2026-02-19T20-40-46Z-graphql-cli",
-      "package": "graphql-cli",
+      "id": "batch-2026-02-19T20-40-46Z-http-server",
+      "package": "http-server",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
