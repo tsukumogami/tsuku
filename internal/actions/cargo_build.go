@@ -148,7 +148,7 @@ func (a *CargoBuildAction) Execute(ctx *ExecutionContext, params map[string]inte
 	fmt.Printf("   Using cargo: %s\n", cargoPath)
 
 	// Set up deterministic environment with isolated CARGO_HOME
-	env := buildDeterministicCargoEnv(cargoPath, ctx.WorkDir, ctx.ExecPaths)
+	env := buildDeterministicCargoEnv(cargoPath, ctx.WorkDir, ctx)
 
 	// Link shared cargo registry cache into CARGO_HOME when running inside
 	// a sandbox container with the mount configured.
@@ -354,7 +354,7 @@ func (a *CargoBuildAction) executeLockDataMode(ctx *ExecutionContext, params map
 	// Validate Rust version if specified
 	if rustVersion != "" {
 		// Build temporary environment for version check
-		tempEnv := buildDeterministicCargoEnv(cargoPath, ctx.WorkDir, ctx.ExecPaths)
+		tempEnv := buildDeterministicCargoEnv(cargoPath, ctx.WorkDir, ctx)
 		if err := validateRustVersion(ctx, cargoPath, rustVersion, tempEnv); err != nil {
 			fmt.Printf("   Warning: Rust version validation failed: %v\n", err)
 		}
@@ -429,7 +429,7 @@ func (a *CargoBuildAction) executeLockDataMode(ctx *ExecutionContext, params map
 	}
 
 	// Build deterministic environment
-	env := buildDeterministicCargoEnv(cargoPath, tempDir, ctx.ExecPaths)
+	env := buildDeterministicCargoEnv(cargoPath, tempDir, ctx)
 
 	// Link shared cargo registry cache into CARGO_HOME when running inside
 	// a sandbox container with the mount configured.
@@ -508,10 +508,18 @@ func (a *CargoBuildAction) executeLockDataMode(ctx *ExecutionContext, params map
 
 // buildDeterministicCargoEnv creates an environment with deterministic build settings.
 // workDir is used to create an isolated CARGO_HOME for reproducible builds.
-// execPaths are additional bin directories from installed dependencies (e.g., perl for openssl-sys).
-func buildDeterministicCargoEnv(cargoPath, workDir string, execPaths []string) []string {
+// ctx provides ExecPaths (dependency bin dirs) and Dependencies/LibsDir/ToolsDir
+// for setting PKG_CONFIG_PATH, C_INCLUDE_PATH, and LIBRARY_PATH from library deps.
+// ctx may be nil, in which case dependency discovery is skipped.
+func buildDeterministicCargoEnv(cargoPath, workDir string, ctx *ExecutionContext) []string {
 	cargoDir := filepath.Dir(cargoPath)
 	env := os.Environ()
+
+	// Collect ExecPaths from context if available
+	var execPaths []string
+	if ctx != nil {
+		execPaths = ctx.ExecPaths
+	}
 
 	// Filter existing variables that might affect determinism
 	var existingPath string
@@ -521,19 +529,85 @@ func buildDeterministicCargoEnv(cargoPath, workDir string, execPaths []string) [
 			existingPath = strings.TrimPrefix(e, "PATH=")
 		} else if !strings.HasPrefix(e, "CARGO_INCREMENTAL=") &&
 			!strings.HasPrefix(e, "SOURCE_DATE_EPOCH=") &&
-			!strings.HasPrefix(e, "CARGO_HOME=") {
+			!strings.HasPrefix(e, "CARGO_HOME=") &&
+			!strings.HasPrefix(e, "PKG_CONFIG_PATH=") &&
+			!strings.HasPrefix(e, "C_INCLUDE_PATH=") &&
+			!strings.HasPrefix(e, "LIBRARY_PATH=") {
 			filteredEnv = append(filteredEnv, e)
 		}
 	}
 
-	// Build PATH: cargo bin + ExecPaths (dependency binaries) + existing PATH
-	// ExecPaths includes directories like perl, zig, etc. needed by build scripts
+	// Discover paths from library dependencies (same pattern as buildAutotoolsEnv)
+	var depBinPaths []string
+	var pkgConfigPaths []string
+	var includePaths []string
+	var libraryPaths []string
+
+	if ctx != nil && len(ctx.Dependencies.InstallTime) > 0 {
+		for depName, depVersion := range ctx.Dependencies.InstallTime {
+			// Check both libs and tools directories, prefer libs if it exists
+			var depDir string
+			if ctx.LibsDir != "" {
+				libsDepDir := filepath.Join(ctx.LibsDir, depName+"-"+depVersion)
+				if _, err := os.Stat(libsDepDir); err == nil {
+					depDir = libsDepDir
+				}
+			}
+			if depDir == "" && ctx.ToolsDir != "" {
+				toolsDepDir := filepath.Join(ctx.ToolsDir, depName+"-"+depVersion)
+				if _, err := os.Stat(toolsDepDir); err == nil {
+					depDir = toolsDepDir
+				}
+			}
+			if depDir == "" {
+				continue
+			}
+
+			// bin/ -- for tools like pkg-config
+			binDir := filepath.Join(depDir, "bin")
+			if _, err := os.Stat(binDir); err == nil {
+				depBinPaths = append(depBinPaths, binDir)
+			}
+
+			// lib/pkgconfig -- for pkg-config discovery
+			pkgConfigDir := filepath.Join(depDir, "lib", "pkgconfig")
+			if _, err := os.Stat(pkgConfigDir); err == nil {
+				pkgConfigPaths = append(pkgConfigPaths, pkgConfigDir)
+			}
+
+			// include/ -- for C header discovery (cc crate)
+			includeDir := filepath.Join(depDir, "include")
+			if _, err := os.Stat(includeDir); err == nil {
+				includePaths = append(includePaths, includeDir)
+			}
+
+			// lib/ -- for library linking
+			libDir := filepath.Join(depDir, "lib")
+			if _, err := os.Stat(libDir); err == nil {
+				libraryPaths = append(libraryPaths, libDir)
+			}
+		}
+	}
+
+	// Build PATH: cargo bin + dependency bins + ExecPaths + existing PATH
 	pathParts := []string{cargoDir}
+	pathParts = append(pathParts, depBinPaths...)
 	pathParts = append(pathParts, execPaths...)
 	if existingPath != "" {
 		pathParts = append(pathParts, existingPath)
 	}
 	filteredEnv = append(filteredEnv, "PATH="+strings.Join(pathParts, ":"))
+
+	// Set library dependency env vars
+	if len(pkgConfigPaths) > 0 {
+		filteredEnv = append(filteredEnv, "PKG_CONFIG_PATH="+strings.Join(pkgConfigPaths, ":"))
+	}
+	if len(includePaths) > 0 {
+		filteredEnv = append(filteredEnv, "C_INCLUDE_PATH="+strings.Join(includePaths, ":"))
+	}
+	if len(libraryPaths) > 0 {
+		filteredEnv = append(filteredEnv, "LIBRARY_PATH="+strings.Join(libraryPaths, ":"))
+	}
 
 	// Set isolated CARGO_HOME to prevent cross-contamination between builds
 	cargoHome := filepath.Join(workDir, ".cargo-home")
