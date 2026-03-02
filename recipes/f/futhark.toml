@@ -1,0 +1,35 @@
+[metadata]
+  name = "futhark"
+  description = "Data-parallel functional programming language"
+  homepage = "https://futhark-lang.org/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["gmp"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "futhark"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "futhark"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/futhark"]
+
+[verify]
+  command = "futhark --version"
+  pattern = ""

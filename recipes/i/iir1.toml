@@ -1,0 +1,50 @@
+[metadata]
+  name = "iir1"
+  description = "DSP IIR realtime filter library written in C++"
+  homepage = "https://berndporr.github.io/iir1/"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "iir1"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "iir1"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libiir.so", "lib/libiir.so.1", "lib/libiir.so.1.10.0", "lib/libiir_static.a", "lib/pkgconfig/iir.pc", "include/Iir.h", "include/iir/Biquad.h", "include/iir/Butterworth.h", "include/iir/Cascade.h", "include/iir/ChebyshevI.h", "include/iir/ChebyshevII.h", "include/iir/Common.h", "include/iir/Custom.h", "include/iir/Layout.h", "include/iir/MathSupplement.h", "include/iir/PoleFilter.h", "include/iir/RBJ.h", "include/iir/State.h", "include/iir/Types.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "iir1"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libiir.1.10.0.dylib", "lib/libiir.1.dylib", "lib/libiir.dylib", "lib/libiir_static.a", "lib/pkgconfig/iir.pc", "include/Iir.h", "include/iir/Biquad.h", "include/iir/Butterworth.h", "include/iir/Cascade.h", "include/iir/ChebyshevI.h", "include/iir/ChebyshevII.h", "include/iir/Common.h", "include/iir/Custom.h", "include/iir/Layout.h", "include/iir/MathSupplement.h", "include/iir/PoleFilter.h", "include/iir/RBJ.h", "include/iir/State.h", "include/iir/Types.h"]
+  [steps.when]
+    os = ["darwin"]

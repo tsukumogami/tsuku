@@ -1,0 +1,50 @@
+[metadata]
+  name = "libid3tag"
+  description = "ID3 tag manipulation library"
+  homepage = "https://codeberg.org/tenacityteam/libid3tag"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "libid3tag"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "libid3tag"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libid3tag.so", "lib/libid3tag.so.0", "lib/libid3tag.so.0.16.4", "lib/pkgconfig/id3tag.pc", "include/id3tag.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "libid3tag"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libid3tag.0.16.4.dylib", "lib/libid3tag.0.dylib", "lib/libid3tag.dylib", "lib/pkgconfig/id3tag.pc", "include/id3tag.h"]
+  [steps.when]
+    os = ["darwin"]
