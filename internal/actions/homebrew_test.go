@@ -658,6 +658,89 @@ func TestHomebrewRelocateAction_FixBinaryRpath_MachOMagic(t *testing.T) {
 	}
 }
 
+func TestHomebrewRelocateAction_FixMachoRpath_WithDependencies(t *testing.T) {
+	t.Parallel()
+	action := &HomebrewRelocateAction{}
+	tmpDir := t.TempDir()
+
+	// Create a fake Mach-O binary (64-bit little-endian magic)
+	testFile := filepath.Join(tmpDir, "fc-list")
+	if err := os.WriteFile(testFile, []byte{0xcf, 0xfa, 0xed, 0xfe, 0, 0, 0, 0}, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create dependency lib directories to verify the path-existence check
+	libsDir := filepath.Join(tmpDir, "libs")
+	gettextLib := filepath.Join(libsDir, "gettext-0.22.5", "lib")
+	if err := os.MkdirAll(gettextLib, 0755); err != nil {
+		t.Fatal(err)
+	}
+	freetypeLib := filepath.Join(libsDir, "freetype-2.13.3", "lib")
+	if err := os.MkdirAll(freetypeLib, 0755); err != nil {
+		t.Fatal(err)
+	}
+	// Create a dep that has no lib dir -- should be skipped
+	_ = os.MkdirAll(filepath.Join(libsDir, "zlib-1.3.2"), 0755)
+
+	ctx := &ExecutionContext{
+		ExecPaths: []string{},
+		LibsDir:   libsDir,
+		Dependencies: ResolvedDeps{
+			InstallTime: map[string]string{
+				"gettext":  "0.22.5",
+				"freetype": "2.13.3",
+				"zlib":     "1.3.2", // No lib/ subdir
+			},
+		},
+	}
+
+	// On Linux, install_name_tool isn't available, so fixMachoRpath returns
+	// nil with a warning. This verifies the function doesn't crash when
+	// dependencies are populated and the tool is missing.
+	err := action.fixMachoRpath(ctx, testFile, tmpDir)
+	if err != nil {
+		t.Fatalf("fixMachoRpath with dependencies should not error: %v", err)
+	}
+}
+
+func TestHomebrewRelocateAction_FixMachoRpath_NoDeps(t *testing.T) {
+	t.Parallel()
+	action := &HomebrewRelocateAction{}
+	tmpDir := t.TempDir()
+
+	testFile := filepath.Join(tmpDir, "tool")
+	if err := os.WriteFile(testFile, []byte{0xcf, 0xfa, 0xed, 0xfe, 0, 0, 0, 0}, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// No dependencies -- behavior should be unchanged from before
+	ctx := &ExecutionContext{
+		ExecPaths: []string{},
+	}
+
+	err := action.fixMachoRpath(ctx, testFile, tmpDir)
+	if err != nil {
+		t.Fatalf("fixMachoRpath without dependencies should not error: %v", err)
+	}
+}
+
+func TestHomebrewRelocateAction_FixMachoRpath_NilCtx(t *testing.T) {
+	t.Parallel()
+	action := &HomebrewRelocateAction{}
+	tmpDir := t.TempDir()
+
+	testFile := filepath.Join(tmpDir, "tool")
+	if err := os.WriteFile(testFile, []byte{0xcf, 0xfa, 0xed, 0xfe, 0, 0, 0, 0}, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// nil context -- should not panic
+	err := action.fixMachoRpath(nil, testFile, tmpDir)
+	if err != nil {
+		t.Fatalf("fixMachoRpath with nil ctx should not error: %v", err)
+	}
+}
+
 func TestHomebrewRelocateAction_FixBinaryRpath_ReadOnlyELF(t *testing.T) {
 	t.Parallel()
 	action := &HomebrewRelocateAction{}

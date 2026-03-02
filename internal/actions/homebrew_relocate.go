@@ -300,7 +300,7 @@ func (a *HomebrewRelocateAction) fixBinaryRpath(ctx *ExecutionContext, binaryPat
 		bytes.Equal(magic, []byte{0xcf, 0xfa, 0xed, 0xfe}) || // 64-bit little-endian
 		bytes.Equal(magic, []byte{0xca, 0xfe, 0xba, 0xbe}) || // Fat binary big-endian
 		bytes.Equal(magic, []byte{0xbe, 0xba, 0xfe, 0xca}) { // Fat binary little-endian
-		return a.fixMachoRpath(binaryPath, installPath)
+		return a.fixMachoRpath(ctx, binaryPath, installPath)
 	}
 
 	// Not a recognized binary format, skip silently
@@ -422,8 +422,11 @@ func (a *HomebrewRelocateAction) fixElfInterpreter(patchelf, binaryPath string) 
 	return nil
 }
 
-// fixMachoRpath uses install_name_tool to fix RPATH on macOS Mach-O binaries
-func (a *HomebrewRelocateAction) fixMachoRpath(binaryPath, installPath string) error {
+// fixMachoRpath uses install_name_tool to fix RPATH on macOS Mach-O binaries.
+// It adds a self-relative @loader_path RPATH and, when the execution context
+// has install-time dependencies, adds absolute RPATHs to each dependency's
+// lib directory so dynamically linked libraries can be found at runtime.
+func (a *HomebrewRelocateAction) fixMachoRpath(ctx *ExecutionContext, binaryPath, installPath string) error {
 	installNameTool, err := exec.LookPath("install_name_tool")
 	if err != nil {
 		fmt.Printf("   Warning: install_name_tool not found, skipping RPATH fix for %s\n", filepath.Base(binaryPath))
@@ -504,6 +507,25 @@ func (a *HomebrewRelocateAction) fixMachoRpath(binaryPath, installPath string) e
 		// Ignore "would duplicate" errors
 		if !strings.Contains(string(output), "would duplicate") {
 			return fmt.Errorf("install_name_tool -add_rpath failed: %s: %w", strings.TrimSpace(string(output)), err)
+		}
+	}
+
+	// Add RPATHs for dependency library directories so dynamically linked
+	// libraries from dependencies (e.g., libintl from gettext) can be found
+	// at runtime. This mirrors the logic in fixLibraryDylibRpaths.
+	if ctx != nil && ctx.Dependencies.InstallTime != nil && ctx.LibsDir != "" {
+		for depName, depVersion := range ctx.Dependencies.InstallTime {
+			depLibPath := filepath.Join(ctx.LibsDir, fmt.Sprintf("%s-%s", depName, depVersion), "lib")
+			if _, err := os.Stat(depLibPath); err != nil {
+				continue // Skip deps without a lib directory
+			}
+			depCmd := exec.Command(installNameTool, "-add_rpath", depLibPath, binaryPath)
+			if output, err := depCmd.CombinedOutput(); err != nil {
+				if !strings.Contains(string(output), "would duplicate") {
+					fmt.Printf("   Warning: failed to add dependency RPATH %s to %s: %s\n",
+						depLibPath, filepath.Base(binaryPath), strings.TrimSpace(string(output)))
+				}
+			}
 		}
 	}
 
@@ -602,18 +624,6 @@ func (a *HomebrewRelocateAction) fixLibraryDylibRpaths(ctx *ExecutionContext, in
 		for depName, depVersion := range ctx.Dependencies.InstallTime {
 			// Dependency libraries are in $TSUKU_HOME/libs/depname-version/lib
 			depLibPath := filepath.Join(ctx.LibsDir, fmt.Sprintf("%s-%s", depName, depVersion), "lib")
-
-			// Debug: Check if this dependency lib dir exists and list its contents
-			if entries, err := os.ReadDir(depLibPath); err == nil {
-				var fileNames []string
-				for _, e := range entries {
-					fileNames = append(fileNames, e.Name())
-				}
-				fmt.Printf("   Debug: %s lib dir contains: %v\n", depName, fileNames)
-			} else {
-				fmt.Printf("   Debug: %s lib dir doesn't exist: %v\n", depName, err)
-			}
-
 			depLibPaths = append(depLibPaths, depLibPath)
 		}
 	}
@@ -624,7 +634,6 @@ func (a *HomebrewRelocateAction) fixLibraryDylibRpaths(ctx *ExecutionContext, in
 	}
 
 	fmt.Printf("   Fixing dylib RPATHs for %d .dylib file(s) with %d dependencies\n", len(dylibFiles), len(depLibPaths))
-	fmt.Printf("   Debug: Dependency lib paths: %v\n", depLibPaths)
 
 	installNameTool, err := exec.LookPath("install_name_tool")
 	if err != nil {
@@ -634,8 +643,6 @@ func (a *HomebrewRelocateAction) fixLibraryDylibRpaths(ctx *ExecutionContext, in
 
 	// For each .dylib file, add RPATHs to all dependency lib directories
 	for _, dylibPath := range dylibFiles {
-		fmt.Printf("   Debug: Processing dylib: %s\n", filepath.Base(dylibPath))
-
 		// Make file writable
 		info, err := os.Stat(dylibPath)
 		if err != nil {
@@ -653,19 +660,11 @@ func (a *HomebrewRelocateAction) fixLibraryDylibRpaths(ctx *ExecutionContext, in
 
 		// Add RPATH for each dependency
 		for _, depPath := range depLibPaths {
-			fmt.Printf("   Debug: Adding RPATH %s to %s\n", depPath, filepath.Base(dylibPath))
-			addCmd := exec.Command(installNameTool, "-add_rpath", depPath, dylibPath)
-			output, err := addCmd.CombinedOutput()
-			if err != nil {
-				// Ignore "would duplicate" errors
-				if !strings.Contains(string(output), "would duplicate") {
-					fmt.Printf("   Warning: failed to add RPATH %s to %s: %s\n",
-						depPath, filepath.Base(dylibPath), strings.TrimSpace(string(output)))
-				} else {
-					fmt.Printf("   Debug: RPATH already exists (duplicate)\n")
-				}
-			} else {
-				fmt.Printf("   Debug: Successfully added RPATH\n")
+			rpathCmd := exec.Command(installNameTool, "-add_rpath", depPath, dylibPath)
+			output, err := rpathCmd.CombinedOutput()
+			if err != nil && !strings.Contains(string(output), "would duplicate") {
+				fmt.Printf("   Warning: failed to add RPATH %s to %s: %s\n",
+					depPath, filepath.Base(dylibPath), strings.TrimSpace(string(output)))
 			}
 		}
 
