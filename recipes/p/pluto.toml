@@ -1,0 +1,35 @@
+[metadata]
+  name = "pluto"
+  description = "CLI tool to help discover deprecated apiVersions in Kubernetes"
+  homepage = "https://fairwinds.com"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+  unsupported_platforms = ["darwin/arm64", "darwin/amd64"]
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "pluto"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "pluto"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/pluto"]
+
+[verify]
+  command = "pluto --version"
+  pattern = ""
