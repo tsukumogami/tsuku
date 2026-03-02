@@ -4,6 +4,7 @@
   homepage = "https://wiki.freedesktop.org/www/Software/cppunit/"
   version_format = ""
   requires_sudo = false
+  unsupported_platforms = ["darwin/arm64", "darwin/amd64"]
   tier = 0
   type = ""
   llm_validation = "skipped"
