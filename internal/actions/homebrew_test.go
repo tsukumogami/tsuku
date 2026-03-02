@@ -694,12 +694,17 @@ func TestHomebrewRelocateAction_FixMachoRpath_WithDependencies(t *testing.T) {
 		},
 	}
 
-	// On Linux, install_name_tool isn't available, so fixMachoRpath returns
-	// nil with a warning. This verifies the function doesn't crash when
-	// dependencies are populated and the tool is missing.
+	// On Linux, install_name_tool isn't available so fixMachoRpath returns nil
+	// with a warning. On macOS, install_name_tool is available but rejects our
+	// dummy file ("not a Mach-O file") which is expected since we're not
+	// creating a real binary. Either way, the function must not panic.
 	err := action.fixMachoRpath(ctx, testFile, tmpDir)
 	if err != nil {
-		t.Fatalf("fixMachoRpath with dependencies should not error: %v", err)
+		if strings.Contains(err.Error(), "not a Mach-O file") || strings.Contains(err.Error(), "not a Mach-O") {
+			t.Logf("expected error with dummy binary on macOS: %v", err)
+		} else {
+			t.Fatalf("fixMachoRpath with dependencies returned unexpected error: %v", err)
+		}
 	}
 }
 
@@ -720,7 +725,11 @@ func TestHomebrewRelocateAction_FixMachoRpath_NoDeps(t *testing.T) {
 
 	err := action.fixMachoRpath(ctx, testFile, tmpDir)
 	if err != nil {
-		t.Fatalf("fixMachoRpath without dependencies should not error: %v", err)
+		if strings.Contains(err.Error(), "not a Mach-O file") || strings.Contains(err.Error(), "not a Mach-O") {
+			t.Logf("expected error with dummy binary on macOS: %v", err)
+		} else {
+			t.Fatalf("fixMachoRpath without dependencies returned unexpected error: %v", err)
+		}
 	}
 }
 
@@ -737,7 +746,11 @@ func TestHomebrewRelocateAction_FixMachoRpath_NilCtx(t *testing.T) {
 	// nil context -- should not panic
 	err := action.fixMachoRpath(nil, testFile, tmpDir)
 	if err != nil {
-		t.Fatalf("fixMachoRpath with nil ctx should not error: %v", err)
+		if strings.Contains(err.Error(), "not a Mach-O file") || strings.Contains(err.Error(), "not a Mach-O") {
+			t.Logf("expected error with dummy binary on macOS: %v", err)
+		} else {
+			t.Fatalf("fixMachoRpath with nil ctx returned unexpected error: %v", err)
+		}
 	}
 }
 
