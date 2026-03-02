@@ -1,34 +1,34 @@
 {
-  "generated_at": "2026-03-01T21:18:37Z",
-  "total_recipes": 370,
+  "generated_at": "2026-03-02T01:01:34Z",
+  "total_recipes": 380,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 313,
-        "total": 370,
-        "pct": 84.5945945945946
+        "supported": 317,
+        "total": 380,
+        "pct": 83.42105263157895
       },
       "glibc": {
-        "supported": 339,
-        "total": 370,
-        "pct": 91.62162162162161
+        "supported": 349,
+        "total": 380,
+        "pct": 91.84210526315789
       },
       "musl": {
-        "supported": 197,
-        "total": 370,
-        "pct": 53.24324324324324
+        "supported": 207,
+        "total": 380,
+        "pct": 54.473684210526315
       }
     },
     "by_category": {
       "library": {
-        "total": 26,
-        "musl_support": 25,
-        "glibc_support": 25
+        "total": 31,
+        "musl_support": 30,
+        "glibc_support": 30
       },
       "tool": {
-        "total": 344,
-        "musl_support": 172,
-        "glibc_support": 314
+        "total": 349,
+        "musl_support": 177,
+        "glibc_support": 319
       }
     }
   },
@@ -1342,6 +1342,22 @@
       "warnings": null
     },
     {
+      "name": "desktop-file-utils",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'desktop-file-utils' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
       "name": "devspace",
       "type": "tool",
       "platforms": {
@@ -1352,6 +1368,22 @@
       "gaps": null,
       "errors": null,
       "warnings": null
+    },
+    {
+      "name": "dfu-util",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'dfu-util' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
     },
     {
       "name": "diff-so-fancy",
@@ -1848,6 +1880,22 @@
       ]
     },
     {
+      "name": "fstrm",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'fstrm' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
       "name": "fx",
       "type": "tool",
       "platforms": {
@@ -2061,6 +2109,18 @@
       "warnings": [
         "recipe 'glew' has platform-specific actions without libc when clauses and no musl fallback"
       ]
+    },
+    {
+      "name": "glib",
+      "type": "library",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
     },
     {
       "name": "glow",
@@ -3016,6 +3076,20 @@
       ]
     },
     {
+      "name": "libevent",
+      "type": "library",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "libgit2",
       "type": "library",
       "platforms": {
@@ -3070,6 +3144,38 @@
       ]
     },
     {
+      "name": "libogg",
+      "type": "library",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": [
+        "library recipe 'libogg' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
+      ],
+      "warnings": [
+        "recipe 'libogg' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "libomp",
+      "type": "library",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": [
+        "library recipe 'libomp' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
+      ],
+      "warnings": [
+        "recipe 'libomp' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
       "name": "libpng",
       "type": "library",
       "platforms": {
@@ -3095,6 +3201,22 @@
       "errors": null,
       "warnings": [
         "recipe 'libssh2' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "libusb",
+      "type": "library",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": [
+        "library recipe 'libusb' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
+      ],
+      "warnings": [
+        "recipe 'libusb' has platform-specific actions without libc when clauses and no musl fallback"
       ]
     },
     {
@@ -3775,6 +3897,22 @@
       "errors": null,
       "warnings": [
         "recipe 'packer' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "par2",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'par2' has platform-specific actions without libc when clauses and no musl fallback"
       ]
     },
     {
@@ -5031,6 +5169,22 @@
       "gaps": null,
       "errors": null,
       "warnings": null
+    },
+    {
+      "name": "vorbis-tools",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'vorbis-tools' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
     },
     {
       "name": "vsce",
