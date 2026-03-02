@@ -1,0 +1,51 @@
+[metadata]
+  name = "libslirp"
+  description = "General purpose TCP-IP emulator"
+  homepage = "https://gitlab.freedesktop.org/slirp/libslirp"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["glib"]
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "libslirp"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "libslirp"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libslirp.a", "lib/libslirp.so", "lib/libslirp.so.0", "lib/libslirp.so.0.4.0", "lib/pkgconfig/slirp.pc", "include/slirp/libslirp-version.h", "include/slirp/libslirp.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "libslirp"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libslirp.0.dylib", "lib/libslirp.a", "lib/libslirp.dylib", "lib/pkgconfig/slirp.pc", "include/slirp/libslirp-version.h", "include/slirp/libslirp.h"]
+  [steps.when]
+    os = ["darwin"]
