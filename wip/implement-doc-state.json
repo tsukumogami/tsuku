@@ -1,0 +1,273 @@
+{
+  "pr_status": "implementing",
+  "design_doc": "docs/designs/DESIGN-blog-infrastructure.md",
+  "branch": "docs/blog-infrastructure",
+  "pr_number": 1973,
+  "integrity_hash": "sha256:aad46d58e685959cd450ef3b89774626a90994dbbc273969cea6f752ff7c6118",
+  "issues": [
+    {
+      "number": 1974,
+      "title": "Add Hugo project structure and templates",
+      "status": "completed",
+      "ci_status": "passed",
+      "ci_fix_attempts": 0,
+      "issue_type": "code",
+      "dependencies": [],
+      "commits": [
+        "aa72825f11349c8281c13ce9a46177a6f214bfcf"
+      ],
+      "agent_type": "webdev",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          "blog/.gitignore",
+          "blog/hugo.toml",
+          "blog/layouts/_default/baseof.html",
+          "blog/layouts/_default/single.html",
+          "blog/layouts/index.html",
+          "blog/layouts/posts/list.html",
+          "website/.gitignore",
+          "website/assets/blog.css",
+          "website/assets/og-default.png"
+        ],
+        "tests_added": 0,
+        "key_decisions": "Added blog/layouts/index.html as a home template for /blog/index.html. Added disableKinds=['taxonomy'] to suppress unused taxonomy warnings. Added pre code reset in blog.css to prevent double styling."
+      },
+      "reviewer_results": {
+        "issue": 1974,
+        "round": 2,
+        "reviewers": [
+          {
+            "focus": "pragmatic",
+            "blocking_count": 0,
+            "advisory_count": 0,
+            "detail_file": "wip/research/implement-doc_review_pragmatic_issue1974.md"
+          },
+          {
+            "focus": "architect",
+            "blocking_count": 0,
+            "advisory_count": 1,
+            "detail_file": "wip/research/implement-doc_review_architect_issue1974.md"
+          },
+          {
+            "focus": "maintainer",
+            "blocking_count": 0,
+            "advisory_count": 1,
+            "detail_file": "wip/research/implement-doc_review_maintainer_issue1974.md"
+          }
+        ]
+      },
+      "testable_scenarios": [
+        "scenario-1",
+        "scenario-2",
+        "scenario-3",
+        "scenario-4",
+        "scenario-5"
+      ]
+    },
+    {
+      "number": 1975,
+      "title": "Add hello world validation post",
+      "status": "completed",
+      "ci_status": "passed",
+      "ci_fix_attempts": 0,
+      "issue_type": "code",
+      "dependencies": [
+        1974
+      ],
+      "commits": [
+        "f5d26fbb"
+      ],
+      "agent_type": "webdev",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          "blog/content/posts/_index.md",
+          "blog/content/posts/hello-world.md"
+        ],
+        "tests_added": 0,
+        "key_decisions": "Content matches the design doc exactly. Uses indented code blocks matching the design spec. Hugo build validation deferred to CI (#1976).",
+        "requirements_map": [
+          {
+            "ac": "Section index exists",
+            "status": "implemented",
+            "evidence": "blog/content/posts/_index.md created"
+          },
+          {
+            "ac": "Hello world post with correct frontmatter",
+            "status": "implemented",
+            "evidence": "blog/content/posts/hello-world.md with title, date, description"
+          },
+          {
+            "ac": "Post body with headings, code, inline code",
+            "status": "implemented",
+            "evidence": "Post contains ## heading, indented code block, and inline tsuku references"
+          }
+        ]
+      },
+      "reviewer_results": {
+        "issue": 1975,
+        "round": 1,
+        "reviewers": [
+          {
+            "focus": "pragmatic",
+            "blocking_count": 0,
+            "advisory_count": 0,
+            "detail_file": "wip/research/implement-doc_review_pragmatic_issue1975.md"
+          },
+          {
+            "focus": "architect",
+            "blocking_count": 0,
+            "advisory_count": 0,
+            "detail_file": "wip/research/implement-doc_review_architect_issue1975.md"
+          },
+          {
+            "focus": "maintainer",
+            "blocking_count": 0,
+            "advisory_count": 0,
+            "detail_file": "wip/research/implement-doc_review_maintainer_issue1975.md"
+          }
+        ]
+      },
+      "testable_scenarios": [
+        "scenario-6",
+        "scenario-7",
+        "scenario-8",
+        "scenario-9"
+      ]
+    },
+    {
+      "number": 1976,
+      "title": "Integrate Hugo build into CI pipeline",
+      "status": "completed",
+      "ci_status": "passed",
+      "ci_fix_attempts": 0,
+      "issue_type": "code",
+      "dependencies": [
+        1974,
+        1975
+      ],
+      "commits": [
+        "6ba0fae534978e25ac46445233eb6fcd7aa20e95"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          ".github/workflows/deploy-website.yml"
+        ],
+        "tests_added": 0,
+        "key_decisions": "Followed design doc CI snippet exactly. Hugo install and build steps placed between Python setup and recipe generation.",
+        "requirements_map": [
+          {
+            "ac": "Path triggers include blog/**",
+            "status": "implemented",
+            "evidence": "Added to both push and pull_request paths"
+          },
+          {
+            "ac": "Hugo install with checksum verification",
+            "status": "implemented",
+            "evidence": "Downloads .deb, verifies sha256sum, installs with dpkg"
+          },
+          {
+            "ac": "Blog build step before recipes",
+            "status": "implemented",
+            "evidence": "Build blog at line 50, Generate recipes at line 53"
+          },
+          {
+            "ac": "Hugo version pinned as env var",
+            "status": "implemented",
+            "evidence": "HUGO_VERSION: 0.147.0 in env block"
+          }
+        ]
+      },
+      "reviewer_results": {
+        "issue": 1976,
+        "round": 1,
+        "reviewers": [
+          {
+            "focus": "pragmatic",
+            "blocking_count": 0,
+            "advisory_count": 0,
+            "detail_file": "wip/research/implement-doc_review_pragmatic_issue1976.md"
+          },
+          {
+            "focus": "architect",
+            "blocking_count": 0,
+            "advisory_count": 0,
+            "detail_file": "wip/research/implement-doc_review_architect_issue1976.md"
+          },
+          {
+            "focus": "maintainer",
+            "blocking_count": 0,
+            "advisory_count": 1,
+            "detail_file": "wip/research/implement-doc_review_maintainer_issue1976.md"
+          }
+        ]
+      },
+      "testable_scenarios": [
+        "scenario-10",
+        "scenario-11",
+        "scenario-12",
+        "scenario-14"
+      ]
+    },
+    {
+      "number": 1977,
+      "title": "Add blog link to site navigation",
+      "status": "scrutinized",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "code",
+      "dependencies": [
+        1974
+      ],
+      "commits": [
+        "b7f6b6bb"
+      ],
+      "agent_type": "webdev",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          "website/index.html",
+          "website/recipes/index.html",
+          "website/telemetry/index.html",
+          "website/404.html",
+          "website/assets/style.css"
+        ],
+        "tests_added": 0,
+        "key_decisions": "Used .nav-links CSS class with flexbox to group Blog link and GitHub icon. Blog link placed before Privacy|GitHub in footer.",
+        "requirements_map": {
+          "AC1": "website/index.html nav",
+          "AC2": "website/recipes/index.html nav",
+          "AC3": "website/telemetry/index.html nav",
+          "AC4": "website/404.html nav",
+          "AC5": "Between logo and GitHub icon via .nav-links flex container",
+          "AC6": "Footer updated in all four pages",
+          "AC7": "No dashboard pages changed",
+          "AC8": "No blog templates changed"
+        }
+      },
+      "testable_scenarios": [
+        "scenario-13"
+      ]
+    },
+    {
+      "number": 1978,
+      "title": "Enable Cloudflare Web Analytics",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [
+        1976
+      ],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": []
+    }
+  ],
+  "skipped_issues": null,
+  "test_plan_file": "wip/implement-doc_blog-infrastructure_test_plan.md"
+}

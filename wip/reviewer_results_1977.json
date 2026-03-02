@@ -1,0 +1,25 @@
+{
+  "issue": 1977,
+  "round": 1,
+  "reviewers": [
+    {
+      "focus": "pragmatic",
+      "blocking_count": 0,
+      "advisory_count": 1,
+      "detail_file": "wip/research/implement-doc_review_pragmatic_issue1977.md",
+      "note": "Blocking finding dismissed: blog.css is consumed by Hugo templates (blog/layouts/_default/baseof.html), not dead code. Advisory about stats page is expected per issue scope (AC7)."
+    },
+    {
+      "focus": "architect",
+      "blocking_count": 0,
+      "advisory_count": 1,
+      "detail_file": "wip/research/implement-doc_review_architect_issue1977.md"
+    },
+    {
+      "focus": "maintainer",
+      "blocking_count": 0,
+      "advisory_count": 3,
+      "detail_file": "wip/research/implement-doc_review_maintainer_issue1977.md"
+    }
+  ]
+}

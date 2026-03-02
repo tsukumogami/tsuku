@@ -45,8 +45,8 @@ Planned
 | ~~_Adds the section index and first blog post with frontmatter that exercises CSS styles (headings, code blocks, inline code). Validates that Hugo rendering, template blocks, and OpenGraph tags work end-to-end._~~ | | |
 | ~~[#1976: Integrate Hugo build into CI pipeline](https://github.com/tsukumogami/tsuku/issues/1976)~~ | ~~[#1974](https://github.com/tsukumogami/tsuku/issues/1974), [#1975](https://github.com/tsukumogami/tsuku/issues/1975)~~ | ~~testable~~ |
 | ~~_Updates `deploy-website.yml` with Hugo install (checksum-verified `.deb`), blog build step, and `blog/**` path triggers. After this, pushing a markdown file to `blog/content/posts/` automatically builds and deploys the blog alongside the existing site._~~ | | |
-| [#1977: Add blog link to site navigation](https://github.com/tsukumogami/tsuku/issues/1977) | [#1974](https://github.com/tsukumogami/tsuku/issues/1974) | simple |
-| _Adds "Blog" links to the nav and footer of user-facing pages (`index.html`, `recipes/`, `telemetry/`, `404.html`) so visitors can discover the blog from any page on tsuku.dev._ | | |
+| ~~[#1977: Add blog link to site navigation](https://github.com/tsukumogami/tsuku/issues/1977)~~ | ~~[#1974](https://github.com/tsukumogami/tsuku/issues/1974)~~ | ~~simple~~ |
+| ~~_Adds "Blog" links to the nav and footer of user-facing pages (`index.html`, `recipes/`, `telemetry/`, `404.html`) so visitors can discover the blog from any page on tsuku.dev._~~ | | |
 | ~~[#1978: Enable Cloudflare Web Analytics](https://github.com/tsukumogami/tsuku/issues/1978)~~ | ~~[#1976](https://github.com/tsukumogami/tsuku/issues/1976)~~ | ~~simple~~ |
 | ~~_Enables Cloudflare Web Analytics on the tsuku.dev zone so we can see visitor metrics for the blog and existing pages. No code changes needed -- configured in the Cloudflare dashboard._~~ | | |
 
@@ -83,8 +83,7 @@ graph TD
     classDef needsDesign fill:#e1bee7
     classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
 
-    class I1974,I1975,I1976,I1978 done
-    class I1977 ready
+    class I1974,I1975,I1976,I1977,I1978 done
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design

@@ -18,7 +18,7 @@ Total scenarios: 14
 - [x] scenario-10: CI workflow includes blog path triggers
 - [x] scenario-11: CI workflow installs Hugo with checksum verification
 - [x] scenario-12: CI workflow builds blog before recipe generation
-- [ ] scenario-13: User-facing pages include blog navigation link
+- [x] scenario-13: User-facing pages include blog navigation link
 - [x] scenario-14: End-to-end blog rendering with dark theme (skipped: requires browser, manual verification)
 
 ---
@@ -195,7 +195,7 @@ Total scenarios: 14
 - `grep '/blog/' website/telemetry/index.html`
 - `grep '/blog/' website/404.html`
 **Expected**: All four user-facing pages (index, recipes, telemetry, 404) contain a link to `/blog/` in both the nav header and the footer
-**Status**: pending
+**Status**: passed
 
 ---
 
