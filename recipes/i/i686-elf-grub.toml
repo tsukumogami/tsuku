@@ -1,0 +1,35 @@
+[metadata]
+  name = "i686-elf-grub"
+  description = "GNU GRUB bootloader for i686-elf"
+  homepage = "https://savannah.gnu.org/projects/grub"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["xz", "gettext"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "i686-elf-grub"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "i686-elf-grub"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/i686-elf-grub-editenv", "bin/i686-elf-grub-file", "bin/i686-elf-grub-fstest", "bin/i686-elf-grub-glue-efi", "bin/i686-elf-grub-kbdcomp", "bin/i686-elf-grub-menulst2cfg", "bin/i686-elf-grub-mkimage", "bin/i686-elf-grub-mklayout", "bin/i686-elf-grub-mknetdir", "bin/i686-elf-grub-mkpasswd-pbkdf2", "bin/i686-elf-grub-mkrelpath", "bin/i686-elf-grub-mkrescue", "bin/i686-elf-grub-mkstandalone", "bin/i686-elf-grub-render-label", "bin/i686-elf-grub-script-check", "bin/i686-elf-grub-syslinux2cfg"]
+
+[verify]
+  command = "i686-elf-grub-editenv --version"
+  pattern = ""

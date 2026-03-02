@@ -1,0 +1,50 @@
+[metadata]
+  name = "zimg"
+  description = "Scaling, colorspace conversion, and dithering library"
+  homepage = "https://github.com/sekrit-twc/zimg"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "zimg"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "zimg"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libzimg.a", "lib/libzimg.so", "lib/libzimg.so.2", "lib/libzimg.so.2.0.0", "lib/pkgconfig/zimg.pc", "include/zimg++.hpp", "include/zimg.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "zimg"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libzimg.2.dylib", "lib/libzimg.a", "lib/libzimg.dylib", "lib/pkgconfig/zimg.pc", "include/zimg++.hpp", "include/zimg.h"]
+  [steps.when]
+    os = ["darwin"]
