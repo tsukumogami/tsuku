@@ -1,0 +1,36 @@
+[metadata]
+  name = "protobuf"
+  description = "Protocol buffers (Google's data interchange format)"
+  homepage = "https://protobuf.dev/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["abseil"]
+  unsupported_platforms = ["darwin/arm64", "darwin/amd64"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = ""
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "protobuf"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/protoc", "bin/protoc-33.4.0", "bin/protoc-gen-upb", "bin/protoc-gen-upb-33.4.0", "bin/protoc-gen-upb_minitable", "bin/protoc-gen-upb_minitable-33.4.0", "bin/protoc-gen-upbdefs", "bin/protoc-gen-upbdefs-33.4.0"]
+
+[verify]
+  command = "protoc --version"
+  pattern = ""
