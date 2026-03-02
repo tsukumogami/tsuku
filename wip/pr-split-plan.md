@@ -43,12 +43,28 @@ Contents:
 - `data/queues/priority-queue.json` -- batch generation ordering
 - 45 modified recipes: satisfies sections, crates_io source, runtime_deps
 
+### PR 2: `backfill/pr2-glib` (PR #1979) -- MERGED
+
+Merged 2026-03-01. 10 homebrew recipes (5 libs + 5 tools).
+
+The original pr-index.md assigned 16 recipes (5 libs + 5 tools + 6 cargo),
+but the 6 cargo recipes were library-only crates with no CLI binary (#1980,
+fixed by #1981). The 5 originally assigned tools had unsatisfied deps, so
+they were swapped for tools with fully satisfied deps.
+
+Final contents:
+- Libraries: glib, libevent, libusb, libomp, libogg
+- Tools: desktop-file-utils, dfu-util, fstrm, par2, vorbis-tools
+- Platform exclusions: 5 tools + libevent exclude darwin (rpath #1965),
+  libevent also excludes linux/arm64 (homebrew bottle issue)
+
 ## Remaining PRs
 
-See `wip/pr-index.md` for the full per-recipe assignment.
+See `wip/pr-index.md` for the full per-recipe assignment. Note that
+pr-index.md is now stale for PR 2 (tools and cargo were swapped) and
+cargo recipes need vetting for library-only crates before each PR.
 
 Key PRs in the critical path:
-- **PR 2**: glib, libevent, libusb, libomp, libogg + 5 tools + 6 cargo
 - **PR 3**: mpfr, libidn2, graphene, notmuch, libgee + 5 tools + 6 cargo
 - **PR 4**: liblqr, libslirp, gupnp-av, jsonrpc-glib, libdex + 5 tools + 6 cargo
 - **PR 5**: libgit2-glib, unbound, qtsvg, jansson, libsamplerate + 5 tools + 6 cargo
@@ -74,3 +90,18 @@ These recipes are excluded until their blocking issues are resolved:
 | #1964 | Circular dependency detection bug | Open |
 | #1965 | macOS homebrew recipes missing rpath for runtime dep libraries | Open |
 | #1970 | Dashboard: invalid queue status "generated" | Open |
+| #1980 | cargo_install fails for library-only crates | Closed (#1981) |
+
+## Lessons learned
+
+- **Cargo recipes need vetting**: Auto-generated cargo recipes may reference
+  library-only crates (no binary). Check each crate before including in a PR.
+  Known fixes: `bindgen` -> `bindgen-cli`, `boringtun` -> `boringtun-cli`.
+  Pure libraries (bitcoin, boring, bsdiff) should be excluded.
+- **Tool dep satisfaction**: The pr-index.md tool assignments don't verify
+  all deps are on main. Must check each tool's deps before including.
+- **macOS rpath**: Most homebrew tools with library deps fail on macOS.
+  Add `unsupported_platforms = ["darwin/arm64", "darwin/amd64"]` with a
+  comment linking to #1965.
+- **arm64 homebrew bottles**: Some homebrew bottles fail on arm64 Linux
+  glibc containers. Check arm64 CI results and exclude if needed.
