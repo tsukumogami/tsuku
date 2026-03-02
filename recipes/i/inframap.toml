@@ -1,21 +1,19 @@
 [metadata]
-  name = "gitui"
-  description = "Blazing fast terminal-ui for git written in rust"
-  homepage = "https://github.com/gitui-org/gitui"
+  name = "inframap"
+  description = "Read your tfstate or HCL to generate a graph"
+  homepage = "https://github.com/cycloidio/inframap"
   version_format = ""
   requires_sudo = false
-  runtime_dependencies = ["openssl"]
   tier = 0
   type = ""
   llm_validation = "skipped"
-supported_os = ["linux"]
 
 [version]
-  source = ""
+  source = "homebrew"
   github_repo = ""
   tag_prefix = ""
   module = ""
-  formula = ""
+  formula = "inframap"
   cask = ""
   tap = ""
   fossil_repo = ""
@@ -25,12 +23,12 @@ supported_os = ["linux"]
 
 [[steps]]
   action = "homebrew"
-  formula = "gitui"
+  formula = "inframap"
 
 [[steps]]
   action = "install_binaries"
-  binaries = ["bin/gitui"]
+  binaries = ["bin/inframap"]
 
 [verify]
-  command = "gitui --version"
+  command = "inframap --version"
   pattern = ""
