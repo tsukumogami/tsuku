@@ -1,21 +1,19 @@
 [metadata]
-  name = "gitui"
-  description = "Blazing fast terminal-ui for git written in rust"
-  homepage = "https://github.com/gitui-org/gitui"
+  name = "shuffledns"
+  description = "Enumerate subdomains using active bruteforce & resolve subdomains with wildcards"
+  homepage = "https://github.com/projectdiscovery/shuffledns"
   version_format = ""
   requires_sudo = false
-  runtime_dependencies = ["openssl"]
   tier = 0
   type = ""
   llm_validation = "skipped"
-supported_os = ["linux"]
 
 [version]
-  source = ""
+  source = "homebrew"
   github_repo = ""
   tag_prefix = ""
   module = ""
-  formula = ""
+  formula = "shuffledns"
   cask = ""
   tap = ""
   fossil_repo = ""
@@ -25,12 +23,12 @@ supported_os = ["linux"]
 
 [[steps]]
   action = "homebrew"
-  formula = "gitui"
+  formula = "shuffledns"
 
 [[steps]]
   action = "install_binaries"
-  binaries = ["bin/gitui"]
+  binaries = ["bin/shuffledns"]
 
 [verify]
-  command = "gitui --version"
+  command = "shuffledns --version"
   pattern = ""
