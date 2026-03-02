@@ -5,8 +5,8 @@
   version_format = ""
   requires_sudo = false
   runtime_dependencies = ["gmp"]
-  # darwin/arm64: no bottle for arm64_sonoma; linux/arm64: no bottles
-  unsupported_platforms = ["darwin/arm64", "linux/arm64"]
+  # darwin: no bottles for arm64_sonoma or sonoma; linux/arm64: no bottles
+  unsupported_platforms = ["darwin/arm64", "darwin/amd64", "linux/arm64"]
   tier = 0
   type = ""
   llm_validation = "skipped"
