@@ -1,0 +1,51 @@
+[metadata]
+  name = "mpfr"
+  description = "C library for multiple-precision floating-point computations"
+  homepage = "https://www.mpfr.org/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["gmp"]
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "mpfr"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "mpfr"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libmpfr.a", "lib/libmpfr.so", "lib/libmpfr.so.6", "lib/libmpfr.so.6.2.2", "lib/pkgconfig/mpfr.pc", "include/mpf2mpfr.h", "include/mpfr.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "mpfr"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libmpfr.6.dylib", "lib/libmpfr.a", "lib/libmpfr.dylib", "lib/pkgconfig/mpfr.pc", "include/mpf2mpfr.h", "include/mpfr.h"]
+  [steps.when]
+    os = ["darwin"]

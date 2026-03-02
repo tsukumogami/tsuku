@@ -1,0 +1,51 @@
+[metadata]
+  name = "libgee"
+  description = "Collection library providing GObject-based interfaces"
+  homepage = "https://wiki.gnome.org/Projects/Libgee"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["glib", "gettext"]
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "libgee"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "libgee"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libgee-0.8.so", "lib/libgee-0.8.so.2", "lib/libgee-0.8.so.2.6.1", "lib/pkgconfig/gee-0.8.pc", "include/gee-0.8/gee.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "libgee"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libgee-0.8.2.dylib", "lib/libgee-0.8.dylib", "lib/pkgconfig/gee-0.8.pc", "include/gee-0.8/gee.h"]
+  [steps.when]
+    os = ["darwin"]
