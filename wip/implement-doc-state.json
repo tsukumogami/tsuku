@@ -1,9 +1,9 @@
 {
-  "pr_status": "implementing",
+  "pr_status": "qa_validated",
   "design_doc": "docs/designs/DESIGN-blog-infrastructure.md",
   "branch": "docs/blog-infrastructure",
   "pr_number": 1973,
-  "integrity_hash": "sha256:aad46d58e685959cd450ef3b89774626a90994dbbc273969cea6f752ff7c6118",
+  "integrity_hash": "sha256:e6fd318417be46c6d6780f27880ec7679e2a4f53f50b2566bdb642f431d7aa5c",
   "issues": [
     {
       "number": 1974,
@@ -215,8 +215,8 @@
     {
       "number": 1977,
       "title": "Add blog link to site navigation",
-      "status": "scrutinized",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "ci_fix_attempts": 0,
       "issue_type": "code",
       "dependencies": [
@@ -248,6 +248,31 @@
           "AC8": "No blog templates changed"
         }
       },
+      "reviewer_results": {
+        "issue": 1977,
+        "round": 1,
+        "reviewers": [
+          {
+            "focus": "pragmatic",
+            "blocking_count": 0,
+            "advisory_count": 1,
+            "detail_file": "wip/research/implement-doc_review_pragmatic_issue1977.md",
+            "note": "Blocking finding dismissed: blog.css is consumed by Hugo templates (blog/layouts/_default/baseof.html), not dead code. Advisory about stats page is expected per issue scope (AC7)."
+          },
+          {
+            "focus": "architect",
+            "blocking_count": 0,
+            "advisory_count": 1,
+            "detail_file": "wip/research/implement-doc_review_architect_issue1977.md"
+          },
+          {
+            "focus": "maintainer",
+            "blocking_count": 0,
+            "advisory_count": 3,
+            "detail_file": "wip/research/implement-doc_review_maintainer_issue1977.md"
+          }
+        ]
+      },
       "testable_scenarios": [
         "scenario-13"
       ]
@@ -255,16 +280,21 @@
     {
       "number": 1978,
       "title": "Enable Cloudflare Web Analytics",
-      "status": "pending",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "task",
       "dependencies": [
         1976
       ],
       "commits": [],
       "agent_type": "",
-      "summary": null,
+      "summary": {
+        "narrative": "",
+        "files_changed": [],
+        "tests_added": 0,
+        "key_decisions": "Manual Cloudflare dashboard configuration. No code changes needed."
+      },
       "testable_scenarios": []
     }
   ],
