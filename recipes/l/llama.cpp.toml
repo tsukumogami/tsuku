@@ -1,0 +1,35 @@
+[metadata]
+  name = "llama.cpp"
+  description = "LLM inference in C/C++"
+  homepage = "https://github.com/ggml-org/llama.cpp"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["openssl"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = ""
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "llama.cpp"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/convert_hf_to_gguf.py", "bin/llama-batched", "bin/llama-batched-bench", "bin/llama-bench", "bin/llama-cli", "bin/llama-completion", "bin/llama-convert-llama2c-to-ggml", "bin/llama-cvector-generator", "bin/llama-debug", "bin/llama-diffusion-cli", "bin/llama-embedding", "bin/llama-eval-callback", "bin/llama-export-lora", "bin/llama-finetune", "bin/llama-fit-params", "bin/llama-gen-docs", "bin/llama-gguf", "bin/llama-gguf-hash", "bin/llama-gguf-split", "bin/llama-idle", "bin/llama-imatrix", "bin/llama-lookahead", "bin/llama-lookup", "bin/llama-lookup-create", "bin/llama-lookup-merge", "bin/llama-lookup-stats", "bin/llama-mtmd-cli", "bin/llama-parallel", "bin/llama-passkey", "bin/llama-perplexity", "bin/llama-quantize", "bin/llama-retrieval", "bin/llama-save-load-state", "bin/llama-server", "bin/llama-simple", "bin/llama-simple-chat", "bin/llama-speculative", "bin/llama-speculative-simple", "bin/llama-tokenize", "bin/llama-tts"]
+
+[verify]
+  command = "convert_hf_to_gguf.py --version"
+  pattern = ""
