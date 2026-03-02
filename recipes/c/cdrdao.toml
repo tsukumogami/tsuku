@@ -8,6 +8,8 @@
   type = ""
   llm_validation = "skipped"
   runtime_dependencies = ["lame", "mad"]
+  # macOS: abort trap (dylib loading failure)
+  unsupported_platforms = ["darwin/arm64", "darwin/amd64"]
 
 [version]
   source = "homebrew"

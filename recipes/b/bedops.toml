@@ -8,6 +8,8 @@
   type = ""
   llm_validation = "skipped"
   runtime_dependencies = ["jansson"]
+  # macOS: installation verification fails (exit 1)
+  unsupported_platforms = ["darwin/arm64", "darwin/amd64"]
 
 [version]
   source = "homebrew"
