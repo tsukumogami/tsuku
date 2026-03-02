@@ -1,0 +1,50 @@
+[metadata]
+  name = "libpg-query"
+  description = "C library for accessing the PostgreSQL parser outside of the server environment"
+  homepage = "https://github.com/pganalyze/libpg_query"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "libpg_query"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "libpg_query"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libpg_query.a", "lib/libpg_query.so", "lib/libpg_query.so.1706.2", "lib/libpg_query.so.1706.2.2", "include/pg_query/pg_query.proto", "include/pg_query.h", "include/postgres_deparse.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "libpg_query"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libpg_query.1706.2.2.dylib", "lib/libpg_query.1706.2.dylib", "lib/libpg_query.a", "lib/libpg_query.dylib", "include/pg_query/pg_query.proto", "include/pg_query.h", "include/postgres_deparse.h"]
+  [steps.when]
+    os = ["darwin"]
