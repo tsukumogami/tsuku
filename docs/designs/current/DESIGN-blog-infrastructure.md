@@ -50,43 +50,7 @@ Current
 | ~~[#1978: Enable Cloudflare Web Analytics](https://github.com/tsukumogami/tsuku/issues/1978)~~ | ~~[#1976](https://github.com/tsukumogami/tsuku/issues/1976)~~ | ~~simple~~ |
 | ~~_Enables Cloudflare Web Analytics on the tsuku.dev zone so we can see visitor metrics for the blog and existing pages. No code changes needed -- configured in the Cloudflare dashboard._~~ | | |
 
-### Dependency Graph
-
-```mermaid
-graph TD
-    subgraph Phase1["Phase 1: Foundation"]
-        I1974["#1974: Add Hugo project structure"]
-    end
-
-    subgraph Phase2["Phase 2: Content and Integration"]
-        I1975["#1975: Add hello world post"]
-        I1977["#1977: Add blog link to nav"]
-    end
-
-    subgraph Phase3["Phase 3: Pipeline"]
-        I1976["#1976: Integrate Hugo into CI"]
-    end
-
-    subgraph Phase4["Phase 4: Analytics"]
-        I1978["#1978: Enable Cloudflare Analytics"]
-    end
-
-    I1974 --> I1975
-    I1974 --> I1976
-    I1974 --> I1977
-    I1975 --> I1976
-    I1976 --> I1978
-
-    classDef done fill:#c8e6c9
-    classDef ready fill:#bbdefb
-    classDef blocked fill:#fff9c4
-    classDef needsDesign fill:#e1bee7
-    classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
-
-    class I1974,I1975,I1976,I1977,I1978 done
-```
-
-**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design
+Implementation completed via PR #1973.
 
 ## Upstream Design Reference
 
