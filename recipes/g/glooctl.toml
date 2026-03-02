@@ -1,0 +1,35 @@
+[metadata]
+  name = "glooctl"
+  description = "Envoy-Powered API Gateway"
+  homepage = "https://docs.solo.io/gloo-edge/main/reference/cli/glooctl/"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+  unsupported_platforms = ["darwin/arm64", "darwin/amd64"]
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "glooctl"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "glooctl"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/glooctl"]
+
+[verify]
+  command = "glooctl --version"
+  pattern = ""
