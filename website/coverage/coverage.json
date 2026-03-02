@@ -1,22 +1,22 @@
 {
-  "generated_at": "2026-03-02T02:26:51Z",
-  "total_recipes": 390,
+  "generated_at": "2026-03-02T04:44:06Z",
+  "total_recipes": 391,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 325,
-        "total": 390,
-        "pct": 83.33333333333334
+        "supported": 326,
+        "total": 391,
+        "pct": 83.37595907928389
       },
       "glibc": {
-        "supported": 359,
-        "total": 390,
-        "pct": 92.05128205128204
+        "supported": 360,
+        "total": 391,
+        "pct": 92.07161125319693
       },
       "musl": {
-        "supported": 218,
-        "total": 390,
-        "pct": 55.8974358974359
+        "supported": 219,
+        "total": 391,
+        "pct": 56.01023017902813
       }
     },
     "by_category": {
@@ -26,9 +26,9 @@
         "glibc_support": 36
       },
       "tool": {
-        "total": 353,
-        "musl_support": 182,
-        "glibc_support": 323
+        "total": 354,
+        "musl_support": 183,
+        "glibc_support": 324
       }
     }
   },
@@ -1792,6 +1792,20 @@
       "errors": null,
       "warnings": [
         "recipe 'expat' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "eza",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": [
+        "recipe 'eza' has platform-specific actions without libc when clauses and no musl fallback"
       ]
     },
     {
