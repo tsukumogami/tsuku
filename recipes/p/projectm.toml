@@ -1,0 +1,35 @@
+[metadata]
+  name = "projectm"
+  description = "Milkdrop-compatible music visualizer"
+  homepage = "https://github.com/projectM-visualizer/projectm"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["sdl2"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = ""
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "projectm"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/projectM-unittest", "bin/projectMSDL"]
+
+[verify]
+  command = "projectM-unittest --version"
+  pattern = ""
