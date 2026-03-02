@@ -7,6 +7,7 @@
   tier = 0
   type = ""
   llm_validation = "skipped"
+  unsupported_platforms = ["darwin/arm64", "darwin/amd64", "linux/arm64"]
 
 [version]
   source = "homebrew"
