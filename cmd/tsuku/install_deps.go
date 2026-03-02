@@ -576,6 +576,12 @@ func resolveRuntimeDeps(r *recipe.Recipe, mgr *install.Manager) map[string]strin
 	// Look up installed versions for each runtime dep
 	result := make(map[string]string)
 	for depName := range deps.Runtime {
+		// Check library state first (libraries are installed to $TSUKU_HOME/libs/)
+		if libVersion := mgr.GetInstalledLibraryVersion(depName); libVersion != "" {
+			result[depName] = libVersion
+			continue
+		}
+		// Fall back to tool state (tools are installed to $TSUKU_HOME/tools/)
 		toolState, err := mgr.GetState().GetToolState(depName)
 		if err != nil || toolState == nil {
 			// Dependency not installed - skip (shouldn't happen if install order is correct)
