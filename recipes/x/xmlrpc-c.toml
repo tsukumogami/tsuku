@@ -1,0 +1,35 @@
+[metadata]
+  name = "xmlrpc-c"
+  description = "Lightweight RPC library (based on XML and HTTP)"
+  homepage = "https://xmlrpc-c.sourceforge.io/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["openssl"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = ""
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "xmlrpc-c"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/xmlrpc-c-config"]
+
+[verify]
+  command = "xmlrpc-c-config --version"
+  pattern = ""
