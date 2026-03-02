@@ -1,0 +1,34 @@
+[metadata]
+  name = "ccrypt"
+  description = "Encrypt and decrypt files and streams"
+  homepage = "https://ccrypt.sourceforge.net/"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "ccrypt"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "ccrypt"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/ccguess", "bin/ccrypt"]
+
+[verify]
+  command = "ccguess --version"
+  pattern = ""
