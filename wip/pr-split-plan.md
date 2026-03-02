@@ -58,16 +58,26 @@ Final contents:
 - Platform exclusions: 5 tools + libevent exclude darwin (rpath #1965),
   libevent also excludes linux/arm64 (homebrew bottle issue)
 
+### PR 3: `backfill/pr3-mpfr` (PR #1985) -- MERGED
+
+Merged 2026-03-02. 10 homebrew recipes (5 libs + 5 tools).
+
+Dropped 3 library-only cargo crates (bzip2, cadence, capnp) and 1 tool
+with unsatisfied deps (colmap). Replaced with notmuch-mutt (tool).
+5 cargo recipes (cargo-geiger, cargo-generate, cargo-outdated,
+cargo-release, cargo-udeps) failed due to missing OpenSSL build deps
+in sandbox -- parked for future PR with extra_dependencies fix.
+
+Final contents:
+- Libraries: mpfr, libidn2, graphene, notmuch, libgee
+- Tools: aarch64-elf-gdb, aerc, arm-none-eabi-gdb, dissent, notmuch-mutt
+- All tools exclude darwin (rpath #1965)
+
 ## Remaining PRs
 
-See `wip/pr-index.md` for the full per-recipe assignment. Note that
-pr-index.md is now stale for PR 2 (tools and cargo were swapped) and
-cargo recipes need vetting for library-only crates before each PR.
-
-Key PRs in the critical path:
-- **PR 3**: mpfr, libidn2, graphene, notmuch, libgee + 5 tools + 6 cargo
-- **PR 4**: liblqr, libslirp, gupnp-av, jsonrpc-glib, libdex + 5 tools + 6 cargo
-- **PR 5**: libgit2-glib, unbound, qtsvg, jansson, libsamplerate + 5 tools + 6 cargo
+Going forward, PRs triple the homebrew count (~15 libs + ~15 tools) since
+homebrew recipes test fast. Cargo recipes with openssl deps need
+extra_dependencies fix before inclusion. pr-index.md is stale for PRs 2+.
 
 ## Deferred recipes
 
@@ -105,3 +115,8 @@ These recipes are excluded until their blocking issues are resolved:
   comment linking to #1965.
 - **arm64 homebrew bottles**: Some homebrew bottles fail on arm64 Linux
   glibc containers. Check arm64 CI results and exclude if needed.
+- **Cargo openssl deps**: Most cargo recipes that do HTTP/TLS depend on
+  openssl-sys. Fix: add `extra_dependencies = ["openssl", "pkg-config"]`.
+  For vendored openssl (openssl-src), also need perl.
+- **Homebrew recipes are fast**: ~1-6s per recipe in sandbox. Triple the
+  homebrew count per PR (~15 libs + ~15 tools) to move faster.
