@@ -1,0 +1,35 @@
+[metadata]
+  name = "ocaml"
+  description = "General purpose programming language in the ML family"
+  homepage = "https://ocaml.org/"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+  unsupported_platforms = ["darwin/arm64", "darwin/amd64"]
+
+[version]
+  source = ""
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "ocaml"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/ocaml", "bin/ocamlc", "bin/ocamlc.byte", "bin/ocamlc.opt", "bin/ocamlcmt", "bin/ocamlcp", "bin/ocamldebug", "bin/ocamldep", "bin/ocamldep.byte", "bin/ocamldep.opt", "bin/ocamldoc", "bin/ocamldoc.opt", "bin/ocamllex", "bin/ocamllex.byte", "bin/ocamllex.opt", "bin/ocamlmklib", "bin/ocamlmktop", "bin/ocamlobjinfo", "bin/ocamlobjinfo.byte", "bin/ocamlobjinfo.opt", "bin/ocamlopt", "bin/ocamlopt.byte", "bin/ocamlopt.opt", "bin/ocamloptp", "bin/ocamlprof", "bin/ocamlrun", "bin/ocamlrund", "bin/ocamlruni", "bin/ocamlyacc"]
+
+[verify]
+  command = "ocaml --version"
+  pattern = ""

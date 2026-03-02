@@ -1,0 +1,35 @@
+[metadata]
+  name = "octomap"
+  description = "Efficient probabilistic 3D mapping framework based on octrees"
+  homepage = "https://octomap.github.io/"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+  unsupported_platforms = ["darwin/arm64", "darwin/amd64"]
+
+[version]
+  source = ""
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "octomap"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/binvox2bt", "bin/bt2vrml", "bin/compare_octrees", "bin/convert_octree", "bin/edit_octree", "bin/eval_octree_accuracy", "bin/graph2tree", "bin/log2graph"]
+
+[verify]
+  command = "binvox2bt --version"
+  pattern = ""
