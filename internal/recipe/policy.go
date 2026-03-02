@@ -1,10 +1,26 @@
 package recipe
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/tsukumogami/tsuku/internal/platform"
+)
 
 // AllLinuxFamilies lists all supported Linux distribution families.
 // Used when a recipe requires files for all families (FamilyVarying, FamilyMixed).
 var AllLinuxFamilies = []string{"debian", "rhel", "arch", "alpine", "suse"}
+
+// FamiliesForLibc returns the Linux families that use a given libc implementation.
+// Derived from AllLinuxFamilies and platform.LibcForFamily so it stays consistent.
+func FamiliesForLibc(libc string) []string {
+	var families []string
+	for _, f := range AllLinuxFamilies {
+		if platform.LibcForFamily(f) == libc {
+			families = append(families, f)
+		}
+	}
+	return families
+}
 
 // RecipeFamilyPolicy describes how a recipe relates to Linux families.
 // This determines which platform+family combinations need golden files.
@@ -113,6 +129,11 @@ func AnalyzeRecipe(recipe *Recipe) *RecipeAnalysis {
 			}
 		} else if analysis.Constraint != nil && analysis.Constraint.LinuxFamily != "" {
 			familiesUsed[analysis.Constraint.LinuxFamily] = true
+		} else if analysis.Constraint != nil && analysis.Constraint.Libc != "" {
+			// Libc-constrained step: map libc to its corresponding families
+			for _, f := range FamiliesForLibc(analysis.Constraint.Libc) {
+				familiesUsed[f] = true
+			}
 		} else if analysis.Constraint == nil || analysis.Constraint.OS == "" || analysis.Constraint.OS == "linux" {
 			hasUnconstrainedLinuxSteps = true
 		}

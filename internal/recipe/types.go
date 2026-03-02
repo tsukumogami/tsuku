@@ -598,6 +598,7 @@ type Constraint struct {
 	Arch        string // e.g., "amd64", "arm64", or empty (any)
 	LinuxFamily string // e.g., "debian", or empty (any linux)
 	GPU         string // e.g., "nvidia", "amd", or empty (any GPU)
+	Libc        string // e.g., "glibc", "musl", or empty (any libc)
 }
 
 // Clone returns a copy of the constraint, or an empty constraint if c is nil.
@@ -611,11 +612,12 @@ func (c *Constraint) Clone() *Constraint {
 		Arch:        c.Arch,
 		LinuxFamily: c.LinuxFamily,
 		GPU:         c.GPU,
+		Libc:        c.Libc,
 	}
 }
 
 // Validate returns an error if the constraint contains invalid combinations.
-// Invalid state: LinuxFamily set when OS is not "linux" (or empty).
+// Invalid state: LinuxFamily or Libc set when OS is not "linux" (or empty).
 func (c *Constraint) Validate() error {
 	if c == nil {
 		return nil
@@ -623,6 +625,10 @@ func (c *Constraint) Validate() error {
 	// LinuxFamily is only valid when OS is empty (implies linux) or OS is "linux"
 	if c.LinuxFamily != "" && c.OS != "" && c.OS != "linux" {
 		return fmt.Errorf("linux_family %q is only valid with os=\"linux\", got os=%q", c.LinuxFamily, c.OS)
+	}
+	// Libc is only valid when OS is empty (implies linux) or OS is "linux"
+	if c.Libc != "" && c.OS != "" && c.OS != "linux" {
+		return fmt.Errorf("libc %q is only valid with os=\"linux\", got os=%q", c.Libc, c.OS)
 	}
 	return nil
 }
@@ -684,6 +690,15 @@ func MergeWhenClause(implicit *Constraint, when *WhenClause) (*Constraint, error
 				result.Arch, when.Arch)
 		}
 		result.Arch = when.Arch
+	}
+
+	// Propagate Libc filter (single value -> set constraint; multi-value -> leave empty)
+	if len(when.Libc) == 1 {
+		if result.Libc != "" && result.Libc != when.Libc[0] {
+			return nil, fmt.Errorf("libc conflict: action requires %q but when clause specifies %q",
+				result.Libc, when.Libc[0])
+		}
+		result.Libc = when.Libc[0]
 	}
 
 	// Propagate GPU filter (single value only, no conflict detection needed)

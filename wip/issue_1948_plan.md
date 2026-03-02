@@ -26,28 +26,31 @@ None.
 
 ## Implementation Steps
 
-- [ ] Add `Libc` field to `Constraint` struct in `types.go` (string field, e.g., "glibc", "musl", or empty for unconstrained)
-- [ ] Update `Constraint.Clone()` to copy the `Libc` field
-- [ ] Update `Constraint.Validate()` to check that `Libc` is only set when `OS` is empty or `"linux"` (same pattern as `LinuxFamily` validation)
-- [ ] Add libc propagation in `MergeWhenClause()`: when `when.Libc` has exactly 1 value, set `result.Libc` to that value (with conflict detection against implicit constraint); when multi-value (e.g., `["glibc", "musl"]`), leave `result.Libc` empty since it spans both
-- [ ] Add helper function `FamiliesForLibc(libc string) []string` in `policy.go` that maps "musl" -> ["alpine"] and "glibc" -> ["debian", "rhel", "arch", "suse"]; uses `AllLinuxFamilies` and `platform.LibcForFamily` for consistency
-- [ ] Update `AnalyzeRecipe()` in `policy.go` to check `analysis.Constraint.Libc`:
+- [x] Add `Libc` field to `Constraint` struct in `types.go` (string field, e.g., "glibc", "musl", or empty for unconstrained)
+- [x] Update `Constraint.Clone()` to copy the `Libc` field
+- [x] Update `Constraint.Validate()` to check that `Libc` is only set when `OS` is empty or `"linux"` (same pattern as `LinuxFamily` validation)
+- [x] Add libc propagation in `MergeWhenClause()`: when `when.Libc` has exactly 1 value, set `result.Libc` to that value (with conflict detection against implicit constraint); when multi-value (e.g., `["glibc", "musl"]`), leave `result.Libc` empty since it spans both
+- [x] Add helper function `FamiliesForLibc(libc string) []string` in `policy.go` that maps "musl" -> ["alpine"] and "glibc" -> ["debian", "rhel", "arch", "suse"]; uses `AllLinuxFamilies` and `platform.LibcForFamily` for consistency
+- [x] Update `AnalyzeRecipe()` in `policy.go` to check `analysis.Constraint.Libc`:
   - If `Libc` is set and `LinuxFamily` is not set, derive the family set via `FamiliesForLibc` and add each to `familiesUsed`
   - If both `Libc` and `LinuxFamily` are set, the existing `LinuxFamily` logic already handles it (no change needed)
   - A libc-constrained step without a family constraint should NOT count as `hasUnconstrainedLinuxSteps` (it is family-scoped)
-- [ ] Add unit tests in `analysis_test.go`:
-  - `TestComputeAnalysis_LibcSingleValue`: when clause `libc = ["musl"]` produces `Constraint{Libc: "musl"}`
-  - `TestComputeAnalysis_LibcMultiValue`: when clause `libc = ["glibc", "musl"]` leaves `Constraint.Libc` empty
-  - `TestComputeAnalysis_LibcConflict`: implicit constraint with `Libc: "glibc"` + when `libc = ["musl"]` produces error
-  - `TestComputeAnalysis_LibcOnNonLinux`: when clause with `os = ["darwin"]` + `libc = ["glibc"]` validates correctly (libc only meaningful on linux, but the WhenClause already handles this via Matches())
-- [ ] Add unit tests in `policy_test.go`:
+- [x] Add unit tests in `types_test.go`:
+  - `TestMergeWhenClause_SingleLibc`: when clause `libc = ["musl"]` produces `Constraint{Libc: "musl"}`
+  - `TestMergeWhenClause_MultiLibcLeavesEmpty`: when clause `libc = ["glibc", "musl"]` leaves `Constraint.Libc` empty
+  - `TestMergeWhenClause_LibcConflict`: implicit constraint with `Libc: "glibc"` + when `libc = ["musl"]` produces error
+  - `TestMergeWhenClause_LibcRedundant`: redundant libc (same value) merges correctly
+  - `TestConstraint_Clone_IncludesLibc`, `TestConstraint_Validate_LibcOnNonLinux`, etc.
+- [x] Add unit tests in `policy_test.go`:
   - `TestAnalyzeRecipe_LibcMuslOnly`: recipe with only `libc = ["musl"]` steps -> `FamilySpecific` with `alpine`
   - `TestAnalyzeRecipe_LibcGlibcOnly`: recipe with only `libc = ["glibc"]` steps -> `FamilySpecific` with `debian`, `rhel`, `arch`, `suse`
   - `TestAnalyzeRecipe_LibcBothSplit`: recipe with separate glibc and musl steps -> `FamilySpecific` with all 5 families
   - `TestAnalyzeRecipe_LibcMixedWithUnconstrained`: recipe with libc-constrained + unconstrained steps -> `FamilyMixed`
   - `TestSupportedPlatforms_LibcMuslOnly`: verifies only alpine platforms are generated
-- [ ] Run `go test ./internal/recipe/...` to verify all existing and new tests pass
-- [ ] Run `go vet ./...` and `go build ./cmd/tsuku` to verify no regressions
+  - `TestAnalyzeRecipe_LibcWithLinuxFamilyPreference`: LinuxFamily takes precedence over Libc
+  - `TestFamiliesForLibc`: verifies musl->alpine and glibc->debian/rhel/arch/suse mapping
+- [x] Run `go test ./internal/recipe/...` to verify all existing and new tests pass
+- [x] Run `go vet ./...` and `go build ./cmd/tsuku` to verify no regressions
 
 ## Testing Strategy
 
