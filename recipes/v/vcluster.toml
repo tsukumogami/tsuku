@@ -1,21 +1,20 @@
 [metadata]
-  name = "gitui"
-  description = "Blazing fast terminal-ui for git written in rust"
-  homepage = "https://github.com/gitui-org/gitui"
+  name = "vcluster"
+  description = "Creates fully functional virtual k8s cluster inside host k8s cluster's namespace"
+  homepage = "https://www.vcluster.com"
   version_format = ""
   requires_sudo = false
-  runtime_dependencies = ["openssl"]
+  runtime_dependencies = ["kubernetes-cli"]
   tier = 0
   type = ""
   llm_validation = "skipped"
-supported_os = ["linux"]
 
 [version]
-  source = ""
+  source = "homebrew"
   github_repo = ""
   tag_prefix = ""
   module = ""
-  formula = ""
+  formula = "vcluster"
   cask = ""
   tap = ""
   fossil_repo = ""
@@ -25,12 +24,12 @@ supported_os = ["linux"]
 
 [[steps]]
   action = "homebrew"
-  formula = "gitui"
+  formula = "vcluster"
 
 [[steps]]
   action = "install_binaries"
-  binaries = ["bin/gitui"]
+  binaries = ["bin/vcluster"]
 
 [verify]
-  command = "gitui --version"
+  command = "vcluster --version"
   pattern = ""
