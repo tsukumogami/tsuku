@@ -10,6 +10,7 @@
     "mpfr",
     "readline",
   ]
+  unsupported_platforms = ["darwin/arm64", "darwin/amd64"]
   tier = 0
   type = ""
   llm_validation = "skipped"
