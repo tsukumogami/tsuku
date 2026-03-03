@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-03T10:43:16Z",
+  "generated_at": "2026-03-03T11:35:31Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -869,7 +869,7 @@
           "name": "aarch64-elf-gcc",
           "ecosystem": "homebrew",
           "priority": 3,
-          "category": "missing_dep",
+          "category": "install_failed",
           "failure_count": 5,
           "next_retry_at": "2026-02-19T15:38:37Z"
         },
@@ -37734,13 +37734,98 @@
     }
   ],
   "failures": {
-    "generation_failed": 295,
-    "install_failed": 185,
-    "missing_dep": 67,
+    "generation_failed": 296,
+    "install_failed": 192,
+    "missing_dep": 68,
     "network_error": 7,
-    "recipe_not_found": 72
+    "recipe_not_found": 73
   },
   "failure_details": [
+    {
+      "id": "homebrew-2026-03-03T11-33-11Z-aarch64-elf-gcc",
+      "package": "aarch64-elf-gcc",
+      "ecosystem": "homebrew",
+      "category": "install_failed",
+      "batch_id": "2026-03-03T11-33-11Z",
+      "timestamp": "2026-03-03T11:33:11.341464722Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T11-32-58Z-a2ps",
+      "package": "a2ps",
+      "ecosystem": "homebrew",
+      "category": "install_failed",
+      "batch_id": "2026-03-03T11-33-11Z",
+      "timestamp": "2026-03-03T11:32:58.202152846Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T11-32-54Z-openjdk",
+      "package": "openjdk",
+      "ecosystem": "homebrew",
+      "category": "missing_dep",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for openjdk from homebrew:openjdk...\nFetching formula metadata... done (v25.0.2)\nInspecting bottle contents... failed\ndeterministic generation failed: [missing_dep] missing dependencies: recipe harfbuzz not found in registry; recipe little-cms2 not found in registry",
+      "batch_id": "2026-03-03T11-33-11Z",
+      "timestamp": "2026-03-03T11:32:54.162094629Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T11-32-45Z-libassuan",
+      "package": "libassuan",
+      "ecosystem": "homebrew",
+      "category": "install_failed",
+      "batch_id": "2026-03-03T11-33-11Z",
+      "timestamp": "2026-03-03T11:32:45.751761783Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T11-32-39Z-little-cms2",
+      "package": "little-cms2",
+      "ecosystem": "homebrew",
+      "category": "install_failed",
+      "batch_id": "2026-03-03T11-33-11Z",
+      "timestamp": "2026-03-03T11:32:39.996174686Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T11-32-36Z-exa",
+      "package": "exa",
+      "ecosystem": "homebrew",
+      "category": "recipe_not_found",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: package 'exa' not found in homebrew",
+      "batch_id": "2026-03-03T11-33-11Z",
+      "timestamp": "2026-03-03T11:32:36.979000039Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T11-32-35Z-ffmpeg",
+      "package": "ffmpeg",
+      "ecosystem": "homebrew",
+      "category": "install_failed",
+      "batch_id": "2026-03-03T11-33-11Z",
+      "timestamp": "2026-03-03T11:32:35.735137159Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T11-32-22Z-tmux",
+      "package": "tmux",
+      "ecosystem": "homebrew",
+      "category": "install_failed",
+      "message": "Error: recipe validation failed for 'libevent'\n  - steps: step 3: when.os contains 'darwin' which is not in the recipe's supported platforms\n  - steps: step 4: when.os contains 'darwin' which is not in the recipe's supported platforms",
+      "batch_id": "2026-03-03T11-33-11Z",
+      "timestamp": "2026-03-03T11:32:22.913091695Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T11-32-20Z-task",
+      "package": "task",
+      "ecosystem": "homebrew",
+      "category": "install_failed",
+      "message": "tsuku collects anonymous usage statistics to improve the tool.\nNo personal information is collected. See: https://tsuku.dev/telemetry\n\nTo opt out: tsuku config set telemetry false\n         or export TSUKU_NO_TELEMETRY=1",
+      "batch_id": "2026-03-03T11-33-11Z",
+      "timestamp": "2026-03-03T11:32:20.704196526Z"
+    },
+    {
+      "id": "github-2026-03-03T11-32-16Z-bat",
+      "package": "bat",
+      "ecosystem": "github",
+      "category": "generation_failed",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: 'bat' resolved to github (sharkdp/bat), which requires LLM for recipe generation.\nRemove --deterministic-only or wait for a recipe to be contributed.",
+      "batch_id": "2026-03-03T11-33-11Z",
+      "timestamp": "2026-03-03T11:32:16.116485167Z"
+    },
     {
       "id": "homebrew-2026-03-03T10-39-47Z-certifi",
       "package": "certifi",
@@ -38893,8 +38978,8 @@
       "timestamp": "2026-03-03T04:46:51.406194538Z"
     },
     {
-      "id": "batch-2026-03-03T04-41-23Z-libgcrypt",
-      "package": "libgcrypt",
+      "id": "batch-2026-03-03T04-41-23Z-libtool",
+      "package": "libtool",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -38908,8 +38993,8 @@
       "timestamp": "2026-03-03T04:41:23Z"
     },
     {
-      "id": "batch-2026-03-03T04-41-23Z-libtool",
-      "package": "libtool",
+      "id": "batch-2026-03-03T04-41-23Z-libgcrypt",
+      "package": "libgcrypt",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -39470,95 +39555,6 @@
       "message": "Installing eval-time dependencies: [nodejs]\nInstalling nodejs...\nChecking runtime dependencies for nodejs...\n  Resolving runtime dependency 'gcc-libs'...\nExecuting plan: gcc-libs@15.2.0\n   Work directory: /tmp/action-validator-928693963\n   Total steps: 5 (including 0 from dependencies)\n\nStep 1/5: download_file\n   Using cached: gcc.tar.gz\n   ✓ Restored from cache\n\nStep 2/5: extract\n   Extracting: gcc.tar.gz\n   Format: tar.gz\n   Strip dirs: 2\n\nStep 3/5: homebrew_relocate\n   Relocating placeholde",
       "batch_id": "2026-03-02T04-17-18Z",
       "timestamp": "2026-03-02T04:17:06.47927134Z"
-    },
-    {
-      "id": "crates.io-2026-03-02T04-16-30Z-ascii",
-      "package": "ascii",
-      "ecosystem": "crates.io",
-      "category": "install_failed",
-      "message": "Installing eval-time dependencies: [rust]\nInstalling rust...\nGenerating plan for rust@1.93.1\nExecuting plan: rust@1.93.1\n   Work directory: /tmp/action-validator-4250712087\n   Total steps: 4 (including 0 from dependencies)\n\nStep 1/4: download_file\n   Using cached: rust-1.93.1-x86_64-unknown-linux-gnu.tar.gz\n   ✓ Restored from cache\n\nStep 2/4: extract\n   Extracting: rust-1.93.1-x86_64-unknown-linux-gnu.tar.gz\n   Format: tar.gz\n   Strip dirs: 1\n\nStep 3/4: run_command\n   Running: ./install.sh --p",
-      "batch_id": "2026-03-02T04-17-18Z",
-      "timestamp": "2026-03-02T04:16:30.598996035Z"
-    },
-    {
-      "id": "rubygems-2026-03-02T04-15-37Z-amp",
-      "package": "amp",
-      "ecosystem": "rubygems",
-      "category": "install_failed",
-      "message": "Error: recipe validation failed for 'amp'\n  - metadata.homepage: homepage must start with https:// (got: http://amp.carboni.ca/)",
-      "batch_id": "2026-03-02T04-17-18Z",
-      "timestamp": "2026-03-02T04:15:37.975206417Z"
-    },
-    {
-      "id": "github-2026-03-02T04-15-23Z-bat",
-      "package": "bat",
-      "ecosystem": "github",
-      "category": "generation_failed",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: 'bat' resolved to github (sharkdp/bat), which requires LLM for recipe generation.\nRemove --deterministic-only or wait for a recipe to be contributed.",
-      "batch_id": "2026-03-02T04-17-18Z",
-      "timestamp": "2026-03-02T04:15:23.933276099Z"
-    },
-    {
-      "id": "homebrew-2026-02-23T02-08-32Z-acme.sh",
-      "package": "acme.sh",
-      "ecosystem": "homebrew",
-      "category": "generation_failed",
-      "subcategory": "no_bottles",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for acme.sh from homebrew:acme.sh...\nFetching formula metadata... done (v3.1.2)\nInspecting bottle contents... failed\ndeterministic generation failed: [no_bottles] formula acme.sh has no bottles available",
-      "batch_id": "2026-02-23T02-08-32Z",
-      "timestamp": "2026-02-23T02:08:32.357950472Z"
-    },
-    {
-      "id": "homebrew-2026-02-23T02-08-30Z-achannarasappa/tap/ticker",
-      "package": "achannarasappa/tap/ticker",
-      "ecosystem": "homebrew",
-      "category": "recipe_not_found",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: package 'achannarasappa/tap/ticker' not found in homebrew",
-      "batch_id": "2026-02-23T02-08-32Z",
-      "timestamp": "2026-02-23T02:08:30.956761467Z"
-    },
-    {
-      "id": "homebrew-2026-02-23T02-08-29Z-abduco",
-      "package": "abduco",
-      "ecosystem": "homebrew",
-      "category": "install_failed",
-      "batch_id": "2026-02-23T02-08-32Z",
-      "timestamp": "2026-02-23T02:08:29.837077401Z"
-    },
-    {
-      "id": "homebrew-2026-02-23T02-08-27Z-abcmidi",
-      "package": "abcmidi",
-      "ecosystem": "homebrew",
-      "category": "install_failed",
-      "batch_id": "2026-02-23T02-08-32Z",
-      "timestamp": "2026-02-23T02:08:27.525697979Z"
-    },
-    {
-      "id": "homebrew-2026-02-23T02-08-25Z-aarch64-elf-gdb",
-      "package": "aarch64-elf-gdb",
-      "ecosystem": "homebrew",
-      "category": "recipe_not_found",
-      "message": "Error: registry: recipe mpfr not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create mpfr --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi, npm",
-      "batch_id": "2026-02-23T02-08-32Z",
-      "timestamp": "2026-02-23T02:08:25.104090611Z"
-    },
-    {
-      "id": "homebrew-2026-02-23T02-08-23Z-aarch64-elf-gcc",
-      "package": "aarch64-elf-gcc",
-      "ecosystem": "homebrew",
-      "category": "recipe_not_found",
-      "message": "Error: registry: recipe isl not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create isl --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi, npm",
-      "batch_id": "2026-02-23T02-08-32Z",
-      "timestamp": "2026-02-23T02:08:23.162326849Z"
-    },
-    {
-      "id": "homebrew-2026-02-23T02-08-15Z-a2ps",
-      "package": "a2ps",
-      "ecosystem": "homebrew",
-      "category": "recipe_not_found",
-      "message": "Error: registry: recipe bdw-gc not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create bdw-gc --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi, npm",
-      "batch_id": "2026-02-23T02-08-32Z",
-      "timestamp": "2026-02-23T02:08:15.201853337Z"
     }
   ],
   "health": {
@@ -39571,14 +39567,14 @@
       },
       "github": {
         "breaker_state": "open",
-        "failures": 42,
-        "last_failure": "2026-03-03T09:42:58Z",
-        "opens_at": "2026-03-03T10:42:58Z"
+        "failures": 43,
+        "last_failure": "2026-03-03T11:35:01Z",
+        "opens_at": "2026-03-03T12:35:01Z"
       },
       "homebrew": {
         "breaker_state": "closed",
-        "failures": 3,
-        "last_failure": "2026-03-03T10:41:45Z",
+        "failures": 4,
+        "last_failure": "2026-03-03T11:35:01Z",
         "opens_at": "2026-03-02T19:46:21Z"
       },
       "npm": {
@@ -39601,12 +39597,12 @@
       }
     },
     "last_run": {
-      "batch_id": "2026-03-03T10-41-49Z",
+      "batch_id": "2026-03-03T11-35-05Z",
       "ecosystems": {
-        "crates.io": 1,
+        "github": 1,
         "homebrew": 9
       },
-      "timestamp": "2026-03-03T10:41:49Z",
+      "timestamp": "2026-03-03T11:35:05Z",
       "succeeded": 0,
       "failed": 0,
       "total": 0
@@ -39623,7 +39619,7 @@
       "total": 2,
       "recipes_merged": 2
     },
-    "runs_since_last_success": 3
+    "runs_since_last_success": 4
   },
   "runs": [
     {
