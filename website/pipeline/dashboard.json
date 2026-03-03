@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-03T10:42:12Z",
+  "generated_at": "2026-03-03T10:43:16Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 26,
       "excluded": 5,
-      "failed": 38,
-      "pending": 3903,
+      "failed": 35,
+      "pending": 3906,
       "success": 1333
     },
     "by_tier": {
@@ -24,8 +24,8 @@
       "3": {
         "blocked": 17,
         "excluded": 5,
-        "failed": 26,
-        "pending": 3892,
+        "failed": 23,
+        "pending": 3895,
         "success": 1320
       }
     },
@@ -40,7 +40,8 @@
       },
       "crates.io": {
         "excluded": 5,
-        "pending": 77,
+        "failed": 1,
+        "pending": 76,
         "success": 23,
         "total": 105
       },
@@ -55,8 +56,8 @@
       },
       "homebrew": {
         "blocked": 26,
-        "failed": 38,
-        "pending": 3708,
+        "failed": 34,
+        "pending": 3712,
         "success": 1111,
         "total": 4883
       },
@@ -675,58 +676,22 @@
           "next_retry_at": "2026-03-03T13:44:08Z"
         },
         {
-          "id": "homebrew:addlicense",
-          "name": "addlicense",
+          "id": "homebrew:autoconf",
+          "name": "autoconf",
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "install_failed",
           "failure_count": 3,
-          "next_retry_at": "2026-03-03T10:14:24Z"
+          "next_retry_at": "2026-03-03T14:42:48Z"
         },
         {
-          "id": "homebrew:adembc/tap/lazyssh",
-          "name": "adembc/tap/lazyssh",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "recipe_not_found",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-03T10:14:24Z"
-        },
-        {
-          "id": "homebrew:adwaita-icon-theme",
-          "name": "adwaita-icon-theme",
+          "id": "homebrew:certifi",
+          "name": "certifi",
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "generation_failed",
           "failure_count": 3,
-          "next_retry_at": "2026-03-03T10:14:24Z"
-        },
-        {
-          "id": "homebrew:afl++",
-          "name": "afl++",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "recipe_not_found",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-03T10:14:24Z"
-        },
-        {
-          "id": "homebrew:agavra/tap/tuicr",
-          "name": "agavra/tap/tuicr",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "recipe_not_found",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-03T10:14:24Z"
-        },
-        {
-          "id": "homebrew:agrinman/tap/tunnelto",
-          "name": "agrinman/tap/tunnelto",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "recipe_not_found",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-03T10:14:24Z"
+          "next_retry_at": "2026-03-03T14:42:48Z"
         },
         {
           "id": "homebrew:icu4c@78",
@@ -738,22 +703,13 @@
           "next_retry_at": "2026-03-03T11:49:01Z"
         },
         {
-          "id": "homebrew:libassuan",
-          "name": "libassuan",
-          "ecosystem": "homebrew",
+          "id": "crates.io:numpy",
+          "name": "numpy",
+          "ecosystem": "crates.io",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-03T09:58:15Z"
-        },
-        {
-          "id": "homebrew:little-cms2",
-          "name": "little-cms2",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-03T09:58:15Z"
+          "failure_count": 2,
+          "next_retry_at": "2026-03-03T12:42:48Z"
         },
         {
           "id": "homebrew:openjph",
@@ -763,6 +719,24 @@
           "category": "install_failed",
           "failure_count": 3,
           "next_retry_at": "2026-03-03T13:44:08Z"
+        },
+        {
+          "id": "homebrew:p11-kit",
+          "name": "p11-kit",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-03T14:42:48Z"
+        },
+        {
+          "id": "homebrew:pmix",
+          "name": "pmix",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-03T14:42:48Z"
         },
         {
           "id": "homebrew:tree-sitter@0.25",
@@ -871,7 +845,7 @@
           "ecosystem": "homebrew",
           "priority": 1,
           "category": "install_failed",
-          "failure_count": 13
+          "failure_count": 14
         },
         {
           "id": "homebrew:ffmpeg",
@@ -879,7 +853,7 @@
           "ecosystem": "homebrew",
           "priority": 2,
           "category": "install_failed",
-          "failure_count": 11
+          "failure_count": 12
         },
         {
           "id": "homebrew:a2ps",
@@ -954,6 +928,24 @@
           "next_retry_at": "2026-03-03T09:11:37Z"
         },
         {
+          "id": "homebrew:addlicense",
+          "name": "addlicense",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-03T10:14:24Z"
+        },
+        {
+          "id": "homebrew:adembc/tap/lazyssh",
+          "name": "adembc/tap/lazyssh",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "recipe_not_found",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-03T10:14:24Z"
+        },
+        {
           "id": "homebrew:adr-tools",
           "name": "adr-tools",
           "ecosystem": "homebrew",
@@ -963,6 +955,33 @@
           "next_retry_at": "2026-03-03T07:14:24Z"
         },
         {
+          "id": "homebrew:adwaita-icon-theme",
+          "name": "adwaita-icon-theme",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "generation_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-03T10:14:24Z"
+        },
+        {
+          "id": "homebrew:afl++",
+          "name": "afl++",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "recipe_not_found",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-03T10:14:24Z"
+        },
+        {
+          "id": "homebrew:agavra/tap/tuicr",
+          "name": "agavra/tap/tuicr",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "recipe_not_found",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-03T10:14:24Z"
+        },
+        {
           "id": "homebrew:age-plugin-yubikey",
           "name": "age-plugin-yubikey",
           "ecosystem": "homebrew",
@@ -970,6 +989,15 @@
           "category": "install_failed",
           "failure_count": 1,
           "next_retry_at": "2026-03-03T07:14:24Z"
+        },
+        {
+          "id": "homebrew:agrinman/tap/tunnelto",
+          "name": "agrinman/tap/tunnelto",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "recipe_not_found",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-03T10:14:24Z"
         },
         {
           "id": "homebrew:aicommit2",
@@ -2105,15 +2133,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "homebrew:autoconf",
-          "name": "autoconf",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-03-03T07:58:15Z"
         },
         {
           "id": "homebrew:autoconf-archive",
@@ -3853,15 +3872,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "homebrew:certifi",
-          "name": "certifi",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "generation_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-03-03T08:54:46Z"
         },
         {
           "id": "homebrew:cesarferreira/tap/rip",
@@ -13156,6 +13166,15 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:libassuan",
+          "name": "libassuan",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-03T09:58:15Z"
+        },
+        {
           "id": "homebrew:libatomic_ops",
           "name": "libatomic_ops",
           "ecosystem": "homebrew",
@@ -14155,6 +14174,15 @@
           "ecosystem": "crates.io",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "homebrew:little-cms2",
+          "name": "little-cms2",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-03T09:58:15Z"
         },
         {
           "id": "crates.io:livekit",
@@ -17201,15 +17229,6 @@
           "failure_count": 0
         },
         {
-          "id": "crates.io:numpy",
-          "name": "numpy",
-          "ecosystem": "crates.io",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 1,
-          "next_retry_at": "2026-03-03T07:14:24Z"
-        },
-        {
           "id": "homebrew:nuonco/tap/nuon",
           "name": "nuonco/tap/nuon",
           "ecosystem": "homebrew",
@@ -18569,15 +18588,6 @@
           "failure_count": 0
         },
         {
-          "id": "homebrew:p11-kit",
-          "name": "p11-kit",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-03-03T08:54:46Z"
-        },
-        {
           "id": "homebrew:packetry",
           "name": "packetry",
           "ecosystem": "homebrew",
@@ -19437,15 +19447,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "homebrew:pmix",
-          "name": "pmix",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 1,
-          "next_retry_at": "2026-03-03T08:49:01Z"
         },
         {
           "id": "crates.io:pmtiles",
