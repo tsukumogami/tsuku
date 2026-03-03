@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-03T05:52:06Z",
+  "updated_at": "2026-03-03T05:58:15Z",
   "entries": [
     {
       "name": "node",
@@ -366,7 +366,7 @@
       "name": "ollama",
       "source": "homebrew:ollama",
       "priority": 2,
-      "status": "blocked",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 1,
@@ -456,11 +456,11 @@
       "name": "little-cms2",
       "source": "homebrew:little-cms2",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": "2026-03-03T05:44:42.91988522Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-03-03T09:58:15.859385129Z"
     },
     {
       "name": "gmp",
@@ -496,11 +496,11 @@
       "name": "libassuan",
       "source": "homebrew:libassuan",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": "2026-03-03T05:44:42.91988522Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-03-03T09:58:15.859385129Z"
     },
     {
       "name": "libuv",
@@ -516,21 +516,21 @@
       "name": "webp",
       "source": "homebrew:webp",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": "2026-03-03T05:44:42.91988522Z"
+      "failure_count": 2,
+      "next_retry_at": "2026-03-03T07:58:15.859385129Z"
     },
     {
       "name": "ada-url",
       "source": "homebrew:ada-url",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": "2026-03-03T05:44:42.91988522Z"
+      "failure_count": 2,
+      "next_retry_at": "2026-03-03T07:58:15.859385129Z"
     },
     {
       "name": "aom",
@@ -646,11 +646,11 @@
       "name": "autoconf",
       "source": "homebrew:autoconf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": "2026-03-03T05:44:42.91988522Z"
+      "failure_count": 2,
+      "next_retry_at": "2026-03-03T07:58:15.859385129Z"
     },
     {
       "name": "bdw-gc",
@@ -826,7 +826,7 @@
       "name": "mlx-c",
       "source": "homebrew:mlx-c",
       "priority": 3,
-      "status": "failed",
+      "status": "success",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 2,
