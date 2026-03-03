@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-03T07:49:30Z",
+  "generated_at": "2026-03-03T08:42:41Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -10413,6 +10413,7 @@
           "name": "harfbuzz",
           "ecosystem": "homebrew",
           "priority": 3,
+          "category": "missing_dep",
           "failure_count": 0
         },
         {
@@ -37731,13 +37732,100 @@
     }
   ],
   "failures": {
-    "generation_failed": 289,
-    "install_failed": 162,
-    "missing_dep": 66,
+    "generation_failed": 291,
+    "install_failed": 169,
+    "missing_dep": 67,
     "network_error": 7,
     "recipe_not_found": 72
   },
   "failure_details": [
+    {
+      "id": "homebrew-2026-03-03T08-39-56Z-harfbuzz",
+      "package": "harfbuzz",
+      "ecosystem": "homebrew",
+      "category": "missing_dep",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for harfbuzz from homebrew:harfbuzz...\nFetching formula metadata... done (v12.3.2)\nInspecting bottle contents... failed\ndeterministic generation failed: [missing_dep] missing dependencies: recipe icu4c@78 not found in registry",
+      "batch_id": "2026-03-03T08-39-56Z",
+      "timestamp": "2026-03-03T08:39:56.239006318Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T08-39-53Z-ada-url",
+      "package": "ada-url",
+      "ecosystem": "homebrew",
+      "category": "install_failed",
+      "batch_id": "2026-03-03T08-39-56Z",
+      "timestamp": "2026-03-03T08:39:53.56503572Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T08-39-49Z-webp",
+      "package": "webp",
+      "ecosystem": "homebrew",
+      "category": "install_failed",
+      "batch_id": "2026-03-03T08-39-56Z",
+      "timestamp": "2026-03-03T08:39:49.771850398Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T08-39-45Z-openjph",
+      "package": "openjph",
+      "ecosystem": "homebrew",
+      "category": "install_failed",
+      "batch_id": "2026-03-03T08-39-56Z",
+      "timestamp": "2026-03-03T08:39:45.309992419Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T08-39-39Z-nvm",
+      "package": "nvm",
+      "ecosystem": "homebrew",
+      "category": "generation_failed",
+      "subcategory": "no_bottles",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for nvm from homebrew:nvm...\nFetching formula metadata... done (v0.40.4)\nInspecting bottle contents... failed\ndeterministic generation failed: [no_bottles] formula nvm has no bottles available",
+      "batch_id": "2026-03-03T08-39-56Z",
+      "timestamp": "2026-03-03T08:39:39.476074416Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T08-39-37Z-jless",
+      "package": "jless",
+      "ecosystem": "homebrew",
+      "category": "install_failed",
+      "batch_id": "2026-03-03T08-39-56Z",
+      "timestamp": "2026-03-03T08:39:37.935401814Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T08-39-34Z-gcc",
+      "package": "gcc",
+      "ecosystem": "homebrew",
+      "category": "generation_failed",
+      "subcategory": "recipe_already_exists",
+      "message": "Error: recipe 'gcc-libs' already satisfies 'gcc'. Use --force to create anyway.",
+      "batch_id": "2026-03-03T08-39-56Z",
+      "timestamp": "2026-03-03T08:39:34.989959962Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T08-39-33Z-ffmpeg",
+      "package": "ffmpeg",
+      "ecosystem": "homebrew",
+      "category": "install_failed",
+      "batch_id": "2026-03-03T08-39-56Z",
+      "timestamp": "2026-03-03T08:39:33.844058903Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T08-39-21Z-tmux",
+      "package": "tmux",
+      "ecosystem": "homebrew",
+      "category": "install_failed",
+      "message": "Error: recipe validation failed for 'libevent'\n  - steps: step 3: when.os contains 'darwin' which is not in the recipe's supported platforms\n  - steps: step 4: when.os contains 'darwin' which is not in the recipe's supported platforms",
+      "batch_id": "2026-03-03T08-39-56Z",
+      "timestamp": "2026-03-03T08:39:21.701758524Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T08-39-19Z-task",
+      "package": "task",
+      "ecosystem": "homebrew",
+      "category": "install_failed",
+      "message": "tsuku collects anonymous usage statistics to improve the tool.\nNo personal information is collected. See: https://tsuku.dev/telemetry\n\nTo opt out: tsuku config set telemetry false\n         or export TSUKU_NO_TELEMETRY=1",
+      "batch_id": "2026-03-03T08-39-56Z",
+      "timestamp": "2026-03-03T08:39:19.286586332Z"
+    },
     {
       "id": "batch-2026-03-03T07-45-35Z-zeromq",
       "package": "zeromq",
@@ -39420,8 +39508,8 @@
       "timestamp": "2026-02-22T22:25:32.975745377Z"
     },
     {
-      "id": "batch-2026-02-21T07-27-58Z-ansifilter",
-      "package": "ansifilter",
+      "id": "batch-2026-02-21T07-27-58Z-angle-grinder",
+      "package": "angle-grinder",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -39435,13 +39523,17 @@
       "timestamp": "2026-02-21T07:27:58Z"
     },
     {
-      "id": "batch-2026-02-21T07-27-58Z-anycable-go",
-      "package": "anycable-go",
+      "id": "batch-2026-02-21T07-27-58Z-ansifilter",
+      "package": "ansifilter",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
       "exit_code": 6,
-      "platform": "linux-alpine-musl-x86_64",
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
       "batch_id": "2026-02-21T07-27-58Z",
       "timestamp": "2026-02-21T07:27:58Z"
     },
@@ -39465,8 +39557,8 @@
       "timestamp": "2026-02-21T07:27:58Z"
     },
     {
-      "id": "batch-2026-02-21T07-27-58Z-angle-grinder",
-      "package": "angle-grinder",
+      "id": "batch-2026-02-21T07-27-58Z-anyquery",
+      "package": "anyquery",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -39480,17 +39572,13 @@
       "timestamp": "2026-02-21T07:27:58Z"
     },
     {
-      "id": "batch-2026-02-21T07-27-58Z-anyquery",
-      "package": "anyquery",
+      "id": "batch-2026-02-21T07-27-58Z-anycable-go",
+      "package": "anycable-go",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
       "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
+      "platform": "linux-alpine-musl-x86_64",
       "batch_id": "2026-02-21T07-27-58Z",
       "timestamp": "2026-02-21T07:27:58Z"
     },
@@ -39521,97 +39609,6 @@
       "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: package 'approov/cli/approov' not found in homebrew",
       "batch_id": "2026-02-21T07-22-39Z",
       "timestamp": "2026-02-21T07:22:29.040778005Z"
-    },
-    {
-      "id": "homebrew-2026-02-21T07-22-28Z-apple/apple/game-porting-toolkit-compiler",
-      "package": "apple/apple/game-porting-toolkit-compiler",
-      "ecosystem": "homebrew",
-      "category": "recipe_not_found",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: package 'apple/apple/game-porting-toolkit-compiler' not found in homebrew",
-      "batch_id": "2026-02-21T07-22-39Z",
-      "timestamp": "2026-02-21T07:22:28.032226093Z"
-    },
-    {
-      "id": "homebrew-2026-02-21T07-22-27Z-apple/apple/game-porting-toolkit",
-      "package": "apple/apple/game-porting-toolkit",
-      "ecosystem": "homebrew",
-      "category": "recipe_not_found",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: package 'apple/apple/game-porting-toolkit' not found in homebrew",
-      "batch_id": "2026-02-21T07-22-39Z",
-      "timestamp": "2026-02-21T07:22:27.023753457Z"
-    },
-    {
-      "id": "homebrew-2026-02-21T07-22-26Z-apono-io/tap/apono-cli",
-      "package": "apono-io/tap/apono-cli",
-      "ecosystem": "homebrew",
-      "category": "recipe_not_found",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: package 'apono-io/tap/apono-cli' not found in homebrew",
-      "batch_id": "2026-02-21T07-22-39Z",
-      "timestamp": "2026-02-21T07:22:26.015566892Z"
-    },
-    {
-      "id": "homebrew-2026-02-21T07-22-25Z-apko",
-      "package": "apko",
-      "ecosystem": "homebrew",
-      "category": "install_failed",
-      "batch_id": "2026-02-21T07-22-39Z",
-      "timestamp": "2026-02-21T07:22:25.007101623Z"
-    },
-    {
-      "id": "homebrew-2026-02-21T07-22-21Z-api-linter",
-      "package": "api-linter",
-      "ecosystem": "homebrew",
-      "category": "install_failed",
-      "batch_id": "2026-02-21T07-22-39Z",
-      "timestamp": "2026-02-21T07:22:21.060055038Z"
-    },
-    {
-      "id": "homebrew-2026-02-21T07-22-17Z-apcupsd",
-      "package": "apcupsd",
-      "ecosystem": "homebrew",
-      "category": "generation_failed",
-      "subcategory": "no_bottles",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for apcupsd from homebrew:apcupsd...\nFetching formula metadata... done (v3.14.14)\nInspecting bottle contents... failed\ndeterministic generation failed: [no_bottles] formula apcupsd has no bottles available",
-      "batch_id": "2026-02-21T07-22-39Z",
-      "timestamp": "2026-02-21T07:22:17.860803818Z"
-    },
-    {
-      "id": "homebrew-2026-02-21T07-22-16Z-apaffenholz/polymake/polymake",
-      "package": "apaffenholz/polymake/polymake",
-      "ecosystem": "homebrew",
-      "category": "recipe_not_found",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: package 'apaffenholz/polymake/polymake' not found in homebrew",
-      "batch_id": "2026-02-21T07-22-39Z",
-      "timestamp": "2026-02-21T07:22:16.322604519Z"
-    },
-    {
-      "id": "homebrew-2026-02-21T07-22-15Z-apache-spark",
-      "package": "apache-spark",
-      "ecosystem": "homebrew",
-      "category": "generation_failed",
-      "subcategory": "no_bottles",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for apache-spark from homebrew:apache-spark...\nFetching formula metadata... done (v4.1.1)\nInspecting bottle contents... failed\ndeterministic generation failed: [no_bottles] formula apache-spark has no bottles available",
-      "batch_id": "2026-02-21T07-22-39Z",
-      "timestamp": "2026-02-21T07:22:15.313390939Z"
-    },
-    {
-      "id": "homebrew-2026-02-21T07-22-13Z-apache-polaris",
-      "package": "apache-polaris",
-      "ecosystem": "homebrew",
-      "category": "recipe_not_found",
-      "message": "Error: registry: recipe openjdk not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create openjdk --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi, npm",
-      "batch_id": "2026-02-21T07-22-39Z",
-      "timestamp": "2026-02-21T07:22:13.929418757Z"
-    },
-    {
-      "id": "homebrew-2026-02-21T07-22-04Z-apache-arrow-glib",
-      "package": "apache-arrow-glib",
-      "ecosystem": "homebrew",
-      "category": "generation_failed",
-      "subcategory": "complex_archive",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for apache-arrow-glib from homebrew:apache-arrow-glib...\nFetching formula metadata... done (v23.0.1)\nInspecting bottle contents... failed\ndeterministic generation failed: [complex_archive] formula apache-arrow-glib bottle contains no binaries in bin/",
-      "batch_id": "2026-02-21T07-22-39Z",
-      "timestamp": "2026-02-21T07:22:04.667024334Z"
     }
   ],
   "health": {
@@ -39630,8 +39627,8 @@
       },
       "homebrew": {
         "breaker_state": "closed",
-        "failures": 0,
-        "last_failure": "2026-03-03T05:51:07Z",
+        "failures": 1,
+        "last_failure": "2026-03-03T08:42:14Z",
         "opens_at": "2026-03-02T19:46:21Z"
       },
       "npm": {
@@ -39654,16 +39651,14 @@
       }
     },
     "last_run": {
-      "batch_id": "2026-03-03T07-45-41Z",
+      "batch_id": "2026-03-03T08-42-21Z",
       "ecosystems": {
-        "github": 1,
-        "homebrew": 9
+        "homebrew": 10
       },
-      "timestamp": "2026-03-03T07:45:41Z",
-      "succeeded": 2,
+      "timestamp": "2026-03-03T08:42:21Z",
+      "succeeded": 0,
       "failed": 0,
-      "total": 2,
-      "recipes_merged": 2
+      "total": 0
     },
     "last_successful_run": {
       "batch_id": "2026-03-03T07-45-41Z",
@@ -39677,7 +39672,7 @@
       "total": 2,
       "recipes_merged": 2
     },
-    "runs_since_last_success": 0
+    "runs_since_last_success": 1
   },
   "runs": [
     {
