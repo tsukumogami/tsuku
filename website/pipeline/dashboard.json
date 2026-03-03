@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-03T16:47:26Z",
+  "generated_at": "2026-03-03T17:55:33Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -37743,13 +37743,80 @@
     }
   ],
   "failures": {
-    "generation_failed": 303,
-    "install_failed": 206,
+    "generation_failed": 313,
+    "install_failed": 210,
     "missing_dep": 68,
     "network_error": 7,
     "recipe_not_found": 74
   },
   "failure_details": [
+    {
+      "id": "batch-2026-03-03T17-52-32Z-asciidoctor",
+      "package": "asciidoctor",
+      "ecosystem": "batch",
+      "category": "generation_failed",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x86_64",
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64",
+        "linux-arch-glibc-x86_64",
+        "linux-rhel-glibc-arm64",
+        "linux-rhel-glibc-x86_64",
+        "linux-suse-glibc-arm64",
+        "linux-suse-glibc-x86_64"
+      ],
+      "batch_id": "2026-03-03T17-52-32Z",
+      "timestamp": "2026-03-03T17:52:32Z"
+    },
+    {
+      "id": "pypi-2026-03-03T17-49-20Z-vllm",
+      "package": "vllm",
+      "ecosystem": "pypi",
+      "category": "install_failed",
+      "message": "Installing eval-time dependencies: [python-standalone]\nInstalling python-standalone...\nGenerating plan for python-standalone@20260303\nExecuting plan: python-standalone@20260303\n   Work directory: /tmp/action-validator-1507606670\n   Total steps: 4 (including 0 from dependencies)\n\nStep 1/4: download_file\n   Using cached: cpython-3.10.20+20260303-x86_64-unknown-linux-gnu-install_only.tar.gz\n   ✓ Restored from cache\n\nStep 2/4: extract\n   Extracting: cpython-3.10.20+20260303-x86_64-unknown-linux-gn",
+      "batch_id": "2026-03-03T17-49-20Z",
+      "timestamp": "2026-03-03T17:49:20.207964193Z"
+    },
+    {
+      "id": "npm-2026-03-03T17-44-14Z-countdown",
+      "package": "countdown",
+      "ecosystem": "npm",
+      "category": "install_failed",
+      "message": "Error: recipe validation failed for 'countdown'\n  - metadata.homepage: homepage must start with https:// (got: http://countdownjs.org)",
+      "batch_id": "2026-03-03T17-49-20Z",
+      "timestamp": "2026-03-03T17:44:14.5422426Z"
+    },
+    {
+      "id": "crates.io-2026-03-03T17-44-12Z-basis_universal",
+      "package": "basis_universal",
+      "ecosystem": "crates.io",
+      "category": "install_failed",
+      "message": "Installing eval-time dependencies: [rust]\nInstalling rust...\nGenerating plan for rust@1.93.1\nExecuting plan: rust@1.93.1\n   Work directory: /tmp/action-validator-2161871427\n   Total steps: 4 (including 0 from dependencies)\n\nStep 1/4: download_file\n   Using cached: rust-1.93.1-x86_64-unknown-linux-gnu.tar.gz\n   ✓ Restored from cache\n\nStep 2/4: extract\n   Extracting: rust-1.93.1-x86_64-unknown-linux-gnu.tar.gz\n   Format: tar.gz\n   Strip dirs: 1\n\nStep 3/4: run_command\n   Running: ./install.sh --p",
+      "batch_id": "2026-03-03T17-49-20Z",
+      "timestamp": "2026-03-03T17:44:12.629505733Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T17-43-15Z-task",
+      "package": "task",
+      "ecosystem": "homebrew",
+      "category": "install_failed",
+      "message": "tsuku collects anonymous usage statistics to improve the tool.\nNo personal information is collected. See: https://tsuku.dev/telemetry\n\nTo opt out: tsuku config set telemetry false\n         or export TSUKU_NO_TELEMETRY=1",
+      "batch_id": "2026-03-03T17-49-20Z",
+      "timestamp": "2026-03-03T17:43:15.84550563Z"
+    },
+    {
+      "id": "github-2026-03-03T17-43-10Z-bat",
+      "package": "bat",
+      "ecosystem": "github",
+      "category": "generation_failed",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: 'bat' resolved to github (sharkdp/bat), which requires LLM for recipe generation.\nRemove --deterministic-only or wait for a recipe to be contributed.",
+      "batch_id": "2026-03-03T17-49-20Z",
+      "timestamp": "2026-03-03T17:43:10.459302745Z"
+    },
     {
       "id": "pypi-2026-03-03T15-47-43Z-tctl",
       "package": "tctl",
@@ -39502,125 +39569,98 @@
       "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: package 'anomalyco/tap/opencode' not found in homebrew",
       "batch_id": "2026-03-03T03-15-07Z",
       "timestamp": "2026-03-03T03:14:19.629634386Z"
-    },
-    {
-      "id": "homebrew-2026-03-03T03-14-18Z-python@3.14",
-      "package": "python@3.14",
-      "ecosystem": "homebrew",
-      "category": "generation_failed",
-      "subcategory": "api_error",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for python@3.14 from homebrew:python@3.14...\nFetching formula metadata... done (v3.14.3)\nInspecting bottle contents... failed\ndeterministic generation failed: [api_error] failed to fetch bottle data for formula python@3.14",
-      "batch_id": "2026-03-03T03-15-07Z",
-      "timestamp": "2026-03-03T03:14:18.471189122Z"
-    },
-    {
-      "id": "homebrew-2026-03-03T03-14-17Z-openssl@3",
-      "package": "openssl@3",
-      "ecosystem": "homebrew",
-      "category": "generation_failed",
-      "subcategory": "recipe_already_exists",
-      "message": "Error: recipe 'openssl' already satisfies 'openssl@3'. Use --force to create anyway.",
-      "batch_id": "2026-03-03T03-15-07Z",
-      "timestamp": "2026-03-03T03:14:17.103060886Z"
-    },
-    {
-      "id": "homebrew-2026-03-03T03-14-16Z-vim",
-      "package": "vim",
-      "ecosystem": "homebrew",
-      "category": "missing_dep",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for vim from homebrew:vim...\nFetching formula metadata... done (v9.2.0050)\nInspecting bottle contents... failed\ndeterministic generation failed: [missing_dep] missing dependencies: recipe python@3.14 not found in registry",
-      "batch_id": "2026-03-03T03-15-07Z",
-      "timestamp": "2026-03-03T03:14:16.067729231Z"
-    },
-    {
-      "id": "homebrew-2026-03-03T03-14-12Z-tmux",
-      "package": "tmux",
-      "ecosystem": "homebrew",
-      "category": "install_failed",
-      "message": "Error: recipe validation failed for 'libevent'\n  - steps: step 3: when.os contains 'darwin' which is not in the recipe's supported platforms\n  - steps: step 4: when.os contains 'darwin' which is not in the recipe's supported platforms",
-      "batch_id": "2026-03-03T03-15-07Z",
-      "timestamp": "2026-03-03T03:14:12.951731809Z"
-    },
-    {
-      "id": "homebrew-2026-03-03T03-14-10Z-task",
-      "package": "task",
-      "ecosystem": "homebrew",
-      "category": "install_failed",
-      "message": "tsuku collects anonymous usage statistics to improve the tool.\nNo personal information is collected. See: https://tsuku.dev/telemetry\n\nTo opt out: tsuku config set telemetry false\n         or export TSUKU_NO_TELEMETRY=1",
-      "batch_id": "2026-03-03T03-15-07Z",
-      "timestamp": "2026-03-03T03:14:10.904125734Z"
-    },
-    {
-      "id": "homebrew-2026-03-03T03-14-07Z-node",
-      "package": "node",
-      "ecosystem": "homebrew",
-      "category": "missing_dep",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for node from homebrew:node...\nFetching formula metadata... done (v25.7.0)\nInspecting bottle contents... failed\ndeterministic generation failed: [missing_dep] missing dependencies: recipe ada-url not found in registry; recipe hdrhistogram_c not found in registry; recipe icu4c@78 not found in registry; recipe llhttp not found in registry; recipe uvwasi not found in registry",
-      "batch_id": "2026-03-03T03-15-07Z",
-      "timestamp": "2026-03-03T03:14:07.045477334Z"
     }
   ],
   "health": {
     "ecosystems": {
       "crates.io": {
         "breaker_state": "open",
-        "failures": 43,
-        "last_failure": "2026-03-03T15:49:34Z",
-        "opens_at": "2026-03-03T16:49:34Z"
+        "failures": 44,
+        "last_failure": "2026-03-03T17:52:32Z",
+        "opens_at": "2026-03-03T18:52:32Z"
       },
       "github": {
         "breaker_state": "open",
-        "failures": 46,
-        "last_failure": "2026-03-03T15:49:34Z",
-        "opens_at": "2026-03-03T16:49:34Z"
+        "failures": 47,
+        "last_failure": "2026-03-03T17:52:32Z",
+        "opens_at": "2026-03-03T18:52:32Z"
       },
       "homebrew": {
         "breaker_state": "open",
-        "failures": 7,
-        "last_failure": "2026-03-03T15:49:34Z",
-        "opens_at": "2026-03-03T16:49:34Z"
+        "failures": 8,
+        "last_failure": "2026-03-03T17:52:32Z",
+        "opens_at": "2026-03-03T18:52:32Z"
       },
       "npm": {
         "breaker_state": "open",
-        "failures": 41,
-        "last_failure": "2026-03-03T15:49:34Z",
-        "opens_at": "2026-03-03T16:49:34Z"
+        "failures": 42,
+        "last_failure": "2026-03-03T17:52:32Z",
+        "opens_at": "2026-03-03T18:52:32Z"
       },
       "pypi": {
         "breaker_state": "open",
-        "failures": 38,
-        "last_failure": "2026-03-03T15:49:34Z",
-        "opens_at": "2026-03-03T16:49:34Z"
+        "failures": 39,
+        "last_failure": "2026-03-03T17:52:32Z",
+        "opens_at": "2026-03-03T18:52:32Z"
       },
       "rubygems": {
-        "breaker_state": "open",
-        "failures": 41,
+        "breaker_state": "closed",
+        "failures": 0,
         "last_failure": "2026-03-03T15:49:34Z",
         "opens_at": "2026-03-03T16:49:34Z"
       }
     },
     "last_run": {
-      "batch_id": "2026-03-03T16-46-57Z",
-      "timestamp": "2026-03-03T16:46:57Z",
-      "succeeded": 0,
+      "batch_id": "2026-03-03T17-52-34Z",
+      "ecosystems": {
+        "crates.io": 1,
+        "github": 1,
+        "homebrew": 1,
+        "npm": 1,
+        "pypi": 1,
+        "rubygems": 1
+      },
+      "timestamp": "2026-03-03T17:52:34Z",
+      "succeeded": 1,
       "failed": 0,
-      "total": 0
+      "total": 1,
+      "recipes_merged": 1
     },
     "last_successful_run": {
-      "batch_id": "2026-03-03T07-45-41Z",
+      "batch_id": "2026-03-03T17-52-34Z",
       "ecosystems": {
+        "crates.io": 1,
         "github": 1,
-        "homebrew": 9
+        "homebrew": 1,
+        "npm": 1,
+        "pypi": 1,
+        "rubygems": 1
       },
-      "timestamp": "2026-03-03T07:45:41Z",
-      "succeeded": 2,
+      "timestamp": "2026-03-03T17:52:34Z",
+      "succeeded": 1,
       "failed": 0,
-      "total": 2,
-      "recipes_merged": 2
+      "total": 1,
+      "recipes_merged": 1
     },
-    "runs_since_last_success": 9
+    "runs_since_last_success": 0
   },
   "runs": [
+    {
+      "batch_id": "2026-03-03T17-52-34Z",
+      "ecosystems": {
+        "crates.io": 1,
+        "github": 1,
+        "homebrew": 1,
+        "npm": 1,
+        "pypi": 1,
+        "rubygems": 1
+      },
+      "total": 1,
+      "merged": 1,
+      "rate": 1,
+      "duration": 8,
+      "timestamp": "2026-03-03T17:52:34Z"
+    },
     {
       "batch_id": "2026-03-03T07-45-41Z",
       "ecosystems": {
@@ -39730,17 +39770,6 @@
       "rate": 1,
       "duration": 8,
       "timestamp": "2026-02-23T02:26:40Z"
-    },
-    {
-      "batch_id": "2026-02-22T22-42-09Z",
-      "ecosystems": {
-        "homebrew": 10
-      },
-      "total": 1,
-      "merged": 1,
-      "rate": 1,
-      "duration": 7,
-      "timestamp": "2026-02-22T22:42:09Z"
     }
   ],
   "disambiguations": {
