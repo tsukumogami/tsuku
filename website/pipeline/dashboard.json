@@ -1,13 +1,13 @@
 {
-  "generated_at": "2026-03-03T07:48:27Z",
+  "generated_at": "2026-03-03T07:49:30Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 25,
       "excluded": 5,
       "failed": 49,
-      "pending": 3895,
-      "success": 1331
+      "pending": 3893,
+      "success": 1333
     },
     "by_tier": {
       "1": {
@@ -25,8 +25,8 @@
         "blocked": 16,
         "excluded": 5,
         "failed": 37,
-        "pending": 3884,
-        "success": 1318
+        "pending": 3882,
+        "success": 1320
       }
     },
     "by_ecosystem": {
@@ -40,8 +40,7 @@
       },
       "crates.io": {
         "excluded": 5,
-        "failed": 1,
-        "pending": 76,
+        "pending": 77,
         "success": 23,
         "total": 105
       },
@@ -56,9 +55,9 @@
       },
       "homebrew": {
         "blocked": 25,
-        "failed": 45,
-        "pending": 3704,
-        "success": 1109,
+        "failed": 46,
+        "pending": 3701,
+        "success": 1111,
         "total": 4883
       },
       "manual": {
@@ -722,15 +721,6 @@
           "next_retry_at": "2026-03-03T10:14:24Z"
         },
         {
-          "id": "homebrew:adr-tools",
-          "name": "adr-tools",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "generation_failed",
-          "failure_count": 1,
-          "next_retry_at": "2026-03-03T07:14:24Z"
-        },
-        {
           "id": "homebrew:adwaita-icon-theme",
           "name": "adwaita-icon-theme",
           "ecosystem": "homebrew",
@@ -756,15 +746,6 @@
           "category": "recipe_not_found",
           "failure_count": 3,
           "next_retry_at": "2026-03-03T10:14:24Z"
-        },
-        {
-          "id": "homebrew:age-plugin-yubikey",
-          "name": "age-plugin-yubikey",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 1,
-          "next_retry_at": "2026-03-03T07:14:24Z"
         },
         {
           "id": "homebrew:agrinman/tap/tunnelto",
@@ -812,6 +793,15 @@
           "next_retry_at": "2026-03-03T08:54:46Z"
         },
         {
+          "id": "homebrew:icu4c@78",
+          "name": "icu4c@78",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "generation_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-03T11:49:01Z"
+        },
+        {
           "id": "pypi:lib3mf",
           "name": "lib3mf",
           "ecosystem": "pypi",
@@ -839,15 +829,6 @@
           "next_retry_at": "2026-03-03T09:58:15Z"
         },
         {
-          "id": "crates.io:numpy",
-          "name": "numpy",
-          "ecosystem": "crates.io",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 1,
-          "next_retry_at": "2026-03-03T07:14:24Z"
-        },
-        {
           "id": "homebrew:openjph",
           "name": "openjph",
           "ecosystem": "homebrew",
@@ -864,6 +845,24 @@
           "category": "install_failed",
           "failure_count": 2,
           "next_retry_at": "2026-03-03T08:54:46Z"
+        },
+        {
+          "id": "homebrew:pmix",
+          "name": "pmix",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 1,
+          "next_retry_at": "2026-03-03T08:49:01Z"
+        },
+        {
+          "id": "homebrew:tree-sitter@0.25",
+          "name": "tree-sitter@0.25",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "generation_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-03T11:49:01Z"
         },
         {
           "id": "homebrew:webp",
@@ -963,7 +962,7 @@
           "ecosystem": "homebrew",
           "priority": 1,
           "category": "install_failed",
-          "failure_count": 10
+          "failure_count": 11
         },
         {
           "id": "homebrew:ffmpeg",
@@ -971,7 +970,7 @@
           "ecosystem": "homebrew",
           "priority": 2,
           "category": "install_failed",
-          "failure_count": 8
+          "failure_count": 9
         },
         {
           "id": "homebrew:a2ps",
@@ -1008,6 +1007,24 @@
           "category": "install_failed",
           "failure_count": 1,
           "next_retry_at": "2026-03-03T06:11:37Z"
+        },
+        {
+          "id": "homebrew:adr-tools",
+          "name": "adr-tools",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "generation_failed",
+          "failure_count": 1,
+          "next_retry_at": "2026-03-03T07:14:24Z"
+        },
+        {
+          "id": "homebrew:age-plugin-yubikey",
+          "name": "age-plugin-yubikey",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 1,
+          "next_retry_at": "2026-03-03T07:14:24Z"
         },
         {
           "id": "homebrew:aicommit2",
@@ -11199,15 +11216,6 @@
           "failure_count": 1
         },
         {
-          "id": "homebrew:icu4c@78",
-          "name": "icu4c@78",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "generation_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-03-03T06:51:20Z"
-        },
-        {
           "id": "homebrew:id3v2",
           "name": "id3v2",
           "ecosystem": "homebrew",
@@ -17210,6 +17218,15 @@
           "failure_count": 0
         },
         {
+          "id": "crates.io:numpy",
+          "name": "numpy",
+          "ecosystem": "crates.io",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 1,
+          "next_retry_at": "2026-03-03T07:14:24Z"
+        },
+        {
           "id": "homebrew:nuonco/tap/nuon",
           "name": "nuonco/tap/nuon",
           "ecosystem": "homebrew",
@@ -19430,14 +19447,6 @@
           "failure_count": 0
         },
         {
-          "id": "homebrew:pmix",
-          "name": "pmix",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 0
-        },
-        {
           "id": "crates.io:pmtiles",
           "name": "pmtiles",
           "ecosystem": "crates.io",
@@ -20102,13 +20111,6 @@
         {
           "id": "homebrew:pueue",
           "name": "pueue",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "homebrew:pugixml",
-          "name": "pugixml",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
@@ -25713,15 +25715,6 @@
           "failure_count": 0
         },
         {
-          "id": "homebrew:tree-sitter@0.25",
-          "name": "tree-sitter@0.25",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "generation_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-03-03T06:08:12Z"
-        },
-        {
           "id": "homebrew:treefrog",
           "name": "treefrog",
           "ecosystem": "homebrew",
@@ -28074,13 +28067,6 @@
         {
           "id": "homebrew:zenity",
           "name": "zenity",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "homebrew:zeromq",
-          "name": "zeromq",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
@@ -35433,6 +35419,13 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:pugixml",
+          "name": "pugixml",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
           "id": "homebrew:pulsarctl",
           "name": "pulsarctl",
           "ecosystem": "homebrew",
@@ -37557,6 +37550,13 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:zeromq",
+          "name": "zeromq",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
           "id": "manual:zig",
           "name": "zig",
           "ecosystem": "manual",
@@ -39420,8 +39420,8 @@
       "timestamp": "2026-02-22T22:25:32.975745377Z"
     },
     {
-      "id": "batch-2026-02-21T07-27-58Z-angle-grinder",
-      "package": "angle-grinder",
+      "id": "batch-2026-02-21T07-27-58Z-ansifilter",
+      "package": "ansifilter",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -39435,17 +39435,13 @@
       "timestamp": "2026-02-21T07:27:58Z"
     },
     {
-      "id": "batch-2026-02-21T07-27-58Z-ansifilter",
-      "package": "ansifilter",
+      "id": "batch-2026-02-21T07-27-58Z-anycable-go",
+      "package": "anycable-go",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
       "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
+      "platform": "linux-alpine-musl-x86_64",
       "batch_id": "2026-02-21T07-27-58Z",
       "timestamp": "2026-02-21T07:27:58Z"
     },
@@ -39469,8 +39465,8 @@
       "timestamp": "2026-02-21T07:27:58Z"
     },
     {
-      "id": "batch-2026-02-21T07-27-58Z-anyquery",
-      "package": "anyquery",
+      "id": "batch-2026-02-21T07-27-58Z-angle-grinder",
+      "package": "angle-grinder",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -39484,13 +39480,17 @@
       "timestamp": "2026-02-21T07:27:58Z"
     },
     {
-      "id": "batch-2026-02-21T07-27-58Z-anycable-go",
-      "package": "anycable-go",
+      "id": "batch-2026-02-21T07-27-58Z-anyquery",
+      "package": "anyquery",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
       "exit_code": 6,
-      "platform": "linux-alpine-musl-x86_64",
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
       "batch_id": "2026-02-21T07-27-58Z",
       "timestamp": "2026-02-21T07:27:58Z"
     },
