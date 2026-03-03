@@ -1,27 +1,27 @@
 {
-  "generated_at": "2026-03-03T04:44:13Z",
-  "total_recipes": 1387,
+  "generated_at": "2026-03-03T05:57:53Z",
+  "total_recipes": 1388,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 827,
-        "total": 1387,
-        "pct": 59.62509012256669
+        "supported": 828,
+        "total": 1388,
+        "pct": 59.654178674351584
       },
       "glibc": {
         "supported": 1356,
-        "total": 1387,
-        "pct": 97.76496034607065
+        "total": 1388,
+        "pct": 97.69452449567724
       },
       "musl": {
         "supported": 1215,
-        "total": 1387,
-        "pct": 87.59913482335978
+        "total": 1388,
+        "pct": 87.53602305475503
       }
     },
     "by_category": {
       "library": {
-        "total": 148,
+        "total": 149,
         "musl_support": 147,
         "glibc_support": 147
       },
@@ -13233,6 +13233,25 @@
       "errors": null,
       "warnings": [
         "recipe 'mkcert' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "mlx-c",
+      "type": "library",
+      "platforms": {
+        "darwin": true,
+        "glibc": false,
+        "musl": false
+      },
+      "gaps": [
+        "glibc",
+        "musl"
+      ],
+      "errors": [
+        "library recipe 'mlx-c' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
+      ],
+      "warnings": [
+        "recipe 'mlx-c' has platform-specific actions without libc when clauses and no musl fallback"
       ]
     },
     {
