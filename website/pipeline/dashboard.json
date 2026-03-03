@@ -1,13 +1,13 @@
 {
-  "generated_at": "2026-03-03T17:55:33Z",
+  "generated_at": "2026-03-03T17:56:35Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 5,
-      "failed": 23,
-      "pending": 3917,
-      "success": 1333
+      "failed": 21,
+      "pending": 3918,
+      "success": 1334
     },
     "by_tier": {
       "1": {
@@ -17,16 +17,16 @@
       },
       "2": {
         "blocked": 6,
-        "failed": 12,
-        "pending": 1,
+        "failed": 9,
+        "pending": 4,
         "success": 8
       },
       "3": {
         "blocked": 18,
         "excluded": 5,
-        "failed": 11,
-        "pending": 3906,
-        "success": 1320
+        "failed": 12,
+        "pending": 3904,
+        "success": 1321
       }
     },
     "by_ecosystem": {
@@ -40,8 +40,8 @@
       },
       "crates.io": {
         "excluded": 5,
-        "failed": 2,
-        "pending": 75,
+        "failed": 3,
+        "pending": 74,
         "success": 23,
         "total": 105
       },
@@ -56,8 +56,8 @@
       },
       "homebrew": {
         "blocked": 27,
-        "failed": 15,
-        "pending": 3730,
+        "failed": 11,
+        "pending": 3734,
         "success": 1111,
         "total": 4883
       },
@@ -70,21 +70,20 @@
         "total": 1
       },
       "npm": {
-        "failed": 2,
-        "pending": 19,
+        "failed": 3,
+        "pending": 18,
         "success": 54,
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
       "rubygems": {
-        "failed": 2,
+        "failed": 1,
         "pending": 84,
-        "success": 3,
+        "success": 4,
         "total": 89
       }
     },
@@ -475,24 +474,6 @@
           "next_retry_at": "2026-03-04T04:57:16Z"
         },
         {
-          "id": "homebrew:gcc",
-          "name": "gcc",
-          "ecosystem": "homebrew",
-          "priority": 2,
-          "category": "generation_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-03T17:44:08Z"
-        },
-        {
-          "id": "homebrew:jless",
-          "name": "jless",
-          "ecosystem": "homebrew",
-          "priority": 2,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-03T17:44:08Z"
-        },
-        {
           "id": "homebrew:node@22",
           "name": "node@22",
           "ecosystem": "homebrew",
@@ -500,15 +481,6 @@
           "category": "generation_failed",
           "failure_count": 5,
           "next_retry_at": "2026-03-04T06:05:38Z"
-        },
-        {
-          "id": "homebrew:nvm",
-          "name": "nvm",
-          "ecosystem": "homebrew",
-          "priority": 2,
-          "category": "generation_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-03T17:44:08Z"
         },
         {
           "id": "homebrew:openssl@3",
@@ -574,15 +546,6 @@
           "next_retry_at": "2026-03-03T22:05:38Z"
         },
         {
-          "id": "rubygems:arturo",
-          "name": "arturo",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-03-03T17:50:54Z"
-        },
-        {
           "id": "crates.io:ascii",
           "name": "ascii",
           "ecosystem": "crates.io",
@@ -601,6 +564,15 @@
           "next_retry_at": "2026-03-03T22:05:38Z"
         },
         {
+          "id": "crates.io:basis_universal",
+          "name": "basis_universal",
+          "ecosystem": "crates.io",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 2,
+          "next_retry_at": "2026-03-03T19:56:08Z"
+        },
+        {
           "id": "npm:chainsaw",
           "name": "chainsaw",
           "ecosystem": "npm",
@@ -608,6 +580,15 @@
           "category": "install_failed",
           "failure_count": 3,
           "next_retry_at": "2026-03-03T19:50:54Z"
+        },
+        {
+          "id": "npm:countdown",
+          "name": "countdown",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-03T21:56:08Z"
         },
         {
           "id": "pypi:lib3mf",
@@ -655,13 +636,13 @@
           "next_retry_at": "2026-03-03T19:50:54Z"
         },
         {
-          "id": "homebrew:webp",
-          "name": "webp",
-          "ecosystem": "homebrew",
+          "id": "pypi:vllm",
+          "name": "vllm",
+          "ecosystem": "pypi",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-03T17:44:08Z"
+          "failure_count": 3,
+          "next_retry_at": "2026-03-03T21:56:08Z"
         }
       ],
       "pending": [
@@ -761,6 +742,33 @@
           "priority": 2,
           "category": "install_failed",
           "failure_count": 14
+        },
+        {
+          "id": "homebrew:gcc",
+          "name": "gcc",
+          "ecosystem": "homebrew",
+          "priority": 2,
+          "category": "generation_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-03T17:44:08Z"
+        },
+        {
+          "id": "homebrew:jless",
+          "name": "jless",
+          "ecosystem": "homebrew",
+          "priority": 2,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-03T17:44:08Z"
+        },
+        {
+          "id": "homebrew:nvm",
+          "name": "nvm",
+          "ecosystem": "homebrew",
+          "priority": 2,
+          "category": "generation_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-03T17:44:08Z"
         },
         {
           "id": "homebrew:0xjacky/tools/nginx-ui",
@@ -1840,6 +1848,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:arturo",
+          "name": "arturo",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 2,
+          "next_retry_at": "2026-03-03T17:50:54Z"
+        },
+        {
           "id": "homebrew:arxiv_latex_cleaner",
           "name": "arxiv_latex_cleaner",
           "ecosystem": "homebrew",
@@ -1852,14 +1869,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "rubygems:asciidoctor",
-          "name": "asciidoctor",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 1
         },
         {
           "id": "homebrew:asciiquarium",
@@ -2715,14 +2724,6 @@
           "name": "basicmachines-co/basic-memory/basic-memory",
           "ecosystem": "homebrew",
           "priority": 3,
-          "failure_count": 1
-        },
-        {
-          "id": "crates.io:basis_universal",
-          "name": "basis_universal",
-          "ecosystem": "crates.io",
-          "priority": 3,
-          "category": "install_failed",
           "failure_count": 1
         },
         {
@@ -5057,15 +5058,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "npm:countdown",
-          "name": "countdown",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-02-20T19:39:44Z"
         },
         {
           "id": "homebrew:coursier",
@@ -26789,15 +26781,6 @@
           "failure_count": 0
         },
         {
-          "id": "pypi:vllm",
-          "name": "vllm",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-02-21T05:59:16Z"
-        },
-        {
           "id": "homebrew:vmware-tanzu/carvel/vendir",
           "name": "vmware-tanzu/carvel/vendir",
           "ecosystem": "homebrew",
@@ -27205,6 +27188,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "homebrew:webp",
+          "name": "webp",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-03T17:44:08Z"
         },
         {
           "id": "homebrew:webpack",
@@ -28668,6 +28660,14 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:asciidoctor",
+          "name": "asciidoctor",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 1
         },
         {
           "id": "homebrew:asciinema",
