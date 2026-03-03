@@ -1,34 +1,34 @@
 {
-  "generated_at": "2026-03-03T03:20:37Z",
-  "total_recipes": 1378,
+  "generated_at": "2026-03-03T04:44:13Z",
+  "total_recipes": 1387,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 820,
-        "total": 1378,
-        "pct": 59.50653120464441
+        "supported": 827,
+        "total": 1387,
+        "pct": 59.62509012256669
       },
       "glibc": {
-        "supported": 1347,
-        "total": 1378,
-        "pct": 97.75036284470247
+        "supported": 1356,
+        "total": 1387,
+        "pct": 97.76496034607065
       },
       "musl": {
-        "supported": 1206,
-        "total": 1378,
-        "pct": 87.51814223512336
+        "supported": 1215,
+        "total": 1387,
+        "pct": 87.59913482335978
       }
     },
     "by_category": {
       "library": {
-        "total": 143,
-        "musl_support": 142,
-        "glibc_support": 142
+        "total": 148,
+        "musl_support": 147,
+        "glibc_support": 147
       },
       "tool": {
-        "total": 1235,
-        "musl_support": 1064,
-        "glibc_support": 1205
+        "total": 1239,
+        "musl_support": 1068,
+        "glibc_support": 1209
       }
     }
   },
@@ -7670,6 +7670,22 @@
       ]
     },
     {
+      "name": "hdrhistogram_c",
+      "type": "library",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": [
+        "library recipe 'hdrhistogram_c' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
+      ],
+      "warnings": [
+        "recipe 'hdrhistogram_c' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
       "name": "headscale-cli",
       "type": "tool",
       "platforms": {
@@ -10844,6 +10860,22 @@
       ]
     },
     {
+      "name": "libgcrypt",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'libgcrypt' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
       "name": "libgee",
       "type": "library",
       "platforms": {
@@ -11023,6 +11055,20 @@
       ],
       "warnings": [
         "recipe 'libjodycode' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "libksba",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": [
+        "recipe 'libksba' has platform-specific actions without libc when clauses and no musl fallback"
       ]
     },
     {
@@ -11684,6 +11730,22 @@
       ]
     },
     {
+      "name": "libtool",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'libtool' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
       "name": "libtorrent-rakshasa",
       "type": "library",
       "platforms": {
@@ -12188,6 +12250,22 @@
       ]
     },
     {
+      "name": "llhttp",
+      "type": "library",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": [
+        "library recipe 'llhttp' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
+      ],
+      "warnings": [
+        "recipe 'llhttp' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
       "name": "lmdb",
       "type": "tool",
       "platforms": {
@@ -12388,6 +12466,22 @@
       "errors": null,
       "warnings": [
         "recipe 'luajit' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "luv",
+      "type": "library",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": [
+        "library recipe 'luv' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
+      ],
+      "warnings": [
+        "recipe 'luv' has platform-specific actions without libc when clauses and no musl fallback"
       ]
     },
     {
@@ -14045,6 +14139,22 @@
       ],
       "errors": null,
       "warnings": null
+    },
+    {
+      "name": "npth",
+      "type": "library",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": [
+        "library recipe 'npth' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
+      ],
+      "warnings": [
+        "recipe 'npth' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
     },
     {
       "name": "nspr",
@@ -16299,6 +16409,20 @@
       "errors": null,
       "warnings": [
         "recipe 'richgo' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "ripgrep",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": [
+        "recipe 'ripgrep' has platform-specific actions without libc when clauses and no musl fallback"
       ]
     },
     {
@@ -19396,6 +19520,22 @@
       "errors": null,
       "warnings": [
         "recipe 'uv' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "uvwasi",
+      "type": "library",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": [
+        "library recipe 'uvwasi' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
+      ],
+      "warnings": [
+        "recipe 'uvwasi' has platform-specific actions without libc when clauses and no musl fallback"
       ]
     },
     {
