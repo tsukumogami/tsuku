@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-03T14:06:07Z",
+  "generated_at": "2026-03-03T14:54:47Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -39132,8 +39132,8 @@
       "timestamp": "2026-03-03T04:46:51.406194538Z"
     },
     {
-      "id": "batch-2026-03-03T04-41-23Z-libgcrypt",
-      "package": "libgcrypt",
+      "id": "batch-2026-03-03T04-41-23Z-libtool",
+      "package": "libtool",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -39147,8 +39147,8 @@
       "timestamp": "2026-03-03T04:41:23Z"
     },
     {
-      "id": "batch-2026-03-03T04-41-23Z-libtool",
-      "package": "libtool",
+      "id": "batch-2026-03-03T04-41-23Z-libgcrypt",
+      "package": "libgcrypt",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -39601,16 +39601,8 @@
       }
     },
     "last_run": {
-      "batch_id": "2026-03-03T14-04-42Z",
-      "ecosystems": {
-        "crates.io": 1,
-        "github": 1,
-        "homebrew": 1,
-        "npm": 1,
-        "pypi": 1,
-        "rubygems": 1
-      },
-      "timestamp": "2026-03-03T14:04:42Z",
+      "batch_id": "2026-03-03T14-54-30Z",
+      "timestamp": "2026-03-03T14:54:30Z",
       "succeeded": 0,
       "failed": 0,
       "total": 0
@@ -39627,7 +39619,7 @@
       "total": 2,
       "recipes_merged": 2
     },
-    "runs_since_last_success": 6
+    "runs_since_last_success": 7
   },
   "runs": [
     {
