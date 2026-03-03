@@ -1,29 +1,29 @@
 {
-  "generated_at": "2026-03-03T06:13:47Z",
-  "total_recipes": 1394,
+  "generated_at": "2026-03-03T06:54:19Z",
+  "total_recipes": 1395,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 834,
-        "total": 1394,
-        "pct": 59.82783357245337
+        "supported": 835,
+        "total": 1395,
+        "pct": 59.85663082437276
       },
       "glibc": {
-        "supported": 1362,
-        "total": 1394,
-        "pct": 97.70444763271162
+        "supported": 1363,
+        "total": 1395,
+        "pct": 97.70609318996416
       },
       "musl": {
-        "supported": 1221,
-        "total": 1394,
-        "pct": 87.58967001434719
+        "supported": 1222,
+        "total": 1395,
+        "pct": 87.59856630824373
       }
     },
     "by_category": {
       "library": {
-        "total": 150,
-        "musl_support": 148,
-        "glibc_support": 148
+        "total": 151,
+        "musl_support": 149,
+        "glibc_support": 149
       },
       "tool": {
         "total": 1244,
@@ -1812,6 +1812,22 @@
       "errors": null,
       "warnings": [
         "recipe 'c-ares' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "c-blosc2",
+      "type": "library",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": [
+        "library recipe 'c-blosc2' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
+      ],
+      "warnings": [
+        "recipe 'c-blosc2' has platform-specific actions without libc when clauses and no musl fallback"
       ]
     },
     {
