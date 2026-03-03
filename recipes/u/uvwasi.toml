@@ -1,0 +1,51 @@
+[metadata]
+  name = "uvwasi"
+  description = "WASI syscall API built atop libuv"
+  homepage = "https://github.com/nodejs/uvwasi"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["libuv"]
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "uvwasi"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "uvwasi"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libuvwasi.a", "lib/libuvwasi.so", "lib/pkgconfig/uvwasi.pc", "include/uvwasi.h", "include/wasi_serdes.h", "include/wasi_types.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "uvwasi"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libuvwasi.a", "lib/libuvwasi.dylib", "lib/pkgconfig/uvwasi.pc", "include/uvwasi.h", "include/wasi_serdes.h", "include/wasi_types.h"]
+  [steps.when]
+    os = ["darwin"]
