@@ -42,6 +42,10 @@
       "failures": 39,
       "last_failure": "2026-03-03T17:52:32Z",
       "opens_at": "2026-03-03T18:52:32Z"
+    },
+    "default": {
+      "state": "closed",
+      "failures": 0
     }
   },
   "budget": {
