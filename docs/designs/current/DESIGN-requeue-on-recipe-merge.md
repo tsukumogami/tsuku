@@ -180,13 +180,41 @@ This eliminates the concurrent-writer problem entirely: one workflow owns the fi
 
 **Extract queue commit job**: Split queue-writing into a shared job called by both workflows. More correct than today but adds significant workflow complexity. The single-owner pattern achieves the same safety with less machinery.
 
+### Decision 5: Failure Status Propagation
+
+The single-writer design (Decision 4) keeps `batch-generate.yml` from committing queue status changes. The batch orchestrator updates entries to `failed`/`blocked` locally during its run, but those changes stay in the working tree. On main, the queue shows 0 failed and 0 blocked entries, making the pipeline dashboard inaccurate.
+
+Meanwhile, failure JSONL data (`data/failures/*.jsonl`) does reach main -- either through batch PRs (which include `data/failures/` in their commits) or through the persist step (when zero recipes pass). This data contains the ground truth about which packages are failing and why.
+
+#### Chosen: Extend queue-maintain with Mark Failures Step
+
+Add a mark-failures step to `queue-maintain` that reads failure JSONL data and updates queue entry statuses. This preserves single-writer: all queue writes still flow through `update-queue-status.yml`, which runs `queue-maintain` after marking merged recipes as "success".
+
+The new step order in `queue-maintain` is:
+
+1. **Mark failures**: for each `pending` entry with more failures in JSONL than its current `failure_count`, set status to `blocked` (if `missing_dep` with `blocked_by`) or `failed` (otherwise). For `failed` entries past their `next_retry_at`, flip back to `pending`.
+2. **Requeue**: blocked -> pending when all blocking deps resolved (existing).
+3. **Reorder**: sort by priority and transitive blocking impact (existing).
+
+**Idempotency**: The comparison `total_failures_in_jsonl > entry.failure_count` prevents re-marking entries from stale data. Once an entry is marked `failed` with count=N and later retried (flipped to `pending`), it won't be re-marked unless new failure records appear (count > N).
+
+**Backoff expiry**: Failed entries get `next_retry_at` set via exponential backoff (1h base, 2x per failure, capped at 7 days). When `next_retry_at` passes, the mark-failures step flips the entry back to `pending`, making it eligible for the next batch run.
+
+**Workflow trigger expansion**: `update-queue-status.yml` path triggers are expanded to include `data/failures/**` so the workflow fires when `batch-generate.yml` commits failure data directly to main (via its persist step, which now includes `data/failures/`).
+
+#### Alternatives Considered
+
+**Dashboard-side computation**: Have the dashboard compute failed/blocked counts from JSONL data instead of queue statuses. Avoids any queue changes but creates two sources of truth (queue says "pending", dashboard says "failed"). The batch orchestrator also reads queue statuses for scheduling decisions, so the queue itself needs to be accurate.
+
+**Commit queue changes from batch-generate.yml**: Have the batch PR include queue status updates. Rejected -- this was the pre-Decision 4 approach and reintroduces the concurrent-writer problem.
+
 ## Decision Outcome
 
-**Chosen: 1 (Go) + 2 (single command) + 3 (queue status) + 4 (single owner)**
+**Chosen: 1 (Go) + 2 (single command) + 3 (queue status) + 4 (single owner) + 5 (mark failures via queue-maintain)**
 
 ### Summary
 
-We're replacing `scripts/requeue-unblocked.sh` and `cmd/reorder-queue/` with a single `cmd/queue-maintain/` Go CLI that performs both requeue and reorder in one pass. The tool loads the unified queue and failure JSONL data once, scans for blocked entries whose dependencies now have status "success" in the queue, flips them to "pending", then reorders all entries within each priority level by transitive blocking impact. It writes the result back to the unified queue file.
+We're replacing `scripts/requeue-unblocked.sh` and `cmd/reorder-queue/` with a single `cmd/queue-maintain/` Go CLI that performs mark-failures, requeue, and reorder in one pass. The tool loads the unified queue and failure JSONL data once, marks entries as failed or blocked based on failure records, scans for blocked entries whose dependencies now have status "success" in the queue and flips them to "pending", then reorders all entries within each priority level by transitive blocking impact. It writes the result back to the unified queue file.
 
 The workflow integration makes `update-queue-status.yml` the single owner of `priority-queue.json` on main. After marking merged recipes as "success" (its existing behavior), it builds and runs `queue-maintain`, which requeues any newly-unblockable packages and reorders the queue. The queue modifications from `batch-generate.yml`'s PR creation step are removed -- when batch PRs merge, `update-queue-status.yml` handles the queue state. `batch-generate.yml` still runs `queue-maintain` locally during its generate and merge jobs (replacing the current `requeue-unblocked.sh` calls), but those queue changes stay in the batch working tree and only the recipe files go into the batch PR.
 
@@ -382,6 +410,7 @@ No user data is accessed or transmitted. The queue and failure data contain pack
 - Single Go tool for queue maintenance reduces operational complexity
 - Eliminating the concurrent-writer pattern prevents git conflicts between workflows
 - Shared blocker map loading means one implementation to maintain
+- Pipeline dashboard shows accurate failed/blocked counts (Decision 5) -- failure JSONL ground truth is translated into queue statuses on every queue-maintain run
 
 ### Negative
 

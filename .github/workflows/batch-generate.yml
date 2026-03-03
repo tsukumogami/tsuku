@@ -1069,7 +1069,7 @@ jobs:
       - name: Persist circuit breaker and metrics state
         if: steps.check-open-prs.outputs.should_skip != 'true' && steps.check.outputs.changes == 'false'
         run: |
-          git add batch-control.json data/metrics/ 2>/dev/null || true
+          git add batch-control.json data/metrics/ data/failures/ 2>/dev/null || true
           if git diff --cached --quiet; then
             echo "No state changes to persist"
             exit 0

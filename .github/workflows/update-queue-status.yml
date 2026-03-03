@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'recipes/**'
+      - 'data/failures/**'
 
 permissions:
   contents: write
