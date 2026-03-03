@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-03T09:44:08Z",
+  "updated_at": "2026-03-03T10:42:48Z",
   "entries": [
     {
       "name": "node",
@@ -159,7 +159,7 @@
       "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 13,
+      "failure_count": 14,
       "next_retry_at": null
     },
     {
@@ -209,7 +209,7 @@
       "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 11,
+      "failure_count": 12,
       "next_retry_at": null
     },
     {
@@ -456,7 +456,7 @@
       "name": "little-cms2",
       "source": "homebrew:little-cms2",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 3,
@@ -506,11 +506,11 @@
       "name": "pmix",
       "source": "homebrew:pmix",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": "2026-03-03T08:49:01.547147527Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-03-03T14:42:48.391479525Z"
     },
     {
       "name": "jpeg-xl",
@@ -526,7 +526,7 @@
       "name": "libassuan",
       "source": "homebrew:libassuan",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 3,
@@ -636,21 +636,21 @@
       "name": "numpy",
       "source": "crates.io:numpy",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": "2026-03-03T07:14:24.734891235Z"
+      "failure_count": 2,
+      "next_retry_at": "2026-03-03T12:42:48.391479525Z"
     },
     {
       "name": "p11-kit",
       "source": "homebrew:p11-kit",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-03-03T08:54:46.246393136Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-03-03T14:42:48.391479525Z"
     },
     {
       "name": "simdjson",
@@ -696,11 +696,11 @@
       "name": "autoconf",
       "source": "homebrew:autoconf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-03-03T07:58:15.859385129Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-03-03T14:42:48.391479525Z"
     },
     {
       "name": "bdw-gc",
@@ -726,11 +726,11 @@
       "name": "certifi",
       "source": "homebrew:certifi",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-03-03T08:54:46.246393136Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-03-03T14:42:48.391479525Z"
     },
     {
       "name": "deno",
@@ -1316,7 +1316,7 @@
       "name": "addlicense",
       "source": "homebrew:addlicense",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 3,
@@ -1336,7 +1336,7 @@
       "name": "adembc/tap/lazyssh",
       "source": "homebrew:adembc/tap/lazyssh",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 3,
@@ -1376,7 +1376,7 @@
       "name": "adwaita-icon-theme",
       "source": "homebrew:adwaita-icon-theme",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 3,
@@ -1416,7 +1416,7 @@
       "name": "afl++",
       "source": "homebrew:afl++",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 3,
@@ -1436,7 +1436,7 @@
       "name": "agavra/tap/tuicr",
       "source": "homebrew:agavra/tap/tuicr",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 3,
@@ -1496,7 +1496,7 @@
       "name": "agrinman/tap/tunnelto",
       "source": "homebrew:agrinman/tap/tunnelto",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 3,
