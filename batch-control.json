@@ -15,7 +15,7 @@
     },
     "homebrew": {
       "state": "closed",
-      "failures": 3,
+      "failures": 0,
       "last_failure": "2026-03-03T05:51:07Z",
       "opens_at": "2026-03-02T19:46:21Z"
     },
@@ -27,9 +27,9 @@
     },
     "crates.io": {
       "state": "open",
-      "failures": 39,
-      "last_failure": "2026-03-02T19:40:14Z",
-      "opens_at": "2026-03-02T20:40:14Z"
+      "failures": 40,
+      "last_failure": "2026-03-03T06:11:02Z",
+      "opens_at": "2026-03-03T07:11:02Z"
     },
     "npm": {
       "state": "open",
