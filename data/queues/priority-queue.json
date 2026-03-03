@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-03T06:14:24Z",
+  "updated_at": "2026-03-03T06:54:46Z",
   "entries": [
     {
       "name": "node",
@@ -159,7 +159,7 @@
       "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 9,
+      "failure_count": 10,
       "next_retry_at": null
     },
     {
@@ -209,7 +209,7 @@
       "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 7,
+      "failure_count": 8,
       "next_retry_at": null
     },
     {
@@ -266,11 +266,11 @@
       "name": "exa",
       "source": "homebrew:exa",
       "priority": 2,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-03-03T06:08:12.881937985Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-03-03T10:54:46.246393136Z"
     },
     {
       "name": "gcc",
@@ -466,11 +466,11 @@
       "name": "openjph",
       "source": "homebrew:openjph",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
-      "next_retry_at": null
+      "failure_count": 1,
+      "next_retry_at": "2026-03-03T07:54:46.246393136Z"
     },
     {
       "name": "gmp",
@@ -490,6 +490,16 @@
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 1,
+      "next_retry_at": null
+    },
+    {
+      "name": "pmix",
+      "source": "homebrew:pmix",
+      "priority": 3,
+      "status": "pending",
+      "confidence": "auto",
+      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
+      "failure_count": 0,
       "next_retry_at": null
     },
     {
@@ -520,6 +530,16 @@
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 0,
+      "next_retry_at": null
+    },
+    {
+      "name": "open-mpi",
+      "source": "homebrew:open-mpi",
+      "priority": 3,
+      "status": "blocked",
+      "confidence": "auto",
+      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
+      "failure_count": 1,
       "next_retry_at": null
     },
     {
@@ -576,7 +596,7 @@
       "name": "icu4c@78",
       "source": "homebrew:icu4c@78",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 2,
@@ -616,11 +636,11 @@
       "name": "p11-kit",
       "source": "homebrew:p11-kit",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": "2026-03-03T06:11:37.166208706Z"
+      "failure_count": 2,
+      "next_retry_at": "2026-03-03T08:54:46.246393136Z"
     },
     {
       "name": "simdjson",
@@ -686,7 +706,7 @@
       "name": "c-blosc2",
       "source": "homebrew:c-blosc2",
       "priority": 3,
-      "status": "pending",
+      "status": "success",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 1,
@@ -696,11 +716,11 @@
       "name": "certifi",
       "source": "homebrew:certifi",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": "2026-03-03T06:11:37.166208706Z"
+      "failure_count": 2,
+      "next_retry_at": "2026-03-03T08:54:46.246393136Z"
     },
     {
       "name": "deno",
@@ -866,10 +886,10 @@
       "name": "mpi4py",
       "source": "homebrew:mpi4py",
       "priority": 3,
-      "status": "pending",
+      "status": "blocked",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
+      "failure_count": 1,
       "next_retry_at": null
     },
     {
@@ -897,16 +917,6 @@
       "source": "homebrew:oniguruma",
       "priority": 3,
       "status": "success",
-      "confidence": "auto",
-      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
-      "next_retry_at": null
-    },
-    {
-      "name": "open-mpi",
-      "source": "homebrew:open-mpi",
-      "priority": 3,
-      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 0,
@@ -37115,16 +37125,6 @@
     {
       "name": "pmd",
       "source": "homebrew:pmd",
-      "priority": 3,
-      "status": "pending",
-      "confidence": "auto",
-      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
-      "next_retry_at": null
-    },
-    {
-      "name": "pmix",
-      "source": "homebrew:pmix",
       "priority": 3,
       "status": "pending",
       "confidence": "auto",
