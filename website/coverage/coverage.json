@@ -1,34 +1,34 @@
 {
-  "generated_at": "2026-03-03T06:54:19Z",
-  "total_recipes": 1395,
+  "generated_at": "2026-03-03T07:48:34Z",
+  "total_recipes": 1397,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 835,
-        "total": 1395,
-        "pct": 59.85663082437276
+        "supported": 836,
+        "total": 1397,
+        "pct": 59.84251968503938
       },
       "glibc": {
-        "supported": 1363,
-        "total": 1395,
-        "pct": 97.70609318996416
+        "supported": 1365,
+        "total": 1397,
+        "pct": 97.70937723693629
       },
       "musl": {
-        "supported": 1222,
-        "total": 1395,
-        "pct": 87.59856630824373
+        "supported": 1224,
+        "total": 1397,
+        "pct": 87.61632068718683
       }
     },
     "by_category": {
       "library": {
-        "total": 151,
-        "musl_support": 149,
-        "glibc_support": 149
+        "total": 152,
+        "musl_support": 150,
+        "glibc_support": 150
       },
       "tool": {
-        "total": 1244,
-        "musl_support": 1073,
-        "glibc_support": 1214
+        "total": 1245,
+        "musl_support": 1074,
+        "glibc_support": 1215
       }
     }
   },
@@ -16039,6 +16039,22 @@
       ]
     },
     {
+      "name": "pugixml",
+      "type": "library",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": [
+        "library recipe 'pugixml' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
+      ],
+      "warnings": [
+        "recipe 'pugixml' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
       "name": "pulsarctl",
       "type": "tool",
       "platforms": {
@@ -20851,6 +20867,22 @@
       "errors": null,
       "warnings": [
         "recipe 'z3' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "zeromq",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'zeromq' has platform-specific actions without libc when clauses and no musl fallback"
       ]
     },
     {
