@@ -1,0 +1,50 @@
+[metadata]
+  name = "llhttp"
+  description = "Port of http_parser to llparse"
+  homepage = "https://llhttp.org/"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "llhttp"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "llhttp"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libllhttp.so", "lib/libllhttp.so.9.3", "lib/libllhttp.so.9.3.1", "lib/pkgconfig/libllhttp.pc", "include/llhttp.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "llhttp"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libllhttp.9.3.1.dylib", "lib/libllhttp.9.3.dylib", "lib/libllhttp.dylib", "lib/pkgconfig/libllhttp.pc", "include/llhttp.h"]
+  [steps.when]
+    os = ["darwin"]
