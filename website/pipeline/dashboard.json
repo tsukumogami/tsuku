@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-03T14:05:01Z",
+  "generated_at": "2026-03-03T14:06:07Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 5,
-      "failed": 25,
-      "pending": 3915,
+      "failed": 23,
+      "pending": 3917,
       "success": 1333
     },
     "by_tier": {
@@ -17,15 +17,15 @@
       },
       "2": {
         "blocked": 6,
-        "failed": 7,
-        "pending": 6,
+        "failed": 12,
+        "pending": 1,
         "success": 8
       },
       "3": {
         "blocked": 18,
         "excluded": 5,
-        "failed": 18,
-        "pending": 3899,
+        "failed": 11,
+        "pending": 3906,
         "success": 1320
       }
     },
@@ -40,7 +40,8 @@
       },
       "crates.io": {
         "excluded": 5,
-        "pending": 77,
+        "failed": 1,
+        "pending": 76,
         "success": 23,
         "total": 105
       },
@@ -55,8 +56,8 @@
       },
       "homebrew": {
         "blocked": 27,
-        "failed": 25,
-        "pending": 3720,
+        "failed": 19,
+        "pending": 3726,
         "success": 1111,
         "total": 4883
       },
@@ -69,17 +70,20 @@
         "total": 1
       },
       "npm": {
-        "pending": 21,
+        "failed": 1,
+        "pending": 20,
         "success": 54,
         "total": 75
       },
       "pypi": {
-        "pending": 3,
+        "failed": 1,
+        "pending": 2,
         "success": 4,
         "total": 7
       },
       "rubygems": {
-        "pending": 86,
+        "failed": 1,
+        "pending": 85,
         "success": 3,
         "total": 89
       }
@@ -489,6 +493,15 @@
           "next_retry_at": "2026-03-03T17:44:08Z"
         },
         {
+          "id": "homebrew:node@22",
+          "name": "node@22",
+          "ecosystem": "homebrew",
+          "priority": 2,
+          "category": "generation_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-04T06:05:38Z"
+        },
+        {
           "id": "homebrew:nvm",
           "name": "nvm",
           "ecosystem": "homebrew",
@@ -507,6 +520,42 @@
           "next_retry_at": "2026-03-04T12:08:12Z"
         },
         {
+          "id": "homebrew:pnpm",
+          "name": "pnpm",
+          "ecosystem": "homebrew",
+          "priority": 2,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-04T06:05:38Z"
+        },
+        {
+          "id": "homebrew:python@3.11",
+          "name": "python@3.11",
+          "ecosystem": "homebrew",
+          "priority": 2,
+          "category": "generation_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-04T06:05:38Z"
+        },
+        {
+          "id": "homebrew:python@3.12",
+          "name": "python@3.12",
+          "ecosystem": "homebrew",
+          "priority": 2,
+          "category": "generation_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-04T06:05:38Z"
+        },
+        {
+          "id": "homebrew:python@3.13",
+          "name": "python@3.13",
+          "ecosystem": "homebrew",
+          "priority": 2,
+          "category": "generation_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-04T22:05:38Z"
+        },
+        {
           "id": "homebrew:python@3.14",
           "name": "python@3.14",
           "ecosystem": "homebrew",
@@ -516,94 +565,13 @@
           "next_retry_at": "2026-03-03T20:08:12Z"
         },
         {
-          "id": "homebrew:0xjuanma/tap/golazo",
-          "name": "0xjuanma/tap/golazo",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "recipe_not_found",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-03T13:11:37Z"
-        },
-        {
-          "id": "homebrew:2ykwang/2ykwang/mac-cleanup-go",
-          "name": "2ykwang/2ykwang/mac-cleanup-go",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "recipe_not_found",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-03T13:11:37Z"
-        },
-        {
-          "id": "homebrew:2ykwang/mac-cleanup-go/mac-cleanup-go",
-          "name": "2ykwang/mac-cleanup-go/mac-cleanup-go",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "recipe_not_found",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-03T13:11:37Z"
-        },
-        {
-          "id": "homebrew:42ailab/42plugin/forty-two-plugin",
-          "name": "42ailab/42plugin/forty-two-plugin",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "recipe_not_found",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-03T13:11:37Z"
-        },
-        {
-          "id": "homebrew:5ouma/tap/gh-poi",
-          "name": "5ouma/tap/gh-poi",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "recipe_not_found",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-03T13:11:37Z"
-        },
-        {
-          "id": "homebrew:a7ex/formulae/xcresultparser",
-          "name": "a7ex/formulae/xcresultparser",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "recipe_not_found",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-03T13:11:37Z"
-        },
-        {
-          "id": "homebrew:aalib",
-          "name": "aalib",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "generation_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-03T13:11:37Z"
-        },
-        {
-          "id": "homebrew:abcde",
-          "name": "abcde",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "generation_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-03T13:11:37Z"
-        },
-        {
-          "id": "homebrew:abcm2ps",
-          "name": "abcm2ps",
-          "ecosystem": "homebrew",
+          "id": "rubygems:amp",
+          "name": "amp",
+          "ecosystem": "rubygems",
           "priority": 3,
           "category": "install_failed",
           "failure_count": 4,
-          "next_retry_at": "2026-03-03T13:11:37Z"
-        },
-        {
-          "id": "homebrew:ada-url",
-          "name": "ada-url",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-03T13:44:08Z"
+          "next_retry_at": "2026-03-03T22:05:38Z"
         },
         {
           "id": "homebrew:autoconf",
@@ -615,6 +583,15 @@
           "next_retry_at": "2026-03-03T14:42:48Z"
         },
         {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-03T22:05:38Z"
+        },
+        {
           "id": "homebrew:certifi",
           "name": "certifi",
           "ecosystem": "homebrew",
@@ -622,6 +599,15 @@
           "category": "generation_failed",
           "failure_count": 3,
           "next_retry_at": "2026-03-03T14:42:48Z"
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-03T22:05:38Z"
         },
         {
           "id": "homebrew:libassuan",
@@ -642,13 +628,13 @@
           "next_retry_at": "2026-03-04T03:36:10Z"
         },
         {
-          "id": "homebrew:openjph",
-          "name": "openjph",
-          "ecosystem": "homebrew",
+          "id": "crates.io:numpy",
+          "name": "numpy",
+          "ecosystem": "crates.io",
           "priority": 3,
           "category": "install_failed",
           "failure_count": 3,
-          "next_retry_at": "2026-03-03T13:44:08Z"
+          "next_retry_at": "2026-03-03T18:05:38Z"
         },
         {
           "id": "homebrew:p11-kit",
@@ -777,51 +763,6 @@
           "failure_count": 14
         },
         {
-          "id": "homebrew:node@22",
-          "name": "node@22",
-          "ecosystem": "homebrew",
-          "priority": 2,
-          "category": "generation_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-03T12:08:12Z"
-        },
-        {
-          "id": "homebrew:pnpm",
-          "name": "pnpm",
-          "ecosystem": "homebrew",
-          "priority": 2,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-03T12:08:12Z"
-        },
-        {
-          "id": "homebrew:python@3.11",
-          "name": "python@3.11",
-          "ecosystem": "homebrew",
-          "priority": 2,
-          "category": "generation_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-03T12:08:12Z"
-        },
-        {
-          "id": "homebrew:python@3.12",
-          "name": "python@3.12",
-          "ecosystem": "homebrew",
-          "priority": 2,
-          "category": "generation_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-03T12:08:12Z"
-        },
-        {
-          "id": "homebrew:python@3.13",
-          "name": "python@3.13",
-          "ecosystem": "homebrew",
-          "priority": 2,
-          "category": "generation_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-03T12:44:42Z"
-        },
-        {
           "id": "homebrew:0xjacky/tools/nginx-ui",
           "name": "0xjacky/tools/nginx-ui",
           "ecosystem": "homebrew",
@@ -829,6 +770,51 @@
           "category": "recipe_not_found",
           "failure_count": 4,
           "next_retry_at": "2026-03-03T12:51:20Z"
+        },
+        {
+          "id": "homebrew:0xjuanma/tap/golazo",
+          "name": "0xjuanma/tap/golazo",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "recipe_not_found",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-03T13:11:37Z"
+        },
+        {
+          "id": "homebrew:2ykwang/2ykwang/mac-cleanup-go",
+          "name": "2ykwang/2ykwang/mac-cleanup-go",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "recipe_not_found",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-03T13:11:37Z"
+        },
+        {
+          "id": "homebrew:2ykwang/mac-cleanup-go/mac-cleanup-go",
+          "name": "2ykwang/mac-cleanup-go/mac-cleanup-go",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "recipe_not_found",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-03T13:11:37Z"
+        },
+        {
+          "id": "homebrew:42ailab/42plugin/forty-two-plugin",
+          "name": "42ailab/42plugin/forty-two-plugin",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "recipe_not_found",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-03T13:11:37Z"
+        },
+        {
+          "id": "homebrew:5ouma/tap/gh-poi",
+          "name": "5ouma/tap/gh-poi",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "recipe_not_found",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-03T13:11:37Z"
         },
         {
           "id": "homebrew:a2ps",
@@ -840,6 +826,24 @@
           "next_retry_at": "2026-02-19T15:38:27Z"
         },
         {
+          "id": "homebrew:a7ex/formulae/xcresultparser",
+          "name": "a7ex/formulae/xcresultparser",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "recipe_not_found",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-03T13:11:37Z"
+        },
+        {
+          "id": "homebrew:aalib",
+          "name": "aalib",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "generation_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-03T13:11:37Z"
+        },
+        {
           "id": "homebrew:aarch64-elf-gcc",
           "name": "aarch64-elf-gcc",
           "ecosystem": "homebrew",
@@ -847,6 +851,24 @@
           "category": "install_failed",
           "failure_count": 6,
           "next_retry_at": "2026-02-19T15:38:37Z"
+        },
+        {
+          "id": "homebrew:abcde",
+          "name": "abcde",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "generation_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-03T13:11:37Z"
+        },
+        {
+          "id": "homebrew:abcm2ps",
+          "name": "abcm2ps",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-03T13:11:37Z"
         },
         {
           "id": "homebrew:abcmidi",
@@ -928,6 +950,15 @@
           "category": "install_failed",
           "failure_count": 3,
           "next_retry_at": "2026-03-03T09:11:37Z"
+        },
+        {
+          "id": "homebrew:ada-url",
+          "name": "ada-url",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-03T13:44:08Z"
         },
         {
           "id": "homebrew:addlicense",
@@ -1242,15 +1273,6 @@
           "priority": 3,
           "category": "generation_failed",
           "failure_count": 1
-        },
-        {
-          "id": "rubygems:amp",
-          "name": "amp",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-03T08:08:12Z"
         },
         {
           "id": "homebrew:amplitude/ampli/ampli",
@@ -2450,15 +2472,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-03T08:08:12Z"
         },
         {
           "id": "homebrew:azure-cli",
@@ -13140,15 +13153,6 @@
           "failure_count": 1
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-03T08:08:12Z"
-        },
-        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -17222,15 +17226,6 @@
           "failure_count": 0
         },
         {
-          "id": "crates.io:numpy",
-          "name": "numpy",
-          "ecosystem": "crates.io",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-03-03T12:42:48Z"
-        },
-        {
           "id": "homebrew:nuonco/tap/nuon",
           "name": "nuonco/tap/nuon",
           "ecosystem": "homebrew",
@@ -17733,6 +17728,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "homebrew:openjph",
+          "name": "openjph",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-03T13:44:08Z"
         },
         {
           "id": "homebrew:openkim-models",
@@ -39128,8 +39132,8 @@
       "timestamp": "2026-03-03T04:46:51.406194538Z"
     },
     {
-      "id": "batch-2026-03-03T04-41-23Z-libtool",
-      "package": "libtool",
+      "id": "batch-2026-03-03T04-41-23Z-libgcrypt",
+      "package": "libgcrypt",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -39143,8 +39147,8 @@
       "timestamp": "2026-03-03T04:41:23Z"
     },
     {
-      "id": "batch-2026-03-03T04-41-23Z-libgcrypt",
-      "package": "libgcrypt",
+      "id": "batch-2026-03-03T04-41-23Z-libtool",
+      "package": "libtool",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
