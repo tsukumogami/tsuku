@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-03T04:45:20Z",
+  "generated_at": "2026-03-03T04:50:41Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -28330,7 +28330,7 @@
           "name": "ripgrep",
           "ecosystem": "homebrew",
           "priority": 2,
-          "category": "missing_dep",
+          "category": "generation_failed",
           "failure_count": 1
         },
         {
@@ -31774,6 +31774,7 @@
           "name": "hdrhistogram_c",
           "ecosystem": "homebrew",
           "priority": 3,
+          "category": "generation_failed",
           "failure_count": 0
         },
         {
@@ -33146,6 +33147,7 @@
           "name": "libgcrypt",
           "ecosystem": "homebrew",
           "priority": 3,
+          "category": "generation_failed",
           "failure_count": 0
         },
         {
@@ -33210,6 +33212,7 @@
           "name": "libksba",
           "ecosystem": "homebrew",
           "priority": 3,
+          "category": "generation_failed",
           "failure_count": 0
         },
         {
@@ -33441,6 +33444,7 @@
           "name": "libtool",
           "ecosystem": "homebrew",
           "priority": 3,
+          "category": "generation_failed",
           "failure_count": 0
         },
         {
@@ -33630,6 +33634,7 @@
           "name": "llhttp",
           "ecosystem": "homebrew",
           "priority": 3,
+          "category": "generation_failed",
           "failure_count": 0
         },
         {
@@ -33716,6 +33721,7 @@
           "name": "luv",
           "ecosystem": "homebrew",
           "priority": 3,
+          "category": "generation_failed",
           "failure_count": 0
         },
         {
@@ -34523,6 +34529,7 @@
           "name": "npth",
           "ecosystem": "homebrew",
           "priority": 3,
+          "category": "generation_failed",
           "failure_count": 1
         },
         {
@@ -36954,6 +36961,7 @@
           "name": "uvwasi",
           "ecosystem": "homebrew",
           "priority": 3,
+          "category": "generation_failed",
           "failure_count": 1
         },
         {
@@ -37637,13 +37645,244 @@
     }
   ],
   "failures": {
-    "generation_failed": 257,
-    "install_failed": 123,
-    "missing_dep": 47,
+    "generation_failed": 269,
+    "install_failed": 131,
+    "missing_dep": 51,
     "network_error": 7,
-    "recipe_not_found": 59
+    "recipe_not_found": 60
   },
   "failure_details": [
+    {
+      "id": "homebrew-2026-03-03T04-47-58Z-0xjacky/tools/nginx-ui",
+      "package": "0xjacky/tools/nginx-ui",
+      "ecosystem": "homebrew",
+      "category": "recipe_not_found",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: package '0xjacky/tools/nginx-ui' not found in homebrew",
+      "batch_id": "2026-03-03T04-47-58Z",
+      "timestamp": "2026-03-03T04:47:58.454635512Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T04-47-57Z-webp",
+      "package": "webp",
+      "ecosystem": "homebrew",
+      "category": "install_failed",
+      "batch_id": "2026-03-03T04-47-58Z",
+      "timestamp": "2026-03-03T04:47:57.313881023Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T04-47-53Z-pinentry",
+      "package": "pinentry",
+      "ecosystem": "homebrew",
+      "category": "missing_dep",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for pinentry from homebrew:pinentry...\nFetching formula metadata... done (v1.3.2)\nInspecting bottle contents... failed\ndeterministic generation failed: [missing_dep] missing dependencies: recipe libassuan not found in registry",
+      "batch_id": "2026-03-03T04-47-58Z",
+      "timestamp": "2026-03-03T04:47:53.34865777Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T04-47-51Z-npth",
+      "package": "npth",
+      "ecosystem": "homebrew",
+      "category": "generation_failed",
+      "subcategory": "recipe_already_exists",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for npth from homebrew:npth...\nFetching formula metadata... done (v1.8)\nInspecting bottle contents... done (deterministic)\nError: recipe already exists at recipes/n/npth.toml\nUse --force to overwrite",
+      "batch_id": "2026-03-03T04-47-58Z",
+      "timestamp": "2026-03-03T04:47:51.500557105Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T04-47-49Z-mlx-c",
+      "package": "mlx-c",
+      "ecosystem": "homebrew",
+      "category": "generation_failed",
+      "subcategory": "no_bottles",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for mlx-c from homebrew:mlx-c...\nFetching formula metadata... done (v0.5.0)\nInspecting bottle contents... failed\ndeterministic generation failed: [no_bottles] formula mlx-c has no bottles available",
+      "batch_id": "2026-03-03T04-47-58Z",
+      "timestamp": "2026-03-03T04:47:49.456187766Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T04-47-47Z-luv",
+      "package": "luv",
+      "ecosystem": "homebrew",
+      "category": "generation_failed",
+      "subcategory": "recipe_already_exists",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for luv from homebrew:luv...\nFetching formula metadata... done (v1.51.0-2)\nInspecting bottle contents... done (deterministic)\nError: recipe already exists at recipes/l/luv.toml\nUse --force to overwrite",
+      "batch_id": "2026-03-03T04-47-58Z",
+      "timestamp": "2026-03-03T04:47:47.913961179Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T04-47-45Z-little-cms2",
+      "package": "little-cms2",
+      "ecosystem": "homebrew",
+      "category": "install_failed",
+      "batch_id": "2026-03-03T04-47-58Z",
+      "timestamp": "2026-03-03T04:47:45.807842791Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T04-47-43Z-libtool",
+      "package": "libtool",
+      "ecosystem": "homebrew",
+      "category": "generation_failed",
+      "subcategory": "recipe_already_exists",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for libtool from homebrew:libtool...\nFetching formula metadata... done (v2.5.4)\nInspecting bottle contents... done (deterministic)\nError: recipe already exists at recipes/l/libtool.toml\nUse --force to overwrite",
+      "batch_id": "2026-03-03T04-47-58Z",
+      "timestamp": "2026-03-03T04:47:43.170266649Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T04-47-41Z-libksba",
+      "package": "libksba",
+      "ecosystem": "homebrew",
+      "category": "generation_failed",
+      "subcategory": "recipe_already_exists",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for libksba from homebrew:libksba...\nFetching formula metadata... done (v1.6.8)\nInspecting bottle contents... done (deterministic)\nError: recipe already exists at recipes/l/libksba.toml\nUse --force to overwrite",
+      "batch_id": "2026-03-03T04-47-58Z",
+      "timestamp": "2026-03-03T04:47:41.333529344Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T04-47-39Z-libheif",
+      "package": "libheif",
+      "ecosystem": "homebrew",
+      "category": "missing_dep",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for libheif from homebrew:libheif...\nFetching formula metadata... done (v1.21.2)\nInspecting bottle contents... failed\ndeterministic generation failed: [missing_dep] missing dependencies: recipe aom not found in registry; recipe webp not found in registry",
+      "batch_id": "2026-03-03T04-47-58Z",
+      "timestamp": "2026-03-03T04:47:39.662887283Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T04-47-36Z-libgcrypt",
+      "package": "libgcrypt",
+      "ecosystem": "homebrew",
+      "category": "generation_failed",
+      "subcategory": "recipe_already_exists",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for libgcrypt from homebrew:libgcrypt...\nFetching formula metadata... done (v1.12.1)\nInspecting bottle contents... done (deterministic)\nError: recipe already exists at recipes/l/libgcrypt.toml\nUse --force to overwrite",
+      "batch_id": "2026-03-03T04-47-58Z",
+      "timestamp": "2026-03-03T04:47:36.932241671Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T04-47-35Z-libassuan",
+      "package": "libassuan",
+      "ecosystem": "homebrew",
+      "category": "install_failed",
+      "batch_id": "2026-03-03T04-47-58Z",
+      "timestamp": "2026-03-03T04:47:35.049011439Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T04-47-29Z-gnutls",
+      "package": "gnutls",
+      "ecosystem": "homebrew",
+      "category": "missing_dep",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for gnutls from homebrew:gnutls...\nFetching formula metadata... done (v3.8.12)\nInspecting bottle contents... failed\ndeterministic generation failed: [missing_dep] missing dependencies: recipe p11-kit not found in registry",
+      "batch_id": "2026-03-03T04-47-58Z",
+      "timestamp": "2026-03-03T04:47:29.854511835Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T04-47-27Z-autoconf",
+      "package": "autoconf",
+      "ecosystem": "homebrew",
+      "category": "install_failed",
+      "batch_id": "2026-03-03T04-47-58Z",
+      "timestamp": "2026-03-03T04:47:27.031479969Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T04-47-22Z-uvwasi",
+      "package": "uvwasi",
+      "ecosystem": "homebrew",
+      "category": "generation_failed",
+      "subcategory": "recipe_already_exists",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for uvwasi from homebrew:uvwasi...\nFetching formula metadata... done (v0.0.23)\nInspecting bottle contents... done (deterministic)\nError: recipe already exists at recipes/u/uvwasi.toml\nUse --force to overwrite",
+      "batch_id": "2026-03-03T04-47-58Z",
+      "timestamp": "2026-03-03T04:47:22.792678978Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T04-47-20Z-llhttp",
+      "package": "llhttp",
+      "ecosystem": "homebrew",
+      "category": "generation_failed",
+      "subcategory": "recipe_already_exists",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for llhttp from homebrew:llhttp...\nFetching formula metadata... done (v9.3.1)\nInspecting bottle contents... done (deterministic)\nError: recipe already exists at recipes/l/llhttp.toml\nUse --force to overwrite",
+      "batch_id": "2026-03-03T04-47-58Z",
+      "timestamp": "2026-03-03T04:47:20.570409051Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T04-47-18Z-icu4c@78",
+      "package": "icu4c@78",
+      "ecosystem": "homebrew",
+      "category": "generation_failed",
+      "subcategory": "api_error",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for icu4c@78 from homebrew:icu4c@78...\nFetching formula metadata... done (v78.2)\nInspecting bottle contents... failed\ndeterministic generation failed: [api_error] failed to fetch bottle data for formula icu4c@78",
+      "batch_id": "2026-03-03T04-47-58Z",
+      "timestamp": "2026-03-03T04:47:18.364458236Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T04-47-16Z-hdrhistogram_c",
+      "package": "hdrhistogram_c",
+      "ecosystem": "homebrew",
+      "category": "generation_failed",
+      "subcategory": "recipe_already_exists",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for hdrhistogram_c from homebrew:hdrhistogram_c...\nFetching formula metadata... done (v0.11.9)\nInspecting bottle contents... done (deterministic)\nError: recipe already exists at recipes/h/hdrhistogram_c.toml\nUse --force to overwrite",
+      "batch_id": "2026-03-03T04-47-58Z",
+      "timestamp": "2026-03-03T04:47:16.947316129Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T04-47-14Z-ada-url",
+      "package": "ada-url",
+      "ecosystem": "homebrew",
+      "category": "install_failed",
+      "batch_id": "2026-03-03T04-47-58Z",
+      "timestamp": "2026-03-03T04:47:14.812316661Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T04-47-11Z-yt-dlp",
+      "package": "yt-dlp",
+      "ecosystem": "homebrew",
+      "category": "missing_dep",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for yt-dlp from homebrew:yt-dlp...\nFetching formula metadata... done (v2026.2.21)\nInspecting bottle contents... failed\ndeterministic generation failed: [missing_dep] missing dependencies: recipe certifi not found in registry; recipe deno not found in registry; recipe python@3.14 not found in registry",
+      "batch_id": "2026-03-03T04-47-58Z",
+      "timestamp": "2026-03-03T04:47:11.12386854Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T04-47-08Z-ripgrep",
+      "package": "ripgrep",
+      "ecosystem": "homebrew",
+      "category": "generation_failed",
+      "subcategory": "recipe_already_exists",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for ripgrep from homebrew:ripgrep...\nFetching formula metadata... done (v15.1.0)\nInspecting bottle contents... done (deterministic)\nError: recipe already exists at recipes/r/ripgrep.toml\nUse --force to overwrite",
+      "batch_id": "2026-03-03T04-47-58Z",
+      "timestamp": "2026-03-03T04:47:08.581333451Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T04-47-06Z-ffmpeg",
+      "package": "ffmpeg",
+      "ecosystem": "homebrew",
+      "category": "install_failed",
+      "batch_id": "2026-03-03T04-47-58Z",
+      "timestamp": "2026-03-03T04:47:06.554351959Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T04-46-54Z-python@3.13",
+      "package": "python@3.13",
+      "ecosystem": "homebrew",
+      "category": "generation_failed",
+      "subcategory": "api_error",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for python@3.13 from homebrew:python@3.13...\nFetching formula metadata... done (v3.13.12)\nInspecting bottle contents... failed\ndeterministic generation failed: [api_error] failed to fetch bottle data for formula python@3.13",
+      "batch_id": "2026-03-03T04-47-58Z",
+      "timestamp": "2026-03-03T04:46:54.930402982Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T04-46-53Z-tmux",
+      "package": "tmux",
+      "ecosystem": "homebrew",
+      "category": "install_failed",
+      "message": "Error: recipe validation failed for 'libevent'\n  - steps: step 3: when.os contains 'darwin' which is not in the recipe's supported platforms\n  - steps: step 4: when.os contains 'darwin' which is not in the recipe's supported platforms",
+      "batch_id": "2026-03-03T04-47-58Z",
+      "timestamp": "2026-03-03T04:46:53.529531764Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T04-46-51Z-task",
+      "package": "task",
+      "ecosystem": "homebrew",
+      "category": "install_failed",
+      "message": "tsuku collects anonymous usage statistics to improve the tool.\nNo personal information is collected. See: https://tsuku.dev/telemetry\n\nTo opt out: tsuku config set telemetry false\n         or export TSUKU_NO_TELEMETRY=1",
+      "batch_id": "2026-03-03T04-47-58Z",
+      "timestamp": "2026-03-03T04:46:51.406194538Z"
+    },
     {
       "id": "batch-2026-03-03T04-41-23Z-libtool",
       "package": "libtool",
@@ -38434,8 +38673,8 @@
       "timestamp": "2026-02-22T22:25:32.975745377Z"
     },
     {
-      "id": "batch-2026-02-21T07-27-58Z-ansifilter",
-      "package": "ansifilter",
+      "id": "batch-2026-02-21T07-27-58Z-anyquery",
+      "package": "anyquery",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -38445,32 +38684,6 @@
         "linux-alpine-musl-arm64",
         "linux-alpine-musl-x86_64"
       ],
-      "batch_id": "2026-02-21T07-27-58Z",
-      "timestamp": "2026-02-21T07:27:58Z"
-    },
-    {
-      "id": "batch-2026-02-21T07-27-58Z-angle-grinder",
-      "package": "angle-grinder",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "2026-02-21T07-27-58Z",
-      "timestamp": "2026-02-21T07:27:58Z"
-    },
-    {
-      "id": "batch-2026-02-21T07-27-58Z-anycable-go",
-      "package": "anycable-go",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "linux-alpine-musl-x86_64",
       "batch_id": "2026-02-21T07-27-58Z",
       "timestamp": "2026-02-21T07:27:58Z"
     },
@@ -38494,8 +38707,34 @@
       "timestamp": "2026-02-21T07:27:58Z"
     },
     {
-      "id": "batch-2026-02-21T07-27-58Z-anyquery",
-      "package": "anyquery",
+      "id": "batch-2026-02-21T07-27-58Z-anycable-go",
+      "package": "anycable-go",
+      "ecosystem": "batch",
+      "category": "generation_failed",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "linux-alpine-musl-x86_64",
+      "batch_id": "2026-02-21T07-27-58Z",
+      "timestamp": "2026-02-21T07:27:58Z"
+    },
+    {
+      "id": "batch-2026-02-21T07-27-58Z-angle-grinder",
+      "package": "angle-grinder",
+      "ecosystem": "batch",
+      "category": "generation_failed",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "2026-02-21T07-27-58Z",
+      "timestamp": "2026-02-21T07:27:58Z"
+    },
+    {
+      "id": "batch-2026-02-21T07-27-58Z-ansifilter",
+      "package": "ansifilter",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -39307,271 +39546,6 @@
       "message": "tsuku collects anonymous usage statistics to improve the tool.\nNo personal information is collected. See: https://tsuku.dev/telemetry\n\nTo opt out: tsuku config set telemetry false\n         or export TSUKU_NO_TELEMETRY=1",
       "batch_id": "2026-02-21T06-14-54Z",
       "timestamp": "2026-02-21T06:13:51.407644997Z"
-    },
-    {
-      "id": "github-2026-02-21T06-13-46Z-step",
-      "package": "step",
-      "ecosystem": "github",
-      "category": "generation_failed",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: 'step' resolved to github (smallstep/cli), which requires LLM for recipe generation.\nRemove --deterministic-only or wait for a recipe to be contributed.",
-      "batch_id": "2026-02-21T06-14-54Z",
-      "timestamp": "2026-02-21T06:13:46.945591037Z"
-    },
-    {
-      "id": "github-2026-02-21T06-13-44Z-sk",
-      "package": "sk",
-      "ecosystem": "github",
-      "category": "generation_failed",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: 'sk' resolved to github (lotabout/skim), which requires LLM for recipe generation.\nRemove --deterministic-only or wait for a recipe to be contributed.",
-      "batch_id": "2026-02-21T06-14-54Z",
-      "timestamp": "2026-02-21T06:13:44.937754125Z"
-    },
-    {
-      "id": "github-2026-02-21T06-13-42Z-rg",
-      "package": "rg",
-      "ecosystem": "github",
-      "category": "generation_failed",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: 'rg' resolved to github (BurntSushi/ripgrep), which requires LLM for recipe generation.\nRemove --deterministic-only or wait for a recipe to be contributed.",
-      "batch_id": "2026-02-21T06-14-54Z",
-      "timestamp": "2026-02-21T06:13:42.929168245Z"
-    },
-    {
-      "id": "github-2026-02-21T06-13-40Z-ko",
-      "package": "ko",
-      "ecosystem": "github",
-      "category": "generation_failed",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: 'ko' resolved to github (ko-build/ko), which requires LLM for recipe generation.\nRemove --deterministic-only or wait for a recipe to be contributed.",
-      "batch_id": "2026-02-21T06-14-54Z",
-      "timestamp": "2026-02-21T06:13:40.9204086Z"
-    },
-    {
-      "id": "github-2026-02-21T06-13-38Z-jq",
-      "package": "jq",
-      "ecosystem": "github",
-      "category": "generation_failed",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: 'jq' resolved to github (jqlang/jq), which requires LLM for recipe generation.\nRemove --deterministic-only or wait for a recipe to be contributed.",
-      "batch_id": "2026-02-21T06-14-54Z",
-      "timestamp": "2026-02-21T06:13:38.911665016Z"
-    },
-    {
-      "id": "github-2026-02-21T06-13-36Z-hub",
-      "package": "hub",
-      "ecosystem": "github",
-      "category": "generation_failed",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: 'hub' resolved to github (github/hub), which requires LLM for recipe generation.\nRemove --deterministic-only or wait for a recipe to be contributed.",
-      "batch_id": "2026-02-21T06-14-54Z",
-      "timestamp": "2026-02-21T06:13:36.902361538Z"
-    },
-    {
-      "id": "github-2026-02-21T06-13-34Z-dive",
-      "package": "dive",
-      "ecosystem": "github",
-      "category": "generation_failed",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: 'dive' resolved to github (wagoodman/dive), which requires LLM for recipe generation.\nRemove --deterministic-only or wait for a recipe to be contributed.",
-      "batch_id": "2026-02-21T06-14-54Z",
-      "timestamp": "2026-02-21T06:13:34.893585769Z"
-    },
-    {
-      "id": "github-2026-02-21T06-13-32Z-delta",
-      "package": "delta",
-      "ecosystem": "github",
-      "category": "generation_failed",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: 'delta' resolved to github (dandavison/delta), which requires LLM for recipe generation.\nRemove --deterministic-only or wait for a recipe to be contributed.",
-      "batch_id": "2026-02-21T06-14-54Z",
-      "timestamp": "2026-02-21T06:13:32.884274304Z"
-    },
-    {
-      "id": "github-2026-02-21T06-13-30Z-bat",
-      "package": "bat",
-      "ecosystem": "github",
-      "category": "generation_failed",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: 'bat' resolved to github (sharkdp/bat), which requires LLM for recipe generation.\nRemove --deterministic-only or wait for a recipe to be contributed.",
-      "batch_id": "2026-02-21T06-14-54Z",
-      "timestamp": "2026-02-21T06:13:30.875620235Z"
-    },
-    {
-      "id": "batch-2026-02-20T06-08-19Z-yaml-language-server",
-      "package": "yaml-language-server",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "2026-02-20T06-08-19Z",
-      "timestamp": "2026-02-20T06:08:19Z"
-    },
-    {
-      "id": "batch-2026-02-20T06-08-19Z-yo",
-      "package": "yo",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "2026-02-20T06-08-19Z",
-      "timestamp": "2026-02-20T06:08:19Z"
-    },
-    {
-      "id": "batch-2026-02-20T06-08-19Z-zx",
-      "package": "zx",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "2026-02-20T06-08-19Z",
-      "timestamp": "2026-02-20T06:08:19Z"
-    },
-    {
-      "id": "batch-2026-02-20T06-08-19Z-yarn",
-      "package": "yarn",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "2026-02-20T06-08-19Z",
-      "timestamp": "2026-02-20T06:08:19Z"
-    },
-    {
-      "id": "npm-2026-02-20T05-59-27Z-webdav",
-      "package": "webdav",
-      "ecosystem": "npm",
-      "category": "install_failed",
-      "message": "Installation failed: step 1 (npm_exec) failed: expected executable webdav not found at /tmp/action-validator-1660529119/.install/node_modules/.bin/webdav",
-      "batch_id": "2026-02-20T06-00-01Z",
-      "timestamp": "2026-02-20T05:59:27.380365308Z"
-    },
-    {
-      "id": "npm-2026-02-20T05-59-22Z-wartremover",
-      "package": "wartremover",
-      "ecosystem": "npm",
-      "category": "install_failed",
-      "message": "Installation failed: step 1 (npm_exec) failed: expected executable wartremover not found at /tmp/action-validator-1021172357/.install/node_modules/.bin/wartremover",
-      "batch_id": "2026-02-20T06-00-01Z",
-      "timestamp": "2026-02-20T05:59:22.383886634Z"
-    },
-    {
-      "id": "pypi-2026-02-20T05-59-16Z-vllm",
-      "package": "vllm",
-      "ecosystem": "pypi",
-      "category": "install_failed",
-      "batch_id": "2026-02-20T06-00-01Z",
-      "timestamp": "2026-02-20T05:59:16.570103241Z"
-    },
-    {
-      "id": "pypi-2026-02-20T05-54-22Z-tctl",
-      "package": "tctl",
-      "ecosystem": "pypi",
-      "category": "install_failed",
-      "message": "Installing eval-time dependencies: [python-standalone]\nInstalling python-standalone...\nGenerating plan for python-standalone@20260211\nExecuting plan: python-standalone@20260211\n   Work directory: /tmp/action-validator-2967704586\n   Total steps: 4 (including 0 from dependencies)\n\nStep 1/4: download_file\n   Using cached: cpython-3.10.19+20260211-x86_64-unknown-linux-gnu-install_only.tar.gz\n   ✓ Restored from cache\n\nStep 2/4: extract\n   Extracting: cpython-3.10.19+20260211-x86_64-unknown-linux-gn",
-      "batch_id": "2026-02-20T06-00-01Z",
-      "timestamp": "2026-02-20T05:54:22.268375633Z"
-    },
-    {
-      "id": "npm-2026-02-20T05-54-15Z-sigstore",
-      "package": "sigstore",
-      "ecosystem": "npm",
-      "category": "install_failed",
-      "message": "tsuku collects anonymous usage statistics to improve the tool.\nNo personal information is collected. See: https://tsuku.dev/telemetry\n\nTo opt out: tsuku config set telemetry false\n         or export TSUKU_NO_TELEMETRY=1\nInstalling eval-time dependencies: [nodejs]\nInstalling nodejs...\nChecking runtime dependencies for nodejs...\n  Resolving runtime dependency 'gcc-libs'...\nExecuting plan: gcc-libs@15.2.0\n   Work directory: /tmp/action-validator-3400483914\n   Total steps: 5 (including 0 from depend",
-      "batch_id": "2026-02-20T06-00-01Z",
-      "timestamp": "2026-02-20T05:54:15.893000665Z"
-    },
-    {
-      "id": "batch-2026-02-20T04-28-03Z-typescript-language-server",
-      "package": "typescript-language-server",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "2026-02-20T04-28-03Z",
-      "timestamp": "2026-02-20T04:28:03Z"
-    },
-    {
-      "id": "batch-2026-02-20T04-28-03Z-vsce",
-      "package": "vsce",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "2026-02-20T04-28-03Z",
-      "timestamp": "2026-02-20T04:28:03Z"
-    },
-    {
-      "id": "batch-2026-02-20T04-28-03Z-pyright",
-      "package": "pyright",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "2026-02-20T04-28-03Z",
-      "timestamp": "2026-02-20T04:28:03Z"
-    },
-    {
-      "id": "npm-2026-02-20T04-21-42Z-wartremover",
-      "package": "wartremover",
-      "ecosystem": "npm",
-      "category": "install_failed",
-      "message": "Installation failed: step 1 (npm_exec) failed: expected executable wartremover not found at /tmp/action-validator-3365689896/.install/node_modules/.bin/wartremover",
-      "batch_id": "2026-02-20T04-21-42Z",
-      "timestamp": "2026-02-20T04:21:42.507695573Z"
-    },
-    {
-      "id": "pypi-2026-02-20T04-21-28Z-vllm",
-      "package": "vllm",
-      "ecosystem": "pypi",
-      "category": "install_failed",
-      "batch_id": "2026-02-20T04-21-42Z",
-      "timestamp": "2026-02-20T04:21:28.60406357Z"
-    },
-    {
-      "id": "pypi-2026-02-20T04-16-17Z-tctl",
-      "package": "tctl",
-      "ecosystem": "pypi",
-      "category": "install_failed",
-      "message": "Installing eval-time dependencies: [python-standalone]\nInstalling python-standalone...\nGenerating plan for python-standalone@20260211\nExecuting plan: python-standalone@20260211\n   Work directory: /tmp/action-validator-2419517561\n   Total steps: 4 (including 0 from dependencies)\n\nStep 1/4: download_file\n   Using cached: cpython-3.10.19+20260211-x86_64-unknown-linux-gnu-install_only.tar.gz\n   ✓ Restored from cache\n\nStep 2/4: extract\n   Extracting: cpython-3.10.19+20260211-x86_64-unknown-linux-gn",
-      "batch_id": "2026-02-20T04-21-42Z",
-      "timestamp": "2026-02-20T04:16:17.990357229Z"
-    },
-    {
-      "id": "npm-2026-02-20T04-16-11Z-sigstore",
-      "package": "sigstore",
-      "ecosystem": "npm",
-      "category": "install_failed",
-      "message": "Installation failed: step 1 (npm_exec) failed: expected executable sigstore not found at /tmp/action-validator-2796016500/.install/node_modules/.bin/sigstore",
-      "batch_id": "2026-02-20T04-21-42Z",
-      "timestamp": "2026-02-20T04:16:11.517846937Z"
     }
   ],
   "health": {
@@ -39590,8 +39564,8 @@
       },
       "homebrew": {
         "breaker_state": "closed",
-        "failures": 0,
-        "last_failure": "2026-03-03T04:17:57Z",
+        "failures": 1,
+        "last_failure": "2026-03-03T04:50:09Z",
         "opens_at": "2026-03-02T19:46:21Z"
       },
       "npm": {
@@ -39614,16 +39588,14 @@
       }
     },
     "last_run": {
-      "batch_id": "2026-03-03T04-41-28Z",
+      "batch_id": "2026-03-03T04-50-14Z",
       "ecosystems": {
-        "github": 1,
-        "homebrew": 24
+        "homebrew": 25
       },
-      "timestamp": "2026-03-03T04:41:28Z",
-      "succeeded": 9,
+      "timestamp": "2026-03-03T04:50:14Z",
+      "succeeded": 0,
       "failed": 0,
-      "total": 9,
-      "recipes_merged": 9
+      "total": 0
     },
     "last_successful_run": {
       "batch_id": "2026-03-03T04-41-28Z",
@@ -39637,7 +39609,7 @@
       "total": 9,
       "recipes_merged": 9
     },
-    "runs_since_last_success": 0
+    "runs_since_last_success": 1
   },
   "runs": [
     {
