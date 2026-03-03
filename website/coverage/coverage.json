@@ -1,22 +1,22 @@
 {
-  "generated_at": "2026-03-03T07:48:34Z",
-  "total_recipes": 1397,
+  "generated_at": "2026-03-03T17:55:36Z",
+  "total_recipes": 1398,
   "summary": {
     "by_platform": {
       "darwin": {
         "supported": 836,
-        "total": 1397,
-        "pct": 59.84251968503938
+        "total": 1398,
+        "pct": 59.7997138769671
       },
       "glibc": {
-        "supported": 1365,
-        "total": 1397,
-        "pct": 97.70937723693629
+        "supported": 1366,
+        "total": 1398,
+        "pct": 97.71101573676681
       },
       "musl": {
-        "supported": 1224,
-        "total": 1397,
-        "pct": 87.61632068718683
+        "supported": 1225,
+        "total": 1398,
+        "pct": 87.62517882689556
       }
     },
     "by_category": {
@@ -26,9 +26,9 @@
         "glibc_support": 150
       },
       "tool": {
-        "total": 1245,
-        "musl_support": 1074,
-        "glibc_support": 1215
+        "total": 1246,
+        "musl_support": 1075,
+        "glibc_support": 1216
       }
     }
   },
@@ -723,6 +723,20 @@
       "warnings": [
         "recipe 'asc' has platform-specific actions without libc when clauses and no musl fallback"
       ]
+    },
+    {
+      "name": "asciidoctor",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": null
     },
     {
       "name": "asciinema",
