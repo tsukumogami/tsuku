@@ -1,0 +1,51 @@
+[metadata]
+  name = "c-blosc2"
+  description = "Fast, compressed, persistent binary data store library for C"
+  homepage = "https://www.blosc.org"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["lz4", "zstd"]
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "c-blosc2"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "c-blosc2"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libblosc2.a", "lib/libblosc2.so", "lib/libblosc2.so.2.23.0", "lib/libblosc2.so.7", "lib/pkgconfig/blosc2.pc", "include/b2nd.h", "include/blosc2/blosc2-common.h", "include/blosc2/blosc2-export.h", "include/blosc2/blosc2-stdio.h", "include/blosc2/codecs-registry.h", "include/blosc2/filters-registry.h", "include/blosc2/tuners-registry.h", "include/blosc2.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "c-blosc2"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libblosc2.2.23.0.dylib", "lib/libblosc2.7.dylib", "lib/libblosc2.a", "lib/libblosc2.dylib", "lib/pkgconfig/blosc2.pc", "include/b2nd.h", "include/blosc2/blosc2-common.h", "include/blosc2/blosc2-export.h", "include/blosc2/blosc2-stdio.h", "include/blosc2/codecs-registry.h", "include/blosc2/filters-registry.h", "include/blosc2/tuners-registry.h", "include/blosc2.h"]
+  [steps.when]
+    os = ["darwin"]
