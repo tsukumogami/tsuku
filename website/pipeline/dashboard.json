@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-03T09:43:20Z",
+  "generated_at": "2026-03-03T09:44:35Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -17,15 +17,15 @@
       },
       "2": {
         "blocked": 6,
-        "failed": 9,
-        "pending": 4,
+        "failed": 12,
+        "pending": 1,
         "success": 8
       },
       "3": {
         "blocked": 17,
         "excluded": 5,
-        "failed": 29,
-        "pending": 3889,
+        "failed": 26,
+        "pending": 3892,
         "success": 1320
       }
     },
@@ -459,6 +459,24 @@
           "next_retry_at": "2026-03-03T10:54:46Z"
         },
         {
+          "id": "homebrew:gcc",
+          "name": "gcc",
+          "ecosystem": "homebrew",
+          "priority": 2,
+          "category": "generation_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-03T17:44:08Z"
+        },
+        {
+          "id": "homebrew:jless",
+          "name": "jless",
+          "ecosystem": "homebrew",
+          "priority": 2,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-03T17:44:08Z"
+        },
+        {
           "id": "homebrew:node@22",
           "name": "node@22",
           "ecosystem": "homebrew",
@@ -466,6 +484,15 @@
           "category": "generation_failed",
           "failure_count": 4,
           "next_retry_at": "2026-03-03T12:08:12Z"
+        },
+        {
+          "id": "homebrew:nvm",
+          "name": "nvm",
+          "ecosystem": "homebrew",
+          "priority": 2,
+          "category": "generation_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-03T17:44:08Z"
         },
         {
           "id": "homebrew:openssl@3",
@@ -639,31 +666,13 @@
           "next_retry_at": "2026-03-03T12:08:12Z"
         },
         {
-          "id": "homebrew:acpica",
-          "name": "acpica",
+          "id": "homebrew:ada-url",
+          "name": "ada-url",
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "install_failed",
           "failure_count": 3,
-          "next_retry_at": "2026-03-03T09:11:37Z"
-        },
-        {
-          "id": "homebrew:acsandmann/tap/rift",
-          "name": "acsandmann/tap/rift",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "recipe_not_found",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-03T09:11:37Z"
-        },
-        {
-          "id": "homebrew:act_runner",
-          "name": "act_runner",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-03T09:11:37Z"
+          "next_retry_at": "2026-03-03T13:44:08Z"
         },
         {
           "id": "homebrew:addlicense",
@@ -720,15 +729,6 @@
           "next_retry_at": "2026-03-03T10:14:24Z"
         },
         {
-          "id": "homebrew:certifi",
-          "name": "certifi",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "generation_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-03-03T08:54:46Z"
-        },
-        {
           "id": "homebrew:icu4c@78",
           "name": "icu4c@78",
           "ecosystem": "homebrew",
@@ -756,22 +756,13 @@
           "next_retry_at": "2026-03-03T09:58:15Z"
         },
         {
-          "id": "homebrew:p11-kit",
-          "name": "p11-kit",
+          "id": "homebrew:openjph",
+          "name": "openjph",
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-03-03T08:54:46Z"
-        },
-        {
-          "id": "homebrew:pmix",
-          "name": "pmix",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 1,
-          "next_retry_at": "2026-03-03T08:49:01Z"
+          "failure_count": 3,
+          "next_retry_at": "2026-03-03T13:44:08Z"
         },
         {
           "id": "homebrew:tree-sitter@0.25",
@@ -781,6 +772,15 @@
           "category": "generation_failed",
           "failure_count": 3,
           "next_retry_at": "2026-03-03T11:49:01Z"
+        },
+        {
+          "id": "homebrew:webp",
+          "name": "webp",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-03T17:44:08Z"
         }
       ],
       "pending": [
@@ -871,7 +871,7 @@
           "ecosystem": "homebrew",
           "priority": 1,
           "category": "install_failed",
-          "failure_count": 12
+          "failure_count": 13
         },
         {
           "id": "homebrew:ffmpeg",
@@ -879,34 +879,7 @@
           "ecosystem": "homebrew",
           "priority": 2,
           "category": "install_failed",
-          "failure_count": 10
-        },
-        {
-          "id": "homebrew:gcc",
-          "name": "gcc",
-          "ecosystem": "homebrew",
-          "priority": 2,
-          "category": "generation_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-03-03T07:52:06Z"
-        },
-        {
-          "id": "homebrew:jless",
-          "name": "jless",
-          "ecosystem": "homebrew",
-          "priority": 2,
-          "category": "install_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-03-03T07:52:06Z"
-        },
-        {
-          "id": "homebrew:nvm",
-          "name": "nvm",
-          "ecosystem": "homebrew",
-          "priority": 2,
-          "category": "generation_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-03-03T07:52:06Z"
+          "failure_count": 11
         },
         {
           "id": "homebrew:a2ps",
@@ -954,13 +927,31 @@
           "next_retry_at": "2026-03-03T08:08:12Z"
         },
         {
-          "id": "homebrew:ada-url",
-          "name": "ada-url",
+          "id": "homebrew:acpica",
+          "name": "acpica",
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-03-03T07:58:15Z"
+          "failure_count": 3,
+          "next_retry_at": "2026-03-03T09:11:37Z"
+        },
+        {
+          "id": "homebrew:acsandmann/tap/rift",
+          "name": "acsandmann/tap/rift",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "recipe_not_found",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-03T09:11:37Z"
+        },
+        {
+          "id": "homebrew:act_runner",
+          "name": "act_runner",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-03T09:11:37Z"
         },
         {
           "id": "homebrew:adr-tools",
@@ -3862,6 +3853,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "homebrew:certifi",
+          "name": "certifi",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "generation_failed",
+          "failure_count": 2,
+          "next_retry_at": "2026-03-03T08:54:46Z"
         },
         {
           "id": "homebrew:cesarferreira/tap/rip",
@@ -17722,15 +17722,6 @@
           "failure_count": 0
         },
         {
-          "id": "homebrew:openjph",
-          "name": "openjph",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 1,
-          "next_retry_at": "2026-03-03T07:54:46Z"
-        },
-        {
           "id": "homebrew:openkim-models",
           "name": "openkim-models",
           "ecosystem": "homebrew",
@@ -18576,6 +18567,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "homebrew:p11-kit",
+          "name": "p11-kit",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 2,
+          "next_retry_at": "2026-03-03T08:54:46Z"
         },
         {
           "id": "homebrew:packetry",
@@ -19437,6 +19437,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "homebrew:pmix",
+          "name": "pmix",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 1,
+          "next_retry_at": "2026-03-03T08:49:01Z"
         },
         {
           "id": "crates.io:pmtiles",
@@ -27187,15 +27196,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "homebrew:webp",
-          "name": "webp",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-03-03T07:58:15Z"
         },
         {
           "id": "homebrew:webpack",
@@ -38807,8 +38807,8 @@
       "timestamp": "2026-03-03T04:46:51.406194538Z"
     },
     {
-      "id": "batch-2026-03-03T04-41-23Z-libtool",
-      "package": "libtool",
+      "id": "batch-2026-03-03T04-41-23Z-libgcrypt",
+      "package": "libgcrypt",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -38822,8 +38822,8 @@
       "timestamp": "2026-03-03T04:41:23Z"
     },
     {
-      "id": "batch-2026-03-03T04-41-23Z-libgcrypt",
-      "package": "libgcrypt",
+      "id": "batch-2026-03-03T04-41-23Z-libtool",
+      "package": "libtool",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
