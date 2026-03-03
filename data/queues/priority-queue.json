@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-03T03:21:03Z",
+  "updated_at": "2026-03-03T04:08:12Z",
   "entries": [
     {
       "name": "node",
       "source": "homebrew:node",
       "priority": 1,
-      "status": "pending",
+      "status": "blocked",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
+      "failure_count": 4,
       "next_retry_at": null
     },
     {
@@ -96,10 +96,10 @@
       "name": "neovim",
       "source": "homebrew:neovim",
       "priority": 1,
-      "status": "pending",
+      "status": "blocked",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
+      "failure_count": 4,
       "next_retry_at": null
     },
     {
@@ -159,17 +159,17 @@
       "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
+      "failure_count": 4,
       "next_retry_at": null
     },
     {
       "name": "vim",
       "source": "homebrew:vim",
       "priority": 1,
-      "status": "pending",
+      "status": "blocked",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
+      "failure_count": 4,
       "next_retry_at": null
     },
     {
@@ -186,11 +186,11 @@
       "name": "openssl@3",
       "source": "homebrew:openssl@3",
       "priority": 2,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-02-24T06:13:54.942523874Z"
+      "failure_count": 6,
+      "next_retry_at": "2026-03-04T12:08:12.881937985Z"
     },
     {
       "name": "python@3.13",
@@ -206,30 +206,30 @@
       "name": "python@3.14",
       "source": "homebrew:python@3.14",
       "priority": 2,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-02-24T06:14:03.397894201Z"
+      "failure_count": 5,
+      "next_retry_at": "2026-03-03T20:08:12.881937985Z"
     },
     {
       "name": "anomalyco/tap/opencode",
       "source": "homebrew:anomalyco/tap/opencode",
       "priority": 2,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-02-24T06:13:52.416870032Z"
+      "failure_count": 5,
+      "next_retry_at": "2026-03-03T20:08:12.881937985Z"
     },
     {
       "name": "awscli",
       "source": "homebrew:awscli",
       "priority": 2,
-      "status": "pending",
+      "status": "blocked",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
+      "failure_count": 2,
       "next_retry_at": null
     },
     {
@@ -256,11 +256,11 @@
       "name": "exa",
       "source": "homebrew:exa",
       "priority": 2,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
-      "next_retry_at": null
+      "failure_count": 2,
+      "next_retry_at": "2026-03-03T06:08:12.881937985Z"
     },
     {
       "name": "ffmpeg",
@@ -269,37 +269,37 @@
       "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
+      "failure_count": 2,
       "next_retry_at": null
     },
     {
       "name": "gcc",
       "source": "homebrew:gcc",
       "priority": 2,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
-      "next_retry_at": null
+      "failure_count": 1,
+      "next_retry_at": "2026-03-03T05:08:12.881937985Z"
     },
     {
       "name": "gemini-cli",
       "source": "homebrew:gemini-cli",
       "priority": 2,
-      "status": "pending",
+      "status": "blocked",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
+      "failure_count": 2,
       "next_retry_at": null
     },
     {
       "name": "gnupg",
       "source": "homebrew:gnupg",
       "priority": 2,
-      "status": "pending",
+      "status": "blocked",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
+      "failure_count": 1,
       "next_retry_at": null
     },
     {
@@ -326,61 +326,61 @@
       "name": "imagemagick",
       "source": "homebrew:imagemagick",
       "priority": 2,
-      "status": "pending",
+      "status": "blocked",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
+      "failure_count": 2,
       "next_retry_at": null
     },
     {
       "name": "jless",
       "source": "homebrew:jless",
       "priority": 2,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
-      "next_retry_at": null
+      "failure_count": 1,
+      "next_retry_at": "2026-03-03T05:08:12.881937985Z"
     },
     {
       "name": "node@22",
       "source": "homebrew:node@22",
       "priority": 2,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-02-24T06:13:53.677861623Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-03-03T12:08:12.881937985Z"
     },
     {
       "name": "nvm",
       "source": "homebrew:nvm",
       "priority": 2,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
-      "next_retry_at": null
+      "failure_count": 1,
+      "next_retry_at": "2026-03-03T05:08:12.881937985Z"
     },
     {
       "name": "ollama",
       "source": "homebrew:ollama",
       "priority": 2,
-      "status": "pending",
+      "status": "blocked",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
+      "failure_count": 1,
       "next_retry_at": null
     },
     {
       "name": "pnpm",
       "source": "homebrew:pnpm",
       "priority": 2,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-02-24T06:13:56.654327224Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-03-03T12:08:12.881937985Z"
     },
     {
       "name": "protobuf",
@@ -396,31 +396,31 @@
       "name": "pyenv",
       "source": "homebrew:pyenv",
       "priority": 2,
-      "status": "pending",
+      "status": "blocked",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
+      "failure_count": 5,
       "next_retry_at": "2026-02-24T06:13:58.306913285Z"
     },
     {
       "name": "python@3.11",
       "source": "homebrew:python@3.11",
       "priority": 2,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-02-24T06:13:59.5569802Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-03-03T12:08:12.881937985Z"
     },
     {
       "name": "python@3.12",
       "source": "homebrew:python@3.12",
       "priority": 2,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-02-24T06:14:00.808190795Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-03-03T12:08:12.881937985Z"
     },
     {
       "name": "ripgrep",
@@ -429,7 +429,7 @@
       "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
+      "failure_count": 1,
       "next_retry_at": null
     },
     {
@@ -806,11 +806,11 @@
       "name": "tree-sitter@0.25",
       "source": "homebrew:tree-sitter@0.25",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": null
+      "failure_count": 2,
+      "next_retry_at": "2026-03-03T06:08:12.881937985Z"
     },
     {
       "name": "webp",
@@ -889,7 +889,7 @@
       "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
+      "failure_count": 4,
       "next_retry_at": "2026-02-19T15:38:27.082365439Z"
     },
     {
@@ -919,7 +919,7 @@
       "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
+      "failure_count": 4,
       "next_retry_at": "2026-02-19T15:38:37.6217734Z"
     },
     {
@@ -966,21 +966,21 @@
       "name": "abcmidi",
       "source": "homebrew:abcmidi",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-02-22T06:14:18.341810854Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-03-03T12:08:12.881937985Z"
     },
     {
       "name": "abduco",
       "source": "homebrew:abduco",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-02-22T06:14:20.797891678Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-03-03T12:08:12.881937985Z"
     },
     {
       "name": "abi3audit",
@@ -1006,11 +1006,11 @@
       "name": "achannarasappa/tap/ticker",
       "source": "homebrew:achannarasappa/tap/ticker",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-02-22T06:14:23.679804391Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-03-03T12:08:12.881937985Z"
     },
     {
       "name": "ack",
@@ -1036,11 +1036,11 @@
       "name": "acme.sh",
       "source": "homebrew:acme.sh",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-02-22T06:14:25.067893975Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-03-03T08:08:12.881937985Z"
     },
     {
       "name": "acpica",
@@ -1736,11 +1736,11 @@
       "name": "amp",
       "source": "rubygems:amp",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-02-22T07:21:30.499339095Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-03-03T08:08:12.881937985Z"
     },
     {
       "name": "amplify",
@@ -2306,11 +2306,11 @@
       "name": "apt",
       "source": "homebrew:apt",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
-      "next_retry_at": null
+      "failure_count": 1,
+      "next_retry_at": "2026-03-03T05:08:12.881937985Z"
     },
     {
       "name": "apt-dater",
@@ -2726,11 +2726,11 @@
       "name": "ascii",
       "source": "crates.io:ascii",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": null
+      "failure_count": 2,
+      "next_retry_at": "2026-03-03T06:08:12.881937985Z"
     },
     {
       "name": "asciidoc",
@@ -3806,11 +3806,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-02-20T14:14:52.863503027Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-03-03T08:08:12.881937985Z"
     },
     {
       "name": "azqr",
@@ -25086,11 +25086,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-02-20T22:30:41.219402634Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-03-03T08:08:12.881937985Z"
     },
     {
       "name": "libaacs",
