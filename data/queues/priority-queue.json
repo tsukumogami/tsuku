@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-03T08:43:18Z",
+  "updated_at": "2026-03-03T09:44:08Z",
   "entries": [
     {
       "name": "node",
@@ -159,7 +159,7 @@
       "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 12,
+      "failure_count": 13,
       "next_retry_at": null
     },
     {
@@ -209,7 +209,7 @@
       "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 10,
+      "failure_count": 11,
       "next_retry_at": null
     },
     {
@@ -276,11 +276,11 @@
       "name": "gcc",
       "source": "homebrew:gcc",
       "priority": 2,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-03-03T07:52:06.413640836Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-03-03T17:44:08.405748823Z"
     },
     {
       "name": "gemini-cli",
@@ -336,11 +336,11 @@
       "name": "jless",
       "source": "homebrew:jless",
       "priority": 2,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-03-03T07:52:06.413640836Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-03-03T17:44:08.405748823Z"
     },
     {
       "name": "node@22",
@@ -356,11 +356,11 @@
       "name": "nvm",
       "source": "homebrew:nvm",
       "priority": 2,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-03-03T07:52:06.413640836Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-03-03T17:44:08.405748823Z"
     },
     {
       "name": "ollama",
@@ -476,11 +476,11 @@
       "name": "openjph",
       "source": "homebrew:openjph",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": "2026-03-03T07:54:46.246393136Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-03-03T13:44:08.405748823Z"
     },
     {
       "name": "gmp",
@@ -506,7 +506,7 @@
       "name": "pmix",
       "source": "homebrew:pmix",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 1,
@@ -556,21 +556,21 @@
       "name": "webp",
       "source": "homebrew:webp",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-03-03T07:58:15.859385129Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-03-03T17:44:08.405748823Z"
     },
     {
       "name": "ada-url",
       "source": "homebrew:ada-url",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-03-03T07:58:15.859385129Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-03-03T13:44:08.405748823Z"
     },
     {
       "name": "aom",
@@ -646,7 +646,7 @@
       "name": "p11-kit",
       "source": "homebrew:p11-kit",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 2,
@@ -726,7 +726,7 @@
       "name": "certifi",
       "source": "homebrew:certifi",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 2,
@@ -1216,7 +1216,7 @@
       "name": "acpica",
       "source": "homebrew:acpica",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 3,
@@ -1236,7 +1236,7 @@
       "name": "acsandmann/tap/rift",
       "source": "homebrew:acsandmann/tap/rift",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 3,
@@ -1256,7 +1256,7 @@
       "name": "act_runner",
       "source": "homebrew:act_runner",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 3,
