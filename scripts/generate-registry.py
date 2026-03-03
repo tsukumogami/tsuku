@@ -302,31 +302,17 @@ def main() -> int:
         elif recipe:
             recipes.append(recipe)
 
-    # Validate cross-recipe dependencies (each referenced dependency must exist)
+    # Build satisfies index and validate entries in a single pass.
+    # The index maps alias names to canonical recipe names, mirroring the
+    # CLI's satisfies fallback in internal/recipe/loader.go.
     recipe_names = {r["name"] for r in recipes}
-    for recipe in recipes:
-        for dep in recipe["dependencies"]:
-            if dep not in recipe_names:
-                all_errors.append(ValidationError(
-                    f"recipe '{recipe['name']}'",
-                    f"dependency '{dep}' references non-existent recipe"
-                ))
-        for dep in recipe["runtime_dependencies"]:
-            if dep not in recipe_names:
-                all_errors.append(ValidationError(
-                    f"recipe '{recipe['name']}'",
-                    f"runtime_dependency '{dep}' references non-existent recipe"
-                ))
-
-    # Validate cross-recipe satisfies entries
-    # Track all claimed package names: pkg_name -> recipe_name
     satisfies_claims: dict[str, str] = {}
     for recipe in recipes:
         satisfies = recipe.get("satisfies", {})
         for ecosystem, pkg_names in satisfies.items():
             for pkg_name in pkg_names:
                 # Check for duplicate claims across recipes
-                if pkg_name in satisfies_claims:
+                if pkg_name in satisfies_claims and satisfies_claims[pkg_name] != recipe["name"]:
                     all_errors.append(ValidationError(
                         f"recipe '{recipe['name']}'",
                         f"duplicate satisfies entry: '{pkg_name}' is already claimed "
@@ -343,6 +329,23 @@ def main() -> int:
                         f"satisfies entry '{pkg_name}' conflicts with existing "
                         f"recipe canonical name '{pkg_name}'"
                     ))
+
+    # Validate cross-recipe dependencies (each referenced dependency must exist
+    # as a canonical name or be satisfied by another recipe's satisfies entry)
+    resolvable_names = recipe_names | set(satisfies_claims.keys())
+    for recipe in recipes:
+        for dep in recipe["dependencies"]:
+            if dep not in resolvable_names:
+                all_errors.append(ValidationError(
+                    f"recipe '{recipe['name']}'",
+                    f"dependency '{dep}' references non-existent recipe"
+                ))
+        for dep in recipe["runtime_dependencies"]:
+            if dep not in resolvable_names:
+                all_errors.append(ValidationError(
+                    f"recipe '{recipe['name']}'",
+                    f"runtime_dependency '{dep}' references non-existent recipe"
+                ))
 
     # Report errors
     if all_errors:
