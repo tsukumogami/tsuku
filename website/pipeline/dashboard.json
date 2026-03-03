@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-03T05:58:39Z",
+  "generated_at": "2026-03-03T06:13:39Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -865,6 +865,7 @@
           "name": "activemq",
           "ecosystem": "homebrew",
           "priority": 3,
+          "category": "missing_dep",
           "failure_count": 0
         },
         {
@@ -872,6 +873,7 @@
           "name": "adb-enhanced",
           "ecosystem": "homebrew",
           "priority": 3,
+          "category": "missing_dep",
           "failure_count": 0
         },
         {
@@ -897,6 +899,7 @@
           "name": "adios2",
           "ecosystem": "homebrew",
           "priority": 3,
+          "category": "missing_dep",
           "failure_count": 0
         },
         {
@@ -904,6 +907,7 @@
           "name": "adr-tools",
           "ecosystem": "homebrew",
           "priority": 3,
+          "category": "generation_failed",
           "failure_count": 0
         },
         {
@@ -920,6 +924,7 @@
           "name": "aerleon",
           "ecosystem": "homebrew",
           "priority": 3,
+          "category": "missing_dep",
           "failure_count": 0
         },
         {
@@ -952,6 +957,7 @@
           "name": "agda",
           "ecosystem": "homebrew",
           "priority": 3,
+          "category": "missing_dep",
           "failure_count": 0
         },
         {
@@ -959,6 +965,7 @@
           "name": "age-plugin-yubikey",
           "ecosystem": "homebrew",
           "priority": 3,
+          "category": "install_failed",
           "failure_count": 0
         },
         {
@@ -17199,6 +17206,7 @@
           "name": "numpy",
           "ecosystem": "crates.io",
           "priority": 3,
+          "category": "install_failed",
           "failure_count": 0
         },
         {
@@ -17640,6 +17648,7 @@
           "name": "openexr",
           "ecosystem": "homebrew",
           "priority": 3,
+          "category": "missing_dep",
           "failure_count": 0
         },
         {
@@ -37680,13 +37689,193 @@
     }
   ],
   "failures": {
-    "generation_failed": 276,
-    "install_failed": 146,
-    "missing_dep": 57,
+    "generation_failed": 279,
+    "install_failed": 153,
+    "missing_dep": 63,
     "network_error": 7,
-    "recipe_not_found": 67
+    "recipe_not_found": 71
   },
   "failure_details": [
+    {
+      "id": "batch-2026-03-03T06-11-02Z-ollama",
+      "package": "ollama",
+      "ecosystem": "batch",
+      "category": "generation_failed",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "darwin-x86_64",
+      "batch_id": "2026-03-03T06-11-02Z",
+      "timestamp": "2026-03-03T06:11:02Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T06-07-36Z-agrinman/tap/tunnelto",
+      "package": "agrinman/tap/tunnelto",
+      "ecosystem": "homebrew",
+      "category": "recipe_not_found",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: package 'agrinman/tap/tunnelto' not found in homebrew",
+      "batch_id": "2026-03-03T06-07-41Z",
+      "timestamp": "2026-03-03T06:07:36.080947258Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T06-07-31Z-age-plugin-yubikey",
+      "package": "age-plugin-yubikey",
+      "ecosystem": "homebrew",
+      "category": "install_failed",
+      "batch_id": "2026-03-03T06-07-41Z",
+      "timestamp": "2026-03-03T06:07:31.634810976Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T06-07-28Z-agda",
+      "package": "agda",
+      "ecosystem": "homebrew",
+      "category": "missing_dep",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for agda from homebrew:agda...\nFetching formula metadata... done (v2.8.0)\nInspecting bottle contents... failed\ndeterministic generation failed: [missing_dep] missing dependencies: recipe ghc@9.12 not found in registry",
+      "batch_id": "2026-03-03T06-07-41Z",
+      "timestamp": "2026-03-03T06:07:28.681418884Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T06-07-07Z-agavra/tap/tuicr",
+      "package": "agavra/tap/tuicr",
+      "ecosystem": "homebrew",
+      "category": "recipe_not_found",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: package 'agavra/tap/tuicr' not found in homebrew",
+      "batch_id": "2026-03-03T06-07-41Z",
+      "timestamp": "2026-03-03T06:07:07.978587781Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T06-07-03Z-afl++",
+      "package": "afl++",
+      "ecosystem": "homebrew",
+      "category": "recipe_not_found",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: package 'afl++' not found in homebrew",
+      "batch_id": "2026-03-03T06-07-41Z",
+      "timestamp": "2026-03-03T06:07:03.714532636Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T06-07-02Z-aerleon",
+      "package": "aerleon",
+      "ecosystem": "homebrew",
+      "category": "missing_dep",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for aerleon from homebrew:aerleon...\nFetching formula metadata... done (v1.16.0)\nInspecting bottle contents... failed\ndeterministic generation failed: [missing_dep] missing dependencies: recipe python@3.14 not found in registry",
+      "batch_id": "2026-03-03T06-07-41Z",
+      "timestamp": "2026-03-03T06:07:02.560760307Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T06-07-00Z-adwaita-icon-theme",
+      "package": "adwaita-icon-theme",
+      "ecosystem": "homebrew",
+      "category": "generation_failed",
+      "subcategory": "no_bottles",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for adwaita-icon-theme from homebrew:adwaita-icon-theme...\nFetching formula metadata... done (v49.0)\nInspecting bottle contents... failed\ndeterministic generation failed: [no_bottles] formula adwaita-icon-theme has no bottles available",
+      "batch_id": "2026-03-03T06-07-41Z",
+      "timestamp": "2026-03-03T06:07:00.697402562Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T06-06-59Z-adr-tools",
+      "package": "adr-tools",
+      "ecosystem": "homebrew",
+      "category": "generation_failed",
+      "subcategory": "no_bottles",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for adr-tools from homebrew:adr-tools...\nFetching formula metadata... done (v3.0.0)\nInspecting bottle contents... failed\ndeterministic generation failed: [no_bottles] formula adr-tools has no bottles available",
+      "batch_id": "2026-03-03T06-07-41Z",
+      "timestamp": "2026-03-03T06:06:59.118593847Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T06-06-57Z-adios2",
+      "package": "adios2",
+      "ecosystem": "homebrew",
+      "category": "missing_dep",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for adios2 from homebrew:adios2...\nFetching formula metadata... done (v2.11.0)\nInspecting bottle contents... failed\ndeterministic generation failed: [missing_dep] missing dependencies: recipe c-blosc2 not found in registry; recipe libfabric not found in registry; recipe mpi4py not found in registry; recipe numpy not found in registry; recipe open-mpi not found in registry; recipe pugixml n",
+      "batch_id": "2026-03-03T06-07-41Z",
+      "timestamp": "2026-03-03T06:06:57.538317271Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T06-06-53Z-adembc/tap/lazyssh",
+      "package": "adembc/tap/lazyssh",
+      "ecosystem": "homebrew",
+      "category": "recipe_not_found",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: package 'adembc/tap/lazyssh' not found in homebrew",
+      "batch_id": "2026-03-03T06-07-41Z",
+      "timestamp": "2026-03-03T06:06:53.333312898Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T06-06-52Z-addlicense",
+      "package": "addlicense",
+      "ecosystem": "homebrew",
+      "category": "install_failed",
+      "batch_id": "2026-03-03T06-07-41Z",
+      "timestamp": "2026-03-03T06:06:52.183747341Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T06-06-48Z-adb-enhanced",
+      "package": "adb-enhanced",
+      "ecosystem": "homebrew",
+      "category": "missing_dep",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for adb-enhanced from homebrew:adb-enhanced...\nFetching formula metadata... done (v2.8.0)\nInspecting bottle contents... failed\ndeterministic generation failed: [missing_dep] missing dependencies: recipe python@3.14 not found in registry",
+      "batch_id": "2026-03-03T06-07-41Z",
+      "timestamp": "2026-03-03T06:06:48.956680448Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T06-06-46Z-activemq",
+      "package": "activemq",
+      "ecosystem": "homebrew",
+      "category": "missing_dep",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for activemq from homebrew:activemq...\nFetching formula metadata... done (v6.2.1)\nInspecting bottle contents... failed\ndeterministic generation failed: [missing_dep] missing dependencies: recipe java-service-wrapper not found in registry; recipe openjdk not found in registry",
+      "batch_id": "2026-03-03T06-07-41Z",
+      "timestamp": "2026-03-03T06:06:46.500921893Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T06-06-43Z-a2ps",
+      "package": "a2ps",
+      "ecosystem": "homebrew",
+      "category": "install_failed",
+      "batch_id": "2026-03-03T06-07-41Z",
+      "timestamp": "2026-03-03T06:06:43.017829903Z"
+    },
+    {
+      "id": "crates.io-2026-03-03T06-06-39Z-numpy",
+      "package": "numpy",
+      "ecosystem": "crates.io",
+      "category": "install_failed",
+      "message": "Installing eval-time dependencies: [rust]\nInstalling rust...\nGenerating plan for rust@1.93.1\nExecuting plan: rust@1.93.1\n   Work directory: /tmp/action-validator-3155306691\n   Total steps: 4 (including 0 from dependencies)\n\nStep 1/4: download_file\n   Using cached: rust-1.93.1-x86_64-unknown-linux-gnu.tar.gz\n   ✓ Restored from cache\n\nStep 2/4: extract\n   Extracting: rust-1.93.1-x86_64-unknown-linux-gnu.tar.gz\n   Format: tar.gz\n   Strip dirs: 1\n\nStep 3/4: run_command\n   Running: ./install.sh --p",
+      "batch_id": "2026-03-03T06-07-41Z",
+      "timestamp": "2026-03-03T06:06:39.112088739Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T06-05-33Z-openexr",
+      "package": "openexr",
+      "ecosystem": "homebrew",
+      "category": "missing_dep",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for openexr from homebrew:openexr...\nFetching formula metadata... done (v3.4.6)\nInspecting bottle contents... failed\ndeterministic generation failed: [missing_dep] missing dependencies: recipe openjph not found in registry",
+      "batch_id": "2026-03-03T06-07-41Z",
+      "timestamp": "2026-03-03T06:05:33.193115594Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T06-05-26Z-ffmpeg",
+      "package": "ffmpeg",
+      "ecosystem": "homebrew",
+      "category": "install_failed",
+      "batch_id": "2026-03-03T06-07-41Z",
+      "timestamp": "2026-03-03T06:05:26.61237961Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T06-05-14Z-tmux",
+      "package": "tmux",
+      "ecosystem": "homebrew",
+      "category": "install_failed",
+      "message": "Error: recipe validation failed for 'libevent'\n  - steps: step 3: when.os contains 'darwin' which is not in the recipe's supported platforms\n  - steps: step 4: when.os contains 'darwin' which is not in the recipe's supported platforms",
+      "batch_id": "2026-03-03T06-07-41Z",
+      "timestamp": "2026-03-03T06:05:14.461568916Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T06-05-12Z-task",
+      "package": "task",
+      "ecosystem": "homebrew",
+      "category": "install_failed",
+      "message": "tsuku collects anonymous usage statistics to improve the tool.\nNo personal information is collected. See: https://tsuku.dev/telemetry\n\nTo opt out: tsuku config set telemetry false\n         or export TSUKU_NO_TELEMETRY=1",
+      "batch_id": "2026-03-03T06-07-41Z",
+      "timestamp": "2026-03-03T06:05:12.268355465Z"
+    },
     {
       "id": "homebrew-2026-03-03T05-49-35Z-little-cms2",
       "package": "little-cms2",
@@ -38230,8 +38419,8 @@
       "timestamp": "2026-03-03T04:46:51.406194538Z"
     },
     {
-      "id": "batch-2026-03-03T04-41-23Z-libgcrypt",
-      "package": "libgcrypt",
+      "id": "batch-2026-03-03T04-41-23Z-libtool",
+      "package": "libtool",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -38245,8 +38434,8 @@
       "timestamp": "2026-03-03T04:41:23Z"
     },
     {
-      "id": "batch-2026-03-03T04-41-23Z-libtool",
-      "package": "libtool",
+      "id": "batch-2026-03-03T04-41-23Z-libgcrypt",
+      "package": "libgcrypt",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -39019,21 +39208,6 @@
       "timestamp": "2026-02-22T22:25:32.975745377Z"
     },
     {
-      "id": "batch-2026-02-21T07-27-58Z-anyquery",
-      "package": "anyquery",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "2026-02-21T07-27-58Z",
-      "timestamp": "2026-02-21T07:27:58Z"
-    },
-    {
       "id": "batch-2026-02-21T07-27-58Z-anycable-go",
       "package": "anycable-go",
       "ecosystem": "batch",
@@ -39041,21 +39215,6 @@
       "subcategory": "install_failed",
       "exit_code": 6,
       "platform": "linux-alpine-musl-x86_64",
-      "batch_id": "2026-02-21T07-27-58Z",
-      "timestamp": "2026-02-21T07:27:58Z"
-    },
-    {
-      "id": "batch-2026-02-21T07-27-58Z-angle-grinder",
-      "package": "angle-grinder",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
       "batch_id": "2026-02-21T07-27-58Z",
       "timestamp": "2026-02-21T07:27:58Z"
     },
@@ -39081,6 +39240,36 @@
     {
       "id": "batch-2026-02-21T07-27-58Z-ansifilter",
       "package": "ansifilter",
+      "ecosystem": "batch",
+      "category": "generation_failed",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "2026-02-21T07-27-58Z",
+      "timestamp": "2026-02-21T07:27:58Z"
+    },
+    {
+      "id": "batch-2026-02-21T07-27-58Z-anyquery",
+      "package": "anyquery",
+      "ecosystem": "batch",
+      "category": "generation_failed",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "2026-02-21T07-27-58Z",
+      "timestamp": "2026-02-21T07:27:58Z"
+    },
+    {
+      "id": "batch-2026-02-21T07-27-58Z-angle-grinder",
+      "package": "angle-grinder",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -39379,205 +39568,15 @@
       "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: package 'ameshkov/tap/dnslookup' not found in homebrew",
       "batch_id": "2026-02-21T07-22-39Z",
       "timestamp": "2026-02-21T07:21:13.024051938Z"
-    },
-    {
-      "id": "homebrew-2026-02-21T07-21-12Z-alsa-lib",
-      "package": "alsa-lib",
-      "ecosystem": "homebrew",
-      "category": "install_failed",
-      "batch_id": "2026-02-21T07-22-39Z",
-      "timestamp": "2026-02-21T07:21:12.015227186Z"
-    },
-    {
-      "id": "homebrew-2026-02-21T07-21-09Z-alpscore",
-      "package": "alpscore",
-      "ecosystem": "homebrew",
-      "category": "generation_failed",
-      "subcategory": "complex_archive",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for alpscore from homebrew:alpscore...\nFetching formula metadata... done (v2.3.2)\nInspecting bottle contents... failed\ndeterministic generation failed: [complex_archive] formula alpscore bottle contains no binaries in bin/",
-      "batch_id": "2026-02-21T07-22-39Z",
-      "timestamp": "2026-02-21T07:21:09.395337827Z"
-    },
-    {
-      "id": "homebrew-2026-02-21T07-21-07Z-allureofthestars",
-      "package": "allureofthestars",
-      "ecosystem": "homebrew",
-      "category": "recipe_not_found",
-      "message": "Error: registry: recipe sdl2_ttf not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create sdl2_ttf --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi, npm",
-      "batch_id": "2026-02-21T07-22-39Z",
-      "timestamp": "2026-02-21T07:21:07.648765786Z"
-    },
-    {
-      "id": "homebrew-2026-02-21T07-21-00Z-alloy-analyzer",
-      "package": "alloy-analyzer",
-      "ecosystem": "homebrew",
-      "category": "generation_failed",
-      "subcategory": "no_bottles",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for alloy-analyzer from homebrew:alloy-analyzer...\nFetching formula metadata... done (v6.2.0)\nInspecting bottle contents... failed\ndeterministic generation failed: [no_bottles] formula alloy-analyzer has no bottles available",
-      "batch_id": "2026-02-21T07-22-39Z",
-      "timestamp": "2026-02-21T07:21:00.874923404Z"
-    },
-    {
-      "id": "homebrew-2026-02-21T07-20-59Z-aliyun-cli",
-      "package": "aliyun-cli",
-      "ecosystem": "homebrew",
-      "category": "install_failed",
-      "message": "tsuku collects anonymous usage statistics to improve the tool.\nNo personal information is collected. See: https://tsuku.dev/telemetry\n\nTo opt out: tsuku config set telemetry false\n         or export TSUKU_NO_TELEMETRY=1",
-      "batch_id": "2026-02-21T07-22-39Z",
-      "timestamp": "2026-02-21T07:20:59.502761996Z"
-    },
-    {
-      "id": "homebrew-2026-02-21T07-20-54Z-algolia/algolia-cli/algolia",
-      "package": "algolia/algolia-cli/algolia",
-      "ecosystem": "homebrew",
-      "category": "recipe_not_found",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: package 'algolia/algolia-cli/algolia' not found in homebrew",
-      "batch_id": "2026-02-21T07-22-39Z",
-      "timestamp": "2026-02-21T07:20:54.966610504Z"
-    },
-    {
-      "id": "homebrew-2026-02-21T07-20-53Z-algertc/kleopatra4mac/kleopatra",
-      "package": "algertc/kleopatra4mac/kleopatra",
-      "ecosystem": "homebrew",
-      "category": "recipe_not_found",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: package 'algertc/kleopatra4mac/kleopatra' not found in homebrew",
-      "batch_id": "2026-02-21T07-22-39Z",
-      "timestamp": "2026-02-21T07:20:53.958571461Z"
-    },
-    {
-      "id": "homebrew-2026-02-21T07-20-52Z-akeylesslabs/tap/akeyless",
-      "package": "akeylesslabs/tap/akeyless",
-      "ecosystem": "homebrew",
-      "category": "recipe_not_found",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: package 'akeylesslabs/tap/akeyless' not found in homebrew",
-      "batch_id": "2026-02-21T07-22-39Z",
-      "timestamp": "2026-02-21T07:20:52.950091893Z"
-    },
-    {
-      "id": "homebrew-2026-02-21T07-20-51Z-aisk/tap/timeout",
-      "package": "aisk/tap/timeout",
-      "ecosystem": "homebrew",
-      "category": "recipe_not_found",
-      "subcategory": "timeout",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: package 'aisk/tap/timeout' not found in homebrew",
-      "batch_id": "2026-02-21T07-22-39Z",
-      "timestamp": "2026-02-21T07:20:51.941623588Z"
-    },
-    {
-      "id": "homebrew-2026-02-21T07-20-50Z-airbytehq/tap/abctl",
-      "package": "airbytehq/tap/abctl",
-      "ecosystem": "homebrew",
-      "category": "recipe_not_found",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: package 'airbytehq/tap/abctl' not found in homebrew",
-      "batch_id": "2026-02-21T07-22-39Z",
-      "timestamp": "2026-02-21T07:20:50.934036079Z"
-    },
-    {
-      "id": "homebrew-2026-02-21T07-20-49Z-aider",
-      "package": "aider",
-      "ecosystem": "homebrew",
-      "category": "generation_failed",
-      "subcategory": "complex_archive",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for aider from homebrew:aider...\nFetching formula metadata... done (v0.86.1)\nInspecting bottle contents... failed\ndeterministic generation failed: [complex_archive] formula aider bottle contains no binaries in bin/",
-      "batch_id": "2026-02-21T07-22-39Z",
-      "timestamp": "2026-02-21T07:20:49.925435683Z"
-    },
-    {
-      "id": "homebrew-2026-02-21T07-20-45Z-agrinman/tap/tunnelto",
-      "package": "agrinman/tap/tunnelto",
-      "ecosystem": "homebrew",
-      "category": "recipe_not_found",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: package 'agrinman/tap/tunnelto' not found in homebrew",
-      "batch_id": "2026-02-21T07-22-39Z",
-      "timestamp": "2026-02-21T07:20:45.764901021Z"
-    },
-    {
-      "id": "homebrew-2026-02-21T07-20-44Z-agavra/tap/tuicr",
-      "package": "agavra/tap/tuicr",
-      "ecosystem": "homebrew",
-      "category": "recipe_not_found",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: package 'agavra/tap/tuicr' not found in homebrew",
-      "batch_id": "2026-02-21T07-22-39Z",
-      "timestamp": "2026-02-21T07:20:44.756131239Z"
-    },
-    {
-      "id": "homebrew-2026-02-21T07-20-43Z-afl++",
-      "package": "afl++",
-      "ecosystem": "homebrew",
-      "category": "recipe_not_found",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: package 'afl++' not found in homebrew",
-      "batch_id": "2026-02-21T07-22-39Z",
-      "timestamp": "2026-02-21T07:20:43.74792481Z"
-    },
-    {
-      "id": "batch-2026-02-21T06-25-27Z-alass",
-      "package": "alass",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "2026-02-21T06-25-27Z",
-      "timestamp": "2026-02-21T06:25:27Z"
-    },
-    {
-      "id": "homebrew-2026-02-21T06-14-54Z-alda",
-      "package": "alda",
-      "ecosystem": "homebrew",
-      "category": "recipe_not_found",
-      "message": "Error: registry: recipe openjdk not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create openjdk --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi, npm",
-      "batch_id": "2026-02-21T06-14-54Z",
-      "timestamp": "2026-02-21T06:14:54.233319988Z"
-    },
-    {
-      "id": "homebrew-2026-02-21T06-14-49Z-akeylesslabs/tap/akeyless",
-      "package": "akeylesslabs/tap/akeyless",
-      "ecosystem": "homebrew",
-      "category": "recipe_not_found",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: package 'akeylesslabs/tap/akeyless' not found in homebrew",
-      "batch_id": "2026-02-21T06-14-54Z",
-      "timestamp": "2026-02-21T06:14:49.262809449Z"
-    },
-    {
-      "id": "homebrew-2026-02-21T06-14-48Z-aisk/tap/timeout",
-      "package": "aisk/tap/timeout",
-      "ecosystem": "homebrew",
-      "category": "recipe_not_found",
-      "subcategory": "timeout",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: package 'aisk/tap/timeout' not found in homebrew",
-      "batch_id": "2026-02-21T06-14-54Z",
-      "timestamp": "2026-02-21T06:14:48.254730253Z"
-    },
-    {
-      "id": "homebrew-2026-02-21T06-14-47Z-aircrack-ng",
-      "package": "aircrack-ng",
-      "ecosystem": "homebrew",
-      "category": "recipe_not_found",
-      "message": "Error: registry: recipe openssl@3 not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create openssl@3 --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi, npm",
-      "batch_id": "2026-02-21T06-14-54Z",
-      "timestamp": "2026-02-21T06:14:47.246061216Z"
-    },
-    {
-      "id": "homebrew-2026-02-21T06-14-45Z-airbytehq/tap/abctl",
-      "package": "airbytehq/tap/abctl",
-      "ecosystem": "homebrew",
-      "category": "recipe_not_found",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: package 'airbytehq/tap/abctl' not found in homebrew",
-      "batch_id": "2026-02-21T06-14-54Z",
-      "timestamp": "2026-02-21T06:14:45.462616042Z"
     }
   ],
   "health": {
     "ecosystems": {
       "crates.io": {
         "breaker_state": "open",
-        "failures": 39,
-        "last_failure": "2026-03-02T19:40:14Z",
-        "opens_at": "2026-03-02T20:40:14Z"
+        "failures": 40,
+        "last_failure": "2026-03-03T06:11:02Z",
+        "opens_at": "2026-03-03T07:11:02Z"
       },
       "github": {
         "breaker_state": "open",
@@ -39587,7 +39586,7 @@
       },
       "homebrew": {
         "breaker_state": "closed",
-        "failures": 3,
+        "failures": 0,
         "last_failure": "2026-03-03T05:51:07Z",
         "opens_at": "2026-03-02T19:46:21Z"
       },
@@ -39611,31 +39610,44 @@
       }
     },
     "last_run": {
-      "batch_id": "2026-03-03T05-51-11Z",
+      "batch_id": "2026-03-03T06-11-06Z",
       "ecosystems": {
-        "github": 1,
-        "homebrew": 9
-      },
-      "timestamp": "2026-03-03T05:51:11Z",
-      "succeeded": 0,
-      "failed": 0,
-      "total": 0
-    },
-    "last_successful_run": {
-      "batch_id": "2026-03-03T04-41-28Z",
-      "ecosystems": {
-        "github": 1,
+        "crates.io": 1,
         "homebrew": 24
       },
-      "timestamp": "2026-03-03T04:41:28Z",
-      "succeeded": 9,
+      "timestamp": "2026-03-03T06:11:06Z",
+      "succeeded": 6,
       "failed": 0,
-      "total": 9,
-      "recipes_merged": 9
+      "total": 6,
+      "recipes_merged": 6
     },
-    "runs_since_last_success": 3
+    "last_successful_run": {
+      "batch_id": "2026-03-03T06-11-06Z",
+      "ecosystems": {
+        "crates.io": 1,
+        "homebrew": 24
+      },
+      "timestamp": "2026-03-03T06:11:06Z",
+      "succeeded": 6,
+      "failed": 0,
+      "total": 6,
+      "recipes_merged": 6
+    },
+    "runs_since_last_success": 0
   },
   "runs": [
+    {
+      "batch_id": "2026-03-03T06-11-06Z",
+      "ecosystems": {
+        "crates.io": 1,
+        "homebrew": 24
+      },
+      "total": 6,
+      "merged": 6,
+      "rate": 1,
+      "duration": 9,
+      "timestamp": "2026-03-03T06:11:06Z"
+    },
     {
       "batch_id": "2026-03-03T04-41-28Z",
       "ecosystems": {
@@ -39745,18 +39757,6 @@
       "rate": 1,
       "duration": 4,
       "timestamp": "2026-02-21T06:25:27Z"
-    },
-    {
-      "batch_id": "2026-02-20T06-08-20Z",
-      "ecosystems": {
-        "npm": 7,
-        "pypi": 2
-      },
-      "total": 4,
-      "merged": 4,
-      "rate": 1,
-      "duration": 6,
-      "timestamp": "2026-02-20T06:08:20Z"
     }
   ],
   "disambiguations": {
