@@ -1,13 +1,13 @@
 {
-  "generated_at": "2026-03-03T06:54:08Z",
+  "generated_at": "2026-03-03T06:55:13Z",
   "queue": {
     "total": 5305,
     "by_status": {
-      "blocked": 23,
+      "blocked": 25,
       "excluded": 5,
-      "failed": 46,
-      "pending": 3901,
-      "success": 1330
+      "failed": 49,
+      "pending": 3895,
+      "success": 1331
     },
     "by_tier": {
       "1": {
@@ -17,16 +17,16 @@
       },
       "2": {
         "blocked": 6,
-        "failed": 11,
-        "pending": 2,
+        "failed": 12,
+        "pending": 1,
         "success": 8
       },
       "3": {
-        "blocked": 14,
+        "blocked": 16,
         "excluded": 5,
-        "failed": 35,
-        "pending": 3889,
-        "success": 1317
+        "failed": 37,
+        "pending": 3884,
+        "success": 1318
       }
     },
     "by_ecosystem": {
@@ -55,10 +55,10 @@
         "total": 8
       },
       "homebrew": {
-        "blocked": 23,
-        "failed": 42,
-        "pending": 3710,
-        "success": 1108,
+        "blocked": 25,
+        "failed": 45,
+        "pending": 3704,
+        "success": 1109,
         "total": 4883
       },
       "manual": {
@@ -350,6 +350,29 @@
           "failure_count": 1
         },
         {
+          "id": "homebrew:mpi4py",
+          "name": "mpi4py",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "missing_dep",
+          "blocked_by": [
+            "open-mpi",
+            "python@3.14"
+          ],
+          "failure_count": 1
+        },
+        {
+          "id": "homebrew:open-mpi",
+          "name": "open-mpi",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "missing_dep",
+          "blocked_by": [
+            "pmix"
+          ],
+          "failure_count": 1
+        },
+        {
           "id": "homebrew:openexr",
           "name": "openexr",
           "ecosystem": "homebrew",
@@ -418,6 +441,15 @@
           "category": "recipe_not_found",
           "failure_count": 5,
           "next_retry_at": "2026-03-03T20:08:12Z"
+        },
+        {
+          "id": "homebrew:exa",
+          "name": "exa",
+          "ecosystem": "homebrew",
+          "priority": 2,
+          "category": "recipe_not_found",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-03T10:54:46Z"
         },
         {
           "id": "homebrew:gcc",
@@ -771,13 +803,13 @@
           "next_retry_at": "2026-03-03T08:08:12Z"
         },
         {
-          "id": "homebrew:icu4c@78",
-          "name": "icu4c@78",
+          "id": "homebrew:certifi",
+          "name": "certifi",
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "generation_failed",
           "failure_count": 2,
-          "next_retry_at": "2026-03-03T06:51:20Z"
+          "next_retry_at": "2026-03-03T08:54:46Z"
         },
         {
           "id": "pypi:lib3mf",
@@ -814,6 +846,24 @@
           "category": "install_failed",
           "failure_count": 1,
           "next_retry_at": "2026-03-03T07:14:24Z"
+        },
+        {
+          "id": "homebrew:openjph",
+          "name": "openjph",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 1,
+          "next_retry_at": "2026-03-03T07:54:46Z"
+        },
+        {
+          "id": "homebrew:p11-kit",
+          "name": "p11-kit",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 2,
+          "next_retry_at": "2026-03-03T08:54:46Z"
         },
         {
           "id": "homebrew:webp",
@@ -913,16 +963,7 @@
           "ecosystem": "homebrew",
           "priority": 1,
           "category": "install_failed",
-          "failure_count": 9
-        },
-        {
-          "id": "homebrew:exa",
-          "name": "exa",
-          "ecosystem": "homebrew",
-          "priority": 2,
-          "category": "recipe_not_found",
-          "failure_count": 2,
-          "next_retry_at": "2026-03-03T06:08:12Z"
+          "failure_count": 10
         },
         {
           "id": "homebrew:ffmpeg",
@@ -930,7 +971,7 @@
           "ecosystem": "homebrew",
           "priority": 2,
           "category": "install_failed",
-          "failure_count": 7
+          "failure_count": 8
         },
         {
           "id": "homebrew:a2ps",
@@ -3468,13 +3509,6 @@
           "failure_count": 1
         },
         {
-          "id": "homebrew:c-blosc2",
-          "name": "c-blosc2",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 1
-        },
-        {
           "id": "homebrew:c10t",
           "name": "c10t",
           "ecosystem": "homebrew",
@@ -3830,15 +3864,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "homebrew:certifi",
-          "name": "certifi",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "generation_failed",
-          "failure_count": 1,
-          "next_retry_at": "2026-03-03T06:11:37Z"
         },
         {
           "id": "homebrew:cesarferreira/tap/rip",
@@ -11174,6 +11199,15 @@
           "failure_count": 1
         },
         {
+          "id": "homebrew:icu4c@78",
+          "name": "icu4c@78",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "generation_failed",
+          "failure_count": 2,
+          "next_retry_at": "2026-03-03T06:51:20Z"
+        },
+        {
           "id": "homebrew:id3v2",
           "name": "id3v2",
           "ecosystem": "homebrew",
@@ -16105,14 +16139,6 @@
           "failure_count": 0
         },
         {
-          "id": "homebrew:mpi4py",
-          "name": "mpi4py",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "missing_dep",
-          "failure_count": 0
-        },
-        {
           "id": "homebrew:mpich",
           "name": "mpich",
           "ecosystem": "homebrew",
@@ -17478,14 +17504,6 @@
           "failure_count": 1
         },
         {
-          "id": "homebrew:open-mpi",
-          "name": "open-mpi",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "missing_dep",
-          "failure_count": 0
-        },
-        {
           "id": "homebrew:open-ocd",
           "name": "open-ocd",
           "ecosystem": "homebrew",
@@ -17700,14 +17718,6 @@
           "name": "openjpeg",
           "ecosystem": "homebrew",
           "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "homebrew:openjph",
-          "name": "openjph",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "install_failed",
           "failure_count": 0
         },
         {
@@ -18556,15 +18566,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "homebrew:p11-kit",
-          "name": "p11-kit",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 1,
-          "next_retry_at": "2026-03-03T06:11:37Z"
         },
         {
           "id": "homebrew:packetry",
@@ -29155,6 +29156,13 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:c-blosc2",
+          "name": "c-blosc2",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 1
+        },
+        {
           "id": "homebrew:c2048",
           "name": "c2048",
           "ecosystem": "homebrew",
@@ -37621,6 +37629,19 @@
   },
   "blockers": [
     {
+      "dependency": "python@3.14",
+      "count": 8,
+      "direct_count": 7,
+      "total_count": 8,
+      "packages": [
+        "homebrew:acronym",
+        "homebrew:adb-enhanced",
+        "homebrew:adios2",
+        "homebrew:aerleon",
+        "homebrew:mpi4py"
+      ]
+    },
+    {
       "dependency": "little-cms2",
       "count": 7,
       "direct_count": 3,
@@ -37629,19 +37650,6 @@
         "homebrew:deno",
         "homebrew:imagemagick",
         "homebrew:jpeg-xl"
-      ]
-    },
-    {
-      "dependency": "python@3.14",
-      "count": 6,
-      "direct_count": 6,
-      "total_count": 6,
-      "packages": [
-        "homebrew:acronym",
-        "homebrew:adb-enhanced",
-        "homebrew:adios2",
-        "homebrew:aerleon",
-        "homebrew:vim"
       ]
     },
     {
@@ -37660,6 +37668,15 @@
       "total_count": 4,
       "packages": [
         "homebrew:jpeg-xl"
+      ]
+    },
+    {
+      "dependency": "pmix",
+      "count": 4,
+      "direct_count": 1,
+      "total_count": 4,
+      "packages": [
+        "homebrew:open-mpi"
       ]
     },
     {
@@ -37682,6 +37699,16 @@
       ]
     },
     {
+      "dependency": "open-mpi",
+      "count": 3,
+      "direct_count": 2,
+      "total_count": 3,
+      "packages": [
+        "homebrew:adios2",
+        "homebrew:mpi4py"
+      ]
+    },
+    {
       "dependency": "webp",
       "count": 3,
       "direct_count": 2,
@@ -37693,24 +37720,6 @@
     },
     {
       "dependency": "ada-url",
-      "count": 2,
-      "direct_count": 1,
-      "total_count": 2,
-      "packages": [
-        "homebrew:node"
-      ]
-    },
-    {
-      "dependency": "aom",
-      "count": 2,
-      "direct_count": 1,
-      "total_count": 2,
-      "packages": [
-        "homebrew:libheif"
-      ]
-    },
-    {
-      "dependency": "hdrhistogram_c",
       "count": 2,
       "direct_count": 1,
       "total_count": 2,
@@ -39318,6 +39327,36 @@
       "timestamp": "2026-02-22T22:25:32.975745377Z"
     },
     {
+      "id": "batch-2026-02-21T07-27-58Z-ansifilter",
+      "package": "ansifilter",
+      "ecosystem": "batch",
+      "category": "generation_failed",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "2026-02-21T07-27-58Z",
+      "timestamp": "2026-02-21T07:27:58Z"
+    },
+    {
+      "id": "batch-2026-02-21T07-27-58Z-anyquery",
+      "package": "anyquery",
+      "ecosystem": "batch",
+      "category": "generation_failed",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "2026-02-21T07-27-58Z",
+      "timestamp": "2026-02-21T07:27:58Z"
+    },
+    {
       "id": "batch-2026-02-21T07-27-58Z-angle-grinder",
       "package": "angle-grinder",
       "ecosystem": "batch",
@@ -39352,21 +39391,6 @@
       "timestamp": "2026-02-21T07:27:58Z"
     },
     {
-      "id": "batch-2026-02-21T07-27-58Z-anyquery",
-      "package": "anyquery",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "2026-02-21T07-27-58Z",
-      "timestamp": "2026-02-21T07:27:58Z"
-    },
-    {
       "id": "batch-2026-02-21T07-27-58Z-anycable-go",
       "package": "anycable-go",
       "ecosystem": "batch",
@@ -39374,21 +39398,6 @@
       "subcategory": "install_failed",
       "exit_code": 6,
       "platform": "linux-alpine-musl-x86_64",
-      "batch_id": "2026-02-21T07-27-58Z",
-      "timestamp": "2026-02-21T07:27:58Z"
-    },
-    {
-      "id": "batch-2026-02-21T07-27-58Z-ansifilter",
-      "package": "ansifilter",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
       "batch_id": "2026-02-21T07-27-58Z",
       "timestamp": "2026-02-21T07:27:58Z"
     },
