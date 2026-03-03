@@ -1,22 +1,22 @@
 {
-  "generated_at": "2026-03-03T17:55:36Z",
-  "total_recipes": 1398,
+  "generated_at": "2026-03-03T19:49:02Z",
+  "total_recipes": 1399,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 836,
-        "total": 1398,
-        "pct": 59.7997138769671
+        "supported": 837,
+        "total": 1399,
+        "pct": 59.828448892065765
       },
       "glibc": {
-        "supported": 1366,
-        "total": 1398,
-        "pct": 97.71101573676681
+        "supported": 1367,
+        "total": 1399,
+        "pct": 97.71265189421014
       },
       "musl": {
-        "supported": 1225,
-        "total": 1398,
-        "pct": 87.62517882689556
+        "supported": 1226,
+        "total": 1399,
+        "pct": 87.63402430307362
       }
     },
     "by_category": {
@@ -26,9 +26,9 @@
         "glibc_support": 150
       },
       "tool": {
-        "total": 1246,
-        "musl_support": 1075,
-        "glibc_support": 1216
+        "total": 1247,
+        "musl_support": 1076,
+        "glibc_support": 1217
       }
     }
   },
@@ -2433,6 +2433,18 @@
       "warnings": [
         "recipe 'chainloop-cli' has platform-specific actions without libc when clauses and no musl fallback"
       ]
+    },
+    {
+      "name": "chamber",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
     },
     {
       "name": "chart-releaser",
