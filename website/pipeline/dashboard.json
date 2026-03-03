@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-03T12:56:42Z",
+  "generated_at": "2026-03-03T12:57:44Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 5,
-      "failed": 36,
-      "pending": 3904,
+      "failed": 25,
+      "pending": 3915,
       "success": 1333
     },
     "by_tier": {
@@ -17,15 +17,15 @@
       },
       "2": {
         "blocked": 6,
-        "failed": 11,
-        "pending": 2,
+        "failed": 7,
+        "pending": 6,
         "success": 8
       },
       "3": {
         "blocked": 18,
         "excluded": 5,
-        "failed": 25,
-        "pending": 3892,
+        "failed": 18,
+        "pending": 3899,
         "success": 1320
       }
     },
@@ -40,8 +40,7 @@
       },
       "crates.io": {
         "excluded": 5,
-        "failed": 1,
-        "pending": 76,
+        "pending": 77,
         "success": 23,
         "total": 105
       },
@@ -56,8 +55,8 @@
       },
       "homebrew": {
         "blocked": 27,
-        "failed": 35,
-        "pending": 3710,
+        "failed": 25,
+        "pending": 3720,
         "success": 1111,
         "total": 4883
       },
@@ -463,6 +462,15 @@
           "next_retry_at": "2026-03-03T20:08:12Z"
         },
         {
+          "id": "homebrew:exa",
+          "name": "exa",
+          "ecosystem": "homebrew",
+          "priority": 2,
+          "category": "recipe_not_found",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-04T04:57:16Z"
+        },
+        {
           "id": "homebrew:gcc",
           "name": "gcc",
           "ecosystem": "homebrew",
@@ -479,15 +487,6 @@
           "category": "install_failed",
           "failure_count": 4,
           "next_retry_at": "2026-03-03T17:44:08Z"
-        },
-        {
-          "id": "homebrew:node@22",
-          "name": "node@22",
-          "ecosystem": "homebrew",
-          "priority": 2,
-          "category": "generation_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-03T12:08:12Z"
         },
         {
           "id": "homebrew:nvm",
@@ -508,42 +507,6 @@
           "next_retry_at": "2026-03-04T12:08:12Z"
         },
         {
-          "id": "homebrew:pnpm",
-          "name": "pnpm",
-          "ecosystem": "homebrew",
-          "priority": 2,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-03T12:08:12Z"
-        },
-        {
-          "id": "homebrew:python@3.11",
-          "name": "python@3.11",
-          "ecosystem": "homebrew",
-          "priority": 2,
-          "category": "generation_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-03T12:08:12Z"
-        },
-        {
-          "id": "homebrew:python@3.12",
-          "name": "python@3.12",
-          "ecosystem": "homebrew",
-          "priority": 2,
-          "category": "generation_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-03T12:08:12Z"
-        },
-        {
-          "id": "homebrew:python@3.13",
-          "name": "python@3.13",
-          "ecosystem": "homebrew",
-          "priority": 2,
-          "category": "generation_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-03T12:44:42Z"
-        },
-        {
           "id": "homebrew:python@3.14",
           "name": "python@3.14",
           "ecosystem": "homebrew",
@@ -551,15 +514,6 @@
           "category": "generation_failed",
           "failure_count": 5,
           "next_retry_at": "2026-03-03T20:08:12Z"
-        },
-        {
-          "id": "homebrew:0xjacky/tools/nginx-ui",
-          "name": "0xjacky/tools/nginx-ui",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "recipe_not_found",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-03T12:51:20Z"
         },
         {
           "id": "homebrew:0xjuanma/tap/golazo",
@@ -643,33 +597,6 @@
           "next_retry_at": "2026-03-03T13:11:37Z"
         },
         {
-          "id": "homebrew:abcmidi",
-          "name": "abcmidi",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-03T12:08:12Z"
-        },
-        {
-          "id": "homebrew:abduco",
-          "name": "abduco",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-03T12:08:12Z"
-        },
-        {
-          "id": "homebrew:achannarasappa/tap/ticker",
-          "name": "achannarasappa/tap/ticker",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "recipe_not_found",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-03T12:08:12Z"
-        },
-        {
           "id": "homebrew:ada-url",
           "name": "ada-url",
           "ecosystem": "homebrew",
@@ -697,15 +624,6 @@
           "next_retry_at": "2026-03-03T14:42:48Z"
         },
         {
-          "id": "homebrew:icu4c@78",
-          "name": "icu4c@78",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "generation_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-03T11:49:01Z"
-        },
-        {
           "id": "homebrew:libassuan",
           "name": "libassuan",
           "ecosystem": "homebrew",
@@ -722,15 +640,6 @@
           "category": "install_failed",
           "failure_count": 5,
           "next_retry_at": "2026-03-04T03:36:10Z"
-        },
-        {
-          "id": "crates.io:numpy",
-          "name": "numpy",
-          "ecosystem": "crates.io",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-03-03T12:42:48Z"
         },
         {
           "id": "homebrew:openjph",
@@ -758,15 +667,6 @@
           "category": "install_failed",
           "failure_count": 3,
           "next_retry_at": "2026-03-03T14:42:48Z"
-        },
-        {
-          "id": "homebrew:tree-sitter@0.25",
-          "name": "tree-sitter@0.25",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "generation_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-03T11:49:01Z"
         },
         {
           "id": "homebrew:webp",
@@ -866,16 +766,7 @@
           "ecosystem": "homebrew",
           "priority": 1,
           "category": "install_failed",
-          "failure_count": 15
-        },
-        {
-          "id": "homebrew:exa",
-          "name": "exa",
-          "ecosystem": "homebrew",
-          "priority": 2,
-          "category": "recipe_not_found",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-03T10:54:46Z"
+          "failure_count": 16
         },
         {
           "id": "homebrew:ffmpeg",
@@ -883,7 +774,61 @@
           "ecosystem": "homebrew",
           "priority": 2,
           "category": "install_failed",
-          "failure_count": 13
+          "failure_count": 14
+        },
+        {
+          "id": "homebrew:node@22",
+          "name": "node@22",
+          "ecosystem": "homebrew",
+          "priority": 2,
+          "category": "generation_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-03T12:08:12Z"
+        },
+        {
+          "id": "homebrew:pnpm",
+          "name": "pnpm",
+          "ecosystem": "homebrew",
+          "priority": 2,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-03T12:08:12Z"
+        },
+        {
+          "id": "homebrew:python@3.11",
+          "name": "python@3.11",
+          "ecosystem": "homebrew",
+          "priority": 2,
+          "category": "generation_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-03T12:08:12Z"
+        },
+        {
+          "id": "homebrew:python@3.12",
+          "name": "python@3.12",
+          "ecosystem": "homebrew",
+          "priority": 2,
+          "category": "generation_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-03T12:08:12Z"
+        },
+        {
+          "id": "homebrew:python@3.13",
+          "name": "python@3.13",
+          "ecosystem": "homebrew",
+          "priority": 2,
+          "category": "generation_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-03T12:44:42Z"
+        },
+        {
+          "id": "homebrew:0xjacky/tools/nginx-ui",
+          "name": "0xjacky/tools/nginx-ui",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "recipe_not_found",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-03T12:51:20Z"
         },
         {
           "id": "homebrew:a2ps",
@@ -904,6 +849,24 @@
           "next_retry_at": "2026-02-19T15:38:37Z"
         },
         {
+          "id": "homebrew:abcmidi",
+          "name": "abcmidi",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-03T12:08:12Z"
+        },
+        {
+          "id": "homebrew:abduco",
+          "name": "abduco",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-03T12:08:12Z"
+        },
+        {
           "id": "homebrew:abi3audit",
           "name": "abi3audit",
           "ecosystem": "homebrew",
@@ -911,6 +874,15 @@
           "category": "generation_failed",
           "failure_count": 1,
           "next_retry_at": "2026-03-03T06:11:37Z"
+        },
+        {
+          "id": "homebrew:achannarasappa/tap/ticker",
+          "name": "achannarasappa/tap/ticker",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "recipe_not_found",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-03T12:08:12Z"
         },
         {
           "id": "homebrew:acl2",
@@ -11230,6 +11202,15 @@
           "failure_count": 1
         },
         {
+          "id": "homebrew:icu4c@78",
+          "name": "icu4c@78",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "generation_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-03T11:49:01Z"
+        },
+        {
           "id": "homebrew:id3v2",
           "name": "id3v2",
           "ecosystem": "homebrew",
@@ -17239,6 +17220,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "crates.io:numpy",
+          "name": "numpy",
+          "ecosystem": "crates.io",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 2,
+          "next_retry_at": "2026-03-03T12:42:48Z"
         },
         {
           "id": "homebrew:nuonco/tap/nuon",
@@ -25719,6 +25709,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "homebrew:tree-sitter@0.25",
+          "name": "tree-sitter@0.25",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "generation_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-03T11:49:01Z"
         },
         {
           "id": "homebrew:treefrog",
@@ -39075,8 +39074,8 @@
       "timestamp": "2026-03-03T04:46:51.406194538Z"
     },
     {
-      "id": "batch-2026-03-03T04-41-23Z-libgcrypt",
-      "package": "libgcrypt",
+      "id": "batch-2026-03-03T04-41-23Z-libtool",
+      "package": "libtool",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -39090,8 +39089,8 @@
       "timestamp": "2026-03-03T04:41:23Z"
     },
     {
-      "id": "batch-2026-03-03T04-41-23Z-libtool",
-      "package": "libtool",
+      "id": "batch-2026-03-03T04-41-23Z-libgcrypt",
+      "package": "libgcrypt",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
