@@ -26,10 +26,10 @@ None. Hugo's built-in OG and Twitter Card templates handle all the logic. No new
 
 ## Implementation Steps
 
-- [ ] Replace `website/assets/og-default.png` with a proper 1200x630px image that visually represents tsuku (the tsuku name/logo on a styled background)
-- [ ] Add `{{ template "_internal/twitter_cards.html" . }}` to `blog/layouts/_default/baseof.html` after the existing OG template line
-- [ ] Add an example `images` field (commented out) to `blog/content/posts/hello-world.md` frontmatter, or document the pattern in a code comment, so future authors know per-post images are supported
-- [ ] Verify `hugo.toml` `params.images` points to the correct absolute URL for the deployed image (currently `https://tsuku.dev/assets/og-default.png`)
+- [x] Replace `website/assets/og-default.png` with a proper 1200x630px image that visually represents tsuku (the tsuku name/logo on a styled background)
+- [x] Add `{{ template "_internal/twitter_cards.html" . }}` to `blog/layouts/_default/baseof.html` after the existing OG template line
+- [x] Add an example `images` field (commented out) to `blog/content/posts/hello-world.md` frontmatter, or document the pattern in a code comment, so future authors know per-post images are supported
+- [x] Verify `hugo.toml` `params.images` points to the correct absolute URL for the deployed image (currently `https://tsuku.dev/assets/og-default.png`)
 
 ## Success Criteria
 
