@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-03T10:42:48Z",
+  "updated_at": "2026-03-03T11:36:10Z",
   "entries": [
     {
       "name": "node",
@@ -159,7 +159,7 @@
       "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 14,
+      "failure_count": 15,
       "next_retry_at": null
     },
     {
@@ -209,7 +209,7 @@
       "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 12,
+      "failure_count": 13,
       "next_retry_at": null
     },
     {
@@ -266,7 +266,7 @@
       "name": "exa",
       "source": "homebrew:exa",
       "priority": 2,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 3,
@@ -456,11 +456,11 @@
       "name": "little-cms2",
       "source": "homebrew:little-cms2",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-03-03T09:58:15.859385129Z"
+      "failure_count": 5,
+      "next_retry_at": "2026-03-04T03:36:10.31750384Z"
     },
     {
       "name": "icu4c@78",
@@ -526,11 +526,11 @@
       "name": "libassuan",
       "source": "homebrew:libassuan",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-03-03T09:58:15.859385129Z"
+      "failure_count": 5,
+      "next_retry_at": "2026-03-04T03:36:10.31750384Z"
     },
     {
       "name": "libuv",
@@ -936,10 +936,10 @@
       "name": "openjdk",
       "source": "homebrew:openjdk",
       "priority": 3,
-      "status": "pending",
+      "status": "blocked",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
+      "failure_count": 2,
       "next_retry_at": null
     },
     {
@@ -1059,7 +1059,7 @@
       "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 6,
+      "failure_count": 7,
       "next_retry_at": "2026-02-19T15:38:27.082365439Z"
     },
     {
@@ -1089,7 +1089,7 @@
       "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 5,
+      "failure_count": 6,
       "next_retry_at": "2026-02-19T15:38:37.6217734Z"
     },
     {
