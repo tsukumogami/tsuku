@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-03T11:35:31Z",
+  "generated_at": "2026-03-03T11:36:38Z",
   "queue": {
     "total": 5305,
     "by_status": {
-      "blocked": 26,
+      "blocked": 27,
       "excluded": 5,
-      "failed": 35,
-      "pending": 3906,
+      "failed": 36,
+      "pending": 3904,
       "success": 1333
     },
     "by_tier": {
@@ -17,15 +17,15 @@
       },
       "2": {
         "blocked": 6,
-        "failed": 12,
-        "pending": 1,
+        "failed": 11,
+        "pending": 2,
         "success": 8
       },
       "3": {
-        "blocked": 17,
+        "blocked": 18,
         "excluded": 5,
-        "failed": 23,
-        "pending": 3895,
+        "failed": 25,
+        "pending": 3892,
         "success": 1320
       }
     },
@@ -55,9 +55,9 @@
         "total": 8
       },
       "homebrew": {
-        "blocked": 26,
-        "failed": 34,
-        "pending": 3712,
+        "blocked": 27,
+        "failed": 35,
+        "pending": 3710,
         "success": 1111,
         "total": 4883
       },
@@ -392,6 +392,18 @@
           "failure_count": 1
         },
         {
+          "id": "homebrew:openjdk",
+          "name": "openjdk",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "missing_dep",
+          "blocked_by": [
+            "harfbuzz",
+            "little-cms2"
+          ],
+          "failure_count": 2
+        },
+        {
           "id": "homebrew:pinentry",
           "name": "pinentry",
           "ecosystem": "homebrew",
@@ -449,15 +461,6 @@
           "category": "recipe_not_found",
           "failure_count": 5,
           "next_retry_at": "2026-03-03T20:08:12Z"
-        },
-        {
-          "id": "homebrew:exa",
-          "name": "exa",
-          "ecosystem": "homebrew",
-          "priority": 2,
-          "category": "recipe_not_found",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-03T10:54:46Z"
         },
         {
           "id": "homebrew:gcc",
@@ -703,6 +706,24 @@
           "next_retry_at": "2026-03-03T11:49:01Z"
         },
         {
+          "id": "homebrew:libassuan",
+          "name": "libassuan",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-04T03:36:10Z"
+        },
+        {
+          "id": "homebrew:little-cms2",
+          "name": "little-cms2",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-04T03:36:10Z"
+        },
+        {
           "id": "crates.io:numpy",
           "name": "numpy",
           "ecosystem": "crates.io",
@@ -845,7 +866,16 @@
           "ecosystem": "homebrew",
           "priority": 1,
           "category": "install_failed",
-          "failure_count": 14
+          "failure_count": 15
+        },
+        {
+          "id": "homebrew:exa",
+          "name": "exa",
+          "ecosystem": "homebrew",
+          "priority": 2,
+          "category": "recipe_not_found",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-03T10:54:46Z"
         },
         {
           "id": "homebrew:ffmpeg",
@@ -853,7 +883,7 @@
           "ecosystem": "homebrew",
           "priority": 2,
           "category": "install_failed",
-          "failure_count": 12
+          "failure_count": 13
         },
         {
           "id": "homebrew:a2ps",
@@ -861,7 +891,7 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 6,
+          "failure_count": 7,
           "next_retry_at": "2026-02-19T15:38:27Z"
         },
         {
@@ -870,7 +900,7 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 5,
+          "failure_count": 6,
           "next_retry_at": "2026-02-19T15:38:37Z"
         },
         {
@@ -13166,15 +13196,6 @@
           "failure_count": 0
         },
         {
-          "id": "homebrew:libassuan",
-          "name": "libassuan",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-03T09:58:15Z"
-        },
-        {
           "id": "homebrew:libatomic_ops",
           "name": "libatomic_ops",
           "ecosystem": "homebrew",
@@ -14174,15 +14195,6 @@
           "ecosystem": "crates.io",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "homebrew:little-cms2",
-          "name": "little-cms2",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-03T09:58:15Z"
         },
         {
           "id": "crates.io:livekit",
@@ -17695,14 +17707,6 @@
           "name": "openj9",
           "ecosystem": "homebrew",
           "priority": 3,
-          "failure_count": 1
-        },
-        {
-          "id": "homebrew:openjdk",
-          "name": "openjdk",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "missing_dep",
           "failure_count": 1
         },
         {
@@ -37633,6 +37637,18 @@
   },
   "blockers": [
     {
+      "dependency": "little-cms2",
+      "count": 9,
+      "direct_count": 4,
+      "total_count": 9,
+      "packages": [
+        "homebrew:deno",
+        "homebrew:imagemagick",
+        "homebrew:jpeg-xl",
+        "homebrew:openjdk"
+      ]
+    },
+    {
       "dependency": "python@3.14",
       "count": 8,
       "direct_count": 7,
@@ -37646,14 +37662,13 @@
       ]
     },
     {
-      "dependency": "little-cms2",
-      "count": 7,
-      "direct_count": 3,
-      "total_count": 7,
+      "dependency": "icu4c@78",
+      "count": 5,
+      "direct_count": 2,
+      "total_count": 5,
       "packages": [
-        "homebrew:deno",
-        "homebrew:imagemagick",
-        "homebrew:jpeg-xl"
+        "homebrew:harfbuzz",
+        "homebrew:node"
       ]
     },
     {
@@ -37681,16 +37696,6 @@
       "total_count": 4,
       "packages": [
         "homebrew:open-mpi"
-      ]
-    },
-    {
-      "dependency": "icu4c@78",
-      "count": 3,
-      "direct_count": 2,
-      "total_count": 3,
-      "packages": [
-        "homebrew:harfbuzz",
-        "homebrew:node"
       ]
     },
     {
