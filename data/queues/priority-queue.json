@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-03T12:57:16Z",
+  "updated_at": "2026-03-03T14:05:38Z",
   "entries": [
     {
       "name": "node",
@@ -216,11 +216,11 @@
       "name": "python@3.13",
       "source": "homebrew:python@3.13",
       "priority": 2,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 4,
-      "next_retry_at": "2026-03-03T12:44:42.91988522Z"
+      "failure_count": 6,
+      "next_retry_at": "2026-03-04T22:05:38.606601787Z"
     },
     {
       "name": "anomalyco/tap/opencode",
@@ -346,11 +346,11 @@
       "name": "node@22",
       "source": "homebrew:node@22",
       "priority": 2,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 4,
-      "next_retry_at": "2026-03-03T12:08:12.881937985Z"
+      "failure_count": 5,
+      "next_retry_at": "2026-03-04T06:05:38.606601787Z"
     },
     {
       "name": "nvm",
@@ -376,11 +376,11 @@
       "name": "pnpm",
       "source": "homebrew:pnpm",
       "priority": 2,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 4,
-      "next_retry_at": "2026-03-03T12:08:12.881937985Z"
+      "failure_count": 5,
+      "next_retry_at": "2026-03-04T06:05:38.606601787Z"
     },
     {
       "name": "protobuf",
@@ -406,21 +406,21 @@
       "name": "python@3.11",
       "source": "homebrew:python@3.11",
       "priority": 2,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 4,
-      "next_retry_at": "2026-03-03T12:08:12.881937985Z"
+      "failure_count": 5,
+      "next_retry_at": "2026-03-04T06:05:38.606601787Z"
     },
     {
       "name": "python@3.12",
       "source": "homebrew:python@3.12",
       "priority": 2,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 4,
-      "next_retry_at": "2026-03-03T12:08:12.881937985Z"
+      "failure_count": 5,
+      "next_retry_at": "2026-03-04T06:05:38.606601787Z"
     },
     {
       "name": "ripgrep",
@@ -476,7 +476,7 @@
       "name": "openjph",
       "source": "homebrew:openjph",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 3,
@@ -566,7 +566,7 @@
       "name": "ada-url",
       "source": "homebrew:ada-url",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 3,
@@ -636,11 +636,11 @@
       "name": "numpy",
       "source": "crates.io:numpy",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-03-03T12:42:48.391479525Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-03-03T18:05:38.606601787Z"
     },
     {
       "name": "p11-kit",
@@ -1006,7 +1006,7 @@
       "name": "0xjuanma/tap/golazo",
       "source": "homebrew:0xjuanma/tap/golazo",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 4,
@@ -1016,7 +1016,7 @@
       "name": "2ykwang/2ykwang/mac-cleanup-go",
       "source": "homebrew:2ykwang/2ykwang/mac-cleanup-go",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 4,
@@ -1026,7 +1026,7 @@
       "name": "2ykwang/mac-cleanup-go/mac-cleanup-go",
       "source": "homebrew:2ykwang/mac-cleanup-go/mac-cleanup-go",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 4,
@@ -1036,7 +1036,7 @@
       "name": "42ailab/42plugin/forty-two-plugin",
       "source": "homebrew:42ailab/42plugin/forty-two-plugin",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 4,
@@ -1046,7 +1046,7 @@
       "name": "5ouma/tap/gh-poi",
       "source": "homebrew:5ouma/tap/gh-poi",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 4,
@@ -1066,7 +1066,7 @@
       "name": "a7ex/formulae/xcresultparser",
       "source": "homebrew:a7ex/formulae/xcresultparser",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 4,
@@ -1076,7 +1076,7 @@
       "name": "aalib",
       "source": "homebrew:aalib",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 4,
@@ -1116,7 +1116,7 @@
       "name": "abcde",
       "source": "homebrew:abcde",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 4,
@@ -1126,7 +1126,7 @@
       "name": "abcm2ps",
       "source": "homebrew:abcm2ps",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 4,
@@ -1906,11 +1906,11 @@
       "name": "amp",
       "source": "rubygems:amp",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-03-03T08:08:12.881937985Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-03-03T22:05:38.606601787Z"
     },
     {
       "name": "amplify",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-03-03T08:08:12.881937985Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-03-03T22:05:38.606601787Z"
     },
     {
       "name": "azqr",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-03-03T08:08:12.881937985Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-03-03T22:05:38.606601787Z"
     },
     {
       "name": "libaacs",
