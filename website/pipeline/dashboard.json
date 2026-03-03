@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-03T04:50:41Z",
+  "generated_at": "2026-03-03T04:51:45Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 13,
       "excluded": 5,
-      "failed": 27,
-      "pending": 3937,
+      "failed": 30,
+      "pending": 3934,
       "success": 1323
     },
     "by_tier": {
@@ -24,8 +24,8 @@
       "3": {
         "blocked": 3,
         "excluded": 5,
-        "failed": 15,
-        "pending": 3926,
+        "failed": 18,
+        "pending": 3923,
         "success": 1311
       }
     },
@@ -56,8 +56,8 @@
       },
       "homebrew": {
         "blocked": 13,
-        "failed": 23,
-        "pending": 3746,
+        "failed": 26,
+        "pending": 3743,
         "success": 1101,
         "total": 4883
       },
@@ -399,6 +399,15 @@
           "next_retry_at": "2026-03-03T20:08:12Z"
         },
         {
+          "id": "homebrew:0xjacky/tools/nginx-ui",
+          "name": "0xjacky/tools/nginx-ui",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "recipe_not_found",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-03T12:51:20Z"
+        },
+        {
           "id": "homebrew:abcmidi",
           "name": "abcmidi",
           "ecosystem": "homebrew",
@@ -489,6 +498,15 @@
           "next_retry_at": "2026-03-03T08:08:12Z"
         },
         {
+          "id": "homebrew:icu4c@78",
+          "name": "icu4c@78",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "generation_failed",
+          "failure_count": 2,
+          "next_retry_at": "2026-03-03T06:51:20Z"
+        },
+        {
           "id": "pypi:lib3mf",
           "name": "lib3mf",
           "ecosystem": "pypi",
@@ -514,6 +532,15 @@
           "category": "install_failed",
           "failure_count": 1,
           "next_retry_at": "2026-03-03T05:44:42Z"
+        },
+        {
+          "id": "homebrew:mlx-c",
+          "name": "mlx-c",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "generation_failed",
+          "failure_count": 2,
+          "next_retry_at": "2026-03-03T06:51:20Z"
         },
         {
           "id": "homebrew:tree-sitter@0.25",
@@ -622,7 +649,7 @@
           "ecosystem": "homebrew",
           "priority": 1,
           "category": "install_failed",
-          "failure_count": 5
+          "failure_count": 6
         },
         {
           "id": "homebrew:ffmpeg",
@@ -630,16 +657,7 @@
           "ecosystem": "homebrew",
           "priority": 2,
           "category": "install_failed",
-          "failure_count": 3
-        },
-        {
-          "id": "homebrew:0xjacky/tools/nginx-ui",
-          "name": "0xjacky/tools/nginx-ui",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "recipe_not_found",
-          "failure_count": 3,
-          "next_retry_at": "2026-02-24T06:14:04Z"
+          "failure_count": 4
         },
         {
           "id": "homebrew:0xjuanma/tap/golazo",
@@ -11126,14 +11144,6 @@
           "failure_count": 1
         },
         {
-          "id": "homebrew:icu4c@78",
-          "name": "icu4c@78",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "generation_failed",
-          "failure_count": 1
-        },
-        {
           "id": "homebrew:id3v2",
           "name": "id3v2",
           "ecosystem": "homebrew",
@@ -15760,14 +15770,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "homebrew:mlx-c",
-          "name": "mlx-c",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "generation_failed",
-          "failure_count": 1
         },
         {
           "id": "homebrew:mlx-lm",
@@ -38673,21 +38675,6 @@
       "timestamp": "2026-02-22T22:25:32.975745377Z"
     },
     {
-      "id": "batch-2026-02-21T07-27-58Z-anyquery",
-      "package": "anyquery",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64"
-      ],
-      "batch_id": "2026-02-21T07-27-58Z",
-      "timestamp": "2026-02-21T07:27:58Z"
-    },
-    {
       "id": "batch-2026-02-21T07-27-58Z-apr-util",
       "package": "apr-util",
       "ecosystem": "batch",
@@ -38720,6 +38707,21 @@
     {
       "id": "batch-2026-02-21T07-27-58Z-angle-grinder",
       "package": "angle-grinder",
+      "ecosystem": "batch",
+      "category": "generation_failed",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64"
+      ],
+      "batch_id": "2026-02-21T07-27-58Z",
+      "timestamp": "2026-02-21T07:27:58Z"
+    },
+    {
+      "id": "batch-2026-02-21T07-27-58Z-anyquery",
+      "package": "anyquery",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
