@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-03T15:50:54Z",
+  "updated_at": "2026-03-03T17:56:08Z",
   "entries": [
     {
       "name": "node",
@@ -276,7 +276,7 @@
       "name": "gcc",
       "source": "homebrew:gcc",
       "priority": 2,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 4,
@@ -336,7 +336,7 @@
       "name": "jless",
       "source": "homebrew:jless",
       "priority": 2,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 4,
@@ -356,7 +356,7 @@
       "name": "nvm",
       "source": "homebrew:nvm",
       "priority": 2,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 4,
@@ -556,7 +556,7 @@
       "name": "webp",
       "source": "homebrew:webp",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 4,
@@ -2866,7 +2866,7 @@
       "name": "arturo",
       "source": "rubygems:arturo",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 2,
@@ -2906,7 +2906,7 @@
       "name": "asciidoctor",
       "source": "rubygems:asciidoctor",
       "priority": 3,
-      "status": "pending",
+      "status": "success",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 1,
@@ -4446,11 +4446,11 @@
       "name": "basis_universal",
       "source": "crates.io:basis_universal",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": null
+      "failure_count": 2,
+      "next_retry_at": "2026-03-03T19:56:08.762700377Z"
     },
     {
       "name": "bastet",
@@ -9116,11 +9116,11 @@
       "name": "countdown",
       "source": "npm:countdown",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-02-20T19:39:44.657537068Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-03-03T21:56:08.762700377Z"
     },
     {
       "name": "coursier",
@@ -50306,11 +50306,11 @@
       "name": "vllm",
       "source": "pypi:vllm",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-02-21T05:59:16.570158033Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-03-03T21:56:08.762700377Z"
     },
     {
       "name": "vmware-tanzu/carvel/vendir",
