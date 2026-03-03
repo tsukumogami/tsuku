@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-03T09:44:35Z",
+  "generated_at": "2026-03-03T10:42:12Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -37733,13 +37733,98 @@
     }
   ],
   "failures": {
-    "generation_failed": 294,
-    "install_failed": 176,
+    "generation_failed": 295,
+    "install_failed": 185,
     "missing_dep": 67,
     "network_error": 7,
     "recipe_not_found": 72
   },
   "failure_details": [
+    {
+      "id": "homebrew-2026-03-03T10-39-47Z-certifi",
+      "package": "certifi",
+      "ecosystem": "homebrew",
+      "category": "generation_failed",
+      "subcategory": "no_bottles",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for certifi from homebrew:certifi...\nFetching formula metadata... done (v2026.2.25)\nInspecting bottle contents... failed\ndeterministic generation failed: [no_bottles] formula certifi has no bottles available",
+      "batch_id": "2026-03-03T10-39-47Z",
+      "timestamp": "2026-03-03T10:39:47.769977897Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T10-39-46Z-autoconf",
+      "package": "autoconf",
+      "ecosystem": "homebrew",
+      "category": "install_failed",
+      "batch_id": "2026-03-03T10-39-47Z",
+      "timestamp": "2026-03-03T10:39:46.206616828Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T10-39-42Z-p11-kit",
+      "package": "p11-kit",
+      "ecosystem": "homebrew",
+      "category": "install_failed",
+      "batch_id": "2026-03-03T10-39-47Z",
+      "timestamp": "2026-03-03T10:39:42.15109872Z"
+    },
+    {
+      "id": "crates.io-2026-03-03T10-39-37Z-numpy",
+      "package": "numpy",
+      "ecosystem": "crates.io",
+      "category": "install_failed",
+      "message": "Installing eval-time dependencies: [rust]\nInstalling rust...\nGenerating plan for rust@1.93.1\nExecuting plan: rust@1.93.1\n   Work directory: /tmp/action-validator-4049747296\n   Total steps: 4 (including 0 from dependencies)\n\nStep 1/4: download_file\n   Using cached: rust-1.93.1-x86_64-unknown-linux-gnu.tar.gz\n   ✓ Restored from cache\n\nStep 2/4: extract\n   Extracting: rust-1.93.1-x86_64-unknown-linux-gnu.tar.gz\n   Format: tar.gz\n   Strip dirs: 1\n\nStep 3/4: run_command\n   Running: ./install.sh --p",
+      "batch_id": "2026-03-03T10-39-47Z",
+      "timestamp": "2026-03-03T10:39:37.295128068Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T10-38-37Z-libassuan",
+      "package": "libassuan",
+      "ecosystem": "homebrew",
+      "category": "install_failed",
+      "batch_id": "2026-03-03T10-39-47Z",
+      "timestamp": "2026-03-03T10:38:37.195960727Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T10-38-31Z-pmix",
+      "package": "pmix",
+      "ecosystem": "homebrew",
+      "category": "install_failed",
+      "batch_id": "2026-03-03T10-39-47Z",
+      "timestamp": "2026-03-03T10:38:31.65796866Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T10-38-28Z-little-cms2",
+      "package": "little-cms2",
+      "ecosystem": "homebrew",
+      "category": "install_failed",
+      "batch_id": "2026-03-03T10-39-47Z",
+      "timestamp": "2026-03-03T10:38:28.202466244Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T10-38-25Z-ffmpeg",
+      "package": "ffmpeg",
+      "ecosystem": "homebrew",
+      "category": "install_failed",
+      "batch_id": "2026-03-03T10-39-47Z",
+      "timestamp": "2026-03-03T10:38:25.330775397Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T10-38-12Z-tmux",
+      "package": "tmux",
+      "ecosystem": "homebrew",
+      "category": "install_failed",
+      "message": "Error: recipe validation failed for 'libevent'\n  - steps: step 3: when.os contains 'darwin' which is not in the recipe's supported platforms\n  - steps: step 4: when.os contains 'darwin' which is not in the recipe's supported platforms",
+      "batch_id": "2026-03-03T10-39-47Z",
+      "timestamp": "2026-03-03T10:38:12.755360005Z"
+    },
+    {
+      "id": "homebrew-2026-03-03T10-38-10Z-task",
+      "package": "task",
+      "ecosystem": "homebrew",
+      "category": "install_failed",
+      "message": "tsuku collects anonymous usage statistics to improve the tool.\nNo personal information is collected. See: https://tsuku.dev/telemetry\n\nTo opt out: tsuku config set telemetry false\n         or export TSUKU_NO_TELEMETRY=1",
+      "batch_id": "2026-03-03T10-39-47Z",
+      "timestamp": "2026-03-03T10:38:10.558377176Z"
+    },
     {
       "id": "homebrew-2026-03-03T09-41-24Z-webp",
       "package": "webp",
@@ -39473,117 +39558,15 @@
       "message": "Error: registry: recipe bdw-gc not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create bdw-gc --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi, npm",
       "batch_id": "2026-02-23T02-08-32Z",
       "timestamp": "2026-02-23T02:08:15.201853337Z"
-    },
-    {
-      "id": "homebrew-2026-02-23T02-08-13Z-tree-sitter@0.25",
-      "package": "tree-sitter@0.25",
-      "ecosystem": "homebrew",
-      "category": "generation_failed",
-      "subcategory": "api_error",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for tree-sitter@0.25 from homebrew:tree-sitter@0.25...\nFetching formula metadata... done (v0.25.10)\nInspecting bottle contents... failed\ndeterministic generation failed: [api_error] failed to fetch bottle data for formula tree-sitter@0.25",
-      "batch_id": "2026-02-23T02-08-32Z",
-      "timestamp": "2026-02-23T02:08:13.493877587Z"
-    },
-    {
-      "id": "homebrew-2026-02-23T02-08-12Z-libidn2",
-      "package": "libidn2",
-      "ecosystem": "homebrew",
-      "category": "recipe_not_found",
-      "message": "Error: registry: recipe libunistring not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create libunistring --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi, npm",
-      "batch_id": "2026-02-23T02-08-32Z",
-      "timestamp": "2026-02-23T02:08:12.201935974Z"
-    },
-    {
-      "id": "batch-2026-02-22T22-42-09Z-libgit2",
-      "package": "libgit2",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "darwin-arm64",
-        "darwin-x86_64",
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64",
-        "linux-rhel-glibc-arm64",
-        "linux-rhel-glibc-x86_64",
-        "linux-suse-glibc-arm64",
-        "linux-suse-glibc-x86_64"
-      ],
-      "batch_id": "2026-02-22T22-42-09Z",
-      "timestamp": "2026-02-22T22:42:09Z"
-    },
-    {
-      "id": "homebrew-2026-02-22T22-25-55Z-achannarasappa/tap/ticker",
-      "package": "achannarasappa/tap/ticker",
-      "ecosystem": "homebrew",
-      "category": "recipe_not_found",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: package 'achannarasappa/tap/ticker' not found in homebrew",
-      "batch_id": "2026-02-22T22-25-55Z",
-      "timestamp": "2026-02-22T22:25:55.252709009Z"
-    },
-    {
-      "id": "homebrew-2026-02-22T22-25-54Z-abduco",
-      "package": "abduco",
-      "ecosystem": "homebrew",
-      "category": "install_failed",
-      "batch_id": "2026-02-22T22-25-55Z",
-      "timestamp": "2026-02-22T22:25:54.103689363Z"
-    },
-    {
-      "id": "homebrew-2026-02-22T22-25-51Z-abcmidi",
-      "package": "abcmidi",
-      "ecosystem": "homebrew",
-      "category": "install_failed",
-      "batch_id": "2026-02-22T22-25-55Z",
-      "timestamp": "2026-02-22T22:25:51.297914097Z"
-    },
-    {
-      "id": "homebrew-2026-02-22T22-25-48Z-aarch64-elf-gdb",
-      "package": "aarch64-elf-gdb",
-      "ecosystem": "homebrew",
-      "category": "recipe_not_found",
-      "message": "Error: registry: recipe mpfr not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create mpfr --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi, npm",
-      "batch_id": "2026-02-22T22-25-55Z",
-      "timestamp": "2026-02-22T22:25:48.567948395Z"
-    },
-    {
-      "id": "homebrew-2026-02-22T22-25-46Z-aarch64-elf-gcc",
-      "package": "aarch64-elf-gcc",
-      "ecosystem": "homebrew",
-      "category": "recipe_not_found",
-      "message": "Error: registry: recipe isl not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create isl --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi, npm",
-      "batch_id": "2026-02-22T22-25-55Z",
-      "timestamp": "2026-02-22T22:25:46.375213058Z"
-    },
-    {
-      "id": "homebrew-2026-02-22T22-25-37Z-a2ps",
-      "package": "a2ps",
-      "ecosystem": "homebrew",
-      "category": "recipe_not_found",
-      "message": "Error: registry: recipe bdw-gc not found in registry\n\nSuggestion: Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes\n\nTo create a recipe from a package ecosystem:\n  tsuku create bdw-gc --from \u003cecosystem\u003e\n\nAvailable ecosystems: crates.io, rubygems, pypi, npm",
-      "batch_id": "2026-02-22T22-25-55Z",
-      "timestamp": "2026-02-22T22:25:37.933761834Z"
-    },
-    {
-      "id": "homebrew-2026-02-22T22-25-36Z-tree-sitter@0.25",
-      "package": "tree-sitter@0.25",
-      "ecosystem": "homebrew",
-      "category": "generation_failed",
-      "subcategory": "api_error",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for tree-sitter@0.25 from homebrew:tree-sitter@0.25...\nFetching formula metadata... done (v0.25.10)\nInspecting bottle contents... failed\ndeterministic generation failed: [api_error] failed to fetch bottle data for formula tree-sitter@0.25",
-      "batch_id": "2026-02-22T22-25-55Z",
-      "timestamp": "2026-02-22T22:25:36.152988791Z"
     }
   ],
   "health": {
     "ecosystems": {
       "crates.io": {
         "breaker_state": "open",
-        "failures": 40,
-        "last_failure": "2026-03-03T06:11:02Z",
-        "opens_at": "2026-03-03T07:11:02Z"
+        "failures": 41,
+        "last_failure": "2026-03-03T10:41:45Z",
+        "opens_at": "2026-03-03T11:41:45Z"
       },
       "github": {
         "breaker_state": "open",
@@ -39593,8 +39576,8 @@
       },
       "homebrew": {
         "breaker_state": "closed",
-        "failures": 2,
-        "last_failure": "2026-03-03T09:42:58Z",
+        "failures": 3,
+        "last_failure": "2026-03-03T10:41:45Z",
         "opens_at": "2026-03-02T19:46:21Z"
       },
       "npm": {
@@ -39617,12 +39600,12 @@
       }
     },
     "last_run": {
-      "batch_id": "2026-03-03T09-43-02Z",
+      "batch_id": "2026-03-03T10-41-49Z",
       "ecosystems": {
-        "github": 1,
+        "crates.io": 1,
         "homebrew": 9
       },
-      "timestamp": "2026-03-03T09:43:02Z",
+      "timestamp": "2026-03-03T10:41:49Z",
       "succeeded": 0,
       "failed": 0,
       "total": 0
@@ -39639,7 +39622,7 @@
       "total": 2,
       "recipes_merged": 2
     },
-    "runs_since_last_success": 2
+    "runs_since_last_success": 3
   },
   "runs": [
     {
