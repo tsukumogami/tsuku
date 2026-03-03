@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-03T04:44:42Z",
+  "updated_at": "2026-03-03T04:51:20Z",
   "entries": [
     {
       "name": "node",
@@ -159,7 +159,7 @@
       "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 5,
+      "failure_count": 6,
       "next_retry_at": null
     },
     {
@@ -269,7 +269,7 @@
       "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
+      "failure_count": 4,
       "next_retry_at": null
     },
     {
@@ -526,11 +526,11 @@
       "name": "icu4c@78",
       "source": "homebrew:icu4c@78",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": null
+      "failure_count": 2,
+      "next_retry_at": "2026-03-03T06:51:20.38816992Z"
     },
     {
       "name": "libgit2",
@@ -796,11 +796,11 @@
       "name": "mlx-c",
       "source": "homebrew:mlx-c",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": null
+      "failure_count": 2,
+      "next_retry_at": "2026-03-03T06:51:20.38816992Z"
     },
     {
       "name": "notmuch",
@@ -866,11 +866,11 @@
       "name": "0xjacky/tools/nginx-ui",
       "source": "homebrew:0xjacky/tools/nginx-ui",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-02-24T06:14:04.404934265Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-03-03T12:51:20.38816992Z"
     },
     {
       "name": "0xjuanma/tap/golazo",
