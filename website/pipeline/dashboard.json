@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-03T15:50:00Z",
+  "generated_at": "2026-03-03T15:51:19Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -40,8 +40,8 @@
       },
       "crates.io": {
         "excluded": 5,
-        "failed": 1,
-        "pending": 76,
+        "failed": 2,
+        "pending": 75,
         "success": 23,
         "total": 105
       },
@@ -56,8 +56,8 @@
       },
       "homebrew": {
         "blocked": 27,
-        "failed": 19,
-        "pending": 3726,
+        "failed": 15,
+        "pending": 3730,
         "success": 1111,
         "total": 4883
       },
@@ -70,20 +70,20 @@
         "total": 1
       },
       "npm": {
-        "failed": 1,
-        "pending": 20,
+        "failed": 2,
+        "pending": 19,
         "success": 54,
         "total": 75
       },
       "pypi": {
-        "failed": 1,
-        "pending": 2,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
       "rubygems": {
-        "failed": 1,
-        "pending": 85,
+        "failed": 2,
+        "pending": 84,
         "success": 3,
         "total": 89
       }
@@ -574,13 +574,22 @@
           "next_retry_at": "2026-03-03T22:05:38Z"
         },
         {
-          "id": "homebrew:autoconf",
-          "name": "autoconf",
-          "ecosystem": "homebrew",
+          "id": "rubygems:arturo",
+          "name": "arturo",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 2,
+          "next_retry_at": "2026-03-03T17:50:54Z"
+        },
+        {
+          "id": "crates.io:ascii",
+          "name": "ascii",
+          "ecosystem": "crates.io",
           "priority": 3,
           "category": "install_failed",
           "failure_count": 3,
-          "next_retry_at": "2026-03-03T14:42:48Z"
+          "next_retry_at": "2026-03-03T19:50:54Z"
         },
         {
           "id": "npm:azion",
@@ -592,13 +601,13 @@
           "next_retry_at": "2026-03-03T22:05:38Z"
         },
         {
-          "id": "homebrew:certifi",
-          "name": "certifi",
-          "ecosystem": "homebrew",
+          "id": "npm:chainsaw",
+          "name": "chainsaw",
+          "ecosystem": "npm",
           "priority": 3,
-          "category": "generation_failed",
+          "category": "install_failed",
           "failure_count": 3,
-          "next_retry_at": "2026-03-03T14:42:48Z"
+          "next_retry_at": "2026-03-03T19:50:54Z"
         },
         {
           "id": "pypi:lib3mf",
@@ -637,22 +646,13 @@
           "next_retry_at": "2026-03-03T18:05:38Z"
         },
         {
-          "id": "homebrew:p11-kit",
-          "name": "p11-kit",
-          "ecosystem": "homebrew",
+          "id": "pypi:tctl",
+          "name": "tctl",
+          "ecosystem": "pypi",
           "priority": 3,
           "category": "install_failed",
           "failure_count": 3,
-          "next_retry_at": "2026-03-03T14:42:48Z"
-        },
-        {
-          "id": "homebrew:pmix",
-          "name": "pmix",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-03T14:42:48Z"
+          "next_retry_at": "2026-03-03T19:50:54Z"
         },
         {
           "id": "homebrew:webp",
@@ -1840,28 +1840,11 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:arturo",
-          "name": "arturo",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 1
-        },
-        {
           "id": "homebrew:arxiv_latex_cleaner",
           "name": "arxiv_latex_cleaner",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "crates.io:ascii",
-          "name": "ascii",
-          "ecosystem": "crates.io",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-03-03T06:08:12Z"
         },
         {
           "id": "homebrew:asciidoc",
@@ -2157,6 +2140,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "homebrew:autoconf",
+          "name": "autoconf",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-03T14:42:48Z"
         },
         {
           "id": "homebrew:autoconf-archive",
@@ -3889,6 +3881,15 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:certifi",
+          "name": "certifi",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "generation_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-03T14:42:48Z"
+        },
+        {
           "id": "homebrew:cesarferreira/tap/rip",
           "name": "cesarferreira/tap/rip",
           "ecosystem": "homebrew",
@@ -3950,15 +3951,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:chainsaw",
-          "name": "chainsaw",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-02-20T19:39:39Z"
         },
         {
           "id": "rubygems:chamber",
@@ -18586,6 +18578,15 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:p11-kit",
+          "name": "p11-kit",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-03T14:42:48Z"
+        },
+        {
           "id": "homebrew:packetry",
           "name": "packetry",
           "ecosystem": "homebrew",
@@ -19445,6 +19446,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "homebrew:pmix",
+          "name": "pmix",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-03T14:42:48Z"
         },
         {
           "id": "crates.io:pmtiles",
@@ -24913,15 +24923,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "pypi:tctl",
-          "name": "tctl",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-02-21T05:54:22Z"
         },
         {
           "id": "homebrew:tdlib",
