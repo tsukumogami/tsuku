@@ -1,34 +1,34 @@
 {
-  "generated_at": "2026-03-03T05:57:53Z",
-  "total_recipes": 1388,
+  "generated_at": "2026-03-03T06:13:47Z",
+  "total_recipes": 1394,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 828,
-        "total": 1388,
-        "pct": 59.654178674351584
+        "supported": 834,
+        "total": 1394,
+        "pct": 59.82783357245337
       },
       "glibc": {
-        "supported": 1356,
-        "total": 1388,
-        "pct": 97.69452449567724
+        "supported": 1362,
+        "total": 1394,
+        "pct": 97.70444763271162
       },
       "musl": {
-        "supported": 1215,
-        "total": 1388,
-        "pct": 87.53602305475503
+        "supported": 1221,
+        "total": 1394,
+        "pct": 87.58967001434719
       }
     },
     "by_category": {
       "library": {
-        "total": 149,
-        "musl_support": 147,
-        "glibc_support": 147
+        "total": 150,
+        "musl_support": 148,
+        "glibc_support": 148
       },
       "tool": {
-        "total": 1239,
-        "musl_support": 1068,
-        "glibc_support": 1209
+        "total": 1244,
+        "musl_support": 1073,
+        "glibc_support": 1214
       }
     }
   },
@@ -239,6 +239,20 @@
       ]
     },
     {
+      "name": "aftman",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": [
+        "recipe 'aftman' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
       "name": "age",
       "type": "tool",
       "platforms": {
@@ -265,6 +279,48 @@
       ],
       "errors": null,
       "warnings": null
+    },
+    {
+      "name": "agg",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": [
+        "recipe 'agg' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "aha",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": [
+        "recipe 'aha' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "aichat",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": [
+        "recipe 'aichat' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
     },
     {
       "name": "air",
@@ -11168,6 +11224,22 @@
       ]
     },
     {
+      "name": "libmpc",
+      "type": "library",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": [
+        "library recipe 'libmpc' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
+      ],
+      "warnings": [
+        "recipe 'libmpc' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
       "name": "libmpdclient",
       "type": "library",
       "platforms": {
@@ -14382,6 +14454,20 @@
       "errors": null,
       "warnings": [
         "recipe 'okteto' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "ollama",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": [
+        "recipe 'ollama' has platform-specific actions without libc when clauses and no musl fallback"
       ]
     },
     {
