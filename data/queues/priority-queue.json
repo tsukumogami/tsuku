@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-03T04:51:20Z",
+  "updated_at": "2026-03-03T05:11:37Z",
   "entries": [
     {
       "name": "node",
@@ -159,7 +159,7 @@
       "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 6,
+      "failure_count": 7,
       "next_retry_at": null
     },
     {
@@ -183,6 +183,16 @@
       "next_retry_at": null
     },
     {
+      "name": "python@3.14",
+      "source": "homebrew:python@3.14",
+      "priority": 2,
+      "status": "failed",
+      "confidence": "auto",
+      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
+      "failure_count": 5,
+      "next_retry_at": "2026-03-03T20:08:12.881937985Z"
+    },
+    {
       "name": "openssl@3",
       "source": "homebrew:openssl@3",
       "priority": 2,
@@ -193,14 +203,14 @@
       "next_retry_at": "2026-03-04T12:08:12.881937985Z"
     },
     {
-      "name": "python@3.14",
-      "source": "homebrew:python@3.14",
+      "name": "ffmpeg",
+      "source": "homebrew:ffmpeg",
       "priority": 2,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 5,
-      "next_retry_at": "2026-03-03T20:08:12.881937985Z"
+      "next_retry_at": null
     },
     {
       "name": "python@3.13",
@@ -263,20 +273,10 @@
       "next_retry_at": "2026-03-03T06:08:12.881937985Z"
     },
     {
-      "name": "ffmpeg",
-      "source": "homebrew:ffmpeg",
-      "priority": 2,
-      "status": "pending",
-      "confidence": "auto",
-      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 4,
-      "next_retry_at": null
-    },
-    {
       "name": "gcc",
       "source": "homebrew:gcc",
       "priority": 2,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 1,
@@ -336,7 +336,7 @@
       "name": "jless",
       "source": "homebrew:jless",
       "priority": 2,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 1,
@@ -356,7 +356,7 @@
       "name": "nvm",
       "source": "homebrew:nvm",
       "priority": 2,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 1,
@@ -463,6 +463,16 @@
       "next_retry_at": null
     },
     {
+      "name": "jpeg-xl",
+      "source": "homebrew:jpeg-xl",
+      "priority": 3,
+      "status": "pending",
+      "confidence": "auto",
+      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
+      "failure_count": 0,
+      "next_retry_at": null
+    },
+    {
       "name": "libassuan",
       "source": "homebrew:libassuan",
       "priority": 3,
@@ -481,6 +491,16 @@
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 0,
       "next_retry_at": null
+    },
+    {
+      "name": "little-cms2",
+      "source": "homebrew:little-cms2",
+      "priority": 3,
+      "status": "failed",
+      "confidence": "auto",
+      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
+      "failure_count": 1,
+      "next_retry_at": "2026-03-03T05:44:42.91988522Z"
     },
     {
       "name": "webp",
@@ -506,7 +526,17 @@
       "name": "aom",
       "source": "homebrew:aom",
       "priority": 3,
-      "status": "pending",
+      "status": "blocked",
+      "confidence": "auto",
+      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
+      "failure_count": 1,
+      "next_retry_at": null
+    },
+    {
+      "name": "dav1d",
+      "source": "homebrew:dav1d",
+      "priority": 3,
+      "status": "success",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 0,
@@ -556,11 +586,11 @@
       "name": "p11-kit",
       "source": "homebrew:p11-kit",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
-      "next_retry_at": null
+      "failure_count": 1,
+      "next_retry_at": "2026-03-03T06:11:37.166208706Z"
     },
     {
       "name": "simdjson",
@@ -626,30 +656,20 @@
       "name": "certifi",
       "source": "homebrew:certifi",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
-      "next_retry_at": null
-    },
-    {
-      "name": "dav1d",
-      "source": "homebrew:dav1d",
-      "priority": 3,
-      "status": "success",
-      "confidence": "auto",
-      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
-      "next_retry_at": null
+      "failure_count": 1,
+      "next_retry_at": "2026-03-03T06:11:37.166208706Z"
     },
     {
       "name": "deno",
       "source": "homebrew:deno",
       "priority": 3,
-      "status": "pending",
+      "status": "blocked",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
+      "failure_count": 1,
       "next_retry_at": null
     },
     {
@@ -733,6 +753,16 @@
       "next_retry_at": null
     },
     {
+      "name": "libmpc",
+      "source": "homebrew:libmpc",
+      "priority": 3,
+      "status": "pending",
+      "confidence": "auto",
+      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
+      "failure_count": 1,
+      "next_retry_at": null
+    },
+    {
       "name": "libsodium",
       "source": "homebrew:libsodium",
       "priority": 3,
@@ -761,16 +791,6 @@
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 1,
       "next_retry_at": null
-    },
-    {
-      "name": "little-cms2",
-      "source": "homebrew:little-cms2",
-      "priority": 3,
-      "status": "failed",
-      "confidence": "auto",
-      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": "2026-03-03T05:44:42.91988522Z"
     },
     {
       "name": "lpeg",
@@ -820,6 +840,16 @@
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 1,
+      "next_retry_at": null
+    },
+    {
+      "name": "numpy",
+      "source": "crates.io:numpy",
+      "priority": 3,
+      "status": "pending",
+      "confidence": "auto",
+      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
+      "failure_count": 0,
       "next_retry_at": null
     },
     {
@@ -876,51 +906,51 @@
       "name": "0xjuanma/tap/golazo",
       "source": "homebrew:0xjuanma/tap/golazo",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-02-24T06:14:05.411512725Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-03-03T13:11:37.166208706Z"
     },
     {
       "name": "2ykwang/2ykwang/mac-cleanup-go",
       "source": "homebrew:2ykwang/2ykwang/mac-cleanup-go",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-02-24T06:14:06.419089102Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-03-03T13:11:37.166208706Z"
     },
     {
       "name": "2ykwang/mac-cleanup-go/mac-cleanup-go",
       "source": "homebrew:2ykwang/mac-cleanup-go/mac-cleanup-go",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-02-24T06:14:07.427599218Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-03-03T13:11:37.166208706Z"
     },
     {
       "name": "42ailab/42plugin/forty-two-plugin",
       "source": "homebrew:42ailab/42plugin/forty-two-plugin",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-02-24T06:14:08.435384456Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-03-03T13:11:37.166208706Z"
     },
     {
       "name": "5ouma/tap/gh-poi",
       "source": "homebrew:5ouma/tap/gh-poi",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-02-24T06:14:09.443634973Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-03-03T13:11:37.166208706Z"
     },
     {
       "name": "a2ps",
@@ -929,37 +959,37 @@
       "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 4,
+      "failure_count": 5,
       "next_retry_at": "2026-02-19T15:38:27.082365439Z"
     },
     {
       "name": "a7ex/formulae/xcresultparser",
       "source": "homebrew:a7ex/formulae/xcresultparser",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-02-24T06:14:10.451649158Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-03-03T13:11:37.166208706Z"
     },
     {
       "name": "aalib",
       "source": "homebrew:aalib",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-02-24T06:14:11.803389241Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-03-03T13:11:37.166208706Z"
     },
     {
       "name": "aarch64-elf-gcc",
       "source": "homebrew:aarch64-elf-gcc",
       "priority": 3,
-      "status": "pending",
+      "status": "blocked",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 4,
+      "failure_count": 5,
       "next_retry_at": "2026-02-19T15:38:37.6217734Z"
     },
     {
@@ -976,31 +1006,31 @@
       "name": "ab-av1",
       "source": "homebrew:ab-av1",
       "priority": 3,
-      "status": "pending",
+      "status": "blocked",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
+      "failure_count": 1,
       "next_retry_at": null
     },
     {
       "name": "abcde",
       "source": "homebrew:abcde",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-02-24T06:14:13.167738278Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-03-03T13:11:37.166208706Z"
     },
     {
       "name": "abcm2ps",
       "source": "homebrew:abcm2ps",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-02-24T06:14:15.660266328Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-03-03T13:11:37.166208706Z"
     },
     {
       "name": "abcmidi",
@@ -1026,11 +1056,11 @@
       "name": "abi3audit",
       "source": "homebrew:abi3audit",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
-      "next_retry_at": null
+      "failure_count": 1,
+      "next_retry_at": "2026-03-03T06:11:37.166208706Z"
     },
     {
       "name": "abseil",
@@ -1066,11 +1096,11 @@
       "name": "acl2",
       "source": "homebrew:acl2",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
-      "next_retry_at": null
+      "failure_count": 1,
+      "next_retry_at": "2026-03-03T06:11:37.166208706Z"
     },
     {
       "name": "acme.sh",
@@ -1086,31 +1116,31 @@
       "name": "acpica",
       "source": "homebrew:acpica",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-02-22T06:14:27.745746099Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-03-03T09:11:37.166208706Z"
     },
     {
       "name": "acronym",
       "source": "homebrew:acronym",
       "priority": 3,
-      "status": "pending",
+      "status": "blocked",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
+      "failure_count": 1,
       "next_retry_at": null
     },
     {
       "name": "acsandmann/tap/rift",
       "source": "homebrew:acsandmann/tap/rift",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-02-22T06:14:28.753937134Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-03-03T09:11:37.166208706Z"
     },
     {
       "name": "act",
@@ -1126,11 +1156,11 @@
       "name": "act_runner",
       "source": "homebrew:act_runner",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-02-22T06:14:31.923583425Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-03-03T09:11:37.166208706Z"
     },
     {
       "name": "actionlint",
@@ -2336,7 +2366,7 @@
       "name": "apt",
       "source": "homebrew:apt",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 1,
@@ -22613,16 +22643,6 @@
       "next_retry_at": null
     },
     {
-      "name": "jpeg-xl",
-      "source": "homebrew:jpeg-xl",
-      "priority": 3,
-      "status": "pending",
-      "confidence": "auto",
-      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
-      "next_retry_at": null
-    },
-    {
       "name": "jpeginfo",
       "source": "homebrew:jpeginfo",
       "priority": 3,
@@ -25860,16 +25880,6 @@
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 0,
-      "next_retry_at": null
-    },
-    {
-      "name": "libmpc",
-      "source": "homebrew:libmpc",
-      "priority": 3,
-      "status": "pending",
-      "confidence": "auto",
-      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
       "next_retry_at": null
     },
     {
@@ -33015,16 +33025,6 @@
     {
       "name": "numbat",
       "source": "homebrew:numbat",
-      "priority": 3,
-      "status": "pending",
-      "confidence": "auto",
-      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
-      "next_retry_at": null
-    },
-    {
-      "name": "numpy",
-      "source": "crates.io:numpy",
       "priority": 3,
       "status": "pending",
       "confidence": "auto",
