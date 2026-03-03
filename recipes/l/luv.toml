@@ -1,0 +1,51 @@
+[metadata]
+  name = "luv"
+  description = "Bare libuv bindings for lua"
+  homepage = "https://github.com/luvit/luv"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["libuv"]
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "luv"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "luv"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libluv.a", "lib/libluv.so", "lib/libluv.so.1", "lib/libluv.so.1.51.0", "lib/lua/5.1/luv.so", "lib/lua/5.4/luv.so", "lib/pkgconfig/libluv.pc", "include/luv/lhandle.h", "include/luv/lreq.h", "include/luv/luv.h", "include/luv/util.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "luv"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libluv.1.51.0.dylib", "lib/libluv.1.dylib", "lib/libluv.a", "lib/libluv.dylib", "lib/lua/5.1/luv.so", "lib/lua/5.4/luv.so", "lib/pkgconfig/libluv.pc", "include/luv/lhandle.h", "include/luv/lreq.h", "include/luv/luv.h", "include/luv/util.h"]
+  [steps.when]
+    os = ["darwin"]

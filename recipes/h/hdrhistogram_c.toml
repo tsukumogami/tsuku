@@ -1,0 +1,50 @@
+[metadata]
+  name = "hdrhistogram_c"
+  description = "C port of the HdrHistogram"
+  homepage = "https://github.com/HdrHistogram/HdrHistogram_c"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = "library"
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "hdrhistogram_c"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "hdrhistogram_c"
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libhdr_histogram.so", "lib/libhdr_histogram.so.6", "lib/libhdr_histogram.so.6.2.3", "lib/libhdr_histogram_static.a", "lib/pkgconfig/hdr_histogram.pc", "include/hdr/hdr_histogram.h", "include/hdr/hdr_histogram_log.h", "include/hdr/hdr_histogram_version.h", "include/hdr/hdr_interval_recorder.h", "include/hdr/hdr_thread.h", "include/hdr/hdr_time.h", "include/hdr/hdr_writer_reader_phaser.h"]
+  [steps.when]
+    libc = ["glibc"]
+    os = ["linux"]
+
+[[steps]]
+  action = "homebrew"
+  formula = "hdrhistogram_c"
+  [steps.when]
+    os = ["darwin"]
+
+[[steps]]
+  action = "install_binaries"
+  install_mode = "directory"
+  outputs = ["lib/libhdr_histogram.6.2.3.dylib", "lib/libhdr_histogram.6.dylib", "lib/libhdr_histogram.dylib", "lib/libhdr_histogram_static.a", "lib/pkgconfig/hdr_histogram.pc", "include/hdr/hdr_histogram.h", "include/hdr/hdr_histogram_log.h", "include/hdr/hdr_histogram_version.h", "include/hdr/hdr_interval_recorder.h", "include/hdr/hdr_thread.h", "include/hdr/hdr_time.h", "include/hdr/hdr_writer_reader_phaser.h"]
+  [steps.when]
+    os = ["darwin"]

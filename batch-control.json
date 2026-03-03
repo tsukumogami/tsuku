@@ -9,13 +9,13 @@
   "circuit_breaker": {
     "github": {
       "state": "open",
-      "failures": 38,
-      "last_failure": "2026-03-03T03:17:19Z",
-      "opens_at": "2026-03-03T04:17:19Z"
+      "failures": 39,
+      "last_failure": "2026-03-03T04:41:23Z",
+      "opens_at": "2026-03-03T05:41:23Z"
     },
     "homebrew": {
       "state": "closed",
-      "failures": 1,
+      "failures": 0,
       "last_failure": "2026-03-03T04:17:57Z",
       "opens_at": "2026-03-02T19:46:21Z"
     },

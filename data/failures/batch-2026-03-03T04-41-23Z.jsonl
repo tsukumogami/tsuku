@@ -1,0 +1,4 @@
+{"schema_version":1,"recipe":"libgcrypt","platform":"darwin-arm64","exit_code":6,"category":"generation_failed","timestamp":"2026-03-03T04:41:23Z"}
+{"schema_version":1,"recipe":"libgcrypt","platform":"darwin-x86_64","exit_code":6,"category":"generation_failed","timestamp":"2026-03-03T04:41:23Z"}
+{"schema_version":1,"recipe":"libtool","platform":"darwin-arm64","exit_code":6,"category":"generation_failed","timestamp":"2026-03-03T04:41:23Z"}
+{"schema_version":1,"recipe":"libtool","platform":"darwin-x86_64","exit_code":6,"category":"generation_failed","timestamp":"2026-03-03T04:41:23Z"}
