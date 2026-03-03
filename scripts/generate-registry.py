@@ -29,7 +29,7 @@ OUTPUT_DIR = Path("_site")
 OUTPUT_FILE = OUTPUT_DIR / "recipes.json"
 
 # Validation patterns
-NAME_PATTERN = re.compile(r"^[a-z0-9@.-]+$")
+NAME_PATTERN = re.compile(r"^[a-z0-9@._-]+$")
 ECOSYSTEM_PATTERN = re.compile(r"^[a-z][a-z0-9-]*$")
 # Accept paths from registry (recipes/<letter>/<name>.toml) or embedded (internal/recipe/recipes/<name>.toml)
 PATH_PATTERN = re.compile(r"^(recipes/[a-z]/[a-z0-9@._-]+\.toml|internal/recipe/recipes/[a-z0-9@._-]+\.toml)$")
