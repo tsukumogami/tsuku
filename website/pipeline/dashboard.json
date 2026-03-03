@@ -1,13 +1,13 @@
 {
-  "generated_at": "2026-03-03T06:13:39Z",
+  "generated_at": "2026-03-03T06:14:49Z",
   "queue": {
     "total": 5305,
     "by_status": {
-      "blocked": 18,
+      "blocked": 23,
       "excluded": 5,
-      "failed": 44,
-      "pending": 3914,
-      "success": 1324
+      "failed": 46,
+      "pending": 3901,
+      "success": 1330
     },
     "by_tier": {
       "1": {
@@ -17,16 +17,16 @@
       },
       "2": {
         "blocked": 6,
-        "failed": 12,
+        "failed": 11,
         "pending": 2,
-        "success": 7
+        "success": 8
       },
       "3": {
-        "blocked": 9,
+        "blocked": 14,
         "excluded": 5,
-        "failed": 32,
-        "pending": 3902,
-        "success": 1312
+        "failed": 35,
+        "pending": 3889,
+        "success": 1317
       }
     },
     "by_ecosystem": {
@@ -55,10 +55,10 @@
         "total": 8
       },
       "homebrew": {
-        "blocked": 18,
-        "failed": 40,
-        "pending": 3723,
-        "success": 1102,
+        "blocked": 23,
+        "failed": 42,
+        "pending": 3710,
+        "success": 1108,
         "total": 4883
       },
       "manual": {
@@ -207,18 +207,6 @@
           "failure_count": 1
         },
         {
-          "id": "homebrew:aarch64-elf-gcc",
-          "name": "aarch64-elf-gcc",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "missing_dep",
-          "blocked_by": [
-            "libmpc"
-          ],
-          "failure_count": 5,
-          "next_retry_at": "2026-02-19T15:38:37Z"
-        },
-        {
           "id": "homebrew:ab-av1",
           "name": "ab-av1",
           "ecosystem": "homebrew",
@@ -238,6 +226,69 @@
           "blocked_by": [
             "numpy",
             "python@3.14"
+          ],
+          "failure_count": 1
+        },
+        {
+          "id": "homebrew:activemq",
+          "name": "activemq",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "missing_dep",
+          "blocked_by": [
+            "java-service-wrapper",
+            "openjdk"
+          ],
+          "failure_count": 1
+        },
+        {
+          "id": "homebrew:adb-enhanced",
+          "name": "adb-enhanced",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "missing_dep",
+          "blocked_by": [
+            "python@3.14"
+          ],
+          "failure_count": 1
+        },
+        {
+          "id": "homebrew:adios2",
+          "name": "adios2",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "missing_dep",
+          "blocked_by": [
+            "c-blosc2",
+            "libfabric",
+            "mpi4py",
+            "numpy",
+            "open-mpi",
+            "pugixml",
+            "python@3.14",
+            "zeromq"
+          ],
+          "failure_count": 1
+        },
+        {
+          "id": "homebrew:aerleon",
+          "name": "aerleon",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "missing_dep",
+          "blocked_by": [
+            "python@3.14"
+          ],
+          "failure_count": 1
+        },
+        {
+          "id": "homebrew:agda",
+          "name": "agda",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "missing_dep",
+          "blocked_by": [
+            "ghc@9.12"
           ],
           "failure_count": 1
         },
@@ -299,6 +350,17 @@
           "failure_count": 1
         },
         {
+          "id": "homebrew:openexr",
+          "name": "openexr",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "missing_dep",
+          "blocked_by": [
+            "openjph"
+          ],
+          "failure_count": 1
+        },
+        {
           "id": "homebrew:pinentry",
           "name": "pinentry",
           "ecosystem": "homebrew",
@@ -356,15 +418,6 @@
           "category": "recipe_not_found",
           "failure_count": 5,
           "next_retry_at": "2026-03-03T20:08:12Z"
-        },
-        {
-          "id": "homebrew:exa",
-          "name": "exa",
-          "ecosystem": "homebrew",
-          "priority": 2,
-          "category": "recipe_not_found",
-          "failure_count": 2,
-          "next_retry_at": "2026-03-03T06:08:12Z"
         },
         {
           "id": "homebrew:gcc",
@@ -565,15 +618,6 @@
           "next_retry_at": "2026-03-03T12:08:12Z"
         },
         {
-          "id": "homebrew:abi3audit",
-          "name": "abi3audit",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "generation_failed",
-          "failure_count": 1,
-          "next_retry_at": "2026-03-03T06:11:37Z"
-        },
-        {
           "id": "homebrew:achannarasappa/tap/ticker",
           "name": "achannarasappa/tap/ticker",
           "ecosystem": "homebrew",
@@ -581,15 +625,6 @@
           "category": "recipe_not_found",
           "failure_count": 4,
           "next_retry_at": "2026-03-03T12:08:12Z"
-        },
-        {
-          "id": "homebrew:acl2",
-          "name": "acl2",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 1,
-          "next_retry_at": "2026-03-03T06:11:37Z"
         },
         {
           "id": "homebrew:acme.sh",
@@ -637,6 +672,78 @@
           "next_retry_at": "2026-03-03T07:58:15Z"
         },
         {
+          "id": "homebrew:addlicense",
+          "name": "addlicense",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-03T10:14:24Z"
+        },
+        {
+          "id": "homebrew:adembc/tap/lazyssh",
+          "name": "adembc/tap/lazyssh",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "recipe_not_found",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-03T10:14:24Z"
+        },
+        {
+          "id": "homebrew:adr-tools",
+          "name": "adr-tools",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "generation_failed",
+          "failure_count": 1,
+          "next_retry_at": "2026-03-03T07:14:24Z"
+        },
+        {
+          "id": "homebrew:adwaita-icon-theme",
+          "name": "adwaita-icon-theme",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "generation_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-03T10:14:24Z"
+        },
+        {
+          "id": "homebrew:afl++",
+          "name": "afl++",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "recipe_not_found",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-03T10:14:24Z"
+        },
+        {
+          "id": "homebrew:agavra/tap/tuicr",
+          "name": "agavra/tap/tuicr",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "recipe_not_found",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-03T10:14:24Z"
+        },
+        {
+          "id": "homebrew:age-plugin-yubikey",
+          "name": "age-plugin-yubikey",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 1,
+          "next_retry_at": "2026-03-03T07:14:24Z"
+        },
+        {
+          "id": "homebrew:agrinman/tap/tunnelto",
+          "name": "agrinman/tap/tunnelto",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "recipe_not_found",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-03T10:14:24Z"
+        },
+        {
           "id": "rubygems:amp",
           "name": "amp",
           "ecosystem": "rubygems",
@@ -644,15 +751,6 @@
           "category": "install_failed",
           "failure_count": 3,
           "next_retry_at": "2026-03-03T08:08:12Z"
-        },
-        {
-          "id": "crates.io:ascii",
-          "name": "ascii",
-          "ecosystem": "crates.io",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-03-03T06:08:12Z"
         },
         {
           "id": "homebrew:autoconf",
@@ -671,15 +769,6 @@
           "category": "install_failed",
           "failure_count": 3,
           "next_retry_at": "2026-03-03T08:08:12Z"
-        },
-        {
-          "id": "homebrew:certifi",
-          "name": "certifi",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "generation_failed",
-          "failure_count": 1,
-          "next_retry_at": "2026-03-03T06:11:37Z"
         },
         {
           "id": "homebrew:icu4c@78",
@@ -718,22 +807,13 @@
           "next_retry_at": "2026-03-03T09:58:15Z"
         },
         {
-          "id": "homebrew:p11-kit",
-          "name": "p11-kit",
-          "ecosystem": "homebrew",
+          "id": "crates.io:numpy",
+          "name": "numpy",
+          "ecosystem": "crates.io",
           "priority": 3,
           "category": "install_failed",
           "failure_count": 1,
-          "next_retry_at": "2026-03-03T06:11:37Z"
-        },
-        {
-          "id": "homebrew:tree-sitter@0.25",
-          "name": "tree-sitter@0.25",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "generation_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-03-03T06:08:12Z"
+          "next_retry_at": "2026-03-03T07:14:24Z"
         },
         {
           "id": "homebrew:webp",
@@ -833,7 +913,16 @@
           "ecosystem": "homebrew",
           "priority": 1,
           "category": "install_failed",
-          "failure_count": 8
+          "failure_count": 9
+        },
+        {
+          "id": "homebrew:exa",
+          "name": "exa",
+          "ecosystem": "homebrew",
+          "priority": 2,
+          "category": "recipe_not_found",
+          "failure_count": 2,
+          "next_retry_at": "2026-03-03T06:08:12Z"
         },
         {
           "id": "homebrew:ffmpeg",
@@ -841,15 +930,7 @@
           "ecosystem": "homebrew",
           "priority": 2,
           "category": "install_failed",
-          "failure_count": 6
-        },
-        {
-          "id": "homebrew:ollama",
-          "name": "ollama",
-          "ecosystem": "homebrew",
-          "priority": 2,
-          "category": "missing_dep",
-          "failure_count": 1
+          "failure_count": 7
         },
         {
           "id": "homebrew:a2ps",
@@ -857,146 +938,35 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 5,
+          "failure_count": 6,
           "next_retry_at": "2026-02-19T15:38:27Z"
         },
         {
-          "id": "homebrew:activemq",
-          "name": "activemq",
+          "id": "homebrew:aarch64-elf-gcc",
+          "name": "aarch64-elf-gcc",
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "missing_dep",
-          "failure_count": 0
+          "failure_count": 5,
+          "next_retry_at": "2026-02-19T15:38:37Z"
         },
         {
-          "id": "homebrew:adb-enhanced",
-          "name": "adb-enhanced",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "missing_dep",
-          "failure_count": 0
-        },
-        {
-          "id": "homebrew:addlicense",
-          "name": "addlicense",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-02-22T06:14:34Z"
-        },
-        {
-          "id": "homebrew:adembc/tap/lazyssh",
-          "name": "adembc/tap/lazyssh",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "recipe_not_found",
-          "failure_count": 2,
-          "next_retry_at": "2026-02-22T06:14:35Z"
-        },
-        {
-          "id": "homebrew:adios2",
-          "name": "adios2",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "missing_dep",
-          "failure_count": 0
-        },
-        {
-          "id": "homebrew:adr-tools",
-          "name": "adr-tools",
+          "id": "homebrew:abi3audit",
+          "name": "abi3audit",
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "generation_failed",
-          "failure_count": 0
+          "failure_count": 1,
+          "next_retry_at": "2026-03-03T06:11:37Z"
         },
         {
-          "id": "homebrew:adwaita-icon-theme",
-          "name": "adwaita-icon-theme",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "generation_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-02-22T06:14:37Z"
-        },
-        {
-          "id": "homebrew:aerleon",
-          "name": "aerleon",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "missing_dep",
-          "failure_count": 0
-        },
-        {
-          "id": "homebrew:afl++",
-          "name": "afl++",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "recipe_not_found",
-          "failure_count": 2,
-          "next_retry_at": "2026-02-22T07:20:43Z"
-        },
-        {
-          "id": "homebrew:aftman",
-          "name": "aftman",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "homebrew:agavra/tap/tuicr",
-          "name": "agavra/tap/tuicr",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "recipe_not_found",
-          "failure_count": 2,
-          "next_retry_at": "2026-02-22T07:20:44Z"
-        },
-        {
-          "id": "homebrew:agda",
-          "name": "agda",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "missing_dep",
-          "failure_count": 0
-        },
-        {
-          "id": "homebrew:age-plugin-yubikey",
-          "name": "age-plugin-yubikey",
+          "id": "homebrew:acl2",
+          "name": "acl2",
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 0
-        },
-        {
-          "id": "homebrew:agg",
-          "name": "agg",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "homebrew:agrinman/tap/tunnelto",
-          "name": "agrinman/tap/tunnelto",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "recipe_not_found",
-          "failure_count": 2,
-          "next_retry_at": "2026-02-22T07:20:45Z"
-        },
-        {
-          "id": "homebrew:aha",
-          "name": "aha",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "homebrew:aichat",
-          "name": "aichat",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
+          "failure_count": 1,
+          "next_retry_at": "2026-03-03T06:11:37Z"
         },
         {
           "id": "homebrew:aicommit2",
@@ -1819,6 +1789,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "crates.io:ascii",
+          "name": "ascii",
+          "ecosystem": "crates.io",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 2,
+          "next_retry_at": "2026-03-03T06:08:12Z"
         },
         {
           "id": "homebrew:asciidoc",
@@ -3851,6 +3830,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "homebrew:certifi",
+          "name": "certifi",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "generation_failed",
+          "failure_count": 1,
+          "next_retry_at": "2026-03-03T06:11:37Z"
         },
         {
           "id": "homebrew:cesarferreira/tap/rip",
@@ -13402,13 +13390,6 @@
           "failure_count": 1
         },
         {
-          "id": "homebrew:libmpc",
-          "name": "libmpc",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 1
-        },
-        {
           "id": "homebrew:libmtp",
           "name": "libmtp",
           "ecosystem": "homebrew",
@@ -17202,14 +17183,6 @@
           "failure_count": 0
         },
         {
-          "id": "crates.io:numpy",
-          "name": "numpy",
-          "ecosystem": "crates.io",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 0
-        },
-        {
           "id": "homebrew:nuonco/tap/nuon",
           "name": "nuonco/tap/nuon",
           "ecosystem": "homebrew",
@@ -17641,14 +17614,6 @@
           "name": "opendht",
           "ecosystem": "homebrew",
           "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "homebrew:openexr",
-          "name": "openexr",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "missing_dep",
           "failure_count": 0
         },
         {
@@ -18588,6 +18553,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "homebrew:p11-kit",
+          "name": "p11-kit",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 1,
+          "next_retry_at": "2026-03-03T06:11:37Z"
         },
         {
           "id": "homebrew:packetry",
@@ -25733,6 +25707,15 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:tree-sitter@0.25",
+          "name": "tree-sitter@0.25",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "generation_failed",
+          "failure_count": 2,
+          "next_retry_at": "2026-03-03T06:08:12Z"
+        },
+        {
           "id": "homebrew:treefrog",
           "name": "treefrog",
           "ecosystem": "homebrew",
@@ -28351,6 +28334,14 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:ollama",
+          "name": "ollama",
+          "ecosystem": "homebrew",
+          "priority": 2,
+          "category": "missing_dep",
+          "failure_count": 1
+        },
+        {
           "id": "homebrew:protobuf",
           "name": "protobuf",
           "ecosystem": "homebrew",
@@ -28463,6 +28454,13 @@
           "failure_count": 1
         },
         {
+          "id": "homebrew:aftman",
+          "name": "aftman",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
           "id": "github:FiloSottile/age",
           "name": "age",
           "ecosystem": "github",
@@ -28473,6 +28471,27 @@
           "id": "npm:agent-browser",
           "name": "agent-browser",
           "ecosystem": "npm",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "homebrew:agg",
+          "name": "agg",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "homebrew:aha",
+          "name": "aha",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "homebrew:aichat",
+          "name": "aichat",
+          "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
         },
@@ -33290,6 +33309,13 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:libmpc",
+          "name": "libmpc",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 1
+        },
+        {
           "id": "homebrew:libnatpmp",
           "name": "libnatpmp",
           "ecosystem": "homebrew",
@@ -37603,6 +37629,28 @@
       ]
     },
     {
+      "dependency": "python@3.14",
+      "count": 6,
+      "direct_count": 6,
+      "total_count": 6,
+      "packages": [
+        "homebrew:acronym",
+        "homebrew:adb-enhanced",
+        "homebrew:adios2",
+        "homebrew:aerleon",
+        "homebrew:vim"
+      ]
+    },
+    {
+      "dependency": "openjph",
+      "count": 5,
+      "direct_count": 1,
+      "total_count": 5,
+      "packages": [
+        "homebrew:openexr"
+      ]
+    },
+    {
       "dependency": "openexr",
       "count": 4,
       "direct_count": 1,
@@ -37628,17 +37676,6 @@
       "packages": [
         "homebrew:gnupg",
         "homebrew:pinentry"
-      ]
-    },
-    {
-      "dependency": "python@3.14",
-      "count": 3,
-      "direct_count": 3,
-      "total_count": 3,
-      "packages": [
-        "homebrew:acronym",
-        "homebrew:vim",
-        "homebrew:yt-dlp"
       ]
     },
     {
@@ -37671,15 +37708,6 @@
     },
     {
       "dependency": "hdrhistogram_c",
-      "count": 2,
-      "direct_count": 1,
-      "total_count": 2,
-      "packages": [
-        "homebrew:node"
-      ]
-    },
-    {
-      "dependency": "icu4c@78",
       "count": 2,
       "direct_count": 1,
       "total_count": 2,
@@ -39208,38 +39236,8 @@
       "timestamp": "2026-02-22T22:25:32.975745377Z"
     },
     {
-      "id": "batch-2026-02-21T07-27-58Z-anycable-go",
-      "package": "anycable-go",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "linux-alpine-musl-x86_64",
-      "batch_id": "2026-02-21T07-27-58Z",
-      "timestamp": "2026-02-21T07:27:58Z"
-    },
-    {
-      "id": "batch-2026-02-21T07-27-58Z-apr-util",
-      "package": "apr-util",
-      "ecosystem": "batch",
-      "category": "missing_dep",
-      "exit_code": 8,
-      "platform": "multiple",
-      "platforms": [
-        "darwin-arm64",
-        "darwin-x86_64",
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64",
-        "linux-debian-glibc-arm64",
-        "linux-rhel-glibc-arm64",
-        "linux-suse-glibc-arm64"
-      ],
-      "batch_id": "2026-02-21T07-27-58Z",
-      "timestamp": "2026-02-21T07:27:58Z"
-    },
-    {
-      "id": "batch-2026-02-21T07-27-58Z-ansifilter",
-      "package": "ansifilter",
+      "id": "batch-2026-02-21T07-27-58Z-angle-grinder",
+      "package": "angle-grinder",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
@@ -39268,8 +39266,38 @@
       "timestamp": "2026-02-21T07:27:58Z"
     },
     {
-      "id": "batch-2026-02-21T07-27-58Z-angle-grinder",
-      "package": "angle-grinder",
+      "id": "batch-2026-02-21T07-27-58Z-apr-util",
+      "package": "apr-util",
+      "ecosystem": "batch",
+      "category": "missing_dep",
+      "exit_code": 8,
+      "platform": "multiple",
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x86_64",
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64",
+        "linux-debian-glibc-arm64",
+        "linux-rhel-glibc-arm64",
+        "linux-suse-glibc-arm64"
+      ],
+      "batch_id": "2026-02-21T07-27-58Z",
+      "timestamp": "2026-02-21T07:27:58Z"
+    },
+    {
+      "id": "batch-2026-02-21T07-27-58Z-anycable-go",
+      "package": "anycable-go",
+      "ecosystem": "batch",
+      "category": "generation_failed",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "linux-alpine-musl-x86_64",
+      "batch_id": "2026-02-21T07-27-58Z",
+      "timestamp": "2026-02-21T07:27:58Z"
+    },
+    {
+      "id": "batch-2026-02-21T07-27-58Z-ansifilter",
+      "package": "ansifilter",
       "ecosystem": "batch",
       "category": "generation_failed",
       "subcategory": "install_failed",
