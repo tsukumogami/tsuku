@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-03T06:54:46Z",
+  "updated_at": "2026-03-03T07:49:01Z",
   "entries": [
     {
       "name": "node",
@@ -159,7 +159,7 @@
       "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 10,
+      "failure_count": 11,
       "next_retry_at": null
     },
     {
@@ -209,7 +209,7 @@
       "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 8,
+      "failure_count": 9,
       "next_retry_at": null
     },
     {
@@ -496,11 +496,11 @@
       "name": "pmix",
       "source": "homebrew:pmix",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
-      "next_retry_at": null
+      "failure_count": 1,
+      "next_retry_at": "2026-03-03T08:49:01.547147527Z"
     },
     {
       "name": "jpeg-xl",
@@ -583,6 +583,16 @@
       "next_retry_at": null
     },
     {
+      "name": "harfbuzz",
+      "source": "homebrew:harfbuzz",
+      "priority": 3,
+      "status": "pending",
+      "confidence": "auto",
+      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
+      "failure_count": 0,
+      "next_retry_at": null
+    },
+    {
       "name": "hdrhistogram_c",
       "source": "homebrew:hdrhistogram_c",
       "priority": 3,
@@ -596,11 +606,11 @@
       "name": "icu4c@78",
       "source": "homebrew:icu4c@78",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-03-03T06:51:20.38816992Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-03-03T11:49:01.547147527Z"
     },
     {
       "name": "libgit2",
@@ -626,7 +636,7 @@
       "name": "numpy",
       "source": "crates.io:numpy",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 1,
@@ -956,7 +966,7 @@
       "name": "pugixml",
       "source": "homebrew:pugixml",
       "priority": 3,
-      "status": "pending",
+      "status": "success",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 0,
@@ -966,17 +976,17 @@
       "name": "tree-sitter@0.25",
       "source": "homebrew:tree-sitter@0.25",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-03-03T06:08:12.881937985Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-03-03T11:49:01.547147527Z"
     },
     {
       "name": "zeromq",
       "source": "homebrew:zeromq",
       "priority": 3,
-      "status": "pending",
+      "status": "success",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 0,
@@ -1346,7 +1356,7 @@
       "name": "adr-tools",
       "source": "homebrew:adr-tools",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 1,
@@ -1456,7 +1466,7 @@
       "name": "age-plugin-yubikey",
       "source": "homebrew:age-plugin-yubikey",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 1,
@@ -19510,16 +19520,6 @@
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 1,
-      "next_retry_at": null
-    },
-    {
-      "name": "harfbuzz",
-      "source": "homebrew:harfbuzz",
-      "priority": 3,
-      "status": "pending",
-      "confidence": "auto",
-      "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
       "next_retry_at": null
     },
     {
