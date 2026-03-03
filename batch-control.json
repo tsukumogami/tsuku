@@ -33,9 +33,9 @@
     },
     "npm": {
       "state": "open",
-      "failures": 42,
-      "last_failure": "2026-03-03T17:52:32Z",
-      "opens_at": "2026-03-03T18:52:32Z"
+      "failures": 43,
+      "last_failure": "2026-03-03T20:38:09Z",
+      "opens_at": "2026-03-03T21:38:09Z"
     },
     "pypi": {
       "state": "open",
