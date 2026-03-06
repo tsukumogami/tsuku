@@ -13,8 +13,13 @@
 ## Selected Approach (Phase 2)
 Integer version with range acceptance. It's the only approach with codebase precedent, works for static and distributed registries without fallback mechanisms, and has the smallest implementation scope. HTTP negotiation and dual-manifest can be layered on top later if tsuku moves to dynamic APIs.
 
+## Investigation Findings (Phase 3)
+- Version transition: Go's json.Unmarshal won't coerce string↔int. Need custom UnmarshalJSON on Manifest. Legacy strings map to version 0. Generation script change must lag CLI change by one release.
+- Warning UX: No centralized warning system exists. Need printWarning() helper respecting --quiet. Use sync.Once for per-session dedup. Trigger on manifest read, not CLI startup. No semver comparison exists yet -- need minimal parser or golang.org/x/mod/semver.
+- Cache interaction: Manifest cache is simpler than expected -- no TTL, no stale-if-error. FetchManifest validates before caching, so incompatible data never reaches disk. Old cache survives server-side upgrades. Per-recipe CachedRegistry is independent and unaffected.
+
 ## Current Status
-**Phase:** 2 - Present Approaches
+**Phase:** 3 - Deep Investigation
 **Last Updated:** 2026-03-05
 
 ## Key Exploration Findings
