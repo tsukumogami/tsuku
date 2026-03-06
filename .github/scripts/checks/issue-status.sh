@@ -91,10 +91,14 @@ if [[ -n "$PR_NUMBER" ]]; then
 fi
 
 # Get GitHub status for all issues/milestones (batch query)
-GITHUB_STATUS=$("$CI_DIR/get-github-status.sh" --from-doc "$DOC_PATH") || {
+# Exit code 1 = partial failure (some issues not found); still usable
+# Exit code 2 = operational error (missing tools, bad input)
+GH_STATUS_EXIT=0
+GITHUB_STATUS=$("$CI_DIR/get-github-status.sh" --from-doc "$DOC_PATH") || GH_STATUS_EXIT=$?
+if [[ $GH_STATUS_EXIT -eq 2 ]]; then
     echo "Error: could not query GitHub API" >&2
     exit $EXIT_FAIL
-}
+fi
 
 FAILED=0
 
