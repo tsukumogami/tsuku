@@ -5,8 +5,16 @@
 **Problem:** The CLI never validates the registry manifest's schema version. Breaking format changes cause silent failures, and there's no mechanism for registries to announce upcoming migrations or guide users to upgrade.
 **Constraints:** Must work for both central and distributed registries. Must be additive (deploying the mechanism can't break old CLIs). Integer schema version preferred over semver, following the discovery registry's existing pattern.
 
+## Approaches Investigated (Phase 1)
+- Integer version with range acceptance: extends discovery registry's proven pattern, smallest scope, works for all registry types
+- HTTP version negotiation: elegant for API registries but requires manifest-level fallback anyway (supplementary complexity)
+- Dual-manifest endpoint: versioned URL paths, structural independence, but adds latency and dual generation burden
+
+## Selected Approach (Phase 2)
+Integer version with range acceptance. It's the only approach with codebase precedent, works for static and distributed registries without fallback mechanisms, and has the smallest implementation scope. HTTP negotiation and dual-manifest can be layered on top later if tsuku moves to dynamic APIs.
+
 ## Current Status
-**Phase:** 0 - Setup (Explore Handoff)
+**Phase:** 2 - Present Approaches
 **Last Updated:** 2026-03-05
 
 ## Key Exploration Findings

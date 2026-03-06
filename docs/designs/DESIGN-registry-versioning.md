@@ -38,3 +38,28 @@ This design defines a protocol where registries announce upcoming format changes
 - **Additive deployment.** The versioning and deprecation mechanism itself must be deployable without breaking old CLIs.
 - **Simplicity.** The discovery registry's integer version with hard check is the proven pattern in this codebase. Semver is overkill for schema negotiation.
 - **Cache safety.** A version-incompatible stale manifest is worse than no manifest. The stale-if-error fallback needs to be version-aware.
+
+## Considered Options
+
+### Decision 1: Version negotiation mechanism
+
+**Context:** How the CLI detects whether it can parse a registry's manifest format, and how registries signal upcoming format changes.
+
+**Chosen: Integer version with range acceptance.**
+
+The manifest carries an integer `schema_version`. The CLI embeds a supported range `[MinVersion, MaxVersion]`. On parse, `parseManifest()` checks the manifest's version against the range: in-range proceeds normally, above-range returns a hard error with "upgrade tsuku" messaging. A separate optional `deprecation` object in the manifest pre-announces migrations. This directly extends the pattern already proven in the discovery registry (`internal/discover/registry.go:52-53`), works identically for static file registries and future HTTP API registries, and gets cache safety for free because `parseManifest()` is the single chokepoint for all manifest parsing paths.
+
+*Alternative rejected: HTTP version negotiation.* The CLI would send `Accept` headers declaring supported schema versions, and smart registries would serve the appropriate format. Elegant for API-backed registries, but tsuku's central registry is a static file on Cloudflare Pages, and distributed registries will likely be static or git-based too. Every non-HTTP code path (cache reads, local registries, git-based registries) requires manifest-level version checking as a fallback, so the HTTP negotiation layer becomes supplementary complexity on top of the mechanism you must build anyway.
+
+*Alternative rejected: Dual-manifest endpoint.* Versioned URL paths (`/v1/recipes.json`, `/v2/recipes.json`) where the URL IS the version contract. Old CLIs keep hitting their known URL; new CLIs probe upward with 404 fallback. Makes registry independence structural, but adds latency (one extra round-trip per version probe for new-CLI-on-old-registry), requires dual file generation during transitions, creates URL asymmetry with recipe paths, and introduces N*M probing complexity with multiple registries. The manifest-level integer check achieves the same goals with less infrastructure.
+
+## Decision Outcome
+
+The registry manifest will carry an integer `schema_version` field. The CLI will validate this against a compiled-in supported range on every manifest parse. An optional `deprecation` object in the manifest will let registries pre-announce format migrations with timelines and upgrade instructions.
+
+Key properties:
+- Integer schema version replaces the current unused semver string `"1.2.0"`
+- Version check in `parseManifest()` protects all code paths (fetch, cache, local)
+- Deprecation block is additive JSON -- old CLIs ignore it, new CLIs surface warnings
+- Each registry (central or distributed) authors its own deprecation independently
+- Stale cached manifests that are version-incompatible are treated as unusable
