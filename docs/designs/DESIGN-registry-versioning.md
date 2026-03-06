@@ -3,7 +3,7 @@ status: Proposed
 problem: |
   The CLI parses the registry manifest with no format compatibility check. The Manifest struct has a SchemaVersion field that's never validated. A breaking registry format change would cause silent parse failures or confusing errors, and old CLI versions have no way to know they're incompatible. There's no mechanism for registries to announce upcoming format changes or guide users through upgrades.
 decision: |
-  The manifest carries an integer schema_version validated against a compiled-in range [Min, Max] in parseManifest(). An optional deprecation object in the manifest lets registries pre-announce format migrations with timelines, minimum CLI version requirements, and upgrade URLs. The version check gates all manifest parsing paths (fetch, cache, local). Legacy string-format versions are handled via custom UnmarshalJSON during the transition. Deprecation warnings are displayed by the cmd/ layer (not the registry package) using sync.Once for per-session dedup. A minimal hand-rolled semver parser compares CLI version against min_cli_version.
+  The manifest carries an integer schema_version validated against a compiled-in range [Min, Max] in parseManifest(). An optional deprecation object in the manifest lets registries pre-announce format migrations with timelines, minimum CLI version requirements, and upgrade URLs. The version check gates all manifest parsing paths (fetch, cache, local). Legacy string-format versions are handled via custom UnmarshalJSON during the transition. Deprecation warnings are displayed by the cmd/ layer (not the registry package) using sync.Once for per-session dedup. The existing version.CompareVersions() checks CLI version against min_cli_version.
 rationale: |
   Integer versioning follows the pattern already proven by the discovery registry in this codebase. It's simpler than semver (which is overkill for schema negotiation), works identically for static file and HTTP API registries, and gets cache safety for free through the parseManifest() chokepoint. HTTP content negotiation and dual-manifest endpoints were rejected because they add infrastructure complexity on top of the manifest-level check you must build anyway.
 ---
@@ -95,21 +95,23 @@ When a manifest contains a `deprecation` object, the CLI needs to surface a warn
 
 ### Decision 4: Semver comparison for `min_cli_version`
 
-The deprecation notice includes `min_cli_version` so the CLI can tell users whether they need to upgrade. Comparing `buildinfo.Version()` (e.g., `"v0.3.0"`) against a semver string like `"v0.5.0"` requires version parsing. No semver parsing or comparison exists anywhere in the codebase today.
+The deprecation notice includes `min_cli_version` so the CLI can tell users whether they need to upgrade. Comparing `buildinfo.Version()` (e.g., `"v0.3.0"`) against a semver string like `"v0.5.0"` requires version parsing.
 
-#### Chosen: Minimal hand-rolled parser
+#### Chosen: Reuse `version.CompareVersions()`
 
-Strip the `v` prefix, split on `.`, compare major/minor/patch as integers. Dev builds (`dev-*`, `dev`, `unknown`) skip the comparison entirely and are treated as current -- developers running from source are assumed to be on the latest code. This is ~20 lines of code with no external dependency. tsuku doesn't use pre-release semver tags for releases, so the simple parser covers all real version strings.
+The codebase already has `version.CompareVersions()` (`internal/version/version_utils.go`) which handles semver with `v` prefix stripping, prerelease ordering, and calver formats. The `Masterminds/semver/v3` library is also already a dependency, used by multiple version providers for sorting. For the deprecation check, `CompareVersions(buildinfo.Version(), minCLIVersion)` gives us exactly what we need with no new code. Dev builds (`dev-*`, `dev`, `unknown`) skip the comparison entirely and are treated as current -- developers running from source are assumed to be on the latest code.
 
 #### Alternatives Considered
 
-**`golang.org/x/mod/semver`.** A well-tested semver library from the Go team. Rejected because adding a dependency for a single comparison point is disproportionate. The library handles pre-release ordering, build metadata, and other complexities that tsuku's version strings never exercise. If semver comparison becomes needed in more places, this decision can be revisited.
+**Hand-rolled minimal parser.** Strip `v` prefix, split on `.`, compare integers. Rejected because it duplicates logic that `CompareVersions` already handles, including edge cases like prerelease ordering and prefix normalization.
+
+**Direct use of `Masterminds/semver/v3`.** Call `semver.NewVersion()` and use its comparison methods directly. This would work but adds a direct coupling to the library in `internal/buildinfo/` or `cmd/`. Using the existing `CompareVersions` wrapper keeps the version comparison logic centralized in `internal/version/`.
 
 ## Decision Outcome
 
 The manifest carries an integer `schema_version` validated against a compiled-in `[Min, Max]` range in `parseManifest()`. Legacy string-format versions are handled transparently via a custom `UnmarshalJSON` on the `Manifest` struct, mapping old strings to version 0. The generation script migrates from string to integer one release after the CLI ships with the dual-type unmarshaler, so neither old CLIs nor new CLIs ever see a type they can't handle.
 
-An optional `deprecation` object in the manifest lets registries pre-announce format migrations. The `internal/registry` layer parses and stores the deprecation data; the `cmd/` layer displays it as a stderr warning via a new `printWarning()` helper that respects `--quiet`. Warnings fire once per CLI invocation using `sync.Once`. Before displaying upgrade instructions, the CLI compares `buildinfo.Version()` against the deprecation's `min_cli_version` using a minimal semver parser, and adjusts the message accordingly -- either "upgrade to vX.Y" or "your CLI already supports the new format."
+An optional `deprecation` object in the manifest lets registries pre-announce format migrations. The `internal/registry` layer parses and stores the deprecation data; the `cmd/` layer displays it as a stderr warning via a new `printWarning()` helper that respects `--quiet`. Warnings fire once per CLI invocation using `sync.Once`. Before displaying upgrade instructions, the CLI compares `buildinfo.Version()` against the deprecation's `min_cli_version` using the existing `version.CompareVersions()`, and adjusts the message accordingly -- either "upgrade to vX.Y" or "your CLI already supports the new format."
 
 Key properties:
 - Integer schema version replaces the current unused semver string `"1.2.0"`
@@ -176,7 +178,7 @@ The `deprecation` object is optional. When absent (the normal state), no warning
 
 **Downgrade prevention rule:** Before displaying deprecation warnings, the CLI compares `buildinfo.Version()` against `min_cli_version`. If the current CLI version is >= `min_cli_version`, it shows "your CLI already supports the new format." If below, it shows "upgrade to vX.Y." The CLI never renders a message suggesting a version older than the running one -- this prevents a malicious registry from using `min_cli_version` to suggest downgrading.
 
-**Semver comparison** (`internal/buildinfo/`): Minimal semver comparison for checking `buildinfo.Version()` against `min_cli_version`. Dev builds (`dev-*`, `dev`, `unknown`) skip the comparison and are treated as current.
+**Semver comparison**: Uses `version.CompareVersions()` (`internal/version/version_utils.go`) to check `buildinfo.Version()` against `min_cli_version`. This function already handles `v` prefix stripping, semver ordering, and prerelease comparison. Dev builds (`dev-*`, `dev`, `unknown`) skip the comparison and are treated as current.
 
 ### Data Flow
 
@@ -247,14 +249,14 @@ Deliverables:
 
 ### Phase 2: Deprecation notice support
 
-Add the `DeprecationNotice` struct, parsing, and warning display. Add `printWarning()` helper. Add minimal semver comparison for `min_cli_version`.
+Add the `DeprecationNotice` struct, parsing, and warning display. Add `printWarning()` helper. Use existing `version.CompareVersions()` for `min_cli_version` checking.
 
 Deliverables:
 - `DeprecationNotice` struct and `Deprecation *DeprecationNotice` field on `Manifest`
 - `printWarning()` in `cmd/tsuku/helpers.go` (stderr, respects `--quiet`)
 - `sync.Once` warning dedup per CLI invocation
-- Minimal semver comparison in `internal/buildinfo/` (or use `golang.org/x/mod/semver`)
-- Tests for deprecation parsing, warning display, version comparison
+- Dev build detection for skipping `min_cli_version` comparison
+- Tests for deprecation parsing, warning display, dev build handling
 
 ### Phase 3: Generation script migration
 
@@ -305,11 +307,11 @@ Not applicable. No new data is collected or transmitted. The deprecation check i
 
 ### Negative
 - The string-to-integer migration for `SchemaVersion` requires a two-release rollout (CLI change first, generation script second)
-- Adding semver comparison introduces new code (either a dependency or a hand-rolled parser) for `min_cli_version` checking
+- Dev build detection needs special handling to skip the `min_cli_version` comparison (dev builds don't follow semver)
 - The `deprecation.message` is registry-authored free text, which could be used for phishing in a malicious distributed registry
 - A compromised registry could serve `schema_version: 0` with altered recipe data, and it would pass validation and be cached. This isn't a new attack vector (the same works today without versioning), but the version check doesn't prevent it. A future ratchet mechanism (refuse to cache a schema version lower than the highest previously seen) could close this gap.
 
 ### Mitigations
 - Two-release rollout: the custom `UnmarshalJSON` handles both formats transparently, so users never see an error during transition
-- Semver comparison: a minimal parser (strip `v` prefix, split on `.`, compare integers) is ~20 lines of code. No need for a full library.
+- Semver comparison: reuses existing `version.CompareVersions()` with a dev-build guard. No new parsing code needed.
 - Phishing risk: the CLI labels the message source ("Registry at X reports: ...") and never auto-opens URLs. This matches the trust model users already accepted by adding the registry.
