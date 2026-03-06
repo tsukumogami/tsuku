@@ -3,7 +3,7 @@ status: Proposed
 problem: |
   The CLI parses the registry manifest with no format compatibility check. The Manifest struct has a SchemaVersion field that's never validated. A breaking registry format change would cause silent parse failures or confusing errors, and old CLI versions have no way to know they're incompatible. There's no mechanism for registries to announce upcoming format changes or guide users through upgrades.
 decision: |
-  The manifest carries an integer schema_version validated against a compiled-in range [Min, Max] in parseManifest(). An optional deprecation object in the manifest lets registries pre-announce format migrations with timelines, minimum CLI version requirements, and upgrade URLs. The version check gates all manifest parsing paths (fetch, cache, local). Legacy string-format versions are handled via custom UnmarshalJSON during the transition.
+  The manifest carries an integer schema_version validated against a compiled-in range [Min, Max] in parseManifest(). An optional deprecation object in the manifest lets registries pre-announce format migrations with timelines, minimum CLI version requirements, and upgrade URLs. The version check gates all manifest parsing paths (fetch, cache, local). Legacy string-format versions are handled via custom UnmarshalJSON during the transition. Deprecation warnings are displayed by the cmd/ layer (not the registry package) using sync.Once for per-session dedup. A minimal hand-rolled semver parser compares CLI version against min_cli_version.
 rationale: |
   Integer versioning follows the pattern already proven by the discovery registry in this codebase. It's simpler than semver (which is overkill for schema negotiation), works identically for static file and HTTP API registries, and gets cache safety for free through the parseManifest() chokepoint. HTTP content negotiation and dual-manifest endpoints were rejected because they add infrastructure complexity on top of the manifest-level check you must build anyway.
 ---
@@ -47,19 +47,69 @@ This design defines a protocol where registries announce upcoming format changes
 
 ### Decision 1: Version negotiation mechanism
 
-**Context:** How the CLI detects whether it can parse a registry's manifest format, and how registries signal upcoming format changes.
+How the CLI detects whether it can parse a registry's manifest format, and how registries signal upcoming format changes.
 
-**Chosen: Integer version with range acceptance.**
+#### Chosen: Integer version with range acceptance
 
 The manifest carries an integer `schema_version`. The CLI embeds a supported range `[MinVersion, MaxVersion]`. On parse, `parseManifest()` checks the manifest's version against the range: in-range proceeds normally, above-range returns a hard error with "upgrade tsuku" messaging. A separate optional `deprecation` object in the manifest pre-announces migrations. This directly extends the pattern already proven in the discovery registry (`internal/discover/registry.go:52-53`), works identically for static file registries and future HTTP API registries, and gets cache safety for free because `parseManifest()` is the single chokepoint for all manifest parsing paths.
 
-*Alternative rejected: HTTP version negotiation.* The CLI would send `Accept` headers declaring supported schema versions, and smart registries would serve the appropriate format. Elegant for API-backed registries, but tsuku's central registry is a static file on Cloudflare Pages, and distributed registries will likely be static or git-based too. Every non-HTTP code path (cache reads, local registries, git-based registries) requires manifest-level version checking as a fallback, so the HTTP negotiation layer becomes supplementary complexity on top of the mechanism you must build anyway.
+#### Alternatives Considered
 
-*Alternative rejected: Dual-manifest endpoint.* Versioned URL paths (`/v1/recipes.json`, `/v2/recipes.json`) where the URL IS the version contract. Old CLIs keep hitting their known URL; new CLIs probe upward with 404 fallback. Makes registry independence structural, but adds latency (one extra round-trip per version probe for new-CLI-on-old-registry), requires dual file generation during transitions, creates URL asymmetry with recipe paths, and introduces N*M probing complexity with multiple registries. The manifest-level integer check achieves the same goals with less infrastructure.
+**HTTP version negotiation.** The CLI sends `Accept` headers declaring supported schema versions, and smart registries serve the appropriate format. Rejected because tsuku's central registry is a static file on Cloudflare Pages, and distributed registries will likely be static or git-based too. Every non-HTTP code path (cache reads, local registries, git-based registries) requires manifest-level version checking as a fallback, so the HTTP negotiation layer becomes supplementary complexity on top of the mechanism you must build anyway.
+
+**Dual-manifest endpoint.** Versioned URL paths (`/v1/recipes.json`, `/v2/recipes.json`) where the URL IS the version contract. Old CLIs keep hitting their known URL; new CLIs probe upward with 404 fallback. Rejected because it adds latency (one extra round-trip per version probe for new-CLI-on-old-registry), requires dual file generation during transitions, creates URL asymmetry with recipe paths, and introduces N*M probing complexity with multiple registries. The manifest-level integer check achieves the same goals with less infrastructure.
+
+### Decision 2: Legacy version transition strategy
+
+The `Manifest.SchemaVersion` field is currently a `string` (`"1.2.0"`), but the new design needs an `int`. Go's `json.Unmarshal` is strict about type matching -- it won't coerce a JSON string into an int field or vice versa. Users have cached `manifest.json` files with the string format, and old CLIs in the wild expect it. The transition must not break either direction: new CLI reading old cache, or old CLI reading new manifest.
+
+#### Chosen: Custom `UnmarshalJSON` on `Manifest`
+
+Implement `UnmarshalJSON` on the `Manifest` struct. The public field stays `SchemaVersion int`. The custom unmarshaler decodes `schema_version` into an `interface{}`, then type-switches: `float64` (JSON number) converts to `int`, `string` (legacy format like `"1.2.0"`) maps to version 0 (pre-versioning era). This keeps the public API clean, handles both formats transparently, and requires no caller changes since `parseManifest()` just calls `json.Unmarshal` which invokes the custom method automatically.
+
+The generation script change (`"1.2.0"` to `1`) must lag the CLI change by at least one release. If the script emits an integer before users have the new CLI, old CLIs fail with no recovery path. Sequence: Release N ships the dual-type unmarshaler (script still emits string), Release N+1 changes the script to emit integer.
+
+#### Alternatives Considered
+
+**`json.Number` field type.** `json.Number` accepts JSON numbers but not JSON strings when used as a struct field with default `json.Unmarshal`. It would handle the new integer format but fail on the old string `"1.2.0"` -- the opposite of what backward compatibility requires. Rejected because it solves the wrong direction.
+
+**`interface{}` field with accessor method.** Store `SchemaVersionRaw interface{}` and provide a `SchemaVersion() (int, error)` method. This works but exposes a raw field on the struct, requires every access point to call the method instead of reading a field, and leaks the transition concern into the public API. Rejected because the custom `UnmarshalJSON` achieves the same result without API degradation.
+
+**Immediate type change (no transition).** Change the field to `int` and the generation script simultaneously. Users with cached string-format manifests get a parse error, recoverable by running `tsuku update-registry`. Rejected because old CLIs (which expect a string field) would hard-fail on the new integer manifest with no recovery path except upgrading the CLI -- exactly the kind of silent breakage this design aims to prevent.
+
+### Decision 3: Warning trigger point
+
+When a manifest contains a `deprecation` object, the CLI needs to surface a warning. The question is where in the code path this happens, and how to avoid spamming the user with repeated warnings.
+
+#### Chosen: Manifest parse stores, `cmd/` layer displays with `sync.Once`
+
+`parseManifest()` parses and stores the `Deprecation` field on the struct but does not write to stderr -- it stays in `internal/registry`, which shouldn't own display concerns. The `cmd/` layer checks `manifest.Deprecation` after a successful parse and calls `printWarning()` if present. A `sync.Once` ensures the warning fires at most once per CLI invocation, even if multiple code paths read the manifest. This covers both `update-registry` (which fetches fresh) and recipe-using commands (which read from cache), without adding latency to commands that don't touch the manifest (like `--help` or `--version`).
+
+#### Alternatives Considered
+
+**Trigger at CLI startup.** Check the cached manifest's deprecation state during `main.go` initialization. Rejected because it adds I/O latency to every command, including `--help` and `--version`, which never need the manifest. It also creates a dependency between CLI startup and the registry cache.
+
+**Trigger inside `parseManifest()` directly.** Have the parsing function write to stderr when it encounters a deprecation block. Rejected because `parseManifest()` lives in `internal/registry`, and writing to stderr from a library-level parsing function violates the display boundary. It also makes the warning impossible to suppress with `--quiet` (which is a `cmd/`-level flag) without threading CLI flags into the registry package.
+
+**Trigger on first recipe load in the Loader.** Check deprecation state when the Loader initializes or on first recipe access. This covers all recipe-using commands but misses `update-registry`, which is the most natural place for users to see the warning. Rejected because it requires plumbing manifest access into the Loader's initialization path, and the `cmd/` layer already has access to the manifest after fetch or cache read.
+
+### Decision 4: Semver comparison for `min_cli_version`
+
+The deprecation notice includes `min_cli_version` so the CLI can tell users whether they need to upgrade. Comparing `buildinfo.Version()` (e.g., `"v0.3.0"`) against a semver string like `"v0.5.0"` requires version parsing. No semver parsing or comparison exists anywhere in the codebase today.
+
+#### Chosen: Minimal hand-rolled parser
+
+Strip the `v` prefix, split on `.`, compare major/minor/patch as integers. Dev builds (`dev-*`, `dev`, `unknown`) skip the comparison entirely and are treated as current -- developers running from source are assumed to be on the latest code. This is ~20 lines of code with no external dependency. tsuku doesn't use pre-release semver tags for releases, so the simple parser covers all real version strings.
+
+#### Alternatives Considered
+
+**`golang.org/x/mod/semver`.** A well-tested semver library from the Go team. Rejected because adding a dependency for a single comparison point is disproportionate. The library handles pre-release ordering, build metadata, and other complexities that tsuku's version strings never exercise. If semver comparison becomes needed in more places, this decision can be revisited.
 
 ## Decision Outcome
 
-The registry manifest will carry an integer `schema_version` field. The CLI will validate this against a compiled-in supported range on every manifest parse. An optional `deprecation` object in the manifest will let registries pre-announce format migrations with timelines and upgrade instructions.
+The manifest carries an integer `schema_version` validated against a compiled-in `[Min, Max]` range in `parseManifest()`. Legacy string-format versions are handled transparently via a custom `UnmarshalJSON` on the `Manifest` struct, mapping old strings to version 0. The generation script migrates from string to integer one release after the CLI ships with the dual-type unmarshaler, so neither old CLIs nor new CLIs ever see a type they can't handle.
+
+An optional `deprecation` object in the manifest lets registries pre-announce format migrations. The `internal/registry` layer parses and stores the deprecation data; the `cmd/` layer displays it as a stderr warning via a new `printWarning()` helper that respects `--quiet`. Warnings fire once per CLI invocation using `sync.Once`. Before displaying upgrade instructions, the CLI compares `buildinfo.Version()` against the deprecation's `min_cli_version` using a minimal semver parser, and adjusts the message accordingly -- either "upgrade to vX.Y" or "your CLI already supports the new format."
 
 Key properties:
 - Integer schema version replaces the current unused semver string `"1.2.0"`
@@ -67,6 +117,7 @@ Key properties:
 - Deprecation block is additive JSON -- old CLIs ignore it, new CLIs surface warnings
 - Each registry (central or distributed) authors its own deprecation independently
 - Stale cached manifests that are version-incompatible are treated as unusable
+- Two-release rollout ensures neither direction of the string-to-int transition breaks
 
 ## Solution Architecture
 
