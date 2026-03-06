@@ -27,7 +27,7 @@ Hugo's `_internal/opengraph.html` already reads `.Params.images` for per-post OG
 - [x] Create Twitter Card partial template
 - [x] Add partial include to baseof.html
 - [x] Generate and replace OG default image with branded version
-- [ ] Verify hello-world post frontmatter supports images field (add example comment)
+- [x] Verify hello-world post frontmatter supports images field (add example comment)
 
 ## Testing Strategy
 - Manual: Share a built blog URL through social media preview validators (opengraph.dev, cards-dev.twitter.com)
