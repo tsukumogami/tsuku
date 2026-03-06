@@ -2,6 +2,10 @@
 status: Proposed
 problem: |
   The CLI parses the registry manifest with no format compatibility check. The Manifest struct has a SchemaVersion field that's never validated. A breaking registry format change would cause silent parse failures or confusing errors, and old CLI versions have no way to know they're incompatible. There's no mechanism for registries to announce upcoming format changes or guide users through upgrades.
+decision: |
+  The manifest carries an integer schema_version validated against a compiled-in range [Min, Max] in parseManifest(). An optional deprecation object in the manifest lets registries pre-announce format migrations with timelines, minimum CLI version requirements, and upgrade URLs. The version check gates all manifest parsing paths (fetch, cache, local). Legacy string-format versions are handled via custom UnmarshalJSON during the transition.
+rationale: |
+  Integer versioning follows the pattern already proven by the discovery registry in this codebase. It's simpler than semver (which is overkill for schema negotiation), works identically for static file and HTTP API registries, and gets cache safety for free through the parseManifest() chokepoint. HTTP content negotiation and dual-manifest endpoints were rejected because they add infrastructure complexity on top of the manifest-level check you must build anyway.
 ---
 
 # DESIGN: Registry Schema Versioning and Deprecation Signaling
@@ -113,11 +117,13 @@ The `deprecation` object is optional. When absent (the normal state), no warning
 
 **Version constants** (`internal/registry/manifest.go`): `MinManifestSchemaVersion = 0` and `MaxManifestSchemaVersion = 1`. Version 0 represents pre-versioning manifests (the legacy string era). Version 1 is the first explicitly versioned format. Future breaking changes increment `MaxManifestSchemaVersion`.
 
-**`parseManifest()` validation** (`internal/registry/manifest.go`): After JSON unmarshal, checks `manifest.SchemaVersion` against `[Min, Max]`. Above-range returns a new `RegistryError` with `ErrTypeValidation` and a suggestion to upgrade. Also checks the `Deprecation` field and triggers a warning if present.
+**`parseManifest()` validation** (`internal/registry/manifest.go`): After JSON unmarshal, checks `manifest.SchemaVersion` against `[Min, Max]`. Above-range returns a new `RegistryError` with `ErrTypeSchemaVersion` (dedicated error type, not overloading `ErrTypeValidation`) and a suggestion to upgrade. The suggestion also mentions `tsuku update-registry` for the CLI-downgrade case where the cache has a higher version than the CLI supports. `parseManifest()` only validates and stores the `Deprecation` field on the struct -- it does not write to stderr. Warning display is the caller's responsibility.
 
 **`DeprecationNotice` struct** (`internal/registry/manifest.go`): Holds `SunsetDate`, `MinCLIVersion`, `Message`, `UpgradeURL`. Parsed from the manifest's `deprecation` JSON object.
 
-**Warning display** (`cmd/tsuku/helpers.go`): New `printWarning()` helper that writes to stderr and respects `--quiet`. Deprecation warnings fire once per CLI invocation via `sync.Once`, triggered during the first manifest parse that encounters a deprecation notice.
+**Warning display** (`cmd/tsuku/helpers.go`): New `printWarning()` helper that writes to stderr and respects `--quiet`. After a successful manifest parse, the `cmd/` layer checks `manifest.Deprecation` and calls `printWarning()` if present. Warnings fire once per CLI invocation via `sync.Once`. The warning identifies the source registry by URL (the actual fetch URL, not a hardcoded default) so users know which registry issued the notice. When multi-registry support ships (#2073), the `sync.Once` should become per-registry dedup.
+
+**Downgrade prevention rule:** Before displaying deprecation warnings, the CLI compares `buildinfo.Version()` against `min_cli_version`. If the current CLI version is >= `min_cli_version`, it shows "your CLI already supports the new format." If below, it shows "upgrade to vX.Y." The CLI never renders a message suggesting a version older than the running one -- this prevents a malicious registry from using `min_cli_version` to suggest downgrading.
 
 **Semver comparison** (`internal/buildinfo/`): Minimal semver comparison for checking `buildinfo.Version()` against `min_cli_version`. Dev builds (`dev-*`, `dev`, `unknown`) skip the comparison and are treated as current.
 
@@ -151,26 +157,28 @@ parseManifest() -> json.Unmarshal (custom UnmarshalJSON handles string/int)
 **Version check error:**
 ```go
 &RegistryError{
-    Type:    ErrTypeValidation,
+    Type:    ErrTypeSchemaVersion,
     Recipe:  "manifest",
     Message: fmt.Sprintf("registry uses schema version %d, but this CLI supports versions %d-%d",
         manifest.SchemaVersion, MinManifestSchemaVersion, MaxManifestSchemaVersion),
 }
 ```
 
-The `Suggestion()` method returns: `"Update tsuku to the latest version. See https://tsuku.dev/upgrade"`
+The `Suggestion()` method returns: `"Update tsuku to the latest version, or run 'tsuku update-registry' to refresh the cache. See https://tsuku.dev/upgrade"`
 
 **Deprecation warning (stderr):**
 ```
-Warning: This registry's format will change on 2026-09-01.
+Warning: Registry at https://tsuku.dev reports: This registry will adopt schema v2 on 2026-09-01.
   Update tsuku to v0.5.0 or later: https://tsuku.dev/upgrade
 ```
 
 If the user's CLI already meets `min_cli_version`:
 ```
-Warning: This registry's format will change on 2026-09-01.
+Warning: Registry at https://tsuku.dev reports: This registry will adopt schema v2 on 2026-09-01.
   Your CLI (v0.5.0) already supports the new format. Run 'tsuku update-registry' after the migration.
 ```
+
+The registry URL shown is the actual fetch URL (from `manifestURL()`), not a hardcoded default.
 
 ## Implementation Approach
 
@@ -182,7 +190,7 @@ Deliverables:
 - `Manifest.SchemaVersion` type change from `string` to `int`
 - Custom `UnmarshalJSON` on `Manifest` (accepts both string and int)
 - Version range constants and validation in `parseManifest()`
-- New `ErrTypeSchemaVersion` or reuse `ErrTypeValidation` with schema-specific suggestion
+- New `ErrTypeSchemaVersion` error type with dedicated upgrade suggestion
 - Test updates (9 locations across `manifest_test.go` and `satisfies_test.go`)
 - New tests for: integer version parsing, legacy string parsing, out-of-range rejection
 
@@ -223,8 +231,12 @@ Not applicable. No new code execution paths are introduced. The version check an
 Mitigation: The CLI should not auto-open URLs. The `upgrade_url` is displayed as text only. Users must copy-paste it themselves. The warning message is clearly labeled as coming from the registry, not from tsuku itself:
 
 ```
-Warning: Registry at tsuku.dev reports: <message>
+Warning: Registry at <actual-fetch-url> reports: <message>
 ```
+
+The URL shown is the actual fetch URL (from `manifestURL()`), not hardcoded. This ensures that if `TSUKU_MANIFEST_URL` or `TSUKU_REGISTRY_URL` is overridden, the warning correctly attributes the message to the actual source rather than giving a malicious override the trust halo of the default registry.
+
+Additionally, the CLI never renders a deprecation message that suggests installing a version older than the running one. The `min_cli_version` comparison happens before displaying any upgrade instructions.
 
 For the central registry, the message originates from the tsuku maintainers (trusted). For distributed registries, users have already opted into trusting that source.
 
@@ -244,6 +256,7 @@ Not applicable. No new data is collected or transmitted. The deprecation check i
 - The string-to-integer migration for `SchemaVersion` requires a two-release rollout (CLI change first, generation script second)
 - Adding semver comparison introduces new code (either a dependency or a hand-rolled parser) for `min_cli_version` checking
 - The `deprecation.message` is registry-authored free text, which could be used for phishing in a malicious distributed registry
+- A compromised registry could serve `schema_version: 0` with altered recipe data, and it would pass validation and be cached. This isn't a new attack vector (the same works today without versioning), but the version check doesn't prevent it. A future ratchet mechanism (refuse to cache a schema version lower than the highest previously seen) could close this gap.
 
 ### Mitigations
 - Two-release rollout: the custom `UnmarshalJSON` handles both formats transparently, so users never see an error during transition
