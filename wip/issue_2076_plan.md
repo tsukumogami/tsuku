@@ -24,9 +24,9 @@ Hugo's `_internal/opengraph.html` already reads `.Params.images` for per-post OG
 - `blog/layouts/partials/twitter-card.html` - Twitter Card meta tags partial
 
 ## Implementation Steps
-- [ ] Create Twitter Card partial template
-- [ ] Add partial include to baseof.html
-- [ ] Generate and replace OG default image with branded version
+- [x] Create Twitter Card partial template
+- [x] Add partial include to baseof.html
+- [x] Generate and replace OG default image with branded version
 - [ ] Verify hello-world post frontmatter supports images field (add example comment)
 
 ## Testing Strategy
