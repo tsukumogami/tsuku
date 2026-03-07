@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-07T21:26:07Z",
+  "updated_at": "2026-03-07T22:28:02Z",
   "entries": [
     {
       "name": "node",
@@ -1906,11 +1906,11 @@
       "name": "amp",
       "source": "rubygems:amp",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 4,
-      "next_retry_at": "2026-03-03T22:05:38.606601787Z"
+      "failure_count": 6,
+      "next_retry_at": "2026-03-09T06:28:02.73342262Z"
     },
     {
       "name": "amplify",
@@ -2866,11 +2866,11 @@
       "name": "arturo",
       "source": "rubygems:arturo",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-03-03T23:49:21.220236632Z"
+      "failure_count": 5,
+      "next_retry_at": "2026-03-08T14:28:02.73342262Z"
     },
     {
       "name": "arxiv_latex_cleaner",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 4,
-      "next_retry_at": "2026-03-03T22:05:38.606601787Z"
+      "failure_count": 5,
+      "next_retry_at": "2026-03-08T14:28:02.73342262Z"
     },
     {
       "name": "azqr",
@@ -4836,11 +4836,11 @@
       "name": "bettercap",
       "source": "rubygems:bettercap",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": "2026-03-03T20:49:21.220236632Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-03-08T02:28:02.73342262Z"
     },
     {
       "name": "bfg",
@@ -5826,11 +5826,11 @@
       "name": "bullet",
       "source": "rubygems:bullet",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": "2026-03-03T20:49:21.220236632Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-03-08T02:28:02.73342262Z"
     },
     {
       "name": "bulletty",
@@ -5896,11 +5896,11 @@
       "name": "bup",
       "source": "rubygems:bup",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": "2026-03-03T20:49:21.220236632Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-03-08T02:28:02.73342262Z"
     },
     {
       "name": "burp",
@@ -6606,11 +6606,11 @@
       "name": "cassandra",
       "source": "rubygems:cassandra",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": "2026-03-03T20:49:21.220236632Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-03-08T02:28:02.73342262Z"
     },
     {
       "name": "cassandra-reaper",
@@ -6806,11 +6806,11 @@
       "name": "cdo",
       "source": "rubygems:cdo",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": "2026-03-03T20:49:21.220236632Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-03-08T02:28:02.73342262Z"
     },
     {
       "name": "cdogs-sdl",
@@ -7356,11 +7356,11 @@
       "name": "chisel",
       "source": "rubygems:chisel",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
-      "next_retry_at": null
+      "failure_count": 1,
+      "next_retry_at": "2026-03-07T23:28:02.73342262Z"
     },
     {
       "name": "chisel-tunnel",
@@ -7436,11 +7436,11 @@
       "name": "chroma",
       "source": "rubygems:chroma",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
-      "next_retry_at": null
+      "failure_count": 1,
+      "next_retry_at": "2026-03-07T23:28:02.73342262Z"
     },
     {
       "name": "chromaprint",
