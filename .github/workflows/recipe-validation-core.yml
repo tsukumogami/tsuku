@@ -94,7 +94,7 @@ jobs:
 
       - name: Upload binaries
         if: steps.collect.outputs.has_recipes == 'true'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7.0.0
         with:
           name: tsuku-binaries
           path: tsuku-*
@@ -116,7 +116,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Download binaries
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8.0.0
         with:
           name: tsuku-binaries
 
@@ -183,7 +183,7 @@ jobs:
           echo "$RESULTS" > validation-results-linux-${{ matrix.family }}-x86_64.json
 
       - name: Upload results
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7.0.0
         with:
           name: validation-results-linux-${{ matrix.family }}-x86_64
           path: validation-results-linux-${{ matrix.family }}-x86_64.json
@@ -205,7 +205,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Download binaries
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8.0.0
         with:
           name: tsuku-binaries
 
@@ -272,7 +272,7 @@ jobs:
           echo "$RESULTS" > validation-results-linux-${{ matrix.family }}-arm64.json
 
       - name: Upload results
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7.0.0
         with:
           name: validation-results-linux-${{ matrix.family }}-arm64
           path: validation-results-linux-${{ matrix.family }}-arm64.json
@@ -290,7 +290,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Download binaries
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8.0.0
         with:
           name: tsuku-binaries
 
@@ -341,7 +341,7 @@ jobs:
           echo "$RESULTS" > validation-results-darwin-arm64.json
 
       - name: Upload results
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7.0.0
         with:
           name: validation-results-darwin-arm64
           path: validation-results-darwin-arm64.json
@@ -359,7 +359,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Download binaries
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8.0.0
         with:
           name: tsuku-binaries
 
@@ -410,7 +410,7 @@ jobs:
           echo "$RESULTS" > validation-results-darwin-x86_64.json
 
       - name: Upload results
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7.0.0
         with:
           name: validation-results-darwin-x86_64
           path: validation-results-darwin-x86_64.json
@@ -427,7 +427,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Download all results
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8.0.0
         with:
           pattern: validation-results-*
           merge-multiple: true

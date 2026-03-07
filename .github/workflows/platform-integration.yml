@@ -28,7 +28,7 @@ jobs:
           CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -o tsuku-linux-arm64 ./cmd/tsuku
 
       - name: Upload binaries
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
         with:
           name: binaries
           path: tsuku-*
@@ -70,7 +70,7 @@ jobs:
         run: cp cmd/tsuku-dltest/target/release/tsuku-dltest tsuku-dltest-linux-${{ matrix.arch }}
 
       - name: Upload dltest binary
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
         with:
           name: dltest-${{ matrix.arch }}
           path: tsuku-dltest-linux-${{ matrix.arch }}
@@ -104,7 +104,7 @@ jobs:
         run: cp cmd/tsuku-dltest/target/release/tsuku-dltest tsuku-dltest-linux-${{ matrix.arch }}-musl
 
       - name: Upload dltest binary
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
         with:
           name: dltest-${{ matrix.arch }}-musl
           path: tsuku-dltest-linux-${{ matrix.arch }}-musl
@@ -150,12 +150,12 @@ jobs:
 
     steps:
       - name: Download pre-built binary
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131  # v7.0.0
+        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # v8.0.0
         with:
           name: binaries
 
       - name: Download dltest helper
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131  # v7.0.0
+        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # v8.0.0
         with:
           name: ${{ matrix.dltest_artifact }}
 
@@ -269,12 +269,12 @@ jobs:
   #
   #   steps:
   #     - name: Download pre-built binary
-  #       uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131  # v7.0.0
+  #       uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # v8.0.0
   #       with:
   #         name: binaries
   #
   #     - name: Download dltest helper
-  #       uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131  # v7.0.0
+  #       uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # v8.0.0
   #       with:
   #         name: dltest-arm64-musl
   #
