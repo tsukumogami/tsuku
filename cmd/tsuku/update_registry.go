@@ -226,11 +226,15 @@ func forceRegistryRefreshAll(ctx context.Context, cachedReg *registry.CachedRegi
 // The manifest provides the satisfies index for ecosystem name resolution.
 // Errors are non-fatal: the CLI continues working without the manifest,
 // but ecosystem name resolution for registry-only recipes won't work.
+// If the manifest contains a deprecation notice, a warning is printed.
 func refreshManifest(ctx context.Context, reg *registry.Registry) {
-	_, err := reg.FetchManifest(ctx)
+	manifest, err := reg.FetchManifest(ctx)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Warning: failed to fetch registry manifest: %v\n", err)
+		return
 	}
+
+	checkDeprecationWarning(manifest, reg.ManifestURL())
 }
 
 // formatAgeDuration formats a duration for human-readable display.

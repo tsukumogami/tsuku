@@ -20,7 +20,7 @@ import tomllib
 from datetime import datetime, timezone
 from pathlib import Path
 
-SCHEMA_VERSION = "1.2.0"
+SCHEMA_VERSION = 1
 MAX_DESCRIPTION_LENGTH = 200
 MAX_FILE_SIZE = 100 * 1024  # 100KB
 # Recipe directories: registry recipes and embedded recipes
