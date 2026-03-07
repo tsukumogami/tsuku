@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-07T22:27:29Z",
+  "generated_at": "2026-03-07T22:28:42Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 1,
-      "pending": 3936,
+      "failed": 11,
+      "pending": 3926,
       "success": 1335
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 1,
-        "pending": 3913,
+        "failed": 11,
+        "pending": 3903,
         "success": 1322
       }
     },
@@ -68,7 +68,8 @@
         "total": 1
       },
       "npm": {
-        "pending": 21,
+        "failed": 1,
+        "pending": 20,
         "success": 54,
         "total": 75
       },
@@ -79,7 +80,8 @@
       },
       "rubygems": {
         "excluded": 1,
-        "pending": 83,
+        "failed": 9,
+        "pending": 74,
         "success": 5,
         "total": 89
       }
@@ -459,6 +461,96 @@
         }
       ],
       "failed": [
+        {
+          "id": "rubygems:amp",
+          "name": "amp",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-09T06:28:02Z"
+        },
+        {
+          "id": "rubygems:arturo",
+          "name": "arturo",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-08T14:28:02Z"
+        },
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-08T14:28:02Z"
+        },
+        {
+          "id": "rubygems:bettercap",
+          "name": "bettercap",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-08T02:28:02Z"
+        },
+        {
+          "id": "rubygems:bullet",
+          "name": "bullet",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-08T02:28:02Z"
+        },
+        {
+          "id": "rubygems:bup",
+          "name": "bup",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-08T02:28:02Z"
+        },
+        {
+          "id": "rubygems:cassandra",
+          "name": "cassandra",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-08T02:28:02Z"
+        },
+        {
+          "id": "rubygems:cdo",
+          "name": "cdo",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-08T02:28:02Z"
+        },
+        {
+          "id": "rubygems:chisel",
+          "name": "chisel",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 1,
+          "next_retry_at": "2026-03-07T23:28:02Z"
+        },
+        {
+          "id": "rubygems:chroma",
+          "name": "chroma",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 1,
+          "next_retry_at": "2026-03-07T23:28:02Z"
+        },
         {
           "id": "crates.io:numpy",
           "name": "numpy",
@@ -1188,15 +1280,6 @@
           "failure_count": 1
         },
         {
-          "id": "rubygems:amp",
-          "name": "amp",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-03T22:05:38Z"
-        },
-        {
           "id": "homebrew:amplitude/ampli/ampli",
           "name": "amplitude/ampli/ampli",
           "ecosystem": "homebrew",
@@ -1760,15 +1843,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "rubygems:arturo",
-          "name": "arturo",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-03T23:49:21Z"
         },
         {
           "id": "homebrew:arxiv_latex_cleaner",
@@ -2398,15 +2472,6 @@
           "failure_count": 1
         },
         {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-03T22:05:38Z"
-        },
-        {
           "id": "homebrew:azure-cli",
           "name": "azure-cli",
           "ecosystem": "homebrew",
@@ -2855,15 +2920,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "rubygems:bettercap",
-          "name": "bettercap",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 1,
-          "next_retry_at": "2026-03-03T20:49:21Z"
         },
         {
           "id": "homebrew:bfg",
@@ -3385,15 +3441,6 @@
           "failure_count": 1
         },
         {
-          "id": "rubygems:bullet",
-          "name": "bullet",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 1,
-          "next_retry_at": "2026-03-03T20:49:21Z"
-        },
-        {
           "id": "homebrew:bulletty",
           "name": "bulletty",
           "ecosystem": "homebrew",
@@ -3413,15 +3460,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "rubygems:bup",
-          "name": "bup",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 1,
-          "next_retry_at": "2026-03-03T20:49:21Z"
         },
         {
           "id": "homebrew:burp",
@@ -3711,15 +3749,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:cassandra",
-          "name": "cassandra",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 1,
-          "next_retry_at": "2026-03-03T20:49:21Z"
-        },
-        {
           "id": "homebrew:cassandra-reaper",
           "name": "cassandra-reaper",
           "ecosystem": "homebrew",
@@ -3809,15 +3838,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "rubygems:cdo",
-          "name": "cdo",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 1,
-          "next_retry_at": "2026-03-03T20:49:21Z"
         },
         {
           "id": "homebrew:ceres-solver",
@@ -4076,14 +4096,6 @@
           "failure_count": 1
         },
         {
-          "id": "rubygems:chisel",
-          "name": "chisel",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 0
-        },
-        {
           "id": "homebrew:chisel-tunnel",
           "name": "chisel-tunnel",
           "ecosystem": "homebrew",
@@ -4116,14 +4128,6 @@
           "name": "choose",
           "ecosystem": "homebrew",
           "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "rubygems:chroma",
-          "name": "chroma",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
           "failure_count": 0
         },
         {
