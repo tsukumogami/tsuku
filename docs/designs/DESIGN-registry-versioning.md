@@ -242,11 +242,11 @@ Deliverables:
 
 See `docs/plans/PLAN-registry-versioning.md` for full decomposition.
 
-| # | Title | Complexity | Status |
-|---|-------|-----------|--------|
-| 1 | feat(registry): add integer schema version validation to manifest parsing | testable | in-progress |
-| 2 | feat(registry): add deprecation notice parsing and warning display | testable | pending |
-| 3 | chore(scripts): update generation script to emit integer schema version | simple | pending |
+| Issue | Dependencies | Tier |
+|-------|--------------|------|
+| Issue 1: feat(registry): add integer schema version validation to manifest parsing | None | testable |
+| Issue 2: feat(registry): add deprecation notice parsing and warning display | Issue 1 | testable |
+| Issue 3: chore(scripts): update generation script to emit integer schema version | Issue 1 | simple |
 
 ```mermaid
 graph LR
@@ -264,6 +264,8 @@ graph LR
     class I1 ready
     class I2,I3 blocked
 ```
+
+**Legend**: Green = done, Blue = ready, Yellow = blocked
 
 ## Security Considerations
 
