@@ -608,6 +608,10 @@ tsuku update-registry --recipe fzf
 tsuku update-registry --all
 ```
 
+#### Registry Compatibility
+
+tsuku validates the registry's schema version on every fetch and cache read. If the registry format is newer than your CLI supports, tsuku exits with an error and suggests upgrading. When a registry includes a deprecation notice for an upcoming format change, tsuku prints a one-time warning to stderr with the timeline, the minimum CLI version required, and an upgrade URL. The `--quiet` flag suppresses these warnings.
+
 ### Sandbox Testing
 
 Test installations in isolated containers to verify recipes work correctly:

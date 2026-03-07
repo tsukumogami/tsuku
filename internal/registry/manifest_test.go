@@ -3,17 +3,19 @@ package registry
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
 func TestParseManifest_WithSatisfies(t *testing.T) {
 	raw := `{
-		"schema_version": "1.2.0",
+		"schema_version": 1,
 		"generated_at": "2026-01-01T00:00:00Z",
 		"recipes": [
 			{
@@ -41,8 +43,8 @@ func TestParseManifest_WithSatisfies(t *testing.T) {
 		t.Fatalf("parseManifest() error: %v", err)
 	}
 
-	if manifest.SchemaVersion != "1.2.0" {
-		t.Errorf("expected schema_version 1.2.0, got %s", manifest.SchemaVersion)
+	if manifest.SchemaVersion != 1 {
+		t.Errorf("expected schema_version 1, got %d", manifest.SchemaVersion)
 	}
 
 	if len(manifest.Recipes) != 2 {
@@ -107,7 +109,7 @@ func TestGetCachedManifest_NoCachedFile(t *testing.T) {
 func TestGetCachedManifest_ValidCachedFile(t *testing.T) {
 	cacheDir := t.TempDir()
 	manifestData := Manifest{
-		SchemaVersion: "1.2.0",
+		SchemaVersion: 1,
 		Recipes: []ManifestRecipe{
 			{
 				Name:      "sqlite",
@@ -164,7 +166,7 @@ func TestManifestRecipe_SatisfiesOmittedWhenEmpty(t *testing.T) {
 
 func TestFetchManifest_RemoteSuccess(t *testing.T) {
 	manifestJSON := `{
-		"schema_version": "1.2.0",
+		"schema_version": 1,
 		"generated_at": "2026-01-01T00:00:00Z",
 		"recipes": [
 			{
@@ -198,8 +200,8 @@ func TestFetchManifest_RemoteSuccess(t *testing.T) {
 		t.Fatalf("FetchManifest() error: %v", err)
 	}
 
-	if manifest.SchemaVersion != "1.2.0" {
-		t.Errorf("expected schema_version 1.2.0, got %s", manifest.SchemaVersion)
+	if manifest.SchemaVersion != 1 {
+		t.Errorf("expected schema_version 1, got %d", manifest.SchemaVersion)
 	}
 	if len(manifest.Recipes) != 1 {
 		t.Fatalf("expected 1 recipe, got %d", len(manifest.Recipes))
@@ -216,8 +218,8 @@ func TestFetchManifest_RemoteSuccess(t *testing.T) {
 	if cached == nil {
 		t.Fatal("expected manifest to be cached after FetchManifest")
 	}
-	if cached.SchemaVersion != "1.2.0" {
-		t.Errorf("cached manifest schema_version = %q, want 1.2.0", cached.SchemaVersion)
+	if cached.SchemaVersion != 1 {
+		t.Errorf("cached manifest schema_version = %d, want 1", cached.SchemaVersion)
 	}
 }
 
@@ -277,7 +279,7 @@ func TestFetchManifest_LocalRegistry(t *testing.T) {
 	}
 
 	manifestJSON := `{
-		"schema_version": "1.2.0",
+		"schema_version": 1,
 		"generated_at": "2026-01-01T00:00:00Z",
 		"recipes": [
 			{
@@ -357,7 +359,7 @@ func TestCacheManifest_WritesFile(t *testing.T) {
 	cacheDir := t.TempDir()
 	reg := &Registry{CacheDir: cacheDir}
 
-	data := []byte(`{"schema_version":"1.2.0","recipes":[]}`)
+	data := []byte(`{"schema_version":1,"recipes":[]}`)
 	if err := reg.CacheManifest(data); err != nil {
 		t.Fatalf("CacheManifest() error: %v", err)
 	}
@@ -378,9 +380,9 @@ func TestManifestURL_EnvOverride(t *testing.T) {
 	customURL := "https://custom.example.com/manifest.json"
 	t.Setenv(EnvManifestURL, customURL)
 
-	got := reg.manifestURL()
+	got := reg.ManifestURL()
 	if got != customURL {
-		t.Errorf("manifestURL() = %q, want %q", got, customURL)
+		t.Errorf("ManifestURL() = %q, want %q", got, customURL)
 	}
 }
 
@@ -389,9 +391,9 @@ func TestManifestURL_DefaultRemote(t *testing.T) {
 	// Ensure env is not set
 	t.Setenv(EnvManifestURL, "")
 
-	got := reg.manifestURL()
+	got := reg.ManifestURL()
 	if got != DefaultManifestURL {
-		t.Errorf("manifestURL() = %q, want %q", got, DefaultManifestURL)
+		t.Errorf("ManifestURL() = %q, want %q", got, DefaultManifestURL)
 	}
 }
 
@@ -400,9 +402,142 @@ func TestManifestURL_LocalRegistry(t *testing.T) {
 	// Ensure env is not set
 	t.Setenv(EnvManifestURL, "")
 
-	got := reg.manifestURL()
+	got := reg.ManifestURL()
 	want := filepath.Join("/tmp/test-registry", "_site", "recipes.json")
 	if got != want {
-		t.Errorf("manifestURL() = %q, want %q", got, want)
+		t.Errorf("ManifestURL() = %q, want %q", got, want)
+	}
+}
+
+func TestParseManifest_ValidIntegerVersion(t *testing.T) {
+	raw := `{
+		"schema_version": 1,
+		"generated_at": "2026-01-01T00:00:00Z",
+		"recipes": []
+	}`
+
+	manifest, err := parseManifest([]byte(raw))
+	if err != nil {
+		t.Fatalf("parseManifest() error: %v", err)
+	}
+	if manifest.SchemaVersion != 1 {
+		t.Errorf("expected schema_version 1, got %d", manifest.SchemaVersion)
+	}
+}
+
+func TestParseManifest_AboveMaxVersion(t *testing.T) {
+	raw := fmt.Sprintf(`{
+		"schema_version": %d,
+		"generated_at": "2026-01-01T00:00:00Z",
+		"recipes": []
+	}`, MaxManifestSchemaVersion+1)
+
+	_, err := parseManifest([]byte(raw))
+	if err == nil {
+		t.Fatal("expected error for above-max schema version")
+	}
+
+	var regErr *RegistryError
+	if !errors.As(err, &regErr) {
+		t.Fatalf("expected *RegistryError, got %T: %v", err, err)
+	}
+	if regErr.Type != ErrTypeSchemaVersion {
+		t.Errorf("expected ErrTypeSchemaVersion, got %v", regErr.Type)
+	}
+
+	// Verify the error message includes the version and range
+	msg := regErr.Message
+	if !strings.Contains(msg, fmt.Sprintf("%d", MaxManifestSchemaVersion+1)) {
+		t.Errorf("error message should contain version %d: %s", MaxManifestSchemaVersion+1, msg)
+	}
+	if !strings.Contains(msg, "tsuku update-registry") {
+		t.Errorf("error message should mention 'tsuku update-registry': %s", msg)
+	}
+	if !strings.Contains(msg, "upgrade tsuku") {
+		t.Errorf("error message should mention upgrading tsuku: %s", msg)
+	}
+}
+
+func TestParseManifest_ZeroVersion(t *testing.T) {
+	raw := `{
+		"schema_version": 0,
+		"generated_at": "2026-01-01T00:00:00Z",
+		"recipes": []
+	}`
+
+	_, err := parseManifest([]byte(raw))
+	if err == nil {
+		t.Fatal("expected error for zero schema version")
+	}
+
+	var regErr *RegistryError
+	if !errors.As(err, &regErr) {
+		t.Fatalf("expected *RegistryError, got %T: %v", err, err)
+	}
+	if regErr.Type != ErrTypeSchemaVersion {
+		t.Errorf("expected ErrTypeSchemaVersion, got %v", regErr.Type)
+	}
+}
+
+func TestParseManifest_SchemaVersionSuggestion(t *testing.T) {
+	regErr := &RegistryError{
+		Type:    ErrTypeSchemaVersion,
+		Message: "test",
+	}
+
+	suggestion := regErr.Suggestion()
+	if !strings.Contains(suggestion, "tsuku update-registry") {
+		t.Errorf("suggestion should mention 'tsuku update-registry': %s", suggestion)
+	}
+	if !strings.Contains(suggestion, "upgrade tsuku") {
+		t.Errorf("suggestion should mention upgrading tsuku: %s", suggestion)
+	}
+}
+
+func TestParseManifest_DeprecationPresent(t *testing.T) {
+	raw := `{
+		"schema_version": 1,
+		"generated_at": "2026-01-01T00:00:00Z",
+		"deprecation": {
+			"sunset_date": "2026-09-01",
+			"min_cli_version": "v0.5.0",
+			"message": "This registry will adopt schema v2 on 2026-09-01."
+		},
+		"recipes": []
+	}`
+
+	manifest, err := parseManifest([]byte(raw))
+	if err != nil {
+		t.Fatalf("parseManifest() error: %v", err)
+	}
+
+	if manifest.Deprecation == nil {
+		t.Fatal("expected non-nil Deprecation")
+	}
+	if manifest.Deprecation.SunsetDate != "2026-09-01" {
+		t.Errorf("SunsetDate = %q, want %q", manifest.Deprecation.SunsetDate, "2026-09-01")
+	}
+	if manifest.Deprecation.MinCLIVersion != "v0.5.0" {
+		t.Errorf("MinCLIVersion = %q, want %q", manifest.Deprecation.MinCLIVersion, "v0.5.0")
+	}
+	if manifest.Deprecation.Message != "This registry will adopt schema v2 on 2026-09-01." {
+		t.Errorf("Message = %q, want expected message", manifest.Deprecation.Message)
+	}
+}
+
+func TestParseManifest_DeprecationAbsent(t *testing.T) {
+	raw := `{
+		"schema_version": 1,
+		"generated_at": "2026-01-01T00:00:00Z",
+		"recipes": []
+	}`
+
+	manifest, err := parseManifest([]byte(raw))
+	if err != nil {
+		t.Fatalf("parseManifest() error: %v", err)
+	}
+
+	if manifest.Deprecation != nil {
+		t.Errorf("expected nil Deprecation when absent, got %+v", manifest.Deprecation)
 	}
 }

@@ -21,13 +21,29 @@ const (
 
 	// EnvManifestURL is the environment variable to override the manifest URL.
 	EnvManifestURL = "TSUKU_MANIFEST_URL"
+
+	// MinManifestSchemaVersion is the minimum schema version this CLI supports.
+	MinManifestSchemaVersion = 1
+
+	// MaxManifestSchemaVersion is the maximum schema version this CLI supports.
+	MaxManifestSchemaVersion = 1
 )
+
+// DeprecationNotice holds pre-announced format migration details from a registry.
+// When present in a manifest, it signals that the registry plans to adopt a new
+// schema version and provides guidance for CLI users to prepare.
+type DeprecationNotice struct {
+	SunsetDate    string `json:"sunset_date"`
+	MinCLIVersion string `json:"min_cli_version"`
+	Message       string `json:"message"`
+}
 
 // Manifest represents the registry manifest (recipes.json).
 type Manifest struct {
-	SchemaVersion string           `json:"schema_version"`
-	GeneratedAt   string           `json:"generated_at"`
-	Recipes       []ManifestRecipe `json:"recipes"`
+	SchemaVersion int                `json:"schema_version"`
+	GeneratedAt   string             `json:"generated_at"`
+	Deprecation   *DeprecationNotice `json:"deprecation,omitempty"`
+	Recipes       []ManifestRecipe   `json:"recipes"`
 }
 
 // ManifestRecipe represents a single recipe entry in the manifest.
@@ -59,10 +75,10 @@ func (r *Registry) GetCachedManifest() (*Manifest, error) {
 	return parseManifest(data)
 }
 
-// manifestURL returns the URL for the registry manifest.
+// ManifestURL returns the URL for the registry manifest.
 // Checks TSUKU_MANIFEST_URL environment variable first, then falls back
 // to DefaultManifestURL. For local registries, constructs a filesystem path.
-func (r *Registry) manifestURL() string {
+func (r *Registry) ManifestURL() string {
 	if envURL := os.Getenv(EnvManifestURL); envURL != "" {
 		return envURL
 	}
@@ -75,7 +91,7 @@ func (r *Registry) manifestURL() string {
 // FetchManifest fetches the registry manifest from the remote URL (or local
 // filesystem) and caches it in CacheDir. Returns the parsed manifest.
 func (r *Registry) FetchManifest(ctx context.Context) (*Manifest, error) {
-	url := r.manifestURL()
+	url := r.ManifestURL()
 
 	var data []byte
 	var err error
@@ -154,11 +170,25 @@ func (r *Registry) CacheManifest(data []byte) error {
 	return nil
 }
 
-// parseManifest parses raw JSON bytes into a Manifest struct.
+// parseManifest parses raw JSON bytes into a Manifest struct and validates
+// that the schema version falls within the supported [Min, Max] range.
 func parseManifest(data []byte) (*Manifest, error) {
 	var manifest Manifest
 	if err := json.Unmarshal(data, &manifest); err != nil {
 		return nil, fmt.Errorf("failed to parse manifest JSON: %w", err)
 	}
+
+	if manifest.SchemaVersion < MinManifestSchemaVersion || manifest.SchemaVersion > MaxManifestSchemaVersion {
+		return nil, &RegistryError{
+			Type:   ErrTypeSchemaVersion,
+			Recipe: "manifest",
+			Message: fmt.Sprintf(
+				"unsupported manifest schema version %d (supported range: %d-%d); "+
+					"run 'tsuku update-registry' or upgrade tsuku",
+				manifest.SchemaVersion, MinManifestSchemaVersion, MaxManifestSchemaVersion,
+			),
+		}
+	}
+
 	return &manifest, nil
 }
