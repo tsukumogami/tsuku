@@ -102,24 +102,46 @@ func checkDeprecationWarning(manifest *registry.Manifest, registryURL string) {
 
 // formatDeprecationWarning builds the deprecation warning string. Accepts the
 // CLI version as a parameter so the version comparison branches are testable.
+//
+// The warning leads with the actionable information (what version to upgrade to,
+// by when) rather than internal details like schema version numbers.
 func formatDeprecationWarning(dep *registry.DeprecationNotice, registryURL, cliVersion string) string {
 	var b strings.Builder
 
-	fmt.Fprintf(&b, "Warning: Registry at %s reports: %s", registryURL, dep.Message)
-
 	if isDevBuild(cliVersion) {
-		// Dev builds are treated as current -- no version guidance needed
-	} else if dep.MinCLIVersion != "" {
+		// Dev builds: show the registry message as-is, no version guidance
+		fmt.Fprintf(&b, "Warning: %s", dep.Message)
+		if dep.SunsetDate != "" {
+			fmt.Fprintf(&b, " (by %s)", dep.SunsetDate)
+		}
+		return b.String()
+	}
+
+	if dep.MinCLIVersion != "" {
 		cmp := version.CompareVersions(cliVersion, dep.MinCLIVersion)
 		if cmp >= 0 {
 			// CLI already meets the minimum version
-			fmt.Fprintf(&b, "\n  Your CLI (%s) already supports the new format. Run 'tsuku update-registry' after the migration.", cliVersion)
-		} else {
-			// CLI needs an upgrade -- but never suggest downgrading
-			fmt.Fprintf(&b, "\n  Update tsuku to %s or later", dep.MinCLIVersion)
-			if dep.UpgradeURL != "" {
-				fmt.Fprintf(&b, ": %s", dep.UpgradeURL)
+			fmt.Fprintf(&b, "Warning: %s", dep.Message)
+			if dep.SunsetDate != "" {
+				fmt.Fprintf(&b, " (by %s)", dep.SunsetDate)
 			}
+			fmt.Fprintf(&b, "\n  Your CLI (%s) is already compatible. Run 'tsuku update-registry' after the migration.", cliVersion)
+		} else {
+			// CLI needs an upgrade
+			fmt.Fprintf(&b, "Warning: tsuku %s or later is required by %s", dep.MinCLIVersion, registryURL)
+			if dep.SunsetDate != "" {
+				fmt.Fprintf(&b, " after %s", dep.SunsetDate)
+			}
+			fmt.Fprintf(&b, ".\n  Run: tsuku update")
+			if dep.UpgradeURL != "" {
+				fmt.Fprintf(&b, "\n  More info: %s", dep.UpgradeURL)
+			}
+		}
+	} else {
+		// No min version specified, just show the message
+		fmt.Fprintf(&b, "Warning: %s", dep.Message)
+		if dep.SunsetDate != "" {
+			fmt.Fprintf(&b, " (by %s)", dep.SunsetDate)
 		}
 	}
 

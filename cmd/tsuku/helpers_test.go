@@ -135,8 +135,8 @@ func TestCheckDeprecationWarning_DisplaysWarning(t *testing.T) {
 	_, _ = buf.ReadFrom(r)
 	output := buf.String()
 
-	if !strings.Contains(output, "Warning: Registry at https://tsuku.dev/recipes.json reports: Schema v2 coming soon.") {
-		t.Errorf("expected warning with registry URL and message, got %q", output)
+	if !strings.Contains(output, "Warning:") || !strings.Contains(output, "Schema v2 coming soon.") {
+		t.Errorf("expected warning containing message, got %q", output)
 	}
 }
 
@@ -246,9 +246,8 @@ func TestCheckDeprecationWarning_UpgradeNeeded(t *testing.T) {
 
 	// Current dev build version will be "dev" or "dev-<hash>" or "unknown",
 	// which are all dev builds, so version comparison is skipped.
-	// We need to test version comparison branches differently.
 	// This test validates the basic warning format.
-	if !strings.Contains(output, "Warning: Registry at https://example.com reports: Upgrade needed test.") {
+	if !strings.Contains(output, "Warning:") || !strings.Contains(output, "Upgrade needed test.") {
 		t.Errorf("expected warning format, got %q", output)
 	}
 }
@@ -257,19 +256,22 @@ func TestFormatDeprecationWarning_CLIBelowMinVersion(t *testing.T) {
 	dep := &registry.DeprecationNotice{
 		SunsetDate:    "2026-09-01",
 		MinCLIVersion: "v0.5.0",
-		Message:       "Schema v2 on 2026-09-01.",
+		Message:       "Registry format changing.",
 		UpgradeURL:    "https://tsuku.dev/upgrade",
 	}
 
 	msg := formatDeprecationWarning(dep, "https://tsuku.dev/recipes.json", "v0.3.0")
 
-	if !strings.Contains(msg, "Warning: Registry at https://tsuku.dev/recipes.json reports: Schema v2 on 2026-09-01.") {
-		t.Errorf("expected warning header, got %q", msg)
+	if !strings.Contains(msg, "Warning: tsuku v0.5.0 or later is required") {
+		t.Errorf("expected version requirement in warning, got %q", msg)
 	}
-	if !strings.Contains(msg, "Update tsuku to v0.5.0 or later") {
-		t.Errorf("expected upgrade instruction, got %q", msg)
+	if !strings.Contains(msg, "after 2026-09-01") {
+		t.Errorf("expected sunset date, got %q", msg)
 	}
-	if !strings.Contains(msg, "https://tsuku.dev/upgrade") {
+	if !strings.Contains(msg, "Run: tsuku update") {
+		t.Errorf("expected upgrade command, got %q", msg)
+	}
+	if !strings.Contains(msg, "More info: https://tsuku.dev/upgrade") {
 		t.Errorf("expected upgrade URL, got %q", msg)
 	}
 }
@@ -278,13 +280,13 @@ func TestFormatDeprecationWarning_CLIMeetsMinVersion(t *testing.T) {
 	dep := &registry.DeprecationNotice{
 		SunsetDate:    "2026-09-01",
 		MinCLIVersion: "v0.5.0",
-		Message:       "Schema v2 on 2026-09-01.",
+		Message:       "Registry format changing.",
 	}
 
 	msg := formatDeprecationWarning(dep, "https://tsuku.dev/recipes.json", "v0.5.0")
 
-	if !strings.Contains(msg, "Your CLI (v0.5.0) already supports the new format") {
-		t.Errorf("expected 'already supports' message, got %q", msg)
+	if !strings.Contains(msg, "already compatible") {
+		t.Errorf("expected 'already compatible' message, got %q", msg)
 	}
 	if !strings.Contains(msg, "tsuku update-registry") {
 		t.Errorf("expected update-registry suggestion, got %q", msg)
@@ -295,16 +297,16 @@ func TestFormatDeprecationWarning_CLIAboveMinVersion(t *testing.T) {
 	dep := &registry.DeprecationNotice{
 		SunsetDate:    "2026-09-01",
 		MinCLIVersion: "v0.5.0",
-		Message:       "Schema v2 on 2026-09-01.",
+		Message:       "Registry format changing.",
 	}
 
 	msg := formatDeprecationWarning(dep, "https://example.com", "v1.0.0")
 
-	if !strings.Contains(msg, "Your CLI (v1.0.0) already supports the new format") {
-		t.Errorf("expected 'already supports' message, got %q", msg)
+	if !strings.Contains(msg, "already compatible") {
+		t.Errorf("expected 'already compatible' message, got %q", msg)
 	}
 	// Should NOT suggest upgrading
-	if strings.Contains(msg, "Update tsuku to") {
+	if strings.Contains(msg, "is required") {
 		t.Errorf("should not suggest upgrading when CLI version is above min, got %q", msg)
 	}
 }
@@ -320,15 +322,15 @@ func TestFormatDeprecationWarning_DevBuildSkipsComparison(t *testing.T) {
 		t.Run(devVer, func(t *testing.T) {
 			msg := formatDeprecationWarning(dep, "https://example.com", devVer)
 
-			if strings.Contains(msg, "Update tsuku to") {
+			if strings.Contains(msg, "is required") {
 				t.Errorf("dev build should not suggest upgrading, got %q", msg)
 			}
-			if strings.Contains(msg, "already supports") {
-				t.Errorf("dev build should not show 'already supports', got %q", msg)
+			if strings.Contains(msg, "already compatible") {
+				t.Errorf("dev build should not show compatibility status, got %q", msg)
 			}
-			// Should still show the warning header
-			if !strings.Contains(msg, "Warning: Registry at https://example.com reports: Dev build test.") {
-				t.Errorf("expected warning header even for dev builds, got %q", msg)
+			// Should still show the warning with the message
+			if !strings.Contains(msg, "Warning: Dev build test.") {
+				t.Errorf("expected warning with message for dev builds, got %q", msg)
 			}
 		})
 	}
@@ -343,18 +345,18 @@ func TestFormatDeprecationWarning_NoUpgradeURL(t *testing.T) {
 
 	msg := formatDeprecationWarning(dep, "https://example.com", "v0.1.0")
 
-	if !strings.Contains(msg, "Update tsuku to v0.5.0 or later") {
-		t.Errorf("expected upgrade instruction, got %q", msg)
+	if !strings.Contains(msg, "tsuku v0.5.0 or later is required") {
+		t.Errorf("expected version requirement, got %q", msg)
 	}
-	// Should end with "or later" without URL appended
-	if strings.Contains(msg, ": http") {
-		t.Errorf("should not contain URL when upgrade_url is empty, got %q", msg)
+	// Should not have "More info:" line when no URL
+	if strings.Contains(msg, "More info:") {
+		t.Errorf("should not contain More info when upgrade_url is empty, got %q", msg)
 	}
 }
 
 func TestFormatDeprecationWarning_NeverSuggestsDowngrade(t *testing.T) {
-	// When CLI version is v1.0.0 and min is v0.5.0, should say "already supports"
-	// not "upgrade to v0.5.0" (which would be a downgrade suggestion)
+	// When CLI version is v1.0.0 and min is v0.5.0, should say "already compatible"
+	// not "v0.5.0 is required" (which would imply a downgrade)
 	dep := &registry.DeprecationNotice{
 		SunsetDate:    "2026-09-01",
 		MinCLIVersion: "v0.5.0",
@@ -363,7 +365,7 @@ func TestFormatDeprecationWarning_NeverSuggestsDowngrade(t *testing.T) {
 
 	msg := formatDeprecationWarning(dep, "https://example.com", "v1.0.0")
 
-	if strings.Contains(msg, "Update tsuku to v0.5.0") {
+	if strings.Contains(msg, "v0.5.0 or later is required") {
 		t.Errorf("CLI should never suggest downgrading, got %q", msg)
 	}
 }
