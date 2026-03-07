@@ -6,13 +6,18 @@ import (
 	"fmt"
 	"os"
 	"runtime"
+	"strings"
+	"sync"
 
 	"github.com/tsukumogami/tsuku/internal/actions"
+	"github.com/tsukumogami/tsuku/internal/buildinfo"
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/errmsg"
 	"github.com/tsukumogami/tsuku/internal/executor"
 	"github.com/tsukumogami/tsuku/internal/recipe"
+	"github.com/tsukumogami/tsuku/internal/registry"
 	"github.com/tsukumogami/tsuku/internal/validate"
+	"github.com/tsukumogami/tsuku/internal/version"
 )
 
 // loader holds the recipe loader (shared across all commands)
@@ -57,6 +62,88 @@ func printJSON(v interface{}) {
 // This uses the errmsg package to format errors with actionable suggestions.
 func printError(err error) {
 	errmsg.Fprint(os.Stderr, err)
+}
+
+// deprecationWarningOnce ensures the deprecation warning fires at most once
+// per CLI invocation.
+var deprecationWarningOnce sync.Once
+
+// resetDeprecationWarning resets the sync.Once for testing purposes.
+func resetDeprecationWarning() {
+	deprecationWarningOnce = sync.Once{}
+}
+
+// printWarning prints a warning message to stderr unless quiet mode is enabled.
+func printWarning(msg string) {
+	if !quietFlag {
+		fmt.Fprintln(os.Stderr, msg)
+	}
+}
+
+// isDevBuild returns true if the given version string represents a development build.
+// Dev builds use version strings like "dev-<hash>", "dev", or "unknown".
+func isDevBuild(ver string) bool {
+	return ver == "dev" || ver == "unknown" || strings.HasPrefix(ver, "dev-")
+}
+
+// checkDeprecationWarning checks a manifest for deprecation notices and prints
+// a warning to stderr at most once per CLI invocation. The registryURL identifies
+// which registry issued the notice.
+func checkDeprecationWarning(manifest *registry.Manifest, registryURL string) {
+	if manifest == nil || manifest.Deprecation == nil {
+		return
+	}
+
+	deprecationWarningOnce.Do(func() {
+		msg := formatDeprecationWarning(manifest.Deprecation, registryURL, buildinfo.Version())
+		printWarning(msg)
+	})
+}
+
+// formatDeprecationWarning builds the deprecation warning string. Accepts the
+// CLI version as a parameter so the version comparison branches are testable.
+//
+// The warning leads with the actionable information (what version to upgrade to,
+// by when) rather than internal details like schema version numbers.
+func formatDeprecationWarning(dep *registry.DeprecationNotice, registryURL, cliVersion string) string {
+	var b strings.Builder
+
+	if isDevBuild(cliVersion) {
+		// Dev builds: show the registry message as-is, no version guidance
+		fmt.Fprintf(&b, "Warning: %s", dep.Message)
+		if dep.SunsetDate != "" {
+			fmt.Fprintf(&b, " (by %s)", dep.SunsetDate)
+		}
+		return b.String()
+	}
+
+	if dep.MinCLIVersion != "" {
+		cmp := version.CompareVersions(cliVersion, dep.MinCLIVersion)
+		if cmp >= 0 {
+			// CLI already meets the minimum version
+			fmt.Fprintf(&b, "Warning: %s", dep.Message)
+			if dep.SunsetDate != "" {
+				fmt.Fprintf(&b, " (by %s)", dep.SunsetDate)
+			}
+			fmt.Fprintf(&b, "\n  Your CLI (%s) is already compatible. Run 'tsuku update-registry' after the migration.", cliVersion)
+		} else {
+			// CLI needs an upgrade
+			fmt.Fprintf(&b, "Warning: tsuku %s or later is required by %s", dep.MinCLIVersion, registryURL)
+			if dep.SunsetDate != "" {
+				fmt.Fprintf(&b, " after %s", dep.SunsetDate)
+			}
+			fmt.Fprint(&b, ".")
+			fmt.Fprint(&b, "\n  Upgrade: curl -fsSL https://get.tsuku.dev/now | bash")
+		}
+	} else {
+		// No min version specified, just show the message
+		fmt.Fprintf(&b, "Warning: %s", dep.Message)
+		if dep.SunsetDate != "" {
+			fmt.Fprintf(&b, " (by %s)", dep.SunsetDate)
+		}
+	}
+
+	return b.String()
 }
 
 // generateInstallPlan generates an installation plan for a tool.

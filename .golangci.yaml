@@ -73,6 +73,10 @@ linters:
         # Test credentials and struct field names are not real secrets
         - G101
         - G117
+        # Context cancel false positive (cancel IS deferred, gosec doesn't trace it)
+        - G118
+        # filepath.Walk TOCTOU: package manager controls install directories
+        - G122
 
     dupl:
       # Increase threshold - version providers have similar structures by design

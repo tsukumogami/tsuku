@@ -578,7 +578,7 @@ func TestSatisfies_BuildIndex_IncludesManifestData(t *testing.T) {
 	// name and the registry generator (generate-registry.py) rejects such collisions.
 	cacheDir := t.TempDir()
 	manifestJSON := `{
-		"schema_version": "1.2.0",
+		"schema_version": 1,
 		"generated_at": "2026-01-01T00:00:00Z",
 		"recipes": [
 			{
@@ -638,7 +638,7 @@ func TestSatisfies_BuildIndex_EmbeddedOverManifest(t *testing.T) {
 	// embedded should win (higher priority).
 	cacheDir := t.TempDir()
 	manifestJSON := `{
-		"schema_version": "1.2.0",
+		"schema_version": 1,
 		"generated_at": "2026-01-01T00:00:00Z",
 		"recipes": [
 			{
@@ -717,7 +717,7 @@ url = "https://example.com/test.tar.gz"
 	// Create a cached manifest declaring the same satisfies mapping
 	cacheDir := t.TempDir()
 	manifestJSON := `{
-		"schema_version": "1.2.0",
+		"schema_version": 1,
 		"generated_at": "2026-01-01T00:00:00Z",
 		"recipes": [
 			{
