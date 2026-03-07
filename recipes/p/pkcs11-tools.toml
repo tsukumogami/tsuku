@@ -11,11 +11,11 @@
   runtime_dependencies = ["openssl"]
 
 [version]
-  source = "homebrew"
+  source = ""
   github_repo = ""
   tag_prefix = ""
   module = ""
-  formula = "pkcs11-tools"
+  formula = ""
   cask = ""
   tap = ""
   fossil_repo = ""

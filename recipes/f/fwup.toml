@@ -12,11 +12,11 @@
   runtime_dependencies = ["confuse"]
 
 [version]
-  source = "homebrew"
+  source = ""
   github_repo = ""
   tag_prefix = ""
   module = ""
-  formula = "fwup"
+  formula = ""
   cask = ""
   tap = ""
   fossil_repo = ""

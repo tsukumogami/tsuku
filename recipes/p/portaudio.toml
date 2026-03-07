@@ -11,11 +11,11 @@
   unsupported_platforms = ["darwin/arm64", "darwin/amd64", "linux/arm64"]
 
 [version]
-  source = "homebrew"
+  source = ""
   github_repo = ""
   tag_prefix = ""
   module = ""
-  formula = "portaudio"
+  formula = ""
   cask = ""
   tap = ""
   fossil_repo = ""

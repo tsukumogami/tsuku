@@ -10,7 +10,7 @@
   supported_libc = ["glibc"]
 
 [version]
-  source = "crates_io"
+  source = ""
   github_repo = ""
   tag_prefix = ""
   module = ""

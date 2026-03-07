@@ -5,7 +5,7 @@
   version_format = "semver"
 
 [version]
-  source = "crates_io"
+  source = ""
 
 # Hidden cargo_install step: enables CratesIOSourceStrategy to resolve versions
 # from crates.io instead of GitHub tags (nextest-rs/nextest is a monorepo with
