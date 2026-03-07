@@ -132,9 +132,9 @@ func formatDeprecationWarning(dep *registry.DeprecationNotice, registryURL, cliV
 			if dep.SunsetDate != "" {
 				fmt.Fprintf(&b, " after %s", dep.SunsetDate)
 			}
-			fmt.Fprintf(&b, ".\n  Run: tsuku update")
+			fmt.Fprint(&b, ".")
 			if dep.UpgradeURL != "" {
-				fmt.Fprintf(&b, "\n  More info: %s", dep.UpgradeURL)
+				fmt.Fprintf(&b, "\n  Upgrade: %s", dep.UpgradeURL)
 			}
 		}
 	} else {

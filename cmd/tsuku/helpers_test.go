@@ -268,10 +268,7 @@ func TestFormatDeprecationWarning_CLIBelowMinVersion(t *testing.T) {
 	if !strings.Contains(msg, "after 2026-09-01") {
 		t.Errorf("expected sunset date, got %q", msg)
 	}
-	if !strings.Contains(msg, "Run: tsuku update") {
-		t.Errorf("expected upgrade command, got %q", msg)
-	}
-	if !strings.Contains(msg, "More info: https://tsuku.dev/upgrade") {
+	if !strings.Contains(msg, "Upgrade: https://tsuku.dev/upgrade") {
 		t.Errorf("expected upgrade URL, got %q", msg)
 	}
 }
@@ -348,9 +345,9 @@ func TestFormatDeprecationWarning_NoUpgradeURL(t *testing.T) {
 	if !strings.Contains(msg, "tsuku v0.5.0 or later is required") {
 		t.Errorf("expected version requirement, got %q", msg)
 	}
-	// Should not have "More info:" line when no URL
-	if strings.Contains(msg, "More info:") {
-		t.Errorf("should not contain More info when upgrade_url is empty, got %q", msg)
+	// Should not have "Upgrade:" line when no URL
+	if strings.Contains(msg, "Upgrade:") {
+		t.Errorf("should not contain Upgrade URL when upgrade_url is empty, got %q", msg)
 	}
 }
 
