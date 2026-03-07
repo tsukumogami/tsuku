@@ -1,0 +1,36 @@
+{
+  "batch_id": "2026-03-03",
+  "ecosystems": {
+    "github": 1,
+    "homebrew": 24
+  },
+  "total": 9,
+  "generated": 9,
+  "platforms": {
+    "linux-x86_64": {
+      "tested": 45,
+      "passed": 45,
+      "failed": 0
+    },
+    "linux-arm64": {
+      "tested": 36,
+      "passed": 36,
+      "failed": 0
+    },
+    "darwin-arm64": {
+      "tested": 9,
+      "passed": 7,
+      "failed": 2
+    },
+    "darwin-x86_64": {
+      "tested": 9,
+      "passed": 7,
+      "failed": 2
+    }
+  },
+  "merged": 9,
+  "excluded": 0,
+  "constrained": 2,
+  "timestamp": "2026-03-03T04:41:28Z",
+  "duration_seconds": 13
+}

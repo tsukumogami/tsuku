@@ -1,0 +1,36 @@
+[metadata]
+  name = "zeromq"
+  description = "High-performance, asynchronous messaging library"
+  homepage = "https://zeromq.org/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["libsodium"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+supported_os = ["linux"]
+
+[version]
+  source = ""
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "zeromq"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/curve_keygen"]
+
+[verify]
+  command = "curve_keygen --version"
+  pattern = ""
