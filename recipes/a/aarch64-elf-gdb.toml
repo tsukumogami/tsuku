@@ -19,11 +19,11 @@
   llm_validation = "skipped"
 
 [version]
-  source = "homebrew"
+  source = ""
   github_repo = ""
   tag_prefix = ""
   module = ""
-  formula = "aarch64-elf-gdb"
+  formula = ""
   cask = ""
   tap = ""
   fossil_repo = ""

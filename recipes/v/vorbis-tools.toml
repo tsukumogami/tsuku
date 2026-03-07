@@ -12,11 +12,11 @@
   runtime_dependencies = ["libogg"]
 
 [version]
-  source = "homebrew"
+  source = ""
   github_repo = ""
   tag_prefix = ""
   module = ""
-  formula = "vorbis-tools"
+  formula = ""
   cask = ""
   tap = ""
   fossil_repo = ""

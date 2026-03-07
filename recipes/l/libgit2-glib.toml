@@ -10,11 +10,11 @@
   llm_validation = "skipped"
 
 [version]
-  source = "homebrew"
+  source = ""
   github_repo = ""
   tag_prefix = ""
   module = ""
-  formula = "libgit2-glib"
+  formula = ""
   cask = ""
   tap = ""
   fossil_repo = ""

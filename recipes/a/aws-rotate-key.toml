@@ -10,11 +10,11 @@
   llm_validation = "skipped"
 
 [version]
-  source = "homebrew"
+  source = ""
   github_repo = ""
   tag_prefix = ""
   module = ""
-  formula = "aws-rotate-key"
+  formula = ""
   cask = ""
   tap = ""
   fossil_repo = ""

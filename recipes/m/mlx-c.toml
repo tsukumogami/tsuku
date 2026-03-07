@@ -10,8 +10,8 @@
   unsupported_platforms = ["darwin/amd64", "linux/arm64", "linux/amd64"]
 
 [version]
-  source = "homebrew"
-  formula = "mlx-c"
+  source = ""
+  formula = ""
 
 [[steps]]
   action = "homebrew"

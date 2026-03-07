@@ -9,11 +9,11 @@
   llm_validation = "skipped"
 
 [version]
-  source = "homebrew"
+  source = ""
   github_repo = ""
   tag_prefix = ""
   module = ""
-  formula = "neo4j-mcp"
+  formula = ""
   cask = ""
   tap = ""
   fossil_repo = ""

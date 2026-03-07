@@ -6,7 +6,7 @@
   supported_libc = ["glibc"]
 
 [version]
-  github_repo = "russellbanks/Komac"
+  github_repo = ""
 
 [[steps]]
   action = "github_archive"
