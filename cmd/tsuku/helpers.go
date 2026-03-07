@@ -135,6 +135,8 @@ func formatDeprecationWarning(dep *registry.DeprecationNotice, registryURL, cliV
 			fmt.Fprint(&b, ".")
 			if dep.UpgradeURL != "" {
 				fmt.Fprintf(&b, "\n  Upgrade: %s", dep.UpgradeURL)
+			} else {
+				fmt.Fprint(&b, "\n  Upgrade: curl -fsSL https://get.tsuku.dev/now | bash")
 			}
 		}
 	} else {

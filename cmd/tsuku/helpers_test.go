@@ -345,9 +345,9 @@ func TestFormatDeprecationWarning_NoUpgradeURL(t *testing.T) {
 	if !strings.Contains(msg, "tsuku v0.5.0 or later is required") {
 		t.Errorf("expected version requirement, got %q", msg)
 	}
-	// Should not have "Upgrade:" line when no URL
-	if strings.Contains(msg, "Upgrade:") {
-		t.Errorf("should not contain Upgrade URL when upgrade_url is empty, got %q", msg)
+	// Should fall back to install command when no upgrade_url
+	if !strings.Contains(msg, "curl -fsSL https://get.tsuku.dev/now | bash") {
+		t.Errorf("expected fallback install command when upgrade_url is empty, got %q", msg)
 	}
 }
 
