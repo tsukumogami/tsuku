@@ -49,7 +49,7 @@ Add integer schema versioning and optional deprecation signaling to the registry
 **Goal:** Add `DeprecationNotice` struct and manifest parsing, `printWarning()` helper with `--quiet` support and `sync.Once` dedup, and `min_cli_version` comparison using `version.CompareVersions()` with dev build detection.
 
 **Acceptance Criteria:**
-- [ ] `DeprecationNotice` struct with `SunsetDate`, `MinCLIVersion`, `Message`, `UpgradeURL` fields
+- [ ] `DeprecationNotice` struct with `SunsetDate`, `MinCLIVersion`, `Message` fields
 - [ ] `Deprecation *DeprecationNotice` pointer field on `Manifest` (nil when absent)
 - [ ] Manifest with deprecation object parses correctly; manifest without it has nil `Deprecation`
 - [ ] `printWarning()` helper in `cmd/tsuku/helpers.go` writes to stderr, respects `--quiet`
@@ -60,7 +60,7 @@ Add integer schema versioning and optional deprecation signaling to the registry
 - [ ] When CLI version < `min_cli_version`: shows "upgrade to vX.Y"
 - [ ] Dev builds (`dev-*`, `dev`, `unknown`) skip version comparison, treated as current
 - [ ] CLI never suggests downgrading (downgrade prevention rule)
-- [ ] `upgrade_url` displayed as text only, never auto-opened
+- [ ] Upgrade command hardcoded in CLI (not sourced from registry)
 - [ ] Tests for: deprecation parsing, nil when absent, warning display, quiet suppression, dev build handling, version comparison branches
 
 **Dependencies:** Blocked by Issue 1

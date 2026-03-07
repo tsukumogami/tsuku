@@ -501,8 +501,7 @@ func TestParseManifest_DeprecationPresent(t *testing.T) {
 		"deprecation": {
 			"sunset_date": "2026-09-01",
 			"min_cli_version": "v0.5.0",
-			"message": "This registry will adopt schema v2 on 2026-09-01.",
-			"upgrade_url": "https://tsuku.dev/upgrade"
+			"message": "This registry will adopt schema v2 on 2026-09-01."
 		},
 		"recipes": []
 	}`
@@ -524,9 +523,6 @@ func TestParseManifest_DeprecationPresent(t *testing.T) {
 	if manifest.Deprecation.Message != "This registry will adopt schema v2 on 2026-09-01." {
 		t.Errorf("Message = %q, want expected message", manifest.Deprecation.Message)
 	}
-	if manifest.Deprecation.UpgradeURL != "https://tsuku.dev/upgrade" {
-		t.Errorf("UpgradeURL = %q, want %q", manifest.Deprecation.UpgradeURL, "https://tsuku.dev/upgrade")
-	}
 }
 
 func TestParseManifest_DeprecationAbsent(t *testing.T) {
@@ -543,30 +539,5 @@ func TestParseManifest_DeprecationAbsent(t *testing.T) {
 
 	if manifest.Deprecation != nil {
 		t.Errorf("expected nil Deprecation when absent, got %+v", manifest.Deprecation)
-	}
-}
-
-func TestParseManifest_DeprecationWithoutUpgradeURL(t *testing.T) {
-	raw := `{
-		"schema_version": 1,
-		"generated_at": "2026-01-01T00:00:00Z",
-		"deprecation": {
-			"sunset_date": "2026-09-01",
-			"min_cli_version": "v0.5.0",
-			"message": "Schema v2 coming soon."
-		},
-		"recipes": []
-	}`
-
-	manifest, err := parseManifest([]byte(raw))
-	if err != nil {
-		t.Fatalf("parseManifest() error: %v", err)
-	}
-
-	if manifest.Deprecation == nil {
-		t.Fatal("expected non-nil Deprecation")
-	}
-	if manifest.Deprecation.UpgradeURL != "" {
-		t.Errorf("UpgradeURL = %q, want empty string", manifest.Deprecation.UpgradeURL)
 	}
 }

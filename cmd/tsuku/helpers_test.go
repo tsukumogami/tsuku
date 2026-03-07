@@ -118,7 +118,6 @@ func TestCheckDeprecationWarning_DisplaysWarning(t *testing.T) {
 			SunsetDate:    "2026-09-01",
 			MinCLIVersion: "v99.0.0",
 			Message:       "Schema v2 coming soon.",
-			UpgradeURL:    "https://tsuku.dev/upgrade",
 		},
 	}
 
@@ -227,7 +226,6 @@ func TestCheckDeprecationWarning_UpgradeNeeded(t *testing.T) {
 			SunsetDate:    "2026-09-01",
 			MinCLIVersion: "v99.0.0",
 			Message:       "Upgrade needed test.",
-			UpgradeURL:    "https://tsuku.dev/upgrade",
 		},
 	}
 
@@ -257,7 +255,6 @@ func TestFormatDeprecationWarning_CLIBelowMinVersion(t *testing.T) {
 		SunsetDate:    "2026-09-01",
 		MinCLIVersion: "v0.5.0",
 		Message:       "Registry format changing.",
-		UpgradeURL:    "https://tsuku.dev/upgrade",
 	}
 
 	msg := formatDeprecationWarning(dep, "https://tsuku.dev/recipes.json", "v0.3.0")
@@ -268,8 +265,8 @@ func TestFormatDeprecationWarning_CLIBelowMinVersion(t *testing.T) {
 	if !strings.Contains(msg, "after 2026-09-01") {
 		t.Errorf("expected sunset date, got %q", msg)
 	}
-	if !strings.Contains(msg, "Upgrade: https://tsuku.dev/upgrade") {
-		t.Errorf("expected upgrade URL, got %q", msg)
+	if !strings.Contains(msg, "Upgrade: curl -fsSL https://get.tsuku.dev/now | bash") {
+		t.Errorf("expected install command, got %q", msg)
 	}
 }
 
@@ -330,24 +327,6 @@ func TestFormatDeprecationWarning_DevBuildSkipsComparison(t *testing.T) {
 				t.Errorf("expected warning with message for dev builds, got %q", msg)
 			}
 		})
-	}
-}
-
-func TestFormatDeprecationWarning_NoUpgradeURL(t *testing.T) {
-	dep := &registry.DeprecationNotice{
-		SunsetDate:    "2026-09-01",
-		MinCLIVersion: "v0.5.0",
-		Message:       "No URL test.",
-	}
-
-	msg := formatDeprecationWarning(dep, "https://example.com", "v0.1.0")
-
-	if !strings.Contains(msg, "tsuku v0.5.0 or later is required") {
-		t.Errorf("expected version requirement, got %q", msg)
-	}
-	// Should fall back to install command when no upgrade_url
-	if !strings.Contains(msg, "curl -fsSL https://get.tsuku.dev/now | bash") {
-		t.Errorf("expected fallback install command when upgrade_url is empty, got %q", msg)
 	}
 }
 

@@ -36,7 +36,6 @@ type DeprecationNotice struct {
 	SunsetDate    string `json:"sunset_date"`
 	MinCLIVersion string `json:"min_cli_version"`
 	Message       string `json:"message"`
-	UpgradeURL    string `json:"upgrade_url,omitempty"`
 }
 
 // Manifest represents the registry manifest (recipes.json).

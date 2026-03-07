@@ -133,11 +133,7 @@ func formatDeprecationWarning(dep *registry.DeprecationNotice, registryURL, cliV
 				fmt.Fprintf(&b, " after %s", dep.SunsetDate)
 			}
 			fmt.Fprint(&b, ".")
-			if dep.UpgradeURL != "" {
-				fmt.Fprintf(&b, "\n  Upgrade: %s", dep.UpgradeURL)
-			} else {
-				fmt.Fprint(&b, "\n  Upgrade: curl -fsSL https://get.tsuku.dev/now | bash")
-			}
+			fmt.Fprint(&b, "\n  Upgrade: curl -fsSL https://get.tsuku.dev/now | bash")
 		}
 	} else {
 		// No min version specified, just show the message

@@ -128,8 +128,7 @@ The `schema_version` field changes from an ignored semver string to a validated 
   "deprecation": {
     "sunset_date": "2026-09-01",
     "min_cli_version": "v0.5.0",
-    "message": "This registry will adopt schema v2 on 2026-09-01. Update tsuku to v0.5.0+.",
-    "upgrade_url": "https://tsuku.dev/upgrade"
+    "message": "This registry will adopt schema v2 on 2026-09-01. Update tsuku to v0.5.0+."
   },
   "recipes": [...]
 }
@@ -142,7 +141,6 @@ The `deprecation` object is optional. When absent (the normal state), no warning
 | `sunset_date` | string (YYYY-MM-DD) | Yes | Date after which the registry may stop serving this schema version |
 | `min_cli_version` | string (semver) | Yes | Minimum CLI version that supports the replacement schema |
 | `message` | string | Yes | Human-readable explanation. Each registry writes its own. |
-| `upgrade_url` | string (URL) | No | Link to upgrade instructions or release notes |
 
 ### Components
 
@@ -152,7 +150,7 @@ The `deprecation` object is optional. When absent (the normal state), no warning
 
 **`parseManifest()` validation** (`internal/registry/manifest.go`): After JSON unmarshal, checks `manifest.SchemaVersion` against `[Min, Max]`. Above-range returns a new `RegistryError` with `ErrTypeSchemaVersion` (dedicated error type, not overloading `ErrTypeValidation`) and a suggestion to upgrade. The suggestion also mentions `tsuku update-registry` for the CLI-downgrade case where the cache has a higher version than the CLI supports. `parseManifest()` only validates and stores the `Deprecation` field on the struct -- it does not write to stderr. Warning display is the caller's responsibility.
 
-**`DeprecationNotice` struct** (`internal/registry/manifest.go`): Holds `SunsetDate`, `MinCLIVersion`, `Message`, `UpgradeURL`. Parsed from the manifest's `deprecation` JSON object.
+**`DeprecationNotice` struct** (`internal/registry/manifest.go`): Holds `SunsetDate`, `MinCLIVersion`, `Message`. Parsed from the manifest's `deprecation` JSON object.
 
 **Warning display** (`cmd/tsuku/helpers.go`): New `printWarning()` helper that writes to stderr and respects `--quiet`. After a successful manifest parse, the `cmd/` layer checks `manifest.Deprecation` and calls `printWarning()` if present. Warnings fire once per CLI invocation via `sync.Once`. The warning identifies the source registry by URL (the actual fetch URL, not a hardcoded default) so users know which registry issued the notice. When multi-registry support ships (#2073), the `sync.Once` should become per-registry dedup.
 
@@ -247,15 +245,9 @@ Not applicable. This design changes manifest parsing logic, not download or bina
 Not applicable. No new code execution paths are introduced. The version check and deprecation warning are pure data parsing and string formatting.
 
 ### Supply chain risks
-**Moderate consideration.** The `deprecation` object includes a `message` and `upgrade_url` authored by each registry independently. A compromised or malicious registry could use these fields to direct users to a fake upgrade page.
+**Moderate consideration.** The `deprecation` object includes a `message` field authored by each registry independently. A compromised or malicious registry could craft misleading messages.
 
-Mitigation: The CLI should not auto-open URLs. The `upgrade_url` is displayed as text only. Users must copy-paste it themselves. The warning message is clearly labeled as coming from the registry, not from tsuku itself:
-
-```
-Warning: Registry at <actual-fetch-url> reports: <message>
-```
-
-The URL shown is the actual fetch URL (from `manifestURL()`), not hardcoded. This ensures that if `TSUKU_MANIFEST_URL` or `TSUKU_REGISTRY_URL` is overridden, the warning correctly attributes the message to the actual source rather than giving a malicious override the trust halo of the default registry.
+Mitigation: The upgrade command shown to users is hardcoded in the CLI, not sourced from the registry. The registry's `message` field provides context but cannot direct users to arbitrary URLs. The warning identifies the source registry by its actual fetch URL (from `ManifestURL()`), not a hardcoded default. This ensures that if `TSUKU_MANIFEST_URL` or `TSUKU_REGISTRY_URL` is overridden, the warning correctly attributes the message to the actual source.
 
 Additionally, the CLI never renders a deprecation message that suggests installing a version older than the running one. The `min_cli_version` comparison happens before displaying any upgrade instructions.
 
