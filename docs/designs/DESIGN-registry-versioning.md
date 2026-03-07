@@ -244,9 +244,9 @@ See `docs/plans/PLAN-registry-versioning.md` for full decomposition.
 
 | Issue | Dependencies | Tier |
 |-------|--------------|------|
-| Issue 1: feat(registry): add integer schema version validation to manifest parsing | None | testable |
-| Issue 2: feat(registry): add deprecation notice parsing and warning display | Issue 1 | testable |
-| Issue 3: chore(scripts): update generation script to emit integer schema version | Issue 1 | simple |
+| #1: feat(registry): add integer schema version validation to manifest parsing | None | testable |
+| #2: feat(registry): add deprecation notice parsing and warning display | #1 | testable |
+| #3: chore(scripts): update generation script to emit integer schema version | #1 | simple |
 
 ```mermaid
 graph LR
