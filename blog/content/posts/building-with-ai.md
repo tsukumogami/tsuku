@@ -1,5 +1,5 @@
 ---
-title: "From prompt engineering to intent engineering: what building a package manager taught me about managing AI"
+title: "From prompt to intent engineering: what building a package manager taught me about managing AI"
 date: 2026-03-07
 description: "An engineering manager who hasn't coded in a decade shipped a package manager with AI. The hardest part wasn't the code -- it was getting AI to focus on the intent of the project instead of optimizing for completing its tasks."
 author: "Dan Gazineu"
