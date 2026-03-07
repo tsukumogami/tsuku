@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-07T23:26:36Z",
+  "generated_at": "2026-03-07T23:27:56Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 11,
-      "pending": 3926,
+      "failed": 19,
+      "pending": 3918,
       "success": 1335
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 11,
-        "pending": 3903,
+        "failed": 19,
+        "pending": 3895,
         "success": 1322
       }
     },
@@ -39,8 +39,8 @@
       },
       "crates.io": {
         "excluded": 5,
-        "failed": 1,
-        "pending": 76,
+        "failed": 2,
+        "pending": 75,
         "success": 23,
         "total": 105
       },
@@ -80,8 +80,8 @@
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 9,
-        "pending": 74,
+        "failed": 16,
+        "pending": 67,
         "success": 5,
         "total": 89
       }
@@ -480,6 +480,15 @@
           "next_retry_at": "2026-03-08T14:28:02Z"
         },
         {
+          "id": "crates.io:ascii",
+          "name": "ascii",
+          "ecosystem": "crates.io",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-08T07:27:16Z"
+        },
+        {
           "id": "npm:azion",
           "name": "azion",
           "ecosystem": "npm",
@@ -550,6 +559,69 @@
           "category": "install_failed",
           "failure_count": 1,
           "next_retry_at": "2026-03-07T23:28:02Z"
+        },
+        {
+          "id": "rubygems:cog",
+          "name": "cog",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 1,
+          "next_retry_at": "2026-03-08T00:27:16Z"
+        },
+        {
+          "id": "rubygems:cowsay",
+          "name": "cowsay",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 1,
+          "next_retry_at": "2026-03-08T00:27:16Z"
+        },
+        {
+          "id": "rubygems:cql",
+          "name": "cql",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 1,
+          "next_retry_at": "2026-03-08T00:27:16Z"
+        },
+        {
+          "id": "rubygems:dict",
+          "name": "dict",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 1,
+          "next_retry_at": "2026-03-08T00:27:16Z"
+        },
+        {
+          "id": "rubygems:doggo",
+          "name": "doggo",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 1,
+          "next_retry_at": "2026-03-08T00:27:16Z"
+        },
+        {
+          "id": "rubygems:dug",
+          "name": "dug",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 1,
+          "next_retry_at": "2026-03-08T00:27:16Z"
+        },
+        {
+          "id": "rubygems:exiv2",
+          "name": "exiv2",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 1,
+          "next_retry_at": "2026-03-08T00:27:16Z"
         },
         {
           "id": "crates.io:numpy",
@@ -1850,15 +1922,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "crates.io:ascii",
-          "name": "ascii",
-          "ecosystem": "crates.io",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-03T19:50:54Z"
         },
         {
           "id": "homebrew:asciidoc",
@@ -4747,14 +4810,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:cog",
-          "name": "cog",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 0
-        },
-        {
           "id": "homebrew:coin3d",
           "name": "coin3d",
           "ecosystem": "homebrew",
@@ -5044,14 +5099,6 @@
           "failure_count": 1
         },
         {
-          "id": "rubygems:cowsay",
-          "name": "cowsay",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 0
-        },
-        {
           "id": "homebrew:cp2k",
           "name": "cp2k",
           "ecosystem": "homebrew",
@@ -5140,14 +5187,6 @@
           "name": "cpulimit",
           "ecosystem": "homebrew",
           "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "rubygems:cql",
-          "name": "cql",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
           "failure_count": 0
         },
         {
@@ -6007,14 +6046,6 @@
           "failure_count": 1
         },
         {
-          "id": "rubygems:dict",
-          "name": "dict",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 0
-        },
-        {
           "id": "crates.io:diesel",
           "name": "diesel",
           "ecosystem": "crates.io",
@@ -6325,14 +6356,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:doggo",
-          "name": "doggo",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 0
-        },
-        {
           "id": "homebrew:dokku/repo/dokku",
           "name": "dokku/repo/dokku",
           "ecosystem": "homebrew",
@@ -6596,14 +6619,6 @@
           "name": "dufs",
           "ecosystem": "homebrew",
           "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "rubygems:dug",
-          "name": "dug",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
           "failure_count": 0
         },
         {
@@ -7294,14 +7309,6 @@
           "name": "exif",
           "ecosystem": "homebrew",
           "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "rubygems:exiv2",
-          "name": "exiv2",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
           "failure_count": 0
         },
         {
