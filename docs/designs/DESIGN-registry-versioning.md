@@ -238,6 +238,33 @@ Deliverables:
 - Dev build detection for skipping `min_cli_version` comparison
 - Tests for deprecation parsing, warning display, dev build handling
 
+## Implementation Issues
+
+See `docs/plans/PLAN-registry-versioning.md` for full decomposition.
+
+| # | Title | Complexity | Status |
+|---|-------|-----------|--------|
+| 1 | feat(registry): add integer schema version validation to manifest parsing | testable | in-progress |
+| 2 | feat(registry): add deprecation notice parsing and warning display | testable | pending |
+| 3 | chore(scripts): update generation script to emit integer schema version | simple | pending |
+
+```mermaid
+graph LR
+    I1["Issue 1: Schema version validation"]
+    I2["Issue 2: Deprecation notice support"]
+    I3["Issue 3: Generation script update"]
+
+    I1 --> I2
+    I1 --> I3
+
+    classDef done fill:#c8e6c9
+    classDef ready fill:#bbdefb
+    classDef blocked fill:#fff9c4
+
+    class I1 ready
+    class I2,I3 blocked
+```
+
 ## Security Considerations
 
 ### Download verification
