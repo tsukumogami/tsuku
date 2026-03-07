@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-07T23:10:20Z",
+  "generated_at": "2026-03-07T23:26:36Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -4751,6 +4751,7 @@
           "name": "cog",
           "ecosystem": "rubygems",
           "priority": 3,
+          "category": "install_failed",
           "failure_count": 0
         },
         {
@@ -5047,6 +5048,7 @@
           "name": "cowsay",
           "ecosystem": "rubygems",
           "priority": 3,
+          "category": "install_failed",
           "failure_count": 0
         },
         {
@@ -5145,6 +5147,7 @@
           "name": "cql",
           "ecosystem": "rubygems",
           "priority": 3,
+          "category": "install_failed",
           "failure_count": 0
         },
         {
@@ -6008,6 +6011,7 @@
           "name": "dict",
           "ecosystem": "rubygems",
           "priority": 3,
+          "category": "install_failed",
           "failure_count": 0
         },
         {
@@ -6325,6 +6329,7 @@
           "name": "doggo",
           "ecosystem": "rubygems",
           "priority": 3,
+          "category": "install_failed",
           "failure_count": 0
         },
         {
@@ -6598,6 +6603,7 @@
           "name": "dug",
           "ecosystem": "rubygems",
           "priority": 3,
+          "category": "install_failed",
           "failure_count": 0
         },
         {
@@ -7295,6 +7301,7 @@
           "name": "exiv2",
           "ecosystem": "rubygems",
           "priority": 3,
+          "category": "install_failed",
           "failure_count": 0
         },
         {
@@ -37757,13 +37764,102 @@
     }
   ],
   "failures": {
-    "generation_failed": 325,
-    "install_failed": 237,
+    "generation_failed": 326,
+    "install_failed": 246,
     "missing_dep": 68,
     "network_error": 7,
     "recipe_not_found": 74
   },
   "failure_details": [
+    {
+      "id": "rubygems-2026-03-07T23-24-35Z-exiv2",
+      "package": "exiv2",
+      "ecosystem": "rubygems",
+      "category": "install_failed",
+      "message": "Installation failed: step 1 (gem_exec) failed: bundle install failed: exit status 5\nOutput: Fetching gem metadata from https://rubygems.org/.\nFetching exiv2 0.1.2\nInstalling exiv2 0.1.2 with native extensions\nGem::Ext::BuildError: ERROR: Failed to build gem native extension.\n\ncurrent directory:\n/tmp/action-validator-3252448890/.install/ruby/4.0.0/gems/exiv2-0.1.2/ext/exiv2\n/home/runner/.tsuku/tools/ruby-4.0.1/bin/ruby extconf.rb\nchecking for pkg-config for exiv2... not found\nchecking for -lexiv2",
+      "batch_id": "2026-03-07T23-24-35Z",
+      "timestamp": "2026-03-07T23:24:35.237586822Z"
+    },
+    {
+      "id": "rubygems-2026-03-07T23-24-24Z-dug",
+      "package": "dug",
+      "ecosystem": "rubygems",
+      "category": "install_failed",
+      "message": "Installation failed: step 1 (gem_exec) failed: expected executable dug not found at /tmp/action-validator-1358359530/.install/ruby/4.0.0/bin/dug",
+      "batch_id": "2026-03-07T23-24-35Z",
+      "timestamp": "2026-03-07T23:24:24.393362115Z"
+    },
+    {
+      "id": "rubygems-2026-03-07T23-23-56Z-doggo",
+      "package": "doggo",
+      "ecosystem": "rubygems",
+      "category": "install_failed",
+      "message": "Installation failed: step 1 (gem_exec) failed: expected executable doggo not found at /tmp/action-validator-2039525902/.install/ruby/4.0.0/bin/doggo",
+      "batch_id": "2026-03-07T23-24-35Z",
+      "timestamp": "2026-03-07T23:23:56.176523877Z"
+    },
+    {
+      "id": "rubygems-2026-03-07T23-23-46Z-dict",
+      "package": "dict",
+      "ecosystem": "rubygems",
+      "category": "install_failed",
+      "message": "Installation failed: step 1 (gem_exec) failed: bundle install failed: exit status 5\nOutput: Fetching gem metadata from https://rubygems.org/.......\nFetching nokogiri 1.5.11\nFetching slop 3.3.3\nInstalling slop 3.3.3\nInstalling nokogiri 1.5.11 with native extensions\nGem::Ext::BuildError: ERROR: Failed to build gem native extension.\n\ncurrent directory:\n/tmp/action-validator-2053244103/.install/ruby/4.0.0/gems/nokogiri-1.5.11/ext/nokogiri\n/home/runner/.tsuku/tools/ruby-4.0.1/bin/ruby extconf.rb\nchec",
+      "batch_id": "2026-03-07T23-24-35Z",
+      "timestamp": "2026-03-07T23:23:46.127805927Z"
+    },
+    {
+      "id": "rubygems-2026-03-07T23-23-34Z-cql",
+      "package": "cql",
+      "ecosystem": "rubygems",
+      "category": "install_failed",
+      "message": "Failed to generate plan: failed to resolve step gem_install: failed to decompose gem_install: failed to decompose \"gem_install\": failed to generate Gemfile.lock: bundle lock failed: exit status 6\nOutput: Fetching gem metadata from https://rubygems.org/........\nResolving dependencies...\nCould not find compatible versions\n\nBecause cql \u003e= 1.7.0 depends on Ruby \u003e= 1.8.7, \u003c 4.0\n  and Gemfile depends on cql = 1.7.0,\n  Ruby \u003e= 1.8.7, \u003c 4.0 is required.\nSo, because current Ruby version is = 4.0.1,\n  ver",
+      "batch_id": "2026-03-07T23-24-35Z",
+      "timestamp": "2026-03-07T23:23:34.33900212Z"
+    },
+    {
+      "id": "rubygems-2026-03-07T23-23-26Z-cowsay",
+      "package": "cowsay",
+      "ecosystem": "rubygems",
+      "category": "install_failed",
+      "batch_id": "2026-03-07T23-24-35Z",
+      "timestamp": "2026-03-07T23:23:26.463537891Z"
+    },
+    {
+      "id": "rubygems-2026-03-07T23-23-16Z-cog",
+      "package": "cog",
+      "ecosystem": "rubygems",
+      "category": "install_failed",
+      "message": "Installing eval-time dependencies: [ruby]\nInstalling ruby...\nChecking dependencies for ruby...\n  Resolving dependency 'libyaml'...\nExecuting plan: libyaml@0.2.5\n   Work directory: /tmp/action-validator-2646052323\n   Total steps: 4 (including 0 from dependencies)\n\nStep 1/4: download_file\n   Using cached: libyaml.tar.gz\n   ✓ Restored from cache\n\nStep 2/4: extract\n   Extracting: libyaml.tar.gz\n   Format: tar.gz\n   Strip dirs: 2\n\nStep 3/4: homebrew_relocate\n   Relocating placeholders: libyaml (lib",
+      "batch_id": "2026-03-07T23-24-35Z",
+      "timestamp": "2026-03-07T23:23:16.597791721Z"
+    },
+    {
+      "id": "crates.io-2026-03-07T23-23-01Z-ascii",
+      "package": "ascii",
+      "ecosystem": "crates.io",
+      "category": "install_failed",
+      "message": "Installing eval-time dependencies: [rust]\nInstalling rust...\nGenerating plan for rust@1.94.0\nExecuting plan: rust@1.94.0\n   Work directory: /tmp/action-validator-1456575096\n   Total steps: 4 (including 0 from dependencies)\n\nStep 1/4: download_file\n   Using cached: rust-1.94.0-x86_64-unknown-linux-gnu.tar.gz\n   ✓ Restored from cache\n\nStep 2/4: extract\n   Extracting: rust-1.94.0-x86_64-unknown-linux-gnu.tar.gz\n   Format: tar.gz\n   Strip dirs: 1\n\nStep 3/4: run_command\n   Running: ./install.sh --p",
+      "batch_id": "2026-03-07T23-24-35Z",
+      "timestamp": "2026-03-07T23:23:01.380059218Z"
+    },
+    {
+      "id": "homebrew-2026-03-07T23-22-12Z-task",
+      "package": "task",
+      "ecosystem": "homebrew",
+      "category": "install_failed",
+      "message": "tsuku collects anonymous usage statistics to improve the tool.\nNo personal information is collected. See: https://tsuku.dev/telemetry\n\nTo opt out: tsuku config set telemetry false\n         or export TSUKU_NO_TELEMETRY=1",
+      "batch_id": "2026-03-07T23-24-35Z",
+      "timestamp": "2026-03-07T23:22:12.712991556Z"
+    },
+    {
+      "id": "github-2026-03-07T23-22-08Z-bat",
+      "package": "bat",
+      "ecosystem": "github",
+      "category": "generation_failed",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: 'bat' resolved to github (sharkdp/bat), which requires LLM for recipe generation.\nRemove --deterministic-only or wait for a recipe to be contributed.",
+      "batch_id": "2026-03-07T23-24-35Z",
+      "timestamp": "2026-03-07T23:22:08.436995195Z"
+    },
     {
       "id": "rubygems-2026-03-07T22-24-57Z-chroma",
       "package": "chroma",
@@ -39491,117 +39587,15 @@
       "category": "install_failed",
       "batch_id": "2026-03-03T04-47-58Z",
       "timestamp": "2026-03-03T04:47:14.812316661Z"
-    },
-    {
-      "id": "homebrew-2026-03-03T04-47-11Z-yt-dlp",
-      "package": "yt-dlp",
-      "ecosystem": "homebrew",
-      "category": "missing_dep",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for yt-dlp from homebrew:yt-dlp...\nFetching formula metadata... done (v2026.2.21)\nInspecting bottle contents... failed\ndeterministic generation failed: [missing_dep] missing dependencies: recipe certifi not found in registry; recipe deno not found in registry; recipe python@3.14 not found in registry",
-      "batch_id": "2026-03-03T04-47-58Z",
-      "timestamp": "2026-03-03T04:47:11.12386854Z"
-    },
-    {
-      "id": "homebrew-2026-03-03T04-47-08Z-ripgrep",
-      "package": "ripgrep",
-      "ecosystem": "homebrew",
-      "category": "generation_failed",
-      "subcategory": "recipe_already_exists",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for ripgrep from homebrew:ripgrep...\nFetching formula metadata... done (v15.1.0)\nInspecting bottle contents... done (deterministic)\nError: recipe already exists at recipes/r/ripgrep.toml\nUse --force to overwrite",
-      "batch_id": "2026-03-03T04-47-58Z",
-      "timestamp": "2026-03-03T04:47:08.581333451Z"
-    },
-    {
-      "id": "homebrew-2026-03-03T04-47-06Z-ffmpeg",
-      "package": "ffmpeg",
-      "ecosystem": "homebrew",
-      "category": "install_failed",
-      "batch_id": "2026-03-03T04-47-58Z",
-      "timestamp": "2026-03-03T04:47:06.554351959Z"
-    },
-    {
-      "id": "homebrew-2026-03-03T04-46-54Z-python@3.13",
-      "package": "python@3.13",
-      "ecosystem": "homebrew",
-      "category": "generation_failed",
-      "subcategory": "api_error",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for python@3.13 from homebrew:python@3.13...\nFetching formula metadata... done (v3.13.12)\nInspecting bottle contents... failed\ndeterministic generation failed: [api_error] failed to fetch bottle data for formula python@3.13",
-      "batch_id": "2026-03-03T04-47-58Z",
-      "timestamp": "2026-03-03T04:46:54.930402982Z"
-    },
-    {
-      "id": "homebrew-2026-03-03T04-46-53Z-tmux",
-      "package": "tmux",
-      "ecosystem": "homebrew",
-      "category": "install_failed",
-      "message": "Error: recipe validation failed for 'libevent'\n  - steps: step 3: when.os contains 'darwin' which is not in the recipe's supported platforms\n  - steps: step 4: when.os contains 'darwin' which is not in the recipe's supported platforms",
-      "batch_id": "2026-03-03T04-47-58Z",
-      "timestamp": "2026-03-03T04:46:53.529531764Z"
-    },
-    {
-      "id": "homebrew-2026-03-03T04-46-51Z-task",
-      "package": "task",
-      "ecosystem": "homebrew",
-      "category": "install_failed",
-      "message": "tsuku collects anonymous usage statistics to improve the tool.\nNo personal information is collected. See: https://tsuku.dev/telemetry\n\nTo opt out: tsuku config set telemetry false\n         or export TSUKU_NO_TELEMETRY=1",
-      "batch_id": "2026-03-03T04-47-58Z",
-      "timestamp": "2026-03-03T04:46:51.406194538Z"
-    },
-    {
-      "id": "batch-2026-03-03T04-41-23Z-libtool",
-      "package": "libtool",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "darwin-arm64",
-        "darwin-x86_64"
-      ],
-      "batch_id": "2026-03-03T04-41-23Z",
-      "timestamp": "2026-03-03T04:41:23Z"
-    },
-    {
-      "id": "batch-2026-03-03T04-41-23Z-libgcrypt",
-      "package": "libgcrypt",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "darwin-arm64",
-        "darwin-x86_64"
-      ],
-      "batch_id": "2026-03-03T04-41-23Z",
-      "timestamp": "2026-03-03T04:41:23Z"
-    },
-    {
-      "id": "homebrew-2026-03-03T04-37-47Z-webp",
-      "package": "webp",
-      "ecosystem": "homebrew",
-      "category": "install_failed",
-      "batch_id": "2026-03-03T04-37-47Z",
-      "timestamp": "2026-03-03T04:37:47.814064588Z"
-    },
-    {
-      "id": "homebrew-2026-03-03T04-37-45Z-pinentry",
-      "package": "pinentry",
-      "ecosystem": "homebrew",
-      "category": "missing_dep",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for pinentry from homebrew:pinentry...\nFetching formula metadata... done (v1.3.2)\nInspecting bottle contents... failed\ndeterministic generation failed: [missing_dep] missing dependencies: recipe libassuan not found in registry",
-      "batch_id": "2026-03-03T04-37-47Z",
-      "timestamp": "2026-03-03T04:37:45.442797821Z"
     }
   ],
   "health": {
     "ecosystems": {
       "crates.io": {
         "breaker_state": "open",
-        "failures": 46,
-        "last_failure": "2026-03-07T21:24:57Z",
-        "opens_at": "2026-03-07T22:24:57Z"
+        "failures": 47,
+        "last_failure": "2026-03-07T23:26:08Z",
+        "opens_at": "2026-03-08T00:26:08Z"
       },
       "default": {
         "breaker_state": "closed",
@@ -39609,15 +39603,15 @@
       },
       "github": {
         "breaker_state": "open",
-        "failures": 49,
-        "last_failure": "2026-03-07T21:24:57Z",
-        "opens_at": "2026-03-07T22:24:57Z"
+        "failures": 50,
+        "last_failure": "2026-03-07T23:26:09Z",
+        "opens_at": "2026-03-08T00:26:09Z"
       },
       "homebrew": {
         "breaker_state": "open",
-        "failures": 10,
-        "last_failure": "2026-03-07T21:24:57Z",
-        "opens_at": "2026-03-07T22:24:57Z"
+        "failures": 11,
+        "last_failure": "2026-03-07T23:26:09Z",
+        "opens_at": "2026-03-08T00:26:09Z"
       },
       "npm": {
         "breaker_state": "open",
@@ -39633,18 +39627,20 @@
       },
       "rubygems": {
         "breaker_state": "closed",
-        "failures": 2,
-        "last_failure": "2026-03-07T22:26:58Z",
+        "failures": 3,
+        "last_failure": "2026-03-07T23:26:09Z",
         "opens_at": "2026-03-03T16:49:34Z"
       }
     },
     "last_run": {
-      "batch_id": "2026-03-07T22-27-04Z",
+      "batch_id": "2026-03-07T23-26-14Z",
       "ecosystems": {
-        "npm": 1,
-        "rubygems": 9
+        "crates.io": 1,
+        "github": 1,
+        "homebrew": 1,
+        "rubygems": 7
       },
-      "timestamp": "2026-03-07T22:27:04Z",
+      "timestamp": "2026-03-07T23:26:14Z",
       "succeeded": 0,
       "failed": 0,
       "total": 0
@@ -39663,7 +39659,7 @@
       "total": 1,
       "recipes_merged": 1
     },
-    "runs_since_last_success": 2
+    "runs_since_last_success": 3
   },
   "runs": [
     {
