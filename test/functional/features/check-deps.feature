@@ -15,3 +15,8 @@ Feature: Check dependencies
   Scenario: Check deps with no arguments
     When I run "tsuku check-deps"
     Then the exit code is 1
+
+  Scenario: Check deps JSON output for tool with no dependencies
+    When I run "tsuku check-deps --json go"
+    Then the exit code is 0
+    And the output contains "all_satisfied"

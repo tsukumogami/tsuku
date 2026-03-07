@@ -13,3 +13,13 @@ Feature: Info
     When I run "tsuku info go"
     Then the exit code is 0
     And the output contains "go"
+
+  Scenario: Info for a library recipe without verify section
+    When I run "tsuku info hdrhistogram_c"
+    Then the exit code is 0
+    And the output contains "hdrhistogram_c"
+    And the output contains "library"
+
+  Scenario: Info with no arguments
+    When I run "tsuku info"
+    Then the exit code is 2
