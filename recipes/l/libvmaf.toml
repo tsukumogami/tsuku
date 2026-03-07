@@ -10,11 +10,11 @@
   unsupported_platforms = ["linux/arm64"]
 
 [version]
-  source = "homebrew"
+  source = ""
   github_repo = ""
   tag_prefix = ""
   module = ""
-  formula = "libvmaf"
+  formula = ""
   cask = ""
   tap = ""
   fossil_repo = ""

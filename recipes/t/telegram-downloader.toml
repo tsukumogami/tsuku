@@ -10,11 +10,11 @@
   unsupported_platforms = ["darwin/arm64", "darwin/amd64"]
 
 [version]
-  source = "homebrew"
+  source = ""
   github_repo = ""
   tag_prefix = ""
   module = ""
-  formula = "telegram-downloader"
+  formula = ""
   cask = ""
   tap = ""
   fossil_repo = ""

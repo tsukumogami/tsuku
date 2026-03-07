@@ -10,11 +10,11 @@
   runtime_dependencies = ["libpg-query"]
 
 [version]
-  source = "homebrew"
+  source = ""
   github_repo = ""
   tag_prefix = ""
   module = ""
-  formula = "postgres-language-server"
+  formula = ""
   cask = ""
   tap = ""
   fossil_repo = ""

@@ -10,11 +10,11 @@
   llm_validation = "skipped"
 
 [version]
-  source = "homebrew"
+  source = ""
   github_repo = ""
   tag_prefix = ""
   module = ""
-  formula = "pkcs11-helper"
+  formula = ""
   cask = ""
   tap = ""
   fossil_repo = ""

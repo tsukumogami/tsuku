@@ -10,11 +10,11 @@
   runtime_dependencies = ["libusb"]
 
 [version]
-  source = "homebrew"
+  source = ""
   github_repo = ""
   tag_prefix = ""
   module = ""
-  formula = "dfu-util"
+  formula = ""
   cask = ""
   tap = ""
   fossil_repo = ""

@@ -11,11 +11,11 @@
   runtime_dependencies = ["yaml-cpp"]
 
 [version]
-  source = "homebrew"
+  source = ""
   github_repo = ""
   tag_prefix = ""
   module = ""
-  formula = "clang-uml"
+  formula = ""
   cask = ""
   tap = ""
   fossil_repo = ""
