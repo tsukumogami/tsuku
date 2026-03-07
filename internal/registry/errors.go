@@ -40,6 +40,8 @@ const (
 	ErrTypeCacheTooStale
 	// ErrTypeCacheStaleUsed indicates stale cache was used (warning context)
 	ErrTypeCacheStaleUsed
+	// ErrTypeSchemaVersion indicates the manifest schema version is unsupported
+	ErrTypeSchemaVersion
 )
 
 // RegistryError provides structured error information for registry operations
@@ -85,6 +87,8 @@ func (e *RegistryError) Suggestion() string {
 		return "Check your internet connection and try again"
 	case ErrTypeCacheTooStale:
 		return "Run 'tsuku update-registry' when you have internet connectivity to refresh the cache"
+	case ErrTypeSchemaVersion:
+		return "Run 'tsuku update-registry' to refresh the cache, or upgrade tsuku to the latest version"
 	default:
 		return ""
 	}

@@ -21,11 +21,17 @@ const (
 
 	// EnvManifestURL is the environment variable to override the manifest URL.
 	EnvManifestURL = "TSUKU_MANIFEST_URL"
+
+	// MinManifestSchemaVersion is the minimum schema version this CLI supports.
+	MinManifestSchemaVersion = 1
+
+	// MaxManifestSchemaVersion is the maximum schema version this CLI supports.
+	MaxManifestSchemaVersion = 1
 )
 
 // Manifest represents the registry manifest (recipes.json).
 type Manifest struct {
-	SchemaVersion string           `json:"schema_version"`
+	SchemaVersion int              `json:"schema_version"`
 	GeneratedAt   string           `json:"generated_at"`
 	Recipes       []ManifestRecipe `json:"recipes"`
 }
@@ -154,11 +160,25 @@ func (r *Registry) CacheManifest(data []byte) error {
 	return nil
 }
 
-// parseManifest parses raw JSON bytes into a Manifest struct.
+// parseManifest parses raw JSON bytes into a Manifest struct and validates
+// that the schema version falls within the supported [Min, Max] range.
 func parseManifest(data []byte) (*Manifest, error) {
 	var manifest Manifest
 	if err := json.Unmarshal(data, &manifest); err != nil {
 		return nil, fmt.Errorf("failed to parse manifest JSON: %w", err)
 	}
+
+	if manifest.SchemaVersion < MinManifestSchemaVersion || manifest.SchemaVersion > MaxManifestSchemaVersion {
+		return nil, &RegistryError{
+			Type:   ErrTypeSchemaVersion,
+			Recipe: "manifest",
+			Message: fmt.Sprintf(
+				"unsupported manifest schema version %d (supported range: %d-%d); "+
+					"run 'tsuku update-registry' or upgrade tsuku",
+				manifest.SchemaVersion, MinManifestSchemaVersion, MaxManifestSchemaVersion,
+			),
+		}
+	}
+
 	return &manifest, nil
 }
