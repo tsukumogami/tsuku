@@ -25,6 +25,7 @@
 [[steps]]
   action = "download"
   url = "https://github.com/nextest-rs/nextest/releases/download/cargo-nextest-{version}/cargo-nextest-{version}-{arch}-{os}.tar.gz"
+  checksum_url = "https://github.com/nextest-rs/nextest/releases/download/cargo-nextest-{version}/cargo-nextest-{version}-{arch}-{os}.sha256"
   os_mapping = { linux = "unknown-linux-musl" }
   arch_mapping = { amd64 = "x86_64", arm64 = "aarch64" }
   [steps.when]
@@ -56,6 +57,7 @@
 [[steps]]
   action = "download"
   url = "https://github.com/nextest-rs/nextest/releases/download/cargo-nextest-{version}/cargo-nextest-{version}-{arch}-{os}.tar.gz"
+  checksum_url = "https://github.com/nextest-rs/nextest/releases/download/cargo-nextest-{version}/cargo-nextest-{version}-{arch}-{os}.sha256"
   os_mapping = { darwin = "apple-darwin" }
   arch_mapping = { amd64 = "universal", arm64 = "universal" }
   [steps.when]
