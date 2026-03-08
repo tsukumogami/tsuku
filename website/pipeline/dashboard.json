@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-08T09:38:08Z",
+  "generated_at": "2026-03-08T09:39:27Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 17,
-      "pending": 3920,
+      "failed": 18,
+      "pending": 3919,
       "success": 1335
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 17,
-        "pending": 3897,
+        "failed": 18,
+        "pending": 3896,
         "success": 1322
       }
     },
@@ -39,8 +39,8 @@
       },
       "crates.io": {
         "excluded": 5,
-        "failed": 1,
-        "pending": 76,
+        "failed": 2,
+        "pending": 75,
         "success": 23,
         "total": 105
       },
@@ -68,21 +68,20 @@
         "total": 1
       },
       "npm": {
-        "failed": 4,
-        "pending": 17,
+        "failed": 5,
+        "pending": 16,
         "success": 54,
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 10,
-        "pending": 73,
+        "failed": 8,
+        "pending": 75,
         "success": 5,
         "total": 89
       }
@@ -481,6 +480,15 @@
           "next_retry_at": "2026-03-08T14:28:02Z"
         },
         {
+          "id": "crates.io:ascii",
+          "name": "ascii",
+          "ecosystem": "crates.io",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-09T01:38:42Z"
+        },
+        {
           "id": "npm:azion",
           "name": "azion",
           "ecosystem": "npm",
@@ -544,22 +552,13 @@
           "next_retry_at": "2026-03-08T10:01:31Z"
         },
         {
-          "id": "rubygems:chisel",
-          "name": "chisel",
+          "id": "rubygems:cog",
+          "name": "cog",
           "ecosystem": "rubygems",
           "priority": 3,
           "category": "install_failed",
           "failure_count": 3,
-          "next_retry_at": "2026-03-08T08:19:09Z"
-        },
-        {
-          "id": "rubygems:chroma",
-          "name": "chroma",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-08T08:19:09Z"
+          "next_retry_at": "2026-03-08T13:38:42Z"
         },
         {
           "id": "npm:countdown",
@@ -580,13 +579,13 @@
           "next_retry_at": "2026-03-08T11:35:26Z"
         },
         {
-          "id": "rubygems:doggo",
-          "name": "doggo",
-          "ecosystem": "rubygems",
+          "id": "npm:dmd",
+          "name": "dmd",
+          "ecosystem": "npm",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-03-08T09:35:26Z"
+          "failure_count": 3,
+          "next_retry_at": "2026-03-08T13:38:42Z"
         },
         {
           "id": "pypi:lib3mf",
@@ -614,6 +613,15 @@
           "category": "install_failed",
           "failure_count": 4,
           "next_retry_at": "2026-03-08T15:35:26Z"
+        },
+        {
+          "id": "pypi:vllm",
+          "name": "vllm",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-08T17:38:42Z"
         }
       ],
       "pending": [
@@ -1905,15 +1913,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "crates.io:ascii",
-          "name": "ascii",
-          "ecosystem": "crates.io",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-08T07:27:16Z"
         },
         {
           "id": "homebrew:asciidoc",
@@ -4142,6 +4141,15 @@
           "failure_count": 1
         },
         {
+          "id": "rubygems:chisel",
+          "name": "chisel",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-08T08:19:09Z"
+        },
+        {
           "id": "homebrew:chisel-tunnel",
           "name": "chisel-tunnel",
           "ecosystem": "homebrew",
@@ -4175,6 +4183,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:chroma",
+          "name": "chroma",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-08T08:19:09Z"
         },
         {
           "id": "homebrew:chromaprint",
@@ -4791,15 +4808,6 @@
           "ecosystem": "crates.io",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "rubygems:cog",
-          "name": "cog",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-03-08T06:19:09Z"
         },
         {
           "id": "homebrew:coin3d",
@@ -6194,15 +6202,6 @@
           "failure_count": 1
         },
         {
-          "id": "npm:dmd",
-          "name": "dmd",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-02-20T20:31:42Z"
-        },
-        {
           "id": "homebrew:dmg2img",
           "name": "dmg2img",
           "ecosystem": "homebrew",
@@ -6355,6 +6354,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:doggo",
+          "name": "doggo",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 2,
+          "next_retry_at": "2026-03-08T09:35:26Z"
         },
         {
           "id": "homebrew:dokku/repo/dokku",
@@ -26792,15 +26800,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "pypi:vllm",
-          "name": "vllm",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-03T21:56:08Z"
         },
         {
           "id": "homebrew:vmware-tanzu/carvel/vendir",
