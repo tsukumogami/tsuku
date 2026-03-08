@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Accepted
 problem: |
   Tsuku's three binaries (CLI, dltest, llm) are released independently with inconsistent versioning, naming, and enforcement. The CLI and dltest share a `v*` tag in the main repo, but llm has a separate workflow (`llm-release.yml`) triggered by `tsuku-llm-v*` tags that has never been used. Artifact naming varies across all three (GoReleaser default, simple, version-prefixed). Only dltest has compile-time version pinning; llm accepts any installed version with no compatibility checking. This creates risk of version mismatches between binaries that share internal protocols.
 decision: |
@@ -12,7 +12,7 @@ rationale: |
 
 ## Status
 
-Proposed
+Accepted
 
 ## Context and Problem Statement
 
