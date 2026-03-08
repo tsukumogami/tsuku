@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-08T16:31:20Z",
+  "generated_at": "2026-03-08T16:32:30Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -74,14 +74,15 @@
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 5,
-        "pending": 78,
+        "failed": 6,
+        "pending": 77,
         "success": 5,
         "total": 89
       }
@@ -471,6 +472,15 @@
           "next_retry_at": "2026-03-09T06:28:02Z"
         },
         {
+          "id": "rubygems:arturo",
+          "name": "arturo",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-10T00:31:49Z"
+        },
+        {
           "id": "crates.io:ascii",
           "name": "ascii",
           "ecosystem": "crates.io",
@@ -478,6 +488,15 @@
           "category": "install_failed",
           "failure_count": 5,
           "next_retry_at": "2026-03-09T01:38:42Z"
+        },
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-10T00:31:49Z"
         },
         {
           "id": "crates.io:basis_universal",
@@ -543,15 +562,6 @@
           "next_retry_at": "2026-03-08T22:29:06Z"
         },
         {
-          "id": "npm:e2b",
-          "name": "e2b",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-08T15:25:16Z"
-        },
-        {
           "id": "pypi:lib3mf",
           "name": "lib3mf",
           "ecosystem": "pypi",
@@ -568,15 +578,6 @@
           "category": "install_failed",
           "failure_count": 5,
           "next_retry_at": "2026-03-08T23:35:26Z"
-        },
-        {
-          "id": "pypi:tctl",
-          "name": "tctl",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-08T15:35:26Z"
         },
         {
           "id": "pypi:vllm",
@@ -1872,15 +1873,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:arturo",
-          "name": "arturo",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-08T14:28:02Z"
-        },
-        {
           "id": "homebrew:arxiv_latex_cleaner",
           "name": "arxiv_latex_cleaner",
           "ecosystem": "homebrew",
@@ -2497,15 +2489,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-08T14:28:02Z"
         },
         {
           "id": "homebrew:azure-cli",
@@ -6801,6 +6784,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:e2b",
+          "name": "e2b",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-08T15:25:16Z"
         },
         {
           "id": "homebrew:eask-cli",
@@ -24936,6 +24928,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "pypi:tctl",
+          "name": "tctl",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-08T15:35:26Z"
         },
         {
           "id": "homebrew:tdlib",
