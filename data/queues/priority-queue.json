@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-08T18:37:34Z",
+  "updated_at": "2026-03-08T20:34:45Z",
   "entries": [
     {
       "name": "node",
@@ -4446,7 +4446,7 @@
       "name": "basis_universal",
       "source": "crates.io:basis_universal",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 4,
@@ -5896,11 +5896,11 @@
       "name": "bup",
       "source": "rubygems:bup",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 4,
-      "next_retry_at": "2026-03-08T13:48:41.313020277Z"
+      "failure_count": 5,
+      "next_retry_at": "2026-03-09T12:34:45.020747966Z"
     },
     {
       "name": "burp",
@@ -7356,7 +7356,7 @@
       "name": "chisel",
       "source": "rubygems:chisel",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 4,
@@ -11186,11 +11186,11 @@
       "name": "dmd",
       "source": "npm:dmd",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-03-08T13:38:42.642559501Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-03-09T04:34:45.020747966Z"
     },
     {
       "name": "dmg2img",
@@ -50306,11 +50306,11 @@
       "name": "vllm",
       "source": "pypi:vllm",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 4,
-      "next_retry_at": "2026-03-08T17:38:42.642559501Z"
+      "failure_count": 5,
+      "next_retry_at": "2026-03-09T12:34:45.020747966Z"
     },
     {
       "name": "vmware-tanzu/carvel/vendir",
