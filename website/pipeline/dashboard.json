@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-08T17:25:02Z",
+  "generated_at": "2026-03-08T18:37:03Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -37772,13 +37772,67 @@
     }
   ],
   "failures": {
-    "generation_failed": 335,
-    "install_failed": 299,
+    "generation_failed": 336,
+    "install_failed": 304,
     "missing_dep": 68,
     "network_error": 7,
     "recipe_not_found": 74
   },
   "failure_details": [
+    {
+      "id": "pypi-2026-03-08T18-34-33Z-tctl",
+      "package": "tctl",
+      "ecosystem": "pypi",
+      "category": "install_failed",
+      "message": "Installing eval-time dependencies: [python-standalone]\nInstalling python-standalone...\nGenerating plan for python-standalone@20260303\nExecuting plan: python-standalone@20260303\n   Work directory: /tmp/action-validator-3703022280\n   Total steps: 4 (including 0 from dependencies)\n\nStep 1/4: download_file\n   Using cached: cpython-3.10.20+20260303-x86_64-unknown-linux-gnu-install_only.tar.gz\n   ✓ Restored from cache\n\nStep 2/4: extract\n   Extracting: cpython-3.10.20+20260303-x86_64-unknown-linux-gn",
+      "batch_id": "2026-03-08T18-34-33Z",
+      "timestamp": "2026-03-08T18:34:33.721817743Z"
+    },
+    {
+      "id": "npm-2026-03-08T18-34-25Z-countdown",
+      "package": "countdown",
+      "ecosystem": "npm",
+      "category": "install_failed",
+      "message": "Error: recipe validation failed for 'countdown'\n  - metadata.homepage: homepage must start with https:// (got: http://countdownjs.org)",
+      "batch_id": "2026-03-08T18-34-33Z",
+      "timestamp": "2026-03-08T18:34:25.322789873Z"
+    },
+    {
+      "id": "rubygems-2026-03-08T18-34-23Z-bullet",
+      "package": "bullet",
+      "ecosystem": "rubygems",
+      "category": "install_failed",
+      "message": "Installing eval-time dependencies: [ruby]\nInstalling ruby...\nChecking dependencies for ruby...\n  Resolving dependency 'libyaml'...\nExecuting plan: libyaml@0.2.5\n   Work directory: /tmp/action-validator-2384994073\n   Total steps: 4 (including 0 from dependencies)\n\nStep 1/4: download_file\n   Using cached: libyaml.tar.gz\n   ✓ Restored from cache\n\nStep 2/4: extract\n   Extracting: libyaml.tar.gz\n   Format: tar.gz\n   Strip dirs: 2\n\nStep 3/4: homebrew_relocate\n   Relocating placeholders: libyaml (lib",
+      "batch_id": "2026-03-08T18-34-33Z",
+      "timestamp": "2026-03-08T18:34:23.965044595Z"
+    },
+    {
+      "id": "crates.io-2026-03-08T18-33-53Z-bindgen",
+      "package": "bindgen",
+      "ecosystem": "crates.io",
+      "category": "install_failed",
+      "message": "Installing eval-time dependencies: [rust]\nInstalling rust...\nGenerating plan for rust@1.94.0\nExecuting plan: rust@1.94.0\n   Work directory: /tmp/action-validator-2556184519\n   Total steps: 4 (including 0 from dependencies)\n\nStep 1/4: download_file\n   Using cached: rust-1.94.0-x86_64-unknown-linux-gnu.tar.gz\n   ✓ Restored from cache\n\nStep 2/4: extract\n   Extracting: rust-1.94.0-x86_64-unknown-linux-gnu.tar.gz\n   Format: tar.gz\n   Strip dirs: 1\n\nStep 3/4: run_command\n   Running: ./install.sh --p",
+      "batch_id": "2026-03-08T18-34-33Z",
+      "timestamp": "2026-03-08T18:33:53.256030274Z"
+    },
+    {
+      "id": "homebrew-2026-03-08T18-32-34Z-task",
+      "package": "task",
+      "ecosystem": "homebrew",
+      "category": "install_failed",
+      "message": "tsuku collects anonymous usage statistics to improve the tool.\nNo personal information is collected. See: https://tsuku.dev/telemetry\n\nTo opt out: tsuku config set telemetry false\n         or export TSUKU_NO_TELEMETRY=1",
+      "batch_id": "2026-03-08T18-34-33Z",
+      "timestamp": "2026-03-08T18:32:34.987328213Z"
+    },
+    {
+      "id": "github-2026-03-08T18-32-31Z-bat",
+      "package": "bat",
+      "ecosystem": "github",
+      "category": "generation_failed",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: 'bat' resolved to github (sharkdp/bat), which requires LLM for recipe generation.\nRemove --deterministic-only or wait for a recipe to be contributed.",
+      "batch_id": "2026-03-08T18-34-33Z",
+      "timestamp": "2026-03-08T18:32:31.217715951Z"
+    },
     {
       "id": "pypi-2026-03-08T16-28-53Z-lib3mf",
       "package": "lib3mf",
@@ -39537,70 +39591,15 @@
       "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: package 'afl++' not found in homebrew",
       "batch_id": "2026-03-03T06-07-41Z",
       "timestamp": "2026-03-03T06:07:03.714532636Z"
-    },
-    {
-      "id": "homebrew-2026-03-03T06-07-02Z-aerleon",
-      "package": "aerleon",
-      "ecosystem": "homebrew",
-      "category": "missing_dep",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for aerleon from homebrew:aerleon...\nFetching formula metadata... done (v1.16.0)\nInspecting bottle contents... failed\ndeterministic generation failed: [missing_dep] missing dependencies: recipe python@3.14 not found in registry",
-      "batch_id": "2026-03-03T06-07-41Z",
-      "timestamp": "2026-03-03T06:07:02.560760307Z"
-    },
-    {
-      "id": "homebrew-2026-03-03T06-07-00Z-adwaita-icon-theme",
-      "package": "adwaita-icon-theme",
-      "ecosystem": "homebrew",
-      "category": "generation_failed",
-      "subcategory": "no_bottles",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for adwaita-icon-theme from homebrew:adwaita-icon-theme...\nFetching formula metadata... done (v49.0)\nInspecting bottle contents... failed\ndeterministic generation failed: [no_bottles] formula adwaita-icon-theme has no bottles available",
-      "batch_id": "2026-03-03T06-07-41Z",
-      "timestamp": "2026-03-03T06:07:00.697402562Z"
-    },
-    {
-      "id": "homebrew-2026-03-03T06-06-59Z-adr-tools",
-      "package": "adr-tools",
-      "ecosystem": "homebrew",
-      "category": "generation_failed",
-      "subcategory": "no_bottles",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for adr-tools from homebrew:adr-tools...\nFetching formula metadata... done (v3.0.0)\nInspecting bottle contents... failed\ndeterministic generation failed: [no_bottles] formula adr-tools has no bottles available",
-      "batch_id": "2026-03-03T06-07-41Z",
-      "timestamp": "2026-03-03T06:06:59.118593847Z"
-    },
-    {
-      "id": "homebrew-2026-03-03T06-06-57Z-adios2",
-      "package": "adios2",
-      "ecosystem": "homebrew",
-      "category": "missing_dep",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for adios2 from homebrew:adios2...\nFetching formula metadata... done (v2.11.0)\nInspecting bottle contents... failed\ndeterministic generation failed: [missing_dep] missing dependencies: recipe c-blosc2 not found in registry; recipe libfabric not found in registry; recipe mpi4py not found in registry; recipe numpy not found in registry; recipe open-mpi not found in registry; recipe pugixml n",
-      "batch_id": "2026-03-03T06-07-41Z",
-      "timestamp": "2026-03-03T06:06:57.538317271Z"
-    },
-    {
-      "id": "homebrew-2026-03-03T06-06-53Z-adembc/tap/lazyssh",
-      "package": "adembc/tap/lazyssh",
-      "ecosystem": "homebrew",
-      "category": "recipe_not_found",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: package 'adembc/tap/lazyssh' not found in homebrew",
-      "batch_id": "2026-03-03T06-07-41Z",
-      "timestamp": "2026-03-03T06:06:53.333312898Z"
-    },
-    {
-      "id": "homebrew-2026-03-03T06-06-52Z-addlicense",
-      "package": "addlicense",
-      "ecosystem": "homebrew",
-      "category": "install_failed",
-      "batch_id": "2026-03-03T06-07-41Z",
-      "timestamp": "2026-03-03T06:06:52.183747341Z"
     }
   ],
   "health": {
     "ecosystems": {
       "crates.io": {
         "breaker_state": "open",
-        "failures": 56,
-        "last_failure": "2026-03-08T16:30:44Z",
-        "opens_at": "2026-03-08T17:30:44Z"
+        "failures": 57,
+        "last_failure": "2026-03-08T18:36:29Z",
+        "opens_at": "2026-03-08T19:36:29Z"
       },
       "default": {
         "breaker_state": "closed",
@@ -39608,38 +39607,46 @@
       },
       "github": {
         "breaker_state": "open",
-        "failures": 59,
-        "last_failure": "2026-03-08T16:30:45Z",
-        "opens_at": "2026-03-08T17:30:45Z"
+        "failures": 60,
+        "last_failure": "2026-03-08T18:36:29Z",
+        "opens_at": "2026-03-08T19:36:29Z"
       },
       "homebrew": {
         "breaker_state": "open",
-        "failures": 20,
-        "last_failure": "2026-03-08T16:30:45Z",
-        "opens_at": "2026-03-08T17:30:45Z"
+        "failures": 21,
+        "last_failure": "2026-03-08T18:36:29Z",
+        "opens_at": "2026-03-08T19:36:29Z"
       },
       "npm": {
         "breaker_state": "open",
-        "failures": 51,
-        "last_failure": "2026-03-08T16:30:45Z",
-        "opens_at": "2026-03-08T17:30:45Z"
+        "failures": 52,
+        "last_failure": "2026-03-08T18:36:29Z",
+        "opens_at": "2026-03-08T19:36:29Z"
       },
       "pypi": {
         "breaker_state": "open",
-        "failures": 46,
-        "last_failure": "2026-03-08T16:30:45Z",
-        "opens_at": "2026-03-08T17:30:45Z"
+        "failures": 47,
+        "last_failure": "2026-03-08T18:36:29Z",
+        "opens_at": "2026-03-08T19:36:29Z"
       },
       "rubygems": {
         "breaker_state": "open",
-        "failures": 12,
-        "last_failure": "2026-03-08T16:30:45Z",
-        "opens_at": "2026-03-08T17:30:45Z"
+        "failures": 13,
+        "last_failure": "2026-03-08T18:36:29Z",
+        "opens_at": "2026-03-08T19:36:29Z"
       }
     },
     "last_run": {
-      "batch_id": "2026-03-08T17-24-34Z",
-      "timestamp": "2026-03-08T17:24:34Z",
+      "batch_id": "2026-03-08T18-36-35Z",
+      "ecosystems": {
+        "crates.io": 1,
+        "github": 1,
+        "homebrew": 1,
+        "npm": 1,
+        "pypi": 1,
+        "rubygems": 1
+      },
+      "timestamp": "2026-03-08T18:36:35Z",
       "succeeded": 0,
       "failed": 0,
       "total": 0
@@ -39658,7 +39665,7 @@
       "total": 1,
       "recipes_merged": 1
     },
-    "runs_since_last_success": 18
+    "runs_since_last_success": 19
   },
   "runs": [
     {
