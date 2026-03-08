@@ -21,7 +21,7 @@ builds:
       - -trimpath
       - -buildvcs=false
     ldflags:
-      - -s -w -X github.com/tsukumogami/tsuku/internal/buildinfo.version={{.Version}} -X github.com/tsukumogami/tsuku/internal/buildinfo.commit={{.Commit}} -X github.com/tsukumogami/tsuku/internal/verify.pinnedDltestVersion={{.Version}}
+      - -s -w -X github.com/tsukumogami/tsuku/internal/buildinfo.version={{.Version}} -X github.com/tsukumogami/tsuku/internal/buildinfo.commit={{.Commit}} -X github.com/tsukumogami/tsuku/internal/verify.pinnedDltestVersion={{.Version}} -X github.com/tsukumogami/tsuku/internal/verify.pinnedLlmVersion={{.Version}}
     mod_timestamp: "{{ .CommitTimestamp }}"
     no_unique_dist_dir: true
 
