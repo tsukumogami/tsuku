@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-08T07:35:26Z",
+  "updated_at": "2026-03-08T09:38:42Z",
   "entries": [
     {
       "name": "node",
@@ -2886,11 +2886,11 @@
       "name": "ascii",
       "source": "crates.io:ascii",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 4,
-      "next_retry_at": "2026-03-08T07:27:16.823712047Z"
+      "failure_count": 5,
+      "next_retry_at": "2026-03-09T01:38:42.642559501Z"
     },
     {
       "name": "asciidoc",
@@ -7356,7 +7356,7 @@
       "name": "chisel",
       "source": "rubygems:chisel",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 3,
@@ -7436,7 +7436,7 @@
       "name": "chroma",
       "source": "rubygems:chroma",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 3,
@@ -8626,11 +8626,11 @@
       "name": "cog",
       "source": "rubygems:cog",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-03-08T06:19:09.399344569Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-03-08T13:38:42.642559501Z"
     },
     {
       "name": "coin3d",
@@ -11186,11 +11186,11 @@
       "name": "dmd",
       "source": "npm:dmd",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-02-20T20:31:42.542917803Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-03-08T13:38:42.642559501Z"
     },
     {
       "name": "dmg2img",
@@ -11566,7 +11566,7 @@
       "name": "doggo",
       "source": "rubygems:doggo",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 2,
@@ -50306,11 +50306,11 @@
       "name": "vllm",
       "source": "pypi:vllm",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-03-03T21:56:08.762700377Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-03-08T17:38:42.642559501Z"
     },
     {
       "name": "vmware-tanzu/carvel/vendir",
