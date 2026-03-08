@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-08T12:48:58Z",
+  "generated_at": "2026-03-08T12:50:16Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 19,
-      "pending": 3918,
+      "failed": 21,
+      "pending": 3916,
       "success": 1335
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 19,
-        "pending": 3895,
+        "failed": 21,
+        "pending": 3893,
         "success": 1322
       }
     },
@@ -68,8 +68,8 @@
         "total": 1
       },
       "npm": {
-        "failed": 4,
-        "pending": 17,
+        "failed": 5,
+        "pending": 16,
         "success": 54,
         "total": 75
       },
@@ -80,8 +80,8 @@
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 9,
-        "pending": 74,
+        "failed": 10,
+        "pending": 73,
         "success": 5,
         "total": 89
       }
@@ -552,6 +552,15 @@
           "next_retry_at": "2026-03-08T13:48:41Z"
         },
         {
+          "id": "npm:chainsaw",
+          "name": "chainsaw",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-09T04:49:33Z"
+        },
+        {
           "id": "rubygems:chisel",
           "name": "chisel",
           "ecosystem": "rubygems",
@@ -559,6 +568,15 @@
           "category": "install_failed",
           "failure_count": 4,
           "next_retry_at": "2026-03-08T19:25:16Z"
+        },
+        {
+          "id": "rubygems:chroma",
+          "name": "chroma",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-08T20:49:33Z"
         },
         {
           "id": "rubygems:cog",
@@ -3980,15 +3998,6 @@
           "failure_count": 1
         },
         {
-          "id": "npm:chainsaw",
-          "name": "chainsaw",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-08T10:01:31Z"
-        },
-        {
           "id": "homebrew:changie",
           "name": "changie",
           "ecosystem": "homebrew",
@@ -4183,15 +4192,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "rubygems:chroma",
-          "name": "chroma",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-08T08:19:09Z"
         },
         {
           "id": "homebrew:chromaprint",
