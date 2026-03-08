@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-08T04:19:09Z",
+  "updated_at": "2026-03-08T05:48:41Z",
   "entries": [
     {
       "name": "node",
@@ -636,7 +636,7 @@
       "name": "numpy",
       "source": "crates.io:numpy",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 4,
@@ -4836,11 +4836,11 @@
       "name": "bettercap",
       "source": "rubygems:bettercap",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-03-08T02:28:02.73342262Z"
+      "failure_count": 5,
+      "next_retry_at": "2026-03-08T21:48:41.313020277Z"
     },
     {
       "name": "bfg",
@@ -5826,11 +5826,11 @@
       "name": "bullet",
       "source": "rubygems:bullet",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-03-08T02:28:02.73342262Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-03-08T13:48:41.313020277Z"
     },
     {
       "name": "bulletty",
@@ -5896,11 +5896,11 @@
       "name": "bup",
       "source": "rubygems:bup",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-03-08T02:28:02.73342262Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-03-08T13:48:41.313020277Z"
     },
     {
       "name": "burp",
@@ -6606,11 +6606,11 @@
       "name": "cassandra",
       "source": "rubygems:cassandra",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-03-08T02:28:02.73342262Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-03-08T13:48:41.313020277Z"
     },
     {
       "name": "cassandra-reaper",
@@ -6806,11 +6806,11 @@
       "name": "cdo",
       "source": "rubygems:cdo",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-03-08T02:28:02.73342262Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-03-08T13:48:41.313020277Z"
     },
     {
       "name": "cdogs-sdl",
@@ -9116,11 +9116,11 @@
       "name": "countdown",
       "source": "npm:countdown",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-03-03T21:56:08.762700377Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-03-08T13:48:41.313020277Z"
     },
     {
       "name": "coursier",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 4,
-      "next_retry_at": "2026-03-03T22:05:38.606601787Z"
+      "failure_count": 5,
+      "next_retry_at": "2026-03-08T21:48:41.313020277Z"
     },
     {
       "name": "libaacs",
