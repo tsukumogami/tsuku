@@ -27,3 +27,10 @@
 /* Back to blog link */
 .blog-post > a { color: var(--accent); text-decoration: none; display: inline-block; margin-top: 2rem; }
 .blog-post > a:hover { text-decoration: underline; }
+
+/* Mobile */
+@media (max-width: 600px) {
+    .blog-post { padding: 0.5rem; }
+    .blog-post h1 { font-size: 1.5rem; }
+    .blog-index { padding: 0.5rem; }
+}
