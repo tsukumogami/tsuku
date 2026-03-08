@@ -17,6 +17,11 @@
 ## Selected Approach (Phase 2)
 Incremental Migration chosen over Full Consolidation and Minimal. Each dimension ships as an independent PR with progressive validation. Phases have ordering dependencies but each is independently deployable and reversible.
 
+## Investigation Findings (Phase 3)
+- **GoReleaser naming**: Version suffix comes from default archive `name_template`, not the binary field. Fix: add `name_template: "{{ .Binary }}"` to archives section. Must coordinate with finalize-release and integration-test artifact references.
+- **LLM pinning code path**: Version check fits after `findInstalledBinary()` in `EnsureAddon`. Extract version from directory name, compare against `pinnedLlmVersion`. On mismatch: shut down daemon, install correct version, restart. `Installer` interface needs version parameter.
+- **Phase dependencies**: Phases 1, 2, 3 are fully independent (3 parallel PRs). Phase 4 blocked by Phase 3 only. Phase 5 (naming) is last. Revised plan: 3 batches instead of 5 sequential phases.
+
 ## Current Status
-**Phase:** 2 - Present Approaches
+**Phase:** 3 - Deep Investigation
 **Last Updated:** 2026-03-08
