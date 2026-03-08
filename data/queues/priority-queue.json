@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-08T20:34:45Z",
+  "updated_at": "2026-03-08T22:26:41Z",
   "entries": [
     {
       "name": "node",
@@ -4446,11 +4446,11 @@
       "name": "basis_universal",
       "source": "crates.io:basis_universal",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 4,
-      "next_retry_at": "2026-03-08T19:25:16.533158342Z"
+      "failure_count": 5,
+      "next_retry_at": "2026-03-09T14:26:41.908639242Z"
     },
     {
       "name": "bastet",
@@ -4836,7 +4836,7 @@
       "name": "bettercap",
       "source": "rubygems:bettercap",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 5,
@@ -6606,11 +6606,11 @@
       "name": "cassandra",
       "source": "rubygems:cassandra",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 4,
-      "next_retry_at": "2026-03-08T13:48:41.313020277Z"
+      "failure_count": 5,
+      "next_retry_at": "2026-03-09T14:26:41.908639242Z"
     },
     {
       "name": "cassandra-reaper",
@@ -7436,7 +7436,7 @@
       "name": "chroma",
       "source": "rubygems:chroma",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 4,
@@ -12396,11 +12396,11 @@
       "name": "e2b",
       "source": "npm:e2b",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-03-08T15:25:16.533158342Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-03-09T06:26:41.908639242Z"
     },
     {
       "name": "e2fsprogs",
@@ -25196,7 +25196,7 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 5,
