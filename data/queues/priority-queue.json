@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-08T09:38:42Z",
+  "updated_at": "2026-03-08T11:25:16Z",
   "entries": [
     {
       "name": "node",
@@ -4446,11 +4446,11 @@
       "name": "basis_universal",
       "source": "crates.io:basis_universal",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-03-08T06:01:31.45653282Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-03-08T19:25:16.533158342Z"
     },
     {
       "name": "bastet",
@@ -7036,7 +7036,7 @@
       "name": "chainsaw",
       "source": "npm:chainsaw",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 4,
@@ -7356,11 +7356,11 @@
       "name": "chisel",
       "source": "rubygems:chisel",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-03-08T08:19:09.399344569Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-03-08T19:25:16.533158342Z"
     },
     {
       "name": "chisel-tunnel",
@@ -12396,11 +12396,11 @@
       "name": "e2b",
       "source": "npm:e2b",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-02-20T20:31:49.067620144Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-03-08T15:25:16.533158342Z"
     },
     {
       "name": "e2fsprogs",
