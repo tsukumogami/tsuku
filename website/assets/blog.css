@@ -6,6 +6,7 @@
 .post-meta .author { color: var(--accent); text-decoration: none; }
 .post-meta .author:hover { text-decoration: underline; }
 .post-content { margin-top: 2rem; line-height: 1.8; }
+.post-content p { margin-bottom: 1rem; }
 .post-content a { color: var(--accent); text-decoration: none; }
 .post-content a:visited { color: var(--accent); }
 .post-content a:hover { text-decoration: underline; }
