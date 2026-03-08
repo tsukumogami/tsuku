@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-08T06:43:15Z",
+  "generated_at": "2026-03-08T07:35:00Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -37772,13 +37772,67 @@
     }
   ],
   "failures": {
-    "generation_failed": 329,
-    "install_failed": 269,
+    "generation_failed": 330,
+    "install_failed": 274,
     "missing_dep": 68,
     "network_error": 7,
     "recipe_not_found": 74
   },
   "failure_details": [
+    {
+      "id": "pypi-2026-03-08T07-32-46Z-tctl",
+      "package": "tctl",
+      "ecosystem": "pypi",
+      "category": "install_failed",
+      "message": "Installing eval-time dependencies: [python-standalone]\nInstalling python-standalone...\nGenerating plan for python-standalone@20260303\nExecuting plan: python-standalone@20260303\n   Work directory: /tmp/action-validator-1209945273\n   Total steps: 4 (including 0 from dependencies)\n\nStep 1/4: download_file\n   Using cached: cpython-3.10.20+20260303-x86_64-unknown-linux-gnu-install_only.tar.gz\n   ✓ Restored from cache\n\nStep 2/4: extract\n   Extracting: cpython-3.10.20+20260303-x86_64-unknown-linux-gn",
+      "batch_id": "2026-03-08T07-32-46Z",
+      "timestamp": "2026-03-08T07:32:46.37160442Z"
+    },
+    {
+      "id": "rubygems-2026-03-08T07-32-40Z-doggo",
+      "package": "doggo",
+      "ecosystem": "rubygems",
+      "category": "install_failed",
+      "message": "Installing eval-time dependencies: [ruby]\nInstalling ruby...\nChecking dependencies for ruby...\n  Resolving dependency 'libyaml'...\nExecuting plan: libyaml@0.2.5\n   Work directory: /tmp/action-validator-1421804679\n   Total steps: 4 (including 0 from dependencies)\n\nStep 1/4: download_file\n   Using cached: libyaml.tar.gz\n   ✓ Restored from cache\n\nStep 2/4: extract\n   Extracting: libyaml.tar.gz\n   Format: tar.gz\n   Strip dirs: 2\n\nStep 3/4: homebrew_relocate\n   Relocating placeholders: libyaml (lib",
+      "batch_id": "2026-03-08T07-32-46Z",
+      "timestamp": "2026-03-08T07:32:40.068948189Z"
+    },
+    {
+      "id": "npm-2026-03-08T07-32-28Z-datasette",
+      "package": "datasette",
+      "ecosystem": "npm",
+      "category": "install_failed",
+      "message": "Installing eval-time dependencies: [nodejs]\nInstalling nodejs...\nChecking runtime dependencies for nodejs...\n  Resolving runtime dependency 'gcc-libs'...\nExecuting plan: gcc-libs@15.2.0\n   Work directory: /tmp/action-validator-3299495802\n   Total steps: 5 (including 0 from dependencies)\n\nStep 1/5: download_file\n   Using cached: gcc.tar.gz\n   ✓ Restored from cache\n\nStep 2/5: extract\n   Extracting: gcc.tar.gz\n   Format: tar.gz\n   Strip dirs: 2\n\nStep 3/5: homebrew_relocate\n   Relocating placehold",
+      "batch_id": "2026-03-08T07-32-46Z",
+      "timestamp": "2026-03-08T07:32:28.30787571Z"
+    },
+    {
+      "id": "crates.io-2026-03-08T07-32-12Z-numpy",
+      "package": "numpy",
+      "ecosystem": "crates.io",
+      "category": "install_failed",
+      "message": "Installing eval-time dependencies: [rust]\nInstalling rust...\nGenerating plan for rust@1.94.0\nExecuting plan: rust@1.94.0\n   Work directory: /tmp/action-validator-4228655814\n   Total steps: 4 (including 0 from dependencies)\n\nStep 1/4: download_file\n   Using cached: rust-1.94.0-x86_64-unknown-linux-gnu.tar.gz\n   ✓ Restored from cache\n\nStep 2/4: extract\n   Extracting: rust-1.94.0-x86_64-unknown-linux-gnu.tar.gz\n   Format: tar.gz\n   Strip dirs: 1\n\nStep 3/4: run_command\n   Running: ./install.sh --p",
+      "batch_id": "2026-03-08T07-32-46Z",
+      "timestamp": "2026-03-08T07:32:12.883173992Z"
+    },
+    {
+      "id": "homebrew-2026-03-08T07-31-14Z-task",
+      "package": "task",
+      "ecosystem": "homebrew",
+      "category": "install_failed",
+      "message": "tsuku collects anonymous usage statistics to improve the tool.\nNo personal information is collected. See: https://tsuku.dev/telemetry\n\nTo opt out: tsuku config set telemetry false\n         or export TSUKU_NO_TELEMETRY=1",
+      "batch_id": "2026-03-08T07-32-46Z",
+      "timestamp": "2026-03-08T07:31:14.978072475Z"
+    },
+    {
+      "id": "github-2026-03-08T07-31-12Z-bat",
+      "package": "bat",
+      "ecosystem": "github",
+      "category": "generation_failed",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: 'bat' resolved to github (sharkdp/bat), which requires LLM for recipe generation.\nRemove --deterministic-only or wait for a recipe to be contributed.",
+      "batch_id": "2026-03-08T07-32-46Z",
+      "timestamp": "2026-03-08T07:31:12.27475875Z"
+    },
     {
       "id": "pypi-2026-03-08T05-45-11Z-lib3mf",
       "package": "lib3mf",
@@ -39534,68 +39588,15 @@
       "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: package 'a7ex/formulae/xcresultparser' not found in homebrew",
       "batch_id": "2026-03-03T05-09-05Z",
       "timestamp": "2026-03-03T05:08:23.112304953Z"
-    },
-    {
-      "id": "homebrew-2026-03-03T05-08-21Z-a2ps",
-      "package": "a2ps",
-      "ecosystem": "homebrew",
-      "category": "install_failed",
-      "batch_id": "2026-03-03T05-09-05Z",
-      "timestamp": "2026-03-03T05:08:21.916770687Z"
-    },
-    {
-      "id": "homebrew-2026-03-03T05-08-18Z-5ouma/tap/gh-poi",
-      "package": "5ouma/tap/gh-poi",
-      "ecosystem": "homebrew",
-      "category": "recipe_not_found",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: package '5ouma/tap/gh-poi' not found in homebrew",
-      "batch_id": "2026-03-03T05-09-05Z",
-      "timestamp": "2026-03-03T05:08:18.118745727Z"
-    },
-    {
-      "id": "homebrew-2026-03-03T05-08-16Z-42ailab/42plugin/forty-two-plugin",
-      "package": "42ailab/42plugin/forty-two-plugin",
-      "ecosystem": "homebrew",
-      "category": "recipe_not_found",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: package '42ailab/42plugin/forty-two-plugin' not found in homebrew",
-      "batch_id": "2026-03-03T05-09-05Z",
-      "timestamp": "2026-03-03T05:08:16.94033012Z"
-    },
-    {
-      "id": "homebrew-2026-03-03T05-08-15Z-2ykwang/mac-cleanup-go/mac-cleanup-go",
-      "package": "2ykwang/mac-cleanup-go/mac-cleanup-go",
-      "ecosystem": "homebrew",
-      "category": "recipe_not_found",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: package '2ykwang/mac-cleanup-go/mac-cleanup-go' not found in homebrew",
-      "batch_id": "2026-03-03T05-09-05Z",
-      "timestamp": "2026-03-03T05:08:15.72320406Z"
-    },
-    {
-      "id": "homebrew-2026-03-03T05-08-14Z-2ykwang/2ykwang/mac-cleanup-go",
-      "package": "2ykwang/2ykwang/mac-cleanup-go",
-      "ecosystem": "homebrew",
-      "category": "recipe_not_found",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: package '2ykwang/2ykwang/mac-cleanup-go' not found in homebrew",
-      "batch_id": "2026-03-03T05-09-05Z",
-      "timestamp": "2026-03-03T05:08:14.537184372Z"
-    },
-    {
-      "id": "homebrew-2026-03-03T05-08-13Z-0xjuanma/tap/golazo",
-      "package": "0xjuanma/tap/golazo",
-      "ecosystem": "homebrew",
-      "category": "recipe_not_found",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: package '0xjuanma/tap/golazo' not found in homebrew",
-      "batch_id": "2026-03-03T05-09-05Z",
-      "timestamp": "2026-03-03T05:08:13.340728154Z"
     }
   ],
   "health": {
     "ecosystems": {
       "crates.io": {
         "breaker_state": "open",
-        "failures": 50,
-        "last_failure": "2026-03-08T05:47:34Z",
-        "opens_at": "2026-03-08T06:47:34Z"
+        "failures": 51,
+        "last_failure": "2026-03-08T07:34:32Z",
+        "opens_at": "2026-03-08T08:34:32Z"
       },
       "default": {
         "breaker_state": "closed",
@@ -39603,38 +39604,46 @@
       },
       "github": {
         "breaker_state": "open",
-        "failures": 53,
-        "last_failure": "2026-03-08T05:47:34Z",
-        "opens_at": "2026-03-08T06:47:34Z"
+        "failures": 54,
+        "last_failure": "2026-03-08T07:34:32Z",
+        "opens_at": "2026-03-08T08:34:32Z"
       },
       "homebrew": {
         "breaker_state": "open",
-        "failures": 14,
-        "last_failure": "2026-03-08T05:47:34Z",
-        "opens_at": "2026-03-08T06:47:34Z"
+        "failures": 15,
+        "last_failure": "2026-03-08T07:34:32Z",
+        "opens_at": "2026-03-08T08:34:32Z"
       },
       "npm": {
         "breaker_state": "open",
-        "failures": 45,
-        "last_failure": "2026-03-08T05:47:34Z",
-        "opens_at": "2026-03-08T06:47:34Z"
+        "failures": 46,
+        "last_failure": "2026-03-08T07:34:32Z",
+        "opens_at": "2026-03-08T08:34:32Z"
       },
       "pypi": {
         "breaker_state": "open",
-        "failures": 40,
-        "last_failure": "2026-03-08T05:47:34Z",
-        "opens_at": "2026-03-08T06:47:34Z"
+        "failures": 41,
+        "last_failure": "2026-03-08T07:34:32Z",
+        "opens_at": "2026-03-08T08:34:32Z"
       },
       "rubygems": {
         "breaker_state": "open",
-        "failures": 6,
-        "last_failure": "2026-03-08T05:47:34Z",
-        "opens_at": "2026-03-08T06:47:34Z"
+        "failures": 7,
+        "last_failure": "2026-03-08T07:34:32Z",
+        "opens_at": "2026-03-08T08:34:32Z"
       }
     },
     "last_run": {
-      "batch_id": "2026-03-08T06-42-49Z",
-      "timestamp": "2026-03-08T06:42:49Z",
+      "batch_id": "2026-03-08T07-34-38Z",
+      "ecosystems": {
+        "crates.io": 1,
+        "github": 1,
+        "homebrew": 1,
+        "npm": 1,
+        "pypi": 1,
+        "rubygems": 1
+      },
+      "timestamp": "2026-03-08T07:34:38Z",
       "succeeded": 0,
       "failed": 0,
       "total": 0
@@ -39653,7 +39662,7 @@
       "total": 1,
       "recipes_merged": 1
     },
-    "runs_since_last_success": 7
+    "runs_since_last_success": 8
   },
   "runs": [
     {
