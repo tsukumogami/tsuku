@@ -1,6 +1,7 @@
 name: Tests
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
     paths:
@@ -11,6 +12,8 @@ on:
       - 'test-matrix.json'
       - 'testdata/**'
       - '.github/workflows/test.yml'
+      - 'recipes/**/*.toml'
+      - 'internal/recipe/recipes/**/*.toml'
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
     branches: [main]
@@ -22,6 +25,8 @@ on:
       - 'test-matrix.json'
       - 'testdata/**'
       - '.github/workflows/test.yml'
+      - 'recipes/**/*.toml'
+      - 'internal/recipe/recipes/**/*.toml'
   schedule:
     # Run nightly at 00:00 UTC for recipe validation
     - cron: '0 0 * * *'
