@@ -167,10 +167,153 @@ jobs:
           cp cmd/tsuku-dltest/target/release/tsuku-dltest "${{ matrix.artifact }}"
           gh release upload "${GITHUB_REF_NAME}" "${{ matrix.artifact }}" --clobber
 
+  # Build tsuku-llm addon for all platforms (GPU backends)
+  # Artifact naming: tsuku-llm-v{version}-{os}-{arch}[-{backend}]
+  # macOS omits backend suffix (Metal is the only option per arch).
+  #
+  # CUDA version coupling: builds against CUDA toolkit 12.4. The cuda-runtime
+  # recipe (recipes/c/cuda-runtime.toml) must provide ABI-compatible 12.x libs.
+  build-llm:
+    name: "Build tsuku-llm (${{ matrix.platform }})"
+    needs: [release]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # macOS builds (Metal support built-in)
+          - platform: darwin-arm64
+            runner: macos-latest
+            target: aarch64-apple-darwin
+            artifact_suffix: darwin-arm64
+            backend: metal
+          - platform: darwin-amd64
+            runner: macos-15-intel
+            target: x86_64-apple-darwin
+            artifact_suffix: darwin-amd64
+            backend: metal
+
+          # Linux AMD64 builds
+          - platform: linux-amd64-cuda
+            runner: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
+            artifact_suffix: linux-amd64-cuda
+            backend: cuda
+          - platform: linux-amd64-vulkan
+            runner: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
+            artifact_suffix: linux-amd64-vulkan
+            backend: vulkan
+          # Linux ARM64 builds
+          - platform: linux-arm64-cuda
+            runner: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+            artifact_suffix: linux-arm64-cuda
+            backend: cuda
+          - platform: linux-arm64-vulkan
+            runner: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+            artifact_suffix: linux-arm64-vulkan
+            backend: vulkan
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        with:
+          submodules: true
+          sparse-checkout: |
+            tsuku-llm
+            internal/llm/proto
+
+      - name: Compute artifact name
+        id: artifact
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          ARTIFACT_NAME="tsuku-llm-v${VERSION}-${{ matrix.artifact_suffix }}"
+          echo "name=${ARTIFACT_NAME}" >> "$GITHUB_OUTPUT"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Artifact name: ${ARTIFACT_NAME}"
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: "1.75"
+
+      - name: Install protobuf compiler
+        run: |
+          if [[ "$OSTYPE" == "darwin"* ]]; then
+            brew install protobuf
+          else
+            sudo apt-get update
+            sudo apt-get install -y protobuf-compiler
+          fi
+
+      - name: Install CUDA toolkit (Linux CUDA builds)
+        if: matrix.backend == 'cuda' && startsWith(matrix.runner, 'ubuntu')
+        run: |
+          # Install CUDA 12.4 toolkit for building.
+          # CUDA version coupling: changing the major version here requires
+          # updating recipes/c/cuda-runtime.toml to provide compatible libraries.
+          wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.1-1_all.deb
+          sudo dpkg -i cuda-keyring_1.1-1_all.deb
+          sudo apt-get update
+          sudo apt-get install -y cuda-toolkit-12-4
+          echo "/usr/local/cuda-12.4/bin" >> $GITHUB_PATH
+          echo "CUDA_PATH=/usr/local/cuda-12.4" >> $GITHUB_ENV
+
+      - name: Install Vulkan SDK (Linux Vulkan builds)
+        if: matrix.backend == 'vulkan' && startsWith(matrix.runner, 'ubuntu')
+        run: |
+          # Install Vulkan SDK
+          wget -qO - https://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo apt-key add -
+          sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-jammy.list \
+            https://packages.lunarg.com/vulkan/lunarg-vulkan-jammy.list
+          sudo apt-get update
+          sudo apt-get install -y vulkan-sdk
+          echo "VULKAN_SDK=/usr" >> $GITHUB_ENV
+
+      - name: Inject version
+        run: |
+          VERSION="${{ steps.artifact.outputs.version }}"
+          if [[ "$OSTYPE" == "darwin"* ]]; then
+            sed -i '' "s/^version = .*/version = \"$VERSION\"/" tsuku-llm/Cargo.toml
+          else
+            sed -i "s/^version = .*/version = \"$VERSION\"/" tsuku-llm/Cargo.toml
+          fi
+          echo "Building version: $VERSION"
+
+      - name: Build release binary
+        working-directory: tsuku-llm
+        env:
+          LLAMA_BACKEND: ${{ matrix.backend }}
+        run: |
+          # Set backend-specific features
+          case "${{ matrix.backend }}" in
+            metal)
+              cargo build --release --features metal
+              ;;
+            cuda)
+              cargo build --release --features cuda
+              ;;
+            vulkan)
+              cargo build --release --features vulkan
+              ;;
+          esac
+
+      - name: Sign binary (macOS)
+        if: startsWith(matrix.runner, 'macos')
+        run: codesign -s - tsuku-llm/target/release/tsuku-llm
+
+      - name: Upload to release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cp tsuku-llm/target/release/tsuku-llm "${{ steps.artifact.outputs.name }}"
+          gh release upload "${GITHUB_REF_NAME}" "${{ steps.artifact.outputs.name }}" --clobber
+
   # Integration tests on native platforms
   integration-test:
     name: "Integration Test (${{ matrix.platform }})"
-    needs: [release, build-rust]
+    needs: [release, build-rust, build-llm]
     strategy:
       fail-fast: false
       matrix:
@@ -180,21 +323,25 @@ jobs:
             os: linux
             arch: amd64
             dltest_binary: tsuku-dltest-linux-amd64
+            llm_binary: ""
           - platform: linux-arm64
             runner: ubuntu-24.04-arm
             os: linux
             arch: arm64
             dltest_binary: tsuku-dltest-linux-arm64
+            llm_binary: ""
           - platform: darwin-amd64
             runner: macos-15-intel
             os: darwin
             arch: amd64
             dltest_binary: tsuku-dltest-darwin-amd64
+            llm_binary: tsuku-llm-v{version}-darwin-amd64
           - platform: darwin-arm64
             runner: macos-latest
             os: darwin
             arch: arm64
             dltest_binary: tsuku-dltest-darwin-arm64
+            llm_binary: tsuku-llm-v{version}-darwin-arm64
     runs-on: ${{ matrix.runner }}
     steps:
       - name: Download binaries from draft release
@@ -206,10 +353,21 @@ jobs:
           # goreleaser default naming: tsuku-{os}-{arch}_{version}_{os}_{arch}
           TSUKU_BINARY="tsuku-${{ matrix.os }}-${{ matrix.arch }}_${VERSION}_${{ matrix.os }}_${{ matrix.arch }}"
           mkdir -p ./artifacts
+
+          # Build download patterns
+          PATTERNS=("--pattern" "${TSUKU_BINARY}" "--pattern" "${{ matrix.dltest_binary }}")
+
+          # Add llm binary pattern for macOS runners
+          LLM_TEMPLATE="${{ matrix.llm_binary }}"
+          if [ -n "$LLM_TEMPLATE" ]; then
+            LLM_BINARY="${LLM_TEMPLATE//\{version\}/$VERSION}"
+            PATTERNS+=("--pattern" "$LLM_BINARY")
+            echo "LLM_BINARY=${LLM_BINARY}" >> "$GITHUB_ENV"
+          fi
+
           gh release download "$TAG" \
             --repo "$GITHUB_REPOSITORY" \
-            --pattern "${TSUKU_BINARY}" \
-            --pattern "${{ matrix.dltest_binary }}" \
+            "${PATTERNS[@]}" \
             --dir ./artifacts
           chmod +x ./artifacts/*
           # Store binary name for later steps
@@ -243,9 +401,24 @@ jobs:
           fi
           echo "tsuku-dltest version check passed"
 
+      - name: Validate tsuku-llm binary (macOS only)
+        if: env.LLM_BINARY != ''
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          EXPECTED_VERSION="${TAG#v}"
+          # Verify binary runs and shows help
+          ./artifacts/${LLM_BINARY} --help
+          # Verify version output
+          LLM_VERSION=$(./artifacts/${LLM_BINARY} --version 2>&1 || true)
+          echo "tsuku-llm version output: $LLM_VERSION"
+          if ! echo "$LLM_VERSION" | grep -q "$EXPECTED_VERSION"; then
+            echo "WARNING: tsuku-llm version string not found in output"
+          fi
+          echo "tsuku-llm validation passed"
+
   finalize-release:
     name: Finalize Release
-    needs: [integration-test, build-rust-musl]
+    needs: [integration-test, build-rust-musl, build-llm]
     runs-on: ubuntu-latest
     steps:
       - name: Verify all artifacts present
@@ -271,6 +444,13 @@ jobs:
             # Rust binaries - musl (from build-rust-musl)
             tsuku-dltest-linux-amd64-musl
             tsuku-dltest-linux-arm64-musl
+            # LLM addon binaries (from build-llm)
+            "tsuku-llm-v${VERSION}-darwin-arm64"
+            "tsuku-llm-v${VERSION}-darwin-amd64"
+            "tsuku-llm-v${VERSION}-linux-amd64-cuda"
+            "tsuku-llm-v${VERSION}-linux-amd64-vulkan"
+            "tsuku-llm-v${VERSION}-linux-arm64-cuda"
+            "tsuku-llm-v${VERSION}-linux-arm64-vulkan"
           )
 
           echo "Verifying all ${#EXPECTED_ARTIFACTS[@]} artifacts are present..."
