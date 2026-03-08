@@ -3,8 +3,9 @@
 ## Core Question
 
 How should tsuku unify all its artifacts (CLI, dltest, llm) into a single release
-tag, enable their recipes to resolve versions from repo tags, and enforce same-version
-constraints so these binaries always ship and run in lockstep?
+tag, standardize artifact naming, enable their recipes to resolve versions from repo
+tags, and enforce same-version constraints so these binaries always ship and run in
+lockstep?
 
 ## Context
 
@@ -15,32 +16,41 @@ version resolution for the tsuku-dltest and tsuku-llm recipes should derive from
 same `v*` tags, and tsuku should enforce that its companion binaries match its own
 version -- eliminating any need for backward compatibility between these binaries.
 
+Issue #1791 tracks aligning artifact naming between the release pipeline and recipe
+asset patterns. Currently the pipeline produces `tsuku-llm-linux-amd64-cuda` (no
+version) but the recipe expects `tsuku-llm-v{version}-linux-amd64-cuda`. This naming
+alignment is now in scope as part of the unified release design.
+
 ## In Scope
 
 - Unified `v*` tag release pipeline for all artifacts
+- Artifact naming standardization across CLI, dltest, and llm (#1791)
 - Version resolution for tsuku-dltest and tsuku-llm recipes using repo tags
 - Version constraint mechanism in tsuku CLI (require same-version companions)
 - Retiring `llm-release.yml` and independent `tsuku-llm-v*` tags
 
 ## Out of Scope
 
-- Artifact naming alignment (#1791 tracks separately)
 - GPU variant selection UX (#1776)
 - General recipe version resolution changes for external tools
 
 ## Research Leads
 
+### Round 1 (completed)
+
 1. **How does the current release pipeline build and version tsuku-dltest, and what would extending it to tsuku-llm require?**
-   Issues #2108/#2109 propose following the `build-rust` pattern. Need to understand the actual pipeline structure, version injection, and artifact verification to assess feasibility and effort.
-
 2. **How do the tsuku-dltest and tsuku-llm recipes currently resolve versions, and can they use GitHub tags from the tsuku repo?**
-   These are internal tools whose recipes should resolve versions from the same `v*` tags used for the Go CLI. Need to understand what version providers are available and whether existing ones support tag-based resolution from the tsuku repo.
-
 3. **Does tsuku have a mechanism to enforce version constraints between itself and companion binaries?**
-   The user wants tsuku to require dltest/llm at its own exact version. Need to determine whether dependency constraints or version pinning already exists, or if a new mechanism is needed.
-
 4. **How does tsuku currently discover and invoke dltest and llm at runtime?**
-   Understanding the current integration points reveals where version checking should go and what happens when there's a version mismatch.
-
 5. **What does retiring `llm-release.yml` look like, and are there consumers of the separate `tsuku-llm-v*` tags?**
-   Need to ensure nothing depends on the independent release flow before removing it.
+
+### Round 2
+
+6. **What artifact naming convention should be standardized across all three binaries, and what does changing it break?**
+   #1791 identifies a mismatch between pipeline artifact names and recipe patterns. With unified releases, we need one naming convention. Need to evaluate options against existing recipes, GoReleaser config, and downstream consumers.
+
+7. **How should the dltest compile-time version pinning pattern be extended to llm, given llm's gRPC daemon architecture?**
+   Round 1 found dltest already has ldflags-based version pinning with auto-reinstall. llm has none. Need to understand the llm addon manager's lifecycle and where version checking fits.
+
+8. **What does the GPU build dependency setup (CUDA toolkit, Vulkan SDK) add to the release pipeline, and how do GPU artifact variants affect the unified naming scheme?**
+   Merging llm-release.yml into release.yml brings GPU dependencies. Need to understand build time impact and how backend variants (cuda/vulkan/metal) fit the naming convention.
