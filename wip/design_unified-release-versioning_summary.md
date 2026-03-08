@@ -22,6 +22,10 @@ Incremental Migration chosen over Full Consolidation and Minimal. Each dimension
 - **LLM pinning code path**: Version check fits after `findInstalledBinary()` in `EnsureAddon`. Extract version from directory name, compare against `pinnedLlmVersion`. On mismatch: shut down daemon, install correct version, restart. `Installer` interface needs version parameter.
 - **Phase dependencies**: Phases 1, 2, 3 are fully independent (3 parallel PRs). Phase 4 blocked by Phase 3 only. Phase 5 (naming) is last. Revised plan: 3 batches instead of 5 sequential phases.
 
+## Security Review (Phase 5)
+**Outcome:** Option 2 (Document considerations)
+**Summary:** Security profile consistent with existing dltest pattern. Brief considerations documented for download verification, execution isolation, supply chain, and user data exposure.
+
 ## Current Status
-**Phase:** 3 - Deep Investigation
+**Phase:** 6 - Final Review
 **Last Updated:** 2026-03-08
