@@ -244,7 +244,7 @@ Examples:
 		}
 
 		// Show verification method
-		if r.Verify.Command != "" {
+		if r.Verify != nil && r.Verify.Command != "" {
 			fmt.Printf("Verify Command: %s\n", r.Verify.Command)
 		}
 
