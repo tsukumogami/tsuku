@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-08T11:24:45Z",
+  "generated_at": "2026-03-08T11:25:59Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 18,
-      "pending": 3919,
+      "failed": 20,
+      "pending": 3917,
       "success": 1335
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 18,
-        "pending": 3896,
+        "failed": 20,
+        "pending": 3894,
         "success": 1322
       }
     },
@@ -39,8 +39,8 @@
       },
       "crates.io": {
         "excluded": 5,
-        "failed": 2,
-        "pending": 75,
+        "failed": 3,
+        "pending": 74,
         "success": 23,
         "total": 105
       },
@@ -80,8 +80,8 @@
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 8,
-        "pending": 75,
+        "failed": 9,
+        "pending": 74,
         "success": 5,
         "total": 89
       }
@@ -498,6 +498,15 @@
           "next_retry_at": "2026-03-08T14:28:02Z"
         },
         {
+          "id": "crates.io:basis_universal",
+          "name": "basis_universal",
+          "ecosystem": "crates.io",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-08T19:25:16Z"
+        },
+        {
           "id": "rubygems:bettercap",
           "name": "bettercap",
           "ecosystem": "rubygems",
@@ -543,13 +552,13 @@
           "next_retry_at": "2026-03-08T13:48:41Z"
         },
         {
-          "id": "npm:chainsaw",
-          "name": "chainsaw",
-          "ecosystem": "npm",
+          "id": "rubygems:chisel",
+          "name": "chisel",
+          "ecosystem": "rubygems",
           "priority": 3,
           "category": "install_failed",
           "failure_count": 4,
-          "next_retry_at": "2026-03-08T10:01:31Z"
+          "next_retry_at": "2026-03-08T19:25:16Z"
         },
         {
           "id": "rubygems:cog",
@@ -586,6 +595,15 @@
           "category": "install_failed",
           "failure_count": 3,
           "next_retry_at": "2026-03-08T13:38:42Z"
+        },
+        {
+          "id": "npm:e2b",
+          "name": "e2b",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-08T15:25:16Z"
         },
         {
           "id": "pypi:lib3mf",
@@ -2778,15 +2796,6 @@
           "failure_count": 1
         },
         {
-          "id": "crates.io:basis_universal",
-          "name": "basis_universal",
-          "ecosystem": "crates.io",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-08T06:01:31Z"
-        },
-        {
           "id": "homebrew:bastet",
           "name": "bastet",
           "ecosystem": "homebrew",
@@ -3980,6 +3989,15 @@
           "failure_count": 1
         },
         {
+          "id": "npm:chainsaw",
+          "name": "chainsaw",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-08T10:01:31Z"
+        },
+        {
           "id": "homebrew:changie",
           "name": "changie",
           "ecosystem": "homebrew",
@@ -4139,15 +4157,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "rubygems:chisel",
-          "name": "chisel",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-08T08:19:09Z"
         },
         {
           "id": "homebrew:chisel-tunnel",
@@ -6792,15 +6801,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:e2b",
-          "name": "e2b",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-02-20T20:31:49Z"
         },
         {
           "id": "homebrew:eask-cli",
