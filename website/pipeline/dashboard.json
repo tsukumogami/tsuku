@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-09T04:21:39Z",
+  "generated_at": "2026-03-09T04:22:56Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 17,
-      "pending": 3920,
+      "failed": 20,
+      "pending": 3917,
       "success": 1335
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 17,
-        "pending": 3897,
+        "failed": 20,
+        "pending": 3894,
         "success": 1322
       }
     },
@@ -39,8 +39,8 @@
       },
       "crates.io": {
         "excluded": 5,
-        "failed": 2,
-        "pending": 75,
+        "failed": 3,
+        "pending": 74,
         "success": 23,
         "total": 105
       },
@@ -68,8 +68,8 @@
         "total": 1
       },
       "npm": {
-        "failed": 6,
-        "pending": 15,
+        "failed": 7,
+        "pending": 14,
         "success": 54,
         "total": 75
       },
@@ -80,8 +80,8 @@
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 6,
-        "pending": 77,
+        "failed": 7,
+        "pending": 76,
         "success": 5,
         "total": 89
       }
@@ -480,6 +480,15 @@
           "next_retry_at": "2026-03-10T00:31:49Z"
         },
         {
+          "id": "crates.io:ascii",
+          "name": "ascii",
+          "ecosystem": "crates.io",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-10T12:22:13Z"
+        },
+        {
           "id": "npm:azion",
           "name": "azion",
           "ecosystem": "npm",
@@ -534,6 +543,15 @@
           "next_retry_at": "2026-03-09T14:26:41Z"
         },
         {
+          "id": "rubygems:cdo",
+          "name": "cdo",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-09T20:22:13Z"
+        },
+        {
           "id": "npm:chainsaw",
           "name": "chainsaw",
           "ecosystem": "npm",
@@ -577,6 +595,15 @@
           "category": "install_failed",
           "failure_count": 4,
           "next_retry_at": "2026-03-09T06:26:41Z"
+        },
+        {
+          "id": "npm:ent",
+          "name": "ent",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-09T08:22:13Z"
         },
         {
           "id": "pypi:lib3mf",
@@ -1904,15 +1931,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "crates.io:ascii",
-          "name": "ascii",
-          "ecosystem": "crates.io",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-09T01:38:42Z"
         },
         {
           "id": "homebrew:asciidoc",
@@ -3883,15 +3901,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "rubygems:cdo",
-          "name": "cdo",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-08T13:48:41Z"
         },
         {
           "id": "homebrew:ceres-solver",
@@ -7123,15 +7132,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:ent",
-          "name": "ent",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-02-20T20:31:54Z"
         },
         {
           "id": "homebrew:env0/terratag/terratag",
