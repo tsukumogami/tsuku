@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-09T06:02:49Z",
+  "generated_at": "2026-03-09T06:04:02Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -68,8 +68,8 @@
         "total": 1
       },
       "npm": {
-        "failed": 7,
-        "pending": 14,
+        "failed": 6,
+        "pending": 15,
         "success": 54,
         "total": 75
       },
@@ -80,8 +80,8 @@
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 7,
-        "pending": 76,
+        "failed": 8,
+        "pending": 75,
         "success": 5,
         "total": 89
       }
@@ -552,13 +552,13 @@
           "next_retry_at": "2026-03-09T20:22:13Z"
         },
         {
-          "id": "npm:chainsaw",
-          "name": "chainsaw",
-          "ecosystem": "npm",
+          "id": "rubygems:chisel",
+          "name": "chisel",
+          "ecosystem": "rubygems",
           "priority": 3,
           "category": "install_failed",
           "failure_count": 5,
-          "next_retry_at": "2026-03-09T04:49:33Z"
+          "next_retry_at": "2026-03-09T22:03:21Z"
         },
         {
           "id": "npm:countdown",
@@ -579,15 +579,6 @@
           "next_retry_at": "2026-03-09T18:02:26Z"
         },
         {
-          "id": "npm:dmd",
-          "name": "dmd",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-09T04:34:45Z"
-        },
-        {
           "id": "npm:e2b",
           "name": "e2b",
           "ecosystem": "npm",
@@ -604,6 +595,15 @@
           "category": "install_failed",
           "failure_count": 3,
           "next_retry_at": "2026-03-09T08:22:13Z"
+        },
+        {
+          "id": "npm:fastmcp",
+          "name": "fastmcp",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-09T10:03:21Z"
         },
         {
           "id": "pypi:lib3mf",
@@ -3989,6 +3989,15 @@
           "failure_count": 1
         },
         {
+          "id": "npm:chainsaw",
+          "name": "chainsaw",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-09T04:49:33Z"
+        },
+        {
           "id": "homebrew:changie",
           "name": "changie",
           "ecosystem": "homebrew",
@@ -4148,15 +4157,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "rubygems:chisel",
-          "name": "chisel",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-08T19:25:16Z"
         },
         {
           "id": "homebrew:chisel-tunnel",
@@ -6220,6 +6220,15 @@
           "failure_count": 1
         },
         {
+          "id": "npm:dmd",
+          "name": "dmd",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-09T04:34:45Z"
+        },
+        {
           "id": "homebrew:dmg2img",
           "name": "dmg2img",
           "ecosystem": "homebrew",
@@ -7526,15 +7535,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:fastmcp",
-          "name": "fastmcp",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-02-20T20:32:03Z"
         },
         {
           "id": "homebrew:fastmod",
