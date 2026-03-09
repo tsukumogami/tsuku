@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-09T19:45:44Z",
+  "generated_at": "2026-03-09T19:47:04Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 27,
-      "pending": 3910,
+      "failed": 26,
+      "pending": 3911,
       "success": 1335
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 27,
-        "pending": 3887,
+        "failed": 26,
+        "pending": 3888,
         "success": 1322
       }
     },
@@ -68,8 +68,8 @@
         "total": 1
       },
       "npm": {
-        "failed": 10,
-        "pending": 11,
+        "failed": 9,
+        "pending": 12,
         "success": 54,
         "total": 75
       },
@@ -579,6 +579,15 @@
           "next_retry_at": "2026-03-09T23:07:58Z"
         },
         {
+          "id": "rubygems:cog",
+          "name": "cog",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-10T11:46:19Z"
+        },
+        {
           "id": "npm:countdown",
           "name": "countdown",
           "ecosystem": "npm",
@@ -588,15 +597,6 @@
           "next_retry_at": "2026-03-10T21:04:32Z"
         },
         {
-          "id": "rubygems:cowsay",
-          "name": "cowsay",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-09T19:40:20Z"
-        },
-        {
           "id": "rubygems:cql",
           "name": "cql",
           "ecosystem": "rubygems",
@@ -604,15 +604,6 @@
           "category": "install_failed",
           "failure_count": 3,
           "next_retry_at": "2026-03-09T20:04:34Z"
-        },
-        {
-          "id": "npm:datasette",
-          "name": "datasette",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-09T18:02:26Z"
         },
         {
           "id": "npm:dmd",
@@ -631,15 +622,6 @@
           "category": "install_failed",
           "failure_count": 5,
           "next_retry_at": "2026-03-10T01:53:53Z"
-        },
-        {
-          "id": "npm:ent",
-          "name": "ent",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-09T19:40:20Z"
         },
         {
           "id": "npm:fastmcp",
@@ -667,6 +649,15 @@
           "category": "install_failed",
           "failure_count": 3,
           "next_retry_at": "2026-03-09T21:54:13Z"
+        },
+        {
+          "id": "npm:kew",
+          "name": "kew",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-09T23:46:19Z"
         },
         {
           "id": "pypi:lib3mf",
@@ -4864,15 +4855,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:cog",
-          "name": "cog",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-09T17:53:53Z"
-        },
-        {
           "id": "homebrew:coin3d",
           "name": "coin3d",
           "ecosystem": "homebrew",
@@ -5151,6 +5133,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "rubygems:cowsay",
+          "name": "cowsay",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-09T19:40:20Z"
         },
         {
           "id": "homebrew:cp2k",
@@ -5746,6 +5737,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "npm:datasette",
+          "name": "datasette",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-09T18:02:26Z"
         },
         {
           "id": "homebrew:datawire/blackbird/telepresence",
@@ -7159,6 +7159,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:ent",
+          "name": "ent",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-09T19:40:20Z"
         },
         {
           "id": "homebrew:env0/terratag/terratag",
@@ -12462,15 +12471,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "npm:kew",
-          "name": "kew",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-02-20T22:30:26Z"
         },
         {
           "id": "homebrew:keychain",
