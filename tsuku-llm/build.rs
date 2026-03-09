@@ -107,6 +107,8 @@ fn compile_llama_cpp() -> Result<(), Box<dyn std::error::Error>> {
     {
         println!("cargo:rustc-link-lib=framework=Foundation");
         println!("cargo:rustc-link-lib=framework=Accelerate");
+        // BLAS backend (Apple Accelerate) is enabled by default on macOS
+        println!("cargo:rustc-link-lib=static=ggml-blas");
 
         #[cfg(feature = "metal")]
         {
@@ -118,6 +120,11 @@ fn compile_llama_cpp() -> Result<(), Box<dyn std::error::Error>> {
 
     #[cfg(feature = "cuda")]
     {
+        // Add CUDA library search paths
+        if let Ok(cuda_path) = env::var("CUDA_PATH") {
+            println!("cargo:rustc-link-search=native={}/lib64", cuda_path);
+            println!("cargo:rustc-link-search=native={}/lib64/stubs", cuda_path);
+        }
         println!("cargo:rustc-link-lib=cuda");
         println!("cargo:rustc-link-lib=cublas");
         println!("cargo:rustc-link-lib=culibos");
