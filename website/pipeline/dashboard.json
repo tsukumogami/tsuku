@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-09T09:53:26Z",
+  "generated_at": "2026-03-09T09:54:38Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 21,
-      "pending": 3916,
+      "failed": 23,
+      "pending": 3914,
       "success": 1335
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 21,
-        "pending": 3893,
+        "failed": 23,
+        "pending": 3891,
         "success": 1322
       }
     },
@@ -68,8 +68,8 @@
         "total": 1
       },
       "npm": {
-        "failed": 6,
-        "pending": 15,
+        "failed": 7,
+        "pending": 14,
         "success": 54,
         "total": 75
       },
@@ -80,8 +80,8 @@
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 9,
-        "pending": 74,
+        "failed": 10,
+        "pending": 73,
         "success": 5,
         "total": 89
       }
@@ -579,6 +579,15 @@
           "next_retry_at": "2026-03-09T23:07:58Z"
         },
         {
+          "id": "rubygems:cog",
+          "name": "cog",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-09T17:53:53Z"
+        },
+        {
           "id": "npm:countdown",
           "name": "countdown",
           "ecosystem": "npm",
@@ -604,6 +613,15 @@
           "category": "install_failed",
           "failure_count": 5,
           "next_retry_at": "2026-03-10T00:47:58Z"
+        },
+        {
+          "id": "npm:e2b",
+          "name": "e2b",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-10T01:53:53Z"
         },
         {
           "id": "npm:fastmcp",
@@ -4810,15 +4828,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:cog",
-          "name": "cog",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-08T13:38:42Z"
-        },
-        {
           "id": "homebrew:coin3d",
           "name": "coin3d",
           "ecosystem": "homebrew",
@@ -6801,15 +6810,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:e2b",
-          "name": "e2b",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-09T06:26:41Z"
         },
         {
           "id": "homebrew:eask-cli",
