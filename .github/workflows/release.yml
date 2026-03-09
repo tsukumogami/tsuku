@@ -222,7 +222,7 @@ jobs:
           submodules: true
           sparse-checkout: |
             tsuku-llm
-            internal/llm/proto
+            proto
 
       - name: Compute artifact name
         id: artifact
@@ -253,7 +253,15 @@ jobs:
           # Install CUDA 12.4 toolkit for building.
           # CUDA version coupling: changing the major version here requires
           # updating recipes/c/cuda-runtime.toml to provide compatible libraries.
-          wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.1-1_all.deb
+          ARCH=$(dpkg --print-architecture)
+          if [ "$ARCH" = "amd64" ]; then
+            REPO_ARCH="x86_64"
+            DISTRO="ubuntu2204"
+          else
+            REPO_ARCH="sbsa"
+            DISTRO="ubuntu2404"
+          fi
+          wget "https://developer.download.nvidia.com/compute/cuda/repos/${DISTRO}/${REPO_ARCH}/cuda-keyring_1.1-1_all.deb"
           sudo dpkg -i cuda-keyring_1.1-1_all.deb
           sudo apt-get update
           sudo apt-get install -y cuda-toolkit-12-4
@@ -263,12 +271,20 @@ jobs:
       - name: Install Vulkan SDK (Linux Vulkan builds)
         if: matrix.backend == 'vulkan' && startsWith(matrix.runner, 'ubuntu')
         run: |
-          # Install Vulkan SDK
-          wget -qO - https://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo apt-key add -
-          sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-jammy.list \
-            https://packages.lunarg.com/vulkan/lunarg-vulkan-jammy.list
-          sudo apt-get update
-          sudo apt-get install -y vulkan-sdk
+          # Install Vulkan SDK headers and libraries.
+          # The Lunarg PPA only provides x86_64 packages. On ARM64, install
+          # the distro-provided Vulkan development headers instead.
+          ARCH=$(dpkg --print-architecture)
+          if [ "$ARCH" = "amd64" ]; then
+            wget -qO - https://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo apt-key add -
+            sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-jammy.list \
+              https://packages.lunarg.com/vulkan/lunarg-vulkan-jammy.list
+            sudo apt-get update
+            sudo apt-get install -y vulkan-sdk
+          else
+            sudo apt-get update
+            sudo apt-get install -y libvulkan-dev vulkan-validationlayers-dev spirv-tools
+          fi
           echo "VULKAN_SDK=/usr" >> $GITHUB_ENV
 
       - name: Inject version
