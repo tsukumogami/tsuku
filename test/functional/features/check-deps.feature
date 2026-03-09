@@ -16,6 +16,13 @@ Feature: Check dependencies
     When I run "tsuku check-deps"
     Then the exit code is 1
 
+  Scenario: Check deps JSON output reflects missing dependencies
+    # See #2099
+    When I run "tsuku check-deps ruby --json"
+    Then the exit code is 0
+    And the output does not contain "\"all_satisfied\":true"
+    And the output does not contain "\"all_satisfied\": true"
+
   Scenario: Check deps JSON output for tool with no dependencies
     When I run "tsuku check-deps --json go"
     Then the exit code is 0

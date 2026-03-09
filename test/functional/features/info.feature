@@ -20,6 +20,12 @@ Feature: Info
     And the output contains "hdrhistogram_c"
     And the output contains "library"
 
+  Scenario: Info with --metadata-only --json omits status
+    # See #2105
+    When I run "tsuku info go --metadata-only --json"
+    Then the exit code is 0
+    And the output does not contain "not_installed"
+
   Scenario: Info with no arguments
     When I run "tsuku info"
     Then the exit code is 2
