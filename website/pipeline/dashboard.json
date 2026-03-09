@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-09T08:47:18Z",
+  "generated_at": "2026-03-09T08:48:46Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 20,
-      "pending": 3917,
+      "failed": 21,
+      "pending": 3916,
       "success": 1335
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 20,
-        "pending": 3894,
+        "failed": 21,
+        "pending": 3893,
         "success": 1322
       }
     },
@@ -80,8 +80,8 @@
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 8,
-        "pending": 75,
+        "failed": 9,
+        "pending": 74,
         "success": 5,
         "total": 89
       }
@@ -462,6 +462,15 @@
       ],
       "failed": [
         {
+          "id": "rubygems:amp",
+          "name": "amp",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-12T00:47:58Z"
+        },
+        {
           "id": "rubygems:arturo",
           "name": "arturo",
           "ecosystem": "rubygems",
@@ -588,13 +597,13 @@
           "next_retry_at": "2026-03-09T18:02:26Z"
         },
         {
-          "id": "npm:ent",
-          "name": "ent",
+          "id": "npm:dmd",
+          "name": "dmd",
           "ecosystem": "npm",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-09T08:22:13Z"
+          "failure_count": 5,
+          "next_retry_at": "2026-03-10T00:47:58Z"
         },
         {
           "id": "npm:fastmcp",
@@ -1359,15 +1368,6 @@
           "priority": 3,
           "category": "generation_failed",
           "failure_count": 1
-        },
-        {
-          "id": "rubygems:amp",
-          "name": "amp",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-09T06:28:02Z"
         },
         {
           "id": "homebrew:amplitude/ampli/ampli",
@@ -6211,15 +6211,6 @@
           "failure_count": 1
         },
         {
-          "id": "npm:dmd",
-          "name": "dmd",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-09T04:34:45Z"
-        },
-        {
           "id": "homebrew:dmg2img",
           "name": "dmg2img",
           "ecosystem": "homebrew",
@@ -7141,6 +7132,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:ent",
+          "name": "ent",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-09T08:22:13Z"
         },
         {
           "id": "homebrew:env0/terratag/terratag",
