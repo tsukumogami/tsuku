@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-09T02:01:50Z",
+  "generated_at": "2026-03-09T02:03:08Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 15,
-      "pending": 3922,
+      "failed": 17,
+      "pending": 3920,
       "success": 1335
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 15,
-        "pending": 3899,
+        "failed": 17,
+        "pending": 3897,
         "success": 1322
       }
     },
@@ -68,8 +68,8 @@
         "total": 1
       },
       "npm": {
-        "failed": 5,
-        "pending": 16,
+        "failed": 6,
+        "pending": 15,
         "success": 54,
         "total": 75
       },
@@ -80,8 +80,8 @@
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 5,
-        "pending": 78,
+        "failed": 6,
+        "pending": 77,
         "success": 5,
         "total": 89
       }
@@ -480,15 +480,6 @@
           "next_retry_at": "2026-03-10T00:31:49Z"
         },
         {
-          "id": "crates.io:ascii",
-          "name": "ascii",
-          "ecosystem": "crates.io",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-09T01:38:42Z"
-        },
-        {
           "id": "npm:azion",
           "name": "azion",
           "ecosystem": "npm",
@@ -505,6 +496,15 @@
           "category": "install_failed",
           "failure_count": 5,
           "next_retry_at": "2026-03-09T14:26:41Z"
+        },
+        {
+          "id": "rubygems:bettercap",
+          "name": "bettercap",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-10T10:02:26Z"
         },
         {
           "id": "rubygems:bullet",
@@ -552,6 +552,15 @@
           "next_retry_at": "2026-03-09T10:37:34Z"
         },
         {
+          "id": "npm:datasette",
+          "name": "datasette",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-09T18:02:26Z"
+        },
+        {
           "id": "npm:dmd",
           "name": "dmd",
           "ecosystem": "npm",
@@ -577,6 +586,15 @@
           "category": "install_failed",
           "failure_count": 10,
           "next_retry_at": "2026-03-16T00:56:07Z"
+        },
+        {
+          "id": "crates.io:numpy",
+          "name": "numpy",
+          "ecosystem": "crates.io",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-10T10:02:26Z"
         },
         {
           "id": "pypi:tctl",
@@ -1888,6 +1906,15 @@
           "failure_count": 0
         },
         {
+          "id": "crates.io:ascii",
+          "name": "ascii",
+          "ecosystem": "crates.io",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-09T01:38:42Z"
+        },
+        {
           "id": "homebrew:asciidoc",
           "name": "asciidoc",
           "ecosystem": "homebrew",
@@ -2938,15 +2965,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "rubygems:bettercap",
-          "name": "bettercap",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-08T21:48:41Z"
         },
         {
           "id": "homebrew:bfg",
@@ -5692,15 +5710,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "npm:datasette",
-          "name": "datasette",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-08T22:29:06Z"
         },
         {
           "id": "homebrew:datawire/blackbird/telepresence",
@@ -17220,15 +17229,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "crates.io:numpy",
-          "name": "numpy",
-          "ecosystem": "crates.io",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-08T23:35:26Z"
         },
         {
           "id": "homebrew:nuonco/tap/nuon",
