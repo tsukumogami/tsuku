@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-09T16:04:34Z",
+  "updated_at": "2026-03-09T17:54:13Z",
   "entries": [
     {
       "name": "node",
@@ -4446,11 +4446,11 @@
       "name": "basis_universal",
       "source": "crates.io:basis_universal",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 5,
-      "next_retry_at": "2026-03-09T14:26:41.908639242Z"
+      "failure_count": 6,
+      "next_retry_at": "2026-03-11T01:54:13.407038661Z"
     },
     {
       "name": "bastet",
@@ -6606,11 +6606,11 @@
       "name": "cassandra",
       "source": "rubygems:cassandra",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 5,
-      "next_retry_at": "2026-03-09T14:26:41.908639242Z"
+      "failure_count": 6,
+      "next_retry_at": "2026-03-11T01:54:13.407038661Z"
     },
     {
       "name": "cassandra-reaper",
@@ -8626,7 +8626,7 @@
       "name": "cog",
       "source": "rubygems:cog",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 4,
@@ -19736,11 +19736,11 @@
       "name": "hasura-cli",
       "source": "npm:hasura-cli",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-02-20T21:31:53.904643878Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-03-09T21:54:13.407038661Z"
     },
     {
       "name": "hatari",
