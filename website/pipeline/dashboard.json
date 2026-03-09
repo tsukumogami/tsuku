@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-09T13:04:03Z",
+  "generated_at": "2026-03-09T13:05:16Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 21,
-      "pending": 3916,
+      "failed": 22,
+      "pending": 3915,
       "success": 1335
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 21,
-        "pending": 3893,
+        "failed": 22,
+        "pending": 3892,
         "success": 1322
       }
     },
@@ -68,8 +68,8 @@
         "total": 1
       },
       "npm": {
-        "failed": 6,
-        "pending": 15,
+        "failed": 7,
+        "pending": 14,
         "success": 54,
         "total": 75
       },
@@ -517,13 +517,13 @@
           "next_retry_at": "2026-03-10T10:02:26Z"
         },
         {
-          "id": "rubygems:bup",
-          "name": "bup",
+          "id": "rubygems:bullet",
+          "name": "bullet",
           "ecosystem": "rubygems",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-09T12:34:45Z"
+          "failure_count": 6,
+          "next_retry_at": "2026-03-10T21:04:32Z"
         },
         {
           "id": "rubygems:cassandra",
@@ -578,6 +578,15 @@
           "category": "install_failed",
           "failure_count": 4,
           "next_retry_at": "2026-03-09T17:53:53Z"
+        },
+        {
+          "id": "npm:countdown",
+          "name": "countdown",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-10T21:04:32Z"
         },
         {
           "id": "rubygems:cowsay",
@@ -643,13 +652,13 @@
           "next_retry_at": "2026-03-10T10:02:26Z"
         },
         {
-          "id": "pypi:vllm",
-          "name": "vllm",
+          "id": "pypi:tctl",
+          "name": "tctl",
           "ecosystem": "pypi",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-09T12:34:45Z"
+          "failure_count": 6,
+          "next_retry_at": "2026-03-10T21:04:32Z"
         }
       ],
       "pending": [
@@ -3514,15 +3523,6 @@
           "failure_count": 1
         },
         {
-          "id": "rubygems:bullet",
-          "name": "bullet",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-09T10:37:34Z"
-        },
-        {
           "id": "homebrew:bulletty",
           "name": "bulletty",
           "ecosystem": "homebrew",
@@ -3542,6 +3542,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:bup",
+          "name": "bup",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-09T12:34:45Z"
         },
         {
           "id": "homebrew:burp",
@@ -5077,15 +5086,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "npm:countdown",
-          "name": "countdown",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-09T10:37:34Z"
         },
         {
           "id": "homebrew:coursier",
@@ -24930,15 +24930,6 @@
           "failure_count": 1
         },
         {
-          "id": "pypi:tctl",
-          "name": "tctl",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-09T10:37:34Z"
-        },
-        {
           "id": "homebrew:tdlib",
           "name": "tdlib",
           "ecosystem": "homebrew",
@@ -26801,6 +26792,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "pypi:vllm",
+          "name": "vllm",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-09T12:34:45Z"
         },
         {
           "id": "homebrew:vmware-tanzu/carvel/vendir",
