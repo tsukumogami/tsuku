@@ -262,6 +262,65 @@ Deliverables:
 - `recipes/t/tsuku-llm.toml` (update asset patterns)
 - llm build steps in release.yml (change output naming)
 
+## Implementation Issues
+
+### Milestone: [Unified Release Versioning](https://github.com/tsukumogami/tsuku/milestone/107)
+
+| Issue | Dependencies | Tier |
+|-------|--------------|------------|
+| ~~[#2124: fix(recipes): add github_repo to dltest recipe for version resolution](https://github.com/tsukumogami/tsuku/issues/2124)~~ | ~~None~~ | ~~simple~~ |
+| ~~_Add the missing `github_repo` field to the dltest recipe so version resolution works against the main repo's tags._~~ | | |
+| ~~[#2125: feat(verify): add compile-time version pinning for tsuku-llm](https://github.com/tsukumogami/tsuku/issues/2125)~~ | ~~None~~ | ~~testable~~ |
+| ~~_Pin the expected llm binary version at compile time so the CLI can detect mismatches and trigger auto-reinstall._~~ | | |
+| ~~[#2126: feat(ci): merge llm release pipeline into unified release workflow](https://github.com/tsukumogami/tsuku/issues/2126)~~ | ~~None~~ | ~~testable~~ |
+| ~~_Consolidate the separate llm release workflow into the main `release.yml`, building all three binaries under one tag._~~ | | |
+| [#2127: fix(recipes): add version section to llm recipe for unified tag resolution](https://github.com/tsukumogami/tsuku/issues/2127) | [#2126](https://github.com/tsukumogami/tsuku/issues/2126) | simple |
+| _Point the llm recipe's version resolution at the main repo instead of the old tsuku-llm repo, now that releases are unified._ | | |
+| [#2128: refactor(release): standardize artifact naming to {tool}-{os}-{arch}](https://github.com/tsukumogami/tsuku/issues/2128) | [#2127](https://github.com/tsukumogami/tsuku/issues/2127) | testable |
+| _Remove version suffixes from release artifact filenames and update GoReleaser templates, build steps, and recipe asset patterns._ | | |
+| [#2129: feat(llm): add gRPC version handshake for runtime version diagnostics](https://github.com/tsukumogami/tsuku/issues/2129) | [#2125](https://github.com/tsukumogami/tsuku/issues/2125) | testable |
+| _Add an `addon_version` field to the gRPC StatusResponse so the CLI can verify the running daemon matches the expected version._ | | |
+
+### Dependency Graph
+
+```mermaid
+graph TD
+    I2124["#2124: dltest recipe version fix"]
+    I2125["#2125: Compile-time llm pinning"]
+    I2126["#2126: Merge llm release pipeline"]
+    I2127["#2127: llm recipe version section"]
+    I2128["#2128: Standardize artifact naming"]
+    I2129["#2129: gRPC version handshake"]
+
+    I2126 --> I2127
+    I2127 --> I2128
+    I2125 --> I2129
+
+    classDef done fill:#c8e6c9
+    classDef ready fill:#bbdefb
+    classDef blocked fill:#fff9c4
+
+    class I2124,I2125,I2126 done
+    class I2127,I2129 ready
+    class I2128 blocked
+```
+
+**Legend**: Green = done, Blue = ready, Yellow = blocked
+
+## Security Considerations
+
+### Download Verification
+Artifact naming changes must be coordinated with checksum generation and recipe asset patterns. If an asset pattern doesn't match the actual release asset name, the download fails in integration-test (blocking release). The `finalize-release` job generates `checksums.txt` after all artifacts are uploaded, so partial checksums aren't a risk. No change to the verification model -- the existing checksum-based download verification applies equally to renamed artifacts.
+
+### Execution Isolation
+Auto-reinstall on version mismatch (for both dltest and llm) invokes the recipe system, which downloads and installs binaries. This follows the same security model as manual `tsuku install` -- no privilege escalation, same download verification. The `Prompter` interface in `AddonManager` can gate auto-downloads with user confirmation.
+
+### Supply Chain Risks
+Consolidating all builds into one `release.yml` workflow doesn't change the trust boundary -- both workflows are in the same repository with the same access controls and branch protection rules. Changing the llm recipe's version resolution source from `tsukumogami/tsuku-llm` to `tsukumogami/tsuku` keeps the trust within the same GitHub organization.
+
+### User Data Exposure
+Not applicable. This design changes release infrastructure and version enforcement. The gRPC `addon_version` field in StatusResponse reports the binary version (not user data) and is only transmitted over a local Unix socket.
+
 ## Consequences
 
 ### Positive
@@ -282,17 +341,3 @@ Deliverables:
 - Calendar time is acceptable because the core safety fix (version pinning) lands in Batch 1.
 - Daemon lifecycle is a one-time implementation cost; the pattern is well-defined (shutdown, install, restart) and testable in isolation.
 - Installer interface change is additive (new method alongside existing one) so no existing code breaks.
-
-## Security Considerations
-
-### Download Verification
-Artifact naming changes must be coordinated with checksum generation and recipe asset patterns. If an asset pattern doesn't match the actual release asset name, the download fails in integration-test (blocking release). The `finalize-release` job generates `checksums.txt` after all artifacts are uploaded, so partial checksums aren't a risk. No change to the verification model -- the existing checksum-based download verification applies equally to renamed artifacts.
-
-### Execution Isolation
-Auto-reinstall on version mismatch (for both dltest and llm) invokes the recipe system, which downloads and installs binaries. This follows the same security model as manual `tsuku install` -- no privilege escalation, same download verification. The `Prompter` interface in `AddonManager` can gate auto-downloads with user confirmation.
-
-### Supply Chain Risks
-Consolidating all builds into one `release.yml` workflow doesn't change the trust boundary -- both workflows are in the same repository with the same access controls and branch protection rules. Changing the llm recipe's version resolution source from `tsukumogami/tsuku-llm` to `tsukumogami/tsuku` keeps the trust within the same GitHub organization.
-
-### User Data Exposure
-Not applicable. This design changes release infrastructure and version enforcement. The gRPC `addon_version` field in StatusResponse reports the binary version (not user data) and is only transmitted over a local Unix socket.
