@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-09T17:54:13Z",
+  "updated_at": "2026-03-09T19:46:19Z",
   "entries": [
     {
       "name": "node",
@@ -8626,11 +8626,11 @@
       "name": "cog",
       "source": "rubygems:cog",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 4,
-      "next_retry_at": "2026-03-09T17:53:53.592451322Z"
+      "failure_count": 5,
+      "next_retry_at": "2026-03-10T11:46:19.083905148Z"
     },
     {
       "name": "coin3d",
@@ -9156,7 +9156,7 @@
       "name": "cowsay",
       "source": "rubygems:cowsay",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 4,
@@ -10236,7 +10236,7 @@
       "name": "datasette",
       "source": "npm:datasette",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 5,
@@ -12966,7 +12966,7 @@
       "name": "ent",
       "source": "npm:ent",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 4,
@@ -23566,11 +23566,11 @@
       "name": "kew",
       "source": "npm:kew",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-02-20T22:30:26.487080493Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-03-09T23:46:19.083905148Z"
     },
     {
       "name": "keychain",
