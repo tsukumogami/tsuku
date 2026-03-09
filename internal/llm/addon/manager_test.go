@@ -13,8 +13,9 @@ import (
 
 // mockInstaller is a test double for the Installer interface.
 type mockInstaller struct {
-	installCalls []installCall
-	installErr   error
+	installCalls          []installCall
+	versionedInstallCalls []versionedInstallCall
+	installErr            error
 	// onInstall simulates installing by creating a binary in the tools dir
 	onInstall func(homeDir string)
 }
@@ -24,10 +25,29 @@ type installCall struct {
 	gpuOverride string
 }
 
+type versionedInstallCall struct {
+	recipeName  string
+	version     string
+	gpuOverride string
+}
+
 func (m *mockInstaller) InstallRecipe(ctx context.Context, recipeName string, gpuOverride string) error {
 	m.installCalls = append(m.installCalls, installCall{recipeName: recipeName, gpuOverride: gpuOverride})
 	if m.onInstall != nil {
 		// The test doesn't know the homeDir; callers set onInstall with closure over it
+		m.onInstall("")
+	}
+	if m.installErr != nil {
+		return m.installErr
+	}
+	return nil
+}
+
+func (m *mockInstaller) InstallRecipeVersion(ctx context.Context, recipeName string, version string, gpuOverride string) error {
+	m.versionedInstallCalls = append(m.versionedInstallCalls, versionedInstallCall{
+		recipeName: recipeName, version: version, gpuOverride: gpuOverride,
+	})
+	if m.onInstall != nil {
 		m.onInstall("")
 	}
 	if m.installErr != nil {
@@ -425,4 +445,102 @@ func TestSetPrompter(t *testing.T) {
 	p := &AutoApprovePrompter{}
 	m.SetPrompter(p)
 	require.NotNil(t, m.prompter)
+}
+
+func TestExtractVersionFromPath(t *testing.T) {
+	tests := []struct {
+		name string
+		path string
+		want string
+	}{
+		{"bin layout", "/home/user/.tsuku/tools/tsuku-llm-0.5.0/bin/tsuku-llm", "0.5.0"},
+		{"flat layout", "/home/user/.tsuku/tools/tsuku-llm-1.2.3/tsuku-llm", "1.2.3"},
+		{"no version dir", "/usr/local/bin/tsuku-llm", ""},
+		{"pre-release", "/home/user/.tsuku/tools/tsuku-llm-0.6.0-rc.1/bin/tsuku-llm", "0.6.0-rc.1"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := extractVersionFromPath(tt.path)
+			require.Equal(t, tt.want, got)
+		})
+	}
+}
+
+// mockDaemonStopper is a test double for the DaemonStopper interface.
+type mockDaemonStopper struct {
+	stopCalls int
+	stopErr   error
+}
+
+func (m *mockDaemonStopper) StopDaemon(ctx context.Context) error {
+	m.stopCalls++
+	return m.stopErr
+}
+
+func TestEnsureAddon_VersionMismatch_Reinstalls(t *testing.T) {
+	t.Setenv("TSUKU_LLM_BINARY", "")
+	tmpDir := t.TempDir()
+
+	// Install version 0.4.0 initially
+	createFakeBinary(t, tmpDir, "0.4.0")
+
+	stopper := &mockDaemonStopper{}
+	installer := &mockInstaller{
+		onInstall: func(_ string) {
+			// Remove old version and install pinned version
+			os.RemoveAll(filepath.Join(tmpDir, "tools", "tsuku-llm-0.4.0"))
+			createFakeBinary(t, tmpDir, "0.5.0")
+		},
+	}
+	m := NewAddonManager(tmpDir, installer, "")
+	m.SetDaemonStopper(stopper)
+
+	// Temporarily set pinned version (simulates a release build)
+	origPinned := setPinnedLlmVersionForTest("0.5.0")
+	defer setPinnedLlmVersionForTest(origPinned)
+
+	path, err := m.EnsureAddon(context.Background())
+	require.NoError(t, err)
+	require.Contains(t, path, "tsuku-llm-0.5.0")
+	require.Equal(t, 1, stopper.stopCalls, "should stop daemon before reinstall")
+	require.Len(t, installer.versionedInstallCalls, 1)
+	require.Equal(t, "0.5.0", installer.versionedInstallCalls[0].version)
+}
+
+func TestEnsureAddon_DevMode_AcceptsAnyVersion(t *testing.T) {
+	t.Setenv("TSUKU_LLM_BINARY", "")
+	tmpDir := t.TempDir()
+	binPath := createFakeBinary(t, tmpDir, "0.4.0")
+
+	installer := &mockInstaller{}
+	m := NewAddonManager(tmpDir, installer, "")
+
+	// Default pinned version is "dev" - should accept any version
+	origPinned := setPinnedLlmVersionForTest("dev")
+	defer setPinnedLlmVersionForTest(origPinned)
+
+	path, err := m.EnsureAddon(context.Background())
+	require.NoError(t, err)
+	require.Equal(t, binPath, path)
+	require.Empty(t, installer.installCalls, "dev mode should not reinstall")
+	require.Empty(t, installer.versionedInstallCalls, "dev mode should not reinstall")
+}
+
+func TestEnsureAddon_VersionMatch_NoReinstall(t *testing.T) {
+	t.Setenv("TSUKU_LLM_BINARY", "")
+	tmpDir := t.TempDir()
+	binPath := createFakeBinary(t, tmpDir, "0.5.0")
+
+	installer := &mockInstaller{}
+	m := NewAddonManager(tmpDir, installer, "")
+
+	origPinned := setPinnedLlmVersionForTest("0.5.0")
+	defer setPinnedLlmVersionForTest(origPinned)
+
+	path, err := m.EnsureAddon(context.Background())
+	require.NoError(t, err)
+	require.Equal(t, binPath, path)
+	require.Empty(t, installer.installCalls, "matching version should not reinstall")
+	require.Empty(t, installer.versionedInstallCalls, "matching version should not reinstall")
 }

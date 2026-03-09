@@ -8,3 +8,12 @@ var pinnedDltestVersion = "dev"
 func PinnedDltestVersion() string {
 	return pinnedDltestVersion
 }
+
+// pinnedLlmVersion is the expected tsuku-llm version for this release.
+// Injected at build time via ldflags. When "dev", any installed version is accepted.
+var pinnedLlmVersion = "dev"
+
+// PinnedLlmVersion returns the expected tsuku-llm version.
+func PinnedLlmVersion() string {
+	return pinnedLlmVersion
+}
