@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-09T08:47:58Z",
+  "updated_at": "2026-03-09T09:53:53Z",
   "entries": [
     {
       "name": "node",
@@ -8626,11 +8626,11 @@
       "name": "cog",
       "source": "rubygems:cog",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-03-08T13:38:42.642559501Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-03-09T17:53:53.592451322Z"
     },
     {
       "name": "coin3d",
@@ -12396,11 +12396,11 @@
       "name": "e2b",
       "source": "npm:e2b",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 4,
-      "next_retry_at": "2026-03-09T06:26:41.908639242Z"
+      "failure_count": 5,
+      "next_retry_at": "2026-03-10T01:53:53.592451322Z"
     },
     {
       "name": "e2fsprogs",
