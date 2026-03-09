@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-09T07:07:25Z",
+  "generated_at": "2026-03-09T07:08:38Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -462,15 +462,6 @@
       ],
       "failed": [
         {
-          "id": "rubygems:amp",
-          "name": "amp",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-09T06:28:02Z"
-        },
-        {
           "id": "rubygems:arturo",
           "name": "arturo",
           "ecosystem": "rubygems",
@@ -552,6 +543,15 @@
           "next_retry_at": "2026-03-09T20:22:13Z"
         },
         {
+          "id": "npm:chainsaw",
+          "name": "chainsaw",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-10T15:07:58Z"
+        },
+        {
           "id": "rubygems:chisel",
           "name": "chisel",
           "ecosystem": "rubygems",
@@ -559,6 +559,15 @@
           "category": "install_failed",
           "failure_count": 5,
           "next_retry_at": "2026-03-09T22:03:21Z"
+        },
+        {
+          "id": "rubygems:chroma",
+          "name": "chroma",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-09T23:07:58Z"
         },
         {
           "id": "npm:countdown",
@@ -577,15 +586,6 @@
           "category": "install_failed",
           "failure_count": 5,
           "next_retry_at": "2026-03-09T18:02:26Z"
-        },
-        {
-          "id": "npm:e2b",
-          "name": "e2b",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-09T06:26:41Z"
         },
         {
           "id": "npm:ent",
@@ -1359,6 +1359,15 @@
           "priority": 3,
           "category": "generation_failed",
           "failure_count": 1
+        },
+        {
+          "id": "rubygems:amp",
+          "name": "amp",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-09T06:28:02Z"
         },
         {
           "id": "homebrew:amplitude/ampli/ampli",
@@ -3989,15 +3998,6 @@
           "failure_count": 1
         },
         {
-          "id": "npm:chainsaw",
-          "name": "chainsaw",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-09T04:49:33Z"
-        },
-        {
           "id": "homebrew:changie",
           "name": "changie",
           "ecosystem": "homebrew",
@@ -4192,15 +4192,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "rubygems:chroma",
-          "name": "chroma",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-08T20:49:33Z"
         },
         {
           "id": "homebrew:chromaprint",
@@ -6819,6 +6810,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:e2b",
+          "name": "e2b",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-09T06:26:41Z"
         },
         {
           "id": "homebrew:eask-cli",
