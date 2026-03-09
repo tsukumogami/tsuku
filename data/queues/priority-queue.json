@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-09T06:03:21Z",
+  "updated_at": "2026-03-09T07:07:58Z",
   "entries": [
     {
       "name": "node",
@@ -1906,7 +1906,7 @@
       "name": "amp",
       "source": "rubygems:amp",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 6,
@@ -7036,11 +7036,11 @@
       "name": "chainsaw",
       "source": "npm:chainsaw",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 5,
-      "next_retry_at": "2026-03-09T04:49:33.085958341Z"
+      "failure_count": 6,
+      "next_retry_at": "2026-03-10T15:07:58.468069086Z"
     },
     {
       "name": "chamber",
@@ -7436,11 +7436,11 @@
       "name": "chroma",
       "source": "rubygems:chroma",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 4,
-      "next_retry_at": "2026-03-08T20:49:33.085958341Z"
+      "failure_count": 5,
+      "next_retry_at": "2026-03-09T23:07:58.468069086Z"
     },
     {
       "name": "chromaprint",
@@ -12396,7 +12396,7 @@
       "name": "e2b",
       "source": "npm:e2b",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 4,
