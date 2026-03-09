@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-08T23:25:35Z",
+  "generated_at": "2026-03-09T00:57:05Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 16,
-      "pending": 3921,
+      "failed": 15,
+      "pending": 3922,
       "success": 1335
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 16,
-        "pending": 3898,
+        "failed": 15,
+        "pending": 3899,
         "success": 1322
       }
     },
@@ -39,8 +39,8 @@
       },
       "crates.io": {
         "excluded": 5,
-        "failed": 3,
-        "pending": 74,
+        "failed": 2,
+        "pending": 75,
         "success": 23,
         "total": 105
       },
@@ -68,14 +68,13 @@
         "total": 1
       },
       "npm": {
-        "failed": 6,
-        "pending": 15,
+        "failed": 5,
+        "pending": 16,
         "success": 54,
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
@@ -553,15 +552,6 @@
           "next_retry_at": "2026-03-09T10:37:34Z"
         },
         {
-          "id": "npm:datasette",
-          "name": "datasette",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-08T22:29:06Z"
-        },
-        {
           "id": "npm:dmd",
           "name": "dmd",
           "ecosystem": "npm",
@@ -580,13 +570,13 @@
           "next_retry_at": "2026-03-09T06:26:41Z"
         },
         {
-          "id": "crates.io:numpy",
-          "name": "numpy",
-          "ecosystem": "crates.io",
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-08T23:35:26Z"
+          "failure_count": 10,
+          "next_retry_at": "2026-03-16T00:56:07Z"
         },
         {
           "id": "pypi:tctl",
@@ -5702,6 +5692,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "npm:datasette",
+          "name": "datasette",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-08T22:29:06Z"
         },
         {
           "id": "homebrew:datawire/blackbird/telepresence",
@@ -13132,15 +13131,6 @@
           "failure_count": 1
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-08T21:48:41Z"
-        },
-        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -17230,6 +17220,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "crates.io:numpy",
+          "name": "numpy",
+          "ecosystem": "crates.io",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-08T23:35:26Z"
         },
         {
           "id": "homebrew:nuonco/tap/nuon",
