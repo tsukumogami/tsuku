@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-09T21:36:24Z",
+  "generated_at": "2026-03-09T21:37:36Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 26,
-      "pending": 3911,
+      "failed": 25,
+      "pending": 3912,
       "success": 1335
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 26,
-        "pending": 3888,
+        "failed": 25,
+        "pending": 3889,
         "success": 1322
       }
     },
@@ -80,8 +80,8 @@
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 11,
-        "pending": 72,
+        "failed": 10,
+        "pending": 73,
         "success": 5,
         "total": 89
       }
@@ -543,15 +543,6 @@
           "next_retry_at": "2026-03-11T01:54:13Z"
         },
         {
-          "id": "rubygems:cdo",
-          "name": "cdo",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-09T20:22:13Z"
-        },
-        {
           "id": "npm:chainsaw",
           "name": "chainsaw",
           "ecosystem": "npm",
@@ -597,13 +588,22 @@
           "next_retry_at": "2026-03-10T21:04:32Z"
         },
         {
-          "id": "rubygems:cql",
-          "name": "cql",
+          "id": "rubygems:cowsay",
+          "name": "cowsay",
           "ecosystem": "rubygems",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-09T20:04:34Z"
+          "failure_count": 5,
+          "next_retry_at": "2026-03-10T13:36:55Z"
+        },
+        {
+          "id": "npm:datasette",
+          "name": "datasette",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-11T05:36:55Z"
         },
         {
           "id": "npm:dmd",
@@ -631,15 +631,6 @@
           "category": "install_failed",
           "failure_count": 4,
           "next_retry_at": "2026-03-09T22:18:30Z"
-        },
-        {
-          "id": "npm:got",
-          "name": "got",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-09T20:04:34Z"
         },
         {
           "id": "npm:hasura-cli",
@@ -3957,6 +3948,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:cdo",
+          "name": "cdo",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-09T20:22:13Z"
+        },
+        {
           "id": "homebrew:ceres-solver",
           "name": "ceres-solver",
           "ecosystem": "homebrew",
@@ -5135,15 +5135,6 @@
           "failure_count": 1
         },
         {
-          "id": "rubygems:cowsay",
-          "name": "cowsay",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-09T19:40:20Z"
-        },
-        {
           "id": "homebrew:cp2k",
           "name": "cp2k",
           "ecosystem": "homebrew",
@@ -5233,6 +5224,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:cql",
+          "name": "cql",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-09T20:04:34Z"
         },
         {
           "id": "homebrew:cqlabs/dcm/dcm",
@@ -5737,15 +5737,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "npm:datasette",
-          "name": "datasette",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-09T18:02:26Z"
         },
         {
           "id": "homebrew:datawire/blackbird/telepresence",
@@ -9711,6 +9702,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "npm:got",
+          "name": "got",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-09T20:04:34Z"
         },
         {
           "id": "homebrew:gpa",
