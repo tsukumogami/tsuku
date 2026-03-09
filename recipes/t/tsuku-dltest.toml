@@ -7,6 +7,7 @@ homepage = "https://github.com/tsukumogami/tsuku"
 supported_libc = ["glibc"]
 
 [version]
+github_repo = "tsukumogami/tsuku"
 tag_prefix = "v"
 
 [[steps]]

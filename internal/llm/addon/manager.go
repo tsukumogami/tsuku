@@ -12,6 +12,8 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+
+	"github.com/tsukumogami/tsuku/internal/verify"
 )
 
 // Installer abstracts the recipe-based installation pipeline.
@@ -21,6 +23,16 @@ type Installer interface {
 	// target (with the given GPU override applied), and executes it.
 	// gpuOverride is passed to PlanConfig.GPU; "" means auto-detect.
 	InstallRecipe(ctx context.Context, recipeName string, gpuOverride string) error
+
+	// InstallRecipeVersion loads a recipe by name and installs a specific version.
+	// gpuOverride is passed to PlanConfig.GPU; "" means auto-detect.
+	InstallRecipeVersion(ctx context.Context, recipeName string, version string, gpuOverride string) error
+}
+
+// DaemonStopper can stop a running tsuku-llm daemon.
+// Used to shut down a version-mismatched daemon before reinstalling.
+type DaemonStopper interface {
+	StopDaemon(ctx context.Context) error
 }
 
 // AddonManager handles locating and ensuring the tsuku-llm addon is installed.
@@ -43,6 +55,10 @@ type AddonManager struct {
 	// prompter handles user confirmation before downloads.
 	// If nil, downloads proceed without prompting (legacy behavior).
 	prompter Prompter
+
+	// daemonStopper stops a running daemon on version mismatch.
+	// If nil, version mismatch reinstalls without stopping (assumes daemon not running).
+	daemonStopper DaemonStopper
 }
 
 // NewAddonManager creates a new addon manager with the given installer and backend override.
@@ -74,6 +90,12 @@ func (m *AddonManager) HomeDir() string {
 // When set, EnsureAddon will prompt the user before installing the addon.
 func (m *AddonManager) SetPrompter(p Prompter) {
 	m.prompter = p
+}
+
+// SetDaemonStopper sets the daemon stopper used to shut down a running daemon
+// before reinstalling on version mismatch.
+func (m *AddonManager) SetDaemonStopper(s DaemonStopper) {
+	m.daemonStopper = s
 }
 
 // estimatedAddonSize is the approximate size of the tsuku-llm addon binary.
@@ -118,6 +140,31 @@ func (m *AddonManager) EnsureAddon(ctx context.Context) (string, error) {
 	// Check if already installed
 	binaryPath := m.findInstalledBinary()
 
+	if binaryPath != "" {
+		// Check version compatibility
+		installedVersion := extractVersionFromPath(binaryPath)
+		pinned := verify.PinnedLlmVersion()
+
+		if pinned != "dev" && installedVersion != "" && installedVersion != pinned {
+			slog.Info("tsuku-llm version mismatch, reinstalling",
+				"installed", installedVersion, "pinned", pinned)
+
+			// Stop running daemon before reinstalling
+			if m.daemonStopper != nil {
+				if err := m.daemonStopper.StopDaemon(ctx); err != nil {
+					slog.Warn("failed to stop daemon before reinstall", "error", err)
+				}
+			}
+
+			// Clear cache and reinstall at pinned version
+			m.cachedPath = ""
+			if err := m.installVersionedRecipe(ctx, pinned); err != nil {
+				return "", fmt.Errorf("reinstalling tsuku-llm %s: %w", pinned, err)
+			}
+			binaryPath = m.findInstalledBinary()
+		}
+	}
+
 	if binaryPath == "" {
 		// Prompt user before downloading, if a prompter is configured
 		if m.prompter != nil {
@@ -131,8 +178,15 @@ func (m *AddonManager) EnsureAddon(ctx context.Context) (string, error) {
 		}
 
 		// Not installed - install via recipe system
-		if err := m.installViaRecipe(ctx); err != nil {
-			return "", fmt.Errorf("installing tsuku-llm: %w", err)
+		pinned := verify.PinnedLlmVersion()
+		if pinned != "dev" {
+			if err := m.installVersionedRecipe(ctx, pinned); err != nil {
+				return "", fmt.Errorf("installing tsuku-llm %s: %w", pinned, err)
+			}
+		} else {
+			if err := m.installViaRecipe(ctx); err != nil {
+				return "", fmt.Errorf("installing tsuku-llm: %w", err)
+			}
 		}
 		binaryPath = m.findInstalledBinary()
 	}
@@ -192,6 +246,31 @@ func (m *AddonManager) installViaRecipe(ctx context.Context) error {
 	}
 
 	return m.installer.InstallRecipe(ctx, "tsuku-llm", "")
+}
+
+// installVersionedRecipe installs a specific version via the recipe system.
+func (m *AddonManager) installVersionedRecipe(ctx context.Context, version string) error {
+	if m.installer == nil {
+		return fmt.Errorf("no installer configured")
+	}
+
+	return m.installer.InstallRecipeVersion(ctx, "tsuku-llm", version, "")
+}
+
+// extractVersionFromPath extracts the version from a tsuku-llm binary path.
+// Expects paths like .../tools/tsuku-llm-0.5.0/bin/tsuku-llm
+// Returns the version string, or "" if the version cannot be determined.
+func extractVersionFromPath(binaryPath string) string {
+	// Walk up to find the tsuku-llm-<version> directory
+	dir := filepath.Dir(binaryPath)
+	for i := 0; i < 3; i++ {
+		name := filepath.Base(dir)
+		if strings.HasPrefix(name, "tsuku-llm-") {
+			return strings.TrimPrefix(name, "tsuku-llm-")
+		}
+		dir = filepath.Dir(dir)
+	}
+	return ""
 }
 
 // cleanupLegacyPath removes the old addon installation path if it exists.
