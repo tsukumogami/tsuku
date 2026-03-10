@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-10T09:48:22Z",
+  "updated_at": "2026-03-10T11:38:38Z",
   "entries": [
     {
       "name": "node",
@@ -636,7 +636,7 @@
       "name": "numpy",
       "source": "crates.io:numpy",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 6,
@@ -4836,7 +4836,7 @@
       "name": "bettercap",
       "source": "rubygems:bettercap",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 6,
@@ -11566,11 +11566,11 @@
       "name": "doggo",
       "source": "rubygems:doggo",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-03-08T09:35:26.626086092Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-03-10T15:38:38.536354115Z"
     },
     {
       "name": "dokku/repo/dokku",
@@ -19736,11 +19736,11 @@
       "name": "hasura-cli",
       "source": "npm:hasura-cli",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-03-09T21:54:13.407038661Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-03-10T19:38:38.536354115Z"
     },
     {
       "name": "hatari",
