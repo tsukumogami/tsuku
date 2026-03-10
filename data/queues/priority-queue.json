@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-09T23:32:30Z",
+  "updated_at": "2026-03-10T01:55:25Z",
   "entries": [
     {
       "name": "node",
@@ -2866,7 +2866,7 @@
       "name": "arturo",
       "source": "rubygems:arturo",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 6,
@@ -3966,7 +3966,7 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 6,
@@ -7356,11 +7356,11 @@
       "name": "chisel",
       "source": "rubygems:chisel",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 5,
-      "next_retry_at": "2026-03-09T22:03:21.573190545Z"
+      "failure_count": 6,
+      "next_retry_at": "2026-03-11T09:55:25.941367516Z"
     },
     {
       "name": "chisel-tunnel",
@@ -11186,7 +11186,7 @@
       "name": "dmd",
       "source": "npm:dmd",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 5,
@@ -12396,7 +12396,7 @@
       "name": "e2b",
       "source": "npm:e2b",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 5,
@@ -13766,11 +13766,11 @@
       "name": "fastmcp",
       "source": "npm:fastmcp",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 4,
-      "next_retry_at": "2026-03-09T22:18:30.786859571Z"
+      "failure_count": 5,
+      "next_retry_at": "2026-03-10T17:55:25.941367516Z"
     },
     {
       "name": "fastmod",
@@ -23566,7 +23566,7 @@
       "name": "kew",
       "source": "npm:kew",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 3,
