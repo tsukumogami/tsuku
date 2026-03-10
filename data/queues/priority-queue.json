@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-10T11:38:38Z",
+  "updated_at": "2026-03-10T13:02:46Z",
   "entries": [
     {
       "name": "node",
@@ -636,11 +636,11 @@
       "name": "numpy",
       "source": "crates.io:numpy",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 6,
-      "next_retry_at": "2026-03-10T10:02:26.581683344Z"
+      "failure_count": 7,
+      "next_retry_at": "2026-03-13T05:02:46.926890774Z"
     },
     {
       "name": "p11-kit",
@@ -2886,7 +2886,7 @@
       "name": "ascii",
       "source": "crates.io:ascii",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 6,
@@ -4836,11 +4836,11 @@
       "name": "bettercap",
       "source": "rubygems:bettercap",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 6,
-      "next_retry_at": "2026-03-10T10:02:26.581683344Z"
+      "failure_count": 7,
+      "next_retry_at": "2026-03-13T05:02:46.926890774Z"
     },
     {
       "name": "bfg",
@@ -8626,7 +8626,7 @@
       "name": "cog",
       "source": "rubygems:cog",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 5,
@@ -23566,11 +23566,11 @@
       "name": "kew",
       "source": "npm:kew",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-03-09T23:46:19.083905148Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-03-10T21:02:46.926890774Z"
     },
     {
       "name": "keychain",
