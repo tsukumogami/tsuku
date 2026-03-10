@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-10T09:47:47Z",
+  "generated_at": "2026-03-10T09:49:03Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 26,
-      "pending": 3911,
+      "failed": 28,
+      "pending": 3909,
       "success": 1335
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 26,
-        "pending": 3888,
+        "failed": 28,
+        "pending": 3886,
         "success": 1322
       }
     },
@@ -68,8 +68,8 @@
         "total": 1
       },
       "npm": {
-        "failed": 8,
-        "pending": 13,
+        "failed": 9,
+        "pending": 12,
         "success": 54,
         "total": 75
       },
@@ -80,8 +80,8 @@
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 12,
-        "pending": 71,
+        "failed": 13,
+        "pending": 70,
         "success": 5,
         "total": 89
       }
@@ -624,6 +624,15 @@
           "next_retry_at": "2026-03-11T05:36:55Z"
         },
         {
+          "id": "rubygems:dict",
+          "name": "dict",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-10T13:48:22Z"
+        },
+        {
           "id": "npm:dmd",
           "name": "dmd",
           "ecosystem": "npm",
@@ -658,6 +667,15 @@
           "category": "install_failed",
           "failure_count": 5,
           "next_retry_at": "2026-03-10T17:55:25Z"
+        },
+        {
+          "id": "npm:got",
+          "name": "got",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-10T17:48:22Z"
         },
         {
           "id": "pypi:lib3mf",
@@ -6073,15 +6091,6 @@
           "failure_count": 1
         },
         {
-          "id": "rubygems:dict",
-          "name": "dict",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-03-08T06:19:09Z"
-        },
-        {
           "id": "crates.io:diesel",
           "name": "diesel",
           "ecosystem": "crates.io",
@@ -9684,15 +9693,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "npm:got",
-          "name": "got",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-09T20:04:34Z"
         },
         {
           "id": "homebrew:gpa",
