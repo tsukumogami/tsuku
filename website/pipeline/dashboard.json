@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-10T08:43:08Z",
+  "generated_at": "2026-03-10T09:47:47Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -37771,13 +37771,67 @@
     }
   ],
   "failures": {
-    "generation_failed": 356,
-    "install_failed": 404,
+    "generation_failed": 357,
+    "install_failed": 409,
     "missing_dep": 68,
     "network_error": 7,
     "recipe_not_found": 74
   },
   "failure_details": [
+    {
+      "id": "pypi-2026-03-10T09-45-04Z-lib3mf",
+      "package": "lib3mf",
+      "ecosystem": "pypi",
+      "category": "install_failed",
+      "message": "Installing eval-time dependencies: [python-standalone]\nInstalling python-standalone...\nGenerating plan for python-standalone@20260303\nExecuting plan: python-standalone@20260303\n   Work directory: /tmp/action-validator-1681093906\n   Total steps: 4 (including 0 from dependencies)\n\nStep 1/4: download_file\n   Using cached: cpython-3.10.20+20260303-x86_64-unknown-linux-gnu-install_only.tar.gz\n   ✓ Restored from cache\n\nStep 2/4: extract\n   Extracting: cpython-3.10.20+20260303-x86_64-unknown-linux-gn",
+      "batch_id": "2026-03-10T09-45-04Z",
+      "timestamp": "2026-03-10T09:45:04.132077068Z"
+    },
+    {
+      "id": "npm-2026-03-10T09-44-52Z-got",
+      "package": "got",
+      "ecosystem": "npm",
+      "category": "install_failed",
+      "message": "Installing eval-time dependencies: [nodejs]\nInstalling nodejs...\nChecking runtime dependencies for nodejs...\n  Resolving runtime dependency 'gcc-libs'...\nExecuting plan: gcc-libs@15.2.0\n   Work directory: /tmp/action-validator-3058401692\n   Total steps: 5 (including 0 from dependencies)\n\nStep 1/5: download_file\n   Using cached: gcc.tar.gz\n   ✓ Restored from cache\n\nStep 2/5: extract\n   Extracting: gcc.tar.gz\n   Format: tar.gz\n   Strip dirs: 2\n\nStep 3/5: homebrew_relocate\n   Relocating placehold",
+      "batch_id": "2026-03-10T09-45-04Z",
+      "timestamp": "2026-03-10T09:44:52.06942932Z"
+    },
+    {
+      "id": "rubygems-2026-03-10T09-44-33Z-dict",
+      "package": "dict",
+      "ecosystem": "rubygems",
+      "category": "install_failed",
+      "message": "Installing eval-time dependencies: [ruby]\nInstalling ruby...\nChecking dependencies for ruby...\n  Resolving dependency 'libyaml'...\nExecuting plan: libyaml@0.2.5\n   Work directory: /tmp/action-validator-4008812406\n   Total steps: 4 (including 0 from dependencies)\n\nStep 1/4: download_file\n   Using cached: libyaml.tar.gz\n   ✓ Restored from cache\n\nStep 2/4: extract\n   Extracting: libyaml.tar.gz\n   Format: tar.gz\n   Strip dirs: 2\n\nStep 3/4: homebrew_relocate\n   Relocating placeholders: libyaml (lib",
+      "batch_id": "2026-03-10T09-45-04Z",
+      "timestamp": "2026-03-10T09:44:33.362890501Z"
+    },
+    {
+      "id": "crates.io-2026-03-10T09-44-17Z-bindgen",
+      "package": "bindgen",
+      "ecosystem": "crates.io",
+      "category": "install_failed",
+      "message": "Installing eval-time dependencies: [rust]\nInstalling rust...\nGenerating plan for rust@1.94.0\nExecuting plan: rust@1.94.0\n   Work directory: /tmp/action-validator-2264029190\n   Total steps: 4 (including 0 from dependencies)\n\nStep 1/4: download_file\n   Using cached: rust-1.94.0-x86_64-unknown-linux-gnu.tar.gz\n   ✓ Restored from cache\n\nStep 2/4: extract\n   Extracting: rust-1.94.0-x86_64-unknown-linux-gnu.tar.gz\n   Format: tar.gz\n   Strip dirs: 1\n\nStep 3/4: run_command\n   Running: ./install.sh --p",
+      "batch_id": "2026-03-10T09-45-04Z",
+      "timestamp": "2026-03-10T09:44:17.734966924Z"
+    },
+    {
+      "id": "homebrew-2026-03-10T09-42-56Z-task",
+      "package": "task",
+      "ecosystem": "homebrew",
+      "category": "install_failed",
+      "message": "tsuku collects anonymous usage statistics to improve the tool.\nNo personal information is collected. See: https://tsuku.dev/telemetry\n\nTo opt out: tsuku config set telemetry false\n         or export TSUKU_NO_TELEMETRY=1",
+      "batch_id": "2026-03-10T09-45-04Z",
+      "timestamp": "2026-03-10T09:42:56.08611836Z"
+    },
+    {
+      "id": "github-2026-03-10T09-42-52Z-bat",
+      "package": "bat",
+      "ecosystem": "github",
+      "category": "generation_failed",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: 'bat' resolved to github (sharkdp/bat), which requires LLM for recipe generation.\nRemove --deterministic-only or wait for a recipe to be contributed.",
+      "batch_id": "2026-03-10T09-45-04Z",
+      "timestamp": "2026-03-10T09:42:52.366508498Z"
+    },
     {
       "id": "pypi-2026-03-10T07-43-02Z-lib3mf",
       "package": "lib3mf",
@@ -39518,68 +39572,15 @@
       "category": "install_failed",
       "batch_id": "2026-03-07T23-24-35Z",
       "timestamp": "2026-03-07T23:23:26.463537891Z"
-    },
-    {
-      "id": "rubygems-2026-03-07T23-23-16Z-cog",
-      "package": "cog",
-      "ecosystem": "rubygems",
-      "category": "install_failed",
-      "message": "Installing eval-time dependencies: [ruby]\nInstalling ruby...\nChecking dependencies for ruby...\n  Resolving dependency 'libyaml'...\nExecuting plan: libyaml@0.2.5\n   Work directory: /tmp/action-validator-2646052323\n   Total steps: 4 (including 0 from dependencies)\n\nStep 1/4: download_file\n   Using cached: libyaml.tar.gz\n   ✓ Restored from cache\n\nStep 2/4: extract\n   Extracting: libyaml.tar.gz\n   Format: tar.gz\n   Strip dirs: 2\n\nStep 3/4: homebrew_relocate\n   Relocating placeholders: libyaml (lib",
-      "batch_id": "2026-03-07T23-24-35Z",
-      "timestamp": "2026-03-07T23:23:16.597791721Z"
-    },
-    {
-      "id": "crates.io-2026-03-07T23-23-01Z-ascii",
-      "package": "ascii",
-      "ecosystem": "crates.io",
-      "category": "install_failed",
-      "message": "Installing eval-time dependencies: [rust]\nInstalling rust...\nGenerating plan for rust@1.94.0\nExecuting plan: rust@1.94.0\n   Work directory: /tmp/action-validator-1456575096\n   Total steps: 4 (including 0 from dependencies)\n\nStep 1/4: download_file\n   Using cached: rust-1.94.0-x86_64-unknown-linux-gnu.tar.gz\n   ✓ Restored from cache\n\nStep 2/4: extract\n   Extracting: rust-1.94.0-x86_64-unknown-linux-gnu.tar.gz\n   Format: tar.gz\n   Strip dirs: 1\n\nStep 3/4: run_command\n   Running: ./install.sh --p",
-      "batch_id": "2026-03-07T23-24-35Z",
-      "timestamp": "2026-03-07T23:23:01.380059218Z"
-    },
-    {
-      "id": "homebrew-2026-03-07T23-22-12Z-task",
-      "package": "task",
-      "ecosystem": "homebrew",
-      "category": "install_failed",
-      "message": "tsuku collects anonymous usage statistics to improve the tool.\nNo personal information is collected. See: https://tsuku.dev/telemetry\n\nTo opt out: tsuku config set telemetry false\n         or export TSUKU_NO_TELEMETRY=1",
-      "batch_id": "2026-03-07T23-24-35Z",
-      "timestamp": "2026-03-07T23:22:12.712991556Z"
-    },
-    {
-      "id": "github-2026-03-07T23-22-08Z-bat",
-      "package": "bat",
-      "ecosystem": "github",
-      "category": "generation_failed",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: 'bat' resolved to github (sharkdp/bat), which requires LLM for recipe generation.\nRemove --deterministic-only or wait for a recipe to be contributed.",
-      "batch_id": "2026-03-07T23-24-35Z",
-      "timestamp": "2026-03-07T23:22:08.436995195Z"
-    },
-    {
-      "id": "rubygems-2026-03-07T22-24-57Z-chroma",
-      "package": "chroma",
-      "ecosystem": "rubygems",
-      "category": "install_failed",
-      "message": "Installation failed: step 1 (gem_exec) failed: expected executable chroma not found at /tmp/action-validator-771928218/.install/bin/chroma",
-      "batch_id": "2026-03-07T22-24-57Z",
-      "timestamp": "2026-03-07T22:24:57.311371067Z"
-    },
-    {
-      "id": "rubygems-2026-03-07T22-24-47Z-chisel",
-      "package": "chisel",
-      "ecosystem": "rubygems",
-      "category": "install_failed",
-      "batch_id": "2026-03-07T22-24-57Z",
-      "timestamp": "2026-03-07T22:24:47.489936191Z"
     }
   ],
   "health": {
     "ecosystems": {
       "crates.io": {
         "breaker_state": "open",
-        "failures": 77,
-        "last_failure": "2026-03-10T07:44:10Z",
-        "opens_at": "2026-03-10T08:44:10Z"
+        "failures": 78,
+        "last_failure": "2026-03-10T09:47:15Z",
+        "opens_at": "2026-03-10T10:47:15Z"
       },
       "default": {
         "breaker_state": "closed",
@@ -39587,38 +39588,46 @@
       },
       "github": {
         "breaker_state": "open",
-        "failures": 80,
-        "last_failure": "2026-03-10T07:44:10Z",
-        "opens_at": "2026-03-10T08:44:10Z"
+        "failures": 81,
+        "last_failure": "2026-03-10T09:47:15Z",
+        "opens_at": "2026-03-10T10:47:15Z"
       },
       "homebrew": {
         "breaker_state": "open",
-        "failures": 41,
-        "last_failure": "2026-03-10T07:44:10Z",
-        "opens_at": "2026-03-10T08:44:10Z"
+        "failures": 42,
+        "last_failure": "2026-03-10T09:47:15Z",
+        "opens_at": "2026-03-10T10:47:15Z"
       },
       "npm": {
         "breaker_state": "open",
-        "failures": 72,
-        "last_failure": "2026-03-10T07:44:10Z",
-        "opens_at": "2026-03-10T08:44:10Z"
+        "failures": 73,
+        "last_failure": "2026-03-10T09:47:15Z",
+        "opens_at": "2026-03-10T10:47:15Z"
       },
       "pypi": {
         "breaker_state": "open",
-        "failures": 67,
-        "last_failure": "2026-03-10T07:44:10Z",
-        "opens_at": "2026-03-10T08:44:10Z"
+        "failures": 68,
+        "last_failure": "2026-03-10T09:47:15Z",
+        "opens_at": "2026-03-10T10:47:15Z"
       },
       "rubygems": {
         "breaker_state": "open",
-        "failures": 33,
-        "last_failure": "2026-03-10T07:44:10Z",
-        "opens_at": "2026-03-10T08:44:10Z"
+        "failures": 34,
+        "last_failure": "2026-03-10T09:47:15Z",
+        "opens_at": "2026-03-10T10:47:15Z"
       }
     },
     "last_run": {
-      "batch_id": "2026-03-10T08-42-37Z",
-      "timestamp": "2026-03-10T08:42:37Z",
+      "batch_id": "2026-03-10T09-47-21Z",
+      "ecosystems": {
+        "crates.io": 1,
+        "github": 1,
+        "homebrew": 1,
+        "npm": 1,
+        "pypi": 1,
+        "rubygems": 1
+      },
+      "timestamp": "2026-03-10T09:47:21Z",
       "succeeded": 0,
       "failed": 0,
       "total": 0
@@ -39637,7 +39646,7 @@
       "total": 1,
       "recipes_merged": 1
     },
-    "runs_since_last_success": 49
+    "runs_since_last_success": 50
   },
   "runs": [
     {
