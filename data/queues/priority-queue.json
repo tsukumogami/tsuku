@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-10T17:01:41Z",
+  "updated_at": "2026-03-10T18:51:04Z",
   "entries": [
     {
       "name": "node",
@@ -7036,11 +7036,11 @@
       "name": "chainsaw",
       "source": "npm:chainsaw",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 6,
-      "next_retry_at": "2026-03-10T15:07:58.468069086Z"
+      "failure_count": 7,
+      "next_retry_at": "2026-03-13T10:51:04.753983944Z"
     },
     {
       "name": "chamber",
@@ -9326,11 +9326,11 @@
       "name": "cql",
       "source": "rubygems:cql",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 4,
-      "next_retry_at": "2026-03-10T15:45:19.2926546Z"
+      "failure_count": 5,
+      "next_retry_at": "2026-03-11T10:51:04.753983944Z"
     },
     {
       "name": "cqlabs/dcm/dcm",
@@ -13766,7 +13766,7 @@
       "name": "fastmcp",
       "source": "npm:fastmcp",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 5,
@@ -18186,7 +18186,7 @@
       "name": "got",
       "source": "npm:got",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 4,
@@ -24896,7 +24896,7 @@
       "name": "lcm",
       "source": "npm:lcm",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 3,
