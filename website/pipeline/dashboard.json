@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-10T01:54:54Z",
+  "generated_at": "2026-03-10T01:56:05Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 23,
-      "pending": 3914,
+      "failed": 20,
+      "pending": 3917,
       "success": 1335
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 23,
-        "pending": 3891,
+        "failed": 20,
+        "pending": 3894,
         "success": 1322
       }
     },
@@ -68,8 +68,8 @@
         "total": 1
       },
       "npm": {
-        "failed": 8,
-        "pending": 13,
+        "failed": 5,
+        "pending": 16,
         "success": 54,
         "total": 75
       },
@@ -471,15 +471,6 @@
           "next_retry_at": "2026-03-12T00:47:58Z"
         },
         {
-          "id": "rubygems:arturo",
-          "name": "arturo",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-10T00:31:49Z"
-        },
-        {
           "id": "crates.io:ascii",
           "name": "ascii",
           "ecosystem": "crates.io",
@@ -487,15 +478,6 @@
           "category": "install_failed",
           "failure_count": 6,
           "next_retry_at": "2026-03-10T12:22:13Z"
-        },
-        {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-10T00:31:49Z"
         },
         {
           "id": "crates.io:basis_universal",
@@ -561,6 +543,15 @@
           "next_retry_at": "2026-03-10T15:07:58Z"
         },
         {
+          "id": "rubygems:chisel",
+          "name": "chisel",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-11T09:55:25Z"
+        },
+        {
           "id": "rubygems:cog",
           "name": "cog",
           "ecosystem": "rubygems",
@@ -597,24 +588,6 @@
           "next_retry_at": "2026-03-11T05:36:55Z"
         },
         {
-          "id": "npm:dmd",
-          "name": "dmd",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-10T00:47:58Z"
-        },
-        {
-          "id": "npm:e2b",
-          "name": "e2b",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-10T01:53:53Z"
-        },
-        {
           "id": "npm:ent",
           "name": "ent",
           "ecosystem": "npm",
@@ -624,13 +597,13 @@
           "next_retry_at": "2026-03-10T15:32:30Z"
         },
         {
-          "id": "npm:kew",
-          "name": "kew",
+          "id": "npm:fastmcp",
+          "name": "fastmcp",
           "ecosystem": "npm",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-09T23:46:19Z"
+          "failure_count": 5,
+          "next_retry_at": "2026-03-10T17:55:25Z"
         },
         {
           "id": "pypi:lib3mf",
@@ -1953,6 +1926,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:arturo",
+          "name": "arturo",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-10T00:31:49Z"
+        },
+        {
           "id": "homebrew:arxiv_latex_cleaner",
           "name": "arxiv_latex_cleaner",
           "ecosystem": "homebrew",
@@ -2569,6 +2551,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-10T00:31:49Z"
         },
         {
           "id": "homebrew:azure-cli",
@@ -4175,15 +4166,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "rubygems:chisel",
-          "name": "chisel",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-09T22:03:21Z"
         },
         {
           "id": "homebrew:chisel-tunnel",
@@ -6229,6 +6211,15 @@
           "failure_count": 1
         },
         {
+          "id": "npm:dmd",
+          "name": "dmd",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-10T00:47:58Z"
+        },
+        {
           "id": "homebrew:dmg2img",
           "name": "dmg2img",
           "ecosystem": "homebrew",
@@ -6819,6 +6810,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:e2b",
+          "name": "e2b",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-10T01:53:53Z"
         },
         {
           "id": "homebrew:eask-cli",
@@ -7535,15 +7535,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:fastmcp",
-          "name": "fastmcp",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-09T22:18:30Z"
         },
         {
           "id": "homebrew:fastmod",
@@ -12471,6 +12462,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "npm:kew",
+          "name": "kew",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-09T23:46:19Z"
         },
         {
           "id": "homebrew:keychain",
