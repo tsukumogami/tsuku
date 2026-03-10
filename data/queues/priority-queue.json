@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-10T18:51:04Z",
+  "updated_at": "2026-03-10T20:38:12Z",
   "entries": [
     {
       "name": "node",
@@ -10876,11 +10876,11 @@
       "name": "dict",
       "source": "rubygems:dict",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-03-10T13:48:22.450804003Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-03-11T04:38:12.717098936Z"
     },
     {
       "name": "diesel",
@@ -12966,11 +12966,11 @@
       "name": "ent",
       "source": "npm:ent",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 5,
-      "next_retry_at": "2026-03-10T15:32:30.619021774Z"
+      "failure_count": 6,
+      "next_retry_at": "2026-03-12T04:38:12.717098936Z"
     },
     {
       "name": "ente-cli",
@@ -19736,7 +19736,7 @@
       "name": "hasura-cli",
       "source": "npm:hasura-cli",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 4,
