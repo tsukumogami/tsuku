@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-10T11:38:04Z",
+  "generated_at": "2026-03-10T11:39:21Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -39,8 +39,8 @@
       },
       "crates.io": {
         "excluded": 5,
-        "failed": 3,
-        "pending": 74,
+        "failed": 2,
+        "pending": 75,
         "success": 23,
         "total": 105
       },
@@ -68,8 +68,8 @@
         "total": 1
       },
       "npm": {
-        "failed": 9,
-        "pending": 12,
+        "failed": 10,
+        "pending": 11,
         "success": 54,
         "total": 75
       },
@@ -507,15 +507,6 @@
           "next_retry_at": "2026-03-11T01:54:13Z"
         },
         {
-          "id": "rubygems:bettercap",
-          "name": "bettercap",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-10T10:02:26Z"
-        },
-        {
           "id": "rubygems:bullet",
           "name": "bullet",
           "ecosystem": "rubygems",
@@ -642,6 +633,15 @@
           "next_retry_at": "2026-03-11T13:50:09Z"
         },
         {
+          "id": "rubygems:doggo",
+          "name": "doggo",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-10T15:38:38Z"
+        },
+        {
           "id": "npm:e2b",
           "name": "e2b",
           "ecosystem": "npm",
@@ -678,6 +678,15 @@
           "next_retry_at": "2026-03-10T17:48:22Z"
         },
         {
+          "id": "npm:hasura-cli",
+          "name": "hasura-cli",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-10T19:38:38Z"
+        },
+        {
           "id": "pypi:lib3mf",
           "name": "lib3mf",
           "ecosystem": "pypi",
@@ -685,15 +694,6 @@
           "category": "install_failed",
           "failure_count": 10,
           "next_retry_at": "2026-03-16T00:56:07Z"
-        },
-        {
-          "id": "crates.io:numpy",
-          "name": "numpy",
-          "ecosystem": "crates.io",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-10T10:02:26Z"
         },
         {
           "id": "pypi:tctl",
@@ -3055,6 +3055,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "rubygems:bettercap",
+          "name": "bettercap",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-10T10:02:26Z"
         },
         {
           "id": "homebrew:bfg",
@@ -6390,15 +6399,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "rubygems:doggo",
-          "name": "doggo",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-03-08T09:35:26Z"
         },
         {
           "id": "homebrew:dokku/repo/dokku",
@@ -10533,15 +10533,6 @@
           "ecosystem": "crates.io",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "npm:hasura-cli",
-          "name": "hasura-cli",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-09T21:54:13Z"
         },
         {
           "id": "homebrew:hatch",
@@ -17229,6 +17220,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "crates.io:numpy",
+          "name": "numpy",
+          "ecosystem": "crates.io",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-10T10:02:26Z"
         },
         {
           "id": "homebrew:nuonco/tap/nuon",
