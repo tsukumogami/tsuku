@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-10T13:02:13Z",
+  "generated_at": "2026-03-10T13:03:33Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 28,
-      "pending": 3909,
+      "failed": 29,
+      "pending": 3908,
       "success": 1335
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 28,
-        "pending": 3886,
+        "failed": 29,
+        "pending": 3885,
         "success": 1322
       }
     },
@@ -68,8 +68,8 @@
         "total": 1
       },
       "npm": {
-        "failed": 10,
-        "pending": 11,
+        "failed": 11,
+        "pending": 10,
         "success": 54,
         "total": 75
       },
@@ -480,15 +480,6 @@
           "next_retry_at": "2026-03-12T20:14:43Z"
         },
         {
-          "id": "crates.io:ascii",
-          "name": "ascii",
-          "ecosystem": "crates.io",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-10T12:22:13Z"
-        },
-        {
           "id": "npm:azion",
           "name": "azion",
           "ecosystem": "npm",
@@ -505,6 +496,15 @@
           "category": "install_failed",
           "failure_count": 6,
           "next_retry_at": "2026-03-11T01:54:13Z"
+        },
+        {
+          "id": "rubygems:bettercap",
+          "name": "bettercap",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-13T05:02:46Z"
         },
         {
           "id": "rubygems:bullet",
@@ -568,15 +568,6 @@
           "category": "install_failed",
           "failure_count": 6,
           "next_retry_at": "2026-03-11T13:50:09Z"
-        },
-        {
-          "id": "rubygems:cog",
-          "name": "cog",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-10T11:46:19Z"
         },
         {
           "id": "npm:countdown",
@@ -687,6 +678,15 @@
           "next_retry_at": "2026-03-10T19:38:38Z"
         },
         {
+          "id": "npm:kew",
+          "name": "kew",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-10T21:02:46Z"
+        },
+        {
           "id": "pypi:lib3mf",
           "name": "lib3mf",
           "ecosystem": "pypi",
@@ -694,6 +694,15 @@
           "category": "install_failed",
           "failure_count": 10,
           "next_retry_at": "2026-03-16T00:56:07Z"
+        },
+        {
+          "id": "crates.io:numpy",
+          "name": "numpy",
+          "ecosystem": "crates.io",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-13T05:02:46Z"
         },
         {
           "id": "pypi:tctl",
@@ -2005,6 +2014,15 @@
           "failure_count": 0
         },
         {
+          "id": "crates.io:ascii",
+          "name": "ascii",
+          "ecosystem": "crates.io",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-10T12:22:13Z"
+        },
+        {
           "id": "homebrew:asciidoc",
           "name": "asciidoc",
           "ecosystem": "homebrew",
@@ -3055,15 +3073,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "rubygems:bettercap",
-          "name": "bettercap",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-10T10:02:26Z"
         },
         {
           "id": "homebrew:bfg",
@@ -4880,6 +4889,15 @@
           "ecosystem": "crates.io",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:cog",
+          "name": "cog",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-10T11:46:19Z"
         },
         {
           "id": "homebrew:coin3d",
@@ -12455,15 +12473,6 @@
           "failure_count": 0
         },
         {
-          "id": "npm:kew",
-          "name": "kew",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-09T23:46:19Z"
-        },
-        {
           "id": "homebrew:keychain",
           "name": "keychain",
           "ecosystem": "homebrew",
@@ -17220,15 +17229,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "crates.io:numpy",
-          "name": "numpy",
-          "ecosystem": "crates.io",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-10T10:02:26Z"
         },
         {
           "id": "homebrew:nuonco/tap/nuon",
