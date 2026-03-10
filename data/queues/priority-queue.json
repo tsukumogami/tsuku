@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-10T07:45:19Z",
+  "updated_at": "2026-03-10T09:48:22Z",
   "entries": [
     {
       "name": "node",
@@ -10876,11 +10876,11 @@
       "name": "dict",
       "source": "rubygems:dict",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-03-08T06:19:09.399344569Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-03-10T13:48:22.450804003Z"
     },
     {
       "name": "diesel",
@@ -18186,11 +18186,11 @@
       "name": "got",
       "source": "npm:got",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-03-09T20:04:34.539537417Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-03-10T17:48:22.450804003Z"
     },
     {
       "name": "gotests",
