@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-10T04:14:12Z",
+  "generated_at": "2026-03-10T04:15:30Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 20,
-      "pending": 3917,
+      "failed": 22,
+      "pending": 3915,
       "success": 1335
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 20,
-        "pending": 3894,
+        "failed": 22,
+        "pending": 3892,
         "success": 1322
       }
     },
@@ -68,8 +68,8 @@
         "total": 1
       },
       "npm": {
-        "failed": 5,
-        "pending": 16,
+        "failed": 6,
+        "pending": 15,
         "success": 54,
         "total": 75
       },
@@ -80,8 +80,8 @@
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 9,
-        "pending": 74,
+        "failed": 10,
+        "pending": 73,
         "success": 5,
         "total": 89
       }
@@ -471,6 +471,15 @@
           "next_retry_at": "2026-03-12T00:47:58Z"
         },
         {
+          "id": "rubygems:arturo",
+          "name": "arturo",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-12T20:14:43Z"
+        },
+        {
           "id": "crates.io:ascii",
           "name": "ascii",
           "ecosystem": "crates.io",
@@ -478,6 +487,15 @@
           "category": "install_failed",
           "failure_count": 6,
           "next_retry_at": "2026-03-10T12:22:13Z"
+        },
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-12T20:14:43Z"
         },
         {
           "id": "crates.io:basis_universal",
@@ -1926,15 +1944,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:arturo",
-          "name": "arturo",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-10T00:31:49Z"
-        },
-        {
           "id": "homebrew:arxiv_latex_cleaner",
           "name": "arxiv_latex_cleaner",
           "ecosystem": "homebrew",
@@ -2551,15 +2560,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-10T00:31:49Z"
         },
         {
           "id": "homebrew:azure-cli",
