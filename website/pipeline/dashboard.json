@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-11T13:01:13Z",
+  "generated_at": "2026-03-11T13:02:28Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 30,
-      "pending": 3907,
+      "failed": 32,
+      "pending": 3905,
       "success": 1335
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 30,
-        "pending": 3884,
+        "failed": 32,
+        "pending": 3882,
         "success": 1322
       }
     },
@@ -68,8 +68,8 @@
         "total": 1
       },
       "npm": {
-        "failed": 12,
-        "pending": 9,
+        "failed": 13,
+        "pending": 8,
         "success": 54,
         "total": 75
       },
@@ -80,8 +80,8 @@
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 12,
-        "pending": 71,
+        "failed": 13,
+        "pending": 70,
         "success": 5,
         "total": 89
       }
@@ -561,6 +561,15 @@
           "next_retry_at": "2026-03-13T10:51:04Z"
         },
         {
+          "id": "rubygems:chisel",
+          "name": "chisel",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-14T05:01:47Z"
+        },
+        {
           "id": "rubygems:chroma",
           "name": "chroma",
           "ecosystem": "rubygems",
@@ -703,6 +712,15 @@
           "category": "install_failed",
           "failure_count": 10,
           "next_retry_at": "2026-03-16T00:56:07Z"
+        },
+        {
+          "id": "npm:mailhog",
+          "name": "mailhog",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-11T21:01:47Z"
         },
         {
           "id": "crates.io:numpy",
@@ -4238,15 +4256,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "rubygems:chisel",
-          "name": "chisel",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-11T09:55:25Z"
         },
         {
           "id": "homebrew:chisel-tunnel",
@@ -14787,15 +14796,6 @@
           "ecosystem": "rubygems",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "npm:mailhog",
-          "name": "mailhog",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-10T21:01:41Z"
         },
         {
           "id": "homebrew:mailsy",
