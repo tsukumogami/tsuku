@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-11T07:48:38Z",
+  "updated_at": "2026-03-11T09:47:32Z",
   "entries": [
     {
       "name": "node",
@@ -6806,11 +6806,11 @@
       "name": "cdo",
       "source": "rubygems:cdo",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 6,
-      "next_retry_at": "2026-03-11T07:32:30.619021774Z"
+      "failure_count": 7,
+      "next_retry_at": "2026-03-14T01:47:32.832609029Z"
     },
     {
       "name": "cdogs-sdl",
@@ -23566,11 +23566,11 @@
       "name": "kew",
       "source": "npm:kew",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 4,
-      "next_retry_at": "2026-03-10T21:02:46.926890774Z"
+      "failure_count": 5,
+      "next_retry_at": "2026-03-12T01:47:32.832609029Z"
     },
     {
       "name": "keychain",
