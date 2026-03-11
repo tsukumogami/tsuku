@@ -1,0 +1,32 @@
+[metadata]
+  name = "fastlane"
+  description = "The easiest way to automate beta deployments and releases for your iOS and Android apps"
+  homepage = "https://fastlane.tools"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+supported_os = ["linux"]
+
+[version]
+  source = ""
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "gem_install"
+  executables = ["bin-proxy", "fastlane", "match_file"]
+  gem = "fastlane"
+
+[verify]
+  command = "bin-proxy --version"
+  pattern = ""
