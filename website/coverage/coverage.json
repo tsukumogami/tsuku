@@ -1,22 +1,22 @@
 {
-  "generated_at": "2026-03-09T00:55:19Z",
-  "total_recipes": 1399,
+  "generated_at": "2026-03-11T21:39:24Z",
+  "total_recipes": 1400,
   "summary": {
     "by_platform": {
       "darwin": {
         "supported": 837,
-        "total": 1399,
-        "pct": 59.828448892065765
+        "total": 1400,
+        "pct": 59.785714285714285
       },
       "glibc": {
-        "supported": 1366,
-        "total": 1399,
-        "pct": 97.64117226590422
+        "supported": 1367,
+        "total": 1400,
+        "pct": 97.64285714285714
       },
       "musl": {
-        "supported": 1225,
-        "total": 1399,
-        "pct": 87.5625446747677
+        "supported": 1226,
+        "total": 1400,
+        "pct": 87.57142857142857
       }
     },
     "by_category": {
@@ -26,9 +26,9 @@
         "glibc_support": 150
       },
       "tool": {
-        "total": 1247,
-        "musl_support": 1075,
-        "glibc_support": 1216
+        "total": 1248,
+        "musl_support": 1076,
+        "glibc_support": 1217
       }
     }
   },
@@ -5031,6 +5031,20 @@
       "warnings": [
         "recipe 'fastfetch' has platform-specific actions without libc when clauses and no musl fallback"
       ]
+    },
+    {
+      "name": "fastlane",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": null
     },
     {
       "name": "fastly",
