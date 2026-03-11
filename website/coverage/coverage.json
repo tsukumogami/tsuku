@@ -1,22 +1,22 @@
 {
-  "generated_at": "2026-03-11T22:16:48Z",
-  "total_recipes": 1400,
+  "generated_at": "2026-03-11T22:35:46Z",
+  "total_recipes": 1401,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 837,
-        "total": 1400,
-        "pct": 59.785714285714285
+        "supported": 838,
+        "total": 1401,
+        "pct": 59.81441827266239
       },
       "glibc": {
-        "supported": 1367,
-        "total": 1400,
-        "pct": 97.64285714285714
+        "supported": 1368,
+        "total": 1401,
+        "pct": 97.64453961456103
       },
       "musl": {
-        "supported": 1226,
-        "total": 1400,
-        "pct": 87.57142857142857
+        "supported": 1227,
+        "total": 1401,
+        "pct": 87.58029978586723
       }
     },
     "by_category": {
@@ -26,9 +26,9 @@
         "glibc_support": 150
       },
       "tool": {
-        "total": 1248,
-        "musl_support": 1076,
-        "glibc_support": 1217
+        "total": 1249,
+        "musl_support": 1077,
+        "glibc_support": 1218
       }
     }
   },
@@ -6422,6 +6422,18 @@
       "warnings": [
         "recipe 'glm' has platform-specific actions without libc when clauses and no musl fallback"
       ]
+    },
+    {
+      "name": "global",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
     },
     {
       "name": "glooctl",
