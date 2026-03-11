@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-11T05:53:12Z",
+  "updated_at": "2026-03-11T07:48:38Z",
   "entries": [
     {
       "name": "node",
@@ -6806,7 +6806,7 @@
       "name": "cdo",
       "source": "rubygems:cdo",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 6,
@@ -10236,11 +10236,11 @@
       "name": "datasette",
       "source": "npm:datasette",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 6,
-      "next_retry_at": "2026-03-11T05:36:55.971206654Z"
+      "failure_count": 7,
+      "next_retry_at": "2026-03-13T23:48:38.233064418Z"
     },
     {
       "name": "datawire/blackbird/telepresence",
@@ -10876,11 +10876,11 @@
       "name": "dict",
       "source": "rubygems:dict",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 4,
-      "next_retry_at": "2026-03-11T04:38:12.717098936Z"
+      "failure_count": 5,
+      "next_retry_at": "2026-03-11T23:48:38.233064418Z"
     },
     {
       "name": "diesel",
@@ -11566,7 +11566,7 @@
       "name": "doggo",
       "source": "rubygems:doggo",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 4,
