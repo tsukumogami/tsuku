@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-11T14:11:21Z",
+  "updated_at": "2026-03-11T15:52:51Z",
   "entries": [
     {
       "name": "node",
@@ -7436,11 +7436,11 @@
       "name": "chroma",
       "source": "rubygems:chroma",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 6,
-      "next_retry_at": "2026-03-11T13:50:09.066351066Z"
+      "failure_count": 7,
+      "next_retry_at": "2026-03-14T07:52:51.406956859Z"
     },
     {
       "name": "chromaprint",
@@ -11186,11 +11186,11 @@
       "name": "dmd",
       "source": "npm:dmd",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 6,
-      "next_retry_at": "2026-03-11T13:50:09.066351066Z"
+      "failure_count": 7,
+      "next_retry_at": "2026-03-14T07:52:51.406956859Z"
     },
     {
       "name": "dmg2img",
@@ -12396,7 +12396,7 @@
       "name": "e2b",
       "source": "npm:e2b",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 6,
