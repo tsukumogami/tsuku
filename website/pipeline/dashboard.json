@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-11T17:53:38Z",
+  "generated_at": "2026-03-11T17:54:53Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 33,
-      "pending": 3904,
+      "failed": 35,
+      "pending": 3902,
       "success": 1335
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 33,
-        "pending": 3881,
+        "failed": 35,
+        "pending": 3879,
         "success": 1322
       }
     },
@@ -68,8 +68,8 @@
         "total": 1
       },
       "npm": {
-        "failed": 13,
-        "pending": 8,
+        "failed": 14,
+        "pending": 7,
         "success": 54,
         "total": 75
       },
@@ -80,8 +80,8 @@
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 14,
-        "pending": 69,
+        "failed": 15,
+        "pending": 68,
         "success": 5,
         "total": 89
       }
@@ -649,6 +649,24 @@
           "category": "install_failed",
           "failure_count": 5,
           "next_retry_at": "2026-03-12T03:38:27Z"
+        },
+        {
+          "id": "rubygems:dug",
+          "name": "dug",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 2,
+          "next_retry_at": "2026-03-11T19:54:12Z"
+        },
+        {
+          "id": "npm:e2b",
+          "name": "e2b",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-14T09:54:12Z"
         },
         {
           "id": "npm:ent",
@@ -6703,15 +6721,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:dug",
-          "name": "dug",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 1,
-          "next_retry_at": "2026-03-08T00:27:16Z"
-        },
-        {
           "id": "homebrew:dumbpipe",
           "name": "dumbpipe",
           "ecosystem": "homebrew",
@@ -6864,15 +6873,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:e2b",
-          "name": "e2b",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-11T15:45:19Z"
         },
         {
           "id": "homebrew:eask-cli",
