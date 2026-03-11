@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-11T11:37:55Z",
+  "generated_at": "2026-03-11T11:39:07Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -68,8 +68,8 @@
         "total": 1
       },
       "npm": {
-        "failed": 11,
-        "pending": 10,
+        "failed": 12,
+        "pending": 9,
         "success": 54,
         "total": 75
       },
@@ -80,8 +80,8 @@
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 13,
-        "pending": 70,
+        "failed": 12,
+        "pending": 71,
         "success": 5,
         "total": 89
       }
@@ -561,15 +561,6 @@
           "next_retry_at": "2026-03-13T10:51:04Z"
         },
         {
-          "id": "rubygems:chisel",
-          "name": "chisel",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-11T09:55:25Z"
-        },
-        {
           "id": "rubygems:chroma",
           "name": "chroma",
           "ecosystem": "rubygems",
@@ -606,15 +597,6 @@
           "next_retry_at": "2026-03-12T01:01:41Z"
         },
         {
-          "id": "rubygems:cql",
-          "name": "cql",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-11T10:51:04Z"
-        },
-        {
           "id": "npm:datasette",
           "name": "datasette",
           "ecosystem": "npm",
@@ -640,6 +622,15 @@
           "category": "install_failed",
           "failure_count": 6,
           "next_retry_at": "2026-03-11T13:50:09Z"
+        },
+        {
+          "id": "rubygems:doggo",
+          "name": "doggo",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-12T03:38:27Z"
         },
         {
           "id": "npm:e2b",
@@ -694,6 +685,15 @@
           "category": "install_failed",
           "failure_count": 5,
           "next_retry_at": "2026-03-12T01:47:32Z"
+        },
+        {
+          "id": "npm:lcm",
+          "name": "lcm",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-11T19:38:27Z"
         },
         {
           "id": "pypi:lib3mf",
@@ -4240,6 +4240,15 @@
           "failure_count": 1
         },
         {
+          "id": "rubygems:chisel",
+          "name": "chisel",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-11T09:55:25Z"
+        },
+        {
           "id": "homebrew:chisel-tunnel",
           "name": "chisel-tunnel",
           "ecosystem": "homebrew",
@@ -5260,6 +5269,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:cql",
+          "name": "cql",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-11T10:51:04Z"
         },
         {
           "id": "homebrew:cqlabs/dcm/dcm",
@@ -6408,15 +6426,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "rubygems:doggo",
-          "name": "doggo",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-11T06:34:28Z"
         },
         {
           "id": "homebrew:dokku/repo/dokku",
@@ -12989,15 +12998,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "npm:lcm",
-          "name": "lcm",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-10T18:08:56Z"
         },
         {
           "id": "homebrew:ldid",
