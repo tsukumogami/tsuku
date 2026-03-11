@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-11T09:46:59Z",
+  "generated_at": "2026-03-11T09:48:13Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 28,
-      "pending": 3909,
+      "failed": 30,
+      "pending": 3907,
       "success": 1335
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 28,
-        "pending": 3886,
+        "failed": 30,
+        "pending": 3884,
         "success": 1322
       }
     },
@@ -68,8 +68,8 @@
         "total": 1
       },
       "npm": {
-        "failed": 10,
-        "pending": 11,
+        "failed": 11,
+        "pending": 10,
         "success": 54,
         "total": 75
       },
@@ -80,8 +80,8 @@
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 12,
-        "pending": 71,
+        "failed": 13,
+        "pending": 70,
         "success": 5,
         "total": 89
       }
@@ -543,6 +543,15 @@
           "next_retry_at": "2026-03-13T21:53:12Z"
         },
         {
+          "id": "rubygems:cdo",
+          "name": "cdo",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-14T01:47:32Z"
+        },
+        {
           "id": "npm:chainsaw",
           "name": "chainsaw",
           "ecosystem": "npm",
@@ -676,6 +685,15 @@
           "category": "install_failed",
           "failure_count": 5,
           "next_retry_at": "2026-03-11T21:53:12Z"
+        },
+        {
+          "id": "npm:kew",
+          "name": "kew",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-12T01:47:32Z"
         },
         {
           "id": "pypi:lib3mf",
@@ -3973,15 +3991,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "rubygems:cdo",
-          "name": "cdo",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-11T07:32:30Z"
         },
         {
           "id": "homebrew:ceres-solver",
@@ -12462,15 +12471,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "npm:kew",
-          "name": "kew",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-10T21:02:46Z"
         },
         {
           "id": "homebrew:keychain",
