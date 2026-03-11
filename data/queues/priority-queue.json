@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-11T15:52:51Z",
+  "updated_at": "2026-03-11T17:54:12Z",
   "entries": [
     {
       "name": "node",
@@ -12116,11 +12116,11 @@
       "name": "dug",
       "source": "rubygems:dug",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": "2026-03-08T00:27:16.823712047Z"
+      "failure_count": 2,
+      "next_retry_at": "2026-03-11T19:54:12.284705887Z"
     },
     {
       "name": "dumbpipe",
@@ -12396,11 +12396,11 @@
       "name": "e2b",
       "source": "npm:e2b",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 6,
-      "next_retry_at": "2026-03-11T15:45:19.2926546Z"
+      "failure_count": 7,
+      "next_retry_at": "2026-03-14T09:54:12.284705887Z"
     },
     {
       "name": "e2fsprogs",
