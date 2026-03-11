@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-10T22:34:28Z",
+  "updated_at": "2026-03-11T01:57:08Z",
   "entries": [
     {
       "name": "node",
@@ -4446,7 +4446,7 @@
       "name": "basis_universal",
       "source": "crates.io:basis_universal",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 6,
@@ -5826,11 +5826,11 @@
       "name": "bullet",
       "source": "rubygems:bullet",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 6,
-      "next_retry_at": "2026-03-10T21:04:32.874836597Z"
+      "failure_count": 7,
+      "next_retry_at": "2026-03-13T17:57:08.185852466Z"
     },
     {
       "name": "bulletty",
@@ -6606,7 +6606,7 @@
       "name": "cassandra",
       "source": "rubygems:cassandra",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 6,
@@ -9116,11 +9116,11 @@
       "name": "countdown",
       "source": "npm:countdown",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 6,
-      "next_retry_at": "2026-03-10T21:04:32.874836597Z"
+      "failure_count": 7,
+      "next_retry_at": "2026-03-13T17:57:08.185852466Z"
     },
     {
       "name": "coursier",
@@ -46686,11 +46686,11 @@
       "name": "tctl",
       "source": "pypi:tctl",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 6,
-      "next_retry_at": "2026-03-10T21:04:32.874836597Z"
+      "failure_count": 7,
+      "next_retry_at": "2026-03-13T17:57:08.185852466Z"
     },
     {
       "name": "tdlib",
