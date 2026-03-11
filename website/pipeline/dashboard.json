@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-11T15:52:17Z",
+  "generated_at": "2026-03-11T15:53:33Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 32,
-      "pending": 3905,
+      "failed": 33,
+      "pending": 3904,
       "success": 1335
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 32,
-        "pending": 3882,
+        "failed": 33,
+        "pending": 3881,
         "success": 1322
       }
     },
@@ -80,8 +80,8 @@
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 13,
-        "pending": 70,
+        "failed": 14,
+        "pending": 69,
         "success": 5,
         "total": 89
       }
@@ -570,6 +570,15 @@
           "next_retry_at": "2026-03-14T05:01:47Z"
         },
         {
+          "id": "rubygems:chroma",
+          "name": "chroma",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-14T07:52:51Z"
+        },
+        {
           "id": "rubygems:cog",
           "name": "cog",
           "ecosystem": "rubygems",
@@ -624,6 +633,15 @@
           "next_retry_at": "2026-03-11T23:48:38Z"
         },
         {
+          "id": "npm:dmd",
+          "name": "dmd",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-14T07:52:51Z"
+        },
+        {
           "id": "rubygems:doggo",
           "name": "doggo",
           "ecosystem": "rubygems",
@@ -631,15 +649,6 @@
           "category": "install_failed",
           "failure_count": 5,
           "next_retry_at": "2026-03-12T03:38:27Z"
-        },
-        {
-          "id": "npm:e2b",
-          "name": "e2b",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-11T15:45:19Z"
         },
         {
           "id": "npm:ent",
@@ -4293,15 +4302,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:chroma",
-          "name": "chroma",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-11T13:50:09Z"
-        },
-        {
           "id": "homebrew:chromaprint",
           "name": "chromaprint",
           "ecosystem": "homebrew",
@@ -6283,15 +6283,6 @@
           "failure_count": 1
         },
         {
-          "id": "npm:dmd",
-          "name": "dmd",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-11T13:50:09Z"
-        },
-        {
           "id": "homebrew:dmg2img",
           "name": "dmg2img",
           "ecosystem": "homebrew",
@@ -6873,6 +6864,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:e2b",
+          "name": "e2b",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-11T15:45:19Z"
         },
         {
           "id": "homebrew:eask-cli",
