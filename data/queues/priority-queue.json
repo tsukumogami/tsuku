@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-11T04:20:13Z",
+  "updated_at": "2026-03-11T05:53:12Z",
   "entries": [
     {
       "name": "node",
@@ -6606,11 +6606,11 @@
       "name": "cassandra",
       "source": "rubygems:cassandra",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 6,
-      "next_retry_at": "2026-03-11T01:54:13.407038661Z"
+      "failure_count": 7,
+      "next_retry_at": "2026-03-13T21:53:12.747259952Z"
     },
     {
       "name": "cassandra-reaper",
@@ -10236,7 +10236,7 @@
       "name": "datasette",
       "source": "npm:datasette",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 6,
@@ -10876,7 +10876,7 @@
       "name": "dict",
       "source": "rubygems:dict",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 4,
@@ -19736,11 +19736,11 @@
       "name": "hasura-cli",
       "source": "npm:hasura-cli",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 4,
-      "next_retry_at": "2026-03-10T19:38:38.536354115Z"
+      "failure_count": 5,
+      "next_retry_at": "2026-03-11T21:53:12.747259952Z"
     },
     {
       "name": "hatari",
