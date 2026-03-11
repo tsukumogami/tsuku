@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-11T01:57:08Z",
+  "updated_at": "2026-03-11T04:20:13Z",
   "entries": [
     {
       "name": "node",
@@ -4446,11 +4446,11 @@
       "name": "basis_universal",
       "source": "crates.io:basis_universal",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 6,
-      "next_retry_at": "2026-03-11T01:54:13.407038661Z"
+      "failure_count": 7,
+      "next_retry_at": "2026-03-13T20:20:13.581550514Z"
     },
     {
       "name": "bastet",
@@ -5896,11 +5896,11 @@
       "name": "bup",
       "source": "rubygems:bup",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 6,
-      "next_retry_at": "2026-03-10T22:18:30.786859571Z"
+      "failure_count": 7,
+      "next_retry_at": "2026-03-13T20:20:13.581550514Z"
     },
     {
       "name": "burp",
@@ -18186,11 +18186,11 @@
       "name": "got",
       "source": "npm:got",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 4,
-      "next_retry_at": "2026-03-10T17:48:22.450804003Z"
+      "failure_count": 5,
+      "next_retry_at": "2026-03-11T20:20:13.581550514Z"
     },
     {
       "name": "gotests",
@@ -50306,11 +50306,11 @@
       "name": "vllm",
       "source": "pypi:vllm",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 6,
-      "next_retry_at": "2026-03-10T22:18:30.786859571Z"
+      "failure_count": 7,
+      "next_retry_at": "2026-03-13T20:20:13.581550514Z"
     },
     {
       "name": "vmware-tanzu/carvel/vendir",
