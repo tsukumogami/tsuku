@@ -1,13 +1,13 @@
 {
-  "generated_at": "2026-03-11T21:39:17Z",
+  "generated_at": "2026-03-11T21:40:39Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 36,
-      "pending": 3901,
-      "success": 1335
+      "failed": 32,
+      "pending": 3904,
+      "success": 1336
     },
     "by_tier": {
       "1": {
@@ -23,9 +23,9 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 36,
-        "pending": 3878,
-        "success": 1322
+        "failed": 32,
+        "pending": 3881,
+        "success": 1323
       }
     },
     "by_ecosystem": {
@@ -68,8 +68,8 @@
         "total": 1
       },
       "npm": {
-        "failed": 14,
-        "pending": 7,
+        "failed": 12,
+        "pending": 9,
         "success": 54,
         "total": 75
       },
@@ -80,9 +80,9 @@
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 16,
-        "pending": 67,
-        "success": 5,
+        "failed": 14,
+        "pending": 68,
+        "success": 6,
         "total": 89
       }
     },
@@ -651,15 +651,6 @@
           "next_retry_at": "2026-03-12T03:38:27Z"
         },
         {
-          "id": "rubygems:dug",
-          "name": "dug",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-03-11T19:54:12Z"
-        },
-        {
           "id": "npm:e2b",
           "name": "e2b",
           "ecosystem": "npm",
@@ -678,15 +669,6 @@
           "next_retry_at": "2026-03-12T04:38:12Z"
         },
         {
-          "id": "rubygems:exiv2",
-          "name": "exiv2",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-03-11T20:59:20Z"
-        },
-        {
           "id": "npm:fastmcp",
           "name": "fastmcp",
           "ecosystem": "npm",
@@ -694,15 +676,6 @@
           "category": "install_failed",
           "failure_count": 6,
           "next_retry_at": "2026-03-12T06:34:28Z"
-        },
-        {
-          "id": "npm:got",
-          "name": "got",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-11T20:20:13Z"
         },
         {
           "id": "npm:hasura-cli",
@@ -723,15 +696,6 @@
           "next_retry_at": "2026-03-12T01:47:32Z"
         },
         {
-          "id": "npm:lcm",
-          "name": "lcm",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-11T19:38:27Z"
-        },
-        {
           "id": "pypi:lib3mf",
           "name": "lib3mf",
           "ecosystem": "pypi",
@@ -741,13 +705,13 @@
           "next_retry_at": "2026-03-16T00:56:07Z"
         },
         {
-          "id": "npm:mailhog",
-          "name": "mailhog",
+          "id": "npm:markdown-toc",
+          "name": "markdown-toc",
           "ecosystem": "npm",
           "priority": 3,
           "category": "install_failed",
           "failure_count": 4,
-          "next_retry_at": "2026-03-11T21:01:47Z"
+          "next_retry_at": "2026-03-12T05:39:53Z"
         },
         {
           "id": "npm:mongoose",
@@ -6730,6 +6694,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:dug",
+          "name": "dug",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 2,
+          "next_retry_at": "2026-03-11T19:54:12Z"
+        },
+        {
           "id": "homebrew:dumbpipe",
           "name": "dumbpipe",
           "ecosystem": "homebrew",
@@ -7402,6 +7375,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:exiv2",
+          "name": "exiv2",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 2,
+          "next_retry_at": "2026-03-11T20:59:20Z"
+        },
+        {
           "id": "homebrew:exoscale/tap/exoscale-cli",
           "name": "exoscale/tap/exoscale-cli",
           "ecosystem": "homebrew",
@@ -7573,13 +7555,6 @@
           "id": "homebrew:fastga",
           "name": "fastga",
           "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "rubygems:fastlane",
-          "name": "fastlane",
-          "ecosystem": "rubygems",
           "priority": 3,
           "failure_count": 0
         },
@@ -9738,6 +9713,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "npm:got",
+          "name": "got",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-11T20:20:13Z"
         },
         {
           "id": "homebrew:gpa",
@@ -13018,6 +13002,15 @@
           "failure_count": 0
         },
         {
+          "id": "npm:lcm",
+          "name": "lcm",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-11T19:38:27Z"
+        },
+        {
           "id": "homebrew:ldid",
           "name": "ldid",
           "ecosystem": "homebrew",
@@ -14807,6 +14800,15 @@
           "failure_count": 0
         },
         {
+          "id": "npm:mailhog",
+          "name": "mailhog",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-11T21:01:47Z"
+        },
+        {
           "id": "homebrew:mailsy",
           "name": "mailsy",
           "ecosystem": "homebrew",
@@ -14994,15 +14996,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "npm:markdown-toc",
-          "name": "markdown-toc",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-11T18:11:21Z"
         },
         {
           "id": "homebrew:markdownlint-cli",
@@ -30620,6 +30613,13 @@
           "id": "homebrew:fastfetch",
           "name": "fastfetch",
           "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "rubygems:fastlane",
+          "name": "fastlane",
+          "ecosystem": "rubygems",
           "priority": 3,
           "failure_count": 0
         },
