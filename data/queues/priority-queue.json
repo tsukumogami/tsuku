@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-11T09:47:32Z",
+  "updated_at": "2026-03-11T11:38:27Z",
   "entries": [
     {
       "name": "node",
@@ -7356,7 +7356,7 @@
       "name": "chisel",
       "source": "rubygems:chisel",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 6,
@@ -9326,7 +9326,7 @@
       "name": "cql",
       "source": "rubygems:cql",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 5,
@@ -11566,11 +11566,11 @@
       "name": "doggo",
       "source": "rubygems:doggo",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 4,
-      "next_retry_at": "2026-03-11T06:34:28.184071287Z"
+      "failure_count": 5,
+      "next_retry_at": "2026-03-12T03:38:27.609873712Z"
     },
     {
       "name": "dokku/repo/dokku",
@@ -24896,11 +24896,11 @@
       "name": "lcm",
       "source": "npm:lcm",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-03-10T18:08:56.495689349Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-03-11T19:38:27.609873712Z"
     },
     {
       "name": "lcov",
