@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-11T13:01:48Z",
+  "updated_at": "2026-03-11T14:11:21Z",
   "entries": [
     {
       "name": "node",
@@ -7436,7 +7436,7 @@
       "name": "chroma",
       "source": "rubygems:chroma",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 6,
@@ -9326,11 +9326,11 @@
       "name": "cql",
       "source": "rubygems:cql",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 5,
-      "next_retry_at": "2026-03-11T10:51:04.753983944Z"
+      "failure_count": 6,
+      "next_retry_at": "2026-03-12T22:11:21.674666796Z"
     },
     {
       "name": "cqlabs/dcm/dcm",
@@ -11186,7 +11186,7 @@
       "name": "dmd",
       "source": "npm:dmd",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 6,
@@ -28896,11 +28896,11 @@
       "name": "markdown-toc",
       "source": "npm:markdown-toc",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-02-20T22:30:57.83345791Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-03-11T18:11:21.674666796Z"
     },
     {
       "name": "markdownlint-cli",
