@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-11T14:10:46Z",
+  "generated_at": "2026-03-11T14:12:06Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -570,15 +570,6 @@
           "next_retry_at": "2026-03-14T05:01:47Z"
         },
         {
-          "id": "rubygems:chroma",
-          "name": "chroma",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-11T13:50:09Z"
-        },
-        {
           "id": "rubygems:cog",
           "name": "cog",
           "ecosystem": "rubygems",
@@ -606,6 +597,15 @@
           "next_retry_at": "2026-03-12T01:01:41Z"
         },
         {
+          "id": "rubygems:cql",
+          "name": "cql",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-12T22:11:21Z"
+        },
+        {
           "id": "npm:datasette",
           "name": "datasette",
           "ecosystem": "npm",
@@ -622,15 +622,6 @@
           "category": "install_failed",
           "failure_count": 5,
           "next_retry_at": "2026-03-11T23:48:38Z"
-        },
-        {
-          "id": "npm:dmd",
-          "name": "dmd",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-11T13:50:09Z"
         },
         {
           "id": "rubygems:doggo",
@@ -721,6 +712,15 @@
           "category": "install_failed",
           "failure_count": 4,
           "next_retry_at": "2026-03-11T21:01:47Z"
+        },
+        {
+          "id": "npm:markdown-toc",
+          "name": "markdown-toc",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-11T18:11:21Z"
         },
         {
           "id": "crates.io:numpy",
@@ -4293,6 +4293,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:chroma",
+          "name": "chroma",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-11T13:50:09Z"
+        },
+        {
           "id": "homebrew:chromaprint",
           "name": "chromaprint",
           "ecosystem": "homebrew",
@@ -5278,15 +5287,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "rubygems:cql",
-          "name": "cql",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-11T10:51:04Z"
         },
         {
           "id": "homebrew:cqlabs/dcm/dcm",
@@ -6281,6 +6281,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:dmd",
+          "name": "dmd",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-11T13:50:09Z"
         },
         {
           "id": "homebrew:dmg2img",
@@ -14985,15 +14994,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "npm:markdown-toc",
-          "name": "markdown-toc",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-02-20T22:30:57Z"
         },
         {
           "id": "homebrew:markdownlint-cli",
