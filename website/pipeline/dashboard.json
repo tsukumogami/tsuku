@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-11T05:52:38Z",
+  "generated_at": "2026-03-11T05:53:54Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -534,6 +534,15 @@
           "next_retry_at": "2026-03-13T20:20:13Z"
         },
         {
+          "id": "rubygems:cassandra",
+          "name": "cassandra",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-13T21:53:12Z"
+        },
+        {
           "id": "rubygems:cdo",
           "name": "cdo",
           "ecosystem": "rubygems",
@@ -606,24 +615,6 @@
           "next_retry_at": "2026-03-11T10:51:04Z"
         },
         {
-          "id": "npm:datasette",
-          "name": "datasette",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-11T05:36:55Z"
-        },
-        {
-          "id": "rubygems:dict",
-          "name": "dict",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-11T04:38:12Z"
-        },
-        {
           "id": "npm:dmd",
           "name": "dmd",
           "ecosystem": "npm",
@@ -676,6 +667,15 @@
           "category": "install_failed",
           "failure_count": 5,
           "next_retry_at": "2026-03-11T20:20:13Z"
+        },
+        {
+          "id": "npm:hasura-cli",
+          "name": "hasura-cli",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-11T21:53:12Z"
         },
         {
           "id": "pypi:lib3mf",
@@ -3884,15 +3884,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:cassandra",
-          "name": "cassandra",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-11T01:54:13Z"
-        },
-        {
           "id": "homebrew:cassandra-reaper",
           "name": "cassandra-reaper",
           "ecosystem": "homebrew",
@@ -5757,6 +5748,15 @@
           "failure_count": 0
         },
         {
+          "id": "npm:datasette",
+          "name": "datasette",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-11T05:36:55Z"
+        },
+        {
           "id": "homebrew:datawire/blackbird/telepresence",
           "name": "datawire/blackbird/telepresence",
           "ecosystem": "homebrew",
@@ -6098,6 +6098,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "rubygems:dict",
+          "name": "dict",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-11T04:38:12Z"
         },
         {
           "id": "crates.io:diesel",
@@ -10533,15 +10542,6 @@
           "ecosystem": "crates.io",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "npm:hasura-cli",
-          "name": "hasura-cli",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-10T19:38:38Z"
         },
         {
           "id": "homebrew:hatch",
