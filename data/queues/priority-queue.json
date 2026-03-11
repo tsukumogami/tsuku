@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-11T11:38:27Z",
+  "updated_at": "2026-03-11T13:01:48Z",
   "entries": [
     {
       "name": "node",
@@ -7356,11 +7356,11 @@
       "name": "chisel",
       "source": "rubygems:chisel",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 6,
-      "next_retry_at": "2026-03-11T09:55:25.941367516Z"
+      "failure_count": 7,
+      "next_retry_at": "2026-03-14T05:01:47.991907361Z"
     },
     {
       "name": "chisel-tunnel",
@@ -28556,11 +28556,11 @@
       "name": "mailhog",
       "source": "npm:mailhog",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-03-10T21:01:41.763877274Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-03-11T21:01:47.991907361Z"
     },
     {
       "name": "mailpit",
