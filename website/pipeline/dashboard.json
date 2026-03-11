@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-11T18:58:30Z",
+  "generated_at": "2026-03-11T19:00:03Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 35,
-      "pending": 3902,
+      "failed": 36,
+      "pending": 3901,
       "success": 1335
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 35,
-        "pending": 3879,
+        "failed": 36,
+        "pending": 3878,
         "success": 1322
       }
     },
@@ -80,8 +80,8 @@
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 15,
-        "pending": 68,
+        "failed": 16,
+        "pending": 67,
         "success": 5,
         "total": 89
       }
@@ -678,6 +678,15 @@
           "next_retry_at": "2026-03-12T04:38:12Z"
         },
         {
+          "id": "rubygems:exiv2",
+          "name": "exiv2",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 2,
+          "next_retry_at": "2026-03-11T20:59:20Z"
+        },
+        {
           "id": "npm:fastmcp",
           "name": "fastmcp",
           "ecosystem": "npm",
@@ -741,13 +750,13 @@
           "next_retry_at": "2026-03-11T21:01:47Z"
         },
         {
-          "id": "npm:markdown-toc",
-          "name": "markdown-toc",
+          "id": "npm:mongoose",
+          "name": "mongoose",
           "ecosystem": "npm",
           "priority": 3,
           "category": "install_failed",
           "failure_count": 3,
-          "next_retry_at": "2026-03-11T18:11:21Z"
+          "next_retry_at": "2026-03-11T22:59:20Z"
         },
         {
           "id": "crates.io:numpy",
@@ -7391,15 +7400,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "rubygems:exiv2",
-          "name": "exiv2",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 1,
-          "next_retry_at": "2026-03-08T00:27:16Z"
         },
         {
           "id": "homebrew:exoscale/tap/exoscale-cli",
@@ -14996,6 +14996,15 @@
           "failure_count": 0
         },
         {
+          "id": "npm:markdown-toc",
+          "name": "markdown-toc",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-11T18:11:21Z"
+        },
+        {
           "id": "homebrew:markdownlint-cli",
           "name": "markdownlint-cli",
           "ecosystem": "homebrew",
@@ -16016,15 +16025,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:mongoose",
-          "name": "mongoose",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-02-20T23:29:53Z"
         },
         {
           "id": "homebrew:mongosh",
