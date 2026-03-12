@@ -1,22 +1,22 @@
 {
-  "generated_at": "2026-03-11T22:35:46Z",
-  "total_recipes": 1401,
+  "generated_at": "2026-03-12T07:02:28Z",
+  "total_recipes": 1402,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 838,
-        "total": 1401,
-        "pct": 59.81441827266239
+        "supported": 839,
+        "total": 1402,
+        "pct": 59.84308131241084
       },
       "glibc": {
-        "supported": 1368,
-        "total": 1401,
-        "pct": 97.64453961456103
+        "supported": 1369,
+        "total": 1402,
+        "pct": 97.64621968616262
       },
       "musl": {
-        "supported": 1227,
-        "total": 1401,
-        "pct": 87.58029978586723
+        "supported": 1228,
+        "total": 1402,
+        "pct": 87.58915834522111
       }
     },
     "by_category": {
@@ -26,9 +26,9 @@
         "glibc_support": 150
       },
       "tool": {
-        "total": 1249,
-        "musl_support": 1077,
-        "glibc_support": 1218
+        "total": 1250,
+        "musl_support": 1078,
+        "glibc_support": 1219
       }
     }
   },
@@ -9312,6 +9312,18 @@
       "warnings": [
         "recipe 'jsoncpp' has platform-specific actions without libc when clauses and no musl fallback"
       ]
+    },
+    {
+      "name": "jsonlint",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
     },
     {
       "name": "jsonnet",
