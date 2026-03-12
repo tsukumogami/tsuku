@@ -12,7 +12,7 @@ Issues covered: 5
 - `grep 'target: 75%' codecov.yml`
 - `grep -A1 'range:' codecov.yml`
 **Expected**: codecov.yml contains `target: 75%` under `project.default`, and a `range` key set to `"70...90"`. The `patch.default.target` remains at `50%`.
-**Status**: pending
+**Status**: passed
 
 ## Scenario 2: Codecov patch target unchanged
 **ID**: scenario-2
@@ -20,7 +20,7 @@ Issues covered: 5
 **Commands**:
 - `grep -A3 'patch:' codecov.yml`
 **Expected**: The patch section still contains `target: 50%` -- no unintended changes to patch coverage requirements.
-**Status**: pending
+**Status**: passed
 
 ## Scenario 3: executor package tests pass and meet 75%
 **ID**: scenario-3
@@ -29,7 +29,7 @@ Issues covered: 5
 - `go test -coverprofile=cover_executor.out ./internal/executor/...`
 - `go tool cover -func=cover_executor.out | tail -1`
 **Expected**: All tests pass. The total coverage line for `internal/executor` shows >= 75.0%.
-**Status**: pending
+**Status**: passed (76.4%)
 
 ## Scenario 4: validate package tests pass and meet 75%
 **ID**: scenario-4
@@ -38,7 +38,7 @@ Issues covered: 5
 - `go test -coverprofile=cover_validate.out ./internal/validate/...`
 - `go tool cover -func=cover_validate.out | tail -1`
 **Expected**: All tests pass. The total coverage line for `internal/validate` shows >= 75.0%.
-**Status**: pending
+**Status**: passed (75.2%)
 
 ## Scenario 5: builders package tests pass and meet 75%
 **ID**: scenario-5
@@ -47,7 +47,7 @@ Issues covered: 5
 - `go test -coverprofile=cover_builders.out ./internal/builders/...`
 - `go tool cover -func=cover_builders.out | tail -1`
 **Expected**: All tests pass. The total coverage line for `internal/builders` shows >= 75.0%.
-**Status**: pending
+**Status**: passed (75.5%)
 
 ## Scenario 6: userconfig package tests pass and meet 75%
 **ID**: scenario-6
@@ -56,7 +56,7 @@ Issues covered: 5
 - `go test -coverprofile=cover_userconfig.out ./internal/userconfig/...`
 - `go tool cover -func=cover_userconfig.out | tail -1`
 **Expected**: All tests pass. The total coverage line for `internal/userconfig` shows >= 75.0%.
-**Status**: pending
+**Status**: passed (94.0%)
 
 ## Scenario 7: discover package tests pass and meet 75%
 **ID**: scenario-7

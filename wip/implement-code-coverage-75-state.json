@@ -3,13 +3,13 @@
   "design_doc": "docs/plans/PLAN-code-coverage-75.md",
   "branch": "impl/code-coverage-75",
   "pr_number": 2143,
-  "integrity_hash": "sha256:0cff1906ff66d82f18c7b887decc976bc7e43206028aa13f69e3c381760cd3dd",
+  "integrity_hash": "sha256:97cfc564a3cbf3f69bba238f8a964129da71a36317381e07d07c68e128222e3b",
   "issues": [
     {
       "number": 2131,
       "title": "chore: update Codecov configuration for 75% target",
-      "status": "scrutinized",
-      "ci_status": "",
+      "status": "completed",
+      "ci_status": "passed",
       "ci_fix_attempts": 0,
       "issue_type": "code",
       "dependencies": [],
@@ -30,6 +30,31 @@
           "patch_unchanged": "patch target remains 50%"
         }
       },
+      "reviewer_results": {
+        "issue": 2131,
+        "reviews": [
+          {
+            "focus": "pragmatic",
+            "blocking_count": 0,
+            "advisory_count": 0
+          },
+          {
+            "focus": "architect",
+            "blocking_count": 0,
+            "advisory_count": 0
+          },
+          {
+            "focus": "maintainer",
+            "blocking_count": 0,
+            "advisory_count": 0
+          }
+        ],
+        "qa_scenarios": [
+          "scenario-1",
+          "scenario-2"
+        ],
+        "qa_result": "pass"
+      },
       "testable_scenarios": [
         "scenario-1",
         "scenario-2"
@@ -39,14 +64,55 @@
     {
       "number": 2132,
       "title": "test: cover near-75% packages (executor, validate, builders, userconfig)",
-      "status": "pending",
+      "status": "scrutinized",
       "ci_status": "",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [],
-      "commits": null,
-      "agent_type": "",
-      "summary": null,
+      "commits": [
+        "39849ed2",
+        "39849ed2",
+        "edf95edd"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          "internal/executor/executor_test.go",
+          "internal/validate/runtime_test.go",
+          "internal/builders/errors_test.go",
+          "internal/userconfig/userconfig_test.go"
+        ],
+        "tests_added": 47,
+        "key_decisions": "Fixed TestShouldExecute to use expected field; added comments for grammar wart",
+        "requirements_map": [
+          {
+            "ac": "internal/executor coverage \u003e= 75%",
+            "status": "implemented",
+            "evidence": "76.4%"
+          },
+          {
+            "ac": "internal/validate coverage \u003e= 75%",
+            "status": "implemented",
+            "evidence": "75.2%"
+          },
+          {
+            "ac": "internal/builders coverage \u003e= 75%",
+            "status": "implemented",
+            "evidence": "75.5%"
+          },
+          {
+            "ac": "internal/userconfig coverage \u003e= 75%",
+            "status": "implemented",
+            "evidence": "94.0%"
+          },
+          {
+            "ac": "All existing tests continue to pass",
+            "status": "implemented",
+            "evidence": "go test -short ./... passes"
+          }
+        ]
+      },
       "testable_scenarios": [
         "scenario-3",
         "scenario-4",
