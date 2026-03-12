@@ -16,44 +16,36 @@ import (
 	"github.com/ulikunitz/xz"
 )
 
-// TestExtractAction_ExtractTarXz tests tar.xz extraction.
-func TestExtractAction_ExtractTarXz(t *testing.T) {
-	t.Parallel()
-	action := &ExtractAction{}
-	tmpDir := t.TempDir()
-
-	// Create a tar.xz archive
-	var tarBuf bytes.Buffer
-	tw := tar.NewWriter(&tarBuf)
-	content := []byte("xz content test")
+// createTarArchive builds a tar archive with a single file entry in memory.
+func createTarArchive(t *testing.T, dirName, fileName, content string) []byte {
+	t.Helper()
+	var buf bytes.Buffer
+	tw := tar.NewWriter(&buf)
+	data := []byte(content)
 	hdr := &tar.Header{
-		Name: "xzdir/xzfile.txt",
+		Name: dirName + "/" + fileName,
 		Mode: 0644,
-		Size: int64(len(content)),
+		Size: int64(len(data)),
 	}
 	if err := tw.WriteHeader(hdr); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := tw.Write(content); err != nil {
+	if _, err := tw.Write(data); err != nil {
 		t.Fatal(err)
 	}
 	_ = tw.Close()
+	return buf.Bytes()
+}
 
-	// Compress with xz
-	var xzBuf bytes.Buffer
-	xzw, err := xz.NewWriter(&xzBuf)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if _, err := xzw.Write(tarBuf.Bytes()); err != nil {
-		t.Fatal(err)
-	}
-	if err := xzw.Close(); err != nil {
-		t.Fatal(err)
-	}
+// testTarExtraction is a helper that writes an archive, extracts it with extractFn,
+// and verifies the extracted content.
+func testTarExtraction(t *testing.T, archiveName string, archiveData []byte,
+	extractFn func(string, string, int, []string) error, dirName, fileName, wantContent string) {
+	t.Helper()
+	tmpDir := t.TempDir()
 
-	archivePath := filepath.Join(tmpDir, "test.tar.xz")
-	if err := os.WriteFile(archivePath, xzBuf.Bytes(), 0644); err != nil {
+	archivePath := filepath.Join(tmpDir, archiveName)
+	if err := os.WriteFile(archivePath, archiveData, 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -62,18 +54,40 @@ func TestExtractAction_ExtractTarXz(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := action.extractTarXz(archivePath, destPath, 0, nil); err != nil {
-		t.Fatalf("extractTarXz failed: %v", err)
+	if err := extractFn(archivePath, destPath, 0, nil); err != nil {
+		t.Fatalf("extraction failed: %v", err)
 	}
 
-	extractedFile := filepath.Join(destPath, "xzdir", "xzfile.txt")
+	extractedFile := filepath.Join(destPath, dirName, fileName)
 	extractedContent, err := os.ReadFile(extractedFile)
 	if err != nil {
 		t.Fatalf("Failed to read extracted file: %v", err)
 	}
-	if string(extractedContent) != "xz content test" {
-		t.Errorf("Extracted content = %q, want %q", string(extractedContent), "xz content test")
+	if string(extractedContent) != wantContent {
+		t.Errorf("Extracted content = %q, want %q", string(extractedContent), wantContent)
 	}
+}
+
+// TestExtractAction_ExtractTarXz tests tar.xz extraction.
+func TestExtractAction_ExtractTarXz(t *testing.T) {
+	t.Parallel()
+	action := &ExtractAction{}
+	tarData := createTarArchive(t, "xzdir", "xzfile.txt", "xz content test")
+
+	var xzBuf bytes.Buffer
+	xzw, err := xz.NewWriter(&xzBuf)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := xzw.Write(tarData); err != nil {
+		t.Fatal(err)
+	}
+	if err := xzw.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	testTarExtraction(t, "test.tar.xz", xzBuf.Bytes(),
+		action.extractTarXz, "xzdir", "xzfile.txt", "xz content test")
 }
 
 // TestExtractAction_ExtractTarBz2 tests tar.bz2 extraction.
@@ -133,60 +147,22 @@ func TestExtractAction_ExtractTarBz2(t *testing.T) {
 func TestExtractAction_ExtractTarZst(t *testing.T) {
 	t.Parallel()
 	action := &ExtractAction{}
-	tmpDir := t.TempDir()
+	tarData := createTarArchive(t, "zstdir", "zstfile.txt", "zstd content test")
 
-	// Create a tar archive
-	var tarBuf bytes.Buffer
-	tw := tar.NewWriter(&tarBuf)
-	content := []byte("zstd content test")
-	hdr := &tar.Header{
-		Name: "zstdir/zstfile.txt",
-		Mode: 0644,
-		Size: int64(len(content)),
-	}
-	if err := tw.WriteHeader(hdr); err != nil {
-		t.Fatal(err)
-	}
-	if _, err := tw.Write(content); err != nil {
-		t.Fatal(err)
-	}
-	_ = tw.Close()
-
-	// Compress with zstd
 	var zstBuf bytes.Buffer
 	zw, err := zstd.NewWriter(&zstBuf)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := zw.Write(tarBuf.Bytes()); err != nil {
+	if _, err := zw.Write(tarData); err != nil {
 		t.Fatal(err)
 	}
 	if err := zw.Close(); err != nil {
 		t.Fatal(err)
 	}
 
-	archivePath := filepath.Join(tmpDir, "test.tar.zst")
-	if err := os.WriteFile(archivePath, zstBuf.Bytes(), 0644); err != nil {
-		t.Fatal(err)
-	}
-
-	destPath := filepath.Join(tmpDir, "extracted")
-	if err := os.MkdirAll(destPath, 0755); err != nil {
-		t.Fatal(err)
-	}
-
-	if err := action.extractTarZst(archivePath, destPath, 0, nil); err != nil {
-		t.Fatalf("extractTarZst failed: %v", err)
-	}
-
-	extractedFile := filepath.Join(destPath, "zstdir", "zstfile.txt")
-	extractedContent, err := os.ReadFile(extractedFile)
-	if err != nil {
-		t.Fatalf("Failed to read extracted file: %v", err)
-	}
-	if string(extractedContent) != "zstd content test" {
-		t.Errorf("Extracted content = %q, want %q", string(extractedContent), "zstd content test")
-	}
+	testTarExtraction(t, "test.tar.zst", zstBuf.Bytes(),
+		action.extractTarZst, "zstdir", "zstfile.txt", "zstd content test")
 }
 
 // TestExtractAction_ExtractTarLz tests tar.lz extraction error paths.
