@@ -18,11 +18,21 @@ func TestCopyDirectoryExcluding_WithExclude(t *testing.T) {
 	dstDir := filepath.Join(t.TempDir(), "dst")
 
 	// Create source structure with an excluded dir
-	os.MkdirAll(filepath.Join(srcDir, "keep", "sub"), 0755)
-	os.MkdirAll(filepath.Join(srcDir, "exclude_me"), 0755)
-	os.WriteFile(filepath.Join(srcDir, "keep", "file.txt"), []byte("hello"), 0644)
-	os.WriteFile(filepath.Join(srcDir, "exclude_me", "secret.txt"), []byte("secret"), 0644)
-	os.WriteFile(filepath.Join(srcDir, "root.txt"), []byte("root"), 0644)
+	if err := os.MkdirAll(filepath.Join(srcDir, "keep", "sub"), 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(filepath.Join(srcDir, "exclude_me"), 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(srcDir, "keep", "file.txt"), []byte("hello"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(srcDir, "exclude_me", "secret.txt"), []byte("secret"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(srcDir, "root.txt"), []byte("root"), 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	if err := CopyDirectoryExcluding(srcDir, dstDir, "exclude_me"); err != nil {
 		t.Fatalf("CopyDirectoryExcluding() error = %v", err)
@@ -48,8 +58,12 @@ func TestCopyDirectoryExcluding_WithSymlinks(t *testing.T) {
 	dstDir := filepath.Join(t.TempDir(), "dst")
 
 	// Create a file and a symlink to it
-	os.WriteFile(filepath.Join(srcDir, "real.txt"), []byte("real"), 0644)
-	os.Symlink("real.txt", filepath.Join(srcDir, "link.txt"))
+	if err := os.WriteFile(filepath.Join(srcDir, "real.txt"), []byte("real"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink("real.txt", filepath.Join(srcDir, "link.txt")); err != nil {
+		t.Fatal(err)
+	}
 
 	if err := CopyDirectoryExcluding(srcDir, dstDir, ""); err != nil {
 		t.Fatalf("CopyDirectoryExcluding() error = %v", err)
@@ -72,7 +86,9 @@ func TestCopyFile_Success(t *testing.T) {
 
 	srcPath := filepath.Join(srcDir, "test.txt")
 	dstPath := filepath.Join(dstDir, "sub", "test.txt")
-	os.WriteFile(srcPath, []byte("content"), 0644)
+	if err := os.WriteFile(srcPath, []byte("content"), 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	if err := CopyFile(srcPath, dstPath, 0755); err != nil {
 		t.Fatalf("CopyFile() error = %v", err)
@@ -106,9 +122,13 @@ func TestCopySymlink_Success(t *testing.T) {
 	dstDir := t.TempDir()
 
 	// Create source symlink
-	os.WriteFile(filepath.Join(srcDir, "target.txt"), []byte("data"), 0644)
+	if err := os.WriteFile(filepath.Join(srcDir, "target.txt"), []byte("data"), 0644); err != nil {
+		t.Fatal(err)
+	}
 	srcLink := filepath.Join(srcDir, "link")
-	os.Symlink("target.txt", srcLink)
+	if err := os.Symlink("target.txt", srcLink); err != nil {
+		t.Fatal(err)
+	}
 
 	dstLink := filepath.Join(dstDir, "sub", "link")
 	if err := CopySymlink(srcLink, dstLink); err != nil {
@@ -129,7 +149,9 @@ func TestCopyDirectory_NoExclude(t *testing.T) {
 	srcDir := t.TempDir()
 	dstDir := filepath.Join(t.TempDir(), "dst")
 
-	os.WriteFile(filepath.Join(srcDir, "a.txt"), []byte("a"), 0644)
+	if err := os.WriteFile(filepath.Join(srcDir, "a.txt"), []byte("a"), 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	if err := CopyDirectory(srcDir, dstDir); err != nil {
 		t.Fatalf("CopyDirectory() error = %v", err)
@@ -414,7 +436,9 @@ func TestDownloadCache_Save_CreatesDir(t *testing.T) {
 	// Create a file to save
 	srcDir := t.TempDir()
 	srcFile := filepath.Join(srcDir, "test.bin")
-	os.WriteFile(srcFile, []byte("test content"), 0644)
+	if err := os.WriteFile(srcFile, []byte("test content"), 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	err := cache.Save("https://example.com/test.bin", srcFile, "")
 	if err != nil {
@@ -430,15 +454,21 @@ func TestDownloadCache_Save_CreatesDir(t *testing.T) {
 func TestDownloadCache_Clear_Success(t *testing.T) {
 	t.Parallel()
 	cacheDir := filepath.Join(t.TempDir(), "cache")
-	os.MkdirAll(cacheDir, 0700)
+	if err := os.MkdirAll(cacheDir, 0700); err != nil {
+		t.Fatal(err)
+	}
 
 	cache := NewDownloadCache(cacheDir)
 	cache.SetSkipSecurityChecks(true)
 
 	// Save a file first
 	srcFile := filepath.Join(t.TempDir(), "test.bin")
-	os.WriteFile(srcFile, []byte("content"), 0644)
-	_ = cache.Save("https://example.com/test.bin", srcFile, "")
+	if err := os.WriteFile(srcFile, []byte("content"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := cache.Save("https://example.com/test.bin", srcFile, ""); err != nil {
+		t.Fatal(err)
+	}
 
 	// Clear should work
 	err := cache.Clear()
@@ -450,7 +480,9 @@ func TestDownloadCache_Clear_Success(t *testing.T) {
 func TestDownloadCache_Info_Empty(t *testing.T) {
 	t.Parallel()
 	cacheDir := filepath.Join(t.TempDir(), "cache")
-	os.MkdirAll(cacheDir, 0700)
+	if err := os.MkdirAll(cacheDir, 0700); err != nil {
+		t.Fatal(err)
+	}
 
 	cache := NewDownloadCache(cacheDir)
 	cache.SetSkipSecurityChecks(true)
@@ -467,7 +499,9 @@ func TestDownloadCache_Info_Empty(t *testing.T) {
 func TestDownloadCache_Info_WithEntries(t *testing.T) {
 	t.Parallel()
 	cacheDir := filepath.Join(t.TempDir(), "cache")
-	os.MkdirAll(cacheDir, 0700)
+	if err := os.MkdirAll(cacheDir, 0700); err != nil {
+		t.Fatal(err)
+	}
 
 	cache := NewDownloadCache(cacheDir)
 	cache.SetSkipSecurityChecks(true)
@@ -476,8 +510,12 @@ func TestDownloadCache_Info_WithEntries(t *testing.T) {
 	for i, name := range []string{"a.bin", "b.bin"} {
 		srcFile := filepath.Join(t.TempDir(), name)
 		content := strings.Repeat("x", (i+1)*100)
-		os.WriteFile(srcFile, []byte(content), 0644)
-		_ = cache.Save("https://example.com/"+name, srcFile, "")
+		if err := os.WriteFile(srcFile, []byte(content), 0644); err != nil {
+			t.Fatal(err)
+		}
+		if err := cache.Save("https://example.com/"+name, srcFile, ""); err != nil {
+			t.Fatal(err)
+		}
 	}
 
 	info, err := cache.Info()
@@ -497,14 +535,18 @@ func TestDownloadCache_Info_WithEntries(t *testing.T) {
 func TestDownloadCache_CheckAndSave_WithChecksum(t *testing.T) {
 	t.Parallel()
 	cacheDir := filepath.Join(t.TempDir(), "cache")
-	os.MkdirAll(cacheDir, 0700)
+	if err := os.MkdirAll(cacheDir, 0700); err != nil {
+		t.Fatal(err)
+	}
 
 	cache := NewDownloadCache(cacheDir)
 	cache.SetSkipSecurityChecks(true)
 
 	// Save a file
 	srcFile := filepath.Join(t.TempDir(), "test.bin")
-	os.WriteFile(srcFile, []byte("hello world"), 0644)
+	if err := os.WriteFile(srcFile, []byte("hello world"), 0644); err != nil {
+		t.Fatal(err)
+	}
 	err := cache.Save("https://example.com/test.bin", srcFile, "")
 	if err != nil {
 		t.Fatalf("Save() error = %v", err)
@@ -826,9 +868,13 @@ func TestInstallBinariesAction_createSymlink(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	targetDir := filepath.Join(tmpDir, "tools", "tool-1.0.0", "bin")
-	os.MkdirAll(targetDir, 0755)
+	if err := os.MkdirAll(targetDir, 0755); err != nil {
+		t.Fatal(err)
+	}
 	targetFile := filepath.Join(targetDir, "tool")
-	os.WriteFile(targetFile, []byte("#!/bin/sh"), 0755)
+	if err := os.WriteFile(targetFile, []byte("#!/bin/sh"), 0755); err != nil {
+		t.Fatal(err)
+	}
 
 	linkDir := filepath.Join(tmpDir, "tools", ".install", "bin")
 	linkPath := filepath.Join(linkDir, "tool")

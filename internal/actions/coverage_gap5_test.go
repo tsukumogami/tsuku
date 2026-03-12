@@ -206,7 +206,7 @@ func TestDownloadArchiveAction_Decompose_WithStripDirs(t *testing.T) {
 	// Find extract step and check strip_dirs
 	for _, s := range steps {
 		if s.Action == "extract" {
-			sd, _ := s.Params["strip_dirs"]
+			sd := s.Params["strip_dirs"]
 			if sd != 1 {
 				t.Errorf("extract step strip_dirs = %v, want 1", sd)
 			}
