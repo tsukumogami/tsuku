@@ -65,7 +65,7 @@ Issues covered: 5
 - `go test -coverprofile=cover_discover.out ./internal/discover/...`
 - `go tool cover -func=cover_discover.out | tail -1`
 **Expected**: All tests pass. The total coverage line for `internal/discover` shows >= 75.0%.
-**Status**: pending
+**Status**: passed (75.3%)
 
 ## Scenario 8: verify package tests pass and meet 75%
 **ID**: scenario-8
@@ -74,7 +74,7 @@ Issues covered: 5
 - `go test -coverprofile=cover_verify.out ./internal/verify/...`
 - `go tool cover -func=cover_verify.out | tail -1`
 **Expected**: All tests pass. The total coverage line for `internal/verify` shows >= 75.0%.
-**Status**: pending
+**Status**: passed (75.1%)
 
 ## Scenario 9: actions package tests pass and meet 66%
 **ID**: scenario-9
