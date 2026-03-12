@@ -1430,6 +1430,384 @@ func TestBuildResolvedDepsFromPlan(t *testing.T) {
 	}
 }
 
+// TestSetLibsDir tests the SetLibsDir method
+func TestSetLibsDir(t *testing.T) {
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name:        "test-tool",
+			Description: "Test tool",
+		},
+	}
+
+	exec, err := New(r)
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
+	}
+	defer exec.Cleanup()
+
+	exec.SetLibsDir("/custom/libs")
+	if exec.libsDir != "/custom/libs" {
+		t.Errorf("SetLibsDir() = %q, want %q", exec.libsDir, "/custom/libs")
+	}
+}
+
+// TestSetAppsDir tests the SetAppsDir method
+func TestSetAppsDir(t *testing.T) {
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name:        "test-tool",
+			Description: "Test tool",
+		},
+	}
+
+	exec, err := New(r)
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
+	}
+	defer exec.Cleanup()
+
+	exec.SetAppsDir("/custom/apps")
+	if exec.appsDir != "/custom/apps" {
+		t.Errorf("SetAppsDir() = %q, want %q", exec.appsDir, "/custom/apps")
+	}
+}
+
+// TestSetCurrentDir tests the SetCurrentDir method
+func TestSetCurrentDir(t *testing.T) {
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name:        "test-tool",
+			Description: "Test tool",
+		},
+	}
+
+	exec, err := New(r)
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
+	}
+	defer exec.Cleanup()
+
+	exec.SetCurrentDir("/custom/current")
+	if exec.currentDir != "/custom/current" {
+		t.Errorf("SetCurrentDir() = %q, want %q", exec.currentDir, "/custom/current")
+	}
+}
+
+// TestSetResolvedDeps tests the SetResolvedDeps method
+func TestSetResolvedDeps(t *testing.T) {
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name:        "test-tool",
+			Description: "Test tool",
+		},
+	}
+
+	exec, err := New(r)
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
+	}
+	defer exec.Cleanup()
+
+	deps := actions.ResolvedDeps{
+		InstallTime: map[string]string{"openssl": "3.0.0"},
+		Runtime:     map[string]string{"nodejs": "20.0.0"},
+	}
+	exec.SetResolvedDeps(deps)
+
+	if exec.resolvedDeps.InstallTime["openssl"] != "3.0.0" {
+		t.Errorf("resolvedDeps.InstallTime[openssl] = %q, want %q", exec.resolvedDeps.InstallTime["openssl"], "3.0.0")
+	}
+	if exec.resolvedDeps.Runtime["nodejs"] != "20.0.0" {
+		t.Errorf("resolvedDeps.Runtime[nodejs] = %q, want %q", exec.resolvedDeps.Runtime["nodejs"], "20.0.0")
+	}
+}
+
+// TestSetDownloadCacheDir tests the SetDownloadCacheDir method
+func TestSetDownloadCacheDir(t *testing.T) {
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name:        "test-tool",
+			Description: "Test tool",
+		},
+	}
+
+	exec, err := New(r)
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
+	}
+	defer exec.Cleanup()
+
+	exec.SetDownloadCacheDir("/cache/downloads")
+	if exec.downloadCacheDir != "/cache/downloads" {
+		t.Errorf("SetDownloadCacheDir() = %q, want %q", exec.downloadCacheDir, "/cache/downloads")
+	}
+}
+
+// TestSetKeyCacheDir tests the SetKeyCacheDir method
+func TestSetKeyCacheDir(t *testing.T) {
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name:        "test-tool",
+			Description: "Test tool",
+		},
+	}
+
+	exec, err := New(r)
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
+	}
+	defer exec.Cleanup()
+
+	exec.SetKeyCacheDir("/cache/keys")
+	if exec.keyCacheDir != "/cache/keys" {
+		t.Errorf("SetKeyCacheDir() = %q, want %q", exec.keyCacheDir, "/cache/keys")
+	}
+}
+
+// TestSetSkipCacheSecurityChecks tests the SetSkipCacheSecurityChecks method
+func TestSetSkipCacheSecurityChecks(t *testing.T) {
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name:        "test-tool",
+			Description: "Test tool",
+		},
+	}
+
+	exec, err := New(r)
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
+	}
+	defer exec.Cleanup()
+
+	exec.SetSkipCacheSecurityChecks(true)
+	if !exec.skipCacheSecurityChecks {
+		t.Error("SetSkipCacheSecurityChecks(true) should set flag to true")
+	}
+
+	exec.SetSkipCacheSecurityChecks(false)
+	if exec.skipCacheSecurityChecks {
+		t.Error("SetSkipCacheSecurityChecks(false) should set flag to false")
+	}
+}
+
+// TestValidatePlatform tests platform validation
+func TestValidatePlatform(t *testing.T) {
+	// Matching platform should pass
+	plan := &InstallationPlan{
+		Platform: Platform{
+			OS:   runtime.GOOS,
+			Arch: runtime.GOARCH,
+		},
+	}
+	if err := validatePlatform(plan); err != nil {
+		t.Errorf("validatePlatform() with matching platform error = %v", err)
+	}
+
+	// Mismatched OS should fail
+	plan.Platform.OS = "windows"
+	if err := validatePlatform(plan); err == nil {
+		t.Error("validatePlatform() should fail with mismatched OS")
+	}
+
+	// Mismatched arch should fail
+	plan.Platform.OS = runtime.GOOS
+	plan.Platform.Arch = "arm"
+	if err := validatePlatform(plan); err == nil {
+		t.Error("validatePlatform() should fail with mismatched arch")
+	}
+}
+
+// TestValidateResourceLimits tests resource limit validation
+func TestValidateResourceLimits(t *testing.T) {
+	// No dependencies should pass
+	plan := &InstallationPlan{
+		Dependencies: nil,
+	}
+	if err := validateResourceLimits(plan); err != nil {
+		t.Errorf("validateResourceLimits() with no deps error = %v", err)
+	}
+
+	// Normal depth should pass
+	plan = &InstallationPlan{
+		Dependencies: []DependencyPlan{
+			{Tool: "dep1", Dependencies: []DependencyPlan{
+				{Tool: "dep2"},
+			}},
+		},
+	}
+	if err := validateResourceLimits(plan); err != nil {
+		t.Errorf("validateResourceLimits() with normal deps error = %v", err)
+	}
+
+	// Excessive depth should fail (depth > 5)
+	deep := DependencyPlan{Tool: "leaf"}
+	for i := 0; i < 6; i++ {
+		deep = DependencyPlan{
+			Tool:         "dep",
+			Dependencies: []DependencyPlan{deep},
+		}
+	}
+	plan = &InstallationPlan{
+		Dependencies: []DependencyPlan{deep},
+	}
+	if err := validateResourceLimits(plan); err == nil {
+		t.Error("validateResourceLimits() should fail with excessive depth")
+	}
+}
+
+// TestComputeDepth tests the dependency depth calculation
+func TestComputeDepth(t *testing.T) {
+	tests := []struct {
+		name     string
+		deps     []DependencyPlan
+		expected int
+	}{
+		{"nil", nil, 0},
+		{"empty", []DependencyPlan{}, 0},
+		{"single", []DependencyPlan{{Tool: "a"}}, 1},
+		{"two levels", []DependencyPlan{
+			{Tool: "a", Dependencies: []DependencyPlan{{Tool: "b"}}},
+		}, 2},
+		{"wide", []DependencyPlan{
+			{Tool: "a"},
+			{Tool: "b"},
+			{Tool: "c"},
+		}, 1},
+		{"mixed", []DependencyPlan{
+			{Tool: "a", Dependencies: []DependencyPlan{
+				{Tool: "b", Dependencies: []DependencyPlan{{Tool: "c"}}},
+			}},
+			{Tool: "d"},
+		}, 3},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := computeDepth(tt.deps)
+			if result != tt.expected {
+				t.Errorf("computeDepth() = %d, want %d", result, tt.expected)
+			}
+		})
+	}
+}
+
+// TestCountDependencySteps tests step counting across dependency tree
+func TestCountDependencySteps(t *testing.T) {
+	tests := []struct {
+		name     string
+		deps     []DependencyPlan
+		expected int
+	}{
+		{"nil", nil, 0},
+		{"single with steps", []DependencyPlan{
+			{Tool: "a", Steps: []ResolvedStep{{Action: "download"}, {Action: "extract"}}},
+		}, 2},
+		{"nested", []DependencyPlan{
+			{Tool: "a", Steps: []ResolvedStep{{Action: "download"}},
+				Dependencies: []DependencyPlan{
+					{Tool: "b", Steps: []ResolvedStep{{Action: "download"}, {Action: "chmod"}}},
+				}},
+		}, 3},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := countDependencySteps(tt.deps)
+			if result != tt.expected {
+				t.Errorf("countDependencySteps() = %d, want %d", result, tt.expected)
+			}
+		})
+	}
+}
+
+// TestCountTotalDependencies tests total dependency counting
+func TestCountTotalDependencies(t *testing.T) {
+	deps := []DependencyPlan{
+		{Tool: "a", Dependencies: []DependencyPlan{
+			{Tool: "b"},
+			{Tool: "c"},
+		}},
+		{Tool: "d"},
+	}
+
+	result := countTotalDependencies(deps)
+	if result != 4 {
+		t.Errorf("countTotalDependencies() = %d, want 4", result)
+	}
+}
+
+// TestSortStrings tests the custom sort implementation
+func TestSortStrings(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    []string
+		expected []string
+	}{
+		{"empty", []string{}, []string{}},
+		{"single", []string{"a"}, []string{"a"}},
+		{"already sorted", []string{"a", "b", "c"}, []string{"a", "b", "c"}},
+		{"reverse", []string{"c", "b", "a"}, []string{"a", "b", "c"}},
+		{"mixed", []string{"banana", "apple", "cherry"}, []string{"apple", "banana", "cherry"}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := make([]string, len(tt.input))
+			copy(s, tt.input)
+			sortStrings(s)
+			for i, v := range s {
+				if v != tt.expected[i] {
+					t.Errorf("sortStrings() = %v, want %v", s, tt.expected)
+					break
+				}
+			}
+		})
+	}
+}
+
+// TestCopyDir tests recursive directory copying
+func TestCopyDir(t *testing.T) {
+	// Create source directory with files
+	srcDir := t.TempDir()
+	subDir := srcDir + "/sub"
+	if err := os.MkdirAll(subDir, 0755); err != nil {
+		t.Fatalf("failed to create subdir: %v", err)
+	}
+	if err := os.WriteFile(srcDir+"/file1.txt", []byte("content1"), 0644); err != nil {
+		t.Fatalf("failed to write file1: %v", err)
+	}
+	if err := os.WriteFile(subDir+"/file2.txt", []byte("content2"), 0755); err != nil {
+		t.Fatalf("failed to write file2: %v", err)
+	}
+
+	// Copy to destination
+	dstDir := t.TempDir() + "/copy"
+	if err := os.MkdirAll(dstDir, 0755); err != nil {
+		t.Fatalf("failed to create dstDir: %v", err)
+	}
+	if err := copyDir(srcDir, dstDir); err != nil {
+		t.Fatalf("copyDir() error = %v", err)
+	}
+
+	// Verify file1 was copied
+	data, err := os.ReadFile(dstDir + "/file1.txt")
+	if err != nil {
+		t.Fatalf("failed to read copied file1: %v", err)
+	}
+	if string(data) != "content1" {
+		t.Errorf("file1 content = %q, want %q", string(data), "content1")
+	}
+
+	// Verify file2 in subdirectory was copied
+	data, err = os.ReadFile(dstDir + "/sub/file2.txt")
+	if err != nil {
+		t.Fatalf("failed to read copied file2: %v", err)
+	}
+	if string(data) != "content2" {
+		t.Errorf("file2 content = %q, want %q", string(data), "content2")
+	}
+}
+
 // TestBuildResolvedDepsFromPlan_Empty tests with no dependencies
 func TestBuildResolvedDepsFromPlan_Empty(t *testing.T) {
 	result := buildResolvedDepsFromPlan(nil)

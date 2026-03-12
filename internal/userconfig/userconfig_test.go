@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestDefaultConfig(t *testing.T) {
@@ -1221,6 +1222,226 @@ func TestSetLLMBackendRejectsMultipleInvalidValues(t *testing.T) {
 		if err == nil {
 			t.Errorf("expected error for invalid backend value %q", v)
 		}
+	}
+}
+
+func TestLLMLocalEnabledDefault(t *testing.T) {
+	cfg := DefaultConfig()
+	if !cfg.LLMLocalEnabled() {
+		t.Error("expected LLMLocalEnabled() to default to true")
+	}
+}
+
+func TestLLMLocalEnabledExplicit(t *testing.T) {
+	cfg := DefaultConfig()
+
+	// Explicitly disabled
+	enabled := false
+	cfg.LLM.LocalEnabled = &enabled
+	if cfg.LLMLocalEnabled() {
+		t.Error("expected LLMLocalEnabled()=false when explicitly disabled")
+	}
+
+	// Explicitly enabled
+	enabled = true
+	cfg.LLM.LocalEnabled = &enabled
+	if !cfg.LLMLocalEnabled() {
+		t.Error("expected LLMLocalEnabled()=true when explicitly enabled")
+	}
+}
+
+func TestLLMLocalPreemptiveDefault(t *testing.T) {
+	cfg := DefaultConfig()
+	if !cfg.LLMLocalPreemptive() {
+		t.Error("expected LLMLocalPreemptive() to default to true")
+	}
+}
+
+func TestLLMLocalPreemptiveExplicit(t *testing.T) {
+	cfg := DefaultConfig()
+
+	// Explicitly disabled
+	preemptive := false
+	cfg.LLM.LocalPreemptive = &preemptive
+	if cfg.LLMLocalPreemptive() {
+		t.Error("expected LLMLocalPreemptive()=false when explicitly disabled")
+	}
+
+	// Explicitly enabled
+	preemptive = true
+	cfg.LLM.LocalPreemptive = &preemptive
+	if !cfg.LLMLocalPreemptive() {
+		t.Error("expected LLMLocalPreemptive()=true when explicitly enabled")
+	}
+}
+
+func TestLLMIdleTimeoutDefault(t *testing.T) {
+	// Clear the env var to ensure defaults are tested
+	oldVal := os.Getenv(IdleTimeoutEnvVar)
+	os.Unsetenv(IdleTimeoutEnvVar)
+	defer func() {
+		if oldVal != "" {
+			os.Setenv(IdleTimeoutEnvVar, oldVal)
+		}
+	}()
+
+	cfg := DefaultConfig()
+	if cfg.LLMIdleTimeout() != DefaultIdleTimeout {
+		t.Errorf("expected LLMIdleTimeout()=%v, got %v", DefaultIdleTimeout, cfg.LLMIdleTimeout())
+	}
+}
+
+func TestLLMIdleTimeoutFromConfig(t *testing.T) {
+	oldVal := os.Getenv(IdleTimeoutEnvVar)
+	os.Unsetenv(IdleTimeoutEnvVar)
+	defer func() {
+		if oldVal != "" {
+			os.Setenv(IdleTimeoutEnvVar, oldVal)
+		}
+	}()
+
+	cfg := DefaultConfig()
+	cfg.LLM.IdleTimeout = "10m"
+
+	expected := 10 * time.Minute
+	if cfg.LLMIdleTimeout() != expected {
+		t.Errorf("expected LLMIdleTimeout()=%v, got %v", expected, cfg.LLMIdleTimeout())
+	}
+}
+
+func TestLLMIdleTimeoutFromEnvVar(t *testing.T) {
+	oldVal := os.Getenv(IdleTimeoutEnvVar)
+	os.Setenv(IdleTimeoutEnvVar, "30s")
+	defer func() {
+		if oldVal != "" {
+			os.Setenv(IdleTimeoutEnvVar, oldVal)
+		} else {
+			os.Unsetenv(IdleTimeoutEnvVar)
+		}
+	}()
+
+	cfg := DefaultConfig()
+	cfg.LLM.IdleTimeout = "10m" // Should be overridden by env var
+
+	expected := 30 * time.Second
+	if cfg.LLMIdleTimeout() != expected {
+		t.Errorf("expected env var to take precedence: got %v, want %v", cfg.LLMIdleTimeout(), expected)
+	}
+}
+
+func TestLLMIdleTimeoutInvalidEnvFallsThrough(t *testing.T) {
+	oldVal := os.Getenv(IdleTimeoutEnvVar)
+	os.Setenv(IdleTimeoutEnvVar, "not-a-duration")
+	defer func() {
+		if oldVal != "" {
+			os.Setenv(IdleTimeoutEnvVar, oldVal)
+		} else {
+			os.Unsetenv(IdleTimeoutEnvVar)
+		}
+	}()
+
+	cfg := DefaultConfig()
+	cfg.LLM.IdleTimeout = "2m"
+
+	// Invalid env var should fall through to config value
+	expected := 2 * time.Minute
+	if cfg.LLMIdleTimeout() != expected {
+		t.Errorf("expected fallthrough to config: got %v, want %v", cfg.LLMIdleTimeout(), expected)
+	}
+}
+
+func TestLLMIdleTimeoutInvalidConfigFallsToDefault(t *testing.T) {
+	oldVal := os.Getenv(IdleTimeoutEnvVar)
+	os.Unsetenv(IdleTimeoutEnvVar)
+	defer func() {
+		if oldVal != "" {
+			os.Setenv(IdleTimeoutEnvVar, oldVal)
+		}
+	}()
+
+	cfg := DefaultConfig()
+	cfg.LLM.IdleTimeout = "bad-value"
+
+	// Invalid config value should fall through to default
+	if cfg.LLMIdleTimeout() != DefaultIdleTimeout {
+		t.Errorf("expected default: got %v, want %v", cfg.LLMIdleTimeout(), DefaultIdleTimeout)
+	}
+}
+
+func TestGetSetLLMLocalEnabled(t *testing.T) {
+	cfg := DefaultConfig()
+
+	val, ok := cfg.Get("llm.local_enabled")
+	if !ok {
+		t.Error("expected llm.local_enabled key to exist")
+	}
+	if val != "true" {
+		t.Errorf("expected 'true' for default, got %q", val)
+	}
+
+	if err := cfg.Set("llm.local_enabled", "false"); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if cfg.LLMLocalEnabled() {
+		t.Error("expected LLMLocalEnabled()=false")
+	}
+
+	err := cfg.Set("llm.local_enabled", "invalid")
+	if err == nil {
+		t.Error("expected error for invalid boolean value")
+	}
+}
+
+func TestGetSetLLMLocalPreemptive(t *testing.T) {
+	cfg := DefaultConfig()
+
+	val, ok := cfg.Get("llm.local_preemptive")
+	if !ok {
+		t.Error("expected llm.local_preemptive key to exist")
+	}
+	if val != "true" {
+		t.Errorf("expected 'true' for default, got %q", val)
+	}
+
+	if err := cfg.Set("llm.local_preemptive", "false"); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if cfg.LLMLocalPreemptive() {
+		t.Error("expected LLMLocalPreemptive()=false")
+	}
+
+	err := cfg.Set("llm.local_preemptive", "invalid")
+	if err == nil {
+		t.Error("expected error for invalid boolean value")
+	}
+}
+
+func TestGetSetLLMIdleTimeout(t *testing.T) {
+	oldVal := os.Getenv(IdleTimeoutEnvVar)
+	os.Unsetenv(IdleTimeoutEnvVar)
+	defer func() {
+		if oldVal != "" {
+			os.Setenv(IdleTimeoutEnvVar, oldVal)
+		}
+	}()
+
+	cfg := DefaultConfig()
+
+	if err := cfg.Set("llm.idle_timeout", "10m"); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	val, ok := cfg.Get("llm.idle_timeout")
+	if !ok {
+		t.Error("expected llm.idle_timeout key to exist")
+	}
+	if val != "10m0s" {
+		t.Errorf("expected '10m0s', got %q", val)
+	}
+
+	err := cfg.Set("llm.idle_timeout", "invalid")
+	if err == nil {
+		t.Error("expected error for invalid duration")
 	}
 }
 
