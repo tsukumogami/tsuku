@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-12T18:02:00Z",
+  "generated_at": "2026-03-12T18:03:25Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 50,
-      "pending": 3883,
+      "failed": 47,
+      "pending": 3886,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 50,
-        "pending": 3860,
+        "failed": 47,
+        "pending": 3863,
         "success": 1326
       }
     },
@@ -68,8 +68,8 @@
         "total": 1
       },
       "npm": {
-        "failed": 14,
-        "pending": 7,
+        "failed": 15,
+        "pending": 6,
         "success": 54,
         "total": 75
       },
@@ -80,8 +80,8 @@
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 30,
-        "pending": 49,
+        "failed": 26,
+        "pending": 53,
         "success": 9,
         "total": 89
       }
@@ -705,6 +705,15 @@
           "next_retry_at": "2026-03-13T01:47:18Z"
         },
         {
+          "id": "rubygems:gitingest",
+          "name": "gitingest",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-13T10:02:35Z"
+        },
+        {
           "id": "npm:got",
           "name": "got",
           "ecosystem": "npm",
@@ -714,15 +723,6 @@
           "next_retry_at": "2026-03-13T07:29:49Z"
         },
         {
-          "id": "rubygems:haproxy",
-          "name": "haproxy",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-12T17:47:18Z"
-        },
-        {
           "id": "npm:hasura-cli",
           "name": "hasura-cli",
           "ecosystem": "npm",
@@ -730,24 +730,6 @@
           "category": "install_failed",
           "failure_count": 6,
           "next_retry_at": "2026-03-13T13:57:16Z"
-        },
-        {
-          "id": "rubygems:hercules",
-          "name": "hercules",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-12T17:47:18Z"
-        },
-        {
-          "id": "rubygems:htmldoc",
-          "name": "htmldoc",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-12T17:47:18Z"
         },
         {
           "id": "rubygems:httpx",
@@ -867,22 +849,13 @@
           "next_retry_at": "2026-03-12T20:05:27Z"
         },
         {
-          "id": "rubygems:medusa",
-          "name": "medusa",
-          "ecosystem": "rubygems",
+          "id": "npm:mongoose",
+          "name": "mongoose",
+          "ecosystem": "npm",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-03-12T16:10:08Z"
-        },
-        {
-          "id": "rubygems:meli",
-          "name": "meli",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-03-12T16:10:08Z"
+          "failure_count": 4,
+          "next_retry_at": "2026-03-13T02:02:35Z"
         },
         {
           "id": "crates.io:numpy",
@@ -9369,15 +9342,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:gitingest",
-          "name": "gitingest",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-12T15:51:34Z"
-        },
-        {
           "id": "homebrew:gitlab-ci-local",
           "name": "gitlab-ci-local",
           "ecosystem": "homebrew",
@@ -10537,6 +10501,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:haproxy",
+          "name": "haproxy",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-12T17:47:18Z"
+        },
+        {
           "id": "homebrew:harbor-cli",
           "name": "harbor-cli",
           "ecosystem": "homebrew",
@@ -10803,6 +10776,15 @@
           "failure_count": 1
         },
         {
+          "id": "rubygems:hercules",
+          "name": "hercules",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-12T17:47:18Z"
+        },
+        {
           "id": "homebrew:heremaps/olp-cli/olp",
           "name": "heremaps/olp-cli/olp",
           "ecosystem": "homebrew",
@@ -11039,6 +11021,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:htmldoc",
+          "name": "htmldoc",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-12T17:47:18Z"
         },
         {
           "id": "homebrew:htmlhint",
@@ -15397,6 +15388,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:medusa",
+          "name": "medusa",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 2,
+          "next_retry_at": "2026-03-12T16:10:08Z"
+        },
+        {
           "id": "homebrew:megacmd",
           "name": "megacmd",
           "ecosystem": "homebrew",
@@ -15423,6 +15423,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:meli",
+          "name": "meli",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 2,
+          "next_retry_at": "2026-03-12T16:10:08Z"
         },
         {
           "id": "rubygems:memcached",
@@ -16032,15 +16041,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:mongoose",
-          "name": "mongoose",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-11T22:59:20Z"
         },
         {
           "id": "homebrew:mongosh",
