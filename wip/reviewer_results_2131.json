@@ -1,0 +1,10 @@
+{
+  "issue": 2131,
+  "reviews": [
+    {"focus": "pragmatic", "blocking_count": 0, "advisory_count": 0},
+    {"focus": "architect", "blocking_count": 0, "advisory_count": 0},
+    {"focus": "maintainer", "blocking_count": 0, "advisory_count": 0}
+  ],
+  "qa_scenarios": ["scenario-1", "scenario-2"],
+  "qa_result": "pass"
+}

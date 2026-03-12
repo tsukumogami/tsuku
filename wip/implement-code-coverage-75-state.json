@@ -3,19 +3,33 @@
   "design_doc": "docs/plans/PLAN-code-coverage-75.md",
   "branch": "impl/code-coverage-75",
   "pr_number": 2143,
-  "integrity_hash": "sha256:a7d8415326b85b51b4de84eb8c7c109590a9122474026ef6b284db1f1a35716d",
+  "integrity_hash": "sha256:0cff1906ff66d82f18c7b887decc976bc7e43206028aa13f69e3c381760cd3dd",
   "issues": [
     {
       "number": 2131,
       "title": "chore: update Codecov configuration for 75% target",
-      "status": "pending",
+      "status": "scrutinized",
       "ci_status": "",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [],
-      "commits": null,
-      "agent_type": "",
-      "summary": null,
+      "commits": [
+        "9df3967c"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          "codecov.yml"
+        ],
+        "tests_added": 0,
+        "key_decisions": "Added range field at coverage level, not under status",
+        "requirements_map": {
+          "target_75": "codecov.yml target: 75%",
+          "range_70_90": "codecov.yml range: 70...90",
+          "patch_unchanged": "patch target remains 50%"
+        }
+      },
       "testable_scenarios": [
         "scenario-1",
         "scenario-2"
