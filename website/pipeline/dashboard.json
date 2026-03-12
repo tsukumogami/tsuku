@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-12T07:50:57Z",
+  "generated_at": "2026-03-12T07:52:13Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 40,
-      "pending": 3894,
+      "failed": 47,
+      "pending": 3887,
       "success": 1338
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 40,
-        "pending": 3871,
+        "failed": 47,
+        "pending": 3864,
         "success": 1325
       }
     },
@@ -68,8 +68,8 @@
         "total": 1
       },
       "npm": {
-        "failed": 8,
-        "pending": 13,
+        "failed": 9,
+        "pending": 12,
         "success": 54,
         "total": 75
       },
@@ -80,8 +80,8 @@
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 26,
-        "pending": 54,
+        "failed": 32,
+        "pending": 48,
         "success": 8,
         "total": 89
       }
@@ -669,6 +669,15 @@
           "next_retry_at": "2026-03-14T09:54:12Z"
         },
         {
+          "id": "npm:ent",
+          "name": "ent",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-14T23:51:34Z"
+        },
+        {
           "id": "rubygems:exiv2",
           "name": "exiv2",
           "ecosystem": "rubygems",
@@ -687,6 +696,24 @@
           "next_retry_at": "2026-03-12T08:20:14Z"
         },
         {
+          "id": "rubygems:gitingest",
+          "name": "gitingest",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-12T15:51:34Z"
+        },
+        {
+          "id": "rubygems:glassfish",
+          "name": "glassfish",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-12T15:51:34Z"
+        },
+        {
           "id": "npm:got",
           "name": "got",
           "ecosystem": "npm",
@@ -694,6 +721,15 @@
           "category": "install_failed",
           "failure_count": 6,
           "next_retry_at": "2026-03-13T07:29:49Z"
+        },
+        {
+          "id": "rubygems:gsl",
+          "name": "gsl",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-12T15:51:34Z"
         },
         {
           "id": "rubygems:haproxy",
@@ -784,6 +820,33 @@
           "category": "install_failed",
           "failure_count": 1,
           "next_retry_at": "2026-03-12T08:02:53Z"
+        },
+        {
+          "id": "rubygems:kor",
+          "name": "kor",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 1,
+          "next_retry_at": "2026-03-12T08:51:34Z"
+        },
+        {
+          "id": "rubygems:lemon",
+          "name": "lemon",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 1,
+          "next_retry_at": "2026-03-12T08:51:34Z"
+        },
+        {
+          "id": "rubygems:less",
+          "name": "less",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 1,
+          "next_retry_at": "2026-03-12T08:51:34Z"
         },
         {
           "id": "pypi:lib3mf",
@@ -7242,15 +7305,6 @@
           "failure_count": 1
         },
         {
-          "id": "npm:ent",
-          "name": "ent",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-12T04:38:12Z"
-        },
-        {
           "id": "homebrew:env0/terratag/terratag",
           "name": "env0/terratag/terratag",
           "ecosystem": "homebrew",
@@ -9297,15 +9351,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:gitingest",
-          "name": "gitingest",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-03-12T06:20:14Z"
-        },
-        {
           "id": "homebrew:gitlab-ci-local",
           "name": "gitlab-ci-local",
           "ecosystem": "homebrew",
@@ -9388,15 +9433,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "rubygems:glassfish",
-          "name": "glassfish",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-03-12T06:20:14Z"
         },
         {
           "id": "homebrew:glaze",
@@ -10160,15 +10196,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "rubygems:gsl",
-          "name": "gsl",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-03-12T06:20:14Z"
         },
         {
           "id": "homebrew:gspell",
@@ -12674,14 +12701,6 @@
           "failure_count": 1
         },
         {
-          "id": "rubygems:kor",
-          "name": "kor",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 0
-        },
-        {
           "id": "homebrew:kotlin",
           "name": "kotlin",
           "ecosystem": "homebrew",
@@ -13076,14 +13095,6 @@
           "failure_count": 1
         },
         {
-          "id": "rubygems:lemon",
-          "name": "lemon",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 0
-        },
-        {
           "id": "homebrew:leoafarias/fvm/fvm",
           "name": "leoafarias/fvm/fvm",
           "ecosystem": "homebrew",
@@ -13102,14 +13113,6 @@
           "name": "leptonica",
           "ecosystem": "homebrew",
           "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "rubygems:less",
-          "name": "less",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
           "failure_count": 0
         },
         {
