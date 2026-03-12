@@ -1,0 +1,89 @@
+{
+  "pr_status": "implementing",
+  "design_doc": "docs/plans/PLAN-code-coverage-75.md",
+  "branch": "impl/code-coverage-75",
+  "pr_number": null,
+  "integrity_hash": "sha256:28bd912cb3a5900524c56f43024e6f9fb7aa0635108209623759edcc806fd8c2",
+  "issues": [
+    {
+      "number": 2131,
+      "title": "chore: update Codecov configuration for 75% target",
+      "status": "pending",
+      "ci_status": "",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [],
+      "commits": null,
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": [],
+      "complexity": "testable"
+    },
+    {
+      "number": 2132,
+      "title": "test: cover near-75% packages (executor, validate, builders, userconfig)",
+      "status": "pending",
+      "ci_status": "",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [],
+      "commits": null,
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": [],
+      "complexity": "testable"
+    },
+    {
+      "number": 2133,
+      "title": "test: cover internal/discover and internal/verify to 75%",
+      "status": "pending",
+      "ci_status": "",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [],
+      "commits": null,
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": [],
+      "complexity": "testable"
+    },
+    {
+      "number": 2134,
+      "title": "test: cover internal/actions to 66%",
+      "status": "pending",
+      "ci_status": "",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [],
+      "commits": null,
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": [],
+      "complexity": "testable"
+    },
+    {
+      "number": 2135,
+      "title": "test: verify overall coverage exceeds 75%",
+      "status": "pending",
+      "ci_status": "",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [
+        2131,
+        2132,
+        2133,
+        2134
+      ],
+      "commits": null,
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": [],
+      "complexity": "testable"
+    }
+  ],
+  "skipped_issues": null,
+  "test_plan_file": null,
+  "source_doc_type": "plan",
+  "execution_mode": "multi-pr",
+  "deliverable_type": "code"
+}
