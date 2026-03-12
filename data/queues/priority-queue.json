@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-12T07:51:34Z",
+  "updated_at": "2026-03-12T08:49:51Z",
   "entries": [
     {
       "name": "node",
@@ -14536,7 +14536,7 @@
       "name": "flash",
       "source": "rubygems:flash",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 3,
@@ -19496,7 +19496,7 @@
       "name": "haproxy",
       "source": "rubygems:haproxy",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 2,
@@ -20056,7 +20056,7 @@
       "name": "hercules",
       "source": "rubygems:hercules",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 2,
@@ -20486,7 +20486,7 @@
       "name": "htmldoc",
       "source": "rubygems:htmldoc",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 2,
@@ -21756,7 +21756,7 @@
       "name": "ipfs",
       "source": "rubygems:ipfs",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 1,
@@ -26066,11 +26066,11 @@
       "name": "libnotify",
       "source": "rubygems:libnotify",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
-      "next_retry_at": null
+      "failure_count": 1,
+      "next_retry_at": "2026-03-12T09:49:51.675450632Z"
     },
     {
       "name": "libogg",
@@ -28016,11 +28016,11 @@
       "name": "lsof",
       "source": "rubygems:lsof",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
-      "next_retry_at": null
+      "failure_count": 1,
+      "next_retry_at": "2026-03-12T09:49:51.675450632Z"
     },
     {
       "name": "lspmux",
@@ -28206,7 +28206,7 @@
       "name": "lxc",
       "source": "rubygems:lxc",
       "priority": 3,
-      "status": "pending",
+      "status": "success",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 0,
@@ -28546,11 +28546,11 @@
       "name": "mailcatcher",
       "source": "rubygems:mailcatcher",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
-      "next_retry_at": null
+      "failure_count": 1,
+      "next_retry_at": "2026-03-12T09:49:51.675450632Z"
     },
     {
       "name": "mailhog",
@@ -29486,11 +29486,11 @@
       "name": "mdv",
       "source": "rubygems:mdv",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
-      "next_retry_at": null
+      "failure_count": 1,
+      "next_retry_at": "2026-03-12T09:49:51.675450632Z"
     },
     {
       "name": "mecab",
