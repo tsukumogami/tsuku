@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-12T21:36:19Z",
+  "generated_at": "2026-03-12T21:37:37Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 47,
-      "pending": 3886,
+      "failed": 46,
+      "pending": 3887,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 47,
-        "pending": 3863,
+        "failed": 46,
+        "pending": 3864,
         "success": 1326
       }
     },
@@ -80,8 +80,8 @@
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 25,
-        "pending": 54,
+        "failed": 24,
+        "pending": 55,
         "success": 9,
         "total": 89
       }
@@ -471,15 +471,6 @@
           "next_retry_at": "2026-03-19T04:20:14Z"
         },
         {
-          "id": "rubygems:arturo",
-          "name": "arturo",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-03-12T20:14:43Z"
-        },
-        {
           "id": "crates.io:ascii",
           "name": "ascii",
           "ecosystem": "crates.io",
@@ -487,15 +478,6 @@
           "category": "install_failed",
           "failure_count": 7,
           "next_retry_at": "2026-03-13T06:08:56Z"
-        },
-        {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-03-12T20:14:43Z"
         },
         {
           "id": "crates.io:basis_universal",
@@ -732,6 +714,15 @@
           "next_retry_at": "2026-03-13T07:29:49Z"
         },
         {
+          "id": "rubygems:gsl",
+          "name": "gsl",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-13T13:37:00Z"
+        },
+        {
           "id": "npm:hasura-cli",
           "name": "hasura-cli",
           "ecosystem": "npm",
@@ -831,15 +822,6 @@
           "next_retry_at": "2026-03-13T08:05:27Z"
         },
         {
-          "id": "rubygems:mdv",
-          "name": "mdv",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-12T20:05:27Z"
-        },
-        {
           "id": "npm:mongoose",
           "name": "mongoose",
           "ecosystem": "npm",
@@ -865,6 +847,15 @@
           "category": "install_failed",
           "failure_count": 3,
           "next_retry_at": "2026-03-12T23:47:40Z"
+        },
+        {
+          "id": "npm:protoc-gen-js",
+          "name": "protoc-gen-js",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-13T01:37:00Z"
         },
         {
           "id": "pypi:tctl",
@@ -2169,6 +2160,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:arturo",
+          "name": "arturo",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-12T20:14:43Z"
+        },
+        {
           "id": "homebrew:arxiv_latex_cleaner",
           "name": "arxiv_latex_cleaner",
           "ecosystem": "homebrew",
@@ -2785,6 +2785,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-12T20:14:43Z"
         },
         {
           "id": "homebrew:azure-cli",
@@ -10189,15 +10198,6 @@
           "failure_count": 1
         },
         {
-          "id": "rubygems:gsl",
-          "name": "gsl",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-12T15:51:34Z"
-        },
-        {
           "id": "homebrew:gspell",
           "name": "gspell",
           "ecosystem": "homebrew",
@@ -15369,6 +15369,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:mdv",
+          "name": "mdv",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-12T20:05:27Z"
+        },
+        {
           "id": "homebrew:mecab",
           "name": "mecab",
           "ecosystem": "homebrew",
@@ -20018,15 +20027,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "npm:protoc-gen-js",
-          "name": "protoc-gen-js",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-02-21T04:15:55Z"
         },
         {
           "id": "homebrew:protonpass/tap/pass-cli",
