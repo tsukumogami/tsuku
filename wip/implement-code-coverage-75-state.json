@@ -2,8 +2,8 @@
   "pr_status": "implementing",
   "design_doc": "docs/plans/PLAN-code-coverage-75.md",
   "branch": "impl/code-coverage-75",
-  "pr_number": null,
-  "integrity_hash": "sha256:28bd912cb3a5900524c56f43024e6f9fb7aa0635108209623759edcc806fd8c2",
+  "pr_number": 2143,
+  "integrity_hash": "sha256:a7d8415326b85b51b4de84eb8c7c109590a9122474026ef6b284db1f1a35716d",
   "issues": [
     {
       "number": 2131,
@@ -16,7 +16,10 @@
       "commits": null,
       "agent_type": "",
       "summary": null,
-      "testable_scenarios": [],
+      "testable_scenarios": [
+        "scenario-1",
+        "scenario-2"
+      ],
       "complexity": "testable"
     },
     {
@@ -30,7 +33,12 @@
       "commits": null,
       "agent_type": "",
       "summary": null,
-      "testable_scenarios": [],
+      "testable_scenarios": [
+        "scenario-3",
+        "scenario-4",
+        "scenario-5",
+        "scenario-6"
+      ],
       "complexity": "testable"
     },
     {
@@ -44,7 +52,10 @@
       "commits": null,
       "agent_type": "",
       "summary": null,
-      "testable_scenarios": [],
+      "testable_scenarios": [
+        "scenario-7",
+        "scenario-8"
+      ],
       "complexity": "testable"
     },
     {
@@ -58,7 +69,10 @@
       "commits": null,
       "agent_type": "",
       "summary": null,
-      "testable_scenarios": [],
+      "testable_scenarios": [
+        "scenario-9",
+        "scenario-10"
+      ],
       "complexity": "testable"
     },
     {
@@ -77,12 +91,17 @@
       "commits": null,
       "agent_type": "",
       "summary": null,
-      "testable_scenarios": [],
+      "testable_scenarios": [
+        "scenario-12",
+        "scenario-13",
+        "scenario-14"
+      ],
       "complexity": "testable"
     }
   ],
   "skipped_issues": null,
-  "test_plan_file": null,
+  "test_plan_file": "wip/implement-code-coverage-75-test_plan.md",
+  "doc_plan_file": "wip/implement-code-coverage-75-doc_plan.md",
   "source_doc_type": "plan",
   "execution_mode": "multi-pr",
   "deliverable_type": "code"
