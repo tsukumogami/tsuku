@@ -1,22 +1,22 @@
 {
-  "generated_at": "2026-03-12T07:02:28Z",
-  "total_recipes": 1402,
+  "generated_at": "2026-03-12T08:49:22Z",
+  "total_recipes": 1403,
   "summary": {
     "by_platform": {
       "darwin": {
         "supported": 839,
-        "total": 1402,
-        "pct": 59.84308131241084
+        "total": 1403,
+        "pct": 59.80042765502495
       },
       "glibc": {
-        "supported": 1369,
-        "total": 1402,
-        "pct": 97.64621968616262
+        "supported": 1370,
+        "total": 1403,
+        "pct": 97.64789736279401
       },
       "musl": {
-        "supported": 1228,
-        "total": 1402,
-        "pct": 87.58915834522111
+        "supported": 1229,
+        "total": 1403,
+        "pct": 87.59800427655024
       }
     },
     "by_category": {
@@ -26,9 +26,9 @@
         "glibc_support": 150
       },
       "tool": {
-        "total": 1250,
-        "musl_support": 1078,
-        "glibc_support": 1219
+        "total": 1251,
+        "musl_support": 1079,
+        "glibc_support": 1220
       }
     }
   },
@@ -12638,6 +12638,20 @@
       "warnings": [
         "recipe 'luv' has platform-specific actions without libc when clauses and no musl fallback"
       ]
+    },
+    {
+      "name": "lxc",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": null
     },
     {
       "name": "lz4",
