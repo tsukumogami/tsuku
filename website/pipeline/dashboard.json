@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-12T19:47:09Z",
+  "generated_at": "2026-03-12T19:48:35Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -68,8 +68,8 @@
         "total": 1
       },
       "npm": {
-        "failed": 15,
-        "pending": 6,
+        "failed": 16,
+        "pending": 5,
         "success": 54,
         "total": 75
       },
@@ -80,8 +80,8 @@
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 26,
-        "pending": 53,
+        "failed": 25,
+        "pending": 54,
         "success": 9,
         "total": 89
       }
@@ -714,6 +714,15 @@
           "next_retry_at": "2026-03-13T10:02:35Z"
         },
         {
+          "id": "rubygems:glassfish",
+          "name": "glassfish",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-13T11:47:40Z"
+        },
+        {
           "id": "npm:got",
           "name": "got",
           "ecosystem": "npm",
@@ -730,24 +739,6 @@
           "category": "install_failed",
           "failure_count": 6,
           "next_retry_at": "2026-03-13T13:57:16Z"
-        },
-        {
-          "id": "rubygems:httpx",
-          "name": "httpx",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-12T18:42:21Z"
-        },
-        {
-          "id": "rubygems:hydra",
-          "name": "hydra",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-12T18:42:21Z"
         },
         {
           "id": "rubygems:ipfs",
@@ -865,6 +856,15 @@
           "category": "install_failed",
           "failure_count": 7,
           "next_retry_at": "2026-03-13T05:02:46Z"
+        },
+        {
+          "id": "npm:pocketbase",
+          "name": "pocketbase",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-12T23:47:40Z"
         },
         {
           "id": "pypi:tctl",
@@ -9426,15 +9426,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:glassfish",
-          "name": "glassfish",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-12T15:51:34Z"
-        },
-        {
           "id": "homebrew:glaze",
           "name": "glaze",
           "ecosystem": "homebrew",
@@ -11088,6 +11079,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:httpx",
+          "name": "httpx",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-12T18:42:21Z"
+        },
+        {
           "id": "homebrew:httpyac",
           "name": "httpyac",
           "ecosystem": "homebrew",
@@ -11170,6 +11170,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "rubygems:hydra",
+          "name": "hydra",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-12T18:42:21Z"
         },
         {
           "id": "homebrew:hyfetch",
@@ -19526,15 +19535,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "npm:pocketbase",
-          "name": "pocketbase",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-02-21T04:15:51Z"
         },
         {
           "id": "homebrew:poco",
