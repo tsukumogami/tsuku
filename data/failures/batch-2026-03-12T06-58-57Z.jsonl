@@ -1,0 +1,9 @@
+{"schema_version":1,"recipe":"jsonlint","platform":"linux-debian-glibc-x86_64","exit_code":6,"category":"generation_failed","timestamp":"2026-03-12T06:58:57Z"}
+{"schema_version":1,"recipe":"jsonlint","platform":"linux-rhel-glibc-x86_64","exit_code":6,"category":"generation_failed","timestamp":"2026-03-12T06:58:57Z"}
+{"schema_version":1,"recipe":"jsonlint","platform":"linux-arch-glibc-x86_64","exit_code":6,"category":"generation_failed","timestamp":"2026-03-12T06:58:57Z"}
+{"schema_version":1,"recipe":"jsonlint","platform":"linux-suse-glibc-x86_64","exit_code":6,"category":"generation_failed","timestamp":"2026-03-12T06:58:57Z"}
+{"schema_version":1,"recipe":"jsonlint","platform":"linux-alpine-musl-x86_64","exit_code":6,"category":"generation_failed","timestamp":"2026-03-12T06:58:57Z"}
+{"schema_version":1,"recipe":"jsonlint","platform":"linux-debian-glibc-arm64","exit_code":6,"category":"generation_failed","timestamp":"2026-03-12T06:58:57Z"}
+{"schema_version":1,"recipe":"jsonlint","platform":"linux-rhel-glibc-arm64","exit_code":6,"category":"generation_failed","timestamp":"2026-03-12T06:58:57Z"}
+{"schema_version":1,"recipe":"jsonlint","platform":"linux-suse-glibc-arm64","exit_code":6,"category":"generation_failed","timestamp":"2026-03-12T06:58:57Z"}
+{"schema_version":1,"recipe":"jsonlint","platform":"linux-alpine-musl-arm64","exit_code":6,"category":"generation_failed","timestamp":"2026-03-12T06:58:57Z"}
