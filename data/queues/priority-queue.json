@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-12T04:20:14Z",
+  "updated_at": "2026-03-12T05:57:16Z",
   "entries": [
     {
       "name": "node",
@@ -11566,11 +11566,11 @@
       "name": "doggo",
       "source": "rubygems:doggo",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 5,
-      "next_retry_at": "2026-03-12T03:38:27.609873712Z"
+      "failure_count": 7,
+      "next_retry_at": "2026-03-14T21:57:16.761083282Z"
     },
     {
       "name": "dokku/repo/dokku",
@@ -12116,11 +12116,11 @@
       "name": "dug",
       "source": "rubygems:dug",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-03-12T02:36:11.342263187Z"
+      "failure_count": 5,
+      "next_retry_at": "2026-03-12T21:57:16.761083282Z"
     },
     {
       "name": "dumbpipe",
@@ -12966,7 +12966,7 @@
       "name": "ent",
       "source": "npm:ent",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 6,
@@ -13386,11 +13386,11 @@
       "name": "exiv2",
       "source": "rubygems:exiv2",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-03-12T02:36:11.342263187Z"
+      "failure_count": 5,
+      "next_retry_at": "2026-03-12T21:57:16.761083282Z"
     },
     {
       "name": "exoscale/tap/exoscale-cli",
@@ -19496,11 +19496,11 @@
       "name": "haproxy",
       "source": "rubygems:haproxy",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": "2026-03-11T23:36:11.342263187Z"
+      "failure_count": 2,
+      "next_retry_at": "2026-03-12T07:57:16.761083282Z"
     },
     {
       "name": "harbor-cli",
@@ -19736,11 +19736,11 @@
       "name": "hasura-cli",
       "source": "npm:hasura-cli",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 5,
-      "next_retry_at": "2026-03-11T21:53:12.747259952Z"
+      "failure_count": 6,
+      "next_retry_at": "2026-03-13T13:57:16.761083282Z"
     },
     {
       "name": "hatari",
@@ -20056,11 +20056,11 @@
       "name": "hercules",
       "source": "rubygems:hercules",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": "2026-03-11T23:36:11.342263187Z"
+      "failure_count": 2,
+      "next_retry_at": "2026-03-12T07:57:16.761083282Z"
     },
     {
       "name": "heremaps/olp-cli/olp",
@@ -20486,11 +20486,11 @@
       "name": "htmldoc",
       "source": "rubygems:htmldoc",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": "2026-03-12T00:29:49.857660611Z"
+      "failure_count": 2,
+      "next_retry_at": "2026-03-12T07:57:16.761083282Z"
     },
     {
       "name": "htmlhint",
@@ -28896,7 +28896,7 @@
       "name": "markdown-toc",
       "source": "npm:markdown-toc",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 4,
