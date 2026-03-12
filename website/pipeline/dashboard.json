@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-12T23:32:47Z",
+  "generated_at": "2026-03-12T23:34:00Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 46,
-      "pending": 3887,
+      "failed": 41,
+      "pending": 3892,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 46,
-        "pending": 3864,
+        "failed": 41,
+        "pending": 3869,
         "success": 1326
       }
     },
@@ -68,8 +68,8 @@
         "total": 1
       },
       "npm": {
-        "failed": 16,
-        "pending": 5,
+        "failed": 17,
+        "pending": 4,
         "success": 54,
         "total": 75
       },
@@ -80,8 +80,8 @@
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 24,
-        "pending": 55,
+        "failed": 18,
+        "pending": 61,
         "success": 9,
         "total": 89
       }
@@ -471,6 +471,15 @@
           "next_retry_at": "2026-03-19T04:20:14Z"
         },
         {
+          "id": "rubygems:arturo",
+          "name": "arturo",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 8,
+          "next_retry_at": "2026-03-18T07:33:23Z"
+        },
+        {
           "id": "crates.io:ascii",
           "name": "ascii",
           "ecosystem": "crates.io",
@@ -478,6 +487,15 @@
           "category": "install_failed",
           "failure_count": 7,
           "next_retry_at": "2026-03-13T06:08:56Z"
+        },
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 8,
+          "next_retry_at": "2026-03-18T07:33:23Z"
         },
         {
           "id": "crates.io:basis_universal",
@@ -588,15 +606,6 @@
           "next_retry_at": "2026-03-17T12:20:14Z"
         },
         {
-          "id": "rubygems:cql",
-          "name": "cql",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-12T22:11:21Z"
-        },
-        {
           "id": "npm:datasette",
           "name": "datasette",
           "ecosystem": "npm",
@@ -633,15 +642,6 @@
           "next_retry_at": "2026-03-14T21:57:16Z"
         },
         {
-          "id": "rubygems:dug",
-          "name": "dug",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-12T21:57:16Z"
-        },
-        {
           "id": "npm:e2b",
           "name": "e2b",
           "ecosystem": "npm",
@@ -658,15 +658,6 @@
           "category": "install_failed",
           "failure_count": 7,
           "next_retry_at": "2026-03-14T23:51:34Z"
-        },
-        {
-          "id": "rubygems:exiv2",
-          "name": "exiv2",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-12T21:57:16Z"
         },
         {
           "id": "npm:fastmcp",
@@ -732,15 +723,6 @@
           "next_retry_at": "2026-03-13T13:57:16Z"
         },
         {
-          "id": "rubygems:ipfs",
-          "name": "ipfs",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-12T22:10:08Z"
-        },
-        {
           "id": "npm:kew",
           "name": "kew",
           "ecosystem": "npm",
@@ -750,15 +732,6 @@
           "next_retry_at": "2026-03-13T19:37:21Z"
         },
         {
-          "id": "rubygems:kor",
-          "name": "kor",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-12T22:10:08Z"
-        },
-        {
           "id": "npm:lcm",
           "name": "lcm",
           "ecosystem": "npm",
@@ -766,24 +739,6 @@
           "category": "install_failed",
           "failure_count": 5,
           "next_retry_at": "2026-03-13T05:02:46Z"
-        },
-        {
-          "id": "rubygems:lemon",
-          "name": "lemon",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-12T22:10:08Z"
-        },
-        {
-          "id": "rubygems:less",
-          "name": "less",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-12T22:10:08Z"
         },
         {
           "id": "pypi:lib3mf",
@@ -2160,15 +2115,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:arturo",
-          "name": "arturo",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-03-12T20:14:43Z"
-        },
-        {
           "id": "homebrew:arxiv_latex_cleaner",
           "name": "arxiv_latex_cleaner",
           "ecosystem": "homebrew",
@@ -2785,15 +2731,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-03-12T20:14:43Z"
         },
         {
           "id": "homebrew:azure-cli",
@@ -5424,6 +5361,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:cql",
+          "name": "cql",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-12T22:11:21Z"
+        },
+        {
           "id": "homebrew:cqlabs/dcm/dcm",
           "name": "cqlabs/dcm/dcm",
           "ecosystem": "homebrew",
@@ -6838,6 +6784,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:dug",
+          "name": "dug",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-12T21:57:16Z"
+        },
+        {
           "id": "homebrew:dumbpipe",
           "name": "dumbpipe",
           "ecosystem": "homebrew",
@@ -7508,6 +7463,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:exiv2",
+          "name": "exiv2",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-12T21:57:16Z"
         },
         {
           "id": "homebrew:exoscale/tap/exoscale-cli",
@@ -11686,6 +11650,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:ipfs",
+          "name": "ipfs",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-12T22:10:08Z"
+        },
+        {
           "id": "homebrew:ipopt",
           "name": "ipopt",
           "ecosystem": "homebrew",
@@ -12764,6 +12737,15 @@
           "failure_count": 1
         },
         {
+          "id": "rubygems:kor",
+          "name": "kor",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-12T22:10:08Z"
+        },
+        {
           "id": "homebrew:kotlin",
           "name": "kotlin",
           "ecosystem": "homebrew",
@@ -13149,6 +13131,15 @@
           "failure_count": 1
         },
         {
+          "id": "rubygems:lemon",
+          "name": "lemon",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-12T22:10:08Z"
+        },
+        {
           "id": "homebrew:leoafarias/fvm/fvm",
           "name": "leoafarias/fvm/fvm",
           "ecosystem": "homebrew",
@@ -13168,6 +13159,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:less",
+          "name": "less",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-12T22:10:08Z"
         },
         {
           "id": "homebrew:lesspipe",
