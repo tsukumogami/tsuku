@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-12T05:57:16Z",
+  "updated_at": "2026-03-12T07:02:53Z",
   "entries": [
     {
       "name": "node",
@@ -13766,7 +13766,7 @@
       "name": "fastmcp",
       "source": "npm:fastmcp",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 6,
@@ -16906,7 +16906,7 @@
       "name": "gitingest",
       "source": "rubygems:gitingest",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 2,
@@ -17116,7 +17116,7 @@
       "name": "glassfish",
       "source": "rubygems:glassfish",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 2,
@@ -18966,7 +18966,7 @@
       "name": "gsl",
       "source": "rubygems:gsl",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 2,
@@ -20626,11 +20626,11 @@
       "name": "httpx",
       "source": "rubygems:httpx",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": "2026-03-12T00:29:49.857660611Z"
+      "failure_count": 2,
+      "next_retry_at": "2026-03-12T09:02:53.148598919Z"
     },
     {
       "name": "httpyac",
@@ -20786,11 +20786,11 @@
       "name": "hydra",
       "source": "rubygems:hydra",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": "2026-03-12T00:29:49.857660611Z"
+      "failure_count": 2,
+      "next_retry_at": "2026-03-12T09:02:53.148598919Z"
     },
     {
       "name": "hyfetch",
@@ -20816,11 +20816,11 @@
       "name": "hyperkit",
       "source": "rubygems:hyperkit",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": "2026-03-12T00:29:49.857660611Z"
+      "failure_count": 2,
+      "next_retry_at": "2026-03-12T09:02:53.148598919Z"
     },
     {
       "name": "hypre",
@@ -21326,11 +21326,11 @@
       "name": "imgproxy",
       "source": "rubygems:imgproxy",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": "2026-03-12T00:29:49.857660611Z"
+      "failure_count": 2,
+      "next_retry_at": "2026-03-12T09:02:53.148598919Z"
     },
     {
       "name": "imlib2",
@@ -21416,11 +21416,11 @@
       "name": "influxdb",
       "source": "rubygems:influxdb",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": "2026-03-12T00:29:49.857660611Z"
+      "failure_count": 2,
+      "next_retry_at": "2026-03-12T09:02:53.148598919Z"
     },
     {
       "name": "influxdb-cli",
@@ -21756,11 +21756,11 @@
       "name": "ipfs",
       "source": "rubygems:ipfs",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
-      "next_retry_at": null
+      "failure_count": 1,
+      "next_retry_at": "2026-03-12T08:02:53.148598919Z"
     },
     {
       "name": "ipinfo-cli",
@@ -22946,7 +22946,7 @@
       "name": "jsonlint",
       "source": "rubygems:jsonlint",
       "priority": 3,
-      "status": "pending",
+      "status": "success",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 0,
