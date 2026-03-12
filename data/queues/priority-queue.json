@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-12T08:49:51Z",
+  "updated_at": "2026-03-12T09:47:18Z",
   "entries": [
     {
       "name": "node",
@@ -13766,11 +13766,11 @@
       "name": "fastmcp",
       "source": "npm:fastmcp",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 6,
-      "next_retry_at": "2026-03-12T06:34:28.184071287Z"
+      "failure_count": 7,
+      "next_retry_at": "2026-03-15T01:47:18.612536618Z"
     },
     {
       "name": "fastmod",
@@ -14536,11 +14536,11 @@
       "name": "flash",
       "source": "rubygems:flash",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-03-12T08:20:14.229438339Z"
+      "failure_count": 5,
+      "next_retry_at": "2026-03-13T01:47:18.612536618Z"
     },
     {
       "name": "flashrom",
@@ -19496,11 +19496,11 @@
       "name": "haproxy",
       "source": "rubygems:haproxy",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-03-12T07:57:16.761083282Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-03-12T17:47:18.612536618Z"
     },
     {
       "name": "harbor-cli",
@@ -20056,11 +20056,11 @@
       "name": "hercules",
       "source": "rubygems:hercules",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-03-12T07:57:16.761083282Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-03-12T17:47:18.612536618Z"
     },
     {
       "name": "heremaps/olp-cli/olp",
@@ -20486,11 +20486,11 @@
       "name": "htmldoc",
       "source": "rubygems:htmldoc",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-03-12T07:57:16.761083282Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-03-12T17:47:18.612536618Z"
     },
     {
       "name": "htmlhint",
@@ -20626,7 +20626,7 @@
       "name": "httpx",
       "source": "rubygems:httpx",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 2,
@@ -20786,7 +20786,7 @@
       "name": "hydra",
       "source": "rubygems:hydra",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 2,
@@ -20816,7 +20816,7 @@
       "name": "hyperkit",
       "source": "rubygems:hyperkit",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 2,
@@ -21326,7 +21326,7 @@
       "name": "imgproxy",
       "source": "rubygems:imgproxy",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 2,
@@ -21416,7 +21416,7 @@
       "name": "influxdb",
       "source": "rubygems:influxdb",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 2,
@@ -21756,11 +21756,11 @@
       "name": "ipfs",
       "source": "rubygems:ipfs",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": "2026-03-12T08:02:53.148598919Z"
+      "failure_count": 2,
+      "next_retry_at": "2026-03-12T11:47:18.612536618Z"
     },
     {
       "name": "ipinfo-cli",
@@ -23966,7 +23966,7 @@
       "name": "kor",
       "source": "rubygems:kor",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 1,
@@ -25056,7 +25056,7 @@
       "name": "lemon",
       "source": "rubygems:lemon",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 1,
@@ -25116,7 +25116,7 @@
       "name": "less",
       "source": "rubygems:less",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 1,
