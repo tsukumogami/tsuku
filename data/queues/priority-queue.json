@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-12T13:02:46Z",
+  "updated_at": "2026-03-12T14:10:08Z",
   "entries": [
     {
       "name": "node",
@@ -21756,11 +21756,11 @@
       "name": "ipfs",
       "source": "rubygems:ipfs",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-03-12T11:47:18.612536618Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-03-12T22:10:08.72021054Z"
     },
     {
       "name": "ipinfo-cli",
@@ -23966,11 +23966,11 @@
       "name": "kor",
       "source": "rubygems:kor",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-03-12T12:42:21.663072996Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-03-12T22:10:08.72021054Z"
     },
     {
       "name": "kosli-cli",
@@ -25056,11 +25056,11 @@
       "name": "lemon",
       "source": "rubygems:lemon",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-03-12T12:42:21.663072996Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-03-12T22:10:08.72021054Z"
     },
     {
       "name": "lensfun",
@@ -25116,11 +25116,11 @@
       "name": "less",
       "source": "rubygems:less",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-03-12T12:42:21.663072996Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-03-12T22:10:08.72021054Z"
     },
     {
       "name": "lesspipe",
@@ -28546,7 +28546,7 @@
       "name": "mailcatcher",
       "source": "rubygems:mailcatcher",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 2,
@@ -28556,11 +28556,11 @@
       "name": "mailhog",
       "source": "npm:mailhog",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 4,
-      "next_retry_at": "2026-03-11T21:01:47.991907361Z"
+      "failure_count": 5,
+      "next_retry_at": "2026-03-13T06:10:08.72021054Z"
     },
     {
       "name": "mailpit",
@@ -29486,7 +29486,7 @@
       "name": "mdv",
       "source": "rubygems:mdv",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 2,
@@ -29546,11 +29546,11 @@
       "name": "medusa",
       "source": "rubygems:medusa",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": "2026-03-12T12:37:21.761380275Z"
+      "failure_count": 2,
+      "next_retry_at": "2026-03-12T16:10:08.72021054Z"
     },
     {
       "name": "megacmd",
@@ -29596,11 +29596,11 @@
       "name": "meli",
       "source": "rubygems:meli",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": "2026-03-12T12:37:21.761380275Z"
+      "failure_count": 2,
+      "next_retry_at": "2026-03-12T16:10:08.72021054Z"
     },
     {
       "name": "memcached",
