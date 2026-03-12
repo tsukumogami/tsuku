@@ -247,8 +247,12 @@ func TestRateLimitError_ShortRetryAfter(t *testing.T) {
 		ConfigKey:  "llm.hourly_rate_limit",
 	}
 	suggestion := err.Suggestion()
+	// Production code floors sub-minute durations to 1 and always uses the
+	// plural format "%d minutes", so 30s becomes "1 minutes". The grammar
+	// wart ("1 minutes" instead of "1 minute") exists in the production
+	// code and is not worth fixing for a rarely-seen retry message.
 	if !strings.Contains(suggestion, "1 minutes") {
-		t.Errorf("Suggestion() should show at least 1 minute, got: %s", suggestion)
+		t.Errorf("Suggestion() should show at least 1 minute (floored), got: %s", suggestion)
 	}
 }
 
@@ -258,8 +262,10 @@ func TestGitHubRateLimitError_ShortRetryAfter(t *testing.T) {
 		Authenticated: true,
 	}
 	suggestion := err.Suggestion()
+	// Same floor behavior as RateLimitError: sub-minute durations become
+	// "1 minutes" due to the always-plural format string in production code.
 	if !strings.Contains(suggestion, "1 minutes") {
-		t.Errorf("Suggestion() should show at least 1 minute, got: %s", suggestion)
+		t.Errorf("Suggestion() should show at least 1 minute (floored), got: %s", suggestion)
 	}
 }
 

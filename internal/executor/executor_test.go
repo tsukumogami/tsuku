@@ -326,27 +326,8 @@ func TestShouldExecute(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := exec.shouldExecute(tt.when)
-			// Note: OS/arch tests depend on the actual runtime
-			// We check the logic is correctly evaluated
-			if tt.name == "empty when - always execute" || tt.name == "nil when - always execute" {
-				if result != tt.expected {
-					t.Errorf("shouldExecute(%v) = %v, want %v", tt.when, result, tt.expected)
-				}
-			}
-			if tt.name == "non-matching OS" {
-				if result != false {
-					t.Errorf("shouldExecute with non-matching OS should return false")
-				}
-			}
-			if tt.name == "non-matching arch" {
-				if result != false {
-					t.Errorf("shouldExecute with non-matching arch should return false")
-				}
-			}
-			if tt.name == "package_manager - always true (stub)" {
-				if result != true {
-					t.Errorf("shouldExecute with package_manager should return true (stub)")
-				}
+			if result != tt.expected {
+				t.Errorf("shouldExecute(%v) = %v, want %v", tt.when, result, tt.expected)
 			}
 		})
 	}
