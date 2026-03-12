@@ -1277,10 +1277,12 @@ func TestLLMLocalPreemptiveExplicit(t *testing.T) {
 
 func TestLLMIdleTimeoutDefault(t *testing.T) {
 	// Clear the env var to ensure defaults are tested
-	oldVal := os.Getenv(IdleTimeoutEnvVar)
-	os.Unsetenv(IdleTimeoutEnvVar)
+	oldVal, wasSet := os.LookupEnv(IdleTimeoutEnvVar)
+	if err := os.Unsetenv(IdleTimeoutEnvVar); err != nil {
+		t.Fatalf("failed to unset %s: %v", IdleTimeoutEnvVar, err)
+	}
 	defer func() {
-		if oldVal != "" {
+		if wasSet {
 			os.Setenv(IdleTimeoutEnvVar, oldVal)
 		}
 	}()
@@ -1292,10 +1294,12 @@ func TestLLMIdleTimeoutDefault(t *testing.T) {
 }
 
 func TestLLMIdleTimeoutFromConfig(t *testing.T) {
-	oldVal := os.Getenv(IdleTimeoutEnvVar)
-	os.Unsetenv(IdleTimeoutEnvVar)
+	oldVal, wasSet := os.LookupEnv(IdleTimeoutEnvVar)
+	if err := os.Unsetenv(IdleTimeoutEnvVar); err != nil {
+		t.Fatalf("failed to unset %s: %v", IdleTimeoutEnvVar, err)
+	}
 	defer func() {
-		if oldVal != "" {
+		if wasSet {
 			os.Setenv(IdleTimeoutEnvVar, oldVal)
 		}
 	}()
@@ -1316,7 +1320,7 @@ func TestLLMIdleTimeoutFromEnvVar(t *testing.T) {
 		if oldVal != "" {
 			os.Setenv(IdleTimeoutEnvVar, oldVal)
 		} else {
-			os.Unsetenv(IdleTimeoutEnvVar)
+			_ = os.Unsetenv(IdleTimeoutEnvVar)
 		}
 	}()
 
@@ -1336,7 +1340,7 @@ func TestLLMIdleTimeoutInvalidEnvFallsThrough(t *testing.T) {
 		if oldVal != "" {
 			os.Setenv(IdleTimeoutEnvVar, oldVal)
 		} else {
-			os.Unsetenv(IdleTimeoutEnvVar)
+			_ = os.Unsetenv(IdleTimeoutEnvVar)
 		}
 	}()
 
@@ -1351,10 +1355,12 @@ func TestLLMIdleTimeoutInvalidEnvFallsThrough(t *testing.T) {
 }
 
 func TestLLMIdleTimeoutInvalidConfigFallsToDefault(t *testing.T) {
-	oldVal := os.Getenv(IdleTimeoutEnvVar)
-	os.Unsetenv(IdleTimeoutEnvVar)
+	oldVal, wasSet := os.LookupEnv(IdleTimeoutEnvVar)
+	if err := os.Unsetenv(IdleTimeoutEnvVar); err != nil {
+		t.Fatalf("failed to unset %s: %v", IdleTimeoutEnvVar, err)
+	}
 	defer func() {
-		if oldVal != "" {
+		if wasSet {
 			os.Setenv(IdleTimeoutEnvVar, oldVal)
 		}
 	}()
@@ -1417,10 +1423,12 @@ func TestGetSetLLMLocalPreemptive(t *testing.T) {
 }
 
 func TestGetSetLLMIdleTimeout(t *testing.T) {
-	oldVal := os.Getenv(IdleTimeoutEnvVar)
-	os.Unsetenv(IdleTimeoutEnvVar)
+	oldVal, wasSet := os.LookupEnv(IdleTimeoutEnvVar)
+	if err := os.Unsetenv(IdleTimeoutEnvVar); err != nil {
+		t.Fatalf("failed to unset %s: %v", IdleTimeoutEnvVar, err)
+	}
 	defer func() {
-		if oldVal != "" {
+		if wasSet {
 			os.Setenv(IdleTimeoutEnvVar, oldVal)
 		}
 	}()
