@@ -83,7 +83,7 @@ Issues covered: 5
 - `go test -coverprofile=cover_actions.out ./internal/actions/...`
 - `go tool cover -func=cover_actions.out | tail -1`
 **Expected**: All tests pass. The total coverage line for `internal/actions` shows >= 66.0%.
-**Status**: pending
+**Status**: passed (66.8%)
 
 ## Scenario 10: actions tests make no network calls
 **ID**: scenario-10
@@ -91,7 +91,7 @@ Issues covered: 5
 **Commands**:
 - `go test -count=1 ./internal/actions/... 2>&1`
 **Expected**: All tests pass without network access. No test should require downloading remote resources or connecting to external services. Tests that previously required network should use stubs or fixtures.
-**Status**: pending
+**Status**: passed (uses .invalid domains)
 
 ## Scenario 11: existing tests still pass (full suite regression)
 **ID**: scenario-11
@@ -99,7 +99,7 @@ Issues covered: 5
 **Commands**:
 - `go test ./...`
 **Expected**: All existing tests across the entire codebase continue to pass. No regressions introduced by new test files.
-**Status**: pending
+**Status**: passed
 
 ## Use-Case Scenarios
 
