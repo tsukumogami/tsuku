@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-12T14:09:37Z",
+  "generated_at": "2026-03-12T14:10:52Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 50,
-      "pending": 3883,
+      "failed": 55,
+      "pending": 3878,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 50,
-        "pending": 3860,
+        "failed": 55,
+        "pending": 3855,
         "success": 1326
       }
     },
@@ -68,8 +68,8 @@
         "total": 1
       },
       "npm": {
-        "failed": 12,
-        "pending": 9,
+        "failed": 13,
+        "pending": 8,
         "success": 54,
         "total": 75
       },
@@ -80,8 +80,8 @@
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 32,
-        "pending": 47,
+        "failed": 36,
+        "pending": 43,
         "success": 9,
         "total": 89
       }
@@ -822,6 +822,15 @@
           "next_retry_at": "2026-03-12T14:42:21Z"
         },
         {
+          "id": "rubygems:ipfs",
+          "name": "ipfs",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-12T22:10:08Z"
+        },
+        {
           "id": "npm:kew",
           "name": "kew",
           "ecosystem": "npm",
@@ -831,6 +840,15 @@
           "next_retry_at": "2026-03-13T19:37:21Z"
         },
         {
+          "id": "rubygems:kor",
+          "name": "kor",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-12T22:10:08Z"
+        },
+        {
           "id": "npm:lcm",
           "name": "lcm",
           "ecosystem": "npm",
@@ -838,6 +856,24 @@
           "category": "install_failed",
           "failure_count": 5,
           "next_retry_at": "2026-03-13T05:02:46Z"
+        },
+        {
+          "id": "rubygems:lemon",
+          "name": "lemon",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-12T22:10:08Z"
+        },
+        {
+          "id": "rubygems:less",
+          "name": "less",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-12T22:10:08Z"
         },
         {
           "id": "pypi:lib3mf",
@@ -867,22 +903,31 @@
           "next_retry_at": "2026-03-12T15:37:21Z"
         },
         {
-          "id": "rubygems:mailcatcher",
-          "name": "mailcatcher",
-          "ecosystem": "rubygems",
+          "id": "npm:mailhog",
+          "name": "mailhog",
+          "ecosystem": "npm",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-03-12T13:37:21Z"
+          "failure_count": 5,
+          "next_retry_at": "2026-03-13T06:10:08Z"
         },
         {
-          "id": "rubygems:mdv",
-          "name": "mdv",
+          "id": "rubygems:medusa",
+          "name": "medusa",
           "ecosystem": "rubygems",
           "priority": 3,
           "category": "install_failed",
           "failure_count": 2,
-          "next_retry_at": "2026-03-12T13:37:21Z"
+          "next_retry_at": "2026-03-12T16:10:08Z"
+        },
+        {
+          "id": "rubygems:meli",
+          "name": "meli",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 2,
+          "next_retry_at": "2026-03-12T16:10:08Z"
         },
         {
           "id": "crates.io:numpy",
@@ -11632,15 +11677,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:ipfs",
-          "name": "ipfs",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-03-12T11:47:18Z"
-        },
-        {
           "id": "homebrew:ipopt",
           "name": "ipopt",
           "ecosystem": "homebrew",
@@ -12719,15 +12755,6 @@
           "failure_count": 1
         },
         {
-          "id": "rubygems:kor",
-          "name": "kor",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-03-12T12:42:21Z"
-        },
-        {
           "id": "homebrew:kotlin",
           "name": "kotlin",
           "ecosystem": "homebrew",
@@ -13113,15 +13140,6 @@
           "failure_count": 1
         },
         {
-          "id": "rubygems:lemon",
-          "name": "lemon",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-03-12T12:42:21Z"
-        },
-        {
           "id": "homebrew:leoafarias/fvm/fvm",
           "name": "leoafarias/fvm/fvm",
           "ecosystem": "homebrew",
@@ -13141,15 +13159,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "rubygems:less",
-          "name": "less",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-03-12T12:42:21Z"
         },
         {
           "id": "homebrew:lesspipe",
@@ -14808,13 +14817,13 @@
           "failure_count": 0
         },
         {
-          "id": "npm:mailhog",
-          "name": "mailhog",
-          "ecosystem": "npm",
+          "id": "rubygems:mailcatcher",
+          "name": "mailcatcher",
+          "ecosystem": "rubygems",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-11T21:01:47Z"
+          "failure_count": 2,
+          "next_retry_at": "2026-03-12T13:37:21Z"
         },
         {
           "id": "homebrew:mailsy",
@@ -15351,6 +15360,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:mdv",
+          "name": "mdv",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 2,
+          "next_retry_at": "2026-03-12T13:37:21Z"
+        },
+        {
           "id": "homebrew:mecab",
           "name": "mecab",
           "ecosystem": "homebrew",
@@ -15379,15 +15397,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:medusa",
-          "name": "medusa",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 1,
-          "next_retry_at": "2026-03-12T12:37:21Z"
-        },
-        {
           "id": "homebrew:megacmd",
           "name": "megacmd",
           "ecosystem": "homebrew",
@@ -15414,15 +15423,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "rubygems:meli",
-          "name": "meli",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 1,
-          "next_retry_at": "2026-03-12T12:37:21Z"
         },
         {
           "id": "rubygems:memcached",
