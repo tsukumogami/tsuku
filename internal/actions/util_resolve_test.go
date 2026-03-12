@@ -124,29 +124,13 @@ func TestSetupZigWrappers(t *testing.T) {
 }
 
 func TestResolvePipx_NotInstalled(t *testing.T) {
-	t.Parallel()
-	// Use a fake TSUKU_HOME with no pipx installed
 	tmpDir := t.TempDir()
 	toolsDir := filepath.Join(tmpDir, "tools")
 	if err := os.MkdirAll(toolsDir, 0755); err != nil {
 		t.Fatal(err)
 	}
 
-	oldVal := os.Getenv("TSUKU_HOME")
-	if err := os.Setenv("TSUKU_HOME", tmpDir); err != nil {
-		t.Fatal(err)
-	}
-	defer func() {
-		if oldVal != "" {
-			if err := os.Setenv("TSUKU_HOME", oldVal); err != nil {
-				t.Fatalf("failed to restore TSUKU_HOME: %v", err)
-			}
-		} else {
-			if err := os.Unsetenv("TSUKU_HOME"); err != nil {
-				t.Fatalf("failed to unset TSUKU_HOME: %v", err)
-			}
-		}
-	}()
+	t.Setenv("TSUKU_HOME", tmpDir)
 
 	result := ResolvePipx()
 	if result != "" {
@@ -155,7 +139,6 @@ func TestResolvePipx_NotInstalled(t *testing.T) {
 }
 
 func TestResolvePipx_Installed(t *testing.T) {
-	t.Parallel()
 	tmpDir := t.TempDir()
 	toolsDir := filepath.Join(tmpDir, "tools")
 	pipxDir := filepath.Join(toolsDir, "pipx-1.0.0", "bin")
@@ -167,21 +150,7 @@ func TestResolvePipx_Installed(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	oldVal := os.Getenv("TSUKU_HOME")
-	if err := os.Setenv("TSUKU_HOME", tmpDir); err != nil {
-		t.Fatal(err)
-	}
-	defer func() {
-		if oldVal != "" {
-			if err := os.Setenv("TSUKU_HOME", oldVal); err != nil {
-				t.Fatalf("failed to restore TSUKU_HOME: %v", err)
-			}
-		} else {
-			if err := os.Unsetenv("TSUKU_HOME"); err != nil {
-				t.Fatalf("failed to unset TSUKU_HOME: %v", err)
-			}
-		}
-	}()
+	t.Setenv("TSUKU_HOME", tmpDir)
 
 	result := ResolvePipx()
 	if result != pipxPath {
@@ -190,28 +159,13 @@ func TestResolvePipx_Installed(t *testing.T) {
 }
 
 func TestResolveGem_NotInstalled(t *testing.T) {
-	t.Parallel()
 	tmpDir := t.TempDir()
 	toolsDir := filepath.Join(tmpDir, "tools")
 	if err := os.MkdirAll(toolsDir, 0755); err != nil {
 		t.Fatal(err)
 	}
 
-	oldVal := os.Getenv("TSUKU_HOME")
-	if err := os.Setenv("TSUKU_HOME", tmpDir); err != nil {
-		t.Fatal(err)
-	}
-	defer func() {
-		if oldVal != "" {
-			if err := os.Setenv("TSUKU_HOME", oldVal); err != nil {
-				t.Fatalf("failed to restore TSUKU_HOME: %v", err)
-			}
-		} else {
-			if err := os.Unsetenv("TSUKU_HOME"); err != nil {
-				t.Fatalf("failed to unset TSUKU_HOME: %v", err)
-			}
-		}
-	}()
+	t.Setenv("TSUKU_HOME", tmpDir)
 
 	result := ResolveGem()
 	if result != "" {
@@ -220,7 +174,6 @@ func TestResolveGem_NotInstalled(t *testing.T) {
 }
 
 func TestResolveGem_Installed(t *testing.T) {
-	t.Parallel()
 	tmpDir := t.TempDir()
 	toolsDir := filepath.Join(tmpDir, "tools")
 	rubyDir := filepath.Join(toolsDir, "ruby-3.2.0", "bin")
@@ -232,21 +185,7 @@ func TestResolveGem_Installed(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	oldVal := os.Getenv("TSUKU_HOME")
-	if err := os.Setenv("TSUKU_HOME", tmpDir); err != nil {
-		t.Fatal(err)
-	}
-	defer func() {
-		if oldVal != "" {
-			if err := os.Setenv("TSUKU_HOME", oldVal); err != nil {
-				t.Fatalf("failed to restore TSUKU_HOME: %v", err)
-			}
-		} else {
-			if err := os.Unsetenv("TSUKU_HOME"); err != nil {
-				t.Fatalf("failed to unset TSUKU_HOME: %v", err)
-			}
-		}
-	}()
+	t.Setenv("TSUKU_HOME", tmpDir)
 
 	result := ResolveGem()
 	if result != gemPath {
@@ -255,28 +194,13 @@ func TestResolveGem_Installed(t *testing.T) {
 }
 
 func TestResolveZig_NotInstalled(t *testing.T) {
-	t.Parallel()
 	tmpDir := t.TempDir()
 	toolsDir := filepath.Join(tmpDir, "tools")
 	if err := os.MkdirAll(toolsDir, 0755); err != nil {
 		t.Fatal(err)
 	}
 
-	oldVal := os.Getenv("TSUKU_HOME")
-	if err := os.Setenv("TSUKU_HOME", tmpDir); err != nil {
-		t.Fatal(err)
-	}
-	defer func() {
-		if oldVal != "" {
-			if err := os.Setenv("TSUKU_HOME", oldVal); err != nil {
-				t.Fatalf("failed to restore TSUKU_HOME: %v", err)
-			}
-		} else {
-			if err := os.Unsetenv("TSUKU_HOME"); err != nil {
-				t.Fatalf("failed to unset TSUKU_HOME: %v", err)
-			}
-		}
-	}()
+	t.Setenv("TSUKU_HOME", tmpDir)
 
 	result := ResolveZig()
 	if result != "" {
@@ -285,7 +209,6 @@ func TestResolveZig_NotInstalled(t *testing.T) {
 }
 
 func TestResolveZig_Installed(t *testing.T) {
-	t.Parallel()
 	tmpDir := t.TempDir()
 	toolsDir := filepath.Join(tmpDir, "tools")
 	zigDir := filepath.Join(toolsDir, "zig-0.11.0")
@@ -297,21 +220,7 @@ func TestResolveZig_Installed(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	oldVal := os.Getenv("TSUKU_HOME")
-	if err := os.Setenv("TSUKU_HOME", tmpDir); err != nil {
-		t.Fatal(err)
-	}
-	defer func() {
-		if oldVal != "" {
-			if err := os.Setenv("TSUKU_HOME", oldVal); err != nil {
-				t.Fatalf("failed to restore TSUKU_HOME: %v", err)
-			}
-		} else {
-			if err := os.Unsetenv("TSUKU_HOME"); err != nil {
-				t.Fatalf("failed to unset TSUKU_HOME: %v", err)
-			}
-		}
-	}()
+	t.Setenv("TSUKU_HOME", tmpDir)
 
 	result := ResolveZig()
 	if result != zigPath {
@@ -320,28 +229,13 @@ func TestResolveZig_Installed(t *testing.T) {
 }
 
 func TestResolvePythonStandalone_NotInstalled(t *testing.T) {
-	t.Parallel()
 	tmpDir := t.TempDir()
 	toolsDir := filepath.Join(tmpDir, "tools")
 	if err := os.MkdirAll(toolsDir, 0755); err != nil {
 		t.Fatal(err)
 	}
 
-	oldVal := os.Getenv("TSUKU_HOME")
-	if err := os.Setenv("TSUKU_HOME", tmpDir); err != nil {
-		t.Fatal(err)
-	}
-	defer func() {
-		if oldVal != "" {
-			if err := os.Setenv("TSUKU_HOME", oldVal); err != nil {
-				t.Fatalf("failed to restore TSUKU_HOME: %v", err)
-			}
-		} else {
-			if err := os.Unsetenv("TSUKU_HOME"); err != nil {
-				t.Fatalf("failed to unset TSUKU_HOME: %v", err)
-			}
-		}
-	}()
+	t.Setenv("TSUKU_HOME", tmpDir)
 
 	result := ResolvePythonStandalone()
 	if result != "" {
@@ -350,7 +244,6 @@ func TestResolvePythonStandalone_NotInstalled(t *testing.T) {
 }
 
 func TestResolvePythonStandalone_Installed(t *testing.T) {
-	t.Parallel()
 	tmpDir := t.TempDir()
 	toolsDir := filepath.Join(tmpDir, "tools")
 	pyDir := filepath.Join(toolsDir, "python-standalone-3.12.0", "bin")
@@ -362,21 +255,7 @@ func TestResolvePythonStandalone_Installed(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	oldVal := os.Getenv("TSUKU_HOME")
-	if err := os.Setenv("TSUKU_HOME", tmpDir); err != nil {
-		t.Fatal(err)
-	}
-	defer func() {
-		if oldVal != "" {
-			if err := os.Setenv("TSUKU_HOME", oldVal); err != nil {
-				t.Fatalf("failed to restore TSUKU_HOME: %v", err)
-			}
-		} else {
-			if err := os.Unsetenv("TSUKU_HOME"); err != nil {
-				t.Fatalf("failed to unset TSUKU_HOME: %v", err)
-			}
-		}
-	}()
+	t.Setenv("TSUKU_HOME", tmpDir)
 
 	result := ResolvePythonStandalone()
 	if result != pyPath {
@@ -385,28 +264,13 @@ func TestResolvePythonStandalone_Installed(t *testing.T) {
 }
 
 func TestResolveCargo_NotInstalled(t *testing.T) {
-	t.Parallel()
 	tmpDir := t.TempDir()
 	toolsDir := filepath.Join(tmpDir, "tools")
 	if err := os.MkdirAll(toolsDir, 0755); err != nil {
 		t.Fatal(err)
 	}
 
-	oldVal := os.Getenv("TSUKU_HOME")
-	if err := os.Setenv("TSUKU_HOME", tmpDir); err != nil {
-		t.Fatal(err)
-	}
-	defer func() {
-		if oldVal != "" {
-			if err := os.Setenv("TSUKU_HOME", oldVal); err != nil {
-				t.Fatalf("failed to restore TSUKU_HOME: %v", err)
-			}
-		} else {
-			if err := os.Unsetenv("TSUKU_HOME"); err != nil {
-				t.Fatalf("failed to unset TSUKU_HOME: %v", err)
-			}
-		}
-	}()
+	t.Setenv("TSUKU_HOME", tmpDir)
 
 	result := ResolveCargo()
 	if result != "" {
@@ -415,7 +279,6 @@ func TestResolveCargo_NotInstalled(t *testing.T) {
 }
 
 func TestResolveCargo_StandardLocation(t *testing.T) {
-	t.Parallel()
 	tmpDir := t.TempDir()
 	toolsDir := filepath.Join(tmpDir, "tools")
 	rustDir := filepath.Join(toolsDir, "rust-1.75.0", "bin")
@@ -427,21 +290,7 @@ func TestResolveCargo_StandardLocation(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	oldVal := os.Getenv("TSUKU_HOME")
-	if err := os.Setenv("TSUKU_HOME", tmpDir); err != nil {
-		t.Fatal(err)
-	}
-	defer func() {
-		if oldVal != "" {
-			if err := os.Setenv("TSUKU_HOME", oldVal); err != nil {
-				t.Fatalf("failed to restore TSUKU_HOME: %v", err)
-			}
-		} else {
-			if err := os.Unsetenv("TSUKU_HOME"); err != nil {
-				t.Fatalf("failed to unset TSUKU_HOME: %v", err)
-			}
-		}
-	}()
+	t.Setenv("TSUKU_HOME", tmpDir)
 
 	result := ResolveCargo()
 	if result != cargoPath {
@@ -450,7 +299,6 @@ func TestResolveCargo_StandardLocation(t *testing.T) {
 }
 
 func TestResolveCargo_LegacyLocationPath(t *testing.T) {
-	t.Parallel()
 	tmpDir := t.TempDir()
 	toolsDir := filepath.Join(tmpDir, "tools")
 	legacyDir := filepath.Join(toolsDir, "rust-1.75.0", "cargo", "bin")
@@ -462,21 +310,7 @@ func TestResolveCargo_LegacyLocationPath(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	oldVal := os.Getenv("TSUKU_HOME")
-	if err := os.Setenv("TSUKU_HOME", tmpDir); err != nil {
-		t.Fatal(err)
-	}
-	defer func() {
-		if oldVal != "" {
-			if err := os.Setenv("TSUKU_HOME", oldVal); err != nil {
-				t.Fatalf("failed to restore TSUKU_HOME: %v", err)
-			}
-		} else {
-			if err := os.Unsetenv("TSUKU_HOME"); err != nil {
-				t.Fatalf("failed to unset TSUKU_HOME: %v", err)
-			}
-		}
-	}()
+	t.Setenv("TSUKU_HOME", tmpDir)
 
 	result := ResolveCargo()
 	if result != cargoPath {
@@ -485,28 +319,13 @@ func TestResolveCargo_LegacyLocationPath(t *testing.T) {
 }
 
 func TestResolvePerl_NotInstalled(t *testing.T) {
-	t.Parallel()
 	tmpDir := t.TempDir()
 	toolsDir := filepath.Join(tmpDir, "tools")
 	if err := os.MkdirAll(toolsDir, 0755); err != nil {
 		t.Fatal(err)
 	}
 
-	oldVal := os.Getenv("TSUKU_HOME")
-	if err := os.Setenv("TSUKU_HOME", tmpDir); err != nil {
-		t.Fatal(err)
-	}
-	defer func() {
-		if oldVal != "" {
-			if err := os.Setenv("TSUKU_HOME", oldVal); err != nil {
-				t.Fatalf("failed to restore TSUKU_HOME: %v", err)
-			}
-		} else {
-			if err := os.Unsetenv("TSUKU_HOME"); err != nil {
-				t.Fatalf("failed to unset TSUKU_HOME: %v", err)
-			}
-		}
-	}()
+	t.Setenv("TSUKU_HOME", tmpDir)
 
 	result := ResolvePerl()
 	if result != "" {
@@ -515,7 +334,6 @@ func TestResolvePerl_NotInstalled(t *testing.T) {
 }
 
 func TestResolvePerl_Installed(t *testing.T) {
-	t.Parallel()
 	tmpDir := t.TempDir()
 	toolsDir := filepath.Join(tmpDir, "tools")
 	perlDir := filepath.Join(toolsDir, "perl-5.38.0", "bin")
@@ -527,21 +345,7 @@ func TestResolvePerl_Installed(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	oldVal := os.Getenv("TSUKU_HOME")
-	if err := os.Setenv("TSUKU_HOME", tmpDir); err != nil {
-		t.Fatal(err)
-	}
-	defer func() {
-		if oldVal != "" {
-			if err := os.Setenv("TSUKU_HOME", oldVal); err != nil {
-				t.Fatalf("failed to restore TSUKU_HOME: %v", err)
-			}
-		} else {
-			if err := os.Unsetenv("TSUKU_HOME"); err != nil {
-				t.Fatalf("failed to unset TSUKU_HOME: %v", err)
-			}
-		}
-	}()
+	t.Setenv("TSUKU_HOME", tmpDir)
 
 	result := ResolvePerl()
 	if result != perlPath {
@@ -550,28 +354,13 @@ func TestResolvePerl_Installed(t *testing.T) {
 }
 
 func TestResolveCpanm_NotInstalled(t *testing.T) {
-	t.Parallel()
 	tmpDir := t.TempDir()
 	toolsDir := filepath.Join(tmpDir, "tools")
 	if err := os.MkdirAll(toolsDir, 0755); err != nil {
 		t.Fatal(err)
 	}
 
-	oldVal := os.Getenv("TSUKU_HOME")
-	if err := os.Setenv("TSUKU_HOME", tmpDir); err != nil {
-		t.Fatal(err)
-	}
-	defer func() {
-		if oldVal != "" {
-			if err := os.Setenv("TSUKU_HOME", oldVal); err != nil {
-				t.Fatalf("failed to restore TSUKU_HOME: %v", err)
-			}
-		} else {
-			if err := os.Unsetenv("TSUKU_HOME"); err != nil {
-				t.Fatalf("failed to unset TSUKU_HOME: %v", err)
-			}
-		}
-	}()
+	t.Setenv("TSUKU_HOME", tmpDir)
 
 	result := ResolveCpanm()
 	if result != "" {
@@ -580,7 +369,6 @@ func TestResolveCpanm_NotInstalled(t *testing.T) {
 }
 
 func TestResolveCpanm_Installed(t *testing.T) {
-	t.Parallel()
 	tmpDir := t.TempDir()
 	toolsDir := filepath.Join(tmpDir, "tools")
 	perlDir := filepath.Join(toolsDir, "perl-5.38.0", "bin")
@@ -592,21 +380,7 @@ func TestResolveCpanm_Installed(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	oldVal := os.Getenv("TSUKU_HOME")
-	if err := os.Setenv("TSUKU_HOME", tmpDir); err != nil {
-		t.Fatal(err)
-	}
-	defer func() {
-		if oldVal != "" {
-			if err := os.Setenv("TSUKU_HOME", oldVal); err != nil {
-				t.Fatalf("failed to restore TSUKU_HOME: %v", err)
-			}
-		} else {
-			if err := os.Unsetenv("TSUKU_HOME"); err != nil {
-				t.Fatalf("failed to unset TSUKU_HOME: %v", err)
-			}
-		}
-	}()
+	t.Setenv("TSUKU_HOME", tmpDir)
 
 	result := ResolveCpanm()
 	if result != cpanmPath {

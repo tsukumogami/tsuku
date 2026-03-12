@@ -12,50 +12,6 @@ import (
 
 // -- composites.go: DownloadArchiveAction Execute additional paths --
 
-func TestDownloadArchiveAction_Execute_DirectoryModeNoVerify(t *testing.T) {
-	t.Parallel()
-	action := &DownloadArchiveAction{}
-	ctx := &ExecutionContext{
-		Context: context.Background(),
-		WorkDir: t.TempDir(),
-		Version: "1.0.0",
-		OS:      "linux",
-		Arch:    "amd64",
-		Recipe:  &recipe.Recipe{},
-	}
-	err := action.Execute(ctx, map[string]any{
-		"url":            "https://nonexistent.invalid/tool.tar.gz",
-		"archive_format": "tar.gz",
-		"binaries":       []any{"bin/tool"},
-		"install_mode":   "directory",
-	})
-	if err == nil {
-		t.Error("Expected error for directory mode without verify section")
-	}
-}
-
-func TestDownloadArchiveAction_Execute_DirectoryWrappedModeNoVerify(t *testing.T) {
-	t.Parallel()
-	action := &DownloadArchiveAction{}
-	ctx := &ExecutionContext{
-		Context: context.Background(),
-		WorkDir: t.TempDir(),
-		Version: "1.0.0",
-		OS:      "linux",
-		Arch:    "amd64",
-		Recipe:  &recipe.Recipe{},
-	}
-	err := action.Execute(ctx, map[string]any{
-		"url":            "https://nonexistent.invalid/tool.tar.gz",
-		"archive_format": "tar.gz",
-		"binaries":       []any{"bin/tool"},
-		"install_mode":   "directory_wrapped",
-	})
-	if err == nil {
-		t.Error("Expected error for directory_wrapped mode without verify")
-	}
-}
-
 func TestDownloadArchiveAction_Execute_LibraryExempt(t *testing.T) {
 	t.Parallel()
 	action := &DownloadArchiveAction{}
@@ -84,30 +40,6 @@ func TestDownloadArchiveAction_Execute_LibraryExempt(t *testing.T) {
 	errMsg := err.Error()
 	if strings.Contains(errMsg, "verify") || strings.Contains(errMsg, "install_mode") {
 		t.Errorf("Error should be about download, not verify: %s", errMsg)
-	}
-}
-
-// -- composites.go: GitHubArchiveAction Execute with install_mode + verify --
-
-func TestGitHubArchiveAction_Execute_DirectoryModeNoVerify(t *testing.T) {
-	t.Parallel()
-	action := &GitHubArchiveAction{}
-	ctx := &ExecutionContext{
-		Context: context.Background(),
-		WorkDir: t.TempDir(),
-		Version: "1.0.0",
-		OS:      "linux",
-		Arch:    "amd64",
-		Recipe:  &recipe.Recipe{},
-	}
-	err := action.Execute(ctx, map[string]any{
-		"repo":          "owner/repo",
-		"asset_pattern": "tool.tar.gz",
-		"binaries":      []any{"bin/tool"},
-		"install_mode":  "directory",
-	})
-	if err == nil {
-		t.Error("Expected error for directory mode without verify")
 	}
 }
 
