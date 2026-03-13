@@ -783,37 +783,54 @@ func TestExpandPathVariables_RpathFallback_LoaderPathSuffix(t *testing.T) {
 	}
 }
 
-func TestIsFatBinaryForRpath_NonExistent(t *testing.T) {
-	result := isFatBinaryForRpath("/nonexistent/file")
-	if result {
-		t.Error("expected false for nonexistent file")
+func TestIsFatBinaryForRpath(t *testing.T) {
+	tests := []struct {
+		name  string
+		setup func(t *testing.T) string
+		want  bool
+	}{
+		{
+			name: "NonExistent",
+			setup: func(t *testing.T) string {
+				t.Helper()
+				return "/nonexistent/file"
+			},
+			want: false,
+		},
+		{
+			name: "RegularFile",
+			setup: func(t *testing.T) string {
+				t.Helper()
+				path := filepath.Join(t.TempDir(), "regular.bin")
+				if err := os.WriteFile(path, []byte("not a fat binary"), 0644); err != nil {
+					t.Fatal(err)
+				}
+				return path
+			},
+			want: false,
+		},
+		{
+			name: "FatBinaryMagic",
+			setup: func(t *testing.T) string {
+				t.Helper()
+				path := filepath.Join(t.TempDir(), "fat.bin")
+				if err := os.WriteFile(path, []byte{0xca, 0xfe, 0xba, 0xbe, 0, 0, 0, 0}, 0644); err != nil {
+					t.Fatal(err)
+				}
+				return path
+			},
+			want: true,
+		},
 	}
-}
 
-func TestIsFatBinaryForRpath_RegularFile(t *testing.T) {
-	tmpDir := t.TempDir()
-	path := filepath.Join(tmpDir, "regular.bin")
-	if err := os.WriteFile(path, []byte("not a fat binary"), 0644); err != nil {
-		t.Fatal(err)
-	}
-
-	result := isFatBinaryForRpath(path)
-	if result {
-		t.Error("expected false for regular file")
-	}
-}
-
-func TestIsFatBinaryForRpath_TrueCase(t *testing.T) {
-	tmpDir := t.TempDir()
-	path := filepath.Join(tmpDir, "fat.bin")
-	// Fat binary magic
-	if err := os.WriteFile(path, []byte{0xca, 0xfe, 0xba, 0xbe, 0, 0, 0, 0}, 0644); err != nil {
-		t.Fatal(err)
-	}
-
-	result := isFatBinaryForRpath(path)
-	if !result {
-		t.Error("expected true for fat binary magic")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			path := tt.setup(t)
+			if got := isFatBinaryForRpath(path); got != tt.want {
+				t.Errorf("isFatBinaryForRpath(%s) = %v, want %v", path, got, tt.want)
+			}
+		})
 	}
 }
 

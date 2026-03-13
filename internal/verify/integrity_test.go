@@ -350,32 +350,6 @@ func TestVerifyIntegrity_BrokenSymlink(t *testing.T) {
 	}
 }
 
-func TestVerifyIntegrity_BrokenSymlink_LstatExists(t *testing.T) {
-	tmpDir := t.TempDir()
-	libDir := filepath.Join(tmpDir, "lib")
-	if err := os.MkdirAll(libDir, 0755); err != nil {
-		t.Fatal(err)
-	}
-
-	// Create a broken symlink pointing to a target that doesn't exist
-	brokenLink := filepath.Join(libDir, "libbroken.so")
-	if err := os.Symlink("/nonexistent/target/lib.so", brokenLink); err != nil {
-		t.Fatal(err)
-	}
-
-	stored := map[string]string{
-		"lib/libbroken.so": "abc123",
-	}
-
-	result, err := VerifyIntegrity(tmpDir, stored)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if len(result.Missing) != 1 {
-		t.Errorf("expected 1 missing, got %d", len(result.Missing))
-	}
-}
-
 func TestVerifyIntegrity_PermissionError(t *testing.T) {
 	tmpDir := t.TempDir()
 	libDir := filepath.Join(tmpDir, "lib")

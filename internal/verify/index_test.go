@@ -22,33 +22,42 @@ func TestNewSonameIndex(t *testing.T) {
 	}
 }
 
-func TestBuildSonameIndex_NilState(t *testing.T) {
+func TestBuildSonameIndex_ZeroSize(t *testing.T) {
 	t.Parallel()
 
-	index := BuildSonameIndex(nil)
-
-	if index == nil {
-		t.Fatal("BuildSonameIndex(nil) returned nil")
+	tests := []struct {
+		name  string
+		state *install.State
+	}{
+		{
+			name:  "NilState",
+			state: nil,
+		},
+		{
+			name: "EmptyState",
+			state: &install.State{
+				Libs: make(map[string]map[string]install.LibraryVersionState),
+			},
+		},
+		{
+			name: "NilLibsMap",
+			state: &install.State{
+				Libs: nil,
+			},
+		},
 	}
-	if index.Size() != 0 {
-		t.Errorf("Size() = %d, want 0", index.Size())
-	}
-}
 
-func TestBuildSonameIndex_EmptyState(t *testing.T) {
-	t.Parallel()
-
-	state := &install.State{
-		Libs: make(map[string]map[string]install.LibraryVersionState),
-	}
-
-	index := BuildSonameIndex(state)
-
-	if index == nil {
-		t.Fatal("BuildSonameIndex returned nil")
-	}
-	if index.Size() != 0 {
-		t.Errorf("Size() = %d, want 0", index.Size())
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			index := BuildSonameIndex(tt.state)
+			if index == nil {
+				t.Fatal("BuildSonameIndex returned nil")
+			}
+			if index.Size() != 0 {
+				t.Errorf("Size() = %d, want 0", index.Size())
+			}
+		})
 	}
 }
 
@@ -239,22 +248,5 @@ func TestBuildSonameIndex_EmptySonames(t *testing.T) {
 
 	if index.Size() != 0 {
 		t.Errorf("Size() = %d, want 0 (empty sonames should not add entries)", index.Size())
-	}
-}
-
-func TestBuildSonameIndex_NilLibsMap(t *testing.T) {
-	t.Parallel()
-
-	state := &install.State{
-		Libs: nil,
-	}
-
-	index := BuildSonameIndex(state)
-
-	if index == nil {
-		t.Fatal("BuildSonameIndex returned nil")
-	}
-	if index.Size() != 0 {
-		t.Errorf("Size() = %d, want 0", index.Size())
 	}
 }

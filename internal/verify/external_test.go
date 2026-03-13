@@ -64,19 +64,33 @@ func TestIsSharedLibraryPath(t *testing.T) {
 		path string
 		want bool
 	}{
+		// Standard shared objects
 		{"/usr/lib/libz.so", true},
 		{"/usr/lib/libz.so.1", true},
 		{"/usr/lib/libz.so.1.2.11", true},
+
+		// macOS dynamic libraries
 		{"/usr/lib/libz.dylib", true},
+		{"/usr/local/lib/libiconv.dylib", true},
+
+		// Not shared libraries
 		{"/usr/lib/libz.a", false},
 		{"/usr/lib/libz.o", false},
+		{"/usr/bin/tool", false},
 		{"/usr/lib/libz.so.bak", false},
 		{"/usr/lib/libz.soname", false},
 		{"/usr/bin/zlib", false},
+		{"/usr/include/header.h", false},
+
+		// Edge cases
+		{"/usr/lib/libz.so.", true}, // Trailing dot passes version check (empty suffix after dot)
+		{"libfoo.so.1.2.3", true},
+		{"libfoo.dylib", true},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.path, func(t *testing.T) {
+			t.Parallel()
 			if got := isSharedLibraryPath(tt.path); got != tt.want {
 				t.Errorf("isSharedLibraryPath(%q) = %v, want %v", tt.path, got, tt.want)
 			}
@@ -171,54 +185,6 @@ func TestCheckExternalLibrary_WrongFamily(t *testing.T) {
 	}
 }
 
-func TestCheckExternalLibrary_NonLibraryType(t *testing.T) {
-	// Need to check what CheckExternalLibrary does for non-library types
-	// Let me read that function for context
-}
-
-func TestCheckExternalLibrary_ToolType(t *testing.T) {
-	r := &recipe.Recipe{
-		Metadata: recipe.MetadataSection{
-			Name: "git",
-			Type: "tool", // not a library
-		},
-	}
-
-	target := platform.NewTarget("linux/amd64", "debian", "glibc", "")
-	info, err := CheckExternalLibrary(r, target)
-	if err != nil {
-		t.Errorf("unexpected error: %v", err)
-	}
-	if info != nil {
-		t.Error("expected nil for non-library recipe")
-	}
-}
-
-func TestCheckExternalLibrary_FamilyMismatch(t *testing.T) {
-	r := &recipe.Recipe{
-		Metadata: recipe.MetadataSection{
-			Name: "zlib",
-			Type: "library",
-		},
-		Steps: []recipe.Step{
-			{
-				Action: "apt_install",
-				Params: map[string]interface{}{"packages": []string{"zlib1g-dev"}},
-			},
-		},
-	}
-
-	// Target is alpine, but action is apt_install (debian)
-	target := platform.NewTarget("linux/amd64", "alpine", "musl", "")
-	info, err := CheckExternalLibrary(r, target)
-	if err != nil {
-		t.Errorf("unexpected error: %v", err)
-	}
-	if info != nil {
-		t.Error("expected nil for family mismatch")
-	}
-}
-
 func TestCheckExternalLibrary_NonPackageManagerAction(t *testing.T) {
 	r := &recipe.Recipe{
 		Metadata: recipe.MetadataSection{
@@ -267,49 +233,6 @@ func TestCheckExternalLibrary_ReachesPackageCheck(t *testing.T) {
 	// This exercises the allPackagesInstalled call path
 	if info != nil {
 		t.Logf("library found: %+v", info)
-	}
-}
-
-func TestGetPackagesFromParams_InterfaceSlice(t *testing.T) {
-	params := map[string]interface{}{
-		"packages": []interface{}{"zlib1g-dev", "libssl-dev"},
-	}
-
-	result := getPackagesFromParams(params)
-	if len(result) != 2 {
-		t.Errorf("expected 2 packages, got %d", len(result))
-	}
-}
-
-func TestGetPackagesFromParams_MixedInterfaceSlice(t *testing.T) {
-	params := map[string]interface{}{
-		"packages": []interface{}{"zlib1g-dev", 42, "libssl-dev"},
-	}
-
-	result := getPackagesFromParams(params)
-	if len(result) != 2 {
-		t.Errorf("expected 2 packages (skipping int), got %d", len(result))
-	}
-}
-
-func TestGetPackagesFromParams_NoKey(t *testing.T) {
-	params := map[string]interface{}{
-		"url": "https://example.com",
-	}
-
-	result := getPackagesFromParams(params)
-	if result != nil {
-		t.Errorf("expected nil for missing key, got %v", result)
-	}
-}
-
-func TestGetPackagesFromParams_StringSlice(t *testing.T) {
-	params := map[string]interface{}{
-		"packages": []string{"libssl-dev"},
-	}
-	result := getPackagesFromParams(params)
-	if len(result) != 1 || result[0] != "libssl-dev" {
-		t.Errorf("expected [libssl-dev], got %v", result)
 	}
 }
 
@@ -375,44 +298,6 @@ func TestDeduplicateLibraries_Empty(t *testing.T) {
 	}
 	if len(result) != 0 {
 		t.Errorf("expected empty result, got %d", len(result))
-	}
-}
-
-func TestIsSharedLibraryPath_MoreCases(t *testing.T) {
-	tests := []struct {
-		path string
-		want bool
-	}{
-		// Standard shared objects
-		{"/usr/lib/libz.so", true},
-		{"/usr/lib/libz.so.1", true},
-		{"/usr/lib/libz.so.1.2.11", true},
-
-		// macOS dynamic libraries
-		{"/usr/lib/libz.dylib", true},
-		{"/usr/local/lib/libiconv.dylib", true},
-
-		// Not shared libraries
-		{"/usr/lib/libz.a", false},
-		{"/usr/lib/libz.o", false},
-		{"/usr/bin/tool", false},
-		{"/usr/lib/libz.so.bak", false},
-		{"/usr/lib/libz.soname", false},
-		{"/usr/include/header.h", false},
-
-		// Edge cases
-		{"/usr/lib/libz.so.", true}, // Trailing dot passes version check (empty suffix after dot)
-		{"libfoo.so.1.2.3", true},
-		{"libfoo.dylib", true},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.path, func(t *testing.T) {
-			got := isSharedLibraryPath(tt.path)
-			if got != tt.want {
-				t.Errorf("isSharedLibraryPath(%q) = %v, want %v", tt.path, got, tt.want)
-			}
-		})
 	}
 }
 

@@ -291,39 +291,49 @@ func TestDeterministicFailedError(t *testing.T) {
 	}
 }
 
-func TestGitHubRepoNotFoundError_Unwrap(t *testing.T) {
-	underlying := errors.New("404 not found")
-	err := &GitHubRepoNotFoundError{
-		Owner: "owner",
-		Repo:  "repo",
-		Err:   underlying,
+func TestErrorTypes_Unwrap(t *testing.T) {
+	tests := []struct {
+		name       string
+		err        interface{ Unwrap() error }
+		underlying error
+	}{
+		{
+			name:       "GitHubRepoNotFoundError",
+			underlying: errors.New("404 not found"),
+			err: &GitHubRepoNotFoundError{
+				Owner: "owner",
+				Repo:  "repo",
+				Err:   errors.New("404 not found"),
+			},
+		},
+		{
+			name:       "LLMAuthError",
+			underlying: errors.New("unauthorized"),
+			err: &LLMAuthError{
+				Provider: "test",
+				EnvVar:   "TEST_KEY",
+				DocsURL:  "https://example.com",
+				Err:      errors.New("unauthorized"),
+			},
+		},
+		{
+			name:       "SandboxError",
+			underlying: errors.New("exit 1"),
+			err: &SandboxError{
+				Tool: "test",
+				Err:  errors.New("exit 1"),
+			},
+		},
 	}
-	if err.Unwrap() != underlying {
-		t.Error("Unwrap() should return underlying error")
-	}
-}
 
-func TestLLMAuthError_Unwrap(t *testing.T) {
-	underlying := errors.New("unauthorized")
-	err := &LLMAuthError{
-		Provider: "test",
-		EnvVar:   "TEST_KEY",
-		DocsURL:  "https://example.com",
-		Err:      underlying,
-	}
-	if err.Unwrap() != underlying {
-		t.Error("Unwrap() should return underlying error")
-	}
-}
-
-func TestSandboxError_Unwrap(t *testing.T) {
-	underlying := errors.New("exit 1")
-	err := &SandboxError{
-		Tool: "test",
-		Err:  underlying,
-	}
-	if err.Unwrap() != underlying {
-		t.Error("Unwrap() should return underlying error")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			got := tt.err.Unwrap()
+			if got == nil || got.Error() != tt.underlying.Error() {
+				t.Errorf("Unwrap() = %v, want %v", got, tt.underlying)
+			}
+		})
 	}
 }
 
@@ -399,87 +409,108 @@ func TestRecordLLMCost(t *testing.T) {
 	}
 }
 
-func TestCheckLLMPrerequisites_NilOpts(t *testing.T) {
-	if err := CheckLLMPrerequisites(nil); err != nil {
-		t.Errorf("CheckLLMPrerequisites(nil) error = %v, want nil", err)
+func TestCheckLLMPrerequisites(t *testing.T) {
+	tests := []struct {
+		name     string
+		opts     *SessionOptions
+		wantErr  bool
+		checkErr func(t *testing.T, err error)
+	}{
+		{
+			name:    "NilOpts",
+			opts:    nil,
+			wantErr: false,
+		},
+		{
+			name:    "ForceInit",
+			opts:    &SessionOptions{ForceInit: true},
+			wantErr: false,
+		},
+		{
+			name: "LLMDisabled",
+			opts: &SessionOptions{
+				LLMConfig: &mockLLMConfig{enabled: false},
+			},
+			wantErr: true,
+			checkErr: func(t *testing.T, err error) {
+				t.Helper()
+				var llmErr *LLMDisabledError
+				if !errors.As(err, &llmErr) {
+					t.Errorf("expected LLMDisabledError, got %T", err)
+				}
+			},
+		},
+		{
+			name: "BudgetExceeded",
+			opts: &SessionOptions{
+				LLMConfig: &mockLLMConfig{enabled: true, dailyBudget: 5.0, hourlyLimit: 10},
+				LLMStateTracker: &mockLLMTracker{
+					canGenerate:    false,
+					denyReason:     "daily budget exceeded",
+					dailySpent:     5.5,
+					recentGenCount: 3,
+				},
+			},
+			wantErr: true,
+			checkErr: func(t *testing.T, err error) {
+				t.Helper()
+				var budgetErr *BudgetError
+				if !errors.As(err, &budgetErr) {
+					t.Errorf("expected BudgetError, got %T", err)
+				}
+			},
+		},
+		{
+			name: "RateLimitExceeded",
+			opts: &SessionOptions{
+				LLMConfig: &mockLLMConfig{enabled: true, dailyBudget: 5.0, hourlyLimit: 10},
+				LLMStateTracker: &mockLLMTracker{
+					canGenerate:    false,
+					denyReason:     "rate limit exceeded",
+					dailySpent:     1.0,
+					recentGenCount: 10,
+				},
+			},
+			wantErr: true,
+			checkErr: func(t *testing.T, err error) {
+				t.Helper()
+				var rateErr *RateLimitError
+				if !errors.As(err, &rateErr) {
+					t.Errorf("expected RateLimitError, got %T", err)
+				}
+			},
+		},
+		{
+			name: "Allowed",
+			opts: &SessionOptions{
+				LLMConfig: &mockLLMConfig{enabled: true, dailyBudget: 5.0, hourlyLimit: 10},
+				LLMStateTracker: &mockLLMTracker{
+					canGenerate:    true,
+					dailySpent:     1.0,
+					recentGenCount: 3,
+				},
+			},
+			wantErr: false,
+		},
 	}
-}
 
-func TestCheckLLMPrerequisites_ForceInit(t *testing.T) {
-	opts := &SessionOptions{ForceInit: true}
-	if err := CheckLLMPrerequisites(opts); err != nil {
-		t.Errorf("CheckLLMPrerequisites with ForceInit error = %v, want nil", err)
-	}
-}
-
-func TestCheckLLMPrerequisites_LLMDisabled(t *testing.T) {
-	cfg := &mockLLMConfig{enabled: false}
-	opts := &SessionOptions{LLMConfig: cfg}
-
-	err := CheckLLMPrerequisites(opts)
-	if err == nil {
-		t.Error("expected error when LLM disabled")
-	}
-
-	var llmErr *LLMDisabledError
-	if !errors.As(err, &llmErr) {
-		t.Errorf("expected LLMDisabledError, got %T", err)
-	}
-}
-
-func TestCheckLLMPrerequisites_BudgetExceeded(t *testing.T) {
-	cfg := &mockLLMConfig{enabled: true, dailyBudget: 5.0, hourlyLimit: 10}
-	tracker := &mockLLMTracker{
-		canGenerate:    false,
-		denyReason:     "daily budget exceeded",
-		dailySpent:     5.5,
-		recentGenCount: 3,
-	}
-	opts := &SessionOptions{LLMConfig: cfg, LLMStateTracker: tracker}
-
-	err := CheckLLMPrerequisites(opts)
-	if err == nil {
-		t.Error("expected error when budget exceeded")
-	}
-
-	var budgetErr *BudgetError
-	if !errors.As(err, &budgetErr) {
-		t.Errorf("expected BudgetError, got %T", err)
-	}
-}
-
-func TestCheckLLMPrerequisites_RateLimitExceeded(t *testing.T) {
-	cfg := &mockLLMConfig{enabled: true, dailyBudget: 5.0, hourlyLimit: 10}
-	tracker := &mockLLMTracker{
-		canGenerate:    false,
-		denyReason:     "rate limit exceeded",
-		dailySpent:     1.0,
-		recentGenCount: 10,
-	}
-	opts := &SessionOptions{LLMConfig: cfg, LLMStateTracker: tracker}
-
-	err := CheckLLMPrerequisites(opts)
-	if err == nil {
-		t.Error("expected error when rate limit exceeded")
-	}
-
-	var rateErr *RateLimitError
-	if !errors.As(err, &rateErr) {
-		t.Errorf("expected RateLimitError, got %T", err)
-	}
-}
-
-func TestCheckLLMPrerequisites_Allowed(t *testing.T) {
-	cfg := &mockLLMConfig{enabled: true, dailyBudget: 5.0, hourlyLimit: 10}
-	tracker := &mockLLMTracker{
-		canGenerate:    true,
-		dailySpent:     1.0,
-		recentGenCount: 3,
-	}
-	opts := &SessionOptions{LLMConfig: cfg, LLMStateTracker: tracker}
-
-	if err := CheckLLMPrerequisites(opts); err != nil {
-		t.Errorf("expected nil error when generation allowed, got %v", err)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			err := CheckLLMPrerequisites(tt.opts)
+			if tt.wantErr {
+				if err == nil {
+					t.Fatal("expected error")
+				}
+				if tt.checkErr != nil {
+					tt.checkErr(t, err)
+				}
+			} else {
+				if err != nil {
+					t.Errorf("unexpected error: %v", err)
+				}
+			}
+		})
 	}
 }
 

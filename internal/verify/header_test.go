@@ -419,38 +419,6 @@ func TestValidationError_Unwrap(t *testing.T) {
 	}
 }
 
-func TestValidationError_Error_AllBranches(t *testing.T) {
-	t.Run("with message", func(t *testing.T) {
-		verr := &ValidationError{
-			Category: ErrCorrupted,
-			Message:  "custom message",
-		}
-		if verr.Error() != "custom message" {
-			t.Errorf("Error() = %q, want %q", verr.Error(), "custom message")
-		}
-	})
-
-	t.Run("with err no message", func(t *testing.T) {
-		verr := &ValidationError{
-			Category: ErrCorrupted,
-			Err:      errors.New("some error"),
-		}
-		want := "corrupted: some error"
-		if verr.Error() != want {
-			t.Errorf("Error() = %q, want %q", verr.Error(), want)
-		}
-	})
-
-	t.Run("neither message nor err", func(t *testing.T) {
-		verr := &ValidationError{
-			Category: ErrTruncated,
-		}
-		if verr.Error() != "truncated" {
-			t.Errorf("Error() = %q, want %q", verr.Error(), "truncated")
-		}
-	})
-}
-
 func TestValidationStatus_String_Unknown(t *testing.T) {
 	s := ValidationStatus(99)
 	got := s.String()
@@ -466,29 +434,6 @@ func TestErrorCategory_String_Unknown(t *testing.T) {
 	want := "unknown(999)"
 	if got != want {
 		t.Errorf("String() = %q, want %q", got, want)
-	}
-}
-
-func TestErrorCategory_String_AllTier1(t *testing.T) {
-	tests := []struct {
-		cat    ErrorCategory
-		expect string
-	}{
-		{ErrUnreadable, "unreadable"},
-		{ErrInvalidFormat, "invalid format"},
-		{ErrNotSharedLib, "not a shared library"},
-		{ErrWrongArch, "wrong architecture"},
-		{ErrTruncated, "truncated"},
-		{ErrCorrupted, "corrupted"},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.expect, func(t *testing.T) {
-			got := tt.cat.String()
-			if got != tt.expect {
-				t.Errorf("String() = %q, want %q", got, tt.expect)
-			}
-		})
 	}
 }
 
@@ -527,78 +472,64 @@ func TestValidateHeader_RealELF(t *testing.T) {
 	}
 }
 
-func TestValidateHeader_EmptyFileShort(t *testing.T) {
-	tmpDir := t.TempDir()
-	path := filepath.Join(tmpDir, "empty.so")
-	if err := os.WriteFile(path, []byte{}, 0644); err != nil {
-		t.Fatal(err)
+func TestValidateHeader_BadInput(t *testing.T) {
+	tests := []struct {
+		name    string
+		file    string
+		content []byte
+		wantCat *ErrorCategory // if non-nil, assert this category
+	}{
+		{
+			name:    "EmptyFile",
+			file:    "empty.so",
+			content: []byte{},
+		},
+		{
+			name:    "UnknownMagic",
+			file:    "unknown.so",
+			content: []byte{0xDE, 0xAD, 0xBE, 0xEF},
+			wantCat: func() *ErrorCategory { c := ErrInvalidFormat; return &c }(),
+		},
+		{
+			name:    "FakeMachOMagic",
+			file:    "fake.dylib",
+			content: []byte{0xfe, 0xed, 0xfa, 0xcf, 0, 0, 0, 0},
+		},
+		{
+			name:    "FakeFatMagic",
+			file:    "fake.fat",
+			content: []byte{0xca, 0xfe, 0xba, 0xbe, 0, 0, 0, 0},
+		},
+		{
+			name:    "TruncatedELF",
+			file:    "truncated.so",
+			content: []byte{0x7f, 'E', 'L', 'F'},
+		},
 	}
 
-	_, err := ValidateHeader(path)
-	if err == nil {
-		t.Error("expected error for empty file")
-	}
-}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			tmpDir := t.TempDir()
+			path := filepath.Join(tmpDir, tt.file)
+			if err := os.WriteFile(path, tt.content, 0644); err != nil {
+				t.Fatal(err)
+			}
 
-func TestValidateHeader_UnknownMagic(t *testing.T) {
-	tmpDir := t.TempDir()
-	path := filepath.Join(tmpDir, "unknown.so")
-	if err := os.WriteFile(path, []byte{0xDE, 0xAD, 0xBE, 0xEF}, 0644); err != nil {
-		t.Fatal(err)
-	}
-
-	_, err := ValidateHeader(path)
-	if err == nil {
-		t.Error("expected error for unknown magic")
-	}
-	verr, ok := err.(*ValidationError)
-	if !ok {
-		t.Fatalf("expected ValidationError, got %T", err)
-	}
-	if verr.Category != ErrInvalidFormat {
-		t.Errorf("Category = %v, want ErrInvalidFormat", verr.Category)
-	}
-}
-
-func TestValidateHeader_FakeMachOMagic(t *testing.T) {
-	tmpDir := t.TempDir()
-	path := filepath.Join(tmpDir, "fake.dylib")
-	// Mach-O 64 magic
-	if err := os.WriteFile(path, []byte{0xfe, 0xed, 0xfa, 0xcf, 0, 0, 0, 0}, 0644); err != nil {
-		t.Fatal(err)
-	}
-
-	_, err := ValidateHeader(path)
-	if err == nil {
-		t.Error("expected error for fake Mach-O")
-	}
-}
-
-func TestValidateHeader_FakeFatMagic(t *testing.T) {
-	tmpDir := t.TempDir()
-	path := filepath.Join(tmpDir, "fake.fat")
-	// Fat binary magic
-	if err := os.WriteFile(path, []byte{0xca, 0xfe, 0xba, 0xbe, 0, 0, 0, 0}, 0644); err != nil {
-		t.Fatal(err)
-	}
-
-	_, err := ValidateHeader(path)
-	if err == nil {
-		t.Error("expected error for fake fat binary")
-	}
-}
-
-func TestValidateHeader_TruncatedELF(t *testing.T) {
-	tmpDir := t.TempDir()
-	path := filepath.Join(tmpDir, "truncated.so")
-	// Just the ELF magic, nothing else
-	if err := os.WriteFile(path, []byte{0x7f, 'E', 'L', 'F'}, 0644); err != nil {
-		t.Fatal(err)
-	}
-
-	_, err := ValidateHeader(path)
-	if err == nil {
-		t.Error("expected error for truncated ELF")
+			_, err := ValidateHeader(path)
+			if err == nil {
+				t.Fatalf("expected error for %s", tt.name)
+			}
+			if tt.wantCat != nil {
+				verr, ok := err.(*ValidationError)
+				if !ok {
+					t.Fatalf("expected ValidationError, got %T", err)
+				}
+				if verr.Category != *tt.wantCat {
+					t.Errorf("Category = %v, want %v", verr.Category, *tt.wantCat)
+				}
+			}
+		})
 	}
 }
 

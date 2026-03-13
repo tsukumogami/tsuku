@@ -135,12 +135,29 @@ func TestSetTelemetry(t *testing.T) {
 	}
 }
 
-func TestSetInvalidValue(t *testing.T) {
-	cfg := DefaultConfig()
+func TestSetInvalidValues(t *testing.T) {
+	tests := []struct {
+		name   string
+		key    string
+		values []string
+	}{
+		{"telemetry", "telemetry", []string{"invalid"}},
+		{"llm.enabled", "llm.enabled", []string{"invalid"}},
+		{"llm.daily_budget", "llm.daily_budget", []string{"invalid", "-5"}},
+		{"llm.hourly_rate_limit", "llm.hourly_rate_limit", []string{"invalid", "5.5", "-5"}},
+	}
 
-	err := cfg.Set("telemetry", "invalid")
-	if err == nil {
-		t.Error("expected error for invalid boolean value")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			for _, val := range tt.values {
+				cfg := DefaultConfig()
+				err := cfg.Set(tt.key, val)
+				if err == nil {
+					t.Errorf("Set(%q, %q) should have returned error", tt.key, val)
+				}
+			}
+		})
 	}
 }
 
@@ -248,15 +265,6 @@ func TestSetLLMEnabled(t *testing.T) {
 	}
 }
 
-func TestSetLLMEnabledInvalid(t *testing.T) {
-	cfg := DefaultConfig()
-
-	err := cfg.Set("llm.enabled", "invalid")
-	if err == nil {
-		t.Error("expected error for invalid boolean value")
-	}
-}
-
 func TestSetLLMProviders(t *testing.T) {
 	cfg := DefaultConfig()
 
@@ -289,17 +297,29 @@ func TestSetLLMProviders(t *testing.T) {
 	}
 }
 
-func TestLLMEnabledDefault(t *testing.T) {
+func TestDefaultConfigValues(t *testing.T) {
 	cfg := DefaultConfig()
-	if !cfg.LLMEnabled() {
-		t.Error("expected LLMEnabled() to default to true")
-	}
-}
 
-func TestLLMProvidersDefault(t *testing.T) {
-	cfg := DefaultConfig()
-	if cfg.LLMProviders() != nil {
-		t.Error("expected LLMProviders() to default to nil")
+	tests := []struct {
+		name string
+		got  interface{}
+		want interface{}
+	}{
+		{"LLMEnabled", cfg.LLMEnabled(), true},
+		{"LLMProviders", cfg.LLMProviders() == nil, true},
+		{"LLMDailyBudget", cfg.LLMDailyBudget(), DefaultDailyBudget},
+		{"LLMHourlyRateLimit", cfg.LLMHourlyRateLimit(), DefaultHourlyRateLimit},
+		{"LLMBackend", cfg.LLMBackend(), ""},
+		{"LLMLocalEnabled", cfg.LLMLocalEnabled(), true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			if tt.got != tt.want {
+				t.Errorf("DefaultConfig().%s = %v, want %v", tt.name, tt.got, tt.want)
+			}
+		})
 	}
 }
 
@@ -562,22 +582,6 @@ func TestSetLLMDailyBudget(t *testing.T) {
 	}
 }
 
-func TestSetLLMDailyBudgetInvalid(t *testing.T) {
-	cfg := DefaultConfig()
-
-	// Non-numeric value
-	err := cfg.Set("llm.daily_budget", "invalid")
-	if err == nil {
-		t.Error("expected error for non-numeric value")
-	}
-
-	// Negative value
-	err = cfg.Set("llm.daily_budget", "-5")
-	if err == nil {
-		t.Error("expected error for negative value")
-	}
-}
-
 func TestSetLLMHourlyRateLimit(t *testing.T) {
 	cfg := DefaultConfig()
 
@@ -602,42 +606,6 @@ func TestSetLLMHourlyRateLimit(t *testing.T) {
 	}
 	if cfg.LLMHourlyRateLimit() != 15 {
 		t.Errorf("expected LLMHourlyRateLimit()=15 (case insensitive), got %v", cfg.LLMHourlyRateLimit())
-	}
-}
-
-func TestSetLLMHourlyRateLimitInvalid(t *testing.T) {
-	cfg := DefaultConfig()
-
-	// Non-integer value
-	err := cfg.Set("llm.hourly_rate_limit", "invalid")
-	if err == nil {
-		t.Error("expected error for non-integer value")
-	}
-
-	// Float value (should fail for int)
-	err = cfg.Set("llm.hourly_rate_limit", "5.5")
-	if err == nil {
-		t.Error("expected error for float value")
-	}
-
-	// Negative value
-	err = cfg.Set("llm.hourly_rate_limit", "-5")
-	if err == nil {
-		t.Error("expected error for negative value")
-	}
-}
-
-func TestLLMDailyBudgetDefault(t *testing.T) {
-	cfg := DefaultConfig()
-	if cfg.LLMDailyBudget() != DefaultDailyBudget {
-		t.Errorf("expected LLMDailyBudget() to default to %v, got %v", DefaultDailyBudget, cfg.LLMDailyBudget())
-	}
-}
-
-func TestLLMHourlyRateLimitDefault(t *testing.T) {
-	cfg := DefaultConfig()
-	if cfg.LLMHourlyRateLimit() != DefaultHourlyRateLimit {
-		t.Errorf("expected LLMHourlyRateLimit() to default to %v, got %v", DefaultHourlyRateLimit, cfg.LLMHourlyRateLimit())
 	}
 }
 
@@ -1050,21 +1018,17 @@ func TestAtomicWriteCreatesParentDirectory(t *testing.T) {
 
 // --- LLM backend config tests (Scenario 15) ---
 
-func TestGetLLMBackendDefault(t *testing.T) {
+func TestLLMBackendDefault(t *testing.T) {
 	cfg := DefaultConfig()
+	if cfg.LLMBackend() != "" {
+		t.Errorf("expected LLMBackend() to default to empty string, got %q", cfg.LLMBackend())
+	}
 	val, ok := cfg.Get("llm.backend")
 	if !ok {
 		t.Error("expected llm.backend key to exist")
 	}
 	if val != "" {
-		t.Errorf("expected empty string for default, got %q", val)
-	}
-}
-
-func TestLLMBackendDefault(t *testing.T) {
-	cfg := DefaultConfig()
-	if cfg.LLMBackend() != "" {
-		t.Errorf("expected LLMBackend() to default to empty string, got %q", cfg.LLMBackend())
+		t.Errorf("expected empty string from Get, got %q", val)
 	}
 }
 
@@ -1222,13 +1186,6 @@ func TestSetLLMBackendRejectsMultipleInvalidValues(t *testing.T) {
 		if err == nil {
 			t.Errorf("expected error for invalid backend value %q", v)
 		}
-	}
-}
-
-func TestLLMLocalEnabledDefault(t *testing.T) {
-	cfg := DefaultConfig()
-	if !cfg.LLMLocalEnabled() {
-		t.Error("expected LLMLocalEnabled() to default to true")
 	}
 }
 

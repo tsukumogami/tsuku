@@ -149,50 +149,80 @@ func TestExtractSoname_FormatDetection(t *testing.T) {
 	}
 }
 
-func TestExtractSoname_InvalidFile(t *testing.T) {
-	// Create a file with invalid content
-	tmpDir := t.TempDir()
-	path := filepath.Join(tmpDir, "invalid.so")
-
-	err := os.WriteFile(path, []byte("not a binary file content"), 0644)
-	if err != nil {
-		t.Fatalf("Failed to create test file: %v", err)
+func TestExtractSoname_ErrorCases(t *testing.T) {
+	tests := []struct {
+		name  string
+		setup func(t *testing.T) string
+	}{
+		{
+			name: "InvalidFile",
+			setup: func(t *testing.T) string {
+				t.Helper()
+				path := filepath.Join(t.TempDir(), "invalid.so")
+				if err := os.WriteFile(path, []byte("not a binary file content"), 0644); err != nil {
+					t.Fatal(err)
+				}
+				return path
+			},
+		},
+		{
+			name: "NonexistentFile",
+			setup: func(t *testing.T) string {
+				t.Helper()
+				return "/nonexistent/path/to/file.so"
+			},
+		},
+		{
+			name: "EmptyFile",
+			setup: func(t *testing.T) string {
+				t.Helper()
+				path := filepath.Join(t.TempDir(), "empty.so")
+				if err := os.WriteFile(path, []byte{}, 0644); err != nil {
+					t.Fatal(err)
+				}
+				return path
+			},
+		},
+		{
+			name: "Directory",
+			setup: func(t *testing.T) string {
+				t.Helper()
+				return t.TempDir()
+			},
+		},
+		{
+			name: "FakeMachO",
+			setup: func(t *testing.T) string {
+				t.Helper()
+				path := filepath.Join(t.TempDir(), "fake.dylib")
+				if err := os.WriteFile(path, []byte{0xfe, 0xed, 0xfa, 0xcf, 0, 0, 0, 0}, 0644); err != nil {
+					t.Fatal(err)
+				}
+				return path
+			},
+		},
+		{
+			name: "FakeFat",
+			setup: func(t *testing.T) string {
+				t.Helper()
+				path := filepath.Join(t.TempDir(), "fake.fat")
+				if err := os.WriteFile(path, []byte{0xca, 0xfe, 0xba, 0xbe, 0, 0, 0, 0}, 0644); err != nil {
+					t.Fatal(err)
+				}
+				return path
+			},
+		},
 	}
 
-	_, err = ExtractSoname(path)
-	if err == nil {
-		t.Errorf("ExtractSoname(%s) should have failed for non-binary file", path)
-	}
-}
-
-func TestExtractSoname_NonexistentFile(t *testing.T) {
-	_, err := ExtractSoname("/nonexistent/path/to/file.so")
-	if err == nil {
-		t.Error("ExtractSoname should fail for nonexistent file")
-	}
-}
-
-func TestExtractSoname_EmptyFile(t *testing.T) {
-	tmpDir := t.TempDir()
-	path := filepath.Join(tmpDir, "empty.so")
-
-	err := os.WriteFile(path, []byte{}, 0644)
-	if err != nil {
-		t.Fatalf("Failed to create test file: %v", err)
-	}
-
-	_, err = ExtractSoname(path)
-	if err == nil {
-		t.Errorf("ExtractSoname(%s) should have failed for empty file", path)
-	}
-}
-
-func TestExtractSoname_Directory(t *testing.T) {
-	tmpDir := t.TempDir()
-
-	_, err := ExtractSoname(tmpDir)
-	if err == nil {
-		t.Errorf("ExtractSoname(%s) should have failed for directory", tmpDir)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			path := tt.setup(t)
+			_, err := ExtractSoname(path)
+			if err == nil {
+				t.Errorf("ExtractSoname(%s) should have failed", path)
+			}
+		})
 	}
 }
 
@@ -330,38 +360,6 @@ func TestReadMagicForSoname_EmptyFile(t *testing.T) {
 	}
 	if len(magic) != 0 {
 		t.Errorf("expected empty magic for empty file, got %d bytes", len(magic))
-	}
-}
-
-func TestExtractSoname_FakeMachO(t *testing.T) {
-	tmpDir := t.TempDir()
-	path := filepath.Join(tmpDir, "fake.dylib")
-	// Mach-O 64 magic but invalid content
-	content := []byte{0xfe, 0xed, 0xfa, 0xcf, 0, 0, 0, 0}
-	if err := os.WriteFile(path, content, 0644); err != nil {
-		t.Fatal(err)
-	}
-
-	_, err := ExtractSoname(path)
-	// Should error because the Mach-O parsing will fail
-	if err == nil {
-		t.Error("expected error for fake Mach-O file")
-	}
-}
-
-func TestExtractSoname_FakeFat(t *testing.T) {
-	tmpDir := t.TempDir()
-	path := filepath.Join(tmpDir, "fake.fat")
-	// Fat binary magic but invalid content
-	content := []byte{0xca, 0xfe, 0xba, 0xbe, 0, 0, 0, 0}
-	if err := os.WriteFile(path, content, 0644); err != nil {
-		t.Fatal(err)
-	}
-
-	_, err := ExtractSoname(path)
-	// Should error because the fat binary parsing will fail
-	if err == nil {
-		t.Error("expected error for fake fat binary")
 	}
 }
 

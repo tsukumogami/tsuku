@@ -348,90 +348,95 @@ func TestFormatMetadata(t *testing.T) {
 	}
 }
 
-func TestChainResolver_EmitHitEvent_RegistryHit(t *testing.T) {
-	tc := telemetry.NewClientWithOptions("", 0, true, false)
-	expected := &DiscoveryResult{
-		Builder:    "github",
-		Source:     "cli/cli",
-		Confidence: ConfidenceRegistry,
-	}
-	chain := NewChainResolver(
-		&mockResolver{result: expected},
-	).WithTelemetry(tc)
-
-	result, err := chain.Resolve(context.Background(), "gh")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if result.Builder != "github" {
-		t.Errorf("got builder %q, want %q", result.Builder, "github")
-	}
-}
-
-func TestChainResolver_EmitHitEvent_EcosystemHit(t *testing.T) {
-	tc := telemetry.NewClientWithOptions("", 0, true, false)
-	expected := &DiscoveryResult{
-		Builder:    "crates.io",
-		Source:     "ripgrep",
-		Confidence: ConfidenceEcosystem,
-	}
-	chain := NewChainResolver(
-		&mockResolver{result: expected},
-	).WithTelemetry(tc)
-
-	result, err := chain.Resolve(context.Background(), "rg")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if result.Confidence != ConfidenceEcosystem {
-		t.Errorf("got confidence %v, want %v", result.Confidence, ConfidenceEcosystem)
-	}
-}
-
-func TestChainResolver_EmitHitEvent_LLMHit(t *testing.T) {
-	tc := telemetry.NewClientWithOptions("", 0, true, false)
-	expected := &DiscoveryResult{
-		Builder:    "github",
-		Source:     "stripe/stripe-cli",
-		Confidence: ConfidenceLLM,
-	}
-	chain := NewChainResolver(
-		&mockResolver{result: expected},
-	).WithTelemetry(tc)
-
-	result, err := chain.Resolve(context.Background(), "stripe-cli")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if result.Confidence != ConfidenceLLM {
-		t.Errorf("got confidence %v, want %v", result.Confidence, ConfidenceLLM)
-	}
-}
-
-func TestChainResolver_EmitHitEvent_LLMHitWithMetrics(t *testing.T) {
-	tc := telemetry.NewClientWithOptions("", 0, true, false)
-	expected := &DiscoveryResult{
-		Builder:    "github",
-		Source:     "stripe/stripe-cli",
-		Confidence: ConfidenceLLM,
-		LLMMetrics: &LLMMetrics{
-			InputTokens:  100,
-			OutputTokens: 200,
-			Cost:         0.01,
-			Provider:     "anthropic",
-			Turns:        3,
+func TestChainResolver_EmitHitEvent(t *testing.T) {
+	tests := []struct {
+		name   string
+		tool   string
+		result *DiscoveryResult
+		check  func(t *testing.T, result *DiscoveryResult)
+	}{
+		{
+			name: "RegistryHit",
+			tool: "gh",
+			result: &DiscoveryResult{
+				Builder:    "github",
+				Source:     "cli/cli",
+				Confidence: ConfidenceRegistry,
+			},
+			check: func(t *testing.T, result *DiscoveryResult) {
+				t.Helper()
+				if result.Builder != "github" {
+					t.Errorf("got builder %q, want %q", result.Builder, "github")
+				}
+			},
+		},
+		{
+			name: "EcosystemHit",
+			tool: "rg",
+			result: &DiscoveryResult{
+				Builder:    "crates.io",
+				Source:     "ripgrep",
+				Confidence: ConfidenceEcosystem,
+			},
+			check: func(t *testing.T, result *DiscoveryResult) {
+				t.Helper()
+				if result.Confidence != ConfidenceEcosystem {
+					t.Errorf("got confidence %v, want %v", result.Confidence, ConfidenceEcosystem)
+				}
+			},
+		},
+		{
+			name: "LLMHit",
+			tool: "stripe-cli",
+			result: &DiscoveryResult{
+				Builder:    "github",
+				Source:     "stripe/stripe-cli",
+				Confidence: ConfidenceLLM,
+			},
+			check: func(t *testing.T, result *DiscoveryResult) {
+				t.Helper()
+				if result.Confidence != ConfidenceLLM {
+					t.Errorf("got confidence %v, want %v", result.Confidence, ConfidenceLLM)
+				}
+			},
+		},
+		{
+			name: "LLMHitWithMetrics",
+			tool: "stripe-cli",
+			result: &DiscoveryResult{
+				Builder:    "github",
+				Source:     "stripe/stripe-cli",
+				Confidence: ConfidenceLLM,
+				LLMMetrics: &LLMMetrics{
+					InputTokens:  100,
+					OutputTokens: 200,
+					Cost:         0.01,
+					Provider:     "anthropic",
+					Turns:        3,
+				},
+			},
+			check: func(t *testing.T, result *DiscoveryResult) {
+				t.Helper()
+				if result.LLMMetrics == nil {
+					t.Error("expected LLMMetrics to be set")
+				}
+			},
 		},
 	}
-	chain := NewChainResolver(
-		&mockResolver{result: expected},
-	).WithTelemetry(tc)
 
-	result, err := chain.Resolve(context.Background(), "stripe-cli")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if result.LLMMetrics == nil {
-		t.Error("expected LLMMetrics to be set")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tc := telemetry.NewClientWithOptions("", 0, true, false)
+			chain := NewChainResolver(
+				&mockResolver{result: tt.result},
+			).WithTelemetry(tc)
+
+			result, err := chain.Resolve(context.Background(), tt.tool)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			tt.check(t, result)
+		})
 	}
 }
 
