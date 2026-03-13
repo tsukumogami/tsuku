@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-13T13:00:32Z",
+  "updated_at": "2026-03-13T14:05:54Z",
   "entries": [
     {
       "name": "node",
@@ -17116,11 +17116,11 @@
       "name": "glassfish",
       "source": "rubygems:glassfish",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 5,
-      "next_retry_at": "2026-03-13T11:47:40.913613636Z"
+      "failure_count": 6,
+      "next_retry_at": "2026-03-14T22:05:54.369364932Z"
     },
     {
       "name": "glaze",
@@ -18966,7 +18966,7 @@
       "name": "gsl",
       "source": "rubygems:gsl",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 5,
@@ -19736,7 +19736,7 @@
       "name": "hasura-cli",
       "source": "npm:hasura-cli",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 6,
@@ -28896,11 +28896,11 @@
       "name": "markdown-toc",
       "source": "npm:markdown-toc",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 5,
-      "next_retry_at": "2026-03-13T08:05:27.843288251Z"
+      "failure_count": 6,
+      "next_retry_at": "2026-03-14T22:05:54.369364932Z"
     },
     {
       "name": "markdownlint-cli",
