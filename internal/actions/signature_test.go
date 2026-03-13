@@ -543,3 +543,50 @@ func TestGetKeyFingerprint(t *testing.T) {
 		}
 	}
 }
+
+// -- signature.go: ValidateFingerprint, NormalizeFingerprint, FormatFingerprint --
+
+func TestValidateFingerprint_Valid(t *testing.T) {
+	t.Parallel()
+	err := ValidateFingerprint("D53626F8174A9846F6A573CC1253FA47EA19E301")
+	if err != nil {
+		t.Errorf("ValidateFingerprint() error = %v", err)
+	}
+}
+
+func TestValidateFingerprint_Invalid(t *testing.T) {
+	t.Parallel()
+	tests := []string{
+		"",
+		"short",
+		"D53626F8174A9846F6A573CC1253FA47EA19E30Z",  // non-hex
+		"D53626F8174A9846F6A573CC1253FA47EA19E3011", // too long
+	}
+	for _, fp := range tests {
+		if err := ValidateFingerprint(fp); err == nil {
+			t.Errorf("ValidateFingerprint(%q) should fail", fp)
+		}
+	}
+}
+
+// -- signature.go: ParseFingerprint additional formats --
+
+func TestParseFingerprint_Valid(t *testing.T) {
+	t.Parallel()
+	// Spaced format
+	fp, err := ParseFingerprint("D536 26F8 174A 9846 F6A5 73CC 1253 FA47 EA19 E301")
+	if err != nil {
+		t.Errorf("ParseFingerprint() error = %v", err)
+	}
+	if fp != "D53626F8174A9846F6A573CC1253FA47EA19E301" {
+		t.Errorf("ParseFingerprint() = %q", fp)
+	}
+}
+
+func TestParseFingerprint_Invalid(t *testing.T) {
+	t.Parallel()
+	_, err := ParseFingerprint("not-a-fingerprint")
+	if err == nil {
+		t.Error("ParseFingerprint() should fail for invalid input")
+	}
+}

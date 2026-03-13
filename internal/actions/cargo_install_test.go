@@ -4,7 +4,10 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
+
+	"github.com/tsukumogami/tsuku/internal/recipe"
 )
 
 // TestIsValidCrateName tests crate name validation
@@ -535,5 +538,45 @@ func TestCargoInstallIsDecomposable(t *testing.T) {
 	_, ok := interface{}(action).(Decomposable)
 	if !ok {
 		t.Error("CargoInstallAction should implement Decomposable interface")
+	}
+}
+
+// -- cargo_install.go: Decompose invalid version --
+
+func TestCargoInstallAction_Decompose_InvalidVersion(t *testing.T) {
+	t.Parallel()
+	action := &CargoInstallAction{}
+	ctx := &EvalContext{
+		Context: context.Background(),
+		Version: "invalid!@#",
+	}
+	_, err := action.Decompose(ctx, map[string]any{
+		"crate":       "ripgrep",
+		"executables": []any{"rg"},
+	})
+	if err == nil || !strings.Contains(err.Error(), "version") {
+		t.Errorf("Expected version error, got %v", err)
+	}
+}
+
+// -- cargo_install.go: Execute further validation --
+
+func TestCargoInstallAction_Execute_EmptyExecutable(t *testing.T) {
+	t.Parallel()
+	action := &CargoInstallAction{}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: t.TempDir(),
+		Version: "1.0.0",
+		OS:      "linux",
+		Arch:    "amd64",
+		Recipe:  &recipe.Recipe{},
+	}
+	err := action.Execute(ctx, map[string]any{
+		"crate":       "ripgrep",
+		"executables": []any{""},
+	})
+	if err == nil {
+		t.Error("Expected error for empty executable name")
 	}
 }

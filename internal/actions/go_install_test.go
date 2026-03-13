@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -120,7 +121,7 @@ func TestGoInstallAction_Execute_MissingModule(t *testing.T) {
 	if err == nil {
 		t.Error("Execute() should fail when 'module' parameter is missing")
 	}
-	if err != nil && !containsStr(err.Error(), "module") {
+	if err != nil && !strings.Contains(err.Error(), "module") {
 		t.Errorf("Error message should mention 'module', got: %v", err)
 	}
 }
@@ -145,7 +146,7 @@ func TestGoInstallAction_Execute_MissingExecutables(t *testing.T) {
 	if err == nil {
 		t.Error("Execute() should fail when 'executables' parameter is missing")
 	}
-	if err != nil && !containsStr(err.Error(), "executables") {
+	if err != nil && !strings.Contains(err.Error(), "executables") {
 		t.Errorf("Error message should mention 'executables', got: %v", err)
 	}
 }
@@ -192,7 +193,7 @@ func TestGoInstallAction_Execute_InvalidModule(t *testing.T) {
 	if err == nil {
 		t.Error("Execute() should fail with command injection in module path")
 	}
-	if err != nil && !containsStr(err.Error(), "invalid module path") {
+	if err != nil && !strings.Contains(err.Error(), "invalid module path") {
 		t.Errorf("Error message should mention 'invalid module path', got: %v", err)
 	}
 }
@@ -217,7 +218,7 @@ func TestGoInstallAction_Execute_InvalidVersion(t *testing.T) {
 	if err == nil {
 		t.Error("Execute() should fail with command injection in version")
 	}
-	if err != nil && !containsStr(err.Error(), "invalid version") {
+	if err != nil && !strings.Contains(err.Error(), "invalid version") {
 		t.Errorf("Error message should mention 'invalid version', got: %v", err)
 	}
 }
@@ -242,7 +243,7 @@ func TestGoInstallAction_Execute_InvalidExecutableName(t *testing.T) {
 	if err == nil {
 		t.Error("Execute() should fail with path traversal in executable name")
 	}
-	if err != nil && !containsStr(err.Error(), "invalid executable name") {
+	if err != nil && !strings.Contains(err.Error(), "invalid executable name") {
 		t.Errorf("Error message should mention 'invalid executable name', got: %v", err)
 	}
 }
@@ -277,7 +278,7 @@ func TestGoInstallAction_Execute_GoNotInstalled(t *testing.T) {
 	if err == nil {
 		t.Error("Execute() should fail when Go is not installed")
 	}
-	if err != nil && !containsStr(err.Error(), "go not found") {
+	if err != nil && !strings.Contains(err.Error(), "go not found") {
 		t.Errorf("Error message should mention 'go not found', got: %v", err)
 	}
 }
@@ -412,7 +413,7 @@ func TestGoInstallAction_Execute_GoInstallFails(t *testing.T) {
 	if err == nil {
 		t.Error("Execute() should fail when go install fails")
 	}
-	if err != nil && !containsStr(err.Error(), "go install failed") {
+	if err != nil && !strings.Contains(err.Error(), "go install failed") {
 		t.Errorf("Error message should mention 'go install failed', got: %v", err)
 	}
 }
@@ -454,7 +455,7 @@ func TestGoInstallAction_Execute_ExecutableNotCreated(t *testing.T) {
 	if err == nil {
 		t.Error("Execute() should fail when expected executable is not created")
 	}
-	if err != nil && !containsStr(err.Error(), "expected executable") {
+	if err != nil && !strings.Contains(err.Error(), "expected executable") {
 		t.Errorf("Error message should mention 'expected executable', got: %v", err)
 	}
 }
@@ -672,7 +673,7 @@ func TestGoInstallAction_Execute_SecondExecutableMissing(t *testing.T) {
 	if err == nil {
 		t.Error("Execute() should fail when second executable is missing")
 	}
-	if err != nil && !containsStr(err.Error(), "expected executable") {
+	if err != nil && !strings.Contains(err.Error(), "expected executable") {
 		t.Errorf("Error message should mention 'expected executable', got: %v", err)
 	}
 }
@@ -683,14 +684,4 @@ func TestGoInstallAction_Name(t *testing.T) {
 	if action.Name() != "go_install" {
 		t.Errorf("Name() = %q, want %q", action.Name(), "go_install")
 	}
-}
-
-// Helper function to check if string contains substring
-func containsStr(s, substr string) bool {
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
-		}
-	}
-	return false
 }

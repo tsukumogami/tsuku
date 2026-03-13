@@ -1,8 +1,11 @@
 package actions
 
 import (
+	"context"
 	"runtime"
 	"testing"
+
+	"github.com/tsukumogami/tsuku/internal/recipe"
 )
 
 func TestAppBundleAction_Name(t *testing.T) {
@@ -153,4 +156,56 @@ func TestExtractDMG_NonExistentFile(t *testing.T) {
 	if err == nil {
 		t.Error("extractDMG should fail for non-existent file")
 	}
+}
+
+// -- app_bundle.go: Execute on non-darwin --
+
+func TestAppBundleAction_Execute_NonDarwin(t *testing.T) {
+	t.Parallel()
+	action := &AppBundleAction{}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: t.TempDir(),
+		Version: "1.0.0",
+		OS:      "linux",
+		Arch:    "amd64",
+		Recipe:  &recipe.Recipe{},
+	}
+	// On Linux, app_bundle should be a no-op (skip)
+	err := action.Execute(ctx, map[string]any{
+		"url":      "https://example.com/app.dmg",
+		"checksum": "abc123",
+		"app_name": "Test.app",
+	})
+	if err != nil {
+		t.Errorf("Expected no error on non-darwin, got %v", err)
+	}
+}
+
+// -- app_bundle.go: Preflight --
+
+func TestAppBundleAction_Preflight(t *testing.T) {
+	t.Parallel()
+	action := &AppBundleAction{}
+
+	t.Run("valid", func(t *testing.T) {
+		result := action.Preflight(map[string]any{
+			"url":      "https://nonexistent.invalid/app.dmg",
+			"app_name": "MyApp.app",
+			"binary":   "MyApp",
+			"checksum": "abc123",
+		})
+		if len(result.Errors) != 0 {
+			t.Errorf("Preflight() errors = %v", result.Errors)
+		}
+	})
+
+	t.Run("missing required", func(t *testing.T) {
+		result := action.Preflight(map[string]any{
+			"url": "https://nonexistent.invalid/app.dmg",
+		})
+		if len(result.Errors) == 0 {
+			t.Error("Expected errors for missing required params")
+		}
+	})
 }

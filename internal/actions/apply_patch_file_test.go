@@ -215,10 +215,3 @@ func TestApplyPatchFileAction_IsPrimitive(t *testing.T) {
 		t.Error("apply_patch_file should be registered as a primitive")
 	}
 }
-
-func TestApplyPatchFileAction_IsDeterministic(t *testing.T) {
-	t.Parallel()
-	if !IsDeterministic("apply_patch_file") {
-		t.Error("apply_patch_file should be deterministic")
-	}
-}

@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/tsukumogami/tsuku/internal/recipe"
 )
 
 func TestCargoBuildAction_Name(t *testing.T) {
@@ -1088,5 +1090,424 @@ func TestLinkCargoRegistryCache_EmptyEnv(t *testing.T) {
 	}
 	if err := linkCargoRegistryCache([]string{}); err != nil {
 		t.Fatalf("Expected no error with empty env, got: %v", err)
+	}
+}
+
+// -- cargo_build.go: executeLockDataMode validation paths --
+
+func TestCargoBuildAction_ExecuteLockDataMode_InvalidCrateName(t *testing.T) {
+	t.Parallel()
+	action := &CargoBuildAction{}
+	ctx := &ExecutionContext{
+		Context:    context.Background(),
+		WorkDir:    t.TempDir(),
+		InstallDir: t.TempDir(),
+		Version:    "1.0.0",
+		OS:         "linux",
+		Arch:       "amd64",
+		Recipe:     &recipe.Recipe{},
+	}
+	err := action.Execute(ctx, map[string]any{
+		"lock_data": "[dependencies]\n",
+		"crate":     "!invalid",
+	})
+	if err == nil || !strings.Contains(err.Error(), "invalid crate") {
+		t.Errorf("Expected invalid crate error, got %v", err)
+	}
+}
+
+func TestCargoBuildAction_ExecuteLockDataMode_InvalidVersion(t *testing.T) {
+	t.Parallel()
+	action := &CargoBuildAction{}
+	ctx := &ExecutionContext{
+		Context:    context.Background(),
+		WorkDir:    t.TempDir(),
+		InstallDir: t.TempDir(),
+		Version:    "!invalid",
+		OS:         "linux",
+		Arch:       "amd64",
+		Recipe:     &recipe.Recipe{},
+	}
+	err := action.Execute(ctx, map[string]any{
+		"lock_data": "[dependencies]\n",
+		"crate":     "ripgrep",
+	})
+	if err == nil || !strings.Contains(err.Error(), "version") {
+		t.Errorf("Expected version error, got %v", err)
+	}
+}
+
+func TestCargoBuildAction_ExecuteLockDataMode_MissingLockChecksum(t *testing.T) {
+	t.Parallel()
+	action := &CargoBuildAction{}
+	ctx := &ExecutionContext{
+		Context:    context.Background(),
+		WorkDir:    t.TempDir(),
+		InstallDir: t.TempDir(),
+		Version:    "1.0.0",
+		OS:         "linux",
+		Arch:       "amd64",
+		Recipe:     &recipe.Recipe{},
+	}
+	err := action.Execute(ctx, map[string]any{
+		"lock_data": "[dependencies]\n",
+		"crate":     "ripgrep",
+	})
+	if err == nil || !strings.Contains(err.Error(), "lock_checksum") {
+		t.Errorf("Expected lock_checksum error, got %v", err)
+	}
+}
+
+func TestCargoBuildAction_ExecuteLockDataMode_MissingExecutables(t *testing.T) {
+	t.Parallel()
+	action := &CargoBuildAction{}
+	ctx := &ExecutionContext{
+		Context:    context.Background(),
+		WorkDir:    t.TempDir(),
+		InstallDir: t.TempDir(),
+		Version:    "1.0.0",
+		OS:         "linux",
+		Arch:       "amd64",
+		Recipe:     &recipe.Recipe{},
+	}
+	err := action.Execute(ctx, map[string]any{
+		"lock_data":     "[dependencies]\n",
+		"crate":         "ripgrep",
+		"lock_checksum": "abc123",
+	})
+	if err == nil || !strings.Contains(err.Error(), "executables") {
+		t.Errorf("Expected executables error, got %v", err)
+	}
+}
+
+func TestCargoBuildAction_ExecuteLockDataMode_InvalidExecutable(t *testing.T) {
+	t.Parallel()
+	action := &CargoBuildAction{}
+	ctx := &ExecutionContext{
+		Context:    context.Background(),
+		WorkDir:    t.TempDir(),
+		InstallDir: t.TempDir(),
+		Version:    "1.0.0",
+		OS:         "linux",
+		Arch:       "amd64",
+		Recipe:     &recipe.Recipe{},
+	}
+	err := action.Execute(ctx, map[string]any{
+		"lock_data":     "[dependencies]\n",
+		"crate":         "ripgrep",
+		"lock_checksum": "abc123",
+		"executables":   []any{"../evil"},
+	})
+	if err == nil || !strings.Contains(err.Error(), "path separator") {
+		t.Errorf("Expected path separator error, got %v", err)
+	}
+}
+
+// -- cargo_build.go: Execute source_dir mode with features that have path traversal --
+
+func TestCargoBuildAction_Execute_WithPathTraversalFeature(t *testing.T) {
+	t.Parallel()
+	action := &CargoBuildAction{}
+	tmpDir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(tmpDir, "Cargo.toml"), []byte("[package]\nname = \"test\"\nversion = \"0.1.0\"\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	ctx := &ExecutionContext{
+		Context:    context.Background(),
+		WorkDir:    tmpDir,
+		InstallDir: t.TempDir(),
+		Version:    "1.0.0",
+		OS:         "linux",
+		Arch:       "amd64",
+		Recipe:     &recipe.Recipe{},
+	}
+	// Feature with path traversal (.. is rejected by isValidFeatureName)
+	err := action.Execute(ctx, map[string]any{
+		"source_dir":  tmpDir,
+		"executables": []any{"tool"},
+		"features":    []any{"..evil"},
+	})
+	if err == nil {
+		t.Error("Expected error for feature with path traversal")
+	}
+}
+
+// -- cargo_build.go: Execute source_dir mode with options --
+
+func TestCargoBuildAction_Execute_WithOptions(t *testing.T) {
+	t.Parallel()
+	action := &CargoBuildAction{}
+	tmpDir := t.TempDir()
+	// Create Cargo.toml and Cargo.lock for locked build
+	if err := os.WriteFile(filepath.Join(tmpDir, "Cargo.toml"), []byte("[package]\nname = \"test\"\nversion = \"0.1.0\"\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	ctx := &ExecutionContext{
+		Context:    context.Background(),
+		WorkDir:    tmpDir,
+		InstallDir: t.TempDir(),
+		Version:    "1.0.0",
+		OS:         "linux",
+		Arch:       "amd64",
+		Recipe:     &recipe.Recipe{},
+	}
+	// Request unlocked build (locked=false) so we skip the Cargo.lock check
+	// Build will still fail at actual cargo invocation but will pass validation
+	err := action.Execute(ctx, map[string]any{
+		"source_dir":  tmpDir,
+		"executables": []any{"tool"},
+		"locked":      false,
+	})
+	// Should fail at cargo build, not at validation
+	if err != nil && strings.Contains(err.Error(), "source_dir") {
+		t.Errorf("Expected cargo build error, not validation error: %v", err)
+	}
+}
+
+// -- cargo_build.go: Dependencies, RequiresNetwork --
+
+func TestCargoBuildAction_Dependencies(t *testing.T) {
+	t.Parallel()
+	action := CargoBuildAction{}
+	deps := action.Dependencies()
+	if len(deps.InstallTime) != 1 || deps.InstallTime[0] != "rust" {
+		t.Errorf("Dependencies().InstallTime = %v, want [rust]", deps.InstallTime)
+	}
+}
+
+func TestCargoBuildAction_RequiresNetwork(t *testing.T) {
+	t.Parallel()
+	action := CargoBuildAction{}
+	if !action.RequiresNetwork() {
+		t.Error("RequiresNetwork() = false, want true")
+	}
+}
+
+// -- cargo_build.go: linkCargoRegistryCache --
+
+func TestLinkCargoRegistryCache_NoEnvVars(t *testing.T) {
+	t.Parallel()
+	err := linkCargoRegistryCache([]string{"PATH=/usr/bin"})
+	if err != nil {
+		t.Errorf("linkCargoRegistryCache() with no env vars = %v, want nil", err)
+	}
+}
+
+func TestLinkCargoRegistryCache_MissingMount(t *testing.T) {
+	t.Parallel()
+	tmpDir := t.TempDir()
+	cargoHome := filepath.Join(tmpDir, "cargo-home")
+
+	env := []string{
+		"CARGO_HOME=" + cargoHome,
+		"TSUKU_CARGO_REGISTRY_CACHE=/nonexistent/path",
+	}
+	err := linkCargoRegistryCache(env)
+	if err != nil {
+		t.Errorf("linkCargoRegistryCache() with missing mount = %v, want nil", err)
+	}
+}
+
+func TestLinkCargoRegistryCache_Success(t *testing.T) {
+	t.Parallel()
+	tmpDir := t.TempDir()
+	cargoHome := filepath.Join(tmpDir, "cargo-home")
+	registryCache := filepath.Join(tmpDir, "registry-cache")
+	if err := os.MkdirAll(registryCache, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	env := []string{
+		"CARGO_HOME=" + cargoHome,
+		"TSUKU_CARGO_REGISTRY_CACHE=" + registryCache,
+	}
+	err := linkCargoRegistryCache(env)
+	if err != nil {
+		t.Fatalf("linkCargoRegistryCache() = %v", err)
+	}
+
+	registryPath := filepath.Join(cargoHome, "registry")
+	target, err := os.Readlink(registryPath)
+	if err != nil {
+		t.Fatalf("Readlink(%s) error: %v", registryPath, err)
+	}
+	if target != registryCache {
+		t.Errorf("symlink target = %s, want %s", target, registryCache)
+	}
+}
+
+// -- cargo_build.go: buildDeterministicCargoEnv --
+
+func TestBuildDeterministicCargoEnv_Basic(t *testing.T) {
+	t.Parallel()
+	tmpDir := t.TempDir()
+	cargoPath := filepath.Join(tmpDir, "bin", "cargo")
+	if err := os.MkdirAll(filepath.Dir(cargoPath), 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(cargoPath, []byte("#!/bin/sh"), 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	env := buildDeterministicCargoEnv(cargoPath, tmpDir, nil)
+
+	hasCargoHome := false
+	hasCargoIncremental := false
+	hasSourceDateEpoch := false
+	for _, e := range env {
+		if strings.HasPrefix(e, "CARGO_HOME=") {
+			hasCargoHome = true
+		}
+		if e == "CARGO_INCREMENTAL=0" {
+			hasCargoIncremental = true
+		}
+		if e == "SOURCE_DATE_EPOCH=0" {
+			hasSourceDateEpoch = true
+		}
+	}
+	if !hasCargoHome {
+		t.Error("Expected CARGO_HOME in env")
+	}
+	if !hasCargoIncremental {
+		t.Error("Expected CARGO_INCREMENTAL=0 in env")
+	}
+	if !hasSourceDateEpoch {
+		t.Error("Expected SOURCE_DATE_EPOCH=0 in env")
+	}
+}
+
+func TestBuildDeterministicCargoEnv_WithContext(t *testing.T) {
+	t.Parallel()
+	tmpDir := t.TempDir()
+	cargoPath := filepath.Join(tmpDir, "bin", "cargo")
+	if err := os.MkdirAll(filepath.Dir(cargoPath), 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(cargoPath, []byte("#!/bin/sh"), 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	execPath := filepath.Join(tmpDir, "extra-bin")
+	if err := os.MkdirAll(execPath, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	ctx := &ExecutionContext{
+		Context:   context.Background(),
+		WorkDir:   tmpDir,
+		ExecPaths: []string{execPath},
+	}
+
+	env := buildDeterministicCargoEnv(cargoPath, tmpDir, ctx)
+
+	hasExecInPath := false
+	for _, e := range env {
+		if strings.HasPrefix(e, "PATH=") && strings.Contains(e, execPath) {
+			hasExecInPath = true
+		}
+	}
+	if !hasExecInPath {
+		t.Error("Expected ExecPaths in PATH")
+	}
+}
+
+func TestBuildDeterministicCargoEnv_WithLibDeps(t *testing.T) {
+	t.Parallel()
+	tmpDir := t.TempDir()
+	cargoPath := filepath.Join(tmpDir, "bin", "cargo")
+	if err := os.MkdirAll(filepath.Dir(cargoPath), 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(cargoPath, []byte("#!/bin/sh"), 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create a library dep with lib, include, lib/pkgconfig, and bin
+	libsDir := filepath.Join(tmpDir, "libs")
+	depDir := filepath.Join(libsDir, "openssl-3.0.0")
+	for _, sub := range []string{"bin", "lib/pkgconfig", "include"} {
+		if err := os.MkdirAll(filepath.Join(depDir, sub), 0755); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: tmpDir,
+		LibsDir: libsDir,
+		Dependencies: ResolvedDeps{
+			InstallTime: map[string]string{"openssl": "3.0.0"},
+		},
+	}
+
+	env := buildDeterministicCargoEnv(cargoPath, tmpDir, ctx)
+
+	hasPkgConfig := false
+	hasCInclude := false
+	hasLibrary := false
+	for _, e := range env {
+		if strings.HasPrefix(e, "PKG_CONFIG_PATH=") && strings.Contains(e, "openssl") {
+			hasPkgConfig = true
+		}
+		if strings.HasPrefix(e, "C_INCLUDE_PATH=") && strings.Contains(e, "openssl") {
+			hasCInclude = true
+		}
+		if strings.HasPrefix(e, "LIBRARY_PATH=") && strings.Contains(e, "openssl") {
+			hasLibrary = true
+		}
+	}
+	if !hasPkgConfig {
+		t.Error("Expected PKG_CONFIG_PATH with openssl")
+	}
+	if !hasCInclude {
+		t.Error("Expected C_INCLUDE_PATH with openssl")
+	}
+	if !hasLibrary {
+		t.Error("Expected LIBRARY_PATH with openssl")
+	}
+}
+
+// -- cargo_build.go: Execute with missing Cargo.toml --
+
+func TestCargoBuildAction_Execute_MissingCargoToml(t *testing.T) {
+	t.Parallel()
+	action := &CargoBuildAction{}
+	tmpDir := t.TempDir()
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: tmpDir,
+		Version: "1.0.0",
+		OS:      "linux",
+		Arch:    "amd64",
+		Recipe:  &recipe.Recipe{},
+	}
+	err := action.Execute(ctx, map[string]any{
+		"source_dir":  tmpDir,
+		"executables": []any{"tool"},
+	})
+	if err == nil || !strings.Contains(err.Error(), "Cargo.toml") {
+		t.Errorf("Expected Cargo.toml error, got %v", err)
+	}
+}
+
+// -- cargo_build.go: Execute with lock_data mode --
+
+func TestCargoBuildAction_Execute_LockDataMode_MissingCrate(t *testing.T) {
+	t.Parallel()
+	action := &CargoBuildAction{}
+	ctx := &ExecutionContext{
+		Context:    context.Background(),
+		WorkDir:    t.TempDir(),
+		InstallDir: filepath.Join(t.TempDir(), ".install"),
+		Version:    "1.0.0",
+		OS:         "linux",
+		Arch:       "amd64",
+		Recipe:     &recipe.Recipe{},
+	}
+	err := action.Execute(ctx, map[string]any{
+		"lock_data": "[dependencies]\n",
+	})
+	if err == nil {
+		t.Error("Expected error for missing crate in lock_data mode")
 	}
 }

@@ -731,3 +731,131 @@ func TestHomebrewRelocateAction_RelocatePlaceholders_BothPlaceholders(t *testing
 		t.Errorf("got %q, want %q", string(result), expected)
 	}
 }
+
+// -- homebrew.go: Execute param validation (not already in homebrew_test.go) --
+
+func TestHomebrewAction_Execute_MissingFormula(t *testing.T) {
+	t.Parallel()
+	action := &HomebrewAction{}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: t.TempDir(),
+		OS:      "linux",
+		Arch:    "amd64",
+		Recipe:  &recipe.Recipe{},
+	}
+	err := action.Execute(ctx, map[string]any{})
+	if err == nil || !strings.Contains(err.Error(), "formula") {
+		t.Errorf("Expected formula error, got %v", err)
+	}
+}
+
+func TestHomebrewAction_Execute_InvalidFormula(t *testing.T) {
+	t.Parallel()
+	action := &HomebrewAction{}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: t.TempDir(),
+		OS:      "linux",
+		Arch:    "amd64",
+		Recipe:  &recipe.Recipe{},
+	}
+	err := action.Execute(ctx, map[string]any{
+		"formula": "lib;evil",
+	})
+	if err == nil || !strings.Contains(err.Error(), "invalid character") {
+		t.Errorf("Expected invalid character error, got %v", err)
+	}
+}
+
+func TestHomebrewAction_Execute_UnsupportedPlatform(t *testing.T) {
+	t.Parallel()
+	action := &HomebrewAction{}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: t.TempDir(),
+		OS:      "windows",
+		Arch:    "amd64",
+		Recipe:  &recipe.Recipe{},
+	}
+	err := action.Execute(ctx, map[string]any{
+		"formula": "libyaml",
+	})
+	if err == nil || !strings.Contains(err.Error(), "unsupported platform") {
+		t.Errorf("Expected unsupported platform error, got %v", err)
+	}
+}
+
+// -- homebrew.go: Preflight, Dependencies, IsDeterministic, RequiresNetwork, formulaToGHCRPath --
+
+func TestHomebrewAction_Preflight(t *testing.T) {
+	t.Parallel()
+	action := &HomebrewAction{}
+
+	t.Run("valid", func(t *testing.T) {
+		result := action.Preflight(map[string]any{"formula": "libyaml"})
+		if len(result.Errors) != 0 {
+			t.Errorf("Preflight() errors = %v, want 0", result.Errors)
+		}
+	})
+
+	t.Run("missing formula", func(t *testing.T) {
+		result := action.Preflight(map[string]any{})
+		if len(result.Errors) == 0 {
+			t.Error("Expected error for missing formula")
+		}
+	})
+}
+
+func TestHomebrewAction_Dependencies(t *testing.T) {
+	t.Parallel()
+	action := HomebrewAction{}
+	deps := action.Dependencies()
+	if len(deps.LinuxInstallTime) != 1 || deps.LinuxInstallTime[0] != "patchelf" {
+		t.Errorf("Dependencies().LinuxInstallTime = %v, want [patchelf]", deps.LinuxInstallTime)
+	}
+}
+
+func TestHomebrewAction_IsDeterministic_Direct(t *testing.T) {
+	t.Parallel()
+	action := HomebrewAction{}
+	if !action.IsDeterministic() {
+		t.Error("IsDeterministic() = false, want true")
+	}
+}
+
+func TestHomebrewAction_RequiresNetwork(t *testing.T) {
+	t.Parallel()
+	action := HomebrewAction{}
+	if !action.RequiresNetwork() {
+		t.Error("RequiresNetwork() = false, want true")
+	}
+}
+
+func TestFormulaToGHCRPath(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		input string
+		want  string
+	}{
+		{"libyaml", "libyaml"},
+		{"openssl@3", "openssl/3"},
+		{"python@3.12", "python/3.12"},
+	}
+	for _, tt := range tests {
+		if got := formulaToGHCRPath(tt.input); got != tt.want {
+			t.Errorf("formulaToGHCRPath(%q) = %q, want %q", tt.input, got, tt.want)
+		}
+	}
+}
+
+func TestGhcrHTTPClient(t *testing.T) {
+	t.Parallel()
+	client := ghcrHTTPClient()
+	if client == nil {
+		t.Fatal("ghcrHTTPClient() returned nil")
+	}
+	if client.Timeout == 0 {
+		t.Error("ghcrHTTPClient() returned client with zero timeout")
+	}
+}

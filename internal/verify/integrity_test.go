@@ -349,3 +349,70 @@ func TestVerifyIntegrity_BrokenSymlink(t *testing.T) {
 		t.Errorf("Expected missing file 'lib/libbroken.so', got '%s'", result.Missing[0])
 	}
 }
+
+func TestVerifyIntegrity_BrokenSymlink_LstatExists(t *testing.T) {
+	tmpDir := t.TempDir()
+	libDir := filepath.Join(tmpDir, "lib")
+	if err := os.MkdirAll(libDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create a broken symlink pointing to a target that doesn't exist
+	brokenLink := filepath.Join(libDir, "libbroken.so")
+	if err := os.Symlink("/nonexistent/target/lib.so", brokenLink); err != nil {
+		t.Fatal(err)
+	}
+
+	stored := map[string]string{
+		"lib/libbroken.so": "abc123",
+	}
+
+	result, err := VerifyIntegrity(tmpDir, stored)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(result.Missing) != 1 {
+		t.Errorf("expected 1 missing, got %d", len(result.Missing))
+	}
+}
+
+func TestVerifyIntegrity_PermissionError(t *testing.T) {
+	tmpDir := t.TempDir()
+	libDir := filepath.Join(tmpDir, "lib")
+	if err := os.MkdirAll(libDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create a restricted directory
+	restrictedDir := filepath.Join(tmpDir, "restricted")
+	if err := os.MkdirAll(restrictedDir, 0000); err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		// Restore permission for cleanup
+		if err := os.Chmod(restrictedDir, 0755); err != nil {
+			t.Logf("failed to restore permission: %v", err)
+		}
+	}()
+
+	// Create symlink pointing into the restricted directory
+	symlinkPath := filepath.Join(libDir, "libtest.so")
+	targetPath := filepath.Join(restrictedDir, "libtest.so.1")
+	if err := os.Symlink(targetPath, symlinkPath); err != nil {
+		t.Fatal(err)
+	}
+
+	stored := map[string]string{
+		"lib/libtest.so": "abc123",
+	}
+
+	result, err := VerifyIntegrity(tmpDir, stored)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// Should report as missing since we can't resolve the symlink
+	if len(result.Missing) != 1 {
+		t.Errorf("expected 1 missing, got %d", len(result.Missing))
+	}
+}

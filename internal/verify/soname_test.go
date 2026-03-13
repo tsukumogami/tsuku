@@ -285,3 +285,148 @@ func TestExtractSonames_SystemLibDirectory(t *testing.T) {
 		}
 	}
 }
+
+func TestDetectFormatForSoname_AllFormats(t *testing.T) {
+	tests := []struct {
+		name  string
+		magic []byte
+		want  string
+	}{
+		{"elf", []byte{0x7f, 'E', 'L', 'F', 0, 0, 0, 0}, "elf"},
+		{"macho32", []byte{0xfe, 0xed, 0xfa, 0xce, 0, 0, 0, 0}, "macho"},
+		{"macho64", []byte{0xfe, 0xed, 0xfa, 0xcf, 0, 0, 0, 0}, "macho"},
+		{"fat", []byte{0xca, 0xfe, 0xba, 0xbe, 0, 0, 0, 0}, "fat"},
+		{"unknown", []byte{0x00, 0x00, 0x00, 0x00, 0, 0, 0, 0}, ""},
+		{"short", []byte{0x7f}, ""},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := detectFormatForSoname(tt.magic)
+			if got != tt.want {
+				t.Errorf("detectFormatForSoname(%v) = %q, want %q", tt.magic, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestReadMagicForSoname_NonExistent(t *testing.T) {
+	_, err := readMagicForSoname("/nonexistent/file")
+	if err == nil {
+		t.Error("expected error for nonexistent file")
+	}
+}
+
+func TestReadMagicForSoname_EmptyFile(t *testing.T) {
+	tmpDir := t.TempDir()
+	path := filepath.Join(tmpDir, "empty.bin")
+	if err := os.WriteFile(path, []byte{}, 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	magic, err := readMagicForSoname(path)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(magic) != 0 {
+		t.Errorf("expected empty magic for empty file, got %d bytes", len(magic))
+	}
+}
+
+func TestExtractSoname_FakeMachO(t *testing.T) {
+	tmpDir := t.TempDir()
+	path := filepath.Join(tmpDir, "fake.dylib")
+	// Mach-O 64 magic but invalid content
+	content := []byte{0xfe, 0xed, 0xfa, 0xcf, 0, 0, 0, 0}
+	if err := os.WriteFile(path, content, 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	_, err := ExtractSoname(path)
+	// Should error because the Mach-O parsing will fail
+	if err == nil {
+		t.Error("expected error for fake Mach-O file")
+	}
+}
+
+func TestExtractSoname_FakeFat(t *testing.T) {
+	tmpDir := t.TempDir()
+	path := filepath.Join(tmpDir, "fake.fat")
+	// Fat binary magic but invalid content
+	content := []byte{0xca, 0xfe, 0xba, 0xbe, 0, 0, 0, 0}
+	if err := os.WriteFile(path, content, 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	_, err := ExtractSoname(path)
+	// Should error because the fat binary parsing will fail
+	if err == nil {
+		t.Error("expected error for fake fat binary")
+	}
+}
+
+func TestIsFatBinary_Coverage(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	t.Run("nonexistent", func(t *testing.T) {
+		if isFatBinary("/nonexistent/file") {
+			t.Error("expected false")
+		}
+	})
+
+	t.Run("regular file", func(t *testing.T) {
+		path := filepath.Join(tmpDir, "regular.bin")
+		if err := os.WriteFile(path, []byte("not fat"), 0644); err != nil {
+			t.Fatal(err)
+		}
+		if isFatBinary(path) {
+			t.Error("expected false")
+		}
+	})
+
+	t.Run("fat magic", func(t *testing.T) {
+		path := filepath.Join(tmpDir, "fat.bin")
+		if err := os.WriteFile(path, []byte{0xca, 0xfe, 0xba, 0xbe, 0, 0, 0, 0}, 0644); err != nil {
+			t.Fatal(err)
+		}
+		if !isFatBinary(path) {
+			t.Error("expected true")
+		}
+	})
+}
+
+func TestExtractELFSoname_InvalidELF(t *testing.T) {
+	tmpDir := t.TempDir()
+	path := filepath.Join(tmpDir, "bad.so")
+	// Write ELF magic followed by garbage
+	content := append([]byte{0x7f, 'E', 'L', 'F'}, make([]byte, 60)...)
+	if err := os.WriteFile(path, content, 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	_, err := ExtractELFSoname(path)
+	if err == nil {
+		t.Log("ExtractELFSoname succeeded on minimal ELF - may be valid minimal file")
+	}
+}
+
+func TestExtractSonames_WithSubdirs(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Create subdirectory with non-binary file
+	subDir := filepath.Join(tmpDir, "subdir")
+	if err := os.MkdirAll(subDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(subDir, "not-a-lib.txt"), []byte("text"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	sonames, err := ExtractSonames(tmpDir)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(sonames) != 0 {
+		t.Errorf("expected 0 sonames, got %d", len(sonames))
+	}
+}

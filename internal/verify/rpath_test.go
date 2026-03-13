@@ -582,3 +582,322 @@ func BenchmarkExpandPathVariables(b *testing.B) {
 		_, _ = ExpandPathVariables("$ORIGIN/../lib/libfoo.so", binaryPath, nil, "")
 	}
 }
+
+func TestDetectFormatForRpath_AllFormats(t *testing.T) {
+	tests := []struct {
+		name  string
+		magic []byte
+		want  string
+	}{
+		{"elf", []byte{0x7f, 'E', 'L', 'F', 0, 0, 0, 0}, "elf"},
+		{"macho32", []byte{0xfe, 0xed, 0xfa, 0xce, 0, 0, 0, 0}, "macho"},
+		{"macho64", []byte{0xfe, 0xed, 0xfa, 0xcf, 0, 0, 0, 0}, "macho"},
+		{"macho32rev", []byte{0xce, 0xfa, 0xed, 0xfe, 0, 0, 0, 0}, "macho"},
+		{"macho64rev", []byte{0xcf, 0xfa, 0xed, 0xfe, 0, 0, 0, 0}, "macho"},
+		{"fat", []byte{0xca, 0xfe, 0xba, 0xbe, 0, 0, 0, 0}, "fat"},
+		{"unknown", []byte{0x00, 0x00, 0x00, 0x00, 0, 0, 0, 0}, ""},
+		{"short", []byte{0x7f, 'E'}, ""},
+		{"empty", []byte{}, ""},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := detectFormatForRpath(tt.magic)
+			if got != tt.want {
+				t.Errorf("detectFormatForRpath(%v) = %q, want %q", tt.magic, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestExpandPathVariables_RpathWithExecutablePath(t *testing.T) {
+	tmpDir := t.TempDir()
+	binaryPath := filepath.Join(tmpDir, "bin", "myapp")
+	libDir := filepath.Join(tmpDir, "lib")
+
+	if err := os.MkdirAll(filepath.Dir(binaryPath), 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(libDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	libPath := filepath.Join(libDir, "libfoo.dylib")
+	if err := os.WriteFile(libPath, []byte("dummy"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// RPATH contains @executable_path
+	rpaths := []string{
+		"@executable_path/../lib",
+	}
+
+	expanded, err := ExpandPathVariables("@rpath/libfoo.dylib", binaryPath, rpaths, "")
+	if err != nil {
+		t.Fatalf("ExpandPathVariables failed: %v", err)
+	}
+
+	expected := filepath.Join(tmpDir, "lib/libfoo.dylib")
+	if expanded != expected {
+		t.Errorf("got %q, want %q", expanded, expected)
+	}
+}
+
+func TestExpandPathVariables_RpathWithBareLoaderPath(t *testing.T) {
+	tmpDir := t.TempDir()
+	binaryPath := filepath.Join(tmpDir, "bin", "myapp")
+
+	if err := os.MkdirAll(filepath.Dir(binaryPath), 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create a library in the bin directory (where @loader_path resolves)
+	libPath := filepath.Join(tmpDir, "bin", "libfoo.dylib")
+	if err := os.WriteFile(libPath, []byte("dummy"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// RPATH is bare @loader_path (no trailing path)
+	rpaths := []string{
+		"@loader_path",
+	}
+
+	expanded, err := ExpandPathVariables("@rpath/libfoo.dylib", binaryPath, rpaths, "")
+	if err != nil {
+		t.Fatalf("ExpandPathVariables failed: %v", err)
+	}
+
+	expected := filepath.Join(tmpDir, "bin/libfoo.dylib")
+	if expanded != expected {
+		t.Errorf("got %q, want %q", expanded, expected)
+	}
+}
+
+func TestExpandPathVariables_RpathWithBareExecutablePath(t *testing.T) {
+	tmpDir := t.TempDir()
+	binaryPath := filepath.Join(tmpDir, "bin", "myapp")
+
+	if err := os.MkdirAll(filepath.Dir(binaryPath), 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	libPath := filepath.Join(tmpDir, "bin", "libfoo.dylib")
+	if err := os.WriteFile(libPath, []byte("dummy"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	rpaths := []string{
+		"@executable_path",
+	}
+
+	expanded, err := ExpandPathVariables("@rpath/libfoo.dylib", binaryPath, rpaths, "")
+	if err != nil {
+		t.Fatalf("ExpandPathVariables failed: %v", err)
+	}
+
+	expected := filepath.Join(tmpDir, "bin/libfoo.dylib")
+	if expanded != expected {
+		t.Errorf("got %q, want %q", expanded, expected)
+	}
+}
+
+func TestExpandPathVariables_RpathFallback_BareLoaderPath(t *testing.T) {
+	tmpDir := t.TempDir()
+	binaryPath := filepath.Join(tmpDir, "bin", "myapp")
+
+	if err := os.MkdirAll(filepath.Dir(binaryPath), 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// RPATH is bare @loader_path - no lib file exists, so fallback to first RPATH
+	rpaths := []string{
+		"@loader_path",
+	}
+
+	expanded, err := ExpandPathVariables("@rpath/libnotexist.dylib", binaryPath, rpaths, "")
+	if err != nil {
+		t.Fatalf("ExpandPathVariables failed: %v", err)
+	}
+
+	expected := filepath.Join(tmpDir, "bin/libnotexist.dylib")
+	if expanded != expected {
+		t.Errorf("got %q, want %q", expanded, expected)
+	}
+}
+
+func TestExpandPathVariables_RpathSecondMatch(t *testing.T) {
+	tmpDir := t.TempDir()
+	binaryPath := filepath.Join(tmpDir, "bin", "myapp")
+	libDir := filepath.Join(tmpDir, "lib")
+
+	if err := os.MkdirAll(filepath.Dir(binaryPath), 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(libDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	libPath := filepath.Join(libDir, "libfoo.dylib")
+	if err := os.WriteFile(libPath, []byte("dummy"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// First rpath doesn't have the lib, second does
+	rpaths := []string{
+		filepath.Join(tmpDir, "nonexistent"),
+		filepath.Join(tmpDir, "lib"),
+	}
+
+	expanded, err := ExpandPathVariables("@rpath/libfoo.dylib", binaryPath, rpaths, "")
+	if err != nil {
+		t.Fatalf("ExpandPathVariables failed: %v", err)
+	}
+
+	expected := filepath.Join(tmpDir, "lib/libfoo.dylib")
+	if expanded != expected {
+		t.Errorf("got %q, want %q", expanded, expected)
+	}
+}
+
+func TestExpandPathVariables_RpathFallback_LoaderPathSuffix(t *testing.T) {
+	tmpDir := t.TempDir()
+	binaryPath := filepath.Join(tmpDir, "bin", "myapp")
+
+	if err := os.MkdirAll(filepath.Dir(binaryPath), 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// No lib exists. First RPATH has @loader_path with suffix
+	rpaths := []string{
+		"@loader_path/../lib",
+	}
+
+	expanded, err := ExpandPathVariables("@rpath/libnotexist.dylib", binaryPath, rpaths, "")
+	if err != nil {
+		t.Fatalf("ExpandPathVariables failed: %v", err)
+	}
+
+	expected := filepath.Join(tmpDir, "lib/libnotexist.dylib")
+	if expanded != expected {
+		t.Errorf("got %q, want %q", expanded, expected)
+	}
+}
+
+func TestIsFatBinaryForRpath_NonExistent(t *testing.T) {
+	result := isFatBinaryForRpath("/nonexistent/file")
+	if result {
+		t.Error("expected false for nonexistent file")
+	}
+}
+
+func TestIsFatBinaryForRpath_RegularFile(t *testing.T) {
+	tmpDir := t.TempDir()
+	path := filepath.Join(tmpDir, "regular.bin")
+	if err := os.WriteFile(path, []byte("not a fat binary"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	result := isFatBinaryForRpath(path)
+	if result {
+		t.Error("expected false for regular file")
+	}
+}
+
+func TestIsFatBinaryForRpath_TrueCase(t *testing.T) {
+	tmpDir := t.TempDir()
+	path := filepath.Join(tmpDir, "fat.bin")
+	// Fat binary magic
+	if err := os.WriteFile(path, []byte{0xca, 0xfe, 0xba, 0xbe, 0, 0, 0, 0}, 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	result := isFatBinaryForRpath(path)
+	if !result {
+		t.Error("expected true for fat binary magic")
+	}
+}
+
+func TestReadMagicForRpath_NonExistent(t *testing.T) {
+	_, err := readMagicForRpath("/nonexistent/file")
+	if err == nil {
+		t.Error("expected error for nonexistent file")
+	}
+}
+
+func TestReadMagicForRpath_EmptyFile(t *testing.T) {
+	tmpDir := t.TempDir()
+	path := filepath.Join(tmpDir, "empty.bin")
+	if err := os.WriteFile(path, []byte{}, 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	magic, err := readMagicForRpath(path)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(magic) != 0 {
+		t.Errorf("expected empty magic for empty file, got %d bytes", len(magic))
+	}
+}
+
+func TestExtractRpaths_FakeMachOFile(t *testing.T) {
+	tmpDir := t.TempDir()
+	path := filepath.Join(tmpDir, "fake.dylib")
+	// Write Mach-O 64 magic but invalid content
+	if err := os.WriteFile(path, []byte{0xfe, 0xed, 0xfa, 0xcf, 0, 0, 0, 0}, 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	_, err := ExtractRpaths(path)
+	// Should handle the macho open error gracefully
+	if err == nil {
+		// ExtractRpaths returns error for macho format with invalid content
+		t.Log("fake Mach-O extraction returned no error")
+	}
+}
+
+func TestExtractRpaths_FakeFatFile(t *testing.T) {
+	tmpDir := t.TempDir()
+	path := filepath.Join(tmpDir, "fake.fat")
+	// Write fat binary magic but invalid content
+	if err := os.WriteFile(path, []byte{0xca, 0xfe, 0xba, 0xbe, 0, 0, 0, 0}, 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	_, err := ExtractRpaths(path)
+	// May error on invalid fat content
+	if err != nil {
+		t.Logf("expected error for fake fat binary: %v", err)
+	}
+}
+
+func TestExtractELFRpaths_WithFallback(t *testing.T) {
+	// Test with a system binary that might use DT_RPATH
+	// Most system libs only have DT_RUNPATH, but some older ones have DT_RPATH
+	candidates := []string{
+		"/lib/x86_64-linux-gnu/libc.so.6",
+		"/lib64/libc.so.6",
+		"/usr/lib/libc.so.6",
+	}
+
+	var libPath string
+	for _, c := range candidates {
+		if _, err := os.Stat(c); err == nil {
+			libPath = c
+			break
+		}
+	}
+
+	if libPath == "" {
+		t.Skip("no system library found")
+	}
+
+	// This exercises extractELFRpaths including the DT_RUNPATH/DT_RPATH paths
+	rpaths, err := extractELFRpaths(libPath)
+	if err != nil {
+		t.Fatalf("extractELFRpaths failed: %v", err)
+	}
+
+	// System libs typically don't have RPATH - that's fine
+	_ = rpaths
+}

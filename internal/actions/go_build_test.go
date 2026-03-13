@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
+
+	"github.com/tsukumogami/tsuku/internal/recipe"
 )
 
 // TestGoBuildAction_Name tests the Name method
@@ -35,7 +38,7 @@ func TestGoBuildAction_Execute_MissingModule(t *testing.T) {
 	if err == nil {
 		t.Error("Execute() should fail when 'module' parameter is missing")
 	}
-	if err != nil && !containsStr(err.Error(), "module") {
+	if err != nil && !strings.Contains(err.Error(), "module") {
 		t.Errorf("Error message should mention 'module', got: %v", err)
 	}
 }
@@ -59,7 +62,7 @@ func TestGoBuildAction_Execute_MissingVersion(t *testing.T) {
 	if err == nil {
 		t.Error("Execute() should fail when 'version' parameter is missing")
 	}
-	if err != nil && !containsStr(err.Error(), "version") {
+	if err != nil && !strings.Contains(err.Error(), "version") {
 		t.Errorf("Error message should mention 'version', got: %v", err)
 	}
 }
@@ -83,7 +86,7 @@ func TestGoBuildAction_Execute_MissingExecutables(t *testing.T) {
 	if err == nil {
 		t.Error("Execute() should fail when 'executables' parameter is missing")
 	}
-	if err != nil && !containsStr(err.Error(), "executables") {
+	if err != nil && !strings.Contains(err.Error(), "executables") {
 		t.Errorf("Error message should mention 'executables', got: %v", err)
 	}
 }
@@ -107,7 +110,7 @@ func TestGoBuildAction_Execute_MissingGoSum(t *testing.T) {
 	if err == nil {
 		t.Error("Execute() should fail when 'go_sum' parameter is missing")
 	}
-	if err != nil && !containsStr(err.Error(), "go_sum") {
+	if err != nil && !strings.Contains(err.Error(), "go_sum") {
 		t.Errorf("Error message should mention 'go_sum', got: %v", err)
 	}
 }
@@ -132,7 +135,7 @@ func TestGoBuildAction_Execute_InvalidModule(t *testing.T) {
 	if err == nil {
 		t.Error("Execute() should fail with command injection in module path")
 	}
-	if err != nil && !containsStr(err.Error(), "invalid module path") {
+	if err != nil && !strings.Contains(err.Error(), "invalid module path") {
 		t.Errorf("Error message should mention 'invalid module path', got: %v", err)
 	}
 }
@@ -157,7 +160,7 @@ func TestGoBuildAction_Execute_InvalidVersion(t *testing.T) {
 	if err == nil {
 		t.Error("Execute() should fail with command injection in version")
 	}
-	if err != nil && !containsStr(err.Error(), "invalid version") {
+	if err != nil && !strings.Contains(err.Error(), "invalid version") {
 		t.Errorf("Error message should mention 'invalid version', got: %v", err)
 	}
 }
@@ -182,7 +185,7 @@ func TestGoBuildAction_Execute_InvalidExecutable(t *testing.T) {
 	if err == nil {
 		t.Error("Execute() should fail with path traversal in executable name")
 	}
-	if err != nil && !containsStr(err.Error(), "invalid executable name") {
+	if err != nil && !strings.Contains(err.Error(), "invalid executable name") {
 		t.Errorf("Error message should mention 'invalid executable name', got: %v", err)
 	}
 }
@@ -215,7 +218,7 @@ func TestGoBuildAction_Execute_GoNotInstalled(t *testing.T) {
 	if err == nil {
 		t.Error("Execute() should fail when Go is not installed")
 	}
-	if err != nil && !containsStr(err.Error(), "go not found") {
+	if err != nil && !strings.Contains(err.Error(), "go not found") {
 		t.Errorf("Error message should mention 'go not found', got: %v", err)
 	}
 }
@@ -414,7 +417,7 @@ func TestGoInstallAction_Decompose_GoNotInstalled(t *testing.T) {
 	if err == nil {
 		t.Error("Decompose() should fail when Go is not installed")
 	}
-	if err != nil && !containsStr(err.Error(), "go not found") {
+	if err != nil && !strings.Contains(err.Error(), "go not found") {
 		t.Errorf("Error message should mention 'go not found', got: %v", err)
 	}
 }
@@ -785,10 +788,10 @@ func TestGoBuildAction_Execute_SpecificGoVersionNotInstalled(t *testing.T) {
 	if err == nil {
 		t.Error("Execute() should fail when specific Go version is not installed")
 	}
-	if err != nil && !containsStr(err.Error(), "go 1.21.5 not found") {
+	if err != nil && !strings.Contains(err.Error(), "go 1.21.5 not found") {
 		t.Errorf("Error message should mention the specific version, got: %v", err)
 	}
-	if err != nil && !containsStr(err.Error(), "tsuku install go@1.21.5") {
+	if err != nil && !strings.Contains(err.Error(), "tsuku install go@1.21.5") {
 		t.Errorf("Error message should suggest how to install, got: %v", err)
 	}
 }
@@ -855,5 +858,73 @@ exit 0
 	}
 	if goVersion != "1.21.5" {
 		t.Errorf("go_version = %q, want %q", goVersion, "1.21.5")
+	}
+}
+
+// -- go_build.go: Execute with cgo_enabled flag --
+
+func TestGoBuildAction_Execute_WithCgoFlag(t *testing.T) {
+	t.Parallel()
+	action := &GoBuildAction{}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: t.TempDir(),
+		Version: "1.0.0",
+		OS:      "linux",
+		Arch:    "amd64",
+		Recipe:  &recipe.Recipe{},
+	}
+	// Will fail at go_sum, but exercises cgo_enabled path
+	err := action.Execute(ctx, map[string]any{
+		"module":      "example.com/tool",
+		"version":     "1.0.0",
+		"executables": []any{"tool"},
+		"cgo_enabled": true,
+	})
+	if err == nil || !strings.Contains(err.Error(), "go_sum") {
+		t.Errorf("Expected go_sum error, got %v", err)
+	}
+}
+
+// -- go_build.go: Execute with build_flags --
+
+func TestGoBuildAction_Execute_WithBuildFlags(t *testing.T) {
+	t.Parallel()
+	action := &GoBuildAction{}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: t.TempDir(),
+		Version: "1.0.0",
+		OS:      "linux",
+		Arch:    "amd64",
+		Recipe:  &recipe.Recipe{},
+	}
+	err := action.Execute(ctx, map[string]any{
+		"module":      "example.com/tool",
+		"version":     "1.0.0",
+		"executables": []any{"tool"},
+		"build_flags": []any{"-trimpath"},
+	})
+	if err == nil || !strings.Contains(err.Error(), "go_sum") {
+		t.Errorf("Expected go_sum error, got %v", err)
+	}
+}
+
+// -- go_build.go: Dependencies, RequiresNetwork --
+
+func TestGoBuildAction_Dependencies(t *testing.T) {
+	t.Parallel()
+	action := GoBuildAction{}
+	deps := action.Dependencies()
+	if len(deps.InstallTime) != 1 || deps.InstallTime[0] != "go" {
+		t.Errorf("Dependencies().InstallTime = %v, want [go]", deps.InstallTime)
+	}
+}
+
+func TestGoBuildAction_RequiresNetwork(t *testing.T) {
+	t.Parallel()
+	action := GoBuildAction{}
+	if !action.RequiresNetwork() {
+		t.Error("RequiresNetwork() = false, want true")
 	}
 }

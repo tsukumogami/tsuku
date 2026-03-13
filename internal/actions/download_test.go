@@ -12,6 +12,7 @@ import (
 	"testing"
 
 	"github.com/tsukumogami/tsuku/internal/httputil"
+	"github.com/tsukumogami/tsuku/internal/recipe"
 )
 
 func TestDownloadAction_Name(t *testing.T) {
@@ -543,4 +544,361 @@ func TestDownloadAction_NonRetryableErrorFailsImmediately(t *testing.T) {
 	// Verify that action exists (prevents unused variable warning)
 	_ = action
 	_ = destPath
+}
+
+// -- download.go: Preflight with static checksum and skip_verification --
+
+func TestDownloadAction_Preflight_StaticChecksum(t *testing.T) {
+	t.Parallel()
+	action := &DownloadAction{}
+	result := action.Preflight(map[string]any{
+		"url":      "https://nonexistent.invalid/tool-{version}.tar.gz",
+		"checksum": "abc123",
+	})
+	hasChecksumError := false
+	for _, e := range result.Errors {
+		if strings.Contains(e, "checksum") {
+			hasChecksumError = true
+		}
+	}
+	if !hasChecksumError {
+		t.Error("Expected error about static checksum not supported")
+	}
+}
+
+func TestDownloadAction_Preflight_SkipVerificationReason(t *testing.T) {
+	t.Parallel()
+	action := &DownloadAction{}
+	result := action.Preflight(map[string]any{
+		"url":                      "https://nonexistent.invalid/tool-{version}.tar.gz",
+		"skip_verification_reason": "Upstream does not provide checksums",
+	})
+	// Should not have the "no upstream verification" warning
+	for _, w := range result.Warnings {
+		if strings.Contains(w, "no upstream verification") {
+			t.Error("Should not warn about verification when skip_verification_reason is set")
+		}
+	}
+}
+
+func TestDownloadAction_Preflight_MutuallyExclusiveVerifiers(t *testing.T) {
+	t.Parallel()
+	action := &DownloadAction{}
+	result := action.Preflight(map[string]any{
+		"url":                       "https://nonexistent.invalid/tool-{version}.tar.gz",
+		"checksum_url":              "https://nonexistent.invalid/checksums.txt",
+		"signature_url":             "https://nonexistent.invalid/tool.asc",
+		"signature_key_url":         "https://nonexistent.invalid/key.asc",
+		"signature_key_fingerprint": "D53626F8174A9846F6A573CC1253FA47EA19E301",
+	})
+	hasMutualError := false
+	for _, e := range result.Errors {
+		if strings.Contains(e, "mutually exclusive") {
+			hasMutualError = true
+		}
+	}
+	if !hasMutualError {
+		t.Error("Expected mutually exclusive error")
+	}
+}
+
+func TestDownloadAction_Preflight_InvalidFingerprint(t *testing.T) {
+	t.Parallel()
+	action := &DownloadAction{}
+	result := action.Preflight(map[string]any{
+		"url":                       "https://nonexistent.invalid/tool-{version}.tar.gz",
+		"signature_url":             "https://nonexistent.invalid/tool.asc",
+		"signature_key_url":         "https://nonexistent.invalid/key.asc",
+		"signature_key_fingerprint": "not-a-fingerprint",
+	})
+	hasFingerprintError := false
+	for _, e := range result.Errors {
+		if strings.Contains(e, "fingerprint") {
+			hasFingerprintError = true
+		}
+	}
+	if !hasFingerprintError {
+		t.Error("Expected fingerprint format error")
+	}
+}
+
+func TestDownloadAction_Preflight_StaticURL(t *testing.T) {
+	t.Parallel()
+	action := &DownloadAction{}
+	result := action.Preflight(map[string]any{
+		"url": "https://nonexistent.invalid/tool.tar.gz",
+	})
+	hasStaticURLError := false
+	for _, e := range result.Errors {
+		if strings.Contains(e, "download_file") {
+			hasStaticURLError = true
+		}
+	}
+	if !hasStaticURLError {
+		t.Error("Expected error about static URL (should use download_file)")
+	}
+}
+
+// -- download.go: DownloadAction.Execute uncovered branches --
+
+func TestDownloadAction_Execute_WithURLFailsAtDownload(t *testing.T) {
+	t.Parallel()
+	action := &DownloadAction{}
+	tmpDir := t.TempDir()
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: tmpDir,
+		Version: "1.0.0",
+		OS:      "linux",
+		Arch:    "amd64",
+		Recipe:  &recipe.Recipe{},
+	}
+	err := action.Execute(ctx, map[string]any{
+		"url":  "https://nonexistent.invalid/file.tar.gz",
+		"dest": "output.tar.gz",
+	})
+	if err == nil {
+		t.Error("Expected download error")
+	}
+}
+
+// -- download.go: Execute error paths --
+
+func TestDownloadAction_Execute_NoURLParam(t *testing.T) {
+	t.Parallel()
+	action := &DownloadAction{}
+	ctx := &ExecutionContext{
+		Context:    context.Background(),
+		WorkDir:    t.TempDir(),
+		InstallDir: t.TempDir(),
+		Version:    "1.0.0",
+	}
+
+	err := action.Execute(ctx, map[string]any{})
+	if err == nil {
+		t.Error("Expected error when url is missing")
+	}
+}
+
+// -- download.go: DownloadAction.Decompose --
+
+func TestDownloadAction_Decompose_Basic(t *testing.T) {
+	t.Parallel()
+	action := &DownloadAction{}
+
+	ctx := &EvalContext{
+		Context:    context.Background(),
+		Version:    "1.0.0",
+		VersionTag: "v1.0.0",
+		OS:         "linux",
+		Arch:       "amd64",
+	}
+
+	steps, err := action.Decompose(ctx, map[string]any{
+		"url": "https://example.com/{version}/tool-{os}-{arch}.tar.gz",
+	})
+	if err != nil {
+		t.Fatalf("Decompose() error: %v", err)
+	}
+	if len(steps) != 1 {
+		t.Fatalf("Decompose() returned %d steps, want 1", len(steps))
+	}
+	if steps[0].Action != "download_file" {
+		t.Errorf("step action = %q, want download_file", steps[0].Action)
+	}
+	url, _ := GetString(steps[0].Params, "url")
+	if !strings.Contains(url, "1.0.0") {
+		t.Errorf("URL %q should contain version 1.0.0", url)
+	}
+}
+
+func TestDownloadAction_Decompose_WithMappings(t *testing.T) {
+	t.Parallel()
+	action := &DownloadAction{}
+
+	ctx := &EvalContext{
+		Context:    context.Background(),
+		Version:    "2.0.0",
+		VersionTag: "v2.0.0",
+		OS:         "darwin",
+		Arch:       "amd64",
+	}
+
+	steps, err := action.Decompose(ctx, map[string]any{
+		"url":          "https://example.com/tool-{os}-{arch}.tar.gz",
+		"os_mapping":   map[string]any{"darwin": "macos"},
+		"arch_mapping": map[string]any{"amd64": "x64"},
+	})
+	if err != nil {
+		t.Fatalf("Decompose() error: %v", err)
+	}
+	url, _ := GetString(steps[0].Params, "url")
+	if !strings.Contains(url, "macos") {
+		t.Errorf("URL %q should contain mapped OS 'macos'", url)
+	}
+	if !strings.Contains(url, "x64") {
+		t.Errorf("URL %q should contain mapped arch 'x64'", url)
+	}
+}
+
+func TestDownloadAction_Decompose_WithDest(t *testing.T) {
+	t.Parallel()
+	action := &DownloadAction{}
+
+	ctx := &EvalContext{
+		Context:    context.Background(),
+		Version:    "1.0.0",
+		VersionTag: "v1.0.0",
+		OS:         "linux",
+		Arch:       "amd64",
+	}
+
+	steps, err := action.Decompose(ctx, map[string]any{
+		"url":  "https://example.com/tool.tar.gz",
+		"dest": "custom-name-{version}.tar.gz",
+	})
+	if err != nil {
+		t.Fatalf("Decompose() error: %v", err)
+	}
+	dest, _ := GetString(steps[0].Params, "dest")
+	if dest != "custom-name-1.0.0.tar.gz" {
+		t.Errorf("dest = %q, want custom-name-1.0.0.tar.gz", dest)
+	}
+}
+
+func TestDownloadAction_Decompose_MissingURL(t *testing.T) {
+	t.Parallel()
+	action := &DownloadAction{}
+	ctx := &EvalContext{Context: context.Background(), Version: "1.0.0", OS: "linux", Arch: "amd64"}
+	_, err := action.Decompose(ctx, map[string]any{})
+	if err == nil {
+		t.Error("Expected error for missing URL")
+	}
+}
+
+// -- download.go: Preflight additional warnings --
+
+func TestDownloadAction_Preflight_UnusedOSMapping(t *testing.T) {
+	t.Parallel()
+	action := &DownloadAction{}
+	result := action.Preflight(map[string]any{
+		"url":        "https://example.com/tool-{version}.tar.gz",
+		"os_mapping": map[string]any{"darwin": "macos"},
+	})
+	if len(result.Warnings) == 0 {
+		t.Error("Expected warning for unused os_mapping")
+	}
+}
+
+func TestDownloadAction_Preflight_UnusedArchMapping(t *testing.T) {
+	t.Parallel()
+	action := &DownloadAction{}
+	result := action.Preflight(map[string]any{
+		"url":          "https://example.com/tool-{version}.tar.gz",
+		"arch_mapping": map[string]any{"amd64": "x64"},
+	})
+	if len(result.Warnings) == 0 {
+		t.Error("Expected warning for unused arch_mapping")
+	}
+}
+
+// -- download.go: Preflight valid URL, no errors --
+
+func TestDownloadAction_Preflight_ValidURL(t *testing.T) {
+	t.Parallel()
+	action := &DownloadAction{}
+	result := action.Preflight(map[string]any{
+		"url": "https://example.com/{version}/tool-{os}-{arch}.tar.gz",
+	})
+	if len(result.Errors) != 0 {
+		t.Errorf("Preflight() errors = %v, want 0", result.Errors)
+	}
+}
+
+// -- download.go: Execute param validation --
+
+func TestDownloadAction_Execute_URLWithMappings(t *testing.T) {
+	t.Parallel()
+	action := &DownloadAction{}
+	ctx := newTestExecCtx(t)
+	// This tests the early code paths of Execute with mappings (will fail at HTTP)
+	err := action.Execute(ctx, map[string]any{
+		"url":          "https://example.com/{os}/{arch}/tool",
+		"os_mapping":   map[string]any{"linux": "Linux"},
+		"arch_mapping": map[string]any{"amd64": "x86_64"},
+	})
+	// Should fail at download, not at param validation
+	if err == nil {
+		t.Error("Expected error (download should fail)")
+	}
+}
+
+// -- download.go: containsPlaceholder --
+
+func TestContainsPlaceholder_Direct(t *testing.T) {
+	t.Parallel()
+	if !containsPlaceholder("https://example.com/{version}/tool", "version") {
+		t.Error("expected true for URL with {version}")
+	}
+	if containsPlaceholder("https://example.com/tool", "version") {
+		t.Error("expected false for URL without {version}")
+	}
+}
+
+// -- download.go: Decompose with dest --
+
+func TestDownloadAction_Decompose_WithChecksumAlgo(t *testing.T) {
+	t.Parallel()
+	action := &DownloadAction{}
+	ctx := &EvalContext{
+		Context:    context.Background(),
+		Version:    "1.0.0",
+		VersionTag: "v1.0.0",
+		OS:         "linux",
+		Arch:       "amd64",
+	}
+	steps, err := action.Decompose(ctx, map[string]any{
+		"url":           "https://nonexistent.invalid/tool",
+		"checksum_algo": "sha512",
+	})
+	if err != nil {
+		t.Fatalf("Decompose() error = %v", err)
+	}
+	if len(steps) != 1 {
+		t.Fatalf("Decompose() returned %d steps, want 1", len(steps))
+	}
+}
+
+// -- download.go: Decompose with URL query params --
+
+func TestDownloadAction_Decompose_URLWithQueryParams(t *testing.T) {
+	t.Parallel()
+	action := &DownloadAction{}
+	ctx := &EvalContext{
+		Context:    context.Background(),
+		Version:    "1.0.0",
+		VersionTag: "v1.0.0",
+		OS:         "linux",
+		Arch:       "amd64",
+	}
+	steps, err := action.Decompose(ctx, map[string]any{
+		"url": "https://nonexistent.invalid/tool.bin?token=abc",
+	})
+	if err != nil {
+		t.Fatalf("Decompose() error = %v", err)
+	}
+	dest, _ := GetString(steps[0].Params, "dest")
+	if dest != "tool.bin" {
+		t.Errorf("dest = %q, want %q (query params should be stripped)", dest, "tool.bin")
+	}
+}
+
+// -- download.go: IsDeterministic --
+
+func TestDownloadAction_IsDeterministic(t *testing.T) {
+	t.Parallel()
+	action := DownloadAction{}
+	if !action.IsDeterministic() {
+		t.Error("IsDeterministic() = false, want true")
+	}
 }

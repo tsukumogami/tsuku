@@ -445,9 +445,3 @@ func TestDetectArchiveFormat(t *testing.T) {
 		})
 	}
 }
-
-func TestHasSystemCompiler(t *testing.T) {
-	// Just verify it doesn't panic and returns a bool.
-	// The result depends on the system.
-	_ = hasSystemCompiler()
-}

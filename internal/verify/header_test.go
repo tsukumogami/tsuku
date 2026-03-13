@@ -1,7 +1,12 @@
 package verify
 
 import (
+	"debug/elf"
+	"debug/macho"
+	"errors"
+	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"testing"
@@ -392,5 +397,585 @@ func BenchmarkDetectFormat(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_ = detectFormat(magic)
+	}
+}
+
+func TestValidationError_Unwrap(t *testing.T) {
+	underlying := errors.New("underlying error")
+	verr := &ValidationError{
+		Category: ErrCorrupted,
+		Path:     "/some/path",
+		Err:      underlying,
+	}
+
+	if verr.Unwrap() != underlying {
+		t.Errorf("Unwrap() returned wrong error")
+	}
+
+	// Test with nil Err
+	verr2 := &ValidationError{Category: ErrCorrupted}
+	if verr2.Unwrap() != nil {
+		t.Error("Unwrap() should return nil when Err is nil")
+	}
+}
+
+func TestValidationError_Error_AllBranches(t *testing.T) {
+	t.Run("with message", func(t *testing.T) {
+		verr := &ValidationError{
+			Category: ErrCorrupted,
+			Message:  "custom message",
+		}
+		if verr.Error() != "custom message" {
+			t.Errorf("Error() = %q, want %q", verr.Error(), "custom message")
+		}
+	})
+
+	t.Run("with err no message", func(t *testing.T) {
+		verr := &ValidationError{
+			Category: ErrCorrupted,
+			Err:      errors.New("some error"),
+		}
+		want := "corrupted: some error"
+		if verr.Error() != want {
+			t.Errorf("Error() = %q, want %q", verr.Error(), want)
+		}
+	})
+
+	t.Run("neither message nor err", func(t *testing.T) {
+		verr := &ValidationError{
+			Category: ErrTruncated,
+		}
+		if verr.Error() != "truncated" {
+			t.Errorf("Error() = %q, want %q", verr.Error(), "truncated")
+		}
+	})
+}
+
+func TestValidationStatus_String_Unknown(t *testing.T) {
+	s := ValidationStatus(99)
+	got := s.String()
+	want := "unknown(99)"
+	if got != want {
+		t.Errorf("String() = %q, want %q", got, want)
+	}
+}
+
+func TestErrorCategory_String_Unknown(t *testing.T) {
+	c := ErrorCategory(999)
+	got := c.String()
+	want := "unknown(999)"
+	if got != want {
+		t.Errorf("String() = %q, want %q", got, want)
+	}
+}
+
+func TestErrorCategory_String_AllTier1(t *testing.T) {
+	tests := []struct {
+		cat    ErrorCategory
+		expect string
+	}{
+		{ErrUnreadable, "unreadable"},
+		{ErrInvalidFormat, "invalid format"},
+		{ErrNotSharedLib, "not a shared library"},
+		{ErrWrongArch, "wrong architecture"},
+		{ErrTruncated, "truncated"},
+		{ErrCorrupted, "corrupted"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.expect, func(t *testing.T) {
+			got := tt.cat.String()
+			if got != tt.expect {
+				t.Errorf("String() = %q, want %q", got, tt.expect)
+			}
+		})
+	}
+}
+
+func TestValidateHeader_RealELF(t *testing.T) {
+	// Runs on all Linux systems where libc is available
+
+	candidates := []string{
+		"/lib/x86_64-linux-gnu/libc.so.6",
+		"/lib64/libc.so.6",
+		"/usr/lib/libc.so.6",
+		"/lib/aarch64-linux-gnu/libc.so.6",
+	}
+
+	var libPath string
+	for _, c := range candidates {
+		if _, err := os.Stat(c); err == nil {
+			libPath = c
+			break
+		}
+	}
+
+	if libPath == "" {
+		t.Skip("No system libc found for testing")
+	}
+
+	info, err := ValidateHeader(libPath)
+	if err != nil {
+		t.Fatalf("ValidateHeader(%s) failed: %v", libPath, err)
+	}
+
+	if info.Format != "ELF" {
+		t.Errorf("Format = %q, want ELF", info.Format)
+	}
+	if info.Architecture == "" {
+		t.Error("Architecture should not be empty")
+	}
+}
+
+func TestValidateHeader_EmptyFileShort(t *testing.T) {
+	tmpDir := t.TempDir()
+	path := filepath.Join(tmpDir, "empty.so")
+	if err := os.WriteFile(path, []byte{}, 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	_, err := ValidateHeader(path)
+	if err == nil {
+		t.Error("expected error for empty file")
+	}
+}
+
+func TestValidateHeader_UnknownMagic(t *testing.T) {
+	tmpDir := t.TempDir()
+	path := filepath.Join(tmpDir, "unknown.so")
+	if err := os.WriteFile(path, []byte{0xDE, 0xAD, 0xBE, 0xEF}, 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	_, err := ValidateHeader(path)
+	if err == nil {
+		t.Error("expected error for unknown magic")
+	}
+	verr, ok := err.(*ValidationError)
+	if !ok {
+		t.Fatalf("expected ValidationError, got %T", err)
+	}
+	if verr.Category != ErrInvalidFormat {
+		t.Errorf("Category = %v, want ErrInvalidFormat", verr.Category)
+	}
+}
+
+func TestValidateHeader_FakeMachOMagic(t *testing.T) {
+	tmpDir := t.TempDir()
+	path := filepath.Join(tmpDir, "fake.dylib")
+	// Mach-O 64 magic
+	if err := os.WriteFile(path, []byte{0xfe, 0xed, 0xfa, 0xcf, 0, 0, 0, 0}, 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	_, err := ValidateHeader(path)
+	if err == nil {
+		t.Error("expected error for fake Mach-O")
+	}
+}
+
+func TestValidateHeader_FakeFatMagic(t *testing.T) {
+	tmpDir := t.TempDir()
+	path := filepath.Join(tmpDir, "fake.fat")
+	// Fat binary magic
+	if err := os.WriteFile(path, []byte{0xca, 0xfe, 0xba, 0xbe, 0, 0, 0, 0}, 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	_, err := ValidateHeader(path)
+	if err == nil {
+		t.Error("expected error for fake fat binary")
+	}
+}
+
+func TestValidateHeader_TruncatedELF(t *testing.T) {
+	tmpDir := t.TempDir()
+	path := filepath.Join(tmpDir, "truncated.so")
+	// Just the ELF magic, nothing else
+	if err := os.WriteFile(path, []byte{0x7f, 'E', 'L', 'F'}, 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	_, err := ValidateHeader(path)
+	if err == nil {
+		t.Error("expected error for truncated ELF")
+	}
+}
+
+func TestValidateHeader_ELFExecutable(t *testing.T) {
+	candidates := []string{
+		"/bin/true",
+		"/usr/bin/true",
+		"/bin/false",
+		"/usr/bin/false",
+	}
+
+	var binPath string
+	for _, c := range candidates {
+		if _, err := os.Stat(c); err == nil {
+			binPath = c
+			break
+		}
+	}
+
+	if binPath == "" {
+		t.Skip("no suitable binary found")
+	}
+
+	info, err := ValidateHeader(binPath)
+	if err != nil {
+		// Expected for executables (ErrNotSharedLib)
+		verr, ok := err.(*ValidationError)
+		if ok && verr.Category == ErrNotSharedLib {
+			// This is the expected behavior
+			return
+		}
+		t.Logf("ValidateHeader error: %v", err)
+	}
+	if info != nil {
+		t.Logf("ValidateHeader returned info for executable: %+v", info)
+	}
+}
+
+func TestValidateHeader_RelocatableObject(t *testing.T) {
+	// Check if gcc is available
+	gccPath, err := exec.LookPath("gcc")
+	if err != nil {
+		t.Skip("gcc not available")
+	}
+
+	tmpDir := t.TempDir()
+	srcPath := filepath.Join(tmpDir, "test.c")
+	objPath := filepath.Join(tmpDir, "test.o")
+
+	// Write minimal C source
+	if err := os.WriteFile(srcPath, []byte("int x;\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Compile to .o (relocatable object, ET_REL)
+	cmd := exec.Command(gccPath, "-c", "-o", objPath, srcPath)
+	if out, err := cmd.CombinedOutput(); err != nil {
+		t.Skipf("gcc compilation failed: %v: %s", err, out)
+	}
+
+	_, err = ValidateHeader(objPath)
+	if err == nil {
+		t.Fatal("expected error for relocatable object file")
+	}
+
+	verr, ok := err.(*ValidationError)
+	if !ok {
+		t.Fatalf("expected ValidationError, got %T: %v", err, err)
+	}
+	if verr.Category != ErrNotSharedLib {
+		t.Errorf("Category = %v, want ErrNotSharedLib", verr.Category)
+	}
+}
+
+func TestMapGoArchToELF_AllCases(t *testing.T) {
+	tests := []struct {
+		goarch string
+		want   elf.Machine
+	}{
+		{"amd64", elf.EM_X86_64},
+		{"arm64", elf.EM_AARCH64},
+		{"386", elf.EM_386},
+		{"arm", elf.EM_ARM},
+		{"mips", elf.EM_NONE},
+		{"unknown", elf.EM_NONE},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.goarch, func(t *testing.T) {
+			got := mapGoArchToELF(tt.goarch)
+			if got != tt.want {
+				t.Errorf("mapGoArchToELF(%q) = %v, want %v", tt.goarch, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestMapGoArchToMachO_AllCases(t *testing.T) {
+	tests := []struct {
+		goarch string
+		want   macho.Cpu
+	}{
+		{"amd64", macho.CpuAmd64},
+		{"arm64", macho.CpuArm64},
+		{"386", macho.Cpu386},
+		{"mips", macho.Cpu(0)},
+		{"unknown", macho.Cpu(0)},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.goarch, func(t *testing.T) {
+			got := mapGoArchToMachO(tt.goarch)
+			if got != tt.want {
+				t.Errorf("mapGoArchToMachO(%q) = %v, want %v", tt.goarch, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestMapELFMachine_AllCases(t *testing.T) {
+	tests := []struct {
+		machine elf.Machine
+		want    string
+	}{
+		{elf.EM_X86_64, "x86_64"},
+		{elf.EM_AARCH64, "arm64"},
+		{elf.EM_386, "i386"},
+		{elf.EM_ARM, "arm"},
+		{elf.EM_MIPS, "unknown(8)"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.want, func(t *testing.T) {
+			got := mapELFMachine(tt.machine)
+			if got != tt.want {
+				t.Errorf("mapELFMachine(%v) = %q, want %q", tt.machine, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestMapMachOCpu_AllCases(t *testing.T) {
+	tests := []struct {
+		cpu  macho.Cpu
+		want string
+	}{
+		{macho.CpuAmd64, "x86_64"},
+		{macho.CpuArm64, "arm64"},
+		{macho.Cpu386, "i386"},
+		{macho.Cpu(99), "unknown(99)"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.want, func(t *testing.T) {
+			got := mapMachOCpu(tt.cpu)
+			if got != tt.want {
+				t.Errorf("mapMachOCpu(%v) = %q, want %q", tt.cpu, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestElfTypeName(t *testing.T) {
+	tests := []struct {
+		typ  elf.Type
+		want string
+	}{
+		{elf.ET_NONE, "unknown"},
+		{elf.ET_REL, "relocatable object"},
+		{elf.ET_EXEC, "executable"},
+		{elf.ET_DYN, "shared object"},
+		{elf.ET_CORE, "core dump"},
+		{elf.Type(99), "unknown type (99)"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.want, func(t *testing.T) {
+			got := elfTypeName(tt.typ)
+			if got != tt.want {
+				t.Errorf("elfTypeName(%v) = %q, want %q", tt.typ, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestMachoTypeName(t *testing.T) {
+	tests := []struct {
+		typ  macho.Type
+		want string
+	}{
+		{macho.TypeObj, "object file"},
+		{macho.TypeExec, "executable"},
+		{macho.TypeDylib, "dynamic library"},
+		{macho.TypeBundle, "bundle"},
+		{macho.Type(99), "unknown type (99)"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.want, func(t *testing.T) {
+			got := machoTypeName(tt.typ)
+			if got != tt.want {
+				t.Errorf("machoTypeName(%v) = %q, want %q", tt.typ, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestCategorizeELFError(t *testing.T) {
+	tests := []struct {
+		name    string
+		err     error
+		wantCat ErrorCategory
+		wantMsg string
+	}{
+		{
+			name:    "bad magic",
+			err:     errors.New("bad magic number"),
+			wantCat: ErrInvalidFormat,
+			wantMsg: "invalid ELF magic number",
+		},
+		{
+			name:    "EOF",
+			err:     io.EOF,
+			wantCat: ErrTruncated,
+			wantMsg: "file is truncated",
+		},
+		{
+			name:    "unexpected EOF",
+			err:     io.ErrUnexpectedEOF,
+			wantCat: ErrTruncated,
+			wantMsg: "file is truncated",
+		},
+		{
+			name:    "not exist",
+			err:     os.ErrNotExist,
+			wantCat: ErrUnreadable,
+			wantMsg: "file not found",
+		},
+		{
+			name:    "permission denied",
+			err:     os.ErrPermission,
+			wantCat: ErrUnreadable,
+			wantMsg: "permission denied",
+		},
+		{
+			name:    "offset error",
+			err:     errors.New("invalid offset in section header"),
+			wantCat: ErrCorrupted,
+		},
+		{
+			name:    "section error",
+			err:     errors.New("invalid section data"),
+			wantCat: ErrCorrupted,
+		},
+		{
+			name:    "generic error",
+			err:     errors.New("something unexpected"),
+			wantCat: ErrUnreadable,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			verr := categorizeELFError("/path/to/file", tt.err)
+			if verr.Category != tt.wantCat {
+				t.Errorf("Category = %v, want %v", verr.Category, tt.wantCat)
+			}
+			if tt.wantMsg != "" && verr.Message != tt.wantMsg {
+				t.Errorf("Message = %q, want %q", verr.Message, tt.wantMsg)
+			}
+			if verr.Path != "/path/to/file" {
+				t.Errorf("Path = %q, want %q", verr.Path, "/path/to/file")
+			}
+		})
+	}
+}
+
+func TestCategorizeMachOError(t *testing.T) {
+	tests := []struct {
+		name    string
+		err     error
+		wantCat ErrorCategory
+	}{
+		{"invalid magic", errors.New("invalid magic number"), ErrInvalidFormat},
+		{"EOF", io.EOF, ErrTruncated},
+		{"not exist", os.ErrNotExist, ErrUnreadable},
+		{"permission", os.ErrPermission, ErrUnreadable},
+		{"command error", errors.New("invalid command in load"), ErrCorrupted},
+		{"load error", errors.New("load section failed"), ErrCorrupted},
+		{"generic error", errors.New("something else"), ErrUnreadable},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			verr := categorizeMachOError("/path/to/file", tt.err)
+			if verr.Category != tt.wantCat {
+				t.Errorf("Category = %v, want %v", verr.Category, tt.wantCat)
+			}
+		})
+	}
+}
+
+func TestCategorizeFatError(t *testing.T) {
+	t.Run("not fat", func(t *testing.T) {
+		verr := categorizeFatError("/path/to/file", macho.ErrNotFat)
+		if verr.Category != ErrInvalidFormat {
+			t.Errorf("Category = %v, want %v", verr.Category, ErrInvalidFormat)
+		}
+	})
+
+	t.Run("other error falls through to macho", func(t *testing.T) {
+		verr := categorizeFatError("/path/to/file", os.ErrPermission)
+		if verr.Category != ErrUnreadable {
+			t.Errorf("Category = %v, want %v", verr.Category, ErrUnreadable)
+		}
+	})
+}
+
+func TestReadMagic_ShortFile(t *testing.T) {
+	tmpDir := t.TempDir()
+	path := tmpDir + "/short.bin"
+	if err := os.WriteFile(path, []byte{0x7f}, 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	magic, err := readMagic(path)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(magic) != 1 {
+		t.Errorf("expected 1 byte, got %d", len(magic))
+	}
+}
+
+func TestValidateHeader_PermissionDenied(t *testing.T) {
+	tmpDir := t.TempDir()
+	path := tmpDir + "/noperm.so"
+	if err := os.WriteFile(path, []byte{0x7f, 'E', 'L', 'F'}, 0000); err != nil {
+		t.Fatal(err)
+	}
+
+	_, err := ValidateHeader(path)
+	if err == nil {
+		// On some systems (root), this may succeed - skip
+		t.Skip("permission test not applicable (possibly running as root)")
+	}
+
+	verr, ok := err.(*ValidationError)
+	if !ok {
+		t.Fatalf("expected ValidationError, got %T", err)
+	}
+	if verr.Category != ErrUnreadable && verr.Category != ErrTruncated && verr.Category != ErrCorrupted {
+		t.Errorf("Category = %v, want ErrUnreadable/ErrTruncated/ErrCorrupted", verr.Category)
+	}
+}
+
+func TestErrorCategory_String_AllTier2(t *testing.T) {
+	tests := []struct {
+		cat    ErrorCategory
+		expect string
+	}{
+		{ErrABIMismatch, "ABI mismatch"},
+		{ErrUnknownDependency, "unknown dependency"},
+		{ErrRpathLimitExceeded, "RPATH limit exceeded"},
+		{ErrPathLengthExceeded, "path length exceeded"},
+		{ErrUnexpandedVariable, "unexpanded path variable"},
+		{ErrPathOutsideAllowed, "path outside allowed directories"},
+		{ErrMaxDepthExceeded, "max depth exceeded"},
+		{ErrMissingSoname, "missing soname"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.expect, func(t *testing.T) {
+			got := tt.cat.String()
+			if got != tt.expect {
+				t.Errorf("String() = %q, want %q", got, tt.expect)
+			}
+		})
 	}
 }

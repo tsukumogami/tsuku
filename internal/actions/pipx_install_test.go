@@ -2,7 +2,12 @@ package actions
 
 import (
 	"context"
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
+
+	"github.com/tsukumogami/tsuku/internal/recipe"
 )
 
 func TestIsValidPyPIVersion(t *testing.T) {
@@ -392,5 +397,166 @@ func TestDetectPythonNativeAddons(t *testing.T) {
 				t.Errorf("detectPythonNativeAddons() = %v, want %v", got, tc.want)
 			}
 		})
+	}
+}
+
+// -- pipx_install.go: Execute early validation --
+
+func TestPipxInstallAction_Execute_MissingPackage(t *testing.T) {
+	t.Parallel()
+	action := &PipxInstallAction{}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: t.TempDir(),
+		Version: "1.0.0",
+		OS:      "linux",
+		Arch:    "amd64",
+		Recipe:  &recipe.Recipe{},
+	}
+	err := action.Execute(ctx, map[string]any{})
+	if err == nil || !strings.Contains(err.Error(), "package") {
+		t.Errorf("Expected package error, got %v", err)
+	}
+}
+
+func TestPipxInstallAction_Execute_InvalidVersion(t *testing.T) {
+	t.Parallel()
+	action := &PipxInstallAction{}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: t.TempDir(),
+		Version: "evil;inject",
+		OS:      "linux",
+		Arch:    "amd64",
+		Recipe:  &recipe.Recipe{},
+	}
+	err := action.Execute(ctx, map[string]any{
+		"package": "flask",
+	})
+	if err == nil || !strings.Contains(err.Error(), "version") {
+		t.Errorf("Expected version error, got %v", err)
+	}
+}
+
+func TestPipxInstallAction_Execute_MissingExecutables(t *testing.T) {
+	t.Parallel()
+	action := &PipxInstallAction{}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: t.TempDir(),
+		Version: "1.0.0",
+		OS:      "linux",
+		Arch:    "amd64",
+		Recipe:  &recipe.Recipe{},
+	}
+	err := action.Execute(ctx, map[string]any{
+		"package": "flask",
+	})
+	if err == nil || !strings.Contains(err.Error(), "executables") {
+		t.Errorf("Expected executables error, got %v", err)
+	}
+}
+
+// -- pipx_install.go: Decompose additional paths --
+
+func TestPipxInstallAction_Decompose_InvalidVersion(t *testing.T) {
+	t.Parallel()
+	action := &PipxInstallAction{}
+	ctx := &EvalContext{
+		Context:    context.Background(),
+		Version:    "evil;inject",
+		VersionTag: "v1.0.0",
+		OS:         "linux",
+		Arch:       "amd64",
+	}
+	_, err := action.Decompose(ctx, map[string]any{
+		"package":     "flask",
+		"executables": []any{"flask"},
+	})
+	if err == nil || !strings.Contains(err.Error(), "version") {
+		t.Errorf("Expected version error, got %v", err)
+	}
+}
+
+func TestPipxInstallAction_Decompose_MissingExecutables(t *testing.T) {
+	t.Parallel()
+	action := &PipxInstallAction{}
+	ctx := &EvalContext{
+		Context:    context.Background(),
+		Version:    "1.0.0",
+		VersionTag: "v1.0.0",
+		OS:         "linux",
+		Arch:       "amd64",
+	}
+	_, err := action.Decompose(ctx, map[string]any{
+		"package": "flask",
+	})
+	if err == nil || !strings.Contains(err.Error(), "executables") {
+		t.Errorf("Expected executables error, got %v", err)
+	}
+}
+
+func TestPipxInstallAction_Decompose_EmptyVersion(t *testing.T) {
+	t.Parallel()
+	action := &PipxInstallAction{}
+	ctx := &EvalContext{
+		Context:    context.Background(),
+		Version:    "",
+		VersionTag: "",
+		OS:         "linux",
+		Arch:       "amd64",
+	}
+	_, err := action.Decompose(ctx, map[string]any{
+		"package":     "flask",
+		"executables": []any{"flask"},
+	})
+	if err == nil || !strings.Contains(err.Error(), "version") {
+		t.Errorf("Expected version error, got %v", err)
+	}
+}
+
+// -- go_build.go: Execute early validation --
+
+// -- pipx_install.go: isValidPyPIPackage additional cases --
+
+func TestIsValidPyPIPackage_WithSpaces(t *testing.T) {
+	t.Parallel()
+	if isValidPyPIPackage("evil package") {
+		t.Error("Expected false for package with spaces")
+	}
+}
+
+func TestIsValidPyPIPackage_WithNewline(t *testing.T) {
+	t.Parallel()
+	if isValidPyPIPackage("evil\npackage") {
+		t.Error("Expected false for package with newline")
+	}
+}
+
+// -- pipx_install.go: computeFileSHA256 (0% covered, pure function) --
+
+func TestComputeFileSHA256_Success(t *testing.T) {
+	t.Parallel()
+	tmpDir := t.TempDir()
+	path := filepath.Join(tmpDir, "testfile")
+	if err := os.WriteFile(path, []byte("hello world\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	hash, err := computeFileSHA256(path)
+	if err != nil {
+		t.Fatalf("computeFileSHA256() error = %v", err)
+	}
+	// SHA256 of "hello world\n"
+	expected := "a948904f2f0f479b8f8197694b30184b0d2ed1c1cd2a1ec0fb85d299a192a447"
+	if hash != expected {
+		t.Errorf("computeFileSHA256() = %q, want %q", hash, expected)
+	}
+}
+
+func TestComputeFileSHA256_MissingFile(t *testing.T) {
+	t.Parallel()
+	_, err := computeFileSHA256("/nonexistent/file")
+	if err == nil {
+		t.Error("Expected error for missing file")
 	}
 }

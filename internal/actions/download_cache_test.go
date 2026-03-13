@@ -3,6 +3,7 @@ package actions
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -492,7 +493,7 @@ func TestValidateCacheDirPermissions(t *testing.T) {
 				return
 			}
 			if tt.wantErr && tt.errMsg != "" {
-				if err == nil || !containsString(err.Error(), tt.errMsg) {
+				if err == nil || !strings.Contains(err.Error(), tt.errMsg) {
 					t.Errorf("validateCacheDirPermissions() error = %v, want error containing %q", err, tt.errMsg)
 				}
 			}
@@ -526,7 +527,7 @@ func TestDownloadCache_SaveRejectsSymlink(t *testing.T) {
 	if err == nil {
 		t.Error("expected Save() to reject symlink cache path")
 	}
-	if err != nil && !containsString(err.Error(), "symlink") {
+	if err != nil && !strings.Contains(err.Error(), "symlink") {
 		t.Errorf("expected symlink error, got: %v", err)
 	}
 }
@@ -552,7 +553,7 @@ func TestDownloadCache_CheckRejectsSymlink(t *testing.T) {
 	if err == nil {
 		t.Error("expected Check() to reject symlink cache path")
 	}
-	if err != nil && !containsString(err.Error(), "symlink") {
+	if err != nil && !strings.Contains(err.Error(), "symlink") {
 		t.Errorf("expected symlink error, got: %v", err)
 	}
 }
@@ -579,7 +580,7 @@ func TestDownloadCache_SaveRejectsInsecurePermissions(t *testing.T) {
 	if err == nil {
 		t.Error("expected Save() to reject insecure permissions")
 	}
-	if err != nil && !containsString(err.Error(), "insecure permissions") {
+	if err != nil && !strings.Contains(err.Error(), "insecure permissions") {
 		t.Errorf("expected insecure permissions error, got: %v", err)
 	}
 }
@@ -601,7 +602,407 @@ func TestDownloadCache_CheckRejectsInsecurePermissions(t *testing.T) {
 	if err == nil {
 		t.Error("expected Check() to reject insecure permissions")
 	}
-	if err != nil && !containsString(err.Error(), "insecure permissions") {
+	if err != nil && !strings.Contains(err.Error(), "insecure permissions") {
 		t.Errorf("expected insecure permissions error, got: %v", err)
+	}
+}
+
+// -- download_cache.go: Invalidate with non-existent cache --
+
+func TestDownloadCache_invalidate_NonExistent(t *testing.T) {
+	t.Parallel()
+	cache := NewDownloadCache(t.TempDir())
+	cache.SetSkipSecurityChecks(true)
+	// invalidating a non-cached URL should not panic
+	cache.invalidate("https://nonexistent.invalid/file.tar.gz")
+}
+
+// -- download_cache.go: Save, Clear, Info paths --
+
+func TestDownloadCache_Save_CreatesDir(t *testing.T) {
+	t.Parallel()
+	cacheDir := filepath.Join(t.TempDir(), "new-cache")
+	cache := NewDownloadCache(cacheDir)
+	cache.SetSkipSecurityChecks(true)
+
+	// Create a file to save
+	srcDir := t.TempDir()
+	srcFile := filepath.Join(srcDir, "test.bin")
+	if err := os.WriteFile(srcFile, []byte("test content"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	err := cache.Save("https://example.com/test.bin", srcFile, "")
+	if err != nil {
+		t.Fatalf("Save() error = %v", err)
+	}
+
+	// Verify cache dir was created
+	if _, err := os.Stat(cacheDir); os.IsNotExist(err) {
+		t.Error("Expected cache directory to be created")
+	}
+}
+
+func TestDownloadCache_Clear_Success(t *testing.T) {
+	t.Parallel()
+	cacheDir := filepath.Join(t.TempDir(), "cache")
+	if err := os.MkdirAll(cacheDir, 0700); err != nil {
+		t.Fatal(err)
+	}
+
+	cache := NewDownloadCache(cacheDir)
+	cache.SetSkipSecurityChecks(true)
+
+	// Save a file first
+	srcFile := filepath.Join(t.TempDir(), "test.bin")
+	if err := os.WriteFile(srcFile, []byte("content"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := cache.Save("https://example.com/test.bin", srcFile, ""); err != nil {
+		t.Fatal(err)
+	}
+
+	// Clear should work
+	err := cache.Clear()
+	if err != nil {
+		t.Fatalf("Clear() error = %v", err)
+	}
+}
+
+func TestDownloadCache_Info_Empty(t *testing.T) {
+	t.Parallel()
+	cacheDir := filepath.Join(t.TempDir(), "cache")
+	if err := os.MkdirAll(cacheDir, 0700); err != nil {
+		t.Fatal(err)
+	}
+
+	cache := NewDownloadCache(cacheDir)
+	cache.SetSkipSecurityChecks(true)
+
+	info, err := cache.Info()
+	if err != nil {
+		t.Fatalf("Info() error = %v", err)
+	}
+	if info.EntryCount != 0 {
+		t.Errorf("Info().EntryCount = %d, want 0", info.EntryCount)
+	}
+}
+
+func TestDownloadCache_Info_WithEntries(t *testing.T) {
+	t.Parallel()
+	cacheDir := filepath.Join(t.TempDir(), "cache")
+	if err := os.MkdirAll(cacheDir, 0700); err != nil {
+		t.Fatal(err)
+	}
+
+	cache := NewDownloadCache(cacheDir)
+	cache.SetSkipSecurityChecks(true)
+
+	// Save a couple files
+	for i, name := range []string{"a.bin", "b.bin"} {
+		srcFile := filepath.Join(t.TempDir(), name)
+		content := strings.Repeat("x", (i+1)*100)
+		if err := os.WriteFile(srcFile, []byte(content), 0644); err != nil {
+			t.Fatal(err)
+		}
+		if err := cache.Save("https://example.com/"+name, srcFile, ""); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	info, err := cache.Info()
+	if err != nil {
+		t.Fatalf("Info() error = %v", err)
+	}
+	if info.EntryCount < 2 {
+		t.Errorf("Info().EntryCount = %d, want >= 2", info.EntryCount)
+	}
+	if info.TotalSize == 0 {
+		t.Error("Info().TotalSize = 0, want > 0")
+	}
+}
+
+// -- download_cache.go: Check with checksum --
+
+func TestDownloadCache_CheckAndSave_WithChecksum(t *testing.T) {
+	t.Parallel()
+	cacheDir := filepath.Join(t.TempDir(), "cache")
+	if err := os.MkdirAll(cacheDir, 0700); err != nil {
+		t.Fatal(err)
+	}
+
+	cache := NewDownloadCache(cacheDir)
+	cache.SetSkipSecurityChecks(true)
+
+	// Save a file
+	srcFile := filepath.Join(t.TempDir(), "test.bin")
+	if err := os.WriteFile(srcFile, []byte("hello world"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	err := cache.Save("https://example.com/test.bin", srcFile, "")
+	if err != nil {
+		t.Fatalf("Save() error = %v", err)
+	}
+
+	// Check with correct empty checksum (should match by URL)
+	destFile := filepath.Join(t.TempDir(), "restored.bin")
+	found, err := cache.Check("https://example.com/test.bin", destFile, "", "sha256")
+	if err != nil {
+		t.Fatalf("Check() error = %v", err)
+	}
+	if !found {
+		t.Error("Check() = false, want true")
+	}
+
+	// File should have been restored
+	data, err := os.ReadFile(destFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(data) != "hello world" {
+		t.Errorf("restored content = %q, want %q", string(data), "hello world")
+	}
+}
+
+// -- download_cache.go: cacheKey and cachePaths --
+
+func TestDownloadCache_CacheKey(t *testing.T) {
+	t.Parallel()
+	cache := NewDownloadCache("/tmp/cache")
+
+	key1 := cache.cacheKey("https://example.com/file1.tar.gz")
+	key2 := cache.cacheKey("https://example.com/file2.tar.gz")
+
+	if key1 == key2 {
+		t.Error("Different URLs should produce different cache keys")
+	}
+
+	key1a := cache.cacheKey("https://example.com/file1.tar.gz")
+	if key1 != key1a {
+		t.Error("Same URL should produce same cache key")
+	}
+}
+
+func TestDownloadCache_CachePaths(t *testing.T) {
+	t.Parallel()
+	cache := NewDownloadCache("/tmp/cache")
+
+	filePath, metaPath := cache.cachePaths("https://example.com/file.tar.gz")
+
+	if !strings.HasPrefix(filePath, "/tmp/cache/") {
+		t.Errorf("filePath %q should be under cache dir", filePath)
+	}
+	if !strings.HasSuffix(filePath, ".data") {
+		t.Errorf("filePath %q should end with .data", filePath)
+	}
+	if !strings.HasSuffix(metaPath, ".meta") {
+		t.Errorf("metaPath %q should end with .meta", metaPath)
+	}
+}
+
+// -- download_cache.go: writeMeta roundtrip --
+
+func TestDownloadCache_WriteMeta_ReadMeta(t *testing.T) {
+	t.Parallel()
+	tmpDir := t.TempDir()
+	cache := NewDownloadCache(tmpDir)
+
+	meta := &downloadCacheEntry{
+		URL:      "https://example.com/test.tar.gz",
+		Checksum: "abc123",
+	}
+
+	metaPath := filepath.Join(tmpDir, "test.meta")
+	if err := cache.writeMeta(metaPath, meta); err != nil {
+		t.Fatalf("writeMeta() error: %v", err)
+	}
+
+	readBack, err := cache.readMeta(metaPath)
+	if err != nil {
+		t.Fatalf("readMeta() error: %v", err)
+	}
+	if readBack.URL != meta.URL {
+		t.Errorf("readMeta().URL = %q, want %q", readBack.URL, meta.URL)
+	}
+	if readBack.Checksum != meta.Checksum {
+		t.Errorf("readMeta().Checksum = %q, want %q", readBack.Checksum, meta.Checksum)
+	}
+}
+
+// -- download_cache.go: Clear empty, Clear nonexistent, Info nonexistent, Invalidate, Save with checksum --
+
+func TestDownloadCache_Clear_EmptyDir(t *testing.T) {
+	t.Parallel()
+	tmpDir := t.TempDir()
+	cache := NewDownloadCache(tmpDir)
+	if err := cache.Clear(); err != nil {
+		t.Errorf("Clear() on empty dir error: %v", err)
+	}
+}
+
+func TestDownloadCache_Clear_NonexistentDir(t *testing.T) {
+	t.Parallel()
+	cache := NewDownloadCache("/nonexistent/cache/dir")
+	if err := cache.Clear(); err != nil {
+		t.Errorf("Clear() on nonexistent dir error: %v", err)
+	}
+}
+
+func TestDownloadCache_Info_NonexistentDir(t *testing.T) {
+	t.Parallel()
+	cache := NewDownloadCache("/nonexistent/cache/dir")
+	info, err := cache.Info()
+	if err != nil {
+		t.Fatalf("Info() on nonexistent dir error: %v", err)
+	}
+	if info.EntryCount != 0 {
+		t.Errorf("EntryCount = %d, want 0", info.EntryCount)
+	}
+}
+
+func TestDownloadCache_Invalidate(t *testing.T) {
+	t.Parallel()
+	tmpDir := t.TempDir()
+	// Cache directory must have 0700 permissions for security checks
+	if err := os.Chmod(tmpDir, 0700); err != nil {
+		t.Fatal(err)
+	}
+	cache := NewDownloadCache(tmpDir)
+
+	srcFile := filepath.Join(tmpDir, "source.txt")
+	if err := os.WriteFile(srcFile, []byte("data"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	url := "https://example.com/inval.tar.gz"
+	if err := cache.Save(url, srcFile, ""); err != nil {
+		t.Fatal(err)
+	}
+
+	cache.invalidate(url)
+
+	destPath := filepath.Join(tmpDir, "dest.txt")
+	found, err := cache.Check(url, destPath, "", "")
+	if err != nil {
+		t.Fatalf("Check() error: %v", err)
+	}
+	if found {
+		t.Error("Expected cache miss after invalidate")
+	}
+}
+
+func TestDownloadCache_SaveAndCheckNoChecksum(t *testing.T) {
+	t.Parallel()
+	tmpDir := t.TempDir()
+	cacheDir := filepath.Join(tmpDir, "cache")
+	if err := os.MkdirAll(cacheDir, 0700); err != nil {
+		t.Fatal(err)
+	}
+	cache := NewDownloadCache(cacheDir)
+
+	srcFile := filepath.Join(tmpDir, "source.txt")
+	if err := os.WriteFile(srcFile, []byte("checksum content"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := cache.Save("https://example.com/cs.tar.gz", srcFile, "stored_checksum"); err != nil {
+		t.Fatal(err)
+	}
+
+	// Check without providing checksum (should find via URL only)
+	destPath := filepath.Join(tmpDir, "dest.txt")
+	found, err := cache.Check("https://example.com/cs.tar.gz", destPath, "", "")
+	if err != nil {
+		t.Fatalf("Check() error: %v", err)
+	}
+	if !found {
+		t.Error("Expected cache hit without checksum verification")
+	}
+}
+
+// -- decomposable.go: DownloadResult.Cleanup --
+
+func TestDownloadResult_Cleanup(t *testing.T) {
+	t.Parallel()
+
+	t.Run("empty path", func(t *testing.T) {
+		r := &DownloadResult{AssetPath: ""}
+		if err := r.Cleanup(); err != nil {
+			t.Errorf("Cleanup() error = %v, want nil", err)
+		}
+	})
+
+	t.Run("valid path", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		subDir := filepath.Join(tmpDir, "downloads")
+		if err := os.MkdirAll(subDir, 0755); err != nil {
+			t.Fatal(err)
+		}
+		filePath := filepath.Join(subDir, "file.tar.gz")
+		if err := os.WriteFile(filePath, []byte("data"), 0644); err != nil {
+			t.Fatal(err)
+		}
+
+		r := &DownloadResult{AssetPath: filePath}
+		if err := r.Cleanup(); err != nil {
+			t.Errorf("Cleanup() error = %v", err)
+		}
+
+		// Verify the parent directory was removed
+		if _, err := os.Stat(subDir); !os.IsNotExist(err) {
+			t.Error("Expected directory to be removed after Cleanup()")
+		}
+	})
+}
+
+// -- download_cache.go: SetSkipSecurityChecks --
+
+func TestDownloadCache_SetSkipSecurityChecks(t *testing.T) {
+	t.Parallel()
+	cache := NewDownloadCache("/tmp/test-cache")
+
+	cache.SetSkipSecurityChecks(true)
+	if !cache.skipSecurityChecks {
+		t.Error("Expected skipSecurityChecks to be true")
+	}
+
+	cache.SetSkipSecurityChecks(false)
+	if cache.skipSecurityChecks {
+		t.Error("Expected skipSecurityChecks to be false")
+	}
+}
+
+func TestDownloadCache_SkipSecurityChecks_SaveAndCheck(t *testing.T) {
+	t.Parallel()
+	tmpDir := t.TempDir()
+
+	// Create cache dir with overly permissive mode that would normally be rejected
+	cacheDir := filepath.Join(tmpDir, "cache")
+	if err := os.MkdirAll(cacheDir, 0777); err != nil {
+		t.Fatal(err)
+	}
+
+	cache := NewDownloadCache(cacheDir)
+	cache.SetSkipSecurityChecks(true)
+
+	// Create a file to cache
+	srcFile := filepath.Join(tmpDir, "source.txt")
+	if err := os.WriteFile(srcFile, []byte("cached content"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Save should succeed even with permissive permissions
+	err := cache.Save("https://example.com/test.tar.gz", srcFile, "")
+	if err != nil {
+		t.Fatalf("Save with skip security checks failed: %v", err)
+	}
+
+	// Check should also succeed
+	destPath := filepath.Join(tmpDir, "dest.txt")
+	found, err := cache.Check("https://example.com/test.tar.gz", destPath, "", "")
+	if err != nil {
+		t.Fatalf("Check with skip security checks failed: %v", err)
+	}
+	if !found {
+		t.Error("Expected cache hit")
 	}
 }

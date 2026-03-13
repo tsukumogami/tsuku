@@ -4,7 +4,10 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
+
+	"github.com/tsukumogami/tsuku/internal/recipe"
 )
 
 func TestNpmExecAction_Name(t *testing.T) {
@@ -367,5 +370,164 @@ func TestNpmExecAction_PackageInstallMode_MissingParams(t *testing.T) {
 				t.Errorf("error = %q, want %q", err.Error(), tc.errMsg)
 			}
 		})
+	}
+}
+
+// -- npm_exec.go: executePackageInstall validation paths --
+
+func TestNpmExecAction_ExecutePackageInstall_MissingPackage(t *testing.T) {
+	t.Parallel()
+	action := &NpmExecAction{}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: t.TempDir(),
+		Version: "1.0.0",
+		OS:      "linux",
+		Arch:    "amd64",
+		Recipe:  &recipe.Recipe{},
+	}
+	err := action.Execute(ctx, map[string]any{
+		"package_lock": "{}",
+	})
+	if err == nil || !strings.Contains(err.Error(), "package") {
+		t.Errorf("Expected package error, got %v", err)
+	}
+}
+
+func TestNpmExecAction_ExecutePackageInstall_MissingVersion(t *testing.T) {
+	t.Parallel()
+	action := &NpmExecAction{}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: t.TempDir(),
+		Version: "1.0.0",
+		OS:      "linux",
+		Arch:    "amd64",
+		Recipe:  &recipe.Recipe{},
+	}
+	err := action.Execute(ctx, map[string]any{
+		"package_lock": "{}",
+		"package":      "some-pkg",
+	})
+	if err == nil || !strings.Contains(err.Error(), "version") {
+		t.Errorf("Expected version error, got %v", err)
+	}
+}
+
+func TestNpmExecAction_ExecutePackageInstall_MissingPackageLock(t *testing.T) {
+	t.Parallel()
+	action := &NpmExecAction{}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: t.TempDir(),
+		Version: "1.0.0",
+		OS:      "linux",
+		Arch:    "amd64",
+		Recipe:  &recipe.Recipe{},
+	}
+	// package_lock must be present to trigger executePackageInstall
+	// but the actual lock content is checked by the method
+	err := action.Execute(ctx, map[string]any{
+		"package_lock": "{}",
+		"package":      "some-pkg",
+		"version":      "1.0.0",
+	})
+	if err == nil || !strings.Contains(err.Error(), "executables") {
+		t.Errorf("Expected executables error, got %v", err)
+	}
+}
+
+func TestNpmExecAction_ExecutePackageInstall_MissingExecutables(t *testing.T) {
+	t.Parallel()
+	action := &NpmExecAction{}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: t.TempDir(),
+		Version: "1.0.0",
+		OS:      "linux",
+		Arch:    "amd64",
+		Recipe:  &recipe.Recipe{},
+	}
+	err := action.Execute(ctx, map[string]any{
+		"package_lock": "{}",
+		"package":      "some-pkg",
+		"version":      "1.0.0",
+		"executables":  []any{},
+	})
+	if err == nil || !strings.Contains(err.Error(), "executables") {
+		t.Errorf("Expected executables error, got %v", err)
+	}
+}
+
+// -- npm_exec.go: Dependencies, RequiresNetwork --
+
+func TestNpmExecAction_Dependencies_Direct(t *testing.T) {
+	t.Parallel()
+	action := NpmExecAction{}
+	deps := action.Dependencies()
+	if len(deps.InstallTime) != 1 || deps.InstallTime[0] != "nodejs" {
+		t.Errorf("Dependencies().InstallTime = %v, want [nodejs]", deps.InstallTime)
+	}
+	if len(deps.Runtime) != 1 || deps.Runtime[0] != "nodejs" {
+		t.Errorf("Dependencies().Runtime = %v, want [nodejs]", deps.Runtime)
+	}
+}
+
+// -- npm_exec.go: Execute missing source_dir --
+
+func TestNpmExecAction_Execute_MissingSourceDir(t *testing.T) {
+	t.Parallel()
+	action := &NpmExecAction{}
+	ctx := newTestExecCtx(t)
+	err := action.Execute(ctx, map[string]any{})
+	if err == nil {
+		t.Error("Expected error for missing source_dir and package_lock")
+	}
+}
+
+// -- npm_exec.go: Execute with source_dir that has no package.json --
+
+func TestNpmExecAction_Execute_NoPackageJSON(t *testing.T) {
+	t.Parallel()
+	action := &NpmExecAction{}
+	tmpDir := t.TempDir()
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: tmpDir,
+		Version: "1.0.0",
+		OS:      "linux",
+		Arch:    "amd64",
+		Recipe:  &recipe.Recipe{},
+	}
+	err := action.Execute(ctx, map[string]any{
+		"source_dir": tmpDir,
+		"command":    "build",
+	})
+	if err == nil {
+		t.Error("Expected error for missing package.json")
+	}
+}
+
+func TestNpmExecAction_Execute_MissingCommand(t *testing.T) {
+	t.Parallel()
+	action := &NpmExecAction{}
+	tmpDir := t.TempDir()
+	// Create package.json
+	if err := os.WriteFile(filepath.Join(tmpDir, "package.json"), []byte("{}"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: tmpDir,
+		Version: "1.0.0",
+		OS:      "linux",
+		Arch:    "amd64",
+		Recipe:  &recipe.Recipe{},
+	}
+	err := action.Execute(ctx, map[string]any{
+		"source_dir": tmpDir,
+	})
+	if err == nil {
+		t.Error("Expected error for missing command")
 	}
 }

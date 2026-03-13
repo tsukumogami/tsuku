@@ -2,7 +2,12 @@ package actions
 
 import (
 	"context"
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
+
+	"github.com/tsukumogami/tsuku/internal/recipe"
 )
 
 func TestPipExecAction_Name(t *testing.T) {
@@ -195,5 +200,204 @@ ruff==0.1.0 --hash=sha256:abc123`,
 				t.Errorf("countRequirementsPackages() = %d, want %d", got, tc.want)
 			}
 		})
+	}
+}
+
+// -- pip_exec.go: PipExecAction.Execute with valid params up to pip resolution --
+
+// -- pip_exec.go: Execute with all required params (exercises optional param paths) --
+
+func TestPipExecAction_Execute_AllRequiredParams(t *testing.T) {
+	t.Parallel()
+	action := &PipExecAction{}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: t.TempDir(),
+		Version: "1.0.0",
+		OS:      "linux",
+		Arch:    "amd64",
+		Recipe:  &recipe.Recipe{},
+	}
+	// Provide all required params to exercise code past locked_requirements check
+	err := action.Execute(ctx, map[string]any{
+		"package":             "flask",
+		"version":             "3.0.0",
+		"executables":         []any{"flask"},
+		"locked_requirements": "flask==3.0.0",
+		"has_native_addons":   true,
+	})
+	// Should fail at python resolution, not param validation
+	if err == nil {
+		t.Error("Expected error (python not found)")
+	}
+	if strings.Contains(err.Error(), "requires") {
+		t.Errorf("Expected python resolution error, got param error: %v", err)
+	}
+}
+
+// -- pip_exec.go: fixPythonShebang --
+
+func TestFixPythonShebang_AbsolutePythonPath(t *testing.T) {
+	t.Parallel()
+	tmpDir := t.TempDir()
+	scriptPath := filepath.Join(tmpDir, "script.py")
+	content := "#!/usr/bin/python3\nimport sys\nprint('hello')\n"
+	if err := os.WriteFile(scriptPath, []byte(content), 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := fixPythonShebang(scriptPath); err != nil {
+		t.Fatalf("fixPythonShebang() error = %v", err)
+	}
+
+	result, err := os.ReadFile(scriptPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(result[:2]) != "#!" {
+		t.Error("result should start with shebang")
+	}
+}
+
+func TestFixPythonShebang_NotAScript(t *testing.T) {
+	t.Parallel()
+	tmpDir := t.TempDir()
+	scriptPath := filepath.Join(tmpDir, "binary")
+	if err := os.WriteFile(scriptPath, []byte{0x7f, 'E', 'L', 'F'}, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := fixPythonShebang(scriptPath); err == nil {
+		t.Error("fixPythonShebang() expected error for non-script file")
+	}
+}
+
+func TestFixPythonShebang_NotPython(t *testing.T) {
+	t.Parallel()
+	tmpDir := t.TempDir()
+	scriptPath := filepath.Join(tmpDir, "script.sh")
+	content := "#!/bin/bash\necho hello\n"
+	if err := os.WriteFile(scriptPath, []byte(content), 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := fixPythonShebang(scriptPath); err == nil {
+		t.Error("fixPythonShebang() expected error for non-Python script")
+	}
+}
+
+func TestFixPythonShebang_AlreadyRelative(t *testing.T) {
+	t.Parallel()
+	tmpDir := t.TempDir()
+	scriptPath := filepath.Join(tmpDir, "script.py")
+	content := "#!/usr/bin/env ./python3\nimport sys\n"
+	if err := os.WriteFile(scriptPath, []byte(content), 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := fixPythonShebang(scriptPath); err != nil {
+		t.Errorf("fixPythonShebang() error = %v for already relative path", err)
+	}
+}
+
+// -- pip_exec.go: countRequirementsPackages --
+
+func TestCountRequirementsPackages_Continuation(t *testing.T) {
+	t.Parallel()
+	// Test continuation lines (backslash) are skipped
+	input := "requests==2.31.0 \\\n  --hash=sha256:abc\n"
+	got := countRequirementsPackages(input)
+	if got != 1 {
+		t.Errorf("countRequirementsPackages() = %d, want 1", got)
+	}
+}
+
+// -- pip_exec.go: Dependencies --
+
+func TestPipExecAction_Dependencies_Direct(t *testing.T) {
+	t.Parallel()
+	action := PipExecAction{}
+	deps := action.Dependencies()
+	if len(deps.InstallTime) != 1 || deps.InstallTime[0] != "python-standalone" {
+		t.Errorf("Dependencies().InstallTime = %v, want [python-standalone]", deps.InstallTime)
+	}
+	if len(deps.Runtime) != 1 || deps.Runtime[0] != "python-standalone" {
+		t.Errorf("Dependencies().Runtime = %v, want [python-standalone]", deps.Runtime)
+	}
+}
+
+// -- pip_exec.go: Execute param validation --
+
+func TestPipExecAction_Execute_MissingPackage(t *testing.T) {
+	t.Parallel()
+	action := &PipExecAction{}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: t.TempDir(),
+		Version: "1.0.0",
+		OS:      "linux",
+		Arch:    "amd64",
+		Recipe:  &recipe.Recipe{},
+	}
+	err := action.Execute(ctx, map[string]any{})
+	if err == nil {
+		t.Error("Expected error for missing package param")
+	}
+}
+
+func TestPipExecAction_Execute_MissingVersion(t *testing.T) {
+	t.Parallel()
+	action := &PipExecAction{}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: t.TempDir(),
+		Version: "1.0.0",
+		OS:      "linux",
+		Arch:    "amd64",
+		Recipe:  &recipe.Recipe{},
+	}
+	err := action.Execute(ctx, map[string]any{
+		"package": "flask",
+	})
+	if err == nil {
+		t.Error("Expected error for missing version param")
+	}
+}
+
+func TestPipExecAction_Execute_MissingExecutables(t *testing.T) {
+	t.Parallel()
+	action := &PipExecAction{}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: t.TempDir(),
+		Version: "1.0.0",
+		OS:      "linux",
+		Arch:    "amd64",
+		Recipe:  &recipe.Recipe{},
+	}
+	err := action.Execute(ctx, map[string]any{
+		"package": "flask",
+		"version": "3.0.0",
+	})
+	if err == nil {
+		t.Error("Expected error for missing executables param")
+	}
+}
+
+func TestPipExecAction_Execute_MissingLockedRequirements(t *testing.T) {
+	t.Parallel()
+	action := &PipExecAction{}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: t.TempDir(),
+		Version: "1.0.0",
+		OS:      "linux",
+		Arch:    "amd64",
+		Recipe:  &recipe.Recipe{},
+	}
+	err := action.Execute(ctx, map[string]any{
+		"package":     "flask",
+		"version":     "3.0.0",
+		"executables": []any{"flask"},
+	})
+	if err == nil {
+		t.Error("Expected error for missing locked_requirements")
 	}
 }

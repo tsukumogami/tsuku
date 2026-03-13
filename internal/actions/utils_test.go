@@ -198,3 +198,187 @@ func TestCopyFile(t *testing.T) {
 		t.Errorf("file mode = %o, want %o", info.Mode().Perm(), 0755)
 	}
 }
+
+// -- utils.go: CopyDirectoryExcluding, CopySymlink, CopyFile --
+
+func TestCopyDirectoryExcluding_WithExclude(t *testing.T) {
+	t.Parallel()
+	srcDir := t.TempDir()
+	dstDir := filepath.Join(t.TempDir(), "dst")
+
+	// Create source structure with an excluded dir
+	if err := os.MkdirAll(filepath.Join(srcDir, "keep", "sub"), 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(filepath.Join(srcDir, "exclude_me"), 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(srcDir, "keep", "file.txt"), []byte("hello"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(srcDir, "exclude_me", "secret.txt"), []byte("secret"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(srcDir, "root.txt"), []byte("root"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := CopyDirectoryExcluding(srcDir, dstDir, "exclude_me"); err != nil {
+		t.Fatalf("CopyDirectoryExcluding() error = %v", err)
+	}
+
+	// Kept files should exist
+	if _, err := os.Stat(filepath.Join(dstDir, "keep", "file.txt")); err != nil {
+		t.Error("Expected keep/file.txt to be copied")
+	}
+	if _, err := os.Stat(filepath.Join(dstDir, "root.txt")); err != nil {
+		t.Error("Expected root.txt to be copied")
+	}
+
+	// Excluded dir should not exist
+	if _, err := os.Stat(filepath.Join(dstDir, "exclude_me")); !os.IsNotExist(err) {
+		t.Error("Expected exclude_me directory to be excluded")
+	}
+}
+
+func TestCopyDirectoryExcluding_WithSymlinks(t *testing.T) {
+	t.Parallel()
+	srcDir := t.TempDir()
+	dstDir := filepath.Join(t.TempDir(), "dst")
+
+	// Create a file and a symlink to it
+	if err := os.WriteFile(filepath.Join(srcDir, "real.txt"), []byte("real"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink("real.txt", filepath.Join(srcDir, "link.txt")); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := CopyDirectoryExcluding(srcDir, dstDir, ""); err != nil {
+		t.Fatalf("CopyDirectoryExcluding() error = %v", err)
+	}
+
+	// Symlink should be preserved
+	target, err := os.Readlink(filepath.Join(dstDir, "link.txt"))
+	if err != nil {
+		t.Fatalf("Readlink error: %v", err)
+	}
+	if target != "real.txt" {
+		t.Errorf("symlink target = %q, want %q", target, "real.txt")
+	}
+}
+
+func TestCopyFile_Success(t *testing.T) {
+	t.Parallel()
+	srcDir := t.TempDir()
+	dstDir := t.TempDir()
+
+	srcPath := filepath.Join(srcDir, "test.txt")
+	dstPath := filepath.Join(dstDir, "sub", "test.txt")
+	if err := os.WriteFile(srcPath, []byte("content"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := CopyFile(srcPath, dstPath, 0755); err != nil {
+		t.Fatalf("CopyFile() error = %v", err)
+	}
+
+	data, err := os.ReadFile(dstPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(data) != "content" {
+		t.Errorf("file content = %q, want %q", string(data), "content")
+	}
+
+	info, _ := os.Stat(dstPath)
+	if info.Mode().Perm() != 0755 {
+		t.Errorf("file mode = %v, want 0755", info.Mode().Perm())
+	}
+}
+
+func TestCopyFile_SourceNotFound(t *testing.T) {
+	t.Parallel()
+	err := CopyFile("/nonexistent/file", filepath.Join(t.TempDir(), "dst"), 0644)
+	if err == nil {
+		t.Error("Expected error for nonexistent source")
+	}
+}
+
+func TestCopySymlink_Success(t *testing.T) {
+	t.Parallel()
+	srcDir := t.TempDir()
+	dstDir := t.TempDir()
+
+	// Create source symlink
+	if err := os.WriteFile(filepath.Join(srcDir, "target.txt"), []byte("data"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	srcLink := filepath.Join(srcDir, "link")
+	if err := os.Symlink("target.txt", srcLink); err != nil {
+		t.Fatal(err)
+	}
+
+	dstLink := filepath.Join(dstDir, "sub", "link")
+	if err := CopySymlink(srcLink, dstLink); err != nil {
+		t.Fatalf("CopySymlink() error = %v", err)
+	}
+
+	target, err := os.Readlink(dstLink)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if target != "target.txt" {
+		t.Errorf("symlink target = %q, want %q", target, "target.txt")
+	}
+}
+
+func TestCopyDirectory_NoExclude(t *testing.T) {
+	t.Parallel()
+	srcDir := t.TempDir()
+	dstDir := filepath.Join(t.TempDir(), "dst")
+
+	if err := os.WriteFile(filepath.Join(srcDir, "a.txt"), []byte("a"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := CopyDirectory(srcDir, dstDir); err != nil {
+		t.Fatalf("CopyDirectory() error = %v", err)
+	}
+
+	if _, err := os.Stat(filepath.Join(dstDir, "a.txt")); err != nil {
+		t.Error("Expected a.txt to be copied")
+	}
+}
+
+// -- composites.go: CopyDirectory --
+
+func TestCopyDirectory(t *testing.T) {
+	t.Parallel()
+	srcDir := t.TempDir()
+	dstDir := t.TempDir()
+
+	// Create some files in src
+	if err := os.MkdirAll(filepath.Join(srcDir, "bin"), 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(srcDir, "bin", "tool"), []byte("binary"), 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(srcDir, "README"), []byte("readme"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	err := CopyDirectory(srcDir, dstDir)
+	if err != nil {
+		t.Fatalf("CopyDirectory() error: %v", err)
+	}
+
+	// Verify files were copied
+	if _, err := os.Stat(filepath.Join(dstDir, "bin", "tool")); os.IsNotExist(err) {
+		t.Error("Expected bin/tool to be copied")
+	}
+	if _, err := os.Stat(filepath.Join(dstDir, "README")); os.IsNotExist(err) {
+		t.Error("Expected README to be copied")
+	}
+}

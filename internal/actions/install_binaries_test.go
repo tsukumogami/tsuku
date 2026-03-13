@@ -828,3 +828,349 @@ func TestInstallBinariesAction_Execute_DeprecatedBinariesStillWorks(t *testing.T
 		t.Errorf("Execute() with deprecated 'binaries' should still work, got: %v", err)
 	}
 }
+
+// -- install_binaries.go: installBinariesMode helper --
+
+func TestInstallBinariesAction_Execute_DirectoryMode(t *testing.T) {
+	t.Parallel()
+	action := &InstallBinariesAction{}
+	tmpDir := t.TempDir()
+	installDir := t.TempDir()
+
+	// Create a binary in work dir
+	binDir := filepath.Join(tmpDir, "bin")
+	if err := os.MkdirAll(binDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(binDir, "tool"), []byte("#!/bin/sh\necho hello"), 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	ctx := &ExecutionContext{
+		Context:    context.Background(),
+		WorkDir:    tmpDir,
+		InstallDir: installDir,
+		Version:    "1.0.0",
+		OS:         "linux",
+		Arch:       "amd64",
+		Recipe:     &recipe.Recipe{Verify: &recipe.VerifySection{Command: "tool --version"}},
+	}
+	err := action.Execute(ctx, map[string]any{
+		"binaries":     []any{"bin/tool"},
+		"install_mode": "directory",
+	})
+	if err != nil {
+		t.Errorf("Execute() error = %v", err)
+	}
+}
+
+// -- install_binaries.go: createSymlink --
+
+func TestInstallBinariesAction_createSymlink(t *testing.T) {
+	t.Parallel()
+	action := &InstallBinariesAction{}
+	tmpDir := t.TempDir()
+
+	targetDir := filepath.Join(tmpDir, "tools", "tool-1.0.0", "bin")
+	if err := os.MkdirAll(targetDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	targetFile := filepath.Join(targetDir, "tool")
+	if err := os.WriteFile(targetFile, []byte("#!/bin/sh"), 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	linkDir := filepath.Join(tmpDir, "tools", ".install", "bin")
+	linkPath := filepath.Join(linkDir, "tool")
+
+	err := action.createSymlink(targetFile, linkPath)
+	if err != nil {
+		t.Fatalf("createSymlink() error = %v", err)
+	}
+
+	// Verify symlink exists and is relative
+	target, err := os.Readlink(linkPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if filepath.IsAbs(target) {
+		t.Errorf("createSymlink created absolute symlink: %s", target)
+	}
+}
+
+// -- install_binaries.go: validateBinaryPath --
+
+func TestInstallBinariesAction_validateBinaryPath(t *testing.T) {
+	t.Parallel()
+	action := &InstallBinariesAction{}
+
+	t.Run("valid path", func(t *testing.T) {
+		err := action.validateBinaryPath("bin/tool")
+		if err != nil {
+			t.Errorf("validateBinaryPath(\"bin/tool\") error = %v", err)
+		}
+	})
+
+	t.Run("absolute path", func(t *testing.T) {
+		err := action.validateBinaryPath("/etc/passwd")
+		if err == nil {
+			t.Error("Expected error for absolute path")
+		}
+	})
+
+	t.Run("path traversal", func(t *testing.T) {
+		err := action.validateBinaryPath("../../../etc/passwd")
+		if err == nil {
+			t.Error("Expected error for path traversal")
+		}
+	})
+}
+
+// -- install_binaries.go: Preflight with various params --
+
+func TestInstallBinariesAction_Preflight_WithParams(t *testing.T) {
+	t.Parallel()
+	action := &InstallBinariesAction{}
+
+	t.Run("valid string list", func(t *testing.T) {
+		result := action.Preflight(map[string]any{
+			"binaries": []any{"bin/tool"},
+		})
+		if len(result.Errors) != 0 {
+			t.Errorf("Preflight() errors = %v", result.Errors)
+		}
+	})
+
+	t.Run("valid map format", func(t *testing.T) {
+		result := action.Preflight(map[string]any{
+			"binaries": map[string]any{"src/tool": "tool"},
+		})
+		if len(result.Errors) != 0 {
+			t.Errorf("Preflight() errors = %v", result.Errors)
+		}
+	})
+}
+
+// -- install_binaries.go: parseOutputs edge cases --
+
+func TestInstallBinariesAction_ParseOutputs_InvalidType(t *testing.T) {
+	t.Parallel()
+	action := &InstallBinariesAction{}
+	_, err := action.parseOutputs([]any{42})
+	if err == nil {
+		t.Error("parseOutputs() expected error for int type")
+	}
+}
+
+func TestInstallBinariesAction_ParseOutputs_MissingSrc(t *testing.T) {
+	t.Parallel()
+	action := &InstallBinariesAction{}
+	_, err := action.parseOutputs([]any{
+		map[string]any{"dest": "bin/tool"},
+	})
+	if err == nil {
+		t.Error("parseOutputs() expected error for missing src")
+	}
+}
+
+func TestInstallBinariesAction_ParseOutputs_MissingDest(t *testing.T) {
+	t.Parallel()
+	action := &InstallBinariesAction{}
+	_, err := action.parseOutputs([]any{
+		map[string]any{"src": "tool"},
+	})
+	if err == nil {
+		t.Error("parseOutputs() expected error for missing dest")
+	}
+}
+
+// -- install_binaries.go: DetermineExecutables additional cases --
+
+func TestDetermineExecutables_InferFromBinPrefix(t *testing.T) {
+	t.Parallel()
+	outputs := []recipe.BinaryMapping{
+		{Src: "tool", Dest: "bin/tool"},
+		{Src: "lib.so", Dest: "lib/lib.so"},
+	}
+	result := DetermineExecutables(outputs, nil)
+	if len(result) != 1 || result[0] != "bin/tool" {
+		t.Errorf("DetermineExecutables() = %v, want [bin/tool]", result)
+	}
+}
+
+func TestDetermineExecutables_ExplicitOverride(t *testing.T) {
+	t.Parallel()
+	outputs := []recipe.BinaryMapping{
+		{Src: "tool", Dest: "bin/tool"},
+	}
+	explicit := []string{"custom/tool"}
+	result := DetermineExecutables(outputs, explicit)
+	if len(result) != 1 || result[0] != "custom/tool" {
+		t.Errorf("DetermineExecutables() = %v, want [custom/tool]", result)
+	}
+}
+
+// -- install_binaries.go: extractOutputNames --
+
+func TestExtractOutputNames_Direct(t *testing.T) {
+	t.Parallel()
+	outputs := []recipe.BinaryMapping{
+		{Src: "dist/tool", Dest: "bin/tool"},
+		{Src: "build/lib.so", Dest: "lib/lib.so"},
+	}
+	names := extractOutputNames(outputs)
+	if len(names) != 2 || names[0] != "tool" || names[1] != "lib.so" {
+		t.Errorf("extractOutputNames() = %v, want [tool lib.so]", names)
+	}
+}
+
+// -- install_binaries.go: validateBinaryPath --
+
+func TestInstallBinariesAction_ValidateBinaryPath_DotDot(t *testing.T) {
+	t.Parallel()
+	action := &InstallBinariesAction{}
+	if err := action.validateBinaryPath("../../etc/passwd"); err == nil {
+		t.Error("validateBinaryPath() expected error for '..'")
+	}
+}
+
+func TestInstallBinariesAction_ValidateBinaryPath_Absolute(t *testing.T) {
+	t.Parallel()
+	action := &InstallBinariesAction{}
+	if err := action.validateBinaryPath("/usr/bin/tool"); err == nil {
+		t.Error("validateBinaryPath() expected error for absolute path")
+	}
+}
+
+func TestInstallBinariesAction_ValidateBinaryPath_Valid(t *testing.T) {
+	t.Parallel()
+	action := &InstallBinariesAction{}
+	if err := action.validateBinaryPath("bin/tool"); err != nil {
+		t.Errorf("validateBinaryPath() error = %v for valid path", err)
+	}
+}
+
+// -- install_binaries.go: Preflight with binary param --
+
+func TestInstallBinariesAction_Preflight_BinaryParam(t *testing.T) {
+	t.Parallel()
+	action := &InstallBinariesAction{}
+	result := action.Preflight(map[string]any{
+		"binary": "tool",
+	})
+	if len(result.Errors) == 0 {
+		t.Error("Expected error for 'binary' param (singular)")
+	}
+}
+
+func TestInstallBinariesAction_Preflight_BothOutputsAndBinaries(t *testing.T) {
+	t.Parallel()
+	action := &InstallBinariesAction{}
+	result := action.Preflight(map[string]any{
+		"outputs":  []any{"bin/tool"},
+		"binaries": []any{"bin/tool"},
+	})
+	if len(result.Errors) == 0 {
+		t.Error("Expected error for both outputs and binaries")
+	}
+}
+
+func TestInstallBinariesAction_Preflight_EmptyOutputs(t *testing.T) {
+	t.Parallel()
+	action := &InstallBinariesAction{}
+	result := action.Preflight(map[string]any{
+		"outputs": []any{},
+	})
+	if len(result.Errors) == 0 {
+		t.Error("Expected error for empty outputs array")
+	}
+}
+
+// -- install_binaries.go: Execute with install_mode validation --
+
+func TestInstallBinariesAction_Execute_InvalidInstallMode(t *testing.T) {
+	t.Parallel()
+	action := &InstallBinariesAction{}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: t.TempDir(),
+		Version: "1.0.0",
+		OS:      "linux",
+		Arch:    "amd64",
+		Recipe:  &recipe.Recipe{},
+	}
+	err := action.Execute(ctx, map[string]any{
+		"outputs":      []any{"bin/tool"},
+		"install_mode": "invalid_mode",
+	})
+	if err == nil {
+		t.Error("Expected error for invalid install_mode")
+	}
+}
+
+func TestInstallBinariesAction_Execute_DirectoryWrappedNotImplemented(t *testing.T) {
+	t.Parallel()
+	action := &InstallBinariesAction{}
+	tmpDir := t.TempDir()
+	ctx := &ExecutionContext{
+		Context:    context.Background(),
+		WorkDir:    tmpDir,
+		InstallDir: filepath.Join(tmpDir, ".install"),
+		Version:    "1.0.0",
+		OS:         "linux",
+		Arch:       "amd64",
+		Recipe: &recipe.Recipe{
+			Verify: &recipe.VerifySection{Command: "true"},
+		},
+	}
+	err := action.Execute(ctx, map[string]any{
+		"outputs":      []any{"bin/tool"},
+		"install_mode": "directory_wrapped",
+	})
+	if err == nil {
+		t.Error("Expected error for directory_wrapped (not implemented)")
+	}
+}
+
+func TestInstallBinariesAction_Execute_DirectoryModeNoVerify(t *testing.T) {
+	t.Parallel()
+	action := &InstallBinariesAction{}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: t.TempDir(),
+		Version: "1.0.0",
+		OS:      "linux",
+		Arch:    "amd64",
+		Recipe:  &recipe.Recipe{},
+	}
+	err := action.Execute(ctx, map[string]any{
+		"outputs":      []any{"bin/tool"},
+		"install_mode": "directory",
+	})
+	if err == nil {
+		t.Error("Expected error for directory mode without verify")
+	}
+}
+
+// -- install_binaries.go: Execute with binary traversal --
+
+func TestInstallBinariesAction_Execute_TraversalInOutputs(t *testing.T) {
+	t.Parallel()
+	action := &InstallBinariesAction{}
+	tmpDir := t.TempDir()
+	ctx := &ExecutionContext{
+		Context:    context.Background(),
+		WorkDir:    tmpDir,
+		InstallDir: filepath.Join(tmpDir, ".install"),
+		Version:    "1.0.0",
+		OS:         "linux",
+		Arch:       "amd64",
+		Recipe:     &recipe.Recipe{},
+	}
+	err := action.Execute(ctx, map[string]any{
+		"outputs": []any{map[string]any{"src": "../../etc/passwd", "dest": "bin/passwd"}},
+	})
+	if err == nil {
+		t.Error("Expected error for path traversal in outputs")
+	}
+}

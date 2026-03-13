@@ -1,6 +1,12 @@
 package actions
 
-import "testing"
+import (
+	"context"
+	"strings"
+	"testing"
+
+	"github.com/tsukumogami/tsuku/internal/recipe"
+)
 
 func TestIsValidGemName(t *testing.T) {
 	t.Parallel()
@@ -170,7 +176,7 @@ func TestGemInstallAction_Execute_Validation(t *testing.T) {
 				return
 			}
 
-			if !containsString(err.Error(), tt.expectError) {
+			if !strings.Contains(err.Error(), tt.expectError) {
 				t.Errorf("expected error containing %q, got %q", tt.expectError, err.Error())
 			}
 		})
@@ -183,20 +189,6 @@ func TestGemInstallAction_Name(t *testing.T) {
 	if action.Name() != "gem_install" {
 		t.Errorf("Name() = %q, want %q", action.Name(), "gem_install")
 	}
-}
-
-// Helper function to check if a string contains a substring
-func containsString(s, substr string) bool {
-	return len(s) >= len(substr) && (s == substr || len(s) > 0 && containsSubstring(s, substr))
-}
-
-func containsSubstring(s, substr string) bool {
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
-		}
-	}
-	return false
 }
 
 func TestGemInstallAction_Decompose_Validation(t *testing.T) {
@@ -264,7 +256,7 @@ func TestGemInstallAction_Decompose_Validation(t *testing.T) {
 				return
 			}
 
-			if !containsString(err.Error(), tt.expectError) {
+			if !strings.Contains(err.Error(), tt.expectError) {
 				t.Errorf("expected error containing %q, got %q", tt.expectError, err.Error())
 			}
 		})
@@ -359,5 +351,241 @@ PLATFORMS
 				t.Errorf("countLockfileGems() = %d, want %d", result, tt.expected)
 			}
 		})
+	}
+}
+
+// -- gem_install.go: Decompose additional paths --
+
+func TestGemInstallAction_Decompose_MissingGem(t *testing.T) {
+	t.Parallel()
+	action := &GemInstallAction{}
+	ctx := &EvalContext{
+		Context: context.Background(),
+		Version: "1.0.0",
+	}
+	_, err := action.Decompose(ctx, map[string]any{})
+	if err == nil || !strings.Contains(err.Error(), "gem") {
+		t.Errorf("Expected gem error, got %v", err)
+	}
+}
+
+func TestGemInstallAction_Decompose_InvalidGemName(t *testing.T) {
+	t.Parallel()
+	action := &GemInstallAction{}
+	ctx := &EvalContext{
+		Context: context.Background(),
+		Version: "1.0.0",
+	}
+	_, err := action.Decompose(ctx, map[string]any{
+		"gem":         "!invalid",
+		"executables": []any{"tool"},
+	})
+	if err == nil || !strings.Contains(err.Error(), "invalid") {
+		t.Errorf("Expected invalid error, got %v", err)
+	}
+}
+
+func TestGemInstallAction_Decompose_MissingExecutables(t *testing.T) {
+	t.Parallel()
+	action := &GemInstallAction{}
+	ctx := &EvalContext{
+		Context: context.Background(),
+		Version: "1.0.0",
+	}
+	_, err := action.Decompose(ctx, map[string]any{
+		"gem": "rails",
+	})
+	if err == nil || !strings.Contains(err.Error(), "executables") {
+		t.Errorf("Expected executables error, got %v", err)
+	}
+}
+
+func TestGemInstallAction_Decompose_MissingVersion(t *testing.T) {
+	t.Parallel()
+	action := &GemInstallAction{}
+	ctx := &EvalContext{
+		Context: context.Background(),
+		Version: "",
+	}
+	_, err := action.Decompose(ctx, map[string]any{
+		"gem":         "rails",
+		"executables": []any{"rails"},
+	})
+	if err == nil || !strings.Contains(err.Error(), "version") {
+		t.Errorf("Expected version error, got %v", err)
+	}
+}
+
+func TestGemInstallAction_Decompose_InvalidVersion(t *testing.T) {
+	t.Parallel()
+	action := &GemInstallAction{}
+	ctx := &EvalContext{
+		Context: context.Background(),
+		Version: "invalid!",
+	}
+	_, err := action.Decompose(ctx, map[string]any{
+		"gem":         "rails",
+		"executables": []any{"rails"},
+	})
+	if err == nil || !strings.Contains(err.Error(), "version") {
+		t.Errorf("Expected version error, got %v", err)
+	}
+}
+
+// -- gem_install.go: Execute additional validation --
+
+func TestGemInstallAction_Execute_ControlCharInExecutable(t *testing.T) {
+	t.Parallel()
+	action := &GemInstallAction{}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: t.TempDir(),
+		Version: "1.0.0",
+		OS:      "linux",
+		Arch:    "amd64",
+		Recipe:  &recipe.Recipe{},
+	}
+	err := action.Execute(ctx, map[string]any{
+		"gem":         "rails",
+		"executables": []any{"evil\x00name"},
+	})
+	if err == nil || !strings.Contains(err.Error(), "control characters") {
+		t.Errorf("Expected control characters error, got %v", err)
+	}
+}
+
+func TestGemInstallAction_Execute_ShellMetacharInExecutable(t *testing.T) {
+	t.Parallel()
+	action := &GemInstallAction{}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: t.TempDir(),
+		Version: "1.0.0",
+		OS:      "linux",
+		Arch:    "amd64",
+		Recipe:  &recipe.Recipe{},
+	}
+	err := action.Execute(ctx, map[string]any{
+		"gem":         "rails",
+		"executables": []any{"evil$(cmd)"},
+	})
+	if err == nil || !strings.Contains(err.Error(), "shell metacharacters") {
+		t.Errorf("Expected shell metacharacters error, got %v", err)
+	}
+}
+
+func TestGemInstallAction_Execute_TooLongExecutableName(t *testing.T) {
+	t.Parallel()
+	action := &GemInstallAction{}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: t.TempDir(),
+		Version: "1.0.0",
+		OS:      "linux",
+		Arch:    "amd64",
+		Recipe:  &recipe.Recipe{},
+	}
+	err := action.Execute(ctx, map[string]any{
+		"gem":         "rails",
+		"executables": []any{strings.Repeat("a", 257)},
+	})
+	if err == nil || !strings.Contains(err.Error(), "length") {
+		t.Errorf("Expected length error, got %v", err)
+	}
+}
+
+// -- gem_install.go: Execute param validation --
+
+func TestGemInstallAction_Execute_MissingGem(t *testing.T) {
+	t.Parallel()
+	action := &GemInstallAction{}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: t.TempDir(),
+		Version: "1.0.0",
+		OS:      "linux",
+		Arch:    "amd64",
+		Recipe:  &recipe.Recipe{},
+	}
+	err := action.Execute(ctx, map[string]any{})
+	if err == nil {
+		t.Error("Expected error for missing gem param")
+	}
+}
+
+func TestGemInstallAction_Execute_InvalidGemName(t *testing.T) {
+	t.Parallel()
+	action := &GemInstallAction{}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: t.TempDir(),
+		Version: "1.0.0",
+		OS:      "linux",
+		Arch:    "amd64",
+		Recipe:  &recipe.Recipe{},
+	}
+	err := action.Execute(ctx, map[string]any{
+		"gem": "invalid gem name!",
+	})
+	if err == nil {
+		t.Error("Expected error for invalid gem name")
+	}
+}
+
+func TestGemInstallAction_Execute_InvalidVersion(t *testing.T) {
+	t.Parallel()
+	action := &GemInstallAction{}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: t.TempDir(),
+		Version: "invalid version!@#",
+		OS:      "linux",
+		Arch:    "amd64",
+		Recipe:  &recipe.Recipe{},
+	}
+	err := action.Execute(ctx, map[string]any{
+		"gem": "rails",
+	})
+	if err == nil {
+		t.Error("Expected error for invalid version")
+	}
+}
+
+func TestGemInstallAction_Execute_MissingExecutables(t *testing.T) {
+	t.Parallel()
+	action := &GemInstallAction{}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: t.TempDir(),
+		Version: "1.0.0",
+		OS:      "linux",
+		Arch:    "amd64",
+		Recipe:  &recipe.Recipe{},
+	}
+	err := action.Execute(ctx, map[string]any{
+		"gem": "rails",
+	})
+	if err == nil {
+		t.Error("Expected error for missing executables")
+	}
+}
+
+func TestGemInstallAction_Execute_InvalidExecutableName(t *testing.T) {
+	t.Parallel()
+	action := &GemInstallAction{}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: t.TempDir(),
+		Version: "1.0.0",
+		OS:      "linux",
+		Arch:    "amd64",
+		Recipe:  &recipe.Recipe{},
+	}
+	err := action.Execute(ctx, map[string]any{
+		"gem":         "rails",
+		"executables": []any{"../evil"},
+	})
+	if err == nil {
+		t.Error("Expected error for invalid executable name with path separator")
 	}
 }

@@ -221,3 +221,50 @@ func TestRunCommandAction_Execute_ContextCancellation(t *testing.T) {
 		t.Error("Execute() should fail when context is canceled")
 	}
 }
+
+// -- run_command.go: Preflight --
+
+func TestRunCommandAction_Preflight_Additional(t *testing.T) {
+	t.Parallel()
+	action := &RunCommandAction{}
+
+	t.Run("missing command", func(t *testing.T) {
+		result := action.Preflight(map[string]any{})
+		if len(result.Errors) == 0 {
+			t.Error("Expected error for missing command")
+		}
+	})
+
+	t.Run("valid", func(t *testing.T) {
+		result := action.Preflight(map[string]any{
+			"command": "echo hello",
+		})
+		if len(result.Errors) != 0 {
+			t.Errorf("Preflight() errors = %v", result.Errors)
+		}
+	})
+}
+
+// -- run_command.go: Preflight warnings --
+
+func TestRunCommandAction_Preflight_HardcodedPaths(t *testing.T) {
+	t.Parallel()
+	action := &RunCommandAction{}
+	result := action.Preflight(map[string]any{
+		"command": "ls ~/.tsuku/tools/something",
+	})
+	if len(result.Warnings) == 0 {
+		t.Error("Expected warning for hardcoded tsuku paths")
+	}
+}
+
+func TestRunCommandAction_Preflight_HomeEnvPaths(t *testing.T) {
+	t.Parallel()
+	action := &RunCommandAction{}
+	result := action.Preflight(map[string]any{
+		"command": "ls $HOME/.tsuku/bin/tool",
+	})
+	if len(result.Warnings) == 0 {
+		t.Error("Expected warning for $HOME/.tsuku paths")
+	}
+}

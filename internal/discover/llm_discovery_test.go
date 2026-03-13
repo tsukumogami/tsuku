@@ -1,9 +1,11 @@
 package discover
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 	"testing"
 	"time"
@@ -997,5 +999,128 @@ func TestMultipleCandidates_EndToEnd(t *testing.T) {
 	}
 	if best.Metadata.IsFork {
 		t.Error("expected non-fork to be selected")
+	}
+}
+
+func TestLLMDiscoveryOptions(t *testing.T) {
+	d := &LLMDiscovery{}
+
+	// Test WithConfirmFunc
+	fn := func(result *DiscoveryResult) bool { return true }
+	opt := WithConfirmFunc(fn)
+	opt(d)
+	if d.confirm == nil {
+		t.Error("WithConfirmFunc should set confirm")
+	}
+
+	// Test WithHTTPGet
+	httpFn := func(ctx context.Context, url string) ([]byte, error) { return nil, nil }
+	opt2 := WithHTTPGet(httpFn)
+	opt2(d)
+	if d.httpGet == nil {
+		t.Error("WithHTTPGet should set httpGet")
+	}
+
+	// Test WithConfig
+	opt3 := WithConfig(nil)
+	opt3(d) // Should not panic
+
+	// Test WithStateTracker
+	opt4 := WithStateTracker(nil)
+	opt4(d) // Should not panic
+}
+
+func TestDefaultConfirm(t *testing.T) {
+	result := &DiscoveryResult{Builder: "github", Source: "owner/repo"}
+	if !defaultConfirm(result) {
+		t.Error("defaultConfirm should return true")
+	}
+}
+
+func TestDiscoverySystemPrompt(t *testing.T) {
+	prompt := discoverySystemPrompt("stripe-cli")
+	if !bytes.Contains([]byte(prompt), []byte("stripe-cli")) {
+		t.Error("expected prompt to contain tool name")
+	}
+	if !bytes.Contains([]byte(prompt), []byte("GitHub")) {
+		t.Error("expected prompt to mention GitHub")
+	}
+}
+
+func TestIsRateLimitResponse(t *testing.T) {
+	t.Run("rate limited", func(t *testing.T) {
+		resp := &http.Response{
+			Header: http.Header{"X-Ratelimit-Remaining": []string{"0"}},
+		}
+		if !isRateLimitResponse(resp) {
+			t.Error("expected rate limited")
+		}
+	})
+
+	t.Run("not rate limited", func(t *testing.T) {
+		resp := &http.Response{
+			Header: http.Header{"X-Ratelimit-Remaining": []string{"100"}},
+		}
+		if isRateLimitResponse(resp) {
+			t.Error("expected not rate limited")
+		}
+	})
+
+	t.Run("no header", func(t *testing.T) {
+		resp := &http.Response{
+			Header: http.Header{},
+		}
+		if isRateLimitResponse(resp) {
+			t.Error("expected not rate limited without header")
+		}
+	})
+}
+
+func TestParseRateLimitError(t *testing.T) {
+	t.Run("with reset time", func(t *testing.T) {
+		resetTime := time.Now().Add(10 * time.Minute).Unix()
+		resp := &http.Response{
+			Header: http.Header{
+				"X-Ratelimit-Reset": []string{fmt.Sprintf("%d", resetTime)},
+			},
+		}
+		err := parseRateLimitError(resp, true)
+		if !err.Authenticated {
+			t.Error("expected authenticated")
+		}
+		if err.ResetTime.IsZero() {
+			t.Error("expected non-zero reset time")
+		}
+	})
+
+	t.Run("without reset time", func(t *testing.T) {
+		resp := &http.Response{
+			Header: http.Header{},
+		}
+		err := parseRateLimitError(resp, false)
+		if err.Authenticated {
+			t.Error("expected unauthenticated")
+		}
+		if !err.ResetTime.IsZero() {
+			t.Error("expected zero reset time")
+		}
+	})
+}
+
+func TestWithSearchProvider(t *testing.T) {
+	d := &LLMDiscovery{}
+	opt := WithSearchProvider(nil)
+	opt(d)
+	if d.search != nil {
+		t.Error("expected nil search provider")
+	}
+}
+
+func TestWithLLMFactoryOptions(t *testing.T) {
+	d := &LLMDiscovery{}
+	opt := WithLLMFactoryOptions()
+	opt(d)
+	if d.llmFactoryOptions != nil {
+		t.Error("expected nil factory options for empty args")
 	}
 }

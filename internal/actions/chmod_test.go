@@ -173,3 +173,50 @@ func TestChmodAction_Execute_VariableExpansion(t *testing.T) {
 		t.Errorf("file mode = %o, want 0755", info.Mode().Perm())
 	}
 }
+
+// -- chmod.go: Preflight --
+
+func TestChmodAction_Preflight_MissingFiles(t *testing.T) {
+	t.Parallel()
+	action := &ChmodAction{}
+	result := action.Preflight(map[string]any{})
+	if len(result.Errors) == 0 {
+		t.Error("Expected error for missing files param")
+	}
+}
+
+func TestChmodAction_Preflight_Valid(t *testing.T) {
+	t.Parallel()
+	action := &ChmodAction{}
+	result := action.Preflight(map[string]any{
+		"files": []any{"bin/tool"},
+	})
+	if len(result.Errors) != 0 {
+		t.Errorf("Preflight() errors = %v", result.Errors)
+	}
+}
+
+// -- chmod.go: Preflight warnings --
+
+func TestChmodAction_Preflight_EmptyFiles(t *testing.T) {
+	t.Parallel()
+	action := &ChmodAction{}
+	result := action.Preflight(map[string]any{
+		"files": []any{},
+	})
+	if len(result.Errors) == 0 {
+		t.Error("Expected error for empty files array")
+	}
+}
+
+func TestChmodAction_Preflight_WorldWritable(t *testing.T) {
+	t.Parallel()
+	action := &ChmodAction{}
+	result := action.Preflight(map[string]any{
+		"files": []any{"bin/tool"},
+		"mode":  "0777",
+	})
+	if len(result.Warnings) == 0 {
+		t.Error("Expected warning for world-writable mode")
+	}
+}

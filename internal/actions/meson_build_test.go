@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/tsukumogami/tsuku/internal/recipe"
 )
 
 func TestMesonBuildAction_Name(t *testing.T) {
@@ -333,5 +335,115 @@ func TestIsValidBuildtype(t *testing.T) {
 		if isValidBuildtype(buildtype) {
 			t.Errorf("isValidBuildtype(%q) = true, want false", buildtype)
 		}
+	}
+}
+
+// -- meson_build.go: Execute missing meson.build --
+
+func TestMesonBuildAction_Execute_MissingMesonBuild(t *testing.T) {
+	t.Parallel()
+	action := &MesonBuildAction{}
+	tmpDir := t.TempDir()
+	ctx := &ExecutionContext{
+		Context:    context.Background(),
+		WorkDir:    tmpDir,
+		InstallDir: t.TempDir(),
+		Version:    "1.0.0",
+		OS:         "linux",
+		Arch:       "amd64",
+		Recipe:     &recipe.Recipe{},
+	}
+	err := action.Execute(ctx, map[string]any{
+		"source_dir":  tmpDir,
+		"executables": []any{"tool"},
+	})
+	if err == nil {
+		t.Error("Expected error for missing meson.build")
+	}
+}
+
+// -- meson_build.go: findLibraryDirectories, buildRpathFromLibDirs --
+
+func TestFindLibraryDirectories(t *testing.T) {
+	t.Parallel()
+	tmpDir := t.TempDir()
+
+	// Create directory structure with .so and .dylib files
+	libDir := filepath.Join(tmpDir, "lib")
+	subDir := filepath.Join(libDir, "pkgconfig")
+	if err := os.MkdirAll(subDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create a .so file in lib/
+	if err := os.WriteFile(filepath.Join(libDir, "libfoo.so"), []byte("lib"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	// Create a .dylib in lib/
+	if err := os.WriteFile(filepath.Join(libDir, "libbar.dylib"), []byte("lib"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	// Create non-library file
+	if err := os.WriteFile(filepath.Join(libDir, "libfoo.a"), []byte("lib"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	dirs := findLibraryDirectories(tmpDir)
+	if len(dirs) == 0 {
+		t.Error("findLibraryDirectories() returned empty")
+	}
+	// Should contain the lib dir (only once, despite two library files)
+	found := false
+	for _, d := range dirs {
+		if d == libDir {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Errorf("findLibraryDirectories() = %v, expected to contain %s", dirs, libDir)
+	}
+}
+
+func TestFindLibraryDirectories_Empty(t *testing.T) {
+	t.Parallel()
+	tmpDir := t.TempDir()
+	dirs := findLibraryDirectories(tmpDir)
+	if len(dirs) != 0 {
+		t.Errorf("findLibraryDirectories() on empty dir = %v, want empty", dirs)
+	}
+}
+
+func TestBuildRpathFromLibDirs(t *testing.T) {
+	t.Parallel()
+	installDir := "/home/user/.tsuku/tools/mylib-1.0"
+
+	t.Run("single lib dir", func(t *testing.T) {
+		libPaths := []string{filepath.Join(installDir, "lib")}
+		rpath := buildRpathFromLibDirs(libPaths, installDir)
+		if !strings.HasPrefix(rpath, "$ORIGIN/") {
+			t.Errorf("buildRpathFromLibDirs() = %q, want $ORIGIN/ prefix", rpath)
+		}
+		if !strings.Contains(rpath, "../lib") {
+			t.Errorf("buildRpathFromLibDirs() = %q, want to contain ../lib", rpath)
+		}
+	})
+
+	t.Run("empty", func(t *testing.T) {
+		rpath := buildRpathFromLibDirs(nil, installDir)
+		if rpath != "" {
+			t.Errorf("buildRpathFromLibDirs(nil) = %q, want empty", rpath)
+		}
+	})
+}
+
+// -- meson_build.go: MesonBuildAction Dependencies --
+
+func TestMesonBuildAction_Dependencies(t *testing.T) {
+	t.Parallel()
+	action := MesonBuildAction{}
+	deps := action.Dependencies()
+	if len(deps.InstallTime) == 0 {
+		t.Error("Dependencies().InstallTime is empty")
 	}
 }
