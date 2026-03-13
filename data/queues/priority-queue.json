@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-13T05:53:55Z",
+  "updated_at": "2026-03-13T07:49:34Z",
   "entries": [
     {
       "name": "node",
@@ -636,11 +636,11 @@
       "name": "numpy",
       "source": "crates.io:numpy",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 7,
-      "next_retry_at": "2026-03-13T05:02:46.926890774Z"
+      "failure_count": 8,
+      "next_retry_at": "2026-03-18T15:49:34.214108584Z"
     },
     {
       "name": "p11-kit",
@@ -2886,7 +2886,7 @@
       "name": "ascii",
       "source": "crates.io:ascii",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 7,
@@ -4836,11 +4836,11 @@
       "name": "bettercap",
       "source": "rubygems:bettercap",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 7,
-      "next_retry_at": "2026-03-13T05:02:46.926890774Z"
+      "failure_count": 8,
+      "next_retry_at": "2026-03-18T15:49:34.214108584Z"
     },
     {
       "name": "bfg",
@@ -18186,7 +18186,7 @@
       "name": "got",
       "source": "npm:got",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 6,
@@ -24896,11 +24896,11 @@
       "name": "lcm",
       "source": "npm:lcm",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 5,
-      "next_retry_at": "2026-03-13T05:02:46.631277226Z"
+      "failure_count": 6,
+      "next_retry_at": "2026-03-14T15:49:34.214108584Z"
     },
     {
       "name": "lcov",
@@ -28556,7 +28556,7 @@
       "name": "mailhog",
       "source": "npm:mailhog",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 5,
@@ -39116,7 +39116,7 @@
       "name": "q",
       "source": "npm:q",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 3,
