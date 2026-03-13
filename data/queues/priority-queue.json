@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-13T20:38:13Z",
+  "updated_at": "2026-03-13T22:31:31Z",
   "entries": [
     {
       "name": "node",
@@ -4446,11 +4446,11 @@
       "name": "basis_universal",
       "source": "crates.io:basis_universal",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 7,
-      "next_retry_at": "2026-03-13T20:20:13.581550514Z"
+      "failure_count": 8,
+      "next_retry_at": "2026-03-19T06:31:31.215983728Z"
     },
     {
       "name": "bastet",
@@ -5896,11 +5896,11 @@
       "name": "bup",
       "source": "rubygems:bup",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 7,
-      "next_retry_at": "2026-03-13T20:20:13.581550514Z"
+      "failure_count": 8,
+      "next_retry_at": "2026-03-19T06:31:31.215983728Z"
     },
     {
       "name": "burp",
@@ -6606,7 +6606,7 @@
       "name": "cassandra",
       "source": "rubygems:cassandra",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 7,
@@ -23566,11 +23566,11 @@
       "name": "kew",
       "source": "npm:kew",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 6,
-      "next_retry_at": "2026-03-13T19:37:21.761380275Z"
+      "failure_count": 7,
+      "next_retry_at": "2026-03-16T14:31:31.215983728Z"
     },
     {
       "name": "keychain",
@@ -30826,7 +30826,7 @@
       "name": "mongoose",
       "source": "npm:mongoose",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 5,
@@ -50306,11 +50306,11 @@
       "name": "vllm",
       "source": "pypi:vllm",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 7,
-      "next_retry_at": "2026-03-13T20:20:13.581550514Z"
+      "failure_count": 8,
+      "next_retry_at": "2026-03-19T06:31:31.215983728Z"
     },
     {
       "name": "vmware-tanzu/carvel/vendir",
