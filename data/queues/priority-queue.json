@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-13T18:44:38Z",
+  "updated_at": "2026-03-13T20:38:13Z",
   "entries": [
     {
       "name": "node",
@@ -4446,7 +4446,7 @@
       "name": "basis_universal",
       "source": "crates.io:basis_universal",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 7,
@@ -5826,11 +5826,11 @@
       "name": "bullet",
       "source": "rubygems:bullet",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 7,
-      "next_retry_at": "2026-03-13T17:57:08.185852466Z"
+      "failure_count": 8,
+      "next_retry_at": "2026-03-19T04:38:13.873271891Z"
     },
     {
       "name": "bulletty",
@@ -5896,7 +5896,7 @@
       "name": "bup",
       "source": "rubygems:bup",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 7,
@@ -9116,11 +9116,11 @@
       "name": "countdown",
       "source": "npm:countdown",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 7,
-      "next_retry_at": "2026-03-13T17:57:08.185852466Z"
+      "failure_count": 8,
+      "next_retry_at": "2026-03-19T04:38:13.873271891Z"
     },
     {
       "name": "coursier",
@@ -23566,7 +23566,7 @@
       "name": "kew",
       "source": "npm:kew",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 6,
@@ -46686,11 +46686,11 @@
       "name": "tctl",
       "source": "pypi:tctl",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 7,
-      "next_retry_at": "2026-03-13T17:57:08.185852466Z"
+      "failure_count": 8,
+      "next_retry_at": "2026-03-19T04:38:13.873271891Z"
     },
     {
       "name": "tdlib",
@@ -50306,7 +50306,7 @@
       "name": "vllm",
       "source": "pypi:vllm",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 7,
