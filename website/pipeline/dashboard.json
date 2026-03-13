@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-13T18:44:02Z",
+  "generated_at": "2026-03-13T18:45:22Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 44,
-      "pending": 3889,
+      "failed": 43,
+      "pending": 3890,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 44,
-        "pending": 3866,
+        "failed": 43,
+        "pending": 3867,
         "success": 1326
       }
     },
@@ -74,7 +74,8 @@
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
@@ -516,15 +517,6 @@
           "next_retry_at": "2026-03-18T15:49:34Z"
         },
         {
-          "id": "rubygems:bullet",
-          "name": "bullet",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-03-13T17:57:08Z"
-        },
-        {
           "id": "rubygems:bup",
           "name": "bup",
           "ecosystem": "rubygems",
@@ -586,15 +578,6 @@
           "category": "install_failed",
           "failure_count": 7,
           "next_retry_at": "2026-03-14T14:36:11Z"
-        },
-        {
-          "id": "npm:countdown",
-          "name": "countdown",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-03-13T17:57:08Z"
         },
         {
           "id": "rubygems:cowsay",
@@ -768,6 +751,15 @@
           "next_retry_at": "2026-03-14T09:40:58Z"
         },
         {
+          "id": "rubygems:htmldoc",
+          "name": "htmldoc",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-14T10:44:38Z"
+        },
+        {
           "id": "npm:kew",
           "name": "kew",
           "ecosystem": "npm",
@@ -840,13 +832,13 @@
           "next_retry_at": "2026-03-14T09:40:58Z"
         },
         {
-          "id": "pypi:tctl",
-          "name": "tctl",
-          "ecosystem": "pypi",
+          "id": "npm:protoc-gen-js",
+          "name": "protoc-gen-js",
+          "ecosystem": "npm",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-03-13T17:57:08Z"
+          "failure_count": 4,
+          "next_retry_at": "2026-03-14T02:44:38Z"
         },
         {
           "id": "pypi:vllm",
@@ -3720,6 +3712,15 @@
           "failure_count": 1
         },
         {
+          "id": "rubygems:bullet",
+          "name": "bullet",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-13T17:57:08Z"
+        },
+        {
           "id": "homebrew:bulletty",
           "name": "bulletty",
           "ecosystem": "homebrew",
@@ -5274,6 +5275,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "npm:countdown",
+          "name": "countdown",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-13T17:57:08Z"
         },
         {
           "id": "homebrew:coursier",
@@ -10958,15 +10968,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "rubygems:htmldoc",
-          "name": "htmldoc",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-12T17:47:18Z"
         },
         {
           "id": "homebrew:htmlhint",
@@ -20020,15 +20021,6 @@
           "failure_count": 0
         },
         {
-          "id": "npm:protoc-gen-js",
-          "name": "protoc-gen-js",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-13T01:37:00Z"
-        },
-        {
           "id": "homebrew:protonpass/tap/pass-cli",
           "name": "protonpass/tap/pass-cli",
           "ecosystem": "homebrew",
@@ -24952,6 +24944,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "pypi:tctl",
+          "name": "tctl",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-13T17:57:08Z"
         },
         {
           "id": "homebrew:tdlib",
