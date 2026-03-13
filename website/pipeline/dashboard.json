@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-13T15:46:42Z",
+  "generated_at": "2026-03-13T15:47:48Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 40,
-      "pending": 3893,
+      "failed": 42,
+      "pending": 3891,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 40,
-        "pending": 3870,
+        "failed": 42,
+        "pending": 3868,
         "success": 1326
       }
     },
@@ -68,8 +68,8 @@
         "total": 1
       },
       "npm": {
-        "failed": 14,
-        "pending": 7,
+        "failed": 15,
+        "pending": 6,
         "success": 54,
         "total": 75
       },
@@ -80,8 +80,8 @@
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 20,
-        "pending": 59,
+        "failed": 21,
+        "pending": 58,
         "success": 9,
         "total": 89
       }
@@ -732,6 +732,15 @@
           "next_retry_at": "2026-03-16T01:42:40Z"
         },
         {
+          "id": "rubygems:gsl",
+          "name": "gsl",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-14T23:47:02Z"
+        },
+        {
           "id": "rubygems:haproxy",
           "name": "haproxy",
           "ecosystem": "rubygems",
@@ -739,6 +748,15 @@
           "category": "install_failed",
           "failure_count": 5,
           "next_retry_at": "2026-03-14T03:36:55Z"
+        },
+        {
+          "id": "npm:hasura-cli",
+          "name": "hasura-cli",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-16T07:47:02Z"
         },
         {
           "id": "npm:kew",
@@ -10126,15 +10144,6 @@
           "failure_count": 1
         },
         {
-          "id": "rubygems:gsl",
-          "name": "gsl",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-13T13:37:00Z"
-        },
-        {
           "id": "homebrew:gspell",
           "name": "gspell",
           "ecosystem": "homebrew",
@@ -10574,15 +10583,6 @@
           "ecosystem": "crates.io",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "npm:hasura-cli",
-          "name": "hasura-cli",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-13T13:57:16Z"
         },
         {
           "id": "homebrew:hatch",
