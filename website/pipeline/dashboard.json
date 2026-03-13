@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-13T12:59:58Z",
+  "generated_at": "2026-03-13T13:01:15Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -552,6 +552,15 @@
           "next_retry_at": "2026-03-14T01:47:32Z"
         },
         {
+          "id": "npm:chainsaw",
+          "name": "chainsaw",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 8,
+          "next_retry_at": "2026-03-18T21:00:32Z"
+        },
+        {
           "id": "rubygems:chisel",
           "name": "chisel",
           "ecosystem": "rubygems",
@@ -696,13 +705,13 @@
           "next_retry_at": "2026-03-14T17:42:40Z"
         },
         {
-          "id": "rubygems:glassfish",
-          "name": "glassfish",
+          "id": "rubygems:gitingest",
+          "name": "gitingest",
           "ecosystem": "rubygems",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-13T11:47:40Z"
+          "failure_count": 6,
+          "next_retry_at": "2026-03-14T21:00:32Z"
         },
         {
           "id": "npm:got",
@@ -793,15 +802,6 @@
           "category": "install_failed",
           "failure_count": 8,
           "next_retry_at": "2026-03-18T15:49:34Z"
-        },
-        {
-          "id": "npm:pocketbase",
-          "name": "pocketbase",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-13T12:18:24Z"
         },
         {
           "id": "pypi:tctl",
@@ -4167,15 +4167,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:chainsaw",
-          "name": "chainsaw",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-03-13T10:51:04Z"
         },
         {
           "id": "homebrew:changie",
@@ -9288,15 +9279,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:gitingest",
-          "name": "gitingest",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-13T10:02:35Z"
-        },
-        {
           "id": "homebrew:gitlab-ci-local",
           "name": "gitlab-ci-local",
           "ecosystem": "homebrew",
@@ -9379,6 +9361,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:glassfish",
+          "name": "glassfish",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-13T11:47:40Z"
         },
         {
           "id": "homebrew:glaze",
@@ -19535,6 +19526,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "npm:pocketbase",
+          "name": "pocketbase",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-13T12:18:24Z"
         },
         {
           "id": "homebrew:poco",
