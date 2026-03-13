@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-13T04:17:49Z",
+  "generated_at": "2026-03-13T04:19:05Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 39,
-      "pending": 3894,
+      "failed": 40,
+      "pending": 3893,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 39,
-        "pending": 3871,
+        "failed": 40,
+        "pending": 3870,
         "success": 1326
       }
     },
@@ -80,8 +80,8 @@
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 17,
-        "pending": 62,
+        "failed": 18,
+        "pending": 61,
         "success": 9,
         "total": 89
       }
@@ -651,6 +651,15 @@
           "next_retry_at": "2026-03-14T21:57:16Z"
         },
         {
+          "id": "rubygems:dug",
+          "name": "dug",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-14T12:18:24Z"
+        },
+        {
           "id": "npm:e2b",
           "name": "e2b",
           "ecosystem": "npm",
@@ -768,15 +777,6 @@
           "next_retry_at": "2026-03-13T08:05:27Z"
         },
         {
-          "id": "npm:mongoose",
-          "name": "mongoose",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-13T02:02:35Z"
-        },
-        {
           "id": "crates.io:numpy",
           "name": "numpy",
           "ecosystem": "crates.io",
@@ -784,6 +784,15 @@
           "category": "install_failed",
           "failure_count": 7,
           "next_retry_at": "2026-03-13T05:02:46Z"
+        },
+        {
+          "id": "npm:pocketbase",
+          "name": "pocketbase",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-13T12:18:24Z"
         },
         {
           "id": "npm:q",
@@ -6755,15 +6764,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "rubygems:dug",
-          "name": "dug",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-12T21:57:16Z"
         },
         {
           "id": "homebrew:dumbpipe",
@@ -16052,6 +16052,15 @@
           "failure_count": 1
         },
         {
+          "id": "npm:mongoose",
+          "name": "mongoose",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-13T02:02:35Z"
+        },
+        {
           "id": "homebrew:mongosh",
           "name": "mongosh",
           "ecosystem": "homebrew",
@@ -19535,15 +19544,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "npm:pocketbase",
-          "name": "pocketbase",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-12T23:47:40Z"
         },
         {
           "id": "homebrew:poco",
