@@ -174,49 +174,51 @@ func TestChmodAction_Execute_VariableExpansion(t *testing.T) {
 	}
 }
 
-// -- chmod.go: Preflight --
-
-func TestChmodAction_Preflight_MissingFiles(t *testing.T) {
+// TestChmodAction_Preflight_Cases tests Preflight validation and warnings
+func TestChmodAction_Preflight_Cases(t *testing.T) {
 	t.Parallel()
-	action := &ChmodAction{}
-	result := action.Preflight(map[string]any{})
-	if len(result.Errors) == 0 {
-		t.Error("Expected error for missing files param")
+	tests := []struct {
+		name         string
+		params       map[string]any
+		wantErrors   bool
+		wantWarnings bool
+	}{
+		{
+			name:       "missing files",
+			params:     map[string]any{},
+			wantErrors: true,
+		},
+		{
+			name:       "valid",
+			params:     map[string]any{"files": []any{"bin/tool"}},
+			wantErrors: false,
+		},
+		{
+			name:       "empty files",
+			params:     map[string]any{"files": []any{}},
+			wantErrors: true,
+		},
+		{
+			name:         "world writable",
+			params:       map[string]any{"files": []any{"bin/tool"}, "mode": "0777"},
+			wantWarnings: true,
+		},
 	}
-}
 
-func TestChmodAction_Preflight_Valid(t *testing.T) {
-	t.Parallel()
-	action := &ChmodAction{}
-	result := action.Preflight(map[string]any{
-		"files": []any{"bin/tool"},
-	})
-	if len(result.Errors) != 0 {
-		t.Errorf("Preflight() errors = %v", result.Errors)
-	}
-}
-
-// -- chmod.go: Preflight warnings --
-
-func TestChmodAction_Preflight_EmptyFiles(t *testing.T) {
-	t.Parallel()
-	action := &ChmodAction{}
-	result := action.Preflight(map[string]any{
-		"files": []any{},
-	})
-	if len(result.Errors) == 0 {
-		t.Error("Expected error for empty files array")
-	}
-}
-
-func TestChmodAction_Preflight_WorldWritable(t *testing.T) {
-	t.Parallel()
-	action := &ChmodAction{}
-	result := action.Preflight(map[string]any{
-		"files": []any{"bin/tool"},
-		"mode":  "0777",
-	})
-	if len(result.Warnings) == 0 {
-		t.Error("Expected warning for world-writable mode")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			action := &ChmodAction{}
+			result := action.Preflight(tt.params)
+			if tt.wantErrors && len(result.Errors) == 0 {
+				t.Error("Expected errors but got none")
+			}
+			if !tt.wantErrors && len(result.Errors) != 0 {
+				t.Errorf("Expected no errors, got: %v", result.Errors)
+			}
+			if tt.wantWarnings && len(result.Warnings) == 0 {
+				t.Error("Expected warnings but got none")
+			}
+		})
 	}
 }

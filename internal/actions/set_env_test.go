@@ -136,76 +136,50 @@ func TestSetEnvAction_parseVars_InvalidFormat(t *testing.T) {
 	}
 }
 
-// -- set_env.go: parseVars additional error paths --
-
-func TestSetEnvAction_ParseVars_MissingName(t *testing.T) {
+// TestSetEnvAction_ParseVars_Errors tests parseVars error paths via Execute
+func TestSetEnvAction_ParseVars_Errors(t *testing.T) {
 	t.Parallel()
-	action := &SetEnvAction{}
-	ctx := &ExecutionContext{
-		Context:    context.Background(),
-		WorkDir:    t.TempDir(),
-		InstallDir: t.TempDir(),
-		Version:    "1.0.0",
-	}
-	err := action.Execute(ctx, map[string]any{
-		"vars": []any{
-			map[string]any{"value": "bar"},
+	tests := []struct {
+		name        string
+		vars        any
+		errContains string
+	}{
+		{
+			name:        "missing name",
+			vars:        []any{map[string]any{"value": "bar"}},
+			errContains: "name",
 		},
-	})
-	if err == nil || !strings.Contains(err.Error(), "name") {
-		t.Errorf("Expected name error, got %v", err)
-	}
-}
-
-func TestSetEnvAction_ParseVars_MissingValue(t *testing.T) {
-	t.Parallel()
-	action := &SetEnvAction{}
-	ctx := &ExecutionContext{
-		Context:    context.Background(),
-		WorkDir:    t.TempDir(),
-		InstallDir: t.TempDir(),
-		Version:    "1.0.0",
-	}
-	err := action.Execute(ctx, map[string]any{
-		"vars": []any{
-			map[string]any{"name": "FOO"},
+		{
+			name:        "missing value",
+			vars:        []any{map[string]any{"name": "FOO"}},
+			errContains: "value",
 		},
-	})
-	if err == nil || !strings.Contains(err.Error(), "value") {
-		t.Errorf("Expected value error, got %v", err)
+		{
+			name:        "non-array",
+			vars:        "not an array",
+			errContains: "array",
+		},
+		{
+			name:        "non-map entry",
+			vars:        []any{"not a map"},
+			errContains: "map",
+		},
 	}
-}
 
-func TestSetEnvAction_ParseVars_NonArray(t *testing.T) {
-	t.Parallel()
-	action := &SetEnvAction{}
-	ctx := &ExecutionContext{
-		Context:    context.Background(),
-		WorkDir:    t.TempDir(),
-		InstallDir: t.TempDir(),
-		Version:    "1.0.0",
-	}
-	err := action.Execute(ctx, map[string]any{
-		"vars": "not an array",
-	})
-	if err == nil || !strings.Contains(err.Error(), "array") {
-		t.Errorf("Expected array error, got %v", err)
-	}
-}
-
-func TestSetEnvAction_ParseVars_NonMapEntry(t *testing.T) {
-	t.Parallel()
-	action := &SetEnvAction{}
-	ctx := &ExecutionContext{
-		Context:    context.Background(),
-		WorkDir:    t.TempDir(),
-		InstallDir: t.TempDir(),
-		Version:    "1.0.0",
-	}
-	err := action.Execute(ctx, map[string]any{
-		"vars": []any{"not a map"},
-	})
-	if err == nil || !strings.Contains(err.Error(), "map") {
-		t.Errorf("Expected map error, got %v", err)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			action := &SetEnvAction{}
+			ctx := &ExecutionContext{
+				Context:    context.Background(),
+				WorkDir:    t.TempDir(),
+				InstallDir: t.TempDir(),
+				Version:    "1.0.0",
+			}
+			err := action.Execute(ctx, map[string]any{"vars": tt.vars})
+			if err == nil || !strings.Contains(err.Error(), tt.errContains) {
+				t.Errorf("Expected error containing %q, got %v", tt.errContains, err)
+			}
+		})
 	}
 }

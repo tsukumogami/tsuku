@@ -10,61 +10,48 @@ import (
 	"github.com/tsukumogami/tsuku/internal/recipe"
 )
 
-// -- download_file.go: Execute early validation --
-
-func TestDownloadFileAction_Execute_MissingURL(t *testing.T) {
+// TestDownloadFileAction_Execute_ValidationErrors tests that Execute rejects invalid parameters
+func TestDownloadFileAction_Execute_ValidationErrors(t *testing.T) {
 	t.Parallel()
-	action := &DownloadFileAction{}
-	ctx := &ExecutionContext{
-		Context: context.Background(),
-		WorkDir: t.TempDir(),
-		Version: "1.0.0",
-		OS:      "linux",
-		Arch:    "amd64",
-		Recipe:  &recipe.Recipe{},
+	tests := []struct {
+		name        string
+		params      map[string]any
+		errContains string
+	}{
+		{
+			name:        "missing url",
+			params:      map[string]any{},
+			errContains: "url",
+		},
+		{
+			name:        "missing checksum",
+			params:      map[string]any{"url": "https://example.com/tool.bin"},
+			errContains: "checksum",
+		},
+		{
+			name:        "empty checksum",
+			params:      map[string]any{"url": "https://example.com/tool.bin", "checksum": ""},
+			errContains: "checksum",
+		},
 	}
-	err := action.Execute(ctx, map[string]any{})
-	if err == nil || !strings.Contains(err.Error(), "url") {
-		t.Errorf("Expected url error, got %v", err)
-	}
-}
 
-func TestDownloadFileAction_Execute_MissingChecksum(t *testing.T) {
-	t.Parallel()
-	action := &DownloadFileAction{}
-	ctx := &ExecutionContext{
-		Context: context.Background(),
-		WorkDir: t.TempDir(),
-		Version: "1.0.0",
-		OS:      "linux",
-		Arch:    "amd64",
-		Recipe:  &recipe.Recipe{},
-	}
-	err := action.Execute(ctx, map[string]any{
-		"url": "https://example.com/tool.bin",
-	})
-	if err == nil || !strings.Contains(err.Error(), "checksum") {
-		t.Errorf("Expected checksum error, got %v", err)
-	}
-}
-
-func TestDownloadFileAction_Execute_EmptyChecksum(t *testing.T) {
-	t.Parallel()
-	action := &DownloadFileAction{}
-	ctx := &ExecutionContext{
-		Context: context.Background(),
-		WorkDir: t.TempDir(),
-		Version: "1.0.0",
-		OS:      "linux",
-		Arch:    "amd64",
-		Recipe:  &recipe.Recipe{},
-	}
-	err := action.Execute(ctx, map[string]any{
-		"url":      "https://example.com/tool.bin",
-		"checksum": "",
-	})
-	if err == nil || !strings.Contains(err.Error(), "checksum") {
-		t.Errorf("Expected checksum error, got %v", err)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			action := &DownloadFileAction{}
+			ctx := &ExecutionContext{
+				Context: context.Background(),
+				WorkDir: t.TempDir(),
+				Version: "1.0.0",
+				OS:      "linux",
+				Arch:    "amd64",
+				Recipe:  &recipe.Recipe{},
+			}
+			err := action.Execute(ctx, tt.params)
+			if err == nil || !strings.Contains(err.Error(), tt.errContains) {
+				t.Errorf("Expected error containing %q, got %v", tt.errContains, err)
+			}
+		})
 	}
 }
 

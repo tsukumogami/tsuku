@@ -4,7 +4,6 @@ import (
 	"context"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 
 	"github.com/tsukumogami/tsuku/internal/recipe"
@@ -127,144 +126,72 @@ func containsSubstr(s, substr string) bool {
 	return false
 }
 
-// TestCargoInstallAction_Execute_MissingCrate tests that Execute fails without crate parameter
-func TestCargoInstallAction_Execute_MissingCrate(t *testing.T) {
-	action := &CargoInstallAction{}
-	ctx := &ExecutionContext{
-		Context:    context.Background(),
-		InstallDir: t.TempDir(),
-		Version:    "1.0.0",
-		WorkDir:    t.TempDir(),
+// TestCargoInstallAction_Execute_ValidationErrors tests that Execute rejects invalid parameters
+func TestCargoInstallAction_Execute_ValidationErrors(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name        string
+		version     string
+		params      map[string]interface{}
+		errContains string
+	}{
+		{
+			name:        "missing crate",
+			version:     "1.0.0",
+			params:      map[string]interface{}{"executables": []interface{}{"test-exe"}},
+			errContains: "crate",
+		},
+		{
+			name:        "missing executables",
+			version:     "1.0.0",
+			params:      map[string]interface{}{"crate": "cargo-audit"},
+			errContains: "executables",
+		},
+		{
+			name:        "empty executables",
+			version:     "1.0.0",
+			params:      map[string]interface{}{"crate": "cargo-audit", "executables": []interface{}{}},
+			errContains: "executables",
+		},
+		{
+			name:        "invalid crate name",
+			version:     "1.0.0",
+			params:      map[string]interface{}{"crate": "cargo;rm -rf /", "executables": []interface{}{"cargo"}},
+			errContains: "invalid crate name",
+		},
+		{
+			name:        "invalid version",
+			version:     "1.0.0;rm -rf /",
+			params:      map[string]interface{}{"crate": "cargo-audit", "executables": []interface{}{"cargo-audit"}},
+			errContains: "invalid version",
+		},
+		{
+			name:        "invalid executable name",
+			version:     "1.0.0",
+			params:      map[string]interface{}{"crate": "cargo-audit", "executables": []interface{}{"../../../etc/passwd"}},
+			errContains: "invalid executable name",
+		},
 	}
 
-	params := map[string]interface{}{
-		// Missing "crate" parameter
-		"executables": []interface{}{"test-exe"},
-	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			action := &CargoInstallAction{}
+			ctx := &ExecutionContext{
+				Context:    context.Background(),
+				InstallDir: t.TempDir(),
+				Version:    tt.version,
+				WorkDir:    t.TempDir(),
+			}
 
-	err := action.Execute(ctx, params)
-	if err == nil {
-		t.Error("Execute() should fail when 'crate' parameter is missing")
-	}
-	if err != nil && !containsSubstr(err.Error(), "crate") {
-		t.Errorf("Error message should mention 'crate', got: %v", err)
-	}
-}
-
-// TestCargoInstallAction_Execute_MissingExecutables tests that Execute fails without executables
-func TestCargoInstallAction_Execute_MissingExecutables(t *testing.T) {
-	action := &CargoInstallAction{}
-	ctx := &ExecutionContext{
-		Context:    context.Background(),
-		InstallDir: t.TempDir(),
-		Version:    "1.0.0",
-		WorkDir:    t.TempDir(),
-	}
-
-	params := map[string]interface{}{
-		"crate": "cargo-audit",
-		// Missing "executables" parameter
-	}
-
-	err := action.Execute(ctx, params)
-	if err == nil {
-		t.Error("Execute() should fail when 'executables' parameter is missing")
-	}
-	if err != nil && !containsSubstr(err.Error(), "executables") {
-		t.Errorf("Error message should mention 'executables', got: %v", err)
-	}
-}
-
-// TestCargoInstallAction_Execute_EmptyExecutables tests that Execute fails with empty executables
-func TestCargoInstallAction_Execute_EmptyExecutables(t *testing.T) {
-	action := &CargoInstallAction{}
-	ctx := &ExecutionContext{
-		Context:    context.Background(),
-		InstallDir: t.TempDir(),
-		Version:    "1.0.0",
-		WorkDir:    t.TempDir(),
-	}
-
-	params := map[string]interface{}{
-		"crate":       "cargo-audit",
-		"executables": []interface{}{}, // Empty list
-	}
-
-	err := action.Execute(ctx, params)
-	if err == nil {
-		t.Error("Execute() should fail when 'executables' is empty")
-	}
-}
-
-// TestCargoInstallAction_Execute_InvalidCrateName tests that Execute fails with invalid crate name
-func TestCargoInstallAction_Execute_InvalidCrateName(t *testing.T) {
-	action := &CargoInstallAction{}
-	ctx := &ExecutionContext{
-		Context:    context.Background(),
-		InstallDir: t.TempDir(),
-		Version:    "1.0.0",
-		WorkDir:    t.TempDir(),
-	}
-
-	params := map[string]interface{}{
-		"crate":       "cargo;rm -rf /", // Injection attempt
-		"executables": []interface{}{"cargo"},
-	}
-
-	err := action.Execute(ctx, params)
-	if err == nil {
-		t.Error("Execute() should fail with command injection in crate name")
-	}
-	if err != nil && !containsSubstr(err.Error(), "invalid crate name") {
-		t.Errorf("Error message should mention 'invalid crate name', got: %v", err)
-	}
-}
-
-// TestCargoInstallAction_Execute_InvalidVersion tests that Execute fails with invalid version
-func TestCargoInstallAction_Execute_InvalidVersion(t *testing.T) {
-	action := &CargoInstallAction{}
-	ctx := &ExecutionContext{
-		Context:    context.Background(),
-		InstallDir: t.TempDir(),
-		Version:    "1.0.0;rm -rf /", // Injection attempt
-		WorkDir:    t.TempDir(),
-	}
-
-	params := map[string]interface{}{
-		"crate":       "cargo-audit",
-		"executables": []interface{}{"cargo-audit"},
-	}
-
-	err := action.Execute(ctx, params)
-	if err == nil {
-		t.Error("Execute() should fail with command injection in version")
-	}
-	if err != nil && !containsSubstr(err.Error(), "invalid version") {
-		t.Errorf("Error message should mention 'invalid version', got: %v", err)
-	}
-}
-
-// TestCargoInstallAction_Execute_InvalidExecutableName tests path traversal in executable names
-func TestCargoInstallAction_Execute_InvalidExecutableName(t *testing.T) {
-	action := &CargoInstallAction{}
-	ctx := &ExecutionContext{
-		Context:    context.Background(),
-		InstallDir: t.TempDir(),
-		Version:    "1.0.0",
-		WorkDir:    t.TempDir(),
-	}
-
-	params := map[string]interface{}{
-		"crate":       "cargo-audit",
-		"executables": []interface{}{"../../../etc/passwd"}, // Path traversal
-	}
-
-	err := action.Execute(ctx, params)
-	if err == nil {
-		t.Error("Execute() should fail with path traversal in executable name")
-	}
-	if err != nil && !containsSubstr(err.Error(), "invalid executable name") {
-		t.Errorf("Error message should mention 'invalid executable name', got: %v", err)
+			err := action.Execute(ctx, tt.params)
+			if err == nil {
+				t.Errorf("Execute() should fail for %s", tt.name)
+			}
+			if err != nil && !containsSubstr(err.Error(), tt.errContains) {
+				t.Errorf("Error should contain %q, got: %v", tt.errContains, err)
+			}
+		})
 	}
 }
 
@@ -466,69 +393,53 @@ func TestCargoInstallAction_Decompose(t *testing.T) {
 	}
 }
 
-// TestCargoInstallAction_Decompose_MissingCrate tests Decompose with missing crate
-func TestCargoInstallAction_Decompose_MissingCrate(t *testing.T) {
-	action := &CargoInstallAction{}
-	ctx := &EvalContext{
-		Context: context.Background(),
-		Version: "1.0.0",
+// TestCargoInstallAction_Decompose_ValidationErrors tests that Decompose rejects invalid parameters
+func TestCargoInstallAction_Decompose_ValidationErrors(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name        string
+		ctx         *EvalContext
+		params      map[string]interface{}
+		errContains string
+	}{
+		{
+			name:        "missing crate",
+			ctx:         &EvalContext{Context: context.Background(), Version: "1.0.0"},
+			params:      map[string]interface{}{"executables": []interface{}{"test"}},
+			errContains: "crate",
+		},
+		{
+			name:        "missing version",
+			ctx:         &EvalContext{Context: context.Background()},
+			params:      map[string]interface{}{"crate": "ripgrep", "executables": []interface{}{"rg"}},
+			errContains: "version",
+		},
+		{
+			name:        "invalid crate name",
+			ctx:         &EvalContext{Context: context.Background(), Version: "1.0.0"},
+			params:      map[string]interface{}{"crate": "cargo;rm -rf /", "executables": []interface{}{"test"}},
+			errContains: "invalid crate name",
+		},
+		{
+			name:        "invalid version",
+			ctx:         &EvalContext{Context: context.Background(), Version: "invalid!@#"},
+			params:      map[string]interface{}{"crate": "ripgrep", "executables": []interface{}{"rg"}},
+			errContains: "version",
+		},
 	}
 
-	params := map[string]interface{}{
-		"executables": []interface{}{"test"},
-		// Missing "crate"
-	}
-
-	_, err := action.Decompose(ctx, params)
-	if err == nil {
-		t.Error("Decompose() should fail when crate parameter is missing")
-	}
-	if err != nil && !containsSubstr(err.Error(), "crate") {
-		t.Errorf("Error message should mention 'crate', got: %v", err)
-	}
-}
-
-// TestCargoInstallAction_Decompose_MissingVersion tests Decompose with missing version
-func TestCargoInstallAction_Decompose_MissingVersion(t *testing.T) {
-	action := &CargoInstallAction{}
-	ctx := &EvalContext{
-		Context: context.Background(),
-		// Missing Version
-	}
-
-	params := map[string]interface{}{
-		"crate":       "ripgrep",
-		"executables": []interface{}{"rg"},
-	}
-
-	_, err := action.Decompose(ctx, params)
-	if err == nil {
-		t.Error("Decompose() should fail when version is not provided in context")
-	}
-	if err != nil && !containsSubstr(err.Error(), "version") {
-		t.Errorf("Error message should mention 'version', got: %v", err)
-	}
-}
-
-// TestCargoInstallAction_Decompose_InvalidCrateName tests Decompose with invalid crate name
-func TestCargoInstallAction_Decompose_InvalidCrateName(t *testing.T) {
-	action := &CargoInstallAction{}
-	ctx := &EvalContext{
-		Context: context.Background(),
-		Version: "1.0.0",
-	}
-
-	params := map[string]interface{}{
-		"crate":       "cargo;rm -rf /", // Injection attempt
-		"executables": []interface{}{"test"},
-	}
-
-	_, err := action.Decompose(ctx, params)
-	if err == nil {
-		t.Error("Decompose() should fail with invalid crate name")
-	}
-	if err != nil && !containsSubstr(err.Error(), "invalid crate name") {
-		t.Errorf("Error message should mention 'invalid crate name', got: %v", err)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			action := &CargoInstallAction{}
+			_, err := action.Decompose(tt.ctx, tt.params)
+			if err == nil {
+				t.Errorf("Decompose() should fail for %s", tt.name)
+			}
+			if err != nil && !containsSubstr(err.Error(), tt.errContains) {
+				t.Errorf("Error should contain %q, got: %v", tt.errContains, err)
+			}
+		})
 	}
 }
 
@@ -538,24 +449,6 @@ func TestCargoInstallIsDecomposable(t *testing.T) {
 	_, ok := interface{}(action).(Decomposable)
 	if !ok {
 		t.Error("CargoInstallAction should implement Decomposable interface")
-	}
-}
-
-// -- cargo_install.go: Decompose invalid version --
-
-func TestCargoInstallAction_Decompose_InvalidVersion(t *testing.T) {
-	t.Parallel()
-	action := &CargoInstallAction{}
-	ctx := &EvalContext{
-		Context: context.Background(),
-		Version: "invalid!@#",
-	}
-	_, err := action.Decompose(ctx, map[string]any{
-		"crate":       "ripgrep",
-		"executables": []any{"rg"},
-	})
-	if err == nil || !strings.Contains(err.Error(), "version") {
-		t.Errorf("Expected version error, got %v", err)
 	}
 }
 
