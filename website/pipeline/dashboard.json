@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-13T01:59:15Z",
+  "generated_at": "2026-03-13T02:00:23Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 41,
-      "pending": 3892,
+      "failed": 39,
+      "pending": 3894,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 41,
-        "pending": 3869,
+        "failed": 39,
+        "pending": 3871,
         "success": 1326
       }
     },
@@ -68,8 +68,8 @@
         "total": 1
       },
       "npm": {
-        "failed": 17,
-        "pending": 4,
+        "failed": 16,
+        "pending": 5,
         "success": 54,
         "total": 75
       },
@@ -80,8 +80,8 @@
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 18,
-        "pending": 61,
+        "failed": 17,
+        "pending": 62,
         "success": 9,
         "total": 89
       }
@@ -606,6 +606,15 @@
           "next_retry_at": "2026-03-17T12:20:14Z"
         },
         {
+          "id": "rubygems:cql",
+          "name": "cql",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-15T17:59:47Z"
+        },
+        {
           "id": "npm:datasette",
           "name": "datasette",
           "ecosystem": "npm",
@@ -667,15 +676,6 @@
           "category": "install_failed",
           "failure_count": 7,
           "next_retry_at": "2026-03-15T01:47:18Z"
-        },
-        {
-          "id": "rubygems:flash",
-          "name": "flash",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-13T01:47:18Z"
         },
         {
           "id": "rubygems:gitingest",
@@ -750,15 +750,6 @@
           "next_retry_at": "2026-03-16T00:56:07Z"
         },
         {
-          "id": "rubygems:mailcatcher",
-          "name": "mailcatcher",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-13T00:05:27Z"
-        },
-        {
           "id": "npm:mailhog",
           "name": "mailhog",
           "ecosystem": "npm",
@@ -795,22 +786,13 @@
           "next_retry_at": "2026-03-13T05:02:46Z"
         },
         {
-          "id": "npm:pocketbase",
-          "name": "pocketbase",
+          "id": "npm:q",
+          "name": "q",
           "ecosystem": "npm",
           "priority": 3,
           "category": "install_failed",
           "failure_count": 3,
-          "next_retry_at": "2026-03-12T23:47:40Z"
-        },
-        {
-          "id": "npm:protoc-gen-js",
-          "name": "protoc-gen-js",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-13T01:37:00Z"
+          "next_retry_at": "2026-03-13T05:59:47Z"
         },
         {
           "id": "pypi:tctl",
@@ -5361,15 +5343,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:cql",
-          "name": "cql",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-12T22:11:21Z"
-        },
-        {
           "id": "homebrew:cqlabs/dcm/dcm",
           "name": "cqlabs/dcm/dcm",
           "ecosystem": "homebrew",
@@ -8088,6 +8061,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:flash",
+          "name": "flash",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-13T01:47:18Z"
         },
         {
           "id": "homebrew:flashrom",
@@ -14844,6 +14826,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:mailcatcher",
+          "name": "mailcatcher",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-13T00:05:27Z"
+        },
+        {
           "id": "homebrew:mailsy",
           "name": "mailsy",
           "ecosystem": "homebrew",
@@ -19546,6 +19537,15 @@
           "failure_count": 0
         },
         {
+          "id": "npm:pocketbase",
+          "name": "pocketbase",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-12T23:47:40Z"
+        },
+        {
           "id": "homebrew:poco",
           "name": "poco",
           "ecosystem": "homebrew",
@@ -20027,6 +20027,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "npm:protoc-gen-js",
+          "name": "protoc-gen-js",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-13T01:37:00Z"
         },
         {
           "id": "homebrew:protonpass/tap/pass-cli",
@@ -20643,15 +20652,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "npm:q",
-          "name": "q",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-02-21T04:16:05Z"
         },
         {
           "id": "homebrew:qalculate-gtk",
