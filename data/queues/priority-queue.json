@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-13T17:40:58Z",
+  "updated_at": "2026-03-13T18:44:38Z",
   "entries": [
     {
       "name": "node",
@@ -5826,7 +5826,7 @@
       "name": "bullet",
       "source": "rubygems:bullet",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 7,
@@ -9116,7 +9116,7 @@
       "name": "countdown",
       "source": "npm:countdown",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 7,
@@ -20486,11 +20486,11 @@
       "name": "htmldoc",
       "source": "rubygems:htmldoc",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 4,
-      "next_retry_at": "2026-03-12T17:47:18.612536618Z"
+      "failure_count": 5,
+      "next_retry_at": "2026-03-14T10:44:38.61895123Z"
     },
     {
       "name": "htmlhint",
@@ -38126,11 +38126,11 @@
       "name": "protoc-gen-js",
       "source": "npm:protoc-gen-js",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-03-13T01:37:00.012506041Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-03-14T02:44:38.61895123Z"
     },
     {
       "name": "protolint",
@@ -46686,7 +46686,7 @@
       "name": "tctl",
       "source": "pypi:tctl",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 7,
