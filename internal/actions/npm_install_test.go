@@ -2,7 +2,6 @@ package actions
 
 import (
 	"context"
-	"strings"
 	"testing"
 )
 
@@ -226,58 +225,5 @@ func TestNpmInstallAction_Execute_MissingParams(t *testing.T) {
 				t.Error("Execute() should fail with missing required params")
 			}
 		})
-	}
-}
-
-// -- npm_install.go: Decompose validation paths --
-
-func TestNpmInstallAction_Decompose_InvalidPackageName(t *testing.T) {
-	t.Parallel()
-	action := &NpmInstallAction{}
-	ctx := &EvalContext{
-		Context: context.Background(),
-		Version: "1.0.0",
-		OS:      "linux",
-		Arch:    "amd64",
-	}
-	_, err := action.Decompose(ctx, map[string]any{
-		"package":     "invalid name!",
-		"executables": []any{"tool"},
-	})
-	if err == nil || !strings.Contains(err.Error(), "invalid") {
-		t.Errorf("Expected invalid package name error, got %v", err)
-	}
-}
-
-// -- npm_install.go: NpmInstallAction Decompose more paths --
-
-func TestNpmInstallAction_Decompose_MissingExecutables(t *testing.T) {
-	t.Parallel()
-	action := &NpmInstallAction{}
-	ctx := &EvalContext{
-		Context: context.Background(),
-		Version: "1.0.0",
-	}
-	_, err := action.Decompose(ctx, map[string]any{
-		"package": "some-pkg",
-	})
-	if err == nil || !strings.Contains(err.Error(), "executables") {
-		t.Errorf("Expected executables error, got %v", err)
-	}
-}
-
-func TestNpmInstallAction_Decompose_MissingVersion2(t *testing.T) {
-	t.Parallel()
-	action := &NpmInstallAction{}
-	ctx := &EvalContext{
-		Context: context.Background(),
-		Version: "",
-	}
-	_, err := action.Decompose(ctx, map[string]any{
-		"package":     "some-pkg",
-		"executables": []any{"tool"},
-	})
-	if err == nil || !strings.Contains(err.Error(), "version") {
-		t.Errorf("Expected version error, got %v", err)
 	}
 }

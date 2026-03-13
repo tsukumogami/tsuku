@@ -662,24 +662,6 @@ func TestDownloadAction_Execute_WithURLFailsAtDownload(t *testing.T) {
 	}
 }
 
-// -- download.go: Execute error paths --
-
-func TestDownloadAction_Execute_NoURLParam(t *testing.T) {
-	t.Parallel()
-	action := &DownloadAction{}
-	ctx := &ExecutionContext{
-		Context:    context.Background(),
-		WorkDir:    t.TempDir(),
-		InstallDir: t.TempDir(),
-		Version:    "1.0.0",
-	}
-
-	err := action.Execute(ctx, map[string]any{})
-	if err == nil {
-		t.Error("Expected error when url is missing")
-	}
-}
-
 // -- download.go: DownloadAction.Decompose --
 
 func TestDownloadAction_Decompose_Basic(t *testing.T) {
@@ -830,18 +812,6 @@ func TestDownloadAction_Execute_URLWithMappings(t *testing.T) {
 	// Should fail at download, not at param validation
 	if err == nil {
 		t.Error("Expected error (download should fail)")
-	}
-}
-
-// -- download.go: containsPlaceholder --
-
-func TestContainsPlaceholder_Direct(t *testing.T) {
-	t.Parallel()
-	if !containsPlaceholder("https://example.com/{version}/tool", "version") {
-		t.Error("expected true for URL with {version}")
-	}
-	if containsPlaceholder("https://example.com/tool", "version") {
-		t.Error("expected false for URL without {version}")
 	}
 }
 

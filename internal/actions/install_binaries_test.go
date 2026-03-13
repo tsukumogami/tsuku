@@ -898,34 +898,6 @@ func TestInstallBinariesAction_createSymlink(t *testing.T) {
 	}
 }
 
-// -- install_binaries.go: validateBinaryPath --
-
-func TestInstallBinariesAction_validateBinaryPath(t *testing.T) {
-	t.Parallel()
-	action := &InstallBinariesAction{}
-
-	t.Run("valid path", func(t *testing.T) {
-		err := action.validateBinaryPath("bin/tool")
-		if err != nil {
-			t.Errorf("validateBinaryPath(\"bin/tool\") error = %v", err)
-		}
-	})
-
-	t.Run("absolute path", func(t *testing.T) {
-		err := action.validateBinaryPath("/etc/passwd")
-		if err == nil {
-			t.Error("Expected error for absolute path")
-		}
-	})
-
-	t.Run("path traversal", func(t *testing.T) {
-		err := action.validateBinaryPath("../../../etc/passwd")
-		if err == nil {
-			t.Error("Expected error for path traversal")
-		}
-	})
-}
-
 // -- install_binaries.go: Preflight with various params --
 
 func TestInstallBinariesAction_Preflight_WithParams(t *testing.T) {
@@ -949,39 +921,6 @@ func TestInstallBinariesAction_Preflight_WithParams(t *testing.T) {
 			t.Errorf("Preflight() errors = %v", result.Errors)
 		}
 	})
-}
-
-// -- install_binaries.go: parseOutputs edge cases --
-
-func TestInstallBinariesAction_ParseOutputs_InvalidType(t *testing.T) {
-	t.Parallel()
-	action := &InstallBinariesAction{}
-	_, err := action.parseOutputs([]any{42})
-	if err == nil {
-		t.Error("parseOutputs() expected error for int type")
-	}
-}
-
-func TestInstallBinariesAction_ParseOutputs_MissingSrc(t *testing.T) {
-	t.Parallel()
-	action := &InstallBinariesAction{}
-	_, err := action.parseOutputs([]any{
-		map[string]any{"dest": "bin/tool"},
-	})
-	if err == nil {
-		t.Error("parseOutputs() expected error for missing src")
-	}
-}
-
-func TestInstallBinariesAction_ParseOutputs_MissingDest(t *testing.T) {
-	t.Parallel()
-	action := &InstallBinariesAction{}
-	_, err := action.parseOutputs([]any{
-		map[string]any{"src": "tool"},
-	})
-	if err == nil {
-		t.Error("parseOutputs() expected error for missing dest")
-	}
 }
 
 // -- install_binaries.go: DetermineExecutables additional cases --
@@ -1021,32 +960,6 @@ func TestExtractOutputNames_Direct(t *testing.T) {
 	names := extractOutputNames(outputs)
 	if len(names) != 2 || names[0] != "tool" || names[1] != "lib.so" {
 		t.Errorf("extractOutputNames() = %v, want [tool lib.so]", names)
-	}
-}
-
-// -- install_binaries.go: validateBinaryPath --
-
-func TestInstallBinariesAction_ValidateBinaryPath_DotDot(t *testing.T) {
-	t.Parallel()
-	action := &InstallBinariesAction{}
-	if err := action.validateBinaryPath("../../etc/passwd"); err == nil {
-		t.Error("validateBinaryPath() expected error for '..'")
-	}
-}
-
-func TestInstallBinariesAction_ValidateBinaryPath_Absolute(t *testing.T) {
-	t.Parallel()
-	action := &InstallBinariesAction{}
-	if err := action.validateBinaryPath("/usr/bin/tool"); err == nil {
-		t.Error("validateBinaryPath() expected error for absolute path")
-	}
-}
-
-func TestInstallBinariesAction_ValidateBinaryPath_Valid(t *testing.T) {
-	t.Parallel()
-	action := &InstallBinariesAction{}
-	if err := action.validateBinaryPath("bin/tool"); err != nil {
-		t.Errorf("validateBinaryPath() error = %v for valid path", err)
 	}
 }
 

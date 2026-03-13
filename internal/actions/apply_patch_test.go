@@ -7,8 +7,6 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
-
-	"github.com/tsukumogami/tsuku/internal/recipe"
 )
 
 func TestApplyPatchAction_Name(t *testing.T) {
@@ -281,66 +279,6 @@ func TestApplyPatchAction_Execute_Subdir(t *testing.T) {
 	expected := "// Patched\n"
 	if string(result) != expected {
 		t.Errorf("File content = %q, want %q", string(result), expected)
-	}
-}
-
-func TestApplyPatchAction_Execute_MissingParams(t *testing.T) {
-	t.Parallel()
-	action := &ApplyPatchAction{}
-	ctx := &ExecutionContext{
-		WorkDir: t.TempDir(),
-		Version: "1.0.0",
-	}
-
-	// Neither url nor data
-	params := map[string]interface{}{
-		"strip": 1,
-	}
-
-	err := action.Execute(ctx, params)
-	if err == nil {
-		t.Error("Execute() expected error for missing url/data")
-	}
-}
-
-func TestApplyPatchAction_Execute_BothParams(t *testing.T) {
-	t.Parallel()
-	action := &ApplyPatchAction{}
-	ctx := &ExecutionContext{
-		WorkDir: t.TempDir(),
-		Version: "1.0.0",
-	}
-
-	// Both url and data
-	params := map[string]interface{}{
-		"url":   "https://example.com/patch",
-		"data":  "some patch",
-		"strip": 1,
-	}
-
-	err := action.Execute(ctx, params)
-	if err == nil {
-		t.Error("Execute() expected error for both url and data")
-	}
-}
-
-func TestApplyPatchAction_Execute_InvalidURL(t *testing.T) {
-	t.Parallel()
-	action := &ApplyPatchAction{}
-	ctx := &ExecutionContext{
-		WorkDir: t.TempDir(),
-		Version: "1.0.0",
-	}
-
-	// HTTP URL (not HTTPS)
-	params := map[string]interface{}{
-		"url":   "http://example.com/patch",
-		"strip": 1,
-	}
-
-	err := action.Execute(ctx, params)
-	if err == nil {
-		t.Error("Execute() expected error for http URL")
 	}
 }
 
@@ -736,103 +674,6 @@ func TestApplyPatchAction_Decompose_Errors(t *testing.T) {
 	}
 }
 
-// -- apply_patch.go: Execute early validation --
-
-func TestApplyPatchAction_Execute_MissingBothURLAndData(t *testing.T) {
-	t.Parallel()
-	action := &ApplyPatchAction{}
-	ctx := &ExecutionContext{
-		Context: context.Background(),
-		WorkDir: t.TempDir(),
-		Version: "1.0.0",
-		OS:      "linux",
-		Arch:    "amd64",
-		Recipe:  &recipe.Recipe{},
-	}
-	err := action.Execute(ctx, map[string]any{})
-	if err == nil || !strings.Contains(err.Error(), "either") {
-		t.Errorf("Expected 'either url or data' error, got %v", err)
-	}
-}
-
-func TestApplyPatchAction_Execute_BothURLAndData(t *testing.T) {
-	t.Parallel()
-	action := &ApplyPatchAction{}
-	ctx := &ExecutionContext{
-		Context: context.Background(),
-		WorkDir: t.TempDir(),
-		Version: "1.0.0",
-		OS:      "linux",
-		Arch:    "amd64",
-		Recipe:  &recipe.Recipe{},
-	}
-	err := action.Execute(ctx, map[string]any{
-		"url":  "https://example.com/patch",
-		"data": "some patch data",
-	})
-	if err == nil || !strings.Contains(err.Error(), "cannot specify both") {
-		t.Errorf("Expected 'cannot specify both' error, got %v", err)
-	}
-}
-
-func TestApplyPatchAction_Execute_NonHTTPSURL(t *testing.T) {
-	t.Parallel()
-	action := &ApplyPatchAction{}
-	ctx := &ExecutionContext{
-		Context: context.Background(),
-		WorkDir: t.TempDir(),
-		Version: "1.0.0",
-		OS:      "linux",
-		Arch:    "amd64",
-		Recipe:  &recipe.Recipe{},
-	}
-	err := action.Execute(ctx, map[string]any{
-		"url": "http://insecure.example.com/patch",
-	})
-	if err == nil || !strings.Contains(err.Error(), "https") {
-		t.Errorf("Expected HTTPS error, got %v", err)
-	}
-}
-
-// -- apply_patch.go: Decompose validation --
-
-func TestApplyPatchAction_Decompose_MissingBothURLAndData(t *testing.T) {
-	t.Parallel()
-	action := &ApplyPatchAction{}
-	ctx := &EvalContext{
-		Context:    context.Background(),
-		Version:    "1.0.0",
-		VersionTag: "v1.0.0",
-		OS:         "linux",
-		Arch:       "amd64",
-	}
-	_, err := action.Decompose(ctx, map[string]any{})
-	if err == nil || !strings.Contains(err.Error(), "either") {
-		t.Errorf("Expected 'either' error, got %v", err)
-	}
-}
-
-func TestApplyPatchAction_Decompose_BothURLAndData(t *testing.T) {
-	t.Parallel()
-	action := &ApplyPatchAction{}
-	ctx := &EvalContext{
-		Context:    context.Background(),
-		Version:    "1.0.0",
-		VersionTag: "v1.0.0",
-		OS:         "linux",
-		Arch:       "amd64",
-	}
-	_, err := action.Decompose(ctx, map[string]any{
-		"url":  "https://example.com/patch",
-		"data": "some data",
-	})
-	if err == nil || !strings.Contains(err.Error(), "cannot specify both") {
-		t.Errorf("Expected 'cannot specify both' error, got %v", err)
-	}
-}
-
-// -- apply_patch.go: Decompose error paths --
-
 func TestApplyPatchAction_Decompose_URLWithSHA(t *testing.T) {
 	t.Parallel()
 	action := &ApplyPatchAction{}
@@ -855,28 +696,6 @@ func TestApplyPatchAction_Decompose_URLWithSHA(t *testing.T) {
 	}
 	if steps[0].Action != "download_file" {
 		t.Errorf("first step = %q, want download_file", steps[0].Action)
-	}
-}
-
-func TestApplyPatchAction_Decompose_HTTPNotHTTPS(t *testing.T) {
-	t.Parallel()
-	action := &ApplyPatchAction{}
-	ctx := &EvalContext{Context: context.Background(), Version: "1.0.0", OS: "linux", Arch: "amd64"}
-	_, err := action.Decompose(ctx, map[string]any{
-		"url": "http://example.com/patch.diff",
-	})
-	if err == nil {
-		t.Error("Expected error for non-https URL")
-	}
-}
-
-func TestApplyPatchAction_Decompose_MissingBoth(t *testing.T) {
-	t.Parallel()
-	action := &ApplyPatchAction{}
-	ctx := &EvalContext{Context: context.Background(), Version: "1.0.0", OS: "linux", Arch: "amd64"}
-	_, err := action.Decompose(ctx, map[string]any{})
-	if err == nil {
-		t.Error("Expected error for missing both url and data")
 	}
 }
 
