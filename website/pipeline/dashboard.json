@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-13T17:40:26Z",
+  "generated_at": "2026-03-13T17:41:41Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 42,
-      "pending": 3891,
+      "failed": 44,
+      "pending": 3889,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 42,
-        "pending": 3868,
+        "failed": 44,
+        "pending": 3866,
         "success": 1326
       }
     },
@@ -68,8 +68,8 @@
         "total": 1
       },
       "npm": {
-        "failed": 15,
-        "pending": 6,
+        "failed": 16,
+        "pending": 5,
         "success": 54,
         "total": 75
       },
@@ -80,8 +80,8 @@
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 21,
-        "pending": 58,
+        "failed": 22,
+        "pending": 57,
         "success": 9,
         "total": 89
       }
@@ -759,6 +759,15 @@
           "next_retry_at": "2026-03-16T07:47:02Z"
         },
         {
+          "id": "rubygems:hercules",
+          "name": "hercules",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-14T09:40:58Z"
+        },
+        {
           "id": "npm:kew",
           "name": "kew",
           "ecosystem": "npm",
@@ -820,6 +829,15 @@
           "category": "install_failed",
           "failure_count": 8,
           "next_retry_at": "2026-03-18T15:49:34Z"
+        },
+        {
+          "id": "npm:pocketbase",
+          "name": "pocketbase",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-14T09:40:58Z"
         },
         {
           "id": "pypi:tctl",
@@ -10704,15 +10722,6 @@
           "failure_count": 1
         },
         {
-          "id": "rubygems:hercules",
-          "name": "hercules",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-12T17:47:18Z"
-        },
-        {
           "id": "homebrew:heremaps/olp-cli/olp",
           "name": "heremaps/olp-cli/olp",
           "ecosystem": "homebrew",
@@ -19526,15 +19535,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "npm:pocketbase",
-          "name": "pocketbase",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-13T12:18:24Z"
         },
         {
           "id": "homebrew:poco",
