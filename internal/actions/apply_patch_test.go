@@ -17,268 +17,108 @@ func TestApplyPatchAction_Name(t *testing.T) {
 	}
 }
 
-func TestApplyPatchAction_Execute_InlinePatch(t *testing.T) {
+func TestApplyPatchAction_Execute_Success(t *testing.T) {
 	t.Parallel()
-	// Skip if patch command not available
 	if _, err := checkPatchCommand(); err != nil {
 		t.Skip("patch command not available")
 	}
 
-	tmpDir := t.TempDir()
-
-	// Create a test file to patch
-	testFile := filepath.Join(tmpDir, "test.txt")
-	originalContent := "Hello World\n"
-	if err := os.WriteFile(testFile, []byte(originalContent), 0644); err != nil {
-		t.Fatalf("Failed to create test file: %v", err)
+	tests := []struct {
+		name      string
+		files     map[string]string
+		params    map[string]interface{}
+		checkFile string
+		expected  string
+	}{
+		{
+			name:  "inline patch",
+			files: map[string]string{"test.txt": "Hello World\n"},
+			params: map[string]interface{}{
+				"data":  "--- a/test.txt\n+++ b/test.txt\n@@ -1 +1 @@\n-Hello World\n+Hello Patch\n",
+				"strip": 1,
+			},
+			checkFile: "test.txt",
+			expected:  "Hello Patch\n",
+		},
+		{
+			name:  "multiline patch",
+			files: map[string]string{"config.h": "#define DEBUG 1\n#define VERSION 1\n"},
+			params: map[string]interface{}{
+				"data":  "--- a/config.h\n+++ b/config.h\n@@ -1,2 +1,2 @@\n-#define DEBUG 1\n-#define VERSION 1\n+#define DEBUG 0\n+#define VERSION 2\n",
+				"strip": 1,
+			},
+			checkFile: "config.h",
+			expected:  "#define DEBUG 0\n#define VERSION 2\n",
+		},
+		{
+			name:  "strip level 2",
+			files: map[string]string{"src/main.c": "int main() { return 0; }\n"},
+			params: map[string]interface{}{
+				"data":  "--- a/b/src/main.c\n+++ a/b/src/main.c\n@@ -1 +1 @@\n-int main() { return 0; }\n+int main() { return 1; }\n",
+				"strip": 2,
+			},
+			checkFile: "src/main.c",
+			expected:  "int main() { return 1; }\n",
+		},
+		{
+			name:  "strip level zero",
+			files: map[string]string{"main.c": "int main() { return 0; }\n"},
+			params: map[string]interface{}{
+				"data":  "--- main.c\n+++ main.c\n@@ -1 +1 @@\n-int main() { return 0; }\n+int main() { return 42; }\n",
+				"strip": 0,
+			},
+			checkFile: "main.c",
+			expected:  "int main() { return 42; }\n",
+		},
+		{
+			name:  "subdir patch",
+			files: map[string]string{"lib/util.c": "// Original\n"},
+			params: map[string]interface{}{
+				"data":   "--- a/util.c\n+++ b/util.c\n@@ -1 +1 @@\n-// Original\n+// Patched\n",
+				"strip":  1,
+				"subdir": "lib",
+			},
+			checkFile: "lib/util.c",
+			expected:  "// Patched\n",
+		},
 	}
 
-	// Create a simple patch
-	patchData := `--- a/test.txt
-+++ b/test.txt
-@@ -1 +1 @@
--Hello World
-+Hello Patch
-`
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			tmpDir := t.TempDir()
 
-	action := &ApplyPatchAction{}
-	ctx := &ExecutionContext{
-		WorkDir: tmpDir,
-		Version: "1.0.0",
-	}
+			// Create files including parent directories
+			for relPath, content := range tt.files {
+				fullPath := filepath.Join(tmpDir, relPath)
+				if dir := filepath.Dir(fullPath); dir != tmpDir {
+					if err := os.MkdirAll(dir, 0755); err != nil {
+						t.Fatalf("Failed to create dir %s: %v", dir, err)
+					}
+				}
+				if err := os.WriteFile(fullPath, []byte(content), 0644); err != nil {
+					t.Fatalf("Failed to create file %s: %v", relPath, err)
+				}
+			}
 
-	params := map[string]interface{}{
-		"data":  patchData,
-		"strip": 1,
-	}
+			action := &ApplyPatchAction{}
+			ctx := &ExecutionContext{
+				WorkDir: tmpDir,
+				Version: "1.0.0",
+			}
 
-	if err := action.Execute(ctx, params); err != nil {
-		t.Fatalf("Execute() error = %v", err)
-	}
+			if err := action.Execute(ctx, tt.params); err != nil {
+				t.Fatalf("Execute() error = %v", err)
+			}
 
-	// Verify file was patched
-	result, err := os.ReadFile(testFile)
-	if err != nil {
-		t.Fatalf("Failed to read result file: %v", err)
-	}
-
-	expected := "Hello Patch\n"
-	if string(result) != expected {
-		t.Errorf("File content = %q, want %q", string(result), expected)
-	}
-}
-
-func TestApplyPatchAction_Execute_MultilinePatch(t *testing.T) {
-	t.Parallel()
-	// Skip if patch command not available
-	if _, err := checkPatchCommand(); err != nil {
-		t.Skip("patch command not available")
-	}
-
-	tmpDir := t.TempDir()
-
-	// Create a test file to patch
-	testFile := filepath.Join(tmpDir, "config.h")
-	originalContent := "#define DEBUG 1\n#define VERSION 1\n"
-	if err := os.WriteFile(testFile, []byte(originalContent), 0644); err != nil {
-		t.Fatalf("Failed to create test file: %v", err)
-	}
-
-	// Create a patch that modifies multiple lines
-	patchData := `--- a/config.h
-+++ b/config.h
-@@ -1,2 +1,2 @@
--#define DEBUG 1
--#define VERSION 1
-+#define DEBUG 0
-+#define VERSION 2
-`
-
-	action := &ApplyPatchAction{}
-	ctx := &ExecutionContext{
-		WorkDir: tmpDir,
-		Version: "1.0.0",
-	}
-
-	params := map[string]interface{}{
-		"data":  patchData,
-		"strip": 1,
-	}
-
-	if err := action.Execute(ctx, params); err != nil {
-		t.Fatalf("Execute() error = %v", err)
-	}
-
-	result, err := os.ReadFile(testFile)
-	if err != nil {
-		t.Fatalf("Failed to read result file: %v", err)
-	}
-
-	expected := "#define DEBUG 0\n#define VERSION 2\n"
-	if string(result) != expected {
-		t.Errorf("File content = %q, want %q", string(result), expected)
-	}
-}
-
-func TestApplyPatchAction_Execute_StripLevel(t *testing.T) {
-	t.Parallel()
-	// Skip if patch command not available
-	if _, err := checkPatchCommand(); err != nil {
-		t.Skip("patch command not available")
-	}
-
-	tmpDir := t.TempDir()
-
-	// Create subdirectory structure matching the patch
-	srcDir := filepath.Join(tmpDir, "src")
-	if err := os.MkdirAll(srcDir, 0755); err != nil {
-		t.Fatalf("Failed to create src dir: %v", err)
-	}
-
-	testFile := filepath.Join(srcDir, "main.c")
-	originalContent := "int main() { return 0; }\n"
-	if err := os.WriteFile(testFile, []byte(originalContent), 0644); err != nil {
-		t.Fatalf("Failed to create test file: %v", err)
-	}
-
-	// Patch with deeper path (strip=2 needed to remove a/b/...)
-	patchData := `--- a/b/src/main.c
-+++ a/b/src/main.c
-@@ -1 +1 @@
--int main() { return 0; }
-+int main() { return 1; }
-`
-
-	action := &ApplyPatchAction{}
-	ctx := &ExecutionContext{
-		WorkDir: tmpDir,
-		Version: "1.0.0",
-	}
-
-	params := map[string]interface{}{
-		"data":  patchData,
-		"strip": 2,
-	}
-
-	if err := action.Execute(ctx, params); err != nil {
-		t.Fatalf("Execute() error = %v", err)
-	}
-
-	result, err := os.ReadFile(testFile)
-	if err != nil {
-		t.Fatalf("Failed to read result file: %v", err)
-	}
-
-	expected := "int main() { return 1; }\n"
-	if string(result) != expected {
-		t.Errorf("File content = %q, want %q", string(result), expected)
-	}
-}
-
-// AP-3: Strip level p0 - patch without path prefix stripping
-func TestApplyPatchAction_Execute_StripLevelZero(t *testing.T) {
-	t.Parallel()
-	// Skip if patch command not available
-	if _, err := checkPatchCommand(); err != nil {
-		t.Skip("patch command not available")
-	}
-
-	tmpDir := t.TempDir()
-
-	// Create test file at exact path matching the patch (no stripping)
-	testFile := filepath.Join(tmpDir, "main.c")
-	originalContent := "int main() { return 0; }\n"
-	if err := os.WriteFile(testFile, []byte(originalContent), 0644); err != nil {
-		t.Fatalf("Failed to create test file: %v", err)
-	}
-
-	// Patch with no path prefix (strip=0)
-	patchData := `--- main.c
-+++ main.c
-@@ -1 +1 @@
--int main() { return 0; }
-+int main() { return 42; }
-`
-
-	action := &ApplyPatchAction{}
-	ctx := &ExecutionContext{
-		WorkDir: tmpDir,
-		Version: "1.0.0",
-	}
-
-	params := map[string]interface{}{
-		"data":  patchData,
-		"strip": 0,
-	}
-
-	if err := action.Execute(ctx, params); err != nil {
-		t.Fatalf("Execute() error = %v", err)
-	}
-
-	result, err := os.ReadFile(testFile)
-	if err != nil {
-		t.Fatalf("Failed to read result file: %v", err)
-	}
-
-	expected := "int main() { return 42; }\n"
-	if string(result) != expected {
-		t.Errorf("File content = %q, want %q", string(result), expected)
-	}
-}
-
-func TestApplyPatchAction_Execute_Subdir(t *testing.T) {
-	t.Parallel()
-	// Skip if patch command not available
-	if _, err := checkPatchCommand(); err != nil {
-		t.Skip("patch command not available")
-	}
-
-	tmpDir := t.TempDir()
-
-	// Create subdirectory
-	subDir := filepath.Join(tmpDir, "lib")
-	if err := os.MkdirAll(subDir, 0755); err != nil {
-		t.Fatalf("Failed to create subdir: %v", err)
-	}
-
-	testFile := filepath.Join(subDir, "util.c")
-	originalContent := "// Original\n"
-	if err := os.WriteFile(testFile, []byte(originalContent), 0644); err != nil {
-		t.Fatalf("Failed to create test file: %v", err)
-	}
-
-	// Patch relative to subdir
-	patchData := `--- a/util.c
-+++ b/util.c
-@@ -1 +1 @@
--// Original
-+// Patched
-`
-
-	action := &ApplyPatchAction{}
-	ctx := &ExecutionContext{
-		WorkDir: tmpDir,
-		Version: "1.0.0",
-	}
-
-	params := map[string]interface{}{
-		"data":   patchData,
-		"strip":  1,
-		"subdir": "lib",
-	}
-
-	if err := action.Execute(ctx, params); err != nil {
-		t.Fatalf("Execute() error = %v", err)
-	}
-
-	result, err := os.ReadFile(testFile)
-	if err != nil {
-		t.Fatalf("Failed to read result file: %v", err)
-	}
-
-	expected := "// Patched\n"
-	if string(result) != expected {
-		t.Errorf("File content = %q, want %q", string(result), expected)
+			result, err := os.ReadFile(filepath.Join(tmpDir, tt.checkFile))
+			if err != nil {
+				t.Fatalf("Failed to read result file: %v", err)
+			}
+			if string(result) != tt.expected {
+				t.Errorf("File content = %q, want %q", string(result), tt.expected)
+			}
+		})
 	}
 }
 
@@ -426,13 +266,9 @@ func TestApplyPatchAction_Execute_MultiplePatchesOrdering(t *testing.T) {
 	}
 }
 
-func TestApplyPatchAction_Execute_PathTraversalSubdir(t *testing.T) {
+func TestApplyPatchAction_Execute_InvalidSubdir(t *testing.T) {
 	t.Parallel()
 	action := &ApplyPatchAction{}
-	ctx := &ExecutionContext{
-		WorkDir: t.TempDir(),
-		Version: "1.0.0",
-	}
 
 	tests := []struct {
 		name   string
@@ -440,10 +276,16 @@ func TestApplyPatchAction_Execute_PathTraversalSubdir(t *testing.T) {
 	}{
 		{"parent dir", "../etc"},
 		{"absolute path", "/etc"},
+		{"nonexistent", "nonexistent"},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			ctx := &ExecutionContext{
+				WorkDir: t.TempDir(),
+				Version: "1.0.0",
+			}
 			params := map[string]interface{}{
 				"data":   "some patch",
 				"subdir": tt.subdir,
@@ -451,28 +293,9 @@ func TestApplyPatchAction_Execute_PathTraversalSubdir(t *testing.T) {
 
 			err := action.Execute(ctx, params)
 			if err == nil {
-				t.Error("Execute() expected error for path traversal")
+				t.Error("Execute() expected error for invalid subdir")
 			}
 		})
-	}
-}
-
-func TestApplyPatchAction_Execute_NonexistentSubdir(t *testing.T) {
-	t.Parallel()
-	action := &ApplyPatchAction{}
-	ctx := &ExecutionContext{
-		WorkDir: t.TempDir(),
-		Version: "1.0.0",
-	}
-
-	params := map[string]interface{}{
-		"data":   "some patch",
-		"subdir": "nonexistent",
-	}
-
-	err := action.Execute(ctx, params)
-	if err == nil {
-		t.Error("Execute() expected error for nonexistent subdir")
 	}
 }
 

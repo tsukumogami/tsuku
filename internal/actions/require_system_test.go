@@ -304,68 +304,60 @@ func TestSystemDepVersionError_Error(t *testing.T) {
 
 // -- require_system.go: Preflight --
 
-func TestRequireSystemAction_Preflight_Additional(t *testing.T) {
+func TestRequireSystemAction_Preflight_Cases(t *testing.T) {
 	t.Parallel()
 	action := &RequireSystemAction{}
 
-	t.Run("valid", func(t *testing.T) {
-		result := action.Preflight(map[string]any{
-			"command": "dpkg",
+	tests := []struct {
+		name       string
+		params     map[string]any
+		wantErrors int
+	}{
+		{
+			name:       "valid command only",
+			params:     map[string]any{"command": "dpkg"},
+			wantErrors: 0,
+		},
+		{
+			name:       "missing command",
+			params:     map[string]any{},
+			wantErrors: 1,
+		},
+		{
+			name: "deprecated install_guide",
+			params: map[string]any{
+				"command":       "dpkg",
+				"install_guide": "apt install libssl-dev",
+			},
+			wantErrors: 1,
+		},
+		{
+			name: "incomplete version detection",
+			params: map[string]any{
+				"command":     "dpkg",
+				"min_version": "1.0",
+			},
+			wantErrors: 1,
+		},
+		{
+			name: "complete version check",
+			params: map[string]any{
+				"command":       "dpkg",
+				"min_version":   "1.0",
+				"version_flag":  "--version",
+				"version_regex": `(\d+\.\d+)`,
+			},
+			wantErrors: 0,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			result := action.Preflight(tt.params)
+			if len(result.Errors) != tt.wantErrors {
+				t.Errorf("Preflight() errors = %v, want %d errors", result.Errors, tt.wantErrors)
+			}
 		})
-		if len(result.Errors) != 0 {
-			t.Errorf("Preflight() errors = %v", result.Errors)
-		}
-	})
-
-	t.Run("missing command", func(t *testing.T) {
-		result := action.Preflight(map[string]any{})
-		if len(result.Errors) == 0 {
-			t.Error("Expected error for missing command")
-		}
-	})
-}
-
-// -- require_system.go: Preflight additional cases --
-
-func TestRequireSystemAction_Preflight_DeprecatedInstallGuide(t *testing.T) {
-	t.Parallel()
-	action := &RequireSystemAction{}
-	result := action.Preflight(map[string]any{
-		"command":       "dpkg",
-		"install_guide": "apt install libssl-dev",
-	})
-	if len(result.Errors) == 0 {
-		t.Error("Expected error for deprecated install_guide")
-	}
-}
-
-func TestRequireSystemAction_Preflight_IncompleteVersionDetection(t *testing.T) {
-	t.Parallel()
-	action := &RequireSystemAction{}
-	result := action.Preflight(map[string]any{
-		"command":     "dpkg",
-		"min_version": "1.0",
-	})
-	if len(result.Errors) == 0 {
-		t.Error("Expected error for min_version without version_flag/version_regex")
-	}
-}
-
-// -- system_config.go: RequireSystemAction Execute --
-
-// -- require_system.go: Preflight with complete version check --
-
-func TestRequireSystemAction_Preflight_CompleteVersionCheck(t *testing.T) {
-	t.Parallel()
-	action := &RequireSystemAction{}
-	result := action.Preflight(map[string]any{
-		"command":       "dpkg",
-		"min_version":   "1.0",
-		"version_flag":  "--version",
-		"version_regex": `(\d+\.\d+)`,
-	})
-	// Should have no errors when all version fields are present
-	if len(result.Errors) != 0 {
-		t.Errorf("Preflight() errors = %v for complete version check", result.Errors)
 	}
 }

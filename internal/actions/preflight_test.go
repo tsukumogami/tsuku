@@ -56,111 +56,97 @@ func TestValidateAction_Warnings(t *testing.T) {
 	}
 }
 
-func TestDownloadAction_StaticChecksumError(t *testing.T) {
-	// Test that static checksum parameter triggers error
-	result := ValidateAction("download", map[string]interface{}{
-		"url":          "https://example.com/{version}/file.tar.gz",
-		"checksum":     "abc123",
-		"checksum_url": "https://example.com/{version}/checksums.txt",
-	})
-	if !result.HasErrors() {
-		t.Error("expected error for static checksum parameter")
-	}
-	found := false
-	for _, err := range result.Errors {
-		if err == "download action does not support static 'checksum'; use 'checksum_url' for dynamic verification or 'download_file' for static URLs" {
-			found = true
-			break
-		}
-	}
-	if !found {
-		t.Errorf("expected specific checksum error message, got: %v", result.Errors)
-	}
-}
-
-func TestDownloadAction_MissingVerificationWarning(t *testing.T) {
-	// Test that missing checksum_url or signature_url triggers warning
-	result := ValidateAction("download", map[string]interface{}{
-		"url": "https://example.com/{version}/file.tar.gz",
-	})
-	if result.HasErrors() {
-		t.Errorf("expected no errors, got: %v", result.Errors)
-	}
-	if !result.HasWarnings() {
-		t.Error("expected warning for missing verification")
-	}
-	found := false
-	for _, warn := range result.Warnings {
-		if warn == "no upstream verification (checksum_url or signature_url); integrity relies on plan-time computation" {
-			found = true
-			break
-		}
-	}
-	if !found {
-		t.Errorf("expected specific verification warning message, got: %v", result.Warnings)
-	}
-}
-
-func TestDownloadAction_StaticURLError(t *testing.T) {
-	// Test that URL without variables triggers error
-	result := ValidateAction("download", map[string]interface{}{
-		"url":          "https://example.com/static/file.tar.gz",
-		"checksum_url": "https://example.com/checksums.txt",
-	})
-	if !result.HasErrors() {
-		t.Error("expected error for static URL without variables")
-	}
-	found := false
-	for _, err := range result.Errors {
-		if err == "download URL contains no variables; use 'download_file' action for static URLs" {
-			found = true
-			break
-		}
-	}
-	if !found {
-		t.Errorf("expected specific static URL error message, got: %v", result.Errors)
-	}
-}
-
-func TestDownloadAction_URLWithVariablesPass(t *testing.T) {
-	// Test that URL with variables passes validation (no error for that check)
-	result := ValidateAction("download", map[string]interface{}{
-		"url":          "https://example.com/{version}/file-{os}-{arch}.tar.gz",
-		"checksum_url": "https://example.com/{version}/checksums.txt",
-	})
-	if result.HasErrors() {
-		t.Errorf("expected no errors for URL with variables, got: %v", result.Errors)
-	}
-	if result.HasWarnings() {
-		t.Errorf("expected no warnings when checksum_url is provided, got: %v", result.Warnings)
-	}
-}
-
-func TestPreflightResult_ToError(t *testing.T) {
-	// Test ToError with no errors
-	result := &PreflightResult{}
-	if result.ToError() != nil {
-		t.Error("expected nil error for empty result")
+func TestDownloadAction_PreflightValidation(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name         string
+		params       map[string]interface{}
+		wantErrors   bool
+		wantWarnings bool
+		errContains  string
+		warnContains string
+	}{
+		{
+			name: "static checksum error",
+			params: map[string]interface{}{
+				"url":          "https://example.com/{version}/file.tar.gz",
+				"checksum":     "abc123",
+				"checksum_url": "https://example.com/{version}/checksums.txt",
+			},
+			wantErrors:  true,
+			errContains: "does not support static 'checksum'",
+		},
+		{
+			name: "missing verification warning",
+			params: map[string]interface{}{
+				"url": "https://example.com/{version}/file.tar.gz",
+			},
+			wantWarnings: true,
+			warnContains: "no upstream verification",
+		},
+		{
+			name: "static URL error",
+			params: map[string]interface{}{
+				"url":          "https://example.com/static/file.tar.gz",
+				"checksum_url": "https://example.com/checksums.txt",
+			},
+			wantErrors:  true,
+			errContains: "download URL contains no variables",
+		},
+		{
+			name: "URL with variables passes",
+			params: map[string]interface{}{
+				"url":          "https://example.com/{version}/file-{os}-{arch}.tar.gz",
+				"checksum_url": "https://example.com/{version}/checksums.txt",
+			},
+			wantErrors:   false,
+			wantWarnings: false,
+		},
 	}
 
-	// Test ToError with one error
-	result.AddError("single error")
-	err := result.ToError()
-	if err == nil {
-		t.Error("expected error for result with errors")
-	}
-	if err.Error() != "single error" {
-		t.Errorf("unexpected error message: %v", err)
-	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			result := ValidateAction("download", tt.params)
 
-	// Test ToError with multiple errors
-	result.AddError("second error")
-	err = result.ToError()
-	if err == nil {
-		t.Error("expected error for result with multiple errors")
-	}
-	if err.Error() != "single error (and 1 more errors)" {
-		t.Errorf("unexpected error message: %v", err)
+			if tt.wantErrors && !result.HasErrors() {
+				t.Error("expected errors but got none")
+			}
+			if !tt.wantErrors && result.HasErrors() {
+				t.Errorf("expected no errors, got: %v", result.Errors)
+			}
+			if tt.errContains != "" {
+				found := false
+				for _, err := range result.Errors {
+					if strings.Contains(err, tt.errContains) {
+						found = true
+						break
+					}
+				}
+				if !found {
+					t.Errorf("expected error containing %q, got: %v", tt.errContains, result.Errors)
+				}
+			}
+
+			if tt.wantWarnings && !result.HasWarnings() {
+				t.Error("expected warnings but got none")
+			}
+			if !tt.wantWarnings && result.HasWarnings() {
+				t.Errorf("expected no warnings, got: %v", result.Warnings)
+			}
+			if tt.warnContains != "" {
+				found := false
+				for _, w := range result.Warnings {
+					if strings.Contains(w, tt.warnContains) {
+						found = true
+						break
+					}
+				}
+				if !found {
+					t.Errorf("expected warning containing %q, got: %v", tt.warnContains, result.Warnings)
+				}
+			}
+		})
 	}
 }
 
@@ -759,6 +745,7 @@ func TestPreflightResult_ToError_Cases(t *testing.T) {
 			name:      "multiple errors",
 			result:    &PreflightResult{},
 			addErrors: []string{"error1", "error2", "error3"},
+			wantMsg:   "error1 (and 2 more errors)",
 		},
 	}
 

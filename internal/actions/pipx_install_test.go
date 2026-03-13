@@ -123,73 +123,94 @@ func TestPipxInstallAction_RequiresNetwork(t *testing.T) {
 	}
 }
 
-func TestPipxInstallAction_Decompose_MissingParams(t *testing.T) {
+func TestPipxInstallAction_Decompose_Validation(t *testing.T) {
 	t.Parallel()
 	action := &PipxInstallAction{}
-	ctx := &EvalContext{
-		Context: context.Background(),
-		Version: "1.0.0",
-	}
 
 	tests := []struct {
-		name   string
-		params map[string]interface{}
-		errMsg string
+		name        string
+		version     string
+		params      map[string]interface{}
+		errContains string
 	}{
 		{
-			name:   "missing package",
-			params: map[string]interface{}{},
-			errMsg: "pipx_install action requires 'package' parameter",
+			name:        "missing package",
+			version:     "1.0.0",
+			params:      map[string]interface{}{},
+			errContains: "requires 'package' parameter",
 		},
 		{
-			name: "missing executables",
+			name:    "missing executables",
+			version: "1.0.0",
 			params: map[string]interface{}{
 				"package": "ruff",
 			},
-			errMsg: "pipx_install action requires 'executables' parameter with at least one executable",
+			errContains: "requires 'executables' parameter",
 		},
 		{
-			name: "empty executables",
+			name:    "empty executables",
+			version: "1.0.0",
 			params: map[string]interface{}{
 				"package":     "ruff",
 				"executables": []string{},
 			},
-			errMsg: "pipx_install action requires 'executables' parameter with at least one executable",
+			errContains: "requires 'executables' parameter",
+		},
+		{
+			name:    "missing version",
+			version: "",
+			params: map[string]interface{}{
+				"package":     "ruff",
+				"executables": []string{"ruff"},
+			},
+			errContains: "requires a resolved version",
+		},
+		{
+			name:    "invalid version",
+			version: "evil;inject",
+			params: map[string]interface{}{
+				"package":     "flask",
+				"executables": []any{"flask"},
+			},
+			errContains: "version",
+		},
+		{
+			name:    "executables key absent",
+			version: "1.0.0",
+			params: map[string]interface{}{
+				"package": "flask",
+			},
+			errContains: "executables",
+		},
+		{
+			name:    "empty version",
+			version: "",
+			params: map[string]interface{}{
+				"package":     "flask",
+				"executables": []any{"flask"},
+			},
+			errContains: "version",
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			ctx := &EvalContext{
+				Context:    context.Background(),
+				Version:    tc.version,
+				VersionTag: "v" + tc.version,
+				OS:         "linux",
+				Arch:       "amd64",
+			}
 			_, err := action.Decompose(ctx, tc.params)
 			if err == nil {
 				t.Fatal("expected error, got nil")
 			}
-			if err.Error() != tc.errMsg {
-				t.Errorf("error = %q, want %q", err.Error(), tc.errMsg)
+			if !strings.Contains(err.Error(), tc.errContains) {
+				t.Errorf("error = %q, want containing %q", err.Error(), tc.errContains)
 			}
 		})
-	}
-}
-
-func TestPipxInstallAction_Decompose_MissingVersion(t *testing.T) {
-	t.Parallel()
-	action := &PipxInstallAction{}
-	ctx := &EvalContext{
-		Context: context.Background(),
-		Version: "", // Missing version
-	}
-
-	params := map[string]interface{}{
-		"package":     "ruff",
-		"executables": []string{"ruff"},
-	}
-
-	_, err := action.Decompose(ctx, params)
-	if err == nil {
-		t.Fatal("expected error for missing version")
-	}
-	if err.Error() != "pipx_install decomposition requires a resolved version" {
-		t.Errorf("unexpected error: %v", err)
 	}
 }
 
@@ -402,116 +423,51 @@ func TestDetectPythonNativeAddons(t *testing.T) {
 
 // -- pipx_install.go: Execute early validation --
 
-func TestPipxInstallAction_Execute_MissingPackage(t *testing.T) {
+func TestPipxInstallAction_Execute_Validation(t *testing.T) {
 	t.Parallel()
-	action := &PipxInstallAction{}
-	ctx := &ExecutionContext{
-		Context: context.Background(),
-		WorkDir: t.TempDir(),
-		Version: "1.0.0",
-		OS:      "linux",
-		Arch:    "amd64",
-		Recipe:  &recipe.Recipe{},
+	tests := []struct {
+		name        string
+		version     string
+		params      map[string]any
+		errContains string
+	}{
+		{
+			name:        "missing package",
+			version:     "1.0.0",
+			params:      map[string]any{},
+			errContains: "package",
+		},
+		{
+			name:        "invalid version",
+			version:     "evil;inject",
+			params:      map[string]any{"package": "flask"},
+			errContains: "version",
+		},
+		{
+			name:        "missing executables",
+			version:     "1.0.0",
+			params:      map[string]any{"package": "flask"},
+			errContains: "executables",
+		},
 	}
-	err := action.Execute(ctx, map[string]any{})
-	if err == nil || !strings.Contains(err.Error(), "package") {
-		t.Errorf("Expected package error, got %v", err)
-	}
-}
 
-func TestPipxInstallAction_Execute_InvalidVersion(t *testing.T) {
-	t.Parallel()
-	action := &PipxInstallAction{}
-	ctx := &ExecutionContext{
-		Context: context.Background(),
-		WorkDir: t.TempDir(),
-		Version: "evil;inject",
-		OS:      "linux",
-		Arch:    "amd64",
-		Recipe:  &recipe.Recipe{},
-	}
-	err := action.Execute(ctx, map[string]any{
-		"package": "flask",
-	})
-	if err == nil || !strings.Contains(err.Error(), "version") {
-		t.Errorf("Expected version error, got %v", err)
-	}
-}
-
-func TestPipxInstallAction_Execute_MissingExecutables(t *testing.T) {
-	t.Parallel()
-	action := &PipxInstallAction{}
-	ctx := &ExecutionContext{
-		Context: context.Background(),
-		WorkDir: t.TempDir(),
-		Version: "1.0.0",
-		OS:      "linux",
-		Arch:    "amd64",
-		Recipe:  &recipe.Recipe{},
-	}
-	err := action.Execute(ctx, map[string]any{
-		"package": "flask",
-	})
-	if err == nil || !strings.Contains(err.Error(), "executables") {
-		t.Errorf("Expected executables error, got %v", err)
-	}
-}
-
-// -- pipx_install.go: Decompose additional paths --
-
-func TestPipxInstallAction_Decompose_InvalidVersion(t *testing.T) {
-	t.Parallel()
-	action := &PipxInstallAction{}
-	ctx := &EvalContext{
-		Context:    context.Background(),
-		Version:    "evil;inject",
-		VersionTag: "v1.0.0",
-		OS:         "linux",
-		Arch:       "amd64",
-	}
-	_, err := action.Decompose(ctx, map[string]any{
-		"package":     "flask",
-		"executables": []any{"flask"},
-	})
-	if err == nil || !strings.Contains(err.Error(), "version") {
-		t.Errorf("Expected version error, got %v", err)
-	}
-}
-
-func TestPipxInstallAction_Decompose_MissingExecutables(t *testing.T) {
-	t.Parallel()
-	action := &PipxInstallAction{}
-	ctx := &EvalContext{
-		Context:    context.Background(),
-		Version:    "1.0.0",
-		VersionTag: "v1.0.0",
-		OS:         "linux",
-		Arch:       "amd64",
-	}
-	_, err := action.Decompose(ctx, map[string]any{
-		"package": "flask",
-	})
-	if err == nil || !strings.Contains(err.Error(), "executables") {
-		t.Errorf("Expected executables error, got %v", err)
-	}
-}
-
-func TestPipxInstallAction_Decompose_EmptyVersion(t *testing.T) {
-	t.Parallel()
-	action := &PipxInstallAction{}
-	ctx := &EvalContext{
-		Context:    context.Background(),
-		Version:    "",
-		VersionTag: "",
-		OS:         "linux",
-		Arch:       "amd64",
-	}
-	_, err := action.Decompose(ctx, map[string]any{
-		"package":     "flask",
-		"executables": []any{"flask"},
-	})
-	if err == nil || !strings.Contains(err.Error(), "version") {
-		t.Errorf("Expected version error, got %v", err)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			action := &PipxInstallAction{}
+			ctx := &ExecutionContext{
+				Context: context.Background(),
+				WorkDir: t.TempDir(),
+				Version: tt.version,
+				OS:      "linux",
+				Arch:    "amd64",
+				Recipe:  &recipe.Recipe{},
+			}
+			err := action.Execute(ctx, tt.params)
+			if err == nil || !strings.Contains(err.Error(), tt.errContains) {
+				t.Errorf("Expected error containing %q, got %v", tt.errContains, err)
+			}
+		})
 	}
 }
 

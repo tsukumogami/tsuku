@@ -224,47 +224,54 @@ func TestRunCommandAction_Execute_ContextCancellation(t *testing.T) {
 
 // -- run_command.go: Preflight --
 
-func TestRunCommandAction_Preflight_Additional(t *testing.T) {
+func TestRunCommandAction_Preflight_Cases(t *testing.T) {
 	t.Parallel()
 	action := &RunCommandAction{}
 
-	t.Run("missing command", func(t *testing.T) {
-		result := action.Preflight(map[string]any{})
-		if len(result.Errors) == 0 {
-			t.Error("Expected error for missing command")
-		}
-	})
-
-	t.Run("valid", func(t *testing.T) {
-		result := action.Preflight(map[string]any{
-			"command": "echo hello",
-		})
-		if len(result.Errors) != 0 {
-			t.Errorf("Preflight() errors = %v", result.Errors)
-		}
-	})
-}
-
-// -- run_command.go: Preflight warnings --
-
-func TestRunCommandAction_Preflight_HardcodedPaths(t *testing.T) {
-	t.Parallel()
-	action := &RunCommandAction{}
-	result := action.Preflight(map[string]any{
-		"command": "ls ~/.tsuku/tools/something",
-	})
-	if len(result.Warnings) == 0 {
-		t.Error("Expected warning for hardcoded tsuku paths")
+	tests := []struct {
+		name         string
+		params       map[string]any
+		wantErrors   bool
+		wantWarnings bool
+	}{
+		{
+			name:       "missing command",
+			params:     map[string]any{},
+			wantErrors: true,
+		},
+		{
+			name:       "valid command",
+			params:     map[string]any{"command": "echo hello"},
+			wantErrors: false,
+		},
+		{
+			name:         "hardcoded tilde tsuku path",
+			params:       map[string]any{"command": "ls ~/.tsuku/tools/something"},
+			wantWarnings: true,
+		},
+		{
+			name:         "hardcoded HOME env tsuku path",
+			params:       map[string]any{"command": "ls $HOME/.tsuku/bin/tool"},
+			wantWarnings: true,
+		},
 	}
-}
 
-func TestRunCommandAction_Preflight_HomeEnvPaths(t *testing.T) {
-	t.Parallel()
-	action := &RunCommandAction{}
-	result := action.Preflight(map[string]any{
-		"command": "ls $HOME/.tsuku/bin/tool",
-	})
-	if len(result.Warnings) == 0 {
-		t.Error("Expected warning for $HOME/.tsuku paths")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			result := action.Preflight(tt.params)
+			if tt.wantErrors && len(result.Errors) == 0 {
+				t.Error("expected errors but got none")
+			}
+			if !tt.wantErrors && len(result.Errors) != 0 {
+				t.Errorf("expected no errors, got: %v", result.Errors)
+			}
+			if tt.wantWarnings && len(result.Warnings) == 0 {
+				t.Error("expected warnings but got none")
+			}
+			if !tt.wantWarnings && len(result.Warnings) != 0 {
+				t.Errorf("expected no warnings, got: %v", result.Warnings)
+			}
+		})
 	}
 }
