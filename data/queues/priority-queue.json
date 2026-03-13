@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-13T15:47:02Z",
+  "updated_at": "2026-03-13T17:40:58Z",
   "entries": [
     {
       "name": "node",
@@ -20056,11 +20056,11 @@
       "name": "hercules",
       "source": "rubygems:hercules",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 4,
-      "next_retry_at": "2026-03-12T17:47:18.612536618Z"
+      "failure_count": 5,
+      "next_retry_at": "2026-03-14T09:40:58.791497802Z"
     },
     {
       "name": "heremaps/olp-cli/olp",
@@ -37216,11 +37216,11 @@
       "name": "pocketbase",
       "source": "npm:pocketbase",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 4,
-      "next_retry_at": "2026-03-13T12:18:24.016788746Z"
+      "failure_count": 5,
+      "next_retry_at": "2026-03-14T09:40:58.791497802Z"
     },
     {
       "name": "poco",
