@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-14T22:30:45Z",
+  "generated_at": "2026-03-14T23:29:20Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -39667,16 +39667,8 @@
       }
     },
     "last_run": {
-      "batch_id": "2026-03-14T22-28-53Z",
-      "ecosystems": {
-        "crates.io": 1,
-        "github": 1,
-        "homebrew": 1,
-        "npm": 1,
-        "pypi": 1,
-        "rubygems": 1
-      },
-      "timestamp": "2026-03-14T22:28:53Z",
+      "batch_id": "2026-03-14T23-28-59Z",
+      "timestamp": "2026-03-14T23:28:59Z",
       "succeeded": 0,
       "failed": 0,
       "total": 0
@@ -39692,7 +39684,7 @@
       "total": 1,
       "recipes_merged": 1
     },
-    "runs_since_last_success": 55
+    "runs_since_last_success": 56
   },
   "runs": [
     {
