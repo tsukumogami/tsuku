@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-14T20:31:31Z",
+  "generated_at": "2026-03-14T20:32:50Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -624,15 +624,6 @@
           "next_retry_at": "2026-03-19T12:16:00Z"
         },
         {
-          "id": "rubygems:dict",
-          "name": "dict",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-03-14T20:20:14Z"
-        },
-        {
           "id": "npm:dmd",
           "name": "dmd",
           "ecosystem": "npm",
@@ -694,6 +685,15 @@
           "category": "install_failed",
           "failure_count": 7,
           "next_retry_at": "2026-03-15T01:47:18Z"
+        },
+        {
+          "id": "rubygems:flash",
+          "name": "flash",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-17T12:32:06Z"
         },
         {
           "id": "rubygems:gitingest",
@@ -795,15 +795,6 @@
           "next_retry_at": "2026-03-16T00:56:07Z"
         },
         {
-          "id": "npm:mailhog",
-          "name": "mailhog",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-14T19:36:55Z"
-        },
-        {
           "id": "npm:markdown-toc",
           "name": "markdown-toc",
           "ecosystem": "npm",
@@ -847,6 +838,15 @@
           "category": "install_failed",
           "failure_count": 5,
           "next_retry_at": "2026-03-14T21:50:02Z"
+        },
+        {
+          "id": "npm:q",
+          "name": "q",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-15T12:32:06Z"
         },
         {
           "id": "npm:sigstore",
@@ -6253,6 +6253,15 @@
           "failure_count": 1
         },
         {
+          "id": "rubygems:dict",
+          "name": "dict",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-14T20:20:14Z"
+        },
+        {
           "id": "crates.io:diesel",
           "name": "diesel",
           "ecosystem": "crates.io",
@@ -8106,15 +8115,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "rubygems:flash",
-          "name": "flash",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-14T17:42:40Z"
         },
         {
           "id": "homebrew:flashrom",
@@ -14853,6 +14853,15 @@
           "next_retry_at": "2026-03-13T00:05:27Z"
         },
         {
+          "id": "npm:mailhog",
+          "name": "mailhog",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-14T19:36:55Z"
+        },
+        {
           "id": "homebrew:mailsy",
           "name": "mailsy",
           "ecosystem": "homebrew",
@@ -20652,15 +20661,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "npm:q",
-          "name": "q",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-14T15:41:15Z"
         },
         {
           "id": "homebrew:qalculate-gtk",
