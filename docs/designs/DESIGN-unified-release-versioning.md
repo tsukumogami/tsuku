@@ -278,8 +278,8 @@ Deliverables:
 | _Point the llm recipe's version resolution at the main repo instead of the old tsuku-llm repo, now that releases are unified._ | | |
 | [#2128: refactor(release): standardize artifact naming to {tool}-{os}-{arch}](https://github.com/tsukumogami/tsuku/issues/2128) | [#2127](https://github.com/tsukumogami/tsuku/issues/2127) | testable |
 | _Remove version suffixes from release artifact filenames and update GoReleaser templates, build steps, and recipe asset patterns._ | | |
-| [#2129: feat(llm): add gRPC version handshake for runtime version diagnostics](https://github.com/tsukumogami/tsuku/issues/2129) | [#2125](https://github.com/tsukumogami/tsuku/issues/2125) | testable |
-| _Add an `addon_version` field to the gRPC StatusResponse so the CLI can verify the running daemon matches the expected version._ | | |
+| ~~[#2129: feat(llm): add gRPC version handshake for runtime version diagnostics](https://github.com/tsukumogami/tsuku/issues/2129)~~ | ~~[#2125](https://github.com/tsukumogami/tsuku/issues/2125)~~ | ~~testable~~ |
+| ~~_Add an `addon_version` field to the gRPC StatusResponse so the CLI can verify the running daemon matches the expected version._~~ | | |
 
 ### Dependency Graph
 
@@ -300,8 +300,8 @@ graph TD
     classDef ready fill:#bbdefb
     classDef blocked fill:#fff9c4
 
-    class I2124,I2125,I2126 done
-    class I2127,I2129 ready
+    class I2124,I2125,I2126,I2129 done
+    class I2127 ready
     class I2128 blocked
 ```
 
