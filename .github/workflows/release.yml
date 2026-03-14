@@ -372,7 +372,6 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG="${GITHUB_REF_NAME}"
-          VERSION="${TAG#v}"
           TSUKU_BINARY="tsuku-${{ matrix.os }}-${{ matrix.arch }}"
           mkdir -p ./artifacts
 
