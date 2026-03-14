@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-14T14:33:11Z",
+  "generated_at": "2026-03-14T14:34:19Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -651,6 +651,15 @@
           "next_retry_at": "2026-03-14T21:57:16Z"
         },
         {
+          "id": "rubygems:dug",
+          "name": "dug",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-17T06:33:41Z"
+        },
+        {
           "id": "npm:e2b",
           "name": "e2b",
           "ecosystem": "npm",
@@ -667,15 +676,6 @@
           "category": "install_failed",
           "failure_count": 7,
           "next_retry_at": "2026-03-14T23:51:34Z"
-        },
-        {
-          "id": "rubygems:exiv2",
-          "name": "exiv2",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-14T13:53:55Z"
         },
         {
           "id": "npm:fastmcp",
@@ -831,6 +831,15 @@
           "next_retry_at": "2026-03-18T15:49:34Z"
         },
         {
+          "id": "npm:pocketbase",
+          "name": "pocketbase",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-15T22:33:41Z"
+        },
+        {
           "id": "npm:protoc-gen-js",
           "name": "protoc-gen-js",
           "ecosystem": "npm",
@@ -847,15 +856,6 @@
           "category": "install_failed",
           "failure_count": 4,
           "next_retry_at": "2026-03-14T15:41:15Z"
-        },
-        {
-          "id": "npm:sigstore",
-          "name": "sigstore",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-14T13:36:30Z"
         },
         {
           "id": "pypi:tctl",
@@ -6820,15 +6820,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:dug",
-          "name": "dug",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-14T12:18:24Z"
-        },
-        {
           "id": "homebrew:dumbpipe",
           "name": "dumbpipe",
           "ecosystem": "homebrew",
@@ -7499,6 +7490,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:exiv2",
+          "name": "exiv2",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-14T13:53:55Z"
         },
         {
           "id": "homebrew:exoscale/tap/exoscale-cli",
@@ -19555,15 +19555,6 @@
           "failure_count": 0
         },
         {
-          "id": "npm:pocketbase",
-          "name": "pocketbase",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-14T09:40:58Z"
-        },
-        {
           "id": "homebrew:poco",
           "name": "poco",
           "ecosystem": "homebrew",
@@ -23279,6 +23270,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:sigstore",
+          "name": "sigstore",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-14T13:36:30Z"
         },
         {
           "id": "homebrew:sile",
