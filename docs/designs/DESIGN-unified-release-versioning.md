@@ -274,10 +274,10 @@ Deliverables:
 | ~~_Pin the expected llm binary version at compile time so the CLI can detect mismatches and trigger auto-reinstall._~~ | | |
 | ~~[#2126: feat(ci): merge llm release pipeline into unified release workflow](https://github.com/tsukumogami/tsuku/issues/2126)~~ | ~~None~~ | ~~testable~~ |
 | ~~_Consolidate the separate llm release workflow into the main `release.yml`, building all three binaries under one tag._~~ | | |
-| [#2127: fix(recipes): add version section to llm recipe for unified tag resolution](https://github.com/tsukumogami/tsuku/issues/2127) | [#2126](https://github.com/tsukumogami/tsuku/issues/2126) | simple |
-| _Point the llm recipe's version resolution at the main repo instead of the old tsuku-llm repo, now that releases are unified._ | | |
-| [#2128: refactor(release): standardize artifact naming to {tool}-{os}-{arch}](https://github.com/tsukumogami/tsuku/issues/2128) | [#2127](https://github.com/tsukumogami/tsuku/issues/2127) | testable |
-| _Remove version suffixes from release artifact filenames and update GoReleaser templates, build steps, and recipe asset patterns._ | | |
+| ~~[#2127: fix(recipes): add version section to llm recipe for unified tag resolution](https://github.com/tsukumogami/tsuku/issues/2127)~~ | ~~[#2126](https://github.com/tsukumogami/tsuku/issues/2126)~~ | ~~simple~~ |
+| ~~_Point the llm recipe's version resolution at the main repo instead of the old tsuku-llm repo, now that releases are unified._~~ | | |
+| ~~[#2128: refactor(release): standardize artifact naming to {tool}-{os}-{arch}](https://github.com/tsukumogami/tsuku/issues/2128)~~ | ~~[#2127](https://github.com/tsukumogami/tsuku/issues/2127)~~ | ~~testable~~ |
+| ~~_Remove version suffixes from release artifact filenames and update GoReleaser templates, build steps, and recipe asset patterns._~~ | | |
 | [#2129: feat(llm): add gRPC version handshake for runtime version diagnostics](https://github.com/tsukumogami/tsuku/issues/2129) | [#2125](https://github.com/tsukumogami/tsuku/issues/2125) | testable |
 | _Add an `addon_version` field to the gRPC StatusResponse so the CLI can verify the running daemon matches the expected version._ | | |
 
@@ -300,9 +300,8 @@ graph TD
     classDef ready fill:#bbdefb
     classDef blocked fill:#fff9c4
 
-    class I2124,I2125,I2126 done
-    class I2127,I2129 ready
-    class I2128 blocked
+    class I2124,I2125,I2126,I2127,I2128 done
+    class I2129 ready
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked
