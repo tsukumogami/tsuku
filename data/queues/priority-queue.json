@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-14T05:50:02Z",
+  "updated_at": "2026-03-14T07:41:15Z",
   "entries": [
     {
       "name": "node",
@@ -7356,11 +7356,11 @@
       "name": "chisel",
       "source": "rubygems:chisel",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 7,
-      "next_retry_at": "2026-03-14T05:01:47.991907361Z"
+      "failure_count": 8,
+      "next_retry_at": "2026-03-19T15:41:15.224147293Z"
     },
     {
       "name": "chisel-tunnel",
@@ -39116,11 +39116,11 @@
       "name": "q",
       "source": "npm:q",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-03-13T05:59:47.522538342Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-03-14T15:41:15.224147293Z"
     },
     {
       "name": "qalculate-gtk",
