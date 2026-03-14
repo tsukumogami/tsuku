@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-14T04:15:22Z",
+  "generated_at": "2026-03-14T04:16:43Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -543,6 +543,15 @@
           "next_retry_at": "2026-03-19T09:57:45Z"
         },
         {
+          "id": "rubygems:cdo",
+          "name": "cdo",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 8,
+          "next_retry_at": "2026-03-19T12:16:00Z"
+        },
+        {
           "id": "npm:chainsaw",
           "name": "chainsaw",
           "ecosystem": "npm",
@@ -604,6 +613,15 @@
           "category": "install_failed",
           "failure_count": 7,
           "next_retry_at": "2026-03-15T17:59:47Z"
+        },
+        {
+          "id": "npm:datasette",
+          "name": "datasette",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 8,
+          "next_retry_at": "2026-03-19T12:16:00Z"
         },
         {
           "id": "rubygems:dict",
@@ -723,15 +741,6 @@
           "next_retry_at": "2026-03-14T23:47:02Z"
         },
         {
-          "id": "rubygems:haproxy",
-          "name": "haproxy",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-14T03:36:55Z"
-        },
-        {
           "id": "npm:hasura-cli",
           "name": "hasura-cli",
           "ecosystem": "npm",
@@ -829,15 +838,6 @@
           "category": "install_failed",
           "failure_count": 5,
           "next_retry_at": "2026-03-14T09:40:58Z"
-        },
-        {
-          "id": "npm:protoc-gen-js",
-          "name": "protoc-gen-js",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-14T02:44:38Z"
         },
         {
           "id": "pypi:tctl",
@@ -4119,15 +4119,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:cdo",
-          "name": "cdo",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-03-14T01:47:32Z"
-        },
-        {
           "id": "homebrew:ceres-solver",
           "name": "ceres-solver",
           "ecosystem": "homebrew",
@@ -5899,15 +5890,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "npm:datasette",
-          "name": "datasette",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-03-13T23:48:38Z"
         },
         {
           "id": "homebrew:datawire/blackbird/telepresence",
@@ -10472,6 +10454,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:haproxy",
+          "name": "haproxy",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-14T03:36:55Z"
         },
         {
           "id": "homebrew:harbor-cli",
@@ -20027,6 +20018,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "npm:protoc-gen-js",
+          "name": "protoc-gen-js",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-14T02:44:38Z"
         },
         {
           "id": "homebrew:protonpass/tap/pass-cli",
