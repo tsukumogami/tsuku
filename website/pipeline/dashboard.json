@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-14T12:50:51Z",
+  "generated_at": "2026-03-14T12:52:04Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 45,
-      "pending": 3888,
+      "failed": 46,
+      "pending": 3887,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 45,
-        "pending": 3865,
+        "failed": 46,
+        "pending": 3864,
         "success": 1326
       }
     },
@@ -68,8 +68,8 @@
         "total": 1
       },
       "npm": {
-        "failed": 17,
-        "pending": 4,
+        "failed": 18,
+        "pending": 3,
         "success": 54,
         "total": 75
       },
@@ -651,13 +651,13 @@
           "next_retry_at": "2026-03-14T21:57:16Z"
         },
         {
-          "id": "rubygems:dug",
-          "name": "dug",
-          "ecosystem": "rubygems",
+          "id": "npm:e2b",
+          "name": "e2b",
+          "ecosystem": "npm",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-14T12:18:24Z"
+          "failure_count": 8,
+          "next_retry_at": "2026-03-19T20:51:27Z"
         },
         {
           "id": "npm:ent",
@@ -748,6 +748,15 @@
           "category": "install_failed",
           "failure_count": 7,
           "next_retry_at": "2026-03-16T07:47:02Z"
+        },
+        {
+          "id": "rubygems:hercules",
+          "name": "hercules",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-15T20:51:27Z"
         },
         {
           "id": "rubygems:httpx",
@@ -6811,6 +6820,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:dug",
+          "name": "dug",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-14T12:18:24Z"
+        },
+        {
           "id": "homebrew:dumbpipe",
           "name": "dumbpipe",
           "ecosystem": "homebrew",
@@ -6963,15 +6981,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:e2b",
-          "name": "e2b",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-03-14T09:54:12Z"
         },
         {
           "id": "homebrew:eask-cli",
@@ -10738,15 +10747,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "rubygems:hercules",
-          "name": "hercules",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-14T09:40:58Z"
         },
         {
           "id": "homebrew:heremaps/olp-cli/olp",
