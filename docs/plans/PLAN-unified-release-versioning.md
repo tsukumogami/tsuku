@@ -79,7 +79,8 @@ graph TD
     classDef tracksPlan fill:#FFE0B2,stroke:#F57C00,color:#000
 
     class I2124,I2125,I2126 ready
-    class I2127,I2128,I2129 blocked
+    class I2128,I2129 blocked
+    class I2127 done
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design/tracks-plan

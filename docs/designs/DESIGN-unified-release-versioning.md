@@ -301,7 +301,8 @@ graph TD
     classDef blocked fill:#fff9c4
 
     class I2124,I2125,I2126 done
-    class I2127,I2129 ready
+    class I2129 ready
+    class I2127 done
     class I2128 blocked
 ```
 
