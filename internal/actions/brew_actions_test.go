@@ -1,6 +1,7 @@
 package actions
 
 import (
+	"context"
 	"strings"
 	"testing"
 )
@@ -377,5 +378,37 @@ func TestBrewCaskAction_Describe(t *testing.T) {
 				t.Errorf("Describe() = %q, want %q", got, tt.want)
 			}
 		})
+	}
+}
+
+// -- brew_actions.go: BrewInstallAction.Execute missing packages branch --
+
+func TestBrewInstallAction_Execute_MissingPackages(t *testing.T) {
+	t.Parallel()
+	action := &BrewInstallAction{}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: t.TempDir(),
+		Version: "1.0.0",
+	}
+	err := action.Execute(ctx, map[string]any{})
+	if err == nil {
+		t.Error("Expected error for missing packages")
+	}
+}
+
+// -- brew_actions.go: BrewCaskAction.Execute missing packages branch --
+
+func TestBrewCaskAction_Execute_MissingPackages(t *testing.T) {
+	t.Parallel()
+	action := &BrewCaskAction{}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: t.TempDir(),
+		Version: "1.0.0",
+	}
+	err := action.Execute(ctx, map[string]any{})
+	if err == nil {
+		t.Error("Expected error for missing packages")
 	}
 }

@@ -398,6 +398,11 @@ func TestMapKeys(t *testing.T) {
 		want int
 	}{
 		{
+			name: "nil map",
+			m:    nil,
+			want: 0,
+		},
+		{
 			name: "empty map",
 			m:    map[string]string{},
 			want: 0,
@@ -417,6 +422,9 @@ func TestMapKeys(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			keys := mapKeys(tt.m)
+			if keys == nil {
+				t.Error("mapKeys() should return empty slice, not nil")
+			}
 			if len(keys) != tt.want {
 				t.Errorf("mapKeys() returned %d keys, want %d", len(keys), tt.want)
 			}
@@ -435,95 +443,76 @@ func TestMapKeys(t *testing.T) {
 	}
 }
 
-func TestMapKeys_Empty(t *testing.T) {
-	keys := mapKeys(nil)
-	if keys == nil {
-		t.Error("mapKeys(nil) should return empty slice, not nil")
-	}
-	if len(keys) != 0 {
-		t.Errorf("mapKeys(nil) returned %d keys, want 0", len(keys))
-	}
-}
-
-func TestResolveRuntimeDeps_NoRuntimeDeps(t *testing.T) {
-	cfg, cleanup := testutil.NewTestConfig(t)
-	defer cleanup()
-
-	mgr := install.New(cfg)
-
-	// Create a recipe without runtime dependencies
-	r := &recipe.Recipe{
-		Metadata: recipe.MetadataSection{
-			Name: "test-tool",
+func TestResolveRuntimeDeps(t *testing.T) {
+	tests := []struct {
+		name          string
+		runtimeDeps   []string
+		installedDeps map[string]string // tool -> version to pre-install
+		wantNil       bool
+		wantKeys      map[string]string // expected key->version in result
+	}{
+		{
+			name:    "no runtime deps",
+			wantNil: true,
+		},
+		{
+			name:          "with installed runtime dep",
+			runtimeDeps:   []string{"nodejs"},
+			installedDeps: map[string]string{"nodejs": "20.10.0"},
+			wantKeys:      map[string]string{"nodejs": "20.10.0"},
+		},
+		{
+			name:        "missing runtime dep",
+			runtimeDeps: []string{"nodejs"},
+			// wantNil or empty map are both acceptable
 		},
 	}
 
-	result := resolveRuntimeDeps(r, mgr)
-	if result != nil {
-		t.Errorf("resolveRuntimeDeps() = %v, want nil for recipe without runtime deps", result)
-	}
-}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg, cleanup := testutil.NewTestConfig(t)
+			defer cleanup()
 
-func TestResolveRuntimeDeps_WithRuntimeDeps(t *testing.T) {
-	cfg, cleanup := testutil.NewTestConfig(t)
-	defer cleanup()
+			mgr := install.New(cfg)
 
-	mgr := install.New(cfg)
+			// Pre-install any dependencies
+			for tool, version := range tt.installedDeps {
+				sm := mgr.GetState()
+				v := version
+				err := sm.UpdateTool(tool, func(ts *install.ToolState) {
+					ts.Version = v
+					ts.IsExplicit = true
+				})
+				if err != nil {
+					t.Fatalf("UpdateTool(%s) error = %v", tool, err)
+				}
+			}
 
-	// Install a runtime dependency first
-	sm := mgr.GetState()
-	err := sm.UpdateTool("nodejs", func(ts *install.ToolState) {
-		ts.Version = "20.10.0"
-		ts.IsExplicit = true
-	})
-	if err != nil {
-		t.Fatalf("UpdateTool() error = %v", err)
-	}
+			r := &recipe.Recipe{
+				Metadata: recipe.MetadataSection{
+					Name:                "test-tool",
+					RuntimeDependencies: tt.runtimeDeps,
+				},
+			}
 
-	// Create a recipe with runtime_dependencies
-	r := &recipe.Recipe{
-		Metadata: recipe.MetadataSection{
-			Name:                "npm-tool",
-			RuntimeDependencies: []string{"nodejs"},
-		},
-	}
+			result := resolveRuntimeDeps(r, mgr)
 
-	result := resolveRuntimeDeps(r, mgr)
-	if result == nil {
-		t.Fatal("resolveRuntimeDeps() = nil, want map with nodejs")
-	}
+			if tt.wantNil {
+				if result != nil {
+					t.Errorf("resolveRuntimeDeps() = %v, want nil", result)
+				}
+				return
+			}
 
-	version, ok := result["nodejs"]
-	if !ok {
-		t.Error("resolveRuntimeDeps() missing nodejs key")
-	}
-	if version != "20.10.0" {
-		t.Errorf("resolveRuntimeDeps()[nodejs] = %q, want %q", version, "20.10.0")
-	}
-}
-
-func TestResolveRuntimeDeps_MissingDep(t *testing.T) {
-	cfg, cleanup := testutil.NewTestConfig(t)
-	defer cleanup()
-
-	mgr := install.New(cfg)
-
-	// Create a recipe with a runtime dependency that isn't installed
-	r := &recipe.Recipe{
-		Metadata: recipe.MetadataSection{
-			Name:                "npm-tool",
-			RuntimeDependencies: []string{"nodejs"},
-		},
-	}
-
-	result := resolveRuntimeDeps(r, mgr)
-	// Should return empty map (not nil) since deps were specified but not found
-	if result == nil {
-		// This is acceptable - nil means no deps resolved
-		return
-	}
-	if len(result) != 0 {
-		t.Errorf("resolveRuntimeDeps() = %v, want empty map for missing dep", result)
+			for key, wantVersion := range tt.wantKeys {
+				got, ok := result[key]
+				if !ok {
+					t.Errorf("resolveRuntimeDeps() missing key %q", key)
+				} else if got != wantVersion {
+					t.Errorf("resolveRuntimeDeps()[%s] = %q, want %q", key, got, wantVersion)
+				}
+			}
+		})
 	}
 }
 

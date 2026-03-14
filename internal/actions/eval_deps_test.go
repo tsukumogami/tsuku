@@ -132,3 +132,60 @@ func TestIsToolInstalled(t *testing.T) {
 		t.Error("isToolInstalled() = true, want false for non-existent directory")
 	}
 }
+
+// -- eval_deps.go: GetEvalDeps --
+
+func TestGetEvalDeps_UnknownAction(t *testing.T) {
+	t.Parallel()
+	deps := GetEvalDeps("nonexistent_action_xyz")
+	if deps != nil {
+		t.Errorf("GetEvalDeps(unknown) = %v, want nil", deps)
+	}
+}
+
+func TestGetEvalDeps_KnownAction(t *testing.T) {
+	t.Parallel()
+	deps := GetEvalDeps("gem_install")
+	// gem_install has ruby as eval-time dep
+	if len(deps) == 0 {
+		t.Error("GetEvalDeps(gem_install) should return eval-time deps")
+	}
+}
+
+// -- eval_deps.go: CheckEvalDeps --
+
+func TestCheckEvalDeps_EmptyDeps(t *testing.T) {
+	t.Parallel()
+	result := CheckEvalDeps(nil)
+	if result != nil {
+		t.Errorf("CheckEvalDeps(nil) = %v, want nil", result)
+	}
+}
+
+// -- eval_deps.go: checkEvalDepsInDir additional paths --
+
+func TestCheckEvalDepsInDir_MixedInstalled(t *testing.T) {
+	t.Parallel()
+	tmpDir := t.TempDir()
+
+	if err := os.MkdirAll(filepath.Join(tmpDir, "go-1.21.0"), 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(filepath.Join(tmpDir, "rust-1.76.0"), 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	missing := checkEvalDepsInDir([]string{"go", "python", "rust"}, tmpDir)
+	if len(missing) != 1 || missing[0] != "python" {
+		t.Errorf("checkEvalDepsInDir() = %v, want [python]", missing)
+	}
+}
+
+func TestCheckEvalDepsInDir_EmptyDir(t *testing.T) {
+	t.Parallel()
+	tmpDir := t.TempDir()
+	missing := checkEvalDepsInDir([]string{"go"}, tmpDir)
+	if len(missing) != 1 {
+		t.Errorf("checkEvalDepsInDir() = %v, want [go]", missing)
+	}
+}

@@ -4,6 +4,9 @@ import (
 	"context"
 	"testing"
 
+	"path/filepath"
+	"strings"
+
 	"github.com/tsukumogami/tsuku/internal/recipe"
 )
 
@@ -113,27 +116,22 @@ func TestGitHubArchiveAction_VerificationEnforcement(t *testing.T) {
 	}
 }
 
-func TestDownloadArchiveAction_Name(t *testing.T) {
+func TestCompositeAction_Name(t *testing.T) {
 	t.Parallel()
-	action := &DownloadArchiveAction{}
-	if action.Name() != "download_archive" {
-		t.Errorf("Name() = %q, want %q", action.Name(), "download_archive")
+	tests := []struct {
+		action Action
+		want   string
+	}{
+		{&DownloadArchiveAction{}, "download_archive"},
+		{&GitHubArchiveAction{}, "github_archive"},
+		{&GitHubFileAction{}, "github_file"},
 	}
-}
-
-func TestGitHubArchiveAction_Name(t *testing.T) {
-	t.Parallel()
-	action := &GitHubArchiveAction{}
-	if action.Name() != "github_archive" {
-		t.Errorf("Name() = %q, want %q", action.Name(), "github_archive")
-	}
-}
-
-func TestGitHubFileAction_Name(t *testing.T) {
-	t.Parallel()
-	action := &GitHubFileAction{}
-	if action.Name() != "github_file" {
-		t.Errorf("Name() = %q, want %q", action.Name(), "github_file")
+	for _, tt := range tests {
+		t.Run(tt.want, func(t *testing.T) {
+			if got := tt.action.Name(); got != tt.want {
+				t.Errorf("Name() = %q, want %q", got, tt.want)
+			}
+		})
 	}
 }
 
@@ -753,5 +751,1454 @@ func TestDownloadArchiveAction_VerificationEnforcement(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+// -- composites.go: GitHubArchiveAction.Preflight additional warning paths --
+
+func TestGitHubArchiveAction_Preflight_ValidMinimal(t *testing.T) {
+	t.Parallel()
+	action := &GitHubArchiveAction{}
+	result := action.Preflight(map[string]any{
+		"repo":          "owner/repo",
+		"asset_pattern": "tool-{version}-{os}-{arch}.tar.gz",
+	})
+	if len(result.Errors) != 0 {
+		t.Errorf("Preflight() errors = %v", result.Errors)
+	}
+}
+
+func TestGitHubArchiveAction_Preflight_MissingRepo(t *testing.T) {
+	t.Parallel()
+	action := &GitHubArchiveAction{}
+	result := action.Preflight(map[string]any{
+		"asset_pattern": "tool-{version}.tar.gz",
+		"binaries":      []any{"bin/tool"},
+	})
+	if len(result.Errors) == 0 {
+		t.Error("Expected error for missing repo")
+	}
+}
+
+func TestGitHubFileAction_Preflight_MissingAssetPattern(t *testing.T) {
+	t.Parallel()
+	action := &GitHubFileAction{}
+	result := action.Preflight(map[string]any{
+		"repo":   "owner/repo",
+		"binary": "tool",
+	})
+	if len(result.Errors) == 0 {
+		t.Error("Expected error for missing asset_pattern")
+	}
+}
+
+func TestGitHubFileAction_Preflight_ValidMinimal(t *testing.T) {
+	t.Parallel()
+	action := &GitHubFileAction{}
+	result := action.Preflight(map[string]any{
+		"repo":          "owner/repo",
+		"asset_pattern": "tool-{version}",
+	})
+	if len(result.Errors) != 0 {
+		t.Errorf("Preflight() errors = %v", result.Errors)
+	}
+}
+
+// -- composites.go: extractSourceFiles helper --
+
+func TestExtractSourceFiles_StringSlice(t *testing.T) {
+	t.Parallel()
+	result := extractSourceFiles([]any{"bin/tool1", "bin/tool2"})
+	if len(result) != 2 {
+		t.Errorf("extractSourceFiles() returned %d files, want 2", len(result))
+	}
+}
+
+func TestExtractSourceFiles_MapSlice(t *testing.T) {
+	t.Parallel()
+	result := extractSourceFiles([]any{
+		map[string]any{"src": "build/tool", "dest": "bin/tool"},
+	})
+	if len(result) != 1 || result[0] != "build/tool" {
+		t.Errorf("extractSourceFiles() = %v, want [build/tool]", result)
+	}
+}
+
+// -- composites.go: DownloadArchiveAction Decompose with specific params --
+
+func TestDownloadArchiveAction_Decompose_WithOSMapping(t *testing.T) {
+	t.Parallel()
+	action := &DownloadArchiveAction{}
+	ctx := &EvalContext{
+		Context:    context.Background(),
+		Version:    "1.0.0",
+		VersionTag: "v1.0.0",
+		OS:         "darwin",
+		Arch:       "arm64",
+	}
+	steps, err := action.Decompose(ctx, map[string]any{
+		"url":        "https://nonexistent.invalid/tool-{version}-{os}-{arch}.tar.gz",
+		"binaries":   []any{"bin/tool"},
+		"os_mapping": map[string]any{"darwin": "macOS"},
+	})
+	if err != nil {
+		t.Fatalf("Decompose() error = %v", err)
+	}
+	if len(steps) == 0 {
+		t.Error("Decompose() returned 0 steps")
+	}
+}
+
+func TestDownloadArchiveAction_Decompose_WithArchMapping(t *testing.T) {
+	t.Parallel()
+	action := &DownloadArchiveAction{}
+	ctx := &EvalContext{
+		Context:    context.Background(),
+		Version:    "1.0.0",
+		VersionTag: "v1.0.0",
+		OS:         "linux",
+		Arch:       "amd64",
+	}
+	steps, err := action.Decompose(ctx, map[string]any{
+		"url":          "https://nonexistent.invalid/tool-{version}-{os}-{arch}.tar.gz",
+		"binaries":     []any{"bin/tool"},
+		"arch_mapping": map[string]any{"amd64": "x86_64"},
+	})
+	if err != nil {
+		t.Fatalf("Decompose() error = %v", err)
+	}
+	if len(steps) == 0 {
+		t.Error("Decompose() returned 0 steps")
+	}
+}
+
+// -- composites.go: GitHubArchiveAction.Execute additional validation paths --
+
+func TestGitHubArchiveAction_Execute_CannotDetectFormat(t *testing.T) {
+	t.Parallel()
+	action := &GitHubArchiveAction{}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: t.TempDir(),
+		Version: "1.0.0",
+		OS:      "linux",
+		Arch:    "amd64",
+		Recipe:  &recipe.Recipe{},
+	}
+	err := action.Execute(ctx, map[string]any{
+		"repo":          "owner/repo",
+		"asset_pattern": "tool-{version}-{os}-{arch}",
+	})
+	if err == nil || !strings.Contains(err.Error(), "archive format") {
+		t.Errorf("Expected archive format error, got %v", err)
+	}
+}
+
+func TestGitHubArchiveAction_Execute_DirectoryModeWithoutVerify(t *testing.T) {
+	t.Parallel()
+	action := &GitHubArchiveAction{}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: t.TempDir(),
+		Version: "1.0.0",
+		OS:      "linux",
+		Arch:    "amd64",
+		Recipe:  &recipe.Recipe{},
+	}
+	err := action.Execute(ctx, map[string]any{
+		"repo":          "owner/repo",
+		"asset_pattern": "tool-{version}.tar.gz",
+		"binaries":      []any{"tool"},
+		"install_mode":  "directory",
+	})
+	if err == nil || !strings.Contains(err.Error(), "verify") {
+		t.Errorf("Expected verify error, got %v", err)
+	}
+}
+
+// -- composites.go: DownloadArchiveAction.Execute with explicit dest --
+
+func TestDownloadArchiveAction_Execute_WithDest(t *testing.T) {
+	t.Parallel()
+	action := &DownloadArchiveAction{}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: t.TempDir(),
+		Version: "1.0.0",
+		OS:      "linux",
+		Arch:    "amd64",
+		Recipe:  &recipe.Recipe{},
+	}
+	// Should fail at download, not at parsing
+	err := action.Execute(ctx, map[string]any{
+		"url":      "https://nonexistent.invalid/tool-1.0.0.tar.gz",
+		"binaries": []any{"bin/tool"},
+		"dest":     "custom-name.tar.gz",
+	})
+	if err == nil {
+		t.Error("Expected download error")
+	}
+	// Should not be a format detection error
+	if strings.Contains(err.Error(), "archive format") {
+		t.Error("Did not expect format detection error")
+	}
+}
+
+// -- composites.go: resolveAssetName without wildcards --
+
+func TestGitHubArchiveAction_resolveAssetName_NoWildcards(t *testing.T) {
+	t.Parallel()
+	action := &GitHubArchiveAction{}
+	ctx := &EvalContext{
+		Context:    context.Background(),
+		Version:    "1.0.0",
+		VersionTag: "v1.0.0",
+		OS:         "linux",
+		Arch:       "amd64",
+	}
+	name, err := action.resolveAssetName(ctx, map[string]any{
+		"os_mapping":   map[string]any{"linux": "Linux"},
+		"arch_mapping": map[string]any{"amd64": "x86_64"},
+	}, "tool-{version}-{os}-{arch}.tar.gz", "owner/repo")
+	if err != nil {
+		t.Fatalf("resolveAssetName() error = %v", err)
+	}
+	if name != "tool-1.0.0-Linux-x86_64.tar.gz" {
+		t.Errorf("resolveAssetName() = %q, want %q", name, "tool-1.0.0-Linux-x86_64.tar.gz")
+	}
+}
+
+// -- composites.go: GitHubArchiveAction.Execute with OS/arch mapping --
+
+func TestGitHubArchiveAction_Execute_WithOSMapping(t *testing.T) {
+	t.Parallel()
+	action := &GitHubArchiveAction{}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: t.TempDir(),
+		Version: "1.0.0",
+		OS:      "linux",
+		Arch:    "amd64",
+		Recipe:  &recipe.Recipe{Verify: &recipe.VerifySection{Command: "tool --version"}},
+	}
+	// Should fail at download but get past the mapping logic
+	err := action.Execute(ctx, map[string]any{
+		"repo":          "owner/repo",
+		"asset_pattern": "tool-{version}-{os}-{arch}.tar.gz",
+		"binaries":      []any{"tool"},
+		"os_mapping":    map[string]any{"linux": "Linux"},
+		"arch_mapping":  map[string]any{"amd64": "x86_64"},
+	})
+	// Should fail at download, not at param validation
+	if err == nil {
+		t.Error("Expected error (download failure)")
+	}
+	if strings.Contains(err.Error(), "repo") || strings.Contains(err.Error(), "asset_pattern") ||
+		strings.Contains(err.Error(), "binaries") || strings.Contains(err.Error(), "archive format") {
+		t.Errorf("Failed too early at parameter validation: %v", err)
+	}
+}
+
+// -- composites.go: GitHubFileAction.Execute additional validation --
+
+func TestGitHubFileAction_Execute_WithOSMapping(t *testing.T) {
+	t.Parallel()
+	action := &GitHubFileAction{}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: t.TempDir(),
+		Version: "1.0.0",
+		OS:      "linux",
+		Arch:    "amd64",
+		Recipe:  &recipe.Recipe{},
+	}
+	// Should fail at download but get past mapping logic
+	err := action.Execute(ctx, map[string]any{
+		"repo":          "owner/repo",
+		"asset_pattern": "tool-{version}-{os}-{arch}",
+		"binary":        "tool",
+		"os_mapping":    map[string]any{"linux": "Linux"},
+		"arch_mapping":  map[string]any{"amd64": "x86_64"},
+	})
+	if err == nil {
+		t.Error("Expected error (download failure)")
+	}
+}
+
+// -- composites.go: DownloadArchiveAction.Execute with strip_dirs --
+
+func TestDownloadArchiveAction_Execute_WithStripDirs(t *testing.T) {
+	t.Parallel()
+	action := &DownloadArchiveAction{}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: t.TempDir(),
+		Version: "1.0.0",
+		OS:      "linux",
+		Arch:    "amd64",
+		Recipe:  &recipe.Recipe{},
+	}
+	// Should fail at download, not at parsing
+	err := action.Execute(ctx, map[string]any{
+		"url":        "https://nonexistent.invalid/tool-1.0.0.tar.gz",
+		"binaries":   []any{"bin/tool"},
+		"strip_dirs": 1,
+	})
+	if err == nil {
+		t.Error("Expected download error")
+	}
+}
+
+// -- composites.go: DownloadArchiveAction.Execute with directory install_mode --
+
+func TestDownloadArchiveAction_Execute_DirectoryModeWithoutVerify(t *testing.T) {
+	t.Parallel()
+	action := &DownloadArchiveAction{}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: t.TempDir(),
+		Version: "1.0.0",
+		OS:      "linux",
+		Arch:    "amd64",
+		Recipe:  &recipe.Recipe{},
+	}
+	err := action.Execute(ctx, map[string]any{
+		"url":          "https://nonexistent.invalid/tool-1.0.0.tar.gz",
+		"binaries":     []any{"tool"},
+		"install_mode": "directory",
+	})
+	if err == nil || !strings.Contains(err.Error(), "verify") {
+		t.Errorf("Expected verify section error, got %v", err)
+	}
+}
+
+func TestDownloadArchiveAction_Execute_DirectoryWrappedModeWithoutVerify(t *testing.T) {
+	t.Parallel()
+	action := &DownloadArchiveAction{}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: t.TempDir(),
+		Version: "1.0.0",
+		OS:      "linux",
+		Arch:    "amd64",
+		Recipe:  &recipe.Recipe{},
+	}
+	err := action.Execute(ctx, map[string]any{
+		"url":          "https://nonexistent.invalid/tool-1.0.0.tar.gz",
+		"binaries":     []any{"tool"},
+		"install_mode": "directory_wrapped",
+	})
+	if err == nil || !strings.Contains(err.Error(), "verify") {
+		t.Errorf("Expected verify section error, got %v", err)
+	}
+}
+
+// -- composites.go: GitHubFileAction.Execute with binaries format --
+
+func TestGitHubFileAction_Execute_NewBinariesFormat(t *testing.T) {
+	t.Parallel()
+	action := &GitHubFileAction{}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: t.TempDir(),
+		Version: "1.0.0",
+		OS:      "linux",
+		Arch:    "amd64",
+		Recipe:  &recipe.Recipe{},
+	}
+	// Uses new binaries format with src/dest maps
+	err := action.Execute(ctx, map[string]any{
+		"repo":          "owner/repo",
+		"asset_pattern": "tool-{version}-{os}-{arch}",
+		"binaries": []any{
+			map[string]any{"src": "tool", "dest": "bin/tool"},
+		},
+	})
+	// Should fail at download, not at param parsing
+	if err == nil {
+		t.Error("Expected error (download failure)")
+	}
+}
+
+func TestGitHubFileAction_Execute_BinariesMissingSrc(t *testing.T) {
+	t.Parallel()
+	action := &GitHubFileAction{}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: t.TempDir(),
+		Version: "1.0.0",
+		OS:      "linux",
+		Arch:    "amd64",
+		Recipe:  &recipe.Recipe{},
+	}
+	err := action.Execute(ctx, map[string]any{
+		"repo":          "owner/repo",
+		"asset_pattern": "tool-{version}",
+		"binaries":      []any{map[string]any{"dest": "bin/tool"}},
+	})
+	if err == nil || !strings.Contains(err.Error(), "binaries[0].src") {
+		t.Errorf("Expected binaries[0].src error, got %v", err)
+	}
+}
+
+func TestGitHubFileAction_Execute_NoBinaryOrBinaries(t *testing.T) {
+	t.Parallel()
+	action := &GitHubFileAction{}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: t.TempDir(),
+		Version: "1.0.0",
+		OS:      "linux",
+		Arch:    "amd64",
+		Recipe:  &recipe.Recipe{},
+	}
+	err := action.Execute(ctx, map[string]any{
+		"repo":          "owner/repo",
+		"asset_pattern": "tool-{version}",
+	})
+	if err == nil || !strings.Contains(err.Error(), "binary") {
+		t.Errorf("Expected binary error, got %v", err)
+	}
+}
+
+// -- composites.go: DownloadArchiveAction.Execute with OS/arch mapping --
+
+func TestDownloadArchiveAction_Execute_WithOSMapping(t *testing.T) {
+	t.Parallel()
+	action := &DownloadArchiveAction{}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: t.TempDir(),
+		Version: "1.0.0",
+		OS:      "linux",
+		Arch:    "amd64",
+		Recipe:  &recipe.Recipe{},
+	}
+	// Should fail at download, exercising the mapping code paths
+	err := action.Execute(ctx, map[string]any{
+		"url":          "https://nonexistent.invalid/tool-{version}-{os}-{arch}.tar.gz",
+		"binaries":     []any{"tool"},
+		"os_mapping":   map[string]any{"linux": "Linux"},
+		"arch_mapping": map[string]any{"amd64": "x86_64"},
+	})
+	if err == nil {
+		t.Error("Expected error (download failure)")
+	}
+	// Should fail at download, not at params
+	if strings.Contains(err.Error(), "archive format") || strings.Contains(err.Error(), "binaries") {
+		t.Errorf("Failed too early: %v", err)
+	}
+}
+
+// -- GitHubArchiveAction.Decompose with OS/arch mapping --
+
+func TestGitHubArchiveAction_Decompose_WithMappings(t *testing.T) {
+	t.Parallel()
+	action := &GitHubArchiveAction{}
+	ctx := &EvalContext{
+		Context:    context.Background(),
+		Version:    "1.0.0",
+		VersionTag: "v1.0.0",
+		OS:         "linux",
+		Arch:       "amd64",
+	}
+	steps, err := action.Decompose(ctx, map[string]any{
+		"repo":          "owner/repo",
+		"asset_pattern": "tool-{version}-{os}-{arch}.tar.gz",
+		"binaries":      []any{"tool"},
+		"os_mapping":    map[string]any{"linux": "Linux"},
+		"arch_mapping":  map[string]any{"amd64": "x86_64"},
+	})
+	if err != nil {
+		t.Fatalf("Decompose() error = %v", err)
+	}
+	if len(steps) == 0 {
+		t.Error("Decompose() returned no steps")
+	}
+}
+
+// -- GitHubFileAction.Decompose with binaries format --
+
+func TestGitHubFileAction_Decompose_WithBinariesFormat(t *testing.T) {
+	t.Parallel()
+	action := &GitHubFileAction{}
+	ctx := &EvalContext{
+		Context:    context.Background(),
+		Version:    "1.0.0",
+		VersionTag: "v1.0.0",
+		OS:         "linux",
+		Arch:       "amd64",
+	}
+	steps, err := action.Decompose(ctx, map[string]any{
+		"repo":          "owner/repo",
+		"asset_pattern": "tool-{version}-{os}-{arch}",
+		"binaries": []any{
+			map[string]any{"src": "tool", "dest": "bin/tool"},
+		},
+	})
+	if err != nil {
+		t.Fatalf("Decompose() error = %v", err)
+	}
+	if len(steps) == 0 {
+		t.Error("Decompose() returned no steps")
+	}
+}
+
+// -- composites.go: DownloadArchiveAction Execute error paths --
+
+func TestDownloadArchiveAction_Execute_NoFormat(t *testing.T) {
+	t.Parallel()
+	action := &DownloadArchiveAction{}
+	ctx := &ExecutionContext{
+		Context:    context.Background(),
+		WorkDir:    t.TempDir(),
+		InstallDir: t.TempDir(),
+		Version:    "1.0.0",
+		OS:         "linux",
+		Arch:       "amd64",
+	}
+
+	err := action.Execute(ctx, map[string]any{
+		"url":      "https://example.com/tool",
+		"binaries": []any{"bin/tool"},
+	})
+	if err == nil {
+		t.Error("Expected error when format cannot be auto-detected")
+	}
+}
+
+func TestDownloadArchiveAction_Execute_NoBinaries(t *testing.T) {
+	t.Parallel()
+	action := &DownloadArchiveAction{}
+	ctx := &ExecutionContext{
+		Context:    context.Background(),
+		WorkDir:    t.TempDir(),
+		InstallDir: t.TempDir(),
+		Version:    "1.0.0",
+		OS:         "linux",
+		Arch:       "amd64",
+	}
+
+	err := action.Execute(ctx, map[string]any{
+		"url": "https://example.com/tool.tar.gz",
+	})
+	if err == nil {
+		t.Error("Expected error when binaries is missing")
+	}
+}
+
+// -- composites.go: GitHubArchiveAction Execute error paths --
+
+func TestGitHubArchiveAction_Execute_NoRepo(t *testing.T) {
+	t.Parallel()
+	action := &GitHubArchiveAction{}
+	ctx := &ExecutionContext{
+		Context:    context.Background(),
+		WorkDir:    t.TempDir(),
+		InstallDir: t.TempDir(),
+		Version:    "1.0.0",
+		OS:         "linux",
+		Arch:       "amd64",
+	}
+
+	err := action.Execute(ctx, map[string]any{
+		"asset_pattern": "tool-{os}-{arch}.tar.gz",
+		"binaries":      []any{"bin/tool"},
+	})
+	if err == nil {
+		t.Error("Expected error when repo is missing")
+	}
+}
+
+func TestGitHubArchiveAction_Execute_NoAssetPattern(t *testing.T) {
+	t.Parallel()
+	action := &GitHubArchiveAction{}
+	ctx := &ExecutionContext{
+		Context:    context.Background(),
+		WorkDir:    t.TempDir(),
+		InstallDir: t.TempDir(),
+		Version:    "1.0.0",
+		OS:         "linux",
+		Arch:       "amd64",
+	}
+
+	err := action.Execute(ctx, map[string]any{
+		"repo":     "cli/cli",
+		"binaries": []any{"bin/tool"},
+	})
+	if err == nil {
+		t.Error("Expected error when asset_pattern is missing")
+	}
+}
+
+// -- composites.go: GitHubFileAction Execute error paths --
+
+func TestGitHubFileAction_Execute_NoRepo(t *testing.T) {
+	t.Parallel()
+	action := &GitHubFileAction{}
+	ctx := &ExecutionContext{
+		Context:    context.Background(),
+		WorkDir:    t.TempDir(),
+		InstallDir: t.TempDir(),
+		Version:    "1.0.0",
+		OS:         "linux",
+		Arch:       "amd64",
+	}
+
+	err := action.Execute(ctx, map[string]any{
+		"asset_pattern": "tool-{os}",
+		"binary_name":   "tool",
+	})
+	if err == nil {
+		t.Error("Expected error when repo is missing")
+	}
+}
+
+func TestGitHubFileAction_Execute_NoAssetPattern(t *testing.T) {
+	t.Parallel()
+	action := &GitHubFileAction{}
+	ctx := &ExecutionContext{
+		Context:    context.Background(),
+		WorkDir:    t.TempDir(),
+		InstallDir: t.TempDir(),
+		Version:    "1.0.0",
+		OS:         "linux",
+		Arch:       "amd64",
+	}
+
+	err := action.Execute(ctx, map[string]any{
+		"repo":        "cli/cli",
+		"binary_name": "tool",
+	})
+	if err == nil {
+		t.Error("Expected error when asset_pattern is missing")
+	}
+}
+
+// -- composites.go: Preflight --
+
+func TestGitHubArchiveAction_Preflight_AllWarnings(t *testing.T) {
+	t.Parallel()
+	action := &GitHubArchiveAction{}
+
+	result := action.Preflight(map[string]any{
+		"repo":          "owner/repo",
+		"asset_pattern": "tool-{version}.tar.gz",
+		"os_mapping":    map[string]any{"linux": "Linux"},
+		"arch_mapping":  map[string]any{"amd64": "x86_64"},
+	})
+
+	if len(result.Warnings) < 2 {
+		t.Errorf("Expected at least 2 warnings for unused os/arch mappings, got %d: %v",
+			len(result.Warnings), result.Warnings)
+	}
+}
+
+func TestGitHubFileAction_Preflight_MissingRepo(t *testing.T) {
+	t.Parallel()
+	action := &GitHubFileAction{}
+
+	result := action.Preflight(map[string]any{
+		"asset_pattern": "tool-{os}",
+	})
+	if len(result.Errors) == 0 {
+		t.Error("Expected error for missing repo")
+	}
+}
+
+func TestGitHubFileAction_Preflight_InvalidRepo(t *testing.T) {
+	t.Parallel()
+	action := &GitHubFileAction{}
+
+	result := action.Preflight(map[string]any{
+		"repo":          "invalid",
+		"asset_pattern": "tool-{os}",
+	})
+	hasRepoError := false
+	for _, e := range result.Errors {
+		if strings.Contains(e, "owner/repository") {
+			hasRepoError = true
+			break
+		}
+	}
+	if !hasRepoError {
+		t.Errorf("Expected repo format error, got %v", result.Errors)
+	}
+}
+
+// -- composites.go: GitHubArchiveAction.resolveAssetName --
+
+func TestGitHubArchiveAction_ResolveAssetName(t *testing.T) {
+	t.Parallel()
+	action := &GitHubArchiveAction{}
+
+	ctx := &EvalContext{
+		Context:    context.Background(),
+		Version:    "1.0.0",
+		VersionTag: "v1.0.0",
+		OS:         "linux",
+		Arch:       "amd64",
+	}
+
+	name, err := action.resolveAssetName(ctx, map[string]any{}, "tool-{version}-{os}-{arch}.tar.gz", "owner/repo")
+	if err != nil {
+		t.Fatalf("resolveAssetName() error: %v", err)
+	}
+	if name != "tool-1.0.0-linux-amd64.tar.gz" {
+		t.Errorf("resolveAssetName() = %q, want tool-1.0.0-linux-amd64.tar.gz", name)
+	}
+}
+
+func TestGitHubArchiveAction_ResolveAssetName_WithMappings(t *testing.T) {
+	t.Parallel()
+	action := &GitHubArchiveAction{}
+
+	ctx := &EvalContext{
+		Context:    context.Background(),
+		Version:    "1.0.0",
+		VersionTag: "v1.0.0",
+		OS:         "darwin",
+		Arch:       "arm64",
+	}
+
+	params := map[string]any{
+		"os_mapping":   map[string]any{"darwin": "macOS"},
+		"arch_mapping": map[string]any{"arm64": "aarch64"},
+	}
+
+	name, err := action.resolveAssetName(ctx, params, "tool-{os}-{arch}.tar.gz", "owner/repo")
+	if err != nil {
+		t.Fatalf("resolveAssetName() error: %v", err)
+	}
+	if name != "tool-macOS-aarch64.tar.gz" {
+		t.Errorf("resolveAssetName() = %q, want tool-macOS-aarch64.tar.gz", name)
+	}
+}
+
+// -- composites.go: DownloadArchiveAction.Decompose --
+
+func TestDownloadArchiveAction_Decompose_Basic(t *testing.T) {
+	t.Parallel()
+	action := &DownloadArchiveAction{}
+	ctx := &EvalContext{
+		Context:    context.Background(),
+		Version:    "1.0.0",
+		VersionTag: "v1.0.0",
+		OS:         "linux",
+		Arch:       "amd64",
+	}
+
+	steps, err := action.Decompose(ctx, map[string]any{
+		"url":      "https://example.com/{version}/tool-{os}-{arch}.tar.gz",
+		"binaries": []any{"bin/tool"},
+	})
+	if err != nil {
+		t.Fatalf("Decompose() error: %v", err)
+	}
+	if len(steps) < 3 {
+		t.Errorf("Decompose() returned %d steps, want >= 3", len(steps))
+	}
+	if steps[0].Action != "download_file" {
+		t.Errorf("first step = %q, want download_file", steps[0].Action)
+	}
+}
+
+func TestDownloadArchiveAction_Decompose_MissingURL(t *testing.T) {
+	t.Parallel()
+	action := &DownloadArchiveAction{}
+	ctx := &EvalContext{Context: context.Background(), Version: "1.0.0", OS: "linux", Arch: "amd64"}
+	_, err := action.Decompose(ctx, map[string]any{
+		"binaries": []any{"bin/tool"},
+	})
+	if err == nil {
+		t.Error("Expected error for missing URL")
+	}
+}
+
+func TestDownloadArchiveAction_Decompose_MissingBinaries(t *testing.T) {
+	t.Parallel()
+	action := &DownloadArchiveAction{}
+	ctx := &EvalContext{Context: context.Background(), Version: "1.0.0", OS: "linux", Arch: "amd64"}
+	_, err := action.Decompose(ctx, map[string]any{
+		"url": "https://example.com/tool.tar.gz",
+	})
+	if err == nil {
+		t.Error("Expected error for missing binaries")
+	}
+}
+
+func TestDownloadArchiveAction_Decompose_UndetectableFormat(t *testing.T) {
+	t.Parallel()
+	action := &DownloadArchiveAction{}
+	ctx := &EvalContext{Context: context.Background(), Version: "1.0.0", OS: "linux", Arch: "amd64"}
+	_, err := action.Decompose(ctx, map[string]any{
+		"url":      "https://example.com/tool",
+		"binaries": []any{"bin/tool"},
+	})
+	if err == nil {
+		t.Error("Expected error when format cannot be detected")
+	}
+}
+
+func TestDownloadArchiveAction_Decompose_WithStripDirs(t *testing.T) {
+	t.Parallel()
+	action := &DownloadArchiveAction{}
+	ctx := &EvalContext{
+		Context:    context.Background(),
+		Version:    "1.0.0",
+		VersionTag: "v1.0.0",
+		OS:         "linux",
+		Arch:       "amd64",
+	}
+
+	steps, err := action.Decompose(ctx, map[string]any{
+		"url":        "https://example.com/tool.tar.gz",
+		"binaries":   []any{"bin/tool"},
+		"strip_dirs": 1,
+	})
+	if err != nil {
+		t.Fatalf("Decompose() error: %v", err)
+	}
+	// Find extract step and check strip_dirs
+	for _, s := range steps {
+		if s.Action == "extract" {
+			sd := s.Params["strip_dirs"]
+			if sd != 1 {
+				t.Errorf("extract step strip_dirs = %v, want 1", sd)
+			}
+		}
+	}
+}
+
+// -- composites.go: GitHubArchiveAction.Decompose error paths --
+
+func TestGitHubArchiveAction_Decompose_MissingRepo(t *testing.T) {
+	t.Parallel()
+	action := &GitHubArchiveAction{}
+	ctx := &EvalContext{Context: context.Background(), Version: "1.0.0", VersionTag: "v1.0.0", OS: "linux", Arch: "amd64"}
+	_, err := action.Decompose(ctx, map[string]any{
+		"asset_pattern": "tool-{version}.tar.gz",
+		"binaries":      []any{"bin/tool"},
+	})
+	if err == nil {
+		t.Error("Expected error for missing repo")
+	}
+}
+
+func TestGitHubArchiveAction_Decompose_MissingAssetPattern(t *testing.T) {
+	t.Parallel()
+	action := &GitHubArchiveAction{}
+	ctx := &EvalContext{Context: context.Background(), Version: "1.0.0", VersionTag: "v1.0.0", OS: "linux", Arch: "amd64"}
+	_, err := action.Decompose(ctx, map[string]any{
+		"repo":     "owner/repo",
+		"binaries": []any{"bin/tool"},
+	})
+	if err == nil {
+		t.Error("Expected error for missing asset_pattern")
+	}
+}
+
+func TestGitHubArchiveAction_Decompose_MissingBinaries(t *testing.T) {
+	t.Parallel()
+	action := &GitHubArchiveAction{}
+	ctx := &EvalContext{Context: context.Background(), Version: "1.0.0", VersionTag: "v1.0.0", OS: "linux", Arch: "amd64"}
+	_, err := action.Decompose(ctx, map[string]any{
+		"repo":          "owner/repo",
+		"asset_pattern": "tool.tar.gz",
+	})
+	if err == nil {
+		t.Error("Expected error for missing binaries")
+	}
+}
+
+// -- composites.go: GitHubFileAction.Decompose error paths --
+
+func TestGitHubFileAction_Decompose_MissingRepo(t *testing.T) {
+	t.Parallel()
+	action := &GitHubFileAction{}
+	ctx := &EvalContext{Context: context.Background(), Version: "1.0.0", VersionTag: "v1.0.0", OS: "linux", Arch: "amd64"}
+	_, err := action.Decompose(ctx, map[string]any{
+		"asset_pattern": "tool-{os}",
+		"binary":        "tool",
+	})
+	if err == nil {
+		t.Error("Expected error for missing repo")
+	}
+}
+
+func TestGitHubFileAction_Decompose_MissingAssetPattern(t *testing.T) {
+	t.Parallel()
+	action := &GitHubFileAction{}
+	ctx := &EvalContext{Context: context.Background(), Version: "1.0.0", VersionTag: "v1.0.0", OS: "linux", Arch: "amd64"}
+	_, err := action.Decompose(ctx, map[string]any{
+		"repo":   "owner/repo",
+		"binary": "tool",
+	})
+	if err == nil {
+		t.Error("Expected error for missing asset_pattern")
+	}
+}
+
+func TestGitHubFileAction_Decompose_MissingBinaries(t *testing.T) {
+	t.Parallel()
+	action := &GitHubFileAction{}
+	ctx := &EvalContext{Context: context.Background(), Version: "1.0.0", VersionTag: "v1.0.0", OS: "linux", Arch: "amd64"}
+	_, err := action.Decompose(ctx, map[string]any{
+		"repo":          "owner/repo",
+		"asset_pattern": "tool-{os}",
+	})
+	if err == nil {
+		t.Error("Expected error for missing binary/binaries")
+	}
+}
+
+// -- composites.go: GitHubFileAction.Preflight additional warnings --
+
+func TestGitHubFileAction_Preflight_ArchiveExtensionWarning(t *testing.T) {
+	t.Parallel()
+	action := &GitHubFileAction{}
+	result := action.Preflight(map[string]any{
+		"repo":          "owner/repo",
+		"asset_pattern": "tool-{os}.tar.gz",
+	})
+	hasArchiveWarning := false
+	for _, w := range result.Warnings {
+		if strings.Contains(w, "archive extension") {
+			hasArchiveWarning = true
+			break
+		}
+	}
+	if !hasArchiveWarning {
+		t.Errorf("Expected archive extension warning, got %v", result.Warnings)
+	}
+}
+
+func TestGitHubFileAction_Preflight_UnusedMappings(t *testing.T) {
+	t.Parallel()
+	action := &GitHubFileAction{}
+	result := action.Preflight(map[string]any{
+		"repo":          "owner/repo",
+		"asset_pattern": "tool-{version}",
+		"os_mapping":    map[string]any{"linux": "Linux"},
+		"arch_mapping":  map[string]any{"amd64": "x64"},
+	})
+	if len(result.Warnings) < 2 {
+		t.Errorf("Expected at least 2 warnings for unused mappings, got %d", len(result.Warnings))
+	}
+}
+
+// -- composites.go: GitHubArchiveAction.Preflight more paths --
+
+func TestGitHubArchiveAction_Preflight_MissingAll(t *testing.T) {
+	t.Parallel()
+	action := &GitHubArchiveAction{}
+	result := action.Preflight(map[string]any{})
+	if len(result.Errors) < 2 {
+		t.Errorf("Expected at least 2 errors (repo + asset_pattern), got %d", len(result.Errors))
+	}
+}
+
+func TestGitHubArchiveAction_Preflight_InvalidRepo(t *testing.T) {
+	t.Parallel()
+	action := &GitHubArchiveAction{}
+	result := action.Preflight(map[string]any{
+		"repo":          "invalid-repo",
+		"asset_pattern": "tool.tar.gz",
+	})
+	hasRepoError := false
+	for _, e := range result.Errors {
+		if strings.Contains(e, "owner/repository") {
+			hasRepoError = true
+			break
+		}
+	}
+	if !hasRepoError {
+		t.Errorf("Expected repo format error, got %v", result.Errors)
+	}
+}
+
+// -- composites.go: GitHubArchiveAction.Decompose with full success path --
+
+func TestGitHubArchiveAction_Decompose_Success(t *testing.T) {
+	t.Parallel()
+	action := &GitHubArchiveAction{}
+	ctx := &EvalContext{
+		Context:    context.Background(),
+		Version:    "1.0.0",
+		VersionTag: "v1.0.0",
+		OS:         "linux",
+		Arch:       "amd64",
+	}
+
+	steps, err := action.Decompose(ctx, map[string]any{
+		"repo":          "owner/repo",
+		"asset_pattern": "tool-{version}-{os}-{arch}.tar.gz",
+		"binaries":      []any{"bin/tool"},
+	})
+	if err != nil {
+		t.Fatalf("Decompose() error: %v", err)
+	}
+	if len(steps) < 3 {
+		t.Errorf("Decompose() returned %d steps, want >= 3", len(steps))
+	}
+	if steps[0].Action != "download_file" {
+		t.Errorf("first step = %q, want download_file", steps[0].Action)
+	}
+	// Verify URL contains owner/repo
+	url, _ := GetString(steps[0].Params, "url")
+	if !strings.Contains(url, "owner/repo") {
+		t.Errorf("URL %q should contain owner/repo", url)
+	}
+}
+
+// -- composites.go: GitHubFileAction.Decompose with binary param (backward compat) --
+
+func TestGitHubFileAction_Decompose_WithBinaryParam(t *testing.T) {
+	t.Parallel()
+	action := &GitHubFileAction{}
+	ctx := &EvalContext{
+		Context:    context.Background(),
+		Version:    "1.0.0",
+		VersionTag: "v1.0.0",
+		OS:         "linux",
+		Arch:       "amd64",
+	}
+
+	steps, err := action.Decompose(ctx, map[string]any{
+		"repo":          "owner/repo",
+		"asset_pattern": "tool-{os}-{arch}",
+		"binary":        "tool",
+	})
+	if err != nil {
+		t.Fatalf("Decompose() error: %v", err)
+	}
+	if len(steps) < 2 {
+		t.Errorf("Decompose() returned %d steps, want >= 2", len(steps))
+	}
+}
+
+// -- composites.go: GitHubArchiveAction.Execute param validation --
+
+func TestGitHubArchiveAction_Execute_MissingRepo(t *testing.T) {
+	t.Parallel()
+	action := &GitHubArchiveAction{}
+	ctx := newTestExecCtx(t)
+	err := action.Execute(ctx, map[string]any{
+		"asset_pattern": "tool-{version}-{os}-{arch}.tar.gz",
+		"binaries":      []any{"bin/tool"},
+	})
+	if err == nil {
+		t.Error("Expected error for missing repo")
+	}
+}
+
+func TestGitHubArchiveAction_Execute_MissingAssetPattern(t *testing.T) {
+	t.Parallel()
+	action := &GitHubArchiveAction{}
+	ctx := newTestExecCtx(t)
+	err := action.Execute(ctx, map[string]any{
+		"repo":     "owner/repo",
+		"binaries": []any{"bin/tool"},
+	})
+	if err == nil {
+		t.Error("Expected error for missing asset_pattern")
+	}
+}
+
+func TestGitHubArchiveAction_Execute_MissingBinaries(t *testing.T) {
+	t.Parallel()
+	action := &GitHubArchiveAction{}
+	ctx := newTestExecCtx(t)
+	err := action.Execute(ctx, map[string]any{
+		"repo":          "owner/repo",
+		"asset_pattern": "tool-{version}-{os}-{arch}.tar.gz",
+	})
+	if err == nil {
+		t.Error("Expected error for missing binaries")
+	}
+}
+
+func TestGitHubArchiveAction_Execute_InvalidInstallMode(t *testing.T) {
+	t.Parallel()
+	action := &GitHubArchiveAction{}
+	ctx := newTestExecCtx(t)
+	err := action.Execute(ctx, map[string]any{
+		"repo":          "owner/repo",
+		"asset_pattern": "tool.tar.gz",
+		"binaries":      []any{"bin/tool"},
+		"install_mode":  "invalid",
+	})
+	if err == nil {
+		t.Error("Expected error for invalid install_mode")
+	}
+}
+
+func TestGitHubArchiveAction_Execute_UndetectableFormat(t *testing.T) {
+	t.Parallel()
+	action := &GitHubArchiveAction{}
+	ctx := newTestExecCtx(t)
+	err := action.Execute(ctx, map[string]any{
+		"repo":          "owner/repo",
+		"asset_pattern": "tool",
+		"binaries":      []any{"bin/tool"},
+	})
+	if err == nil {
+		t.Error("Expected error for undetectable archive format")
+	}
+}
+
+// -- composites.go: GitHubFileAction.Execute param validation --
+
+func TestGitHubFileAction_Execute_MissingRepo(t *testing.T) {
+	t.Parallel()
+	action := &GitHubFileAction{}
+	ctx := newTestExecCtx(t)
+	err := action.Execute(ctx, map[string]any{
+		"asset_pattern": "tool-{version}-{os}-{arch}",
+		"binary":        "tool",
+	})
+	if err == nil {
+		t.Error("Expected error for missing repo")
+	}
+}
+
+func TestGitHubFileAction_Execute_MissingAssetPattern(t *testing.T) {
+	t.Parallel()
+	action := &GitHubFileAction{}
+	ctx := newTestExecCtx(t)
+	err := action.Execute(ctx, map[string]any{
+		"repo":   "owner/repo",
+		"binary": "tool",
+	})
+	if err == nil {
+		t.Error("Expected error for missing asset_pattern")
+	}
+}
+
+func TestGitHubFileAction_Execute_MissingBinary(t *testing.T) {
+	t.Parallel()
+	action := &GitHubFileAction{}
+	ctx := newTestExecCtx(t)
+	err := action.Execute(ctx, map[string]any{
+		"repo":          "owner/repo",
+		"asset_pattern": "tool-{version}-{os}-{arch}",
+	})
+	if err == nil {
+		t.Error("Expected error for missing binary/binaries")
+	}
+}
+
+// -- composites.go: DownloadArchiveAction Execute additional paths --
+
+func TestDownloadArchiveAction_Execute_LibraryExempt(t *testing.T) {
+	t.Parallel()
+	action := &DownloadArchiveAction{}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: t.TempDir(),
+		Version: "1.0.0",
+		OS:      "linux",
+		Arch:    "amd64",
+		Recipe: &recipe.Recipe{
+			Metadata: recipe.MetadataSection{Type: "library"},
+		},
+	}
+	// Library type should not require verify section even with directory mode
+	err := action.Execute(ctx, map[string]any{
+		"url":            "https://nonexistent.invalid/lib.tar.gz",
+		"archive_format": "tar.gz",
+		"binaries":       []any{"lib/libfoo.so"},
+		"install_mode":   "directory",
+	})
+	// Should fail at download, not at install_mode validation
+	if err == nil {
+		t.Error("Expected error (download should fail)")
+	}
+	// Verify the error is about download, not about install_mode
+	errMsg := err.Error()
+	if strings.Contains(errMsg, "verify") || strings.Contains(errMsg, "install_mode") {
+		t.Errorf("Error should be about download, not verify: %s", errMsg)
+	}
+}
+
+// -- composites.go: GitHubFileAction Execute with mappings --
+
+func TestGitHubFileAction_Execute_WithBinariesArray(t *testing.T) {
+	t.Parallel()
+	action := &GitHubFileAction{}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: t.TempDir(),
+		Version: "1.0.0",
+		OS:      "linux",
+		Arch:    "amd64",
+		Recipe:  &recipe.Recipe{},
+	}
+	// binaries with invalid structure should fail
+	err := action.Execute(ctx, map[string]any{
+		"repo":          "owner/repo",
+		"asset_pattern": "tool-{version}",
+		"binaries":      []any{map[string]any{"dest": "bin/tool"}}, // Missing src
+	})
+	if err == nil {
+		t.Error("Expected error for binaries without src")
+	}
+}
+
+func TestGitHubFileAction_Execute_WithBinaryString(t *testing.T) {
+	t.Parallel()
+	action := &GitHubFileAction{}
+	ctx := &ExecutionContext{
+		Context:    context.Background(),
+		WorkDir:    t.TempDir(),
+		InstallDir: filepath.Join(t.TempDir(), ".install"),
+		Version:    "1.0.0",
+		VersionTag: "v1.0.0",
+		OS:         "linux",
+		Arch:       "amd64",
+		Recipe:     &recipe.Recipe{},
+	}
+	// Should pass validation but fail at download
+	err := action.Execute(ctx, map[string]any{
+		"repo":          "owner/repo",
+		"asset_pattern": "tool-{version}-{os}-{arch}",
+		"binary":        "tool",
+		"os_mapping":    map[string]any{"linux": "Linux"},
+		"arch_mapping":  map[string]any{"amd64": "x86_64"},
+	})
+	if err == nil {
+		t.Error("Expected error (download should fail)")
+	}
+}
+
+// -- composites.go: GitHubArchiveAction Preflight warnings --
+
+func TestGitHubArchiveAction_Preflight_UnusedOSMapping(t *testing.T) {
+	t.Parallel()
+	action := &GitHubArchiveAction{}
+	result := action.Preflight(map[string]any{
+		"repo":          "owner/repo",
+		"asset_pattern": "tool-{version}-{arch}.tar.gz",
+		"os_mapping":    map[string]any{"linux": "Linux"},
+	})
+	if len(result.Warnings) == 0 {
+		t.Error("Expected warning for unused os_mapping")
+	}
+}
+
+func TestGitHubArchiveAction_Preflight_UnusedArchMapping(t *testing.T) {
+	t.Parallel()
+	action := &GitHubArchiveAction{}
+	result := action.Preflight(map[string]any{
+		"repo":          "owner/repo",
+		"asset_pattern": "tool-{version}-{os}.tar.gz",
+		"arch_mapping":  map[string]any{"amd64": "x86_64"},
+	})
+	if len(result.Warnings) == 0 {
+		t.Error("Expected warning for unused arch_mapping")
+	}
+}
+
+func TestGitHubArchiveAction_Preflight_RedundantFormat(t *testing.T) {
+	t.Parallel()
+	action := &GitHubArchiveAction{}
+	result := action.Preflight(map[string]any{
+		"repo":           "owner/repo",
+		"asset_pattern":  "tool.tar.gz",
+		"archive_format": "tar.gz",
+	})
+	if len(result.Warnings) == 0 {
+		t.Error("Expected warning for redundant archive_format")
+	}
+}
+
+// -- composites.go: DownloadArchiveAction Execute with mappings --
+
+func TestDownloadArchiveAction_Execute_WithMappings(t *testing.T) {
+	t.Parallel()
+	action := &DownloadArchiveAction{}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: t.TempDir(),
+		Version: "1.0.0",
+		OS:      "linux",
+		Arch:    "amd64",
+		Recipe:  &recipe.Recipe{},
+	}
+	// This tests the OS/arch mapping code paths. Download will fail.
+	err := action.Execute(ctx, map[string]any{
+		"url":            "https://nonexistent.invalid/{os}/{arch}/tool.tar.gz",
+		"archive_format": "tar.gz",
+		"binaries":       []any{"bin/tool"},
+		"os_mapping":     map[string]any{"linux": "Linux"},
+		"arch_mapping":   map[string]any{"amd64": "x86_64"},
+	})
+	// Should fail at download, not at mapping
+	if err == nil {
+		t.Error("Expected error (download should fail)")
+	}
+}
+
+// -- composites.go: DownloadArchiveAction.Execute with format detection --
+
+func TestDownloadArchiveAction_Execute_AutoDetectFormat(t *testing.T) {
+	t.Parallel()
+	action := &DownloadArchiveAction{}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: t.TempDir(),
+		Version: "1.0.0",
+		OS:      "linux",
+		Arch:    "amd64",
+		Recipe:  &recipe.Recipe{},
+	}
+	// URL has tar.gz extension so format should be auto-detected
+	err := action.Execute(ctx, map[string]any{
+		"url":      "https://nonexistent.invalid/tool-1.0.0.tar.gz",
+		"binaries": []any{"bin/tool"},
+	})
+	// Should fail at download, not at format detection
+	if err == nil || strings.Contains(err.Error(), "archive format") {
+		t.Error("Expected download error, not format detection error")
+	}
+}
+
+func TestDownloadArchiveAction_Execute_CannotDetectFormat(t *testing.T) {
+	t.Parallel()
+	action := &DownloadArchiveAction{}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: t.TempDir(),
+		Version: "1.0.0",
+		OS:      "linux",
+		Arch:    "amd64",
+		Recipe:  &recipe.Recipe{},
+	}
+	err := action.Execute(ctx, map[string]any{
+		"url":      "https://nonexistent.invalid/tool",
+		"binaries": []any{"bin/tool"},
+	})
+	if err == nil || !strings.Contains(err.Error(), "archive format") {
+		t.Errorf("Expected format detection error, got %v", err)
+	}
+}
+
+// -- composites.go: DownloadArchiveAction Preflight warning paths --
+
+func TestDownloadArchiveAction_Preflight_UnusedOSMapping(t *testing.T) {
+	t.Parallel()
+	action := &DownloadArchiveAction{}
+	result := action.Preflight(map[string]any{
+		"url":        "https://nonexistent.invalid/tool-{version}-{arch}.tar.gz",
+		"binaries":   []any{"bin/tool"},
+		"os_mapping": map[string]any{"linux": "Linux"},
+	})
+	if len(result.Warnings) == 0 {
+		t.Error("Expected warning for unused os_mapping")
+	}
+}
+
+func TestDownloadArchiveAction_Preflight_UnusedArchMapping(t *testing.T) {
+	t.Parallel()
+	action := &DownloadArchiveAction{}
+	result := action.Preflight(map[string]any{
+		"url":          "https://nonexistent.invalid/tool-{version}-{os}.tar.gz",
+		"binaries":     []any{"bin/tool"},
+		"arch_mapping": map[string]any{"amd64": "x86_64"},
+	})
+	if len(result.Warnings) == 0 {
+		t.Error("Expected warning for unused arch_mapping")
+	}
+}
+
+// -- composites.go: DownloadArchiveAction Preflight missing binaries --
+
+func TestDownloadArchiveAction_Preflight_MissingAll(t *testing.T) {
+	t.Parallel()
+	action := &DownloadArchiveAction{}
+	result := action.Preflight(map[string]any{})
+	if len(result.Errors) == 0 {
+		t.Error("Expected at least 1 error for missing params")
+	}
+}
+
+// -- composites.go: GitHubFileAction Preflight additional paths --
+
+func TestGitHubFileAction_Preflight_ValidWithBinaries(t *testing.T) {
+	t.Parallel()
+	action := &GitHubFileAction{}
+	result := action.Preflight(map[string]any{
+		"repo":          "owner/repo",
+		"asset_pattern": "tool-{version}-{os}-{arch}",
+		"binaries":      []any{map[string]any{"src": "tool", "dest": "bin/tool"}},
+	})
+	if len(result.Errors) != 0 {
+		t.Errorf("Preflight() errors = %v", result.Errors)
+	}
+}
+
+// -- composites.go: IsDeterministic for various actions --
+
+func TestDownloadArchiveAction_IsDeterministic(t *testing.T) {
+	t.Parallel()
+	action := DownloadArchiveAction{}
+	if !action.IsDeterministic() {
+		t.Error("IsDeterministic() = false, want true")
+	}
+}
+
+func TestGitHubArchiveAction_IsDeterministic(t *testing.T) {
+	t.Parallel()
+	action := GitHubArchiveAction{}
+	if !action.IsDeterministic() {
+		t.Error("IsDeterministic() = false, want true")
+	}
+}
+
+func TestGitHubFileAction_IsDeterministic(t *testing.T) {
+	t.Parallel()
+	action := GitHubFileAction{}
+	if !action.IsDeterministic() {
+		t.Error("IsDeterministic() = false, want true")
+	}
+}
+
+// -- composites.go: DownloadArchiveAction.Preflight with redundant archive_format --
+
+func TestDownloadArchiveAction_Preflight_RedundantFormat(t *testing.T) {
+	t.Parallel()
+	action := &DownloadArchiveAction{}
+
+	result := action.Preflight(map[string]any{
+		"url":            "https://example.com/file.tar.gz",
+		"archive_format": "tar.gz",
+	})
+	if len(result.Warnings) == 0 {
+		t.Error("Expected warning for redundant archive_format")
+	}
+}
+
+func TestDownloadArchiveAction_Preflight_MissingURL(t *testing.T) {
+	t.Parallel()
+	action := &DownloadArchiveAction{}
+
+	result := action.Preflight(map[string]any{})
+	if len(result.Errors) == 0 {
+		t.Error("Expected error for missing URL")
+	}
+}
+
+// newTestExecCtx creates a minimal ExecutionContext for tests that call Execute.
+func newTestExecCtx(t *testing.T) *ExecutionContext {
+	t.Helper()
+	tmpDir := t.TempDir()
+	return &ExecutionContext{
+		Context:    context.Background(),
+		WorkDir:    tmpDir,
+		InstallDir: filepath.Join(tmpDir, ".install"),
+		Version:    "1.0.0",
+		OS:         "linux",
+		Arch:       "amd64",
+		Recipe:     &recipe.Recipe{},
 	}
 }

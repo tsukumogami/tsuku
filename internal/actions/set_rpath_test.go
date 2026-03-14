@@ -1,6 +1,7 @@
 package actions
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"strings"
@@ -1078,5 +1079,262 @@ func TestValidateRpath_EdgeCases(t *testing.T) {
 				t.Errorf("validateRpath(%q) error = %v, wantError %v", tt.rpath, err, tt.wantError)
 			}
 		})
+	}
+}
+
+// -- set_rpath.go: detectBinaryFormat (Mach-O 32-bit variants not covered elsewhere) --
+
+func TestDetectBinaryFormat_MachO32BigEndian_Alt(t *testing.T) {
+	t.Parallel()
+	tmpDir := t.TempDir()
+	path := filepath.Join(tmpDir, "macho32be")
+	if err := os.WriteFile(path, []byte{0xfe, 0xed, 0xfa, 0xce, 0x00, 0x00, 0x00, 0x00}, 0755); err != nil {
+		t.Fatal(err)
+	}
+	format, err := detectBinaryFormat(path)
+	if err != nil {
+		t.Fatalf("detectBinaryFormat() error = %v", err)
+	}
+	if format != "macho" {
+		t.Errorf("detectBinaryFormat() = %q, want %q", format, "macho")
+	}
+}
+
+func TestDetectBinaryFormat_MachO32LittleEndian(t *testing.T) {
+	t.Parallel()
+	tmpDir := t.TempDir()
+	path := filepath.Join(tmpDir, "macho32le")
+	if err := os.WriteFile(path, []byte{0xce, 0xfa, 0xed, 0xfe, 0x00, 0x00, 0x00, 0x00}, 0755); err != nil {
+		t.Fatal(err)
+	}
+	format, err := detectBinaryFormat(path)
+	if err != nil {
+		t.Fatalf("detectBinaryFormat() error = %v", err)
+	}
+	if format != "macho" {
+		t.Errorf("detectBinaryFormat() = %q, want %q", format, "macho")
+	}
+}
+
+func TestDetectBinaryFormat_MachO64BigEndian_Alt(t *testing.T) {
+	t.Parallel()
+	tmpDir := t.TempDir()
+	path := filepath.Join(tmpDir, "macho64be")
+	if err := os.WriteFile(path, []byte{0xfe, 0xed, 0xfa, 0xcf, 0x00, 0x00, 0x00, 0x00}, 0755); err != nil {
+		t.Fatal(err)
+	}
+	format, err := detectBinaryFormat(path)
+	if err != nil {
+		t.Fatalf("detectBinaryFormat() error = %v", err)
+	}
+	if format != "macho" {
+		t.Errorf("detectBinaryFormat() = %q, want %q", format, "macho")
+	}
+}
+
+func TestDetectBinaryFormat_FatBinaryLittleEndianVariant(t *testing.T) {
+	t.Parallel()
+	tmpDir := t.TempDir()
+	path := filepath.Join(tmpDir, "fatle")
+	if err := os.WriteFile(path, []byte{0xbe, 0xba, 0xfe, 0xca, 0x00, 0x00, 0x00, 0x02}, 0755); err != nil {
+		t.Fatal(err)
+	}
+	format, err := detectBinaryFormat(path)
+	if err != nil {
+		t.Fatalf("detectBinaryFormat() error = %v", err)
+	}
+	if format != "macho" {
+		t.Errorf("detectBinaryFormat() = %q, want %q", format, "macho")
+	}
+}
+
+func TestDetectBinaryFormat_EmptyFile(t *testing.T) {
+	t.Parallel()
+	tmpDir := t.TempDir()
+	path := filepath.Join(tmpDir, "empty")
+	if err := os.WriteFile(path, []byte{}, 0755); err != nil {
+		t.Fatal(err)
+	}
+	_, err := detectBinaryFormat(path)
+	if err == nil {
+		t.Error("detectBinaryFormat() expected error for empty file")
+	}
+}
+
+// -- set_rpath.go: validatePathWithinDir --
+
+func TestValidatePathWithinDir_Valid(t *testing.T) {
+	t.Parallel()
+	tmpDir := t.TempDir()
+	target := filepath.Join(tmpDir, "sub", "file")
+	if err := validatePathWithinDir(target, tmpDir); err != nil {
+		t.Errorf("validatePathWithinDir() error = %v", err)
+	}
+}
+
+func TestValidatePathWithinDir_Escape(t *testing.T) {
+	t.Parallel()
+	tmpDir := t.TempDir()
+	target := filepath.Join(tmpDir, "..", "outside")
+	if err := validatePathWithinDir(target, tmpDir); err == nil {
+		t.Error("validatePathWithinDir() expected error for path escape")
+	}
+}
+
+// -- set_rpath.go: validateRpath --
+
+func TestValidateRpath_Empty(t *testing.T) {
+	t.Parallel()
+	if err := validateRpath("", ""); err != nil {
+		t.Errorf("validateRpath() error = %v for empty rpath", err)
+	}
+}
+
+func TestValidateRpath_ValidOrigin(t *testing.T) {
+	t.Parallel()
+	if err := validateRpath("$ORIGIN/../lib", ""); err != nil {
+		t.Errorf("validateRpath() error = %v for $ORIGIN path", err)
+	}
+}
+
+func TestValidateRpath_ValidExecutablePath(t *testing.T) {
+	t.Parallel()
+	if err := validateRpath("@executable_path/../lib", ""); err != nil {
+		t.Errorf("validateRpath() error = %v for @executable_path", err)
+	}
+}
+
+func TestValidateRpath_ValidLoaderPath(t *testing.T) {
+	t.Parallel()
+	if err := validateRpath("@loader_path/../lib", ""); err != nil {
+		t.Errorf("validateRpath() error = %v for @loader_path", err)
+	}
+}
+
+func TestValidateRpath_AbsoluteWithinLibsDir(t *testing.T) {
+	t.Parallel()
+	libsDir := "/home/user/.tsuku/libs"
+	if err := validateRpath("/home/user/.tsuku/libs/openssl/lib", libsDir); err != nil {
+		t.Errorf("validateRpath() error = %v for path within libsDir", err)
+	}
+}
+
+func TestValidateRpath_AbsoluteOutsideLibsDir(t *testing.T) {
+	t.Parallel()
+	libsDir := "/home/user/.tsuku/libs"
+	if err := validateRpath("/usr/lib", libsDir); err == nil {
+		t.Error("validateRpath() expected error for absolute path outside libsDir")
+	}
+}
+
+func TestValidateRpath_AbsoluteNoLibsDir(t *testing.T) {
+	t.Parallel()
+	if err := validateRpath("/usr/lib", ""); err == nil {
+		t.Error("validateRpath() expected error for absolute path with no libsDir")
+	}
+}
+
+func TestValidateRpath_InvalidRelative(t *testing.T) {
+	t.Parallel()
+	if err := validateRpath("../lib", ""); err == nil {
+		t.Error("validateRpath() expected error for relative path without valid prefix")
+	}
+}
+
+func TestValidateRpath_ColonSeparated(t *testing.T) {
+	t.Parallel()
+	if err := validateRpath("$ORIGIN/../lib:@loader_path/../lib", ""); err != nil {
+		t.Errorf("validateRpath() error = %v for colon-separated valid rpaths", err)
+	}
+}
+
+// -- set_rpath.go: validateBinaryName --
+
+func TestValidateBinaryName_Valid(t *testing.T) {
+	t.Parallel()
+	validNames := []string{"tool", "my-tool", "tool_v2", "lib.so.1", "a.out"}
+	for _, name := range validNames {
+		if err := validateBinaryName(name); err != nil {
+			t.Errorf("validateBinaryName(%q) error = %v", name, err)
+		}
+	}
+}
+
+func TestValidateBinaryName_Invalid(t *testing.T) {
+	t.Parallel()
+	invalidNames := []string{"tool;rm -rf", "bin/tool", "tool name", "$PATH"}
+	for _, name := range invalidNames {
+		if err := validateBinaryName(name); err == nil {
+			t.Errorf("validateBinaryName(%q) expected error", name)
+		}
+	}
+}
+
+// -- set_rpath.go: createLibraryWrapper --
+
+func TestCreateLibraryWrapper_Success(t *testing.T) {
+	t.Parallel()
+	tmpDir := t.TempDir()
+	binaryPath := filepath.Join(tmpDir, "mytool")
+	if err := os.WriteFile(binaryPath, []byte{0x7f, 'E', 'L', 'F'}, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := createLibraryWrapper(binaryPath, "$ORIGIN/../lib"); err != nil {
+		t.Fatalf("createLibraryWrapper() error = %v", err)
+	}
+
+	// Check wrapper script was created
+	content, err := os.ReadFile(binaryPath)
+	if err != nil {
+		t.Fatalf("failed to read wrapper: %v", err)
+	}
+	if len(content) == 0 {
+		t.Error("wrapper script is empty")
+	}
+
+	// Check original was renamed
+	if _, err := os.Stat(binaryPath + ".orig"); err != nil {
+		t.Error("original binary was not renamed to .orig")
+	}
+}
+
+func TestCreateLibraryWrapper_Symlink(t *testing.T) {
+	t.Parallel()
+	tmpDir := t.TempDir()
+	realPath := filepath.Join(tmpDir, "real")
+	linkPath := filepath.Join(tmpDir, "link")
+	if err := os.WriteFile(realPath, []byte{0x7f, 'E', 'L', 'F'}, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(realPath, linkPath); err != nil {
+		t.Fatal(err)
+	}
+	if err := createLibraryWrapper(linkPath, "$ORIGIN/../lib"); err == nil {
+		t.Error("createLibraryWrapper() expected error for symlink")
+	}
+}
+
+// -- set_rpath.go: Execute with unexpanded dep vars --
+
+func TestSetRpathAction_Execute_UnexpandedDepVar(t *testing.T) {
+	t.Parallel()
+	action := &SetRpathAction{}
+	tmpDir := t.TempDir()
+	binPath := filepath.Join(tmpDir, "tool")
+	if err := os.WriteFile(binPath, []byte{0x7f, 'E', 'L', 'F'}, 0755); err != nil {
+		t.Fatal(err)
+	}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: tmpDir,
+		Version: "1.0.0",
+	}
+	err := action.Execute(ctx, map[string]any{
+		"binaries": []any{"tool"},
+		"rpath":    "{dep:nonexistent}/lib",
+	})
+	if err == nil {
+		t.Error("Expected error for unexpanded dep variable")
 	}
 }

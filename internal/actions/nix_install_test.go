@@ -6,6 +6,8 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+
+	"github.com/tsukumogami/tsuku/internal/recipe"
 )
 
 func TestIsValidNixPackage(t *testing.T) {
@@ -622,5 +624,87 @@ func TestDetectProotFallback(t *testing.T) {
 	// Should return false since the command will fail
 	if result {
 		t.Error("detectProotFallback() should return false for nonexistent path")
+	}
+}
+
+// -- nix_install.go: NixInstallAction.Execute with invalid executable containing metachar --
+
+func TestNixInstallAction_Execute_ShellMetacharExecutable(t *testing.T) {
+	t.Parallel()
+	action := &NixInstallAction{}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: t.TempDir(),
+		Version: "1.0.0",
+		OS:      "linux",
+		Arch:    "amd64",
+		Recipe:  &recipe.Recipe{},
+	}
+	err := action.Execute(ctx, map[string]any{
+		"package":     "hello",
+		"executables": []any{"evil;cmd"},
+	})
+	if err == nil {
+		t.Error("Expected error for shell metacharacter in executable")
+	}
+}
+
+// -- NixInstallAction Decompose with executables --
+
+func TestNixInstallAction_Decompose_NoExecutables(t *testing.T) {
+	t.Parallel()
+	action := &NixInstallAction{}
+	ctx := &EvalContext{
+		Context:    context.Background(),
+		Version:    "1.0.0",
+		VersionTag: "v1.0.0",
+		OS:         "linux",
+		Arch:       "amd64",
+	}
+	_, err := action.Decompose(ctx, map[string]any{
+		"package": "hello",
+	})
+	if err == nil || !strings.Contains(err.Error(), "executables") {
+		t.Errorf("Expected executables error, got %v", err)
+	}
+}
+
+// -- NixInstallAction Decompose with invalid executable --
+
+func TestNixInstallAction_Decompose_BadExecutable(t *testing.T) {
+	t.Parallel()
+	action := &NixInstallAction{}
+	ctx := &EvalContext{
+		Context:    context.Background(),
+		Version:    "1.0.0",
+		VersionTag: "v1.0.0",
+		OS:         "linux",
+		Arch:       "amd64",
+	}
+	_, err := action.Decompose(ctx, map[string]any{
+		"package":     "hello",
+		"executables": []any{"../evil"},
+	})
+	if err == nil {
+		t.Error("Expected error for invalid executable")
+	}
+}
+
+// -- nix_install.go: NixInstallAction Dependencies --
+
+func TestNixInstallAction_Dependencies(t *testing.T) {
+	t.Parallel()
+	action := NixInstallAction{}
+	deps := action.Dependencies()
+	if len(deps.InstallTime) != 1 || deps.InstallTime[0] != "nix-portable" {
+		t.Errorf("Dependencies().InstallTime = %v, want [nix-portable]", deps.InstallTime)
+	}
+}
+
+func TestNixInstallAction_RequiresNetwork(t *testing.T) {
+	t.Parallel()
+	action := NixInstallAction{}
+	if !action.RequiresNetwork() {
+		t.Error("RequiresNetwork() = false, want true")
 	}
 }

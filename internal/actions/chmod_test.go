@@ -173,3 +173,52 @@ func TestChmodAction_Execute_VariableExpansion(t *testing.T) {
 		t.Errorf("file mode = %o, want 0755", info.Mode().Perm())
 	}
 }
+
+// TestChmodAction_Preflight_Cases tests Preflight validation and warnings
+func TestChmodAction_Preflight_Cases(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name         string
+		params       map[string]any
+		wantErrors   bool
+		wantWarnings bool
+	}{
+		{
+			name:       "missing files",
+			params:     map[string]any{},
+			wantErrors: true,
+		},
+		{
+			name:       "valid",
+			params:     map[string]any{"files": []any{"bin/tool"}},
+			wantErrors: false,
+		},
+		{
+			name:       "empty files",
+			params:     map[string]any{"files": []any{}},
+			wantErrors: true,
+		},
+		{
+			name:         "world writable",
+			params:       map[string]any{"files": []any{"bin/tool"}, "mode": "0777"},
+			wantWarnings: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			action := &ChmodAction{}
+			result := action.Preflight(tt.params)
+			if tt.wantErrors && len(result.Errors) == 0 {
+				t.Error("Expected errors but got none")
+			}
+			if !tt.wantErrors && len(result.Errors) != 0 {
+				t.Errorf("Expected no errors, got: %v", result.Errors)
+			}
+			if tt.wantWarnings && len(result.Warnings) == 0 {
+				t.Error("Expected warnings but got none")
+			}
+		})
+	}
+}

@@ -221,3 +221,57 @@ func TestRunCommandAction_Execute_ContextCancellation(t *testing.T) {
 		t.Error("Execute() should fail when context is canceled")
 	}
 }
+
+// -- run_command.go: Preflight --
+
+func TestRunCommandAction_Preflight_Cases(t *testing.T) {
+	t.Parallel()
+	action := &RunCommandAction{}
+
+	tests := []struct {
+		name         string
+		params       map[string]any
+		wantErrors   bool
+		wantWarnings bool
+	}{
+		{
+			name:       "missing command",
+			params:     map[string]any{},
+			wantErrors: true,
+		},
+		{
+			name:       "valid command",
+			params:     map[string]any{"command": "echo hello"},
+			wantErrors: false,
+		},
+		{
+			name:         "hardcoded tilde tsuku path",
+			params:       map[string]any{"command": "ls ~/.tsuku/tools/something"},
+			wantWarnings: true,
+		},
+		{
+			name:         "hardcoded HOME env tsuku path",
+			params:       map[string]any{"command": "ls $HOME/.tsuku/bin/tool"},
+			wantWarnings: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			result := action.Preflight(tt.params)
+			if tt.wantErrors && len(result.Errors) == 0 {
+				t.Error("expected errors but got none")
+			}
+			if !tt.wantErrors && len(result.Errors) != 0 {
+				t.Errorf("expected no errors, got: %v", result.Errors)
+			}
+			if tt.wantWarnings && len(result.Warnings) == 0 {
+				t.Error("expected warnings but got none")
+			}
+			if !tt.wantWarnings && len(result.Warnings) != 0 {
+				t.Errorf("expected no warnings, got: %v", result.Warnings)
+			}
+		})
+	}
+}

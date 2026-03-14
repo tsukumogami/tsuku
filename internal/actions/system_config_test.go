@@ -818,3 +818,375 @@ func TestManualAction_Describe(t *testing.T) {
 		})
 	}
 }
+
+// -- system_config.go: RequireCommandAction.Preflight with version fields --
+
+func TestRequireCommandAction_Preflight_WithVersionFields(t *testing.T) {
+	t.Parallel()
+	action := &RequireCommandAction{}
+
+	t.Run("min_version without version_flag", func(t *testing.T) {
+		result := action.Preflight(map[string]any{
+			"command":     "ls",
+			"min_version": "1.0",
+		})
+		if len(result.Errors) == 0 {
+			t.Error("Expected error for min_version without version_flag")
+		}
+	})
+
+	t.Run("complete version check", func(t *testing.T) {
+		result := action.Preflight(map[string]any{
+			"command":       "ls",
+			"min_version":   "1.0",
+			"version_flag":  "--version",
+			"version_regex": `(\d+\.\d+)`,
+		})
+		if len(result.Errors) != 0 {
+			t.Errorf("Preflight() errors = %v, want 0", result.Errors)
+		}
+	})
+}
+
+// -- system_config.go: RequireCommandAction Execute with valid command --
+
+func TestRequireCommandAction_Execute_ValidCommand(t *testing.T) {
+	t.Parallel()
+	action := &RequireCommandAction{}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: t.TempDir(),
+	}
+	// "true" is available on all Unix systems
+	err := action.Execute(ctx, map[string]any{
+		"command": "true",
+	})
+	if err != nil {
+		t.Errorf("Execute() error = %v for valid command 'true'", err)
+	}
+}
+
+func TestRequireCommandAction_Execute_MissingCommand(t *testing.T) {
+	t.Parallel()
+	action := &RequireCommandAction{}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: t.TempDir(),
+	}
+	err := action.Execute(ctx, map[string]any{})
+	if err == nil {
+		t.Error("Expected error for missing command param")
+	}
+}
+
+func TestRequireCommandAction_Execute_NonexistentCommand(t *testing.T) {
+	t.Parallel()
+	action := &RequireCommandAction{}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: t.TempDir(),
+	}
+	err := action.Execute(ctx, map[string]any{
+		"command": "nonexistent_command_xyz",
+	})
+	if err == nil {
+		t.Error("Expected error for nonexistent command")
+	}
+}
+
+func TestRequireCommandAction_Execute_WithVersionCheck(t *testing.T) {
+	t.Parallel()
+	action := &RequireCommandAction{}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: t.TempDir(),
+	}
+	// Use 'bash' with --version since it's reliably available
+	err := action.Execute(ctx, map[string]any{
+		"command":       "bash",
+		"min_version":   "1.0",
+		"version_flag":  "--version",
+		"version_regex": `(\d+\.\d+)`,
+	})
+	if err != nil {
+		t.Errorf("Execute() error = %v for bash version check", err)
+	}
+}
+
+func TestRequireCommandAction_Execute_VersionCheckMissingFlags(t *testing.T) {
+	t.Parallel()
+	action := &RequireCommandAction{}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: t.TempDir(),
+	}
+	err := action.Execute(ctx, map[string]any{
+		"command":     "true",
+		"min_version": "1.0",
+	})
+	if err == nil {
+		t.Error("Expected error for min_version without version_flag/version_regex")
+	}
+}
+
+// Tests for Validate and ImplicitConstraint methods that were at 0% coverage.
+
+func TestGroupAddAction_Validate(t *testing.T) {
+	t.Parallel()
+	action := &GroupAddAction{}
+
+	tests := []struct {
+		name    string
+		params  map[string]any
+		wantErr bool
+	}{
+		{
+			name:    "valid group",
+			params:  map[string]any{"group": "docker"},
+			wantErr: false,
+		},
+		{
+			name:    "missing group",
+			params:  map[string]any{},
+			wantErr: true,
+		},
+		{
+			name:    "empty group",
+			params:  map[string]any{"group": ""},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := action.Validate(tt.params)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Validate() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestGroupAddAction_ImplicitConstraint(t *testing.T) {
+	t.Parallel()
+	action := &GroupAddAction{}
+	if c := action.ImplicitConstraint(); c != nil {
+		t.Errorf("ImplicitConstraint() = %v, want nil", c)
+	}
+}
+
+func TestGroupAddAction_IsExternallyManaged(t *testing.T) {
+	t.Parallel()
+	action := &GroupAddAction{}
+	if action.IsExternallyManaged() {
+		t.Error("IsExternallyManaged() = true, want false")
+	}
+}
+
+func TestServiceEnableAction_Validate(t *testing.T) {
+	t.Parallel()
+	action := &ServiceEnableAction{}
+
+	tests := []struct {
+		name    string
+		params  map[string]any
+		wantErr bool
+	}{
+		{
+			name:    "valid service",
+			params:  map[string]any{"service": "docker"},
+			wantErr: false,
+		},
+		{
+			name:    "missing service",
+			params:  map[string]any{},
+			wantErr: true,
+		},
+		{
+			name:    "empty service",
+			params:  map[string]any{"service": ""},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := action.Validate(tt.params)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Validate() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestServiceEnableAction_ImplicitConstraint(t *testing.T) {
+	t.Parallel()
+	action := &ServiceEnableAction{}
+	if c := action.ImplicitConstraint(); c != nil {
+		t.Errorf("ImplicitConstraint() = %v, want nil", c)
+	}
+}
+
+func TestServiceEnableAction_IsExternallyManaged(t *testing.T) {
+	t.Parallel()
+	action := &ServiceEnableAction{}
+	if action.IsExternallyManaged() {
+		t.Error("IsExternallyManaged() = true, want false")
+	}
+}
+
+func TestServiceStartAction_Validate(t *testing.T) {
+	t.Parallel()
+	action := &ServiceStartAction{}
+
+	tests := []struct {
+		name    string
+		params  map[string]any
+		wantErr bool
+	}{
+		{
+			name:    "valid service",
+			params:  map[string]any{"service": "docker"},
+			wantErr: false,
+		},
+		{
+			name:    "missing service",
+			params:  map[string]any{},
+			wantErr: true,
+		},
+		{
+			name:    "empty service",
+			params:  map[string]any{"service": ""},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := action.Validate(tt.params)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Validate() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestServiceStartAction_ImplicitConstraint(t *testing.T) {
+	t.Parallel()
+	action := &ServiceStartAction{}
+	if c := action.ImplicitConstraint(); c != nil {
+		t.Errorf("ImplicitConstraint() = %v, want nil", c)
+	}
+}
+
+func TestServiceStartAction_IsExternallyManaged(t *testing.T) {
+	t.Parallel()
+	action := &ServiceStartAction{}
+	if action.IsExternallyManaged() {
+		t.Error("IsExternallyManaged() = true, want false")
+	}
+}
+
+func TestRequireCommandAction_Validate(t *testing.T) {
+	t.Parallel()
+	action := &RequireCommandAction{}
+
+	tests := []struct {
+		name    string
+		params  map[string]any
+		wantErr bool
+	}{
+		{
+			name:    "valid command",
+			params:  map[string]any{"command": "ls"},
+			wantErr: false,
+		},
+		{
+			name:    "missing command",
+			params:  map[string]any{},
+			wantErr: true,
+		},
+		{
+			name:    "empty command",
+			params:  map[string]any{"command": ""},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := action.Validate(tt.params)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Validate() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestRequireCommandAction_ImplicitConstraint(t *testing.T) {
+	t.Parallel()
+	action := &RequireCommandAction{}
+	if c := action.ImplicitConstraint(); c != nil {
+		t.Errorf("ImplicitConstraint() = %v, want nil", c)
+	}
+}
+
+func TestRequireCommandAction_IsExternallyManaged(t *testing.T) {
+	t.Parallel()
+	action := &RequireCommandAction{}
+	if action.IsExternallyManaged() {
+		t.Error("IsExternallyManaged() = true, want false")
+	}
+}
+
+func TestManualAction_Validate(t *testing.T) {
+	t.Parallel()
+	action := &ManualAction{}
+
+	tests := []struct {
+		name    string
+		params  map[string]any
+		wantErr bool
+	}{
+		{
+			name:    "valid text",
+			params:  map[string]any{"text": "Install manually"},
+			wantErr: false,
+		},
+		{
+			name:    "missing text",
+			params:  map[string]any{},
+			wantErr: true,
+		},
+		{
+			name:    "empty text",
+			params:  map[string]any{"text": ""},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := action.Validate(tt.params)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Validate() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestManualAction_ImplicitConstraint(t *testing.T) {
+	t.Parallel()
+	action := &ManualAction{}
+	if c := action.ImplicitConstraint(); c != nil {
+		t.Errorf("ImplicitConstraint() = %v, want nil", c)
+	}
+}
+
+func TestManualAction_IsExternallyManaged(t *testing.T) {
+	t.Parallel()
+	action := &ManualAction{}
+	if action.IsExternallyManaged() {
+		t.Error("IsExternallyManaged() = true, want false")
+	}
+}

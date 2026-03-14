@@ -606,3 +606,22 @@ func TestNixRealizeAction_Execute_WithLocks(t *testing.T) {
 		t.Errorf("should accept valid locks parameter: %v", err)
 	}
 }
+
+// -- nix_realize.go: Dependencies, RequiresNetwork --
+
+func TestNixRealizeAction_Dependencies_Direct(t *testing.T) {
+	t.Parallel()
+	action := NixRealizeAction{}
+	deps := action.Dependencies()
+	if len(deps.InstallTime) != 1 || deps.InstallTime[0] != "nix-portable" {
+		t.Errorf("Dependencies().InstallTime = %v, want [nix-portable]", deps.InstallTime)
+	}
+}
+
+func TestNixRealizeAction_RequiresNetwork_Direct(t *testing.T) {
+	t.Parallel()
+	action := NixRealizeAction{}
+	if !action.RequiresNetwork() {
+		t.Error("RequiresNetwork() = false, want true")
+	}
+}

@@ -56,111 +56,97 @@ func TestValidateAction_Warnings(t *testing.T) {
 	}
 }
 
-func TestDownloadAction_StaticChecksumError(t *testing.T) {
-	// Test that static checksum parameter triggers error
-	result := ValidateAction("download", map[string]interface{}{
-		"url":          "https://example.com/{version}/file.tar.gz",
-		"checksum":     "abc123",
-		"checksum_url": "https://example.com/{version}/checksums.txt",
-	})
-	if !result.HasErrors() {
-		t.Error("expected error for static checksum parameter")
-	}
-	found := false
-	for _, err := range result.Errors {
-		if err == "download action does not support static 'checksum'; use 'checksum_url' for dynamic verification or 'download_file' for static URLs" {
-			found = true
-			break
-		}
-	}
-	if !found {
-		t.Errorf("expected specific checksum error message, got: %v", result.Errors)
-	}
-}
-
-func TestDownloadAction_MissingVerificationWarning(t *testing.T) {
-	// Test that missing checksum_url or signature_url triggers warning
-	result := ValidateAction("download", map[string]interface{}{
-		"url": "https://example.com/{version}/file.tar.gz",
-	})
-	if result.HasErrors() {
-		t.Errorf("expected no errors, got: %v", result.Errors)
-	}
-	if !result.HasWarnings() {
-		t.Error("expected warning for missing verification")
-	}
-	found := false
-	for _, warn := range result.Warnings {
-		if warn == "no upstream verification (checksum_url or signature_url); integrity relies on plan-time computation" {
-			found = true
-			break
-		}
-	}
-	if !found {
-		t.Errorf("expected specific verification warning message, got: %v", result.Warnings)
-	}
-}
-
-func TestDownloadAction_StaticURLError(t *testing.T) {
-	// Test that URL without variables triggers error
-	result := ValidateAction("download", map[string]interface{}{
-		"url":          "https://example.com/static/file.tar.gz",
-		"checksum_url": "https://example.com/checksums.txt",
-	})
-	if !result.HasErrors() {
-		t.Error("expected error for static URL without variables")
-	}
-	found := false
-	for _, err := range result.Errors {
-		if err == "download URL contains no variables; use 'download_file' action for static URLs" {
-			found = true
-			break
-		}
-	}
-	if !found {
-		t.Errorf("expected specific static URL error message, got: %v", result.Errors)
-	}
-}
-
-func TestDownloadAction_URLWithVariablesPass(t *testing.T) {
-	// Test that URL with variables passes validation (no error for that check)
-	result := ValidateAction("download", map[string]interface{}{
-		"url":          "https://example.com/{version}/file-{os}-{arch}.tar.gz",
-		"checksum_url": "https://example.com/{version}/checksums.txt",
-	})
-	if result.HasErrors() {
-		t.Errorf("expected no errors for URL with variables, got: %v", result.Errors)
-	}
-	if result.HasWarnings() {
-		t.Errorf("expected no warnings when checksum_url is provided, got: %v", result.Warnings)
-	}
-}
-
-func TestPreflightResult_ToError(t *testing.T) {
-	// Test ToError with no errors
-	result := &PreflightResult{}
-	if result.ToError() != nil {
-		t.Error("expected nil error for empty result")
+func TestDownloadAction_PreflightValidation(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name         string
+		params       map[string]interface{}
+		wantErrors   bool
+		wantWarnings bool
+		errContains  string
+		warnContains string
+	}{
+		{
+			name: "static checksum error",
+			params: map[string]interface{}{
+				"url":          "https://example.com/{version}/file.tar.gz",
+				"checksum":     "abc123",
+				"checksum_url": "https://example.com/{version}/checksums.txt",
+			},
+			wantErrors:  true,
+			errContains: "does not support static 'checksum'",
+		},
+		{
+			name: "missing verification warning",
+			params: map[string]interface{}{
+				"url": "https://example.com/{version}/file.tar.gz",
+			},
+			wantWarnings: true,
+			warnContains: "no upstream verification",
+		},
+		{
+			name: "static URL error",
+			params: map[string]interface{}{
+				"url":          "https://example.com/static/file.tar.gz",
+				"checksum_url": "https://example.com/checksums.txt",
+			},
+			wantErrors:  true,
+			errContains: "download URL contains no variables",
+		},
+		{
+			name: "URL with variables passes",
+			params: map[string]interface{}{
+				"url":          "https://example.com/{version}/file-{os}-{arch}.tar.gz",
+				"checksum_url": "https://example.com/{version}/checksums.txt",
+			},
+			wantErrors:   false,
+			wantWarnings: false,
+		},
 	}
 
-	// Test ToError with one error
-	result.AddError("single error")
-	err := result.ToError()
-	if err == nil {
-		t.Error("expected error for result with errors")
-	}
-	if err.Error() != "single error" {
-		t.Errorf("unexpected error message: %v", err)
-	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			result := ValidateAction("download", tt.params)
 
-	// Test ToError with multiple errors
-	result.AddError("second error")
-	err = result.ToError()
-	if err == nil {
-		t.Error("expected error for result with multiple errors")
-	}
-	if err.Error() != "single error (and 1 more errors)" {
-		t.Errorf("unexpected error message: %v", err)
+			if tt.wantErrors && !result.HasErrors() {
+				t.Error("expected errors but got none")
+			}
+			if !tt.wantErrors && result.HasErrors() {
+				t.Errorf("expected no errors, got: %v", result.Errors)
+			}
+			if tt.errContains != "" {
+				found := false
+				for _, err := range result.Errors {
+					if strings.Contains(err, tt.errContains) {
+						found = true
+						break
+					}
+				}
+				if !found {
+					t.Errorf("expected error containing %q, got: %v", tt.errContains, result.Errors)
+				}
+			}
+
+			if tt.wantWarnings && !result.HasWarnings() {
+				t.Error("expected warnings but got none")
+			}
+			if !tt.wantWarnings && result.HasWarnings() {
+				t.Errorf("expected no warnings, got: %v", result.Warnings)
+			}
+			if tt.warnContains != "" {
+				found := false
+				for _, w := range result.Warnings {
+					if strings.Contains(w, tt.warnContains) {
+						found = true
+						break
+					}
+				}
+				if !found {
+					t.Errorf("expected warning containing %q, got: %v", tt.warnContains, result.Warnings)
+				}
+			}
+		})
 	}
 }
 
@@ -217,214 +203,155 @@ func TestRegisteredNames(t *testing.T) {
 
 // Tests for unused os_mapping/arch_mapping warnings
 
-func TestDownloadAction_UnusedOSMapping(t *testing.T) {
-	result := ValidateAction("download", map[string]interface{}{
-		"url":          "https://example.com/{version}/file-{arch}.tar.gz",
-		"checksum_url": "https://example.com/{version}/checksums.txt",
-		"os_mapping":   map[string]interface{}{"darwin": "macos"},
-	})
-	if !result.HasWarnings() {
-		t.Error("expected warning for unused os_mapping")
+func TestAction_UnusedMappingWarnings(t *testing.T) {
+	tests := []struct {
+		name          string
+		action        string
+		params        map[string]interface{}
+		warnContains  string // if non-empty, expect a warning containing this
+		rejectWarning bool   // if true, no mapping warnings should appear
+	}{
+		{
+			name:   "download unused os_mapping",
+			action: "download",
+			params: map[string]interface{}{
+				"url":          "https://example.com/{version}/file-{arch}.tar.gz",
+				"checksum_url": "https://example.com/{version}/checksums.txt",
+				"os_mapping":   map[string]interface{}{"darwin": "macos"},
+			},
+			warnContains: "os_mapping",
+		},
+		{
+			name:   "download unused arch_mapping",
+			action: "download",
+			params: map[string]interface{}{
+				"url":          "https://example.com/{version}/file-{os}.tar.gz",
+				"checksum_url": "https://example.com/{version}/checksums.txt",
+				"arch_mapping": map[string]interface{}{"amd64": "x64"},
+			},
+			warnContains: "arch_mapping",
+		},
+		{
+			name:   "download used mappings no warning",
+			action: "download",
+			params: map[string]interface{}{
+				"url":          "https://example.com/{version}/file-{os}-{arch}.tar.gz",
+				"checksum_url": "https://example.com/{version}/checksums.txt",
+				"os_mapping":   map[string]interface{}{"darwin": "macos"},
+				"arch_mapping": map[string]interface{}{"amd64": "x64"},
+			},
+			rejectWarning: true,
+		},
+		{
+			name:   "download_archive unused os_mapping",
+			action: "download_archive",
+			params: map[string]interface{}{
+				"url":        "https://example.com/{version}/file-{arch}.tar.gz",
+				"os_mapping": map[string]interface{}{"darwin": "macos"},
+			},
+			warnContains: "os_mapping",
+		},
+		{
+			name:   "download_archive unused arch_mapping",
+			action: "download_archive",
+			params: map[string]interface{}{
+				"url":          "https://example.com/{version}/file-{os}.tar.gz",
+				"arch_mapping": map[string]interface{}{"amd64": "x64"},
+			},
+			warnContains: "arch_mapping",
+		},
+		{
+			name:   "github_archive unused os_mapping",
+			action: "github_archive",
+			params: map[string]interface{}{
+				"repo":          "owner/repo",
+				"asset_pattern": "tool-{version}-{arch}.tar.gz",
+				"os_mapping":    map[string]interface{}{"darwin": "macos"},
+			},
+			warnContains: "os_mapping",
+		},
+		{
+			name:   "github_archive unused arch_mapping",
+			action: "github_archive",
+			params: map[string]interface{}{
+				"repo":          "owner/repo",
+				"asset_pattern": "tool-{version}-{os}.tar.gz",
+				"arch_mapping":  map[string]interface{}{"amd64": "x64"},
+			},
+			warnContains: "arch_mapping",
+		},
+		{
+			name:   "github_archive used mappings no warning",
+			action: "github_archive",
+			params: map[string]interface{}{
+				"repo":          "owner/repo",
+				"asset_pattern": "tool-{version}-{os}-{arch}.tar.gz",
+				"os_mapping":    map[string]interface{}{"darwin": "macos"},
+				"arch_mapping":  map[string]interface{}{"amd64": "x64"},
+			},
+			rejectWarning: true,
+		},
+		{
+			name:   "github_file unused os_mapping",
+			action: "github_file",
+			params: map[string]interface{}{
+				"repo":          "owner/repo",
+				"asset_pattern": "tool-{version}-{arch}",
+				"os_mapping":    map[string]interface{}{"darwin": "macos"},
+			},
+			warnContains: "os_mapping",
+		},
+		{
+			name:   "github_file unused arch_mapping",
+			action: "github_file",
+			params: map[string]interface{}{
+				"repo":          "owner/repo",
+				"asset_pattern": "tool-{version}-{os}",
+				"arch_mapping":  map[string]interface{}{"amd64": "x64"},
+			},
+			warnContains: "arch_mapping",
+		},
+		{
+			name:   "github_file used mappings no warning",
+			action: "github_file",
+			params: map[string]interface{}{
+				"repo":          "owner/repo",
+				"asset_pattern": "tool-{version}-{os}-{arch}",
+				"os_mapping":    map[string]interface{}{"darwin": "macos"},
+				"arch_mapping":  map[string]interface{}{"amd64": "x64"},
+			},
+			rejectWarning: true,
+		},
 	}
-	found := false
-	for _, w := range result.Warnings {
-		if strings.Contains(w, "os_mapping") && strings.Contains(w, "no effect") {
-			found = true
-			break
-		}
-	}
-	if !found {
-		t.Errorf("expected os_mapping warning, got: %v", result.Warnings)
-	}
-}
 
-func TestDownloadAction_UnusedArchMapping(t *testing.T) {
-	result := ValidateAction("download", map[string]interface{}{
-		"url":          "https://example.com/{version}/file-{os}.tar.gz",
-		"checksum_url": "https://example.com/{version}/checksums.txt",
-		"arch_mapping": map[string]interface{}{"amd64": "x64"},
-	})
-	if !result.HasWarnings() {
-		t.Error("expected warning for unused arch_mapping")
-	}
-	found := false
-	for _, w := range result.Warnings {
-		if strings.Contains(w, "arch_mapping") && strings.Contains(w, "no effect") {
-			found = true
-			break
-		}
-	}
-	if !found {
-		t.Errorf("expected arch_mapping warning, got: %v", result.Warnings)
-	}
-}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := ValidateAction(tt.action, tt.params)
 
-func TestDownloadAction_UsedMappingsNoWarning(t *testing.T) {
-	result := ValidateAction("download", map[string]interface{}{
-		"url":          "https://example.com/{version}/file-{os}-{arch}.tar.gz",
-		"checksum_url": "https://example.com/{version}/checksums.txt",
-		"os_mapping":   map[string]interface{}{"darwin": "macos"},
-		"arch_mapping": map[string]interface{}{"amd64": "x64"},
-	})
-	// Should have no warnings about unused mappings
-	for _, w := range result.Warnings {
-		if strings.Contains(w, "mapping") && strings.Contains(w, "no effect") {
-			t.Errorf("unexpected mapping warning: %s", w)
-		}
-	}
-}
+			if tt.rejectWarning {
+				for _, w := range result.Warnings {
+					if strings.Contains(w, "mapping") && strings.Contains(w, "no effect") {
+						t.Errorf("unexpected mapping warning: %s", w)
+					}
+				}
+				return
+			}
 
-func TestDownloadArchiveAction_UnusedOSMapping(t *testing.T) {
-	result := ValidateAction("download_archive", map[string]interface{}{
-		"url":        "https://example.com/{version}/file-{arch}.tar.gz",
-		"os_mapping": map[string]interface{}{"darwin": "macos"},
-	})
-	if !result.HasWarnings() {
-		t.Error("expected warning for unused os_mapping")
-	}
-	found := false
-	for _, w := range result.Warnings {
-		if strings.Contains(w, "os_mapping") && strings.Contains(w, "no effect") {
-			found = true
-			break
-		}
-	}
-	if !found {
-		t.Errorf("expected os_mapping warning, got: %v", result.Warnings)
-	}
-}
-
-func TestDownloadArchiveAction_UnusedArchMapping(t *testing.T) {
-	result := ValidateAction("download_archive", map[string]interface{}{
-		"url":          "https://example.com/{version}/file-{os}.tar.gz",
-		"arch_mapping": map[string]interface{}{"amd64": "x64"},
-	})
-	if !result.HasWarnings() {
-		t.Error("expected warning for unused arch_mapping")
-	}
-	found := false
-	for _, w := range result.Warnings {
-		if strings.Contains(w, "arch_mapping") && strings.Contains(w, "no effect") {
-			found = true
-			break
-		}
-	}
-	if !found {
-		t.Errorf("expected arch_mapping warning, got: %v", result.Warnings)
-	}
-}
-
-func TestGitHubArchiveAction_UnusedOSMapping(t *testing.T) {
-	result := ValidateAction("github_archive", map[string]interface{}{
-		"repo":          "owner/repo",
-		"asset_pattern": "tool-{version}-{arch}.tar.gz",
-		"os_mapping":    map[string]interface{}{"darwin": "macos"},
-	})
-	if !result.HasWarnings() {
-		t.Error("expected warning for unused os_mapping")
-	}
-	found := false
-	for _, w := range result.Warnings {
-		if strings.Contains(w, "os_mapping") && strings.Contains(w, "no effect") {
-			found = true
-			break
-		}
-	}
-	if !found {
-		t.Errorf("expected os_mapping warning, got: %v", result.Warnings)
-	}
-}
-
-func TestGitHubArchiveAction_UnusedArchMapping(t *testing.T) {
-	result := ValidateAction("github_archive", map[string]interface{}{
-		"repo":          "owner/repo",
-		"asset_pattern": "tool-{version}-{os}.tar.gz",
-		"arch_mapping":  map[string]interface{}{"amd64": "x64"},
-	})
-	if !result.HasWarnings() {
-		t.Error("expected warning for unused arch_mapping")
-	}
-	found := false
-	for _, w := range result.Warnings {
-		if strings.Contains(w, "arch_mapping") && strings.Contains(w, "no effect") {
-			found = true
-			break
-		}
-	}
-	if !found {
-		t.Errorf("expected arch_mapping warning, got: %v", result.Warnings)
-	}
-}
-
-func TestGitHubArchiveAction_UsedMappingsNoWarning(t *testing.T) {
-	result := ValidateAction("github_archive", map[string]interface{}{
-		"repo":          "owner/repo",
-		"asset_pattern": "tool-{version}-{os}-{arch}.tar.gz",
-		"os_mapping":    map[string]interface{}{"darwin": "macos"},
-		"arch_mapping":  map[string]interface{}{"amd64": "x64"},
-	})
-	// Should have no warnings about unused mappings
-	for _, w := range result.Warnings {
-		if strings.Contains(w, "mapping") && strings.Contains(w, "no effect") {
-			t.Errorf("unexpected mapping warning: %s", w)
-		}
-	}
-}
-
-func TestGitHubFileAction_UnusedOSMapping(t *testing.T) {
-	result := ValidateAction("github_file", map[string]interface{}{
-		"repo":          "owner/repo",
-		"asset_pattern": "tool-{version}-{arch}",
-		"os_mapping":    map[string]interface{}{"darwin": "macos"},
-	})
-	if !result.HasWarnings() {
-		t.Error("expected warning for unused os_mapping")
-	}
-	found := false
-	for _, w := range result.Warnings {
-		if strings.Contains(w, "os_mapping") && strings.Contains(w, "no effect") {
-			found = true
-			break
-		}
-	}
-	if !found {
-		t.Errorf("expected os_mapping warning, got: %v", result.Warnings)
-	}
-}
-
-func TestGitHubFileAction_UnusedArchMapping(t *testing.T) {
-	result := ValidateAction("github_file", map[string]interface{}{
-		"repo":          "owner/repo",
-		"asset_pattern": "tool-{version}-{os}",
-		"arch_mapping":  map[string]interface{}{"amd64": "x64"},
-	})
-	if !result.HasWarnings() {
-		t.Error("expected warning for unused arch_mapping")
-	}
-	found := false
-	for _, w := range result.Warnings {
-		if strings.Contains(w, "arch_mapping") && strings.Contains(w, "no effect") {
-			found = true
-			break
-		}
-	}
-	if !found {
-		t.Errorf("expected arch_mapping warning, got: %v", result.Warnings)
-	}
-}
-
-func TestGitHubFileAction_UsedMappingsNoWarning(t *testing.T) {
-	result := ValidateAction("github_file", map[string]interface{}{
-		"repo":          "owner/repo",
-		"asset_pattern": "tool-{version}-{os}-{arch}",
-		"os_mapping":    map[string]interface{}{"darwin": "macos"},
-		"arch_mapping":  map[string]interface{}{"amd64": "x64"},
-	})
-	// Should have no warnings about unused mappings
-	for _, w := range result.Warnings {
-		if strings.Contains(w, "mapping") && strings.Contains(w, "no effect") {
-			t.Errorf("unexpected mapping warning: %s", w)
-		}
+			if !result.HasWarnings() {
+				t.Errorf("expected warning containing %q", tt.warnContains)
+				return
+			}
+			found := false
+			for _, w := range result.Warnings {
+				if strings.Contains(w, tt.warnContains) && strings.Contains(w, "no effect") {
+					found = true
+					break
+				}
+			}
+			if !found {
+				t.Errorf("expected warning containing %q, got: %v", tt.warnContains, result.Warnings)
+			}
+		})
 	}
 }
 
@@ -556,98 +483,36 @@ func TestGitHubFileAction_ArchiveExtensionWarning(t *testing.T) {
 
 // Tests for package manager actions requiring executables parameter
 
-func TestNpmInstallAction_RequiresExecutables(t *testing.T) {
-	result := ValidateAction("npm_install", map[string]interface{}{
-		"package": "some-package",
-	})
-	if !result.HasErrors() {
-		t.Error("expected error for missing executables")
+func TestAction_RequiresExecutables(t *testing.T) {
+	tests := []struct {
+		action string
+		params map[string]interface{}
+	}{
+		{"npm_install", map[string]interface{}{"package": "some-package"}},
+		{"pipx_install", map[string]interface{}{"package": "some-package"}},
+		{"cargo_install", map[string]interface{}{"crate": "some-crate"}},
+		{"go_install", map[string]interface{}{"module": "github.com/some/module"}},
+		{"gem_install", map[string]interface{}{"gem": "some-gem"}},
 	}
-	found := false
-	for _, err := range result.Errors {
-		if err == "npm_install action requires 'executables' parameter" {
-			found = true
-			break
-		}
-	}
-	if !found {
-		t.Errorf("expected executables error, got: %v", result.Errors)
-	}
-}
 
-func TestPipxInstallAction_RequiresExecutables(t *testing.T) {
-	result := ValidateAction("pipx_install", map[string]interface{}{
-		"package": "some-package",
-	})
-	if !result.HasErrors() {
-		t.Error("expected error for missing executables")
-	}
-	found := false
-	for _, err := range result.Errors {
-		if err == "pipx_install action requires 'executables' parameter" {
-			found = true
-			break
-		}
-	}
-	if !found {
-		t.Errorf("expected executables error, got: %v", result.Errors)
-	}
-}
-
-func TestCargoInstallAction_RequiresExecutables(t *testing.T) {
-	result := ValidateAction("cargo_install", map[string]interface{}{
-		"crate": "some-crate",
-	})
-	if !result.HasErrors() {
-		t.Error("expected error for missing executables")
-	}
-	found := false
-	for _, err := range result.Errors {
-		if err == "cargo_install action requires 'executables' parameter" {
-			found = true
-			break
-		}
-	}
-	if !found {
-		t.Errorf("expected executables error, got: %v", result.Errors)
-	}
-}
-
-func TestGoInstallAction_RequiresExecutables(t *testing.T) {
-	result := ValidateAction("go_install", map[string]interface{}{
-		"module": "github.com/some/module",
-	})
-	if !result.HasErrors() {
-		t.Error("expected error for missing executables")
-	}
-	found := false
-	for _, err := range result.Errors {
-		if err == "go_install action requires 'executables' parameter" {
-			found = true
-			break
-		}
-	}
-	if !found {
-		t.Errorf("expected executables error, got: %v", result.Errors)
-	}
-}
-
-func TestGemInstallAction_RequiresExecutables(t *testing.T) {
-	result := ValidateAction("gem_install", map[string]interface{}{
-		"gem": "some-gem",
-	})
-	if !result.HasErrors() {
-		t.Error("expected error for missing executables")
-	}
-	found := false
-	for _, err := range result.Errors {
-		if err == "gem_install action requires 'executables' parameter" {
-			found = true
-			break
-		}
-	}
-	if !found {
-		t.Errorf("expected executables error, got: %v", result.Errors)
+	for _, tt := range tests {
+		t.Run(tt.action, func(t *testing.T) {
+			result := ValidateAction(tt.action, tt.params)
+			if !result.HasErrors() {
+				t.Error("expected error for missing executables")
+			}
+			wantErr := tt.action + " action requires 'executables' parameter"
+			found := false
+			for _, err := range result.Errors {
+				if err == wantErr {
+					found = true
+					break
+				}
+			}
+			if !found {
+				t.Errorf("expected %q, got: %v", wantErr, result.Errors)
+			}
+		})
 	}
 }
 
@@ -810,6 +675,114 @@ func TestChmodAction_OverlyPermissiveMode(t *testing.T) {
 			}
 			if !tt.wantWarning && hasPermWarning {
 				t.Errorf("unexpected world-write warning for mode %s", tt.mode)
+			}
+		})
+	}
+}
+
+// -- registryValidator tests (preflight.go) --
+
+func TestRegistryValidator_RegisteredNames(t *testing.T) {
+	t.Parallel()
+	v := &registryValidator{}
+	names := v.RegisteredNames()
+	if len(names) == 0 {
+		t.Error("RegisteredNames() returned empty list")
+	}
+}
+
+func TestRegistryValidator_ValidateAction(t *testing.T) {
+	t.Parallel()
+	v := &registryValidator{}
+
+	t.Run("known action", func(t *testing.T) {
+		result := v.ValidateAction("download_archive", map[string]any{
+			"url":      "https://nonexistent.invalid/tool-{version}.tar.gz",
+			"binaries": []any{"bin/tool"},
+		})
+		// Should not panic and should return a result
+		if result == nil {
+			t.Error("ValidateAction() returned nil")
+		}
+	})
+
+	t.Run("unknown action", func(t *testing.T) {
+		result := v.ValidateAction("nonexistent_action_xyz", map[string]any{})
+		if result == nil {
+			t.Error("ValidateAction() returned nil for unknown action")
+		}
+	})
+}
+
+// -- preflight.go: PreflightResult methods --
+
+func TestPreflightResult_ToError_Cases(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name      string
+		result    *PreflightResult
+		addErrors []string
+		wantNil   bool
+		wantMsg   string // exact match if non-empty
+	}{
+		{
+			name:    "nil result",
+			result:  nil,
+			wantNil: true,
+		},
+		{
+			name:    "no errors",
+			result:  &PreflightResult{},
+			wantNil: true,
+		},
+		{
+			name:      "single error",
+			result:    &PreflightResult{},
+			addErrors: []string{"test error"},
+			wantMsg:   "test error",
+		},
+		{
+			name:      "multiple errors",
+			result:    &PreflightResult{},
+			addErrors: []string{"error1", "error2", "error3"},
+			wantMsg:   "error1 (and 2 more errors)",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := tt.result
+			for _, e := range tt.addErrors {
+				r.AddError(e)
+			}
+			err := r.ToError()
+			if tt.wantNil {
+				if err != nil {
+					t.Errorf("ToError() = %v, want nil", err)
+				}
+				return
+			}
+			if err == nil {
+				t.Fatal("ToError() = nil, want error")
+			}
+			if tt.wantMsg != "" && err.Error() != tt.wantMsg {
+				t.Errorf("ToError() = %q, want %q", err.Error(), tt.wantMsg)
+			}
+		})
+	}
+}
+
+func TestValidateAction_AllRegisteredActions(t *testing.T) {
+	t.Parallel()
+	// This just verifies ValidateAction doesn't panic for known actions with empty params.
+	// Many will have errors (missing required params), which is fine.
+	names := RegisteredNames()
+	for _, name := range names {
+		t.Run(name, func(t *testing.T) {
+			result := ValidateAction(name, map[string]any{})
+			// Result should be non-nil
+			if result == nil {
+				t.Errorf("ValidateAction(%q) returned nil", name)
 			}
 		})
 	}

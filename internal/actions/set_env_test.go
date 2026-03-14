@@ -1,6 +1,7 @@
 package actions
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"strings"
@@ -130,6 +131,54 @@ func TestSetEnvAction_parseVars_InvalidFormat(t *testing.T) {
 			_, err := action.parseVars(tt.input)
 			if err == nil {
 				t.Errorf("parseVars(%v) should fail", tt.input)
+			}
+		})
+	}
+}
+
+// TestSetEnvAction_ParseVars_Errors tests parseVars error paths via Execute
+func TestSetEnvAction_ParseVars_Errors(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name        string
+		vars        any
+		errContains string
+	}{
+		{
+			name:        "missing name",
+			vars:        []any{map[string]any{"value": "bar"}},
+			errContains: "name",
+		},
+		{
+			name:        "missing value",
+			vars:        []any{map[string]any{"name": "FOO"}},
+			errContains: "value",
+		},
+		{
+			name:        "non-array",
+			vars:        "not an array",
+			errContains: "array",
+		},
+		{
+			name:        "non-map entry",
+			vars:        []any{"not a map"},
+			errContains: "map",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			action := &SetEnvAction{}
+			ctx := &ExecutionContext{
+				Context:    context.Background(),
+				WorkDir:    t.TempDir(),
+				InstallDir: t.TempDir(),
+				Version:    "1.0.0",
+			}
+			err := action.Execute(ctx, map[string]any{"vars": tt.vars})
+			if err == nil || !strings.Contains(err.Error(), tt.errContains) {
+				t.Errorf("Expected error containing %q, got %v", tt.errContains, err)
 			}
 		})
 	}

@@ -758,3 +758,67 @@ func contains(s, substr string) bool {
 	}
 	return false
 }
+
+func TestEcosystemProbe_WithConfirmDisambiguation(t *testing.T) {
+	// Set up two ambiguous matches (close downloads)
+	probe := NewEcosystemProbe([]builders.EcosystemProber{
+		&mockProber{name: "npm", result: &builders.ProbeResult{Source: "serve", Downloads: 1000, VersionCount: 10, HasRepository: true}},
+		&mockProber{name: "crates.io", result: &builders.ProbeResult{Source: "serve", Downloads: 500, VersionCount: 10, HasRepository: true}},
+	}, 5*time.Second, WithConfirmDisambiguation(func(matches []ProbeMatch) (int, error) {
+		// Select the first match
+		return 0, nil
+	}))
+
+	result, err := probe.Resolve(context.Background(), "serve")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result == nil {
+		t.Fatal("expected result from interactive disambiguation")
+	}
+}
+
+func TestEcosystemProbe_WithConfirmDisambiguation_Error(t *testing.T) {
+	probe := NewEcosystemProbe([]builders.EcosystemProber{
+		&mockProber{name: "npm", result: &builders.ProbeResult{Source: "serve", Downloads: 1000, VersionCount: 10, HasRepository: true}},
+		&mockProber{name: "crates.io", result: &builders.ProbeResult{Source: "serve", Downloads: 500, VersionCount: 10, HasRepository: true}},
+	}, 5*time.Second, WithConfirmDisambiguation(func(matches []ProbeMatch) (int, error) {
+		return 0, errors.New("user canceled")
+	}))
+
+	_, err := probe.Resolve(context.Background(), "serve")
+	if err == nil {
+		t.Fatal("expected error from canceled disambiguation")
+	}
+}
+
+func TestEcosystemProbe_WithForceDeterministic(t *testing.T) {
+	// Two ambiguous matches (close downloads) - forceDeterministic should pick first ranked
+	probe := NewEcosystemProbe([]builders.EcosystemProber{
+		&mockProber{name: "npm", result: &builders.ProbeResult{Source: "serve", Downloads: 1000, VersionCount: 10, HasRepository: true}},
+		&mockProber{name: "crates.io", result: &builders.ProbeResult{Source: "serve", Downloads: 500, VersionCount: 10, HasRepository: true}},
+	}, 5*time.Second, WithForceDeterministic())
+
+	result, err := probe.Resolve(context.Background(), "serve")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result == nil {
+		t.Fatal("expected result from force-deterministic mode")
+	}
+	if result.Metadata.SelectionReason != SelectionPriorityFallback {
+		t.Errorf("expected SelectionReason %q, got %q", SelectionPriorityFallback, result.Metadata.SelectionReason)
+	}
+}
+
+func TestEcosystemProbe_ResolveWithDetails_AllErrors(t *testing.T) {
+	probe := NewEcosystemProbe([]builders.EcosystemProber{
+		&mockProber{name: "npm", err: errors.New("fail")},
+		&mockProber{name: "pypi", err: errors.New("fail")},
+	}, 5*time.Second)
+
+	_, err := probe.ResolveWithDetails(context.Background(), "anything")
+	if err == nil {
+		t.Fatal("expected error when all probers fail")
+	}
+}

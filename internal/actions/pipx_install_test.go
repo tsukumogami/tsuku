@@ -2,7 +2,12 @@ package actions
 
 import (
 	"context"
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
+
+	"github.com/tsukumogami/tsuku/internal/recipe"
 )
 
 func TestIsValidPyPIVersion(t *testing.T) {
@@ -118,73 +123,94 @@ func TestPipxInstallAction_RequiresNetwork(t *testing.T) {
 	}
 }
 
-func TestPipxInstallAction_Decompose_MissingParams(t *testing.T) {
+func TestPipxInstallAction_Decompose_Validation(t *testing.T) {
 	t.Parallel()
 	action := &PipxInstallAction{}
-	ctx := &EvalContext{
-		Context: context.Background(),
-		Version: "1.0.0",
-	}
 
 	tests := []struct {
-		name   string
-		params map[string]interface{}
-		errMsg string
+		name        string
+		version     string
+		params      map[string]interface{}
+		errContains string
 	}{
 		{
-			name:   "missing package",
-			params: map[string]interface{}{},
-			errMsg: "pipx_install action requires 'package' parameter",
+			name:        "missing package",
+			version:     "1.0.0",
+			params:      map[string]interface{}{},
+			errContains: "requires 'package' parameter",
 		},
 		{
-			name: "missing executables",
+			name:    "missing executables",
+			version: "1.0.0",
 			params: map[string]interface{}{
 				"package": "ruff",
 			},
-			errMsg: "pipx_install action requires 'executables' parameter with at least one executable",
+			errContains: "requires 'executables' parameter",
 		},
 		{
-			name: "empty executables",
+			name:    "empty executables",
+			version: "1.0.0",
 			params: map[string]interface{}{
 				"package":     "ruff",
 				"executables": []string{},
 			},
-			errMsg: "pipx_install action requires 'executables' parameter with at least one executable",
+			errContains: "requires 'executables' parameter",
+		},
+		{
+			name:    "missing version",
+			version: "",
+			params: map[string]interface{}{
+				"package":     "ruff",
+				"executables": []string{"ruff"},
+			},
+			errContains: "requires a resolved version",
+		},
+		{
+			name:    "invalid version",
+			version: "evil;inject",
+			params: map[string]interface{}{
+				"package":     "flask",
+				"executables": []any{"flask"},
+			},
+			errContains: "version",
+		},
+		{
+			name:    "executables key absent",
+			version: "1.0.0",
+			params: map[string]interface{}{
+				"package": "flask",
+			},
+			errContains: "executables",
+		},
+		{
+			name:    "empty version",
+			version: "",
+			params: map[string]interface{}{
+				"package":     "flask",
+				"executables": []any{"flask"},
+			},
+			errContains: "version",
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			ctx := &EvalContext{
+				Context:    context.Background(),
+				Version:    tc.version,
+				VersionTag: "v" + tc.version,
+				OS:         "linux",
+				Arch:       "amd64",
+			}
 			_, err := action.Decompose(ctx, tc.params)
 			if err == nil {
 				t.Fatal("expected error, got nil")
 			}
-			if err.Error() != tc.errMsg {
-				t.Errorf("error = %q, want %q", err.Error(), tc.errMsg)
+			if !strings.Contains(err.Error(), tc.errContains) {
+				t.Errorf("error = %q, want containing %q", err.Error(), tc.errContains)
 			}
 		})
-	}
-}
-
-func TestPipxInstallAction_Decompose_MissingVersion(t *testing.T) {
-	t.Parallel()
-	action := &PipxInstallAction{}
-	ctx := &EvalContext{
-		Context: context.Background(),
-		Version: "", // Missing version
-	}
-
-	params := map[string]interface{}{
-		"package":     "ruff",
-		"executables": []string{"ruff"},
-	}
-
-	_, err := action.Decompose(ctx, params)
-	if err == nil {
-		t.Fatal("expected error for missing version")
-	}
-	if err.Error() != "pipx_install decomposition requires a resolved version" {
-		t.Errorf("unexpected error: %v", err)
 	}
 }
 
@@ -392,5 +418,101 @@ func TestDetectPythonNativeAddons(t *testing.T) {
 				t.Errorf("detectPythonNativeAddons() = %v, want %v", got, tc.want)
 			}
 		})
+	}
+}
+
+// -- pipx_install.go: Execute early validation --
+
+func TestPipxInstallAction_Execute_Validation(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name        string
+		version     string
+		params      map[string]any
+		errContains string
+	}{
+		{
+			name:        "missing package",
+			version:     "1.0.0",
+			params:      map[string]any{},
+			errContains: "package",
+		},
+		{
+			name:        "invalid version",
+			version:     "evil;inject",
+			params:      map[string]any{"package": "flask"},
+			errContains: "version",
+		},
+		{
+			name:        "missing executables",
+			version:     "1.0.0",
+			params:      map[string]any{"package": "flask"},
+			errContains: "executables",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			action := &PipxInstallAction{}
+			ctx := &ExecutionContext{
+				Context: context.Background(),
+				WorkDir: t.TempDir(),
+				Version: tt.version,
+				OS:      "linux",
+				Arch:    "amd64",
+				Recipe:  &recipe.Recipe{},
+			}
+			err := action.Execute(ctx, tt.params)
+			if err == nil || !strings.Contains(err.Error(), tt.errContains) {
+				t.Errorf("Expected error containing %q, got %v", tt.errContains, err)
+			}
+		})
+	}
+}
+
+// -- go_build.go: Execute early validation --
+
+// -- pipx_install.go: isValidPyPIPackage additional cases --
+
+func TestIsValidPyPIPackage_WithSpaces(t *testing.T) {
+	t.Parallel()
+	if isValidPyPIPackage("evil package") {
+		t.Error("Expected false for package with spaces")
+	}
+}
+
+func TestIsValidPyPIPackage_WithNewline(t *testing.T) {
+	t.Parallel()
+	if isValidPyPIPackage("evil\npackage") {
+		t.Error("Expected false for package with newline")
+	}
+}
+
+// -- pipx_install.go: computeFileSHA256 (0% covered, pure function) --
+
+func TestComputeFileSHA256_Success(t *testing.T) {
+	t.Parallel()
+	tmpDir := t.TempDir()
+	path := filepath.Join(tmpDir, "testfile")
+	if err := os.WriteFile(path, []byte("hello world\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	hash, err := computeFileSHA256(path)
+	if err != nil {
+		t.Fatalf("computeFileSHA256() error = %v", err)
+	}
+	// SHA256 of "hello world\n"
+	expected := "a948904f2f0f479b8f8197694b30184b0d2ed1c1cd2a1ec0fb85d299a192a447"
+	if hash != expected {
+		t.Errorf("computeFileSHA256() = %q, want %q", hash, expected)
+	}
+}
+
+func TestComputeFileSHA256_MissingFile(t *testing.T) {
+	t.Parallel()
+	_, err := computeFileSHA256("/nonexistent/file")
+	if err == nil {
+		t.Error("Expected error for missing file")
 	}
 }

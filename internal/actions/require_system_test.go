@@ -301,3 +301,63 @@ func TestSystemDepVersionError_Error(t *testing.T) {
 		t.Errorf("Error message missing required version: %s", msg)
 	}
 }
+
+// -- require_system.go: Preflight --
+
+func TestRequireSystemAction_Preflight_Cases(t *testing.T) {
+	t.Parallel()
+	action := &RequireSystemAction{}
+
+	tests := []struct {
+		name       string
+		params     map[string]any
+		wantErrors int
+	}{
+		{
+			name:       "valid command only",
+			params:     map[string]any{"command": "dpkg"},
+			wantErrors: 0,
+		},
+		{
+			name:       "missing command",
+			params:     map[string]any{},
+			wantErrors: 1,
+		},
+		{
+			name: "deprecated install_guide",
+			params: map[string]any{
+				"command":       "dpkg",
+				"install_guide": "apt install libssl-dev",
+			},
+			wantErrors: 1,
+		},
+		{
+			name: "incomplete version detection",
+			params: map[string]any{
+				"command":     "dpkg",
+				"min_version": "1.0",
+			},
+			wantErrors: 1,
+		},
+		{
+			name: "complete version check",
+			params: map[string]any{
+				"command":       "dpkg",
+				"min_version":   "1.0",
+				"version_flag":  "--version",
+				"version_regex": `(\d+\.\d+)`,
+			},
+			wantErrors: 0,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			result := action.Preflight(tt.params)
+			if len(result.Errors) != tt.wantErrors {
+				t.Errorf("Preflight() errors = %v, want %d errors", result.Errors, tt.wantErrors)
+			}
+		})
+	}
+}

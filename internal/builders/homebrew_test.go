@@ -438,17 +438,17 @@ func TestHomebrewBuilder_buildUserMessage(t *testing.T) {
 	}
 
 	// Check for formula name
-	if !containsString(message, "ripgrep") {
+	if !strings.Contains(message, "ripgrep") {
 		t.Error("buildUserMessage() missing formula name")
 	}
 
 	// Check for version
-	if !containsString(message, "14.1.0") {
+	if !strings.Contains(message, "14.1.0") {
 		t.Error("buildUserMessage() missing version")
 	}
 
 	// Check for dependencies
-	if !containsString(message, "pcre2") {
+	if !strings.Contains(message, "pcre2") {
 		t.Error("buildUserMessage() missing dependencies")
 	}
 }
@@ -586,7 +586,7 @@ func TestHomebrewBuilder_executeToolCall_FetchFormulaJSON(t *testing.T) {
 	if len(result) == 0 {
 		t.Error("expected non-empty result")
 	}
-	if !containsString(result, "jq") {
+	if !strings.Contains(result, "jq") {
 		t.Error("result should contain formula name")
 	}
 }
@@ -679,16 +679,6 @@ func TestHomebrewBuilder_executeToolCall_UnknownTool(t *testing.T) {
 	if err == nil {
 		t.Error("expected error for unknown tool")
 	}
-}
-
-// Helper function to check if a string contains a substring
-func containsString(s, substr string) bool {
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
-		}
-	}
-	return false
 }
 
 func TestHomebrewFormulaNotFoundError(t *testing.T) {
@@ -814,10 +804,10 @@ func TestHomebrewBuilder_inspectBottle(t *testing.T) {
 	if err != nil {
 		t.Fatalf("inspectBottle() error = %v", err)
 	}
-	if !containsString(result, "jq") {
+	if !strings.Contains(result, "jq") {
 		t.Error("result should contain formula name")
 	}
-	if !containsString(result, "x86_64_linux") {
+	if !strings.Contains(result, "x86_64_linux") {
 		t.Error("result should contain platform")
 	}
 }
@@ -853,7 +843,7 @@ func TestHomebrewBuilder_fetchFormulaJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("fetchFormulaJSON() error = %v", err)
 	}
-	if !containsString(result, "test") {
+	if !strings.Contains(result, "test") {
 		t.Error("result should contain formula name")
 	}
 
@@ -899,7 +889,7 @@ func TestHomebrewBuilder_executeToolCall_DefaultFormula(t *testing.T) {
 	if err != nil {
 		t.Fatalf("executeToolCall() error = %v", err)
 	}
-	if !containsString(result, "defaultformula") {
+	if !strings.Contains(result, "defaultformula") {
 		t.Error("should use default formula")
 	}
 
@@ -913,7 +903,7 @@ func TestHomebrewBuilder_executeToolCall_DefaultFormula(t *testing.T) {
 	if err != nil {
 		t.Fatalf("executeToolCall() error = %v", err)
 	}
-	if !containsString(result, "defaultformula") {
+	if !strings.Contains(result, "defaultformula") {
 		t.Error("should use default formula")
 	}
 }
@@ -1001,7 +991,7 @@ func TestHomebrewBuilder_buildUserMessage_NoDependencies(t *testing.T) {
 	}
 
 	message := b.buildUserMessage(genCtx)
-	if containsString(message, "Runtime Dependencies:") {
+	if strings.Contains(message, "Runtime Dependencies:") {
 		t.Error("message should not contain dependencies section when there are none")
 	}
 }
@@ -1581,10 +1571,10 @@ func TestDependencyNode_FormatTree_Simple(t *testing.T) {
 	}
 
 	output := node.FormatTree()
-	if !containsString(output, "simple") {
+	if !strings.Contains(output, "simple") {
 		t.Error("FormatTree should contain formula name")
 	}
-	if !containsString(output, "needs recipe") {
+	if !strings.Contains(output, "needs recipe") {
 		t.Error("FormatTree should indicate needs recipe")
 	}
 }
@@ -1601,10 +1591,10 @@ func TestDependencyNode_FormatTree_WithChildren(t *testing.T) {
 	}
 
 	output := parent.FormatTree()
-	if !containsString(output, "parent") {
+	if !strings.Contains(output, "parent") {
 		t.Error("FormatTree should contain parent")
 	}
-	if !containsString(output, "child") {
+	if !strings.Contains(output, "child") {
 		t.Error("FormatTree should contain child")
 	}
 }
@@ -1617,7 +1607,7 @@ func TestDependencyNode_FormatTree_WithRecipe(t *testing.T) {
 	}
 
 	output := node.FormatTree()
-	if !containsString(output, "has recipe") {
+	if !strings.Contains(output, "has recipe") {
 		t.Error("FormatTree should indicate has recipe")
 	}
 }
@@ -1645,7 +1635,7 @@ func TestDependencyNode_FormatTree_Diamond(t *testing.T) {
 
 	output := parent.FormatTree()
 	// Shared should appear with [duplicate] marker on second occurrence
-	if !containsString(output, "[duplicate]") {
+	if !strings.Contains(output, "[duplicate]") {
 		t.Error("FormatTree should mark duplicate nodes")
 	}
 }
