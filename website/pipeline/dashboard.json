@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-14T01:57:01Z",
+  "generated_at": "2026-03-14T01:58:28Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -534,13 +534,13 @@
           "next_retry_at": "2026-03-19T06:31:31Z"
         },
         {
-          "id": "rubygems:cdo",
-          "name": "cdo",
+          "id": "rubygems:cassandra",
+          "name": "cassandra",
           "ecosystem": "rubygems",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-03-14T01:47:32Z"
+          "failure_count": 8,
+          "next_retry_at": "2026-03-19T09:57:45Z"
         },
         {
           "id": "npm:chainsaw",
@@ -604,15 +604,6 @@
           "category": "install_failed",
           "failure_count": 7,
           "next_retry_at": "2026-03-15T17:59:47Z"
-        },
-        {
-          "id": "npm:datasette",
-          "name": "datasette",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-03-13T23:48:38Z"
         },
         {
           "id": "rubygems:dict",
@@ -811,6 +802,15 @@
           "category": "install_failed",
           "failure_count": 6,
           "next_retry_at": "2026-03-14T22:05:54Z"
+        },
+        {
+          "id": "npm:mongoose",
+          "name": "mongoose",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-15T09:57:45Z"
         },
         {
           "id": "crates.io:numpy",
@@ -4028,15 +4028,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:cassandra",
-          "name": "cassandra",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-03-13T21:53:12Z"
-        },
-        {
           "id": "homebrew:cassandra-reaper",
           "name": "cassandra-reaper",
           "ecosystem": "homebrew",
@@ -4126,6 +4117,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:cdo",
+          "name": "cdo",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-14T01:47:32Z"
         },
         {
           "id": "homebrew:ceres-solver",
@@ -5899,6 +5899,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "npm:datasette",
+          "name": "datasette",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-13T23:48:38Z"
         },
         {
           "id": "homebrew:datawire/blackbird/telepresence",
@@ -16050,15 +16059,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:mongoose",
-          "name": "mongoose",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-13T21:53:55Z"
         },
         {
           "id": "homebrew:mongosh",
