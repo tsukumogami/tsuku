@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-14T16:35:17Z",
+  "generated_at": "2026-03-14T16:36:36Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 46,
-      "pending": 3887,
+      "failed": 45,
+      "pending": 3888,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 46,
-        "pending": 3864,
+        "failed": 45,
+        "pending": 3865,
         "success": 1326
       }
     },
@@ -68,8 +68,8 @@
         "total": 1
       },
       "npm": {
-        "failed": 18,
-        "pending": 3,
+        "failed": 17,
+        "pending": 4,
         "success": 54,
         "total": 75
       },
@@ -579,15 +579,6 @@
           "next_retry_at": "2026-03-19T19:28:47Z"
         },
         {
-          "id": "rubygems:cog",
-          "name": "cog",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-03-14T14:36:11Z"
-        },
-        {
           "id": "npm:countdown",
           "name": "countdown",
           "ecosystem": "npm",
@@ -676,6 +667,15 @@
           "category": "install_failed",
           "failure_count": 7,
           "next_retry_at": "2026-03-14T23:51:34Z"
+        },
+        {
+          "id": "rubygems:exiv2",
+          "name": "exiv2",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-17T08:35:49Z"
         },
         {
           "id": "npm:fastmcp",
@@ -777,15 +777,6 @@
           "next_retry_at": "2026-03-16T14:31:31Z"
         },
         {
-          "id": "npm:lcm",
-          "name": "lcm",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-14T15:49:34Z"
-        },
-        {
           "id": "pypi:lib3mf",
           "name": "lib3mf",
           "ecosystem": "pypi",
@@ -849,13 +840,13 @@
           "next_retry_at": "2026-03-14T21:50:02Z"
         },
         {
-          "id": "npm:q",
-          "name": "q",
+          "id": "npm:sigstore",
+          "name": "sigstore",
           "ecosystem": "npm",
           "priority": 3,
           "category": "install_failed",
           "failure_count": 4,
-          "next_retry_at": "2026-03-14T15:41:15Z"
+          "next_retry_at": "2026-03-15T00:35:49Z"
         },
         {
           "id": "pypi:tctl",
@@ -5035,6 +5026,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:cog",
+          "name": "cog",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-14T14:36:11Z"
+        },
+        {
           "id": "homebrew:coin3d",
           "name": "coin3d",
           "ecosystem": "homebrew",
@@ -7490,15 +7490,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "rubygems:exiv2",
-          "name": "exiv2",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-14T13:53:55Z"
         },
         {
           "id": "homebrew:exoscale/tap/exoscale-cli",
@@ -13059,6 +13050,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "npm:lcm",
+          "name": "lcm",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-14T15:49:34Z"
         },
         {
           "id": "homebrew:ldid",
@@ -20654,6 +20654,15 @@
           "failure_count": 0
         },
         {
+          "id": "npm:q",
+          "name": "q",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-14T15:41:15Z"
+        },
+        {
           "id": "homebrew:qalculate-gtk",
           "name": "qalculate-gtk",
           "ecosystem": "homebrew",
@@ -23270,15 +23279,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:sigstore",
-          "name": "sigstore",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-14T13:36:30Z"
         },
         {
           "id": "homebrew:sile",
