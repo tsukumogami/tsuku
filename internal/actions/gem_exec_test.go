@@ -15,61 +15,74 @@ func TestGemExecAction_Name(t *testing.T) {
 	}
 }
 
-func TestGemExecAction_RequiresSourceDir(t *testing.T) {
-	a := &GemExecAction{}
-	ctx := &ExecutionContext{
-		WorkDir: t.TempDir(),
+func TestGemExecAction_ParamValidation(t *testing.T) {
+	tests := []struct {
+		name        string
+		params      map[string]interface{}
+		setupFiles  map[string]string
+		errContains string
+	}{
+		{
+			name: "missing source_dir",
+			params: map[string]interface{}{
+				"command": "install",
+			},
+			errContains: "gem_exec requires 'source_dir' parameter",
+		},
+		{
+			name: "missing command",
+			params: map[string]interface{}{
+				"source_dir": "WORKDIR",
+			},
+			setupFiles: map[string]string{
+				"Gemfile": "source 'https://rubygems.org'\n",
+			},
+			errContains: "gem_exec requires 'command' parameter",
+		},
+		{
+			name: "missing Gemfile",
+			params: map[string]interface{}{
+				"source_dir": "WORKDIR",
+				"command":    "install",
+			},
+			errContains: "Gemfile not found",
+		},
 	}
 
-	// Missing source_dir
-	err := a.Execute(ctx, map[string]interface{}{
-		"command": "install",
-	})
-	if err == nil || err.Error() != "gem_exec requires 'source_dir' parameter" {
-		t.Errorf("Expected source_dir required error, got: %v", err)
-	}
-}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			a := &GemExecAction{}
+			workDir := t.TempDir()
 
-func TestGemExecAction_RequiresCommand(t *testing.T) {
-	a := &GemExecAction{}
-	workDir := t.TempDir()
+			for name, content := range tt.setupFiles {
+				if err := os.WriteFile(filepath.Join(workDir, name), []byte(content), 0644); err != nil {
+					t.Fatal(err)
+				}
+			}
 
-	// Create a Gemfile
-	gemfilePath := filepath.Join(workDir, "Gemfile")
-	if err := os.WriteFile(gemfilePath, []byte("source 'https://rubygems.org'\n"), 0644); err != nil {
-		t.Fatal(err)
-	}
+			// Replace WORKDIR sentinel with actual temp dir
+			params := make(map[string]interface{})
+			for k, v := range tt.params {
+				if s, ok := v.(string); ok && s == "WORKDIR" {
+					params[k] = workDir
+				} else {
+					params[k] = v
+				}
+			}
 
-	ctx := &ExecutionContext{
-		Context: context.Background(),
-		WorkDir: workDir,
-	}
+			ctx := &ExecutionContext{
+				Context: context.Background(),
+				WorkDir: workDir,
+			}
 
-	// Missing command
-	err := a.Execute(ctx, map[string]interface{}{
-		"source_dir": workDir,
-	})
-	if err == nil || err.Error() != "gem_exec requires 'command' parameter" {
-		t.Errorf("Expected command required error, got: %v", err)
-	}
-}
-
-func TestGemExecAction_ValidatesGemfileExists(t *testing.T) {
-	a := &GemExecAction{}
-	workDir := t.TempDir()
-
-	ctx := &ExecutionContext{
-		Context: context.Background(),
-		WorkDir: workDir,
-	}
-
-	// No Gemfile in source_dir
-	err := a.Execute(ctx, map[string]interface{}{
-		"source_dir": workDir,
-		"command":    "install",
-	})
-	if err == nil {
-		t.Error("Expected error for missing Gemfile")
+			err := a.Execute(ctx, params)
+			if err == nil {
+				t.Fatalf("expected error containing %q, got nil", tt.errContains)
+			}
+			if !strings.Contains(err.Error(), tt.errContains) {
+				t.Errorf("expected error containing %q, got: %v", tt.errContains, err)
+			}
+		})
 	}
 }
 
@@ -149,81 +162,76 @@ func TestGemExecAction_RejectsShellMetacharacters(t *testing.T) {
 }
 
 func TestGemExecAction_BuildEnvironment(t *testing.T) {
-	a := &GemExecAction{}
-
-	sourceDir := "/tmp/src"
-	outputDir := "/tmp/out"
-
-	// Test with lockfile enforcement
-	env := a.buildEnvironment(sourceDir, outputDir, true, nil)
-
-	hasGemfile := false
-	hasFrozen := false
-	hasGemHome := false
-	hasSourceDateEpoch := false
-
-	for _, e := range env {
-		switch {
-		case e == "BUNDLE_GEMFILE=/tmp/src/Gemfile":
-			hasGemfile = true
-		case e == "BUNDLE_FROZEN=true":
-			hasFrozen = true
-		case e == "GEM_HOME=/tmp/out":
-			hasGemHome = true
-		case e == "SOURCE_DATE_EPOCH=315619200":
-			hasSourceDateEpoch = true
-		}
+	tests := []struct {
+		name          string
+		sourceDir     string
+		outputDir     string
+		useLockfile   bool
+		customEnv     map[string]string
+		wantEnvVars   []string
+		rejectEnvVars []string
+	}{
+		{
+			name:        "with lockfile enforcement",
+			sourceDir:   "/tmp/src",
+			outputDir:   "/tmp/out",
+			useLockfile: true,
+			wantEnvVars: []string{
+				"BUNDLE_GEMFILE=/tmp/src/Gemfile",
+				"BUNDLE_FROZEN=true",
+				"GEM_HOME=/tmp/out",
+				"SOURCE_DATE_EPOCH=315619200",
+			},
+		},
+		{
+			name:          "without lockfile enforcement",
+			sourceDir:     "/tmp/src",
+			outputDir:     "/tmp/out",
+			useLockfile:   false,
+			wantEnvVars:   []string{"BUNDLE_GEMFILE=/tmp/src/Gemfile", "GEM_HOME=/tmp/out"},
+			rejectEnvVars: []string{"BUNDLE_FROZEN=true"},
+		},
+		{
+			name:        "with custom vars",
+			sourceDir:   "/tmp/src",
+			outputDir:   "/tmp/out",
+			useLockfile: true,
+			customEnv: map[string]string{
+				"CC":     "gcc-12",
+				"CFLAGS": "-O2",
+			},
+			wantEnvVars: []string{"CC=gcc-12", "CFLAGS=-O2"},
+		},
+		{
+			name:          "empty output dir",
+			sourceDir:     "/tmp/src",
+			outputDir:     "",
+			useLockfile:   true,
+			rejectEnvVars: []string{"GEM_HOME="},
+		},
 	}
 
-	if !hasGemfile {
-		t.Error("Missing BUNDLE_GEMFILE in environment")
-	}
-	if !hasFrozen {
-		t.Error("Missing BUNDLE_FROZEN=true when use_lockfile is true")
-	}
-	if !hasGemHome {
-		t.Error("Missing GEM_HOME in environment")
-	}
-	if !hasSourceDateEpoch {
-		t.Error("Missing SOURCE_DATE_EPOCH for reproducible builds")
-	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			a := &GemExecAction{}
+			env := a.buildEnvironment(tt.sourceDir, tt.outputDir, tt.useLockfile, tt.customEnv)
 
-	// Test without lockfile enforcement
-	envNoLock := a.buildEnvironment(sourceDir, outputDir, false, nil)
-	for _, e := range envNoLock {
-		if e == "BUNDLE_FROZEN=true" {
-			t.Error("BUNDLE_FROZEN should not be set when use_lockfile is false")
-		}
-	}
-}
+			envSet := make(map[string]bool)
+			for _, e := range env {
+				envSet[e] = true
+			}
 
-func TestGemExecAction_BuildEnvironmentWithCustomVars(t *testing.T) {
-	a := &GemExecAction{}
-
-	customEnv := map[string]string{
-		"CC":     "gcc-12",
-		"CFLAGS": "-O2",
-	}
-
-	env := a.buildEnvironment("/tmp/src", "/tmp/out", true, customEnv)
-
-	hasCC := false
-	hasCFLAGS := false
-
-	for _, e := range env {
-		switch {
-		case e == "CC=gcc-12":
-			hasCC = true
-		case e == "CFLAGS=-O2":
-			hasCFLAGS = true
-		}
-	}
-
-	if !hasCC {
-		t.Error("Missing custom CC environment variable")
-	}
-	if !hasCFLAGS {
-		t.Error("Missing custom CFLAGS environment variable")
+			for _, want := range tt.wantEnvVars {
+				if !envSet[want] {
+					t.Errorf("missing expected env var %q", want)
+				}
+			}
+			for _, reject := range tt.rejectEnvVars {
+				if envSet[reject] {
+					t.Errorf("unexpected env var %q should not be present", reject)
+				}
+			}
+		})
 	}
 }
 
@@ -499,7 +507,7 @@ func TestGemExecAction_ExecutableVerificationFails(t *testing.T) {
 	if err == nil {
 		t.Error("Execute() should fail when executable not found")
 	}
-	if err != nil && !containsStr(err.Error(), "expected executable") {
+	if err != nil && !strings.Contains(err.Error(), "expected executable") {
 		t.Errorf("Error should mention missing executable, got: %v", err)
 	}
 }
@@ -544,7 +552,7 @@ func TestGemExecAction_BundlerExecutionFails(t *testing.T) {
 		t.Error("Execute() should fail when bundler fails")
 	}
 	// Accept either "bundle config failed" or "bundle install failed"
-	if err != nil && !containsStr(err.Error(), "bundle") {
+	if err != nil && !strings.Contains(err.Error(), "bundle") {
 		t.Errorf("Error should mention bundle failure, got: %v", err)
 	}
 }
@@ -627,202 +635,156 @@ func TestGemExecAction_BundlerNotFound(t *testing.T) {
 	if err == nil {
 		t.Error("Execute() should fail when bundler not found")
 	}
-	if err != nil && !containsStr(err.Error(), "bundler not found") {
+	if err != nil && !strings.Contains(err.Error(), "bundler not found") {
 		t.Errorf("Error should mention bundler not found, got: %v", err)
 	}
 }
 
-func TestGemExecAction_WithRubyVersionValidation(t *testing.T) {
-	a := &GemExecAction{}
-	workDir := t.TempDir()
-
-	// Create Gemfile and lockfile
-	gemfilePath := filepath.Join(workDir, "Gemfile")
-	if err := os.WriteFile(gemfilePath, []byte("source 'https://rubygems.org'\n"), 0644); err != nil {
-		t.Fatal(err)
-	}
-	lockPath := filepath.Join(workDir, "Gemfile.lock")
-	if err := os.WriteFile(lockPath, []byte("GEM\n  remote: https://rubygems.org/\n  specs:\n"), 0644); err != nil {
-		t.Fatal(err)
-	}
-
-	ctx := &ExecutionContext{
-		Context: context.Background(),
-		WorkDir: workDir,
-	}
-
-	// Test with ruby_version that will fail validation (ruby not in PATH in test env)
-	err := a.Execute(ctx, map[string]interface{}{
-		"source_dir":   workDir,
-		"command":      "install",
-		"ruby_version": "3.2.0",
-	})
-	// Should fail at ruby version validation
-	if err == nil {
-		t.Error("Execute() should fail when ruby version validation fails")
-	}
-	if err != nil && !containsStr(err.Error(), "ruby version validation failed") {
-		// It might also fail because bundler not found, which is fine
-		if !containsStr(err.Error(), "bundler not found") {
-			t.Errorf("Error should mention ruby version validation or bundler not found, got: %v", err)
-		}
-	}
-}
-
-func TestGemExecAction_WithBundlerVersionValidation(t *testing.T) {
-	a := &GemExecAction{}
-	workDir := t.TempDir()
-
-	// Create Gemfile and lockfile
-	gemfilePath := filepath.Join(workDir, "Gemfile")
-	if err := os.WriteFile(gemfilePath, []byte("source 'https://rubygems.org'\n"), 0644); err != nil {
-		t.Fatal(err)
-	}
-	lockPath := filepath.Join(workDir, "Gemfile.lock")
-	if err := os.WriteFile(lockPath, []byte("GEM\n  remote: https://rubygems.org/\n  specs:\n"), 0644); err != nil {
-		t.Fatal(err)
+func TestGemExecAction_WithVersionValidation(t *testing.T) {
+	tests := []struct {
+		name           string
+		params         map[string]interface{}
+		errMustContain string
+		errAlsoAccepts string
+	}{
+		{
+			name: "ruby version validation fails",
+			params: map[string]interface{}{
+				"ruby_version": "3.2.0",
+			},
+			errMustContain: "ruby version validation failed",
+			errAlsoAccepts: "bundler not found",
+		},
+		{
+			name: "bundler version validation fails",
+			params: map[string]interface{}{
+				"bundler_version": "2.4.0",
+			},
+			errMustContain: "bundler version validation failed",
+			errAlsoAccepts: "bundler not found",
+		},
 	}
 
-	ctx := &ExecutionContext{
-		Context: context.Background(),
-		WorkDir: workDir,
-	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			a := &GemExecAction{}
+			workDir := t.TempDir()
 
-	// Test with bundler_version that will fail validation (bundle not in PATH)
-	err := a.Execute(ctx, map[string]interface{}{
-		"source_dir":      workDir,
-		"command":         "install",
-		"bundler_version": "2.4.0",
-	})
-	// Should fail at bundler version validation
-	if err == nil {
-		t.Error("Execute() should fail when bundler version validation fails")
-	}
-	if err != nil && !containsStr(err.Error(), "bundler version validation failed") {
-		// It might also fail because bundler not found, which is fine
-		if !containsStr(err.Error(), "bundler not found") {
-			t.Errorf("Error should mention bundler version validation or bundler not found, got: %v", err)
-		}
+			gemfilePath := filepath.Join(workDir, "Gemfile")
+			if err := os.WriteFile(gemfilePath, []byte("source 'https://rubygems.org'\n"), 0644); err != nil {
+				t.Fatal(err)
+			}
+			lockPath := filepath.Join(workDir, "Gemfile.lock")
+			if err := os.WriteFile(lockPath, []byte("GEM\n  remote: https://rubygems.org/\n  specs:\n"), 0644); err != nil {
+				t.Fatal(err)
+			}
+
+			ctx := &ExecutionContext{
+				Context: context.Background(),
+				WorkDir: workDir,
+			}
+
+			params := map[string]interface{}{
+				"source_dir": workDir,
+				"command":    "install",
+			}
+			for k, v := range tt.params {
+				params[k] = v
+			}
+
+			err := a.Execute(ctx, params)
+			if err == nil {
+				t.Fatal("expected error, got nil")
+			}
+			if !strings.Contains(err.Error(), tt.errMustContain) &&
+				!strings.Contains(err.Error(), tt.errAlsoAccepts) {
+				t.Errorf("expected error containing %q or %q, got: %v",
+					tt.errMustContain, tt.errAlsoAccepts, err)
+			}
+		})
 	}
 }
 
-func TestGemExecAction_BuildEnvironmentEmptyOutputDir(t *testing.T) {
-	a := &GemExecAction{}
-
-	// Test with empty output_dir
-	env := a.buildEnvironment("/tmp/src", "", true, nil)
-
-	// GEM_HOME should not be set when outputDir is empty
-	for _, e := range env {
-		if e == "GEM_HOME=" {
-			t.Error("GEM_HOME should not be set to empty string")
-		}
-	}
-}
-
-func TestGemExecAction_ValidateRubyVersion_WithMock(t *testing.T) {
-	a := &GemExecAction{}
-	workDir := t.TempDir()
-
-	// Create a mock ruby executable
-	mockScript := "#!/bin/sh\necho 'ruby 3.2.0 (2022-12-25 revision abc123)'\n"
-	rubyPath := filepath.Join(workDir, "ruby")
-	if err := os.WriteFile(rubyPath, []byte(mockScript), 0755); err != nil {
-		t.Fatal(err)
-	}
-
-	// Override PATH
-	origPath := os.Getenv("PATH")
-	t.Setenv("PATH", workDir+":"+origPath)
-
-	// Test with matching version
-	err := a.validateRubyVersion("3.2")
-	if err != nil {
-		t.Errorf("validateRubyVersion should pass for matching version, got: %v", err)
-	}
-
-	// Test with non-matching version
-	err = a.validateRubyVersion("3.1")
-	if err == nil {
-		t.Error("validateRubyVersion should fail for non-matching version")
-	}
-}
-
-func TestGemExecAction_ValidateBundlerVersion_WithMock(t *testing.T) {
-	a := &GemExecAction{}
-	workDir := t.TempDir()
-
-	// Create a mock bundle executable
-	mockScript := "#!/bin/sh\necho 'Bundler version 2.4.10'\n"
-	bundlePath := filepath.Join(workDir, "bundle")
-	if err := os.WriteFile(bundlePath, []byte(mockScript), 0755); err != nil {
-		t.Fatal(err)
-	}
-
-	// Override PATH
-	origPath := os.Getenv("PATH")
-	t.Setenv("PATH", workDir+":"+origPath)
-
-	// Test with matching version
-	err := a.validateBundlerVersion("2.4")
-	if err != nil {
-		t.Errorf("validateBundlerVersion should pass for matching version, got: %v", err)
+func TestGemExecAction_VersionValidation_WithMock(t *testing.T) {
+	tests := []struct {
+		name        string
+		mockBinary  string
+		mockOutput  string
+		validate    func(a *GemExecAction) error
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name:       "ruby matching version",
+			mockBinary: "ruby",
+			mockOutput: "ruby 3.2.0 (2022-12-25 revision abc123)",
+			validate:   func(a *GemExecAction) error { return a.validateRubyVersion("3.2") },
+			expectErr:  false,
+		},
+		{
+			name:       "ruby non-matching version",
+			mockBinary: "ruby",
+			mockOutput: "ruby 3.2.0 (2022-12-25 revision abc123)",
+			validate:   func(a *GemExecAction) error { return a.validateRubyVersion("3.1") },
+			expectErr:  true,
+		},
+		{
+			name:        "ruby bad output",
+			mockBinary:  "ruby",
+			mockOutput:  "some unexpected output",
+			validate:    func(a *GemExecAction) error { return a.validateRubyVersion("3.2") },
+			expectErr:   true,
+			errContains: "unexpected ruby",
+		},
+		{
+			name:       "bundler matching version",
+			mockBinary: "bundle",
+			mockOutput: "Bundler version 2.4.10",
+			validate:   func(a *GemExecAction) error { return a.validateBundlerVersion("2.4") },
+			expectErr:  false,
+		},
+		{
+			name:       "bundler non-matching version",
+			mockBinary: "bundle",
+			mockOutput: "Bundler version 2.4.10",
+			validate:   func(a *GemExecAction) error { return a.validateBundlerVersion("2.3") },
+			expectErr:  true,
+		},
+		{
+			name:        "bundler bad output",
+			mockBinary:  "bundle",
+			mockOutput:  "some unexpected output",
+			validate:    func(a *GemExecAction) error { return a.validateBundlerVersion("2.4") },
+			expectErr:   true,
+			errContains: "unexpected bundle",
+		},
 	}
 
-	// Test with non-matching version
-	err = a.validateBundlerVersion("2.3")
-	if err == nil {
-		t.Error("validateBundlerVersion should fail for non-matching version")
-	}
-}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			a := &GemExecAction{}
+			workDir := t.TempDir()
 
-func TestGemExecAction_ValidateRubyVersion_BadOutput(t *testing.T) {
-	a := &GemExecAction{}
-	workDir := t.TempDir()
+			mockScript := "#!/bin/sh\necho '" + tt.mockOutput + "'\n"
+			binPath := filepath.Join(workDir, tt.mockBinary)
+			if err := os.WriteFile(binPath, []byte(mockScript), 0755); err != nil {
+				t.Fatal(err)
+			}
 
-	// Create a mock ruby executable with unexpected output
-	mockScript := "#!/bin/sh\necho 'some unexpected output'\n"
-	rubyPath := filepath.Join(workDir, "ruby")
-	if err := os.WriteFile(rubyPath, []byte(mockScript), 0755); err != nil {
-		t.Fatal(err)
-	}
+			origPath := os.Getenv("PATH")
+			t.Setenv("PATH", workDir+":"+origPath)
 
-	// Override PATH
-	origPath := os.Getenv("PATH")
-	t.Setenv("PATH", workDir+":"+origPath)
-
-	// Test with unexpected output format
-	err := a.validateRubyVersion("3.2")
-	if err == nil {
-		t.Error("validateRubyVersion should fail with unexpected output")
-	}
-	if err != nil && !containsStr(err.Error(), "unexpected ruby") {
-		t.Errorf("Error should mention unexpected output, got: %v", err)
-	}
-}
-
-func TestGemExecAction_ValidateBundlerVersion_BadOutput(t *testing.T) {
-	a := &GemExecAction{}
-	workDir := t.TempDir()
-
-	// Create a mock bundle executable with unexpected output
-	mockScript := "#!/bin/sh\necho 'some unexpected output'\n"
-	bundlePath := filepath.Join(workDir, "bundle")
-	if err := os.WriteFile(bundlePath, []byte(mockScript), 0755); err != nil {
-		t.Fatal(err)
-	}
-
-	// Override PATH
-	origPath := os.Getenv("PATH")
-	t.Setenv("PATH", workDir+":"+origPath)
-
-	// Test with unexpected output format
-	err := a.validateBundlerVersion("2.4")
-	if err == nil {
-		t.Error("validateBundlerVersion should fail with unexpected output")
-	}
-	if err != nil && !containsStr(err.Error(), "unexpected bundle") {
-		t.Errorf("Error should mention unexpected output, got: %v", err)
+			err := tt.validate(a)
+			if tt.expectErr && err == nil {
+				t.Error("expected error, got nil")
+			}
+			if !tt.expectErr && err != nil {
+				t.Errorf("expected no error, got: %v", err)
+			}
+			if tt.errContains != "" && err != nil && !strings.Contains(err.Error(), tt.errContains) {
+				t.Errorf("expected error containing %q, got: %v", tt.errContains, err)
+			}
+		})
 	}
 }
 
@@ -959,7 +921,7 @@ func TestGemExecAction_LockDataMode_Validation(t *testing.T) {
 				return
 			}
 
-			if !containsStr(err.Error(), tt.expectError) {
+			if !strings.Contains(err.Error(), tt.expectError) {
 				t.Errorf("expected error containing %q, got %q", tt.expectError, err.Error())
 			}
 		})
@@ -996,7 +958,7 @@ func TestGemExecAction_LockDataMode_BundlerNotFound(t *testing.T) {
 	if err == nil {
 		t.Error("Execute() should fail when bundler not found")
 	}
-	if err != nil && !containsStr(err.Error(), "bundler not found") {
+	if err != nil && !strings.Contains(err.Error(), "bundler not found") {
 		t.Errorf("Error should mention bundler not found, got: %v", err)
 	}
 }
@@ -1061,7 +1023,7 @@ DEPENDENCIES
 	if err != nil {
 		t.Errorf("Gemfile should be created: %v", err)
 	}
-	if !containsStr(string(content), "gem 'bundler'") {
+	if !strings.Contains(string(content), "gem 'bundler'") {
 		t.Error("Gemfile should contain gem specification")
 	}
 
@@ -1071,7 +1033,7 @@ DEPENDENCIES
 	if err != nil {
 		t.Errorf("Gemfile.lock should be created: %v", err)
 	}
-	if !containsStr(string(content), "bundler (2.4.0)") {
+	if !strings.Contains(string(content), "bundler (2.4.0)") {
 		t.Error("Gemfile.lock should contain lock data")
 	}
 }
@@ -1203,8 +1165,7 @@ func TestGemExecAction_LockDataMode_RejectsSystemBundler(t *testing.T) {
 
 	// Override PATH so findBundler finds the system bundler
 	origPath := os.Getenv("PATH")
-	os.Setenv("PATH", systemBinDir+":"+origPath)
-	defer os.Setenv("PATH", origPath)
+	t.Setenv("PATH", systemBinDir+":"+origPath)
 
 	ctx := &ExecutionContext{
 		Context:    context.Background(),
@@ -1225,13 +1186,6 @@ func TestGemExecAction_LockDataMode_RejectsSystemBundler(t *testing.T) {
 	}
 	if err != nil && !strings.Contains(err.Error(), "requires tsuku-managed ruby") {
 		t.Errorf("error should mention tsuku-managed ruby requirement, got: %v", err)
-	}
-}
-
-func TestGemExecAction_IsDeterministic(t *testing.T) {
-	a := &GemExecAction{}
-	if a.IsDeterministic() {
-		t.Error("gem_exec should not be deterministic (has residual non-determinism)")
 	}
 }
 
@@ -1287,5 +1241,45 @@ CHECKSUMS
 				t.Errorf("countLockfileGems() = %d, want %d", result, tt.expected)
 			}
 		})
+	}
+}
+
+// -- gem_exec.go: extractBundlerVersion --
+
+func TestExtractBundlerVersion_Found(t *testing.T) {
+	t.Parallel()
+	lockData := `GEM
+  remote: https://rubygems.org/
+  specs:
+    rake (13.0.6)
+
+BUNDLED WITH
+   2.4.22
+`
+	version := extractBundlerVersion(lockData)
+	if version != "2.4.22" {
+		t.Errorf("extractBundlerVersion() = %q, want %q", version, "2.4.22")
+	}
+}
+
+func TestExtractBundlerVersion_NotFound(t *testing.T) {
+	t.Parallel()
+	version := extractBundlerVersion("no bundled with section")
+	if version != "" {
+		t.Errorf("extractBundlerVersion() = %q, want empty", version)
+	}
+}
+
+// -- gem_exec.go: Dependencies --
+
+func TestGemExecAction_Dependencies(t *testing.T) {
+	t.Parallel()
+	action := GemExecAction{}
+	deps := action.Dependencies()
+	if len(deps.InstallTime) != 1 || deps.InstallTime[0] != "ruby" {
+		t.Errorf("Dependencies().InstallTime = %v, want [ruby]", deps.InstallTime)
+	}
+	if len(deps.Runtime) != 1 || deps.Runtime[0] != "ruby" {
+		t.Errorf("Dependencies().Runtime = %v, want [ruby]", deps.Runtime)
 	}
 }

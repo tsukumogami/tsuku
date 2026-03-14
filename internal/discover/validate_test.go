@@ -206,26 +206,8 @@ func TestValidateEntries_MetadataDoesNotOverrideSeedRepo(t *testing.T) {
 }
 
 func TestGitHubValidator_ExtractsMetadata(t *testing.T) {
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, `{
-			"archived": false,
-			"description": "A line-oriented search tool",
-			"homepage": "https://github.com/BurntSushi/ripgrep",
-			"html_url": "https://github.com/BurntSushi/ripgrep"
-		}`)
-	}))
-	defer srv.Close()
-
-	v := &GitHubValidator{client: srv.Client()}
-	meta, err := v.validate("BurntSushi/ripgrep")
-	// This will fail because it hits the test server at api.github.com URL,
-	// not the test server. So we test via the cache approach instead.
-	_ = meta
-	_ = err
-	_ = srv
-
-	// Direct test: pre-populate cache with known metadata and verify retrieval
-	v2 := &GitHubValidator{client: srv.Client()}
+	// Pre-populate cache with known metadata and verify retrieval
+	v2 := &GitHubValidator{client: http.DefaultClient}
 	expected := &EntryMetadata{Description: "search tool", Homepage: "https://rg.dev", Repo: "https://github.com/BurntSushi/ripgrep"}
 	v2.cache.Store("BurntSushi/ripgrep", cachedResult{meta: expected, err: nil})
 

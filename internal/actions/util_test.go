@@ -3,6 +3,7 @@ package actions
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -862,5 +863,43 @@ func TestCheckUnexpandedDepVars(t *testing.T) {
 				t.Errorf("CheckUnexpandedDepVars(%q) error = %v, wantErr %v", tt.input, err, tt.wantErr)
 			}
 		})
+	}
+}
+
+// -- util.go: VerifyChecksum edge cases --
+
+func TestVerifyChecksum_WithAlgorithmPrefix(t *testing.T) {
+	t.Parallel()
+	tmpDir := t.TempDir()
+
+	content := []byte("test content for checksum")
+	filePath := filepath.Join(tmpDir, "test.txt")
+	if err := os.WriteFile(filePath, content, 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Verify unsupported algorithm returns error
+	err := VerifyChecksum(filePath, "abc123", "md5")
+	if err == nil {
+		t.Error("Expected unsupported algorithm error")
+	}
+	if !strings.Contains(err.Error(), "unsupported hash algorithm") {
+		t.Errorf("Expected 'unsupported hash algorithm' error, got: %v", err)
+	}
+}
+
+func TestVerifyChecksum_SHA512_Mismatch(t *testing.T) {
+	t.Parallel()
+	tmpDir := t.TempDir()
+
+	content := []byte("sha512 test")
+	filePath := filepath.Join(tmpDir, "test.txt")
+	if err := os.WriteFile(filePath, content, 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	err := VerifyChecksum(filePath, "wrong_hash", "sha512")
+	if err == nil {
+		t.Error("Expected checksum mismatch error for SHA512")
 	}
 }

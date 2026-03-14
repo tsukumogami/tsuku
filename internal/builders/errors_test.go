@@ -213,3 +213,335 @@ func TestSandboxError(t *testing.T) {
 		t.Error("Unwrap() should return underlying error")
 	}
 }
+
+func TestRateLimitError_ConfirmationPrompt(t *testing.T) {
+	err := &RateLimitError{
+		Limit: 10,
+		Count: 10,
+	}
+	prompt := err.ConfirmationPrompt()
+	if !strings.Contains(prompt, "Rate limit exceeded") {
+		t.Errorf("ConfirmationPrompt() should mention rate limit, got: %s", prompt)
+	}
+}
+
+func TestBudgetError_ConfirmationPrompt(t *testing.T) {
+	err := &BudgetError{
+		Budget: 5.00,
+		Spent:  5.00,
+	}
+	prompt := err.ConfirmationPrompt()
+	if !strings.Contains(prompt, "budget exhausted") {
+		t.Errorf("ConfirmationPrompt() should mention budget, got: %s", prompt)
+	}
+	if !strings.Contains(prompt, "$5.00") {
+		t.Errorf("ConfirmationPrompt() should contain spent amount, got: %s", prompt)
+	}
+}
+
+func TestRateLimitError_ShortRetryAfter(t *testing.T) {
+	err := &RateLimitError{
+		Limit:      10,
+		Count:      10,
+		RetryAfter: 30 * time.Second,
+		ConfigKey:  "llm.hourly_rate_limit",
+	}
+	suggestion := err.Suggestion()
+	// Production code floors sub-minute durations to 1 and always uses the
+	// plural format "%d minutes", so 30s becomes "1 minutes". The grammar
+	// wart ("1 minutes" instead of "1 minute") exists in the production
+	// code and is not worth fixing for a rarely-seen retry message.
+	if !strings.Contains(suggestion, "1 minutes") {
+		t.Errorf("Suggestion() should show at least 1 minute (floored), got: %s", suggestion)
+	}
+}
+
+func TestGitHubRateLimitError_ShortRetryAfter(t *testing.T) {
+	err := &GitHubRateLimitError{
+		RetryAfter:    10 * time.Second,
+		Authenticated: true,
+	}
+	suggestion := err.Suggestion()
+	// Same floor behavior as RateLimitError: sub-minute durations become
+	// "1 minutes" due to the always-plural format string in production code.
+	if !strings.Contains(suggestion, "1 minutes") {
+		t.Errorf("Suggestion() should show at least 1 minute (floored), got: %s", suggestion)
+	}
+}
+
+func TestDeterministicFailedError(t *testing.T) {
+	underlying := errors.New("no bottles available")
+	err := &DeterministicFailedError{
+		Formula:  "fzf",
+		Category: FailureCategoryNoBottles,
+		Message:  "no pre-built bottles for this platform",
+		Err:      underlying,
+	}
+
+	errMsg := err.Error()
+	if !strings.Contains(errMsg, "fzf") {
+		t.Errorf("Error() should contain formula name, got: %s", errMsg)
+	}
+	if !strings.Contains(errMsg, "no pre-built bottles") {
+		t.Errorf("Error() should contain message, got: %s", errMsg)
+	}
+
+	if err.Unwrap() != underlying {
+		t.Error("Unwrap() should return underlying error")
+	}
+}
+
+func TestErrorTypes_Unwrap(t *testing.T) {
+	tests := []struct {
+		name       string
+		err        interface{ Unwrap() error }
+		underlying error
+	}{
+		{
+			name:       "GitHubRepoNotFoundError",
+			underlying: errors.New("404 not found"),
+			err: &GitHubRepoNotFoundError{
+				Owner: "owner",
+				Repo:  "repo",
+				Err:   errors.New("404 not found"),
+			},
+		},
+		{
+			name:       "LLMAuthError",
+			underlying: errors.New("unauthorized"),
+			err: &LLMAuthError{
+				Provider: "test",
+				EnvVar:   "TEST_KEY",
+				DocsURL:  "https://example.com",
+				Err:      errors.New("unauthorized"),
+			},
+		},
+		{
+			name:       "SandboxError",
+			underlying: errors.New("exit 1"),
+			err: &SandboxError{
+				Tool: "test",
+				Err:  errors.New("exit 1"),
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			got := tt.err.Unwrap()
+			if got == nil || got.Error() != tt.underlying.Error() {
+				t.Errorf("Unwrap() = %v, want %v", got, tt.underlying)
+			}
+		})
+	}
+}
+
+func TestRepairNotSupportedError(t *testing.T) {
+	err := &RepairNotSupportedError{BuilderType: "ecosystem"}
+
+	msg := err.Error()
+	if !strings.Contains(msg, "ecosystem") {
+		t.Errorf("Error() should contain builder type, got: %s", msg)
+	}
+	if !strings.Contains(msg, "do not support repair") {
+		t.Errorf("Error() should explain repair not supported, got: %s", msg)
+	}
+}
+
+func TestRepairNotSupportedError_Is(t *testing.T) {
+	err1 := &RepairNotSupportedError{BuilderType: "ecosystem"}
+	err2 := &RepairNotSupportedError{BuilderType: "github"}
+
+	// Is() should match any RepairNotSupportedError regardless of BuilderType
+	if !err1.Is(err2) {
+		t.Error("Is() should match other RepairNotSupportedError instances")
+	}
+
+	// Should not match regular errors
+	if err1.Is(errors.New("other")) {
+		t.Error("Is() should not match non-RepairNotSupportedError")
+	}
+
+	// errors.Is should work
+	if !errors.Is(err1, &RepairNotSupportedError{}) {
+		t.Error("errors.Is() should match RepairNotSupportedError")
+	}
+}
+
+func TestLLMDisabledError(t *testing.T) {
+	err := &LLMDisabledError{}
+	msg := err.Error()
+	if !strings.Contains(msg, "LLM features are disabled") {
+		t.Errorf("Error() should explain LLM disabled, got: %s", msg)
+	}
+	if !strings.Contains(msg, "tsuku config set llm.enabled true") {
+		t.Errorf("Error() should contain enablement command, got: %s", msg)
+	}
+}
+
+func TestRecordLLMCost(t *testing.T) {
+	// nil tracker should return nil
+	if err := RecordLLMCost(nil, 1.0); err != nil {
+		t.Errorf("RecordLLMCost(nil, 1.0) error = %v, want nil", err)
+	}
+
+	// Zero cost should return nil
+	tracker := &mockLLMTracker{}
+	if err := RecordLLMCost(tracker, 0); err != nil {
+		t.Errorf("RecordLLMCost(tracker, 0) error = %v, want nil", err)
+	}
+	if tracker.recordedCost != 0 {
+		t.Error("should not record zero cost")
+	}
+
+	// Negative cost should return nil
+	if err := RecordLLMCost(tracker, -1); err != nil {
+		t.Errorf("RecordLLMCost(tracker, -1) error = %v, want nil", err)
+	}
+
+	// Positive cost should be recorded
+	if err := RecordLLMCost(tracker, 0.5); err != nil {
+		t.Errorf("RecordLLMCost(tracker, 0.5) error = %v, want nil", err)
+	}
+	if tracker.recordedCost != 0.5 {
+		t.Errorf("recorded cost = %v, want 0.5", tracker.recordedCost)
+	}
+}
+
+func TestCheckLLMPrerequisites(t *testing.T) {
+	tests := []struct {
+		name     string
+		opts     *SessionOptions
+		wantErr  bool
+		checkErr func(t *testing.T, err error)
+	}{
+		{
+			name:    "NilOpts",
+			opts:    nil,
+			wantErr: false,
+		},
+		{
+			name:    "ForceInit",
+			opts:    &SessionOptions{ForceInit: true},
+			wantErr: false,
+		},
+		{
+			name: "LLMDisabled",
+			opts: &SessionOptions{
+				LLMConfig: &mockLLMConfig{enabled: false},
+			},
+			wantErr: true,
+			checkErr: func(t *testing.T, err error) {
+				t.Helper()
+				var llmErr *LLMDisabledError
+				if !errors.As(err, &llmErr) {
+					t.Errorf("expected LLMDisabledError, got %T", err)
+				}
+			},
+		},
+		{
+			name: "BudgetExceeded",
+			opts: &SessionOptions{
+				LLMConfig: &mockLLMConfig{enabled: true, dailyBudget: 5.0, hourlyLimit: 10},
+				LLMStateTracker: &mockLLMTracker{
+					canGenerate:    false,
+					denyReason:     "daily budget exceeded",
+					dailySpent:     5.5,
+					recentGenCount: 3,
+				},
+			},
+			wantErr: true,
+			checkErr: func(t *testing.T, err error) {
+				t.Helper()
+				var budgetErr *BudgetError
+				if !errors.As(err, &budgetErr) {
+					t.Errorf("expected BudgetError, got %T", err)
+				}
+			},
+		},
+		{
+			name: "RateLimitExceeded",
+			opts: &SessionOptions{
+				LLMConfig: &mockLLMConfig{enabled: true, dailyBudget: 5.0, hourlyLimit: 10},
+				LLMStateTracker: &mockLLMTracker{
+					canGenerate:    false,
+					denyReason:     "rate limit exceeded",
+					dailySpent:     1.0,
+					recentGenCount: 10,
+				},
+			},
+			wantErr: true,
+			checkErr: func(t *testing.T, err error) {
+				t.Helper()
+				var rateErr *RateLimitError
+				if !errors.As(err, &rateErr) {
+					t.Errorf("expected RateLimitError, got %T", err)
+				}
+			},
+		},
+		{
+			name: "Allowed",
+			opts: &SessionOptions{
+				LLMConfig: &mockLLMConfig{enabled: true, dailyBudget: 5.0, hourlyLimit: 10},
+				LLMStateTracker: &mockLLMTracker{
+					canGenerate:    true,
+					dailySpent:     1.0,
+					recentGenCount: 3,
+				},
+			},
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			err := CheckLLMPrerequisites(tt.opts)
+			if tt.wantErr {
+				if err == nil {
+					t.Fatal("expected error")
+				}
+				if tt.checkErr != nil {
+					tt.checkErr(t, err)
+				}
+			} else {
+				if err != nil {
+					t.Errorf("unexpected error: %v", err)
+				}
+			}
+		})
+	}
+}
+
+// Mock types for testing
+
+type mockLLMConfig struct {
+	enabled     bool
+	dailyBudget float64
+	hourlyLimit int
+}
+
+func (m *mockLLMConfig) LLMEnabled() bool        { return m.enabled }
+func (m *mockLLMConfig) LLMDailyBudget() float64 { return m.dailyBudget }
+func (m *mockLLMConfig) LLMHourlyRateLimit() int { return m.hourlyLimit }
+
+type mockLLMTracker struct {
+	canGenerate    bool
+	denyReason     string
+	dailySpent     float64
+	recentGenCount int
+	recordedCost   float64
+}
+
+func (m *mockLLMTracker) CanGenerate(hourlyLimit int, dailyBudget float64) (bool, string) {
+	return m.canGenerate, m.denyReason
+}
+
+func (m *mockLLMTracker) RecordGeneration(cost float64) error {
+	m.recordedCost = cost
+	return nil
+}
+
+func (m *mockLLMTracker) DailySpent() float64        { return m.dailySpent }
+func (m *mockLLMTracker) RecentGenerationCount() int { return m.recentGenCount }

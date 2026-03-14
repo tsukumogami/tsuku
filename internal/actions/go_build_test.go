@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
+
+	"github.com/tsukumogami/tsuku/internal/recipe"
 )
 
 // TestGoBuildAction_Name tests the Name method
@@ -16,174 +19,100 @@ func TestGoBuildAction_Name(t *testing.T) {
 	}
 }
 
-// TestGoBuildAction_Execute_MissingModule tests that Execute fails without module
-func TestGoBuildAction_Execute_MissingModule(t *testing.T) {
-	action := &GoBuildAction{}
-	ctx := &ExecutionContext{
-		Context:    context.Background(),
-		InstallDir: t.TempDir(),
-		WorkDir:    t.TempDir(),
+// TestGoBuildAction_Execute_ValidationErrors tests that Execute rejects invalid parameters
+func TestGoBuildAction_Execute_ValidationErrors(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name        string
+		params      map[string]interface{}
+		errContains string
+	}{
+		{
+			name: "missing module",
+			params: map[string]interface{}{
+				"version":     "v1.0.0",
+				"executables": []interface{}{"tool"},
+				"go_sum":      "test go.sum content",
+			},
+			errContains: "module",
+		},
+		{
+			name: "missing version",
+			params: map[string]interface{}{
+				"module":      "github.com/user/repo",
+				"executables": []interface{}{"tool"},
+				"go_sum":      "test go.sum content",
+			},
+			errContains: "version",
+		},
+		{
+			name: "missing executables",
+			params: map[string]interface{}{
+				"module":  "github.com/user/repo",
+				"version": "v1.0.0",
+				"go_sum":  "test go.sum content",
+			},
+			errContains: "executables",
+		},
+		{
+			name: "missing go_sum",
+			params: map[string]interface{}{
+				"module":      "github.com/user/repo",
+				"version":     "v1.0.0",
+				"executables": []interface{}{"tool"},
+			},
+			errContains: "go_sum",
+		},
+		{
+			name: "invalid module path",
+			params: map[string]interface{}{
+				"module":      "github.com/user/repo;rm -rf /",
+				"version":     "v1.0.0",
+				"executables": []interface{}{"tool"},
+				"go_sum":      "test go.sum content",
+			},
+			errContains: "invalid module path",
+		},
+		{
+			name: "invalid version",
+			params: map[string]interface{}{
+				"module":      "github.com/user/repo",
+				"version":     "v1.0.0;rm -rf /",
+				"executables": []interface{}{"tool"},
+				"go_sum":      "test go.sum content",
+			},
+			errContains: "invalid version",
+		},
+		{
+			name: "invalid executable name",
+			params: map[string]interface{}{
+				"module":      "github.com/user/repo",
+				"version":     "v1.0.0",
+				"executables": []interface{}{"../../../etc/passwd"},
+				"go_sum":      "test go.sum content",
+			},
+			errContains: "invalid executable name",
+		},
 	}
 
-	params := map[string]interface{}{
-		"version":     "v1.0.0",
-		"executables": []interface{}{"tool"},
-		"go_sum":      "test go.sum content",
-	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			action := &GoBuildAction{}
+			ctx := &ExecutionContext{
+				Context:    context.Background(),
+				InstallDir: t.TempDir(),
+				WorkDir:    t.TempDir(),
+			}
 
-	err := action.Execute(ctx, params)
-	if err == nil {
-		t.Error("Execute() should fail when 'module' parameter is missing")
-	}
-	if err != nil && !containsStr(err.Error(), "module") {
-		t.Errorf("Error message should mention 'module', got: %v", err)
-	}
-}
-
-// TestGoBuildAction_Execute_MissingVersion tests that Execute fails without version
-func TestGoBuildAction_Execute_MissingVersion(t *testing.T) {
-	action := &GoBuildAction{}
-	ctx := &ExecutionContext{
-		Context:    context.Background(),
-		InstallDir: t.TempDir(),
-		WorkDir:    t.TempDir(),
-	}
-
-	params := map[string]interface{}{
-		"module":      "github.com/user/repo",
-		"executables": []interface{}{"tool"},
-		"go_sum":      "test go.sum content",
-	}
-
-	err := action.Execute(ctx, params)
-	if err == nil {
-		t.Error("Execute() should fail when 'version' parameter is missing")
-	}
-	if err != nil && !containsStr(err.Error(), "version") {
-		t.Errorf("Error message should mention 'version', got: %v", err)
-	}
-}
-
-// TestGoBuildAction_Execute_MissingExecutables tests that Execute fails without executables
-func TestGoBuildAction_Execute_MissingExecutables(t *testing.T) {
-	action := &GoBuildAction{}
-	ctx := &ExecutionContext{
-		Context:    context.Background(),
-		InstallDir: t.TempDir(),
-		WorkDir:    t.TempDir(),
-	}
-
-	params := map[string]interface{}{
-		"module":  "github.com/user/repo",
-		"version": "v1.0.0",
-		"go_sum":  "test go.sum content",
-	}
-
-	err := action.Execute(ctx, params)
-	if err == nil {
-		t.Error("Execute() should fail when 'executables' parameter is missing")
-	}
-	if err != nil && !containsStr(err.Error(), "executables") {
-		t.Errorf("Error message should mention 'executables', got: %v", err)
-	}
-}
-
-// TestGoBuildAction_Execute_MissingGoSum tests that Execute fails without go_sum
-func TestGoBuildAction_Execute_MissingGoSum(t *testing.T) {
-	action := &GoBuildAction{}
-	ctx := &ExecutionContext{
-		Context:    context.Background(),
-		InstallDir: t.TempDir(),
-		WorkDir:    t.TempDir(),
-	}
-
-	params := map[string]interface{}{
-		"module":      "github.com/user/repo",
-		"version":     "v1.0.0",
-		"executables": []interface{}{"tool"},
-	}
-
-	err := action.Execute(ctx, params)
-	if err == nil {
-		t.Error("Execute() should fail when 'go_sum' parameter is missing")
-	}
-	if err != nil && !containsStr(err.Error(), "go_sum") {
-		t.Errorf("Error message should mention 'go_sum', got: %v", err)
-	}
-}
-
-// TestGoBuildAction_Execute_InvalidModule tests command injection in module
-func TestGoBuildAction_Execute_InvalidModule(t *testing.T) {
-	action := &GoBuildAction{}
-	ctx := &ExecutionContext{
-		Context:    context.Background(),
-		InstallDir: t.TempDir(),
-		WorkDir:    t.TempDir(),
-	}
-
-	params := map[string]interface{}{
-		"module":      "github.com/user/repo;rm -rf /",
-		"version":     "v1.0.0",
-		"executables": []interface{}{"tool"},
-		"go_sum":      "test go.sum content",
-	}
-
-	err := action.Execute(ctx, params)
-	if err == nil {
-		t.Error("Execute() should fail with command injection in module path")
-	}
-	if err != nil && !containsStr(err.Error(), "invalid module path") {
-		t.Errorf("Error message should mention 'invalid module path', got: %v", err)
-	}
-}
-
-// TestGoBuildAction_Execute_InvalidVersion tests command injection in version
-func TestGoBuildAction_Execute_InvalidVersion(t *testing.T) {
-	action := &GoBuildAction{}
-	ctx := &ExecutionContext{
-		Context:    context.Background(),
-		InstallDir: t.TempDir(),
-		WorkDir:    t.TempDir(),
-	}
-
-	params := map[string]interface{}{
-		"module":      "github.com/user/repo",
-		"version":     "v1.0.0;rm -rf /",
-		"executables": []interface{}{"tool"},
-		"go_sum":      "test go.sum content",
-	}
-
-	err := action.Execute(ctx, params)
-	if err == nil {
-		t.Error("Execute() should fail with command injection in version")
-	}
-	if err != nil && !containsStr(err.Error(), "invalid version") {
-		t.Errorf("Error message should mention 'invalid version', got: %v", err)
-	}
-}
-
-// TestGoBuildAction_Execute_InvalidExecutable tests path traversal in executable
-func TestGoBuildAction_Execute_InvalidExecutable(t *testing.T) {
-	action := &GoBuildAction{}
-	ctx := &ExecutionContext{
-		Context:    context.Background(),
-		InstallDir: t.TempDir(),
-		WorkDir:    t.TempDir(),
-	}
-
-	params := map[string]interface{}{
-		"module":      "github.com/user/repo",
-		"version":     "v1.0.0",
-		"executables": []interface{}{"../../../etc/passwd"},
-		"go_sum":      "test go.sum content",
-	}
-
-	err := action.Execute(ctx, params)
-	if err == nil {
-		t.Error("Execute() should fail with path traversal in executable name")
-	}
-	if err != nil && !containsStr(err.Error(), "invalid executable name") {
-		t.Errorf("Error message should mention 'invalid executable name', got: %v", err)
+			err := action.Execute(ctx, tt.params)
+			if err == nil {
+				t.Errorf("Execute() should fail for %s", tt.name)
+			}
+			if err != nil && !strings.Contains(err.Error(), tt.errContains) {
+				t.Errorf("Error should contain %q, got: %v", tt.errContains, err)
+			}
+		})
 	}
 }
 
@@ -215,7 +144,7 @@ func TestGoBuildAction_Execute_GoNotInstalled(t *testing.T) {
 	if err == nil {
 		t.Error("Execute() should fail when Go is not installed")
 	}
-	if err != nil && !containsStr(err.Error(), "go not found") {
+	if err != nil && !strings.Contains(err.Error(), "go not found") {
 		t.Errorf("Error message should mention 'go not found', got: %v", err)
 	}
 }
@@ -310,112 +239,105 @@ func TestGoInstallAction_Decomposable(t *testing.T) {
 	}
 }
 
-// TestGoInstallAction_Decompose_MissingModule tests Decompose fails without module
-func TestGoInstallAction_Decompose_MissingModule(t *testing.T) {
-	action := &GoInstallAction{}
-	ctx := &EvalContext{
-		Context:    context.Background(),
-		Version:    "1.0.0",
-		VersionTag: "v1.0.0",
+// TestGoInstallAction_Decompose_ValidationErrors tests that Decompose rejects invalid parameters
+func TestGoInstallAction_Decompose_ValidationErrors(t *testing.T) {
+	tests := []struct {
+		name        string
+		ctx         *EvalContext
+		params      map[string]interface{}
+		setup       func(t *testing.T)
+		errContains string
+	}{
+		{
+			name: "missing module",
+			ctx: &EvalContext{
+				Context:    context.Background(),
+				Version:    "1.0.0",
+				VersionTag: "v1.0.0",
+			},
+			params: map[string]interface{}{
+				"executables": []interface{}{"tool"},
+			},
+			errContains: "module",
+		},
+		{
+			name: "missing executables",
+			ctx: &EvalContext{
+				Context:    context.Background(),
+				Version:    "1.0.0",
+				VersionTag: "v1.0.0",
+			},
+			params: map[string]interface{}{
+				"module": "github.com/user/repo",
+			},
+			errContains: "executables",
+		},
+		{
+			name: "invalid module",
+			ctx: &EvalContext{
+				Context:    context.Background(),
+				Version:    "1.0.0",
+				VersionTag: "v1.0.0",
+			},
+			params: map[string]interface{}{
+				"module":      "github.com/user/repo;rm",
+				"executables": []interface{}{"tool"},
+			},
+			errContains: "invalid module",
+		},
+		{
+			name: "invalid version",
+			ctx: &EvalContext{
+				Context:    context.Background(),
+				Version:    "1.0.0",
+				VersionTag: "v1.0.0;rm",
+			},
+			params: map[string]interface{}{
+				"module":      "github.com/user/repo",
+				"executables": []interface{}{"tool"},
+			},
+			errContains: "invalid version",
+		},
+		{
+			name: "go not installed",
+			ctx: &EvalContext{
+				Context:    context.Background(),
+				Version:    "1.0.0",
+				VersionTag: "v1.0.0",
+			},
+			params: map[string]interface{}{
+				"module":      "github.com/user/repo",
+				"executables": []interface{}{"tool"},
+			},
+			setup: func(t *testing.T) {
+				tmpHome := t.TempDir()
+				t.Setenv("HOME", tmpHome)
+				toolsDir := filepath.Join(tmpHome, ".tsuku", "tools")
+				if err := os.MkdirAll(toolsDir, 0755); err != nil {
+					t.Fatalf("Failed to create tools dir: %v", err)
+				}
+			},
+			errContains: "go not found",
+		},
 	}
 
-	params := map[string]interface{}{
-		"executables": []interface{}{"tool"},
-	}
-
-	_, err := action.Decompose(ctx, params)
-	if err == nil {
-		t.Error("Decompose() should fail when 'module' parameter is missing")
-	}
-}
-
-// TestGoInstallAction_Decompose_MissingExecutables tests Decompose fails without executables
-func TestGoInstallAction_Decompose_MissingExecutables(t *testing.T) {
-	action := &GoInstallAction{}
-	ctx := &EvalContext{
-		Context:    context.Background(),
-		Version:    "1.0.0",
-		VersionTag: "v1.0.0",
-	}
-
-	params := map[string]interface{}{
-		"module": "github.com/user/repo",
-	}
-
-	_, err := action.Decompose(ctx, params)
-	if err == nil {
-		t.Error("Decompose() should fail when 'executables' parameter is missing")
-	}
-}
-
-// TestGoInstallAction_Decompose_InvalidModule tests Decompose fails with invalid module
-func TestGoInstallAction_Decompose_InvalidModule(t *testing.T) {
-	action := &GoInstallAction{}
-	ctx := &EvalContext{
-		Context:    context.Background(),
-		Version:    "1.0.0",
-		VersionTag: "v1.0.0",
-	}
-
-	params := map[string]interface{}{
-		"module":      "github.com/user/repo;rm",
-		"executables": []interface{}{"tool"},
-	}
-
-	_, err := action.Decompose(ctx, params)
-	if err == nil {
-		t.Error("Decompose() should fail with invalid module path")
-	}
-}
-
-// TestGoInstallAction_Decompose_InvalidVersion tests Decompose fails with invalid version
-func TestGoInstallAction_Decompose_InvalidVersion(t *testing.T) {
-	action := &GoInstallAction{}
-	ctx := &EvalContext{
-		Context:    context.Background(),
-		Version:    "1.0.0",
-		VersionTag: "v1.0.0;rm",
-	}
-
-	params := map[string]interface{}{
-		"module":      "github.com/user/repo",
-		"executables": []interface{}{"tool"},
-	}
-
-	_, err := action.Decompose(ctx, params)
-	if err == nil {
-		t.Error("Decompose() should fail with invalid version")
-	}
-}
-
-// TestGoInstallAction_Decompose_GoNotInstalled tests Decompose fails when Go not installed
-func TestGoInstallAction_Decompose_GoNotInstalled(t *testing.T) {
-	tmpHome := t.TempDir()
-	t.Setenv("HOME", tmpHome)
-
-	toolsDir := filepath.Join(tmpHome, ".tsuku", "tools")
-	if err := os.MkdirAll(toolsDir, 0755); err != nil {
-		t.Fatalf("Failed to create tools dir: %v", err)
-	}
-
-	action := &GoInstallAction{}
-	ctx := &EvalContext{
-		Context:    context.Background(),
-		Version:    "1.0.0",
-		VersionTag: "v1.0.0",
-	}
-
-	params := map[string]interface{}{
-		"module":      "github.com/user/repo",
-		"executables": []interface{}{"tool"},
-	}
-
-	_, err := action.Decompose(ctx, params)
-	if err == nil {
-		t.Error("Decompose() should fail when Go is not installed")
-	}
-	if err != nil && !containsStr(err.Error(), "go not found") {
-		t.Errorf("Error message should mention 'go not found', got: %v", err)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.setup == nil {
+				t.Parallel()
+			}
+			if tt.setup != nil {
+				tt.setup(t)
+			}
+			action := &GoInstallAction{}
+			_, err := action.Decompose(tt.ctx, tt.params)
+			if err == nil {
+				t.Errorf("Decompose() should fail for %s", tt.name)
+			}
+			if err != nil && !strings.Contains(err.Error(), tt.errContains) {
+				t.Errorf("Error should contain %q, got: %v", tt.errContains, err)
+			}
+		})
 	}
 }
 
@@ -785,10 +707,10 @@ func TestGoBuildAction_Execute_SpecificGoVersionNotInstalled(t *testing.T) {
 	if err == nil {
 		t.Error("Execute() should fail when specific Go version is not installed")
 	}
-	if err != nil && !containsStr(err.Error(), "go 1.21.5 not found") {
+	if err != nil && !strings.Contains(err.Error(), "go 1.21.5 not found") {
 		t.Errorf("Error message should mention the specific version, got: %v", err)
 	}
-	if err != nil && !containsStr(err.Error(), "tsuku install go@1.21.5") {
+	if err != nil && !strings.Contains(err.Error(), "tsuku install go@1.21.5") {
 		t.Errorf("Error message should suggest how to install, got: %v", err)
 	}
 }
@@ -855,5 +777,73 @@ exit 0
 	}
 	if goVersion != "1.21.5" {
 		t.Errorf("go_version = %q, want %q", goVersion, "1.21.5")
+	}
+}
+
+// -- go_build.go: Execute with cgo_enabled flag --
+
+func TestGoBuildAction_Execute_WithCgoFlag(t *testing.T) {
+	t.Parallel()
+	action := &GoBuildAction{}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: t.TempDir(),
+		Version: "1.0.0",
+		OS:      "linux",
+		Arch:    "amd64",
+		Recipe:  &recipe.Recipe{},
+	}
+	// Will fail at go_sum, but exercises cgo_enabled path
+	err := action.Execute(ctx, map[string]any{
+		"module":      "example.com/tool",
+		"version":     "1.0.0",
+		"executables": []any{"tool"},
+		"cgo_enabled": true,
+	})
+	if err == nil || !strings.Contains(err.Error(), "go_sum") {
+		t.Errorf("Expected go_sum error, got %v", err)
+	}
+}
+
+// -- go_build.go: Execute with build_flags --
+
+func TestGoBuildAction_Execute_WithBuildFlags(t *testing.T) {
+	t.Parallel()
+	action := &GoBuildAction{}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: t.TempDir(),
+		Version: "1.0.0",
+		OS:      "linux",
+		Arch:    "amd64",
+		Recipe:  &recipe.Recipe{},
+	}
+	err := action.Execute(ctx, map[string]any{
+		"module":      "example.com/tool",
+		"version":     "1.0.0",
+		"executables": []any{"tool"},
+		"build_flags": []any{"-trimpath"},
+	})
+	if err == nil || !strings.Contains(err.Error(), "go_sum") {
+		t.Errorf("Expected go_sum error, got %v", err)
+	}
+}
+
+// -- go_build.go: Dependencies, RequiresNetwork --
+
+func TestGoBuildAction_Dependencies(t *testing.T) {
+	t.Parallel()
+	action := GoBuildAction{}
+	deps := action.Dependencies()
+	if len(deps.InstallTime) != 1 || deps.InstallTime[0] != "go" {
+		t.Errorf("Dependencies().InstallTime = %v, want [go]", deps.InstallTime)
+	}
+}
+
+func TestGoBuildAction_RequiresNetwork(t *testing.T) {
+	t.Parallel()
+	action := GoBuildAction{}
+	if !action.RequiresNetwork() {
+		t.Error("RequiresNetwork() = false, want true")
 	}
 }

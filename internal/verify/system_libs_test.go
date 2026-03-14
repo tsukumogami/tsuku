@@ -313,3 +313,28 @@ func TestDefaultRegistry_PatternCount(t *testing.T) {
 		}
 	})
 }
+
+func TestIsPathVariable_MoreCases(t *testing.T) {
+	tests := []struct {
+		name string
+		want bool
+	}{
+		{"$ORIGIN/lib/foo.so", true},
+		{"${ORIGIN}/lib/foo.so", true},
+		{"@rpath/libfoo.dylib", true},
+		{"@loader_path/lib", true},
+		{"@executable_path/lib", true},
+		{"libc.so.6", false},
+		{"/usr/lib/libfoo.so", false},
+		{"libfoo.so.1", false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := IsPathVariable(tt.name)
+			if got != tt.want {
+				t.Errorf("IsPathVariable(%q) = %v, want %v", tt.name, got, tt.want)
+			}
+		})
+	}
+}

@@ -1,8 +1,10 @@
 package actions
 
 import (
+	"context"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -439,5 +441,28 @@ func TestTextReplaceAction_Execute_SubdirectoryFile(t *testing.T) {
 	expected := "#define DEBUG 0"
 	if string(result) != expected {
 		t.Errorf("File content = %q, want %q", string(result), expected)
+	}
+}
+
+// -- text_replace.go: Execute additional paths --
+
+func TestTextReplaceAction_Execute_MissingPattern(t *testing.T) {
+	t.Parallel()
+	action := &TextReplaceAction{}
+	tmpDir := t.TempDir()
+	testFile := filepath.Join(tmpDir, "test.txt")
+	if err := os.WriteFile(testFile, []byte("hello world"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: tmpDir,
+		Version: "1.0.0",
+	}
+	err := action.Execute(ctx, map[string]any{
+		"file": "test.txt",
+	})
+	if err == nil || !strings.Contains(err.Error(), "pattern") {
+		t.Errorf("Expected pattern error, got %v", err)
 	}
 }

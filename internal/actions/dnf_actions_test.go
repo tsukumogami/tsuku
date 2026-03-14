@@ -1,8 +1,11 @@
 package actions
 
 import (
+	"context"
 	"strings"
 	"testing"
+
+	"github.com/tsukumogami/tsuku/internal/recipe"
 )
 
 func TestDnfInstallAction_Name(t *testing.T) {
@@ -391,5 +394,24 @@ func TestDnfRepoAction_Describe(t *testing.T) {
 				t.Errorf("Describe() = %q, want %q", got, tt.want)
 			}
 		})
+	}
+}
+
+// -- dnf_actions.go: DnfInstallAction.Execute missing packages --
+
+func TestDnfInstallAction_Execute_MissingPackages(t *testing.T) {
+	t.Parallel()
+	action := &DnfInstallAction{}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+		WorkDir: t.TempDir(),
+		Version: "1.0.0",
+		OS:      "linux",
+		Arch:    "amd64",
+		Recipe:  &recipe.Recipe{},
+	}
+	err := action.Execute(ctx, map[string]any{})
+	if err == nil {
+		t.Error("Expected error for missing packages")
 	}
 }

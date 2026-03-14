@@ -699,3 +699,25 @@ func pipTestContains(s, substr string) bool {
 	}
 	return false
 }
+
+// -- pip_install.go: Dependencies, RequiresNetwork --
+
+func TestPipInstallAction_Dependencies_Direct(t *testing.T) {
+	t.Parallel()
+	action := PipInstallAction{}
+	deps := action.Dependencies()
+	if len(deps.InstallTime) != 1 || deps.InstallTime[0] != "python" {
+		t.Errorf("Dependencies().InstallTime = %v, want [python]", deps.InstallTime)
+	}
+	if len(deps.Runtime) != 1 || deps.Runtime[0] != "python" {
+		t.Errorf("Dependencies().Runtime = %v, want [python]", deps.Runtime)
+	}
+}
+
+func TestPipInstallAction_RequiresNetwork_Direct(t *testing.T) {
+	t.Parallel()
+	action := PipInstallAction{}
+	if !action.RequiresNetwork() {
+		t.Error("RequiresNetwork() = false, want true")
+	}
+}

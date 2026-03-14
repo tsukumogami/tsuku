@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -100,150 +101,79 @@ func TestIsValidGoVersion(t *testing.T) {
 	}
 }
 
-// TestGoInstallAction_Execute_MissingModule tests that Execute fails without module parameter
-func TestGoInstallAction_Execute_MissingModule(t *testing.T) {
-	action := &GoInstallAction{}
-	ctx := &ExecutionContext{
-		Context:    context.Background(),
-		InstallDir: t.TempDir(),
-		Version:    "1.0.0",
-		VersionTag: "v1.0.0",
-		WorkDir:    t.TempDir(),
+// TestGoInstallAction_Execute_ValidationErrors tests that Execute rejects invalid parameters
+func TestGoInstallAction_Execute_ValidationErrors(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name        string
+		ctx         *ExecutionContext
+		params      map[string]interface{}
+		errContains string
+	}{
+		{
+			name: "missing module",
+			ctx: &ExecutionContext{
+				Context: context.Background(), InstallDir: "", Version: "1.0.0", VersionTag: "v1.0.0",
+			},
+			params:      map[string]interface{}{"executables": []interface{}{"test-exe"}},
+			errContains: "module",
+		},
+		{
+			name: "missing executables",
+			ctx: &ExecutionContext{
+				Context: context.Background(), InstallDir: "", Version: "1.0.0", VersionTag: "v1.0.0",
+			},
+			params:      map[string]interface{}{"module": "github.com/user/repo"},
+			errContains: "executables",
+		},
+		{
+			name: "empty executables",
+			ctx: &ExecutionContext{
+				Context: context.Background(), InstallDir: "", Version: "1.0.0", VersionTag: "v1.0.0",
+			},
+			params:      map[string]interface{}{"module": "github.com/user/repo", "executables": []interface{}{}},
+			errContains: "executables",
+		},
+		{
+			name: "invalid module path",
+			ctx: &ExecutionContext{
+				Context: context.Background(), InstallDir: "", Version: "1.0.0", VersionTag: "v1.0.0",
+			},
+			params:      map[string]interface{}{"module": "github.com/user/repo;rm -rf /", "executables": []interface{}{"tool"}},
+			errContains: "invalid module path",
+		},
+		{
+			name: "invalid version",
+			ctx: &ExecutionContext{
+				Context: context.Background(), InstallDir: "", Version: "1.0.0", VersionTag: "v1.0.0;rm -rf /",
+			},
+			params:      map[string]interface{}{"module": "github.com/user/repo", "executables": []interface{}{"tool"}},
+			errContains: "invalid version",
+		},
+		{
+			name: "invalid executable name",
+			ctx: &ExecutionContext{
+				Context: context.Background(), InstallDir: "", Version: "1.0.0", VersionTag: "v1.0.0",
+			},
+			params:      map[string]interface{}{"module": "github.com/user/repo", "executables": []interface{}{"../../../etc/passwd"}},
+			errContains: "invalid executable name",
+		},
 	}
 
-	params := map[string]interface{}{
-		// Missing "module" parameter
-		"executables": []interface{}{"test-exe"},
-	}
-
-	err := action.Execute(ctx, params)
-	if err == nil {
-		t.Error("Execute() should fail when 'module' parameter is missing")
-	}
-	if err != nil && !containsStr(err.Error(), "module") {
-		t.Errorf("Error message should mention 'module', got: %v", err)
-	}
-}
-
-// TestGoInstallAction_Execute_MissingExecutables tests that Execute fails without executables
-func TestGoInstallAction_Execute_MissingExecutables(t *testing.T) {
-	action := &GoInstallAction{}
-	ctx := &ExecutionContext{
-		Context:    context.Background(),
-		InstallDir: t.TempDir(),
-		Version:    "1.0.0",
-		VersionTag: "v1.0.0",
-		WorkDir:    t.TempDir(),
-	}
-
-	params := map[string]interface{}{
-		"module": "github.com/user/repo",
-		// Missing "executables" parameter
-	}
-
-	err := action.Execute(ctx, params)
-	if err == nil {
-		t.Error("Execute() should fail when 'executables' parameter is missing")
-	}
-	if err != nil && !containsStr(err.Error(), "executables") {
-		t.Errorf("Error message should mention 'executables', got: %v", err)
-	}
-}
-
-// TestGoInstallAction_Execute_EmptyExecutables tests that Execute fails with empty executables
-func TestGoInstallAction_Execute_EmptyExecutables(t *testing.T) {
-	action := &GoInstallAction{}
-	ctx := &ExecutionContext{
-		Context:    context.Background(),
-		InstallDir: t.TempDir(),
-		Version:    "1.0.0",
-		VersionTag: "v1.0.0",
-		WorkDir:    t.TempDir(),
-	}
-
-	params := map[string]interface{}{
-		"module":      "github.com/user/repo",
-		"executables": []interface{}{}, // Empty list
-	}
-
-	err := action.Execute(ctx, params)
-	if err == nil {
-		t.Error("Execute() should fail when 'executables' is empty")
-	}
-}
-
-// TestGoInstallAction_Execute_InvalidModule tests that Execute fails with invalid module path
-func TestGoInstallAction_Execute_InvalidModule(t *testing.T) {
-	action := &GoInstallAction{}
-	ctx := &ExecutionContext{
-		Context:    context.Background(),
-		InstallDir: t.TempDir(),
-		Version:    "1.0.0",
-		VersionTag: "v1.0.0",
-		WorkDir:    t.TempDir(),
-	}
-
-	params := map[string]interface{}{
-		"module":      "github.com/user/repo;rm -rf /", // Injection attempt
-		"executables": []interface{}{"tool"},
-	}
-
-	err := action.Execute(ctx, params)
-	if err == nil {
-		t.Error("Execute() should fail with command injection in module path")
-	}
-	if err != nil && !containsStr(err.Error(), "invalid module path") {
-		t.Errorf("Error message should mention 'invalid module path', got: %v", err)
-	}
-}
-
-// TestGoInstallAction_Execute_InvalidVersion tests that Execute fails with invalid version
-func TestGoInstallAction_Execute_InvalidVersion(t *testing.T) {
-	action := &GoInstallAction{}
-	ctx := &ExecutionContext{
-		Context:    context.Background(),
-		InstallDir: t.TempDir(),
-		Version:    "1.0.0",
-		VersionTag: "v1.0.0;rm -rf /", // Injection attempt in VersionTag
-		WorkDir:    t.TempDir(),
-	}
-
-	params := map[string]interface{}{
-		"module":      "github.com/user/repo",
-		"executables": []interface{}{"tool"},
-	}
-
-	err := action.Execute(ctx, params)
-	if err == nil {
-		t.Error("Execute() should fail with command injection in version")
-	}
-	if err != nil && !containsStr(err.Error(), "invalid version") {
-		t.Errorf("Error message should mention 'invalid version', got: %v", err)
-	}
-}
-
-// TestGoInstallAction_Execute_InvalidExecutableName tests path traversal in executable names
-func TestGoInstallAction_Execute_InvalidExecutableName(t *testing.T) {
-	action := &GoInstallAction{}
-	ctx := &ExecutionContext{
-		Context:    context.Background(),
-		InstallDir: t.TempDir(),
-		Version:    "1.0.0",
-		VersionTag: "v1.0.0",
-		WorkDir:    t.TempDir(),
-	}
-
-	params := map[string]interface{}{
-		"module":      "github.com/user/repo",
-		"executables": []interface{}{"../../../etc/passwd"}, // Path traversal
-	}
-
-	err := action.Execute(ctx, params)
-	if err == nil {
-		t.Error("Execute() should fail with path traversal in executable name")
-	}
-	if err != nil && !containsStr(err.Error(), "invalid executable name") {
-		t.Errorf("Error message should mention 'invalid executable name', got: %v", err)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			tt.ctx.InstallDir = t.TempDir()
+			tt.ctx.WorkDir = t.TempDir()
+			action := &GoInstallAction{}
+			err := action.Execute(tt.ctx, tt.params)
+			if err == nil {
+				t.Errorf("Execute() should fail for %s", tt.name)
+			}
+			if err != nil && !strings.Contains(err.Error(), tt.errContains) {
+				t.Errorf("Error should contain %q, got: %v", tt.errContains, err)
+			}
+		})
 	}
 }
 
@@ -277,7 +207,7 @@ func TestGoInstallAction_Execute_GoNotInstalled(t *testing.T) {
 	if err == nil {
 		t.Error("Execute() should fail when Go is not installed")
 	}
-	if err != nil && !containsStr(err.Error(), "go not found") {
+	if err != nil && !strings.Contains(err.Error(), "go not found") {
 		t.Errorf("Error message should mention 'go not found', got: %v", err)
 	}
 }
@@ -412,7 +342,7 @@ func TestGoInstallAction_Execute_GoInstallFails(t *testing.T) {
 	if err == nil {
 		t.Error("Execute() should fail when go install fails")
 	}
-	if err != nil && !containsStr(err.Error(), "go install failed") {
+	if err != nil && !strings.Contains(err.Error(), "go install failed") {
 		t.Errorf("Error message should mention 'go install failed', got: %v", err)
 	}
 }
@@ -454,7 +384,7 @@ func TestGoInstallAction_Execute_ExecutableNotCreated(t *testing.T) {
 	if err == nil {
 		t.Error("Execute() should fail when expected executable is not created")
 	}
-	if err != nil && !containsStr(err.Error(), "expected executable") {
+	if err != nil && !strings.Contains(err.Error(), "expected executable") {
 		t.Errorf("Error message should mention 'expected executable', got: %v", err)
 	}
 }
@@ -672,7 +602,7 @@ func TestGoInstallAction_Execute_SecondExecutableMissing(t *testing.T) {
 	if err == nil {
 		t.Error("Execute() should fail when second executable is missing")
 	}
-	if err != nil && !containsStr(err.Error(), "expected executable") {
+	if err != nil && !strings.Contains(err.Error(), "expected executable") {
 		t.Errorf("Error message should mention 'expected executable', got: %v", err)
 	}
 }
@@ -683,14 +613,4 @@ func TestGoInstallAction_Name(t *testing.T) {
 	if action.Name() != "go_install" {
 		t.Errorf("Name() = %q, want %q", action.Name(), "go_install")
 	}
-}
-
-// Helper function to check if string contains substring
-func containsStr(s, substr string) bool {
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
-		}
-	}
-	return false
 }

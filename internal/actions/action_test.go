@@ -1,6 +1,7 @@
 package actions
 
 import (
+	"context"
 	"testing"
 )
 
@@ -181,5 +182,22 @@ func TestNetworkValidator_AllActions(t *testing.T) {
 				t.Errorf("%s.RequiresNetwork() = true, want false", name)
 			}
 		})
+	}
+}
+
+// -- action.go: Log --
+
+func TestExecutionContext_Log(t *testing.T) {
+	t.Parallel()
+	ctx := &ExecutionContext{
+		Context:    context.Background(),
+		WorkDir:    t.TempDir(),
+		InstallDir: t.TempDir(),
+		Version:    "1.0.0",
+	}
+	// Should return a non-nil logger
+	logger := ctx.Log()
+	if logger == nil {
+		t.Error("Log() returned nil logger")
 	}
 }

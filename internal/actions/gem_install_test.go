@@ -1,6 +1,9 @@
 package actions
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestIsValidGemName(t *testing.T) {
 	t.Parallel()
@@ -170,7 +173,7 @@ func TestGemInstallAction_Execute_Validation(t *testing.T) {
 				return
 			}
 
-			if !containsString(err.Error(), tt.expectError) {
+			if !strings.Contains(err.Error(), tt.expectError) {
 				t.Errorf("expected error containing %q, got %q", tt.expectError, err.Error())
 			}
 		})
@@ -183,20 +186,6 @@ func TestGemInstallAction_Name(t *testing.T) {
 	if action.Name() != "gem_install" {
 		t.Errorf("Name() = %q, want %q", action.Name(), "gem_install")
 	}
-}
-
-// Helper function to check if a string contains a substring
-func containsString(s, substr string) bool {
-	return len(s) >= len(substr) && (s == substr || len(s) > 0 && containsSubstring(s, substr))
-}
-
-func containsSubstring(s, substr string) bool {
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
-		}
-	}
-	return false
 }
 
 func TestGemInstallAction_Decompose_Validation(t *testing.T) {
@@ -264,7 +253,7 @@ func TestGemInstallAction_Decompose_Validation(t *testing.T) {
 				return
 			}
 
-			if !containsString(err.Error(), tt.expectError) {
+			if !strings.Contains(err.Error(), tt.expectError) {
 				t.Errorf("expected error containing %q, got %q", tt.expectError, err.Error())
 			}
 		})

@@ -7,6 +7,7 @@ import (
 	"compress/gzip"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -652,4 +653,221 @@ func TestExtractTar_SymlinkAttacks_SecurityEdgeCases(t *testing.T) {
 			}
 		})
 	}
+}
+
+// -- extract.go: isPathWithinDirectory edge cases --
+
+func TestIsPathWithinDirectory_SameDir(t *testing.T) {
+	t.Parallel()
+	tmpDir := t.TempDir()
+	if !isPathWithinDirectory(tmpDir, tmpDir) {
+		t.Error("isPathWithinDirectory() should return true for same directory")
+	}
+}
+
+func TestIsPathWithinDirectory_Parent(t *testing.T) {
+	t.Parallel()
+	tmpDir := t.TempDir()
+	parent := filepath.Dir(tmpDir)
+	if isPathWithinDirectory(parent, tmpDir) {
+		t.Error("isPathWithinDirectory() should return false for parent directory")
+	}
+}
+
+func TestIsPathWithinDirectory_PartialMatch(t *testing.T) {
+	t.Parallel()
+	// /tmp/foobar should NOT match /tmp/foo
+	if isPathWithinDirectory("/tmp/foobar", "/tmp/foo") {
+		t.Error("isPathWithinDirectory() should not match partial directory names")
+	}
+}
+
+// -- extract.go: validateSymlinkTarget --
+
+func TestValidateSymlinkTarget_Absolute(t *testing.T) {
+	t.Parallel()
+	err := validateSymlinkTarget("/etc/passwd", "/tmp/archive/link", "/tmp/archive")
+	if err == nil || !strings.Contains(err.Error(), "absolute") {
+		t.Errorf("Expected absolute symlink error, got %v", err)
+	}
+}
+
+func TestValidateSymlinkTarget_Escape(t *testing.T) {
+	t.Parallel()
+	err := validateSymlinkTarget("../../etc/passwd", "/tmp/archive/subdir/link", "/tmp/archive")
+	if err == nil || !strings.Contains(err.Error(), "escapes") {
+		t.Errorf("Expected escape error, got %v", err)
+	}
+}
+
+func TestValidateSymlinkTarget_Valid(t *testing.T) {
+	t.Parallel()
+	err := validateSymlinkTarget("../lib/libfoo.so", "/tmp/archive/bin/link", "/tmp/archive")
+	if err != nil {
+		t.Errorf("validateSymlinkTarget() error = %v", err)
+	}
+}
+
+// -- extract.go: DetectArchiveFormat --
+
+func TestDetectArchiveFormat_Variants(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		input string
+		want  string
+	}{
+		{"file.tar.gz", "tar.gz"},
+		{"file.tgz", "tar.gz"},
+		{"file.tar.xz", "tar.xz"},
+		{"file.tar.bz2", "tar.bz2"},
+		{"file.tar.zst", "tar.zst"},
+		{"file.zip", "zip"},
+		{"file.tar", "tar"},
+		{"file.tar.lz", "tar.lz"},
+		{"file.unknown", ""},
+	}
+	for _, tt := range tests {
+		got := DetectArchiveFormat(tt.input)
+		if got != tt.want {
+			t.Errorf("DetectArchiveFormat(%q) = %q, want %q", tt.input, got, tt.want)
+		}
+	}
+}
+
+// -- extract.go: Execute with strip_dirs via Execute method --
+
+func TestExtractAction_Execute_WithStripDirs(t *testing.T) {
+	t.Parallel()
+	action := &ExtractAction{}
+	tmpDir := t.TempDir()
+
+	archiveData := buildTarGz(t, map[string]string{"top/inner/file.txt": "strip content"})
+	archivePath := filepath.Join(tmpDir, "strip.tar.gz")
+	if err := os.WriteFile(archivePath, archiveData, 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	ctx := &ExecutionContext{
+		WorkDir:    tmpDir,
+		InstallDir: tmpDir,
+		Version:    "1.0.0",
+	}
+
+	err := action.Execute(ctx, map[string]any{
+		"archive":    "strip.tar.gz",
+		"format":     "tar.gz",
+		"strip_dirs": 1,
+	})
+	if err != nil {
+		t.Fatalf("Execute with strip_dirs failed: %v", err)
+	}
+
+	extractedFile := filepath.Join(tmpDir, "inner", "file.txt")
+	if _, err := os.Stat(extractedFile); os.IsNotExist(err) {
+		t.Error("Expected file at inner/file.txt after strip_dirs=1")
+	}
+}
+
+// -- extract.go: Execute with files filter --
+
+func TestExtractAction_Execute_WithFilesFilter(t *testing.T) {
+	t.Parallel()
+	action := &ExtractAction{}
+	tmpDir := t.TempDir()
+
+	archiveData := buildTarGz(t, map[string]string{
+		"wanted.txt":   "wanted",
+		"unwanted.txt": "unwanted",
+	})
+	archivePath := filepath.Join(tmpDir, "filter.tar.gz")
+	if err := os.WriteFile(archivePath, archiveData, 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	ctx := &ExecutionContext{
+		WorkDir:    tmpDir,
+		InstallDir: tmpDir,
+		Version:    "1.0.0",
+	}
+
+	err := action.Execute(ctx, map[string]any{
+		"archive": "filter.tar.gz",
+		"format":  "tar.gz",
+		"files":   []any{"wanted.txt"},
+	})
+	if err != nil {
+		t.Fatalf("Execute with files filter failed: %v", err)
+	}
+
+	if _, err := os.Stat(filepath.Join(tmpDir, "wanted.txt")); os.IsNotExist(err) {
+		t.Error("Expected wanted.txt to be extracted")
+	}
+}
+
+// -- extract.go: Preflight with different format values --
+
+func TestExtractAction_Preflight_ValidFormats(t *testing.T) {
+	t.Parallel()
+	action := &ExtractAction{}
+
+	formats := []string{"tar.gz", "tar.xz", "tar.bz2", "tar.zst", "tar.lz", "tar", "zip"}
+	for _, f := range formats {
+		result := action.Preflight(map[string]any{
+			"archive": "test." + f,
+			"format":  f,
+		})
+		if len(result.Errors) != 0 {
+			t.Errorf("Preflight() with format %q errors = %v", f, result.Errors)
+		}
+	}
+}
+
+// -- extract.go: Preflight missing archive --
+
+func TestExtractAction_Preflight_MissingArchive(t *testing.T) {
+	t.Parallel()
+	action := &ExtractAction{}
+	result := action.Preflight(map[string]any{
+		"format": "tar.gz",
+	})
+	if len(result.Errors) == 0 {
+		t.Error("Expected error for missing archive")
+	}
+}
+
+// -- extract.go: Name, IsDeterministic --
+
+func TestExtractAction_Name(t *testing.T) {
+	t.Parallel()
+	action := &ExtractAction{}
+	if got := action.Name(); got != "extract" {
+		t.Errorf("Name() = %q, want %q", got, "extract")
+	}
+}
+
+// buildTarGz creates a tar.gz archive with the given files.
+func buildTarGz(t *testing.T, files map[string]string) []byte {
+	t.Helper()
+	var buf bytes.Buffer
+	gzw := gzip.NewWriter(&buf)
+	tw := tar.NewWriter(gzw)
+
+	for name, content := range files {
+		data := []byte(content)
+		hdr := &tar.Header{
+			Name: name,
+			Mode: 0644,
+			Size: int64(len(data)),
+		}
+		if err := tw.WriteHeader(hdr); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := tw.Write(data); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	_ = tw.Close()
+	_ = gzw.Close()
+	return buf.Bytes()
 }

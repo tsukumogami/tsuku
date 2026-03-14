@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -571,7 +572,7 @@ func TestParseHomebrew(t *testing.T) {
 		if e.Confidence != ConfidenceAuto {
 			t.Errorf("%s: Confidence = %q, want %q", e.Name, e.Confidence, ConfidenceAuto)
 		}
-		if !containsStr(e.Source, "homebrew:") {
+		if !strings.Contains(e.Source, "homebrew:") {
 			t.Errorf("%s: Source = %q, should start with homebrew:", e.Name, e.Source)
 		}
 	}
@@ -1033,18 +1034,4 @@ command = "gh --version"
 	if gh.Priority != 3 {
 		t.Errorf("gh Priority = %d, want 3 (recipe default)", gh.Priority)
 	}
-}
-
-// containsStr checks if s contains substr.
-func containsStr(s, substr string) bool {
-	return len(s) >= len(substr) && searchStr(s, substr)
-}
-
-func searchStr(s, substr string) bool {
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
-		}
-	}
-	return false
 }

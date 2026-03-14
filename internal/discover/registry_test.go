@@ -75,47 +75,45 @@ func TestRegistry_LookupMiss(t *testing.T) {
 	}
 }
 
-func TestParseRegistry_EmptyBuilder(t *testing.T) {
-	data := []byte(`{"schema_version": 1, "tools": {"kubectl": {"builder": "", "source": "kubernetes/kubernetes"}}}`)
-	_, err := ParseRegistry(data)
-	if err == nil {
-		t.Fatal("expected error for empty builder")
+func TestParseRegistry_FieldValidation(t *testing.T) {
+	tests := []struct {
+		name      string
+		json      string
+		wantField string
+	}{
+		{
+			name:      "EmptyBuilder",
+			json:      `{"schema_version": 1, "tools": {"kubectl": {"builder": "", "source": "kubernetes/kubernetes"}}}`,
+			wantField: "builder",
+		},
+		{
+			name:      "MissingBuilder",
+			json:      `{"schema_version": 1, "tools": {"kubectl": {"source": "kubernetes/kubernetes"}}}`,
+			wantField: "builder",
+		},
+		{
+			name:      "EmptySource",
+			json:      `{"schema_version": 1, "tools": {"kubectl": {"builder": "github", "source": ""}}}`,
+			wantField: "source",
+		},
+		{
+			name:      "MissingSource",
+			json:      `{"schema_version": 1, "tools": {"kubectl": {"builder": "github"}}}`,
+			wantField: "source",
+		},
 	}
-	if !strings.Contains(err.Error(), "kubectl") || !strings.Contains(err.Error(), "builder") {
-		t.Errorf("error should mention tool name and field: %v", err)
-	}
-}
 
-func TestParseRegistry_MissingBuilder(t *testing.T) {
-	data := []byte(`{"schema_version": 1, "tools": {"kubectl": {"source": "kubernetes/kubernetes"}}}`)
-	_, err := ParseRegistry(data)
-	if err == nil {
-		t.Fatal("expected error for missing builder")
-	}
-	if !strings.Contains(err.Error(), "builder") {
-		t.Errorf("error should mention builder field: %v", err)
-	}
-}
-
-func TestParseRegistry_EmptySource(t *testing.T) {
-	data := []byte(`{"schema_version": 1, "tools": {"kubectl": {"builder": "github", "source": ""}}}`)
-	_, err := ParseRegistry(data)
-	if err == nil {
-		t.Fatal("expected error for empty source")
-	}
-	if !strings.Contains(err.Error(), "kubectl") || !strings.Contains(err.Error(), "source") {
-		t.Errorf("error should mention tool name and field: %v", err)
-	}
-}
-
-func TestParseRegistry_MissingSource(t *testing.T) {
-	data := []byte(`{"schema_version": 1, "tools": {"kubectl": {"builder": "github"}}}`)
-	_, err := ParseRegistry(data)
-	if err == nil {
-		t.Fatal("expected error for missing source")
-	}
-	if !strings.Contains(err.Error(), "source") {
-		t.Errorf("error should mention source field: %v", err)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			_, err := ParseRegistry([]byte(tt.json))
+			if err == nil {
+				t.Fatalf("expected error for %s", tt.name)
+			}
+			if !strings.Contains(err.Error(), tt.wantField) {
+				t.Errorf("error should mention %q field: %v", tt.wantField, err)
+			}
+		})
 	}
 }
 
