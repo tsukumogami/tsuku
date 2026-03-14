@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-14T09:35:53Z",
+  "generated_at": "2026-03-14T09:37:10Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -570,15 +570,6 @@
           "next_retry_at": "2026-03-19T15:41:15Z"
         },
         {
-          "id": "rubygems:chroma",
-          "name": "chroma",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-03-14T07:52:51Z"
-        },
-        {
           "id": "rubygems:cog",
           "name": "cog",
           "ecosystem": "rubygems",
@@ -631,15 +622,6 @@
           "category": "install_failed",
           "failure_count": 7,
           "next_retry_at": "2026-03-14T20:20:14Z"
-        },
-        {
-          "id": "npm:dmd",
-          "name": "dmd",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-03-14T07:52:51Z"
         },
         {
           "id": "rubygems:doggo",
@@ -777,6 +759,15 @@
           "next_retry_at": "2026-03-14T10:44:38Z"
         },
         {
+          "id": "rubygems:httpx",
+          "name": "httpx",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-15T01:36:30Z"
+        },
+        {
           "id": "npm:kew",
           "name": "kew",
           "ecosystem": "npm",
@@ -865,6 +856,15 @@
           "category": "install_failed",
           "failure_count": 4,
           "next_retry_at": "2026-03-14T15:41:15Z"
+        },
+        {
+          "id": "npm:sigstore",
+          "name": "sigstore",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-14T13:36:30Z"
         },
         {
           "id": "pypi:tctl",
@@ -4428,6 +4428,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:chroma",
+          "name": "chroma",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-14T07:52:51Z"
+        },
+        {
           "id": "homebrew:chromaprint",
           "name": "chromaprint",
           "ecosystem": "homebrew",
@@ -6407,6 +6416,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:dmd",
+          "name": "dmd",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-14T07:52:51Z"
         },
         {
           "id": "homebrew:dmg2img",
@@ -11041,15 +11059,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "rubygems:httpx",
-          "name": "httpx",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-12T18:42:21Z"
         },
         {
           "id": "homebrew:httpyac",
@@ -23270,15 +23279,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:sigstore",
-          "name": "sigstore",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-02-21T05:54:15Z"
         },
         {
           "id": "homebrew:sile",
