@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-14T15:29:27Z",
+  "generated_at": "2026-03-14T16:35:17Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -37815,13 +37815,67 @@
     }
   ],
   "failures": {
-    "generation_failed": 451,
-    "install_failed": 751,
+    "generation_failed": 452,
+    "install_failed": 756,
     "missing_dep": 68,
     "network_error": 7,
     "recipe_not_found": 74
   },
   "failure_details": [
+    {
+      "id": "pypi-2026-03-14T16-32-23Z-lib3mf",
+      "package": "lib3mf",
+      "ecosystem": "pypi",
+      "category": "install_failed",
+      "message": "Installing eval-time dependencies: [python-standalone]\nInstalling python-standalone...\nGenerating plan for python-standalone@20260310\nExecuting plan: python-standalone@20260310\n   Work directory: /tmp/action-validator-584193337\n   Total steps: 4 (including 0 from dependencies)\n\nStep 1/4: download_file\n   Using cached: cpython-3.10.20+20260310-x86_64-unknown-linux-gnu-install_only.tar.gz\n   ✓ Restored from cache\n\nStep 2/4: extract\n   Extracting: cpython-3.10.20+20260310-x86_64-unknown-linux-gnu",
+      "batch_id": "2026-03-14T16-32-23Z",
+      "timestamp": "2026-03-14T16:32:23.841795677Z"
+    },
+    {
+      "id": "npm-2026-03-14T16-32-12Z-sigstore",
+      "package": "sigstore",
+      "ecosystem": "npm",
+      "category": "install_failed",
+      "message": "Installing eval-time dependencies: [nodejs]\nInstalling nodejs...\nChecking runtime dependencies for nodejs...\n  Resolving runtime dependency 'gcc-libs'...\nExecuting plan: gcc-libs@15.2.0\n   Work directory: /tmp/action-validator-1455860362\n   Total steps: 5 (including 0 from dependencies)\n\nStep 1/5: download_file\n   Using cached: gcc.tar.gz\n   ✓ Restored from cache\n\nStep 2/5: extract\n   Extracting: gcc.tar.gz\n   Format: tar.gz\n   Strip dirs: 2\n\nStep 3/5: homebrew_relocate\n   Relocating placehold",
+      "batch_id": "2026-03-14T16-32-23Z",
+      "timestamp": "2026-03-14T16:32:12.836953793Z"
+    },
+    {
+      "id": "rubygems-2026-03-14T16-31-53Z-exiv2",
+      "package": "exiv2",
+      "ecosystem": "rubygems",
+      "category": "install_failed",
+      "message": "Installing eval-time dependencies: [ruby]\nInstalling ruby...\nChecking dependencies for ruby...\n  Resolving dependency 'libyaml'...\nExecuting plan: libyaml@0.2.5\n   Work directory: /tmp/action-validator-284998623\n   Total steps: 4 (including 0 from dependencies)\n\nStep 1/4: download_file\n   Using cached: libyaml.tar.gz\n   ✓ Restored from cache\n\nStep 2/4: extract\n   Extracting: libyaml.tar.gz\n   Format: tar.gz\n   Strip dirs: 2\n\nStep 3/4: homebrew_relocate\n   Relocating placeholders: libyaml (libr",
+      "batch_id": "2026-03-14T16-32-23Z",
+      "timestamp": "2026-03-14T16:31:53.960130875Z"
+    },
+    {
+      "id": "crates.io-2026-03-14T16-31-40Z-bindgen",
+      "package": "bindgen",
+      "ecosystem": "crates.io",
+      "category": "install_failed",
+      "message": "Installing eval-time dependencies: [rust]\nInstalling rust...\nGenerating plan for rust@1.94.0\nExecuting plan: rust@1.94.0\n   Work directory: /tmp/action-validator-357490904\n   Total steps: 4 (including 0 from dependencies)\n\nStep 1/4: download_file\n   Using cached: rust-1.94.0-x86_64-unknown-linux-gnu.tar.gz\n   ✓ Restored from cache\n\nStep 2/4: extract\n   Extracting: rust-1.94.0-x86_64-unknown-linux-gnu.tar.gz\n   Format: tar.gz\n   Strip dirs: 1\n\nStep 3/4: run_command\n   Running: ./install.sh --pr",
+      "batch_id": "2026-03-14T16-32-23Z",
+      "timestamp": "2026-03-14T16:31:40.040815545Z"
+    },
+    {
+      "id": "homebrew-2026-03-14T16-30-24Z-task",
+      "package": "task",
+      "ecosystem": "homebrew",
+      "category": "install_failed",
+      "message": "tsuku collects anonymous usage statistics to improve the tool.\nNo personal information is collected. See: https://tsuku.dev/telemetry\n\nTo opt out: tsuku config set telemetry false\n         or export TSUKU_NO_TELEMETRY=1",
+      "batch_id": "2026-03-14T16-32-23Z",
+      "timestamp": "2026-03-14T16:30:24.540133359Z"
+    },
+    {
+      "id": "github-2026-03-14T16-30-20Z-bat",
+      "package": "bat",
+      "ecosystem": "github",
+      "category": "generation_failed",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: 'bat' resolved to github (sharkdp/bat), which requires LLM for recipe generation.\nRemove --deterministic-only or wait for a recipe to be contributed.",
+      "batch_id": "2026-03-14T16-32-23Z",
+      "timestamp": "2026-03-14T16:30:20.712558061Z"
+    },
     {
       "id": "pypi-2026-03-14T14-30-46Z-lib3mf",
       "package": "lib3mf",
@@ -39566,69 +39620,15 @@
       "message": "Error: recipe validation failed for 'hyperkit'\n  - metadata.homepage: homepage must start with https:// (got: http://jeffshantz.github.io/hyperkit)",
       "batch_id": "2026-03-12T10-39-13Z",
       "timestamp": "2026-03-12T10:38:22.88771399Z"
-    },
-    {
-      "id": "rubygems-2026-03-12T10-38-16Z-hydra",
-      "package": "hydra",
-      "ecosystem": "rubygems",
-      "category": "install_failed",
-      "message": "Error: recipe validation failed for 'hydra'\n  - metadata.homepage: homepage must start with https:// (got: http://projecthydra.org/)",
-      "batch_id": "2026-03-12T10-39-13Z",
-      "timestamp": "2026-03-12T10:38:16.227124406Z"
-    },
-    {
-      "id": "rubygems-2026-03-12T10-38-09Z-httpx",
-      "package": "httpx",
-      "ecosystem": "rubygems",
-      "category": "install_failed",
-      "message": "tsuku collects anonymous usage statistics to improve the tool.\nNo personal information is collected. See: https://tsuku.dev/telemetry\n\nTo opt out: tsuku config set telemetry false\n         or export TSUKU_NO_TELEMETRY=1\nInstalling eval-time dependencies: [ruby]\nInstalling ruby...\nChecking dependencies for ruby...\n  Resolving dependency 'libyaml'...\nExecuting plan: libyaml@0.2.5\n   Work directory: /tmp/action-validator-1622189670\n   Total steps: 4 (including 0 from dependencies)\n\nStep 1/4: downlo",
-      "batch_id": "2026-03-12T10-39-13Z",
-      "timestamp": "2026-03-12T10:38:09.608464298Z"
-    },
-    {
-      "id": "rubygems-2026-03-12T09-44-33Z-hydra",
-      "package": "hydra",
-      "ecosystem": "rubygems",
-      "category": "install_failed",
-      "message": "Error: recipe validation failed for 'hydra'\n  - metadata.homepage: homepage must start with https:// (got: http://projecthydra.org/)",
-      "batch_id": "2026-03-12T09-44-33Z",
-      "timestamp": "2026-03-12T09:44:33.93802476Z"
-    },
-    {
-      "id": "rubygems-2026-03-12T09-44-27Z-httpx",
-      "package": "httpx",
-      "ecosystem": "rubygems",
-      "category": "install_failed",
-      "message": "Installation failed: step 1 (gem_exec) failed: expected executable httpx not found at /tmp/action-validator-3393553883/.install/bin/httpx",
-      "batch_id": "2026-03-12T09-44-33Z",
-      "timestamp": "2026-03-12T09:44:27.398403199Z"
-    },
-    {
-      "id": "rubygems-2026-03-12T09-44-17Z-htmldoc",
-      "package": "htmldoc",
-      "ecosystem": "rubygems",
-      "category": "install_failed",
-      "message": "Error: recipe validation failed for 'htmldoc'\n  - metadata.homepage: homepage must start with https:// (got: http://htmldoc.rubyforge.org)",
-      "batch_id": "2026-03-12T09-44-33Z",
-      "timestamp": "2026-03-12T09:44:17.370353852Z"
-    },
-    {
-      "id": "rubygems-2026-03-12T09-44-10Z-hercules",
-      "package": "hercules",
-      "ecosystem": "rubygems",
-      "category": "install_failed",
-      "message": "Error: recipe validation failed for 'hercules'\n  - metadata.homepage: homepage must start with https:// (got: http://github.com/diogob/hercules)",
-      "batch_id": "2026-03-12T09-44-33Z",
-      "timestamp": "2026-03-12T09:44:10.940005324Z"
     }
   ],
   "health": {
     "ecosystems": {
       "crates.io": {
         "breaker_state": "open",
-        "failures": 132,
-        "last_failure": "2026-03-14T14:32:40Z",
-        "opens_at": "2026-03-14T15:32:40Z"
+        "failures": 133,
+        "last_failure": "2026-03-14T16:34:41Z",
+        "opens_at": "2026-03-14T17:34:41Z"
       },
       "default": {
         "breaker_state": "closed",
@@ -39636,38 +39636,46 @@
       },
       "github": {
         "breaker_state": "open",
-        "failures": 135,
-        "last_failure": "2026-03-14T14:32:40Z",
-        "opens_at": "2026-03-14T15:32:40Z"
+        "failures": 136,
+        "last_failure": "2026-03-14T16:34:41Z",
+        "opens_at": "2026-03-14T17:34:41Z"
       },
       "homebrew": {
         "breaker_state": "open",
-        "failures": 96,
-        "last_failure": "2026-03-14T14:32:40Z",
-        "opens_at": "2026-03-14T15:32:40Z"
+        "failures": 97,
+        "last_failure": "2026-03-14T16:34:41Z",
+        "opens_at": "2026-03-14T17:34:41Z"
       },
       "npm": {
         "breaker_state": "open",
-        "failures": 125,
-        "last_failure": "2026-03-14T14:32:40Z",
-        "opens_at": "2026-03-14T15:32:40Z"
+        "failures": 126,
+        "last_failure": "2026-03-14T16:34:41Z",
+        "opens_at": "2026-03-14T17:34:41Z"
       },
       "pypi": {
         "breaker_state": "open",
-        "failures": 113,
-        "last_failure": "2026-03-14T14:32:40Z",
-        "opens_at": "2026-03-14T15:32:40Z"
+        "failures": 114,
+        "last_failure": "2026-03-14T16:34:41Z",
+        "opens_at": "2026-03-14T17:34:41Z"
       },
       "rubygems": {
         "breaker_state": "open",
-        "failures": 31,
-        "last_failure": "2026-03-14T14:32:40Z",
-        "opens_at": "2026-03-14T15:32:40Z"
+        "failures": 32,
+        "last_failure": "2026-03-14T16:34:41Z",
+        "opens_at": "2026-03-14T17:34:41Z"
       }
     },
     "last_run": {
-      "batch_id": "2026-03-14T15-28-53Z",
-      "timestamp": "2026-03-14T15:28:53Z",
+      "batch_id": "2026-03-14T16-34-50Z",
+      "ecosystems": {
+        "crates.io": 1,
+        "github": 1,
+        "homebrew": 1,
+        "npm": 1,
+        "pypi": 1,
+        "rubygems": 1
+      },
+      "timestamp": "2026-03-14T16:34:50Z",
       "succeeded": 0,
       "failed": 0,
       "total": 0
@@ -39683,7 +39691,7 @@
       "total": 1,
       "recipes_merged": 1
     },
-    "runs_since_last_success": 48
+    "runs_since_last_success": 49
   },
   "runs": [
     {
