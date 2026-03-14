@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-14T07:40:40Z",
+  "generated_at": "2026-03-14T07:41:57Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 45,
-      "pending": 3888,
+      "failed": 47,
+      "pending": 3886,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 45,
-        "pending": 3865,
+        "failed": 47,
+        "pending": 3863,
         "success": 1326
       }
     },
@@ -68,8 +68,8 @@
         "total": 1
       },
       "npm": {
-        "failed": 17,
-        "pending": 4,
+        "failed": 18,
+        "pending": 3,
         "success": 54,
         "total": 75
       },
@@ -80,8 +80,8 @@
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 22,
-        "pending": 57,
+        "failed": 23,
+        "pending": 56,
         "success": 9,
         "total": 89
       }
@@ -561,6 +561,15 @@
           "next_retry_at": "2026-03-18T21:00:32Z"
         },
         {
+          "id": "rubygems:chisel",
+          "name": "chisel",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 8,
+          "next_retry_at": "2026-03-19T15:41:15Z"
+        },
+        {
           "id": "rubygems:chroma",
           "name": "chroma",
           "ecosystem": "rubygems",
@@ -847,6 +856,15 @@
           "category": "install_failed",
           "failure_count": 5,
           "next_retry_at": "2026-03-14T21:50:02Z"
+        },
+        {
+          "id": "npm:q",
+          "name": "q",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-14T15:41:15Z"
         },
         {
           "id": "pypi:tctl",
@@ -4373,15 +4391,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "rubygems:chisel",
-          "name": "chisel",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-03-14T05:01:47Z"
         },
         {
           "id": "homebrew:chisel-tunnel",
@@ -20643,15 +20652,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "npm:q",
-          "name": "q",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-13T05:59:47Z"
         },
         {
           "id": "homebrew:qalculate-gtk",
