@@ -79,7 +79,8 @@ graph TD
     classDef tracksPlan fill:#FFE0B2,stroke:#F57C00,color:#000
 
     class I2124,I2125,I2126 ready
-    class I2128,I2129 blocked
+    class I2129 blocked
+    class I2128 ready
     class I2127 done
 ```
 
