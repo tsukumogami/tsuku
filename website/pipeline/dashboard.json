@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-14T18:41:10Z",
+  "generated_at": "2026-03-14T18:42:23Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 45,
-      "pending": 3888,
+      "failed": 46,
+      "pending": 3887,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 45,
-        "pending": 3865,
+        "failed": 46,
+        "pending": 3864,
         "success": 1326
       }
     },
@@ -68,8 +68,8 @@
         "total": 1
       },
       "npm": {
-        "failed": 17,
-        "pending": 4,
+        "failed": 18,
+        "pending": 3,
         "success": 54,
         "total": 75
       },
@@ -579,6 +579,15 @@
           "next_retry_at": "2026-03-19T19:28:47Z"
         },
         {
+          "id": "rubygems:cog",
+          "name": "cog",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 8,
+          "next_retry_at": "2026-03-20T02:41:46Z"
+        },
+        {
           "id": "npm:countdown",
           "name": "countdown",
           "ecosystem": "npm",
@@ -687,15 +696,6 @@
           "next_retry_at": "2026-03-15T01:47:18Z"
         },
         {
-          "id": "rubygems:flash",
-          "name": "flash",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-14T17:42:40Z"
-        },
-        {
           "id": "rubygems:gitingest",
           "name": "gitingest",
           "ecosystem": "rubygems",
@@ -775,6 +775,15 @@
           "category": "install_failed",
           "failure_count": 7,
           "next_retry_at": "2026-03-16T14:31:31Z"
+        },
+        {
+          "id": "npm:lcm",
+          "name": "lcm",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-17T10:41:46Z"
         },
         {
           "id": "pypi:lib3mf",
@@ -5026,15 +5035,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:cog",
-          "name": "cog",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-03-14T14:36:11Z"
-        },
-        {
           "id": "homebrew:coin3d",
           "name": "coin3d",
           "ecosystem": "homebrew",
@@ -8106,6 +8106,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:flash",
+          "name": "flash",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-14T17:42:40Z"
         },
         {
           "id": "homebrew:flashrom",
@@ -13050,15 +13059,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "npm:lcm",
-          "name": "lcm",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-14T15:49:34Z"
         },
         {
           "id": "homebrew:ldid",
