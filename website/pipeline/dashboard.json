@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-14T05:49:35Z",
+  "generated_at": "2026-03-14T05:50:44Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 44,
-      "pending": 3889,
+      "failed": 45,
+      "pending": 3888,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 44,
-        "pending": 3866,
+        "failed": 45,
+        "pending": 3865,
         "success": 1326
       }
     },
@@ -68,8 +68,8 @@
         "total": 1
       },
       "npm": {
-        "failed": 16,
-        "pending": 5,
+        "failed": 17,
+        "pending": 4,
         "success": 54,
         "total": 75
       },
@@ -561,15 +561,6 @@
           "next_retry_at": "2026-03-18T21:00:32Z"
         },
         {
-          "id": "rubygems:chisel",
-          "name": "chisel",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-03-14T05:01:47Z"
-        },
-        {
           "id": "rubygems:chroma",
           "name": "chroma",
           "ecosystem": "rubygems",
@@ -741,6 +732,15 @@
           "next_retry_at": "2026-03-14T23:47:02Z"
         },
         {
+          "id": "rubygems:haproxy",
+          "name": "haproxy",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-15T13:50:02Z"
+        },
+        {
           "id": "npm:hasura-cli",
           "name": "hasura-cli",
           "ecosystem": "npm",
@@ -838,6 +838,15 @@
           "category": "install_failed",
           "failure_count": 5,
           "next_retry_at": "2026-03-14T09:40:58Z"
+        },
+        {
+          "id": "npm:protoc-gen-js",
+          "name": "protoc-gen-js",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-14T21:50:02Z"
         },
         {
           "id": "pypi:tctl",
@@ -4364,6 +4373,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "rubygems:chisel",
+          "name": "chisel",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-14T05:01:47Z"
         },
         {
           "id": "homebrew:chisel-tunnel",
@@ -10454,15 +10472,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "rubygems:haproxy",
-          "name": "haproxy",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-14T03:36:55Z"
         },
         {
           "id": "homebrew:harbor-cli",
@@ -20018,15 +20027,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "npm:protoc-gen-js",
-          "name": "protoc-gen-js",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-14T02:44:38Z"
         },
         {
           "id": "homebrew:protonpass/tap/pass-cli",
