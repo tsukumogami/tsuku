@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-14T18:41:46Z",
+  "updated_at": "2026-03-14T20:32:06Z",
   "entries": [
     {
       "name": "node",
@@ -10876,7 +10876,7 @@
       "name": "dict",
       "source": "rubygems:dict",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 7,
@@ -14536,11 +14536,11 @@
       "name": "flash",
       "source": "rubygems:flash",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 6,
-      "next_retry_at": "2026-03-14T17:42:40.265953936Z"
+      "failure_count": 7,
+      "next_retry_at": "2026-03-17T12:32:06.910040799Z"
     },
     {
       "name": "flashrom",
@@ -28556,7 +28556,7 @@
       "name": "mailhog",
       "source": "npm:mailhog",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 6,
@@ -39116,11 +39116,11 @@
       "name": "q",
       "source": "npm:q",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 4,
-      "next_retry_at": "2026-03-14T15:41:15.224147293Z"
+      "failure_count": 5,
+      "next_retry_at": "2026-03-15T12:32:06.910040799Z"
     },
     {
       "name": "qalculate-gtk",
