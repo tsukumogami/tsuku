@@ -1,17 +1,17 @@
 ---
 schema: plan/v1
-status: Done
+status: Active
 execution_mode: multi-pr
 upstream: docs/designs/DESIGN-unified-release-versioning.md
 milestone: "Unified Release Versioning"
-issue_count: 6
+issue_count: 7
 ---
 
 # PLAN: Unified Release Versioning
 
 ## Status
 
-Done
+Active
 
 ## Scope Summary
 
@@ -43,6 +43,8 @@ _(omitted in multi-pr mode -- see Implementation Issues below)_
 | _Remove version suffixes from all artifact filenames by overriding GoReleaser's archive `name_template` and updating llm build output naming. Updates recipes and finalize-release to use the clean `{tool}-{os}-{arch}[-{backend}]` convention._ | | |
 | [#2129: feat(llm): add gRPC version handshake for runtime version diagnostics](https://github.com/tsukumogami/tsuku/issues/2129) | [#2125](https://github.com/tsukumogami/tsuku/issues/2125) | testable |
 | _Add `addon_version` field to the gRPC StatusResponse proto so the CLI can query the running llm daemon's version at runtime. Builds on #2125's `PinnedLlmVersion()` accessor to produce diagnostic error messages when versions diverge._ | | |
+| [#2149: fix(ci): install glslc for ARM64 Vulkan builds in release pipeline](https://github.com/tsukumogami/tsuku/issues/2149) | [#2126](https://github.com/tsukumogami/tsuku/issues/2126) | simple |
+| _Add missing `glslc` package to the ARM64 Vulkan SDK install step. The Lunarg PPA bundles it for x86_64 but the ARM64 fallback packages omit it, breaking every release since v0.5.0._ | | |
 
 ### Dependency Graph
 
@@ -63,22 +65,21 @@ graph TD
         I2128["#2128: artifact naming"]
     end
 
+    subgraph Batch4["Batch 4: Release fix"]
+        I2149["#2149: ARM64 Vulkan glslc"]
+    end
+
     I2126 --> I2127
     I2125 --> I2129
     I2126 --> I2128
     I2127 --> I2128
+    I2126 --> I2149
 
     classDef done fill:#c8e6c9
     classDef ready fill:#bbdefb
     classDef blocked fill:#fff9c4
-    classDef needsDesign fill:#e1bee7
-    classDef needsPrd fill:#b3e5fc
-    classDef needsSpike fill:#ffcdd2
-    classDef needsDecision fill:#d1c4e9
-    classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
-    classDef tracksPlan fill:#FFE0B2,stroke:#F57C00,color:#000
 
-    class I2124,I2125,I2126,I2127,I2128,I2129 done
+    class I2124,I2125,I2126,I2127,I2128,I2129,I2149 done
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design/tracks-plan

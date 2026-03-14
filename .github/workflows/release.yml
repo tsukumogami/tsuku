@@ -290,7 +290,7 @@ jobs:
             sudo apt-get install -y vulkan-sdk
           else
             sudo apt-get update
-            sudo apt-get install -y libvulkan-dev spirv-tools glslang-tools
+            sudo apt-get install -y libvulkan-dev spirv-tools glslang-tools glslc
           fi
           echo "VULKAN_SDK=/usr" >> $GITHUB_ENV
 
