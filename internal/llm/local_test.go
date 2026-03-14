@@ -14,6 +14,7 @@ import (
 	"google.golang.org/grpc/test/bufconn"
 
 	pb "github.com/tsukumogami/tsuku/internal/llm/proto"
+	"github.com/tsukumogami/tsuku/internal/verify"
 )
 
 func TestSocketPath(t *testing.T) {
@@ -565,6 +566,94 @@ func TestFromProtoResponse(t *testing.T) {
 	require.Equal(t, "call_123", resp.ToolCalls[0].ID)
 	require.Equal(t, "test_tool", resp.ToolCalls[0].Name)
 	require.Equal(t, "value1", resp.ToolCalls[0].Arguments["arg1"])
+}
+
+// TestEnsureVersionCompatible tests the version handshake logic.
+func TestEnsureVersionCompatible(t *testing.T) {
+	setup := func(t *testing.T, statusResp *pb.StatusResponse, statusErr error) *LocalProvider {
+		t.Helper()
+		tmpDir := t.TempDir()
+		t.Setenv("TSUKU_HOME", tmpDir)
+
+		const bufSize = 1024 * 1024
+		lis := bufconn.Listen(bufSize)
+
+		mockServer := &mockInferenceServer{
+			statusResponse: statusResp,
+			statusErr:      statusErr,
+		}
+		grpcServer := grpc.NewServer()
+		pb.RegisterInferenceServiceServer(grpcServer, mockServer)
+
+		go func() {
+			if err := grpcServer.Serve(lis); err != nil {
+				t.Logf("mock server error: %v", err)
+			}
+		}()
+		t.Cleanup(grpcServer.Stop)
+
+		conn, err := grpc.NewClient(
+			"passthrough://bufnet",
+			grpc.WithContextDialer(func(context.Context, string) (net.Conn, error) {
+				return lis.Dial()
+			}),
+			grpc.WithTransportCredentials(insecure.NewCredentials()),
+		)
+		require.NoError(t, err)
+		t.Cleanup(func() { _ = conn.Close() })
+
+		return &LocalProvider{
+			conn:   conn,
+			client: pb.NewInferenceServiceClient(conn),
+		}
+	}
+
+	t.Run("dev mode bypasses version check", func(t *testing.T) {
+		verify.SetPinnedLlmVersionForTest("dev")
+		// Provider doesn't even need a connection for dev mode
+		provider := &LocalProvider{}
+		err := provider.EnsureVersionCompatible(context.Background())
+		require.NoError(t, err)
+	})
+
+	t.Run("matching versions succeeds", func(t *testing.T) {
+		verify.SetPinnedLlmVersionForTest("1.2.3")
+		provider := setup(t, &pb.StatusResponse{
+			Ready:        true,
+			AddonVersion: "1.2.3",
+		}, nil)
+
+		err := provider.EnsureVersionCompatible(context.Background())
+		require.NoError(t, err)
+	})
+
+	t.Run("mismatched versions returns error", func(t *testing.T) {
+		verify.SetPinnedLlmVersionForTest("1.2.3")
+		provider := setup(t, &pb.StatusResponse{
+			Ready:        true,
+			AddonVersion: "1.0.0",
+		}, nil)
+
+		err := provider.EnsureVersionCompatible(context.Background())
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "version mismatch")
+		require.Contains(t, err.Error(), "1.0.0")
+		require.Contains(t, err.Error(), "1.2.3")
+	})
+
+	t.Run("GetStatus failure returns error", func(t *testing.T) {
+		verify.SetPinnedLlmVersionForTest("1.2.3")
+		provider := setup(t, nil, fmt.Errorf("connection refused"))
+
+		err := provider.EnsureVersionCompatible(context.Background())
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "failed to query addon version")
+	})
+
+	// Reset to dev mode so other tests aren't affected
+	t.Cleanup(func() {
+		verify.SetPinnedLlmVersionForTest("dev")
+	})
 }
 
 // TestToProtoRequest verifies the Go-to-proto conversion.
