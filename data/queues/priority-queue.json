@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-14T04:16:00Z",
+  "updated_at": "2026-03-14T05:50:02Z",
   "entries": [
     {
       "name": "node",
@@ -7356,7 +7356,7 @@
       "name": "chisel",
       "source": "rubygems:chisel",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 7,
@@ -19496,11 +19496,11 @@
       "name": "haproxy",
       "source": "rubygems:haproxy",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 5,
-      "next_retry_at": "2026-03-14T03:36:55.473503255Z"
+      "failure_count": 6,
+      "next_retry_at": "2026-03-15T13:50:02.026238036Z"
     },
     {
       "name": "harbor-cli",
@@ -38126,11 +38126,11 @@
       "name": "protoc-gen-js",
       "source": "npm:protoc-gen-js",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 4,
-      "next_retry_at": "2026-03-14T02:44:38.61895123Z"
+      "failure_count": 5,
+      "next_retry_at": "2026-03-14T21:50:02.026238036Z"
     },
     {
       "name": "protolint",
