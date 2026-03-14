@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-14T11:28:47Z",
+  "updated_at": "2026-03-14T12:51:27Z",
   "entries": [
     {
       "name": "node",
@@ -12116,7 +12116,7 @@
       "name": "dug",
       "source": "rubygems:dug",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 6,
@@ -12396,11 +12396,11 @@
       "name": "e2b",
       "source": "npm:e2b",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 7,
-      "next_retry_at": "2026-03-14T09:54:12.284705887Z"
+      "failure_count": 8,
+      "next_retry_at": "2026-03-19T20:51:27.142867755Z"
     },
     {
       "name": "e2fsprogs",
@@ -20056,11 +20056,11 @@
       "name": "hercules",
       "source": "rubygems:hercules",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 5,
-      "next_retry_at": "2026-03-14T09:40:58.791497802Z"
+      "failure_count": 6,
+      "next_retry_at": "2026-03-15T20:51:27.142867755Z"
     },
     {
       "name": "heremaps/olp-cli/olp",
