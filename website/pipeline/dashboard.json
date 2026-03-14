@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-14T22:29:31Z",
+  "generated_at": "2026-03-14T22:30:45Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 46,
-      "pending": 3887,
+      "failed": 43,
+      "pending": 3890,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 46,
-        "pending": 3864,
+        "failed": 43,
+        "pending": 3867,
         "success": 1326
       }
     },
@@ -68,8 +68,8 @@
         "total": 1
       },
       "npm": {
-        "failed": 18,
-        "pending": 3,
+        "failed": 17,
+        "pending": 4,
         "success": 54,
         "total": 75
       },
@@ -80,8 +80,8 @@
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 22,
-        "pending": 57,
+        "failed": 20,
+        "pending": 59,
         "success": 9,
         "total": 89
       }
@@ -624,6 +624,15 @@
           "next_retry_at": "2026-03-19T12:16:00Z"
         },
         {
+          "id": "rubygems:dict",
+          "name": "dict",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 8,
+          "next_retry_at": "2026-03-20T06:30:05Z"
+        },
+        {
           "id": "npm:dmd",
           "name": "dmd",
           "ecosystem": "npm",
@@ -631,15 +640,6 @@
           "category": "install_failed",
           "failure_count": 8,
           "next_retry_at": "2026-03-19T19:28:47Z"
-        },
-        {
-          "id": "rubygems:doggo",
-          "name": "doggo",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-03-14T21:57:16Z"
         },
         {
           "id": "rubygems:dug",
@@ -694,24 +694,6 @@
           "category": "install_failed",
           "failure_count": 7,
           "next_retry_at": "2026-03-17T12:32:06Z"
-        },
-        {
-          "id": "rubygems:gitingest",
-          "name": "gitingest",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-14T21:00:32Z"
-        },
-        {
-          "id": "rubygems:glassfish",
-          "name": "glassfish",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-14T22:05:54Z"
         },
         {
           "id": "npm:got",
@@ -795,13 +777,13 @@
           "next_retry_at": "2026-03-16T00:56:07Z"
         },
         {
-          "id": "npm:markdown-toc",
-          "name": "markdown-toc",
+          "id": "npm:mailhog",
+          "name": "mailhog",
           "ecosystem": "npm",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-14T22:05:54Z"
+          "failure_count": 7,
+          "next_retry_at": "2026-03-17T14:30:05Z"
         },
         {
           "id": "npm:mongoose",
@@ -829,15 +811,6 @@
           "category": "install_failed",
           "failure_count": 6,
           "next_retry_at": "2026-03-15T22:33:41Z"
-        },
-        {
-          "id": "npm:protoc-gen-js",
-          "name": "protoc-gen-js",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-14T21:50:02Z"
         },
         {
           "id": "npm:q",
@@ -6253,15 +6226,6 @@
           "failure_count": 1
         },
         {
-          "id": "rubygems:dict",
-          "name": "dict",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-03-14T20:20:14Z"
-        },
-        {
           "id": "crates.io:diesel",
           "name": "diesel",
           "ecosystem": "crates.io",
@@ -6561,6 +6525,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:doggo",
+          "name": "doggo",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-14T21:57:16Z"
         },
         {
           "id": "homebrew:dokku/repo/dokku",
@@ -9342,6 +9315,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:gitingest",
+          "name": "gitingest",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-14T21:00:32Z"
+        },
+        {
           "id": "homebrew:gitlab-ci-local",
           "name": "gitlab-ci-local",
           "ecosystem": "homebrew",
@@ -9424,6 +9406,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:glassfish",
+          "name": "glassfish",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-14T22:05:54Z"
         },
         {
           "id": "homebrew:glaze",
@@ -14853,15 +14844,6 @@
           "next_retry_at": "2026-03-13T00:05:27Z"
         },
         {
-          "id": "npm:mailhog",
-          "name": "mailhog",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-14T19:36:55Z"
-        },
-        {
           "id": "homebrew:mailsy",
           "name": "mailsy",
           "ecosystem": "homebrew",
@@ -15049,6 +15031,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "npm:markdown-toc",
+          "name": "markdown-toc",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-14T22:05:54Z"
         },
         {
           "id": "homebrew:markdownlint-cli",
@@ -20045,6 +20036,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "npm:protoc-gen-js",
+          "name": "protoc-gen-js",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-14T21:50:02Z"
         },
         {
           "id": "homebrew:protonpass/tap/pass-cli",
