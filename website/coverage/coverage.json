@@ -1,22 +1,22 @@
 {
-  "generated_at": "2026-03-15T11:05:06Z",
-  "total_recipes": 1403,
+  "generated_at": "2026-03-15T19:21:20Z",
+  "total_recipes": 1401,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 839,
-        "total": 1403,
-        "pct": 59.80042765502495
+        "supported": 837,
+        "total": 1401,
+        "pct": 59.743040685224834
       },
       "glibc": {
-        "supported": 1370,
-        "total": 1403,
-        "pct": 97.64789736279401
+        "supported": 1368,
+        "total": 1401,
+        "pct": 97.64453961456103
       },
       "musl": {
-        "supported": 1229,
-        "total": 1403,
-        "pct": 87.59800427655024
+        "supported": 1227,
+        "total": 1401,
+        "pct": 87.58029978586723
       }
     },
     "by_category": {
@@ -26,9 +26,9 @@
         "glibc_support": 150
       },
       "tool": {
-        "total": 1251,
-        "musl_support": 1079,
-        "glibc_support": 1220
+        "total": 1249,
+        "musl_support": 1077,
+        "glibc_support": 1218
       }
     }
   },
@@ -6424,18 +6424,6 @@
       ]
     },
     {
-      "name": "global",
-      "type": "tool",
-      "platforms": {
-        "darwin": true,
-        "glibc": true,
-        "musl": true
-      },
-      "gaps": null,
-      "errors": null,
-      "warnings": null
-    },
-    {
       "name": "glooctl",
       "type": "tool",
       "platforms": {
@@ -9312,18 +9300,6 @@
       "warnings": [
         "recipe 'jsoncpp' has platform-specific actions without libc when clauses and no musl fallback"
       ]
-    },
-    {
-      "name": "jsonlint",
-      "type": "tool",
-      "platforms": {
-        "darwin": true,
-        "glibc": true,
-        "musl": true
-      },
-      "gaps": null,
-      "errors": null,
-      "warnings": null
     },
     {
       "name": "jsonnet",
