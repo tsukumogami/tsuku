@@ -168,7 +168,7 @@ jobs:
           gh release upload "${GITHUB_REF_NAME}" "${{ matrix.artifact }}" --clobber
 
   # Build tsuku-llm addon for all platforms (GPU backends)
-  # Artifact naming: tsuku-llm-v{version}-{os}-{arch}[-{backend}]
+  # Artifact naming: tsuku-llm-{os}-{arch}[-{backend}]
   # macOS omits backend suffix (Metal is the only option per arch).
   #
   # CUDA version coupling: builds against CUDA toolkit 12.4. The cuda-runtime
@@ -228,7 +228,7 @@ jobs:
         id: artifact
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
-          ARTIFACT_NAME="tsuku-llm-v${VERSION}-${{ matrix.artifact_suffix }}"
+          ARTIFACT_NAME="tsuku-llm-${{ matrix.artifact_suffix }}"
           echo "name=${ARTIFACT_NAME}" >> "$GITHUB_OUTPUT"
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
           echo "Artifact name: ${ARTIFACT_NAME}"
@@ -358,13 +358,13 @@ jobs:
             os: darwin
             arch: amd64
             dltest_binary: tsuku-dltest-darwin-amd64
-            llm_binary: tsuku-llm-v{version}-darwin-amd64
+            llm_binary: tsuku-llm-darwin-amd64
           - platform: darwin-arm64
             runner: macos-latest
             os: darwin
             arch: arm64
             dltest_binary: tsuku-dltest-darwin-arm64
-            llm_binary: tsuku-llm-v{version}-darwin-arm64
+            llm_binary: tsuku-llm-darwin-arm64
     runs-on: ${{ matrix.runner }}
     steps:
       - name: Download binaries from draft release
@@ -372,18 +372,15 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG="${GITHUB_REF_NAME}"
-          VERSION="${TAG#v}"
-          # goreleaser default naming: tsuku-{os}-{arch}_{version}_{os}_{arch}
-          TSUKU_BINARY="tsuku-${{ matrix.os }}-${{ matrix.arch }}_${VERSION}_${{ matrix.os }}_${{ matrix.arch }}"
+          TSUKU_BINARY="tsuku-${{ matrix.os }}-${{ matrix.arch }}"
           mkdir -p ./artifacts
 
           # Build download patterns
           PATTERNS=("--pattern" "${TSUKU_BINARY}" "--pattern" "${{ matrix.dltest_binary }}")
 
           # Add llm binary pattern for macOS runners
-          LLM_TEMPLATE="${{ matrix.llm_binary }}"
-          if [ -n "$LLM_TEMPLATE" ]; then
-            LLM_BINARY="${LLM_TEMPLATE//\{version\}/$VERSION}"
+          LLM_BINARY="${{ matrix.llm_binary }}"
+          if [ -n "$LLM_BINARY" ]; then
             PATTERNS+=("--pattern" "$LLM_BINARY")
             echo "LLM_BINARY=${LLM_BINARY}" >> "$GITHUB_ENV"
           fi
@@ -451,14 +448,13 @@ jobs:
           TAG="${GITHUB_REF_NAME}"
           VERSION="${TAG#v}"
 
-          # Go binaries use goreleaser default naming: tsuku-{os}-{arch}_{version}_{os}_{arch}
-          # Rust binaries use simple naming: tsuku-dltest-{os}-{arch}
+          # All binaries use {tool}-{os}-{arch}[-{backend}] naming (no version in filenames)
           EXPECTED_ARTIFACTS=(
-            # Go binaries (from goreleaser) - versioned naming
-            "tsuku-linux-amd64_${VERSION}_linux_amd64"
-            "tsuku-linux-arm64_${VERSION}_linux_arm64"
-            "tsuku-darwin-amd64_${VERSION}_darwin_amd64"
-            "tsuku-darwin-arm64_${VERSION}_darwin_arm64"
+            # Go binaries (from goreleaser)
+            tsuku-linux-amd64
+            tsuku-linux-arm64
+            tsuku-darwin-amd64
+            tsuku-darwin-arm64
             # Rust binaries - glibc (from build-rust)
             tsuku-dltest-linux-amd64
             tsuku-dltest-linux-arm64
@@ -468,12 +464,12 @@ jobs:
             tsuku-dltest-linux-amd64-musl
             tsuku-dltest-linux-arm64-musl
             # LLM addon binaries (from build-llm)
-            "tsuku-llm-v${VERSION}-darwin-arm64"
-            "tsuku-llm-v${VERSION}-darwin-amd64"
-            "tsuku-llm-v${VERSION}-linux-amd64-cuda"
-            "tsuku-llm-v${VERSION}-linux-amd64-vulkan"
-            "tsuku-llm-v${VERSION}-linux-arm64-cuda"
-            "tsuku-llm-v${VERSION}-linux-arm64-vulkan"
+            tsuku-llm-darwin-arm64
+            tsuku-llm-darwin-amd64
+            tsuku-llm-linux-amd64-cuda
+            tsuku-llm-linux-amd64-vulkan
+            tsuku-llm-linux-arm64-cuda
+            tsuku-llm-linux-arm64-vulkan
           )
 
           echo "Verifying all ${#EXPECTED_ARTIFACTS[@]} artifacts are present..."

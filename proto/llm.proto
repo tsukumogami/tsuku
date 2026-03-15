@@ -155,4 +155,9 @@ message StatusResponse {
 
   // Available VRAM in bytes (0 if CPU-only).
   int64 available_vram_bytes = 5;
+
+  // Version of the running tsuku-llm addon binary.
+  // Used by the CLI to detect version mismatches with the expected
+  // pinned version and produce diagnostic error messages.
+  string addon_version = 6;
 }
