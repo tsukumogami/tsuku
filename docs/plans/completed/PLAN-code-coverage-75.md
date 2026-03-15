@@ -1,6 +1,6 @@
 ---
 schema: plan/v1
-status: Active
+status: Completed
 execution_mode: multi-pr
 milestone: "Code Coverage 75%"
 issue_count: 5
@@ -10,7 +10,7 @@ issue_count: 5
 
 ## Status
 
-Active
+Completed
 
 ## Scope Summary
 
@@ -60,8 +60,7 @@ graph TD
     classDef ready fill:#bbdefb
     classDef blocked fill:#fff9c4
 
-    class I2131,I2132,I2133,I2134 ready
-    class I2135 blocked
+    class I2131,I2132,I2133,I2134,I2135 done
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked
