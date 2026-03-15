@@ -1,6 +1,6 @@
 ---
 schema: plan/v1
-status: Draft
+status: Completed
 execution_mode: single-pr
 upstream: docs/designs/DESIGN-registry-versioning.md
 milestone: "Registry Schema Versioning and Deprecation Signaling"
@@ -11,7 +11,7 @@ issue_count: 3
 
 ## Status
 
-Draft
+Completed
 
 ## Scope Summary
 
@@ -30,15 +30,15 @@ Add integer schema versioning and optional deprecation signaling to the registry
 **Goal:** Change `Manifest.SchemaVersion` from `string` to `int`, add `[Min, Max]` range validation in `parseManifest()`, and introduce `ErrTypeSchemaVersion` with an upgrade suggestion.
 
 **Acceptance Criteria:**
-- [ ] `Manifest.SchemaVersion` field type is `int` (was `string`)
-- [ ] `MinManifestSchemaVersion = 1` and `MaxManifestSchemaVersion = 1` constants defined
-- [ ] `parseManifest()` validates `SchemaVersion` against `[Min, Max]` range after unmarshal
-- [ ] Above-range version returns `RegistryError` with `ErrTypeSchemaVersion` type
-- [ ] Error message includes current version, supported range, and upgrade suggestion
-- [ ] Suggestion mentions both `tsuku update-registry` and upgrading tsuku
-- [ ] Existing tests updated (9 locations across `manifest_test.go` and `satisfies_test.go`)
-- [ ] New tests: valid integer version parsing, out-of-range rejection (above max), zero value handling
-- [ ] `go test ./internal/registry/... ./internal/recipe/...` passes
+- [x]`Manifest.SchemaVersion` field type is `int` (was `string`)
+- [x]`MinManifestSchemaVersion = 1` and `MaxManifestSchemaVersion = 1` constants defined
+- [x]`parseManifest()` validates `SchemaVersion` against `[Min, Max]` range after unmarshal
+- [x]Above-range version returns `RegistryError` with `ErrTypeSchemaVersion` type
+- [x]Error message includes current version, supported range, and upgrade suggestion
+- [x]Suggestion mentions both `tsuku update-registry` and upgrading tsuku
+- [x]Existing tests updated (9 locations across `manifest_test.go` and `satisfies_test.go`)
+- [x]New tests: valid integer version parsing, out-of-range rejection (above max), zero value handling
+- [x]`go test ./internal/registry/... ./internal/recipe/...` passes
 
 **Dependencies:** None
 
@@ -49,19 +49,19 @@ Add integer schema versioning and optional deprecation signaling to the registry
 **Goal:** Add `DeprecationNotice` struct and manifest parsing, `printWarning()` helper with `--quiet` support and `sync.Once` dedup, and `min_cli_version` comparison using `version.CompareVersions()` with dev build detection.
 
 **Acceptance Criteria:**
-- [ ] `DeprecationNotice` struct with `SunsetDate`, `MinCLIVersion`, `Message` fields
-- [ ] `Deprecation *DeprecationNotice` pointer field on `Manifest` (nil when absent)
-- [ ] Manifest with deprecation object parses correctly; manifest without it has nil `Deprecation`
-- [ ] `printWarning()` helper in `cmd/tsuku/helpers.go` writes to stderr, respects `--quiet`
-- [ ] Warning fires at most once per CLI invocation via `sync.Once`
-- [ ] Warning identifies registry by actual fetch URL (from `manifestURL()`), not hardcoded
-- [ ] Warning format: `Warning: Registry at <url> reports: <message>`
-- [ ] When CLI version >= `min_cli_version`: shows "your CLI already supports the new format"
-- [ ] When CLI version < `min_cli_version`: shows "upgrade to vX.Y"
-- [ ] Dev builds (`dev-*`, `dev`, `unknown`) skip version comparison, treated as current
-- [ ] CLI never suggests downgrading (downgrade prevention rule)
-- [ ] Upgrade command hardcoded in CLI (not sourced from registry)
-- [ ] Tests for: deprecation parsing, nil when absent, warning display, quiet suppression, dev build handling, version comparison branches
+- [x]`DeprecationNotice` struct with `SunsetDate`, `MinCLIVersion`, `Message` fields
+- [x]`Deprecation *DeprecationNotice` pointer field on `Manifest` (nil when absent)
+- [x]Manifest with deprecation object parses correctly; manifest without it has nil `Deprecation`
+- [x]`printWarning()` helper in `cmd/tsuku/helpers.go` writes to stderr, respects `--quiet`
+- [x]Warning fires at most once per CLI invocation via `sync.Once`
+- [x]Warning identifies registry by actual fetch URL (from `manifestURL()`), not hardcoded
+- [x]Warning format: `Warning: Registry at <url> reports: <message>`
+- [x]When CLI version >= `min_cli_version`: shows "your CLI already supports the new format"
+- [x]When CLI version < `min_cli_version`: shows "upgrade to vX.Y"
+- [x]Dev builds (`dev-*`, `dev`, `unknown`) skip version comparison, treated as current
+- [x]CLI never suggests downgrading (downgrade prevention rule)
+- [x]Upgrade command hardcoded in CLI (not sourced from registry)
+- [x]Tests for: deprecation parsing, nil when absent, warning display, quiet suppression, dev build handling, version comparison branches
 
 **Dependencies:** Blocked by Issue 1
 
@@ -72,9 +72,9 @@ Add integer schema versioning and optional deprecation signaling to the registry
 **Goal:** Change `scripts/generate-registry.py` from `SCHEMA_VERSION = "1.2.0"` to `SCHEMA_VERSION = 1` so deployed `recipes.json` uses integer format.
 
 **Acceptance Criteria:**
-- [ ] `SCHEMA_VERSION = 1` (was `"1.2.0"`) in `scripts/generate-registry.py`
-- [ ] Generated `recipes.json` contains `"schema_version": 1` (integer, not string)
-- [ ] CI passes
+- [x]`SCHEMA_VERSION = 1` (was `"1.2.0"`) in `scripts/generate-registry.py`
+- [x]Generated `recipes.json` contains `"schema_version": 1` (integer, not string)
+- [x]CI passes
 
 **Dependencies:** Blocked by Issue 1
 
@@ -99,8 +99,7 @@ graph LR
     classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
     classDef tracksPlan fill:#FFE0B2,stroke:#F57C00,color:#000
 
-    class I1 ready
-    class I2,I3 blocked
+    class I1,I2,I3 done
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked
