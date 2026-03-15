@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-15T16:36:13Z",
+  "updated_at": "2026-03-15T18:41:37Z",
   "entries": [
     {
       "name": "node",
@@ -9326,7 +9326,7 @@
       "name": "cql",
       "source": "rubygems:cql",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 7,
@@ -20816,11 +20816,11 @@
       "name": "hyperkit",
       "source": "rubygems:hyperkit",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-03-12T14:42:21.663072996Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-03-16T02:41:36.974883919Z"
     },
     {
       "name": "hypre",
@@ -50986,11 +50986,11 @@
       "name": "webdav",
       "source": "npm:webdav",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": null
+      "failure_count": 2,
+      "next_retry_at": "2026-03-15T20:41:36.974883919Z"
     },
     {
       "name": "webhook",
