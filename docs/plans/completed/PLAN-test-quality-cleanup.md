@@ -1,6 +1,6 @@
 ---
 schema: plan/v1
-status: Active
+status: Completed
 execution_mode: single-pr
 issue_count: 10
 ---
@@ -9,7 +9,7 @@ issue_count: 10
 
 ## Status
 
-Active
+Completed
 
 ## Scope Summary
 

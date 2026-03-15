@@ -1,6 +1,6 @@
 ---
 schema: plan/v1
-status: Active
+status: Completed
 execution_mode: multi-pr
 upstream: docs/designs/DESIGN-unified-release-versioning.md
 milestone: "Unified Release Versioning"
@@ -11,7 +11,7 @@ issue_count: 7
 
 ## Status
 
-Active
+Completed
 
 ## Scope Summary
 
