@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-15T08:40:25Z",
+  "updated_at": "2026-03-15T10:33:33Z",
   "entries": [
     {
       "name": "node",
@@ -20486,11 +20486,11 @@
       "name": "htmldoc",
       "source": "rubygems:htmldoc",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 5,
-      "next_retry_at": "2026-03-14T10:44:38.61895123Z"
+      "failure_count": 6,
+      "next_retry_at": "2026-03-16T18:33:33.786886623Z"
     },
     {
       "name": "htmlhint",
@@ -30826,7 +30826,7 @@
       "name": "mongoose",
       "source": "npm:mongoose",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 6,
@@ -43656,11 +43656,11 @@
       "name": "sigstore",
       "source": "npm:sigstore",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 4,
-      "next_retry_at": "2026-03-15T00:35:49.194873754Z"
+      "failure_count": 5,
+      "next_retry_at": "2026-03-16T02:33:33.786886623Z"
     },
     {
       "name": "sile",
