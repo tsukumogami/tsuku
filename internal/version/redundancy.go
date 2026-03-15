@@ -44,8 +44,11 @@ var actionInference = map[string]string{
 func DetectRedundantVersion(r *recipe.Recipe) []RedundantVersion {
 	var redundant []RedundantVersion
 
-	// Check for github_repo redundancy with github_archive/github_file
-	if r.Version.GitHubRepo != "" {
+	// Check for github_repo redundancy with github_archive/github_file.
+	// Skip when tag_prefix is set: the inferred strategy does not honor
+	// tag_prefix, so the explicit github_repo is required for correct
+	// version resolution via GitHubRepoStrategy.
+	if r.Version.GitHubRepo != "" && r.Version.TagPrefix == "" {
 		for _, step := range r.Steps {
 			if step.Action == "github_archive" || step.Action == "github_file" {
 				if repo, ok := step.Params["repo"].(string); ok && repo != "" {
