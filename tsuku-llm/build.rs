@@ -125,18 +125,23 @@ fn compile_llama_cpp() -> Result<(), Box<dyn std::error::Error>> {
             println!("cargo:rustc-link-search=native={}/lib64", cuda_path);
             println!("cargo:rustc-link-search=native={}/lib64/stubs", cuda_path);
         }
+        // ggml-cuda (static) must come before its dynamic dependencies so the
+        // single-pass linker sees the undefined CUDA symbols before processing
+        // the shared libraries that provide them.
+        println!("cargo:rustc-link-lib=static=ggml-cuda");
         println!("cargo:rustc-link-lib=cuda");
         println!("cargo:rustc-link-lib=cublas");
         println!("cargo:rustc-link-lib=culibos");
         println!("cargo:rustc-link-lib=cudart");
         println!("cargo:rustc-link-lib=cublasLt");
-        println!("cargo:rustc-link-lib=static=ggml-cuda");
     }
 
     #[cfg(feature = "vulkan")]
     {
-        println!("cargo:rustc-link-lib=vulkan");
+        // ggml-vulkan (static) must come before -lvulkan (dynamic) for the
+        // same single-pass linker ordering reason as CUDA above.
         println!("cargo:rustc-link-lib=static=ggml-vulkan");
+        println!("cargo:rustc-link-lib=vulkan");
     }
 
     // Rerun if llama.cpp sources change
