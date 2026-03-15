@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-15T12:52:30Z",
+  "generated_at": "2026-03-15T12:53:50Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 47,
-      "pending": 3886,
+      "failed": 48,
+      "pending": 3885,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 47,
-        "pending": 3863,
+        "failed": 48,
+        "pending": 3862,
         "success": 1326
       }
     },
@@ -80,8 +80,8 @@
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 23,
-        "pending": 56,
+        "failed": 24,
+        "pending": 55,
         "success": 9,
         "total": 89
       }
@@ -777,6 +777,15 @@
           "next_retry_at": "2026-03-16T18:33:33Z"
         },
         {
+          "id": "rubygems:httpx",
+          "name": "httpx",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-16T20:53:09Z"
+        },
+        {
           "id": "npm:kew",
           "name": "kew",
           "ecosystem": "npm",
@@ -822,6 +831,15 @@
           "next_retry_at": "2026-03-17T18:12:17Z"
         },
         {
+          "id": "npm:mongoose",
+          "name": "mongoose",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-18T04:53:09Z"
+        },
+        {
           "id": "crates.io:numpy",
           "name": "numpy",
           "ecosystem": "crates.io",
@@ -847,15 +865,6 @@
           "category": "install_failed",
           "failure_count": 6,
           "next_retry_at": "2026-03-16T16:40:25Z"
-        },
-        {
-          "id": "npm:q",
-          "name": "q",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-15T12:32:06Z"
         },
         {
           "id": "npm:sigstore",
@@ -11043,15 +11052,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:httpx",
-          "name": "httpx",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-15T01:36:30Z"
-        },
-        {
           "id": "homebrew:httpyac",
           "name": "httpyac",
           "ecosystem": "homebrew",
@@ -16070,15 +16070,6 @@
           "failure_count": 1
         },
         {
-          "id": "npm:mongoose",
-          "name": "mongoose",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-15T09:57:45Z"
-        },
-        {
           "id": "homebrew:mongosh",
           "name": "mongosh",
           "ecosystem": "homebrew",
@@ -20661,6 +20652,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "npm:q",
+          "name": "q",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-15T12:32:06Z"
         },
         {
           "id": "homebrew:qalculate-gtk",
