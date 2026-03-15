@@ -386,6 +386,7 @@ jobs:
               - 'testdata/llm-quality-baselines/**'
             recipes:
               - 'internal/recipe/recipes/**/*.toml'
+              - 'recipes/**/*.toml'
             validator:
               - 'internal/recipe/validator.go'
               - 'internal/recipe/validator_test.go'
