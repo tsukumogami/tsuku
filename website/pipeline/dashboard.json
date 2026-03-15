@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-15T02:11:57Z",
+  "generated_at": "2026-03-15T02:13:01Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 43,
-      "pending": 3890,
+      "failed": 40,
+      "pending": 3893,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 43,
-        "pending": 3867,
+        "failed": 40,
+        "pending": 3870,
         "success": 1326
       }
     },
@@ -68,8 +68,8 @@
         "total": 1
       },
       "npm": {
-        "failed": 17,
-        "pending": 4,
+        "failed": 15,
+        "pending": 6,
         "success": 54,
         "total": 75
       },
@@ -80,8 +80,8 @@
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 20,
-        "pending": 59,
+        "failed": 19,
+        "pending": 60,
         "success": 9,
         "total": 89
       }
@@ -642,6 +642,15 @@
           "next_retry_at": "2026-03-19T19:28:47Z"
         },
         {
+          "id": "rubygems:doggo",
+          "name": "doggo",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 8,
+          "next_retry_at": "2026-03-20T10:12:17Z"
+        },
+        {
           "id": "rubygems:dug",
           "name": "dug",
           "ecosystem": "rubygems",
@@ -660,15 +669,6 @@
           "next_retry_at": "2026-03-19T20:51:27Z"
         },
         {
-          "id": "npm:ent",
-          "name": "ent",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-03-14T23:51:34Z"
-        },
-        {
           "id": "rubygems:exiv2",
           "name": "exiv2",
           "ecosystem": "rubygems",
@@ -676,15 +676,6 @@
           "category": "install_failed",
           "failure_count": 7,
           "next_retry_at": "2026-03-17T08:35:49Z"
-        },
-        {
-          "id": "npm:fastmcp",
-          "name": "fastmcp",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-03-15T01:47:18Z"
         },
         {
           "id": "rubygems:flash",
@@ -703,15 +694,6 @@
           "category": "install_failed",
           "failure_count": 7,
           "next_retry_at": "2026-03-16T01:42:40Z"
-        },
-        {
-          "id": "rubygems:gsl",
-          "name": "gsl",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-14T23:47:02Z"
         },
         {
           "id": "rubygems:haproxy",
@@ -739,15 +721,6 @@
           "category": "install_failed",
           "failure_count": 6,
           "next_retry_at": "2026-03-15T20:51:27Z"
-        },
-        {
-          "id": "rubygems:httpx",
-          "name": "httpx",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-15T01:36:30Z"
         },
         {
           "id": "npm:kew",
@@ -786,6 +759,15 @@
           "next_retry_at": "2026-03-17T14:30:05Z"
         },
         {
+          "id": "npm:markdown-toc",
+          "name": "markdown-toc",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-17T18:12:17Z"
+        },
+        {
           "id": "npm:mongoose",
           "name": "mongoose",
           "ecosystem": "npm",
@@ -820,15 +802,6 @@
           "category": "install_failed",
           "failure_count": 5,
           "next_retry_at": "2026-03-15T12:32:06Z"
-        },
-        {
-          "id": "npm:sigstore",
-          "name": "sigstore",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-15T00:35:49Z"
         },
         {
           "id": "pypi:tctl",
@@ -6527,15 +6500,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:doggo",
-          "name": "doggo",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-03-14T21:57:16Z"
-        },
-        {
           "id": "homebrew:dokku/repo/dokku",
           "name": "dokku/repo/dokku",
           "ecosystem": "homebrew",
@@ -7278,6 +7242,15 @@
           "failure_count": 1
         },
         {
+          "id": "npm:ent",
+          "name": "ent",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-14T23:51:34Z"
+        },
+        {
           "id": "homebrew:env0/terratag/terratag",
           "name": "env0/terratag/terratag",
           "ecosystem": "homebrew",
@@ -7654,6 +7627,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:fastmcp",
+          "name": "fastmcp",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-15T01:47:18Z"
         },
         {
           "id": "homebrew:fastmod",
@@ -10180,6 +10162,15 @@
           "failure_count": 1
         },
         {
+          "id": "rubygems:gsl",
+          "name": "gsl",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-14T23:47:02Z"
+        },
+        {
           "id": "homebrew:gspell",
           "name": "gspell",
           "ecosystem": "homebrew",
@@ -11041,6 +11032,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:httpx",
+          "name": "httpx",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-15T01:36:30Z"
         },
         {
           "id": "homebrew:httpyac",
@@ -15031,15 +15031,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "npm:markdown-toc",
-          "name": "markdown-toc",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-14T22:05:54Z"
         },
         {
           "id": "homebrew:markdownlint-cli",
@@ -23279,6 +23270,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:sigstore",
+          "name": "sigstore",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-15T00:35:49Z"
         },
         {
           "id": "homebrew:sile",
