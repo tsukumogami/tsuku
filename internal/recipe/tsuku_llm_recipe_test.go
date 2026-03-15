@@ -51,9 +51,9 @@ func loadTsukuLLMRecipe(t *testing.T) *Recipe {
 }
 
 // pipelineBuildMatrix returns the artifact suffixes produced by the release pipeline.
-// Sourced from .github/workflows/llm-release.yml build matrix.
+// Sourced from .github/workflows/release.yml build-llm matrix.
 //
-// Artifact naming: tsuku-llm-v{version}-{suffix}
+// Artifact naming: tsuku-llm-{suffix}
 // macOS builds omit the backend because Metal is the only backend per architecture.
 func pipelineBuildMatrix() []string {
 	return []string{
@@ -72,8 +72,8 @@ func TestTsukuLLMRecipeAssetPatternsMatchPipeline(t *testing.T) {
 	r := loadTsukuLLMRecipe(t)
 
 	// Extract asset_pattern suffixes from recipe steps.
-	// Each pattern is "tsuku-llm-v{version}-<suffix>".
-	prefix := "tsuku-llm-v{version}-"
+	// Each pattern is "tsuku-llm-<suffix>".
+	prefix := "tsuku-llm-"
 	var recipeSuffixes []string
 	for i, step := range r.Steps {
 		pattern, ok := step.Params["asset_pattern"].(string)

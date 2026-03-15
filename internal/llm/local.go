@@ -16,6 +16,7 @@ import (
 	"github.com/tsukumogami/tsuku/internal/llm/addon"
 	pb "github.com/tsukumogami/tsuku/internal/llm/proto"
 	"github.com/tsukumogami/tsuku/internal/progress"
+	"github.com/tsukumogami/tsuku/internal/verify"
 )
 
 // localMaxTokens caps the MaxTokens for local inference to keep latency
@@ -289,6 +290,33 @@ func (p *LocalProvider) GetStatus(ctx context.Context) (*pb.StatusResponse, erro
 		return nil, err
 	}
 	return resp, nil
+}
+
+// EnsureVersionCompatible checks that the running tsuku-llm daemon's version
+// matches the CLI's expected version. In dev mode (pinned version is "dev"),
+// any daemon version is accepted. Returns a descriptive error when versions
+// differ so the caller can produce diagnostic messages.
+func (p *LocalProvider) EnsureVersionCompatible(ctx context.Context) error {
+	pinned := verify.PinnedLlmVersion()
+	if pinned == "dev" {
+		return nil
+	}
+
+	status, err := p.GetStatus(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to query addon version: %w", err)
+	}
+
+	addonVersion := status.GetAddonVersion()
+	if addonVersion == pinned {
+		return nil
+	}
+
+	return fmt.Errorf(
+		"tsuku-llm version mismatch: running %q but CLI expects %q; "+
+			"reinstall the addon with 'tsuku install tsuku-llm' to fix",
+		addonVersion, pinned,
+	)
 }
 
 // SocketPath returns the path to the Unix domain socket.

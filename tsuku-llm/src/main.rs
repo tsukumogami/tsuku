@@ -525,6 +525,7 @@ impl InferenceService for LlmServer {
             model_size_bytes: 0, // TODO: Actual model size when model is loaded
             backend: self.hardware_profile.gpu_backend.to_string(),
             available_vram_bytes: self.hardware_profile.vram_bytes as i64,
+            addon_version: env!("CARGO_PKG_VERSION").to_string(),
         };
 
         Ok(Response::new(response))
