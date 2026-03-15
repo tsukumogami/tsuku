@@ -1,0 +1,91 @@
+{
+  "pr_status": "implementing",
+  "design_doc": "docs/plans/PLAN-registry-versioning.md",
+  "branch": "impl/registry-versioning",
+  "pr_number": null,
+  "integrity_hash": "sha256:0c9fed52fd137e5dac5f302827a1d1fd05c154edae8d8c721e847672556f1b04",
+  "issues": [
+    {
+      "number": 1,
+      "title": "feat(registry): add integer schema version validation to manifest parsing",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": [],
+      "complexity": "testable",
+      "acceptance_criteria": [
+        "`Manifest.SchemaVersion` field type is `int` (was `string`)",
+        "`MinManifestSchemaVersion = 1` and `MaxManifestSchemaVersion = 1` constants defined",
+        "`parseManifest()` validates `SchemaVersion` against `[Min, Max]` range after unmarshal",
+        "Above-range version returns `RegistryError` with `ErrTypeSchemaVersion` type",
+        "Error message includes current version, supported range, and upgrade suggestion",
+        "Suggestion mentions both `tsuku update-registry` and upgrading tsuku",
+        "Existing tests updated (9 locations across `manifest_test.go` and `satisfies_test.go`)",
+        "New tests: valid integer version parsing, out-of-range rejection (above max), zero value handling",
+        "`go test ./internal/registry/... ./internal/recipe/...` passes"
+      ]
+    },
+    {
+      "number": 2,
+      "title": "feat(registry): add deprecation notice parsing and warning display",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [
+        1
+      ],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": [],
+      "complexity": "testable",
+      "acceptance_criteria": [
+        "`DeprecationNotice` struct with `SunsetDate`, `MinCLIVersion`, `Message` fields",
+        "`Deprecation *DeprecationNotice` pointer field on `Manifest` (nil when absent)",
+        "Manifest with deprecation object parses correctly; manifest without it has nil `Deprecation`",
+        "`printWarning()` helper in `cmd/tsuku/helpers.go` writes to stderr, respects `--quiet`",
+        "Warning fires at most once per CLI invocation via `sync.Once`",
+        "Warning identifies registry by actual fetch URL (from `manifestURL()`), not hardcoded",
+        "Warning format: `Warning: Registry at \u003curl\u003e reports: \u003cmessage\u003e`",
+        "When CLI version \u003e= `min_cli_version`: shows \"your CLI already supports the new format\"",
+        "When CLI version \u003c `min_cli_version`: shows \"upgrade to vX.Y\"",
+        "Dev builds (`dev-*`, `dev`, `unknown`) skip version comparison, treated as current",
+        "CLI never suggests downgrading (downgrade prevention rule)",
+        "Upgrade command hardcoded in CLI (not sourced from registry)",
+        "Tests for: deprecation parsing, nil when absent, warning display, quiet suppression, dev build handling, version comparison branches"
+      ]
+    },
+    {
+      "number": 3,
+      "title": "chore(scripts): update generation script to emit integer schema version",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [
+        1
+      ],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": [],
+      "complexity": "simple",
+      "acceptance_criteria": [
+        "`SCHEMA_VERSION = 1` (was `\"1.2.0\"`) in `scripts/generate-registry.py`",
+        "Generated `recipes.json` contains `\"schema_version\": 1` (integer, not string)",
+        "CI passes"
+      ]
+    }
+  ],
+  "skipped_issues": null,
+  "test_plan_file": null,
+  "source_doc_type": "plan",
+  "execution_mode": "single-pr",
+  "deliverable_type": "mixed"
+}
