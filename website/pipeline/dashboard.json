@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-15T22:30:30Z",
+  "generated_at": "2026-03-15T22:31:51Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 53,
-      "pending": 3880,
+      "failed": 51,
+      "pending": 3882,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 53,
-        "pending": 3857,
+        "failed": 51,
+        "pending": 3859,
         "success": 1326
       }
     },
@@ -68,7 +68,8 @@
         "total": 1
       },
       "npm": {
-        "failed": 21,
+        "failed": 19,
+        "pending": 2,
         "success": 54,
         "total": 75
       },
@@ -758,15 +759,6 @@
           "next_retry_at": "2026-03-16T07:47:02Z"
         },
         {
-          "id": "rubygems:hercules",
-          "name": "hercules",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-15T20:51:27Z"
-        },
-        {
           "id": "rubygems:htmldoc",
           "name": "htmldoc",
           "ecosystem": "rubygems",
@@ -801,6 +793,15 @@
           "category": "install_failed",
           "failure_count": 4,
           "next_retry_at": "2026-03-16T02:41:36Z"
+        },
+        {
+          "id": "rubygems:imgproxy",
+          "name": "imgproxy",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-16T06:31:10Z"
         },
         {
           "id": "npm:kew",
@@ -918,24 +919,6 @@
           "category": "install_failed",
           "failure_count": 8,
           "next_retry_at": "2026-03-19T06:31:31Z"
-        },
-        {
-          "id": "npm:wartremover",
-          "name": "wartremover",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-15T20:36:13Z"
-        },
-        {
-          "id": "npm:webdav",
-          "name": "webdav",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-03-15T20:41:36Z"
         }
       ],
       "pending": [
@@ -10802,6 +10785,15 @@
           "failure_count": 1
         },
         {
+          "id": "rubygems:hercules",
+          "name": "hercules",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-15T20:51:27Z"
+        },
+        {
           "id": "homebrew:heremaps/olp-cli/olp",
           "name": "heremaps/olp-cli/olp",
           "ecosystem": "homebrew",
@@ -11453,15 +11445,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "rubygems:imgproxy",
-          "name": "imgproxy",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-12T14:42:21Z"
         },
         {
           "id": "homebrew:imlib2",
@@ -27087,6 +27070,15 @@
           "failure_count": 1
         },
         {
+          "id": "npm:wartremover",
+          "name": "wartremover",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-15T20:36:13Z"
+        },
+        {
           "id": "crates.io:wasm-bindgen",
           "name": "wasm-bindgen",
           "ecosystem": "crates.io",
@@ -27211,6 +27203,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "npm:webdav",
+          "name": "webdav",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 2,
+          "next_retry_at": "2026-03-15T20:41:36Z"
         },
         {
           "id": "rubygems:webhook",
