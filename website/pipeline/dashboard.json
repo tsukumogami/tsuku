@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-15T14:33:59Z",
+  "generated_at": "2026-03-15T14:35:11Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 48,
-      "pending": 3885,
+      "failed": 49,
+      "pending": 3884,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 48,
-        "pending": 3862,
+        "failed": 49,
+        "pending": 3861,
         "success": 1326
       }
     },
@@ -68,8 +68,8 @@
         "total": 1
       },
       "npm": {
-        "failed": 18,
-        "pending": 3,
+        "failed": 19,
+        "pending": 2,
         "success": 54,
         "total": 75
       },
@@ -741,15 +741,6 @@
           "next_retry_at": "2026-03-18T00:40:25Z"
         },
         {
-          "id": "rubygems:haproxy",
-          "name": "haproxy",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-15T13:50:02Z"
-        },
-        {
           "id": "npm:hasura-cli",
           "name": "hasura-cli",
           "ecosystem": "npm",
@@ -784,6 +775,15 @@
           "category": "install_failed",
           "failure_count": 6,
           "next_retry_at": "2026-03-16T20:53:09Z"
+        },
+        {
+          "id": "rubygems:hydra",
+          "name": "hydra",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-16T06:34:30Z"
         },
         {
           "id": "npm:kew",
@@ -865,6 +865,15 @@
           "category": "install_failed",
           "failure_count": 6,
           "next_retry_at": "2026-03-16T16:40:25Z"
+        },
+        {
+          "id": "npm:q",
+          "name": "q",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-16T22:34:30Z"
         },
         {
           "id": "npm:sigstore",
@@ -10492,6 +10501,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:haproxy",
+          "name": "haproxy",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-15T13:50:02Z"
+        },
+        {
           "id": "homebrew:harbor-cli",
           "name": "harbor-cli",
           "ecosystem": "homebrew",
@@ -11134,15 +11152,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "rubygems:hydra",
-          "name": "hydra",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-12T18:42:21Z"
         },
         {
           "id": "homebrew:hyfetch",
@@ -20652,15 +20661,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "npm:q",
-          "name": "q",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-15T12:32:06Z"
         },
         {
           "id": "homebrew:qalculate-gtk",
