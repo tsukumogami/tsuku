@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-15T19:21:36Z",
+  "updated_at": "2026-03-15T20:33:12Z",
   "entries": [
     {
       "name": "node",
@@ -9326,11 +9326,11 @@
       "name": "cql",
       "source": "rubygems:cql",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 7,
-      "next_retry_at": "2026-03-15T17:59:47.522538342Z"
+      "failure_count": 8,
+      "next_retry_at": "2026-03-21T04:33:12.026900135Z"
     },
     {
       "name": "cqlabs/dcm/dcm",
