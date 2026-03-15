@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-15T18:40:59Z",
+  "generated_at": "2026-03-15T18:42:17Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 51,
-      "pending": 3882,
+      "failed": 52,
+      "pending": 3881,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 51,
-        "pending": 3859,
+        "failed": 52,
+        "pending": 3858,
         "success": 1326
       }
     },
@@ -68,8 +68,7 @@
         "total": 1
       },
       "npm": {
-        "failed": 20,
-        "pending": 1,
+        "failed": 21,
         "success": 54,
         "total": 75
       },
@@ -606,15 +605,6 @@
           "next_retry_at": "2026-03-17T12:20:14Z"
         },
         {
-          "id": "rubygems:cql",
-          "name": "cql",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-03-15T17:59:47Z"
-        },
-        {
           "id": "npm:datasette",
           "name": "datasette",
           "ecosystem": "npm",
@@ -795,6 +785,15 @@
           "next_retry_at": "2026-03-16T06:34:30Z"
         },
         {
+          "id": "rubygems:hyperkit",
+          "name": "hyperkit",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-16T02:41:36Z"
+        },
+        {
           "id": "npm:kew",
           "name": "kew",
           "ecosystem": "npm",
@@ -919,6 +918,15 @@
           "category": "install_failed",
           "failure_count": 3,
           "next_retry_at": "2026-03-15T20:36:13Z"
+        },
+        {
+          "id": "npm:webdav",
+          "name": "webdav",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 2,
+          "next_retry_at": "2026-03-15T20:41:36Z"
         }
       ],
       "pending": [
@@ -5449,6 +5457,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:cql",
+          "name": "cql",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-15T17:59:47Z"
         },
         {
           "id": "homebrew:cqlabs/dcm/dcm",
@@ -11168,15 +11185,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "rubygems:hyperkit",
-          "name": "hyperkit",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-12T14:42:21Z"
         },
         {
           "id": "homebrew:hypre",
@@ -27203,14 +27211,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "npm:webdav",
-          "name": "webdav",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 1
         },
         {
           "id": "rubygems:webhook",
