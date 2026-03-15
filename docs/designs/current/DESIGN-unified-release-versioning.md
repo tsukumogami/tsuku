@@ -1,5 +1,5 @@
 ---
-status: Planned
+status: Current
 problem: |
   Tsuku's three binaries (CLI, dltest, llm) are released independently with inconsistent versioning, naming, and enforcement. The CLI and dltest share a `v*` tag in the main repo, but llm has a separate workflow (`llm-release.yml`) triggered by `tsuku-llm-v*` tags that has never been used. Artifact naming varies across all three (GoReleaser default, simple, version-prefixed). Only dltest has compile-time version pinning; llm accepts any installed version with no compatibility checking. This creates risk of version mismatches between binaries that share internal protocols.
 decision: |
@@ -12,7 +12,7 @@ rationale: |
 
 ## Status
 
-Planned
+Current
 
 ## Context and Problem Statement
 
@@ -261,49 +261,6 @@ Deliverables:
 - `.github/workflows/release.yml` (update artifact references in finalize-release and integration-test)
 - `recipes/t/tsuku-llm.toml` (update asset patterns)
 - llm build steps in release.yml (change output naming)
-
-## Implementation Issues
-
-### Milestone: [Unified Release Versioning](https://github.com/tsukumogami/tsuku/milestone/107)
-
-| Issue | Dependencies | Tier |
-|-------|--------------|------------|
-| ~~[#2124: fix(recipes): add github_repo to dltest recipe for version resolution](https://github.com/tsukumogami/tsuku/issues/2124)~~ | ~~None~~ | ~~simple~~ |
-| ~~_Add the missing `github_repo` field to the dltest recipe so version resolution works against the main repo's tags._~~ | | |
-| ~~[#2125: feat(verify): add compile-time version pinning for tsuku-llm](https://github.com/tsukumogami/tsuku/issues/2125)~~ | ~~None~~ | ~~testable~~ |
-| ~~_Pin the expected llm binary version at compile time so the CLI can detect mismatches and trigger auto-reinstall._~~ | | |
-| ~~[#2126: feat(ci): merge llm release pipeline into unified release workflow](https://github.com/tsukumogami/tsuku/issues/2126)~~ | ~~None~~ | ~~testable~~ |
-| ~~_Consolidate the separate llm release workflow into the main `release.yml`, building all three binaries under one tag._~~ | | |
-| ~~[#2127: fix(recipes): add version section to llm recipe for unified tag resolution](https://github.com/tsukumogami/tsuku/issues/2127)~~ | ~~[#2126](https://github.com/tsukumogami/tsuku/issues/2126)~~ | ~~simple~~ |
-| ~~_Point the llm recipe's version resolution at the main repo instead of the old tsuku-llm repo, now that releases are unified._~~ | | |
-| ~~[#2128: refactor(release): standardize artifact naming to {tool}-{os}-{arch}](https://github.com/tsukumogami/tsuku/issues/2128)~~ | ~~[#2127](https://github.com/tsukumogami/tsuku/issues/2127)~~ | ~~testable~~ |
-| ~~_Remove version suffixes from release artifact filenames and update GoReleaser templates, build steps, and recipe asset patterns._~~ | | |
-| ~~[#2129: feat(llm): add gRPC version handshake for runtime version diagnostics](https://github.com/tsukumogami/tsuku/issues/2129)~~ | ~~[#2125](https://github.com/tsukumogami/tsuku/issues/2125)~~ | ~~testable~~ |
-| ~~_Add an `addon_version` field to the gRPC StatusResponse so the CLI can verify the running daemon matches the expected version._~~ | | |
-
-### Dependency Graph
-
-```mermaid
-graph TD
-    I2124["#2124: dltest recipe version fix"]
-    I2125["#2125: Compile-time llm pinning"]
-    I2126["#2126: Merge llm release pipeline"]
-    I2127["#2127: llm recipe version section"]
-    I2128["#2128: Standardize artifact naming"]
-    I2129["#2129: gRPC version handshake"]
-
-    I2126 --> I2127
-    I2127 --> I2128
-    I2125 --> I2129
-
-    classDef done fill:#c8e6c9
-    classDef ready fill:#bbdefb
-    classDef blocked fill:#fff9c4
-
-    class I2124,I2125,I2126,I2127,I2128,I2129 done
-```
-
-**Legend**: Green = done, Blue = ready, Yellow = blocked
 
 ## Security Considerations
 
