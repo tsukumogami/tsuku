@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-15T05:08:51Z",
+  "generated_at": "2026-03-15T05:10:22Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 40,
-      "pending": 3893,
+      "failed": 42,
+      "pending": 3891,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 40,
-        "pending": 3870,
+        "failed": 42,
+        "pending": 3868,
         "success": 1326
       }
     },
@@ -68,8 +68,8 @@
         "total": 1
       },
       "npm": {
-        "failed": 15,
-        "pending": 6,
+        "failed": 16,
+        "pending": 5,
         "success": 54,
         "total": 75
       },
@@ -80,8 +80,8 @@
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 19,
-        "pending": 60,
+        "failed": 20,
+        "pending": 59,
         "success": 9,
         "total": 89
       }
@@ -669,6 +669,15 @@
           "next_retry_at": "2026-03-19T20:51:27Z"
         },
         {
+          "id": "npm:ent",
+          "name": "ent",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 8,
+          "next_retry_at": "2026-03-20T13:09:28Z"
+        },
+        {
           "id": "rubygems:exiv2",
           "name": "exiv2",
           "ecosystem": "rubygems",
@@ -685,6 +694,15 @@
           "category": "install_failed",
           "failure_count": 7,
           "next_retry_at": "2026-03-17T12:32:06Z"
+        },
+        {
+          "id": "rubygems:gitingest",
+          "name": "gitingest",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-17T21:09:28Z"
         },
         {
           "id": "npm:got",
@@ -7242,15 +7260,6 @@
           "failure_count": 1
         },
         {
-          "id": "npm:ent",
-          "name": "ent",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-03-14T23:51:34Z"
-        },
-        {
           "id": "homebrew:env0/terratag/terratag",
           "name": "env0/terratag/terratag",
           "ecosystem": "homebrew",
@@ -9295,15 +9304,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "rubygems:gitingest",
-          "name": "gitingest",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-14T21:00:32Z"
         },
         {
           "id": "homebrew:gitlab-ci-local",
