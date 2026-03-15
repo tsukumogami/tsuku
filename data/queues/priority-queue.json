@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-15T11:04:45Z",
+  "updated_at": "2026-03-15T12:53:10Z",
   "entries": [
     {
       "name": "node",
@@ -20626,11 +20626,11 @@
       "name": "httpx",
       "source": "rubygems:httpx",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 5,
-      "next_retry_at": "2026-03-15T01:36:30.348319794Z"
+      "failure_count": 6,
+      "next_retry_at": "2026-03-16T20:53:09.99295001Z"
     },
     {
       "name": "httpyac",
@@ -30826,11 +30826,11 @@
       "name": "mongoose",
       "source": "npm:mongoose",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 6,
-      "next_retry_at": "2026-03-15T09:57:45.939528894Z"
+      "failure_count": 7,
+      "next_retry_at": "2026-03-18T04:53:09.99295001Z"
     },
     {
       "name": "mongosh",
@@ -39116,7 +39116,7 @@
       "name": "q",
       "source": "npm:q",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 5,
