@@ -68,12 +68,8 @@ fi
 
 echo "Latest version: $LATEST"
 
-# Strip 'v' prefix from version for binary name (v0.1.0 -> 0.1.0)
-VERSION="${LATEST#v}"
-
 # Download binary
-# Release assets follow goreleaser naming: tsuku-{os}-{arch}_{version}_{os}_{arch}
-BINARY_NAME="tsuku-${OS}-${ARCH}_${VERSION}_${OS}_${ARCH}"
+BINARY_NAME="tsuku-${OS}-${ARCH}"
 DOWNLOAD_URL="https://github.com/${REPO}/releases/download/${LATEST}/${BINARY_NAME}"
 CHECKSUM_URL="https://github.com/${REPO}/releases/download/${LATEST}/checksums.txt"
 
