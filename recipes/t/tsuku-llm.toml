@@ -18,7 +18,6 @@ supported_libc = ["glibc"]
 unsupported_reason = "All variants are built against glibc. musl/Alpine Linux is not supported because llama.cpp and CUDA runtime libraries require glibc. Windows is not supported because the release pipeline does not produce Windows artifacts."
 
 [version]
-github_repo = "tsukumogami/tsuku"
 tag_prefix = "v"
 
 # macOS arm64: Metal variant (all Apple Silicon Macs have Metal-capable GPUs)
