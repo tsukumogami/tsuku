@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-15T02:12:17Z",
+  "updated_at": "2026-03-15T05:09:28Z",
   "entries": [
     {
       "name": "node",
@@ -12966,11 +12966,11 @@
       "name": "ent",
       "source": "npm:ent",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 7,
-      "next_retry_at": "2026-03-14T23:51:34.418917229Z"
+      "failure_count": 8,
+      "next_retry_at": "2026-03-20T13:09:28.577330873Z"
     },
     {
       "name": "ente-cli",
@@ -16906,11 +16906,11 @@
       "name": "gitingest",
       "source": "rubygems:gitingest",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 6,
-      "next_retry_at": "2026-03-14T21:00:32.808923258Z"
+      "failure_count": 7,
+      "next_retry_at": "2026-03-17T21:09:28.577330873Z"
     },
     {
       "name": "gitlab-ci-linter",
