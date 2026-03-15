@@ -17,19 +17,19 @@
           "params": {
             "checksum": "3397194408bd9afd3463a70313dc83d9d8abcf4beb37fc7335fa666a1501784c",
             "checksum_algo": "sha256",
-            "dest": "cpython-3.10.19+20260203-x86_64-unknown-linux-gnu-install_only.tar.gz",
-            "url": "https://github.com/indygreg/python-build-standalone/releases/download/20260203/cpython-3.10.19+20260203-x86_64-unknown-linux-gnu-install_only.tar.gz"
+            "dest": "cpython-3.10.20+20260203-x86_64-unknown-linux-gnu-install_only.tar.gz",
+            "url": "https://github.com/indygreg/python-build-standalone/releases/download/20260203/cpython-3.10.20+20260203-x86_64-unknown-linux-gnu-install_only.tar.gz"
           },
           "evaluable": true,
           "deterministic": true,
-          "url": "https://github.com/indygreg/python-build-standalone/releases/download/20260203/cpython-3.10.19+20260203-x86_64-unknown-linux-gnu-install_only.tar.gz",
+          "url": "https://github.com/indygreg/python-build-standalone/releases/download/20260203/cpython-3.10.20+20260203-x86_64-unknown-linux-gnu-install_only.tar.gz",
           "checksum": "3397194408bd9afd3463a70313dc83d9d8abcf4beb37fc7335fa666a1501784c",
           "size": 43880933
         },
         {
           "action": "extract",
           "params": {
-            "archive": "cpython-3.10.19+20260203-x86_64-unknown-linux-gnu-install_only.tar.gz",
+            "archive": "cpython-3.10.20+20260203-x86_64-unknown-linux-gnu-install_only.tar.gz",
             "format": "tar.gz",
             "strip_dirs": 1
           },
@@ -76,7 +76,7 @@
         "has_native_addons": false,
         "locked_requirements": "meson==1.9.2 \\\n    --hash=sha256:1a284dc1912929098a6462401af58dc49ae3f324e94814a38a8f1020cee07cba\n",
         "package": "meson",
-        "python_version": "3.10.19",
+        "python_version": "3.10.20",
         "version": "1.9.2"
       },
       "evaluable": false,
