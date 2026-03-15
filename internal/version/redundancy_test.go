@@ -109,6 +109,17 @@ func TestDetectRedundantVersion(t *testing.T) {
 			wantMsg: "github_repo=\"muesli/duf\" is redundant",
 		},
 		{
+			name: "not redundant - github_file with matching repo but tag_prefix set",
+			recipe: &recipe.Recipe{
+				Version: recipe.VersionSection{GitHubRepo: "tsukumogami/tsuku", TagPrefix: "v"},
+				Steps: []recipe.Step{{
+					Action: "github_file",
+					Params: map[string]interface{}{"repo": "tsukumogami/tsuku"},
+				}},
+			},
+			wantLen: 0, // tag_prefix requires explicit github_repo (inferred strategy ignores it)
+		},
+		{
 			name: "not redundant - github_archive with different github_repo",
 			recipe: &recipe.Recipe{
 				Version: recipe.VersionSection{GitHubRepo: "owner/main-repo"},

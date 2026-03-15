@@ -85,9 +85,13 @@ jobs:
       - name: Compute golden path
         id: golden-path
         run: |
-          first_letter="${{ inputs.recipe }}"
-          first_letter="${first_letter:0:1}"
-          echo "recipe_dir=testdata/golden/plans/${first_letter}/${{ inputs.recipe }}" >> "$GITHUB_OUTPUT"
+          recipe="${{ inputs.recipe }}"
+          if [[ -f "internal/recipe/recipes/${recipe}.toml" ]]; then
+            echo "recipe_dir=testdata/golden/plans/embedded/${recipe}" >> "$GITHUB_OUTPUT"
+          else
+            first_letter="${recipe:0:1}"
+            echo "recipe_dir=testdata/golden/plans/${first_letter}/${recipe}" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Generate golden files for ${{ matrix.platform.os }}-${{ matrix.platform.arch }}
         env:
@@ -124,10 +128,16 @@ jobs:
 
       - name: Merge golden files
         run: |
-          # Compute target directory from recipe name
-          first_letter="${{ inputs.recipe }}"
-          first_letter="${first_letter:0:1}"
-          target_dir="testdata/golden/plans/${first_letter}/${{ inputs.recipe }}"
+          # Compute target directory, matching the layout used by regenerate-golden.sh:
+          # embedded recipes go under testdata/golden/plans/embedded/<recipe>/
+          # registry recipes go under testdata/golden/plans/<letter>/<recipe>/
+          recipe="${{ inputs.recipe }}"
+          if [[ -f "internal/recipe/recipes/${recipe}.toml" ]]; then
+            target_dir="testdata/golden/plans/embedded/${recipe}"
+          else
+            first_letter="${recipe:0:1}"
+            target_dir="testdata/golden/plans/${first_letter}/${recipe}"
+          fi
           mkdir -p "$target_dir"
 
           # Merge all platform artifacts into the recipe-specific directory.
