@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-15T06:59:50Z",
+  "generated_at": "2026-03-15T07:01:03Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 42,
-      "pending": 3891,
+      "failed": 44,
+      "pending": 3889,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 42,
-        "pending": 3868,
+        "failed": 44,
+        "pending": 3866,
         "success": 1326
       }
     },
@@ -68,8 +68,8 @@
         "total": 1
       },
       "npm": {
-        "failed": 16,
-        "pending": 5,
+        "failed": 17,
+        "pending": 4,
         "success": 54,
         "total": 75
       },
@@ -80,8 +80,8 @@
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 20,
-        "pending": 59,
+        "failed": 21,
+        "pending": 58,
         "success": 9,
         "total": 89
       }
@@ -687,6 +687,15 @@
           "next_retry_at": "2026-03-17T08:35:49Z"
         },
         {
+          "id": "npm:fastmcp",
+          "name": "fastmcp",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 8,
+          "next_retry_at": "2026-03-20T15:00:20Z"
+        },
+        {
           "id": "rubygems:flash",
           "name": "flash",
           "ecosystem": "rubygems",
@@ -703,6 +712,15 @@
           "category": "install_failed",
           "failure_count": 7,
           "next_retry_at": "2026-03-17T21:09:28Z"
+        },
+        {
+          "id": "rubygems:glassfish",
+          "name": "glassfish",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-17T23:00:20Z"
         },
         {
           "id": "npm:got",
@@ -7638,15 +7656,6 @@
           "failure_count": 1
         },
         {
-          "id": "npm:fastmcp",
-          "name": "fastmcp",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-03-15T01:47:18Z"
-        },
-        {
           "id": "homebrew:fastmod",
           "name": "fastmod",
           "ecosystem": "homebrew",
@@ -9388,15 +9397,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "rubygems:glassfish",
-          "name": "glassfish",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-14T22:05:54Z"
         },
         {
           "id": "homebrew:glaze",
