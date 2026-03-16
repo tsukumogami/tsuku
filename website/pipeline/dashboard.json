@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-16T16:13:24Z",
+  "generated_at": "2026-03-16T16:14:53Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -74,14 +74,15 @@
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 30,
-        "pending": 49,
+        "failed": 31,
+        "pending": 48,
         "success": 9,
         "total": 89
       }
@@ -813,6 +814,15 @@
           "next_retry_at": "2026-03-17T02:11:17Z"
         },
         {
+          "id": "rubygems:influxdb",
+          "name": "influxdb",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-17T08:14:04Z"
+        },
+        {
           "id": "rubygems:ipfs",
           "name": "ipfs",
           "ecosystem": "rubygems",
@@ -820,6 +830,15 @@
           "category": "install_failed",
           "failure_count": 5,
           "next_retry_at": "2026-03-17T03:51:23Z"
+        },
+        {
+          "id": "npm:kew",
+          "name": "kew",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 8,
+          "next_retry_at": "2026-03-22T00:14:04Z"
         },
         {
           "id": "rubygems:kor",
@@ -847,15 +866,6 @@
           "category": "install_failed",
           "failure_count": 5,
           "next_retry_at": "2026-03-17T07:05:16Z"
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 91,
-          "next_retry_at": "1733-12-05T15:17:59Z"
         },
         {
           "id": "npm:mailhog",
@@ -955,15 +965,6 @@
           "category": "install_failed",
           "failure_count": 5,
           "next_retry_at": "2026-03-17T05:12:19Z"
-        },
-        {
-          "id": "npm:webdav",
-          "name": "webdav",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-16T15:51:23Z"
         }
       ],
       "pending": [
@@ -11511,15 +11512,6 @@
           "failure_count": 1
         },
         {
-          "id": "rubygems:influxdb",
-          "name": "influxdb",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-16T13:19:42Z"
-        },
-        {
           "id": "homebrew:influxdb-cli",
           "name": "influxdb-cli",
           "ecosystem": "homebrew",
@@ -12577,15 +12569,6 @@
           "failure_count": 0
         },
         {
-          "id": "npm:kew",
-          "name": "kew",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-03-16T14:31:31Z"
-        },
-        {
           "id": "homebrew:keychain",
           "name": "keychain",
           "ecosystem": "homebrew",
@@ -13230,6 +13213,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 91,
+          "next_retry_at": "1733-12-05T15:17:59Z"
         },
         {
           "id": "homebrew:libaacs",
@@ -27212,6 +27204,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "npm:webdav",
+          "name": "webdav",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-16T15:51:23Z"
         },
         {
           "id": "rubygems:webhook",
