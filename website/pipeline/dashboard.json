@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-16T09:00:13Z",
+  "generated_at": "2026-03-16T09:01:30Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 50,
-      "pending": 3883,
+      "failed": 52,
+      "pending": 3881,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 50,
-        "pending": 3860,
+        "failed": 52,
+        "pending": 3858,
         "success": 1326
       }
     },
@@ -74,15 +74,14 @@
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 26,
-        "pending": 53,
+        "failed": 27,
+        "pending": 52,
         "success": 9,
         "total": 89
       }
@@ -751,15 +750,6 @@
           "next_retry_at": "2026-03-18T08:36:13Z"
         },
         {
-          "id": "npm:hasura-cli",
-          "name": "hasura-cli",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-03-16T07:47:02Z"
-        },
-        {
           "id": "rubygems:hercules",
           "name": "hercules",
           "ecosystem": "rubygems",
@@ -785,6 +775,15 @@
           "category": "install_failed",
           "failure_count": 6,
           "next_retry_at": "2026-03-16T20:53:09Z"
+        },
+        {
+          "id": "rubygems:hydra",
+          "name": "hydra",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-17T17:00:48Z"
         },
         {
           "id": "rubygems:hyperkit",
@@ -821,6 +820,15 @@
           "category": "install_failed",
           "failure_count": 7,
           "next_retry_at": "2026-03-17T10:41:46Z"
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 87,
+          "next_retry_at": "1733-12-05T09:13:31Z"
         },
         {
           "id": "npm:mailhog",
@@ -884,6 +892,15 @@
           "category": "install_failed",
           "failure_count": 6,
           "next_retry_at": "2026-03-16T22:34:30Z"
+        },
+        {
+          "id": "npm:sigstore",
+          "name": "sigstore",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-17T17:00:48Z"
         },
         {
           "id": "pypi:tctl",
@@ -10658,6 +10675,15 @@
           "failure_count": 0
         },
         {
+          "id": "npm:hasura-cli",
+          "name": "hasura-cli",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-16T07:47:02Z"
+        },
+        {
           "id": "homebrew:hatch",
           "name": "hatch",
           "ecosystem": "homebrew",
@@ -11153,15 +11179,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "rubygems:hydra",
-          "name": "hydra",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-16T06:34:30Z"
         },
         {
           "id": "homebrew:hyfetch",
@@ -13204,15 +13221,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 85,
-          "next_retry_at": "1733-12-05T05:32:26Z"
         },
         {
           "id": "homebrew:libaacs",
@@ -23280,15 +23288,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:sigstore",
-          "name": "sigstore",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-16T02:33:33Z"
         },
         {
           "id": "homebrew:sile",
