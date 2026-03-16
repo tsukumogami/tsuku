@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-16T07:18:59Z",
+  "generated_at": "2026-03-16T07:20:16Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 51,
-      "pending": 3882,
+      "failed": 50,
+      "pending": 3883,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 51,
-        "pending": 3859,
+        "failed": 50,
+        "pending": 3860,
         "success": 1326
       }
     },
@@ -68,20 +68,21 @@
         "total": 1
       },
       "npm": {
-        "failed": 18,
-        "pending": 3,
+        "failed": 19,
+        "pending": 2,
         "success": 54,
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 27,
-        "pending": 52,
+        "failed": 26,
+        "pending": 53,
         "success": 9,
         "total": 89
       }
@@ -786,22 +787,13 @@
           "next_retry_at": "2026-03-16T20:53:09Z"
         },
         {
-          "id": "rubygems:hydra",
-          "name": "hydra",
+          "id": "rubygems:hyperkit",
+          "name": "hyperkit",
           "ecosystem": "rubygems",
           "priority": 3,
           "category": "install_failed",
           "failure_count": 5,
-          "next_retry_at": "2026-03-16T06:34:30Z"
-        },
-        {
-          "id": "rubygems:imgproxy",
-          "name": "imgproxy",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-16T06:31:10Z"
+          "next_retry_at": "2026-03-16T23:19:35Z"
         },
         {
           "id": "rubygems:influxdb",
@@ -829,15 +821,6 @@
           "category": "install_failed",
           "failure_count": 7,
           "next_retry_at": "2026-03-17T10:41:46Z"
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 85,
-          "next_retry_at": "1733-12-05T05:32:26Z"
         },
         {
           "id": "npm:mailhog",
@@ -874,6 +857,15 @@
           "category": "install_failed",
           "failure_count": 8,
           "next_retry_at": "2026-03-18T15:49:34Z"
+        },
+        {
+          "id": "npm:pocketbase",
+          "name": "pocketbase",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-18T23:19:35Z"
         },
         {
           "id": "npm:protoc-gen-js",
@@ -11163,20 +11155,20 @@
           "failure_count": 1
         },
         {
+          "id": "rubygems:hydra",
+          "name": "hydra",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-16T06:34:30Z"
+        },
+        {
           "id": "homebrew:hyfetch",
           "name": "hyfetch",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "rubygems:hyperkit",
-          "name": "hyperkit",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-16T02:41:36Z"
         },
         {
           "id": "homebrew:hypre",
@@ -11445,6 +11437,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:imgproxy",
+          "name": "imgproxy",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-16T06:31:10Z"
         },
         {
           "id": "homebrew:imlib2",
@@ -13203,6 +13204,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 85,
+          "next_retry_at": "1733-12-05T05:32:26Z"
         },
         {
           "id": "homebrew:libaacs",
@@ -19553,15 +19563,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "npm:pocketbase",
-          "name": "pocketbase",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-15T22:33:41Z"
         },
         {
           "id": "homebrew:poco",
