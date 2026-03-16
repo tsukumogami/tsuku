@@ -12,6 +12,11 @@
 ## Selected Approach (Phase 2)
 RecipeProvider Interface. It's the only approach that delivers the PRD's unified abstraction goal. The pattern already exists implicitly in the codebase and explicitly in the version provider system. It reduces Loader complexity rather than increasing it, and each provider controls its own URL construction and caching, avoiding layout assumption conflicts.
 
+## Investigation Findings (Phase 3)
+- **Interface design**: Three methods (Get, List, Source) plus two optional interfaces (SatisfiesProvider, RefreshableProvider). Four Loader methods collapse into one chain-walking function. In-memory cache stays as Loader concern (stores parsed recipes, not bytes). RequireEmbedded becomes source-tag filter. update-registry uses type-assertion escape hatch.
+- **HTTP fetching**: Two-tier strategy -- Contents API (1 rate-limited call) for directory listing, then raw.githubusercontent.com URLs (unlimited) for file content. Auth via GITHUB_TOKEN raises limit to 5000/hr. Separate CacheManager for distributed sources. Use httputil.NewSecureClient for SSRF protection.
+- **State & registry**: Add top-level Source field to ToolState with lazy migration (default "central"). Store registered sources in config.toml alongside other user preferences. Source-directed loading for update/verify/outdated (bypass chain, use recorded source). Last-install-wins for name collisions with confirmation prompt.
+
 ## Current Status
-**Phase:** 2 - Present Approaches
+**Phase:** 3 - Deep Investigation
 **Last Updated:** 2026-03-15
