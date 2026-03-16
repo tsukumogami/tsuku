@@ -497,3 +497,44 @@ Deliverables:
 - **GitHub-first**: The provider interface is generic. GitHub-specific logic is
   encapsulated in the distributed provider implementation. When non-GitHub
   support is needed, it's a new provider, not a change to the interface.
+
+## Security Considerations
+
+**Trust model.** Distributed recipes execute with the same permissions as central
+registry recipes but without the central registry's PR-based review process. Users
+who run `tsuku install owner/repo` are trusting that repository's maintainers with
+arbitrary file system access under their user account. This is the same trust model
+as `go install`, `cargo install`, or `pip install` from arbitrary sources.
+
+**Recipe integrity.** v1 does not verify recipe content integrity. Recipes are
+fetched from HEAD over HTTPS, which protects against network-level tampering but
+not against upstream compromise (account takeover, malicious force-push). Binary
+integrity is protected by checksum/signature verification defined in the recipe,
+but if the recipe itself is tampered, those verification parameters are also
+compromised. Recipe-level integrity (content-hash pinning, change detection) is
+a prerequisite for enterprise or high-security use and should be prioritized as
+a fast follow.
+
+Implementer requirements:
+- Validate that `download_url` values returned by the GitHub Contents API use
+  HTTPS before following them. Don't trust the URL scheme blindly.
+- Record `sha256(recipe_toml_bytes)` in `state.json` alongside the `Source`
+  field. This doesn't block mutation in v1 but creates an audit trail for a
+  future `--accept-recipe-changes` flow.
+- Print a one-time trust warning on first install from a new distributed source
+  (e.g., "Installing from owner/repo for the first time. This will execute
+  recipe-defined actions with your user permissions.").
+
+**Strict mode.** Teams and CI environments should set `strict_registries = true`
+to prevent auto-registration. Document this in the `tsuku registry` help text
+and in the security section of the website.
+
+**Token handling.** `GITHUB_TOKEN` is sent only to `api.github.com` over HTTPS.
+Raw content fetches don't include authentication headers. The token is resolved
+through the existing `secrets` package, which checks environment variables and
+`config.toml` (stored with 0600 permissions).
+
+**Telemetry.** Telemetry events for distributed installs should include an opaque
+"distributed" source tag rather than the full `owner/repo` identifier. Full
+identifiers reveal user-source relationships to the telemetry backend without
+clear analytical benefit.

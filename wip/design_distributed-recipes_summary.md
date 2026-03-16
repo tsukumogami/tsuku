@@ -17,6 +17,10 @@ RecipeProvider Interface. It's the only approach that delivers the PRD's unified
 - **HTTP fetching**: Two-tier strategy -- Contents API (1 rate-limited call) for directory listing, then raw.githubusercontent.com URLs (unlimited) for file content. Auth via GITHUB_TOKEN raises limit to 5000/hr. Separate CacheManager for distributed sources. Use httputil.NewSecureClient for SSRF protection.
 - **State & registry**: Add top-level Source field to ToolState with lazy migration (default "central"). Store registered sources in config.toml alongside other user preferences. Source-directed loading for update/verify/outdated (bypass chain, use recorded source). Last-install-wins for name collisions with confirmation prompt.
 
+## Security Review (Phase 5)
+**Outcome:** Option 2 -- Document considerations
+**Summary:** Trust model matches go install/cargo install (user trusts the source). Main risk is recipe mutation without detection (deferred to content-hash pinning). Three low-cost mitigations added: trust warning on first install, recipe hash recording in state.json, HTTPS validation for Contents API download_url fields.
+
 ## Current Status
-**Phase:** 3 - Deep Investigation
+**Phase:** 5 - Security
 **Last Updated:** 2026-03-15
