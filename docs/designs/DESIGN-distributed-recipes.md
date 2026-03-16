@@ -119,21 +119,35 @@ to structure this: new interface, extended existing type, or minimal URL routing
 
 **Chosen: RecipeProvider Interface.**
 
-A Go interface with `Get`, `List`, `Source`, and `Priority` methods, implemented
-by adapters wrapping each existing source. The Loader holds an ordered
-`[]RecipeProvider` slice and iterates it, replacing the current sequence of
-`if` blocks.
+A Go interface with `Get`, `List`, and `Source` methods, implemented by adapters
+wrapping each existing source. The Loader holds an ordered `[]RecipeProvider`
+slice and iterates it, replacing the current sequence of `if` blocks.
 
 This approach was selected because it delivers the PRD's unified abstraction goal
 directly. The pattern already exists in the codebase: `EmbeddedRegistry` has
 `Get(name)`, `List()`, and `Has(name)` -- it's one method signature away from a
 formal interface. The version provider system in `internal/version/` uses the same
 pluggable pattern. Formalizing it eliminates ~300 lines of duplicated chain logic
-across three Loader methods (`GetWithContext`, `loadDirect`, `getEmbeddedOnly`)
-and makes adding future source types a single implementation. Each provider
-controls its own URL construction and caching strategy, so distributed repos'
-flat `.tsuku-recipes/` layout doesn't conflict with the central registry's
-bucketed `recipes/{letter}/{name}.toml` structure.
+across four Loader methods (`GetWithContext`, `loadDirect`, `getEmbeddedOnly`,
+`loadEmbeddedDirect`) and makes adding future source types a single
+implementation. Each provider controls its own URL construction and caching
+strategy, so distributed repos' flat `.tsuku-recipes/` layout doesn't conflict
+with the central registry's bucketed `recipes/{letter}/{name}.toml` structure.
+
+Two sub-decisions follow from this choice:
+
+**In-memory cache stays in the Loader, not in providers.** The Loader's
+`recipes map[string]*Recipe` stores parsed `*Recipe` objects, not raw bytes.
+Providers return `[]byte` (TOML). Since parsing is a Loader concern and the
+cache is shared across all providers, it sits above the provider layer. A
+provider returning pre-parsed recipes would bypass validation.
+
+**`update-registry` uses type-assertion, not interface methods.** The
+`update-registry` command needs cache-level operations (TTL checking, forced
+refresh, manifest fetching) that don't belong on the provider interface. The
+Loader exposes `ProviderBySource()` and callers type-assert to the concrete
+provider when they need internals. This is an intentional escape hatch for one
+command, not a pattern to copy.
 
 *Alternative rejected: Extended Registry.* Keeps the Loader's shape but changes
 `registry *Registry` to `registries []*Registry`. This works for adding more
@@ -153,22 +167,243 @@ case handled by slash detection. No recipe discovery, no manifest support, and
 GitHub raw content URL stability is a real concern. The advocate's own summary
 acknowledged that "a provider abstraction would avoid" the tech debt.
 
+### Decision 2: Satisfies index integration
+
+**Context:** The Loader's satisfies index maps package names to recipe names
+(e.g., `"python3"` -> `"python"`). Today it uses two strategies: full TOML parse
+for embedded recipes, and a pre-computed manifest for the central registry. With
+multiple provider types, the index needs a way to collect entries from each.
+
+**Chosen: Optional `SatisfiesProvider` interface.**
+
+Providers that can cheaply return satisfies entries implement an optional
+interface:
+
+```go
+type SatisfiesProvider interface {
+    SatisfiesEntries(ctx context.Context) (map[string]string, error)
+}
+```
+
+The Loader checks `if sp, ok := provider.(SatisfiesProvider); ok` when building
+the index. Each provider uses whatever strategy is efficient for it: embedded and
+local providers do full TOML parsing, the central registry reads its manifest,
+and distributed providers can use their own manifests. Providers that don't
+implement the interface are skipped -- their recipes are only findable by exact
+name.
+
+The satisfies index also tracks which provider contributed each entry (as a
+`satisfiesEntry{recipeName, source}` struct) so that `RequireEmbedded` can
+filter the index to embedded-only entries. This is tag-based filtering: the
+Loader uses `Source()` tags to select which providers participate in resolution,
+generalizing to future flags like `RequireLocal` or `RequireOffline`.
+
+*Alternative rejected: Loader-internal indexing.* Keep satisfies index building
+as a Loader concern, with the Loader calling `List()` on some providers and
+consulting a manifest for others. This requires the Loader to know provider
+internals (which ones have manifests, which ones need full parsing), defeating
+the purpose of the interface abstraction.
+
+### Decision 3: HTTP fetching strategy
+
+**Context:** The distributed provider needs to fetch `.tsuku-recipes/*.toml` from
+GitHub repositories. GitHub offers several APIs with different trade-offs around
+rate limits, auth requirements, and directory listing capability.
+
+**Chosen: Two-tier approach (Contents API + raw content).**
+
+1. One Contents API call (`GET /repos/{owner}/{repo}/contents/.tsuku-recipes`)
+   lists available TOML files. This auto-resolves the default branch, returns
+   file metadata including `download_url` fields pointing to
+   `raw.githubusercontent.com`. Costs 1 rate-limited API request per repo.
+2. Individual files are fetched via those `download_url` values --
+   `raw.githubusercontent.com` URLs that have no rate limit and need no auth
+   for public repos.
+
+This minimizes API rate limit consumption (1 call per repo for discovery) while
+supporting multi-recipe repos where filenames aren't known in advance. Auth via
+`GITHUB_TOKEN` (already supported by the `secrets` package) raises the Contents
+API limit from 60 to 5000 requests/hour.
+
+Two sub-decisions follow from this choice:
+
+**HTTP client: `httputil.NewSecureClient` for both tiers.** The existing registry
+client (`newRegistryHTTPClient()`) lacks SSRF protection and redirect validation.
+It's safe only because it hardcodes `raw.githubusercontent.com`. The distributed
+provider accepts user-provided `owner/repo` values that influence URL
+construction, so SSRF protection, DNS rebinding guards, and HTTPS-only redirect
+enforcement are needed. Two separate client instances: an authenticated one for
+Contents API calls (carries `GITHUB_TOKEN`), and an unauthenticated one for raw
+content fetches (prevents token leakage to `download_url` targets).
+
+**Default branch: Contents API auto-resolution, cached for subsequent fetches.**
+The Contents API auto-resolves the default branch when no `ref` parameter is
+given. The branch name is cached in `_source.json` alongside the directory
+listing. For subsequent fetches (when the listing is cached but individual
+recipes need refreshing), raw content URLs use the cached branch name. If the
+Contents API is rate-limited on a cold cache, the provider tries `main` then
+`master` as a fallback.
+
+*Alternative rejected: Raw content only.* Uses
+`raw.githubusercontent.com/{owner}/{repo}/{branch}/.tsuku-recipes/{file}` for
+everything. No rate limits, but cannot list directory contents -- must know
+filenames in advance. Requires default branch discovery (try `main`, then
+`master`, wasting requests). Works for `owner/repo:recipe-name` where the
+filename is known, but fails for bare `owner/repo` where the user wants all
+recipes from a source.
+
+*Alternative rejected: Archive/tarball API.* Downloads the entire repo as a
+tarball in one request, then extracts `.tsuku-recipes/` files. Gets everything
+at once, but downloads the full repo (overkill for 1-10 TOML files) and counts
+against API rate limits. Only viable for very large multi-recipe repos, which
+aren't the expected case.
+
+### Decision 4: Registry storage location
+
+**Context:** Registered distributed sources (the list of `owner/repo` values a
+user trusts) need persistent storage. This is configuration -- "which sources
+do I trust" -- not runtime state ("what's installed").
+
+**Chosen: `config.toml` (new `[registries]` section).**
+
+The `userconfig` package already manages `$TSUKU_HOME/config.toml` (TOML format,
+atomic writes, 0600 permissions) with `Load()`, `Save()`, `Get()`, `Set()`
+patterns. Registry entries fit naturally alongside existing user preferences
+(telemetry, LLM config, secrets). The `strict_registries` flag also lives here.
+Hand-editable for users who want to manage registries outside the CLI.
+
+```toml
+strict_registries = false
+
+[registries."alice/tools"]
+url = "https://github.com/alice/tools"
+auto_registered = true
+```
+
+One trade-off: the install path currently never reads `config.toml`. Adding
+registry lookup introduces a file read in a performance-sensitive path. This is
+a single `os.ReadFile` of a small TOML file, mitigated by lazy loading with
+in-process caching (read once per session).
+
+*Alternative rejected: `state.json` (new top-level field).* Mixes configuration
+(which sources to trust) with operational state (what's installed). The
+`StateManager` uses exclusive file locks for writes -- registry edits would
+contend with install operations. Changes to trusted sources would show up in
+diffs alongside tool installation changes.
+
+*Alternative rejected: Separate `registries.json`.* Clean separation, but
+introduces yet another file and persistence layer. The `userconfig` package
+already solves atomic writes, TOML parsing, and settings management. A separate
+file duplicates that infrastructure for a single concern.
+
+### Decision 5: Source tracking field placement
+
+**Context:** Installed tools need to record which source they came from so that
+`update`, `verify`, and `outdated` can fetch recipes from the right place.
+`Plan.RecipeSource` already exists per-version inside cached plans, storing
+`"registry"` or `"local"`.
+
+**Chosen: Top-level `Source` field on `ToolState`.**
+
+A tool comes from one source. You don't install v1 from `alice/tools` and v2
+from `bob/tools` under the same name. The source determines where to check for
+updates, which is a tool-level concern. The new `Source` field is the
+authoritative source for future operations; `Plan.RecipeSource` remains as a
+historical record of what was used at install time.
+
+Lazy migration: entries with empty `Source` get `"central"` by default, inferred
+from `Plan.RecipeSource` when available. This runs in the `Load()` path alongside
+the existing `migrateToMultiVersion()` pattern. Since all currently installed
+tools came from the central registry or embedded sources, defaulting to
+`"central"` is safe.
+
+*Alternative rejected: Per-version source tracking only.* Keep using
+`Plan.RecipeSource` without a top-level field. This would require every command
+that needs the source to find the active version, look up its VersionState, check
+for a cached Plan, and extract RecipeSource. That's four levels of indirection
+for a common operation. It also means a tool with no cached plan (pre-plan
+installations) has no source at all.
+
+### Decision 6: Distributed recipe cache architecture
+
+**Context:** The central registry cache uses a letter-bucketed directory layout
+(`$TSUKU_HOME/registry/{letter}/{name}.toml`) managed by a single `CacheManager`
+with LRU eviction. Distributed recipes from different sources could collide on
+names in this flat structure.
+
+**Chosen: Separate `CacheManager` instance with its own directory tree.**
+
+Distributed recipes get `$TSUKU_HOME/cache/distributed/{owner}/{repo}/` with
+their own `CacheManager` instance and independent size limits. Each repo
+directory contains recipe TOML files, metadata sidecars, and a `_source.json`
+file with cached branch name, directory listing, and timestamp.
+
+The central registry cache is bounded by the known recipe count (~1500).
+Distributed sources are unbounded and user-driven. Separate limits prevent a
+proliferation of distributed sources from evicting official registry cache
+entries. The central registry cache location (`$TSUKU_HOME/registry/`) stays
+unchanged for backward compatibility.
+
+*Alternative rejected: Extend existing `CacheManager`.* The `CacheManager` walks
+`{CacheDir}/{letter}/` looking for `.toml` files. Its `listEntries()` and
+`Size()` methods only walk one level of letter directories. Making it handle the
+distributed directory layout (nested `{owner}/{repo}/`) requires modifying its
+traversal logic and size accounting. Since eviction semantics differ between
+bounded (central) and unbounded (distributed) caches, a shared manager would need
+conditional logic for each.
+
+### Decision 7: Name collision handling across sources
+
+**Context:** `state.Installed` is a `map[string]ToolState` keyed by tool name.
+If `alice/tools` and `bob/tools` both define a recipe named `mytool`, there's a
+namespace collision. This also applies to distributed recipes that share a name
+with a central registry recipe (though R5 prevents unqualified names from
+reaching distributed sources).
+
+**Chosen: Last-install-wins with collision detection.**
+
+`state.Installed["mytool"]` points to whichever source was installed last.
+Source is tracked, so `tsuku info mytool` shows which source it came from.
+When installing a tool whose name already exists from a different source, the
+CLI prompts: "mytool is currently installed from bob/tools. Replace with
+alice/tools? [y/N]". The `--force` flag skips the prompt.
+
+This matches how most package managers work (Homebrew taps, npm scoped packages).
+It keeps the state model simple and avoids PATH conflicts between multiple
+binaries with the same name.
+
+*Alternative rejected: Namespaced keys (e.g., `alice/tools/mytool`).* Both
+`state.Installed["alice/tools/mytool"]` and `state.Installed["bob/tools/mytool"]`
+could coexist, each installing different binaries. But this has massive blast
+radius: every command that reads state by tool name needs updating. The `bin/`
+directory can't have two `mytool` symlinks, so PATH conflicts remain unsolved.
+And the user experience degrades -- `tsuku update mytool` becomes ambiguous,
+requiring `tsuku update alice/tools/mytool` for every operation.
+
 ## Decision Outcome
 
-The distributed recipes system will be built on a RecipeProvider interface that
-all recipe sources implement. The Loader's priority chain becomes a configurable
-list of providers rather than hardcoded conditionals.
+The seven decisions above compose into a layered system:
 
-Key properties:
-- Each source type (local, embedded, central registry, distributed) implements
-  the same interface with `Get`, `List`, and `Source` methods
-- The Loader iterates providers in priority order, stopping at the first hit
-- Distributed sources are a new provider that fetches `.tsuku-recipes/*.toml`
-  from GitHub repos via HTTP
-- Per-provider caching with independent TTLs and cache directories
-- Source tracking flows naturally from which provider answered the request
-- The Loader's public API (`Get`, `GetWithContext`) stays the same -- the
-  interface is an internal refactor that existing callers don't see
+**Abstraction layer (Decisions 1-2).** A `RecipeProvider` interface with `Get`,
+`List`, and `Source` methods replaces the Loader's hardcoded priority chain. The
+satisfies index uses an optional `SatisfiesProvider` interface so each provider
+can contribute entries efficiently. The Loader iterates providers in priority
+order, stopping at the first hit. Its public API stays the same -- the interface
+is an internal refactor that existing callers don't see.
+
+**State layer (Decisions 4-5).** A top-level `Source` field on `ToolState`
+records where each tool came from. Registry configuration lives in `config.toml`,
+cleanly separating "where can I look" (config) from "where did this come from"
+(state). Lazy migration defaults existing entries to `"central"`.
+
+**Fetch and cache layer (Decisions 3, 6).** The distributed provider uses a
+two-tier HTTP strategy: Contents API for discovery, raw content for file fetches.
+Distributed recipes get their own cache tree and `CacheManager` instance, keeping
+them isolated from the central registry cache.
+
+**Namespace layer (Decision 7).** Last-install-wins with collision detection.
+Tools are keyed by name in a flat namespace, with a confirmation prompt when
+replacing a tool from a different source.
 
 ## Solution Architecture
 
