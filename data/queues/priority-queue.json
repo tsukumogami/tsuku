@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-16T15:05:16Z",
+  "updated_at": "2026-03-16T16:14:04Z",
   "entries": [
     {
       "name": "node",
@@ -21416,11 +21416,11 @@
       "name": "influxdb",
       "source": "rubygems:influxdb",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 4,
-      "next_retry_at": "2026-03-16T13:19:42.990648469Z"
+      "failure_count": 5,
+      "next_retry_at": "2026-03-17T08:14:04.58271019Z"
     },
     {
       "name": "influxdb-cli",
@@ -23566,11 +23566,11 @@
       "name": "kew",
       "source": "npm:kew",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 7,
-      "next_retry_at": "2026-03-16T14:31:31.215983728Z"
+      "failure_count": 8,
+      "next_retry_at": "2026-03-22T00:14:04.58271019Z"
     },
     {
       "name": "keychain",
@@ -25196,7 +25196,7 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 91,
@@ -50986,7 +50986,7 @@
       "name": "webdav",
       "source": "npm:webdav",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 3,
