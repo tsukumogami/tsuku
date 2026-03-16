@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-16T19:15:12Z",
+  "generated_at": "2026-03-16T19:16:36Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -68,13 +68,13 @@
         "total": 1
       },
       "npm": {
-        "failed": 20,
-        "pending": 1,
+        "failed": 21,
         "success": 54,
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
@@ -768,15 +768,6 @@
           "next_retry_at": "2026-03-18T18:14:42Z"
         },
         {
-          "id": "rubygems:htmldoc",
-          "name": "htmldoc",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-16T18:33:33Z"
-        },
-        {
           "id": "rubygems:httpx",
           "name": "httpx",
           "ecosystem": "rubygems",
@@ -876,13 +867,13 @@
           "next_retry_at": "2026-03-17T10:05:12Z"
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
+          "id": "rubygems:libnotify",
+          "name": "libnotify",
+          "ecosystem": "rubygems",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 93,
-          "next_retry_at": "1733-12-05T18:17:55Z"
+          "failure_count": 4,
+          "next_retry_at": "2026-03-17T03:15:53Z"
         },
         {
           "id": "npm:mailhog",
@@ -928,6 +919,15 @@
           "category": "install_failed",
           "failure_count": 7,
           "next_retry_at": "2026-03-18T23:19:35Z"
+        },
+        {
+          "id": "npm:protoc-gen-js",
+          "name": "protoc-gen-js",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-19T11:15:53Z"
         },
         {
           "id": "npm:q",
@@ -11086,6 +11086,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:htmldoc",
+          "name": "htmldoc",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-16T18:33:33Z"
+        },
+        {
           "id": "homebrew:htmlhint",
           "name": "htmlhint",
           "ecosystem": "homebrew",
@@ -13223,6 +13232,15 @@
           "failure_count": 1
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 93,
+          "next_retry_at": "1733-12-05T18:17:55Z"
+        },
+        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -13552,15 +13570,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "rubygems:libnotify",
-          "name": "libnotify",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-12T15:37:21Z"
         },
         {
           "id": "homebrew:libolm",
@@ -20054,15 +20063,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "npm:protoc-gen-js",
-          "name": "protoc-gen-js",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-16T16:40:25Z"
         },
         {
           "id": "homebrew:protonpass/tap/pass-cli",
