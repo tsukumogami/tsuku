@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-16T07:19:35Z",
+  "updated_at": "2026-03-16T09:00:48Z",
   "entries": [
     {
       "name": "node",
@@ -19736,7 +19736,7 @@
       "name": "hasura-cli",
       "source": "npm:hasura-cli",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 7,
@@ -20786,11 +20786,11 @@
       "name": "hydra",
       "source": "rubygems:hydra",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 5,
-      "next_retry_at": "2026-03-16T06:34:30.135572078Z"
+      "failure_count": 6,
+      "next_retry_at": "2026-03-17T17:00:48.797799169Z"
     },
     {
       "name": "hyfetch",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 85,
-      "next_retry_at": "1733-12-05T05:32:26.135872661Z"
+      "failure_count": 87,
+      "next_retry_at": "1733-12-05T09:13:31.943023361Z"
     },
     {
       "name": "libaacs",
@@ -43656,11 +43656,11 @@
       "name": "sigstore",
       "source": "npm:sigstore",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 5,
-      "next_retry_at": "2026-03-16T02:33:33.786886623Z"
+      "failure_count": 6,
+      "next_retry_at": "2026-03-17T17:00:48.797799169Z"
     },
     {
       "name": "sile",
