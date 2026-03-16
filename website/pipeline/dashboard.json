@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-16T22:36:44Z",
+  "generated_at": "2026-03-16T22:37:59Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 60,
-      "pending": 3873,
+      "failed": 58,
+      "pending": 3875,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 60,
-        "pending": 3850,
+        "failed": 58,
+        "pending": 3852,
         "success": 1326
       }
     },
@@ -68,12 +68,14 @@
         "total": 1
       },
       "npm": {
-        "failed": 21,
+        "failed": 20,
+        "pending": 1,
         "success": 54,
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
@@ -776,15 +778,6 @@
           "next_retry_at": "2026-03-19T12:43:29Z"
         },
         {
-          "id": "rubygems:httpx",
-          "name": "httpx",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-16T20:53:09Z"
-        },
-        {
           "id": "rubygems:hydra",
           "name": "hydra",
           "ecosystem": "rubygems",
@@ -875,15 +868,6 @@
           "next_retry_at": "2026-03-17T10:05:12Z"
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 95,
-          "next_retry_at": "1733-12-05T20:56:12Z"
-        },
-        {
           "id": "rubygems:libnotify",
           "name": "libnotify",
           "ecosystem": "rubygems",
@@ -891,6 +875,15 @@
           "category": "install_failed",
           "failure_count": 4,
           "next_retry_at": "2026-03-17T03:15:53Z"
+        },
+        {
+          "id": "rubygems:lsof",
+          "name": "lsof",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-17T06:37:20Z"
         },
         {
           "id": "npm:mailhog",
@@ -945,15 +938,6 @@
           "category": "install_failed",
           "failure_count": 7,
           "next_retry_at": "2026-03-19T11:15:53Z"
-        },
-        {
-          "id": "npm:q",
-          "name": "q",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-16T22:34:30Z"
         },
         {
           "id": "npm:sigstore",
@@ -11159,6 +11143,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:httpx",
+          "name": "httpx",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-16T20:53:09Z"
+        },
+        {
           "id": "homebrew:httpyac",
           "name": "httpyac",
           "ecosystem": "homebrew",
@@ -13240,6 +13233,15 @@
           "failure_count": 1
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 95,
+          "next_retry_at": "1733-12-05T20:56:12Z"
+        },
+        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -14586,15 +14588,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "rubygems:lsof",
-          "name": "lsof",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-12T15:37:21Z"
         },
         {
           "id": "homebrew:lspmux",
@@ -20678,6 +20671,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "npm:q",
+          "name": "q",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-16T22:34:30Z"
         },
         {
           "id": "homebrew:qalculate-gtk",
