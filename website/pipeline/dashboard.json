@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-16T10:10:47Z",
+  "generated_at": "2026-03-16T10:12:02Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 52,
-      "pending": 3881,
+      "failed": 53,
+      "pending": 3880,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 52,
-        "pending": 3858,
+        "failed": 53,
+        "pending": 3857,
         "success": 1326
       }
     },
@@ -68,20 +68,21 @@
         "total": 1
       },
       "npm": {
-        "failed": 19,
-        "pending": 2,
+        "failed": 20,
+        "pending": 1,
         "success": 54,
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 27,
-        "pending": 52,
+        "failed": 28,
+        "pending": 51,
         "success": 9,
         "total": 89
       }
@@ -750,6 +751,15 @@
           "next_retry_at": "2026-03-18T08:36:13Z"
         },
         {
+          "id": "npm:hasura-cli",
+          "name": "hasura-cli",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 8,
+          "next_retry_at": "2026-03-21T18:11:17Z"
+        },
+        {
           "id": "rubygems:hercules",
           "name": "hercules",
           "ecosystem": "rubygems",
@@ -795,6 +805,15 @@
           "next_retry_at": "2026-03-16T23:19:35Z"
         },
         {
+          "id": "rubygems:imgproxy",
+          "name": "imgproxy",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-17T02:11:17Z"
+        },
+        {
           "id": "rubygems:influxdb",
           "name": "influxdb",
           "ecosystem": "rubygems",
@@ -820,15 +839,6 @@
           "category": "install_failed",
           "failure_count": 7,
           "next_retry_at": "2026-03-17T10:41:46Z"
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 87,
-          "next_retry_at": "1733-12-05T09:13:31Z"
         },
         {
           "id": "npm:mailhog",
@@ -10675,15 +10685,6 @@
           "failure_count": 0
         },
         {
-          "id": "npm:hasura-cli",
-          "name": "hasura-cli",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-03-16T07:47:02Z"
-        },
-        {
           "id": "homebrew:hatch",
           "name": "hatch",
           "ecosystem": "homebrew",
@@ -11454,15 +11455,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "rubygems:imgproxy",
-          "name": "imgproxy",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-16T06:31:10Z"
         },
         {
           "id": "homebrew:imlib2",
@@ -13221,6 +13213,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 87,
+          "next_retry_at": "1733-12-05T09:13:31Z"
         },
         {
           "id": "homebrew:libaacs",
