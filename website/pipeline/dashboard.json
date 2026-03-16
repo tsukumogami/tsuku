@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-16T05:19:04Z",
+  "generated_at": "2026-03-16T05:20:24Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 50,
-      "pending": 3883,
+      "failed": 51,
+      "pending": 3882,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 50,
-        "pending": 3860,
+        "failed": 51,
+        "pending": 3859,
         "success": 1326
       }
     },
@@ -74,8 +74,7 @@
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
@@ -724,6 +723,15 @@
           "next_retry_at": "2026-03-17T23:00:20Z"
         },
         {
+          "id": "npm:got",
+          "name": "got",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 8,
+          "next_retry_at": "2026-03-21T13:19:42Z"
+        },
+        {
           "id": "rubygems:gsl",
           "name": "gsl",
           "ecosystem": "rubygems",
@@ -787,15 +795,6 @@
           "next_retry_at": "2026-03-16T06:34:30Z"
         },
         {
-          "id": "rubygems:hyperkit",
-          "name": "hyperkit",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-16T02:41:36Z"
-        },
-        {
           "id": "rubygems:imgproxy",
           "name": "imgproxy",
           "ecosystem": "rubygems",
@@ -803,6 +802,15 @@
           "category": "install_failed",
           "failure_count": 4,
           "next_retry_at": "2026-03-16T06:31:10Z"
+        },
+        {
+          "id": "rubygems:influxdb",
+          "name": "influxdb",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-16T13:19:42Z"
         },
         {
           "id": "npm:kew",
@@ -821,6 +829,15 @@
           "category": "install_failed",
           "failure_count": 7,
           "next_retry_at": "2026-03-17T10:41:46Z"
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 85,
+          "next_retry_at": "1733-12-05T05:32:26Z"
         },
         {
           "id": "npm:mailhog",
@@ -875,15 +892,6 @@
           "category": "install_failed",
           "failure_count": 6,
           "next_retry_at": "2026-03-16T22:34:30Z"
-        },
-        {
-          "id": "npm:sigstore",
-          "name": "sigstore",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-16T02:33:33Z"
         },
         {
           "id": "pypi:tctl",
@@ -9832,15 +9840,6 @@
           "failure_count": 0
         },
         {
-          "id": "npm:got",
-          "name": "got",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-03-16T01:42:40Z"
-        },
-        {
           "id": "homebrew:gpa",
           "name": "gpa",
           "ecosystem": "homebrew",
@@ -11171,6 +11170,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:hyperkit",
+          "name": "hyperkit",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-16T02:41:36Z"
+        },
+        {
           "id": "homebrew:hypre",
           "name": "hypre",
           "ecosystem": "homebrew",
@@ -11465,15 +11473,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "rubygems:influxdb",
-          "name": "influxdb",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-12T14:42:21Z"
         },
         {
           "id": "homebrew:influxdb-cli",
@@ -13204,15 +13203,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 10,
-          "next_retry_at": "2026-03-16T00:56:07Z"
         },
         {
           "id": "homebrew:libaacs",
@@ -23289,6 +23279,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:sigstore",
+          "name": "sigstore",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-16T02:33:33Z"
         },
         {
           "id": "homebrew:sile",
