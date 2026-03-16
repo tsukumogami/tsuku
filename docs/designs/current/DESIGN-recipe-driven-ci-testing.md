@@ -196,15 +196,15 @@ If `--family` is not provided, use the current system as the target:
 
 This matches current `tsuku info` behavior where dependencies shown are relevant to YOUR system.
 
-### Decision 3: Code Reuse with Sandbox
+### ~~Decision 3: Code Reuse with Sandbox~~
 
-> **Note:** This decision is superseded by [DESIGN-consolidate-system-deps.md](DESIGN-consolidate-system-deps.md), which addresses the divergence between executor and sandbox implementations and extends `--deps-only --system` to include repository configurations.
+> **Superseded** by [DESIGN-consolidate-system-deps.md](DESIGN-consolidate-system-deps.md), which addresses the divergence between executor and sandbox implementations and extends `--deps-only --system` to include repository configurations.
 
-Both `tsuku info` (with new flags) and sandbox mode extract system packages from recipes. How should they share code?
+~~Both `tsuku info` (with new flags) and sandbox mode extract system packages from recipes. How should they share code?~~
 
-#### Chosen: Shared Extraction Library in internal/executor
+#### ~~Chosen: Shared Extraction Library in internal/executor~~
 
-Create `internal/executor/system_deps.go` with extraction functions that both consumers use.
+~~Create `internal/executor/system_deps.go` with extraction functions that both consumers use.~~
 
 ```go
 // Core extraction from steps (used by both)
@@ -220,11 +220,11 @@ func ExtractSystemPackagesList(r *recipe.Recipe, target platform.Target) []strin
 func IsSystemAction(step recipe.Step) bool
 ```
 
-**Benefits:**
-- Single source of truth for extraction logic
-- ~66 LOC reduction from eliminating duplication
-- Leverages existing `SystemAction` interface for type-safe detection
-- Places code alongside related `FilterStepsByTarget()` function
+~~**Benefits:**~~
+- ~~Single source of truth for extraction logic~~
+- ~~\~66 LOC reduction from eliminating duplication~~
+- ~~Leverages existing `SystemAction` interface for type-safe detection~~
+- ~~Places code alongside related `FilterStepsByTarget()` function~~
 
 ### Decision 4: Output Format
 
