@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-16T10:11:17Z",
+  "updated_at": "2026-03-16T11:51:24Z",
   "entries": [
     {
       "name": "node",
@@ -21756,11 +21756,11 @@
       "name": "ipfs",
       "source": "rubygems:ipfs",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 4,
-      "next_retry_at": "2026-03-12T22:10:08.72021054Z"
+      "failure_count": 5,
+      "next_retry_at": "2026-03-17T03:51:23.987781874Z"
     },
     {
       "name": "ipinfo-cli",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 87,
-      "next_retry_at": "1733-12-05T09:13:31.943023361Z"
+      "failure_count": 89,
+      "next_retry_at": "1733-12-05T12:04:07.133006066Z"
     },
     {
       "name": "libaacs",
@@ -50766,7 +50766,7 @@
       "name": "wartremover",
       "source": "npm:wartremover",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 4,
@@ -50986,11 +50986,11 @@
       "name": "webdav",
       "source": "npm:webdav",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-03-15T20:41:36.974883919Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-03-16T15:51:23.987781874Z"
     },
     {
       "name": "webhook",
