@@ -256,6 +256,20 @@ func (l *Loader) resolveFromChain(ctx context.Context, providers []RecipeProvide
 Three Loader constructors (`New`, `NewWithLocalRecipes`, `NewWithoutEmbedded`)
 become one: `NewLoader(providers ...RecipeProvider)`.
 
+**Interface disambiguation.** Two existing interfaces named `RecipeLoader` exist
+in the codebase (`internal/actions/resolver.go:25` and `internal/verify/deps.go:19`).
+These are consumer-side interfaces that the `*Loader` already satisfies. They are
+unrelated to `RecipeProvider`, which is a supply-side interface that sources
+implement. The Loader bridges the two: it accepts `RecipeProvider` implementations
+and exposes the `RecipeLoader` consumer API. No changes to consumer interfaces.
+
+**In-memory cache key scheme.** The `recipes` map uses the recipe name as the key.
+For distributed sources, qualified names like `owner/repo:foo` could collide with
+a central registry recipe named `foo`. The cache key for distributed recipes must
+include the source qualifier: `"owner/repo:foo"` is a distinct key from `"foo"`.
+The Loader strips the qualifier when passing to the distributed provider's `Get`
+method but preserves it for caching.
+
 **Source tracking** (`internal/install/state.go`)
 
 ```go
@@ -303,9 +317,20 @@ HTTP strategy:
 Auth: Uses `GITHUB_TOKEN` via the existing `secrets` package for Contents API
 calls (raises limit from 60 to 5000 req/hr). Raw content fetches don't need auth.
 
-HTTP client: `httputil.NewSecureClient` (SSRF protection, DNS rebinding guards,
-redirect validation) since user-provided `owner/repo` values influence URL
-construction.
+HTTP clients: Two separate clients to prevent token leakage:
+- **Authenticated client** for Contents API calls (`api.github.com` only). Uses
+  `GITHUB_TOKEN` in the `Authorization` header.
+- **Unauthenticated client** for raw content fetches. No auth headers. Used for
+  `download_url` values after hostname validation (see Security Considerations).
+
+Both clients use `httputil.NewSecureClient` (SSRF protection, DNS rebinding
+guards, redirect validation) since user-provided `owner/repo` values influence
+URL construction.
+
+Input validation: The `owner/repo` parsing should reuse the existing
+`ValidateGitHubURL()` function in `internal/discover/sanitize.go`, which
+already handles owner/repo regex validation, path traversal detection, and
+credential rejection. Don't build a parallel parser.
 
 ### Key Interfaces
 
@@ -323,7 +348,8 @@ func (l *Loader) GetFromSource(ctx context.Context, name string, source string) 
 This bypasses the priority chain and loads directly from the provider matching
 the given source. When `source` is `"central"`, it uses the central registry
 provider. When `source` is `"owner/repo"`, it uses the distributed provider
-for that repo.
+for that repo. `GetFromSource` does not consult or populate the in-memory
+`recipes` cache -- it always fetches fresh data from the source.
 
 **Name parsing**: The install command detects distributed sources by the presence
 of a `/` in the tool name. The parsing rules:
@@ -345,7 +371,10 @@ of a `/` in the tool name. The parsing rules:
 2. Check `config.toml` for registered source `owner/repo`
    - If `strict_registries` is on and source is unregistered: error with
      `tsuku registry add` suggestion
-   - If source is unregistered and strict mode is off: auto-register
+   - If source is unregistered and strict mode is off: show confirmation prompt
+     ("Installing from owner/repo for the first time. Distributed recipes can
+     execute arbitrary commands with your user permissions. Continue? [y/N]").
+     Pass `-y` to skip. On confirmation, auto-register.
 3. Distributed provider fetches `.tsuku-recipes/` via Contents API
    - Single TOML file: use it
    - Multiple TOML files: error listing available recipes (unless `:recipe-name` given)
@@ -395,7 +424,9 @@ Deliverables:
 - `internal/recipe/provider_local.go` -- LocalProvider
 - `internal/recipe/provider_embedded.go` -- EmbeddedProvider
 - `internal/registry/provider_central.go` -- CentralRegistryProvider
-- `internal/recipe/loader.go` -- refactored to use providers
+- `internal/recipe/loader.go` -- refactored to use providers, including
+  `warnIfShadows` (currently hardcoded to `l.registry.GetCached()`) refactored
+  to detect shadowing across all providers
 - Updated tests
 
 ### Phase 2: Source tracking in state
@@ -500,11 +531,12 @@ Deliverables:
 
 ## Security Considerations
 
-**Trust model.** Distributed recipes execute with the same permissions as central
-registry recipes but without the central registry's PR-based review process. Users
-who run `tsuku install owner/repo` are trusting that repository's maintainers with
-arbitrary file system access under their user account. This is the same trust model
-as `go install`, `cargo install`, or `pip install` from arbitrary sources.
+**Trust model.** Distributed recipes can execute arbitrary shell commands via the
+`run_command` action (which passes recipe-defined strings to `sh -c`) and have
+access to all other actions (cargo_build, pip_install, configure_make, etc.)
+with the invoking user's full permissions. This is the same trust model as
+`go install`, `cargo install`, or `pip install` from arbitrary sources, but
+unlike the central registry where recipes are reviewed via PR.
 
 **Recipe integrity.** v1 does not verify recipe content integrity. Recipes are
 fetched from HEAD over HTTPS, which protects against network-level tampering but
@@ -517,13 +549,20 @@ a fast follow.
 
 Implementer requirements:
 - Validate that `download_url` values returned by the GitHub Contents API use
-  HTTPS before following them. Don't trust the URL scheme blindly.
+  HTTPS **and** come from an allowed hostname (`raw.githubusercontent.com`,
+  `objects.githubusercontent.com`). A compromised or spoofed API response could
+  point to an arbitrary HTTPS host.
+- Use separate HTTP clients for authenticated (Contents API) and unauthenticated
+  (raw content) requests. If a single client carries the `Authorization` header
+  at the transport level, the token leaks to any `download_url` target.
 - Record `sha256(recipe_toml_bytes)` in `state.json` alongside the `Source`
-  field. This doesn't block mutation in v1 but creates an audit trail for a
-  future `--accept-recipe-changes` flow.
-- Print a one-time trust warning on first install from a new distributed source
-  (e.g., "Installing from owner/repo for the first time. This will execute
-  recipe-defined actions with your user permissions.").
+  field. This doesn't block mutation in v1 but creates an audit trail. The
+  intended future behavior: on update, if the hash changed, show a diff summary
+  and require `--accept-recipe-changes` to proceed.
+- Show an interactive confirmation prompt on first install from a new distributed
+  source (e.g., "Installing from owner/repo for the first time. Distributed
+  recipes can execute arbitrary commands with your user permissions. Continue?
+  [y/N]"). Accept `-y` flag to skip for scripted use.
 
 **Strict mode.** Teams and CI environments should set `strict_registries = true`
 to prevent auto-registration. Document this in the `tsuku registry` help text
