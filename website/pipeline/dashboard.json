@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-16T02:14:12Z",
+  "generated_at": "2026-03-16T02:15:25Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 51,
-      "pending": 3882,
+      "failed": 50,
+      "pending": 3883,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 51,
-        "pending": 3859,
+        "failed": 50,
+        "pending": 3860,
         "success": 1326
       }
     },
@@ -68,20 +68,21 @@
         "total": 1
       },
       "npm": {
-        "failed": 19,
-        "pending": 2,
+        "failed": 18,
+        "pending": 3,
         "success": 54,
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 26,
-        "pending": 53,
+        "failed": 27,
+        "pending": 52,
         "success": 9,
         "total": 89
       }
@@ -723,15 +724,6 @@
           "next_retry_at": "2026-03-17T23:00:20Z"
         },
         {
-          "id": "npm:got",
-          "name": "got",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-03-16T01:42:40Z"
-        },
-        {
           "id": "rubygems:gsl",
           "name": "gsl",
           "ecosystem": "rubygems",
@@ -757,6 +749,15 @@
           "category": "install_failed",
           "failure_count": 7,
           "next_retry_at": "2026-03-16T07:47:02Z"
+        },
+        {
+          "id": "rubygems:hercules",
+          "name": "hercules",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-18T18:14:42Z"
         },
         {
           "id": "rubygems:htmldoc",
@@ -822,15 +823,6 @@
           "next_retry_at": "2026-03-17T10:41:46Z"
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 10,
-          "next_retry_at": "2026-03-16T00:56:07Z"
-        },
-        {
           "id": "npm:mailhog",
           "name": "mailhog",
           "ecosystem": "npm",
@@ -865,15 +857,6 @@
           "category": "install_failed",
           "failure_count": 8,
           "next_retry_at": "2026-03-18T15:49:34Z"
-        },
-        {
-          "id": "npm:pocketbase",
-          "name": "pocketbase",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-15T22:33:41Z"
         },
         {
           "id": "npm:protoc-gen-js",
@@ -919,6 +902,15 @@
           "category": "install_failed",
           "failure_count": 8,
           "next_retry_at": "2026-03-19T06:31:31Z"
+        },
+        {
+          "id": "npm:wartremover",
+          "name": "wartremover",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-16T10:14:42Z"
         }
       ],
       "pending": [
@@ -9840,6 +9832,15 @@
           "failure_count": 0
         },
         {
+          "id": "npm:got",
+          "name": "got",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-16T01:42:40Z"
+        },
+        {
           "id": "homebrew:gpa",
           "name": "gpa",
           "ecosystem": "homebrew",
@@ -10783,15 +10784,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "rubygems:hercules",
-          "name": "hercules",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-15T20:51:27Z"
         },
         {
           "id": "homebrew:heremaps/olp-cli/olp",
@@ -13212,6 +13204,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 10,
+          "next_retry_at": "2026-03-16T00:56:07Z"
         },
         {
           "id": "homebrew:libaacs",
@@ -19562,6 +19563,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "npm:pocketbase",
+          "name": "pocketbase",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-15T22:33:41Z"
         },
         {
           "id": "homebrew:poco",
@@ -27068,15 +27078,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:wartremover",
-          "name": "wartremover",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-15T20:36:13Z"
         },
         {
           "id": "crates.io:wasm-bindgen",
