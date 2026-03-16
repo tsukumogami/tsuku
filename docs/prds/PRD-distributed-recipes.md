@@ -1,5 +1,5 @@
 ---
-status: Draft
+status: Accepted
 problem: |
   Every tsuku recipe lives in the central registry. Tool authors who want their
   software installable via tsuku must contribute a recipe to a third-party repo,
@@ -17,7 +17,7 @@ source_issue: 2073
 
 ## Status
 
-Draft
+Accepted
 
 ## Problem Statement
 
