@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-16T19:15:53Z",
+  "updated_at": "2026-03-16T20:43:29Z",
   "entries": [
     {
       "name": "node",
@@ -20486,11 +20486,11 @@
       "name": "htmldoc",
       "source": "rubygems:htmldoc",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 6,
-      "next_retry_at": "2026-03-16T18:33:33.786886623Z"
+      "failure_count": 7,
+      "next_retry_at": "2026-03-19T12:43:29.772151528Z"
     },
     {
       "name": "htmlhint",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 93,
-      "next_retry_at": "1733-12-05T18:17:55.235493218Z"
+      "failure_count": 95,
+      "next_retry_at": "1733-12-05T20:56:12.91737572Z"
     },
     {
       "name": "libaacs",
