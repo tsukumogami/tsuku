@@ -80,10 +80,9 @@ sources.
 distributed source. The slash distinguishes distributed from central registry
 recipes. Extended forms:
 - `owner/repo:recipe-name` selects a specific recipe when the repo has multiple.
-- `owner/repo@ref` fetches the recipe at a specific git ref (tag or branch).
-  The `@ref` controls which version of the *recipe definition* to use, not
-  which version of the tool. Tool version is resolved by the recipe's
-  `[version]` section.
+- `owner/repo@version` pins the tool version, identical to `tsuku install
+  tool@version` for central recipes. The `@version` always refers to the tool
+  version, never the recipe's git ref.
 
 **R2. Auto-registration.** When a user installs from a distributed source for
 the first time, tsuku registers that source as a known registry under the name
@@ -139,10 +138,10 @@ from all registered distributed sources (in addition to the central registry).
 `tsuku update <tool>` checks the tool's recorded source for new versions.
 
 **R11. Version resolution.** Distributed recipes use the same version provider
-system as central recipes. For v1, `tsuku update` always fetches the recipe
-from the HEAD of the repo's default branch, then resolves the tool version via
-the recipe's `[version]` section. When a user specifies `@ref`, that ref is
-used instead of HEAD for the initial install only.
+system as central recipes. The recipe is always fetched from HEAD of the repo's
+default branch. `@version` in the install command pins the tool version, not the
+recipe. `tsuku update` re-fetches the recipe from HEAD and resolves the latest
+tool version via the recipe's `[version]` section.
 
 **R12. Recipe listing.** `tsuku recipes` shows available recipes from all
 registered sources, grouped by source. Central registry recipes appear first.
@@ -196,8 +195,8 @@ configuration.
 - [ ] `tsuku install owner/repo` fetches `.tsuku-recipes/` from the repo,
   installs the tool, creates a binary in `$TSUKU_HOME/bin/`, and records
   `source: "owner/repo"` in state.json
-- [ ] `tsuku install owner/repo:recipe@v1.0` installs a specific recipe at a
-  specific git ref
+- [ ] `tsuku install owner/repo:recipe@v1.0` installs a specific recipe at
+  tool version v1.0
 - [ ] `tsuku install ripgrep` continues to resolve from the central registry
   with identical behavior to today
 - [ ] `tsuku registry list` shows auto-registered sources after a distributed
@@ -263,8 +262,10 @@ configuration.
 - **Enterprise SSO/SAML.** Organization-level auth for private registries.
 - **Cross-registry search.** `tsuku search` continues to search the central
   registry only.
-- **Recipe version pinning.** Tracking recipe git ref independently from tool
-  version is deferred. v1 always fetches the latest recipe.
+- **Recipe version pinning.** Pinning the recipe to a specific git ref
+  (e.g., `owner/repo[:ref]@version`) is deferred. v1 always fetches the recipe
+  from HEAD. A future version may allow ref pinning with a distinct syntax to
+  avoid conflating recipe ref with tool version.
 - **Recipe generation from distributed sources.** The `--from` builder path
   for auto-generating recipes is unrelated.
 - **Non-GitHub host configuration.** Configuring a default host other than
