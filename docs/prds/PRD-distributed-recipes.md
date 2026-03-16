@@ -78,103 +78,174 @@ sources.
 
 **R1. Install syntax.** `tsuku install owner/repo` installs a tool from a
 distributed source. The slash distinguishes distributed from central registry
-recipes. Extended forms: `owner/repo:recipe-name` (when repo has multiple
-recipes) and `owner/repo@ref` (pin to a git tag or branch).
+recipes. Extended forms:
+- `owner/repo:recipe-name` selects a specific recipe when the repo has multiple.
+- `owner/repo@ref` fetches the recipe at a specific git ref (tag or branch).
+  The `@ref` controls which version of the *recipe definition* to use, not
+  which version of the tool. Tool version is resolved by the recipe's
+  `[version]` section.
 
 **R2. Auto-registration.** When a user installs from a distributed source for
-the first time, tsuku automatically registers that source as a known registry.
-Subsequent commands (update, outdated) use the registered source without the
-user repeating the full path.
+the first time, tsuku registers that source as a known registry under the name
+`owner/repo`. Subsequent commands (update, outdated) use the registered source
+without the user repeating the full path. Auto-registering an already-registered
+source is a no-op.
 
 **R3. Registry convention.** A repository becomes a tsuku registry by containing
-a `.tsuku-recipes/` directory with one or more TOML recipe files. No manifest
-file is required for single-recipe repos. An optional manifest enables richer
-metadata for multi-recipe registries.
+a `.tsuku-recipes/` directory with one or more TOML recipe files. When no
+`:recipe-name` is specified in the install command:
+- If exactly one `.toml` file exists in `.tsuku-recipes/`, use it.
+- If multiple `.toml` files exist, fail with an error listing available recipes.
+An optional manifest (format defined by the downstream design doc) enables
+richer metadata for multi-recipe registries.
 
 **R4. Recipe format compatibility.** Distributed recipes use the same TOML
 format as central registry recipes. No new fields, no format changes. A recipe
 that works in the central registry works identically as a distributed recipe.
 
 **R5. Central registry priority.** Unqualified names (`tsuku install ripgrep`)
-always resolve from the central registry first, then embedded recipes. Distributed
-sources are only consulted when the user provides a qualified name (`owner/repo`).
-This prevents name confusion attacks.
+always resolve from the central registry first, then embedded recipes.
+Distributed sources are never consulted for unqualified names, even if a
+registered distributed source contains a recipe with the same name. This
+prevents name confusion attacks.
 
-**R6. Source tracking.** Each installed tool records its source (central, embedded,
-local path, or `owner/repo`) in state.json. This enables correct routing for
-update, outdated, and remove operations.
+**R6. Source tracking.** Each installed tool records its source in state.json.
+Source values: `"central"` for the central registry, `"embedded"` for built-in
+recipes, a file path for local recipes, or `"owner/repo"` for distributed
+sources. Existing state.json entries without a source field default to
+`"central"` on first access (lazy migration, no user action required).
 
-**R7. Source attribution.** All user-facing commands that display tool information
-(`list`, `info`, `outdated`) show the source. Users can always tell where a tool
-was installed from.
+**R7. Source attribution.** All user-facing commands that display tool
+information (`list`, `info`, `outdated`, `verify`) include the source in their
+output.
 
-**R8. Registry management commands.** `tsuku registry list` shows all known
-registries. `tsuku registry add <name> <source>` explicitly registers a source.
-`tsuku registry remove <name>` unregisters a source. Removing a registry doesn't
-uninstall tools that came from it.
+**R8. Registry management commands.**
+- `tsuku registry list` shows all known registries (auto-registered and
+  explicitly added).
+- `tsuku registry add <name> <source>` registers a source explicitly. `<name>`
+  is a user-chosen alias. `<source>` accepts `owner/repo` shorthand (GitHub) or
+  a full HTTPS URL.
+- `tsuku registry remove <name>` unregisters a source. Removing a registry
+  doesn't uninstall tools that came from it. Removing a non-existent registry
+  is a no-op.
 
-**R9. Strict mode.** A system configuration option (`strict_registries`, off by
+**R9. Strict mode.** A configuration option (`strict_registries`, off by
 default) blocks auto-registration. When enabled, `tsuku install owner/repo`
-fails with a message to run `tsuku registry add` first. This enables enterprise
-lockdown.
+fails with an error message that includes the exact `tsuku registry add`
+command to run. The config location is determined by the design doc.
 
 **R10. Update across registries.** `tsuku update-registry` refreshes metadata
-from all registered sources, not just the central registry. `tsuku update <tool>`
-checks the tool's recorded source for new versions.
+from all registered distributed sources (in addition to the central registry).
+`tsuku update <tool>` checks the tool's recorded source for new versions.
 
 **R11. Version resolution.** Distributed recipes use the same version provider
-system as central recipes. The `@ref` in the install command controls which
-version of the recipe definition to fetch (git tag/branch). Tool version
-resolution is handled by the recipe's `[version]` section as usual. For v1,
-`tsuku update` always fetches the latest recipe (HEAD or latest tag) and then
-resolves the tool version. Recipe-level pinning and two-dimension version
-tracking are deferred.
+system as central recipes. For v1, `tsuku update` always fetches the recipe
+from the HEAD of the repo's default branch, then resolves the tool version via
+the recipe's `[version]` section. When a user specifies `@ref`, that ref is
+used instead of HEAD for the initial install only.
 
-**R16. Recipe listing.** `tsuku recipes` shows available recipes from all
+**R12. Recipe listing.** `tsuku recipes` shows available recipes from all
 registered sources, grouped by source. Central registry recipes appear first.
-Distributed sources appear after, labeled with their source name.
+Distributed sources appear after, labeled by registry name.
 
-**R12. Graceful degradation.** When a distributed source is unreachable, commands
-that check it (update, outdated) show a warning but don't fail entirely. Already-
-installed tools continue to work regardless of source availability.
+**R13. Remove behavior.** `tsuku remove <tool>` works the same regardless of
+source. The tool is uninstalled and its state.json entry removed. The registry
+that provided the recipe remains registered (removing tools doesn't unregister
+sources). The tool's installed name is the recipe name, not the `owner/repo`
+qualifier.
+
+**R14. Verify behavior.** `tsuku verify <tool>` uses the cached recipe to
+verify the installation. If no cached recipe exists and the source is
+unreachable, verification reports the source as unavailable rather than failing
+silently.
+
+**R15. Graceful degradation.** Behavior when a distributed source is unreachable:
+- Batch commands (`tsuku outdated`, `tsuku update-registry`) emit a warning per
+  unreachable source and complete for reachable sources.
+- Targeted commands (`tsuku update <tool>`) fail with a clear error if that
+  tool's source is unreachable.
+- `tsuku install owner/repo` fails with a connection error.
+- Already-installed tools work regardless of source availability.
+
+**R16. Error handling.** Clear, actionable error messages for:
+- `owner/repo` where the repo doesn't exist or is inaccessible.
+- Repo exists but has no `.tsuku-recipes/` directory.
+- `.tsuku-recipes/` contains no valid TOML files or malformed recipes.
+- Multiple recipes in `.tsuku-recipes/` without a `:recipe-name` qualifier.
 
 ### Non-Functional Requirements
 
-**R13. No new dependencies.** Fetching distributed recipes must not add new
-binary dependencies. Use git operations or HTTP fetching with existing stdlib.
+**R17. No new binary dependencies.** Fetching distributed recipes must use HTTP
+(GitHub archive or raw content API) with Go's standard library. The `git`
+binary must not be required on the user's system. The design doc determines
+the specific fetching mechanism.
 
-**R14. Backward compatibility.** Existing `tsuku install <tool>` behavior is
-unchanged. Existing state.json files are migrated transparently (existing
-installations default to central registry source).
+**R18. Backward compatibility.** Existing `tsuku install <tool>` behavior,
+CLI output format, and exit codes are unchanged. Existing state.json files
+are migrated lazily (source field defaults to `"central"` on first access).
 
-**R15. Minimal author friction.** A tool author should go from "no tsuku
-support" to "installable via tsuku" by creating one directory and one file.
-No accounts, no registration, no manifest.
+**R19. Minimal author friction.** A tool author MUST be able to make their
+tool installable via tsuku by creating one directory (`.tsuku-recipes/`) and
+one TOML file. No accounts, no registration, no manifest, no additional
+configuration.
 
 ## Acceptance Criteria
 
-- [ ] `tsuku install owner/repo` fetches `.tsuku-recipes/` from the repo and
-  installs the tool
+### Happy path
+
+- [ ] `tsuku install owner/repo` fetches `.tsuku-recipes/` from the repo,
+  installs the tool, creates a binary in `$TSUKU_HOME/bin/`, and records
+  `source: "owner/repo"` in state.json
 - [ ] `tsuku install owner/repo:recipe@v1.0` installs a specific recipe at a
   specific git ref
 - [ ] `tsuku install ripgrep` continues to resolve from the central registry
-  (no behavior change)
+  with identical behavior to today
 - [ ] `tsuku registry list` shows auto-registered sources after a distributed
   install
-- [ ] `tsuku registry add myname https://github.com/owner/repo` registers a
-  source explicitly
-- [ ] `tsuku registry remove myname` unregisters without uninstalling tools
+- [ ] `tsuku registry add myname owner/repo` registers a source explicitly
+- [ ] `tsuku registry remove myname` unregisters without uninstalling tools;
+  removing a non-existent registry produces no error
 - [ ] `tsuku list` shows the source for each installed tool
-- [ ] `tsuku update <tool>` checks the correct source based on where the tool
-  was originally installed
-- [ ] With `strict_registries = true`, `tsuku install owner/repo` fails and
-  tells the user to register first
-- [ ] Existing state.json files migrate transparently (no user action needed)
-- [ ] koto's recipe works when moved from central registry to
-  `tsukumogami/koto/.tsuku-recipes/koto.toml`
-- [ ] A distributed source being unreachable produces a warning, not a failure,
-  for commands like `tsuku outdated`
-- [ ] `tsuku recipes` shows recipes from all registered sources, grouped by source
+- [ ] `tsuku info <distributed-tool>` shows source, cached recipe ref, and
+  recipe metadata
+- [ ] `tsuku update <tool>` checks the correct source based on the recorded
+  source in state.json
+- [ ] `tsuku remove <tool>` uninstalls a distributed tool identically to a
+  central tool; the source registry remains registered
+- [ ] `tsuku verify <tool>` verifies a distributed tool using the cached recipe
+- [ ] `tsuku recipes` shows recipes from all registered sources, grouped by
+  source name
+- [ ] `tsuku update-registry` refreshes metadata from all registered sources
+
+### Strict mode
+
+- [ ] With `strict_registries` enabled, `tsuku install owner/repo` fails with
+  an error message containing the exact `tsuku registry add` command to run
+- [ ] With `strict_registries` enabled, `tsuku install ripgrep` (central)
+  works unchanged
+
+### Error handling
+
+- [ ] `tsuku install owner/nonexistent` fails with a clear "repository not
+  found" error
+- [ ] `tsuku install owner/repo-without-recipes` fails with "no .tsuku-recipes/
+  directory found"
+- [ ] `tsuku install owner/multi-recipe-repo` (no `:recipe-name`) fails with
+  an error listing available recipes
+- [ ] When a registered distributed source is unreachable, `tsuku outdated`
+  emits a warning for that source and completes for other sources
+- [ ] When a tool's source is unreachable, `tsuku update <tool>` fails with
+  a connection error naming the source
+
+### Migration and compatibility
+
+- [ ] Existing state.json files without source fields work without errors;
+  tools default to `source: "central"` on first access
+- [ ] A recipe moved from the central registry to a distributed source
+  (`owner/repo/.tsuku-recipes/tool.toml`) installs and updates correctly
+- [ ] `go.mod` contains no new external module dependencies after implementation
+- [ ] A new distributed recipe requires exactly one directory and one TOML file;
+  no other files, accounts, or configuration needed
 
 ## Out of Scope
 
@@ -183,46 +254,46 @@ No accounts, no registration, no manifest.
   (`owner/repo`) reach distributed sources.
 - **Recipe contribution workflow (#1299).** The `tsuku contribute` and
   `tsuku export/import` commands are a separate feature.
-- **Cryptographic signing.** No Sigstore, cosign, or signature verification in
-  v1. Content-hash pinning is sufficient for now.
+- **Cryptographic signing.** No Sigstore, cosign, or signature verification
+  in v1.
+- **Content-hash pinning.** Recording the SHA of recipe content at install time
+  and detecting changes on update is deferred to the design doc.
 - **Private repository authentication.** Fetching from private GitHub repos
   (token management, credential storage) is deferred.
 - **Enterprise SSO/SAML.** Organization-level auth for private registries.
 - **Cross-registry search.** `tsuku search` continues to search the central
-  registry only. Searching across all registered sources is a future enhancement.
+  registry only.
 - **Recipe version pinning.** Tracking recipe git ref independently from tool
-  version, and detecting recipe-level updates, is deferred. v1 always uses the
-  latest recipe.
+  version is deferred. v1 always fetches the latest recipe.
 - **Recipe generation from distributed sources.** The `--from` builder path
   for auto-generating recipes is unrelated.
+- **Non-GitHub host configuration.** Configuring a default host other than
+  GitHub is deferred. Non-GitHub sources can use full HTTPS URLs via
+  `tsuku registry add`.
 
 ## Open Questions
 
-1. **Directory name:** Should the convention be `.tsuku-recipes/` or
-   `.tsuku/recipes/`? The former is more discoverable at the repo root. The
-   latter groups under a tsuku-specific directory. Leaning toward `.tsuku-recipes/`
-   for visibility.
-
-2. **Registry state persistence:** Should the list of known registries live in
-   state.json alongside tool state, or in a separate config file
-   (`$TSUKU_HOME/config.toml`)? A separate file is more inspectable and
-   version-controllable. But state.json already exists and avoids a new file.
-
-3. **Manifest schema for multi-recipe repos:** What does the optional manifest
+1. **Manifest schema for multi-recipe repos:** What does the optional manifest
    look like? JSON or TOML? What fields beyond a recipe list? This is a design
-   question that the downstream design doc should address.
+   question for the downstream design doc.
 
 ## Known Limitations
 
 - **No offline distributed install.** Distributed recipes require network access
-  to fetch from the remote repo. Central registry recipes can work from cache.
-  Once a distributed recipe is cached, subsequent operations work offline.
+  to fetch from the remote repo. Once fetched and cached, subsequent operations
+  work offline.
 
-- **Git hosting assumption.** The `owner/repo` syntax assumes GitHub (or a
-  configured default host). Non-GitHub sources need a full URL or host override
-  in config. This is acceptable for v1 given GitHub's dominance in the target
-  user base.
+- **GitHub-first.** The `owner/repo` shorthand assumes GitHub. Non-GitHub
+  sources require a full HTTPS URL via `tsuku registry add`. This is acceptable
+  for v1 given GitHub's dominance in the target user base.
 
-- **No recipe pinning beyond git refs.** Content-hash pinning (recording the
-  SHA of the recipe TOML at install time and detecting changes on update) is
-  mentioned in the exploration research but deferred to the design doc.
+- **No recipe change detection.** Without content-hash pinning (deferred),
+  tsuku can't detect if a recipe was modified at the same git ref. A malicious
+  registry could silently change a recipe's content. This is mitigated by the
+  explicit trust decision (auto-register or strict mode) and will be addressed
+  by content-hash pinning in a future version.
+
+- **`tsuku search` won't find distributed recipes.** Users must know the
+  `owner/repo` to install from a distributed source. `tsuku recipes` (after
+  registration) provides some discoverability, but there's no cross-registry
+  search.
