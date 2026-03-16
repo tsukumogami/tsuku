@@ -61,15 +61,22 @@ instances of the same abstraction?
 
 ### User Focus
 
-**Registry UX decision: implicit like Homebrew.** The user wants `tsuku install
-owner/repo` to just work without a separate registration step. Trust on first
-use, lowest friction. Trust model can tighten later.
+**Registry UX decision: auto-register by default, strict mode as config.**
 
-This means:
-- No `tsuku registry add` required (but could exist as optional for aliasing)
-- First install from a source implicitly registers/caches it
-- The install syntax `owner/repo` or `owner/repo:recipe@version` is the primary UX
-- Trust is established by the act of installing, not a separate gate
+The trust model has two modes:
+
+- **Default (open):** `tsuku install owner/repo` auto-registers the source as a
+  known registry, then installs. Zero friction. Trust on first use.
+- **Strict mode:** A system config option (off by default) blocks auto-registration.
+  Unknown sources are rejected with a message to run `tsuku registry add` first.
+
+`tsuku registry add <name> <source>` always exists for:
+- Pre-registering sources before first install
+- Aliasing (short names for long source URLs)
+- Required step in strict mode
+
+This mirrors Claude Code's `strictKnownMarketplaces` pattern: convenient by
+default, lockdown-able for enterprise/security-conscious users.
 
 ## Accumulated Understanding
 
@@ -87,7 +94,9 @@ TOML) and a registry envelope (optional JSON for remote registries). A third-par
 repo could ship a single `.tsuku-recipes/tool.toml` with no manifest overhead, or
 a full manifest for multi-recipe registries.
 
-Trust starts with implicit TOFU (trust on first use) and content-hash pinning for
+Trust model has two modes: open (default) auto-registers unknown sources on first
+install; strict mode (system config, off by default) blocks auto-registration and
+requires explicit `tsuku registry add`. Both modes use content-hash pinning for
 tampering detection. Cryptographic signing deferred until there are users and
 third-party registries to protect.
 
