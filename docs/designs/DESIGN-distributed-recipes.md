@@ -9,9 +9,17 @@ problem: |
   subsystem is coupled to the central registry's URL model, and every command
   that resolves recipes would need ad-hoc distributed source handling.
 decision: |
-  TBD -- to be filled after approach selection.
+  Extract a RecipeProvider interface that all recipe sources implement. The Loader
+  becomes an ordered chain of providers instead of a hardcoded priority sequence.
+  Distributed sources are a new provider implementation that fetches recipes via
+  HTTP from GitHub repositories containing a .tsuku-recipes/ directory.
 rationale: |
-  TBD -- to be filled after approach selection.
+  The interface pattern already exists implicitly (EmbeddedRegistry has Get/List/Has)
+  and explicitly in the version provider system. Formalizing it eliminates duplicated
+  chain logic in the Loader and makes distributed sources a single implementation
+  rather than branches threaded through every command. The alternatives (extending
+  the Registry type or URL resolution) either fail to deliver the unified abstraction
+  the PRD requires or accumulate technical debt.
 ---
 
 # DESIGN: Distributed Recipes
@@ -100,3 +108,64 @@ untouched.
 - **Registry state persistence.** Registered distributed sources need to be stored
   somewhere. Options include state.json (existing), a separate config file, or
   individual files per registry.
+
+## Considered Options
+
+### Decision 1: Recipe source abstraction model
+
+**Context:** The Loader needs to support distributed recipe sources alongside
+existing local, embedded, and central registry sources. The core question is how
+to structure this: new interface, extended existing type, or minimal URL routing.
+
+**Chosen: RecipeProvider Interface.**
+
+A Go interface with `Get`, `List`, `Source`, and `Priority` methods, implemented
+by adapters wrapping each existing source. The Loader holds an ordered
+`[]RecipeProvider` slice and iterates it, replacing the current sequence of
+`if` blocks.
+
+This approach was selected because it delivers the PRD's unified abstraction goal
+directly. The pattern already exists in the codebase: `EmbeddedRegistry` has
+`Get(name)`, `List()`, and `Has(name)` -- it's one method signature away from a
+formal interface. The version provider system in `internal/version/` uses the same
+pluggable pattern. Formalizing it eliminates ~300 lines of duplicated chain logic
+across three Loader methods (`GetWithContext`, `loadDirect`, `getEmbeddedOnly`)
+and makes adding future source types a single implementation. Each provider
+controls its own URL construction and caching strategy, so distributed repos'
+flat `.tsuku-recipes/` layout doesn't conflict with the central registry's
+bucketed `recipes/{letter}/{name}.toml` structure.
+
+*Alternative rejected: Extended Registry.* Keeps the Loader's shape but changes
+`registry *Registry` to `registries []*Registry`. This works for adding more
+HTTP-based registries, but it doesn't unify local and embedded sources behind
+the same model -- they remain special cases with their own code paths. It also
+assumes distributed repos follow the central registry's directory layout, which
+they won't (the PRD specifies `.tsuku-recipes/` as a flat directory). The
+`PathStyle` escape hatch needed to fix this erodes the approach's main selling
+point of "just another Registry instance." The Loader would gain 5+ loop sites
+that must stay in sync, increasing maintenance cost rather than reducing it.
+
+*Alternative rejected: URL Resolver.* Adds one branch to the Loader that resolves
+`owner/repo` to a GitHub raw content URL and fetches through existing machinery.
+Lowest ceremony (~300 lines of new code), but explicitly accumulates technical
+debt. It doesn't deliver any abstraction -- distributed sources are a special
+case handled by slash detection. No recipe discovery, no manifest support, and
+GitHub raw content URL stability is a real concern. The advocate's own summary
+acknowledged that "a provider abstraction would avoid" the tech debt.
+
+## Decision Outcome
+
+The distributed recipes system will be built on a RecipeProvider interface that
+all recipe sources implement. The Loader's priority chain becomes a configurable
+list of providers rather than hardcoded conditionals.
+
+Key properties:
+- Each source type (local, embedded, central registry, distributed) implements
+  the same interface with `Get`, `List`, and `Source` methods
+- The Loader iterates providers in priority order, stopping at the first hit
+- Distributed sources are a new provider that fetches `.tsuku-recipes/*.toml`
+  from GitHub repos via HTTP
+- Per-provider caching with independent TTLs and cache directories
+- Source tracking flows naturally from which provider answered the request
+- The Loader's public API (`Get`, `GetWithContext`) stays the same -- the
+  interface is an internal refactor that existing callers don't see
