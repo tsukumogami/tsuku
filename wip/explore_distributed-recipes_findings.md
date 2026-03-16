@@ -78,6 +78,8 @@ The trust model has two modes:
 This mirrors Claude Code's `strictKnownMarketplaces` pattern: convenient by
 default, lockdown-able for enterprise/security-conscious users.
 
+## Decision: Crystallize
+
 ## Accumulated Understanding
 
 tsuku should unify all recipe sources (embedded, central, local, distributed)
