@@ -1,5 +1,5 @@
 ---
-status: Accepted
+status: Planned
 upstream: docs/prds/PRD-distributed-recipes.md
 problem: |
   The recipe Loader uses a hardcoded priority chain (memory, local, embedded,
@@ -26,7 +26,7 @@ rationale: |
 
 ## Status
 
-Accepted
+Planned
 
 ## Context and Problem Statement
 
