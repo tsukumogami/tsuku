@@ -281,7 +281,7 @@ Total scenarios: 30
 **Commands**:
 - `go test ./cmd/tsuku/ -run TestUpdateSourceDirected`
 **Expected**: `update` reads `ToolState.Source` and calls `GetFromSource`. Central/embedded sources use the existing chain. When the source is empty (pre-migration state), it defaults to `"central"`. When the source is unreachable, it falls back gracefully instead of failing hard.
-**Status**: pending
+**Status**: passed
 
 ---
 
@@ -292,7 +292,7 @@ Total scenarios: 30
 **Commands**:
 - `go test ./cmd/tsuku/ -run TestOutdatedUnreachable`
 **Expected**: When checking installed tools, unreachable distributed sources produce warnings in output but do not cause a fatal error. Exit code remains 0 (or the existing exit code for "some tools are outdated"). Central tools continue to be checked normally.
-**Status**: pending
+**Status**: passed
 
 ---
 
