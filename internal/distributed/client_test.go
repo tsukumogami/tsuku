@@ -46,10 +46,11 @@ func TestAuthTransport_TokenIsolation(t *testing.T) {
 		at := &authTransport{token: "ghp_test_token", base: capturingTransport}
 
 		req, _ := http.NewRequest("GET", "https://api.github.com/repos/test/test", nil)
-		_, err := at.RoundTrip(req)
+		resp, err := at.RoundTrip(req)
 		if err != nil {
 			t.Fatalf("RoundTrip failed: %v", err)
 		}
+		resp.Body.Close()
 		if capturedReq == nil {
 			t.Fatal("base transport was not called")
 		}

@@ -172,7 +172,7 @@ func TestCheckSourceCollision_NotInstalled(t *testing.T) {
 	defer os.Setenv("TSUKU_HOME", origHome)
 
 	// Create minimal config
-	os.MkdirAll(filepath.Join(tmpDir, "bin"), 0755)
+	_ = os.MkdirAll(filepath.Join(tmpDir, "bin"), 0755)
 
 	cfg, cfgErr := config.DefaultConfig()
 	if cfgErr != nil {
@@ -195,7 +195,7 @@ func TestCheckSourceCollision_SameSource(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to get config: %v", err)
 	}
-	os.MkdirAll(filepath.Dir(filepath.Join(cfg.HomeDir, "state.json")), 0755)
+	_ = os.MkdirAll(filepath.Dir(filepath.Join(cfg.HomeDir, "state.json")), 0755)
 
 	mgr := install.New(cfg)
 	err = mgr.GetState().UpdateTool("mytool", func(ts *install.ToolState) {
@@ -223,7 +223,7 @@ func TestCheckSourceCollision_DifferentSourceWithForce(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to get config: %v", err)
 	}
-	os.MkdirAll(filepath.Dir(filepath.Join(cfg.HomeDir, "state.json")), 0755)
+	_ = os.MkdirAll(filepath.Dir(filepath.Join(cfg.HomeDir, "state.json")), 0755)
 
 	mgr := install.New(cfg)
 	err = mgr.GetState().UpdateTool("mytool", func(ts *install.ToolState) {
@@ -251,7 +251,7 @@ func TestCheckSourceCollision_DifferentSourceNoForce(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to get config: %v", err)
 	}
-	os.MkdirAll(filepath.Dir(filepath.Join(cfg.HomeDir, "state.json")), 0755)
+	_ = os.MkdirAll(filepath.Dir(filepath.Join(cfg.HomeDir, "state.json")), 0755)
 
 	mgr := install.New(cfg)
 	err = mgr.GetState().UpdateTool("mytool", func(ts *install.ToolState) {
@@ -280,7 +280,7 @@ func TestRecordDistributedSource(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to get config: %v", err)
 	}
-	os.MkdirAll(filepath.Dir(filepath.Join(cfg.HomeDir, "state.json")), 0755)
+	_ = os.MkdirAll(filepath.Dir(filepath.Join(cfg.HomeDir, "state.json")), 0755)
 
 	// Pre-create the tool entry
 	mgr := install.New(cfg)
@@ -361,7 +361,7 @@ func TestRecipeHashField_InState(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to get config: %v", err)
 	}
-	os.MkdirAll(filepath.Dir(filepath.Join(cfg.HomeDir, "state.json")), 0755)
+	_ = os.MkdirAll(filepath.Dir(filepath.Join(cfg.HomeDir, "state.json")), 0755)
 
 	mgr := install.New(cfg)
 	hash := computeRecipeHash([]byte("[metadata]\nname = \"test\"\n"))

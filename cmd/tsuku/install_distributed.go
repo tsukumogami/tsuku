@@ -111,7 +111,7 @@ func ensureDistributedSource(source string, autoApprove bool, sysCfg *config.Con
 	if !autoApprove {
 		prompt := fmt.Sprintf("Install from unregistered source %q?", source)
 		if !confirmWithUser(prompt) {
-			return fmt.Errorf("installation cancelled: source %q not approved", source)
+			return fmt.Errorf("installation canceled: source %q not approved", source)
 		}
 	}
 
@@ -193,7 +193,7 @@ func checkSourceCollision(toolName, newSource string, force bool, sysCfg *config
 		toolName, existingSource, newSource,
 	)
 	if !confirmWithUser(prompt) {
-		return fmt.Errorf("installation cancelled: would replace %q from %q with %q", toolName, existingSource, newSource)
+		return fmt.Errorf("installation canceled: would replace %q from %q with %q", toolName, existingSource, newSource)
 	}
 
 	return nil
