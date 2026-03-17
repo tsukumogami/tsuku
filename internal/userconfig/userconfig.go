@@ -126,6 +126,12 @@ func Load() (*Config, error) {
 	return loadFromPath(cfg.ConfigFile)
 }
 
+// LoadFromPathForTest reads config from a specific file path.
+// Exported for use in tests from other packages.
+func LoadFromPathForTest(path string) (*Config, error) {
+	return loadFromPath(path)
+}
+
 // loadFromPath reads config from a specific file path (for testing).
 func loadFromPath(path string) (*Config, error) {
 	userCfg := DefaultConfig()
@@ -165,6 +171,12 @@ func (c *Config) Save() error {
 	}
 
 	return c.saveToPath(cfg.ConfigFile)
+}
+
+// SaveToPathForTest writes config to a specific file path.
+// Exported for use in tests from other packages.
+func (c *Config) SaveToPathForTest(path string) error {
+	return c.saveToPath(path)
 }
 
 // saveToPath writes config to a specific file path using atomic writes with 0600 permissions.

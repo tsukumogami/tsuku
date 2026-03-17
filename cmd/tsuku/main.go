@@ -108,6 +108,7 @@ func init() {
 	rootCmd.AddCommand(shellenvCmd)
 	rootCmd.AddCommand(doctorCmd)
 	rootCmd.AddCommand(llmCmd)
+	rootCmd.AddCommand(registryCmd)
 }
 
 func main() {
