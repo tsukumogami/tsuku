@@ -3,7 +3,7 @@
   "design_doc": "docs/plans/PLAN-distributed-recipes.md",
   "branch": "docs/distributed-recipes",
   "pr_number": 2160,
-  "integrity_hash": "sha256:3432effc311053cdaa6c6f7077d6544a025c8d7fe6a40c7f2a98e683cdd99142",
+  "integrity_hash": "sha256:50ae4aac6da57d8e64759866ad785d05e8d317f97f97d50853894fbb2d1e343c",
   "issues": [
     {
       "number": 1,
@@ -368,8 +368,8 @@
     {
       "number": 4,
       "title": "feat(cli): implement tsuku registry subcommands",
-      "status": "scrutinized",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "ci_fix_attempts": 0,
       "issue_type": "code",
       "dependencies": [
@@ -422,6 +422,48 @@
           }
         ]
       },
+      "reviewer_results": {
+        "issue": 4,
+        "reviews": [
+          {
+            "focus": "pragmatic",
+            "blocking_count": 0,
+            "advisory_count": 2,
+            "detail_file": "wip/research/implement-doc_review_pragmatic_issue4.md"
+          },
+          {
+            "focus": "architect",
+            "blocking_count": 0,
+            "advisory_count": 3,
+            "detail_file": "wip/research/implement-doc_review_architect_issue4.md"
+          },
+          {
+            "focus": "maintainer",
+            "blocking_count": 1,
+            "advisory_count": 2,
+            "detail_file": "wip/research/implement-doc_review_maintainer_issue4.md"
+          }
+        ],
+        "blocking_resolved": true,
+        "resolution": "Extracted shared validateRegistrySource function eliminating divergent twin"
+      },
+      "qa_results": {
+        "issue": 4,
+        "scenarios_tested": [
+          "scenario-9",
+          "scenario-10",
+          "scenario-11",
+          "scenario-12"
+        ],
+        "scenarios_passed": [
+          "scenario-9",
+          "scenario-10",
+          "scenario-11",
+          "scenario-12"
+        ],
+        "scenarios_failed": [],
+        "notes": "scenario-9: TestRegistryList_NoRegistries validates clean output. scenario-10: TestRegistryAdd_Idempotent and TestRegistryRemove validate add/remove. scenario-11: TestRegistryAdd_ValidatesFormat validates format rejection including three-segment paths. scenario-12: TestRegistryCmd_NoSubcommand validates help output."
+      },
       "testable_scenarios": [
         "scenario-9",
         "scenario-10",
@@ -441,16 +483,62 @@
     {
       "number": 5,
       "title": "feat(distributed): implement GitHub HTTP fetching and cache",
-      "status": "pending",
+      "status": "pushed",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [
         1
       ],
-      "commits": [],
+      "commits": [
+        "04dfef2f"
+      ],
       "agent_type": "",
       "summary": null,
+      "reviewer_results": {
+        "issue": 5,
+        "reviews": [
+          {
+            "focus": "pragmatic",
+            "blocking_count": 2,
+            "advisory_count": 4,
+            "detail_file": "wip/research/implement-doc_review_pragmatic_issue5.md"
+          },
+          {
+            "focus": "architect",
+            "blocking_count": 0,
+            "advisory_count": 5,
+            "detail_file": "wip/research/implement-doc_review_architect_issue5.md"
+          },
+          {
+            "focus": "maintainer",
+            "blocking_count": 4,
+            "advisory_count": 3,
+            "detail_file": "wip/research/implement-doc_review_maintainer_issue5.md"
+          }
+        ],
+        "blocking_resolved": true,
+        "resolution": "Unexported dead API, extracted validateRecipeName, fixed test names, fixed FetchRecipe 404 error type, removed ErrNetwork for non-network errors"
+      },
+      "qa_results": {
+        "issue": 5,
+        "scenarios_tested": [
+          "scenario-13",
+          "scenario-14",
+          "scenario-15",
+          "scenario-16",
+          "scenario-17"
+        ],
+        "scenarios_passed": [
+          "scenario-13",
+          "scenario-14",
+          "scenario-15",
+          "scenario-16",
+          "scenario-17"
+        ],
+        "scenarios_failed": [],
+        "notes": "All 9 test functions passed across 5 scenarios. scenario-13: TestAuthTransport_TokenIsolation verified token sent only to api.github.com (2 subtests). scenario-14: TestContentsAPIResponseParsing confirmed Contents API JSON parsing. scenario-15: TestValidateDownloadURL validated hostname allowlist with 9 subtests covering allowed hosts, disallowed hosts, non-HTTPS, and malformed URLs. scenario-16: 5 test functions covered cache lifecycle -- TestCacheLifecycleAndFetchRecipeValidation (round-trip, freshness, stale detection, invalid URL rejection), TestCacheManager_SizeAndEviction, TestCacheManager_IsRecipeFresh (nil/fresh/stale), TestCacheManager_IncompleteSourceMeta (shorter TTL for incomplete), TestGitHubClient_ListRecipes_CacheHit. scenario-17: TestGitHubClient_RateLimitHandling verified header parsing and guidance messages with/without token (3 subtests)."
+      },
       "testable_scenarios": [
         "scenario-13",
         "scenario-14",
