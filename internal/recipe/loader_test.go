@@ -1528,6 +1528,49 @@ func TestLoader_GetFromSource_CentralNotFound(t *testing.T) {
 	}
 }
 
+func TestLoader_GetFromSource_CentralPropagatesRealErrors(t *testing.T) {
+	// Registry returns a real error (not "not found") -- should propagate, not fall through to embedded.
+	errorProvider := &mockErrorProvider{
+		source: SourceRegistry,
+		err:    fmt.Errorf("connection timeout"),
+	}
+	embeddedProvider := &mockProvider{
+		source:  SourceEmbedded,
+		recipes: map[string][]byte{"tool": []byte("embedded-data")},
+	}
+
+	loader := NewLoader(errorProvider, embeddedProvider)
+
+	_, err := loader.GetFromSource(context.Background(), "tool", SourceCentral)
+	if err == nil {
+		t.Fatal("expected error to propagate, got nil")
+	}
+	if !strings.Contains(err.Error(), "connection timeout") {
+		t.Errorf("expected 'connection timeout' in error, got: %v", err)
+	}
+	if strings.Contains(err.Error(), "not found") {
+		t.Error("should not be a not-found error")
+	}
+}
+
+// mockErrorProvider always returns a specific error for Get calls.
+type mockErrorProvider struct {
+	source RecipeSource
+	err    error
+}
+
+func (m *mockErrorProvider) Get(_ context.Context, _ string) ([]byte, error) {
+	return nil, m.err
+}
+
+func (m *mockErrorProvider) List(_ context.Context) ([]RecipeInfo, error) {
+	return nil, nil
+}
+
+func (m *mockErrorProvider) Source() RecipeSource {
+	return m.source
+}
+
 func TestLoader_GetFromSource_BypassesCache(t *testing.T) {
 	recipeData := []byte(`[metadata]
 name = "cached-tool"
