@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-17T23:34:24Z",
+  "generated_at": "2026-03-17T23:45:07Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -74,15 +74,14 @@
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 30,
-        "pending": 49,
+        "failed": 29,
+        "pending": 50,
         "success": 9,
         "total": 89
       }
@@ -706,15 +705,6 @@
           "next_retry_at": "2026-03-23T00:10:12Z"
         },
         {
-          "id": "rubygems:glassfish",
-          "name": "glassfish",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-03-17T23:00:20Z"
-        },
-        {
           "id": "npm:got",
           "name": "got",
           "ecosystem": "npm",
@@ -857,6 +847,15 @@
           "category": "install_failed",
           "failure_count": 6,
           "next_retry_at": "2026-03-19T06:37:50Z"
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 108,
+          "next_retry_at": "1733-12-06T23:57:03Z"
         },
         {
           "id": "npm:mailhog",
@@ -9508,6 +9507,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:glassfish",
+          "name": "glassfish",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-17T23:00:20Z"
+        },
+        {
           "id": "homebrew:glaze",
           "name": "glaze",
           "ecosystem": "homebrew",
@@ -13213,15 +13221,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 107,
-          "next_retry_at": "1733-12-06T20:56:32Z"
         },
         {
           "id": "homebrew:libaacs",
