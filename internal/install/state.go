@@ -81,7 +81,7 @@ type ToolState struct {
 	Version string `json:"version,omitempty"`
 
 	// Source records where this tool's recipe came from.
-	// Values: "central" (default registry/embedded), "embedded", "local", or "owner/repo" (distributed).
+	// Values: "central" (default registry and embedded), "local", or "owner/repo" (distributed).
 	// Populated on new installs; lazily migrated for existing entries.
 	Source string `json:"source,omitempty"`
 
@@ -270,6 +270,9 @@ func (sm *StateManager) loadWithoutLock() (*State, error) {
 
 	// Migrate old single-version format to new multi-version format
 	state.migrateToMultiVersion()
+
+	// Migrate empty Source fields to default values
+	state.migrateSourceTracking()
 
 	return &state, nil
 }

@@ -2613,7 +2613,7 @@ func TestMigrateSourceTracking_InfersFromPlan(t *testing.T) {
 		wantSource   string
 	}{
 		{"registry maps to central", "registry", "central"},
-		{"embedded maps to embedded", "embedded", "embedded"},
+		{"embedded maps to central", "embedded", "central"},
 		{"local maps to local", "local", "local"},
 		{"unknown maps to central", "something-else", "central"},
 	}

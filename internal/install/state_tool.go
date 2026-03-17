@@ -122,7 +122,7 @@ func (sm *StateManager) GetCachedPlan(tool, version string) (*Plan, error) {
 // migrateSourceTracking populates empty Source fields on ToolState entries.
 // For entries with a cached plan, the source is inferred from Plan.RecipeSource:
 //   - "registry" -> "central" (the central registry)
-//   - "embedded" -> "embedded"
+//   - "embedded" -> "central" (embedded recipes are a bundled subset of central)
 //   - "local" -> "local"
 //
 // Entries without a plan or with an unrecognized RecipeSource default to "central",
@@ -142,11 +142,9 @@ func (s *State) migrateSourceTracking() {
 		if tool.ActiveVersion != "" {
 			if vs, ok := tool.Versions[tool.ActiveVersion]; ok && vs.Plan != nil {
 				switch vs.Plan.RecipeSource {
-				case "embedded":
-					source = "embedded"
 				case "local":
 					source = "local"
-					// "registry" and anything else -> "central"
+					// "registry", "embedded", and anything else -> "central"
 				}
 			}
 		}
