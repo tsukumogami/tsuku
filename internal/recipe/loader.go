@@ -259,20 +259,6 @@ func (l *Loader) ProviderBySource(source RecipeSource) RecipeProvider {
 	return nil
 }
 
-// Registry returns the underlying *registry.Registry from the central registry provider.
-// This is a convenience method that finds the CentralRegistryProvider and returns
-// its Registry. Returns nil if no central registry provider is configured.
-func (l *Loader) Registry() interface{} {
-	p := l.ProviderBySource(SourceRegistry)
-	if p == nil {
-		return nil
-	}
-	if rp, ok := p.(*CentralRegistryProvider); ok {
-		return rp.Registry()
-	}
-	return nil
-}
-
 // ClearCache clears the in-memory recipe cache and satisfies index.
 // This forces recipes to be re-fetched from providers on next access,
 // and the satisfies index to be rebuilt on next fallback lookup.
@@ -382,16 +368,6 @@ func (l *Loader) ListAllWithSource() ([]RecipeInfo, error) {
 func (l *Loader) ListLocal() ([]RecipeInfo, error) {
 	for _, p := range l.providers {
 		if p.Source() == SourceLocal {
-			return p.List(context.Background())
-		}
-	}
-	return nil, nil
-}
-
-// ListEmbedded returns only recipes embedded in the binary.
-func (l *Loader) ListEmbedded() ([]RecipeInfo, error) {
-	for _, p := range l.providers {
-		if p.Source() == SourceEmbedded {
 			return p.List(context.Background())
 		}
 	}
