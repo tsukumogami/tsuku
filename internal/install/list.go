@@ -11,7 +11,8 @@ type InstalledTool struct {
 	Name     string
 	Version  string
 	Path     string
-	IsActive bool // Whether this is the currently active version
+	IsActive bool   // Whether this is the currently active version
+	Source   string // Where the recipe came from ("central", "local", "owner/repo")
 }
 
 // List returns a list of all installed tool versions (excluding hidden tools)
@@ -56,6 +57,7 @@ func (m *Manager) ListWithOptions(includeHidden bool) ([]InstalledTool, error) {
 				Version:  version,
 				Path:     toolDir,
 				IsActive: version == toolState.ActiveVersion,
+				Source:   toolState.Source,
 			})
 		}
 	}

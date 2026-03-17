@@ -119,6 +119,41 @@ func (sm *StateManager) GetCachedPlan(tool, version string) (*Plan, error) {
 	return versionState.Plan, nil
 }
 
+// migrateSourceTracking populates empty Source fields on ToolState entries.
+// For entries with a cached plan, the source is inferred from Plan.RecipeSource:
+//   - "registry" -> "central" (the central registry)
+//   - "embedded" -> "central" (embedded recipes are a bundled subset of central)
+//   - "local" -> "local"
+//
+// Entries without a plan or with an unrecognized RecipeSource default to "central",
+// since all tools installed before source tracking was introduced came from the
+// central registry or embedded recipes (both are "central" for update purposes).
+//
+// This migration is idempotent: entries that already have a Source value are skipped.
+func (s *State) migrateSourceTracking() {
+	for name, tool := range s.Installed {
+		if tool.Source != "" {
+			continue
+		}
+
+		source := "central"
+
+		// Try to infer from the active version's cached plan
+		if tool.ActiveVersion != "" {
+			if vs, ok := tool.Versions[tool.ActiveVersion]; ok && vs.Plan != nil {
+				switch vs.Plan.RecipeSource {
+				case "local":
+					source = "local"
+					// "registry", "embedded", and anything else -> "central"
+				}
+			}
+		}
+
+		tool.Source = source
+		s.Installed[name] = tool
+	}
+}
+
 // migrateToMultiVersion migrates old single-version state entries to the new multi-version format.
 // Old format: ToolState.Version = "1.0.0", ToolState.Binaries = ["foo"]
 // New format: ToolState.ActiveVersion = "1.0.0", ToolState.Versions = {"1.0.0": {Binaries: ["foo"], ...}}

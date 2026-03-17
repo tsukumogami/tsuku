@@ -110,8 +110,17 @@ Examples:
 			return
 		}
 
+		// Determine source from the provider that holds the recipe (for uninstalled tools)
+		var recipeSource string
+		if recipePath == "" {
+			_, providerSource, err := loader.GetWithSource(toolName, recipe.LoaderOptions{})
+			if err == nil {
+				recipeSource = recipeSourceFromProvider(providerSource)
+			}
+		}
+
 		// Check installation status and get dependencies
-		var installedVersion, location string
+		var installedVersion, location, toolSource string
 		var installDeps, runtimeDeps []string
 		status := "not_installed"
 
@@ -131,13 +140,14 @@ Examples:
 					}
 				}
 
-				// Get dependencies from state for installed tools
+				// Get dependencies and source from state for installed tools
 				if status == "installed" {
 					stateMgr := install.NewStateManager(cfg)
 					toolState, err := stateMgr.GetToolState(toolName)
 					if err == nil && toolState != nil {
 						installDeps = toolState.InstallDependencies
 						runtimeDeps = toolState.RuntimeDependencies
+						toolSource = toolState.Source
 					}
 				}
 			}
@@ -158,6 +168,12 @@ Examples:
 			}
 		}
 
+		// Resolve the final source value: installed tools use state, uninstalled use provider
+		source := toolSource
+		if source == "" {
+			source = recipeSource
+		}
+
 		// JSON output mode
 		if jsonOutput {
 			type infoOutput struct {
@@ -166,6 +182,7 @@ Examples:
 				Homepage             string            `json:"homepage,omitempty"`
 				VersionFormat        string            `json:"version_format"`
 				VersionSource        string            `json:"version_source"`
+				Source               string            `json:"source,omitempty"`
 				SupportedOS          []string          `json:"supported_os,omitempty"`
 				SupportedArch        []string          `json:"supported_arch,omitempty"`
 				SupportedLibc        []string          `json:"supported_libc,omitempty"`
@@ -191,6 +208,7 @@ Examples:
 				Homepage:             r.Metadata.Homepage,
 				VersionFormat:        r.Metadata.VersionFormat,
 				VersionSource:        r.Version.Source,
+				Source:               source,
 				SupportedOS:          r.Metadata.SupportedOS,
 				SupportedArch:        r.Metadata.SupportedArch,
 				SupportedLibc:        r.Metadata.SupportedLibc,
@@ -222,6 +240,9 @@ Examples:
 		}
 		if r.Metadata.Type != "" {
 			fmt.Printf("Type:           %s\n", r.Metadata.Type)
+		}
+		if source != "" {
+			fmt.Printf("Source:         %s\n", source)
 		}
 
 		// Show platform constraints if present

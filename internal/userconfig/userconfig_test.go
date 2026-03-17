@@ -1410,6 +1410,192 @@ func TestGetSetLLMIdleTimeout(t *testing.T) {
 	}
 }
 
+// --- Registry configuration tests (Scenario 7: distributed recipes) ---
+
+func TestRegistrySaveAndLoadRoundTrip(t *testing.T) {
+	tmpDir := t.TempDir()
+	path := filepath.Join(tmpDir, "config.toml")
+
+	cfg := DefaultConfig()
+	cfg.StrictRegistries = true
+	cfg.Registries = map[string]RegistryEntry{
+		"acme/tools": {
+			URL:            "https://github.com/acme/tools",
+			AutoRegistered: false,
+		},
+		"internal/recipes": {
+			URL:            "https://github.com/internal/recipes",
+			AutoRegistered: true,
+		},
+	}
+
+	if err := cfg.saveToPath(path); err != nil {
+		t.Fatalf("failed to save: %v", err)
+	}
+
+	loaded, err := loadFromPath(path)
+	if err != nil {
+		t.Fatalf("failed to load: %v", err)
+	}
+
+	if !loaded.StrictRegistries {
+		t.Error("expected StrictRegistries=true after round-trip")
+	}
+	if len(loaded.Registries) != 2 {
+		t.Fatalf("expected 2 registries, got %d", len(loaded.Registries))
+	}
+
+	acme, ok := loaded.Registries["acme/tools"]
+	if !ok {
+		t.Fatal("expected acme/tools registry entry")
+	}
+	if acme.URL != "https://github.com/acme/tools" {
+		t.Errorf("expected URL 'https://github.com/acme/tools', got %q", acme.URL)
+	}
+	if acme.AutoRegistered {
+		t.Error("expected AutoRegistered=false for acme/tools")
+	}
+
+	internal, ok := loaded.Registries["internal/recipes"]
+	if !ok {
+		t.Fatal("expected internal/recipes registry entry")
+	}
+	if internal.URL != "https://github.com/internal/recipes" {
+		t.Errorf("expected URL 'https://github.com/internal/recipes', got %q", internal.URL)
+	}
+	if !internal.AutoRegistered {
+		t.Error("expected AutoRegistered=true for internal/recipes")
+	}
+}
+
+func TestRegistryBackwardCompat_NoRegistries(t *testing.T) {
+	tmpDir := t.TempDir()
+	path := filepath.Join(tmpDir, "config.toml")
+
+	// Write a config file without any registries section
+	content := `telemetry = true
+
+[llm]
+enabled = true
+`
+	if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+		t.Fatalf("failed to write test file: %v", err)
+	}
+
+	cfg, err := loadFromPath(path)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if cfg.StrictRegistries {
+		t.Error("expected StrictRegistries=false by default")
+	}
+	if cfg.Registries != nil {
+		t.Error("expected nil Registries map when not in config")
+	}
+}
+
+func TestRegistryEmptyMapDoesNotProduceSpuriousTOML(t *testing.T) {
+	tmpDir := t.TempDir()
+	path := filepath.Join(tmpDir, "config.toml")
+
+	cfg := DefaultConfig()
+	// Registries is nil (default), StrictRegistries is false (default)
+
+	if err := cfg.saveToPath(path); err != nil {
+		t.Fatalf("failed to save: %v", err)
+	}
+
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("failed to read file: %v", err)
+	}
+
+	content := string(data)
+	if strings.Contains(content, "registries") {
+		t.Error("expected no 'registries' in TOML output when map is nil")
+	}
+	if strings.Contains(content, "strict_registries") {
+		t.Error("expected no 'strict_registries' in TOML output when false")
+	}
+}
+
+func TestRegistryLoadFromTOMLFile(t *testing.T) {
+	tmpDir := t.TempDir()
+	path := filepath.Join(tmpDir, "config.toml")
+
+	content := `telemetry = true
+strict_registries = true
+
+[registries.acme_tools]
+url = "https://github.com/acme/tools"
+
+[registries.other_repo]
+url = "https://github.com/other/repo"
+auto_registered = true
+`
+	if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+		t.Fatalf("failed to write test file: %v", err)
+	}
+
+	cfg, err := loadFromPath(path)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if !cfg.StrictRegistries {
+		t.Error("expected StrictRegistries=true")
+	}
+	if len(cfg.Registries) != 2 {
+		t.Fatalf("expected 2 registries, got %d", len(cfg.Registries))
+	}
+	entry, ok := cfg.Registries["acme_tools"]
+	if !ok {
+		t.Fatal("expected acme_tools registry entry")
+	}
+	if entry.URL != "https://github.com/acme/tools" {
+		t.Errorf("expected URL 'https://github.com/acme/tools', got %q", entry.URL)
+	}
+	if entry.AutoRegistered {
+		t.Error("expected AutoRegistered=false when not set")
+	}
+
+	other, ok := cfg.Registries["other_repo"]
+	if !ok {
+		t.Fatal("expected other_repo registry entry")
+	}
+	if !other.AutoRegistered {
+		t.Error("expected AutoRegistered=true for other_repo")
+	}
+}
+
+func TestRegistryDoesNotAffectExistingConfig(t *testing.T) {
+	tmpDir := t.TempDir()
+	path := filepath.Join(tmpDir, "config.toml")
+
+	cfg := DefaultConfig()
+	cfg.Telemetry = false
+	cfg.Registries = map[string]RegistryEntry{
+		"acme/tools": {URL: "https://github.com/acme/tools"},
+	}
+
+	if err := cfg.saveToPath(path); err != nil {
+		t.Fatalf("failed to save: %v", err)
+	}
+
+	loaded, err := loadFromPath(path)
+	if err != nil {
+		t.Fatalf("failed to load: %v", err)
+	}
+
+	if loaded.Telemetry {
+		t.Error("expected Telemetry=false to be preserved")
+	}
+	if len(loaded.Registries) != 1 {
+		t.Errorf("expected 1 registry, got %d", len(loaded.Registries))
+	}
+}
+
 func TestLoadSecretsFromTOMLFile(t *testing.T) {
 	tmpDir := t.TempDir()
 	path := filepath.Join(tmpDir, "config.toml")

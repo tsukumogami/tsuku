@@ -94,6 +94,42 @@ func TestListRubyGemsVersions(t *testing.T) {
 	}
 }
 
+func TestListRubyGemsVersions_FiltersNonNumericVersions(t *testing.T) {
+	// RubyGems.org can return non-numeric version strings like "dev" that aren't
+	// marked as prereleases. These must be filtered out to avoid them sorting
+	// above real versions and causing downstream "invalid version format" errors.
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		versions := []rubyGemsVersion{
+			{Number: "dev", Platform: "ruby", Prerelease: false},      // Non-numeric, should be filtered
+			{Number: "2.6.3", Platform: "ruby", Prerelease: false},    // Valid
+			{Number: "2.6.2", Platform: "ruby", Prerelease: false},    // Valid
+			{Number: "latest", Platform: "ruby", Prerelease: false},   // Non-numeric, should be filtered
+			{Number: "2.6.1.pre", Platform: "ruby", Prerelease: true}, // Prerelease, should be filtered
+			{Number: "", Platform: "ruby", Prerelease: false},         // Empty, should be filtered
+		}
+		_ = json.NewEncoder(w).Encode(versions)
+	}))
+	defer server.Close()
+
+	resolver := New(WithRubyGemsRegistry(server.URL))
+	resolver.httpClient = server.Client()
+
+	ctx := context.Background()
+	versions, err := resolver.ListRubyGemsVersions(ctx, "bundler")
+	if err != nil {
+		t.Fatalf("ListRubyGemsVersions failed: %v", err)
+	}
+
+	if len(versions) != 2 {
+		t.Errorf("expected 2 versions, got %d: %v", len(versions), versions)
+	}
+
+	if len(versions) > 0 && versions[0] != "2.6.3" {
+		t.Errorf("expected first version to be 2.6.3, got %s", versions[0])
+	}
+}
+
 func TestResolveRubyGems(t *testing.T) {
 	// Create mock RubyGems API server
 	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

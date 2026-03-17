@@ -244,6 +244,12 @@ If the tool succeeds but returns a non-zero exit code:
 exit_code = 2  # Expected exit code
 ```
 
+## Source-Directed Verification
+
+When you run `tsuku verify` on a tool installed from a distributed source, tsuku uses the cached recipe from that source rather than the central registry. This means verification always runs against the recipe that was used to install the tool, regardless of where it came from.
+
+You don't need to change any verification syntax or flags. The source resolution happens automatically based on the recorded installation source in `$TSUKU_HOME/state.json`.
+
 ## Validation
 
 Before submitting a recipe, validate it locally:

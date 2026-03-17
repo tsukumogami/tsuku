@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/registry"
 )
 
@@ -343,6 +344,27 @@ func TestFormatDeprecationWarning_NeverSuggestsDowngrade(t *testing.T) {
 
 	if strings.Contains(msg, "v0.5.0 or later is required") {
 		t.Errorf("CLI should never suggest downgrading, got %q", msg)
+	}
+}
+
+func TestRecipeSourceFromProvider(t *testing.T) {
+	tests := []struct {
+		source recipe.RecipeSource
+		want   string
+	}{
+		{recipe.SourceRegistry, "central"},
+		{recipe.SourceEmbedded, "central"},
+		{recipe.SourceLocal, "local"},
+		{recipe.RecipeSource("alice/tools"), "alice/tools"},
+	}
+
+	for _, tt := range tests {
+		t.Run(string(tt.source), func(t *testing.T) {
+			got := recipeSourceFromProvider(tt.source)
+			if got != tt.want {
+				t.Errorf("recipeSourceFromProvider(%q) = %q, want %q", tt.source, got, tt.want)
+			}
+		})
 	}
 }
 
