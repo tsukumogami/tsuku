@@ -1,22 +1,22 @@
 {
-  "generated_at": "2026-03-15T19:21:20Z",
-  "total_recipes": 1401,
+  "generated_at": "2026-03-17T23:43:53Z",
+  "total_recipes": 1400,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 837,
-        "total": 1401,
-        "pct": 59.743040685224834
+        "supported": 836,
+        "total": 1400,
+        "pct": 59.71428571428572
       },
       "glibc": {
-        "supported": 1368,
-        "total": 1401,
-        "pct": 97.64453961456103
+        "supported": 1367,
+        "total": 1400,
+        "pct": 97.64285714285714
       },
       "musl": {
-        "supported": 1227,
-        "total": 1401,
-        "pct": 87.58029978586723
+        "supported": 1226,
+        "total": 1400,
+        "pct": 87.57142857142857
       }
     },
     "by_category": {
@@ -26,9 +26,9 @@
         "glibc_support": 150
       },
       "tool": {
-        "total": 1249,
-        "musl_support": 1077,
-        "glibc_support": 1218
+        "total": 1248,
+        "musl_support": 1076,
+        "glibc_support": 1217
       }
     }
   },
@@ -9720,18 +9720,6 @@
       "warnings": [
         "recipe 'kotlin-language-server' has platform-specific actions without libc when clauses and no musl fallback"
       ]
-    },
-    {
-      "name": "koto",
-      "type": "tool",
-      "platforms": {
-        "darwin": true,
-        "glibc": true,
-        "musl": true
-      },
-      "gaps": null,
-      "errors": null,
-      "warnings": null
     },
     {
       "name": "krakend",
