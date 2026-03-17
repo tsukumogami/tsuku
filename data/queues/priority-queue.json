@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-17T10:56:46Z",
+  "updated_at": "2026-03-17T13:13:06Z",
   "entries": [
     {
       "name": "node",
@@ -9156,7 +9156,7 @@
       "name": "cowsay",
       "source": "rubygems:cowsay",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 8,
@@ -14536,7 +14536,7 @@
       "name": "flash",
       "source": "rubygems:flash",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 7,
@@ -21416,11 +21416,11 @@
       "name": "influxdb",
       "source": "rubygems:influxdb",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 5,
-      "next_retry_at": "2026-03-17T08:14:04.58271019Z"
+      "failure_count": 6,
+      "next_retry_at": "2026-03-18T21:13:06.849119967Z"
     },
     {
       "name": "influxdb-cli",
@@ -24896,11 +24896,11 @@
       "name": "lcm",
       "source": "npm:lcm",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 7,
-      "next_retry_at": "2026-03-17T10:41:46.114745518Z"
+      "failure_count": 8,
+      "next_retry_at": "2026-03-22T21:13:06.849119967Z"
     },
     {
       "name": "lcov",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 101,
-      "next_retry_at": "1733-12-06T09:12:17.387810573Z"
+      "failure_count": 103,
+      "next_retry_at": "1733-12-06T13:25:49.994344159Z"
     },
     {
       "name": "libaacs",
