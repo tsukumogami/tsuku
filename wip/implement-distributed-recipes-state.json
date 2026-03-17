@@ -3,7 +3,7 @@
   "design_doc": "docs/plans/PLAN-distributed-recipes.md",
   "branch": "docs/distributed-recipes",
   "pr_number": 2160,
-  "integrity_hash": "sha256:4e8561867f302df801c44e5e72b18cfc44071a72235bedb000272b04748f6c8e",
+  "integrity_hash": "sha256:c13214340355c0b533ba36bfb98cd8a4e42645747f19679d27cae9d2aff0c09d",
   "issues": [
     {
       "number": 1,
@@ -16,7 +16,12 @@
       "commits": [],
       "agent_type": "",
       "summary": null,
-      "testable_scenarios": [],
+      "testable_scenarios": [
+        "scenario-1",
+        "scenario-2",
+        "scenario-3",
+        "scenario-4"
+      ],
       "complexity": "critical",
       "acceptance_criteria": [
         "`RecipeProvider` interface defined in `internal/recipe/provider.go` with `Get(ctx, name) ([]byte, error)`, `List(ctx) ([]RecipeInfo, error)`, and `Source() RecipeSource` methods",
@@ -53,7 +58,10 @@
       "commits": [],
       "agent_type": "",
       "summary": null,
-      "testable_scenarios": [],
+      "testable_scenarios": [
+        "scenario-5",
+        "scenario-6"
+      ],
       "complexity": "testable",
       "acceptance_criteria": [
         "`ToolState` in `internal/install/state.go` has a `Source string` field with `json:\"source,omitempty\"` tag",
@@ -80,7 +88,10 @@
       "commits": [],
       "agent_type": "",
       "summary": null,
-      "testable_scenarios": [],
+      "testable_scenarios": [
+        "scenario-7",
+        "scenario-8"
+      ],
       "complexity": "testable",
       "acceptance_criteria": [
         "`RegistryEntry` struct added to `internal/userconfig/userconfig.go` with `URL string` and `AutoRegistered bool` fields, TOML-tagged appropriately",
@@ -108,7 +119,12 @@
       "commits": [],
       "agent_type": "",
       "summary": null,
-      "testable_scenarios": [],
+      "testable_scenarios": [
+        "scenario-9",
+        "scenario-10",
+        "scenario-11",
+        "scenario-12"
+      ],
       "complexity": "testable",
       "acceptance_criteria": [
         "`tsuku registry list` displays each registered source with its URL, `(auto-registered)` annotation where applicable, and `strict_registries` status",
@@ -132,7 +148,13 @@
       "commits": [],
       "agent_type": "",
       "summary": null,
-      "testable_scenarios": [],
+      "testable_scenarios": [
+        "scenario-13",
+        "scenario-14",
+        "scenario-15",
+        "scenario-16",
+        "scenario-17"
+      ],
       "complexity": "critical",
       "acceptance_criteria": [
         "Two separate HTTP client instances via `httputil.NewSecureClient` (SSRF protection, DNS rebinding guards, HTTPS-only redirects)",
@@ -172,7 +194,10 @@
       "commits": [],
       "agent_type": "",
       "summary": null,
-      "testable_scenarios": [],
+      "testable_scenarios": [
+        "scenario-18",
+        "scenario-19"
+      ],
       "complexity": "testable",
       "acceptance_criteria": [
         "`DistributedProvider` implements `RecipeProvider` interface (`Get`, `List`, `Source`)",
@@ -207,7 +232,12 @@
       "commits": [],
       "agent_type": "",
       "summary": null,
-      "testable_scenarios": [],
+      "testable_scenarios": [
+        "scenario-20",
+        "scenario-21",
+        "scenario-22",
+        "scenario-23"
+      ],
       "complexity": "testable",
       "acceptance_criteria": [
         "Detect `/` in tool name to identify distributed source requests",
@@ -238,7 +268,10 @@
       "commits": [],
       "agent_type": "",
       "summary": null,
-      "testable_scenarios": [],
+      "testable_scenarios": [
+        "scenario-24",
+        "scenario-25"
+      ],
       "complexity": "testable",
       "acceptance_criteria": [
         "`update`: reads `ToolState.Source`, calls `GetFromSource` for fresh recipe from the recorded source; central/embedded sources use existing chain; falls back gracefully if source is unreachable",
@@ -263,7 +296,9 @@
       "commits": [],
       "agent_type": "",
       "summary": null,
-      "testable_scenarios": [],
+      "testable_scenarios": [
+        "scenario-26"
+      ],
       "complexity": "simple",
       "acceptance_criteria": [
         "`list`: human-readable output shows source suffix for distributed tools (e.g., `ripgrep 14.1.1 [alice/tools]`); `--json` includes `\"source\"` field",
@@ -284,7 +319,9 @@
       "commits": [],
       "agent_type": "",
       "summary": null,
-      "testable_scenarios": [],
+      "testable_scenarios": [
+        "scenario-27"
+      ],
       "complexity": "simple",
       "acceptance_criteria": [
         "`tsuku update-registry` refreshes central registry cache (existing behavior, unchanged)",
@@ -309,7 +346,9 @@
       "commits": [],
       "agent_type": "",
       "summary": null,
-      "testable_scenarios": [],
+      "testable_scenarios": [
+        "scenario-28"
+      ],
       "complexity": "simple",
       "acceptance_criteria": [
         "`.tsuku-recipes/` directory exists at the root of the koto repository",
@@ -335,7 +374,9 @@
       "commits": [],
       "agent_type": "",
       "summary": null,
-      "testable_scenarios": [],
+      "testable_scenarios": [
+        "scenario-29"
+      ],
       "complexity": "simple",
       "acceptance_criteria": [
         "All koto-related recipe TOML files removed from `recipes/` in this repo",
@@ -358,7 +399,9 @@
       "commits": [],
       "agent_type": "",
       "summary": null,
-      "testable_scenarios": [],
+      "testable_scenarios": [
+        "scenario-30"
+      ],
       "complexity": "testable",
       "acceptance_criteria": [
         "`tsuku install tsukumogami/koto` works end-to-end with a released binary",
@@ -373,7 +416,8 @@
     }
   ],
   "skipped_issues": null,
-  "test_plan_file": null,
+  "test_plan_file": "wip/implement-distributed-recipes-test_plan.md",
+  "doc_plan_file": "wip/implement-distributed-recipes-doc_plan.md",
   "source_doc_type": "plan",
   "execution_mode": "single-pr",
   "deliverable_type": "mixed"
