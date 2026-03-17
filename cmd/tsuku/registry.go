@@ -123,16 +123,24 @@ func runRegistryList(cmd *cobra.Command, args []string) {
 	}
 }
 
+// validateRegistrySource checks that source is a valid owner/repo string.
+// ValidateGitHubURL allows extra path segments for full URLs; this function
+// additionally requires exactly one slash so only "owner/repo" passes.
+func validateRegistrySource(source string) error {
+	if err := discover.ValidateGitHubURL(source); err != nil {
+		return fmt.Errorf("invalid registry source %q: %w", source, err)
+	}
+	if strings.Count(source, "/") != 1 {
+		return fmt.Errorf("invalid registry source %q: expected owner/repo format (no extra path segments)", source)
+	}
+	return nil
+}
+
 func runRegistryAdd(cmd *cobra.Command, args []string) {
 	source := args[0]
 
-	// Validate the owner/repo format: must be exactly "owner/repo" with no extra segments
-	if err := discover.ValidateGitHubURL(source); err != nil {
-		fmt.Fprintf(os.Stderr, "Error: invalid registry source %q: %v\n", source, err)
-		exitWithCode(ExitUsage)
-	}
-	if strings.Count(source, "/") != 1 {
-		fmt.Fprintf(os.Stderr, "Error: invalid registry source %q: expected owner/repo format (no extra path segments)\n", source)
+	if err := validateRegistrySource(source); err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		exitWithCode(ExitUsage)
 	}
 

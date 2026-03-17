@@ -2,13 +2,10 @@ package main
 
 import (
 	"bytes"
-	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 
-	"github.com/tsukumogami/tsuku/internal/discover"
 	"github.com/tsukumogami/tsuku/internal/userconfig"
 )
 
@@ -219,22 +216,10 @@ func TestRegistryAdd_ValidatesFormat(t *testing.T) {
 			// Use the same validation chain as runRegistryAdd:
 			// 1. discover.ValidateGitHubURL for format
 			// 2. Exactly one slash for owner/repo constraint
-			err := validateRegistrySourceForTest(tt.source)
+			err := validateRegistrySource(tt.source)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("validateRegistrySourceForTest(%q) error = %v, wantErr %v", tt.source, err, tt.wantErr)
+				t.Errorf("validateRegistrySource(%q) error = %v, wantErr %v", tt.source, err, tt.wantErr)
 			}
 		})
 	}
-}
-
-// validateRegistrySourceForTest mirrors the validation in runRegistryAdd,
-// calling the real discover.ValidateGitHubURL plus the slash-count check.
-func validateRegistrySourceForTest(source string) error {
-	if err := discover.ValidateGitHubURL(source); err != nil {
-		return err
-	}
-	if strings.Count(source, "/") != 1 {
-		return fmt.Errorf("expected owner/repo format (no extra path segments)")
-	}
-	return nil
 }
