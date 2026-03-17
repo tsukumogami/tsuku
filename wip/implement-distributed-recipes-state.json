@@ -3,7 +3,7 @@
   "design_doc": "docs/plans/PLAN-distributed-recipes.md",
   "branch": "docs/distributed-recipes",
   "pr_number": 2160,
-  "integrity_hash": "sha256:9254483af3b3c3fe4f1a00ecf0092b4229210e4f1eb809dad789e86d1dc2845d",
+  "integrity_hash": "sha256:3432effc311053cdaa6c6f7077d6544a025c8d7fe6a40c7f2a98e683cdd99142",
   "issues": [
     {
       "number": 1,
@@ -239,8 +239,8 @@
     {
       "number": 3,
       "title": "feat(config): add registry configuration and GetFromSource",
-      "status": "scrutinized",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "ci_fix_attempts": 0,
       "issue_type": "code",
       "dependencies": [
@@ -309,6 +309,44 @@
           }
         ]
       },
+      "reviewer_results": {
+        "issue": 3,
+        "reviews": [
+          {
+            "focus": "pragmatic",
+            "blocking_count": 0,
+            "advisory_count": 3,
+            "detail_file": "wip/research/implement-doc_review_pragmatic_issue3.md"
+          },
+          {
+            "focus": "architect",
+            "blocking_count": 0,
+            "advisory_count": 0,
+            "detail_file": "wip/research/implement-doc_review_architect_issue3.md"
+          },
+          {
+            "focus": "maintainer",
+            "blocking_count": 1,
+            "advisory_count": 1,
+            "detail_file": "wip/research/implement-doc_review_maintainer_issue3.md"
+          }
+        ],
+        "blocking_resolved": true,
+        "resolution": "Added TestLoader_GetFromSource_CentralPropagatesRealErrors test for error propagation path"
+      },
+      "qa_results": {
+        "issue": 3,
+        "scenarios_tested": [
+          "scenario-7",
+          "scenario-8"
+        ],
+        "scenarios_passed": [
+          "scenario-7",
+          "scenario-8"
+        ],
+        "scenarios_failed": [],
+        "notes": "scenario-7: Config round-trip validated via TestRegistrySaveAndLoadRoundTrip, TestRegistryBackwardCompat_NoRegistries, TestRegistryEmptyMapDoesNotProduceSpuriousTOML. scenario-8: GetFromSource routing validated via TestLoader_GetFromSource_Central_Registry, TestLoader_GetFromSource_Local, TestLoader_GetFromSource_Distributed, TestLoader_GetFromSource_CentralPropagatesRealErrors."
+      },
       "testable_scenarios": [
         "scenario-7",
         "scenario-8"
@@ -330,16 +368,60 @@
     {
       "number": 4,
       "title": "feat(cli): implement tsuku registry subcommands",
-      "status": "pending",
+      "status": "scrutinized",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [
         3
       ],
-      "commits": [],
-      "agent_type": "",
-      "summary": null,
+      "commits": [
+        "a5fcd055"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          "cmd/tsuku/registry.go",
+          "cmd/tsuku/registry_test.go",
+          "cmd/tsuku/main.go",
+          "internal/userconfig/userconfig.go"
+        ],
+        "tests_added": 8,
+        "key_decisions": "ValidateGitHubURL validates owner/repo format. Remove lists tools still installed from removed source. Added LoadFromPathForTest/SaveToPathForTest to userconfig for cross-package testing.",
+        "requirements_map": [
+          {
+            "ac": "registry list displays sources",
+            "status": "implemented",
+            "evidence": "registry.go registryList()"
+          },
+          {
+            "ac": "registry add validates and saves",
+            "status": "implemented",
+            "evidence": "registry.go registryAdd()"
+          },
+          {
+            "ac": "registry remove lists remaining tools",
+            "status": "implemented",
+            "evidence": "registry.go registryRemove()"
+          },
+          {
+            "ac": "registry no subcommand shows help",
+            "status": "implemented",
+            "evidence": "registry.go registryCmd Usage"
+          },
+          {
+            "ac": "consistent exit codes",
+            "status": "implemented",
+            "evidence": "registry.go uses exitError()"
+          },
+          {
+            "ac": "clean output no registries",
+            "status": "implemented",
+            "evidence": "TestRegistryListEmpty"
+          }
+        ]
+      },
       "testable_scenarios": [
         "scenario-9",
         "scenario-10",
