@@ -816,3 +816,19 @@ clear analytical benefit.
 ## Implementation Issues
 
 Full plan: [Distributed Recipes](docs/plans/PLAN-distributed-recipes.md) (single-pr mode, 13 issues). All issues completed.
+
+| Issue | Dependencies | Tier |
+|-------|--------------|------|
+| [#1: refactor(recipe): extract RecipeProvider interface](docs/plans/PLAN-distributed-recipes.md) | None | critical |
+| [#2: feat(state): add source tracking to ToolState](docs/plans/PLAN-distributed-recipes.md) | [#1](docs/plans/PLAN-distributed-recipes.md) | testable |
+| [#3: feat(config): add registry configuration and GetFromSource](docs/plans/PLAN-distributed-recipes.md) | [#1](docs/plans/PLAN-distributed-recipes.md) | testable |
+| [#4: feat(cli): implement tsuku registry subcommands](docs/plans/PLAN-distributed-recipes.md) | [#3](docs/plans/PLAN-distributed-recipes.md) | testable |
+| [#5: feat(distributed): implement GitHub HTTP fetching and cache](docs/plans/PLAN-distributed-recipes.md) | [#1](docs/plans/PLAN-distributed-recipes.md) | critical |
+| [#6: feat(distributed): implement DistributedProvider](docs/plans/PLAN-distributed-recipes.md) | [#1](docs/plans/PLAN-distributed-recipes.md), [#5](docs/plans/PLAN-distributed-recipes.md) | testable |
+| [#7: feat(install): integrate distributed sources into install flow](docs/plans/PLAN-distributed-recipes.md) | [#2](docs/plans/PLAN-distributed-recipes.md), [#4](docs/plans/PLAN-distributed-recipes.md), [#6](docs/plans/PLAN-distributed-recipes.md) | testable |
+| [#8: feat(cli): add source-directed loading to update, outdated, verify](docs/plans/PLAN-distributed-recipes.md) | [#2](docs/plans/PLAN-distributed-recipes.md), [#3](docs/plans/PLAN-distributed-recipes.md), [#6](docs/plans/PLAN-distributed-recipes.md) | testable |
+| [#9: feat(cli): add source display to info, list, recipes](docs/plans/PLAN-distributed-recipes.md) | [#2](docs/plans/PLAN-distributed-recipes.md), [#6](docs/plans/PLAN-distributed-recipes.md) | simple |
+| [#10: feat(cli): extend update-registry for distributed sources](docs/plans/PLAN-distributed-recipes.md) | [#6](docs/plans/PLAN-distributed-recipes.md) | simple |
+| [#11: feat(koto): create .tsuku-recipes/ in koto repo](docs/plans/PLAN-distributed-recipes.md) | [#6](docs/plans/PLAN-distributed-recipes.md) | simple |
+| [#12: chore(recipes): migrate koto recipes to distributed](docs/plans/PLAN-distributed-recipes.md) | [#7](docs/plans/PLAN-distributed-recipes.md), [#11](docs/plans/PLAN-distributed-recipes.md) | simple |
+| [#13: test(distributed): end-to-end validation](docs/plans/PLAN-distributed-recipes.md) | [#11](docs/plans/PLAN-distributed-recipes.md), [#12](docs/plans/PLAN-distributed-recipes.md) | testable |
