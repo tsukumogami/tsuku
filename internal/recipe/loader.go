@@ -117,12 +117,16 @@ func (l *Loader) GetWithSource(name string, opts LoaderOptions) (*Recipe, Recipe
 func (l *Loader) GetFromSource(ctx context.Context, name string, source string) ([]byte, error) {
 	switch source {
 	case SourceCentral:
-		// Try registry provider first, then embedded
+		// Try registry provider first, then embedded.
+		// Propagate real errors (network, parse); only fall through on not-found.
 		for _, p := range l.providers {
 			if p.Source() == SourceRegistry {
 				data, err := p.Get(ctx, name)
 				if err == nil && data != nil {
 					return data, nil
+				}
+				if err != nil && !isNotFoundError(err) && !os.IsNotExist(err) {
+					return nil, fmt.Errorf("central registry error: %w", err)
 				}
 			}
 		}
@@ -131,6 +135,9 @@ func (l *Loader) GetFromSource(ctx context.Context, name string, source string) 
 				data, err := p.Get(ctx, name)
 				if err == nil && data != nil {
 					return data, nil
+				}
+				if err != nil && !isNotFoundError(err) && !os.IsNotExist(err) {
+					return nil, fmt.Errorf("embedded registry error: %w", err)
 				}
 			}
 		}
