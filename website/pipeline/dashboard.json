@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-17T04:23:08Z",
+  "generated_at": "2026-03-17T04:24:24Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 60,
-      "pending": 3873,
+      "failed": 56,
+      "pending": 3877,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 60,
-        "pending": 3850,
+        "failed": 56,
+        "pending": 3854,
         "success": 1326
       }
     },
@@ -68,19 +68,21 @@
         "total": 1
       },
       "npm": {
-        "failed": 21,
+        "failed": 20,
+        "pending": 1,
         "success": 54,
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 33,
-        "pending": 46,
+        "failed": 31,
+        "pending": 48,
         "success": 9,
         "total": 89
       }
@@ -794,13 +796,13 @@
           "next_retry_at": "2026-03-17T17:00:48Z"
         },
         {
-          "id": "rubygems:imgproxy",
-          "name": "imgproxy",
+          "id": "rubygems:hyperkit",
+          "name": "hyperkit",
           "ecosystem": "rubygems",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-17T02:11:17Z"
+          "failure_count": 6,
+          "next_retry_at": "2026-03-18T12:23:46Z"
         },
         {
           "id": "rubygems:influxdb",
@@ -810,15 +812,6 @@
           "category": "install_failed",
           "failure_count": 5,
           "next_retry_at": "2026-03-17T08:14:04Z"
-        },
-        {
-          "id": "rubygems:ipfs",
-          "name": "ipfs",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-17T03:51:23Z"
         },
         {
           "id": "npm:kew",
@@ -864,24 +857,6 @@
           "category": "install_failed",
           "failure_count": 5,
           "next_retry_at": "2026-03-17T10:05:12Z"
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 97,
-          "next_retry_at": "1733-12-06T02:14:17Z"
-        },
-        {
-          "id": "rubygems:libnotify",
-          "name": "libnotify",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-17T03:15:53Z"
         },
         {
           "id": "rubygems:lsof",
@@ -990,15 +965,6 @@
           "category": "install_failed",
           "failure_count": 5,
           "next_retry_at": "2026-03-17T05:12:19Z"
-        },
-        {
-          "id": "npm:webdav",
-          "name": "webdav",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-17T02:05:12Z"
         }
       ],
       "pending": [
@@ -11250,15 +11216,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:hyperkit",
-          "name": "hyperkit",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-16T23:19:35Z"
-        },
-        {
           "id": "homebrew:hypre",
           "name": "hypre",
           "ecosystem": "homebrew",
@@ -11527,6 +11484,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:imgproxy",
+          "name": "imgproxy",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-17T02:11:17Z"
+        },
+        {
           "id": "homebrew:imlib2",
           "name": "imlib2",
           "ecosystem": "homebrew",
@@ -11728,6 +11694,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:ipfs",
+          "name": "ipfs",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-17T03:51:23Z"
         },
         {
           "id": "homebrew:ipopt",
@@ -13249,6 +13224,15 @@
           "failure_count": 1
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 97,
+          "next_retry_at": "1733-12-06T02:14:17Z"
+        },
+        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -13578,6 +13562,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "rubygems:libnotify",
+          "name": "libnotify",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-17T03:15:53Z"
         },
         {
           "id": "homebrew:libolm",
@@ -27211,6 +27204,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "npm:webdav",
+          "name": "webdav",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-17T02:05:12Z"
         },
         {
           "id": "rubygems:webhook",
