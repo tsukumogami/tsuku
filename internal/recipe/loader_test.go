@@ -12,15 +12,53 @@ import (
 	"github.com/tsukumogami/tsuku/internal/registry"
 )
 
-func TestNew(t *testing.T) {
+// Test helper: creates a loader with embedded + central registry providers (no local).
+// Equivalent to the old New(reg).
+func newTestLoaderWithRegistry(reg *registry.Registry) *Loader {
+	embedded, _ := NewEmbeddedRegistry()
+	var providers []RecipeProvider
+	if ep := NewEmbeddedProvider(embedded); ep != nil {
+		providers = append(providers, ep)
+	}
+	providers = append(providers, NewCentralRegistryProvider(reg))
+	return NewLoader(providers...)
+}
+
+// Test helper: creates a loader with local + embedded + central registry providers.
+// Equivalent to the old NewWithLocalRecipes(reg, dir).
+func newTestLoaderWithLocal(reg *registry.Registry, recipesDir string) *Loader {
+	embedded, _ := NewEmbeddedRegistry()
+	var providers []RecipeProvider
+	if recipesDir != "" {
+		providers = append(providers, NewLocalProvider(recipesDir))
+	}
+	if ep := NewEmbeddedProvider(embedded); ep != nil {
+		providers = append(providers, ep)
+	}
+	providers = append(providers, NewCentralRegistryProvider(reg))
+	return NewLoader(providers...)
+}
+
+// Test helper: creates a loader with local + central registry providers (no embedded).
+// Equivalent to the old NewWithoutEmbedded(reg, dir).
+func newTestLoaderNoEmbedded(reg *registry.Registry, recipesDir string) *Loader {
+	var providers []RecipeProvider
+	if recipesDir != "" {
+		providers = append(providers, NewLocalProvider(recipesDir))
+	}
+	providers = append(providers, NewCentralRegistryProvider(reg))
+	return NewLoader(providers...)
+}
+
+func TestNewLoader(t *testing.T) {
 	reg := registry.New(t.TempDir())
-	loader := New(reg)
+	loader := newTestLoaderWithRegistry(reg)
 
 	if loader == nil {
-		t.Fatal("New() returned nil")
+		t.Fatal("NewLoader() returned nil")
 	}
-	if loader.registry != reg {
-		t.Error("loader.registry not set correctly")
+	if len(loader.providers) == 0 {
+		t.Error("loader.providers should not be empty")
 	}
 	if loader.recipes == nil {
 		t.Error("loader.recipes map not initialized")
@@ -54,7 +92,7 @@ command = "test-tool --version"
 	reg := registry.New(cacheDir)
 	reg.BaseURL = server.URL
 
-	loader := New(reg)
+	loader := newTestLoaderWithRegistry(reg)
 
 	recipe, err := loader.Get("test-tool", LoaderOptions{})
 	if err != nil {
@@ -85,7 +123,7 @@ func TestLoader_Get_NotFound(t *testing.T) {
 	reg := registry.New(cacheDir)
 	reg.BaseURL = server.URL
 
-	loader := New(reg)
+	loader := newTestLoaderWithRegistry(reg)
 
 	_, err := loader.Get("nonexistent", LoaderOptions{})
 	if err == nil {
@@ -120,7 +158,7 @@ command = "ctx-tool --version"
 	reg := registry.New(cacheDir)
 	reg.BaseURL = server.URL
 
-	loader := New(reg)
+	loader := newTestLoaderWithRegistry(reg)
 
 	ctx := context.Background()
 	recipe, err := loader.GetWithContext(ctx, "ctx-tool", LoaderOptions{})
@@ -156,7 +194,7 @@ command = "list-tool --version"
 	reg := registry.New(cacheDir)
 	reg.BaseURL = server.URL
 
-	loader := New(reg)
+	loader := newTestLoaderWithRegistry(reg)
 
 	// Initially empty
 	names := loader.List()
@@ -197,7 +235,7 @@ command = "count-tool --version"
 	reg := registry.New(cacheDir)
 	reg.BaseURL = server.URL
 
-	loader := New(reg)
+	loader := newTestLoaderWithRegistry(reg)
 
 	if loader.Count() != 0 {
 		t.Errorf("Count() = %d, want 0", loader.Count())
@@ -210,11 +248,19 @@ command = "count-tool --version"
 	}
 }
 
-func TestLoader_Registry(t *testing.T) {
+func TestLoader_ProviderBySource(t *testing.T) {
 	reg := registry.New(t.TempDir())
-	loader := New(reg)
+	loader := newTestLoaderWithRegistry(reg)
 
-	if loader.Registry() != reg {
+	p := loader.ProviderBySource(SourceRegistry)
+	if p == nil {
+		t.Fatal("ProviderBySource(SourceRegistry) returned nil")
+	}
+	rp, ok := p.(*CentralRegistryProvider)
+	if !ok {
+		t.Fatal("Expected CentralRegistryProvider type")
+	}
+	if rp.Registry() != reg {
 		t.Error("Registry() did not return the expected registry")
 	}
 }
@@ -242,7 +288,7 @@ command = "cache-tool --version"
 	reg := registry.New(cacheDir)
 	reg.BaseURL = server.URL
 
-	loader := New(reg)
+	loader := newTestLoaderWithRegistry(reg)
 
 	// Load a recipe
 	_, _ = loader.Get("cache-tool", LoaderOptions{})
@@ -260,7 +306,7 @@ command = "cache-tool --version"
 
 func TestLoader_parseBytes_Invalid(t *testing.T) {
 	reg := registry.New(t.TempDir())
-	loader := New(reg)
+	loader := newTestLoaderWithRegistry(reg)
 
 	// Invalid TOML
 	_, err := loader.parseBytes([]byte("invalid toml [[["))
@@ -277,33 +323,30 @@ name = ""
 	}
 }
 
-func TestNewWithLocalRecipes(t *testing.T) {
+func TestNewLoader_WithLocalRecipes(t *testing.T) {
 	reg := registry.New(t.TempDir())
 	recipesDir := "/some/recipes/dir"
-	loader := NewWithLocalRecipes(reg, recipesDir)
+	loader := newTestLoaderWithLocal(reg, recipesDir)
 
 	if loader == nil {
-		t.Fatal("NewWithLocalRecipes() returned nil")
+		t.Fatal("NewLoader() returned nil")
 	}
-	if loader.registry != reg {
-		t.Error("loader.registry not set correctly")
-	}
-	if loader.recipesDir != recipesDir {
-		t.Errorf("loader.recipesDir = %q, want %q", loader.recipesDir, recipesDir)
+	if loader.RecipesDir() != recipesDir {
+		t.Errorf("RecipesDir() = %q, want %q", loader.RecipesDir(), recipesDir)
 	}
 }
 
 func TestLoader_SetRecipesDir(t *testing.T) {
 	reg := registry.New(t.TempDir())
-	loader := New(reg)
+	loader := newTestLoaderWithRegistry(reg)
 
-	if loader.recipesDir != "" {
-		t.Errorf("initial recipesDir should be empty, got %q", loader.recipesDir)
+	if loader.RecipesDir() != "" {
+		t.Errorf("initial RecipesDir() should be empty, got %q", loader.RecipesDir())
 	}
 
 	loader.SetRecipesDir("/test/dir")
-	if loader.recipesDir != "/test/dir" {
-		t.Errorf("recipesDir = %q, want %q", loader.recipesDir, "/test/dir")
+	if loader.RecipesDir() != "/test/dir" {
+		t.Errorf("RecipesDir() = %q, want %q", loader.RecipesDir(), "/test/dir")
 	}
 }
 
@@ -336,7 +379,7 @@ command = "local-tool --version"
 	reg := registry.New(cacheDir)
 	reg.BaseURL = server.URL
 
-	loader := NewWithLocalRecipes(reg, recipesDir)
+	loader := newTestLoaderWithLocal(reg, recipesDir)
 
 	// Should load from local recipes directory
 	recipe, err := loader.Get("local-tool", LoaderOptions{})
@@ -399,7 +442,7 @@ command = "priority-tool --version"
 	reg := registry.New(cacheDir)
 	reg.BaseURL = server.URL
 
-	loader := NewWithLocalRecipes(reg, recipesDir)
+	loader := newTestLoaderWithLocal(reg, recipesDir)
 
 	// Should load from local recipes directory, not registry
 	recipe, err := loader.Get("priority-tool", LoaderOptions{})
@@ -443,7 +486,7 @@ command = "registry-tool --version"
 	reg := registry.New(cacheDir)
 	reg.BaseURL = server.URL
 
-	loader := NewWithLocalRecipes(reg, recipesDir)
+	loader := newTestLoaderWithLocal(reg, recipesDir)
 
 	// Should fall back to registry when local doesn't exist
 	recipe, err := loader.Get("registry-tool", LoaderOptions{})
@@ -473,7 +516,7 @@ func TestLoader_Get_LocalRecipeParseError(t *testing.T) {
 	reg := registry.New(cacheDir)
 	reg.BaseURL = server.URL
 
-	loader := NewWithLocalRecipes(reg, recipesDir)
+	loader := newTestLoaderWithLocal(reg, recipesDir)
 
 	// Should return parse error, not fallback to registry
 	_, err := loader.Get("invalid-tool", LoaderOptions{})
@@ -524,7 +567,7 @@ command = "registry-tool --version"
 	}
 
 	reg := registry.New(cacheDir)
-	loader := NewWithoutEmbedded(reg, recipesDir) // Use NewWithoutEmbedded to exclude embedded recipes
+	loader := newTestLoaderNoEmbedded(reg, recipesDir)
 
 	recipes, err := loader.ListAllWithSource()
 	if err != nil {
@@ -596,7 +639,7 @@ command = "shared-tool --version"
 	}
 
 	reg := registry.New(cacheDir)
-	loader := NewWithoutEmbedded(reg, recipesDir) // Use NewWithoutEmbedded to exclude embedded recipes
+	loader := newTestLoaderNoEmbedded(reg, recipesDir)
 
 	recipes, err := loader.ListAllWithSource()
 	if err != nil {
@@ -634,7 +677,7 @@ command = "only-local --version"
 
 	cacheDir := t.TempDir()
 	reg := registry.New(cacheDir)
-	loader := NewWithLocalRecipes(reg, recipesDir)
+	loader := newTestLoaderWithLocal(reg, recipesDir)
 
 	recipes, err := loader.ListLocal()
 	if err != nil {
@@ -659,7 +702,7 @@ func TestLoader_ListLocal_EmptyDirectory(t *testing.T) {
 	recipesDir := t.TempDir()
 	cacheDir := t.TempDir()
 	reg := registry.New(cacheDir)
-	loader := NewWithLocalRecipes(reg, recipesDir)
+	loader := newTestLoaderWithLocal(reg, recipesDir)
 
 	recipes, err := loader.ListLocal()
 	if err != nil {
@@ -674,7 +717,7 @@ func TestLoader_ListLocal_EmptyDirectory(t *testing.T) {
 func TestLoader_ListLocal_NoRecipesDir(t *testing.T) {
 	cacheDir := t.TempDir()
 	reg := registry.New(cacheDir)
-	loader := New(reg) // No recipes dir set
+	loader := newTestLoaderWithRegistry(reg) // No local provider
 
 	recipes, err := loader.ListLocal()
 	if err != nil {
@@ -688,7 +731,7 @@ func TestLoader_ListLocal_NoRecipesDir(t *testing.T) {
 
 func TestLoader_RecipesDir(t *testing.T) {
 	reg := registry.New(t.TempDir())
-	loader := NewWithLocalRecipes(reg, "/some/path")
+	loader := newTestLoaderWithLocal(reg, "/some/path")
 
 	if loader.RecipesDir() != "/some/path" {
 		t.Errorf("RecipesDir() = %q, want %q", loader.RecipesDir(), "/some/path")
@@ -872,7 +915,7 @@ func TestValidate(t *testing.T) {
 
 func TestLoader_SetConstraintLookup(t *testing.T) {
 	reg := registry.New(t.TempDir())
-	loader := New(reg)
+	loader := newTestLoaderWithRegistry(reg)
 
 	// Initially nil
 	if loader.constraintLookup != nil {
@@ -935,7 +978,7 @@ command = "echo ok"
 	reg := registry.New(cacheDir)
 	reg.BaseURL = server.URL
 
-	loader := NewWithLocalRecipes(reg, recipesDir)
+	loader := newTestLoaderWithLocal(reg, recipesDir)
 	loader.SetConstraintLookup(mockLookup)
 
 	recipe, err := loader.Get("constrained-tool", LoaderOptions{})
@@ -995,7 +1038,7 @@ command = "echo ok"
 	reg.BaseURL = server.URL
 
 	// Don't set constraint lookup - analysis should be skipped
-	loader := NewWithLocalRecipes(reg, recipesDir)
+	loader := newTestLoaderWithLocal(reg, recipesDir)
 
 	recipe, err := loader.Get("no-analysis-tool", LoaderOptions{})
 	if err != nil {
@@ -1046,7 +1089,7 @@ command = "echo ok"
 	reg := registry.New(cacheDir)
 	reg.BaseURL = server.URL
 
-	loader := NewWithLocalRecipes(reg, recipesDir)
+	loader := newTestLoaderWithLocal(reg, recipesDir)
 	loader.SetConstraintLookup(mockLookup)
 
 	recipe, err := loader.Get("varying-tool", LoaderOptions{})
@@ -1103,7 +1146,7 @@ command = "echo ok"
 	reg := registry.New(cacheDir)
 	reg.BaseURL = server.URL
 
-	loader := NewWithLocalRecipes(reg, recipesDir)
+	loader := newTestLoaderWithLocal(reg, recipesDir)
 	loader.SetConstraintLookup(mockLookup)
 
 	_, err := loader.Get("conflict-tool", LoaderOptions{})
@@ -1120,7 +1163,7 @@ command = "echo ok"
 func TestLoader_Get_RequireEmbedded(t *testing.T) {
 	// Test that RequireEmbedded=true only checks embedded recipes
 	reg := registry.New(t.TempDir())
-	loader := New(reg)
+	loader := newTestLoaderWithRegistry(reg)
 
 	// Test 1: Embedded recipe should be found with RequireEmbedded=true
 	// Use a known embedded recipe (go toolchain)
@@ -1134,7 +1177,7 @@ func TestLoader_Get_RequireEmbedded(t *testing.T) {
 
 	// Test 2: Non-embedded recipe should fail with RequireEmbedded=true
 	// Use a loader without embedded recipes to simulate this
-	loaderNoEmbed := NewWithoutEmbedded(reg, "")
+	loaderNoEmbed := newTestLoaderNoEmbedded(reg, "")
 	_, err = loaderNoEmbed.Get("nonexistent-recipe", LoaderOptions{RequireEmbedded: true})
 	if err == nil {
 		t.Error("Get() with RequireEmbedded=true should fail for non-embedded recipe")

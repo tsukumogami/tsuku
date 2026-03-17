@@ -28,7 +28,7 @@ action = "download"
 url = "https://example.com/test.tar.gz"
 `
 	reg := registry.New(t.TempDir())
-	loader := New(reg)
+	loader := newTestLoaderWithRegistry(reg)
 
 	recipe, err := loader.parseBytes([]byte(recipeToml))
 	if err != nil {
@@ -72,7 +72,7 @@ url = "https://example.com/test.tar.gz"
 command = "no-satisfies --version"
 `
 	reg := registry.New(t.TempDir())
-	loader := New(reg)
+	loader := newTestLoaderWithRegistry(reg)
 
 	recipe, err := loader.parseBytes([]byte(recipeToml))
 	if err != nil {
@@ -87,7 +87,7 @@ command = "no-satisfies --version"
 func TestSatisfies_EmbeddedOpenSSL(t *testing.T) {
 	// Verify the embedded openssl recipe has the satisfies field parsed correctly
 	reg := registry.New(t.TempDir())
-	loader := New(reg)
+	loader := newTestLoaderWithRegistry(reg)
 
 	recipe, err := loader.Get("openssl", LoaderOptions{RequireEmbedded: true})
 	if err != nil {
@@ -119,15 +119,15 @@ func TestSatisfies_EmbeddedOpenSSL(t *testing.T) {
 
 func TestSatisfies_BuildIndex(t *testing.T) {
 	reg := registry.New(t.TempDir())
-	loader := New(reg) // has embedded recipes
+	loader := newTestLoaderWithRegistry(reg)
 
 	// Force index build by looking up a name
 	loader.satisfiesOnce.Do(loader.buildSatisfiesIndex)
 
 	// The embedded openssl recipe should populate the index
-	if canonicalName, ok := loader.satisfiesIndex["openssl@3"]; ok {
-		if canonicalName != "openssl" {
-			t.Errorf("expected openssl@3 -> openssl, got -> %s", canonicalName)
+	if entry, ok := loader.satisfiesIndex["openssl@3"]; ok {
+		if entry.recipeName != "openssl" {
+			t.Errorf("expected openssl@3 -> openssl, got -> %s", entry.recipeName)
 		}
 	} else {
 		t.Error("expected openssl@3 in satisfies index from embedded openssl recipe")
@@ -136,7 +136,7 @@ func TestSatisfies_BuildIndex(t *testing.T) {
 
 func TestSatisfies_LookupKnownName(t *testing.T) {
 	reg := registry.New(t.TempDir())
-	loader := New(reg)
+	loader := newTestLoaderWithRegistry(reg)
 
 	canonicalName, ok := loader.lookupSatisfies("openssl@3")
 	if !ok {
@@ -149,7 +149,7 @@ func TestSatisfies_LookupKnownName(t *testing.T) {
 
 func TestSatisfies_LookupUnknownName(t *testing.T) {
 	reg := registry.New(t.TempDir())
-	loader := New(reg)
+	loader := newTestLoaderWithRegistry(reg)
 
 	_, ok := loader.lookupSatisfies("nonexistent-package@99")
 	if ok {
@@ -159,7 +159,7 @@ func TestSatisfies_LookupUnknownName(t *testing.T) {
 
 func TestSatisfies_PublicLookup(t *testing.T) {
 	reg := registry.New(t.TempDir())
-	loader := New(reg)
+	loader := newTestLoaderWithRegistry(reg)
 
 	// LookupSatisfies is the public API wrapper
 	canonicalName, ok := loader.LookupSatisfies("openssl@3")
@@ -173,7 +173,7 @@ func TestSatisfies_PublicLookup(t *testing.T) {
 
 // --- Loader Fallback Tests ---
 
-// Helper: create a loader with a test-only embedded-like setup using local recipes
+// Helper: create a loader with a test-only setup using local recipes
 // and a satisfies entry for a test recipe.
 func setupSatisfiesTestLoader(t *testing.T) (*Loader, *httptest.Server) {
 	t.Helper()
@@ -204,15 +204,14 @@ url = "https://example.com/test.tar.gz"
 	reg := registry.New(cacheDir)
 	reg.BaseURL = server.URL
 
-	loader := NewWithoutEmbedded(reg, recipesDir)
+	loader := newTestLoaderNoEmbedded(reg, recipesDir)
 
-	// Pre-populate the satisfies index manually since we're using NewWithoutEmbedded
-	// (no embedded recipes means buildSatisfiesIndex won't find anything).
+	// Pre-populate the satisfies index manually since we have no embedded recipes.
 	// Trigger the Once first so it doesn't overwrite our manual index.
 	loader.satisfiesOnce.Do(func() {
-		loader.satisfiesIndex = map[string]string{
-			"test-alias@2":     "test-canonical",
-			"test-other-alias": "test-canonical",
+		loader.satisfiesIndex = map[string]satisfiesEntry{
+			"test-alias@2":     {recipeName: "test-canonical", source: SourceLocal},
+			"test-other-alias": {recipeName: "test-canonical", source: SourceLocal},
 		}
 	})
 
@@ -261,13 +260,12 @@ command = "exact-match --version"
 	reg := registry.New(cacheDir)
 	reg.BaseURL = server.URL
 
-	loader := NewWithoutEmbedded(reg, recipesDir)
+	loader := newTestLoaderNoEmbedded(reg, recipesDir)
 
 	// Set up satisfies index that also maps "exact-match" to something else
-	// (this shouldn't happen in practice due to validation, but tests the priority)
 	loader.satisfiesOnce.Do(func() {
-		loader.satisfiesIndex = map[string]string{
-			"exact-match": "other-recipe",
+		loader.satisfiesIndex = map[string]satisfiesEntry{
+			"exact-match": {recipeName: "other-recipe", source: SourceLocal},
 		}
 	})
 
@@ -284,12 +282,9 @@ command = "exact-match --version"
 
 func TestSatisfies_GetEmbeddedOnly_Fallback(t *testing.T) {
 	reg := registry.New(t.TempDir())
-	loader := New(reg) // includes embedded recipes
+	loader := newTestLoaderWithRegistry(reg)
 
 	// The embedded openssl recipe satisfies "openssl@3"
-	// But openssl@3 also exists as a registry recipe (exact match).
-	// Since we're using RequireEmbedded, the registry is skipped,
-	// so satisfies fallback should find openssl via the embedded index.
 	recipe, err := loader.Get("openssl@3", LoaderOptions{RequireEmbedded: true})
 	if err != nil {
 		t.Fatalf("Get(openssl@3, RequireEmbedded) failed: %v", err)
@@ -303,12 +298,12 @@ func TestSatisfies_GetEmbeddedOnly_Fallback(t *testing.T) {
 func TestSatisfies_GetEmbeddedOnly_NonEmbeddedSatisfier(t *testing.T) {
 	// A loader with no embedded recipes should not find anything via satisfies
 	reg := registry.New(t.TempDir())
-	loader := NewWithoutEmbedded(reg, "")
+	loader := newTestLoaderNoEmbedded(reg, "")
 
 	// Manually add a satisfies entry pointing to a non-embedded recipe
 	loader.satisfiesOnce.Do(func() {
-		loader.satisfiesIndex = map[string]string{
-			"some-alias": "non-embedded-recipe",
+		loader.satisfiesIndex = map[string]satisfiesEntry{
+			"some-alias": {recipeName: "non-embedded-recipe", source: SourceRegistry},
 		}
 	})
 
@@ -468,7 +463,7 @@ func TestSatisfies_Validation_NoSatisfiesField(t *testing.T) {
 
 func TestSatisfies_LazyBuild(t *testing.T) {
 	reg := registry.New(t.TempDir())
-	loader := New(reg)
+	loader := newTestLoaderWithRegistry(reg)
 
 	// Before any lookup, satisfiesIndex should be nil
 	if loader.satisfiesIndex != nil {
@@ -486,7 +481,7 @@ func TestSatisfies_LazyBuild(t *testing.T) {
 
 func TestSatisfies_ClearCacheResetsIndex(t *testing.T) {
 	reg := registry.New(t.TempDir())
-	loader := New(reg)
+	loader := newTestLoaderWithRegistry(reg)
 
 	// Build the index
 	loader.lookupSatisfies("anything")
@@ -506,14 +501,6 @@ func TestSatisfies_ClearCacheResetsIndex(t *testing.T) {
 // --- Cross-Recipe Cycle Tests ---
 
 func TestSatisfies_GetWithContext_NoCrossRecipeCycle(t *testing.T) {
-	// Simulate a cross-recipe satisfies cycle:
-	//   "alias-a" -> satisfies index -> "recipe-b"
-	//   "recipe-b" doesn't exist as a real recipe
-	//   but if "recipe-b" were looked up through satisfies again, it could
-	//   map to "alias-a" (or another chain) causing infinite recursion.
-	//
-	// With the fix, loadDirect skips the satisfies fallback, so even if
-	// canonicalName is itself in the satisfies index, it won't recurse.
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 	}))
@@ -523,19 +510,17 @@ func TestSatisfies_GetWithContext_NoCrossRecipeCycle(t *testing.T) {
 	reg := registry.New(cacheDir)
 	reg.BaseURL = server.URL
 
-	loader := NewWithoutEmbedded(reg, "")
+	loader := newTestLoaderNoEmbedded(reg, "")
 
 	// Create a cycle: alias-a -> recipe-b -> alias-a
 	loader.satisfiesOnce.Do(func() {
-		loader.satisfiesIndex = map[string]string{
-			"alias-a":  "recipe-b",
-			"recipe-b": "alias-a",
+		loader.satisfiesIndex = map[string]satisfiesEntry{
+			"alias-a":  {recipeName: "recipe-b", source: SourceRegistry},
+			"recipe-b": {recipeName: "alias-a", source: SourceRegistry},
 		}
 	})
 
-	// This should NOT hang or stack-overflow. loadDirect doesn't re-enter
-	// the satisfies path, so "recipe-b" is looked up directly and fails
-	// with a not-found error instead of recursing.
+	// This should NOT hang or stack-overflow.
 	_, err := loader.GetWithContext(context.Background(), "alias-a", LoaderOptions{})
 	if err == nil {
 		t.Fatal("expected error for unresolvable satisfies cycle, got nil")
@@ -550,20 +535,16 @@ func TestSatisfies_GetWithContext_NoCrossRecipeCycle(t *testing.T) {
 func TestSatisfies_GetEmbeddedOnly_NoCrossRecipeCycle(t *testing.T) {
 	// Same cycle test but for the embedded-only path.
 	reg := registry.New(t.TempDir())
-	loader := NewWithoutEmbedded(reg, "")
+	loader := newTestLoaderNoEmbedded(reg, "")
 
 	// Create a cycle in the satisfies index
 	loader.satisfiesOnce.Do(func() {
-		loader.satisfiesIndex = map[string]string{
-			"alias-x":  "recipe-y",
-			"recipe-y": "alias-x",
+		loader.satisfiesIndex = map[string]satisfiesEntry{
+			"alias-x":  {recipeName: "recipe-y", source: SourceEmbedded},
+			"recipe-y": {recipeName: "alias-x", source: SourceEmbedded},
 		}
 	})
 
-	// For embedded-only, lookupSatisfiesEmbeddedOnly checks that the
-	// canonical recipe exists in embedded FS. Since we use NewWithoutEmbedded,
-	// this will already return false for "recipe-y", but the important thing
-	// is that loadEmbeddedDirect doesn't recurse even if it were called.
 	_, err := loader.Get("alias-x", LoaderOptions{RequireEmbedded: true})
 	if err == nil {
 		t.Fatal("expected error for unresolvable satisfies cycle in embedded mode")
@@ -573,9 +554,6 @@ func TestSatisfies_GetEmbeddedOnly_NoCrossRecipeCycle(t *testing.T) {
 // --- Registry Manifest Integration Tests ---
 
 func TestSatisfies_BuildIndex_IncludesManifestData(t *testing.T) {
-	// Create a cached manifest with satisfies data from a registry-only recipe.
-	// Note: libcurl does NOT claim "curl" here because "curl" is a canonical recipe
-	// name and the registry generator (generate-registry.py) rejects such collisions.
 	cacheDir := t.TempDir()
 	manifestJSON := `{
 		"schema_version": 1,
@@ -612,30 +590,27 @@ func TestSatisfies_BuildIndex_IncludesManifestData(t *testing.T) {
 	}
 
 	reg := registry.New(cacheDir)
-	loader := NewWithoutEmbedded(reg, "")
+	loader := newTestLoaderNoEmbedded(reg, "")
 
 	// Trigger index build
 	loader.satisfiesOnce.Do(loader.buildSatisfiesIndex)
 
 	// Manifest entries should be in the index
-	if canonicalName, ok := loader.satisfiesIndex["sqlite3"]; ok {
-		if canonicalName != "sqlite" {
-			t.Errorf("expected sqlite3 -> sqlite, got -> %s", canonicalName)
+	if entry, ok := loader.satisfiesIndex["sqlite3"]; ok {
+		if entry.recipeName != "sqlite" {
+			t.Errorf("expected sqlite3 -> sqlite, got -> %s", entry.recipeName)
 		}
 	} else {
 		t.Error("expected sqlite3 in satisfies index from manifest")
 	}
 
 	// libcurl should NOT have any satisfies entries in the index
-	// because it doesn't declare any (curl is a separate canonical recipe)
-	if canonicalName, ok := loader.satisfiesIndex["curl"]; ok {
-		t.Errorf("unexpected satisfies index entry: curl -> %s (curl is a canonical recipe name, not a satisfies alias)", canonicalName)
+	if entry, ok := loader.satisfiesIndex["curl"]; ok {
+		t.Errorf("unexpected satisfies index entry: curl -> %s (curl is a canonical recipe name, not a satisfies alias)", entry.recipeName)
 	}
 }
 
 func TestSatisfies_BuildIndex_EmbeddedOverManifest(t *testing.T) {
-	// When both embedded and manifest claim the same package name,
-	// embedded should win (higher priority).
 	cacheDir := t.TempDir()
 	manifestJSON := `{
 		"schema_version": 1,
@@ -658,18 +633,18 @@ func TestSatisfies_BuildIndex_EmbeddedOverManifest(t *testing.T) {
 	}
 
 	reg := registry.New(cacheDir)
-	loader := New(reg) // Includes embedded recipes (openssl claims openssl@3)
+	loader := newTestLoaderWithRegistry(reg) // Includes embedded recipes (openssl claims openssl@3)
 
 	// Trigger index build
 	loader.satisfiesOnce.Do(loader.buildSatisfiesIndex)
 
 	// Embedded openssl should win over manifest's other-openssl
-	canonicalName, ok := loader.satisfiesIndex["openssl@3"]
+	entry, ok := loader.satisfiesIndex["openssl@3"]
 	if !ok {
 		t.Fatal("expected openssl@3 in satisfies index")
 	}
-	if canonicalName != "openssl" {
-		t.Errorf("expected embedded 'openssl' to win over manifest, got %q", canonicalName)
+	if entry.recipeName != "openssl" {
+		t.Errorf("expected embedded 'openssl' to win over manifest, got %q", entry.recipeName)
 	}
 }
 
@@ -677,26 +652,22 @@ func TestSatisfies_BuildIndex_NoManifest(t *testing.T) {
 	// When no manifest is cached, the index should still work with embedded data only
 	cacheDir := t.TempDir()
 	reg := registry.New(cacheDir)
-	loader := New(reg)
+	loader := newTestLoaderWithRegistry(reg)
 
 	// Trigger index build (no manifest file exists)
 	loader.satisfiesOnce.Do(loader.buildSatisfiesIndex)
 
 	// Embedded openssl@3 should still be in the index
-	canonicalName, ok := loader.satisfiesIndex["openssl@3"]
+	entry, ok := loader.satisfiesIndex["openssl@3"]
 	if !ok {
 		t.Fatal("expected openssl@3 in satisfies index from embedded recipes")
 	}
-	if canonicalName != "openssl" {
-		t.Errorf("expected openssl@3 -> openssl, got -> %s", canonicalName)
+	if entry.recipeName != "openssl" {
+		t.Errorf("expected openssl@3 -> openssl, got -> %s", entry.recipeName)
 	}
 }
 
 func TestSatisfies_ManifestRecipeResolvable(t *testing.T) {
-	// End-to-end: a registry-only recipe with satisfies entries
-	// should be resolvable through the satisfies fallback.
-	// We simulate this with a local recipe and a cached manifest.
-
 	// Create a local recipe that the manifest claims satisfies "test-alias@2"
 	localRecipe := `[metadata]
 name = "test-registry-recipe"
@@ -743,7 +714,7 @@ url = "https://example.com/test.tar.gz"
 
 	reg := registry.New(cacheDir)
 	reg.BaseURL = server.URL
-	loader := NewWithoutEmbedded(reg, recipesDir)
+	loader := newTestLoaderNoEmbedded(reg, recipesDir)
 
 	// Look up the alias through the satisfies fallback
 	recipe, err := loader.GetWithContext(context.Background(), "test-alias@2", LoaderOptions{})
@@ -757,9 +728,6 @@ url = "https://example.com/test.tar.gz"
 }
 
 func TestSatisfies_LoadDirect_SkipsSatisfiesFallback(t *testing.T) {
-	// Verify that loadDirect doesn't use the satisfies fallback by looking
-	// up a name that exists only in the satisfies index (not as a real recipe).
-	// loadDirect should return not-found rather than recursing through satisfies.
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 	}))
@@ -769,21 +737,21 @@ func TestSatisfies_LoadDirect_SkipsSatisfiesFallback(t *testing.T) {
 	reg := registry.New(cacheDir)
 	reg.BaseURL = server.URL
 
-	loader := NewWithoutEmbedded(reg, "")
+	loader := newTestLoaderNoEmbedded(reg, "")
 
 	// "phantom" exists in the satisfies index but not as a real recipe
 	loader.satisfiesOnce.Do(func() {
-		loader.satisfiesIndex = map[string]string{
-			"phantom": "also-phantom",
+		loader.satisfiesIndex = map[string]satisfiesEntry{
+			"phantom": {recipeName: "also-phantom", source: SourceRegistry},
 		}
 	})
 
-	// loadDirect should NOT follow the satisfies index for "phantom"
-	_, err := loader.loadDirect(context.Background(), "phantom")
+	// resolveFromChain with trySatisfies=false should NOT follow the satisfies index
+	_, _, err := loader.resolveFromChain(context.Background(), loader.providers, "phantom", false)
 	if err == nil {
-		t.Fatal("expected loadDirect to return error for non-existent recipe")
+		t.Fatal("expected resolveFromChain to return error for non-existent recipe")
 	}
-	if !strings.Contains(err.Error(), "phantom") {
-		t.Errorf("expected error to mention 'phantom', got: %v", err)
+	if !strings.Contains(err.Error(), "not found") {
+		t.Errorf("expected error about not found, got: %v", err)
 	}
 }

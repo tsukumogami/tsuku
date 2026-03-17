@@ -658,7 +658,14 @@ func newTestLoader(t *testing.T) *recipe.Loader {
 	reg := registry.New(t.TempDir())
 	reg.BaseURL = server.URL
 
-	return recipe.NewWithLocalRecipes(reg, t.TempDir())
+	embedded, _ := recipe.NewEmbeddedRegistry()
+	var providers []recipe.RecipeProvider
+	providers = append(providers, recipe.NewLocalProvider(t.TempDir()))
+	if ep := recipe.NewEmbeddedProvider(embedded); ep != nil {
+		providers = append(providers, ep)
+	}
+	providers = append(providers, recipe.NewCentralRegistryProvider(reg))
+	return recipe.NewLoader(providers...)
 }
 
 func TestCheckExistingRecipe_SatisfiesMatchPreventsGeneration(t *testing.T) {
@@ -700,7 +707,7 @@ command = "my-tool --version"
 
 	reg := registry.New(t.TempDir())
 	reg.BaseURL = server.URL
-	l := recipe.NewWithoutEmbedded(reg, recipesDir)
+	l := recipe.NewLoader(recipe.NewLocalProvider(recipesDir), recipe.NewCentralRegistryProvider(reg))
 
 	canonicalName, found := checkExistingRecipe(l, "my-tool")
 	if !found {
@@ -733,7 +740,7 @@ func TestCheckExistingRecipe_NoMatchAllowsGeneration(t *testing.T) {
 
 	reg := registry.New(t.TempDir())
 	reg.BaseURL = server.URL
-	l := recipe.NewWithoutEmbedded(reg, t.TempDir())
+	l := recipe.NewLoader(recipe.NewLocalProvider(t.TempDir()), recipe.NewCentralRegistryProvider(reg))
 
 	_, found := checkExistingRecipe(l, "nonexistent-tool")
 	if found {

@@ -9,6 +9,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/tsukumogami/tsuku/internal/config"
+	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/registry"
 )
 
@@ -29,11 +30,17 @@ of all cached recipes regardless of freshness.
 Use --recipe to refresh a specific recipe only.
 Use --dry-run to see what would be refreshed without making network requests.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		reg := loader.Registry()
-		if reg == nil {
+		p := loader.ProviderBySource(recipe.SourceRegistry)
+		if p == nil {
 			printInfo("Registry not configured.")
 			return
 		}
+		rp, ok := p.(*recipe.CentralRegistryProvider)
+		if !ok {
+			printInfo("Registry not configured.")
+			return
+		}
+		reg := rp.Registry()
 
 		// Create CachedRegistry with configured TTL
 		ttl := config.GetRecipeCacheTTL()

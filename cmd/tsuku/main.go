@@ -67,8 +67,19 @@ func init() {
 	}
 	reg := registry.New(cfg.RegistryDir)
 
-	// Initialize recipe loader with registry and local recipes directory
-	loader = recipe.NewWithLocalRecipes(reg, cfg.RecipesDir)
+	// Build provider chain: local > embedded > central registry
+	var providers []recipe.RecipeProvider
+	if cfg.RecipesDir != "" {
+		providers = append(providers, recipe.NewLocalProvider(cfg.RecipesDir))
+	}
+	embedded, _ := recipe.NewEmbeddedRegistry()
+	if ep := recipe.NewEmbeddedProvider(embedded); ep != nil {
+		providers = append(providers, ep)
+	}
+	providers = append(providers, recipe.NewCentralRegistryProvider(reg))
+
+	// Initialize recipe loader with provider chain
+	loader = recipe.NewLoader(providers...)
 
 	// Configure constraint lookup for step analysis (enables platform constraint validation)
 	constraintLookup = defaultConstraintLookup()
