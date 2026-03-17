@@ -2,6 +2,7 @@ package recipe
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -1318,5 +1319,280 @@ command = "cached-tool --version"
 	}
 	if source1 != SourceLocal {
 		t.Errorf("source = %q, want %q", source1, SourceLocal)
+	}
+}
+
+// --- GetFromSource tests ---
+
+// mockProvider is a simple RecipeProvider for testing GetFromSource.
+type mockProvider struct {
+	source  RecipeSource
+	recipes map[string][]byte
+}
+
+func (m *mockProvider) Get(_ context.Context, name string) ([]byte, error) {
+	data, ok := m.recipes[name]
+	if !ok {
+		return nil, fmt.Errorf("recipe %q not found in %s", name, m.source)
+	}
+	return data, nil
+}
+
+func (m *mockProvider) List(_ context.Context) ([]RecipeInfo, error) {
+	var result []RecipeInfo
+	for name := range m.recipes {
+		result = append(result, RecipeInfo{Name: name, Source: m.source})
+	}
+	return result, nil
+}
+
+func (m *mockProvider) Source() RecipeSource {
+	return m.source
+}
+
+func TestLoader_GetFromSource_Central_Registry(t *testing.T) {
+	recipeData := []byte(`[metadata]
+name = "my-tool"
+description = "test"
+
+[[steps]]
+action = "download"
+
+[verify]
+command = "my-tool --version"
+`)
+
+	registryProvider := &mockProvider{
+		source:  SourceRegistry,
+		recipes: map[string][]byte{"my-tool": recipeData},
+	}
+
+	loader := NewLoader(registryProvider)
+
+	data, err := loader.GetFromSource(context.Background(), "my-tool", SourceCentral)
+	if err != nil {
+		t.Fatalf("GetFromSource() failed: %v", err)
+	}
+	if string(data) != string(recipeData) {
+		t.Error("GetFromSource() returned unexpected data")
+	}
+}
+
+func TestLoader_GetFromSource_Central_Embedded(t *testing.T) {
+	recipeData := []byte(`[metadata]
+name = "embedded-tool"
+description = "test"
+
+[[steps]]
+action = "download"
+
+[verify]
+command = "embedded-tool --version"
+`)
+
+	// Only an embedded provider, no registry
+	embeddedProvider := &mockProvider{
+		source:  SourceEmbedded,
+		recipes: map[string][]byte{"embedded-tool": recipeData},
+	}
+
+	loader := NewLoader(embeddedProvider)
+
+	data, err := loader.GetFromSource(context.Background(), "embedded-tool", SourceCentral)
+	if err != nil {
+		t.Fatalf("GetFromSource() failed: %v", err)
+	}
+	if string(data) != string(recipeData) {
+		t.Error("GetFromSource() returned unexpected data")
+	}
+}
+
+func TestLoader_GetFromSource_Central_PrefersRegistry(t *testing.T) {
+	registryData := []byte("registry-version")
+	embeddedData := []byte("embedded-version")
+
+	registryProvider := &mockProvider{
+		source:  SourceRegistry,
+		recipes: map[string][]byte{"tool": registryData},
+	}
+	embeddedProvider := &mockProvider{
+		source:  SourceEmbedded,
+		recipes: map[string][]byte{"tool": embeddedData},
+	}
+
+	loader := NewLoader(embeddedProvider, registryProvider)
+
+	data, err := loader.GetFromSource(context.Background(), "tool", SourceCentral)
+	if err != nil {
+		t.Fatalf("GetFromSource() failed: %v", err)
+	}
+	if string(data) != string(registryData) {
+		t.Errorf("expected registry data, got %q", string(data))
+	}
+}
+
+func TestLoader_GetFromSource_Local(t *testing.T) {
+	recipeData := []byte(`[metadata]
+name = "local-tool"
+description = "local"
+
+[[steps]]
+action = "download"
+
+[verify]
+command = "local-tool --version"
+`)
+
+	localProvider := &mockProvider{
+		source:  SourceLocal,
+		recipes: map[string][]byte{"local-tool": recipeData},
+	}
+
+	loader := NewLoader(localProvider)
+
+	data, err := loader.GetFromSource(context.Background(), "local-tool", "local")
+	if err != nil {
+		t.Fatalf("GetFromSource() failed: %v", err)
+	}
+	if string(data) != string(recipeData) {
+		t.Error("GetFromSource() returned unexpected data")
+	}
+}
+
+func TestLoader_GetFromSource_Distributed(t *testing.T) {
+	recipeData := []byte(`[metadata]
+name = "dist-tool"
+description = "distributed"
+
+[[steps]]
+action = "download"
+
+[verify]
+command = "dist-tool --version"
+`)
+
+	distProvider := &mockProvider{
+		source:  RecipeSource("acme/tools"),
+		recipes: map[string][]byte{"dist-tool": recipeData},
+	}
+
+	loader := NewLoader(distProvider)
+
+	data, err := loader.GetFromSource(context.Background(), "dist-tool", "acme/tools")
+	if err != nil {
+		t.Fatalf("GetFromSource() failed: %v", err)
+	}
+	if string(data) != string(recipeData) {
+		t.Error("GetFromSource() returned unexpected data")
+	}
+}
+
+func TestLoader_GetFromSource_UnknownSource(t *testing.T) {
+	loader := NewLoader()
+
+	_, err := loader.GetFromSource(context.Background(), "tool", "unknown")
+	if err == nil {
+		t.Fatal("expected error for unknown source")
+	}
+	if !strings.Contains(err.Error(), "unknown recipe source") {
+		t.Errorf("expected 'unknown recipe source' in error, got: %v", err)
+	}
+}
+
+func TestLoader_GetFromSource_NoMatchingDistributedProvider(t *testing.T) {
+	loader := NewLoader()
+
+	_, err := loader.GetFromSource(context.Background(), "tool", "acme/tools")
+	if err == nil {
+		t.Fatal("expected error for unregistered distributed source")
+	}
+	if !strings.Contains(err.Error(), "no provider registered") {
+		t.Errorf("expected 'no provider registered' in error, got: %v", err)
+	}
+}
+
+func TestLoader_GetFromSource_CentralNotFound(t *testing.T) {
+	registryProvider := &mockProvider{
+		source:  SourceRegistry,
+		recipes: map[string][]byte{},
+	}
+
+	loader := NewLoader(registryProvider)
+
+	_, err := loader.GetFromSource(context.Background(), "nonexistent", SourceCentral)
+	if err == nil {
+		t.Fatal("expected error for recipe not found in central")
+	}
+	if !strings.Contains(err.Error(), "not found in central registry") {
+		t.Errorf("expected 'not found in central registry' in error, got: %v", err)
+	}
+}
+
+func TestLoader_GetFromSource_BypassesCache(t *testing.T) {
+	recipeData := []byte(`[metadata]
+name = "cached-tool"
+description = "test"
+
+[[steps]]
+action = "download"
+
+[verify]
+command = "cached-tool --version"
+`)
+
+	registryProvider := &mockProvider{
+		source:  SourceRegistry,
+		recipes: map[string][]byte{"cached-tool": recipeData},
+	}
+
+	loader := NewLoader(registryProvider)
+
+	// Pre-populate the in-memory cache with different data
+	loader.CacheRecipe("cached-tool", &Recipe{
+		Metadata: MetadataSection{Name: "cached-tool", Description: "cached version"},
+	})
+
+	// GetFromSource should bypass the cache and return provider data
+	data, err := loader.GetFromSource(context.Background(), "cached-tool", SourceCentral)
+	if err != nil {
+		t.Fatalf("GetFromSource() failed: %v", err)
+	}
+	if string(data) != string(recipeData) {
+		t.Error("GetFromSource() should bypass cache and return fresh data from provider")
+	}
+}
+
+func TestLoader_GetFromSource_DoesNotWriteToCache(t *testing.T) {
+	recipeData := []byte(`[metadata]
+name = "no-cache-tool"
+description = "test"
+
+[[steps]]
+action = "download"
+
+[verify]
+command = "no-cache-tool --version"
+`)
+
+	registryProvider := &mockProvider{
+		source:  SourceRegistry,
+		recipes: map[string][]byte{"no-cache-tool": recipeData},
+	}
+
+	loader := NewLoader(registryProvider)
+
+	// Verify cache is empty
+	if loader.Count() != 0 {
+		t.Fatal("expected empty cache before GetFromSource")
+	}
+
+	_, err := loader.GetFromSource(context.Background(), "no-cache-tool", SourceCentral)
+	if err != nil {
+		t.Fatalf("GetFromSource() failed: %v", err)
+	}
+
+	// Cache should still be empty
+	if loader.Count() != 0 {
+		t.Error("GetFromSource() should not write to the in-memory cache")
 	}
 }

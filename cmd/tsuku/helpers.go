@@ -159,13 +159,13 @@ func formatDeprecationWarning(dep *registry.DeprecationNotice, registryURL, cliV
 func recipeSourceFromProvider(source recipe.RecipeSource) string {
 	switch source {
 	case recipe.SourceLocal:
-		return "local"
+		return string(recipe.SourceLocal)
 	case recipe.SourceEmbedded:
-		return "central"
+		return recipe.SourceCentral
 	case recipe.SourceRegistry:
-		return "central"
+		return recipe.SourceCentral
 	default:
-		// Future: distributed sources will pass through as "owner/repo"
+		// Distributed sources pass through as "owner/repo"
 		return string(source)
 	}
 }

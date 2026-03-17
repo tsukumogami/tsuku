@@ -103,6 +103,75 @@ func (l *Loader) GetWithSource(name string, opts LoaderOptions) (*Recipe, Recipe
 	return r, source, nil
 }
 
+// GetFromSource retrieves raw recipe bytes from a specific source, bypassing the
+// normal provider priority chain and the in-memory cache. This enables source-directed
+// operations (update, outdated, verify) to fetch the recipe from the same source
+// that originally provided it.
+//
+// The source parameter uses user-facing source strings as stored in ToolState.Source:
+//   - "central": delegates to the central registry provider (SourceRegistry)
+//   - "local": delegates to the local provider (SourceLocal)
+//   - "owner/repo": delegates to a distributed provider for that repository
+//
+// Returns an error if no provider matches the given source.
+func (l *Loader) GetFromSource(ctx context.Context, name string, source string) ([]byte, error) {
+	switch source {
+	case SourceCentral:
+		// Try registry provider first, then embedded
+		for _, p := range l.providers {
+			if p.Source() == SourceRegistry {
+				data, err := p.Get(ctx, name)
+				if err == nil && data != nil {
+					return data, nil
+				}
+			}
+		}
+		for _, p := range l.providers {
+			if p.Source() == SourceEmbedded {
+				data, err := p.Get(ctx, name)
+				if err == nil && data != nil {
+					return data, nil
+				}
+			}
+		}
+		return nil, fmt.Errorf("recipe %q not found in central registry", name)
+
+	case string(SourceLocal):
+		for _, p := range l.providers {
+			if p.Source() == SourceLocal {
+				data, err := p.Get(ctx, name)
+				if err != nil {
+					return nil, err
+				}
+				if data != nil {
+					return data, nil
+				}
+			}
+		}
+		return nil, fmt.Errorf("recipe %q not found in local recipes", name)
+
+	default:
+		// Check for "owner/repo" pattern (distributed provider)
+		if strings.Contains(source, "/") {
+			for _, p := range l.providers {
+				if string(p.Source()) == source {
+					data, err := p.Get(ctx, name)
+					if err != nil {
+						return nil, err
+					}
+					if data != nil {
+						return data, nil
+					}
+					return nil, fmt.Errorf("recipe %q not found in %s", name, source)
+				}
+			}
+			return nil, fmt.Errorf("no provider registered for source %q", source)
+		}
+
+		return nil, fmt.Errorf("unknown recipe source %q", source)
+	}
+}
+
 // getEmbeddedOnly loads a recipe from embedded providers only.
 func (l *Loader) getEmbeddedOnly(ctx context.Context, name string) (*Recipe, error) {
 	// Check in-memory cache first (recipe may have been loaded previously)
@@ -440,6 +509,11 @@ const (
 	SourceEmbedded RecipeSource = "embedded"
 	// SourceRegistry indicates a recipe from the cached registry ($TSUKU_HOME/registry)
 	SourceRegistry RecipeSource = "registry"
+
+	// SourceCentral is the user-facing name for the central registry.
+	// Both SourceRegistry and SourceEmbedded map to "central" for source tracking,
+	// because embedded recipes are a cached subset of the central registry.
+	SourceCentral = "central"
 )
 
 // RecipeInfo contains a recipe with its source information

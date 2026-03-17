@@ -16,6 +16,17 @@ import (
 	"github.com/tsukumogami/tsuku/internal/log"
 )
 
+// RegistryEntry represents a configured recipe registry source.
+type RegistryEntry struct {
+	// URL is the base URL for fetching recipes from this registry.
+	URL string `toml:"url"`
+
+	// AutoRegistered indicates this registry was added automatically
+	// during install (not manually by the user). Auto-registered entries
+	// can be cleaned up without user confirmation.
+	AutoRegistered bool `toml:"auto_registered,omitempty"`
+}
+
 // Config represents user-configurable settings.
 type Config struct {
 	// Telemetry enables or disables anonymous usage statistics.
@@ -29,6 +40,15 @@ type Config struct {
 	// Values are resolved through the secrets package, which checks
 	// environment variables first and falls through to this map.
 	Secrets map[string]string `toml:"secrets,omitempty"`
+
+	// StrictRegistries restricts recipe resolution to explicitly registered
+	// sources only. When true, tsuku won't auto-register new distributed
+	// registries during install.
+	StrictRegistries bool `toml:"strict_registries,omitempty"`
+
+	// Registries maps registry names (e.g., "owner/repo") to their configuration.
+	// Used for distributed recipe sources.
+	Registries map[string]RegistryEntry `toml:"registries,omitempty"`
 }
 
 // LLMConfig holds LLM-specific settings.
