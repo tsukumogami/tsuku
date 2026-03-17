@@ -1,0 +1,10 @@
+{
+  "issue": 7,
+  "reviews": [
+    {"focus": "pragmatic", "blocking_count": 2, "advisory_count": 3, "detail_file": "wip/research/implement-doc_review_pragmatic_issue7.md"},
+    {"focus": "architect", "blocking_count": 1, "advisory_count": 2, "detail_file": "wip/research/implement-doc_review_architect_issue7.md"},
+    {"focus": "maintainer", "blocking_count": 2, "advisory_count": 4, "detail_file": "wip/research/implement-doc_review_maintainer_issue7.md"}
+  ],
+  "blocking_resolved": true,
+  "resolution": "Removed dead isDistributedName and distributedTelemetryTag. Passed *config.Config through to avoid redundant config loads. Updated CacheRecipe comment. Added ordering comments."
+}
