@@ -820,15 +820,28 @@ Full plan: [Distributed Recipes](docs/plans/PLAN-distributed-recipes.md) (single
 | Issue | Dependencies | Tier |
 |-------|--------------|------|
 | [#1: refactor(recipe): extract RecipeProvider interface](docs/plans/PLAN-distributed-recipes.md) | None | critical |
+| _Extract RecipeProvider interface and refactor Loader from hardcoded four-source chain to ordered provider slice_ | | |
 | [#2: feat(state): add source tracking to ToolState](docs/plans/PLAN-distributed-recipes.md) | [#1](docs/plans/PLAN-distributed-recipes.md) | testable |
+| _Add Source field to ToolState recording where each tool's recipe came from_ | | |
 | [#3: feat(config): add registry configuration and GetFromSource](docs/plans/PLAN-distributed-recipes.md) | [#1](docs/plans/PLAN-distributed-recipes.md) | testable |
+| _Add registry config section and source-directed recipe loading_ | | |
 | [#4: feat(cli): implement tsuku registry subcommands](docs/plans/PLAN-distributed-recipes.md) | [#3](docs/plans/PLAN-distributed-recipes.md) | testable |
+| _Add registry list, add, remove CLI subcommands_ | | |
 | [#5: feat(distributed): implement GitHub HTTP fetching and cache](docs/plans/PLAN-distributed-recipes.md) | [#1](docs/plans/PLAN-distributed-recipes.md) | critical |
+| _Build GitHub HTTP client with hostname allowlist, auth, rate limiting, and local cache_ | | |
 | [#6: feat(distributed): implement DistributedProvider](docs/plans/PLAN-distributed-recipes.md) | [#1](docs/plans/PLAN-distributed-recipes.md), [#5](docs/plans/PLAN-distributed-recipes.md) | testable |
+| _Create DistributedProvider implementing RecipeProvider and RefreshableProvider_ | | |
 | [#7: feat(install): integrate distributed sources into install flow](docs/plans/PLAN-distributed-recipes.md) | [#2](docs/plans/PLAN-distributed-recipes.md), [#4](docs/plans/PLAN-distributed-recipes.md), [#6](docs/plans/PLAN-distributed-recipes.md) | testable |
+| _Wire distributed sources into install command with name parsing and collision detection_ | | |
 | [#8: feat(cli): add source-directed loading to update, outdated, verify](docs/plans/PLAN-distributed-recipes.md) | [#2](docs/plans/PLAN-distributed-recipes.md), [#3](docs/plans/PLAN-distributed-recipes.md), [#6](docs/plans/PLAN-distributed-recipes.md) | testable |
+| _Make update, outdated, verify use ToolState.Source for provider routing_ | | |
 | [#9: feat(cli): add source display to info, list, recipes](docs/plans/PLAN-distributed-recipes.md) | [#2](docs/plans/PLAN-distributed-recipes.md), [#6](docs/plans/PLAN-distributed-recipes.md) | simple |
+| _Show source annotations in info, list, and recipes output_ | | |
 | [#10: feat(cli): extend update-registry for distributed sources](docs/plans/PLAN-distributed-recipes.md) | [#6](docs/plans/PLAN-distributed-recipes.md) | simple |
+| _Add RefreshableProvider refresh loop to update-registry_ | | |
 | [#11: feat(koto): create .tsuku-recipes/ in koto repo](docs/plans/PLAN-distributed-recipes.md) | [#6](docs/plans/PLAN-distributed-recipes.md) | simple |
+| _Create .tsuku-recipes/ directory in koto with seed recipe_ | | |
 | [#12: chore(recipes): migrate koto recipes to distributed](docs/plans/PLAN-distributed-recipes.md) | [#7](docs/plans/PLAN-distributed-recipes.md), [#11](docs/plans/PLAN-distributed-recipes.md) | simple |
+| _Move koto recipes from central registry to koto's .tsuku-recipes/_ | | |
 | [#13: test(distributed): end-to-end validation](docs/plans/PLAN-distributed-recipes.md) | [#11](docs/plans/PLAN-distributed-recipes.md), [#12](docs/plans/PLAN-distributed-recipes.md) | testable |
+| _Full lifecycle validation of distributed install, update, remove_ | | |
