@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-17T16:09:44Z",
+  "generated_at": "2026-03-17T16:10:54Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 53,
-      "pending": 3880,
+      "failed": 56,
+      "pending": 3877,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 53,
-        "pending": 3857,
+        "failed": 56,
+        "pending": 3854,
         "success": 1326
       }
     },
@@ -68,21 +68,19 @@
         "total": 1
       },
       "npm": {
-        "failed": 20,
-        "pending": 1,
+        "failed": 21,
         "success": 54,
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 28,
-        "pending": 51,
+        "failed": 29,
+        "pending": 50,
         "success": 9,
         "total": 89
       }
@@ -697,6 +695,15 @@
           "next_retry_at": "2026-03-20T15:00:20Z"
         },
         {
+          "id": "rubygems:flash",
+          "name": "flash",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 8,
+          "next_retry_at": "2026-03-23T00:10:12Z"
+        },
+        {
           "id": "rubygems:gitingest",
           "name": "gitingest",
           "ecosystem": "rubygems",
@@ -839,6 +846,24 @@
           "category": "install_failed",
           "failure_count": 8,
           "next_retry_at": "2026-03-22T21:13:06Z"
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 105,
+          "next_retry_at": "1733-12-06T16:22:55Z"
+        },
+        {
+          "id": "npm:mailhog",
+          "name": "mailhog",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 8,
+          "next_retry_at": "2026-03-23T00:10:12Z"
         },
         {
           "id": "npm:markdown-toc",
@@ -8172,15 +8197,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:flash",
-          "name": "flash",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-03-17T12:32:06Z"
-        },
-        {
           "id": "homebrew:flashrom",
           "name": "flashrom",
           "ecosystem": "homebrew",
@@ -13215,15 +13231,6 @@
           "failure_count": 1
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 103,
-          "next_retry_at": "1733-12-06T13:25:49Z"
-        },
-        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -14870,15 +14877,6 @@
           "category": "install_failed",
           "failure_count": 4,
           "next_retry_at": "2026-03-13T00:05:27Z"
-        },
-        {
-          "id": "npm:mailhog",
-          "name": "mailhog",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-03-17T14:30:05Z"
         },
         {
           "id": "homebrew:mailsy",
