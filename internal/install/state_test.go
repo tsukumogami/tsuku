@@ -2580,3 +2580,287 @@ func TestStateManager_GetCachedPlan_NoPlanCached(t *testing.T) {
 		t.Errorf("GetCachedPlan() = %v, want nil when no plan cached", plan)
 	}
 }
+
+// TestMigrateSourceTracking_DefaultsCentral verifies that entries with no Source
+// field get "central" after migration.
+func TestMigrateSourceTracking_DefaultsCentral(t *testing.T) {
+	state := &State{
+		Installed: map[string]ToolState{
+			"kubectl": {
+				ActiveVersion: "1.29.0",
+				Versions: map[string]VersionState{
+					"1.29.0": {Binaries: []string{"kubectl"}},
+				},
+				IsExplicit: true,
+			},
+		},
+	}
+
+	state.migrateSourceTracking()
+
+	tool := state.Installed["kubectl"]
+	if tool.Source != "central" {
+		t.Errorf("Source = %q, want %q", tool.Source, "central")
+	}
+}
+
+// TestMigrateSourceTracking_InfersFromPlan verifies that entries with a cached plan
+// have their Source inferred from Plan.RecipeSource.
+func TestMigrateSourceTracking_InfersFromPlan(t *testing.T) {
+	tests := []struct {
+		name         string
+		recipeSource string
+		wantSource   string
+	}{
+		{"registry maps to central", "registry", "central"},
+		{"embedded maps to embedded", "embedded", "embedded"},
+		{"local maps to local", "local", "local"},
+		{"unknown maps to central", "something-else", "central"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			state := &State{
+				Installed: map[string]ToolState{
+					"tool": {
+						ActiveVersion: "1.0.0",
+						Versions: map[string]VersionState{
+							"1.0.0": {
+								Plan: &Plan{
+									RecipeSource: tt.recipeSource,
+								},
+							},
+						},
+					},
+				},
+			}
+
+			state.migrateSourceTracking()
+
+			tool := state.Installed["tool"]
+			if tool.Source != tt.wantSource {
+				t.Errorf("Source = %q, want %q (for RecipeSource=%q)", tool.Source, tt.wantSource, tt.recipeSource)
+			}
+		})
+	}
+}
+
+// TestMigrateSourceTracking_Idempotent verifies that running migration twice
+// produces identical results.
+func TestMigrateSourceTracking_Idempotent(t *testing.T) {
+	state := &State{
+		Installed: map[string]ToolState{
+			"tool-a": {
+				ActiveVersion: "1.0.0",
+				Versions: map[string]VersionState{
+					"1.0.0": {
+						Plan: &Plan{RecipeSource: "local"},
+					},
+				},
+			},
+			"tool-b": {
+				ActiveVersion: "2.0.0",
+				Versions: map[string]VersionState{
+					"2.0.0": {Binaries: []string{"b"}},
+				},
+			},
+		},
+	}
+
+	state.migrateSourceTracking()
+	// Capture after first run
+	sourceA1 := state.Installed["tool-a"].Source
+	sourceB1 := state.Installed["tool-b"].Source
+
+	// Run again
+	state.migrateSourceTracking()
+	sourceA2 := state.Installed["tool-a"].Source
+	sourceB2 := state.Installed["tool-b"].Source
+
+	if sourceA1 != sourceA2 {
+		t.Errorf("tool-a Source changed: %q -> %q", sourceA1, sourceA2)
+	}
+	if sourceB1 != sourceB2 {
+		t.Errorf("tool-b Source changed: %q -> %q", sourceB1, sourceB2)
+	}
+}
+
+// TestMigrateSourceTracking_SkipsExisting verifies that entries that already
+// have a Source value are not overwritten by migration.
+func TestMigrateSourceTracking_SkipsExisting(t *testing.T) {
+	state := &State{
+		Installed: map[string]ToolState{
+			"custom-tool": {
+				ActiveVersion: "1.0.0",
+				Source:        "alice/tools",
+				Versions: map[string]VersionState{
+					"1.0.0": {
+						Plan: &Plan{RecipeSource: "registry"},
+					},
+				},
+			},
+		},
+	}
+
+	state.migrateSourceTracking()
+
+	tool := state.Installed["custom-tool"]
+	if tool.Source != "alice/tools" {
+		t.Errorf("Source = %q, want %q (should not be overwritten)", tool.Source, "alice/tools")
+	}
+}
+
+// TestSourceField_RoundTrip verifies that the Source field serializes and
+// deserializes correctly through Save/Load.
+func TestSourceField_RoundTrip(t *testing.T) {
+	sm, cleanup := newTestStateManager(t)
+	defer cleanup()
+
+	state := &State{
+		Installed: map[string]ToolState{
+			"tool-central": {
+				ActiveVersion: "1.0.0",
+				Source:        "central",
+				Versions: map[string]VersionState{
+					"1.0.0": {Binaries: []string{"tc"}},
+				},
+				IsExplicit: true,
+			},
+			"tool-local": {
+				ActiveVersion: "2.0.0",
+				Source:        "local",
+				Versions: map[string]VersionState{
+					"2.0.0": {Binaries: []string{"tl"}},
+				},
+				IsExplicit: true,
+			},
+			"tool-distributed": {
+				ActiveVersion: "3.0.0",
+				Source:        "alice/tools",
+				Versions: map[string]VersionState{
+					"3.0.0": {Binaries: []string{"td"}},
+				},
+				IsExplicit: true,
+			},
+		},
+	}
+
+	if err := sm.Save(state); err != nil {
+		t.Fatalf("Save() error = %v", err)
+	}
+
+	loaded, err := sm.Load()
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+
+	tests := []struct {
+		name       string
+		wantSource string
+	}{
+		{"tool-central", "central"},
+		{"tool-local", "local"},
+		{"tool-distributed", "alice/tools"},
+	}
+
+	for _, tt := range tests {
+		tool, ok := loaded.Installed[tt.name]
+		if !ok {
+			t.Fatalf("%s not found in loaded state", tt.name)
+		}
+		if tool.Source != tt.wantSource {
+			t.Errorf("%s Source = %q, want %q", tt.name, tool.Source, tt.wantSource)
+		}
+	}
+}
+
+// TestSourceField_AbsentInJSON verifies that state.json files without Source fields
+// load without errors and get migrated to "central".
+func TestSourceField_AbsentInJSON(t *testing.T) {
+	cfg, cleanup := testutil.NewTestConfig(t)
+	defer cleanup()
+
+	sm := NewStateManager(cfg)
+
+	// Write a state file without Source fields (simulating pre-migration state)
+	stateJSON := `{
+  "installed": {
+    "gh": {
+      "active_version": "2.40.0",
+      "versions": {
+        "2.40.0": {
+          "requested": "",
+          "binaries": ["gh"],
+          "installed_at": "2024-01-01T00:00:00Z"
+        }
+      },
+      "is_explicit": true
+    }
+  }
+}`
+
+	statePath := filepath.Join(cfg.HomeDir, "state.json")
+	if err := os.WriteFile(statePath, []byte(stateJSON), 0644); err != nil {
+		t.Fatalf("failed to write state file: %v", err)
+	}
+
+	loaded, err := sm.Load()
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+
+	gh := loaded.Installed["gh"]
+	if gh.Source != "central" {
+		t.Errorf("Source = %q, want %q for migrated entry without Source", gh.Source, "central")
+	}
+}
+
+// TestSourceField_AbsentInJSON_WithPlan verifies that state.json files without
+// Source fields but with a cached plan infer Source from Plan.RecipeSource.
+func TestSourceField_AbsentInJSON_WithPlan(t *testing.T) {
+	cfg, cleanup := testutil.NewTestConfig(t)
+	defer cleanup()
+
+	sm := NewStateManager(cfg)
+
+	// Write state with a plan that has RecipeSource="local" but no top-level Source
+	stateJSON := `{
+  "installed": {
+    "my-tool": {
+      "active_version": "1.0.0",
+      "versions": {
+        "1.0.0": {
+          "requested": "",
+          "installed_at": "2024-01-01T00:00:00Z",
+          "plan": {
+            "format_version": 1,
+            "tool": "my-tool",
+            "version": "1.0.0",
+            "platform": {"os": "linux", "arch": "amd64"},
+            "generated_at": "2024-01-01T00:00:00Z",
+            "recipe_source": "local",
+            "deterministic": true,
+            "steps": []
+          }
+        }
+      },
+      "is_explicit": true
+    }
+  }
+}`
+
+	statePath := filepath.Join(cfg.HomeDir, "state.json")
+	if err := os.WriteFile(statePath, []byte(stateJSON), 0644); err != nil {
+		t.Fatalf("failed to write state file: %v", err)
+	}
+
+	loaded, err := sm.Load()
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+
+	tool := loaded.Installed["my-tool"]
+	if tool.Source != "local" {
+		t.Errorf("Source = %q, want %q (inferred from Plan.RecipeSource)", tool.Source, "local")
+	}
+}

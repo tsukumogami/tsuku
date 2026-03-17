@@ -1187,3 +1187,136 @@ func TestLoader_Get_RequireEmbedded(t *testing.T) {
 		t.Errorf("error message should mention 'not found in embedded registry', got: %v", err)
 	}
 }
+
+func TestLoader_GetWithSource_Registry(t *testing.T) {
+	mockRecipe := `[metadata]
+name = "source-test"
+description = "A test tool"
+
+[[steps]]
+action = "download"
+url = "https://example.com/test.tar.gz"
+
+[verify]
+command = "source-test --version"
+`
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/recipes/s/source-test.toml" {
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte(mockRecipe))
+		} else {
+			w.WriteHeader(http.StatusNotFound)
+		}
+	}))
+	defer server.Close()
+
+	cacheDir := t.TempDir()
+	reg := registry.New(cacheDir)
+	reg.BaseURL = server.URL
+
+	// Use a loader with no embedded recipes so the registry provider handles it
+	loader := newTestLoaderNoEmbedded(reg, "")
+
+	recipe, source, err := loader.GetWithSource("source-test", LoaderOptions{})
+	if err != nil {
+		t.Fatalf("GetWithSource() failed: %v", err)
+	}
+	if recipe.Metadata.Name != "source-test" {
+		t.Errorf("recipe.Metadata.Name = %q, want %q", recipe.Metadata.Name, "source-test")
+	}
+	if source != SourceRegistry {
+		t.Errorf("source = %q, want %q", source, SourceRegistry)
+	}
+}
+
+func TestLoader_GetWithSource_Local(t *testing.T) {
+	localDir := t.TempDir()
+	recipePath := filepath.Join(localDir, "local-tool.toml")
+	err := os.WriteFile(recipePath, []byte(`[metadata]
+name = "local-tool"
+description = "A local tool"
+
+[[steps]]
+action = "download"
+url = "https://example.com/local.tar.gz"
+
+[verify]
+command = "local-tool --version"
+`), 0644)
+	if err != nil {
+		t.Fatalf("failed to write local recipe: %v", err)
+	}
+
+	reg := registry.New(t.TempDir())
+	loader := newTestLoaderNoEmbedded(reg, localDir)
+
+	recipe, source, err := loader.GetWithSource("local-tool", LoaderOptions{})
+	if err != nil {
+		t.Fatalf("GetWithSource() failed: %v", err)
+	}
+	if recipe.Metadata.Name != "local-tool" {
+		t.Errorf("recipe.Metadata.Name = %q, want %q", recipe.Metadata.Name, "local-tool")
+	}
+	if source != SourceLocal {
+		t.Errorf("source = %q, want %q", source, SourceLocal)
+	}
+}
+
+func TestLoader_GetWithSource_Embedded(t *testing.T) {
+	reg := registry.New(t.TempDir())
+	loader := newTestLoaderWithRegistry(reg)
+
+	// "go" is a known embedded recipe
+	recipe, source, err := loader.GetWithSource("go", LoaderOptions{})
+	if err != nil {
+		t.Fatalf("GetWithSource() failed: %v", err)
+	}
+	if recipe.Metadata.Name != "go" {
+		t.Errorf("recipe.Metadata.Name = %q, want %q", recipe.Metadata.Name, "go")
+	}
+	if source != SourceEmbedded {
+		t.Errorf("source = %q, want %q", source, SourceEmbedded)
+	}
+}
+
+func TestLoader_GetWithSource_CacheRetainsSource(t *testing.T) {
+	localDir := t.TempDir()
+	recipePath := filepath.Join(localDir, "cached-tool.toml")
+	err := os.WriteFile(recipePath, []byte(`[metadata]
+name = "cached-tool"
+description = "A tool for cache testing"
+
+[[steps]]
+action = "download"
+url = "https://example.com/cached.tar.gz"
+
+[verify]
+command = "cached-tool --version"
+`), 0644)
+	if err != nil {
+		t.Fatalf("failed to write recipe: %v", err)
+	}
+
+	reg := registry.New(t.TempDir())
+	loader := newTestLoaderNoEmbedded(reg, localDir)
+
+	// First call
+	_, source1, err := loader.GetWithSource("cached-tool", LoaderOptions{})
+	if err != nil {
+		t.Fatalf("GetWithSource() first call failed: %v", err)
+	}
+
+	// Second call should use cache but still return correct source
+	_, source2, err := loader.GetWithSource("cached-tool", LoaderOptions{})
+	if err != nil {
+		t.Fatalf("GetWithSource() second call failed: %v", err)
+	}
+
+	if source1 != source2 {
+		t.Errorf("source changed between calls: %q -> %q", source1, source2)
+	}
+	if source1 != SourceLocal {
+		t.Errorf("source = %q, want %q", source1, SourceLocal)
+	}
+}

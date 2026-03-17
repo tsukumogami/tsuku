@@ -23,6 +23,7 @@ type LoaderOptions struct {
 type Loader struct {
 	providers        []RecipeProvider
 	recipes          map[string]*Recipe        // In-memory parsed cache
+	recipeSources    map[string]RecipeSource   // Tracks which source each cached recipe came from
 	constraintLookup ConstraintLookup          // Optional lookup for step analysis (nil skips analysis)
 	satisfiesIndex   map[string]satisfiesEntry // package_name -> satisfiesEntry (lazy-built)
 	satisfiesOnce    sync.Once                 // ensures buildSatisfiesIndex runs once
@@ -32,8 +33,9 @@ type Loader struct {
 // Providers are consulted in order; earlier providers shadow later ones.
 func NewLoader(providers ...RecipeProvider) *Loader {
 	return &Loader{
-		providers: providers,
-		recipes:   make(map[string]*Recipe),
+		providers:     providers,
+		recipes:       make(map[string]*Recipe),
+		recipeSources: make(map[string]RecipeSource),
 	}
 }
 
@@ -81,7 +83,24 @@ func (l *Loader) GetWithContext(ctx context.Context, name string, opts LoaderOpt
 	}
 
 	l.recipes[name] = recipe
+	l.recipeSources[name] = source
 	return recipe, nil
+}
+
+// GetWithSource retrieves a recipe by name and returns the source that provided it.
+// This is used by the install flow to record which provider resolved the recipe.
+func (l *Loader) GetWithSource(name string, opts LoaderOptions) (*Recipe, RecipeSource, error) {
+	r, err := l.Get(name, opts)
+	if err != nil {
+		return nil, "", err
+	}
+	source, ok := l.recipeSources[name]
+	if !ok {
+		// Fallback for recipes loaded before source tracking was added to the cache
+		// (e.g., via getEmbeddedOnly which doesn't track source).
+		source = SourceRegistry
+	}
+	return r, source, nil
 }
 
 // getEmbeddedOnly loads a recipe from embedded providers only.

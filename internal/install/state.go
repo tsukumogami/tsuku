@@ -80,6 +80,11 @@ type ToolState struct {
 	// Version is deprecated: use ActiveVersion instead. Kept for migration from old state files.
 	Version string `json:"version,omitempty"`
 
+	// Source records where this tool's recipe came from.
+	// Values: "central" (default registry/embedded), "embedded", "local", or "owner/repo" (distributed).
+	// Populated on new installs; lazily migrated for existing entries.
+	Source string `json:"source,omitempty"`
+
 	IsExplicit            bool     `json:"is_explicit"`                    // User requested this tool directly
 	RequiredBy            []string `json:"required_by"`                    // Tools that depend on this tool
 	IsHidden              bool     `json:"is_hidden"`                      // Hidden from PATH and default list output
@@ -187,6 +192,9 @@ func (sm *StateManager) loadWithLock() (*State, error) {
 
 	// Migrate old single-version format to new multi-version format
 	state.migrateToMultiVersion()
+
+	// Migrate empty Source fields to default values
+	state.migrateSourceTracking()
 
 	return &state, nil
 }
