@@ -2,11 +2,13 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
+	"github.com/tsukumogami/tsuku/internal/discover"
 	"github.com/tsukumogami/tsuku/internal/userconfig"
 )
 
@@ -214,38 +216,25 @@ func TestRegistryAdd_ValidatesFormat(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// We test validation by checking if discover.ValidateGitHubURL accepts it.
-			// The actual import is tested by the command itself; here we just verify
-			// the logic pattern.
-			err := validateRegistrySource(tt.source)
+			// Use the same validation chain as runRegistryAdd:
+			// 1. discover.ValidateGitHubURL for format
+			// 2. Exactly one slash for owner/repo constraint
+			err := validateRegistrySourceForTest(tt.source)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("validateRegistrySource(%q) error = %v, wantErr %v", tt.source, err, tt.wantErr)
+				t.Errorf("validateRegistrySourceForTest(%q) error = %v, wantErr %v", tt.source, err, tt.wantErr)
 			}
 		})
 	}
 }
 
-// validateRegistrySource is a test helper that mirrors the validation in runRegistryAdd.
-func validateRegistrySource(source string) error {
-	// Empty check
-	if source == "" {
-		return os.ErrInvalid
+// validateRegistrySourceForTest mirrors the validation in runRegistryAdd,
+// calling the real discover.ValidateGitHubURL plus the slash-count check.
+func validateRegistrySourceForTest(source string) error {
+	if err := discover.ValidateGitHubURL(source); err != nil {
+		return err
 	}
-	// Must be owner/repo format (exactly one slash, no extra path segments)
-	parts := strings.SplitN(source, "/", 3)
-	if len(parts) != 2 {
-		return os.ErrInvalid
-	}
-	if parts[0] == "" || parts[1] == "" {
-		return os.ErrInvalid
-	}
-	// No path traversal
-	if parts[0] == ".." || parts[0] == "." || parts[1] == ".." || parts[1] == "." {
-		return os.ErrInvalid
-	}
-	// No credentials (@ sign)
-	if strings.Contains(source, "@") {
-		return os.ErrInvalid
+	if strings.Count(source, "/") != 1 {
+		return fmt.Errorf("expected owner/repo format (no extra path segments)")
 	}
 	return nil
 }

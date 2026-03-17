@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"sort"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/tsukumogami/tsuku/internal/config"
@@ -125,9 +126,13 @@ func runRegistryList(cmd *cobra.Command, args []string) {
 func runRegistryAdd(cmd *cobra.Command, args []string) {
 	source := args[0]
 
-	// Validate the owner/repo format
+	// Validate the owner/repo format: must be exactly "owner/repo" with no extra segments
 	if err := discover.ValidateGitHubURL(source); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: invalid registry source %q: %v\n", source, err)
+		exitWithCode(ExitUsage)
+	}
+	if strings.Count(source, "/") != 1 {
+		fmt.Fprintf(os.Stderr, "Error: invalid registry source %q: expected owner/repo format (no extra path segments)\n", source)
 		exitWithCode(ExitUsage)
 	}
 
