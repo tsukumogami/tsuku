@@ -3,7 +3,7 @@
   "design_doc": "docs/plans/PLAN-distributed-recipes.md",
   "branch": "docs/distributed-recipes",
   "pr_number": 2160,
-  "integrity_hash": "sha256:c53c7b21e65db1879dc229ebeef741810a79d93644c44ff7d116c87b4f7c39ac",
+  "integrity_hash": "sha256:d5448120f65506e10523ae7846e490fb8bc92f7ae12e84ebedbeecf961ee0b61",
   "issues": [
     {
       "number": 1,
@@ -574,7 +574,7 @@
     {
       "number": 6,
       "title": "feat(distributed): implement DistributedProvider",
-      "status": "implemented",
+      "status": "scrutinized",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
       "issue_type": "code",

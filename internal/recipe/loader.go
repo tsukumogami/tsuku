@@ -135,7 +135,7 @@ func (l *Loader) getFromDistributed(ctx context.Context, qualifier, recipeName, 
 // into the qualifier ("owner/repo") and the bare recipe name ("recipe").
 // Returns false if the name is not qualified.
 func splitQualifiedName(name string) (qualifier, recipeName string, ok bool) {
-	colonIdx := strings.LastIndex(name, ":")
+	colonIdx := strings.Index(name, ":")
 	if colonIdx <= 0 || colonIdx >= len(name)-1 {
 		return "", "", false
 	}

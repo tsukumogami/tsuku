@@ -1656,7 +1656,7 @@ func TestSplitQualifiedName(t *testing.T) {
 		{"colon but no slash in qualifier", "tools:my-recipe", "", "", false},
 		{"empty recipe name", "acme/tools:", "", "", false},
 		{"empty qualifier", ":my-recipe", "", "", false},
-		{"multiple colons uses last", "acme/tools:sub:recipe", "acme/tools:sub", "recipe", true},
+		{"multiple colons uses first", "acme/tools:sub:recipe", "acme/tools", "sub:recipe", true},
 		{"nested path in qualifier", "acme/sub/tools:recipe", "", "", false},
 		{"empty string", "", "", "", false},
 	}

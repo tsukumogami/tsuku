@@ -105,66 +105,47 @@ func newGitHubClientWithHTTP(apiClient, rawClient *http.Client, cache *CacheMana
 // .tsuku-recipes/ directory. It uses the cache when fresh, falling back to
 // the Contents API, and finally to raw URL probing on rate limit.
 func (gc *GitHubClient) ListRecipes(ctx context.Context, owner, repo string) (*SourceMeta, error) {
+	return gc.listRecipes(ctx, owner, repo, false)
+}
+
+// ForceListRecipes is like ListRecipes but bypasses the cache freshness check.
+// Used by DistributedProvider.Refresh() to force a re-fetch of the directory listing.
+func (gc *GitHubClient) ForceListRecipes(ctx context.Context, owner, repo string) (*SourceMeta, error) {
+	return gc.listRecipes(ctx, owner, repo, true)
+}
+
+// listRecipes is the shared implementation for ListRecipes and ForceListRecipes.
+// When skipFreshCheck is true, the cache freshness check is bypassed.
+func (gc *GitHubClient) listRecipes(ctx context.Context, owner, repo string, skipFreshCheck bool) (*SourceMeta, error) {
 	if err := discover.ValidateGitHubURL(owner + "/" + repo); err != nil {
 		return nil, err
 	}
 
-	// Check cache first
+	// Check cache first (skipped when forcing a refresh)
 	cached, err := gc.cache.GetSourceMeta(owner, repo)
-	if err == nil && gc.cache.IsSourceFresh(cached) {
+	if !skipFreshCheck && err == nil && gc.cache.IsSourceFresh(cached) {
 		return cached, nil
 	}
 
 	// Try Contents API
 	meta, apiErr := gc.listViaContentsAPI(ctx, owner, repo)
 	if apiErr == nil {
-		// Cache write failure is non-fatal
 		_ = gc.cache.PutSourceMeta(owner, repo, meta)
 		return meta, nil
 	}
 
-	// If rate limited and we have a stale cache, use it
-	if _, ok := apiErr.(*ErrRateLimited); ok && cached != nil {
-		return cached, nil
-	}
-
-	// If rate limited with no cache, fall back to branch probing
+	// If rate limited, try stale cache first, then branch probing
 	if rateLimitErr, ok := apiErr.(*ErrRateLimited); ok {
-		meta, probeErr := gc.probeDefaultBranches(ctx, owner, repo)
-		if probeErr != nil {
-			// Return the rate limit error since probing also failed
-			return nil, rateLimitErr
+		// On force refresh, we haven't loaded cached yet
+		if skipFreshCheck && cached == nil {
+			cached, _ = gc.cache.GetSourceMeta(owner, repo)
 		}
-		_ = gc.cache.PutSourceMeta(owner, repo, meta)
-		return meta, nil
-	}
-
-	return nil, apiErr
-}
-
-// ForceListRecipes is like ListRecipes but bypasses the cache freshness check.
-// Used by DistributedProvider.Refresh() to force a re-fetch of the directory listing.
-func (gc *GitHubClient) ForceListRecipes(ctx context.Context, owner, repo string) (*SourceMeta, error) {
-	if err := discover.ValidateGitHubURL(owner + "/" + repo); err != nil {
-		return nil, err
-	}
-
-	// Try Contents API directly (skip cache freshness check)
-	meta, apiErr := gc.listViaContentsAPI(ctx, owner, repo)
-	if apiErr == nil {
-		_ = gc.cache.PutSourceMeta(owner, repo, meta)
-		return meta, nil
-	}
-
-	// If rate limited, fall back to stale cache then branch probing
-	if _, ok := apiErr.(*ErrRateLimited); ok {
-		cached, _ := gc.cache.GetSourceMeta(owner, repo)
 		if cached != nil {
 			return cached, nil
 		}
 		meta, probeErr := gc.probeDefaultBranches(ctx, owner, repo)
 		if probeErr != nil {
-			return nil, apiErr
+			return nil, rateLimitErr
 		}
 		_ = gc.cache.PutSourceMeta(owner, repo, meta)
 		return meta, nil

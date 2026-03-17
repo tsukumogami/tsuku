@@ -109,7 +109,7 @@ func TestDistributedProvider_Get_NotFound(t *testing.T) {
 	}
 }
 
-func TestDistributedProvider_Get_FetchesFromServer(t *testing.T) {
+func TestDistributedProvider_Get_ValidatesDownloadHost(t *testing.T) {
 	cache := NewCacheManager(t.TempDir(), 1*time.Hour)
 
 	// Set up an API server that returns directory listing
@@ -356,16 +356,6 @@ func TestDistributedProvider_Get_RateLimitError(t *testing.T) {
 	// The error should indicate a problem (rate limit or no recipe dir)
 	if !strings.Contains(err.Error(), "rate limit") && !strings.Contains(err.Error(), "listing recipes") {
 		t.Errorf("error should mention rate limit or listing: %s", err)
-	}
-}
-
-func TestDistributedProvider_OwnerRepo(t *testing.T) {
-	p := NewDistributedProvider("acme", "tools", nil)
-	if p.Owner() != "acme" {
-		t.Errorf("Owner() = %q, want %q", p.Owner(), "acme")
-	}
-	if p.Repo() != "tools" {
-		t.Errorf("Repo() = %q, want %q", p.Repo(), "tools")
 	}
 }
 

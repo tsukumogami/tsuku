@@ -80,13 +80,3 @@ func (p *DistributedProvider) Refresh(ctx context.Context) error {
 	}
 	return nil
 }
-
-// Owner returns the repository owner.
-func (p *DistributedProvider) Owner() string {
-	return p.owner
-}
-
-// Repo returns the repository name.
-func (p *DistributedProvider) Repo() string {
-	return p.repo
-}
