@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-17T18:06:40Z",
+  "updated_at": "2026-03-17T20:43:48Z",
   "entries": [
     {
       "name": "node",
@@ -20786,11 +20786,11 @@
       "name": "hydra",
       "source": "rubygems:hydra",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 6,
-      "next_retry_at": "2026-03-17T17:00:48.797799169Z"
+      "failure_count": 7,
+      "next_retry_at": "2026-03-20T12:43:48.898156951Z"
     },
     {
       "name": "hyfetch",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 105,
-      "next_retry_at": "1733-12-06T16:22:55.553610962Z"
+      "failure_count": 107,
+      "next_retry_at": "1733-12-06T20:56:32.043381143Z"
     },
     {
       "name": "libaacs",
@@ -28896,7 +28896,7 @@
       "name": "markdown-toc",
       "source": "npm:markdown-toc",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 7,
@@ -43656,11 +43656,11 @@
       "name": "sigstore",
       "source": "npm:sigstore",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 6,
-      "next_retry_at": "2026-03-17T17:00:48.797799169Z"
+      "failure_count": 7,
+      "next_retry_at": "2026-03-20T12:43:48.898156951Z"
     },
     {
       "name": "sile",
