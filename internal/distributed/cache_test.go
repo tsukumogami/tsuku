@@ -179,6 +179,107 @@ func TestCacheManager_FilesOnDisk(t *testing.T) {
 	}
 }
 
+func TestCacheManager_IsRecipeFresh(t *testing.T) {
+	cm := NewCacheManager(t.TempDir(), 1*time.Hour)
+
+	t.Run("nil meta", func(t *testing.T) {
+		if cm.IsRecipeFresh(nil) {
+			t.Error("nil meta should not be fresh")
+		}
+	})
+
+	t.Run("fresh", func(t *testing.T) {
+		meta := &RecipeMeta{FetchedAt: time.Now()}
+		if !cm.IsRecipeFresh(meta) {
+			t.Error("recent meta should be fresh")
+		}
+	})
+
+	t.Run("stale", func(t *testing.T) {
+		meta := &RecipeMeta{FetchedAt: time.Now().Add(-2 * time.Hour)}
+		if cm.IsRecipeFresh(meta) {
+			t.Error("old meta should be stale")
+		}
+	})
+}
+
+func TestCacheManager_SizeAndEviction(t *testing.T) {
+	dir := t.TempDir()
+	cm := NewCacheManager(dir, 1*time.Hour)
+
+	// Write first repo data
+	data := []byte("recipe content here")
+	meta := &RecipeMeta{FetchedAt: time.Now()}
+
+	if err := cm.PutSourceMeta("owner1", "repo1", &SourceMeta{Branch: "main", FetchedAt: time.Now().Add(-1 * time.Hour)}); err != nil {
+		t.Fatalf("PutSourceMeta: %v", err)
+	}
+	if err := cm.PutRecipe("owner1", "repo1", "tool1", data, meta); err != nil {
+		t.Fatalf("PutRecipe: %v", err)
+	}
+
+	// Verify Size() returns non-zero
+	size := cm.Size()
+	if size == 0 {
+		t.Fatal("expected non-zero cache size")
+	}
+
+	// Set max to current size so the next write triggers eviction
+	cm.SetMaxSize(size)
+
+	// Write second repo -- this should trigger eviction of the first (older) repo
+	if err := cm.PutSourceMeta("owner2", "repo2", &SourceMeta{Branch: "main", FetchedAt: time.Now()}); err != nil {
+		t.Fatalf("PutSourceMeta: %v", err)
+	}
+	if err := cm.PutRecipe("owner2", "repo2", "tool2", data, meta); err != nil {
+		t.Fatalf("PutRecipe: %v", err)
+	}
+
+	// First repo should have been evicted
+	got, err := cm.GetRecipe("owner1", "repo1", "tool1")
+	if err != nil {
+		t.Fatalf("GetRecipe: %v", err)
+	}
+	if got != nil {
+		t.Error("expected first repo to be evicted")
+	}
+
+	// Second repo should still exist
+	got, err = cm.GetRecipe("owner2", "repo2", "tool2")
+	if err != nil {
+		t.Fatalf("GetRecipe: %v", err)
+	}
+	if got == nil {
+		t.Error("expected second repo to still be cached")
+	}
+}
+
+func TestCacheManager_IncompleteSourceMeta(t *testing.T) {
+	cm := NewCacheManager(t.TempDir(), 1*time.Hour)
+
+	t.Run("complete is fresh within TTL", func(t *testing.T) {
+		meta := &SourceMeta{FetchedAt: time.Now(), Incomplete: false}
+		if !cm.IsSourceFresh(meta) {
+			t.Error("complete recent meta should be fresh")
+		}
+	})
+
+	t.Run("incomplete uses shorter TTL", func(t *testing.T) {
+		// 10 minutes ago -- within 1-hour TTL but outside 5-minute incomplete TTL
+		meta := &SourceMeta{FetchedAt: time.Now().Add(-10 * time.Minute), Incomplete: true}
+		if cm.IsSourceFresh(meta) {
+			t.Error("10-minute-old incomplete meta should be stale (5m TTL)")
+		}
+	})
+
+	t.Run("incomplete is fresh within 5m", func(t *testing.T) {
+		meta := &SourceMeta{FetchedAt: time.Now().Add(-2 * time.Minute), Incomplete: true}
+		if !cm.IsSourceFresh(meta) {
+			t.Error("2-minute-old incomplete meta should be fresh")
+		}
+	})
+}
+
 func TestCacheManager_DefaultTTL(t *testing.T) {
 	cm := NewCacheManager(t.TempDir(), 0) // 0 should use default
 	if cm.ttl != DefaultCacheTTL {

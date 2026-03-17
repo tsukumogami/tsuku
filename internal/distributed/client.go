@@ -149,22 +149,23 @@ func (gc *GitHubClient) FetchRecipe(ctx context.Context, owner, repo, name, down
 		return nil, err
 	}
 
-	// Check cache
+	// Check cache -- return immediately only when content exists and is fresh
 	cached, err := gc.cache.GetRecipe(owner, repo, name)
-	if err == nil && cached != nil {
+	recipeMeta, _ := gc.cache.GetRecipeMeta(owner, repo, name)
+	if err == nil && cached != nil && gc.cache.IsRecipeFresh(recipeMeta) {
 		return cached, nil
 	}
 
-	// Download
+	// Download (stale or missing cache triggers a network request)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, downloadURL, nil)
 	if err != nil {
 		return nil, &ErrNetwork{Operation: "creating request", Err: err}
 	}
 	req.Header.Set("User-Agent", httputil.DefaultUserAgent)
 
-	// Add conditional headers if we have cached metadata
-	recipeMeta, _ := gc.cache.GetRecipeMeta(owner, repo, name)
-	if recipeMeta != nil {
+	// Add conditional headers only when we have both cached content and metadata.
+	// Without cached content, a 304 response can't be fulfilled.
+	if cached != nil && recipeMeta != nil {
 		if recipeMeta.ETag != "" {
 			req.Header.Set("If-None-Match", recipeMeta.ETag)
 		}
@@ -321,9 +322,10 @@ func (gc *GitHubClient) tryBranches(ctx context.Context, owner, repo string, bra
 
 		if resp.StatusCode == http.StatusOK || resp.StatusCode == http.StatusMovedPermanently {
 			return &SourceMeta{
-				Branch:    branch,
-				Files:     nil, // Can't list via raw URLs; will populate on next successful API call
-				FetchedAt: time.Now(),
+				Branch:     branch,
+				Files:      nil, // Can't list via raw URLs; will populate on next successful API call
+				FetchedAt:  time.Now(),
+				Incomplete: true, // Short TTL so full listing is fetched once rate limits reset
 			}, nil
 		}
 	}

@@ -37,32 +37,26 @@ func TestAuthTransport_TokenIsolation(t *testing.T) {
 	authedClient := &http.Client{Transport: transport}
 
 	t.Run("token sent to api.github.com", func(t *testing.T) {
-		gotAuth = ""
-		// We can't actually hit api.github.com in tests, but we can verify
-		// the transport logic by checking the hostname matching.
-		// Instead, test the RoundTripper directly with a crafted request.
-		req, _ := http.NewRequest("GET", ts.URL+"/test", nil)
-		// Override the URL hostname to simulate api.github.com
-		req.URL.Host = contentsAPIHost
-		// But use the test server for actual transport
-		req.URL.Host = ts.Listener.Addr().String()
-		req.URL.Scheme = "https"
-		req.Host = contentsAPIHost
+		// Use a capturing base transport to verify the Authorization header
+		// is added by authTransport.RoundTrip for api.github.com requests.
+		var capturedReq *http.Request
+		capturingTransport := roundTripFunc(func(req *http.Request) (*http.Response, error) {
+			capturedReq = req
+			return &http.Response{StatusCode: 200, Body: http.NoBody}, nil
+		})
+		at := &authTransport{token: "ghp_test_token", base: capturingTransport}
 
-		// The authTransport checks req.URL.Hostname(), which is the test server addr.
-		// So token won't be sent (correctly, since it's not api.github.com).
-		// Let's test the logic more directly.
-	})
-
-	t.Run("transport adds token for api.github.com hostname", func(t *testing.T) {
-		// Create a request with api.github.com hostname
 		req, _ := http.NewRequest("GET", "https://api.github.com/repos/test/test", nil)
-		// Clone it as the transport would, and check header
-		if strings.EqualFold(req.URL.Hostname(), contentsAPIHost) {
-			req.Header.Set("Authorization", "Bearer ghp_test_token")
+		_, err := at.RoundTrip(req)
+		if err != nil {
+			t.Fatalf("RoundTrip failed: %v", err)
 		}
-		if req.Header.Get("Authorization") != "Bearer ghp_test_token" {
-			t.Error("expected Authorization header for api.github.com")
+		if capturedReq == nil {
+			t.Fatal("base transport was not called")
+		}
+		got := capturedReq.Header.Get("Authorization")
+		if got != "Bearer ghp_test_token" {
+			t.Errorf("Authorization = %q, want %q", got, "Bearer ghp_test_token")
 		}
 	})
 
