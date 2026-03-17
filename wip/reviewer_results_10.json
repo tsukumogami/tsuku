@@ -1,8 +1,0 @@
-{
-  "issue": 10,
-  "reviews": [
-    {"focus": "pragmatic", "blocking_count": 0, "advisory_count": 2, "detail_file": "wip/research/implement-doc_review_pragmatic_issue10.md"}
-  ],
-  "blocking_resolved": true,
-  "resolution": "No blocking findings."
-}

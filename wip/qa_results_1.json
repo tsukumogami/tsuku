@@ -1,7 +1,0 @@
-{
-  "issue": 1,
-  "scenarios_tested": ["scenario-1", "scenario-2", "scenario-3", "scenario-4"],
-  "scenarios_passed": ["scenario-1", "scenario-2", "scenario-3", "scenario-4"],
-  "scenarios_failed": [],
-  "notes": "All scenarios validated via go test ./... and go build ./... passing. Issue 1 is a pure refactor with no behavior change."
-}

@@ -1,8 +1,0 @@
-{
-  "issue": 9,
-  "all_passed": true,
-  "passed": 1,
-  "failed": 0,
-  "scenarios": ["scenario-26"],
-  "summary": "Source field populated correctly. Distributed tools show [owner/repo] suffix. JSON includes source field. Pre-migration tools default to central."
-}

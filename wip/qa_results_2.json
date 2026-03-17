@@ -1,7 +1,0 @@
-{
-  "issue": 2,
-  "scenarios_tested": ["scenario-5", "scenario-6"],
-  "scenarios_passed": ["scenario-5", "scenario-6"],
-  "scenarios_failed": [],
-  "notes": "All 10 test cases pass across both scenarios. TestSourceField_RoundTrip, TestSourceField_AbsentInJSON, and TestSourceField_AbsentInJSON_WithPlan validate serialization. TestMigrateSourceTracking_DefaultsCentral, TestMigrateSourceTracking_InfersFromPlan (4 sub-tests: registry/embedded/local/unknown), TestMigrateSourceTracking_Idempotent, and TestMigrateSourceTracking_SkipsExisting validate migration. TestRecipeSourceFromProvider (4 sub-tests: registry/embedded/local/custom) validates source population. Full suite (go test ./...) has one pre-existing lint failure in internal/dashboard/dashboard_test.go (SA5011 staticcheck, unrelated to issue #2). All packages relevant to source tracking pass cleanly."
-}

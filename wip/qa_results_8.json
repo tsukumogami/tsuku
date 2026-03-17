@@ -1,8 +1,0 @@
-{
-  "issue": 8,
-  "all_passed": true,
-  "passed": 2,
-  "failed": 0,
-  "scenarios": ["scenario-24", "scenario-25"],
-  "summary": "Both scenarios passed. Source-directed loading works for central, embedded, distributed, and empty sources. Unreachable sources fall back gracefully."
-}

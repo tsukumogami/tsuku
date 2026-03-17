@@ -1,7 +1,0 @@
-{
-  "issue": 7,
-  "scenarios_tested": ["scenario-20", "scenario-21", "scenario-22", "scenario-23"],
-  "scenarios_passed": ["scenario-20", "scenario-21", "scenario-22", "scenario-23"],
-  "scenarios_failed": [],
-  "notes": "All 12 unit tests pass (0.012s). Scenario 20 is environment-dependent (requires GITHUB_TOKEN for live API calls); validated via unit tests covering parseDistributedName, validateRegistrySource, autoRegisterSource, and recordDistributedSource -- code paths are correct. Scenario 21 (strict mode) validated through config round-trip tests and source validation rejection tests. Scenario 22 (name parsing) fully covered by TestParseDistributedName with 8 sub-tests across all formats: owner/repo, owner/repo:recipe, owner/repo@version, owner/repo:recipe@version, bare names, hyphens, dots. Scenario 23 (collision detection) covered by 4 tests: not-installed (no collision), same-source (no collision), different-source-with-force (no collision), different-source-no-force (collision error in non-interactive mode). Additional tests verified: --yes/-y flag registration (TestInstallYesFlag), recipe hash computation determinism (TestComputeRecipeHash), and hash persistence through state save/load (TestRecipeHashField_InState)."
-}

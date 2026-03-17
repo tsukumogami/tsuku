@@ -1,7 +1,0 @@
-{
-  "issue": 5,
-  "scenarios_tested": ["scenario-13", "scenario-14", "scenario-15", "scenario-16", "scenario-17"],
-  "scenarios_passed": ["scenario-13", "scenario-14", "scenario-15", "scenario-16", "scenario-17"],
-  "scenarios_failed": [],
-  "notes": "All 9 test functions passed across 5 scenarios. scenario-13: TestAuthTransport_TokenIsolation verified token sent only to api.github.com (2 subtests). scenario-14: TestContentsAPIResponseParsing confirmed Contents API JSON parsing. scenario-15: TestValidateDownloadURL validated hostname allowlist with 9 subtests covering allowed hosts, disallowed hosts, non-HTTPS, and malformed URLs. scenario-16: 5 test functions covered cache lifecycle -- TestCacheLifecycleAndFetchRecipeValidation (round-trip, freshness, stale detection, invalid URL rejection), TestCacheManager_SizeAndEviction, TestCacheManager_IsRecipeFresh (nil/fresh/stale), TestCacheManager_IncompleteSourceMeta (shorter TTL for incomplete), TestGitHubClient_ListRecipes_CacheHit. scenario-17: TestGitHubClient_RateLimitHandling verified header parsing and guidance messages with/without token (3 subtests)."
-}

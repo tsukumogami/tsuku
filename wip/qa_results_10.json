@@ -1,8 +1,0 @@
-{
-  "issue": 10,
-  "all_passed": true,
-  "passed": 1,
-  "failed": 0,
-  "scenarios": ["scenario-27"],
-  "summary": "All 5 refresh tests pass: no providers, multiple providers, central skip, error isolation, non-refreshable skip."
-}

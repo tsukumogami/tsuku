@@ -1,7 +1,0 @@
-{
-  "issue": 4,
-  "scenarios_tested": ["scenario-9", "scenario-10", "scenario-11", "scenario-12"],
-  "scenarios_passed": ["scenario-9", "scenario-10", "scenario-11", "scenario-12"],
-  "scenarios_failed": [],
-  "notes": "scenario-9: TestRegistryList_NoRegistries validates clean output. scenario-10: TestRegistryAdd_Idempotent and TestRegistryRemove validate add/remove. scenario-11: TestRegistryAdd_ValidatesFormat validates format rejection including three-segment paths. scenario-12: TestRegistryCmd_NoSubcommand validates help output."
-}
