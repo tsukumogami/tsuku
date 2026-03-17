@@ -115,14 +115,7 @@ Examples:
 		if recipePath == "" {
 			_, providerSource, err := loader.GetWithSource(toolName, recipe.LoaderOptions{})
 			if err == nil {
-				switch providerSource {
-				case recipe.SourceLocal:
-					recipeSource = "local"
-				case recipe.SourceRegistry, recipe.SourceEmbedded:
-					recipeSource = "central"
-				default:
-					recipeSource = string(providerSource)
-				}
+				recipeSource = recipeSourceFromProvider(providerSource)
 			}
 		}
 
