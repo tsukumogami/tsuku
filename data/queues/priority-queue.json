@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-17T15:00:49Z",
+  "updated_at": "2026-03-17T16:10:12Z",
   "entries": [
     {
       "name": "node",
@@ -14536,11 +14536,11 @@
       "name": "flash",
       "source": "rubygems:flash",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 7,
-      "next_retry_at": "2026-03-17T12:32:06.910040799Z"
+      "failure_count": 8,
+      "next_retry_at": "2026-03-23T00:10:12.40838677Z"
     },
     {
       "name": "flashrom",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 103,
-      "next_retry_at": "1733-12-06T13:25:49.994344159Z"
+      "failure_count": 105,
+      "next_retry_at": "1733-12-06T16:22:55.553610962Z"
     },
     {
       "name": "libaacs",
@@ -28556,11 +28556,11 @@
       "name": "mailhog",
       "source": "npm:mailhog",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 7,
-      "next_retry_at": "2026-03-17T14:30:05.18231873Z"
+      "failure_count": 8,
+      "next_retry_at": "2026-03-23T00:10:12.40838677Z"
     },
     {
       "name": "mailpit",
