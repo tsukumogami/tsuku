@@ -3,19 +3,80 @@
   "design_doc": "docs/plans/PLAN-distributed-recipes.md",
   "branch": "docs/distributed-recipes",
   "pr_number": 2160,
-  "integrity_hash": "sha256:c13214340355c0b533ba36bfb98cd8a4e42645747f19679d27cae9d2aff0c09d",
+  "integrity_hash": "sha256:feaed4d9501723a532d3c700c4a694a4042a496a24cd8ee3c44fcf7d4e3cb264",
   "issues": [
     {
       "number": 1,
       "title": "refactor(recipe): extract RecipeProvider interface and refactor Loader",
-      "status": "pending",
+      "status": "pushed",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [],
-      "commits": [],
-      "agent_type": "",
-      "summary": null,
+      "commits": [
+        "32999d3d"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          "internal/recipe/provider.go",
+          "internal/recipe/provider_local.go",
+          "internal/recipe/provider_embedded.go",
+          "internal/recipe/provider_registry.go",
+          "internal/recipe/loader.go",
+          "internal/recipe/loader_test.go",
+          "internal/recipe/satisfies_test.go",
+          "cmd/tsuku/main.go",
+          "cmd/tsuku/update_registry.go",
+          "cmd/tsuku/create_test.go"
+        ],
+        "tests_added": 0,
+        "key_decisions": "All providers in recipe package to avoid circular deps. CentralRegistryProvider wraps *registry.Registry. ProviderBySource() for type-assertion escape hatch. satisfiesEntry struct tags entries with source.",
+        "requirements_map": []
+      },
+      "reviewer_results": {
+        "issue": 1,
+        "reviews": [
+          {
+            "focus": "pragmatic",
+            "blocking_count": 2,
+            "advisory_count": 3,
+            "detail_file": "wip/research/implement-doc_review_pragmatic_issue1.md"
+          },
+          {
+            "focus": "architect",
+            "blocking_count": 0,
+            "advisory_count": 3,
+            "detail_file": "wip/research/implement-doc_review_architect_issue1.md"
+          },
+          {
+            "focus": "maintainer",
+            "blocking_count": 1,
+            "advisory_count": 4,
+            "detail_file": "wip/research/implement-doc_review_maintainer_issue1.md"
+          }
+        ],
+        "blocking_resolved": true,
+        "resolution": "Deleted dead Loader.Registry() and ListEmbedded() methods per reviewer feedback"
+      },
+      "qa_results": {
+        "issue": 1,
+        "scenarios_tested": [
+          "scenario-1",
+          "scenario-2",
+          "scenario-3",
+          "scenario-4"
+        ],
+        "scenarios_passed": [
+          "scenario-1",
+          "scenario-2",
+          "scenario-3",
+          "scenario-4"
+        ],
+        "scenarios_failed": [],
+        "notes": "All scenarios validated via go test ./... and go build ./... passing. Issue 1 is a pure refactor with no behavior change."
+      },
       "testable_scenarios": [
         "scenario-1",
         "scenario-2",
