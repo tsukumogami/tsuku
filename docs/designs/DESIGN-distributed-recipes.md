@@ -708,6 +708,55 @@ Deliverables:
 - `cmd/tsuku/recipes.go` -- list from all registered sources
 - `cmd/tsuku/update_registry.go` -- refresh distributed sources
 
+## Security Considerations
+
+**Trust model.** Distributed recipes can execute arbitrary shell commands via the
+`run_command` action (which passes recipe-defined strings to `sh -c`) and have
+access to all other actions (cargo_build, pip_install, configure_make, etc.)
+with the invoking user's full permissions. This is the same trust model as
+`go install`, `cargo install`, or `pip install` from arbitrary sources, but
+unlike the central registry where recipes are reviewed via PR.
+
+**Recipe integrity.** v1 does not verify recipe content integrity. Recipes are
+fetched from HEAD over HTTPS, which protects against network-level tampering but
+not against upstream compromise (account takeover, malicious force-push). Binary
+integrity is protected by checksum/signature verification defined in the recipe,
+but if the recipe itself is tampered, those verification parameters are also
+compromised. Recipe-level integrity (content-hash pinning, change detection) is
+a prerequisite for enterprise or high-security use and should be prioritized as
+a fast follow.
+
+Implementer requirements:
+- Validate that `download_url` values returned by the GitHub Contents API use
+  HTTPS **and** come from an allowed hostname (`raw.githubusercontent.com`,
+  `objects.githubusercontent.com`). A compromised or spoofed API response could
+  point to an arbitrary HTTPS host.
+- Use separate HTTP clients for authenticated (Contents API) and unauthenticated
+  (raw content) requests. If a single client carries the `Authorization` header
+  at the transport level, the token leaks to any `download_url` target.
+- Record `sha256(recipe_toml_bytes)` in `state.json` alongside the `Source`
+  field. This doesn't block mutation in v1 but creates an audit trail. The
+  intended future behavior: on update, if the hash changed, show a diff summary
+  and require `--accept-recipe-changes` to proceed.
+- Show an interactive confirmation prompt on first install from a new distributed
+  source (e.g., "Installing from owner/repo for the first time. Distributed
+  recipes can execute arbitrary commands with your user permissions. Continue?
+  [y/N]"). Accept `-y` flag to skip for scripted use.
+
+**Strict mode.** Teams and CI environments should set `strict_registries = true`
+to prevent auto-registration. Document this in the `tsuku registry` help text
+and in the security section of the website.
+
+**Token handling.** `GITHUB_TOKEN` is sent only to `api.github.com` over HTTPS.
+Raw content fetches don't include authentication headers. The token is resolved
+through the existing `secrets` package, which checks environment variables and
+`config.toml` (stored with 0600 permissions).
+
+**Telemetry.** Telemetry events for distributed installs should include an opaque
+"distributed" source tag rather than the full `owner/repo` identifier. Full
+identifiers reveal user-source relationships to the telemetry backend without
+clear analytical benefit.
+
 ## Consequences
 
 ### Positive
@@ -764,51 +813,100 @@ Deliverables:
   encapsulated in the distributed provider implementation. When non-GitHub
   support is needed, it's a new provider, not a change to the interface.
 
-## Security Considerations
+## Implementation Issues
 
-**Trust model.** Distributed recipes can execute arbitrary shell commands via the
-`run_command` action (which passes recipe-defined strings to `sh -c`) and have
-access to all other actions (cargo_build, pip_install, configure_make, etc.)
-with the invoking user's full permissions. This is the same trust model as
-`go install`, `cargo install`, or `pip install` from arbitrary sources, but
-unlike the central registry where recipes are reviewed via PR.
+Full plan: [Distributed Recipes](docs/plans/PLAN-distributed-recipes.md) (single-pr mode, 13 issues).
 
-**Recipe integrity.** v1 does not verify recipe content integrity. Recipes are
-fetched from HEAD over HTTPS, which protects against network-level tampering but
-not against upstream compromise (account takeover, malicious force-push). Binary
-integrity is protected by checksum/signature verification defined in the recipe,
-but if the recipe itself is tampered, those verification parameters are also
-compromised. Recipe-level integrity (content-hash pinning, change detection) is
-a prerequisite for enterprise or high-security use and should be prioritized as
-a fast follow.
+| Issue | Dependencies | Tier |
+|-------|--------------|------|
+| [#1: refactor(recipe): extract RecipeProvider interface](docs/plans/PLAN-distributed-recipes.md) | None | critical |
+| _Extract RecipeProvider interface and refactor Loader from hardcoded four-source chain to ordered provider slice_ | | |
+| [#2: feat(state): add source tracking to ToolState](docs/plans/PLAN-distributed-recipes.md) | [#1](docs/plans/PLAN-distributed-recipes.md) | testable |
+| _Add Source field to ToolState recording where each tool's recipe came from_ | | |
+| [#3: feat(config): add registry configuration and GetFromSource](docs/plans/PLAN-distributed-recipes.md) | [#1](docs/plans/PLAN-distributed-recipes.md) | testable |
+| _Add registry config section and source-directed recipe loading_ | | |
+| [#4: feat(cli): implement tsuku registry subcommands](docs/plans/PLAN-distributed-recipes.md) | [#3](docs/plans/PLAN-distributed-recipes.md) | testable |
+| _Add registry list, add, remove CLI subcommands_ | | |
+| [#5: feat(distributed): implement GitHub HTTP fetching and cache](docs/plans/PLAN-distributed-recipes.md) | [#1](docs/plans/PLAN-distributed-recipes.md) | critical |
+| _Build GitHub HTTP client with hostname allowlist, auth, rate limiting, and local cache_ | | |
+| [#6: feat(distributed): implement DistributedProvider](docs/plans/PLAN-distributed-recipes.md) | [#1](docs/plans/PLAN-distributed-recipes.md), [#5](docs/plans/PLAN-distributed-recipes.md) | testable |
+| _Create DistributedProvider implementing RecipeProvider and RefreshableProvider_ | | |
+| [#7: feat(install): integrate distributed sources into install flow](docs/plans/PLAN-distributed-recipes.md) | [#2](docs/plans/PLAN-distributed-recipes.md), [#4](docs/plans/PLAN-distributed-recipes.md), [#6](docs/plans/PLAN-distributed-recipes.md) | testable |
+| _Wire distributed sources into install command with name parsing and collision detection_ | | |
+| [#8: feat(cli): add source-directed loading to update, outdated, verify](docs/plans/PLAN-distributed-recipes.md) | [#2](docs/plans/PLAN-distributed-recipes.md), [#3](docs/plans/PLAN-distributed-recipes.md), [#6](docs/plans/PLAN-distributed-recipes.md) | testable |
+| _Make update, outdated, verify use ToolState.Source for provider routing_ | | |
+| [#9: feat(cli): add source display to info, list, recipes](docs/plans/PLAN-distributed-recipes.md) | [#2](docs/plans/PLAN-distributed-recipes.md), [#6](docs/plans/PLAN-distributed-recipes.md) | simple |
+| _Show source annotations in info, list, and recipes output_ | | |
+| [#10: feat(cli): extend update-registry for distributed sources](docs/plans/PLAN-distributed-recipes.md) | [#6](docs/plans/PLAN-distributed-recipes.md) | simple |
+| _Add RefreshableProvider refresh loop to update-registry_ | | |
+| [#11: feat(koto): create .tsuku-recipes/ in koto repo](docs/plans/PLAN-distributed-recipes.md) | [#6](docs/plans/PLAN-distributed-recipes.md) | simple |
+| _Create .tsuku-recipes/ directory in koto with seed recipe_ | | |
+| [#12: chore(recipes): migrate koto recipes to distributed](docs/plans/PLAN-distributed-recipes.md) | [#7](docs/plans/PLAN-distributed-recipes.md), [#11](docs/plans/PLAN-distributed-recipes.md) | simple |
+| _Move koto recipes from central registry to koto's .tsuku-recipes/_ | | |
+| [#13: test(distributed): end-to-end validation](docs/plans/PLAN-distributed-recipes.md) | [#11](docs/plans/PLAN-distributed-recipes.md), [#12](docs/plans/PLAN-distributed-recipes.md) | testable |
+| _Full lifecycle validation of distributed install, update, remove_ | | |
 
-Implementer requirements:
-- Validate that `download_url` values returned by the GitHub Contents API use
-  HTTPS **and** come from an allowed hostname (`raw.githubusercontent.com`,
-  `objects.githubusercontent.com`). A compromised or spoofed API response could
-  point to an arbitrary HTTPS host.
-- Use separate HTTP clients for authenticated (Contents API) and unauthenticated
-  (raw content) requests. If a single client carries the `Authorization` header
-  at the transport level, the token leaks to any `download_url` target.
-- Record `sha256(recipe_toml_bytes)` in `state.json` alongside the `Source`
-  field. This doesn't block mutation in v1 but creates an audit trail. The
-  intended future behavior: on update, if the hash changed, show a diff summary
-  and require `--accept-recipe-changes` to proceed.
-- Show an interactive confirmation prompt on first install from a new distributed
-  source (e.g., "Installing from owner/repo for the first time. Distributed
-  recipes can execute arbitrary commands with your user permissions. Continue?
-  [y/N]"). Accept `-y` flag to skip for scripted use.
+```mermaid
+graph TD
+    subgraph Phase1["Phase 1: Foundation"]
+        I1["1: RecipeProvider interface"]
+    end
 
-**Strict mode.** Teams and CI environments should set `strict_registries = true`
-to prevent auto-registration. Document this in the `tsuku registry` help text
-and in the security section of the website.
+    subgraph Phase2["Phase 2: State + Config"]
+        I2["2: Source tracking"]
+        I3["3: Registry config + GetFromSource"]
+    end
 
-**Token handling.** `GITHUB_TOKEN` is sent only to `api.github.com` over HTTPS.
-Raw content fetches don't include authentication headers. The token is resolved
-through the existing `secrets` package, which checks environment variables and
-`config.toml` (stored with 0600 permissions).
+    subgraph Phase3["Phase 3: Registry + HTTP"]
+        I4["4: Registry subcommands"]
+        I5["5: GitHub HTTP + cache"]
+    end
 
-**Telemetry.** Telemetry events for distributed installs should include an opaque
-"distributed" source tag rather than the full `owner/repo` identifier. Full
-identifiers reveal user-source relationships to the telemetry backend without
-clear analytical benefit.
+    subgraph Phase4["Phase 4: Distributed Provider"]
+        I6["6: DistributedProvider"]
+    end
+
+    subgraph Phase5["Phase 5: Command Integration"]
+        I7["7: Install flow"]
+        I8["8: Update/outdated/verify"]
+        I9["9: Info/list/recipes display"]
+        I10["10: Update-registry"]
+    end
+
+    subgraph Phase6["Phase 6: Cross-repo Validation"]
+        I11["11: Koto .tsuku-recipes/"]
+        I12["12: Migrate koto recipes"]
+        I13["13: E2E validation"]
+    end
+
+    I1 --> I2
+    I1 --> I3
+    I1 --> I5
+    I1 --> I6
+    I3 --> I4
+    I5 --> I6
+    I2 --> I7
+    I4 --> I7
+    I6 --> I7
+    I2 --> I8
+    I3 --> I8
+    I6 --> I8
+    I2 --> I9
+    I6 --> I9
+    I6 --> I10
+    I6 --> I11
+    I7 --> I12
+    I11 --> I12
+    I11 --> I13
+    I12 --> I13
+
+    classDef done fill:#c8e6c9
+    classDef ready fill:#bbdefb
+    classDef blocked fill:#fff9c4
+
+    class I1 done
+    class I2,I3,I5 ready
+    class I4,I6,I7,I8,I9,I10,I11,I12,I13 blocked
+```
+
+**Legend**: Green = done, Blue = ready, Yellow = blocked
