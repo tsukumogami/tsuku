@@ -72,6 +72,54 @@ When a recipe doesn't exist, tsuku queries the curated registry first, then para
 
 Use `--from` to override automatic discovery with an explicit source (see below).
 
+### Install from distributed sources
+
+Tools don't have to be in the central registry. Anyone can host recipes in a GitHub repository, and you can install directly from them:
+
+```bash
+# Install a recipe from a GitHub repo
+tsuku install acme-corp/internal-tools:deploy-cli
+
+# Install a specific version
+tsuku install acme-corp/internal-tools:deploy-cli@2.1.0
+
+# If the repo has only one recipe, the recipe name is optional
+tsuku install acme-corp/my-tool
+```
+
+The first time you install from a new source, tsuku asks for confirmation. Pass `-y` to skip the prompt in scripts:
+
+```bash
+tsuku install -y acme-corp/internal-tools:deploy-cli
+```
+
+Once installed, distributed tools work exactly like central registry tools with `update`, `outdated`, `verify`, and `remove`.
+
+See the [Distributed Recipes Guide](docs/GUIDE-distributed-recipes.md) for the full workflow.
+
+### Manage recipe registries
+
+Pin sources you trust so you don't get prompted every time:
+
+```bash
+# List configured registries
+tsuku registry list
+
+# Trust a GitHub repo as a recipe source
+tsuku registry add acme-corp/internal-tools
+
+# Remove a registry
+tsuku registry remove acme-corp/internal-tools
+```
+
+For CI or team environments where you want to lock down which sources are allowed, enable strict mode in `$TSUKU_HOME/config.toml`:
+
+```toml
+strict_registries = true
+```
+
+With strict mode on, tsuku only installs from the central registry and explicitly added registries. Anything else is rejected.
+
 ### Create recipes from package ecosystems
 
 Generate recipes automatically from package registry metadata:

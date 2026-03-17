@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strings"
 	"syscall"
 
@@ -13,9 +14,11 @@ import (
 	"github.com/tsukumogami/tsuku/internal/actions"
 	"github.com/tsukumogami/tsuku/internal/buildinfo"
 	"github.com/tsukumogami/tsuku/internal/config"
+	"github.com/tsukumogami/tsuku/internal/distributed"
 	"github.com/tsukumogami/tsuku/internal/log"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/registry"
+	"github.com/tsukumogami/tsuku/internal/userconfig"
 )
 
 // defaultHomeOverride is set via ldflags for dev builds.
@@ -67,8 +70,33 @@ func init() {
 	}
 	reg := registry.New(cfg.RegistryDir)
 
-	// Initialize recipe loader with registry and local recipes directory
-	loader = recipe.NewWithLocalRecipes(reg, cfg.RecipesDir)
+	// Build provider chain: local > embedded > central registry
+	var providers []recipe.RecipeProvider
+	if cfg.RecipesDir != "" {
+		providers = append(providers, recipe.NewLocalProvider(cfg.RecipesDir))
+	}
+	embedded, _ := recipe.NewEmbeddedRegistry()
+	if ep := recipe.NewEmbeddedProvider(embedded); ep != nil {
+		providers = append(providers, ep)
+	}
+	providers = append(providers, recipe.NewCentralRegistryProvider(reg))
+
+	// Add distributed providers from user config (lowest priority)
+	if userCfg, err := userconfig.Load(); err == nil && len(userCfg.Registries) > 0 {
+		cacheDir := filepath.Join(cfg.CacheDir, "distributed")
+		cache := distributed.NewCacheManager(cacheDir, distributed.DefaultCacheTTL)
+		ghClient := distributed.NewGitHubClient(cache)
+
+		for source := range userCfg.Registries {
+			parts := strings.SplitN(source, "/", 2)
+			if len(parts) == 2 {
+				providers = append(providers, distributed.NewDistributedProvider(parts[0], parts[1], ghClient))
+			}
+		}
+	}
+
+	// Initialize recipe loader with provider chain
+	loader = recipe.NewLoader(providers...)
 
 	// Configure constraint lookup for step analysis (enables platform constraint validation)
 	constraintLookup = defaultConstraintLookup()
@@ -97,6 +125,7 @@ func init() {
 	rootCmd.AddCommand(shellenvCmd)
 	rootCmd.AddCommand(doctorCmd)
 	rootCmd.AddCommand(llmCmd)
+	rootCmd.AddCommand(registryCmd)
 }
 
 func main() {

@@ -44,6 +44,13 @@ var outdatedCmd = &cobra.Command{
 			return
 		}
 
+		// Load state to access each tool's recorded source
+		state, stateErr := mgr.GetState().Load()
+		if stateErr != nil {
+			fmt.Fprintf(os.Stderr, "Error loading state: %v\n", stateErr)
+			exitWithCode(ExitGeneral)
+		}
+
 		if !jsonOutput {
 			printInfo("Checking for updates...")
 		}
@@ -59,8 +66,8 @@ var outdatedCmd = &cobra.Command{
 		var updates []updateInfo
 
 		for _, tool := range tools {
-			// Load recipe to find repo
-			r, err := loader.Get(tool.Name, recipe.LoaderOptions{})
+			// Load recipe using source-directed loading
+			r, err := loadRecipeForTool(ctx, tool.Name, state, cfg)
 			if err != nil {
 				continue
 			}
@@ -129,6 +136,42 @@ var outdatedCmd = &cobra.Command{
 		}
 		printInfo("\nTo update, run: tsuku update <tool>")
 	},
+}
+
+// loadRecipeForTool loads a recipe using source-directed loading when the tool
+// has a distributed source. For central/local/embedded/empty sources, it falls
+// back to the normal loader chain.
+//
+// If a distributed source is unreachable, the function falls back to the normal
+// loader chain and logs a warning rather than failing fatally.
+func loadRecipeForTool(ctx context.Context, toolName string, state *install.State, cfg *config.Config) (*recipe.Recipe, error) {
+	source := ""
+	if state != nil {
+		if ts, ok := state.Installed[toolName]; ok {
+			source = ts.Source
+		}
+	}
+
+	// Empty source defaults to central -- use normal chain
+	if source == "" || !isDistributedSource(source) {
+		return loader.Get(toolName, recipe.LoaderOptions{})
+	}
+
+	// Ensure the distributed provider is registered
+	if err := addDistributedProvider(source, cfg); err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: could not reach source %q for %s, falling back to default chain: %v\n", source, toolName, err)
+		return loader.Get(toolName, recipe.LoaderOptions{})
+	}
+
+	// Fetch from the recorded source
+	data, err := loader.GetFromSource(ctx, toolName, source)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: could not load %s from %s, falling back to default chain: %v\n", toolName, source, err)
+		return loader.Get(toolName, recipe.LoaderOptions{})
+	}
+
+	// Parse the raw bytes into a Recipe
+	return loader.ParseAndCache(ctx, toolName, data)
 }
 
 func init() {

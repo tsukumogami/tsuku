@@ -156,6 +156,126 @@ func TestListWithOptions_EmptyVersionsMap(t *testing.T) {
 	}
 }
 
+func TestListWithOptions_SourceField(t *testing.T) {
+	cfg, cleanup := testutil.NewTestConfig(t)
+	defer cleanup()
+
+	mgr := New(cfg)
+	sm := NewStateManager(cfg)
+
+	// Create tool directories
+	for _, dir := range []string{
+		cfg.ToolDir("ripgrep", "14.1.1"),
+		cfg.ToolDir("my-tool", "1.0.0"),
+		cfg.ToolDir("local-tool", "2.0.0"),
+	} {
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			t.Fatalf("failed to create tool dir: %v", err)
+		}
+	}
+
+	// Central source tool
+	err := sm.UpdateTool("ripgrep", func(ts *ToolState) {
+		ts.ActiveVersion = "14.1.1"
+		ts.Source = "central"
+		ts.Versions = map[string]VersionState{
+			"14.1.1": {Requested: "", Binaries: []string{"rg"}},
+		}
+	})
+	if err != nil {
+		t.Fatalf("UpdateTool() error = %v", err)
+	}
+
+	// Distributed source tool
+	err = sm.UpdateTool("my-tool", func(ts *ToolState) {
+		ts.ActiveVersion = "1.0.0"
+		ts.Source = "alice/tools"
+		ts.Versions = map[string]VersionState{
+			"1.0.0": {Requested: "", Binaries: []string{"my-tool"}},
+		}
+	})
+	if err != nil {
+		t.Fatalf("UpdateTool() error = %v", err)
+	}
+
+	// Local source tool
+	err = sm.UpdateTool("local-tool", func(ts *ToolState) {
+		ts.ActiveVersion = "2.0.0"
+		ts.Source = "local"
+		ts.Versions = map[string]VersionState{
+			"2.0.0": {Requested: "", Binaries: []string{"local-tool"}},
+		}
+	})
+	if err != nil {
+		t.Fatalf("UpdateTool() error = %v", err)
+	}
+
+	tools, err := mgr.List()
+	if err != nil {
+		t.Fatalf("List() error = %v", err)
+	}
+
+	if len(tools) != 3 {
+		t.Fatalf("List() returned %d tools, want 3", len(tools))
+	}
+
+	// Verify sources (tools are sorted by name)
+	expected := []struct {
+		name   string
+		source string
+	}{
+		{"local-tool", "local"},
+		{"my-tool", "alice/tools"},
+		{"ripgrep", "central"},
+	}
+
+	for i, exp := range expected {
+		if tools[i].Name != exp.name {
+			t.Errorf("tools[%d].Name = %q, want %q", i, tools[i].Name, exp.name)
+		}
+		if tools[i].Source != exp.source {
+			t.Errorf("tools[%d].Source = %q, want %q", i, tools[i].Source, exp.source)
+		}
+	}
+}
+
+func TestListWithOptions_MigratedSource(t *testing.T) {
+	cfg, cleanup := testutil.NewTestConfig(t)
+	defer cleanup()
+
+	mgr := New(cfg)
+	sm := NewStateManager(cfg)
+
+	if err := os.MkdirAll(cfg.ToolDir("old-tool", "1.0.0"), 0755); err != nil {
+		t.Fatalf("failed to create tool dir: %v", err)
+	}
+
+	// Tool without Source field (pre-migration state) gets migrated to "central"
+	err := sm.UpdateTool("old-tool", func(ts *ToolState) {
+		ts.ActiveVersion = "1.0.0"
+		ts.Versions = map[string]VersionState{
+			"1.0.0": {Requested: "", Binaries: []string{"old-tool"}},
+		}
+	})
+	if err != nil {
+		t.Fatalf("UpdateTool() error = %v", err)
+	}
+
+	tools, err := mgr.List()
+	if err != nil {
+		t.Fatalf("List() error = %v", err)
+	}
+
+	if len(tools) != 1 {
+		t.Fatalf("List() returned %d tools, want 1", len(tools))
+	}
+
+	// Source should be "central" after lazy migration
+	if tools[0].Source != "central" {
+		t.Errorf("tools[0].Source = %q, want %q", tools[0].Source, "central")
+	}
+}
+
 func TestListWithOptions_HiddenToolFiltering(t *testing.T) {
 	cfg, cleanup := testutil.NewTestConfig(t)
 	defer cleanup()

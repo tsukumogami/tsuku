@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/tsukumogami/tsuku/internal/config"
@@ -67,6 +68,7 @@ var listCmd = &cobra.Command{
 				Version  string `json:"version"`
 				Path     string `json:"path"`
 				Type     string `json:"type,omitempty"`
+				Source   string `json:"source,omitempty"`
 				IsActive bool   `json:"is_active,omitempty"`
 			}
 			type appJSON struct {
@@ -92,6 +94,7 @@ var listCmd = &cobra.Command{
 					Version:  t.Version,
 					Path:     t.Path,
 					Type:     "tool",
+					Source:   t.Source,
 					IsActive: t.IsActive,
 				})
 			}
@@ -143,7 +146,11 @@ var listCmd = &cobra.Command{
 			if tool.IsActive {
 				activeIndicator = " (active)"
 			}
-			fmt.Printf("%s%-20s  %s%s\n", prefix, tool.Name, tool.Version, activeIndicator)
+			sourceSuffix := ""
+			if strings.Contains(tool.Source, "/") {
+				sourceSuffix = fmt.Sprintf(" [%s]", tool.Source)
+			}
+			fmt.Printf("%s%-20s  %s%s%s\n", prefix, tool.Name, tool.Version, activeIndicator, sourceSuffix)
 		}
 
 		if showSystemDeps {

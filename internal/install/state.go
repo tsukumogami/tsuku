@@ -32,9 +32,12 @@ type Plan struct {
 	Version       string       `json:"version"`
 	Platform      PlanPlatform `json:"platform"`
 	GeneratedAt   time.Time    `json:"generated_at"`
-	RecipeSource  string       `json:"recipe_source"`
-	Deterministic bool         `json:"deterministic"`
-	Steps         []PlanStep   `json:"steps"`
+	// RecipeSource is the raw provider tag ("registry", "embedded", "local").
+	// See recipeSourceFromProvider in cmd/tsuku/helpers.go for the mapping
+	// to the normalized ToolState.Source values ("central", "local", "owner/repo").
+	RecipeSource  string     `json:"recipe_source"`
+	Deterministic bool       `json:"deterministic"`
+	Steps         []PlanStep `json:"steps"`
 }
 
 // PlanPlatform identifies the target OS and architecture for a plan.
@@ -79,6 +82,15 @@ type ToolState struct {
 
 	// Version is deprecated: use ActiveVersion instead. Kept for migration from old state files.
 	Version string `json:"version,omitempty"`
+
+	// Source records where this tool's recipe came from.
+	// Values: "central" (default registry and embedded), "local", or "owner/repo" (distributed).
+	// Populated on new installs; lazily migrated for existing entries.
+	Source string `json:"source,omitempty"`
+
+	// RecipeHash is the SHA256 hash of the recipe TOML bytes at install time.
+	// Provides an audit trail for what recipe content was used to install the tool.
+	RecipeHash string `json:"recipe_hash,omitempty"`
 
 	IsExplicit            bool     `json:"is_explicit"`                    // User requested this tool directly
 	RequiredBy            []string `json:"required_by"`                    // Tools that depend on this tool
@@ -188,6 +200,9 @@ func (sm *StateManager) loadWithLock() (*State, error) {
 	// Migrate old single-version format to new multi-version format
 	state.migrateToMultiVersion()
 
+	// Migrate empty Source fields to default values
+	state.migrateSourceTracking()
+
 	return &state, nil
 }
 
@@ -262,6 +277,9 @@ func (sm *StateManager) loadWithoutLock() (*State, error) {
 
 	// Migrate old single-version format to new multi-version format
 	state.migrateToMultiVersion()
+
+	// Migrate empty Source fields to default values
+	state.migrateSourceTracking()
 
 	return &state, nil
 }

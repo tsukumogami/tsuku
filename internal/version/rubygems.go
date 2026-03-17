@@ -176,9 +176,13 @@ func (r *Resolver) ListRubyGemsVersions(ctx context.Context, gemName string) ([]
 	}
 
 	// Extract stable versions (exclude prereleases, filter to "ruby" platform)
+	// Also skip versions that don't start with a digit (e.g., "dev"), since
+	// those aren't valid release version numbers and would sort above real
+	// versions in lexicographic fallback, causing downstream failures.
 	versions := make([]string, 0, len(response))
 	for _, v := range response {
-		if !v.Prerelease && v.Platform == "ruby" {
+		if !v.Prerelease && v.Platform == "ruby" &&
+			len(v.Number) > 0 && v.Number[0] >= '0' && v.Number[0] <= '9' {
 			versions = append(versions, v.Number)
 		}
 	}

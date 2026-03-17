@@ -146,6 +146,30 @@ func formatDeprecationWarning(dep *registry.DeprecationNotice, registryURL, cliV
 	return b.String()
 }
 
+// recipeSourceFromProvider maps a recipe.RecipeSource to the source string
+// stored in ToolState.Source and Plan.RecipeSource. The mapping normalizes
+// provider-level source tags to the user-facing values used for source tracking:
+//   - SourceRegistry ("registry") -> "central"
+//   - SourceEmbedded ("embedded") -> "central" (embedded is part of the central registry)
+//   - SourceLocal ("local") -> "local"
+//
+// Embedded recipes are treated as "central" because they're a cached subset of the
+// central registry bundled into the binary. For update/outdated/verify purposes,
+// they should check the central registry for newer versions.
+func recipeSourceFromProvider(source recipe.RecipeSource) string {
+	switch source {
+	case recipe.SourceLocal:
+		return string(recipe.SourceLocal)
+	case recipe.SourceEmbedded:
+		return recipe.SourceCentral
+	case recipe.SourceRegistry:
+		return recipe.SourceCentral
+	default:
+		// Distributed sources pass through as "owner/repo"
+		return string(source)
+	}
+}
+
 // generateInstallPlan generates an installation plan for a tool.
 // It handles both tool-from-registry and recipe-from-file cases.
 //
@@ -175,8 +199,11 @@ func generateInstallPlan(
 		r, err = recipe.ParseFile(recipePath, constraintLookup)
 		recipeSource = "local"
 	} else {
-		r, err = loader.Get(toolName, recipe.LoaderOptions{})
-		recipeSource = "registry"
+		var source recipe.RecipeSource
+		r, source, err = loader.GetWithSource(toolName, recipe.LoaderOptions{})
+		if err == nil {
+			recipeSource = recipeSourceFromProvider(source)
+		}
 	}
 	if err != nil {
 		return nil, err

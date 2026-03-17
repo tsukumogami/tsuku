@@ -1012,8 +1012,9 @@ installed before this feature will show "Integrity: SKIPPED".`,
 			exitWithCode(ExitGeneral)
 		}
 
-		// Load recipe to determine type
-		r, err := loader.Get(name, recipe.LoaderOptions{})
+		// Load recipe using source-directed loading when the tool has a
+		// distributed source recorded, falling back to the normal chain.
+		r, err := loadRecipeForTool(context.Background(), name, state, cfg)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Failed to load recipe: %v\n", err)
 			exitWithCode(ExitRecipeNotFound)

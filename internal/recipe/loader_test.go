@@ -2,6 +2,7 @@ package recipe
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -12,15 +13,53 @@ import (
 	"github.com/tsukumogami/tsuku/internal/registry"
 )
 
-func TestNew(t *testing.T) {
+// Test helper: creates a loader with embedded + central registry providers (no local).
+// Equivalent to the old New(reg).
+func newTestLoaderWithRegistry(reg *registry.Registry) *Loader {
+	embedded, _ := NewEmbeddedRegistry()
+	var providers []RecipeProvider
+	if ep := NewEmbeddedProvider(embedded); ep != nil {
+		providers = append(providers, ep)
+	}
+	providers = append(providers, NewCentralRegistryProvider(reg))
+	return NewLoader(providers...)
+}
+
+// Test helper: creates a loader with local + embedded + central registry providers.
+// Equivalent to the old NewWithLocalRecipes(reg, dir).
+func newTestLoaderWithLocal(reg *registry.Registry, recipesDir string) *Loader {
+	embedded, _ := NewEmbeddedRegistry()
+	var providers []RecipeProvider
+	if recipesDir != "" {
+		providers = append(providers, NewLocalProvider(recipesDir))
+	}
+	if ep := NewEmbeddedProvider(embedded); ep != nil {
+		providers = append(providers, ep)
+	}
+	providers = append(providers, NewCentralRegistryProvider(reg))
+	return NewLoader(providers...)
+}
+
+// Test helper: creates a loader with local + central registry providers (no embedded).
+// Equivalent to the old NewWithoutEmbedded(reg, dir).
+func newTestLoaderNoEmbedded(reg *registry.Registry, recipesDir string) *Loader {
+	var providers []RecipeProvider
+	if recipesDir != "" {
+		providers = append(providers, NewLocalProvider(recipesDir))
+	}
+	providers = append(providers, NewCentralRegistryProvider(reg))
+	return NewLoader(providers...)
+}
+
+func TestNewLoader(t *testing.T) {
 	reg := registry.New(t.TempDir())
-	loader := New(reg)
+	loader := newTestLoaderWithRegistry(reg)
 
 	if loader == nil {
-		t.Fatal("New() returned nil")
+		t.Fatal("NewLoader() returned nil")
 	}
-	if loader.registry != reg {
-		t.Error("loader.registry not set correctly")
+	if len(loader.providers) == 0 {
+		t.Error("loader.providers should not be empty")
 	}
 	if loader.recipes == nil {
 		t.Error("loader.recipes map not initialized")
@@ -54,7 +93,7 @@ command = "test-tool --version"
 	reg := registry.New(cacheDir)
 	reg.BaseURL = server.URL
 
-	loader := New(reg)
+	loader := newTestLoaderWithRegistry(reg)
 
 	recipe, err := loader.Get("test-tool", LoaderOptions{})
 	if err != nil {
@@ -85,7 +124,7 @@ func TestLoader_Get_NotFound(t *testing.T) {
 	reg := registry.New(cacheDir)
 	reg.BaseURL = server.URL
 
-	loader := New(reg)
+	loader := newTestLoaderWithRegistry(reg)
 
 	_, err := loader.Get("nonexistent", LoaderOptions{})
 	if err == nil {
@@ -120,7 +159,7 @@ command = "ctx-tool --version"
 	reg := registry.New(cacheDir)
 	reg.BaseURL = server.URL
 
-	loader := New(reg)
+	loader := newTestLoaderWithRegistry(reg)
 
 	ctx := context.Background()
 	recipe, err := loader.GetWithContext(ctx, "ctx-tool", LoaderOptions{})
@@ -156,7 +195,7 @@ command = "list-tool --version"
 	reg := registry.New(cacheDir)
 	reg.BaseURL = server.URL
 
-	loader := New(reg)
+	loader := newTestLoaderWithRegistry(reg)
 
 	// Initially empty
 	names := loader.List()
@@ -197,7 +236,7 @@ command = "count-tool --version"
 	reg := registry.New(cacheDir)
 	reg.BaseURL = server.URL
 
-	loader := New(reg)
+	loader := newTestLoaderWithRegistry(reg)
 
 	if loader.Count() != 0 {
 		t.Errorf("Count() = %d, want 0", loader.Count())
@@ -210,11 +249,19 @@ command = "count-tool --version"
 	}
 }
 
-func TestLoader_Registry(t *testing.T) {
+func TestLoader_ProviderBySource(t *testing.T) {
 	reg := registry.New(t.TempDir())
-	loader := New(reg)
+	loader := newTestLoaderWithRegistry(reg)
 
-	if loader.Registry() != reg {
+	p := loader.ProviderBySource(SourceRegistry)
+	if p == nil {
+		t.Fatal("ProviderBySource(SourceRegistry) returned nil")
+	}
+	rp, ok := p.(*CentralRegistryProvider)
+	if !ok {
+		t.Fatal("Expected CentralRegistryProvider type")
+	}
+	if rp.Registry() != reg {
 		t.Error("Registry() did not return the expected registry")
 	}
 }
@@ -242,7 +289,7 @@ command = "cache-tool --version"
 	reg := registry.New(cacheDir)
 	reg.BaseURL = server.URL
 
-	loader := New(reg)
+	loader := newTestLoaderWithRegistry(reg)
 
 	// Load a recipe
 	_, _ = loader.Get("cache-tool", LoaderOptions{})
@@ -260,7 +307,7 @@ command = "cache-tool --version"
 
 func TestLoader_parseBytes_Invalid(t *testing.T) {
 	reg := registry.New(t.TempDir())
-	loader := New(reg)
+	loader := newTestLoaderWithRegistry(reg)
 
 	// Invalid TOML
 	_, err := loader.parseBytes([]byte("invalid toml [[["))
@@ -277,33 +324,30 @@ name = ""
 	}
 }
 
-func TestNewWithLocalRecipes(t *testing.T) {
+func TestNewLoader_WithLocalRecipes(t *testing.T) {
 	reg := registry.New(t.TempDir())
 	recipesDir := "/some/recipes/dir"
-	loader := NewWithLocalRecipes(reg, recipesDir)
+	loader := newTestLoaderWithLocal(reg, recipesDir)
 
 	if loader == nil {
-		t.Fatal("NewWithLocalRecipes() returned nil")
+		t.Fatal("NewLoader() returned nil")
 	}
-	if loader.registry != reg {
-		t.Error("loader.registry not set correctly")
-	}
-	if loader.recipesDir != recipesDir {
-		t.Errorf("loader.recipesDir = %q, want %q", loader.recipesDir, recipesDir)
+	if loader.RecipesDir() != recipesDir {
+		t.Errorf("RecipesDir() = %q, want %q", loader.RecipesDir(), recipesDir)
 	}
 }
 
 func TestLoader_SetRecipesDir(t *testing.T) {
 	reg := registry.New(t.TempDir())
-	loader := New(reg)
+	loader := newTestLoaderWithRegistry(reg)
 
-	if loader.recipesDir != "" {
-		t.Errorf("initial recipesDir should be empty, got %q", loader.recipesDir)
+	if loader.RecipesDir() != "" {
+		t.Errorf("initial RecipesDir() should be empty, got %q", loader.RecipesDir())
 	}
 
 	loader.SetRecipesDir("/test/dir")
-	if loader.recipesDir != "/test/dir" {
-		t.Errorf("recipesDir = %q, want %q", loader.recipesDir, "/test/dir")
+	if loader.RecipesDir() != "/test/dir" {
+		t.Errorf("RecipesDir() = %q, want %q", loader.RecipesDir(), "/test/dir")
 	}
 }
 
@@ -336,7 +380,7 @@ command = "local-tool --version"
 	reg := registry.New(cacheDir)
 	reg.BaseURL = server.URL
 
-	loader := NewWithLocalRecipes(reg, recipesDir)
+	loader := newTestLoaderWithLocal(reg, recipesDir)
 
 	// Should load from local recipes directory
 	recipe, err := loader.Get("local-tool", LoaderOptions{})
@@ -399,7 +443,7 @@ command = "priority-tool --version"
 	reg := registry.New(cacheDir)
 	reg.BaseURL = server.URL
 
-	loader := NewWithLocalRecipes(reg, recipesDir)
+	loader := newTestLoaderWithLocal(reg, recipesDir)
 
 	// Should load from local recipes directory, not registry
 	recipe, err := loader.Get("priority-tool", LoaderOptions{})
@@ -443,7 +487,7 @@ command = "registry-tool --version"
 	reg := registry.New(cacheDir)
 	reg.BaseURL = server.URL
 
-	loader := NewWithLocalRecipes(reg, recipesDir)
+	loader := newTestLoaderWithLocal(reg, recipesDir)
 
 	// Should fall back to registry when local doesn't exist
 	recipe, err := loader.Get("registry-tool", LoaderOptions{})
@@ -473,7 +517,7 @@ func TestLoader_Get_LocalRecipeParseError(t *testing.T) {
 	reg := registry.New(cacheDir)
 	reg.BaseURL = server.URL
 
-	loader := NewWithLocalRecipes(reg, recipesDir)
+	loader := newTestLoaderWithLocal(reg, recipesDir)
 
 	// Should return parse error, not fallback to registry
 	_, err := loader.Get("invalid-tool", LoaderOptions{})
@@ -524,7 +568,7 @@ command = "registry-tool --version"
 	}
 
 	reg := registry.New(cacheDir)
-	loader := NewWithoutEmbedded(reg, recipesDir) // Use NewWithoutEmbedded to exclude embedded recipes
+	loader := newTestLoaderNoEmbedded(reg, recipesDir)
 
 	recipes, err := loader.ListAllWithSource()
 	if err != nil {
@@ -596,7 +640,7 @@ command = "shared-tool --version"
 	}
 
 	reg := registry.New(cacheDir)
-	loader := NewWithoutEmbedded(reg, recipesDir) // Use NewWithoutEmbedded to exclude embedded recipes
+	loader := newTestLoaderNoEmbedded(reg, recipesDir)
 
 	recipes, err := loader.ListAllWithSource()
 	if err != nil {
@@ -634,7 +678,7 @@ command = "only-local --version"
 
 	cacheDir := t.TempDir()
 	reg := registry.New(cacheDir)
-	loader := NewWithLocalRecipes(reg, recipesDir)
+	loader := newTestLoaderWithLocal(reg, recipesDir)
 
 	recipes, err := loader.ListLocal()
 	if err != nil {
@@ -659,7 +703,7 @@ func TestLoader_ListLocal_EmptyDirectory(t *testing.T) {
 	recipesDir := t.TempDir()
 	cacheDir := t.TempDir()
 	reg := registry.New(cacheDir)
-	loader := NewWithLocalRecipes(reg, recipesDir)
+	loader := newTestLoaderWithLocal(reg, recipesDir)
 
 	recipes, err := loader.ListLocal()
 	if err != nil {
@@ -674,7 +718,7 @@ func TestLoader_ListLocal_EmptyDirectory(t *testing.T) {
 func TestLoader_ListLocal_NoRecipesDir(t *testing.T) {
 	cacheDir := t.TempDir()
 	reg := registry.New(cacheDir)
-	loader := New(reg) // No recipes dir set
+	loader := newTestLoaderWithRegistry(reg) // No local provider
 
 	recipes, err := loader.ListLocal()
 	if err != nil {
@@ -688,7 +732,7 @@ func TestLoader_ListLocal_NoRecipesDir(t *testing.T) {
 
 func TestLoader_RecipesDir(t *testing.T) {
 	reg := registry.New(t.TempDir())
-	loader := NewWithLocalRecipes(reg, "/some/path")
+	loader := newTestLoaderWithLocal(reg, "/some/path")
 
 	if loader.RecipesDir() != "/some/path" {
 		t.Errorf("RecipesDir() = %q, want %q", loader.RecipesDir(), "/some/path")
@@ -872,7 +916,7 @@ func TestValidate(t *testing.T) {
 
 func TestLoader_SetConstraintLookup(t *testing.T) {
 	reg := registry.New(t.TempDir())
-	loader := New(reg)
+	loader := newTestLoaderWithRegistry(reg)
 
 	// Initially nil
 	if loader.constraintLookup != nil {
@@ -935,7 +979,7 @@ command = "echo ok"
 	reg := registry.New(cacheDir)
 	reg.BaseURL = server.URL
 
-	loader := NewWithLocalRecipes(reg, recipesDir)
+	loader := newTestLoaderWithLocal(reg, recipesDir)
 	loader.SetConstraintLookup(mockLookup)
 
 	recipe, err := loader.Get("constrained-tool", LoaderOptions{})
@@ -995,7 +1039,7 @@ command = "echo ok"
 	reg.BaseURL = server.URL
 
 	// Don't set constraint lookup - analysis should be skipped
-	loader := NewWithLocalRecipes(reg, recipesDir)
+	loader := newTestLoaderWithLocal(reg, recipesDir)
 
 	recipe, err := loader.Get("no-analysis-tool", LoaderOptions{})
 	if err != nil {
@@ -1046,7 +1090,7 @@ command = "echo ok"
 	reg := registry.New(cacheDir)
 	reg.BaseURL = server.URL
 
-	loader := NewWithLocalRecipes(reg, recipesDir)
+	loader := newTestLoaderWithLocal(reg, recipesDir)
 	loader.SetConstraintLookup(mockLookup)
 
 	recipe, err := loader.Get("varying-tool", LoaderOptions{})
@@ -1103,7 +1147,7 @@ command = "echo ok"
 	reg := registry.New(cacheDir)
 	reg.BaseURL = server.URL
 
-	loader := NewWithLocalRecipes(reg, recipesDir)
+	loader := newTestLoaderWithLocal(reg, recipesDir)
 	loader.SetConstraintLookup(mockLookup)
 
 	_, err := loader.Get("conflict-tool", LoaderOptions{})
@@ -1120,7 +1164,7 @@ command = "echo ok"
 func TestLoader_Get_RequireEmbedded(t *testing.T) {
 	// Test that RequireEmbedded=true only checks embedded recipes
 	reg := registry.New(t.TempDir())
-	loader := New(reg)
+	loader := newTestLoaderWithRegistry(reg)
 
 	// Test 1: Embedded recipe should be found with RequireEmbedded=true
 	// Use a known embedded recipe (go toolchain)
@@ -1134,7 +1178,7 @@ func TestLoader_Get_RequireEmbedded(t *testing.T) {
 
 	// Test 2: Non-embedded recipe should fail with RequireEmbedded=true
 	// Use a loader without embedded recipes to simulate this
-	loaderNoEmbed := NewWithoutEmbedded(reg, "")
+	loaderNoEmbed := newTestLoaderNoEmbedded(reg, "")
 	_, err = loaderNoEmbed.Get("nonexistent-recipe", LoaderOptions{RequireEmbedded: true})
 	if err == nil {
 		t.Error("Get() with RequireEmbedded=true should fail for non-embedded recipe")
@@ -1142,5 +1186,629 @@ func TestLoader_Get_RequireEmbedded(t *testing.T) {
 	// Check error message contains helpful information
 	if !strings.Contains(err.Error(), "not found in embedded registry") {
 		t.Errorf("error message should mention 'not found in embedded registry', got: %v", err)
+	}
+}
+
+func TestLoader_GetWithSource_Registry(t *testing.T) {
+	mockRecipe := `[metadata]
+name = "source-test"
+description = "A test tool"
+
+[[steps]]
+action = "download"
+url = "https://example.com/test.tar.gz"
+
+[verify]
+command = "source-test --version"
+`
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/recipes/s/source-test.toml" {
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte(mockRecipe))
+		} else {
+			w.WriteHeader(http.StatusNotFound)
+		}
+	}))
+	defer server.Close()
+
+	cacheDir := t.TempDir()
+	reg := registry.New(cacheDir)
+	reg.BaseURL = server.URL
+
+	// Use a loader with no embedded recipes so the registry provider handles it
+	loader := newTestLoaderNoEmbedded(reg, "")
+
+	recipe, source, err := loader.GetWithSource("source-test", LoaderOptions{})
+	if err != nil {
+		t.Fatalf("GetWithSource() failed: %v", err)
+	}
+	if recipe.Metadata.Name != "source-test" {
+		t.Errorf("recipe.Metadata.Name = %q, want %q", recipe.Metadata.Name, "source-test")
+	}
+	if source != SourceRegistry {
+		t.Errorf("source = %q, want %q", source, SourceRegistry)
+	}
+}
+
+func TestLoader_GetWithSource_Local(t *testing.T) {
+	localDir := t.TempDir()
+	recipePath := filepath.Join(localDir, "local-tool.toml")
+	err := os.WriteFile(recipePath, []byte(`[metadata]
+name = "local-tool"
+description = "A local tool"
+
+[[steps]]
+action = "download"
+url = "https://example.com/local.tar.gz"
+
+[verify]
+command = "local-tool --version"
+`), 0644)
+	if err != nil {
+		t.Fatalf("failed to write local recipe: %v", err)
+	}
+
+	reg := registry.New(t.TempDir())
+	loader := newTestLoaderNoEmbedded(reg, localDir)
+
+	recipe, source, err := loader.GetWithSource("local-tool", LoaderOptions{})
+	if err != nil {
+		t.Fatalf("GetWithSource() failed: %v", err)
+	}
+	if recipe.Metadata.Name != "local-tool" {
+		t.Errorf("recipe.Metadata.Name = %q, want %q", recipe.Metadata.Name, "local-tool")
+	}
+	if source != SourceLocal {
+		t.Errorf("source = %q, want %q", source, SourceLocal)
+	}
+}
+
+func TestLoader_GetWithSource_Embedded(t *testing.T) {
+	reg := registry.New(t.TempDir())
+	loader := newTestLoaderWithRegistry(reg)
+
+	// "go" is a known embedded recipe
+	recipe, source, err := loader.GetWithSource("go", LoaderOptions{})
+	if err != nil {
+		t.Fatalf("GetWithSource() failed: %v", err)
+	}
+	if recipe.Metadata.Name != "go" {
+		t.Errorf("recipe.Metadata.Name = %q, want %q", recipe.Metadata.Name, "go")
+	}
+	if source != SourceEmbedded {
+		t.Errorf("source = %q, want %q", source, SourceEmbedded)
+	}
+}
+
+func TestLoader_GetWithSource_CacheRetainsSource(t *testing.T) {
+	localDir := t.TempDir()
+	recipePath := filepath.Join(localDir, "cached-tool.toml")
+	err := os.WriteFile(recipePath, []byte(`[metadata]
+name = "cached-tool"
+description = "A tool for cache testing"
+
+[[steps]]
+action = "download"
+url = "https://example.com/cached.tar.gz"
+
+[verify]
+command = "cached-tool --version"
+`), 0644)
+	if err != nil {
+		t.Fatalf("failed to write recipe: %v", err)
+	}
+
+	reg := registry.New(t.TempDir())
+	loader := newTestLoaderNoEmbedded(reg, localDir)
+
+	// First call
+	_, source1, err := loader.GetWithSource("cached-tool", LoaderOptions{})
+	if err != nil {
+		t.Fatalf("GetWithSource() first call failed: %v", err)
+	}
+
+	// Second call should use cache but still return correct source
+	_, source2, err := loader.GetWithSource("cached-tool", LoaderOptions{})
+	if err != nil {
+		t.Fatalf("GetWithSource() second call failed: %v", err)
+	}
+
+	if source1 != source2 {
+		t.Errorf("source changed between calls: %q -> %q", source1, source2)
+	}
+	if source1 != SourceLocal {
+		t.Errorf("source = %q, want %q", source1, SourceLocal)
+	}
+}
+
+// --- GetFromSource tests ---
+
+// mockProvider is a simple RecipeProvider for testing GetFromSource.
+type mockProvider struct {
+	source  RecipeSource
+	recipes map[string][]byte
+}
+
+func (m *mockProvider) Get(_ context.Context, name string) ([]byte, error) {
+	data, ok := m.recipes[name]
+	if !ok {
+		return nil, fmt.Errorf("recipe %q not found in %s", name, m.source)
+	}
+	return data, nil
+}
+
+func (m *mockProvider) List(_ context.Context) ([]RecipeInfo, error) {
+	var result []RecipeInfo
+	for name := range m.recipes {
+		result = append(result, RecipeInfo{Name: name, Source: m.source})
+	}
+	return result, nil
+}
+
+func (m *mockProvider) Source() RecipeSource {
+	return m.source
+}
+
+func TestLoader_GetFromSource_Central_Registry(t *testing.T) {
+	recipeData := []byte(`[metadata]
+name = "my-tool"
+description = "test"
+
+[[steps]]
+action = "download"
+
+[verify]
+command = "my-tool --version"
+`)
+
+	registryProvider := &mockProvider{
+		source:  SourceRegistry,
+		recipes: map[string][]byte{"my-tool": recipeData},
+	}
+
+	loader := NewLoader(registryProvider)
+
+	data, err := loader.GetFromSource(context.Background(), "my-tool", SourceCentral)
+	if err != nil {
+		t.Fatalf("GetFromSource() failed: %v", err)
+	}
+	if string(data) != string(recipeData) {
+		t.Error("GetFromSource() returned unexpected data")
+	}
+}
+
+func TestLoader_GetFromSource_Central_Embedded(t *testing.T) {
+	recipeData := []byte(`[metadata]
+name = "embedded-tool"
+description = "test"
+
+[[steps]]
+action = "download"
+
+[verify]
+command = "embedded-tool --version"
+`)
+
+	// Only an embedded provider, no registry
+	embeddedProvider := &mockProvider{
+		source:  SourceEmbedded,
+		recipes: map[string][]byte{"embedded-tool": recipeData},
+	}
+
+	loader := NewLoader(embeddedProvider)
+
+	data, err := loader.GetFromSource(context.Background(), "embedded-tool", SourceCentral)
+	if err != nil {
+		t.Fatalf("GetFromSource() failed: %v", err)
+	}
+	if string(data) != string(recipeData) {
+		t.Error("GetFromSource() returned unexpected data")
+	}
+}
+
+func TestLoader_GetFromSource_Central_PrefersRegistry(t *testing.T) {
+	registryData := []byte("registry-version")
+	embeddedData := []byte("embedded-version")
+
+	registryProvider := &mockProvider{
+		source:  SourceRegistry,
+		recipes: map[string][]byte{"tool": registryData},
+	}
+	embeddedProvider := &mockProvider{
+		source:  SourceEmbedded,
+		recipes: map[string][]byte{"tool": embeddedData},
+	}
+
+	loader := NewLoader(embeddedProvider, registryProvider)
+
+	data, err := loader.GetFromSource(context.Background(), "tool", SourceCentral)
+	if err != nil {
+		t.Fatalf("GetFromSource() failed: %v", err)
+	}
+	if string(data) != string(registryData) {
+		t.Errorf("expected registry data, got %q", string(data))
+	}
+}
+
+func TestLoader_GetFromSource_Local(t *testing.T) {
+	recipeData := []byte(`[metadata]
+name = "local-tool"
+description = "local"
+
+[[steps]]
+action = "download"
+
+[verify]
+command = "local-tool --version"
+`)
+
+	localProvider := &mockProvider{
+		source:  SourceLocal,
+		recipes: map[string][]byte{"local-tool": recipeData},
+	}
+
+	loader := NewLoader(localProvider)
+
+	data, err := loader.GetFromSource(context.Background(), "local-tool", "local")
+	if err != nil {
+		t.Fatalf("GetFromSource() failed: %v", err)
+	}
+	if string(data) != string(recipeData) {
+		t.Error("GetFromSource() returned unexpected data")
+	}
+}
+
+func TestLoader_GetFromSource_Distributed(t *testing.T) {
+	recipeData := []byte(`[metadata]
+name = "dist-tool"
+description = "distributed"
+
+[[steps]]
+action = "download"
+
+[verify]
+command = "dist-tool --version"
+`)
+
+	distProvider := &mockProvider{
+		source:  RecipeSource("acme/tools"),
+		recipes: map[string][]byte{"dist-tool": recipeData},
+	}
+
+	loader := NewLoader(distProvider)
+
+	data, err := loader.GetFromSource(context.Background(), "dist-tool", "acme/tools")
+	if err != nil {
+		t.Fatalf("GetFromSource() failed: %v", err)
+	}
+	if string(data) != string(recipeData) {
+		t.Error("GetFromSource() returned unexpected data")
+	}
+}
+
+func TestLoader_GetFromSource_UnknownSource(t *testing.T) {
+	loader := NewLoader()
+
+	_, err := loader.GetFromSource(context.Background(), "tool", "unknown")
+	if err == nil {
+		t.Fatal("expected error for unknown source")
+	}
+	if !strings.Contains(err.Error(), "unknown recipe source") {
+		t.Errorf("expected 'unknown recipe source' in error, got: %v", err)
+	}
+}
+
+func TestLoader_GetFromSource_NoMatchingDistributedProvider(t *testing.T) {
+	loader := NewLoader()
+
+	_, err := loader.GetFromSource(context.Background(), "tool", "acme/tools")
+	if err == nil {
+		t.Fatal("expected error for unregistered distributed source")
+	}
+	if !strings.Contains(err.Error(), "no provider registered") {
+		t.Errorf("expected 'no provider registered' in error, got: %v", err)
+	}
+}
+
+func TestLoader_GetFromSource_CentralNotFound(t *testing.T) {
+	registryProvider := &mockProvider{
+		source:  SourceRegistry,
+		recipes: map[string][]byte{},
+	}
+
+	loader := NewLoader(registryProvider)
+
+	_, err := loader.GetFromSource(context.Background(), "nonexistent", SourceCentral)
+	if err == nil {
+		t.Fatal("expected error for recipe not found in central")
+	}
+	if !strings.Contains(err.Error(), "not found in central registry") {
+		t.Errorf("expected 'not found in central registry' in error, got: %v", err)
+	}
+}
+
+func TestLoader_GetFromSource_CentralPropagatesRealErrors(t *testing.T) {
+	// Registry returns a real error (not "not found") -- should propagate, not fall through to embedded.
+	errorProvider := &mockErrorProvider{
+		source: SourceRegistry,
+		err:    fmt.Errorf("connection timeout"),
+	}
+	embeddedProvider := &mockProvider{
+		source:  SourceEmbedded,
+		recipes: map[string][]byte{"tool": []byte("embedded-data")},
+	}
+
+	loader := NewLoader(errorProvider, embeddedProvider)
+
+	_, err := loader.GetFromSource(context.Background(), "tool", SourceCentral)
+	if err == nil {
+		t.Fatal("expected error to propagate, got nil")
+	}
+	if !strings.Contains(err.Error(), "connection timeout") {
+		t.Errorf("expected 'connection timeout' in error, got: %v", err)
+	}
+	if strings.Contains(err.Error(), "not found") {
+		t.Error("should not be a not-found error")
+	}
+}
+
+// mockErrorProvider always returns a specific error for Get calls.
+type mockErrorProvider struct {
+	source RecipeSource
+	err    error
+}
+
+func (m *mockErrorProvider) Get(_ context.Context, _ string) ([]byte, error) {
+	return nil, m.err
+}
+
+func (m *mockErrorProvider) List(_ context.Context) ([]RecipeInfo, error) {
+	return nil, nil
+}
+
+func (m *mockErrorProvider) Source() RecipeSource {
+	return m.source
+}
+
+func TestLoader_GetFromSource_BypassesCache(t *testing.T) {
+	recipeData := []byte(`[metadata]
+name = "cached-tool"
+description = "test"
+
+[[steps]]
+action = "download"
+
+[verify]
+command = "cached-tool --version"
+`)
+
+	registryProvider := &mockProvider{
+		source:  SourceRegistry,
+		recipes: map[string][]byte{"cached-tool": recipeData},
+	}
+
+	loader := NewLoader(registryProvider)
+
+	// Pre-populate the in-memory cache with different data
+	loader.CacheRecipe("cached-tool", &Recipe{
+		Metadata: MetadataSection{Name: "cached-tool", Description: "cached version"},
+	})
+
+	// GetFromSource should bypass the cache and return provider data
+	data, err := loader.GetFromSource(context.Background(), "cached-tool", SourceCentral)
+	if err != nil {
+		t.Fatalf("GetFromSource() failed: %v", err)
+	}
+	if string(data) != string(recipeData) {
+		t.Error("GetFromSource() should bypass cache and return fresh data from provider")
+	}
+}
+
+func TestLoader_GetFromSource_DoesNotWriteToCache(t *testing.T) {
+	recipeData := []byte(`[metadata]
+name = "no-cache-tool"
+description = "test"
+
+[[steps]]
+action = "download"
+
+[verify]
+command = "no-cache-tool --version"
+`)
+
+	registryProvider := &mockProvider{
+		source:  SourceRegistry,
+		recipes: map[string][]byte{"no-cache-tool": recipeData},
+	}
+
+	loader := NewLoader(registryProvider)
+
+	// Verify cache is empty
+	if loader.Count() != 0 {
+		t.Fatal("expected empty cache before GetFromSource")
+	}
+
+	_, err := loader.GetFromSource(context.Background(), "no-cache-tool", SourceCentral)
+	if err != nil {
+		t.Fatalf("GetFromSource() failed: %v", err)
+	}
+
+	// Cache should still be empty
+	if loader.Count() != 0 {
+		t.Error("GetFromSource() should not write to the in-memory cache")
+	}
+}
+
+// --- scenario-19: Qualified name routing to DistributedProvider ---
+
+func TestSplitQualifiedName(t *testing.T) {
+	tests := []struct {
+		name   string
+		input  string
+		wantQ  string
+		wantR  string
+		wantOK bool
+	}{
+		{"valid qualified name", "acme/tools:my-recipe", "acme/tools", "my-recipe", true},
+		{"bare name no colon", "my-recipe", "", "", false},
+		{"bare name with slash", "acme/tools", "", "", false},
+		{"colon but no slash in qualifier", "tools:my-recipe", "", "", false},
+		{"empty recipe name", "acme/tools:", "", "", false},
+		{"empty qualifier", ":my-recipe", "", "", false},
+		{"multiple colons uses first", "acme/tools:sub:recipe", "acme/tools", "sub:recipe", true},
+		{"nested path in qualifier", "acme/sub/tools:recipe", "", "", false},
+		{"empty string", "", "", "", false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			q, r, ok := splitQualifiedName(tt.input)
+			if ok != tt.wantOK {
+				t.Errorf("splitQualifiedName(%q) ok = %v, want %v", tt.input, ok, tt.wantOK)
+				return
+			}
+			if ok {
+				if q != tt.wantQ {
+					t.Errorf("splitQualifiedName(%q) qualifier = %q, want %q", tt.input, q, tt.wantQ)
+				}
+				if r != tt.wantR {
+					t.Errorf("splitQualifiedName(%q) recipeName = %q, want %q", tt.input, r, tt.wantR)
+				}
+			}
+		})
+	}
+}
+
+func TestLoader_GetWithContext_QualifiedName(t *testing.T) {
+	distRecipe := []byte(`[metadata]
+name = "dist-tool"
+description = "A distributed tool"
+
+[[steps]]
+action = "download"
+
+[verify]
+command = "dist-tool --version"
+`)
+
+	centralRecipe := []byte(`[metadata]
+name = "dist-tool"
+description = "Central version"
+
+[[steps]]
+action = "download"
+
+[verify]
+command = "dist-tool --version"
+`)
+
+	distProvider := &mockProvider{
+		source:  RecipeSource("acme/tools"),
+		recipes: map[string][]byte{"dist-tool": distRecipe},
+	}
+
+	registryProvider := &mockProvider{
+		source:  SourceRegistry,
+		recipes: map[string][]byte{"dist-tool": centralRecipe},
+	}
+
+	loader := NewLoader(registryProvider, distProvider)
+
+	t.Run("qualified name routes to distributed provider", func(t *testing.T) {
+		recipe, err := loader.GetWithContext(context.Background(), "acme/tools:dist-tool", LoaderOptions{})
+		if err != nil {
+			t.Fatalf("GetWithContext() failed: %v", err)
+		}
+		if recipe.Metadata.Description != "A distributed tool" {
+			t.Errorf("expected distributed version, got description %q", recipe.Metadata.Description)
+		}
+	})
+
+	t.Run("bare name routes to central provider", func(t *testing.T) {
+		recipe, err := loader.GetWithContext(context.Background(), "dist-tool", LoaderOptions{})
+		if err != nil {
+			t.Fatalf("GetWithContext() failed: %v", err)
+		}
+		if recipe.Metadata.Description != "Central version" {
+			t.Errorf("expected central version, got description %q", recipe.Metadata.Description)
+		}
+	})
+
+	t.Run("qualified name uses distinct cache key", func(t *testing.T) {
+		// Both should be cached now with different keys
+		if loader.Count() != 2 {
+			t.Errorf("expected 2 cached recipes, got %d", loader.Count())
+		}
+
+		// Fetch again -- should hit cache
+		recipe, err := loader.GetWithContext(context.Background(), "acme/tools:dist-tool", LoaderOptions{})
+		if err != nil {
+			t.Fatalf("GetWithContext() failed on cache hit: %v", err)
+		}
+		if recipe.Metadata.Description != "A distributed tool" {
+			t.Error("cache should return distributed version for qualified name")
+		}
+	})
+}
+
+func TestLoader_GetWithContext_QualifiedName_NoProvider(t *testing.T) {
+	loader := NewLoader()
+
+	_, err := loader.GetWithContext(context.Background(), "acme/tools:some-recipe", LoaderOptions{})
+	if err == nil {
+		t.Fatal("expected error for unregistered distributed source")
+	}
+	if !strings.Contains(err.Error(), "no provider registered") {
+		t.Errorf("expected 'no provider registered' in error, got: %v", err)
+	}
+}
+
+func TestLoader_GetWithContext_QualifiedName_RecipeNotFound(t *testing.T) {
+	distProvider := &mockProvider{
+		source:  RecipeSource("acme/tools"),
+		recipes: map[string][]byte{},
+	}
+
+	loader := NewLoader(distProvider)
+
+	_, err := loader.GetWithContext(context.Background(), "acme/tools:missing", LoaderOptions{})
+	if err == nil {
+		t.Fatal("expected error for missing recipe in distributed source")
+	}
+	if !strings.Contains(err.Error(), "not found") {
+		t.Errorf("expected 'not found' in error, got: %v", err)
+	}
+}
+
+func TestLoader_GetWithSource_QualifiedDistributed(t *testing.T) {
+	distRecipe := []byte(`[metadata]
+name = "dist-tool"
+description = "distributed"
+
+[[steps]]
+action = "download"
+
+[verify]
+command = "dist-tool --version"
+`)
+
+	distProvider := &mockProvider{
+		source:  RecipeSource("acme/tools"),
+		recipes: map[string][]byte{"dist-tool": distRecipe},
+	}
+
+	loader := NewLoader(distProvider)
+
+	// Load via qualified name
+	recipe, source, err := loader.GetWithSource("acme/tools:dist-tool", LoaderOptions{})
+	if err != nil {
+		t.Fatalf("GetWithSource() failed: %v", err)
+	}
+	if recipe.Metadata.Name != "dist-tool" {
+		t.Errorf("recipe name = %q, want %q", recipe.Metadata.Name, "dist-tool")
+	}
+	if source != RecipeSource("acme/tools") {
+		t.Errorf("source = %q, want %q", source, "acme/tools")
 	}
 }

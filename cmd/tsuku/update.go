@@ -1,8 +1,10 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/tsukumogami/tsuku/internal/config"
@@ -57,6 +59,16 @@ Examples:
 			exitWithCode(ExitGeneral)
 		}
 
+		// For distributed sources, use GetFromSource to fetch the recipe
+		// directly from the recorded provider. This avoids recipe shadowing
+		// where a local or central recipe with the same name would take
+		// priority in the chain. The recipe is cached in the loader so
+		// runInstallWithTelemetry can find it.
+		state, _ := mgr.GetState().Load()
+		if r, err := loadRecipeForTool(context.Background(), toolName, state, cfg); err == nil && r != nil {
+			loader.CacheRecipe(toolName, r)
+		}
+
 		if updateDryRun {
 			printInfof("Checking updates for %s...\n", toolName)
 			if err := runDryRun(toolName, ""); err != nil {
@@ -87,6 +99,12 @@ Examples:
 			telemetryClient.Send(event)
 		}
 	},
+}
+
+// isDistributedSource returns true if the source string is a distributed
+// "owner/repo" source (as opposed to "central", "local", or "embedded").
+func isDistributedSource(source string) bool {
+	return strings.Contains(source, "/")
 }
 
 func init() {
