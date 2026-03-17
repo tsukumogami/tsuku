@@ -3,7 +3,7 @@
   "design_doc": "docs/plans/PLAN-distributed-recipes.md",
   "branch": "docs/distributed-recipes",
   "pr_number": 2160,
-  "integrity_hash": "sha256:e9fb52cec41367627bf4fa8c9812c1a22874fa01bc879f4c5dc3e4203fc82498",
+  "integrity_hash": "sha256:9254483af3b3c3fe4f1a00ecf0092b4229210e4f1eb809dad789e86d1dc2845d",
   "issues": [
     {
       "number": 1,
@@ -109,8 +109,8 @@
     {
       "number": 2,
       "title": "feat(state): add source tracking to ToolState",
-      "status": "scrutinized",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "ci_fix_attempts": 0,
       "issue_type": "code",
       "dependencies": [
@@ -181,6 +181,44 @@
           }
         ]
       },
+      "reviewer_results": {
+        "issue": 2,
+        "reviews": [
+          {
+            "focus": "pragmatic",
+            "blocking_count": 0,
+            "advisory_count": 3,
+            "detail_file": "wip/research/implement-doc_review_pragmatic_issue2.md"
+          },
+          {
+            "focus": "architect",
+            "blocking_count": 0,
+            "advisory_count": 2,
+            "detail_file": "wip/research/implement-doc_review_architect_issue2.md"
+          },
+          {
+            "focus": "maintainer",
+            "blocking_count": 1,
+            "advisory_count": 3,
+            "detail_file": "wip/research/implement-doc_review_maintainer_issue2.md"
+          }
+        ],
+        "blocking_resolved": true,
+        "resolution": "Added comment to Plan.RecipeSource clarifying its value space vs ToolState.Source per maintainer review"
+      },
+      "qa_results": {
+        "issue": 2,
+        "scenarios_tested": [
+          "scenario-5",
+          "scenario-6"
+        ],
+        "scenarios_passed": [
+          "scenario-5",
+          "scenario-6"
+        ],
+        "scenarios_failed": [],
+        "notes": "All 10 test cases pass across both scenarios. TestSourceField_RoundTrip, TestSourceField_AbsentInJSON, and TestSourceField_AbsentInJSON_WithPlan validate serialization. TestMigrateSourceTracking_DefaultsCentral, TestMigrateSourceTracking_InfersFromPlan (4 sub-tests: registry/embedded/local/unknown), TestMigrateSourceTracking_Idempotent, and TestMigrateSourceTracking_SkipsExisting validate migration. TestRecipeSourceFromProvider (4 sub-tests: registry/embedded/local/custom) validates source population. Full suite (go test ./...) has one pre-existing lint failure in internal/dashboard/dashboard_test.go (SA5011 staticcheck, unrelated to issue #2). All packages relevant to source tracking pass cleanly."
+      },
       "testable_scenarios": [
         "scenario-5",
         "scenario-6"
@@ -201,16 +239,76 @@
     {
       "number": 3,
       "title": "feat(config): add registry configuration and GetFromSource",
-      "status": "pending",
+      "status": "scrutinized",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [
         1
       ],
-      "commits": [],
-      "agent_type": "",
-      "summary": null,
+      "commits": [
+        "3a70583f"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          "internal/userconfig/userconfig.go",
+          "internal/userconfig/userconfig_test.go",
+          "internal/recipe/loader.go",
+          "internal/recipe/loader_test.go",
+          "cmd/tsuku/helpers.go"
+        ],
+        "tests_added": 15,
+        "key_decisions": "SourceCentral constant extracted. GetFromSource prefers SourceRegistry over SourceEmbedded for central. Returns raw bytes, not Recipe. mockProvider for testing.",
+        "requirements_map": [
+          {
+            "ac": "RegistryEntry struct",
+            "status": "implemented",
+            "evidence": "userconfig.go RegistryEntry type"
+          },
+          {
+            "ac": "Config StrictRegistries and Registries",
+            "status": "implemented",
+            "evidence": "userconfig.go Config struct"
+          },
+          {
+            "ac": "Load/Save round-trip",
+            "status": "implemented",
+            "evidence": "TestRegistrySaveAndLoadRoundTrip"
+          },
+          {
+            "ac": "Empty registries no spurious TOML",
+            "status": "implemented",
+            "evidence": "TestRegistryEmptyMapDoesNotProduceSpuriousTOML"
+          },
+          {
+            "ac": "Backward compat",
+            "status": "implemented",
+            "evidence": "TestRegistryBackwardCompat_NoRegistries"
+          },
+          {
+            "ac": "GetFromSource routes correctly",
+            "status": "implemented",
+            "evidence": "TestLoader_GetFromSource_Central_Registry"
+          },
+          {
+            "ac": "GetFromSource owner/repo",
+            "status": "implemented",
+            "evidence": "TestLoader_GetFromSource_Distributed"
+          },
+          {
+            "ac": "GetFromSource error on unknown",
+            "status": "implemented",
+            "evidence": "TestLoader_GetFromSource_UnknownSource"
+          },
+          {
+            "ac": "GetFromSource bypasses cache",
+            "status": "implemented",
+            "evidence": "TestLoader_GetFromSource_BypassesCache,TestLoader_GetFromSource_DoesNotWriteToCache"
+          }
+        ]
+      },
       "testable_scenarios": [
         "scenario-7",
         "scenario-8"

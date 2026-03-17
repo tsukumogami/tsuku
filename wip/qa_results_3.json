@@ -1,0 +1,7 @@
+{
+  "issue": 3,
+  "scenarios_tested": ["scenario-7", "scenario-8"],
+  "scenarios_passed": ["scenario-7", "scenario-8"],
+  "scenarios_failed": [],
+  "notes": "scenario-7: Config round-trip validated via TestRegistrySaveAndLoadRoundTrip, TestRegistryBackwardCompat_NoRegistries, TestRegistryEmptyMapDoesNotProduceSpuriousTOML. scenario-8: GetFromSource routing validated via TestLoader_GetFromSource_Central_Registry, TestLoader_GetFromSource_Local, TestLoader_GetFromSource_Distributed, TestLoader_GetFromSource_CentralPropagatesRealErrors."
+}
