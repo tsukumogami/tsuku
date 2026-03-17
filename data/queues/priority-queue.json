@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-16T22:37:20Z",
+  "updated_at": "2026-03-17T02:01:34Z",
   "entries": [
     {
       "name": "node",
@@ -20626,11 +20626,11 @@
       "name": "httpx",
       "source": "rubygems:httpx",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 6,
-      "next_retry_at": "2026-03-16T20:53:09.99295001Z"
+      "failure_count": 7,
+      "next_retry_at": "2026-03-19T18:01:34.373605194Z"
     },
     {
       "name": "httpyac",
@@ -20816,7 +20816,7 @@
       "name": "hyperkit",
       "source": "rubygems:hyperkit",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 5,
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 95,
-      "next_retry_at": "1733-12-05T20:56:12.91737572Z"
+      "failure_count": 97,
+      "next_retry_at": "1733-12-06T02:14:17.518829386Z"
     },
     {
       "name": "libaacs",
@@ -39116,11 +39116,11 @@
       "name": "q",
       "source": "npm:q",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 6,
-      "next_retry_at": "2026-03-16T22:34:30.135572078Z"
+      "failure_count": 7,
+      "next_retry_at": "2026-03-19T18:01:34.373605194Z"
     },
     {
       "name": "qalculate-gtk",
