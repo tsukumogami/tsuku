@@ -15,7 +15,7 @@ Total scenarios: 30
 - `go test ./internal/recipe/...`
 - `go vet ./...`
 **Expected**: All commands exit 0. The RecipeProvider interface is defined in `internal/recipe/provider.go`. Loader uses `[]RecipeProvider` internally. No compilation errors.
-**Status**: pending
+**Status**: passed
 
 ---
 
@@ -29,7 +29,7 @@ Total scenarios: 30
 - `actionlint -version`
 - `tsuku list`
 **Expected**: All unit tests pass. Installing a tool from the central registry still works. `tsuku list` shows the installed tool. No behavior change from the refactor.
-**Status**: pending
+**Status**: passed
 
 ---
 
@@ -40,7 +40,7 @@ Total scenarios: 30
 **Commands**:
 - `go test ./internal/recipe/ -run TestNewLoader`
 **Expected**: `NewLoader(providers ...RecipeProvider)` replaces the three old constructors. Tests confirm the Loader resolves recipes by walking the provider slice in priority order.
-**Status**: pending
+**Status**: passed
 
 ---
 
@@ -51,7 +51,7 @@ Total scenarios: 30
 **Commands**:
 - `go test ./internal/recipe/ -run TestSatisfies`
 **Expected**: `satisfiesIndex` entries use `satisfiesEntry{recipeName, source}` structs. Source-filtered lookups return only entries from the requested source. Shadowing detection works across providers.
-**Status**: pending
+**Status**: passed
 
 ---
 

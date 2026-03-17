@@ -3,13 +3,13 @@
   "design_doc": "docs/plans/PLAN-distributed-recipes.md",
   "branch": "docs/distributed-recipes",
   "pr_number": 2160,
-  "integrity_hash": "sha256:feaed4d9501723a532d3c700c4a694a4042a496a24cd8ee3c44fcf7d4e3cb264",
+  "integrity_hash": "sha256:e9fb52cec41367627bf4fa8c9812c1a22874fa01bc879f4c5dc3e4203fc82498",
   "issues": [
     {
       "number": 1,
       "title": "refactor(recipe): extract RecipeProvider interface and refactor Loader",
-      "status": "pushed",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "ci_fix_attempts": 0,
       "issue_type": "code",
       "dependencies": [],
@@ -109,16 +109,78 @@
     {
       "number": 2,
       "title": "feat(state): add source tracking to ToolState",
-      "status": "pending",
+      "status": "scrutinized",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [
         1
       ],
-      "commits": [],
-      "agent_type": "",
-      "summary": null,
+      "commits": [
+        "fe5ce107"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          "internal/install/state.go",
+          "internal/install/state_tool.go",
+          "internal/install/state_test.go",
+          "internal/recipe/loader.go",
+          "internal/recipe/loader_test.go",
+          "cmd/tsuku/helpers.go",
+          "cmd/tsuku/helpers_test.go"
+        ],
+        "tests_added": 12,
+        "key_decisions": "Added recipeSources map to Loader for GetWithSource(). Mapped SourceRegistry and SourceEmbedded to central in ToolState. Migration infers from Plan.RecipeSource. GetWithSource wraps Get() to avoid changing ~30 callers.",
+        "requirements_map": [
+          {
+            "ac": "ToolState has Source field",
+            "status": "implemented",
+            "evidence": "state.go line 87"
+          },
+          {
+            "ac": "Lazy migration in Load()",
+            "status": "implemented",
+            "evidence": "state_tool.go migrateSourceTracking()"
+          },
+          {
+            "ac": "Migration idempotent",
+            "status": "implemented",
+            "evidence": "TestMigrateSourceTracking_Idempotent"
+          },
+          {
+            "ac": "New installs populate Source",
+            "status": "implemented",
+            "evidence": "helpers.go recipeSourceFromProvider()"
+          },
+          {
+            "ac": "Existing state.json loads OK",
+            "status": "implemented",
+            "evidence": "TestSourceField_AbsentInJSON"
+          },
+          {
+            "ac": "Source persisted on Save",
+            "status": "implemented",
+            "evidence": "TestSourceField_RoundTrip"
+          },
+          {
+            "ac": "Unit tests",
+            "status": "implemented",
+            "evidence": "12 tests in 3 files"
+          },
+          {
+            "ac": "go test passes",
+            "status": "implemented",
+            "evidence": "go test ./... exit 0"
+          },
+          {
+            "ac": "go vet passes",
+            "status": "implemented",
+            "evidence": "go vet ./... exit 0"
+          }
+        ]
+      },
       "testable_scenarios": [
         "scenario-5",
         "scenario-6"
