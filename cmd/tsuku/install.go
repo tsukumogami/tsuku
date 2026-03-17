@@ -29,6 +29,7 @@ var installDeterministicOnly bool
 var installSearchProvider string
 var installEnv []string
 var installSkipSecurity bool
+var installYes bool
 
 var installCmd = &cobra.Command{
 	Use:   "install [tool]...",
@@ -40,6 +41,12 @@ Examples:
   tsuku install kubectl
   tsuku install kubectl@v1.29.0
   tsuku install terraform@latest
+
+Install from a distributed recipe source:
+  tsuku install myorg/recipes
+  tsuku install myorg/recipes:mytool
+  tsuku install myorg/recipes@v1.0.0
+  tsuku install myorg/recipes:mytool@v1.0.0
 
 Generate a recipe from a specific source and install:
   tsuku install jq --from homebrew:jq
@@ -177,6 +184,68 @@ Test installation in a sandbox container:
 			toolName := arg
 			versionConstraint := ""
 
+			// Check for distributed name format (owner/repo, owner/repo:recipe, etc.)
+			if dArgs := parseDistributedName(arg); dArgs != nil {
+				// Distributed install path
+				versionConstraint = dArgs.Version
+				resolveVersion := versionConstraint
+				if resolveVersion == "latest" {
+					resolveVersion = ""
+				}
+
+				// Ensure the source is registered (prompt or auto-register)
+				if err := ensureDistributedSource(dArgs.Source, installYes || installForce); err != nil {
+					printError(err)
+					exitWithCode(ExitGeneral)
+				}
+
+				// Check for source collision (same tool name from a different source)
+				if err := checkSourceCollision(dArgs.RecipeName, dArgs.Source, installForce); err != nil {
+					printError(err)
+					exitWithCode(ExitGeneral)
+				}
+
+				// Build the qualified name for the loader (owner/repo:recipe)
+				qualifiedName := dArgs.Source + ":" + dArgs.RecipeName
+
+				if installDryRun {
+					if err := runDryRun(qualifiedName, resolveVersion); err != nil {
+						printError(err)
+						exitWithCode(ExitInstallFailed)
+					}
+					continue
+				}
+
+				// Fetch recipe bytes for hash computation before install
+				recipeBytes, bytesErr := fetchRecipeBytes(dArgs.Source, dArgs.RecipeName)
+
+				// Load recipe using qualified name to route through the distributed provider
+				r, loadErr := loader.GetWithContext(globalCtx, qualifiedName, recipe.LoaderOptions{})
+				if loadErr != nil {
+					printError(fmt.Errorf("recipe %q not found in %s: %w", dArgs.RecipeName, dArgs.Source, loadErr))
+					exitWithCode(ExitRecipeNotFound)
+				}
+
+				// Cache the recipe under the bare name so installWithDependencies can find it
+				loader.CacheRecipe(dArgs.RecipeName, r)
+
+				// Use opaque "distributed" tag for telemetry
+				telemetryTag := distributedTelemetryTag()
+				if err := runInstallWithTelemetry(dArgs.RecipeName, resolveVersion, telemetryTag, true, "", telemetryClient); err != nil {
+					handleInstallError(err)
+				}
+
+				// Record source and recipe hash on the tool state
+				var recipeHash string
+				if bytesErr == nil && recipeBytes != nil {
+					recipeHash = computeRecipeHash(recipeBytes)
+				}
+				if err := recordDistributedSource(dArgs.RecipeName, dArgs.Source, recipeHash); err != nil {
+					printInfof("Warning: failed to record source for %s: %v\n", dArgs.RecipeName, err)
+				}
+				continue
+			}
+
 			if strings.Contains(arg, "@") {
 				parts := strings.SplitN(arg, "@", 2)
 				toolName = parts[0]
@@ -227,6 +296,7 @@ func init() {
 	installCmd.Flags().BoolVar(&installDeterministicOnly, "deterministic-only", false, "Skip LLM fallback; fail if deterministic generation fails")
 	installCmd.Flags().StringVar(&installSearchProvider, "search-provider", "", "Search provider for LLM discovery: ddg, tavily, or brave")
 	installCmd.Flags().StringArrayVar(&installEnv, "env", nil, "Pass environment variable to sandbox container (KEY=VALUE or KEY)")
+	installCmd.Flags().BoolVarP(&installYes, "yes", "y", false, "Skip confirmation prompts (e.g., unregistered source approval)")
 	installCmd.Flags().BoolVar(&installSkipSecurity, "dangerously-suppress-security", false, "Skip cache directory security checks (symlink/permissions). CI only.")
 	_ = installCmd.Flags().MarkHidden("dangerously-suppress-security")
 }

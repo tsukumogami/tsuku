@@ -88,6 +88,10 @@ type ToolState struct {
 	// Populated on new installs; lazily migrated for existing entries.
 	Source string `json:"source,omitempty"`
 
+	// RecipeHash is the SHA256 hash of the recipe TOML bytes at install time.
+	// Provides an audit trail for what recipe content was used to install the tool.
+	RecipeHash string `json:"recipe_hash,omitempty"`
+
 	IsExplicit            bool     `json:"is_explicit"`                    // User requested this tool directly
 	RequiredBy            []string `json:"required_by"`                    // Tools that depend on this tool
 	IsHidden              bool     `json:"is_hidden"`                      // Hidden from PATH and default list output

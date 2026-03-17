@@ -437,6 +437,12 @@ func (l *Loader) CacheRecipe(name string, r *Recipe) {
 	l.recipes[name] = r
 }
 
+// AddProvider appends a provider to the end of the provider chain.
+// This is used for dynamically registering distributed providers during install.
+func (l *Loader) AddProvider(p RecipeProvider) {
+	l.providers = append(l.providers, p)
+}
+
 // buildSatisfiesIndex scans providers implementing SatisfiesProvider for
 // satisfies entries. Called lazily on first fallback lookup.
 // The index is keyed by bare package name (not prefixed by ecosystem),
