@@ -3,7 +3,7 @@
   "design_doc": "docs/plans/PLAN-distributed-recipes.md",
   "branch": "docs/distributed-recipes",
   "pr_number": 2160,
-  "integrity_hash": "sha256:d5448120f65506e10523ae7846e490fb8bc92f7ae12e84ebedbeecf961ee0b61",
+  "integrity_hash": "sha256:66cae66e01ddbd2efa1313ee1e36d2933efb36af1265584b5b03c2777b9734f9",
   "issues": [
     {
       "number": 1,
@@ -574,8 +574,8 @@
     {
       "number": 6,
       "title": "feat(distributed): implement DistributedProvider",
-      "status": "scrutinized",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "ci_fix_attempts": 0,
       "issue_type": "code",
       "dependencies": [
@@ -583,10 +583,51 @@
         5
       ],
       "commits": [
-        "2d2daf2a"
+        "2d2daf2a",
+        "9c6e0a6a",
+        "066e5d0e",
+        "b3fdbf92"
       ],
       "agent_type": "",
       "summary": null,
+      "reviewer_results": {
+        "issue": 6,
+        "reviews": [
+          {
+            "focus": "pragmatic",
+            "blocking_count": 2,
+            "advisory_count": 2,
+            "detail_file": "wip/research/implement-doc_review_pragmatic_issue6.md"
+          },
+          {
+            "focus": "architect",
+            "blocking_count": 0,
+            "advisory_count": 2,
+            "detail_file": "wip/research/implement-doc_review_architect_issue6.md"
+          },
+          {
+            "focus": "maintainer",
+            "blocking_count": 2,
+            "advisory_count": 4,
+            "detail_file": "wip/research/implement-doc_review_maintainer_issue6.md"
+          }
+        ],
+        "blocking_resolved": true,
+        "resolution": "Removed unused Owner/Repo accessors, consolidated ForceListRecipes into shared listRecipes helper, switched splitQualifiedName to use first colon (Index) for safer @version composition, renamed misleading test"
+      },
+      "qa_results": {
+        "issue": 6,
+        "scenarios_tested": [
+          "scenario-18",
+          "scenario-19"
+        ],
+        "scenarios_passed": [
+          "scenario-18",
+          "scenario-19"
+        ],
+        "scenarios_failed": [],
+        "notes": "All tests pass. Scenario 18: DistributedProvider satisfies RecipeProvider and RefreshableProvider interfaces (compile-time check in TestDistributedProvider_ImplementsInterfaces). Source() returns correct 'acme/tools' value. Get() works with cache hits, returns 'not found' for missing recipes, validates download host allowlist, and propagates rate limit errors. List() returns recipe infos with correct source annotation, handles empty lists. Refresh() bypasses cache freshness and updates source meta via API. go vet and go build both exit 0. Scenario 19: splitQualifiedName correctly parses 'owner/repo:recipe' format across 9 sub-cases (valid qualified, bare names, edge cases). Loader routes qualified names to the matching DistributedProvider, bare names to central. Qualified and bare names with the same recipe name use distinct cache keys (no collision). Missing provider for a qualifier returns a clear error. GetWithSource works for qualified distributed names."
+      },
       "testable_scenarios": [
         "scenario-18",
         "scenario-19"
@@ -613,18 +654,31 @@
     {
       "number": 7,
       "title": "feat(install): integrate distributed sources into install flow",
-      "status": "pending",
+      "status": "scrutinized",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [
         2,
         4,
         6
       ],
-      "commits": [],
-      "agent_type": "",
-      "summary": null,
+      "commits": [
+        "2c892719"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          "cmd/tsuku/install.go",
+          "cmd/tsuku/install_distributed.go",
+          "cmd/tsuku/install_distributed_test.go",
+          "internal/install/state.go",
+          "internal/recipe/loader.go"
+        ],
+        "tests_added": 12,
+        "key_decisions": "parseDistributedName handles 4 formats. ensureDistributedSource auto-registers with dynamic AddProvider. checkSourceCollision uses ToolState.Source. RecipeHash added to ToolState for audit trail."
+      },
       "testable_scenarios": [
         "scenario-20",
         "scenario-21",

@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/discover"
 	"github.com/tsukumogami/tsuku/internal/executor"
 	"github.com/tsukumogami/tsuku/internal/recipe"
@@ -193,14 +194,23 @@ Test installation in a sandbox container:
 					resolveVersion = ""
 				}
 
-				// Ensure the source is registered (prompt or auto-register)
-				if err := ensureDistributedSource(dArgs.Source, installYes || installForce); err != nil {
+				// Load system config once for all distributed operations
+				sysCfg, cfgErr := config.DefaultConfig()
+				if cfgErr != nil {
+					printError(fmt.Errorf("failed to load config: %w", cfgErr))
+					exitWithCode(ExitGeneral)
+				}
+
+				// ensureDistributedSource must run before GetWithContext because
+				// it dynamically registers the provider that qualified name
+				// routing depends on.
+				if err := ensureDistributedSource(dArgs.Source, installYes || installForce, sysCfg); err != nil {
 					printError(err)
 					exitWithCode(ExitGeneral)
 				}
 
 				// Check for source collision (same tool name from a different source)
-				if err := checkSourceCollision(dArgs.RecipeName, dArgs.Source, installForce); err != nil {
+				if err := checkSourceCollision(dArgs.RecipeName, dArgs.Source, installForce, sysCfg); err != nil {
 					printError(err)
 					exitWithCode(ExitGeneral)
 				}
@@ -226,21 +236,24 @@ Test installation in a sandbox container:
 					exitWithCode(ExitRecipeNotFound)
 				}
 
-				// Cache the recipe under the bare name so installWithDependencies can find it
+				// Cache the recipe under the bare name so dependency resolution
+				// in installWithDependencies can find it during the install flow.
 				loader.CacheRecipe(dArgs.RecipeName, r)
 
-				// Use opaque "distributed" tag for telemetry
-				telemetryTag := distributedTelemetryTag()
-				if err := runInstallWithTelemetry(dArgs.RecipeName, resolveVersion, telemetryTag, true, "", telemetryClient); err != nil {
+				// Use opaque "distributed" tag for telemetry (never send owner/repo)
+				if err := runInstallWithTelemetry(dArgs.RecipeName, resolveVersion, "distributed", true, "", telemetryClient); err != nil {
 					handleInstallError(err)
 				}
 
-				// Record source and recipe hash on the tool state
+				// Record source and recipe hash on the tool state.
+				// This runs after the install's own state write (which sets Source
+				// from the provider). The RecipeHash is only available here since
+				// the install flow doesn't know about recipe bytes.
 				var recipeHash string
 				if bytesErr == nil && recipeBytes != nil {
 					recipeHash = computeRecipeHash(recipeBytes)
 				}
-				if err := recordDistributedSource(dArgs.RecipeName, dArgs.Source, recipeHash); err != nil {
+				if err := recordDistributedSource(dArgs.RecipeName, dArgs.Source, recipeHash, sysCfg); err != nil {
 					printInfof("Warning: failed to record source for %s: %v\n", dArgs.RecipeName, err)
 				}
 				continue

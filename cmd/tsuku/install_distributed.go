@@ -68,18 +68,14 @@ func parseDistributedName(name string) *distributedInstallArgs {
 	}
 }
 
-// isDistributedName returns true if the tool name looks like a distributed
-// source reference (contains "/").
-func isDistributedName(name string) bool {
-	return strings.Contains(name, "/")
-}
-
 // ensureDistributedSource validates the source, checks registration status,
 // and auto-registers if needed. Returns an error if the source is invalid
 // or if strict_registries blocks the install.
 //
 // The autoApprove parameter skips the interactive confirmation prompt (--yes flag).
-func ensureDistributedSource(source string, autoApprove bool) error {
+// The sysCfg parameter provides the system config (cache dirs, etc.) so callers
+// control the lifecycle and avoid redundant config loads.
+func ensureDistributedSource(source string, autoApprove bool, sysCfg *config.Config) error {
 	// Validate the source format
 	if err := validateRegistrySource(source); err != nil {
 		return err
@@ -99,7 +95,7 @@ func ensureDistributedSource(source string, autoApprove bool) error {
 	// Check if already registered (provider may not exist if config was
 	// added after CLI started -- create it dynamically)
 	if _, registered := userCfg.Registries[source]; registered {
-		return addDistributedProvider(source)
+		return addDistributedProvider(source, sysCfg)
 	}
 
 	// Not registered -- check strict mode
@@ -128,7 +124,7 @@ func ensureDistributedSource(source string, autoApprove bool) error {
 
 	// Dynamically add a provider to the loader so the recipe can be fetched
 	// in the same install session without requiring a restart
-	return addDistributedProvider(source)
+	return addDistributedProvider(source, sysCfg)
 }
 
 // autoRegisterSource adds a distributed source to the user config with
@@ -146,7 +142,8 @@ func autoRegisterSource(userCfg *userconfig.Config, source string) error {
 
 // addDistributedProvider creates a new DistributedProvider for the source
 // and adds it to the global loader. Skips if a provider already exists.
-func addDistributedProvider(source string) error {
+// The sysCfg provides cache directory paths to avoid redundant config loads.
+func addDistributedProvider(source string, sysCfg *config.Config) error {
 	if hasDistributedProvider(source) {
 		return nil
 	}
@@ -156,12 +153,7 @@ func addDistributedProvider(source string) error {
 		return fmt.Errorf("invalid source format: %s", source)
 	}
 
-	cfg, err := config.DefaultConfig()
-	if err != nil {
-		return err
-	}
-
-	cacheDir := filepath.Join(cfg.CacheDir, "distributed")
+	cacheDir := filepath.Join(sysCfg.CacheDir, "distributed")
 	cache := distributed.NewCacheManager(cacheDir, distributed.DefaultCacheTTL)
 	ghClient := distributed.NewGitHubClient(cache)
 	provider := distributed.NewDistributedProvider(parts[0], parts[1], ghClient)
@@ -175,13 +167,8 @@ func addDistributedProvider(source string) error {
 //
 // Same-source reinstalls don't trigger a collision check.
 // The force parameter skips the interactive collision prompt (--force flag).
-func checkSourceCollision(toolName, newSource string, force bool) error {
-	cfg, err := config.DefaultConfig()
-	if err != nil {
-		return nil // Best-effort; don't fail install on config errors
-	}
-
-	mgr := install.New(cfg)
+func checkSourceCollision(toolName, newSource string, force bool, sysCfg *config.Config) error {
+	mgr := install.New(sysCfg)
 	toolState, err := mgr.GetState().GetToolState(toolName)
 	if err != nil || toolState == nil {
 		return nil // Not installed, no collision
@@ -214,13 +201,8 @@ func checkSourceCollision(toolName, newSource string, force bool) error {
 
 // recordDistributedSource updates the ToolState to record the distributed
 // source and recipe hash after a successful install.
-func recordDistributedSource(toolName, source, recipeHash string) error {
-	cfg, err := config.DefaultConfig()
-	if err != nil {
-		return err
-	}
-
-	mgr := install.New(cfg)
+func recordDistributedSource(toolName, source, recipeHash string, sysCfg *config.Config) error {
+	mgr := install.New(sysCfg)
 	return mgr.GetState().UpdateTool(toolName, func(ts *install.ToolState) {
 		ts.Source = source
 		ts.RecipeHash = recipeHash
@@ -238,12 +220,6 @@ func computeRecipeHash(data []byte) string {
 // This is used to compute the recipe hash for the audit trail.
 func fetchRecipeBytes(source, recipeName string) ([]byte, error) {
 	return loader.GetFromSource(globalCtx, recipeName, source)
-}
-
-// distributedTelemetryTag returns the opaque telemetry tag for distributed
-// installs. The actual owner/repo is never sent to telemetry.
-func distributedTelemetryTag() string {
-	return "distributed"
 }
 
 // hasDistributedProvider checks if the loader already has a provider for the

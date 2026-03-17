@@ -98,29 +98,6 @@ func TestParseDistributedName(t *testing.T) {
 	}
 }
 
-func TestIsDistributedName(t *testing.T) {
-	tests := []struct {
-		name  string
-		input string
-		want  bool
-	}{
-		{"bare name", "kubectl", false},
-		{"with version", "kubectl@v1", false},
-		{"owner/repo", "myorg/tools", true},
-		{"owner/repo:recipe", "myorg/tools:thing", true},
-		{"owner/repo@version", "myorg/tools@v1", true},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := isDistributedName(tt.input)
-			if got != tt.want {
-				t.Errorf("isDistributedName(%q) = %v, want %v", tt.input, got, tt.want)
-			}
-		})
-	}
-}
-
 func TestComputeRecipeHash(t *testing.T) {
 	data := []byte("[metadata]\nname = \"test\"\n")
 	hash := computeRecipeHash(data)
@@ -139,13 +116,6 @@ func TestComputeRecipeHash(t *testing.T) {
 	hash3 := computeRecipeHash([]byte("different"))
 	if hash == hash3 {
 		t.Error("different input produced same hash")
-	}
-}
-
-func TestDistributedTelemetryTag(t *testing.T) {
-	tag := distributedTelemetryTag()
-	if tag != "distributed" {
-		t.Errorf("telemetry tag = %q, want %q", tag, "distributed")
 	}
 }
 
@@ -204,7 +174,11 @@ func TestCheckSourceCollision_NotInstalled(t *testing.T) {
 	// Create minimal config
 	os.MkdirAll(filepath.Join(tmpDir, "bin"), 0755)
 
-	err := checkSourceCollision("nonexistent-tool", "myorg/recipes", false)
+	cfg, cfgErr := config.DefaultConfig()
+	if cfgErr != nil {
+		t.Fatalf("failed to get config: %v", cfgErr)
+	}
+	err := checkSourceCollision("nonexistent-tool", "myorg/recipes", false, cfg)
 	if err != nil {
 		t.Errorf("expected no collision for uninstalled tool: %v", err)
 	}
@@ -233,7 +207,7 @@ func TestCheckSourceCollision_SameSource(t *testing.T) {
 	}
 
 	// Same source -- no collision
-	err = checkSourceCollision("mytool", "myorg/recipes", false)
+	err = checkSourceCollision("mytool", "myorg/recipes", false, cfg)
 	if err != nil {
 		t.Errorf("expected no collision for same source: %v", err)
 	}
@@ -261,7 +235,7 @@ func TestCheckSourceCollision_DifferentSourceWithForce(t *testing.T) {
 	}
 
 	// Different source with force -- no collision
-	err = checkSourceCollision("mytool", "other/source", true)
+	err = checkSourceCollision("mytool", "other/source", true, cfg)
 	if err != nil {
 		t.Errorf("expected no collision with --force: %v", err)
 	}
@@ -290,7 +264,7 @@ func TestCheckSourceCollision_DifferentSourceNoForce(t *testing.T) {
 
 	// Different source without force and non-interactive -- should error
 	// (confirmWithUser returns false when not interactive)
-	err = checkSourceCollision("mytool", "other/source", false)
+	err = checkSourceCollision("mytool", "other/source", false, cfg)
 	if err == nil {
 		t.Error("expected collision error for different source without force in non-interactive mode")
 	}
@@ -318,13 +292,14 @@ func TestRecordDistributedSource(t *testing.T) {
 	}
 
 	// Record source and hash
-	err = recordDistributedSource("mytool", "myorg/recipes", "abc123hash")
+	err = recordDistributedSource("mytool", "myorg/recipes", "abc123hash", cfg)
 	if err != nil {
 		t.Fatalf("recordDistributedSource failed: %v", err)
 	}
 
-	// Verify
-	toolState, err := mgr.GetState().GetToolState("mytool")
+	// Reload state manager to verify persistence
+	mgr2 := install.New(cfg)
+	toolState, err := mgr2.GetState().GetToolState("mytool")
 	if err != nil {
 		t.Fatalf("failed to get tool state: %v", err)
 	}

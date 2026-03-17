@@ -431,8 +431,9 @@ func (l *Loader) ClearCache() {
 	l.satisfiesOnce = sync.Once{}
 }
 
-// CacheRecipe adds a recipe to the in-memory cache.
-// This is useful for testing or loading recipes from non-standard sources.
+// CacheRecipe adds a recipe to the in-memory cache under the given name.
+// Used by the distributed install flow to alias a qualified-name recipe
+// under its bare name so dependency resolution can find it.
 func (l *Loader) CacheRecipe(name string, r *Recipe) {
 	l.recipes[name] = r
 }
