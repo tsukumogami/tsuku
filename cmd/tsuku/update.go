@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/tsukumogami/tsuku/internal/config"
@@ -57,6 +58,15 @@ Examples:
 			exitWithCode(ExitGeneral)
 		}
 
+		// Ensure distributed provider is registered if the tool came from
+		// a distributed source (owner/repo). This must happen before the
+		// install flow so the loader can resolve the recipe.
+		if err := ensureSourceProvider(toolName, cfg); err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: could not set up source provider for %s: %v\n", toolName, err)
+			// Continue with the default chain -- the central registry may
+			// still have a recipe with the same name.
+		}
+
 		if updateDryRun {
 			printInfof("Checking updates for %s...\n", toolName)
 			if err := runDryRun(toolName, ""); err != nil {
@@ -87,6 +97,35 @@ Examples:
 			telemetryClient.Send(event)
 		}
 	},
+}
+
+// ensureSourceProvider checks the tool's recorded source and, if it's a
+// distributed source (owner/repo), ensures the corresponding provider is
+// registered in the loader. For central/embedded/local/empty sources this
+// is a no-op because those providers are always available.
+func ensureSourceProvider(toolName string, cfg *config.Config) error {
+	toolState, err := install.New(cfg).GetState().GetToolState(toolName)
+	if err != nil || toolState == nil {
+		return nil // Not installed or no state -- nothing to do
+	}
+
+	source := toolState.Source
+	if source == "" {
+		return nil // Empty defaults to central -- already available
+	}
+
+	if !isDistributedSource(source) {
+		return nil // central, local, embedded -- already in the chain
+	}
+
+	// Distributed source: dynamically register the provider
+	return addDistributedProvider(source, cfg)
+}
+
+// isDistributedSource returns true if the source string is a distributed
+// "owner/repo" source (as opposed to "central", "local", or "embedded").
+func isDistributedSource(source string) bool {
+	return strings.Contains(source, "/")
 }
 
 func init() {

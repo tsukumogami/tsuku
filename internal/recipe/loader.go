@@ -438,6 +438,19 @@ func (l *Loader) CacheRecipe(name string, r *Recipe) {
 	l.recipes[name] = r
 }
 
+// ParseAndCache parses raw TOML bytes into a Recipe and caches the result
+// under the given name. This is used by source-directed flows (update,
+// outdated, verify) that fetch raw bytes via GetFromSource and need a
+// parsed Recipe without going through the full provider chain.
+func (l *Loader) ParseAndCache(_ context.Context, name string, data []byte) (*Recipe, error) {
+	r, err := l.parseBytes(data)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse recipe %s: %w", name, err)
+	}
+	l.recipes[name] = r
+	return r, nil
+}
+
 // AddProvider appends a provider to the end of the provider chain.
 // This is used for dynamically registering distributed providers during install.
 func (l *Loader) AddProvider(p RecipeProvider) {
