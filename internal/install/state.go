@@ -32,9 +32,12 @@ type Plan struct {
 	Version       string       `json:"version"`
 	Platform      PlanPlatform `json:"platform"`
 	GeneratedAt   time.Time    `json:"generated_at"`
-	RecipeSource  string       `json:"recipe_source"`
-	Deterministic bool         `json:"deterministic"`
-	Steps         []PlanStep   `json:"steps"`
+	// RecipeSource is the raw provider tag ("registry", "embedded", "local").
+	// See recipeSourceFromProvider in cmd/tsuku/helpers.go for the mapping
+	// to the normalized ToolState.Source values ("central", "local", "owner/repo").
+	RecipeSource  string     `json:"recipe_source"`
+	Deterministic bool       `json:"deterministic"`
+	Steps         []PlanStep `json:"steps"`
 }
 
 // PlanPlatform identifies the target OS and architecture for a plan.
