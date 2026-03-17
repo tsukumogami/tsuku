@@ -56,9 +56,19 @@ func (l *Loader) Get(name string, opts LoaderOptions) (*Recipe, error) {
 // GetWithContext retrieves a recipe by name with context support.
 // Priority follows the provider order, with in-memory cache checked first.
 // When opts.RequireEmbedded is true, only checks embedded providers.
+//
+// Qualified names in the form "owner/repo:recipe" are routed to the
+// distributed provider matching that owner/repo source. The full qualified
+// name is used as the in-memory cache key to avoid collisions with bare
+// recipe names from the central registry.
 func (l *Loader) GetWithContext(ctx context.Context, name string, opts LoaderOptions) (*Recipe, error) {
 	if opts.RequireEmbedded {
 		return l.getEmbeddedOnly(ctx, name)
+	}
+
+	// Handle qualified names (owner/repo:recipe) for distributed providers
+	if qualifier, recipeName, ok := splitQualifiedName(name); ok {
+		return l.getFromDistributed(ctx, qualifier, recipeName, name)
 	}
 
 	// Check in-memory cache first
@@ -85,6 +95,64 @@ func (l *Loader) GetWithContext(ctx context.Context, name string, opts LoaderOpt
 	l.recipes[name] = recipe
 	l.recipeSources[name] = source
 	return recipe, nil
+}
+
+// getFromDistributed fetches a recipe from a distributed provider matching
+// the given qualifier (owner/repo). The cacheKey is the full qualified name
+// used to store the parsed recipe in the in-memory cache.
+func (l *Loader) getFromDistributed(ctx context.Context, qualifier, recipeName, cacheKey string) (*Recipe, error) {
+	// Check in-memory cache with the full qualified key
+	if recipe, ok := l.recipes[cacheKey]; ok {
+		return recipe, nil
+	}
+
+	// Find the provider matching this qualifier
+	source := RecipeSource(qualifier)
+	for _, p := range l.providers {
+		if p.Source() != source {
+			continue
+		}
+
+		data, err := p.Get(ctx, recipeName)
+		if err != nil {
+			return nil, err
+		}
+
+		recipe, err := l.parseBytes(data)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse recipe %s from %s: %w", cacheKey, source, err)
+		}
+
+		l.recipes[cacheKey] = recipe
+		l.recipeSources[cacheKey] = source
+		return recipe, nil
+	}
+
+	return nil, fmt.Errorf("no provider registered for source %q", qualifier)
+}
+
+// splitQualifiedName splits a qualified recipe name in the form "owner/repo:recipe"
+// into the qualifier ("owner/repo") and the bare recipe name ("recipe").
+// Returns false if the name is not qualified.
+func splitQualifiedName(name string) (qualifier, recipeName string, ok bool) {
+	colonIdx := strings.LastIndex(name, ":")
+	if colonIdx <= 0 || colonIdx >= len(name)-1 {
+		return "", "", false
+	}
+
+	qualifier = name[:colonIdx]
+	recipeName = name[colonIdx+1:]
+
+	// Qualifier must look like owner/repo (contain exactly one slash)
+	if !strings.Contains(qualifier, "/") {
+		return "", "", false
+	}
+	parts := strings.SplitN(qualifier, "/", 3)
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", "", false
+	}
+
+	return qualifier, recipeName, true
 }
 
 // GetWithSource retrieves a recipe by name and returns the source that provided it.

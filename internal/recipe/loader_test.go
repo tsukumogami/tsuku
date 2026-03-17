@@ -1639,3 +1639,176 @@ command = "no-cache-tool --version"
 		t.Error("GetFromSource() should not write to the in-memory cache")
 	}
 }
+
+// --- scenario-19: Qualified name routing to DistributedProvider ---
+
+func TestSplitQualifiedName(t *testing.T) {
+	tests := []struct {
+		name   string
+		input  string
+		wantQ  string
+		wantR  string
+		wantOK bool
+	}{
+		{"valid qualified name", "acme/tools:my-recipe", "acme/tools", "my-recipe", true},
+		{"bare name no colon", "my-recipe", "", "", false},
+		{"bare name with slash", "acme/tools", "", "", false},
+		{"colon but no slash in qualifier", "tools:my-recipe", "", "", false},
+		{"empty recipe name", "acme/tools:", "", "", false},
+		{"empty qualifier", ":my-recipe", "", "", false},
+		{"multiple colons uses last", "acme/tools:sub:recipe", "acme/tools:sub", "recipe", true},
+		{"nested path in qualifier", "acme/sub/tools:recipe", "", "", false},
+		{"empty string", "", "", "", false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			q, r, ok := splitQualifiedName(tt.input)
+			if ok != tt.wantOK {
+				t.Errorf("splitQualifiedName(%q) ok = %v, want %v", tt.input, ok, tt.wantOK)
+				return
+			}
+			if ok {
+				if q != tt.wantQ {
+					t.Errorf("splitQualifiedName(%q) qualifier = %q, want %q", tt.input, q, tt.wantQ)
+				}
+				if r != tt.wantR {
+					t.Errorf("splitQualifiedName(%q) recipeName = %q, want %q", tt.input, r, tt.wantR)
+				}
+			}
+		})
+	}
+}
+
+func TestLoader_GetWithContext_QualifiedName(t *testing.T) {
+	distRecipe := []byte(`[metadata]
+name = "dist-tool"
+description = "A distributed tool"
+
+[[steps]]
+action = "download"
+
+[verify]
+command = "dist-tool --version"
+`)
+
+	centralRecipe := []byte(`[metadata]
+name = "dist-tool"
+description = "Central version"
+
+[[steps]]
+action = "download"
+
+[verify]
+command = "dist-tool --version"
+`)
+
+	distProvider := &mockProvider{
+		source:  RecipeSource("acme/tools"),
+		recipes: map[string][]byte{"dist-tool": distRecipe},
+	}
+
+	registryProvider := &mockProvider{
+		source:  SourceRegistry,
+		recipes: map[string][]byte{"dist-tool": centralRecipe},
+	}
+
+	loader := NewLoader(registryProvider, distProvider)
+
+	t.Run("qualified name routes to distributed provider", func(t *testing.T) {
+		recipe, err := loader.GetWithContext(context.Background(), "acme/tools:dist-tool", LoaderOptions{})
+		if err != nil {
+			t.Fatalf("GetWithContext() failed: %v", err)
+		}
+		if recipe.Metadata.Description != "A distributed tool" {
+			t.Errorf("expected distributed version, got description %q", recipe.Metadata.Description)
+		}
+	})
+
+	t.Run("bare name routes to central provider", func(t *testing.T) {
+		recipe, err := loader.GetWithContext(context.Background(), "dist-tool", LoaderOptions{})
+		if err != nil {
+			t.Fatalf("GetWithContext() failed: %v", err)
+		}
+		if recipe.Metadata.Description != "Central version" {
+			t.Errorf("expected central version, got description %q", recipe.Metadata.Description)
+		}
+	})
+
+	t.Run("qualified name uses distinct cache key", func(t *testing.T) {
+		// Both should be cached now with different keys
+		if loader.Count() != 2 {
+			t.Errorf("expected 2 cached recipes, got %d", loader.Count())
+		}
+
+		// Fetch again -- should hit cache
+		recipe, err := loader.GetWithContext(context.Background(), "acme/tools:dist-tool", LoaderOptions{})
+		if err != nil {
+			t.Fatalf("GetWithContext() failed on cache hit: %v", err)
+		}
+		if recipe.Metadata.Description != "A distributed tool" {
+			t.Error("cache should return distributed version for qualified name")
+		}
+	})
+}
+
+func TestLoader_GetWithContext_QualifiedName_NoProvider(t *testing.T) {
+	loader := NewLoader()
+
+	_, err := loader.GetWithContext(context.Background(), "acme/tools:some-recipe", LoaderOptions{})
+	if err == nil {
+		t.Fatal("expected error for unregistered distributed source")
+	}
+	if !strings.Contains(err.Error(), "no provider registered") {
+		t.Errorf("expected 'no provider registered' in error, got: %v", err)
+	}
+}
+
+func TestLoader_GetWithContext_QualifiedName_RecipeNotFound(t *testing.T) {
+	distProvider := &mockProvider{
+		source:  RecipeSource("acme/tools"),
+		recipes: map[string][]byte{},
+	}
+
+	loader := NewLoader(distProvider)
+
+	_, err := loader.GetWithContext(context.Background(), "acme/tools:missing", LoaderOptions{})
+	if err == nil {
+		t.Fatal("expected error for missing recipe in distributed source")
+	}
+	if !strings.Contains(err.Error(), "not found") {
+		t.Errorf("expected 'not found' in error, got: %v", err)
+	}
+}
+
+func TestLoader_GetWithSource_QualifiedDistributed(t *testing.T) {
+	distRecipe := []byte(`[metadata]
+name = "dist-tool"
+description = "distributed"
+
+[[steps]]
+action = "download"
+
+[verify]
+command = "dist-tool --version"
+`)
+
+	distProvider := &mockProvider{
+		source:  RecipeSource("acme/tools"),
+		recipes: map[string][]byte{"dist-tool": distRecipe},
+	}
+
+	loader := NewLoader(distProvider)
+
+	// Load via qualified name
+	recipe, source, err := loader.GetWithSource("acme/tools:dist-tool", LoaderOptions{})
+	if err != nil {
+		t.Fatalf("GetWithSource() failed: %v", err)
+	}
+	if recipe.Metadata.Name != "dist-tool" {
+		t.Errorf("recipe name = %q, want %q", recipe.Metadata.Name, "dist-tool")
+	}
+	if source != RecipeSource("acme/tools") {
+		t.Errorf("source = %q, want %q", source, "acme/tools")
+	}
+}
