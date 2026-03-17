@@ -3,7 +3,7 @@
   "design_doc": "docs/plans/PLAN-distributed-recipes.md",
   "branch": "docs/distributed-recipes",
   "pr_number": 2160,
-  "integrity_hash": "sha256:50ae4aac6da57d8e64759866ad785d05e8d317f97f97d50853894fbb2d1e343c",
+  "integrity_hash": "sha256:c53c7b21e65db1879dc229ebeef741810a79d93644c44ff7d116c87b4f7c39ac",
   "issues": [
     {
       "number": 1,
@@ -483,8 +483,8 @@
     {
       "number": 5,
       "title": "feat(distributed): implement GitHub HTTP fetching and cache",
-      "status": "pushed",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "ci_fix_attempts": 0,
       "issue_type": "code",
       "dependencies": [
@@ -574,15 +574,17 @@
     {
       "number": 6,
       "title": "feat(distributed): implement DistributedProvider",
-      "status": "pending",
+      "status": "implemented",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [
         1,
         5
       ],
-      "commits": [],
+      "commits": [
+        "2d2daf2a"
+      ],
       "agent_type": "",
       "summary": null,
       "testable_scenarios": [

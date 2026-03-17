@@ -142,6 +142,37 @@ func (gc *GitHubClient) ListRecipes(ctx context.Context, owner, repo string) (*S
 	return nil, apiErr
 }
 
+// ForceListRecipes is like ListRecipes but bypasses the cache freshness check.
+// Used by DistributedProvider.Refresh() to force a re-fetch of the directory listing.
+func (gc *GitHubClient) ForceListRecipes(ctx context.Context, owner, repo string) (*SourceMeta, error) {
+	if err := discover.ValidateGitHubURL(owner + "/" + repo); err != nil {
+		return nil, err
+	}
+
+	// Try Contents API directly (skip cache freshness check)
+	meta, apiErr := gc.listViaContentsAPI(ctx, owner, repo)
+	if apiErr == nil {
+		_ = gc.cache.PutSourceMeta(owner, repo, meta)
+		return meta, nil
+	}
+
+	// If rate limited, fall back to stale cache then branch probing
+	if _, ok := apiErr.(*ErrRateLimited); ok {
+		cached, _ := gc.cache.GetSourceMeta(owner, repo)
+		if cached != nil {
+			return cached, nil
+		}
+		meta, probeErr := gc.probeDefaultBranches(ctx, owner, repo)
+		if probeErr != nil {
+			return nil, apiErr
+		}
+		_ = gc.cache.PutSourceMeta(owner, repo, meta)
+		return meta, nil
+	}
+
+	return nil, apiErr
+}
+
 // FetchRecipe downloads a single recipe TOML file from the given download URL.
 // It validates the URL, checks the cache, and downloads if needed.
 func (gc *GitHubClient) FetchRecipe(ctx context.Context, owner, repo, name, downloadURL string) ([]byte, error) {

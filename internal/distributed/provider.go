@@ -72,12 +72,9 @@ func (p *DistributedProvider) Source() recipe.RecipeSource {
 }
 
 // Refresh re-fetches the directory listing from the GitHub Contents API,
-// updating the cached SourceMeta.
+// bypassing the cache freshness check. Used by update-registry.
 func (p *DistributedProvider) Refresh(ctx context.Context) error {
-	// Invalidate the cache TTL by fetching fresh data.
-	// ListRecipes already handles caching internally, but we need to
-	// bypass the freshness check. Clear the cached entry first.
-	_, err := p.client.ListRecipes(ctx, p.owner, p.repo)
+	_, err := p.client.ForceListRecipes(ctx, p.owner, p.repo)
 	if err != nil {
 		return fmt.Errorf("refreshing recipe listing from %s/%s: %w", p.owner, p.repo, err)
 	}

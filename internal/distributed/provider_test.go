@@ -249,7 +249,7 @@ func TestDistributedProvider_List_Empty(t *testing.T) {
 func TestDistributedProvider_Refresh(t *testing.T) {
 	cache := NewCacheManager(t.TempDir(), 1*time.Hour)
 
-	// Pre-populate with a fresh cache so ListRecipes returns it directly
+	// Pre-populate with a fresh cache
 	meta := &SourceMeta{
 		Branch:    "main",
 		Files:     map[string]string{"tool": "https://raw.githubusercontent.com/acme/tools/main/.tsuku-recipes/tool.toml"},
@@ -259,19 +259,50 @@ func TestDistributedProvider_Refresh(t *testing.T) {
 		t.Fatalf("PutSourceMeta: %v", err)
 	}
 
-	panicClient := &http.Client{
-		Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
-			t.Fatalf("should not call HTTP when cache is fresh, got: %s", req.URL)
-			return nil, nil
-		}),
-	}
+	// Refresh bypasses freshness and hits the API. Provide a server that
+	// returns an updated listing so we can verify the cache gets updated.
+	apiCalled := false
+	apiHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		apiCalled = true
+		entries := []contentsEntry{
+			{Name: "tool.toml", Type: "file", DownloadURL: "https://raw.githubusercontent.com/acme/tools/main/.tsuku-recipes/tool.toml"},
+			{Name: "new-tool.toml", Type: "file", DownloadURL: "https://raw.githubusercontent.com/acme/tools/main/.tsuku-recipes/new-tool.toml"},
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(entries)
+	})
+	apiServer := httptest.NewTLSServer(apiHandler)
+	t.Cleanup(apiServer.Close)
 
-	gc := newGitHubClientWithHTTP(panicClient, panicClient, cache, false)
+	apiClient := apiServer.Client()
+	origTransport := apiClient.Transport
+	apiClient.Transport = roundTripFunc(func(req *http.Request) (*http.Response, error) {
+		if strings.Contains(req.URL.Host, "api.github.com") {
+			req.URL.Scheme = "https"
+			req.URL.Host = strings.TrimPrefix(apiServer.URL, "https://")
+		}
+		return origTransport.RoundTrip(req)
+	})
+
+	gc := newGitHubClientWithHTTP(apiClient, apiServer.Client(), cache, false)
 	p := NewDistributedProvider("acme", "tools", gc)
 
 	err := p.Refresh(context.Background())
 	if err != nil {
 		t.Fatalf("Refresh: %v", err)
+	}
+
+	if !apiCalled {
+		t.Error("Refresh should call the API even when cache is fresh")
+	}
+
+	// Verify the cache was updated with new listing
+	updated, err := cache.GetSourceMeta("acme", "tools")
+	if err != nil {
+		t.Fatalf("GetSourceMeta after refresh: %v", err)
+	}
+	if _, ok := updated.Files["new-tool"]; !ok {
+		t.Error("refreshed cache should contain new-tool")
 	}
 }
 
