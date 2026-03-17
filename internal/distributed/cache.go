@@ -14,9 +14,9 @@ import (
 // are typically smaller repos that change more frequently.
 const DefaultCacheTTL = 1 * time.Hour
 
-// DefaultMaxCacheSize is the default maximum size for the distributed cache (20MB).
+// defaultMaxCacheSize is the default maximum size for the distributed cache (20MB).
 // Independent from the central registry cache limit (50MB).
-const DefaultMaxCacheSize int64 = 20 * 1024 * 1024
+const defaultMaxCacheSize int64 = 20 * 1024 * 1024
 
 // SourceMeta holds cached metadata about a repository's .tsuku-recipes directory.
 // Stored as _source.json in the per-repo cache directory.
@@ -55,15 +55,16 @@ func NewCacheManager(baseDir string, ttl time.Duration) *CacheManager {
 	return &CacheManager{
 		baseDir:  baseDir,
 		ttl:      ttl,
-		maxBytes: DefaultMaxCacheSize,
+		maxBytes: defaultMaxCacheSize,
 	}
 }
 
-// SetMaxSize overrides the default maximum cache size.
-func (cm *CacheManager) SetMaxSize(maxBytes int64) {
-	if maxBytes > 0 {
-		cm.maxBytes = maxBytes
+// validateRecipeName rejects recipe names containing path traversal or separator characters.
+func validateRecipeName(name string) error {
+	if strings.Contains(name, "..") || strings.Contains(name, "/") || strings.Contains(name, string(os.PathSeparator)) {
+		return fmt.Errorf("invalid recipe name: %s", name)
 	}
+	return nil
 }
 
 // repoDir returns the cache directory for a given owner/repo, validating
@@ -141,9 +142,8 @@ func (cm *CacheManager) GetRecipe(owner, repo, name string) ([]byte, error) {
 		return nil, err
 	}
 
-	// Sanitize recipe name against path traversal
-	if strings.Contains(name, "..") || strings.Contains(name, "/") || strings.Contains(name, string(os.PathSeparator)) {
-		return nil, fmt.Errorf("invalid recipe name: %s", name)
+	if err := validateRecipeName(name); err != nil {
+		return nil, err
 	}
 
 	data, err := os.ReadFile(filepath.Join(dir, name+".toml"))
@@ -163,8 +163,8 @@ func (cm *CacheManager) PutRecipe(owner, repo, name string, data []byte, meta *R
 		return err
 	}
 
-	if strings.Contains(name, "..") || strings.Contains(name, "/") || strings.Contains(name, string(os.PathSeparator)) {
-		return fmt.Errorf("invalid recipe name: %s", name)
+	if err := validateRecipeName(name); err != nil {
+		return err
 	}
 
 	if err := os.MkdirAll(dir, 0755); err != nil {
@@ -211,8 +211,8 @@ func (cm *CacheManager) GetRecipeMeta(owner, repo, name string) (*RecipeMeta, er
 		return nil, err
 	}
 
-	if strings.Contains(name, "..") || strings.Contains(name, "/") || strings.Contains(name, string(os.PathSeparator)) {
-		return nil, fmt.Errorf("invalid recipe name: %s", name)
+	if err := validateRecipeName(name); err != nil {
+		return nil, err
 	}
 
 	data, err := os.ReadFile(filepath.Join(dir, name+".meta.json"))

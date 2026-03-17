@@ -225,7 +225,7 @@ func TestCacheManager_SizeAndEviction(t *testing.T) {
 	}
 
 	// Set max to current size so the next write triggers eviction
-	cm.SetMaxSize(size)
+	cm.maxBytes = size
 
 	// Write second repo -- this should trigger eviction of the first (older) repo
 	if err := cm.PutSourceMeta("owner2", "repo2", &SourceMeta{Branch: "main", FetchedAt: time.Now()}); err != nil {

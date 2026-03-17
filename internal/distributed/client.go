@@ -186,14 +186,11 @@ func (gc *GitHubClient) FetchRecipe(ctx context.Context, owner, repo, name, down
 	}
 
 	if resp.StatusCode == http.StatusNotFound {
-		return nil, &ErrRepoNotFound{Owner: owner, Repo: repo}
+		return nil, fmt.Errorf("recipe %q not found in %s/%s", name, owner, repo)
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, &ErrNetwork{
-			Operation: "fetching recipe",
-			Err:       fmt.Errorf("unexpected status %d", resp.StatusCode),
-		}
+		return nil, fmt.Errorf("fetching recipe %q from %s/%s: unexpected status %d", name, owner, repo, resp.StatusCode)
 	}
 
 	data, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20)) // 1MB limit
@@ -243,10 +240,7 @@ func (gc *GitHubClient) listViaContentsAPI(ctx context.Context, owner, repo stri
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, &ErrNetwork{
-			Operation: "Contents API",
-			Err:       fmt.Errorf("unexpected status %d", resp.StatusCode),
-		}
+		return nil, fmt.Errorf("Contents API for %s/%s returned unexpected status %d", owner, repo, resp.StatusCode)
 	}
 
 	body, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
@@ -256,7 +250,7 @@ func (gc *GitHubClient) listViaContentsAPI(ctx context.Context, owner, repo stri
 
 	var entries []contentsEntry
 	if err := json.Unmarshal(body, &entries); err != nil {
-		return nil, &ErrNetwork{Operation: "parsing API response", Err: err}
+		return nil, fmt.Errorf("parsing Contents API response for %s/%s: %w", owner, repo, err)
 	}
 
 	files := make(map[string]string)

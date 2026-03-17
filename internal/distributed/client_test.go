@@ -2,7 +2,6 @@ package distributed
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -75,57 +74,18 @@ func TestAuthTransport_TokenIsolation(t *testing.T) {
 	})
 }
 
-// scenario-14: Contents API listing and download URL extraction
-func TestGitHubClient_ListRecipes_ContentsAPI(t *testing.T) {
+// scenario-14: Contents API response parsing and filtering
+func TestContentsAPIResponseParsing(t *testing.T) {
 	entries := []contentsEntry{
-		{Name: "foo.toml", Type: "file", DownloadURL: ""},
-		{Name: "bar.toml", Type: "file", DownloadURL: ""},
+		{Name: "foo.toml", Type: "file", DownloadURL: "https://raw.githubusercontent.com/owner/repo/main/.tsuku-recipes/foo.toml"},
+		{Name: "bar.toml", Type: "file", DownloadURL: "https://raw.githubusercontent.com/owner/repo/main/.tsuku-recipes/bar.toml"},
 		{Name: "README.md", Type: "file", DownloadURL: "https://raw.githubusercontent.com/owner/repo/main/.tsuku-recipes/README.md"},
 		{Name: "subdir", Type: "dir", DownloadURL: ""},
 	}
 
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Fill in download URLs using the test server's URL scheme won't work
-		// since they must be from allowed hosts. Instead, use real-looking URLs.
-		// The client validates these but won't actually fetch them during ListRecipes.
-		localEntries := make([]contentsEntry, len(entries))
-		copy(localEntries, entries)
-		localEntries[0].DownloadURL = "https://raw.githubusercontent.com/owner/repo/main/.tsuku-recipes/foo.toml"
-		localEntries[1].DownloadURL = "https://raw.githubusercontent.com/owner/repo/main/.tsuku-recipes/bar.toml"
-
-		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(localEntries)
-	})
-
-	ts, client := newTestServer(t, handler)
-	cache := NewCacheManager(t.TempDir(), 1*time.Hour)
-
-	gc := newGitHubClientWithHTTP(client, client, cache, false)
-
-	// Override the Contents API URL by making the test hit the test server
-	// We need to test listViaContentsAPI directly since it constructs the URL
-	// Instead, test the parsing logic via a direct call.
-	ctx := context.Background()
-
-	// Call the handler directly to test response parsing
-	resp, err := client.Get(ts.URL + "/repos/owner/repo/contents/.tsuku-recipes")
-	if err != nil {
-		t.Fatalf("request failed: %v", err)
-	}
-	defer resp.Body.Close()
-
-	_ = ctx
-	_ = gc
-
-	// Verify the response parses correctly
-	var parsed []contentsEntry
-	if err := json.NewDecoder(resp.Body).Decode(&parsed); err != nil {
-		t.Fatalf("parse failed: %v", err)
-	}
-
-	// Simulate what listViaContentsAPI does with the parsed entries
+	// Simulate what listViaContentsAPI does: filter to .toml files with valid download URLs
 	files := make(map[string]string)
-	for _, entry := range parsed {
+	for _, entry := range entries {
 		if entry.Type != "file" || !strings.HasSuffix(entry.Name, ".toml") {
 			continue
 		}
@@ -144,6 +104,11 @@ func TestGitHubClient_ListRecipes_ContentsAPI(t *testing.T) {
 	}
 	if _, ok := files["bar"]; !ok {
 		t.Error("expected bar in files")
+	}
+
+	// Verify non-TOML and directory entries are filtered out
+	if _, ok := files["README"]; ok {
+		t.Error("non-TOML file should be filtered")
 	}
 }
 
@@ -209,55 +174,50 @@ func TestValidateDownloadURL(t *testing.T) {
 	}
 }
 
-// scenario-16: Cache read/write/expiry lifecycle
-func TestGitHubClient_FetchRecipe_CacheLifecycle(t *testing.T) {
+// scenario-16: Cache read/write/expiry lifecycle and FetchRecipe URL validation
+func TestCacheLifecycleAndFetchRecipeValidation(t *testing.T) {
 	recipeContent := []byte(`[tool]\nname = "test-tool"`)
-	callCount := 0
+	cache := NewCacheManager(t.TempDir(), 1*time.Hour)
 
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		callCount++
-		w.Header().Set("ETag", `"etag-123"`)
-		w.Header().Set("Last-Modified", "Mon, 01 Jan 2024 00:00:00 GMT")
-		_, _ = w.Write(recipeContent)
+	t.Run("cache round-trip", func(t *testing.T) {
+		meta := &RecipeMeta{
+			ETag:      `"etag-abc"`,
+			FetchedAt: time.Now(),
+		}
+		if err := cache.PutRecipe("owner", "repo", "test-tool", recipeContent, meta); err != nil {
+			t.Fatalf("PutRecipe: %v", err)
+		}
+
+		got, err := cache.GetRecipe("owner", "repo", "test-tool")
+		if err != nil {
+			t.Fatalf("GetRecipe: %v", err)
+		}
+		if string(got) != string(recipeContent) {
+			t.Error("cached recipe content mismatch")
+		}
 	})
 
-	ts, rawClient := newTestServer(t, handler)
-	cache := NewCacheManager(t.TempDir(), 1*time.Hour)
-	gc := newGitHubClientWithHTTP(rawClient, rawClient, cache, false)
+	t.Run("fresh cache returns immediately", func(t *testing.T) {
+		freshMeta := &RecipeMeta{FetchedAt: time.Now()}
+		if !cache.IsRecipeFresh(freshMeta) {
+			t.Error("recent recipe meta should be fresh")
+		}
+	})
 
-	ctx := context.Background()
-	downloadURL := ts.URL + "/owner/repo/main/.tsuku-recipes/test-tool.toml"
+	t.Run("stale cache is not fresh", func(t *testing.T) {
+		staleMeta := &RecipeMeta{FetchedAt: time.Now().Add(-2 * time.Hour)}
+		if cache.IsRecipeFresh(staleMeta) {
+			t.Error("old recipe meta should be stale")
+		}
+	})
 
-	// We need to bypass hostname validation for tests. Instead, let's test
-	// the cache layer directly and test FetchRecipe's URL validation separately.
-
-	// Write to cache directly
-	meta := &RecipeMeta{
-		ETag:      `"etag-abc"`,
-		FetchedAt: time.Now(),
-	}
-	if err := cache.PutRecipe("owner", "repo", "test-tool", recipeContent, meta); err != nil {
-		t.Fatalf("PutRecipe: %v", err)
-	}
-
-	// FetchRecipe should return cached data (URL validation will fail because
-	// test server URL isn't in the allowlist). Verify cache hit path works.
-	got, err := cache.GetRecipe("owner", "repo", "test-tool")
-	if err != nil {
-		t.Fatalf("GetRecipe: %v", err)
-	}
-	if string(got) != string(recipeContent) {
-		t.Error("cached recipe content mismatch")
-	}
-
-	// Verify FetchRecipe rejects bad URLs
-	_, err = gc.FetchRecipe(ctx, "owner", "repo", "test-tool", "http://evil.com/recipe.toml")
-	if err == nil {
-		t.Error("expected error for invalid download URL")
-	}
-
-	_ = ts
-	_ = downloadURL
+	t.Run("FetchRecipe rejects invalid URLs", func(t *testing.T) {
+		gc := newGitHubClientWithHTTP(&http.Client{}, &http.Client{}, cache, false)
+		_, err := gc.FetchRecipe(context.Background(), "owner", "repo", "test-tool", "http://evil.com/recipe.toml")
+		if err == nil {
+			t.Error("expected error for invalid download URL")
+		}
+	})
 }
 
 // scenario-17: Rate limit error handling with remaining/reset headers
