@@ -278,79 +278,30 @@ func TestLoadRecipeForTool_ToolNotInState(t *testing.T) {
 	}
 }
 
-func TestEnsureSourceProvider_EmptySource(t *testing.T) {
-	tmpDir := t.TempDir()
-	origHome := os.Getenv("TSUKU_HOME")
-	os.Setenv("TSUKU_HOME", tmpDir)
-	defer os.Setenv("TSUKU_HOME", origHome)
-
-	cfg, err := config.DefaultConfig()
-	if err != nil {
-		t.Fatalf("failed to get config: %v", err)
+func TestLoadRecipeForTool_EmbeddedSource(t *testing.T) {
+	// Embedded source should use the normal chain
+	embeddedProvider := &mockProvider{
+		source:  recipe.SourceEmbedded,
+		recipes: map[string][]byte{"gh": testRecipeTOML("gh")},
 	}
-	_ = os.MkdirAll(filepath.Dir(filepath.Join(cfg.HomeDir, "state.json")), 0755)
+	oldLoader := loader
+	loader = recipe.NewLoader(embeddedProvider)
+	defer func() { loader = oldLoader }()
 
-	// Create tool with empty source
-	mgr := install.New(cfg)
-	err = mgr.GetState().UpdateTool("testtool", func(ts *install.ToolState) {
-		ts.ActiveVersion = "1.0.0"
-		ts.Source = ""
-	})
-	if err != nil {
-		t.Fatalf("failed to set up state: %v", err)
+	state := &install.State{
+		Installed: map[string]install.ToolState{
+			"gh": {Source: "embedded", ActiveVersion: "2.0.0"},
+		},
 	}
 
-	// Should be a no-op for empty source
-	err = ensureSourceProvider("testtool", cfg)
+	cfg := &config.Config{HomeDir: t.TempDir()}
+
+	r, err := loadRecipeForTool(context.Background(), "gh", state, cfg)
 	if err != nil {
-		t.Errorf("expected no error for empty source, got: %v", err)
+		t.Fatalf("expected no error, got: %v", err)
 	}
-}
-
-func TestEnsureSourceProvider_CentralSource(t *testing.T) {
-	tmpDir := t.TempDir()
-	origHome := os.Getenv("TSUKU_HOME")
-	os.Setenv("TSUKU_HOME", tmpDir)
-	defer os.Setenv("TSUKU_HOME", origHome)
-
-	cfg, err := config.DefaultConfig()
-	if err != nil {
-		t.Fatalf("failed to get config: %v", err)
-	}
-	_ = os.MkdirAll(filepath.Dir(filepath.Join(cfg.HomeDir, "state.json")), 0755)
-
-	mgr := install.New(cfg)
-	err = mgr.GetState().UpdateTool("testtool", func(ts *install.ToolState) {
-		ts.ActiveVersion = "1.0.0"
-		ts.Source = "central"
-	})
-	if err != nil {
-		t.Fatalf("failed to set up state: %v", err)
-	}
-
-	// Should be a no-op for central source
-	err = ensureSourceProvider("testtool", cfg)
-	if err != nil {
-		t.Errorf("expected no error for central source, got: %v", err)
-	}
-}
-
-func TestEnsureSourceProvider_NotInstalled(t *testing.T) {
-	tmpDir := t.TempDir()
-	origHome := os.Getenv("TSUKU_HOME")
-	os.Setenv("TSUKU_HOME", tmpDir)
-	defer os.Setenv("TSUKU_HOME", origHome)
-
-	cfg, err := config.DefaultConfig()
-	if err != nil {
-		t.Fatalf("failed to get config: %v", err)
-	}
-	_ = os.MkdirAll(filepath.Dir(filepath.Join(cfg.HomeDir, "state.json")), 0755)
-
-	// Should be a no-op for a tool that isn't installed
-	err = ensureSourceProvider("nonexistent", cfg)
-	if err != nil {
-		t.Errorf("expected no error for missing tool, got: %v", err)
+	if r.Metadata.Name != "gh" {
+		t.Errorf("recipe name = %q, want %q", r.Metadata.Name, "gh")
 	}
 }
 
