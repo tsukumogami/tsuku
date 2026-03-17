@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-17T08:59:34Z",
+  "updated_at": "2026-03-17T10:56:46Z",
   "entries": [
     {
       "name": "node",
@@ -13386,11 +13386,11 @@
       "name": "exiv2",
       "source": "rubygems:exiv2",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 7,
-      "next_retry_at": "2026-03-17T08:35:49.194873754Z"
+      "failure_count": 8,
+      "next_retry_at": "2026-03-22T18:56:46.847288477Z"
     },
     {
       "name": "exoscale/tap/exoscale-cli",
@@ -24896,7 +24896,7 @@
       "name": "lcm",
       "source": "npm:lcm",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 7,
@@ -25116,7 +25116,7 @@
       "name": "less",
       "source": "rubygems:less",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 5,
@@ -25196,7 +25196,7 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 101,
