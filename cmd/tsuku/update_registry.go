@@ -63,6 +63,9 @@ Use --dry-run to see what would be refreshed without making network requests.`,
 		}
 
 		runRegistryRefreshAll(ctx, cachedReg)
+
+		// Refresh distributed sources
+		refreshDistributedSources(ctx)
 	},
 }
 
@@ -242,6 +245,50 @@ func refreshManifest(ctx context.Context, reg *registry.Registry) {
 	}
 
 	checkDeprecationWarning(manifest, reg.ManifestURL())
+}
+
+// refreshDistributedSources iterates all providers in the loader and calls
+// Refresh() on those implementing RefreshableProvider, skipping the central
+// registry (already refreshed above). Errors are reported per-source but
+// don't block refresh of other sources.
+func refreshDistributedSources(ctx context.Context) {
+	var refreshed int
+	var errors int
+
+	for _, p := range loader.Providers() {
+		// Skip the central registry -- it's already refreshed above
+		if p.Source() == recipe.SourceRegistry {
+			continue
+		}
+
+		rp, ok := p.(recipe.RefreshableProvider)
+		if !ok {
+			continue
+		}
+
+		source := string(p.Source())
+		printInfo(fmt.Sprintf("Refreshing %s...", source))
+
+		if err := rp.Refresh(ctx); err != nil {
+			fmt.Fprintf(os.Stderr, "  %s: error (%v)\n", source, err)
+			errors++
+			continue
+		}
+
+		fmt.Printf("  %s: refreshed\n", source)
+		refreshed++
+	}
+
+	if refreshed+errors == 0 {
+		return
+	}
+
+	fmt.Println()
+	if errors > 0 {
+		printInfo(fmt.Sprintf("Refreshed %d distributed source(s) (%d error(s)).", refreshed, errors))
+	} else {
+		printInfo(fmt.Sprintf("Refreshed %d distributed source(s).", refreshed))
+	}
 }
 
 // formatAgeDuration formats a duration for human-readable display.

@@ -422,6 +422,12 @@ func (l *Loader) ProviderBySource(source RecipeSource) RecipeProvider {
 	return nil
 }
 
+// Providers returns the list of registered providers. This is used by
+// commands like update-registry that need to iterate all providers.
+func (l *Loader) Providers() []RecipeProvider {
+	return l.providers
+}
+
 // ClearCache clears the in-memory recipe cache and satisfies index.
 // This forces recipes to be re-fetched from providers on next access,
 // and the satisfies index to be rebuilt on next fallback lookup.
