@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-18T16:22:08Z",
+  "updated_at": "2026-03-18T18:06:25Z",
   "entries": [
     {
       "name": "node",
@@ -636,11 +636,11 @@
       "name": "numpy",
       "source": "crates.io:numpy",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 8,
-      "next_retry_at": "2026-03-18T15:49:34.214108584Z"
+      "failure_count": 9,
+      "next_retry_at": "2026-03-25T18:06:25.291115332Z"
     },
     {
       "name": "p11-kit",
@@ -2886,7 +2886,7 @@
       "name": "ascii",
       "source": "crates.io:ascii",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 8,
@@ -4836,11 +4836,11 @@
       "name": "bettercap",
       "source": "rubygems:bettercap",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 8,
-      "next_retry_at": "2026-03-18T15:49:34.214108584Z"
+      "failure_count": 9,
+      "next_retry_at": "2026-03-25T18:06:25.291115332Z"
     },
     {
       "name": "bfg",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 116,
-      "next_retry_at": "1733-12-07T15:20:56.309116918Z"
+      "failure_count": 118,
+      "next_retry_at": "1733-12-07T18:19:08.436339524Z"
     },
     {
       "name": "libaacs",
@@ -50766,11 +50766,11 @@
       "name": "wartremover",
       "source": "npm:wartremover",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 6,
-      "next_retry_at": "2026-03-18T15:14:22.430016547Z"
+      "failure_count": 7,
+      "next_retry_at": "2026-03-21T10:06:25.291115332Z"
     },
     {
       "name": "wasm-bindgen",
