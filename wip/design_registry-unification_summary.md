@@ -23,6 +23,11 @@ Six research agents investigated: code paths, design gaps, duplicated logic, loc
 - Security model for index_url (hostname allowlisting, HTTPS-only?)
 - Cache unification specifics (unified RecipeCache interface parameters)
 
+## Approaches Investigated (Phase 1)
+- **Manifest-Driven Single Provider**: Replace all four providers with one RegistryProvider parameterized by manifest config and a BackingStore interface. Eliminates ~500 lines of duplication, all type assertions. Large scope (~15-20 files, 2-3 weeks).
+- **Layered Storage Abstraction**: Separate storage (byte fetching) from registry (recipe resolution) with cache as composable middleware. Similar deduplication wins, cleaner separation of concerns. Large scope (~15-20 files, 3-4 weeks). Design tension around conditional HTTP requests in the cache layer.
+- **Progressive Extraction**: Keep four provider types, extract shared helpers (satisfies, bucketing, cache interface). Low risk, incremental delivery. Small-medium scope (~8-10 files, 2-4 days). Doesn't eliminate GetFromSource switch or dual cache systems.
+
 ## Current Status
-**Phase:** 0 - Setup (Freeform)
+**Phase:** 1 - Approach Discovery
 **Last Updated:** 2026-03-17
