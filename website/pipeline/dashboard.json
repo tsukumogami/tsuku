@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-18T13:11:54Z",
+  "generated_at": "2026-03-18T13:12:44Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 59,
-      "pending": 3874,
+      "failed": 58,
+      "pending": 3875,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 59,
-        "pending": 3851,
+        "failed": 58,
+        "pending": 3852,
         "success": 1326
       }
     },
@@ -73,7 +73,8 @@
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
@@ -794,15 +795,6 @@
           "next_retry_at": "2026-03-20T12:43:48Z"
         },
         {
-          "id": "rubygems:hyperkit",
-          "name": "hyperkit",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-18T12:23:46Z"
-        },
-        {
           "id": "rubygems:imgproxy",
           "name": "imgproxy",
           "ecosystem": "rubygems",
@@ -875,13 +867,13 @@
           "next_retry_at": "2026-03-19T15:57:32Z"
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
+          "id": "rubygems:libnotify",
+          "name": "libnotify",
+          "ecosystem": "rubygems",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 114,
-          "next_retry_at": "1733-12-07T12:02:53Z"
+          "failure_count": 5,
+          "next_retry_at": "2026-03-19T05:12:03Z"
         },
         {
           "id": "npm:mailhog",
@@ -11241,6 +11233,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:hyperkit",
+          "name": "hyperkit",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-18T12:23:46Z"
+        },
+        {
           "id": "homebrew:hypre",
           "name": "hypre",
           "ecosystem": "homebrew",
@@ -13231,6 +13232,15 @@
           "failure_count": 1
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 114,
+          "next_retry_at": "1733-12-07T12:02:53Z"
+        },
+        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -13560,15 +13570,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "rubygems:libnotify",
-          "name": "libnotify",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-17T03:15:53Z"
         },
         {
           "id": "homebrew:libolm",
