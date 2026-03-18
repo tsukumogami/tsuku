@@ -1,21 +1,21 @@
 ---
 schema: plan/v1
-status: Done
+status: Draft
 execution_mode: single-pr
 upstream: docs/designs/current/DESIGN-distributed-recipes.md
 milestone: "Distributed Recipes"
-issue_count: 13
+issue_count: 18
 ---
 
 # PLAN: Distributed Recipes
 
 ## Status
 
-Done
+Draft
 
 ## Scope Summary
 
-Extract a RecipeProvider interface that all recipe sources implement, add source tracking to installed tool state, and build a distributed provider that fetches recipes from GitHub repositories via HTTP. This enables third-party repositories to host their own tsuku recipes without centralizing everything in the main registry.
+Extract a RecipeProvider interface that all recipe sources implement, add source tracking to installed tool state, and build a distributed provider that fetches recipes from GitHub repositories via HTTP (Issues 1-13, complete). Then unify all four provider implementations behind a single RegistryProvider type configured by a manifest and BackingStore interface, eliminating duplicated cache systems, type assertions, and per-source switch logic (Issues 14-18, Decision 8).
 
 ## Decomposition Strategy
 
@@ -352,6 +352,171 @@ Telemetry:
 
 **Dependencies:** Issue 11, Issue 12
 
+---
+
+### Issue 14: refactor(recipe): define BackingStore interface and port simple providers
+
+**Complexity:** critical
+
+**Goal:** Define the `BackingStore` interface and implement `MemoryStore` and `FSStore`. Create the `RegistryProvider` struct. Port `EmbeddedProvider` and `LocalProvider` to `RegistryProvider` instances using these stores.
+
+**Acceptance Criteria:**
+
+BackingStore interface:
+- [ ] `BackingStore` interface defined with `Get(ctx, path string) ([]byte, error)` and `List(ctx) ([]string, error)`
+- [ ] Interface lives in `internal/recipe/` (alongside existing provider code)
+
+MemoryStore:
+- [ ] `MemoryStore` implements `BackingStore` backed by a `map[string][]byte`
+- [ ] Constructor accepts the existing `go:embed` data from `internal/recipe/embedded.go`
+- [ ] `Get` returns bytes for the given path, `ErrNotFound` if absent
+- [ ] `List` returns all available recipe names (without `.toml` extension)
+
+FSStore:
+- [ ] `FSStore` implements `BackingStore` backed by a filesystem directory path
+- [ ] `Get` reads `{dir}/{path}` from disk
+- [ ] `List` scans the directory for `.toml` files and returns recipe names
+- [ ] Handles missing directory gracefully (returns empty list, not error)
+
+RegistryProvider:
+- [ ] `RegistryProvider` struct with `name`, `source RecipeSource`, `manifest Manifest`, and `store BackingStore` fields
+- [ ] Implements `RecipeProvider` interface (`Get`, `List`, `Source`)
+- [ ] `Get(ctx, name)` computes path from manifest layout: flat -> `name.toml`, grouped -> `firstLetter(name)/name.toml`
+- [ ] Implements `SatisfiesProvider`: reads from manifest index if available, falls back to parsing all recipes
+- [ ] Single `SatisfiesEntries` implementation replaces the three duplicated versions
+
+Provider porting:
+- [ ] `EmbeddedProvider` replaced by `RegistryProvider` with `MemoryStore` and baked-in manifest (layout: flat)
+- [ ] `LocalProvider` replaced by `RegistryProvider` with `FSStore` and default manifest (layout: flat)
+- [ ] All call sites constructing `EmbeddedProvider` or `LocalProvider` updated
+- [ ] `provider_embedded.go` and `provider_local.go` can be deleted or reduced to factory functions
+- [ ] `go test ./...` passes with no behavior changes
+- [ ] `go vet ./...` and `golangci-lint run` pass
+
+**Dependencies:** None (builds on top of completed Issue 1 infrastructure)
+
+---
+
+### Issue 15: refactor(cache): unify disk cache and implement HTTPStore
+
+**Complexity:** critical
+
+**Goal:** Merge the two cache implementations (`internal/registry/cache*.go` and `internal/distributed/cache.go`) into a single parameterized cache, and build `HTTPStore` using it.
+
+**Acceptance Criteria:**
+
+Unified cache:
+- [ ] Single disk cache implementation replacing both `registry.CacheManager` and `distributed.CacheManager`
+- [ ] Parameterized by: cache directory path, TTL, max size, eviction strategy
+- [ ] Supports both LRU eviction (central registry pattern) and oldest-bucket eviction (distributed pattern) via configuration
+- [ ] Metadata sidecar format covers both existing schemas: TTL, content hash, ETag, Last-Modified
+- [ ] Stale-if-error fallback with configurable max stale duration
+- [ ] High-water/low-water eviction thresholds (from existing central cache)
+- [ ] `CacheIntrospectable` optional interface for `update-registry` to inspect cache stats (replaces type-assertion to `*CentralRegistryProvider`)
+
+HTTPStore:
+- [ ] `HTTPStore` implements `BackingStore` with built-in disk cache
+- [ ] Constructor accepts: base URL pattern, cache directory, TTL, size limit, HTTP client(s)
+- [ ] `Get` checks cache freshness, fetches via HTTP on miss/expiry, updates cache
+- [ ] `List` returns recipe names from cached directory listing
+- [ ] Handles conditional requests (ETag/If-Modified-Since) internally
+- [ ] Rate limit errors produce clear messages with reset time
+
+Tests:
+- [ ] Unit tests for unified cache: TTL expiry, eviction, stale-if-error, metadata round-trip
+- [ ] Unit tests for HTTPStore: cache hit, cache miss, conditional request, rate limit
+- [ ] `go test ./...` passes
+- [ ] Existing central registry cache tests adapted to unified cache
+
+**Dependencies:** Issue 14
+
+---
+
+### Issue 16: refactor(registry): port central registry to RegistryProvider
+
+**Complexity:** testable
+
+**Goal:** Replace `CentralRegistryProvider` with a `RegistryProvider` instance using `HTTPStore` and a baked-in manifest (layout: grouped, index_url: tsuku.dev/recipes.json).
+
+**Acceptance Criteria:**
+
+- [ ] Central registry becomes a `RegistryProvider` with baked-in manifest: `{layout: "grouped", index_url: "https://tsuku.dev/recipes.json"}`
+- [ ] `HTTPStore` configured with: 24h TTL, 50MB cache limit, LRU eviction, cache dir `$TSUKU_HOME/registry/`
+- [ ] `SatisfiesEntries` reads from the index URL (existing manifest-based path) through the generic `RegistryProvider` implementation
+- [ ] `RefreshableProvider` implemented on `RegistryProvider` (delegates to `HTTPStore` cache refresh)
+- [ ] `update-registry` command uses `CacheIntrospectable` interface assertion instead of `*CentralRegistryProvider` cast
+- [ ] `provider_registry.go` can be deleted or reduced to a factory function
+- [ ] Cache directory layout unchanged (`$TSUKU_HOME/registry/{letter}/{name}.toml`) for backward compatibility
+- [ ] `go test ./...` passes with no behavior changes
+- [ ] `go vet ./...` and `golangci-lint run` pass
+
+**Dependencies:** Issue 15
+
+---
+
+### Issue 17: refactor(distributed): port distributed provider and add manifest discovery
+
+**Complexity:** testable
+
+**Goal:** Replace `DistributedProvider` with a `RegistryProvider` instance using `HTTPStore`, and add manifest fetching with directory probing.
+
+**Acceptance Criteria:**
+
+Manifest discovery:
+- [ ] When registering a new distributed source, tsuku probes for `.tsuku-recipes/manifest.json` via Contents API
+- [ ] Falls back to `recipes/manifest.json` if `.tsuku-recipes/` not found
+- [ ] Falls back to no manifest (flat layout, no index) if neither exists
+- [ ] Manifest schema: `{"layout": "flat|grouped", "index_url": "..."}`
+- [ ] Both fields optional, defaults to flat layout
+
+Provider porting:
+- [ ] Distributed registries become `RegistryProvider` instances with discovered manifest and `HTTPStore`
+- [ ] `HTTPStore` configured with: 1h TTL, 20MB cache limit, cache dir `$TSUKU_HOME/cache/distributed/{owner}/{repo}/`
+- [ ] GitHub Contents API client logic moves into or wraps `HTTPStore`
+- [ ] `internal/distributed/provider.go` can be deleted or reduced to a factory function
+- [ ] Dynamic provider registration (`addDistributedProvider`) creates `RegistryProvider` instances
+
+Tests:
+- [ ] Unit tests for manifest discovery (found, not found, fallback)
+- [ ] Unit tests for directory probing order (`.tsuku-recipes/` first, then `recipes/`)
+- [ ] Existing distributed provider tests adapted
+- [ ] `go test ./...` passes
+
+**Dependencies:** Issue 15
+
+---
+
+### Issue 18: refactor(loader): remove type assertions and collapse GetFromSource
+
+**Complexity:** testable
+
+**Goal:** Clean up the Loader now that all providers are `RegistryProvider` instances. Remove concrete type assertions, collapse `GetFromSource`, and simplify `install_distributed.go`.
+
+**Acceptance Criteria:**
+
+Loader cleanup:
+- [ ] All 5 type assertions to concrete provider types removed from `loader.go`
+- [ ] `warnIfShadows` uses `BackingStore` interface methods instead of casting to `*EmbeddedProvider` or `*CentralRegistryProvider`
+- [ ] `RecipesDir()` and `SetRecipesDir()` use interface methods or `RegistryProvider` directly instead of `*LocalProvider` cast
+- [ ] `GetFromSource()` collapsed from ~60 lines to ~5: find provider by source, call Get
+- [ ] No per-source-type switch logic remains
+
+install_distributed.go simplification:
+- [ ] `addDistributedProvider()` creates a `RegistryProvider` (not `DistributedProvider`)
+- [ ] Provider-specific logic moved behind the `RegistryProvider` / `BackingStore` interface
+- [ ] Net reduction in `install_distributed.go` line count
+
+Source tracking:
+- [ ] `SourceCentral` / `SourceRegistry` / `SourceEmbedded` distinction simplified where possible
+- [ ] Source matching in `GetFromSource` is uniform across all provider types
+
+Tests:
+- [ ] `go test ./...` passes with no behavior changes
+- [ ] `go vet ./...` and `golangci-lint run` pass
+- [ ] No new type assertions introduced
+
+**Dependencies:** Issue 14, Issue 16, Issue 17
+
 ## Dependency Graph
 
 ```mermaid
@@ -387,6 +552,23 @@ graph TD
         I13["13: E2E validation"]
     end
 
+    subgraph Phase7["Phase 7: BackingStore + Simple Stores"]
+        I14["14: BackingStore + MemoryStore + FSStore"]
+    end
+
+    subgraph Phase8["Phase 8: Unified Cache + HTTP"]
+        I15["15: Unified cache + HTTPStore"]
+    end
+
+    subgraph Phase9["Phase 9: Port Providers"]
+        I16["16: Port central registry"]
+        I17["17: Port distributed + manifest"]
+    end
+
+    subgraph Phase10["Phase 10: Loader Cleanup"]
+        I18["18: Remove type assertions"]
+    end
+
     I1 --> I2
     I1 --> I3
     I1 --> I5
@@ -407,6 +589,12 @@ graph TD
     I11 --> I12
     I11 --> I13
     I12 --> I13
+    I14 --> I15
+    I15 --> I16
+    I15 --> I17
+    I14 --> I18
+    I16 --> I18
+    I17 --> I18
 
     classDef done fill:#c8e6c9
     classDef ready fill:#bbdefb
@@ -419,11 +607,15 @@ graph TD
     classDef tracksPlan fill:#FFE0B2,stroke:#F57C00,color:#000
 
     class I1,I2,I3,I4,I5,I6,I7,I8,I9,I10,I11,I12,I13 done
+    class I14 ready
+    class I15,I16,I17,I18 blocked
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked
 
 ## Implementation Sequence
+
+### Issues 1-13 (Complete)
 
 **Critical path:** Issue 1 -> Issue 5 -> Issue 6 -> Issue 7 -> Issue 12 -> Issue 13 (6 issues)
 
@@ -438,7 +630,16 @@ graph TD
 7. **Issue 12** -- koto recipe migration (separate PR, after install flow works)
 8. **Issue 13** -- end-to-end validation (after tagged release)
 
+### Issues 14-18 (Registry Unification)
+
+**Critical path:** Issue 14 -> Issue 15 -> Issue 16 or 17 -> Issue 18 (4 issues)
+
+**Recommended order:**
+
+1. **Issue 14** -- BackingStore interface + MemoryStore + FSStore + port embedded/local (entry point)
+2. **Issue 15** -- Unified disk cache + HTTPStore (depends on 14)
+3. **Issues 16, 17** in parallel -- port central registry + port distributed with manifest discovery (both depend on 15)
+4. **Issue 18** -- Loader cleanup (depends on 14, 16, 17)
+
 **Parallelization opportunities:**
-- After Issue 1: Issues 2 and 3 can proceed concurrently
-- After Issue 3: Issues 4 and 5 can proceed concurrently
-- After Issue 6: Issues 7, 8, 9, 10, and 11 can all proceed concurrently (5 parallel issues)
+- After Issue 15: Issues 16 and 17 can proceed concurrently (porting central and distributed are independent)
