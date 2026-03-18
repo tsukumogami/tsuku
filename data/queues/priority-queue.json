@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-18T18:06:25Z",
+  "updated_at": "2026-03-18T19:20:15Z",
   "entries": [
     {
       "name": "node",
@@ -2886,11 +2886,11 @@
       "name": "ascii",
       "source": "crates.io:ascii",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 8,
-      "next_retry_at": "2026-03-18T17:42:40.265953936Z"
+      "failure_count": 9,
+      "next_retry_at": "2026-03-25T19:20:15.326933859Z"
     },
     {
       "name": "asciidoc",
@@ -20056,7 +20056,7 @@
       "name": "hercules",
       "source": "rubygems:hercules",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 7,
@@ -21756,11 +21756,11 @@
       "name": "ipfs",
       "source": "rubygems:ipfs",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 6,
-      "next_retry_at": "2026-03-18T15:14:22.430016547Z"
+      "failure_count": 7,
+      "next_retry_at": "2026-03-21T11:20:15.326933859Z"
     },
     {
       "name": "ipinfo-cli",
@@ -25196,7 +25196,7 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 118,
