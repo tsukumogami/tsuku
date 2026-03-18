@@ -356,7 +356,7 @@ func (l *Loader) warnIfShadows(ctx context.Context, name string) {
 			continue
 		}
 		if p.Source() == SourceEmbedded {
-			if ep, ok := p.(*EmbeddedProvider); ok && ep.Has(name) {
+			if rp, ok := p.(*RegistryProvider); ok && rp.Has(ctx, name) {
 				fmt.Printf("Warning: local recipe '%s' shadows embedded recipe\n", name)
 				return
 			}
@@ -566,8 +566,13 @@ func (l *Loader) ListLocal() ([]RecipeInfo, error) {
 // RecipesDir returns the local recipes directory, or "" if no local provider.
 func (l *Loader) RecipesDir() string {
 	for _, p := range l.providers {
-		if lp, ok := p.(*LocalProvider); ok {
-			return lp.Dir()
+		if p.Source() != SourceLocal {
+			continue
+		}
+		if rp, ok := p.(*RegistryProvider); ok {
+			if fs, ok := rp.Store().(*FSStore); ok {
+				return fs.Dir()
+			}
 		}
 	}
 	return ""
@@ -576,7 +581,7 @@ func (l *Loader) RecipesDir() string {
 // SetRecipesDir sets the local recipes directory by finding or adding a LocalProvider.
 func (l *Loader) SetRecipesDir(dir string) {
 	for i, p := range l.providers {
-		if _, ok := p.(*LocalProvider); ok {
+		if p.Source() == SourceLocal {
 			l.providers[i] = NewLocalProvider(dir)
 			return
 		}
