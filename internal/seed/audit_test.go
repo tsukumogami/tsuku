@@ -258,6 +258,7 @@ func TestReadAuditEntry_ParsesValidFile(t *testing.T) {
 	}
 	if entry == nil {
 		t.Fatal("expected non-nil entry")
+		return
 	}
 	if entry.Tool != "bat" {
 		t.Errorf("Tool = %q, want bat", entry.Tool)

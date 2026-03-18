@@ -236,6 +236,7 @@ func TestEnsureDltest_WrongVersionInstalled(t *testing.T) {
 	}
 	if toolState == nil {
 		t.Fatal("expected non-nil toolState for installed tool")
+		return
 	}
 
 	// Verify the version detection logic works

@@ -133,6 +133,7 @@ func TestGetCachedManifest_ValidCachedFile(t *testing.T) {
 	}
 	if manifest == nil {
 		t.Fatal("expected non-nil manifest")
+		return
 	}
 	if len(manifest.Recipes) != 1 {
 		t.Fatalf("expected 1 recipe, got %d", len(manifest.Recipes))
@@ -217,6 +218,7 @@ func TestFetchManifest_RemoteSuccess(t *testing.T) {
 	}
 	if cached == nil {
 		t.Fatal("expected manifest to be cached after FetchManifest")
+		return
 	}
 	if cached.SchemaVersion != 1 {
 		t.Errorf("cached manifest schema_version = %d, want 1", cached.SchemaVersion)

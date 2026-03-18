@@ -23,6 +23,7 @@ func TestPacmanInstallAction_ImplicitConstraint(t *testing.T) {
 
 	if constraint == nil {
 		t.Fatal("ImplicitConstraint() returned nil")
+		return
 	}
 	if constraint.OS != "linux" {
 		t.Errorf("OS = %q, want %q", constraint.OS, "linux")
@@ -169,6 +170,7 @@ func TestApkInstallAction_ImplicitConstraint(t *testing.T) {
 
 	if constraint == nil {
 		t.Fatal("ImplicitConstraint() returned nil")
+		return
 	}
 	if constraint.OS != "linux" {
 		t.Errorf("OS = %q, want %q", constraint.OS, "linux")
@@ -318,6 +320,7 @@ func TestZypperInstallAction_ImplicitConstraint(t *testing.T) {
 
 	if constraint == nil {
 		t.Fatal("ImplicitConstraint() returned nil")
+		return
 	}
 	if constraint.OS != "linux" {
 		t.Errorf("OS = %q, want %q", constraint.OS, "linux")
@@ -485,6 +488,7 @@ func TestAllInstallActions_ImplementSystemAction(t *testing.T) {
 			constraint := tt.action.ImplicitConstraint()
 			if constraint == nil {
 				t.Fatal("ImplicitConstraint() returned nil")
+				return
 			}
 			if constraint.OS != tt.wantOS {
 				t.Errorf("Constraint.OS = %q, want %q", constraint.OS, tt.wantOS)

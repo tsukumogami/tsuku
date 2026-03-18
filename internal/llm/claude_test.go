@@ -188,6 +188,7 @@ func TestClaudeProvider_Complete_Integration(t *testing.T) {
 
 	if resp == nil {
 		t.Fatal("expected non-nil response")
+		return
 	}
 
 	if resp.Content == "" {

@@ -29,6 +29,7 @@ func TestDiskCache_PutGet(t *testing.T) {
 	}
 	if meta == nil {
 		t.Fatal("expected non-nil metadata")
+		return
 	}
 	if meta.Size != int64(len(content)) {
 		t.Errorf("expected size %d, got %d", len(content), meta.Size)
@@ -168,6 +169,7 @@ func TestDiskCache_MetadataRoundTrip(t *testing.T) {
 	}
 	if meta == nil {
 		t.Fatal("expected non-nil meta")
+		return
 	}
 
 	if meta.ETag != original.ETag {

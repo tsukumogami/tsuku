@@ -2541,6 +2541,7 @@ func TestGeneratePlan_GPUDependencyChain_NvidiaCUDA(t *testing.T) {
 			depNames[i] = d.Tool
 		}
 		t.Fatalf("expected cuda-runtime dependency, found: %v", depNames)
+		return
 	}
 
 	// Verify cuda-runtime has nvidia-driver as a nested dependency
@@ -2697,6 +2698,7 @@ func TestGeneratePlan_GPUDependencyChain_AMDVulkan(t *testing.T) {
 			depNames[i] = d.Tool
 		}
 		t.Fatalf("expected vulkan-loader dependency, found: %v", depNames)
+		return
 	}
 
 	// Verify vulkan-loader has mesa-vulkan-drivers as a nested dependency

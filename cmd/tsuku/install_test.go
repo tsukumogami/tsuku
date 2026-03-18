@@ -481,6 +481,7 @@ func TestInstallJSONFlag(t *testing.T) {
 	flag := installCmd.Flags().Lookup("json")
 	if flag == nil {
 		t.Fatal("--json flag not registered")
+		return
 	}
 	if flag.DefValue != "false" {
 		t.Errorf("--json default = %q, want %q", flag.DefValue, "false")

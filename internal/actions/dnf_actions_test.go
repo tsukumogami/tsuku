@@ -23,6 +23,7 @@ func TestDnfInstallAction_ImplicitConstraint(t *testing.T) {
 
 	if constraint == nil {
 		t.Fatal("ImplicitConstraint() returned nil")
+		return
 	}
 	if constraint.OS != "linux" {
 		t.Errorf("OS = %q, want %q", constraint.OS, "linux")
@@ -183,6 +184,7 @@ func TestDnfRepoAction_ImplicitConstraint(t *testing.T) {
 
 	if constraint == nil {
 		t.Fatal("ImplicitConstraint() returned nil")
+		return
 	}
 	if constraint.OS != "linux" {
 		t.Errorf("OS = %q, want %q", constraint.OS, "linux")

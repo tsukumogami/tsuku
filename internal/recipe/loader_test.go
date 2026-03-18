@@ -57,6 +57,7 @@ func TestNewLoader(t *testing.T) {
 
 	if loader == nil {
 		t.Fatal("NewLoader() returned nil")
+		return
 	}
 	if len(loader.providers) == 0 {
 		t.Error("loader.providers should not be empty")
@@ -995,6 +996,7 @@ command = "echo ok"
 	analysis := recipe.Steps[0].Analysis()
 	if analysis == nil {
 		t.Fatal("Expected step analysis to be non-nil")
+		return
 	}
 
 	// Should have debian constraint from apt_install
@@ -1101,6 +1103,7 @@ command = "echo ok"
 	analysis := recipe.Steps[0].Analysis()
 	if analysis == nil {
 		t.Fatal("Expected step analysis to be non-nil")
+		return
 	}
 
 	if !analysis.FamilyVarying {

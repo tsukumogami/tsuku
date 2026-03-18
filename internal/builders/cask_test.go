@@ -563,6 +563,7 @@ func TestCaskBuilder_Probe_ReturnsQualityMetadata(t *testing.T) {
 	}
 	if result == nil {
 		t.Fatal("Probe() returned nil result")
+		return
 	}
 
 	if result.Source != "iterm2" {
@@ -635,6 +636,7 @@ func TestCaskBuilder_Probe_DeprecatedCask(t *testing.T) {
 	}
 	if result == nil {
 		t.Fatal("Probe() returned nil - deprecated casks should still be returned")
+		return
 	}
 
 	if result.Source != "deprecated-app" {

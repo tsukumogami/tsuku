@@ -89,6 +89,7 @@ func TestInstallPlanFlag(t *testing.T) {
 	flag := installCmd.Flags().Lookup("plan")
 	if flag == nil {
 		t.Fatal("--plan flag not registered")
+		return
 	}
 	if flag.Usage != "Install from a pre-computed plan file (use '-' for stdin)" {
 		t.Errorf("--plan usage = %q, want %q", flag.Usage, "Install from a pre-computed plan file (use '-' for stdin)")
