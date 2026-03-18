@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-18T19:20:15Z",
+  "updated_at": "2026-03-18T20:40:56Z",
   "entries": [
     {
       "name": "node",
@@ -20056,11 +20056,11 @@
       "name": "hercules",
       "source": "rubygems:hercules",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 7,
-      "next_retry_at": "2026-03-18T18:14:42.926129091Z"
+      "failure_count": 8,
+      "next_retry_at": "2026-03-24T04:40:56.508052367Z"
     },
     {
       "name": "heremaps/olp-cli/olp",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 118,
-      "next_retry_at": "1733-12-07T18:19:08.436339524Z"
+      "failure_count": 120,
+      "next_retry_at": "1733-12-07T20:53:39.653276559Z"
     },
     {
       "name": "libaacs",
