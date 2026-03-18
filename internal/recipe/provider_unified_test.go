@@ -273,7 +273,7 @@ func TestNewLocalProvider_EmptyDir(t *testing.T) {
 // Test that RegistryProvider integrates with the Loader correctly.
 func TestRegistryProvider_LoaderIntegration(t *testing.T) {
 	dir := t.TempDir()
-	os.WriteFile(filepath.Join(dir, "custom-tool.toml"), []byte(`[metadata]
+	_ = os.WriteFile(filepath.Join(dir, "custom-tool.toml"), []byte(`[metadata]
 name = "custom-tool"
 
 [[steps]]

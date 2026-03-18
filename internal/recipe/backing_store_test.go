@@ -97,10 +97,10 @@ func TestFSStore_GetNotFound(t *testing.T) {
 
 func TestFSStore_List(t *testing.T) {
 	dir := t.TempDir()
-	os.WriteFile(filepath.Join(dir, "a.toml"), []byte("a"), 0644)
-	os.WriteFile(filepath.Join(dir, "b.toml"), []byte("b"), 0644)
-	os.WriteFile(filepath.Join(dir, "c.txt"), []byte("c"), 0644) // not .toml
-	os.Mkdir(filepath.Join(dir, "subdir"), 0755)                 // directory
+	_ = os.WriteFile(filepath.Join(dir, "a.toml"), []byte("a"), 0644)
+	_ = os.WriteFile(filepath.Join(dir, "b.toml"), []byte("b"), 0644)
+	_ = os.WriteFile(filepath.Join(dir, "c.txt"), []byte("c"), 0644) // not .toml
+	_ = os.Mkdir(filepath.Join(dir, "subdir"), 0755)                 // directory
 
 	store := NewFSStore(dir)
 	paths, err := store.List(context.Background())
