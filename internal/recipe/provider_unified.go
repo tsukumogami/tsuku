@@ -240,6 +240,15 @@ type RegistryAccessor interface {
 	Registry() *registry.Registry
 }
 
+// Dir returns the filesystem directory when the backing store is an FSStore.
+// Returns "" for non-filesystem stores (memory, HTTP).
+func (p *RegistryProvider) Dir() string {
+	if fs, ok := p.store.(*FSStore); ok {
+		return fs.Dir()
+	}
+	return ""
+}
+
 // recipeNameFromPath extracts a recipe name from a store path.
 // Handles both flat ("go.toml") and grouped ("g/go.toml") layouts.
 func recipeNameFromPath(path string) string {

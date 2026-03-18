@@ -1494,8 +1494,8 @@ func TestLoader_GetFromSource_UnknownSource(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error for unknown source")
 	}
-	if !strings.Contains(err.Error(), "unknown recipe source") {
-		t.Errorf("expected 'unknown recipe source' in error, got: %v", err)
+	if !strings.Contains(err.Error(), "no provider registered") {
+		t.Errorf("expected 'no provider registered' in error, got: %v", err)
 	}
 }
 
