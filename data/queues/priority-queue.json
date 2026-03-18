@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-18T06:07:35Z",
+  "updated_at": "2026-03-18T07:57:32Z",
   "entries": [
     {
       "name": "node",
@@ -2866,7 +2866,7 @@
       "name": "arturo",
       "source": "rubygems:arturo",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 8,
@@ -3966,7 +3966,7 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 8,
@@ -25116,11 +25116,11 @@
       "name": "less",
       "source": "rubygems:less",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 5,
-      "next_retry_at": "2026-03-17T10:05:12.090269026Z"
+      "failure_count": 6,
+      "next_retry_at": "2026-03-19T15:57:32.051190669Z"
     },
     {
       "name": "lesspipe",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 110,
-      "next_retry_at": "1733-12-07T04:47:45.791831681Z"
+      "failure_count": 112,
+      "next_retry_at": "1733-12-07T08:10:15.196414861Z"
     },
     {
       "name": "libaacs",
@@ -30826,11 +30826,11 @@
       "name": "mongoose",
       "source": "npm:mongoose",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 7,
-      "next_retry_at": "2026-03-18T04:53:09.99295001Z"
+      "failure_count": 8,
+      "next_retry_at": "2026-03-23T15:57:32.051190669Z"
     },
     {
       "name": "mongosh",
