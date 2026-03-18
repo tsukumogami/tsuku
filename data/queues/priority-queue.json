@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-18T13:12:03Z",
+  "updated_at": "2026-03-18T15:08:13Z",
   "entries": [
     {
       "name": "node",
@@ -20816,11 +20816,11 @@
       "name": "hyperkit",
       "source": "rubygems:hyperkit",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 6,
-      "next_retry_at": "2026-03-18T12:23:46.247165968Z"
+      "failure_count": 7,
+      "next_retry_at": "2026-03-21T07:08:13.163892726Z"
     },
     {
       "name": "hypre",
@@ -21326,7 +21326,7 @@
       "name": "imgproxy",
       "source": "rubygems:imgproxy",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 6,
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 114,
-      "next_retry_at": "1733-12-07T12:02:53.983593561Z"
+      "failure_count": 116,
+      "next_retry_at": "1733-12-07T15:20:56.309116918Z"
     },
     {
       "name": "libaacs",
