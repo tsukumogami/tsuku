@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-18T22:36:17Z",
+  "generated_at": "2026-03-18T22:37:28Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 60,
-      "pending": 3873,
+      "failed": 58,
+      "pending": 3875,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 60,
-        "pending": 3850,
+        "failed": 58,
+        "pending": 3852,
         "success": 1326
       }
     },
@@ -68,12 +68,14 @@
         "total": 1
       },
       "npm": {
-        "failed": 21,
+        "failed": 20,
+        "pending": 1,
         "success": 54,
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
@@ -551,15 +553,6 @@
           "next_retry_at": "2026-03-19T12:16:00Z"
         },
         {
-          "id": "npm:chainsaw",
-          "name": "chainsaw",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 8,
-          "next_retry_at": "2026-03-18T21:00:32Z"
-        },
-        {
           "id": "rubygems:chisel",
           "name": "chisel",
           "ecosystem": "rubygems",
@@ -812,15 +805,6 @@
           "next_retry_at": "2026-03-21T08:22:08Z"
         },
         {
-          "id": "rubygems:influxdb",
-          "name": "influxdb",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-18T21:13:06Z"
-        },
-        {
           "id": "rubygems:ipfs",
           "name": "ipfs",
           "ecosystem": "rubygems",
@@ -875,15 +859,6 @@
           "next_retry_at": "2026-03-19T15:57:32Z"
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 120,
-          "next_retry_at": "1733-12-07T20:53:39Z"
-        },
-        {
           "id": "rubygems:libnotify",
           "name": "libnotify",
           "ecosystem": "rubygems",
@@ -891,6 +866,15 @@
           "category": "install_failed",
           "failure_count": 5,
           "next_retry_at": "2026-03-19T05:12:03Z"
+        },
+        {
+          "id": "rubygems:lsof",
+          "name": "lsof",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-19T14:36:47Z"
         },
         {
           "id": "npm:mailhog",
@@ -4346,6 +4330,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:chainsaw",
+          "name": "chainsaw",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 8,
+          "next_retry_at": "2026-03-18T21:00:32Z"
         },
         {
           "id": "homebrew:changie",
@@ -11546,6 +11539,15 @@
           "failure_count": 1
         },
         {
+          "id": "rubygems:influxdb",
+          "name": "influxdb",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-18T21:13:06Z"
+        },
+        {
           "id": "homebrew:influxdb-cli",
           "name": "influxdb-cli",
           "ecosystem": "homebrew",
@@ -13240,6 +13242,15 @@
           "failure_count": 1
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 120,
+          "next_retry_at": "1733-12-07T20:53:39Z"
+        },
+        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -14586,15 +14597,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "rubygems:lsof",
-          "name": "lsof",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-17T06:37:20Z"
         },
         {
           "id": "homebrew:lspmux",
