@@ -1,6 +1,6 @@
 ---
 schema: plan/v1
-status: Draft
+status: Done
 execution_mode: single-pr
 upstream: docs/designs/current/DESIGN-distributed-recipes.md
 milestone: "Distributed Recipes"
@@ -11,7 +11,7 @@ issue_count: 18
 
 ## Status
 
-Draft
+Done
 
 ## Scope Summary
 
@@ -363,35 +363,35 @@ Telemetry:
 **Acceptance Criteria:**
 
 BackingStore interface:
-- [ ] `BackingStore` interface defined with `Get(ctx, path string) ([]byte, error)` and `List(ctx) ([]string, error)`
-- [ ] Interface lives in `internal/recipe/` (alongside existing provider code)
+- [x] `BackingStore` interface defined with `Get(ctx, path string) ([]byte, error)` and `List(ctx) ([]string, error)`
+- [x]Interface lives in `internal/recipe/` (alongside existing provider code)
 
 MemoryStore:
-- [ ] `MemoryStore` implements `BackingStore` backed by a `map[string][]byte`
-- [ ] Constructor accepts the existing `go:embed` data from `internal/recipe/embedded.go`
-- [ ] `Get` returns bytes for the given path, `ErrNotFound` if absent
-- [ ] `List` returns all available recipe names (without `.toml` extension)
+- [x]`MemoryStore` implements `BackingStore` backed by a `map[string][]byte`
+- [x]Constructor accepts the existing `go:embed` data from `internal/recipe/embedded.go`
+- [x]`Get` returns bytes for the given path, `ErrNotFound` if absent
+- [x]`List` returns all available recipe names (without `.toml` extension)
 
 FSStore:
-- [ ] `FSStore` implements `BackingStore` backed by a filesystem directory path
-- [ ] `Get` reads `{dir}/{path}` from disk
-- [ ] `List` scans the directory for `.toml` files and returns recipe names
-- [ ] Handles missing directory gracefully (returns empty list, not error)
+- [x]`FSStore` implements `BackingStore` backed by a filesystem directory path
+- [x]`Get` reads `{dir}/{path}` from disk
+- [x]`List` scans the directory for `.toml` files and returns recipe names
+- [x]Handles missing directory gracefully (returns empty list, not error)
 
 RegistryProvider:
-- [ ] `RegistryProvider` struct with `name`, `source RecipeSource`, `manifest Manifest`, and `store BackingStore` fields
-- [ ] Implements `RecipeProvider` interface (`Get`, `List`, `Source`)
-- [ ] `Get(ctx, name)` computes path from manifest layout: flat -> `name.toml`, grouped -> `firstLetter(name)/name.toml`
-- [ ] Implements `SatisfiesProvider`: reads from manifest index if available, falls back to parsing all recipes
-- [ ] Single `SatisfiesEntries` implementation replaces the three duplicated versions
+- [x]`RegistryProvider` struct with `name`, `source RecipeSource`, `manifest Manifest`, and `store BackingStore` fields
+- [x]Implements `RecipeProvider` interface (`Get`, `List`, `Source`)
+- [x]`Get(ctx, name)` computes path from manifest layout: flat -> `name.toml`, grouped -> `firstLetter(name)/name.toml`
+- [x]Implements `SatisfiesProvider`: reads from manifest index if available, falls back to parsing all recipes
+- [x]Single `SatisfiesEntries` implementation replaces the three duplicated versions
 
 Provider porting:
-- [ ] `EmbeddedProvider` replaced by `RegistryProvider` with `MemoryStore` and baked-in manifest (layout: flat)
-- [ ] `LocalProvider` replaced by `RegistryProvider` with `FSStore` and default manifest (layout: flat)
-- [ ] All call sites constructing `EmbeddedProvider` or `LocalProvider` updated
-- [ ] `provider_embedded.go` and `provider_local.go` can be deleted or reduced to factory functions
-- [ ] `go test ./...` passes with no behavior changes
-- [ ] `go vet ./...` and `golangci-lint run` pass
+- [x]`EmbeddedProvider` replaced by `RegistryProvider` with `MemoryStore` and baked-in manifest (layout: flat)
+- [x]`LocalProvider` replaced by `RegistryProvider` with `FSStore` and default manifest (layout: flat)
+- [x]All call sites constructing `EmbeddedProvider` or `LocalProvider` updated
+- [x]`provider_embedded.go` and `provider_local.go` can be deleted or reduced to factory functions
+- [x]`go test ./...` passes with no behavior changes
+- [x]`go vet ./...` and `golangci-lint run` pass
 
 **Dependencies:** None (builds on top of completed Issue 1 infrastructure)
 
@@ -406,27 +406,27 @@ Provider porting:
 **Acceptance Criteria:**
 
 Unified cache:
-- [ ] Single disk cache implementation replacing both `registry.CacheManager` and `distributed.CacheManager`
-- [ ] Parameterized by: cache directory path, TTL, max size, eviction strategy
-- [ ] Supports both LRU eviction (central registry pattern) and oldest-bucket eviction (distributed pattern) via configuration
-- [ ] Metadata sidecar format covers both existing schemas: TTL, content hash, ETag, Last-Modified
-- [ ] Stale-if-error fallback with configurable max stale duration
-- [ ] High-water/low-water eviction thresholds (from existing central cache)
-- [ ] `CacheIntrospectable` optional interface for `update-registry` to inspect cache stats (replaces type-assertion to `*CentralRegistryProvider`)
+- [x]Single disk cache implementation replacing both `registry.CacheManager` and `distributed.CacheManager`
+- [x]Parameterized by: cache directory path, TTL, max size, eviction strategy
+- [x]Supports both LRU eviction (central registry pattern) and oldest-bucket eviction (distributed pattern) via configuration
+- [x]Metadata sidecar format covers both existing schemas: TTL, content hash, ETag, Last-Modified
+- [x]Stale-if-error fallback with configurable max stale duration
+- [x]High-water/low-water eviction thresholds (from existing central cache)
+- [x]`CacheIntrospectable` optional interface for `update-registry` to inspect cache stats (replaces type-assertion to `*CentralRegistryProvider`)
 
 HTTPStore:
-- [ ] `HTTPStore` implements `BackingStore` with built-in disk cache
-- [ ] Constructor accepts: base URL pattern, cache directory, TTL, size limit, HTTP client(s)
-- [ ] `Get` checks cache freshness, fetches via HTTP on miss/expiry, updates cache
-- [ ] `List` returns recipe names from cached directory listing
-- [ ] Handles conditional requests (ETag/If-Modified-Since) internally
-- [ ] Rate limit errors produce clear messages with reset time
+- [x]`HTTPStore` implements `BackingStore` with built-in disk cache
+- [x]Constructor accepts: base URL pattern, cache directory, TTL, size limit, HTTP client(s)
+- [x]`Get` checks cache freshness, fetches via HTTP on miss/expiry, updates cache
+- [x]`List` returns recipe names from cached directory listing
+- [x]Handles conditional requests (ETag/If-Modified-Since) internally
+- [x]Rate limit errors produce clear messages with reset time
 
 Tests:
-- [ ] Unit tests for unified cache: TTL expiry, eviction, stale-if-error, metadata round-trip
-- [ ] Unit tests for HTTPStore: cache hit, cache miss, conditional request, rate limit
-- [ ] `go test ./...` passes
-- [ ] Existing central registry cache tests adapted to unified cache
+- [x]Unit tests for unified cache: TTL expiry, eviction, stale-if-error, metadata round-trip
+- [x]Unit tests for HTTPStore: cache hit, cache miss, conditional request, rate limit
+- [x]`go test ./...` passes
+- [x]Existing central registry cache tests adapted to unified cache
 
 **Dependencies:** Issue 14
 
@@ -440,15 +440,15 @@ Tests:
 
 **Acceptance Criteria:**
 
-- [ ] Central registry becomes a `RegistryProvider` with baked-in manifest: `{layout: "grouped", index_url: "https://tsuku.dev/recipes.json"}`
-- [ ] `HTTPStore` configured with: 24h TTL, 50MB cache limit, LRU eviction, cache dir `$TSUKU_HOME/registry/`
-- [ ] `SatisfiesEntries` reads from the index URL (existing manifest-based path) through the generic `RegistryProvider` implementation
-- [ ] `RefreshableProvider` implemented on `RegistryProvider` (delegates to `HTTPStore` cache refresh)
-- [ ] `update-registry` command uses `CacheIntrospectable` interface assertion instead of `*CentralRegistryProvider` cast
-- [ ] `provider_registry.go` can be deleted or reduced to a factory function
-- [ ] Cache directory layout unchanged (`$TSUKU_HOME/registry/{letter}/{name}.toml`) for backward compatibility
-- [ ] `go test ./...` passes with no behavior changes
-- [ ] `go vet ./...` and `golangci-lint run` pass
+- [x]Central registry becomes a `RegistryProvider` with baked-in manifest: `{layout: "grouped", index_url: "https://tsuku.dev/recipes.json"}`
+- [x]`HTTPStore` configured with: 24h TTL, 50MB cache limit, LRU eviction, cache dir `$TSUKU_HOME/registry/`
+- [x]`SatisfiesEntries` reads from the index URL (existing manifest-based path) through the generic `RegistryProvider` implementation
+- [x]`RefreshableProvider` implemented on `RegistryProvider` (delegates to `HTTPStore` cache refresh)
+- [x]`update-registry` command uses `CacheIntrospectable` interface assertion instead of `*CentralRegistryProvider` cast
+- [x]`provider_registry.go` can be deleted or reduced to a factory function
+- [x]Cache directory layout unchanged (`$TSUKU_HOME/registry/{letter}/{name}.toml`) for backward compatibility
+- [x]`go test ./...` passes with no behavior changes
+- [x]`go vet ./...` and `golangci-lint run` pass
 
 **Dependencies:** Issue 15
 
@@ -463,24 +463,24 @@ Tests:
 **Acceptance Criteria:**
 
 Manifest discovery:
-- [ ] When registering a new distributed source, tsuku probes for `.tsuku-recipes/manifest.json` via Contents API
-- [ ] Falls back to `recipes/manifest.json` if `.tsuku-recipes/` not found
-- [ ] Falls back to no manifest (flat layout, no index) if neither exists
-- [ ] Manifest schema: `{"layout": "flat|grouped", "index_url": "..."}`
-- [ ] Both fields optional, defaults to flat layout
+- [x]When registering a new distributed source, tsuku probes for `.tsuku-recipes/manifest.json` via Contents API
+- [x]Falls back to `recipes/manifest.json` if `.tsuku-recipes/` not found
+- [x]Falls back to no manifest (flat layout, no index) if neither exists
+- [x]Manifest schema: `{"layout": "flat|grouped", "index_url": "..."}`
+- [x]Both fields optional, defaults to flat layout
 
 Provider porting:
-- [ ] Distributed registries become `RegistryProvider` instances with discovered manifest and `HTTPStore`
-- [ ] `HTTPStore` configured with: 1h TTL, 20MB cache limit, cache dir `$TSUKU_HOME/cache/distributed/{owner}/{repo}/`
-- [ ] GitHub Contents API client logic moves into or wraps `HTTPStore`
-- [ ] `internal/distributed/provider.go` can be deleted or reduced to a factory function
-- [ ] Dynamic provider registration (`addDistributedProvider`) creates `RegistryProvider` instances
+- [x]Distributed registries become `RegistryProvider` instances with discovered manifest and `HTTPStore`
+- [x]`HTTPStore` configured with: 1h TTL, 20MB cache limit, cache dir `$TSUKU_HOME/cache/distributed/{owner}/{repo}/`
+- [x]GitHub Contents API client logic moves into or wraps `HTTPStore`
+- [x]`internal/distributed/provider.go` can be deleted or reduced to a factory function
+- [x]Dynamic provider registration (`addDistributedProvider`) creates `RegistryProvider` instances
 
 Tests:
-- [ ] Unit tests for manifest discovery (found, not found, fallback)
-- [ ] Unit tests for directory probing order (`.tsuku-recipes/` first, then `recipes/`)
-- [ ] Existing distributed provider tests adapted
-- [ ] `go test ./...` passes
+- [x]Unit tests for manifest discovery (found, not found, fallback)
+- [x]Unit tests for directory probing order (`.tsuku-recipes/` first, then `recipes/`)
+- [x]Existing distributed provider tests adapted
+- [x]`go test ./...` passes
 
 **Dependencies:** Issue 15
 
@@ -495,25 +495,25 @@ Tests:
 **Acceptance Criteria:**
 
 Loader cleanup:
-- [ ] All 5 type assertions to concrete provider types removed from `loader.go`
-- [ ] `warnIfShadows` uses `BackingStore` interface methods instead of casting to `*EmbeddedProvider` or `*CentralRegistryProvider`
-- [ ] `RecipesDir()` and `SetRecipesDir()` use interface methods or `RegistryProvider` directly instead of `*LocalProvider` cast
-- [ ] `GetFromSource()` collapsed from ~60 lines to ~5: find provider by source, call Get
-- [ ] No per-source-type switch logic remains
+- [x]All 5 type assertions to concrete provider types removed from `loader.go`
+- [x]`warnIfShadows` uses `BackingStore` interface methods instead of casting to `*EmbeddedProvider` or `*CentralRegistryProvider`
+- [x]`RecipesDir()` and `SetRecipesDir()` use interface methods or `RegistryProvider` directly instead of `*LocalProvider` cast
+- [x]`GetFromSource()` collapsed from ~60 lines to ~5: find provider by source, call Get
+- [x]No per-source-type switch logic remains
 
 install_distributed.go simplification:
-- [ ] `addDistributedProvider()` creates a `RegistryProvider` (not `DistributedProvider`)
-- [ ] Provider-specific logic moved behind the `RegistryProvider` / `BackingStore` interface
-- [ ] Net reduction in `install_distributed.go` line count
+- [x]`addDistributedProvider()` creates a `RegistryProvider` (not `DistributedProvider`)
+- [x]Provider-specific logic moved behind the `RegistryProvider` / `BackingStore` interface
+- [x]Net reduction in `install_distributed.go` line count
 
 Source tracking:
-- [ ] `SourceCentral` / `SourceRegistry` / `SourceEmbedded` distinction simplified where possible
-- [ ] Source matching in `GetFromSource` is uniform across all provider types
+- [x]`SourceCentral` / `SourceRegistry` / `SourceEmbedded` distinction simplified where possible
+- [x]Source matching in `GetFromSource` is uniform across all provider types
 
 Tests:
-- [ ] `go test ./...` passes with no behavior changes
-- [ ] `go vet ./...` and `golangci-lint run` pass
-- [ ] No new type assertions introduced
+- [x]`go test ./...` passes with no behavior changes
+- [x]`go vet ./...` and `golangci-lint run` pass
+- [x]No new type assertions introduced
 
 **Dependencies:** Issue 14, Issue 16, Issue 17
 

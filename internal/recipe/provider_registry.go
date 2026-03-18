@@ -2,6 +2,7 @@ package recipe
 
 import (
 	"os"
+	"strings"
 	"time"
 
 	"github.com/tsukumogami/tsuku/internal/registry"
@@ -29,25 +30,29 @@ const (
 // registry access (e.g., manifest refresh in update-registry). Access it
 // via the RegistryAccessor interface.
 func NewCentralRegistryProvider(reg *registry.Registry) *RegistryProvider {
-	// Derive the HTTP base URL for recipes from the registry's base URL.
-	// Registry URL pattern: {BaseURL}/recipes/{letter}/{name}.toml
-	// HTTPStore appends key to baseURL: {baseURL}/{letter}/{name}.toml
+	// Derive the base path for recipes from the registry's base URL.
+	// Registry layout: {BaseURL}/recipes/{letter}/{name}.toml
 	baseURL := reg.BaseURL + "/recipes"
-
-	// Allow env var override for the base URL (same as Registry uses)
 	if envURL := os.Getenv(registry.EnvRegistryURL); envURL != "" {
 		baseURL = envURL + "/recipes"
 	}
 
-	store := NewHTTPStore(HTTPStoreConfig{
-		BaseURL:  baseURL,
-		CacheDir: reg.CacheDir,
-		TTL:      centralRegistryCacheTTL,
-		MaxSize:  centralRegistryCacheMaxSize,
-		Eviction: EvictLRU,
-		MaxStale: centralRegistryCacheMaxStale,
-		Client:   registry.NewRegistryHTTPClient(),
-	})
+	// Use FSStore for local filesystem registries (e.g., functional tests
+	// that set TSUKU_REGISTRY_URL to a local path), HTTPStore otherwise.
+	var store BackingStore
+	if isLocalRegistryURL(baseURL) {
+		store = NewFSStore(baseURL)
+	} else {
+		store = NewHTTPStore(HTTPStoreConfig{
+			BaseURL:  baseURL,
+			CacheDir: reg.CacheDir,
+			TTL:      centralRegistryCacheTTL,
+			MaxSize:  centralRegistryCacheMaxSize,
+			Eviction: EvictLRU,
+			MaxStale: centralRegistryCacheMaxStale,
+			Client:   registry.NewRegistryHTTPClient(),
+		})
+	}
 
 	manifest := Manifest{
 		Layout:   "grouped",
@@ -57,4 +62,9 @@ func NewCentralRegistryProvider(reg *registry.Registry) *RegistryProvider {
 	p := NewRegistryProvider("central-registry", SourceRegistry, manifest, store)
 	p.registry = reg
 	return p
+}
+
+// isLocalRegistryURL returns true if the URL is a local filesystem path.
+func isLocalRegistryURL(url string) bool {
+	return !strings.HasPrefix(url, "http://") && !strings.HasPrefix(url, "https://")
 }

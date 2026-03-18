@@ -68,6 +68,9 @@ func NewFSStore(dir string) *FSStore {
 func (s *FSStore) Get(_ context.Context, path string) ([]byte, error) {
 	data, err := os.ReadFile(filepath.Join(s.dir, path))
 	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, fmt.Errorf("recipe %q not found in %s", path, s.dir)
+		}
 		return nil, err
 	}
 	return data, nil

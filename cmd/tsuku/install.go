@@ -8,6 +8,8 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"golang.org/x/term"
+
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/discover"
 	"github.com/tsukumogami/tsuku/internal/executor"
@@ -314,13 +316,11 @@ func init() {
 	_ = installCmd.Flags().MarkHidden("dangerously-suppress-security")
 }
 
-// isInteractive returns true if stdin is connected to a terminal
+// isInteractive returns true if stdin is connected to a terminal.
+// Uses term.IsTerminal for a proper ioctl check — the previous
+// ModeCharDevice check incorrectly returned true for /dev/null.
 func isInteractive() bool {
-	fileInfo, err := os.Stdin.Stat()
-	if err != nil {
-		return false
-	}
-	return (fileInfo.Mode() & os.ModeCharDevice) != 0
+	return term.IsTerminal(int(os.Stdin.Fd()))
 }
 
 // runDryRun shows what would be installed without making changes
