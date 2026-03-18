@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/BurntSushi/toml"
+	"github.com/tsukumogami/tsuku/internal/registry"
 )
 
 // Manifest describes the layout and optional index of a recipe registry.
@@ -15,13 +16,20 @@ type Manifest struct {
 }
 
 // RegistryProvider is a unified RecipeProvider implementation that works with
-// any BackingStore. It replaces EmbeddedProvider and LocalProvider with a
-// single type parameterized by a Manifest and a store.
+// any BackingStore. It replaces EmbeddedProvider, LocalProvider, and
+// CentralRegistryProvider with a single type parameterized by a Manifest
+// and a store.
 type RegistryProvider struct {
 	name     string
 	source   RecipeSource
 	manifest Manifest
 	store    BackingStore
+
+	// registry holds a reference to the underlying *registry.Registry when
+	// this provider wraps the central registry. Used by update-registry for
+	// manifest refresh and cache-level operations that don't belong on the
+	// generic provider interface.
+	registry *registry.Registry
 }
 
 // NewRegistryProvider creates a RegistryProvider with the given configuration.
@@ -79,8 +87,44 @@ func (p *RegistryProvider) Source() RecipeSource {
 	return p.source
 }
 
-// SatisfiesEntries returns satisfies mappings by parsing all recipes in the store.
+// SatisfiesEntries returns satisfies mappings. When the provider wraps the
+// central registry, it reads from the cached manifest (recipes.json) for
+// efficiency. Otherwise, it parses individual recipes in the store.
 func (p *RegistryProvider) SatisfiesEntries(ctx context.Context) (map[string]string, error) {
+	// If we have a registry with a cached manifest, use it (more efficient
+	// than parsing every recipe).
+	if p.registry != nil {
+		return p.satisfiesFromManifest()
+	}
+	return p.satisfiesFromRecipes(ctx)
+}
+
+// satisfiesFromManifest reads satisfies entries from the cached registry manifest.
+func (p *RegistryProvider) satisfiesFromManifest() (map[string]string, error) {
+	manifest, err := p.registry.GetCachedManifest()
+	if err != nil {
+		return nil, err
+	}
+	if manifest == nil {
+		return nil, nil
+	}
+
+	result := make(map[string]string)
+	for _, entry := range manifest.Recipes {
+		for _, pkgNames := range entry.Satisfies {
+			for _, pkgName := range pkgNames {
+				if _, exists := result[pkgName]; !exists {
+					result[pkgName] = entry.Name
+				}
+			}
+		}
+	}
+
+	return result, nil
+}
+
+// satisfiesFromRecipes builds satisfies mappings by parsing all recipes in the store.
+func (p *RegistryProvider) satisfiesFromRecipes(ctx context.Context) (map[string]string, error) {
 	paths, err := p.store.List(ctx)
 	if err != nil {
 		if paths == nil {
@@ -149,6 +193,51 @@ func (p *RegistryProvider) recipePath(name string) string {
 	default: // "flat" or empty
 		return name + ".toml"
 	}
+}
+
+// Refresh implements RefreshableProvider. When the backing store is an
+// HTTPStore, it clears stale cache entries so the next Get re-fetches them.
+// For stores without caching (MemoryStore, FSStore), this is a no-op.
+func (p *RegistryProvider) Refresh(_ context.Context) error {
+	// HTTPStore's DiskCache handles freshness via TTL; a "refresh" means
+	// clearing the cache so entries are re-fetched on next access. This is
+	// a coarse-grained refresh -- update-registry uses CachedRegistry for
+	// fine-grained per-recipe control.
+	if hs, ok := p.store.(*HTTPStore); ok {
+		cache := hs.Cache()
+		keys, err := cache.Keys()
+		if err != nil {
+			return fmt.Errorf("listing cache keys: %w", err)
+		}
+		for _, key := range keys {
+			_ = cache.Delete(key)
+		}
+	}
+	return nil
+}
+
+// CacheStats implements CacheIntrospectable. Returns cache statistics when
+// the backing store is an HTTPStore, or nil otherwise.
+func (p *RegistryProvider) CacheStats() (*DiskCacheStats, error) {
+	if hs, ok := p.store.(*HTTPStore); ok {
+		return hs.CacheStats()
+	}
+	return nil, nil
+}
+
+// Registry returns the underlying *registry.Registry when this provider wraps
+// the central registry. Returns nil for providers without a registry backing
+// (embedded, local, distributed). Used by update-registry for manifest refresh
+// and cache-level operations.
+func (p *RegistryProvider) Registry() *registry.Registry {
+	return p.registry
+}
+
+// RegistryAccessor is an optional interface for providers that wrap a
+// *registry.Registry. The update-registry command uses this to access
+// the registry for manifest refresh and per-recipe cache management.
+type RegistryAccessor interface {
+	Registry() *registry.Registry
 }
 
 // recipeNameFromPath extracts a recipe name from a store path.

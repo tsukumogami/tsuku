@@ -87,10 +87,16 @@ func init() {
 		cache := distributed.NewCacheManager(cacheDir, distributed.DefaultCacheTTL)
 		ghClient := distributed.NewGitHubClient(cache)
 
+		initCtx := context.Background()
 		for source := range userCfg.Registries {
 			parts := strings.SplitN(source, "/", 2)
 			if len(parts) == 2 {
-				providers = append(providers, distributed.NewDistributedProvider(parts[0], parts[1], ghClient))
+				dp, dpErr := distributed.NewDistributedRegistryProvider(initCtx, parts[0], parts[1], ghClient)
+				if dpErr != nil {
+					fmt.Fprintf(os.Stderr, "Warning: failed to initialize distributed source %s: %v\n", source, dpErr)
+					continue
+				}
+				providers = append(providers, dp)
 			}
 		}
 	}

@@ -257,9 +257,9 @@ func TestLoader_ProviderBySource(t *testing.T) {
 	if p == nil {
 		t.Fatal("ProviderBySource(SourceRegistry) returned nil")
 	}
-	rp, ok := p.(*CentralRegistryProvider)
+	rp, ok := p.(*RegistryProvider)
 	if !ok {
-		t.Fatal("Expected CentralRegistryProvider type")
+		t.Fatal("Expected RegistryProvider type")
 	}
 	if rp.Registry() != reg {
 		t.Error("Registry() did not return the expected registry")

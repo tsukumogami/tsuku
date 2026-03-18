@@ -25,10 +25,13 @@ action = "download"
 command = "test-tool --version"
 `
 
-// scenario-18: Provider Get/List/Source/Refresh methods work correctly
+// --- Tests for NewDistributedRegistryProviderWithManifest ---
 
-func TestDistributedProvider_Source(t *testing.T) {
-	p := NewDistributedProvider("acme", "tools", nil)
+func TestDistributedRegistryProvider_Source(t *testing.T) {
+	cache := NewCacheManager(t.TempDir(), 1*time.Hour)
+	gc := newGitHubClientWithHTTP(nil, nil, cache, false)
+
+	p := NewDistributedRegistryProviderWithManifest("acme", "tools", recipe.Manifest{Layout: "flat"}, gc)
 	got := p.Source()
 	want := recipe.RecipeSource("acme/tools")
 	if got != want {
@@ -36,7 +39,7 @@ func TestDistributedProvider_Source(t *testing.T) {
 	}
 }
 
-func TestDistributedProvider_Get_CacheHit(t *testing.T) {
+func TestDistributedRegistryProvider_Get_CacheHit(t *testing.T) {
 	cache := NewCacheManager(t.TempDir(), 1*time.Hour)
 
 	// Pre-populate source meta with a download URL
@@ -66,7 +69,7 @@ func TestDistributedProvider_Get_CacheHit(t *testing.T) {
 	}
 
 	gc := newGitHubClientWithHTTP(panicClient, panicClient, cache, false)
-	p := NewDistributedProvider("acme", "tools", gc)
+	p := NewDistributedRegistryProviderWithManifest("acme", "tools", recipe.Manifest{Layout: "flat"}, gc)
 
 	data, err := p.Get(context.Background(), "my-tool")
 	if err != nil {
@@ -77,7 +80,7 @@ func TestDistributedProvider_Get_CacheHit(t *testing.T) {
 	}
 }
 
-func TestDistributedProvider_Get_NotFound(t *testing.T) {
+func TestDistributedRegistryProvider_Get_NotFound(t *testing.T) {
 	cache := NewCacheManager(t.TempDir(), 1*time.Hour)
 
 	// Source meta exists but doesn't include the requested recipe
@@ -98,7 +101,7 @@ func TestDistributedProvider_Get_NotFound(t *testing.T) {
 	}
 
 	gc := newGitHubClientWithHTTP(panicClient, panicClient, cache, false)
-	p := NewDistributedProvider("acme", "tools", gc)
+	p := NewDistributedRegistryProviderWithManifest("acme", "tools", recipe.Manifest{Layout: "flat"}, gc)
 
 	_, err := p.Get(context.Background(), "missing-tool")
 	if err == nil {
@@ -109,7 +112,7 @@ func TestDistributedProvider_Get_NotFound(t *testing.T) {
 	}
 }
 
-func TestDistributedProvider_Get_ValidatesDownloadHost(t *testing.T) {
+func TestDistributedRegistryProvider_Get_ValidatesDownloadHost(t *testing.T) {
 	cache := NewCacheManager(t.TempDir(), 1*time.Hour)
 
 	// Set up an API server that returns directory listing
@@ -148,12 +151,10 @@ func TestDistributedProvider_Get_ValidatesDownloadHost(t *testing.T) {
 
 	// The raw client must trust the test server's TLS
 	gc := newGitHubClientWithHTTP(apiServer.Client(), rawServer.Client(), cache, false)
-	p := NewDistributedProvider("acme", "tools", gc)
+	p := NewDistributedRegistryProviderWithManifest("acme", "tools", recipe.Manifest{Layout: "flat"}, gc)
 
 	// FetchRecipe will reject the test server URL because its hostname
-	// isn't in the allowlist. That's expected -- the download URL validation
-	// test is covered separately. Here we verify the provider wires through
-	// the client correctly by checking the error type.
+	// isn't in the allowlist. That's expected.
 	_, err := p.Get(context.Background(), "my-tool")
 	if err == nil {
 		// If it succeeded, the content should match
@@ -165,7 +166,7 @@ func TestDistributedProvider_Get_ValidatesDownloadHost(t *testing.T) {
 	}
 }
 
-func TestDistributedProvider_List(t *testing.T) {
+func TestDistributedRegistryProvider_List(t *testing.T) {
 	cache := NewCacheManager(t.TempDir(), 1*time.Hour)
 
 	meta := &SourceMeta{
@@ -180,6 +181,16 @@ func TestDistributedProvider_List(t *testing.T) {
 		t.Fatalf("PutSourceMeta: %v", err)
 	}
 
+	// Pre-populate recipe cache so List doesn't need to fetch via HTTP.
+	// RegistryProvider.List() calls Get() on each path to extract descriptions.
+	recipeMeta := &RecipeMeta{FetchedAt: time.Now()}
+	if err := cache.PutRecipe("acme", "tools", "alpha", []byte(validRecipeTOML), recipeMeta); err != nil {
+		t.Fatalf("PutRecipe alpha: %v", err)
+	}
+	if err := cache.PutRecipe("acme", "tools", "beta", []byte(validRecipeTOML), recipeMeta); err != nil {
+		t.Fatalf("PutRecipe beta: %v", err)
+	}
+
 	panicClient := &http.Client{
 		Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
 			t.Fatalf("HTTP client should not be called, got: %s", req.URL)
@@ -188,7 +199,7 @@ func TestDistributedProvider_List(t *testing.T) {
 	}
 
 	gc := newGitHubClientWithHTTP(panicClient, panicClient, cache, false)
-	p := NewDistributedProvider("acme", "tools", gc)
+	p := NewDistributedRegistryProviderWithManifest("acme", "tools", recipe.Manifest{Layout: "flat"}, gc)
 
 	infos, err := p.List(context.Background())
 	if err != nil {
@@ -215,7 +226,7 @@ func TestDistributedProvider_List(t *testing.T) {
 	}
 }
 
-func TestDistributedProvider_List_Empty(t *testing.T) {
+func TestDistributedRegistryProvider_List_Empty(t *testing.T) {
 	cache := NewCacheManager(t.TempDir(), 1*time.Hour)
 
 	meta := &SourceMeta{
@@ -235,7 +246,7 @@ func TestDistributedProvider_List_Empty(t *testing.T) {
 	}
 
 	gc := newGitHubClientWithHTTP(panicClient, panicClient, cache, false)
-	p := NewDistributedProvider("acme", "tools", gc)
+	p := NewDistributedRegistryProviderWithManifest("acme", "tools", recipe.Manifest{Layout: "flat"}, gc)
 
 	infos, err := p.List(context.Background())
 	if err != nil {
@@ -246,7 +257,7 @@ func TestDistributedProvider_List_Empty(t *testing.T) {
 	}
 }
 
-func TestDistributedProvider_Refresh(t *testing.T) {
+func TestDistributedRegistryProvider_Refresh(t *testing.T) {
 	cache := NewCacheManager(t.TempDir(), 1*time.Hour)
 
 	// Pre-populate with a fresh cache
@@ -259,8 +270,7 @@ func TestDistributedProvider_Refresh(t *testing.T) {
 		t.Fatalf("PutSourceMeta: %v", err)
 	}
 
-	// Refresh bypasses freshness and hits the API. Provide a server that
-	// returns an updated listing so we can verify the cache gets updated.
+	// Refresh bypasses freshness and hits the API
 	apiCalled := false
 	apiHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		apiCalled = true
@@ -285,9 +295,15 @@ func TestDistributedProvider_Refresh(t *testing.T) {
 	})
 
 	gc := newGitHubClientWithHTTP(apiClient, apiServer.Client(), cache, false)
-	p := NewDistributedProvider("acme", "tools", gc)
+	p := NewDistributedRegistryProviderWithManifest("acme", "tools", recipe.Manifest{Layout: "flat"}, gc)
 
-	err := p.Refresh(context.Background())
+	// The provider implements RefreshableProvider
+	refreshable, ok := p.(recipe.RefreshableProvider)
+	if !ok {
+		t.Fatal("provider should implement RefreshableProvider")
+	}
+
+	err := refreshable.Refresh(context.Background())
 	if err != nil {
 		t.Fatalf("Refresh: %v", err)
 	}
@@ -306,10 +322,9 @@ func TestDistributedProvider_Refresh(t *testing.T) {
 	}
 }
 
-func TestDistributedProvider_Get_RateLimitError(t *testing.T) {
+func TestDistributedRegistryProvider_Get_RateLimitError(t *testing.T) {
 	cache := NewCacheManager(t.TempDir(), 1*time.Hour)
 
-	// No cached source meta -- API call will be needed
 	resetTime := time.Now().Add(1 * time.Hour)
 
 	apiHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -321,24 +336,17 @@ func TestDistributedProvider_Get_RateLimitError(t *testing.T) {
 	apiServer := httptest.NewTLSServer(apiHandler)
 	t.Cleanup(apiServer.Close)
 
-	// Raw server that returns 404 for branch probing
 	rawHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 	})
 	rawServer := httptest.NewTLSServer(rawHandler)
 	t.Cleanup(rawServer.Close)
 
-	// We can't easily redirect api.github.com calls to the test server since
-	// the client code hardcodes the URL. Instead, test that the provider
-	// correctly propagates rate limit errors from ListRecipes.
-	// Use a client where the API call returns rate limit error.
 	apiClient := apiServer.Client()
 	rawClient := rawServer.Client()
 
-	// Override the api client transport to redirect api.github.com to test server
 	origTransport := apiClient.Transport
 	apiClient.Transport = roundTripFunc(func(req *http.Request) (*http.Response, error) {
-		// Rewrite the URL to point to our test server
 		if strings.Contains(req.URL.Host, "api.github.com") {
 			req.URL.Scheme = "https"
 			req.URL.Host = strings.TrimPrefix(apiServer.URL, "https://")
@@ -347,24 +355,248 @@ func TestDistributedProvider_Get_RateLimitError(t *testing.T) {
 	})
 
 	gc := newGitHubClientWithHTTP(apiClient, rawClient, cache, false)
-	p := NewDistributedProvider("acme", "tools", gc)
+	p := NewDistributedRegistryProviderWithManifest("acme", "tools", recipe.Manifest{Layout: "flat"}, gc)
 
 	_, err := p.Get(context.Background(), "my-tool")
 	if err == nil {
 		t.Fatal("expected error when rate limited")
 	}
-	// The error should indicate a problem (rate limit or no recipe dir)
 	if !strings.Contains(err.Error(), "rate limit") && !strings.Contains(err.Error(), "listing recipes") {
 		t.Errorf("error should mention rate limit or listing: %s", err)
 	}
 }
 
-func TestDistributedProvider_ImplementsInterfaces(t *testing.T) {
-	p := NewDistributedProvider("acme", "tools", nil)
+func TestDistributedRegistryProvider_ImplementsInterfaces(t *testing.T) {
+	cache := NewCacheManager(t.TempDir(), 1*time.Hour)
+	gc := newGitHubClientWithHTTP(nil, nil, cache, false)
+
+	p := NewDistributedRegistryProviderWithManifest("acme", "tools", recipe.Manifest{Layout: "flat"}, gc)
 
 	// Verify RecipeProvider interface
 	var _ recipe.RecipeProvider = p
 
 	// Verify RefreshableProvider interface
-	var _ recipe.RefreshableProvider = p
+	var _ recipe.RefreshableProvider = p.(recipe.RefreshableProvider)
+}
+
+// --- Tests for manifest discovery ---
+
+func TestDiscoverManifest_Found(t *testing.T) {
+	manifest := recipe.Manifest{
+		Layout:   "grouped",
+		IndexURL: "https://example.com/recipes.json",
+	}
+	manifestJSON, _ := json.Marshal(manifest)
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Expect request for main branch, .tsuku-recipes/manifest.json
+		if strings.Contains(r.URL.Path, "main/.tsuku-recipes/manifest.json") {
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write(manifestJSON)
+			return
+		}
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	t.Cleanup(server.Close)
+
+	// Override the probe URL by using a transport that rewrites requests
+	client := &http.Client{
+		Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+			// Redirect raw.githubusercontent.com to our test server
+			if strings.Contains(req.URL.Host, "raw.githubusercontent.com") {
+				req.URL.Scheme = "http"
+				req.URL.Host = strings.TrimPrefix(server.URL, "http://")
+			}
+			return http.DefaultTransport.RoundTrip(req)
+		}),
+	}
+
+	got, err := DiscoverManifest(context.Background(), "acme", "tools", client)
+	if err != nil {
+		t.Fatalf("DiscoverManifest: %v", err)
+	}
+
+	if got.Layout != "grouped" {
+		t.Errorf("Layout = %q, want %q", got.Layout, "grouped")
+	}
+	if got.IndexURL != "https://example.com/recipes.json" {
+		t.Errorf("IndexURL = %q, want %q", got.IndexURL, "https://example.com/recipes.json")
+	}
+}
+
+func TestDiscoverManifest_FallbackToRecipesDir(t *testing.T) {
+	manifest := recipe.Manifest{Layout: "flat"}
+	manifestJSON, _ := json.Marshal(manifest)
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// .tsuku-recipes not found, but recipes/ has a manifest
+		if strings.Contains(r.URL.Path, "recipes/manifest.json") && !strings.Contains(r.URL.Path, ".tsuku-recipes") {
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write(manifestJSON)
+			return
+		}
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	t.Cleanup(server.Close)
+
+	client := &http.Client{
+		Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+			if strings.Contains(req.URL.Host, "raw.githubusercontent.com") {
+				req.URL.Scheme = "http"
+				req.URL.Host = strings.TrimPrefix(server.URL, "http://")
+			}
+			return http.DefaultTransport.RoundTrip(req)
+		}),
+	}
+
+	got, err := DiscoverManifest(context.Background(), "acme", "tools", client)
+	if err != nil {
+		t.Fatalf("DiscoverManifest: %v", err)
+	}
+
+	if got.Layout != "flat" {
+		t.Errorf("Layout = %q, want %q", got.Layout, "flat")
+	}
+}
+
+func TestDiscoverManifest_NoManifest(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	t.Cleanup(server.Close)
+
+	client := &http.Client{
+		Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+			if strings.Contains(req.URL.Host, "raw.githubusercontent.com") {
+				req.URL.Scheme = "http"
+				req.URL.Host = strings.TrimPrefix(server.URL, "http://")
+			}
+			return http.DefaultTransport.RoundTrip(req)
+		}),
+	}
+
+	got, err := DiscoverManifest(context.Background(), "acme", "tools", client)
+	if err != nil {
+		t.Fatalf("DiscoverManifest: %v", err)
+	}
+
+	// Default: flat layout, no index
+	if got.Layout != "flat" {
+		t.Errorf("Layout = %q, want %q", got.Layout, "flat")
+	}
+	if got.IndexURL != "" {
+		t.Errorf("IndexURL = %q, want empty", got.IndexURL)
+	}
+}
+
+func TestDiscoverManifest_MasterBranch(t *testing.T) {
+	manifest := recipe.Manifest{Layout: "grouped"}
+	manifestJSON, _ := json.Marshal(manifest)
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Only found on master branch
+		if strings.Contains(r.URL.Path, "master/.tsuku-recipes/manifest.json") {
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write(manifestJSON)
+			return
+		}
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	t.Cleanup(server.Close)
+
+	client := &http.Client{
+		Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+			if strings.Contains(req.URL.Host, "raw.githubusercontent.com") {
+				req.URL.Scheme = "http"
+				req.URL.Host = strings.TrimPrefix(server.URL, "http://")
+			}
+			return http.DefaultTransport.RoundTrip(req)
+		}),
+	}
+
+	got, err := DiscoverManifest(context.Background(), "acme", "tools", client)
+	if err != nil {
+		t.Fatalf("DiscoverManifest: %v", err)
+	}
+
+	if got.Layout != "grouped" {
+		t.Errorf("Layout = %q, want %q", got.Layout, "grouped")
+	}
+}
+
+func TestDiscoverManifest_InvalidJSON(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.Contains(r.URL.Path, "manifest.json") {
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte("not valid json"))
+			return
+		}
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	t.Cleanup(server.Close)
+
+	client := &http.Client{
+		Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+			if strings.Contains(req.URL.Host, "raw.githubusercontent.com") {
+				req.URL.Scheme = "http"
+				req.URL.Host = strings.TrimPrefix(server.URL, "http://")
+			}
+			return http.DefaultTransport.RoundTrip(req)
+		}),
+	}
+
+	// Invalid JSON in manifest should fall through to default
+	got, err := DiscoverManifest(context.Background(), "acme", "tools", client)
+	if err != nil {
+		t.Fatalf("DiscoverManifest: %v", err)
+	}
+
+	// Should fall back to default flat since the JSON was invalid
+	if got.Layout != "flat" {
+		t.Errorf("Layout = %q, want %q (default)", got.Layout, "flat")
+	}
+}
+
+func TestNewDistributedRegistryProvider_WithManifestDiscovery(t *testing.T) {
+	cache := NewCacheManager(t.TempDir(), 1*time.Hour)
+
+	// Set up a raw server that serves a manifest
+	manifest := recipe.Manifest{Layout: "grouped", IndexURL: "https://example.com/index.json"}
+	manifestJSON, _ := json.Marshal(manifest)
+
+	rawServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.Contains(r.URL.Path, "manifest.json") {
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write(manifestJSON)
+			return
+		}
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	t.Cleanup(rawServer.Close)
+
+	rawClient := &http.Client{
+		Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+			if strings.Contains(req.URL.Host, "raw.githubusercontent.com") {
+				req.URL.Scheme = "http"
+				req.URL.Host = strings.TrimPrefix(rawServer.URL, "http://")
+			}
+			return http.DefaultTransport.RoundTrip(req)
+		}),
+	}
+
+	gc := newGitHubClientWithHTTP(nil, rawClient, cache, false)
+
+	p, err := NewDistributedRegistryProvider(context.Background(), "acme", "tools", gc)
+	if err != nil {
+		t.Fatalf("NewDistributedRegistryProvider: %v", err)
+	}
+
+	if p.Source() != recipe.RecipeSource("acme/tools") {
+		t.Errorf("Source() = %q, want %q", p.Source(), "acme/tools")
+	}
+
+	// Verify it implements RefreshableProvider
+	if _, ok := p.(recipe.RefreshableProvider); !ok {
+		t.Error("provider should implement RefreshableProvider")
+	}
 }

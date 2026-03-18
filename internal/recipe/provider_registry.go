@@ -1,133 +1,60 @@
 package recipe
 
 import (
-	"context"
-	"fmt"
+	"os"
+	"time"
 
-	"github.com/BurntSushi/toml"
 	"github.com/tsukumogami/tsuku/internal/registry"
 )
 
-// CentralRegistryProvider wraps a *registry.Registry to implement RecipeProvider.
-// It also implements SatisfiesProvider (via manifest) and RefreshableProvider.
-type CentralRegistryProvider struct {
-	registry *registry.Registry
-}
+const (
+	// centralRegistryCacheTTL is the TTL for central registry cache entries.
+	centralRegistryCacheTTL = 24 * time.Hour
 
-// NewCentralRegistryProvider creates a CentralRegistryProvider wrapping the given Registry.
-func NewCentralRegistryProvider(reg *registry.Registry) *CentralRegistryProvider {
-	return &CentralRegistryProvider{registry: reg}
-}
+	// centralRegistryCacheMaxSize is the maximum disk cache size for central
+	// registry recipes (50 MB).
+	centralRegistryCacheMaxSize = 50 * 1024 * 1024
 
-// Get retrieves raw recipe TOML bytes from the registry (disk cache or remote).
-func (p *CentralRegistryProvider) Get(ctx context.Context, name string) ([]byte, error) {
-	// Check disk cache first
-	data, err := p.registry.GetCached(name)
-	if err != nil {
-		return nil, err
+	// centralRegistryCacheMaxStale is the stale-if-error window. When a fetch
+	// fails and the cache entry is within this window past TTL, the stale
+	// content is returned instead of an error.
+	centralRegistryCacheMaxStale = 7 * 24 * time.Hour
+)
+
+// NewCentralRegistryProvider creates a RegistryProvider configured for the
+// central recipe registry. It uses an HTTPStore backed by a DiskCache at
+// cacheDir with grouped layout ({letter}/{name}.toml).
+//
+// The reg parameter is retained for operations that still require direct
+// registry access (e.g., manifest refresh in update-registry). Access it
+// via the RegistryAccessor interface.
+func NewCentralRegistryProvider(reg *registry.Registry) *RegistryProvider {
+	// Derive the HTTP base URL for recipes from the registry's base URL.
+	// Registry URL pattern: {BaseURL}/recipes/{letter}/{name}.toml
+	// HTTPStore appends key to baseURL: {baseURL}/{letter}/{name}.toml
+	baseURL := reg.BaseURL + "/recipes"
+
+	// Allow env var override for the base URL (same as Registry uses)
+	if envURL := os.Getenv(registry.EnvRegistryURL); envURL != "" {
+		baseURL = envURL + "/recipes"
 	}
 
-	if data != nil {
-		return data, nil
+	store := NewHTTPStore(HTTPStoreConfig{
+		BaseURL:  baseURL,
+		CacheDir: reg.CacheDir,
+		TTL:      centralRegistryCacheTTL,
+		MaxSize:  centralRegistryCacheMaxSize,
+		Eviction: EvictLRU,
+		MaxStale: centralRegistryCacheMaxStale,
+		Client:   registry.NewRegistryHTTPClient(),
+	})
+
+	manifest := Manifest{
+		Layout:   "grouped",
+		IndexURL: registry.DefaultManifestURL,
 	}
 
-	// Not cached, fetch from remote
-	data, err = p.registry.FetchRecipe(ctx, name)
-	if err != nil {
-		return nil, err
-	}
-
-	// Cache the fetched recipe
-	if cacheErr := p.registry.CacheRecipe(name, data); cacheErr != nil {
-		fmt.Printf("Warning: failed to cache recipe %s: %v\n", name, cacheErr)
-	}
-
-	return data, nil
-}
-
-// List returns metadata for all cached registry recipes.
-func (p *CentralRegistryProvider) List(_ context.Context) ([]RecipeInfo, error) {
-	names, err := p.registry.ListCached()
-	if err != nil {
-		return nil, err
-	}
-
-	var result []RecipeInfo
-	for _, name := range names {
-		description := ""
-		data, err := p.registry.GetCached(name)
-		if err == nil && data != nil {
-			// Parse just enough to get description
-			if r, err := quickParseDescription(data); err == nil {
-				description = r
-			}
-		}
-
-		result = append(result, RecipeInfo{
-			Name:        name,
-			Description: description,
-			Source:      SourceRegistry,
-		})
-	}
-
-	return result, nil
-}
-
-// Source returns SourceRegistry.
-func (p *CentralRegistryProvider) Source() RecipeSource {
-	return SourceRegistry
-}
-
-// SatisfiesEntries returns satisfies mappings from the cached manifest.
-func (p *CentralRegistryProvider) SatisfiesEntries(_ context.Context) (map[string]string, error) {
-	manifest, err := p.registry.GetCachedManifest()
-	if err != nil {
-		return nil, err
-	}
-	if manifest == nil {
-		return nil, nil
-	}
-
-	result := make(map[string]string)
-	for _, entry := range manifest.Recipes {
-		for _, pkgNames := range entry.Satisfies {
-			for _, pkgName := range pkgNames {
-				if _, exists := result[pkgName]; !exists {
-					result[pkgName] = entry.Name
-				}
-			}
-		}
-	}
-
-	return result, nil
-}
-
-// Refresh is not implemented directly on CentralRegistryProvider.
-// The update-registry command uses Registry() to access internals.
-// This method exists to satisfy the RefreshableProvider interface at a basic level.
-func (p *CentralRegistryProvider) Refresh(_ context.Context) error {
-	// The real refresh logic lives in the update-registry command,
-	// which uses Registry() + CachedRegistry for fine-grained control.
-	return nil
-}
-
-// Registry returns the underlying *registry.Registry for escape-hatch access.
-// This is used by update-registry for cache-level operations that don't
-// belong on the provider interface.
-func (p *CentralRegistryProvider) Registry() *registry.Registry {
-	return p.registry
-}
-
-// quickParseDescription extracts the description from recipe TOML bytes
-// without a full parse. Uses TOML unmarshaling of just the metadata section.
-func quickParseDescription(data []byte) (string, error) {
-	var partial struct {
-		Metadata struct {
-			Description string `toml:"description"`
-		} `toml:"metadata"`
-	}
-	if err := toml.Unmarshal(data, &partial); err != nil {
-		return "", err
-	}
-	return partial.Metadata.Description, nil
+	p := NewRegistryProvider("central-registry", SourceRegistry, manifest, store)
+	p.registry = reg
+	return p
 }

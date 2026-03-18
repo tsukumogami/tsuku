@@ -140,7 +140,7 @@ func autoRegisterSource(userCfg *userconfig.Config, source string) error {
 	return userCfg.Save()
 }
 
-// addDistributedProvider creates a new DistributedProvider for the source
+// addDistributedProvider creates a new RegistryProvider for the distributed source
 // and adds it to the global loader. Skips if a provider already exists.
 // The sysCfg provides cache directory paths to avoid redundant config loads.
 func addDistributedProvider(source string, sysCfg *config.Config) error {
@@ -156,7 +156,11 @@ func addDistributedProvider(source string, sysCfg *config.Config) error {
 	cacheDir := filepath.Join(sysCfg.CacheDir, "distributed")
 	cache := distributed.NewCacheManager(cacheDir, distributed.DefaultCacheTTL)
 	ghClient := distributed.NewGitHubClient(cache)
-	provider := distributed.NewDistributedProvider(parts[0], parts[1], ghClient)
+
+	provider, err := distributed.NewDistributedRegistryProvider(globalCtx, parts[0], parts[1], ghClient)
+	if err != nil {
+		return fmt.Errorf("initializing distributed provider for %s: %w", source, err)
+	}
 
 	loader.AddProvider(provider)
 	return nil

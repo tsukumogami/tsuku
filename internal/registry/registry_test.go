@@ -405,7 +405,7 @@ func TestFetchDiscoveryEntry_NetworkError(t *testing.T) {
 
 // TestRegistryHTTPClient_DisableCompression tests that registry HTTP client has compression disabled
 func TestRegistryHTTPClient_DisableCompression(t *testing.T) {
-	client := newRegistryHTTPClient()
+	client := NewRegistryHTTPClient()
 
 	// Verify the transport has DisableCompression set
 	transport, ok := client.Transport.(*http.Transport)

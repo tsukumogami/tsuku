@@ -2,6 +2,7 @@ package recipe
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -363,12 +364,9 @@ func (l *Loader) warnIfShadows(ctx context.Context, name string) {
 		}
 		if p.Source() == SourceRegistry {
 			// Check registry cache without network
-			if rp, ok := p.(*CentralRegistryProvider); ok {
-				data, _ := rp.Registry().GetCached(name)
-				if data != nil {
-					fmt.Printf("Warning: local recipe '%s' shadows registry recipe\n", name)
-					return
-				}
+			if rp, ok := p.(*RegistryProvider); ok && rp.Has(ctx, name) {
+				fmt.Printf("Warning: local recipe '%s' shadows registry recipe\n", name)
+				return
 			}
 		}
 	}
@@ -594,6 +592,11 @@ func (l *Loader) SetRecipesDir(dir string) {
 func isNotFoundError(err error) bool {
 	if err == nil {
 		return false
+	}
+	// Check for HTTPError with 404 status (from HTTPStore)
+	var httpErr *HTTPError
+	if errors.As(err, &httpErr) && httpErr.StatusCode == 404 {
+		return true
 	}
 	// Check for registry RegistryError with ErrTypeNotFound
 	msg := err.Error()
