@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-18T02:05:28Z",
+  "generated_at": "2026-03-18T02:06:50Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -68,13 +68,13 @@
         "total": 1
       },
       "npm": {
-        "failed": 20,
-        "pending": 1,
+        "failed": 21,
         "success": 54,
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
@@ -705,6 +705,15 @@
           "next_retry_at": "2026-03-23T00:10:12Z"
         },
         {
+          "id": "rubygems:gitingest",
+          "name": "gitingest",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 8,
+          "next_retry_at": "2026-03-23T10:06:07Z"
+        },
+        {
           "id": "npm:got",
           "name": "got",
           "ecosystem": "npm",
@@ -712,15 +721,6 @@
           "category": "install_failed",
           "failure_count": 8,
           "next_retry_at": "2026-03-21T13:19:42Z"
-        },
-        {
-          "id": "rubygems:gsl",
-          "name": "gsl",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-03-18T00:40:25Z"
         },
         {
           "id": "rubygems:haproxy",
@@ -849,15 +849,6 @@
           "next_retry_at": "2026-03-19T06:37:50Z"
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 108,
-          "next_retry_at": "1733-12-06T23:57:03Z"
-        },
-        {
           "id": "npm:mailhog",
           "name": "mailhog",
           "ecosystem": "npm",
@@ -955,6 +946,15 @@
           "category": "install_failed",
           "failure_count": 6,
           "next_retry_at": "2026-03-18T15:14:22Z"
+        },
+        {
+          "id": "npm:webdav",
+          "name": "webdav",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-19T10:06:07Z"
         }
       ],
       "pending": [
@@ -9414,15 +9414,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:gitingest",
-          "name": "gitingest",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-03-17T21:09:28Z"
-        },
-        {
           "id": "homebrew:gitlab-ci-local",
           "name": "gitlab-ci-local",
           "ecosystem": "homebrew",
@@ -10277,6 +10268,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "rubygems:gsl",
+          "name": "gsl",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-18T00:40:25Z"
         },
         {
           "id": "homebrew:gspell",
@@ -13221,6 +13221,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 108,
+          "next_retry_at": "1733-12-06T23:57:03Z"
         },
         {
           "id": "homebrew:libaacs",
@@ -27203,15 +27212,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "npm:webdav",
-          "name": "webdav",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-17T22:03:59Z"
         },
         {
           "id": "rubygems:webhook",
