@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-18T02:06:07Z",
+  "updated_at": "2026-03-18T04:35:02Z",
   "entries": [
     {
       "name": "node",
@@ -17116,11 +17116,11 @@
       "name": "glassfish",
       "source": "rubygems:glassfish",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 7,
-      "next_retry_at": "2026-03-17T23:00:20.707783627Z"
+      "failure_count": 8,
+      "next_retry_at": "2026-03-23T12:35:02.646607489Z"
     },
     {
       "name": "glaze",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 108,
-      "next_retry_at": "1733-12-06T23:57:03.928731413Z"
+      "failure_count": 110,
+      "next_retry_at": "1733-12-07T04:47:45.791831681Z"
     },
     {
       "name": "libaacs",
