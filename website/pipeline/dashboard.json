@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-18T06:07:01Z",
+  "generated_at": "2026-03-18T06:08:14Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 57,
-      "pending": 3876,
+      "failed": 56,
+      "pending": 3877,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 57,
-        "pending": 3853,
+        "failed": 56,
+        "pending": 3854,
         "success": 1326
       }
     },
@@ -68,19 +68,21 @@
         "total": 1
       },
       "npm": {
-        "failed": 21,
+        "failed": 20,
+        "pending": 1,
         "success": 54,
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 30,
-        "pending": 49,
+        "failed": 31,
+        "pending": 48,
         "success": 9,
         "total": 89
       }
@@ -731,6 +733,15 @@
           "next_retry_at": "2026-03-21T13:19:42Z"
         },
         {
+          "id": "rubygems:gsl",
+          "name": "gsl",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 8,
+          "next_retry_at": "2026-03-23T14:07:35Z"
+        },
+        {
           "id": "rubygems:haproxy",
           "name": "haproxy",
           "ecosystem": "rubygems",
@@ -857,15 +868,6 @@
           "next_retry_at": "2026-03-19T06:37:50Z"
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 110,
-          "next_retry_at": "1733-12-07T04:47:45Z"
-        },
-        {
           "id": "npm:mailhog",
           "name": "mailhog",
           "ecosystem": "npm",
@@ -882,15 +884,6 @@
           "category": "install_failed",
           "failure_count": 8,
           "next_retry_at": "2026-03-23T06:37:50Z"
-        },
-        {
-          "id": "npm:mongoose",
-          "name": "mongoose",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-03-18T04:53:09Z"
         },
         {
           "id": "crates.io:numpy",
@@ -10278,15 +10271,6 @@
           "failure_count": 1
         },
         {
-          "id": "rubygems:gsl",
-          "name": "gsl",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-03-18T00:40:25Z"
-        },
-        {
           "id": "homebrew:gspell",
           "name": "gspell",
           "ecosystem": "homebrew",
@@ -13231,6 +13215,15 @@
           "failure_count": 1
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 110,
+          "next_retry_at": "1733-12-07T04:47:45Z"
+        },
+        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -16094,6 +16087,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:mongoose",
+          "name": "mongoose",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-18T04:53:09Z"
         },
         {
           "id": "homebrew:mongosh",
